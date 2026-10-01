@@ -1,0 +1,132 @@
+{
+  "started_at_utc": "2026-10-01T14:07:22.015946+00:00",
+  "finished_at_utc": "2026-10-01T14:08:34.486473+00:00",
+  "source_commit": "0a416fb56c888d03c2141de528b78cb5d39ddef2",
+  "source_tree": "1bd97f0afbaba55e9fe78bd9e92d0ef9d2564f95",
+  "source_worktree_clean": true,
+  "binaries": {
+    "agentmage": {
+      "sha256": "d26581604b41a247dde75f6e2ed2dbb3fa1f4937fcd144cdacd709f7ba0d22d1",
+      "bytes": 320965040
+    },
+    "agentmage-host": {
+      "sha256": "3cb445e3bc3ab30d51551f085f226062c50d7535c431351afdb9f931cbd1307c",
+      "bytes": 361418296
+    },
+    "agentmage-read-only-worker": {
+      "sha256": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf",
+      "bytes": 13798696
+    }
+  },
+  "binaries_unchanged": true,
+  "clean": {
+    "exit_code": 5,
+    "preserved": true,
+    "refusal_code": "linux.repository.git_artifact.invalid",
+    "failure_code": "linux.development.launch-envelope.failed"
+  },
+  "recipes": {
+    "sample_files": [
+      "build-verified.json",
+      "needs-network.json",
+      "repair-in-src.json",
+      "tests-only.json"
+    ],
+    "accepted": {
+      "exit_code": 5,
+      "shown_before_launch": true,
+      "recipe_id": "agentmage-sample-repair",
+      "manifest_sha256": "73002a357e9ce574a9293da85f20463952327d1badd47bd9b359b7caeefcf45d",
+      "then_refused_at": "linux.repository.git_artifact.invalid",
+      "preserved": true
+    },
+    "text_form": {
+      "exit_code": 5,
+      "summary_lines": [
+        "recipe agentmage-sample-repair 1.0.0 (tests) \"Change only the code under test until its unit validation passes\" manifest 73002a357e9c",
+        "  may change: src; at most 1 files",
+        "  verified by registered unit validation",
+        "  prerequisites (shown, not checked by the plan): clean worktree",
+        "  target = src/calc.py",
+        "  rollback: the plan's own writes, each by an inverse write with its own approval",
+        "  proposal only: a write outside the plan is refused; each write inside it still needs your approval"
+      ],
+      "then_refused_at": "linux.repository.git_artifact.invalid",
+      "preserved": true
+    },
+    "build_verified_passes_the_cli": {
+      "exit_code": 5,
+      "then_refused_at": "linux.repository.git_artifact.invalid"
+    },
+    "refused_before_launch": {
+      "recipe-needs-network": {
+        "exit_code": 3,
+        "code": "recipe.network-grant-unavailable"
+      },
+      "recipe-unknown-parameter": {
+        "exit_code": 2,
+        "code": "recipe.parameter-invalid"
+      },
+      "recipe-missing-required": {
+        "exit_code": 2,
+        "code": "recipe.parameter-invalid"
+      },
+      "recipe-path-outside-scope": {
+        "exit_code": 2,
+        "code": "recipe.parameter-invalid"
+      },
+      "recipe-integer-unprinted": {
+        "exit_code": 2,
+        "code": "recipe.parameter-invalid"
+      },
+      "recipe-out-of-bounds": {
+        "exit_code": 2,
+        "code": "recipe.parameter-invalid"
+      },
+      "recipe-linked-file": {
+        "exit_code": 2,
+        "code": "recipe.file-invalid"
+      },
+      "recipe-missing-file": {
+        "exit_code": 2,
+        "code": "recipe.file-invalid"
+      },
+      "recipe-tampered-manifest": {
+        "exit_code": 2,
+        "code": "recipe.manifest-invalid"
+      }
+    },
+    "cli_option_refusals_exit_codes": {
+      "cli-recipe-approve-this-run": 2,
+      "cli-recipe-resume": 2,
+      "cli-recipe-preauthorization": 2
+    },
+    "harness_values_without_recipe_exit_code": 1,
+    "sample_directory_unchanged": true,
+    "plan_instantiated_by_a_host": false,
+    "write_refused_by_a_plan_observed": false
+  },
+  "extensions_renamed_issuer": {
+    "first_list": {
+      "exit_code": 0,
+      "issuer_id": "agentmage-sample-issuer"
+    },
+    "renamed_list": {
+      "exit_code": 3,
+      "code": "extension.revocations-untrusted"
+    },
+    "accepted_list_unchanged": true,
+    "final_catalog_revision": 4
+  },
+  "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+  },
+  "network_used": false,
+  "model": "scripted",
+  "real_model_run": false,
+  "complete_coding_workflow_observed": false,
+  "native_tools_executed": false,
+  "qualification": "actual-binary-recipe-pre-launch-checks-and-catalog-host-extensions-plus-native-prerequisite-refusal"
+}

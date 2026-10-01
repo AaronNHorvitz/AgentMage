@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "stage": "batch19-observation",
+  "source_revision": "0a416fb56c888d03c2141de528b78cb5d39ddef2",
+  "scope": "Batch 19 actual Linux CLI observation at the clean security-index commit 0a416fb5: rebuilt binaries; the coding host refused at native Git trust without and with a recipe; a valid recipe read, checked and shown (JSON and text) before the host is launched; a recipe whose validation kind the profile lacks passes the CLI; recipes needing a network grant, with unknown, missing, out-of-scope, unprinted or out-of-bound values, a linked or missing file or a tampered manifest refused before any host; a recipe beside an approval of the whole run, a resume or a preauthorization refused; a revocation list signed by the trusted issuer key under another identity refused through the actual CLI and catalog host; pre-existing work preserved.",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch19-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "1d00407662952a36f9bbe569cb0dbaef0274332f020a5b093e2e5276262c8d89",
+      "private_sha256": "1d00407662952a36f9bbe569cb0dbaef0274332f020a5b093e2e5276262c8d89"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 0.096,
+      "log": "01.log",
+      "log_sha256": "99f71393b9903dca098310bb446022a4bdee195ea9996f351a787195555210a6",
+      "private_log_sha256": "99f71393b9903dca098310bb446022a4bdee195ea9996f351a787195555210a6"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch19-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 72.504,
+      "log": "02.log",
+      "log_sha256": "1c5cb501ae077209032e1263e5fbdbc7a5b926102fce35ba6451542410d46bf6",
+      "private_log_sha256": "1c5cb501ae077209032e1263e5fbdbc7a5b926102fce35ba6451542410d46bf6"
+    }
+  ]
+}

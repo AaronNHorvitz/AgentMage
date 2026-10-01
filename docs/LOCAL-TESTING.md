@@ -265,8 +265,34 @@ and answer the prompts on the terminal.
   refuses the run with `host.runtime.recipe_denied`, because the development profile
   registers only a unit validation. A recipe does not go with `--resume`,
   `--approve-this-run` or any `--preauthorize-*` option. These native steps have not
-  been observed through actual processes yet (AMR-05.10); the checks below that run
-  before a host starts have.
+  been observed through actual processes yet (AMR-05.10). The checks in the next section
+  run before any host starts, so they work in this lane too.
+
+### Recipe checks before a host starts
+
+The CLI reads, checks and shows a recipe before it launches anything (Decision 0133).
+In a fresh demo root:
+
+```sh
+python3 -m scripts.coding_harness recipe-sample --directory "$demo-recipes"
+python3 -m scripts.coding_harness start --root "$demo" --scenario failed-test-repair \
+  --objective 'Repair the failing synthetic add test and rerun validation.' \
+  --recipe "$demo-recipes/needs-network.json" --recipe-param target=src/calc.py \
+  --log-dir "$demo-logs"
+```
+
+`stderr.log` holds `{"code":"recipe.network-grant-unavailable","type":"recipe_refused"}`,
+the exit code is 3, and no host is launched. An unknown parameter, a missing `target`, a
+path outside `src`, `attempts=+2`, `attempts=4`, a linked or missing file and a manifest
+edited without its seal are refused the same way with exit 2. With `repair-in-src.json`
+the CLI shows the recipe first, as a `recipe_requested` row or, without `--json`, as text
+lines ending in "proposal only: a write outside the plan is refused; each write inside it
+still needs your approval". Here the host is then refused at native Git trust (exit 5).
+
+**Current lane result:** the actual rebuilt CLI ran these checks and the extension
+issuer check below; the
+[review-fix and recipe plan verification](verification/review-fixes-and-recipe-plans-2026-10-01.md)
+lists the exact results. No host instantiated a plan in this lane.
 
 ### Documentation packs through the catalog host
 
@@ -418,6 +444,8 @@ The wrapper passes each operation to the CLI's `--extension-trust FILE`,
 **Current lane result:** the actual rebuilt CLI and catalog host ran these steps in two
 scopes, with the results listed in the
 [memory and extension revocation verification](verification/memory-and-extension-revocation-2026-10-01.md).
+The refusal of `renamed.json` is listed in the
+[review-fix and recipe plan verification](verification/review-fixes-and-recipe-plans-2026-10-01.md).
 
 An installed extension provides nothing to a coding run, and nothing it declares is
 granted or run. The host keeps no package source. It trusts the source digest your

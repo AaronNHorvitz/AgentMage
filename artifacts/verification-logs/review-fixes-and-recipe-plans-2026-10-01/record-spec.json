@@ -1,0 +1,303 @@
+{
+ "record_type": "agentmage-review-fixes-and-recipe-plans-verification",
+ "date": "2026-10-01",
+ "base_commit": "e197fe95039343981838301e2566d8eacd7f9452",
+ "head_commit": "0a416fb56c888d03c2141de528b78cb5d39ddef2",
+ "source_commit": "cd99ba035bf80b44012a5df1474d4bcf65be5363",
+ "retained_logs": "artifacts/verification-logs/review-fixes-and-recipe-plans-2026-10-01",
+ "stages": [
+  "batch19-source-final",
+  "batch19-core",
+  "batch19-rebind",
+  "batch19-gate",
+  "batch19-boundary",
+  "batch19-security-index",
+  "batch19-blocked-causes",
+  "batch19-extended-rest",
+  "batch19-observation"
+ ],
+ "inventory": "artifacts/verification-logs/review-fixes-and-recipe-plans-2026-10-01/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch19-source-final/02.log",
+  "engine": "batch19-source-final/03.log",
+  "repository_map": "batch19-source-final/04.log",
+  "inference": "batch19-source-final/05.log",
+  "knowledge": "batch19-source-final/06.log",
+  "linux": "batch19-source-final/07.log",
+  "host": "batch19-source-final/08.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0133-review-fixes-and-recipe-plans-through-the-change-approval.md",
+   "docs/decisions/0134-amr-06-decomposition.md"
+  ],
+  "source_commits": [
+   {
+    "commit": "e71970ed58e509d9770bf466f7b4e341b84501ee",
+    "scope": "Decision 0133: review F1, F2 and N2 of e197fe95 (the extension workspace rule's isolating test, a revocation list's issuer identity bound to the scope's trust statement with the accepted-list view naming it and the sample list renamed.json, an installation time naming a day its month has); AMR-05.9.5.3 recipe plans: the engine's registry-free parameter check and decodable plans, the host recipe module with its samples, the prepare request's recipe, run declarations schema 4, host.runtime.recipe_denied, IPC wire 15, the development factory's instantiation, constraint binding, in-host carry and restart refusal, both host services' binding check, the tool boundary's refusal of writes outside the plan, the action history's policy refusal, the CLI's --recipe and --recipe-param and the harness recipe-sample and start --recipe"
+   },
+   {
+    "commit": "eedf3604830db6c65a75474ab5386f128041a54c",
+    "scope": "Decision 0134: AMR-06 split into AMR-06.1 to AMR-06.10 with exact prerequisites; the work selector records the ten identities"
+   },
+   {
+    "commit": "cd99ba035bf80b44012a5df1474d4bcf65be5363",
+    "scope": "Decision 0133 follow-up from single mutations: refused cases for each declared-plan member a host could reseal, a relative manifest path that names a readable sample, the native chat service's binding check, and the CLI's recipe rule without a redundant term"
+   }
+  ],
+  "review_resolved": "the independent review of e197fe95 (PASS, F1 and F2 low) is resolved by Decision 0133: F1 (the CLI parsing test gains a workspace scope beside a memory list, a documentation pack list, an ended-run read and a complete run, each refused only by the extension workspace rule), F2 (a revocation list must name the identity under which the scope trusts its issuer key; a list naming another identity is refused as untrusted, a stored list that does not match is a store integrity failure, and the accepted-list view shows the issuer identity); note N2 (a day its month does not have is refused) is fixed and note N5 is recorded in the decision's limits",
+  "components": [
+   {
+    "row": "AMR-05.9.5.3",
+    "scope": "component, host-unit, wire and CLI row with actual-CLI pre-launch checks: the CLI reads and admits a recipe manifest, types and checks its values and refuses network recipes before any host is launched, and shows the recipe; the prepare request carries it over IPC wire 15; the host instantiates the plan against the workspace's validation templates (a missing validation kind is refused), binds its digest into the run's constraints and declares it in run declarations schema 4, which the CLI keeps only when it is the plan of what it sent; the tool boundary refuses each write outside the plan or beyond its file bound before any grant or approval and records it as an unauthorized policy denial, and a write inside the plan goes to the ordinary approval. The factory's instantiation and the boundary's refusal glue run only in native composition, which this sandbox refuses; one native boundary test is not run here"
+   }
+  ],
+  "amr06_decomposition": "Decision 0134 adds AMR-06.1 to AMR-06.10; AMR-06.1 (pin the runtime's coordinator-facing producer contract as an unexecuted specification with producer fixtures) is dependency-ready, and AMR-06.2 to AMR-06.10 wait on pinned Coordinator, Memory or Host consumer contracts, network and account grants, the mediated network worker or a native Linux host; no capability is implemented by it",
+  "mutation_checks": "run before the final source commit with private tooling, each applying one exact replacement and running the package filter: 42 single mutations over the engine's parameter check and closed plan decoding, the recipe module's value typing, client and host network refusals, file reader, binding check, declared-plan check, run scope and write target, the extension issuer identity and day rules, the CLI's extension workspace and recipe rules, the CLI verifier, both host services and the action history's policy refusal; 41 made their expected test fail at once, the preauthorization term of the CLI's recipe rule survived because every preauthorization option already needs a budget and a lifetime, so the term was removed and the remaining budget and lifetime terms were each mutated again and caught (2 of 2). The tests that eedf3604 lacked for the declared-plan members, the relative path and the chat service's binding check were found by drafting this list and added in cd99ba03. These runs are not retained logs. The tool boundary's glue was not mutated: its tests need native composition",
+  "failure_comparison": "linux 189 passed, 19 failed, 51 ignored, failure names identical to batch 18; host 465 passed, 53 failed, 10 ignored: the 52 batch 18 failure names and the new native boundary test a_write_outside_the_recipe_plan_is_refused_before_any_grant_or_approval, which fails at the test sandbox manifest like its siblings; the engine passes 1,479 tests (1 more: plan decoding), knowledge 302, and the host 13 more (nine recipe module tests, the CLI recipe parsing test, the action history policy refusal, the CLI verifier's recipe test and the native chat service's binding test)",
+  "interrupted_stage": "an earlier source check stage at eedf3604 (batch19-source) was stopped deliberately after 6 of its 19 commands, all of which had passed, to add the tests that single mutations showed missing; it is not retained, it is superseded by batch19-source-final at cd99ba03, and stage names are never replayed",
+  "retained_failures": [
+   {
+    "stage": "batch19-source-final",
+    "indexes": [
+     7,
+     8
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites: Linux names identical to batch 18; host names identical to batch 18 plus the new native-only boundary test, which fails at the same test sandbox manifest step"
+   },
+   {
+    "stage": "batch19-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch19-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the native-prerequisite host failures (batch19-source-final/08.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch19-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch19-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch19-blocked-causes/03.log) and the documentation gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+    "stale_since": "before batch 12 (four other inputs)",
+    "blocker": "its producer runs the full host suite (the native-prerequisite failures, batch19-source-final/08.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the product gate and the documentation gate; its check mode still validates it at its own revision (batch19-extended-rest/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the full host suite with all features; its check mode still validates it at its own revision (batch19-extended-rest/02.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
+    "stale_since": "before batch 18 (shells/host/src/headless.rs)",
+    "blocker": "already stale at the review base for an input this batch does not change; historical"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-host",
+   "agentmage-kernel-engine"
+  ],
+  "cascade": "the one SBOM write staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index and security map and the Story 3.1 component inventory, configuration startup report and security map (batch19-core) and the Sprint 79 and Sprint 108 reports, whose producers read the committed supply chain (batch19-rebind); the engine's recipe module staled the Muse codec chain (batch19-rebind); TASKS.md and the CLI staled the Story 1.2 contract boundary report and register, the Sprint 27 to 34 knowledge boundary reviews and the v0.4 coding pack manifest and readiness report (batch19-core); the renewed component inventory staled the Story 11.1 security map and through it the Story 11.2 storage security, frozen-scope, AC1 and AC3 reports and the Story 12.1 map (batch19-rebind); the transport, IPC, live service and tool boundary changes staled the Story 23.4 runtime campaign, coordinator boundary review, security map and evidence index (batch19-gate, batch19-boundary, batch19-security-index); no operational store change, so no Sprint 11 store wave",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "37a27590327f451d964a753f5d274aa96af3d468",
+    "to": "eec1e63f87f694c6d30918370d91781f38b2e565",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 19 rebind stage after the renewed Story 11.1 security map, which binds the renewed Story 3.1 component inventory; only the bound digest of the Story 11.1 security map changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 19 rebind stage after the renewed storage security report; only its bound digest changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 19 rebind stage after the renewed storage security report; only its bound digest changed"
+     }
+    ]
+   }
+  ],
+  "newly_stale_disposition": "only historical records: retained stage records of batch 18, each already pinning inputs as they were at its revision; the Story 1.3 RV50 applicability report and the Sprint 50 local evidence report were already stale at the review base",
+  "runtime_campaign": "renewed at eec1e63f for the transport, IPC, live service and tool boundary changes of Decision 0133 (batch19-gate); the coordinator boundary review passes all 12 checks at c86d44fe (batch19-boundary)",
+  "cli_observation": {
+   "source_commit": "0a416fb56c888d03c2141de528b78cb5d39ddef2",
+   "binaries_sha256": {
+    "agentmage": "d26581604b41a247dde75f6e2ed2dbb3fa1f4937fcd144cdacd709f7ba0d22d1",
+    "agentmage-host": "3cb445e3bc3ab30d51551f085f226062c50d7535c431351afdb9f931cbd1307c",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "recipes": {
+    "sample_files": [
+     "build-verified.json",
+     "needs-network.json",
+     "repair-in-src.json",
+     "tests-only.json"
+    ],
+    "accepted": {
+     "exit_code": 5,
+     "shown_before_launch": true,
+     "recipe_id": "agentmage-sample-repair",
+     "manifest_sha256": "73002a357e9ce574a9293da85f20463952327d1badd47bd9b359b7caeefcf45d",
+     "then_refused_at": "linux.repository.git_artifact.invalid",
+     "preserved": true
+    },
+    "text_form": {
+     "exit_code": 5,
+     "summary_lines": [
+      "recipe agentmage-sample-repair 1.0.0 (tests) \"Change only the code under test until its unit validation passes\" manifest 73002a357e9c",
+      "  may change: src; at most 1 files",
+      "  verified by registered unit validation",
+      "  prerequisites (shown, not checked by the plan): clean worktree",
+      "  target = src/calc.py",
+      "  rollback: the plan's own writes, each by an inverse write with its own approval",
+      "  proposal only: a write outside the plan is refused; each write inside it still needs your approval"
+     ],
+     "then_refused_at": "linux.repository.git_artifact.invalid",
+     "preserved": true
+    },
+    "build_verified_passes_the_cli": {
+     "exit_code": 5,
+     "then_refused_at": "linux.repository.git_artifact.invalid"
+    },
+    "refused_before_launch": {
+     "recipe-needs-network": {
+      "exit_code": 3,
+      "code": "recipe.network-grant-unavailable"
+     },
+     "recipe-unknown-parameter": {
+      "exit_code": 2,
+      "code": "recipe.parameter-invalid"
+     },
+     "recipe-missing-required": {
+      "exit_code": 2,
+      "code": "recipe.parameter-invalid"
+     },
+     "recipe-path-outside-scope": {
+      "exit_code": 2,
+      "code": "recipe.parameter-invalid"
+     },
+     "recipe-integer-unprinted": {
+      "exit_code": 2,
+      "code": "recipe.parameter-invalid"
+     },
+     "recipe-out-of-bounds": {
+      "exit_code": 2,
+      "code": "recipe.parameter-invalid"
+     },
+     "recipe-linked-file": {
+      "exit_code": 2,
+      "code": "recipe.file-invalid"
+     },
+     "recipe-missing-file": {
+      "exit_code": 2,
+      "code": "recipe.file-invalid"
+     },
+     "recipe-tampered-manifest": {
+      "exit_code": 2,
+      "code": "recipe.manifest-invalid"
+     }
+    },
+    "cli_option_refusals_exit_codes": {
+     "cli-recipe-approve-this-run": 2,
+     "cli-recipe-resume": 2,
+     "cli-recipe-preauthorization": 2
+    },
+    "harness_values_without_recipe_exit_code": 1,
+    "sample_directory_unchanged": true,
+    "plan_instantiated_by_a_host": false,
+    "write_refused_by_a_plan_observed": false
+   },
+   "extensions_renamed_issuer": {
+    "first_list": {
+     "exit_code": 0,
+     "issuer_id": "agentmage-sample-issuer"
+    },
+    "renamed_list": {
+     "exit_code": 3,
+     "code": "extension.revocations-untrusted"
+    },
+    "accepted_list_unchanged": true,
+    "final_catalog_revision": 4
+   },
+   "dirty_start_exit": 1,
+   "dirty_preserved": true,
+   "network_used": false,
+   "qualification": "actual-binary-recipe-pre-launch-checks-and-catalog-host-extensions-plus-native-prerequisite-refusal",
+   "reason": "the CLI reads, checks and shows a recipe before it launches any host, so those checks ran through the actual CLI in this sandbox; the coding host is still refused at native Git trust before any run, so no host instantiated a plan and no write was refused by one; the catalog host builds no repository composition, so the renamed-issuer list was refused through the actual CLI and catalog host",
+   "attachment": "batch19-observation/attachments/observation.json"
+  },
+  "not_run": [
+   "a host instantiating a recipe plan, a run declaring one, or the tool boundary refusing a write outside a plan through actual processes (AMR-05.10)",
+   "a run refused by the host for a validation kind the workspace does not register (the CLI cannot see the registry; the host never serves in this sandbox)",
+   "the native-only Linux boundary tests, including a_write_outside_the_recipe_plan_is_refused_before_any_grant_or_approval, and the factory's composition glue",
+   "language server observations through a host adapter (AMR-05.9.5.2) and hybrid routing (AMR-05.9.7)",
+   "the runtime producer contract of AMR-06.1 (next batch)",
+   "the actual-process AMR-04 rows (AMR-04.2.3, 04.6.3, 04.7.2, 04.9, 04.10)",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [
+    {
+     "row": "AMR-05.9.5.3",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component, host-unit, wire and CLI row with actual-CLI pre-launch checks: no actual host process has instantiated a plan or refused a write yet (AMR-05.10)"
+    }
+   ],
+   "task_rows_added": [
+    "AMR-06.1",
+    "AMR-06.2",
+    "AMR-06.3",
+    "AMR-06.4",
+    "AMR-06.5",
+    "AMR-06.6",
+    "AMR-06.7",
+    "AMR-06.8",
+    "AMR-06.9",
+    "AMR-06.10"
+   ],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested; open"
+  }
+ }
+}
