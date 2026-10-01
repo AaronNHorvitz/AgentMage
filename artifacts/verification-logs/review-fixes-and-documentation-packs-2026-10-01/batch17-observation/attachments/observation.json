@@ -1,0 +1,162 @@
+{
+  "started_at_utc": "2026-10-01T07:32:40.115019+00:00",
+  "finished_at_utc": "2026-10-01T07:35:12.241197+00:00",
+  "source_commit": "294fa4a2366423569b5b167eb0f39def41ef6707",
+  "source_tree": "24e27279566e2db7e0e3e4bb0944239c9d5baf2f",
+  "source_worktree_clean": true,
+  "binaries": {
+    "agentmage": {
+      "sha256": "bc4aa4b3a481d6b1176b28f33d100caa96cad5d12eb497846c550ccd4591e621",
+      "bytes": 312175696
+    },
+    "agentmage-host": {
+      "sha256": "3be3e893da5c8d536eb8071b751199986b063fd038bf53af661ab4038dcc4383",
+      "bytes": 350400920
+    },
+    "agentmage-read-only-worker": {
+      "sha256": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf",
+      "bytes": 13798696
+    }
+  },
+  "binaries_unchanged": true,
+  "clean": {
+    "exit_code": 5,
+    "preserved": true,
+    "refusal_code": "linux.repository.git_artifact.invalid",
+    "failure_code": "linux.development.launch-envelope.failed"
+  },
+  "catalog_host": {
+    "served": true,
+    "list_empty_exit_code": 0,
+    "other_license": {
+      "exit_code": 4,
+      "code": "doc-pack.license-not-allowed"
+    },
+    "import": {
+      "exit_code": 0,
+      "receipt": {
+        "file_count": 3,
+        "fragment_count": 7,
+        "license": "LicenseRef-agentmage-sample",
+        "manifest_sha256": "bb8fe00eafe55962fde0ec4fa0975df7e9200606f7a444e0a4e3c0b9c24b3a5b",
+        "network_used": false,
+        "pack_id": "agentmage-sample-guide",
+        "receipt_sha256": "94bacdde40a5199dd8e7a2486dc712ed1c8dc35efff58927d2d96081381d38e1",
+        "superseded": null,
+        "total_bytes": 423,
+        "version": {
+          "major": 1,
+          "minor": 0,
+          "patch": 0
+        },
+        "withheld_fragment_count": 0
+      }
+    },
+    "import_again": {
+      "exit_code": 4,
+      "code": "doc-pack.already-imported"
+    },
+    "newer_without_refresh": {
+      "exit_code": 4,
+      "code": "doc-pack.intent-mismatch"
+    },
+    "refresh": {
+      "exit_code": 0,
+      "superseded": "1.0.0"
+    },
+    "search_current_hits": 1,
+    "search_history_hits": 2,
+    "search_remote_cache_hits": 2,
+    "inspect": {
+      "current": {
+        "major": 1,
+        "minor": 1,
+        "patch": 0
+      },
+      "pack_id": "agentmage-sample-guide",
+      "versions": [
+        {
+          "current": false,
+          "delete_on": "2026-10-31",
+          "fresh": true,
+          "freshness_days": 29,
+          "manifest_sha256": "bb8fe00eafe55962fde0ec4fa0975df7e9200606f7a444e0a4e3c0b9c24b3a5b",
+          "retrieved_on": "2026-09-30",
+          "superseded_on": "2026-10-01",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          }
+        },
+        {
+          "current": true,
+          "delete_on": null,
+          "fresh": true,
+          "freshness_days": 29,
+          "manifest_sha256": "ebec090d6ed3829f556af0353e40a585d1f3b721c0ec0a730d184ccee8d46e63",
+          "retrieved_on": "2026-09-30",
+          "superseded_on": null,
+          "version": {
+            "major": 1,
+            "minor": 1,
+            "patch": 0
+          }
+        }
+      ]
+    },
+    "delete_version": {
+      "exit_code": 0,
+      "deletion": {
+        "deleted_on": "2026-10-01",
+        "manifest_sha256": "bb8fe00eafe55962fde0ec4fa0975df7e9200606f7a444e0a4e3c0b9c24b3a5b",
+        "pack_id": "agentmage-sample-guide",
+        "reason": "person",
+        "version": {
+          "major": 1,
+          "minor": 0,
+          "patch": 0
+        }
+      }
+    },
+    "delete_unknown": {
+      "exit_code": 4,
+      "code": "doc-pack.not-found"
+    },
+    "tampered_file": {
+      "exit_code": 2,
+      "code": "doc-pack.content-mismatch"
+    },
+    "linked_file": {
+      "exit_code": 2,
+      "code": "doc-pack.content-mismatch",
+      "host_launched": false
+    },
+    "final_versions": [
+      "1.1.0"
+    ],
+    "pack_directory_unchanged": true,
+    "workspace_preserved": true,
+    "run_option_refused_exit_code": 2
+  },
+  "ended_run": {
+    "exit_code": 0,
+    "chains_present": false,
+    "stored_history_read": true,
+    "invalid_run_id_exit_code": 1
+  },
+  "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+  },
+  "idle_stop_exit_code": 1,
+  "idle_pause_exit_code": 1,
+  "idle_resume_exit_code": 1,
+  "network_used": false,
+  "model": "scripted",
+  "real_model_run": false,
+  "complete_coding_workflow_observed": false,
+  "native_tools_executed": false,
+  "qualification": "actual-binary-catalog-host-documentation-packs-and-ended-run-read-plus-native-prerequisite-refusal"
+}

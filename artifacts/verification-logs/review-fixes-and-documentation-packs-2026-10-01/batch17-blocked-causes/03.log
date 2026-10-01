@@ -1,0 +1,32 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-094cc34c77d48d9f)
+
+running 12 tests
+test frontier_coordinator::tests::cancellation_and_every_delivery_class_remain_local_denials ... ok
+test frontier_coordinator::tests::measured_native_preview_renders_records_and_never_delivers ... ok
+test frontier_coordinator::tests::stale_measured_state_mutation_expiry_and_bad_confirmation_fail_closed ... ok
+test frontier_import_coordinator::tests::story_52_accepted_steps_enter_native_flows_with_every_authority_gate_pending ... ok
+test frontier_release_coordinator::tests::story_53_all_delivery_surfaces_fail_to_local_denial_receipts ... ok
+test frontier_import_coordinator::tests::story_52_restart_refuses_state_drift_tamper_and_incomplete_routing ... ok
+test frontier_import_coordinator::tests::story_52_directory_store_reopens_exact_chain_and_rejects_tampering ... ok
+test frontier_import_coordinator::tests::story_52_every_checkpoint_boundary_resumes_without_partial_or_duplicate_effect ... ok
+test frontier_release_coordinator::tests::story_53_directory_reopen_rejects_tampering_and_preserves_exact_phase ... ok
+test frontier_release_coordinator::tests::story_53_manual_round_trip_remains_local_authority_free_and_optional ... ok
+test linux_read::tests::authenticated_host_frontier_review_renders_once_and_never_delivers ... FAILED
+test frontier_release_coordinator::tests::story_53_every_release_phase_recovers_without_delivery_or_duplicate_effect ... ok
+
+failures:
+
+---- linux_read::tests::authenticated_host_frontier_review_renders_once_and_never_delivers stdout ----
+
+thread 'linux_read::tests::authenticated_host_frontier_review_renders_once_and_never_delivers' (69948) panicked at shells/host/src/linux_read.rs:2344:18:
+verified worker manifest: LinuxSandboxError { kind: InvalidManifest }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    linux_read::tests::authenticated_host_frontier_review_renders_once_and_never_delivers
+
+test result: FAILED. 11 passed; 1 failed; 0 ignored; 0 measured; 455 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `-p agentmage-host --lib`

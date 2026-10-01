@@ -51,10 +51,12 @@ an uncertain record. See the development guide for lifecycle and cleanup limitat
 
 **Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
 launch returned exit 5 before tools because native prerequisites are unavailable.
-The [durable run action history verification](verification/durable-run-action-histories-2026-09-30.md)
-retains the latest source, rebuilt binary identities, startup results, an actual support
-bundle export and the refused ended-run read, with its logs under
+The [review-fix and documentation pack verification](verification/review-fixes-and-documentation-packs-2026-10-01.md)
+retains the latest source, rebuilt binary identities, the startup refusal, and the actual
+catalog host's documentation pack operations and ended-run read, with its logs under
 `artifacts/verification-logs/`; the
+[durable run action history verification](verification/durable-run-action-histories-2026-09-30.md)
+retains an actual support bundle export and the earlier refused ended-run read; the
 [review-fix, local-only route and support bundle verification](verification/review-fixes-local-only-routes-support-bundles-2026-09-30.md),
 the
 [review-fix and run action history verification](verification/review-fixes-and-run-action-history-2026-09-30.md),
@@ -291,7 +293,9 @@ JSON row per result (the CLI alone prints text lines without `--json`).
 
 **Current lane result:** the actual rebuilt CLI and catalog host imported, listed,
 searched, inspected and deleted the sample pack, refused another license, and read
-back an ended run; the batch record lists the exact results. The search is the
+back an ended run; the
+[review-fix and documentation pack verification](verification/review-fixes-and-documentation-packs-2026-10-01.md)
+lists the exact results. The search is the
 deterministic knowledge retrieval through the CLI; no coding run's model reads a pack
 yet. Language server observations and recipe plans remain AMR-05.9.5.2 and
 AMR-05.9.5.3.
