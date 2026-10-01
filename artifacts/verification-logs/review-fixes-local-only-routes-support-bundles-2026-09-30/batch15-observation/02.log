@@ -1,0 +1,16 @@
+cli-help exit 0
+clean-setup exit 0
+clean-diagnose exit 0
+clean-start exit 5
+declined-setup exit 0
+declined-start exit 5
+cli-bundle-open-directory exit 3
+harness-bundle-missing-directory exit 1
+cli-export-invalid exit 2
+clean-status exit 0
+clean-stop-idle exit 1
+clean-pause-idle exit 1
+clean-resume-idle exit 1
+dirty-setup exit 0
+dirty-start exit 1
+BATCH15_LINUX_OBSERVATION_COMPLETE=1

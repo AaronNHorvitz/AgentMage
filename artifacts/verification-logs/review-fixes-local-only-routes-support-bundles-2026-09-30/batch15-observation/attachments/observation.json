@@ -1,0 +1,238 @@
+{
+  "started_at_utc": "2026-10-01T00:45:13.930825+00:00",
+  "finished_at_utc": "2026-10-01T00:45:16.441552+00:00",
+  "source_commit": "9b6f19ee8ebfabfc485bf986b12f5c6b75a4be95",
+  "source_tree": "2e85a312258ed4fc8aea5ab0336b32ebceccaa12",
+  "source_worktree_clean": true,
+  "binaries": {
+    "agentmage": {
+      "sha256": "07970e261e832cab27aa3680821b161660dc3eb7db877ba73642f34e2cf675b7",
+      "bytes": 306517968
+    },
+    "agentmage-host": {
+      "sha256": "4976974081588b741626f5edd4b1ae522deb2159de3c47733967afe2b94b693a",
+      "bytes": 342439288
+    },
+    "agentmage-read-only-worker": {
+      "sha256": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf",
+      "bytes": 13798696
+    }
+  },
+  "binaries_unchanged": true,
+  "clean": {
+    "exit_code": 5,
+    "preserved": true,
+    "refusal_code": "linux.repository.git_artifact.invalid",
+    "failure_code": "linux.development.launch-envelope.failed"
+  },
+  "support_bundle_confirmed": {
+    "preview": {
+      "payload_sha256": "848a673f9c6747b1dcb896c0470c434a17c5c40fa9b99db278f9888d3abed96c",
+      "payload_bytes": 3981,
+      "included_fields": [
+        "component",
+        "state",
+        "reason_code",
+        "remediation_code",
+        "identity_sha256",
+        "report_sha256",
+        "component_version",
+        "content_sha256",
+        "evidence_record_sha256"
+      ],
+      "redactions": [
+        "credentials",
+        "environment",
+        "file_content",
+        "host_identity",
+        "paths",
+        "prompts"
+      ],
+      "sensitivity": "content-free-local-support-bundle",
+      "retention": "user-managed-local-file",
+      "confirmation_sha256": "eb1e9dc4e6f399851fa1220e2982fd61c067a9fa1b427f76915c1ef62cadb42e"
+    },
+    "outcome": {
+      "code": "support-bundle.published",
+      "destination_sha256": "552f92669c2f97c63886a1bd59d7faec32e712cbf98d257907c3f4181d6a7a1d",
+      "payload_bytes": 3981,
+      "payload_sha256": "848a673f9c6747b1dcb896c0470c434a17c5c40fa9b99db278f9888d3abed96c",
+      "result": "published",
+      "type": "support_bundle",
+      "uploaded": false,
+      "written": true
+    },
+    "files_written": 1,
+    "file_mode": "0600",
+    "bundle": {
+      "schema_version": 1,
+      "bundle_kind": "agentmage.support-bundle.v1",
+      "doctor": {
+        "schema_version": 2,
+        "report_kind": "agentmage.local-doctor.v1",
+        "overall_state": "blocked",
+        "items": [
+          {
+            "component": "package",
+            "state": "degraded",
+            "reason_code": "diagnostic.package.development-build",
+            "remediation_code": "diagnostic.remediation.verify-package",
+            "identity_sha256": null
+          },
+          {
+            "component": "platform",
+            "state": "healthy",
+            "reason_code": "diagnostic.platform.linux-development",
+            "remediation_code": "diagnostic.remediation.none",
+            "identity_sha256": null
+          },
+          {
+            "component": "model",
+            "state": "degraded",
+            "reason_code": "diagnostic.model.scripted-fixture",
+            "remediation_code": "diagnostic.remediation.review-model-profile",
+            "identity_sha256": "6a664249c1e9ef664fcacb472729f1b8d8185797b812dc6956bf9348315ff6a1"
+          },
+          {
+            "component": "runtime",
+            "state": "blocked",
+            "reason_code": "linux.development.launch-envelope.failed",
+            "remediation_code": "diagnostic.remediation.restart-runtime",
+            "identity_sha256": null
+          },
+          {
+            "component": "hardware_fit",
+            "state": "unavailable",
+            "reason_code": "diagnostic.component.missing",
+            "remediation_code": "diagnostic.remediation.review-hardware-fit",
+            "identity_sha256": null
+          },
+          {
+            "component": "offline_boundary",
+            "state": "unavailable",
+            "reason_code": "diagnostic.offline.route-unobserved",
+            "remediation_code": "diagnostic.remediation.restore-offline-boundary",
+            "identity_sha256": null
+          },
+          {
+            "component": "sandbox_helper",
+            "state": "unavailable",
+            "reason_code": "diagnostic.component.missing",
+            "remediation_code": "diagnostic.remediation.verify-sandbox-helper",
+            "identity_sha256": null
+          },
+          {
+            "component": "workspace_grant",
+            "state": "unavailable",
+            "reason_code": "diagnostic.component.missing",
+            "remediation_code": "diagnostic.remediation.review-workspace-grant",
+            "identity_sha256": null
+          },
+          {
+            "component": "capabilities",
+            "state": "unavailable",
+            "reason_code": "diagnostic.component.missing",
+            "remediation_code": "diagnostic.remediation.verify-capabilities",
+            "identity_sha256": null
+          },
+          {
+            "component": "repository_map",
+            "state": "unavailable",
+            "reason_code": "diagnostic.component.missing",
+            "remediation_code": "diagnostic.remediation.rebuild-repository-map",
+            "identity_sha256": null
+          },
+          {
+            "component": "encrypted_store",
+            "state": "unavailable",
+            "reason_code": "diagnostic.component.missing",
+            "remediation_code": "diagnostic.remediation.recover-encrypted-store",
+            "identity_sha256": null
+          },
+          {
+            "component": "receipt_chain",
+            "state": "unavailable",
+            "reason_code": "diagnostic.receipt-chain.unobserved",
+            "remediation_code": "diagnostic.remediation.verify-receipt-chain",
+            "identity_sha256": null
+          },
+          {
+            "component": "recovery",
+            "state": "unavailable",
+            "reason_code": "diagnostic.recovery.job-unobserved",
+            "remediation_code": "diagnostic.remediation.resume-or-discard-session",
+            "identity_sha256": null
+          }
+        ],
+        "report_sha256": "2a3baa9161c46c9e0ca9fd9e60f58f016d60a70718a85459c78f5a00af2f76da"
+      },
+      "versions": [
+        {
+          "component": "agentmage-cli",
+          "version": "0.0.0",
+          "content_sha256": null
+        },
+        {
+          "component": "ipc-wire",
+          "version": "10",
+          "content_sha256": null
+        },
+        {
+          "component": "run-declarations",
+          "version": "3",
+          "content_sha256": null
+        }
+      ],
+      "evidence": [],
+      "automatic_upload": false
+    }
+  },
+  "support_bundle_declined": {
+    "exit_code": 5,
+    "outcome": {
+      "code": "support-bundle.not-confirmed",
+      "destination_sha256": null,
+      "payload_bytes": null,
+      "payload_sha256": null,
+      "result": "declined",
+      "type": "support_bundle",
+      "uploaded": false,
+      "written": false
+    },
+    "files_written": 0,
+    "preserved": true
+  },
+  "support_bundle_open_directory": {
+    "exit_code": 3,
+    "outcome": {
+      "code": "diagnostic.export.destination-denied",
+      "destination_sha256": null,
+      "payload_bytes": null,
+      "payload_sha256": null,
+      "result": "refused",
+      "type": "support_bundle",
+      "uploaded": false,
+      "written": false
+    },
+    "preview_shown": false,
+    "files_written": 0
+  },
+  "harness_missing_directory_exit_code": 1,
+  "invalid_route_export_selection_exit_code": 2,
+  "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+  },
+  "idle_stop_exit_code": 1,
+  "idle_pause_exit_code": 1,
+  "idle_resume_exit_code": 1,
+  "route_receipt_observed": false,
+  "action_history_observed": false,
+  "model": "scripted",
+  "real_model_run": false,
+  "complete_coding_workflow_observed": false,
+  "native_tools_executed": false,
+  "job_ledger_exercised": false,
+  "qualification": "actual-binary-native-prerequisite-refusal-and-support-bundle-export-only"
+}

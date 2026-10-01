@@ -93,12 +93,12 @@
       {
         "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
         "stale_since": "before batch 12",
-        "blocker": "its producer runs the product gate (the workspace suites with the native-prerequisite failures, batch14-source-checks/07.log and 08.log) and the documentation gate (batch14-blocked-causes/04.log and 05.log); its check mode still validates it at its own revision (batch14-extended-rest/01.log); review F3"
+        "blocker": "its producer runs the product gate (the workspace suites with the native-prerequisite failures, batch14-source-checks/07.log and 08.log) and the documentation gate (batch14-blocked-causes/04.log and 05.log); its check mode was not run in batch 14 (corrected in batch 15: this record cited a stage the batch did not run); review F3"
       },
       {
         "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
         "stale_since": "before batch 12",
-        "blocker": "its producer runs the full host suite with all features (the native-prerequisite failures, batch14-source-checks/08.log); its check mode still validates it at its own revision (batch14-extended-rest/02.log); review F3"
+        "blocker": "its producer runs the full host suite with all features (the native-prerequisite failures, batch14-source-checks/08.log); its check mode was not run in batch 14 (corrected in batch 15: this record cited a stage the batch did not run); review F3"
       }
     ],
     "sbom_writes": 1,

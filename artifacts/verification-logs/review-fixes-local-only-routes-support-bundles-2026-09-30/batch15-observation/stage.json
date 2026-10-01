@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "stage": "batch15-observation",
+  "source_revision": "9b6f19ee8ebfabfc485bf986b12f5c6b75a4be95",
+  "scope": "Batch 15 actual Linux CLI observation at the clean security-index commit 9b6f19ee: rebuilt binaries, the clean scripted start with --support-bundle and a typed yes, a declined bundle in a second fresh fixture, a bundle directory others can read refused by the actual CLI, a missing directory refused by the harness, a malformed route export selection, idle stop, pause and resume, and the dirty fixture.",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch15-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "2fc8634ca2d1b5bc6f24af1b2c18f989e7a69f4a0c8a23892588db129782433c",
+      "private_sha256": "2fc8634ca2d1b5bc6f24af1b2c18f989e7a69f4a0c8a23892588db129782433c"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 11.788,
+      "log": "01.log",
+      "log_sha256": "fd58f02e3f955d4e06f35cd3d08abf20a26548e1acb93b5fc7e03fdafdda3ac2",
+      "private_log_sha256": "05e40aaa733df0015c81452c6169b6fa46a147811bbcb92952e7e420c0a85d62"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch15-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 2.546,
+      "log": "02.log",
+      "log_sha256": "adf2e46cc61ecf54abc82048745dcdcab315cf8cdc550928519e8403fb94b832",
+      "private_log_sha256": "adf2e46cc61ecf54abc82048745dcdcab315cf8cdc550928519e8403fb94b832"
+    }
+  ]
+}

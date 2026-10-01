@@ -1,0 +1,212 @@
+{
+  "record_type": "agentmage-review-fixes-local-only-routes-support-bundles-verification",
+  "date": "2026-09-30",
+  "base_commit": "e5f3491047fde65c665329696bc011c34e786e54",
+  "head_commit": "9b6f19ee8ebfabfc485bf986b12f5c6b75a4be95",
+  "source_commit": "69c99f66a110496c7599111b03b6c45e0fab00fc",
+  "retained_logs": "artifacts/verification-logs/review-fixes-local-only-routes-support-bundles-2026-09-30",
+  "stages": [
+    "batch15-source-checks",
+    "batch15-core",
+    "batch15-rebind",
+    "batch15-gate",
+    "batch15-boundary",
+    "batch15-security-index",
+    "batch15-blocked-causes",
+    "batch15-extended-rest",
+    "batch15-observation"
+  ],
+  "inventory": "artifacts/verification-logs/review-fixes-local-only-routes-support-bundles-2026-09-30/binding-inventory.json",
+  "check_logs": {
+    "contracts": "batch15-source-checks/02.log",
+    "engine": "batch15-source-checks/03.log",
+    "repository_map": "batch15-source-checks/04.log",
+    "inference": "batch15-source-checks/05.log",
+    "knowledge": "batch15-source-checks/06.log",
+    "linux": "batch15-source-checks/07.log",
+    "host": "batch15-source-checks/08.log"
+  },
+  "fields": {
+    "decisions": [
+      "docs/decisions/0128-local-only-model-routes-and-support-bundles.md"
+    ],
+    "review_resolved": "independent review of e5f34910 (PASS; F1-F3 low, N1-N7 notes); F1, F2, F3, N1, N2 and N3 are addressed in 69c99f66 under Decision 0128 (N2 by the decision's corrected wording, with no code change)",
+    "components": [
+      {
+        "row": "AMR-05.9.2",
+        "scope": "component, host-unit, wire and CLI: the development factory routes each composition's model requests through the kernel router in local-only mode over the one strict-local route of the selected profile before any model is built; the router's receipt is declared unchanged in a closed host type that keeps the kernel digest, with a one-entry route history; run declarations schema 3 carries both over IPC wire 10; the CLI keeps only a recomputed local-only strict-local receipt for this run, shows it and exports the route history; no remote route is offered and hybrid grants are AMR-05.9.7; the factory's composition glue runs only where native composition runs, so it is not exercised in this lane"
+      },
+      {
+        "row": "AMR-05.9.3",
+        "scope": "component, CLI unit and actual CLI process: --support-bundle DIRECTORY previews a content-free support bundle of the invocation through the existing one-use export workflow after the invocation ends and writes it once into the private directory only after a typed yes; the actual rebuilt CLI previewed and wrote one bundle after a refused scripted start, declined on end of input and refused a directory others can read before any preview; the bundle reports every doctor component the CLI did not observe as missing"
+      }
+    ],
+    "mutation_checks": "run before the source commit with private tooling, each applying one exact replacement and running the package filter: 37 single mutations over the review fixes (5), the route receipt verification, request policy, route history binding, route chain kinds, service declaration and driver rules (22), and the support bundle observations, confirmation, preview, rendering and client decisions (10); all 37 made their expected test fail at once. These runs are not retained logs",
+    "failure_comparison": "linux 188 passed, 19 failed, 51 ignored and host 397 passed, 52 failed, 10 ignored; both failure name sets are identical to the batch 14 source-check baseline; the host passes 14 more tests than batch 14 (the F1 test, four route tests and the service's route declaration test, five support bundle tests and three client tests); the two native boundary tests extended for F2 (story_50_2_exact_registered_command_preauthorization_uses_fresh_grant, story_48_2_linux_runtime_writes_only_the_selected_hunks_of_a_narrowed_patch) were already in the failure set and fail at the same native fixture, so their new assertions and the N1 change are unverified here",
+    "retained_failures": [
+      {
+        "stage": "batch15-source-checks",
+        "indexes": [
+          7,
+          8
+        ],
+        "cause": "the known native-prerequisite failures of the Linux and host suites, identical names to the batch 14 baseline"
+      },
+      {
+        "stage": "batch15-blocked-causes",
+        "indexes": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+      }
+    ],
+    "blocked_refreshes": [
+      {
+        "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+        "stale_since": "batch 7",
+        "blocker": "pytest is not installed (batch15-blocked-causes/01.log)"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+        "stale_since": "batch 7",
+        "blocker": "full host suite and product gate: the 52 native-prerequisite host failures (batch15-source-checks/08.log)"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+        "stale_since": "batch 7",
+        "blocker": "host handoff tests fail at native fixtures (batch15-blocked-causes/02.log) and the product gate as above"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+        "stale_since": "batch 7",
+        "blocker": "documentation gate: Mermaid cannot find its headless browser (batch15-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+        "stale_since": "batch 7",
+        "blocker": "host frontier test fails at a native fixture (batch15-blocked-causes/03.log) and the documentation gate as above"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+        "stale_since": "before batch 12 (four other inputs)",
+        "blocker": "its producer runs the full host suite (the 52 native-prerequisite failures, batch15-source-checks/08.log); review F3"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+        "stale_since": "before batch 12",
+        "blocker": "its producer runs the product gate (the workspace suites with the native-prerequisite failures, batch15-source-checks/07.log and 08.log) and the documentation gate (batch15-blocked-causes/04.log and 05.log); its check mode still validates it at its own revision (batch15-extended-rest/01.log); review F3"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+        "stale_since": "before batch 12",
+        "blocker": "its producer runs the full host suite with all features (the native-prerequisite failures, batch15-source-checks/08.log); its check mode still validates it at its own revision (batch15-extended-rest/02.log); review F3"
+      }
+    ],
+    "sbom_writes": 1,
+    "sbom_components_changed": [
+      "agentmage-host"
+    ],
+    "cascade": "no kernel, operational store or library-root source changed, so no codec chain, Sprint 11 store wave or configuration-root renewal was needed; the one SBOM write staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index and security map, the Story 3.1 component inventory, configuration startup report and security map (renewed in batch15-core) and the Sprint 79 and Sprint 108 reports, whose producers read the committed supply chain and so ran only after the core commit (batch15-rebind; review N6 of e5f34910); TASKS.md staled the Story 1.2 contract boundary register; the CLI options staled the Sprint 27 to 34 knowledge boundary reviews and the v0.4 coding pack manifest and readiness report (batch15-core); the new host modules staled the Sprint 79 report through lib.rs; the renewed component inventory staled the Story 11.1 security map and through it the Story 11.2 storage security, frozen-scope, AC1 and AC3 reports and the Story 12.1 map (batch15-rebind); the CLI driver, live service, transport, IPC and native factory changes staled the Story 23.4 runtime campaign, coordinator boundary review, security map and evidence index (batch15-gate, batch15-boundary, batch15-security-index)",
+    "review_pins": [
+      {
+        "gate": "scripts/story_11_2_gate.py",
+        "from": "545f8554cb8185a06a3e0d5d1fd4e2b929827e46",
+        "to": "7b9c5d9a2ef47807ca22838748aa93ee00441735",
+        "reviewed_paths_retained": 25,
+        "changed_reviewed_paths": [
+          {
+            "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+            "reason": "regenerated by the batch 15 evidence pass after the renewed Story 11.1 security map; only one bound digest changed"
+          },
+          {
+            "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+            "reason": "regenerated by the batch 15 evidence pass after the renewed storage security report; only one bound digest changed"
+          },
+          {
+            "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+            "reason": "regenerated by the batch 15 evidence pass after the renewed storage security report; only one bound digest changed"
+          }
+        ]
+      }
+    ],
+    "newly_stale_disposition": "only historical records: four retained batch 14 stage records, which pin inputs as they were at their revisions",
+    "runtime_campaign": "renewed at 7b9c5d9a for the CLI driver, live coding service, transport, IPC and native factory changes of Decision 0128 (batch15-gate); the coordinator boundary review passes all 12 checks at bfa01074 (batch15-boundary)",
+    "cli_observation": {
+      "source_commit": "9b6f19ee8ebfabfc485bf986b12f5c6b75a4be95",
+      "binaries_sha256": {
+        "agentmage": "07970e261e832cab27aa3680821b161660dc3eb7db877ba73642f34e2cf675b7",
+        "agentmage-host": "4976974081588b741626f5edd4b1ae522deb2159de3c47733967afe2b94b693a",
+        "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+      },
+      "clean_scripted_start_exit": 5,
+      "clean_refusal_code": "linux.repository.git_artifact.invalid",
+      "clean_failure_code": "linux.development.launch-envelope.failed",
+      "clean_preserved": true,
+      "support_bundle_confirmed": {
+        "result": "published",
+        "files_written": 1,
+        "file_mode": "0600",
+        "payload_sha256": "848a673f9c6747b1dcb896c0470c434a17c5c40fa9b99db278f9888d3abed96c",
+        "payload_bytes": 3981,
+        "uploaded": false
+      },
+      "support_bundle_declined": {
+        "exit_code": 5,
+        "result": "declined",
+        "files_written": 0,
+        "preserved": true
+      },
+      "support_bundle_open_directory": {
+        "exit_code": 3,
+        "result": "refused",
+        "code": "diagnostic.export.destination-denied",
+        "preview_shown": false,
+        "files_written": 0
+      },
+      "harness_missing_directory_exit": 1,
+      "invalid_route_export_selection_exit": 2,
+      "dirty_start_exit": 1,
+      "dirty_preserved": true,
+      "idle_stop_exit": 1,
+      "idle_pause_exit": 1,
+      "idle_resume_exit": 1,
+      "route_receipt_observed": false,
+      "qualification": "actual-binary-native-prerequisite-refusal-and-support-bundle-export-only",
+      "reason": "native prerequisites refuse the launch before any run starts in this sandbox, so no route receipt is produced by an actual process here; the support bundle is the CLI's own and was previewed, written once after a typed yes, declined on end of input and refused for a directory others can read, all by the actual rebuilt CLI",
+      "attachment": "batch15-observation/attachments/observation.json"
+    },
+    "not_run": [
+      "an actual-process run that produces and shows a route receipt or route history (AMR-05.10)",
+      "hybrid routing under host-owned grants (AMR-05.9.7)",
+      "persistence of action histories across host restarts (AMR-05.9.6)",
+      "the other AMR-05.9 integrations (AMR-05.9.4, AMR-05.9.5)",
+      "a support bundle of a run the host served, or of a running host through production transport",
+      "the native-only Linux boundary tests, including the two extended for F2 and the N1 change",
+      "the actual-process AMR-04 rows (AMR-04.2.3, 04.6.3, 04.7.2, 04.9, 04.10)",
+      "positive native coding workflow",
+      "real model or GPU",
+      "manual user acceptance",
+      "release"
+    ],
+    "claims": {
+      "task_rows_closed": [
+        {
+          "row": "AMR-05.9.2",
+          "closed_by": "the ledger commit that follows this record",
+          "scope": "component, host-unit, wire and CLI row: unit and service tests in this lane; the factory's composition glue runs only in native composition and no actual process produced a route receipt"
+        },
+        {
+          "row": "AMR-05.9.3",
+          "closed_by": "the ledger commit that follows this record",
+          "scope": "component, CLI unit and actual CLI process row for the CLI's own invocation bundle: preview, a typed yes writing one private file, a declined answer and a refused directory by the actual rebuilt CLI after a refused start"
+        }
+      ],
+      "release_claim": "none",
+      "independent_review_of_this_batch": "requested; open"
+    }
+  }
+}

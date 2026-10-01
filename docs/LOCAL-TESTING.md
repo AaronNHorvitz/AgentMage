@@ -51,9 +51,11 @@ an uncertain record. See the development guide for lifecycle and cleanup limitat
 
 **Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
 launch returned exit 5 before tools because native prerequisites are unavailable.
-The [review-fix and run action history verification](verification/review-fixes-and-run-action-history-2026-09-30.md)
-retains the latest source, rebuilt binary identities and startup results, with its logs
-under `artifacts/verification-logs/`; the
+The [review-fix, local-only route and support bundle verification](verification/review-fixes-local-only-routes-support-bundles-2026-09-30.md)
+retains the latest source, rebuilt binary identities, startup results and an actual
+support bundle export, with its logs under `artifacts/verification-logs/`; the
+[review-fix and run action history verification](verification/review-fixes-and-run-action-history-2026-09-30.md),
+the
 [review-fix, offline documentation, language server codec and recipe verification](verification/review-fixes-and-amr-05-codec-packs-recipes-2026-09-30.md),
 the [review-fix and AMR-05 component verification](verification/review-fixes-and-amr-05-components-2026-09-30.md),
 the [review-fix and suspension verification](verification/review-fixes-and-suspension-2026-09-30.md),
