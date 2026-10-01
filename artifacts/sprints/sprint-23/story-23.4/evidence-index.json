@@ -8,27 +8,27 @@
     {
       "bytes": 7514,
       "path": "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
-      "sha256": "aa29f8c7e8f3cc61083a39881688893364980df22ec5e7c1139edcede610bb1e"
+      "sha256": "81bd54dd04fc510acd13b3ecd828d49af7e3ee5434d6a9a7c3ce4c553472f297"
     },
     {
-      "bytes": 10743,
+      "bytes": 10744,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "b46f1811ba9550bb7a56fd0c224d40a6a662ce66a5e94c99e4e6ba6fe66ff709"
+      "sha256": "8d3696934365637c1568997ebcd8a3f4ab322a839ac5b701c5a0f96ccf5e8d74"
     },
     {
       "bytes": 7935,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "a85a4e1e730513277b5998821122b3027443359d75767aa27662085fe2fb9200"
+      "sha256": "5170a31ae44e6f90e0e6d9ca849aabaf4b197ecb054f8bb5565f10d2ff4fb03a"
     },
     {
-      "bytes": 22662,
+      "bytes": 22661,
       "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence-map.json",
-      "sha256": "40de438988dbd6c08e329cbc97e600b82cbd4ab4f8ca656f14b439ddfa81587c"
+      "sha256": "82589cedac59751c08a521d0bc4fc12a1e11b00456dd71cc1ce2925366c4707c"
     },
     {
-      "bytes": 4431,
+      "bytes": 4430,
       "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence.log",
-      "sha256": "a45487562f26adfa41dca99aa782e0537e2040061e4c7e73adcf642d976885f7"
+      "sha256": "6f9b873e6517e75d7d2332ad7002b6ad8769ffd0e8e14c621505e3a0acced1ea"
     },
     {
       "bytes": 9999,
@@ -136,9 +136,9 @@
       "sha256": "b648d8f359c97642847116f076632ed66caa24a1592601efc867886f33ae8397"
     },
     {
-      "bytes": 44957,
+      "bytes": 44545,
       "path": "shells/host/src/native_chat_runtime.rs",
-      "sha256": "613f36944e75e38e4fb92e18cec03d026248c3c01ba392c1f1207cfb60f4ecd1"
+      "sha256": "e3080359eba8f3c19ac7611675ad2be170981fd7fb0661d4957d9ea152b05e2c"
     },
     {
       "bytes": 26833,
@@ -202,7 +202,7 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "42d661700d4d759ac8dc3ed504a082799247214c43522d791991c128106abe8a",
+  "index_sha256": "3292bc47df790f1a28089fd1cc605edfd231abd470d26d69cb52b240bbd2bd78",
   "limitations": [
     "The installed host still lacks a production runtime factory and admitted local model.",
     "The source-level boundary-by-boundary failure matrix is complete; physical process faults remain outside this source campaign.",
@@ -506,7 +506,7 @@
   ],
   "record_type": "story_23_4_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "a6ad9fca94b7575ea60575adb757c68e92cc49bf",
+  "source_revision": "d6413aaa0f20e062135aaa9d145d4afcb295afc2",
   "story_id": "23.4",
   "summary": {
     "complete_count": 16,
