@@ -367,3 +367,57 @@ fn each_memory_operation_opens_the_store_once_and_closes_it_again() {
     );
     assert_eq!(opened.get(), 3);
 }
+
+#[test]
+fn each_extension_operation_opens_the_store_once_and_closes_it_again() {
+    // Decision 0132: the catalog host answers extension requests over its own
+    // store, opened for the operation and closed afterwards; only an
+    // installation needs the clock.
+    use crate::coding_extensions::{
+        ExtensionAnswer, ExtensionKeyRole, ExtensionRefusal, ExtensionRequest,
+        ExtensionTrustStatement,
+    };
+    let (mut catalog, store, opened) = service("catalog-extension");
+    assert_eq!(
+        catalog
+            .extension(ExtensionRequest::List { workspace_id: None })
+            .unwrap(),
+        ExtensionAnswer::Listed {
+            scopes: Vec::new(),
+            catalog_revision: 0
+        }
+    );
+    assert_eq!(opened.get(), 1);
+    drop(store.try_runtime().expect("the service closed the store"));
+    let trust = ExtensionRequest::Trust {
+        workspace_id: "workspace-a".to_owned(),
+        statement: ExtensionTrustStatement {
+            role: ExtensionKeyRole::RevocationIssuer,
+            key_id: "agentmage-sample-issuer".to_owned(),
+            public_key: ed25519_dalek::SigningKey::from_bytes(&[0x1d; 32])
+                .verifying_key()
+                .as_bytes()
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect(),
+        },
+    };
+    // Without a clock a key is still trusted; nothing but an installation
+    // reads it.
+    catalog.store.now_epoch_ms = None;
+    assert!(matches!(
+        catalog.extension(trust.clone()).unwrap(),
+        ExtensionAnswer::Trusted { .. }
+    ));
+    assert_eq!(opened.get(), 2);
+    drop(store.try_runtime().expect("still closed"));
+    catalog.store.now_epoch_ms = Some(1_767_312_000_000);
+    catalog.store.refuse_open = true;
+    assert_eq!(
+        catalog.extension(trust).unwrap(),
+        ExtensionAnswer::Refused {
+            refusal: ExtensionRefusal::StoreUnavailable
+        }
+    );
+    assert_eq!(opened.get(), 2);
+}

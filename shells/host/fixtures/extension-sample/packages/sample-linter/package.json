@@ -1,0 +1,53 @@
+{
+  "manifest": {
+    "schema_version": 1,
+    "package_id": "sample-linter",
+    "package_name": "Sample linter",
+    "version": "1.0.0",
+    "source_id": "sample-linter-source",
+    "source_sha256": "9f3e82177f8691ef3952c7b74f13fd3bad6a779a2a6c0bc82014a4771cceb395",
+    "signer_id": "agentmage-sample-signer",
+    "signer_public_key_sha256": "4b735ac174e40636507716ed5c9a8a75fbf6f462357fabb71ac42b7bd502c64a",
+    "license": "LicenseRef-agentmage-sample",
+    "compatibility": {
+      "kernel_version": "1.0.0",
+      "tool_protocol_version": "1.0.0",
+      "configuration_version": "1.0.0",
+      "memory_version": "1.0.0",
+      "storage_version": "1.0.0",
+      "shell_version": "1.0.0",
+      "policy_version": "1.0.0"
+    },
+    "tools": [
+      "sample-lint-check"
+    ],
+    "skills": [
+      "sample-lint-guide"
+    ],
+    "hooks": [],
+    "requested_scope": {
+      "filesystem_roots": [],
+      "commands": [],
+      "network_domains": [],
+      "credential_ids": [],
+      "connector_ids": [],
+      "publication_targets": [],
+      "max_memory_bytes": 67108864,
+      "max_cpu_milliseconds": 1000,
+      "retention_seconds": 0
+    },
+    "dependencies": [],
+    "entry_points": [
+      {
+        "entry_id": "main",
+        "relative_path": "bin/main",
+        "content_sha256": "9f3e82177f8691ef3952c7b74f13fd3bad6a779a2a6c0bc82014a4771cceb395"
+      }
+    ],
+    "side_effects": [
+      "workspace_read"
+    ],
+    "manifest_sha256": "9c118f8762dca857d48626d915601b57af47e41278327293b2fb3707752a9b76"
+  },
+  "signature": "11ecee8f6dd289c75502709af5cbfad3f0c6f68e41597127968a03205f2555cb071346a34489680835c44deed7ed5ccd7122665d46e59a35907889c94aa5fa00"
+}

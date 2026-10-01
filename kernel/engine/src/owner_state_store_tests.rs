@@ -121,6 +121,50 @@ fn each_state_persists_and_reloads_after_reopening() {
 }
 
 #[test]
+fn each_owner_keeps_its_own_state_and_revision() {
+    // Decision 0132: a later owner adds a name, not a migration; owners never
+    // see or move each other's state, and both are checked at every open.
+    assert_eq!(
+        OwnerStateName::ALL.map(OwnerStateName::as_str),
+        ["memory-catalog", "extension-catalog"]
+    );
+    for owner in OwnerStateName::ALL {
+        assert_eq!(OwnerStateName::parse(owner.as_str()), Some(owner));
+    }
+    let fixture = Fixture::new(66);
+    let states = populated(&fixture);
+    let other = OwnerStateName::ExtensionCatalog;
+    assert_eq!(states.load(other).unwrap().revision, 0);
+    assert_eq!(
+        states.commit(other, 2, b"extensions"),
+        Err(OwnerStateStoreError::Stale)
+    );
+    assert_eq!(states.commit(other, 0, b"extensions").unwrap(), 1);
+    assert_eq!(states.load(OWNER).unwrap().revision, 2);
+    assert_eq!(states.commit(OWNER, 2, b"third state").unwrap(), 3);
+    drop(states);
+    let reopened = fixture.states();
+    assert_eq!(
+        reopened.load(other).unwrap(),
+        StoredOwnerState {
+            revision: 1,
+            state: b"extensions".to_vec()
+        }
+    );
+    assert_eq!(reopened.load(OWNER).unwrap().revision, 3);
+    drop(reopened);
+    // A changed state of either owner poisons the store at the next open.
+    fixture.tamper(
+        "UPDATE owner_states SET state = X'00', revision = revision + 1
+         WHERE owner_id = 'extension-catalog';",
+    );
+    assert!(matches!(
+        fixture.open(),
+        Err(OperationalStoreError::IntegrityFailure)
+    ));
+}
+
+#[test]
 fn a_commit_that_names_another_revision_or_no_state_writes_nothing() {
     let fixture = Fixture::new(62);
     let states = populated(&fixture);

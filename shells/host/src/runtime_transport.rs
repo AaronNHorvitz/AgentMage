@@ -524,6 +524,14 @@ pub trait RuntimeTransportPort {
         Err(RuntimeTransportError::RequestDenied)
     }
 
+    /// Answers one extension request of the catalog host (Decision 0132).
+    fn extension(
+        &mut self,
+        _request: crate::coding_extensions::ExtensionRequest,
+    ) -> Result<crate::coding_extensions::ExtensionAnswer, RuntimeTransportError> {
+        Err(RuntimeTransportError::RequestDenied)
+    }
+
     /// Reads the reconciled control state of one held run's job from the
     /// durable job ledger (Decision 0120).
     fn job_status(

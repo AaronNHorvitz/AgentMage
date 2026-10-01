@@ -18,8 +18,8 @@ pub mod coding_action_history;
 /// Exact non-authoritative approval composition for native coding operations.
 pub mod coding_authority;
 #[cfg(target_os = "linux")]
-/// The development catalog host: documentation packs, ended-run reads and
-/// memory.
+/// The development catalog host: documentation packs, ended-run reads,
+/// memory and extensions.
 pub mod coding_catalog_host;
 /// Hunk review of proposed coding writes for protected approval display.
 pub mod coding_change_review;
@@ -40,6 +40,9 @@ pub mod coding_development_runtime;
 pub mod coding_dispatch;
 /// Documentation packs through the development catalog host.
 pub mod coding_doc_packs;
+/// Extensions and their revocation lists through the development catalog
+/// host.
+pub mod coding_extensions;
 /// Deterministic narrowing of coding profiles from explicitly trusted guidance.
 pub mod coding_guidance;
 /// Interface-neutral composition for the shared local coding runtime.

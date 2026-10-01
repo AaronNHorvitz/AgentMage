@@ -117,6 +117,9 @@ pub struct CodingDevelopmentCliOptions {
     /// A memory operation of the catalog host instead of a run
     /// (Decision 0131).
     pub memory: Option<Box<crate::coding_memory::MemoryRequest>>,
+    /// An extension operation of the catalog host instead of a run
+    /// (Decision 0132).
+    pub extension: Option<Box<crate::coding_extensions::ExtensionCommand>>,
 }
 
 /// Parsed CLI action before any transport or authority boundary.
@@ -289,6 +292,16 @@ fn parse_coding_development(
     let mut memory_revoke_source = None;
     let mut memory_object = None;
     let mut memory_delete = None;
+    let mut extension_trust = None;
+    let mut extension_distrust = None;
+    let mut extension_install = None;
+    let mut extension_license = None;
+    let mut extension_uninstall = None;
+    let mut extension_revocations = None;
+    let mut extension_list = false;
+    let mut extension_workspace = None;
+    let absolute_path =
+        |value: &&String| value.starts_with('/') && !value.contains('\0') && value.len() <= 4_096;
     let mut cursor = 0;
     while let Some(argument) = arguments.get(cursor) {
         let target = match argument.as_str() {
@@ -613,6 +626,74 @@ fn parse_coding_development(
                 cursor += 2;
                 continue;
             }
+            "--extension-trust" if extension_trust.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(absolute_path)
+                    .ok_or(ThinClientError::InvalidValue)?;
+                extension_trust = Some(PathBuf::from(value));
+                cursor += 2;
+                continue;
+            }
+            "--extension-distrust" if extension_distrust.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| crate::coding_extensions::extension_sha256(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                extension_distrust = Some(value.clone());
+                cursor += 2;
+                continue;
+            }
+            "--extension-install" if extension_install.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(absolute_path)
+                    .ok_or(ThinClientError::InvalidValue)?;
+                extension_install = Some(PathBuf::from(value));
+                cursor += 2;
+                continue;
+            }
+            "--extension-allow-license" if extension_license.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| crate::coding_extensions::extension_identifier(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                extension_license = Some(value.clone());
+                cursor += 2;
+                continue;
+            }
+            "--extension-uninstall" if extension_uninstall.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| crate::coding_extensions::extension_identifier(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                extension_uninstall = Some(value.clone());
+                cursor += 2;
+                continue;
+            }
+            "--extension-revocations" if extension_revocations.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(absolute_path)
+                    .ok_or(ThinClientError::InvalidValue)?;
+                extension_revocations = Some(PathBuf::from(value));
+                cursor += 2;
+                continue;
+            }
+            "--extension-list" if !extension_list => {
+                extension_list = true;
+                cursor += 1;
+                continue;
+            }
+            "--extension-workspace" if extension_workspace.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| crate::coding_memory::portable_memory_label(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                extension_workspace = Some(value.clone());
+                cursor += 2;
+                continue;
+            }
             "--ended-run" if ended_run.is_none() => {
                 let value = arguments
                     .get(cursor + 1)
@@ -638,8 +719,8 @@ fn parse_coding_development(
         *target = Some(value.clone());
         cursor += 2;
     }
-    // Decisions 0130 and 0131: a catalog operation (an ended run's histories,
-    // one documentation pack operation or one memory operation) launches only
+    // Decisions 0130 to 0132: a catalog operation (an ended run's histories,
+    // or one documentation pack, memory or extension operation) launches only
     // the catalog host. It runs nothing, so it takes no scenario, model,
     // objective or run option, and its auxiliary options go only with their
     // own operation.
@@ -653,7 +734,18 @@ fn parse_coding_development(
         + usize::from(memory_revoke.is_some())
         + usize::from(memory_revoke_source.is_some())
         + usize::from(memory_delete.is_some())
+        + usize::from(extension_trust.is_some())
+        + usize::from(extension_distrust.is_some())
+        + usize::from(extension_install.is_some())
+        + usize::from(extension_uninstall.is_some())
+        + usize::from(extension_revocations.is_some())
+        + usize::from(extension_list)
         + usize::from(ended_run.is_some());
+    let extension_operation = extension_trust.is_some()
+        || extension_distrust.is_some()
+        || extension_install.is_some()
+        || extension_uninstall.is_some()
+        || extension_revocations.is_some();
     let workspace_required = memory_remember.is_some() || memory_revoke_source.is_some();
     if operations > 1
         || doc_pack_import.is_some() == allowed_licenses.is_empty()
@@ -665,9 +757,52 @@ fn parse_coding_development(
         || memory_cite.is_some() != memory_remember.is_some()
         || memory_type.is_some() && memory_remember.is_none()
         || memory_object.is_some() && memory_revoke_source.is_none()
+        || extension_workspace.is_some() != extension_operation
+            && !(extension_list && extension_workspace.is_some())
+        || extension_license.is_some() != extension_install.is_some()
     {
         return Err(ThinClientError::InvalidValue);
     }
+    let extension_scope = || {
+        extension_workspace
+            .clone()
+            .ok_or(ThinClientError::InvalidValue)
+    };
+    let extension = if let Some(file) = extension_trust {
+        Some(crate::coding_extensions::ExtensionCommand::Trust {
+            workspace_id: extension_scope()?,
+            file,
+        })
+    } else if let Some(key_sha256) = extension_distrust {
+        Some(crate::coding_extensions::ExtensionCommand::Distrust {
+            workspace_id: extension_scope()?,
+            key_sha256,
+        })
+    } else if let Some(directory) = extension_install {
+        Some(crate::coding_extensions::ExtensionCommand::Install {
+            workspace_id: extension_scope()?,
+            directory,
+            allowed_license: extension_license.ok_or(ThinClientError::InvalidValue)?,
+        })
+    } else if let Some(package_id) = extension_uninstall {
+        Some(crate::coding_extensions::ExtensionCommand::Uninstall {
+            workspace_id: extension_scope()?,
+            package_id,
+        })
+    } else if let Some(file) = extension_revocations {
+        Some(
+            crate::coding_extensions::ExtensionCommand::ApplyRevocations {
+                workspace_id: extension_scope()?,
+                file,
+            },
+        )
+    } else if extension_list {
+        Some(crate::coding_extensions::ExtensionCommand::List {
+            workspace_id: extension_workspace.clone(),
+        })
+    } else {
+        None
+    };
     let memory = if let Some(content) = memory_remember {
         Some(crate::coding_memory::MemoryRequest::Remember {
             content,
@@ -769,6 +904,7 @@ fn parse_coding_development(
             ended_run,
             doc_pack: doc_pack.map(Box::new),
             memory: memory.map(Box::new),
+            extension: extension.map(Box::new),
         });
     }
     let scenario = scenario.ok_or(ThinClientError::InvalidValue)?;
@@ -862,6 +998,7 @@ fn parse_coding_development(
         ended_run: None,
         doc_pack: None,
         memory: None,
+        extension: None,
     })
 }
 
@@ -1455,6 +1592,11 @@ Commands:\n\
        [--memory-type semantic|preference|procedural|episodic]\n\
        | --memory-list [--memory-workspace LABEL] | --memory-revoke MEMORY_ID | --memory-delete MEMORY_ID\n\
        | --memory-revoke-source SOURCE_ID --memory-workspace LABEL [--memory-object OBJECT_ID]\n\
+  code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
+       --extension-workspace LABEL --extension-trust ABSOLUTE_FILE | --extension-distrust KEY_SHA256\n\
+       | --extension-install ABSOLUTE_DIRECTORY --extension-allow-license LICENSE\n\
+       | --extension-uninstall PACKAGE_ID | --extension-revocations ABSOLUTE_FILE\n\
+       | --extension-list [--extension-workspace LABEL]\n\
   chat MESSAGE\n\
   conversations list [--from YYYY-MM-DD] [--to YYYY-MM-DD]\n\
   conversations search QUERY\n\
@@ -1825,6 +1967,7 @@ mod tests {
                     ref scenario,
                     doc_pack: None,
                     memory: None,
+                    extension: None,
                     ..
                 }),
                 ..
@@ -2396,6 +2539,179 @@ mod tests {
             "--memory-revoke-source",
             "--memory-object",
             "--memory-delete",
+        ] {
+            assert!(command_help().contains(operation), "{operation}");
+        }
+    }
+
+    #[test]
+    fn extension_operations_parse_closed_and_alone() {
+        // Decision 0132: each extension operation replaces the objective, goes
+        // to the catalog host alone, names its scope, and takes only its own
+        // auxiliary options; files are absolute paths read later.
+        use crate::coding_extensions::ExtensionCommand;
+        let roots = [
+            "code",
+            "--development",
+            "--state-root",
+            "/tmp/state",
+            "--disposable-root",
+            "/tmp/disposable",
+            "--workspace-root",
+            "/tmp/disposable/worktree",
+        ];
+        let parse = |extra: &[&str]| {
+            let mut arguments = roots.to_vec();
+            arguments.extend(extra);
+            match parse_cli_arguments(&strings(&arguments)) {
+                Ok(CliInvocation::Code {
+                    development: Some(options),
+                    ..
+                }) => Ok(options),
+                Ok(_) => panic!("development options"),
+                Err(error) => Err(error),
+            }
+        };
+        let digest = "a".repeat(64);
+        let scope = ["--extension-workspace", "workspace-a"];
+        let with_scope = |extra: &[&'static str]| {
+            let mut arguments = scope.to_vec();
+            arguments.extend(extra);
+            arguments
+        };
+        let workspace = || "workspace-a".to_owned();
+        for (extra, command) in [
+            (
+                with_scope(&["--extension-trust", "/tmp/sample/signer-trust.json"]),
+                ExtensionCommand::Trust {
+                    workspace_id: workspace(),
+                    file: PathBuf::from("/tmp/sample/signer-trust.json"),
+                },
+            ),
+            (
+                vec![
+                    "--extension-distrust",
+                    &digest,
+                    "--extension-workspace",
+                    "workspace-a",
+                ],
+                ExtensionCommand::Distrust {
+                    workspace_id: workspace(),
+                    key_sha256: digest.clone(),
+                },
+            ),
+            (
+                with_scope(&[
+                    "--extension-install",
+                    "/tmp/sample/packages/sample-formatter",
+                    "--extension-allow-license",
+                    "LicenseRef-agentmage-sample",
+                ]),
+                ExtensionCommand::Install {
+                    workspace_id: workspace(),
+                    directory: PathBuf::from("/tmp/sample/packages/sample-formatter"),
+                    allowed_license: "LicenseRef-agentmage-sample".to_owned(),
+                },
+            ),
+            (
+                with_scope(&["--extension-uninstall", "sample-formatter"]),
+                ExtensionCommand::Uninstall {
+                    workspace_id: workspace(),
+                    package_id: "sample-formatter".to_owned(),
+                },
+            ),
+            (
+                with_scope(&["--extension-revocations", "/tmp/sample/revocations/1.json"]),
+                ExtensionCommand::ApplyRevocations {
+                    workspace_id: workspace(),
+                    file: PathBuf::from("/tmp/sample/revocations/1.json"),
+                },
+            ),
+            (
+                vec!["--extension-list"],
+                ExtensionCommand::List { workspace_id: None },
+            ),
+            (
+                with_scope(&["--extension-list"]),
+                ExtensionCommand::List {
+                    workspace_id: Some(workspace()),
+                },
+            ),
+        ] {
+            let options = parse(&extra).unwrap();
+            assert_eq!(options.extension, Some(Box::new(command)), "{extra:?}");
+            assert!(
+                options.doc_pack.is_none()
+                    && options.memory.is_none()
+                    && options.ended_run.is_none()
+                    && options.objective.is_empty()
+                    && options.scenario.is_empty()
+                    && options.model.is_empty()
+                    && options.support_bundle.is_none()
+                    && options.action_history_export.is_none()
+            );
+        }
+        for refused in [
+            // Each change names its scope; a license goes only with an
+            // installation, which needs one.
+            vec!["--extension-trust", "/tmp/sample/signer-trust.json"],
+            vec!["--extension-uninstall", "sample-formatter"],
+            with_scope(&[
+                "--extension-install",
+                "/tmp/sample/packages/sample-formatter",
+            ]),
+            with_scope(&[
+                "--extension-uninstall",
+                "sample-formatter",
+                "--extension-allow-license",
+                "MIT",
+            ]),
+            vec!["--extension-workspace", "workspace-a"],
+            // Two operations, or one beside another catalog operation.
+            with_scope(&[
+                "--extension-uninstall",
+                "sample-formatter",
+                "--extension-revocations",
+                "/tmp/sample/revocations/1.json",
+            ]),
+            vec!["--extension-list", "--memory-list"],
+            vec!["--extension-list", "--doc-pack-list"],
+            vec![
+                "--extension-list",
+                "--ended-run",
+                "coding-development-run-1",
+            ],
+            vec!["--extension-list", "--memory-workspace", "workspace-a"],
+            // Run options do not go with a catalog operation.
+            vec!["--extension-list", "--scenario", "no-op"],
+            vec!["--extension-list", "--model", "scripted"],
+            vec!["--extension-list", "--objective", "inspect"],
+            vec!["--extension-list", "--action-history-export", "effects:1:2"],
+            // Malformed values.
+            with_scope(&["--extension-trust", "relative/signer-trust.json"]),
+            with_scope(&["--extension-revocations", "relative/1.json"]),
+            with_scope(&["--extension-install", "relative/package"]),
+            vec![
+                "--extension-distrust",
+                "ABC",
+                "--extension-workspace",
+                "workspace-a",
+            ],
+            with_scope(&["--extension-uninstall", "sample formatter"]),
+            vec!["--extension-list", "--extension-workspace", "Workspace A"],
+            vec!["--extension-list", "--extension-list"],
+        ] {
+            assert!(parse(&refused).is_err(), "{refused:?}");
+        }
+        for operation in [
+            "--extension-trust",
+            "--extension-distrust",
+            "--extension-install",
+            "--extension-allow-license",
+            "--extension-uninstall",
+            "--extension-revocations",
+            "--extension-list",
+            "--extension-workspace",
         ] {
             assert!(command_help().contains(operation), "{operation}");
         }

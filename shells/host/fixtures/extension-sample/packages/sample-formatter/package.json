@@ -1,0 +1,51 @@
+{
+  "manifest": {
+    "schema_version": 1,
+    "package_id": "sample-formatter",
+    "package_name": "Sample formatter",
+    "version": "1.0.0",
+    "source_id": "sample-formatter-source",
+    "source_sha256": "3b77bdb8228608b2c6fd93cf75546838bbfc675f832fea4cd63b71fa65a982e5",
+    "signer_id": "agentmage-sample-signer",
+    "signer_public_key_sha256": "4b735ac174e40636507716ed5c9a8a75fbf6f462357fabb71ac42b7bd502c64a",
+    "license": "LicenseRef-agentmage-sample",
+    "compatibility": {
+      "kernel_version": "1.0.0",
+      "tool_protocol_version": "1.0.0",
+      "configuration_version": "1.0.0",
+      "memory_version": "1.0.0",
+      "storage_version": "1.0.0",
+      "shell_version": "1.0.0",
+      "policy_version": "1.0.0"
+    },
+    "tools": [
+      "sample-format-check"
+    ],
+    "skills": [],
+    "hooks": [],
+    "requested_scope": {
+      "filesystem_roots": [],
+      "commands": [],
+      "network_domains": [],
+      "credential_ids": [],
+      "connector_ids": [],
+      "publication_targets": [],
+      "max_memory_bytes": 67108864,
+      "max_cpu_milliseconds": 1000,
+      "retention_seconds": 0
+    },
+    "dependencies": [],
+    "entry_points": [
+      {
+        "entry_id": "main",
+        "relative_path": "bin/main",
+        "content_sha256": "3b77bdb8228608b2c6fd93cf75546838bbfc675f832fea4cd63b71fa65a982e5"
+      }
+    ],
+    "side_effects": [
+      "workspace_read"
+    ],
+    "manifest_sha256": "92a28b7ee6ed341d2f9f7f11cea22656538d9888ceb5d86e49774c6760ecf20e"
+  },
+  "signature": "c98c14dcc9c9ced4bda1499da49e7221b7b21194b2fd908219329e35f3481fde33560740a1679c20fa9d1a4cfcebade83c3db4e07924925419af51dbb1593703"
+}

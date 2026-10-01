@@ -22,15 +22,18 @@ use agentmage_capability_knowledge::{
 };
 use agentmage_kernel_engine::doc_pack_store::{
     DocPackCatalogContents, DocPackStoreError, DocPackVersionKey, DurableDocPackCatalog,
-    StoredDocPackDeletion, StoredDocPackDeletionReason, StoredDocPackFile, StoredDocPackVersion,
+    MAX_DOC_PACK_DELETIONS, StoredDocPackDeletion, StoredDocPackDeletionReason, StoredDocPackFile,
+    StoredDocPackVersion,
 };
 use serde::{Deserialize, Deserializer, Serialize};
 use sha2::{Digest, Sha256};
 
 /// Days a superseded version is kept before retention deletes it.
 pub const DOC_PACK_RETENTION_DAYS: u32 = 30;
-/// Most text one import chunk carries. JSON escaping at most doubles it, so a
-/// chunk always fits one IPC frame.
+/// Most text one import chunk carries. The client reads only documentation
+/// text, which has no control character other than a line feed, carriage
+/// return or tab, and JSON escaping at most doubles such text, so a chunk the
+/// client sends always fits one IPC frame (Decision 0132).
 pub const MAX_DOC_PACK_CHUNK_BYTES: usize = 1024 * 1024;
 /// Most licenses one import may allow.
 pub const MAX_DOC_PACK_ALLOWED_LICENSES: usize = 8;
@@ -670,9 +673,22 @@ struct StagedImport {
 }
 
 /// The catalog host's documentation pack owner for one session.
-#[derive(Default)]
 pub struct DocPackOwner {
     staged: Option<StagedImport>,
+    /// Most deletion records and kept versions together after an import.
+    /// Retention and deletion turn a kept version into one deletion record,
+    /// so an import inside this bound leaves room for every later deletion
+    /// and reads never wait on a commit the store refuses (Decision 0132).
+    history_limit: usize,
+}
+
+impl Default for DocPackOwner {
+    fn default() -> Self {
+        Self {
+            staged: None,
+            history_limit: MAX_DOC_PACK_DELETIONS,
+        }
+    }
 }
 
 impl std::fmt::Debug for DocPackOwner {
@@ -715,7 +731,11 @@ impl DocPackOwner {
             DocPackRequest::ImportCommit {} => {
                 let staged = self.staged.take().ok_or(DocPackRefusal::NotStaged)?;
                 let today = today.ok_or(DocPackRefusal::ClockUnavailable)?;
+                let history_limit = self.history_limit;
                 change_catalog(open, today, |catalog, retention| {
+                    if catalog.deletions().len() + catalog.kept_version_count() >= history_limit {
+                        return Err(DocPackRefusal::StoreLimit);
+                    }
                     let receipt = catalog
                         .import(
                             &policy(staged.allowed_licenses.clone()),
@@ -1363,8 +1383,12 @@ mod source {
                 open_at(&parent, name, OFlags::RDONLY | OFlags::NONBLOCK)?,
                 file.byte_len,
             )?;
-            let text =
-                String::from_utf8(bytes).map_err(|_| super::DocPackRefusal::ContentInvalid)?;
+            // Text the host would refuse at commit is refused here, before
+            // any host is launched (Decision 0132).
+            let text = String::from_utf8(bytes)
+                .ok()
+                .filter(|text| agentmage_capability_knowledge::doc_pack_text_allowed(text))
+                .ok_or(super::DocPackRefusal::ContentInvalid)?;
             files.insert(file.path.clone(), text);
         }
         Ok(DocPackSource { manifest, files })

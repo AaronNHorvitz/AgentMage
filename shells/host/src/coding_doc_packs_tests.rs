@@ -309,6 +309,52 @@ fn a_staged_import_takes_only_chunks_that_continue_a_listed_file() {
             Some(DocPackRefusal::NotStaged)
         );
     }
+    // A refused begin discards an import staged before it (Decision 0132).
+    assert!(matches!(
+        harness.answer(
+            begin(vec![LICENSE.to_owned()], pack.manifest.clone()),
+            today
+        ),
+        DocPackAnswer::ImportStaged { .. }
+    ));
+    assert!(matches!(
+        harness.answer(chunk("notes.txt", 0, "Offline"), today),
+        DocPackAnswer::ChunkAccepted { .. }
+    ));
+    assert_eq!(
+        refused(&harness.answer(begin(vec!["MIT".to_owned()], pack.manifest.clone()), today)),
+        Some(DocPackRefusal::LicenseNotAllowed)
+    );
+    assert_eq!(
+        refused(&harness.answer(DocPackRequest::ImportCommit {}, today)),
+        Some(DocPackRefusal::NotStaged)
+    );
+    // The host bounds a chunk itself, even inside a file long enough to take
+    // it (Decision 0132).
+    let large = source(
+        "large-guide",
+        V1,
+        "2026-01-01",
+        &[("large.txt", "x".repeat(MAX_DOC_PACK_CHUNK_BYTES + 1))],
+    );
+    assert!(matches!(
+        harness.answer(
+            begin(vec![LICENSE.to_owned()], large.manifest.clone()),
+            today
+        ),
+        DocPackAnswer::ImportStaged { .. }
+    ));
+    assert_eq!(
+        refused(&harness.answer(
+            chunk("large.txt", 0, &"x".repeat(MAX_DOC_PACK_CHUNK_BYTES + 1)),
+            today
+        )),
+        Some(DocPackRefusal::ChunkInvalid)
+    );
+    assert_eq!(
+        refused(&harness.answer(chunk("large.txt", 0, "x"), today)),
+        Some(DocPackRefusal::NotStaged)
+    );
     // A commit before every file arrived is refused by the import itself,
     // and nothing is stored.
     harness.answer(
@@ -543,6 +589,86 @@ fn deletion_and_search_go_through_the_stored_catalog() {
         panic!("found");
     };
     assert!(hits.is_empty());
+}
+
+#[test]
+fn an_import_leaves_room_for_every_later_deletion() {
+    // Decision 0132 (review F2 of 935cfdd8): deletion records and kept
+    // versions together stay within the store's deletion bound, so retention,
+    // deletion and every read keep working when the history is full; only an
+    // import is refused.
+    assert_eq!(
+        DocPackOwner::default().history_limit,
+        MAX_DOC_PACK_DELETIONS
+    );
+    let mut harness = Harness::new("doc-pack-history-limit");
+    harness.owner.history_limit = 3;
+    let first = guide(V1, "2026-01-01", "The cache keeps compiled units.");
+    let second = guide(V2, "2026-01-02", "The cache keeps compiled results.");
+    let other = source(
+        "linker-notes",
+        V1,
+        "2026-01-01",
+        &[("notes.txt", "Linker notes.\n".to_owned())],
+    );
+    let third = source(
+        "test-notes",
+        V1,
+        "2026-01-01",
+        &[("notes.txt", "Test notes.\n".to_owned())],
+    );
+    let imported = |answers: Vec<DocPackAnswer>| {
+        matches!(answers.last(), Some(DocPackAnswer::Imported { .. }))
+    };
+    assert!(imported(harness.import(&first, None, "2026-01-02")));
+    assert!(imported(harness.import(&second, Some(V1), "2026-01-02")));
+    assert!(imported(harness.import(&other, None, "2026-01-02")));
+    assert_eq!(harness.revision(), 3);
+    // Three kept versions fill the history: the next import is refused and
+    // nothing changes.
+    assert_eq!(
+        refused(harness.import(&third, None, "2026-01-03").last().unwrap()),
+        Some(DocPackRefusal::StoreLimit)
+    );
+    assert_eq!(harness.revision(), 3);
+    // Retention still turns the superseded version into its record, and the
+    // read that applied it answers.
+    let DocPackAnswer::Listed { packs, retention } =
+        harness.answer(DocPackRequest::List {}, "2026-02-01")
+    else {
+        panic!("listed");
+    };
+    assert_eq!((packs.len(), retention.len()), (2, 1));
+    assert_eq!(harness.revision(), 4);
+    assert_eq!(
+        refused(harness.import(&third, None, "2026-02-01").last().unwrap()),
+        Some(DocPackRefusal::StoreLimit)
+    );
+    // A person's deletion still commits, and reads still answer.
+    assert!(matches!(
+        harness.answer(
+            DocPackRequest::Delete {
+                pack_id: "linker-notes".to_owned(),
+                version: None,
+            },
+            "2026-02-01"
+        ),
+        DocPackAnswer::Deleted { .. }
+    ));
+    assert_eq!(harness.revision(), 5);
+    assert!(matches!(
+        harness.answer(
+            DocPackRequest::Inspect {
+                pack_id: "build-tool-guide".to_owned(),
+            },
+            "2026-02-02"
+        ),
+        DocPackAnswer::Inspected { .. }
+    ));
+    // Below the bound an import is admitted again.
+    harness.owner.history_limit = 4;
+    assert!(imported(harness.import(&third, None, "2026-02-02")));
+    assert_eq!(harness.revision(), 6);
 }
 
 #[test]
@@ -1140,6 +1266,19 @@ mod fixture {
                     std::fs::write(path, text).unwrap();
                 },
                 DocPackRefusal::ManifestInvalid,
+            ),
+            (
+                "doc-pack-source-control-character",
+                |directory| {
+                    // Same length; a control character the host refuses at
+                    // commit is refused when the file is read (Decision 0132).
+                    std::fs::write(
+                        directory.pack.join("notes.txt"),
+                        "Offline notes about the cache\u{1}\n",
+                    )
+                    .unwrap();
+                },
+                DocPackRefusal::ContentInvalid,
             ),
             (
                 "doc-pack-source-not-text",

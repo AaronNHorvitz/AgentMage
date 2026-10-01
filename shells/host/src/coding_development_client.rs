@@ -148,9 +148,14 @@ fn run_invocation(
         &options.workspace_root,
     )
     .map_err(|_| CodingDevelopmentClientError::Activation)?;
-    // Decisions 0130 and 0131: an ended run's histories, documentation packs
-    // and memory are served by the catalog host, which composes no run.
-    if options.ended_run.is_some() || options.doc_pack.is_some() || options.memory.is_some() {
+    // Decisions 0130 to 0132: an ended run's histories, documentation packs,
+    // memory and extensions are served by the catalog host, which composes
+    // no run.
+    if options.ended_run.is_some()
+        || options.doc_pack.is_some()
+        || options.memory.is_some()
+        || options.extension.is_some()
+    {
         return run_catalog_invocation(&activation, options, output, cancellation);
     }
     cancellation.check_startup()?;
@@ -847,6 +852,23 @@ fn run_catalog_invocation(
             return Ok(doc_pack_refusal_exit(refusal));
         }
     };
+    // Decision 0132: the extension's files are read before any host is
+    // launched; a file that cannot be read launches nothing.
+    let extension = match options
+        .extension
+        .as_deref()
+        .map(crate::coding_extensions::extension_request)
+        .transpose()
+    {
+        Ok(request) => request,
+        Err(refusal) => {
+            eprint!(
+                "{}",
+                crate::coding_extensions::render_extension_refusal(refusal, json)
+            );
+            return Ok(crate::coding_extensions::extension_refusal_exit(refusal));
+        }
+    };
     cancellation.check_startup()?;
     let mut child = LinuxDevelopmentHostProcess::launch_catalog(
         activation.state_root(),
@@ -854,7 +876,14 @@ fn run_catalog_invocation(
         activation.workspace_root(),
     )
     .map_err(CodingDevelopmentClientError::from)?;
-    let result = catalog_with_child(options, output, &mut child, cancellation, doc_pack);
+    let result = catalog_with_child(
+        options,
+        output,
+        &mut child,
+        cancellation,
+        doc_pack,
+        extension,
+    );
     if result.is_err() {
         child
             .terminate_and_reap()
@@ -879,6 +908,7 @@ fn catalog_with_child(
         Option<agentmage_capability_knowledge::DocPackManifest>,
         Vec<DocPackRequest>,
     )>,
+    extension: Option<crate::coding_extensions::ExtensionRequest>,
 ) -> Result<ClientExitCode, CodingDevelopmentClientError> {
     let envelope = child
         .read_launch_envelope_cancellable(&cancellation.requested)
@@ -888,18 +918,24 @@ fn catalog_with_child(
         .connect_development()
         .map_err(|_| CodingDevelopmentClientError::Transport)?;
     let mut runtime = LinuxRuntimeIpcClient::new(session);
-    let shown = match (&options.ended_run, doc_pack, options.memory.as_deref()) {
-        (Some(run_id), None, None) => {
+    let shown = match (
+        &options.ended_run,
+        doc_pack,
+        options.memory.as_deref(),
+        extension,
+    ) {
+        (Some(run_id), None, None, None) => {
             show_ended_run(&mut runtime, run_id, options.action_history_export, output)
         }
-        (None, Some((sent, requests)), None) => run_doc_pack_requests(
+        (None, Some((sent, requests)), None, None) => run_doc_pack_requests(
             &mut runtime,
             sent.as_ref(),
             requests,
             output,
             &cancellation.requested,
         ),
-        (None, None, Some(request)) => run_memory_request(&mut runtime, request, output),
+        (None, None, Some(request), None) => run_memory_request(&mut runtime, request, output),
+        (None, None, None, Some(request)) => run_extension_request(&mut runtime, &request, output),
         _ => Err(CodingDevelopmentClientError::Activation),
     };
     runtime
@@ -1018,6 +1054,35 @@ fn run_memory_request(
         return Ok(memory_refusal_exit(refusal));
     }
     print!("{}", render_memory_answer(&answer, json));
+    Ok(ClientExitCode::Success)
+}
+
+/// Sends one extension request and writes its answer (Decision 0132). An
+/// answer that does not acknowledge exactly the sent request is refused; a
+/// refusal ends the operation with its exit class.
+fn run_extension_request(
+    runtime: &mut impl RuntimeTransportPort,
+    request: &crate::coding_extensions::ExtensionRequest,
+    output: CliOutputFormat,
+) -> Result<ClientExitCode, CodingDevelopmentClientError> {
+    use crate::coding_extensions::{
+        ExtensionAnswer, extension_answer_acknowledges, extension_refusal_exit,
+        render_extension_answer, render_extension_refusal,
+    };
+    let json = output == CliOutputFormat::Json;
+    let answer = runtime
+        .extension(request.clone())
+        .inspect_err(|error| eprintln!("{}", error.code()))
+        .map_err(|_| CodingDevelopmentClientError::Runtime)?;
+    if !extension_answer_acknowledges(request, &answer) {
+        eprintln!("coding.development.client.extension-answer-denied");
+        return Err(CodingDevelopmentClientError::Presentation);
+    }
+    if let ExtensionAnswer::Refused { refusal } = answer {
+        eprint!("{}", render_extension_refusal(refusal, json));
+        return Ok(extension_refusal_exit(refusal));
+    }
+    print!("{}", render_extension_answer(&answer, json));
     Ok(ClientExitCode::Success)
 }
 
@@ -2224,6 +2289,7 @@ mod tests {
         answers: std::collections::VecDeque<Result<DocPackAnswer, RuntimeTransportError>>,
         sent: Vec<DocPackRequest>,
         memory: Option<Result<crate::coding_memory::MemoryAnswer, RuntimeTransportError>>,
+        extension: Option<Result<crate::coding_extensions::ExtensionAnswer, RuntimeTransportError>>,
     }
 
     impl RuntimeTransportPort for ScriptedCatalog {
@@ -2278,6 +2344,14 @@ mod tests {
             _request: crate::coding_memory::MemoryRequest,
         ) -> Result<crate::coding_memory::MemoryAnswer, RuntimeTransportError> {
             self.memory
+                .take()
+                .unwrap_or(Err(RuntimeTransportError::RuntimeFailed))
+        }
+        fn extension(
+            &mut self,
+            _request: crate::coding_extensions::ExtensionRequest,
+        ) -> Result<crate::coding_extensions::ExtensionAnswer, RuntimeTransportError> {
+            self.extension
                 .take()
                 .unwrap_or(Err(RuntimeTransportError::RuntimeFailed))
         }
@@ -2362,6 +2436,7 @@ mod tests {
                 answers: answers.into(),
                 sent: Vec::new(),
                 memory: None,
+                extension: None,
             };
             let result = run_doc_pack_requests(
                 &mut catalog,
@@ -2450,6 +2525,7 @@ mod tests {
             answers: vec![Ok(accepted)].into(),
             sent: Vec::new(),
             memory: None,
+            extension: None,
         };
         assert_eq!(
             run_doc_pack_requests(
@@ -2486,6 +2562,7 @@ mod tests {
                 answers: std::collections::VecDeque::new(),
                 sent: Vec::new(),
                 memory: Some(answer),
+                extension: None,
             };
             run_memory_request(&mut catalog, &request, CliOutputFormat::Json)
         };
@@ -2525,6 +2602,86 @@ mod tests {
         }
         assert_eq!(
             run(Err(RuntimeTransportError::RequestDenied)),
+            Err(CodingDevelopmentClientError::Runtime)
+        );
+    }
+
+    #[test]
+    fn an_extension_answer_is_shown_only_when_it_acknowledges_the_sent_request() {
+        // Decision 0132: the CLI shows an answer only for the request it
+        // sent; a refusal exits with its class and a transport failure is a
+        // runtime failure.
+        use crate::coding_extensions::{
+            ExtensionAnswer, ExtensionRefusal, ExtensionRequest, ExtensionTransitionView,
+            extension_decision_sha256,
+        };
+        let request = ExtensionRequest::Uninstall {
+            workspace_id: "workspace-a".to_owned(),
+            package_id: "sample-formatter".to_owned(),
+        };
+        let receipt = ExtensionTransitionView {
+            catalog_revision: 2,
+            state_sha256: "a".repeat(64),
+            decision_sha256: extension_decision_sha256(&request).unwrap(),
+        };
+        let uninstalled =
+            |workspace_id: &str, package_id: &str, receipt| ExtensionAnswer::Uninstalled {
+                workspace_id: workspace_id.to_owned(),
+                package_id: package_id.to_owned(),
+                receipt,
+            };
+        let run = |answer: Result<ExtensionAnswer, RuntimeTransportError>| {
+            let mut catalog = ScriptedCatalog {
+                answers: std::collections::VecDeque::new(),
+                sent: Vec::new(),
+                memory: None,
+                extension: Some(answer),
+            };
+            run_extension_request(&mut catalog, &request, CliOutputFormat::Json)
+        };
+        assert_eq!(
+            run(Ok(uninstalled(
+                "workspace-a",
+                "sample-formatter",
+                receipt.clone()
+            ))),
+            Ok(ClientExitCode::Success)
+        );
+        assert_eq!(
+            run(Ok(ExtensionAnswer::Refused {
+                refusal: ExtensionRefusal::DependencyInUse
+            })),
+            Ok(ClientExitCode::PolicyDenied)
+        );
+        assert_eq!(
+            run(Ok(ExtensionAnswer::Refused {
+                refusal: ExtensionRefusal::RevocationsStale
+            })),
+            Ok(ClientExitCode::AuthorityDenied)
+        );
+        for answer in [
+            uninstalled("workspace-b", "sample-formatter", receipt.clone()),
+            uninstalled("workspace-a", "sample-linter", receipt.clone()),
+            uninstalled(
+                "workspace-a",
+                "sample-formatter",
+                ExtensionTransitionView {
+                    decision_sha256: "b".repeat(64),
+                    ..receipt
+                },
+            ),
+            ExtensionAnswer::Listed {
+                scopes: Vec::new(),
+                catalog_revision: 2,
+            },
+        ] {
+            assert_eq!(
+                run(Ok(answer)),
+                Err(CodingDevelopmentClientError::Presentation)
+            );
+        }
+        assert_eq!(
+            run(Err(RuntimeTransportError::RuntimeFailed)),
             Err(CodingDevelopmentClientError::Runtime)
         );
     }

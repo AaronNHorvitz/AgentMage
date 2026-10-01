@@ -432,6 +432,15 @@ fn only_changes_the_catalogs_own_operations_make_are_committed() {
         let stored = catalog.load().unwrap();
         assert_eq!((stored.revision, stored.contents), (2, second()), "{name}");
     }
+    // A head dated backwards with nothing else changed is refused by the
+    // commit itself, not only by the store's trigger (Decision 0132).
+    let mut earlier = second();
+    earlier.last_changed_on = Some("2026-01-31".to_owned());
+    assert_eq!(
+        catalog.commit(2, &earlier),
+        Err(DocPackStoreError::InvalidChange)
+    );
+    assert_eq!(catalog.load().unwrap().revision, 2);
     // The deletion history is append-only.
     catalog.commit(2, &base).unwrap();
     let mut fourth = base.clone();

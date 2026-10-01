@@ -12,7 +12,11 @@
 //! files and advances the head. It refuses every other change: a changed
 //! version or file, a removal without its deletion record, a deletion record
 //! for a version that stays, an edited deletion history or a day that goes
-//! backwards. Store triggers enforce the same transitions.
+//! backwards. Store triggers forbid the transitions Decision 0130 lists; a
+//! row the triggers admit but the commit never writes, such as a file added
+//! to a kept version, a deletion record for a version that stays or a version
+//! inserted already superseded, fails the head digest at the next open
+//! (Decision 0132).
 //!
 //! Every store open checks the catalog's metadata against its head digest;
 //! every load also checks each file's bytes against its digest. A mismatch

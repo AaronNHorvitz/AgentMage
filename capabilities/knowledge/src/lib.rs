@@ -121,7 +121,7 @@ pub use doc_packs::{
     DocPackFile, DocPackFreshness, DocPackImportIntent, DocPackIndex, DocPackKeptState,
     DocPackManifest, DocPackMediaType, DocPackPolicy, DocPackReceipt, DocPackSearchHit,
     DocPackSearchQuery, DocPackSearchResult, DocPackStatus, DocPackVersion, DocPackVersionState,
-    DocPackVersionStatus, parse_doc_pack_manifest, seal_doc_pack_manifest,
+    DocPackVersionStatus, doc_pack_text_allowed, parse_doc_pack_manifest, seal_doc_pack_manifest,
 };
 pub use document_control_skills::{DocumentControlSkill, built_in_document_control_skill_pack};
 pub use domain::{

@@ -686,6 +686,12 @@ impl DocPackCatalog {
         self.total_bytes
     }
 
+    /// Number of kept versions across every pack.
+    #[must_use]
+    pub fn kept_version_count(&self) -> usize {
+        self.packs.values().map(BTreeMap::len).sum()
+    }
+
     /// The identities of every pack with a kept version.
     #[must_use]
     pub fn pack_ids(&self) -> Vec<String> {
@@ -931,6 +937,15 @@ impl DocPackCatalog {
     }
 }
 
+/// Whether `text` is documentation text: no control character other than a
+/// line feed, carriage return or tab (Decision 0132).
+#[must_use]
+pub fn doc_pack_text_allowed(text: &str) -> bool {
+    !text
+        .chars()
+        .any(|character| character.is_control() && !matches!(character, '\n' | '\r' | '\t'))
+}
+
 /// Checks that the file bytes are exactly the manifest's files and are text
 /// without control characters.
 fn check_contents(
@@ -948,10 +963,7 @@ fn check_contents(
             return Err(DocPackError::ContentMismatch);
         }
         let text = std::str::from_utf8(bytes).map_err(|_| DocPackError::ContentInvalid)?;
-        if text
-            .chars()
-            .any(|character| character.is_control() && !matches!(character, '\n' | '\r' | '\t'))
-        {
+        if !doc_pack_text_allowed(text) {
             return Err(DocPackError::ContentInvalid);
         }
     }
@@ -1619,6 +1631,7 @@ mod tests {
             catalog.total_bytes(),
             first.total_bytes + second.total_bytes
         );
+        assert_eq!(catalog.kept_version_count(), 2);
         assert_eq!(
             catalog.inspect(&policy(), "absent-pack", "2026-02-01"),
             Err(DocPackError::NotFound)
@@ -1784,6 +1797,7 @@ mod tests {
             .unwrap();
         assert_eq!(deleted[0].reason, DocPackDeletionReason::Person);
         assert_eq!(catalog.total_bytes(), 0);
+        assert_eq!(catalog.kept_version_count(), 0);
         assert_eq!(
             catalog.index("build-tool-guide"),
             Err(DocPackError::NotFound)
@@ -2259,6 +2273,28 @@ mod tests {
         reversed.versions[1].superseded_on = Some("2026-02-01".to_owned());
         assert_eq!(
             DocPackCatalog::restore(reversed),
+            Err(DocPackError::StateInvalid)
+        );
+        // A version obtained after the last change is refused on its own: one
+        // current version, no deletion and no supersession day (Decision 0132).
+        let mut single = DocPackCatalog::new();
+        let (first, first_contents) = guide(V1, "2026-01-01");
+        single
+            .import(
+                &policy(),
+                &first,
+                &first_contents,
+                DocPackImportIntent::New,
+                "2026-01-01",
+            )
+            .unwrap();
+        let kept = single.state().unwrap();
+        assert!(DocPackCatalog::restore(kept.clone()).is_ok());
+        let mut early = kept;
+        assert!(early.deletions.is_empty() && early.versions[0].superseded_on.is_none());
+        early.last_changed_on = Some("2025-12-31".to_owned());
+        assert_eq!(
+            DocPackCatalog::restore(early),
             Err(DocPackError::StateInvalid)
         );
     }

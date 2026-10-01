@@ -26,17 +26,20 @@ pub const MAX_OWNER_STATE_BYTES: usize = 64 * 1024 * 1024;
 pub enum OwnerStateName {
     /// The catalog host's memory catalog.
     MemoryCatalog,
+    /// The catalog host's extension catalog (Decision 0132).
+    ExtensionCatalog,
 }
 
 impl OwnerStateName {
     /// Every owner, in stable order.
-    pub const ALL: [Self; 1] = [Self::MemoryCatalog];
+    pub const ALL: [Self; 2] = [Self::MemoryCatalog, Self::ExtensionCatalog];
 
     /// The stored owner identity.
     #[must_use]
     pub const fn as_str(self) -> &'static str {
         match self {
             Self::MemoryCatalog => "memory-catalog",
+            Self::ExtensionCatalog => "extension-catalog",
         }
     }
 

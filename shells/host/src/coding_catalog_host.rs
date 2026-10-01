@@ -5,7 +5,8 @@
 //! IPC session of its parent like the development host, but it builds no
 //! repository composition, model, tool or runtime. It answers only catalog
 //! operations: documentation packs, the read of an ended run's stored action
-//! histories and memory (Decision 0131). Every run operation is refused. It
+//! histories, memory (Decision 0131) and extensions (Decision 0132). Every
+//! run operation is refused. It
 //! opens the operational store for each operation and closes it afterwards,
 //! so nothing it holds outlives an answer except a staged documentation pack
 //! import.
@@ -22,6 +23,9 @@ use agentmage_kernel_engine::run_action_history_store::{
 use crate::coding_action_history::{EndedRunActionHistories, read_ended_run_action_histories};
 use crate::coding_doc_packs::{
     DocPackAnswer, DocPackOwner, DocPackRefusal, DocPackRequest, iso_date_of_epoch_ms,
+};
+use crate::coding_extensions::{
+    ExtensionAnswer, ExtensionRefusal, ExtensionRequest, answer_extension,
 };
 use crate::coding_memory::{
     MemoryAnswer, MemoryRefusal, MemoryRequest, MemoryStores, answer_memory,
@@ -195,6 +199,29 @@ impl<S: CatalogStore> RuntimeTransportPort for CodingCatalogService<S> {
             },
             now,
             memory_id,
+        );
+        drop(held);
+        Ok(answer)
+    }
+
+    fn extension(
+        &mut self,
+        request: ExtensionRequest,
+    ) -> Result<ExtensionAnswer, RuntimeTransportError> {
+        let now = self.store.now_epoch_ms();
+        let store = &mut self.store;
+        let mut held = None;
+        let answer = answer_extension(
+            &request,
+            &mut || {
+                let handles = store
+                    .open()
+                    .map_err(|_| ExtensionRefusal::StoreUnavailable)?;
+                let states = handles.owner_states.clone();
+                held = Some(handles);
+                Ok(states)
+            },
+            now,
         );
         drop(held);
         Ok(answer)

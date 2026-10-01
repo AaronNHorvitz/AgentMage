@@ -1,0 +1,5 @@
+{
+  "role": "revocation-issuer",
+  "key_id": "agentmage-sample-foreign-issuer",
+  "public_key": "b2a942ff4c98718bed76e255987f6d59b1a72d3b2cd2510003e6170ac63a9ffb"
+}

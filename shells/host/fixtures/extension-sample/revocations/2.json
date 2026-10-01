@@ -1,0 +1,22 @@
+{
+  "list": {
+    "schema_version": 1,
+    "list_id": "agentmage-sample-revocations",
+    "sequence": 2,
+    "issuer_id": "agentmage-sample-issuer",
+    "issuer_public_key_sha256": "9a19fc9f345c9fde2858f0d175570612fed076877902cfe67d20e0f0a15b9d9f",
+    "issued_at_epoch_ms": 1790812800002,
+    "entries": [
+      {
+        "kind": "package",
+        "package_id": "sample-formatter"
+      },
+      {
+        "kind": "manifest",
+        "manifest_sha256": "9c118f8762dca857d48626d915601b57af47e41278327293b2fb3707752a9b76"
+      }
+    ],
+    "list_sha256": "edd58878a788b0404292e48f8527c215529a24db3d682ed7fe948af83c7a84b0"
+  },
+  "signature": "604090453666ba2b4757115c411b2f674c4b57085b8a7e1b11eeec685fe6008613571dafd011f0594907e741b6aee12ab9d82d93833660d0c944c7f61d0f2900"
+}

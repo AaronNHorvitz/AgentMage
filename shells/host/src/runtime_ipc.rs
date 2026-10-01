@@ -5,8 +5,8 @@
 //! scope it derives from the authenticated peer (Decision 0120). Suspension and
 //! resumption are job control requests too; a step names where a suspended run
 //! stopped (Decision 0122). The catalog host answers documentation pack
-//! requests (Decision 0130) and memory requests (Decision 0131) over the same
-//! channel.
+//! requests (Decision 0130), memory requests (Decision 0131) and extension
+//! requests (Decision 0132) over the same channel.
 
 use agentmage_kernel_contracts::{
     CancellationId, RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEventCursor, RuntimeRunId,
@@ -20,13 +20,14 @@ use sha2::{Digest, Sha256};
 
 use crate::coding_action_history::EndedRunActionHistories;
 use crate::coding_doc_packs::{DocPackAnswer, DocPackRequest};
+use crate::coding_extensions::{ExtensionAnswer, ExtensionRequest};
 use crate::coding_memory::{MemoryAnswer, MemoryRequest};
 use crate::runtime_transport::{
     RuntimeClientScope, RuntimeJobControl, RuntimeJobStatus, RuntimePrepareInput,
     RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
 };
 
-const WIRE_VERSION: u16 = 13;
+const WIRE_VERSION: u16 = 14;
 /// The wire version this build speaks, as named in a support bundle.
 pub const RUNTIME_IPC_WIRE_VERSION: u16 = WIRE_VERSION;
 const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
@@ -86,6 +87,9 @@ enum RuntimeIpcRequest {
     Memory {
         request: MemoryRequest,
     },
+    Extension {
+        request: ExtensionRequest,
+    },
     RevokeSessionPreauthorization {
         session_id: SessionId,
         preauthorization_sha256: String,
@@ -126,6 +130,9 @@ enum RuntimeIpcResponse {
     },
     Memory {
         answer: MemoryAnswer,
+    },
+    Extension {
+        answer: ExtensionAnswer,
     },
     JobStatus {
         status: RuntimeJobStatus,
@@ -466,6 +473,16 @@ impl RuntimeTransportPort for LinuxRuntimeIpcClient {
         }
     }
 
+    fn extension(
+        &mut self,
+        request: ExtensionRequest,
+    ) -> Result<ExtensionAnswer, RuntimeTransportError> {
+        match self.exchange(RuntimeIpcRequest::Extension { request })? {
+            RuntimeIpcResponse::Extension { answer } => Ok(answer),
+            _ => Err(RuntimeTransportError::RuntimeEvidenceDenied),
+        }
+    }
+
     fn revoke_session_preauthorization(
         &mut self,
         session_id: &SessionId,
@@ -669,6 +686,16 @@ fn answer<P: RuntimeTransportPort>(
             ),
             Err(error) => (RuntimeIpcResponse::Error { error }, false),
         },
+        Some(RuntimeIpcRequest::Extension { request }) => match runtime.extension(request) {
+            Ok(answer) if answer_fits(&answer) => (RuntimeIpcResponse::Extension { answer }, false),
+            Ok(_) => (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::CapacityExceeded,
+                },
+                false,
+            ),
+            Err(error) => (RuntimeIpcResponse::Error { error }, false),
+        },
         Some(RuntimeIpcRequest::RevokeSessionPreauthorization {
             session_id,
             preauthorization_sha256,
@@ -787,7 +814,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 13);
+        assert_eq!(decoded.version, 14);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::RunDeclarations {
             declarations: declarations.clone(),
@@ -859,7 +886,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 13);
+        assert_eq!(decoded.version, 14);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::EndedRunActionHistories {
             histories: histories.clone(),
@@ -907,6 +934,40 @@ mod tests {
     }
 
     #[test]
+    fn the_largest_chunk_of_documentation_text_fits_one_frame() {
+        // Decision 0132: the client sends only documentation text, which JSON
+        // escaping at most doubles, so the largest chunk fits one frame; text
+        // with other control characters would not, and is refused before any
+        // host is launched.
+        use crate::coding_doc_packs::MAX_DOC_PACK_CHUNK_BYTES;
+        let frame = |text: String| {
+            serde_json::to_vec(&RuntimeIpcEnvelope {
+                version: WIRE_VERSION,
+                payload: RuntimeIpcRequest::DocPack {
+                    request: DocPackRequest::ImportChunk {
+                        path: format!("{}/notes.txt", "d".repeat(4_000)),
+                        offset: u64::MAX,
+                        text,
+                    },
+                },
+            })
+            .unwrap()
+            .len()
+        };
+        let escaped = "\"\\\n\r\t".repeat(MAX_DOC_PACK_CHUNK_BYTES / 5);
+        assert!(escaped.len() <= MAX_DOC_PACK_CHUNK_BYTES);
+        assert!(agentmage_capability_knowledge::doc_pack_text_allowed(
+            &escaped
+        ));
+        assert!(frame(escaped) <= MAX_WIRE_BYTES);
+        let control = "\u{1}".repeat(MAX_DOC_PACK_CHUNK_BYTES);
+        assert!(!agentmage_capability_knowledge::doc_pack_text_allowed(
+            &control
+        ));
+        assert!(frame(control) > MAX_WIRE_BYTES);
+    }
+
+    #[test]
     fn a_documentation_pack_request_crosses_the_wire_closed() {
         // Decision 0130: documentation pack requests and answers cross the
         // wire closed; a port that is not a catalog host refuses them, and an
@@ -926,7 +987,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 13);
+        assert_eq!(decoded.version, 14);
         assert_eq!(decoded.payload, request.payload);
         let text = String::from_utf8(bytes).unwrap();
         for nested in [
@@ -1098,7 +1159,7 @@ mod tests {
 
     #[test]
     fn a_memory_request_crosses_the_wire_closed() {
-        // Decision 0131: memory requests and answers cross wire 13 closed; a
+        // Decision 0131: memory requests and answers cross the wire closed; a
         // port that is not a catalog host refuses them, and an oversized
         // listing is refused without ending the service.
         use crate::coding_memory::{
@@ -1117,7 +1178,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 13);
+        assert_eq!(decoded.version, 14);
         assert_eq!(decoded.payload, request.payload);
         let text = String::from_utf8(bytes).unwrap();
         for nested in [
@@ -1260,6 +1321,175 @@ mod tests {
         };
         assert_eq!(
             answer(&mut MemoryPort(oversized), &fixture_client(), list()),
+            (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::CapacityExceeded,
+                },
+                false
+            )
+        );
+    }
+
+    #[test]
+    fn an_extension_request_crosses_the_wire_closed() {
+        // Decision 0132: extension requests and answers cross wire 14 closed;
+        // a port that is not a catalog host refuses them, and an oversized
+        // listing is refused without ending the service.
+        use crate::coding_extensions::{
+            ExtensionKeyRole, ExtensionKeyView, ExtensionRefusal, ExtensionScopeView,
+        };
+        let request = RuntimeIpcEnvelope {
+            version: WIRE_VERSION,
+            payload: RuntimeIpcRequest::Extension {
+                request: ExtensionRequest::Uninstall {
+                    workspace_id: "workspace-a".to_owned(),
+                    package_id: "sample-formatter".to_owned(),
+                },
+            },
+        };
+        let bytes = serde_json::to_vec(&request).unwrap();
+        let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
+            serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(decoded.version, 14);
+        assert_eq!(decoded.payload, request.payload);
+        let text = String::from_utf8(bytes).unwrap();
+        for nested in [
+            text.replacen(
+                "\"package_id\":\"sample-formatter\"",
+                "\"package_id\":\"sample-formatter\",\"x\":1",
+                1,
+            ),
+            text.replacen(",\"package_id\":\"sample-formatter\"", "", 1),
+            text.replacen("\"operation\":\"uninstall\"", "\"operation\":\"enable\"", 1),
+        ] {
+            assert_ne!(nested, text);
+            assert!(
+                serde_json::from_str::<RuntimeIpcEnvelope<RuntimeIpcRequest>>(&nested).is_err()
+            );
+        }
+        let scope = ExtensionScopeView {
+            workspace_id: "workspace-a".to_owned(),
+            keys: vec![ExtensionKeyView {
+                role: ExtensionKeyRole::RevocationIssuer,
+                key_id: "agentmage-sample-issuer".to_owned(),
+                key_sha256: "c".repeat(64),
+            }],
+            extensions: Vec::new(),
+            revocations: None,
+        };
+        let response = RuntimeIpcResponse::Extension {
+            answer: ExtensionAnswer::Listed {
+                scopes: vec![scope.clone()],
+                catalog_revision: 1,
+            },
+        };
+        let bytes = serde_json::to_vec(&response).unwrap();
+        assert_eq!(
+            serde_json::from_slice::<RuntimeIpcResponse>(&bytes).unwrap(),
+            response
+        );
+        let text = String::from_utf8(bytes).unwrap();
+        for nested in [
+            text.replacen(
+                "\"role\":\"revocation-issuer\"",
+                "\"role\":\"revocation-issuer\",\"x\":1",
+                1,
+            ),
+            text.replacen("\"revocations\":null", "\"revocations\":null,\"x\":1", 1),
+            text.replacen(",\"revocations\":null", "", 1),
+            text.replacen("\"role\":\"revocation-issuer\"", "\"role\":\"owner\"", 1),
+            text.replacen("\"answer\":\"listed\"", "\"answer\":\"enabled\"", 1),
+        ] {
+            assert_ne!(nested, text);
+            assert!(serde_json::from_str::<RuntimeIpcResponse>(&nested).is_err());
+        }
+        let list = || {
+            Some(RuntimeIpcRequest::Extension {
+                request: ExtensionRequest::List { workspace_id: None },
+            })
+        };
+        let mut port = DeclaringPort {
+            session_id_bytes: 0,
+            released: 0,
+        };
+        assert_eq!(
+            answer(&mut port, &fixture_client(), list()),
+            (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::RequestDenied,
+                },
+                false
+            )
+        );
+        struct ExtensionPort(ExtensionAnswer);
+        impl RuntimeTransportPort for ExtensionPort {
+            fn prepare(
+                &mut self,
+                _input: RuntimePrepareInput,
+            ) -> Result<RuntimeRunRequest, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn start(
+                &mut self,
+                _request: RuntimeRunRequest,
+            ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn advance(
+                &mut self,
+                _run_id: &RuntimeRunId,
+                _request_sha256: &str,
+                _after_event_cursor: Option<&RuntimeEventCursor>,
+                _response: Option<&RuntimeApprovalResponse>,
+            ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn cancel(
+                &mut self,
+                _run_id: &RuntimeRunId,
+                _request_sha256: &str,
+                _cancellation_id: CancellationId,
+                _after_event_cursor: Option<&RuntimeEventCursor>,
+            ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn release(
+                &mut self,
+                _run_id: &RuntimeRunId,
+                _request_sha256: &str,
+            ) -> Result<(), RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn extension(
+                &mut self,
+                _request: ExtensionRequest,
+            ) -> Result<ExtensionAnswer, RuntimeTransportError> {
+                Ok(self.0.clone())
+            }
+        }
+        let refused = ExtensionAnswer::Refused {
+            refusal: ExtensionRefusal::RevocationsStale,
+        };
+        assert_eq!(
+            answer(
+                &mut ExtensionPort(refused.clone()),
+                &fixture_client(),
+                list()
+            ),
+            (RuntimeIpcResponse::Extension { answer: refused }, false)
+        );
+        let oversized = ExtensionAnswer::Listed {
+            scopes: vec![
+                ExtensionScopeView {
+                    workspace_id: "x".repeat(MAX_WIRE_BYTES),
+                    ..scope
+                };
+                1
+            ],
+            catalog_revision: 1,
+        };
+        assert_eq!(
+            answer(&mut ExtensionPort(oversized), &fixture_client(), list()),
             (
                 RuntimeIpcResponse::Error {
                     error: RuntimeTransportError::CapacityExceeded,
@@ -1482,7 +1712,7 @@ mod tests {
             .unwrap();
             let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
                 serde_json::from_slice(&bytes).unwrap();
-            assert_eq!(decoded.version, 13);
+            assert_eq!(decoded.version, 14);
             assert_eq!(decoded.payload, request);
         }
         let mut scoped = serde_json::to_value(RuntimeIpcRequest::ControlJob {
@@ -1712,7 +1942,7 @@ mod tests {
         .unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcResponse> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 13);
+        assert_eq!(decoded.version, 14);
         assert_eq!(decoded.payload, response);
         let mut extra = serde_json::to_value(&suspended).unwrap();
         extra["suspended"]["resumable"] = serde_json::Value::Bool(true);

@@ -1,0 +1,5 @@
+{
+  "role": "package-signer",
+  "key_id": "agentmage-sample-signer",
+  "public_key": "c050c5637a44fa8629fff3cccce2300cb362a63d99d95fc54145266f4332445a"
+}

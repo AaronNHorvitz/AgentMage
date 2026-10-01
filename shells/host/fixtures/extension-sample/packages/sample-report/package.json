@@ -1,0 +1,58 @@
+{
+  "manifest": {
+    "schema_version": 1,
+    "package_id": "sample-report",
+    "package_name": "Sample report",
+    "version": "1.0.0",
+    "source_id": "sample-report-source",
+    "source_sha256": "2ad7395a1155933cacba2134f8a396cfd1fd7a5e34e0e82396f1700fba51f7a8",
+    "signer_id": "agentmage-sample-signer",
+    "signer_public_key_sha256": "4b735ac174e40636507716ed5c9a8a75fbf6f462357fabb71ac42b7bd502c64a",
+    "license": "LicenseRef-agentmage-sample",
+    "compatibility": {
+      "kernel_version": "1.0.0",
+      "tool_protocol_version": "1.0.0",
+      "configuration_version": "1.0.0",
+      "memory_version": "1.0.0",
+      "storage_version": "1.0.0",
+      "shell_version": "1.0.0",
+      "policy_version": "1.0.0"
+    },
+    "tools": [
+      "sample-report"
+    ],
+    "skills": [],
+    "hooks": [],
+    "requested_scope": {
+      "filesystem_roots": [],
+      "commands": [],
+      "network_domains": [],
+      "credential_ids": [],
+      "connector_ids": [],
+      "publication_targets": [],
+      "max_memory_bytes": 67108864,
+      "max_cpu_milliseconds": 1000,
+      "retention_seconds": 0
+    },
+    "dependencies": [
+      {
+        "package_id": "sample-formatter",
+        "exact_version": "1.0.0",
+        "manifest_sha256": "92a28b7ee6ed341d2f9f7f11cea22656538d9888ceb5d86e49774c6760ecf20e"
+      }
+    ],
+    "entry_points": [
+      {
+        "entry_id": "main",
+        "relative_path": "bin/main",
+        "content_sha256": "2ad7395a1155933cacba2134f8a396cfd1fd7a5e34e0e82396f1700fba51f7a8"
+      }
+    ],
+    "side_effects": [
+      "workspace_read",
+      "workspace_write"
+    ],
+    "manifest_sha256": "922c447c19840cc24d07b1991ed81051b2a88e405ae4aae6352d35bd34c6ee66"
+  },
+  "signature": "fb9e26c888ef122ab658b7f20753fbf7c77ab5cd0ec340f874a2a5490cefd4b24a32f3828e56dc912b8484fac7b1cf12c5760364fc4db4389e4630395c345d09"
+}

@@ -514,6 +514,81 @@ class CodingHarnessTests(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 coding_harness.parser().parse_args(["memory", "--root", "/expected", *invalid])
 
+    def test_extension_operations_reach_the_catalog_host_in_their_closed_forms(self):
+        def extension(*arguments):
+            parsed = coding_harness.parser().parse_args(["extension", "--root", "/expected", *arguments])
+            return coding_harness.extension_arguments(parsed)
+
+        scope = ["--extension-workspace", "workspace-a"]
+        digest = "a" * 64
+        self.assertEqual(
+            extension("--trust", "/s/signer-trust.json", "--workspace", "workspace-a"),
+            ["--extension-trust", "/s/signer-trust.json"] + scope,
+        )
+        self.assertEqual(
+            extension("--distrust", digest, "--workspace", "workspace-a"),
+            ["--extension-distrust", digest] + scope,
+        )
+        self.assertEqual(
+            extension(
+                "--install", "/s/packages/sample-formatter", "--allow-license",
+                "LicenseRef-agentmage-sample", "--workspace", "workspace-a",
+            ),
+            [
+                "--extension-install", "/s/packages/sample-formatter",
+                "--extension-allow-license", "LicenseRef-agentmage-sample",
+            ] + scope,
+        )
+        self.assertEqual(
+            extension("--uninstall", "sample-formatter", "--workspace", "workspace-a"),
+            ["--extension-uninstall", "sample-formatter"] + scope,
+        )
+        self.assertEqual(
+            extension("--revocations", "/s/revocations/1.json", "--workspace", "workspace-a"),
+            ["--extension-revocations", "/s/revocations/1.json"] + scope,
+        )
+        self.assertEqual(extension("--list"), ["--extension-list"])
+        self.assertEqual(extension("--list", "--workspace", "workspace-a"), ["--extension-list"] + scope)
+        for invalid in (
+            ("--trust", "/s/signer-trust.json"),
+            ("--trust", "relative.json", "--workspace", "w"),
+            ("--revocations", "relative.json", "--workspace", "w"),
+            ("--install", "/s/p", "--workspace", "w"),
+            ("--install", "relative", "--allow-license", "MIT", "--workspace", "w"),
+            ("--install", "/s/p", "--allow-license", "MIT License", "--workspace", "w"),
+            ("--uninstall", "sample-formatter", "--allow-license", "MIT", "--workspace", "w"),
+            ("--uninstall", "sample formatter", "--workspace", "w"),
+            ("--distrust", "A" * 64, "--workspace", "w"),
+            ("--list", "--workspace", "Workspace A"),
+            ("--list", "--allow-license", "MIT"),
+        ):
+            with self.assertRaises(coding_harness.HarnessError, msg=invalid):
+                extension(*invalid)
+        with self.assertRaises(SystemExit):
+            coding_harness.parser().parse_args(["extension", "--root", "/expected", "--list", "--uninstall", "x"])
+
+    def test_the_extension_sample_is_copied_privately_and_only_once(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary) / "sample"
+            files = coding_harness.write_extension_sample(directory)
+            self.assertIn("revocations/1.json", files)
+            self.assertIn("packages/sample-report/package.json", files)
+            self.assertEqual(stat.S_IMODE(directory.stat().st_mode), 0o700)
+            for relative in files:
+                copied = directory / relative
+                self.assertEqual(stat.S_IMODE(copied.stat().st_mode), 0o600)
+                self.assertEqual(
+                    copied.read_bytes(), (coding_harness.EXTENSION_SAMPLE / relative).read_bytes()
+                )
+            self.assertEqual(stat.S_IMODE((directory / "packages").stat().st_mode), 0o700)
+            for target in (directory, Path("relative/sample")):
+                with self.assertRaises(coding_harness.HarnessError):
+                    coding_harness.write_extension_sample(target)
+            link = Path(temporary) / "link"
+            link.symlink_to(Path(temporary) / "elsewhere")
+            with self.assertRaises(coding_harness.HarnessError):
+                coding_harness.write_extension_sample(link)
+
     def test_the_sample_pack_is_sealed_as_the_knowledge_component_seals_it(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary) / "sample"

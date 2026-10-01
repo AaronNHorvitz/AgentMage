@@ -340,8 +340,59 @@ optional `--memory-workspace`), `--memory-revoke-source SOURCE` (with
   content-free code on standard error and exits with its class (2, 4, 5 or 7 as for
   documentation packs).
 
-No coding run reads memory yet. Signed extension revocation lists remain
-AMR-05.9.4.2.
+No coding run reads memory yet.
+
+### Extensions and revocation lists through the catalog host
+
+The catalog host also keeps one extension catalog in the same encrypted store
+(Decision 0132). Extensions live in workspace scopes. Each scope holds the keys you
+trust in it, the extensions you installed in it and the revocation list it accepted
+last, and nothing crosses scopes. The harness copies a synthetic sample: trust
+statements, three signed packages and five signed lists. The sample's keys come from
+fixed, published seeds, so trust them only inside a disposable demonstration root:
+
+```sh
+python3 -m scripts.coding_harness extension-sample --directory "$demo-extensions"
+ext() { python3 -m scripts.coding_harness extension --root "$demo" "$@"; }
+ext --trust "$demo-extensions/signer-trust.json" --workspace calculator
+ext --trust "$demo-extensions/issuer-trust.json" --workspace calculator
+for package in sample-formatter sample-linter sample-report; do
+  ext --install "$demo-extensions/packages/$package" \
+    --allow-license LicenseRef-agentmage-sample --workspace calculator
+done
+ext --revocations "$demo-extensions/revocations/1.json" --workspace calculator
+ext --list --workspace calculator
+ext --revocations "$demo-extensions/revocations/2.json" --workspace calculator
+ext --revocations "$demo-extensions/revocations/1.json" --workspace calculator
+```
+
+The wrapper passes each operation to the CLI's `--extension-trust FILE`,
+`--extension-distrust KEY_SHA256`, `--extension-install DIRECTORY` with
+`--extension-allow-license LICENSE`, `--extension-uninstall PACKAGE_ID`,
+`--extension-revocations FILE` or `--extension-list`. Each takes
+`--extension-workspace LABEL`, which is optional only for the list.
+
+- The first list revokes `sample-formatter`. `sample-report` depends on it and goes
+  inactive too, and `sample-linter` stays active. The second list also revokes the
+  linter's exact manifest. Applying the first list again is then refused with
+  `extension.revocations-stale` (exit 3), as is `2-fork.json`. `foreign.json` is
+  refused with `extension.revocations-untrusted`, and `unsigned.json` with
+  `extension.revocations-invalid`. The same list twice changes nothing.
+- Each scope is separate. A second scope that trusts `foreign-issuer-trust.json`
+  accepts `foreign.json`, which then revokes the linter only there.
+- An installation checks the manifest seal, the source file's digest, the license you
+  allow, a trusted signer key of the scope, each dependency at its exact version, the
+  host's contract versions and the signature. It also checks the scope's accepted
+  list. A revoked package is refused with `extension.revoked` (exit 4). Distrusting the
+  signer of an installed extension, or the issuer of the accepted list, is refused with
+  `extension.key-in-use`.
+- Files are read from absolute paths only, without following links, as bounded
+  regular files. A file that cannot be read is refused with `extension.file-invalid`
+  (exit 2) before any host starts.
+
+An installed extension provides nothing to a coding run, and nothing it declares is
+granted or run. The host keeps no package source. It trusts the source digest your
+own authenticated CLI observed.
 
 To run the whole declared scripted matrix in one step instead (edits, denial,
 cancellation, pause and resume, stale approvals, rollback and the other cases, each in

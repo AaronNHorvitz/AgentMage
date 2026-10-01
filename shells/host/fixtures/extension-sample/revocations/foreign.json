@@ -1,0 +1,18 @@
+{
+  "list": {
+    "schema_version": 1,
+    "list_id": "agentmage-sample-foreign-revocations",
+    "sequence": 1,
+    "issuer_id": "agentmage-sample-foreign-issuer",
+    "issuer_public_key_sha256": "805afc760d1b35019da554257cf3fed2bb92c944ada3d5017039569e27f311b2",
+    "issued_at_epoch_ms": 1790812800001,
+    "entries": [
+      {
+        "kind": "package",
+        "package_id": "sample-linter"
+      }
+    ],
+    "list_sha256": "0ab80f64c6dddb9ca552a5c186941905fe1a6878bf5aac8c62642e7e27938502"
+  },
+  "signature": "842d819d2120742e53ff144d44fa6993ab83f74b7154ddd01a38525ee881497e8b348b98138c1d4af4b3d167009fec3e2c990852b5a4d3a7a2d9e2b76e1a0102"
+}

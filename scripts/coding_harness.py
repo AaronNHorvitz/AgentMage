@@ -1037,6 +1037,73 @@ def memory_arguments(arguments: argparse.Namespace) -> list[str]:
     return ["--memory-revoke" if arguments.revoke is not None else "--memory-delete", memory_id]
 
 
+EXTENSION_IDENTIFIER = re.compile(r"[A-Za-z0-9._:-]{1,128}")
+EXTENSION_SHA256 = re.compile(r"[0-9a-f]{64}")
+EXTENSION_SAMPLE = ROOT / "shells" / "host" / "fixtures" / "extension-sample"
+
+
+def extension_arguments(arguments: argparse.Namespace) -> list[str]:
+    """The CLI arguments of one extension operation (Decision 0132), in the
+    closed forms the CLI accepts. Files and directories are absolute."""
+    workspace = arguments.workspace
+    if workspace is not None and MEMORY_LABEL.fullmatch(workspace) is None:
+        raise HarnessError("coding.harness.extension-workspace-denied")
+    if (arguments.allow_license is not None) != (arguments.install is not None):
+        raise HarnessError("coding.harness.extension-arguments-denied")
+    if arguments.list:
+        return ["--extension-list"] + (["--extension-workspace", workspace] if workspace else [])
+    if workspace is None:
+        raise HarnessError("coding.harness.extension-arguments-denied")
+    scope = ["--extension-workspace", workspace]
+    for option, value in (
+        ("--extension-trust", arguments.trust),
+        ("--extension-revocations", arguments.revocations),
+    ):
+        if value is not None:
+            if not value.is_absolute():
+                raise HarnessError("coding.harness.extension-path-denied")
+            return [option, str(value)] + scope
+    if arguments.install is not None:
+        if (
+            not arguments.install.is_absolute()
+            or EXTENSION_IDENTIFIER.fullmatch(arguments.allow_license) is None
+        ):
+            raise HarnessError("coding.harness.extension-install-denied")
+        return [
+            "--extension-install", str(arguments.install),
+            "--extension-allow-license", arguments.allow_license,
+        ] + scope
+    if arguments.distrust is not None:
+        if EXTENSION_SHA256.fullmatch(arguments.distrust) is None:
+            raise HarnessError("coding.harness.extension-key-denied")
+        return ["--extension-distrust", arguments.distrust] + scope
+    if EXTENSION_IDENTIFIER.fullmatch(arguments.uninstall or "") is None:
+        raise HarnessError("coding.harness.extension-package-denied")
+    return ["--extension-uninstall", arguments.uninstall] + scope
+
+
+def write_extension_sample(directory: Path) -> list[str]:
+    """Copies the committed synthetic extension sample into a new private
+    directory (Decision 0132). Its keys come from fixed, published seeds:
+    trust them only inside a disposable demonstration root."""
+    if not directory.is_absolute() or directory.exists() or directory.is_symlink():
+        raise HarnessError("coding.harness.extension-sample-target-denied")
+    files = sorted(
+        path.relative_to(EXTENSION_SAMPLE)
+        for path in EXTENSION_SAMPLE.rglob("*")
+        if path.is_file() and not path.is_symlink()
+    )
+    if not files:
+        raise HarnessError("coding.harness.extension-sample-missing")
+    directory.mkdir(mode=0o700)
+    for relative in files:
+        target = directory / relative
+        for parent in reversed(target.relative_to(directory).parents[:-1]):
+            (directory / parent).mkdir(mode=0o700, exist_ok=True)
+        private_file(target, (EXTENSION_SAMPLE / relative).read_text(encoding="utf-8"))
+    return [str(relative) for relative in files]
+
+
 def catalog(base: Path, arguments: list[str]) -> int:
     """Runs one catalog operation through the actual CLI and catalog host
     (Decision 0130). The same run record reservation as `start` keeps a
@@ -1249,6 +1316,19 @@ def parser() -> argparse.ArgumentParser:
     memory_command.add_argument("--cite")
     memory_command.add_argument("--type", choices=MEMORY_TYPES)
     memory_command.add_argument("--object")
+    extension_command = commands.add_parser("extension")
+    extension_command.add_argument("--root", type=Path, required=True)
+    extension_operation = extension_command.add_mutually_exclusive_group(required=True)
+    extension_operation.add_argument("--trust", type=Path)
+    extension_operation.add_argument("--distrust")
+    extension_operation.add_argument("--install", type=Path)
+    extension_operation.add_argument("--uninstall")
+    extension_operation.add_argument("--revocations", type=Path)
+    extension_operation.add_argument("--list", action="store_true")
+    extension_command.add_argument("--workspace")
+    extension_command.add_argument("--allow-license")
+    extension_sample_command = commands.add_parser("extension-sample")
+    extension_sample_command.add_argument("--directory", type=Path, required=True)
     sample_command = commands.add_parser("doc-pack-sample")
     sample_command.add_argument("--directory", type=Path, required=True)
     sample_command.add_argument("--version", default="1.0.0")
@@ -1314,6 +1394,14 @@ def main() -> int:
             return catalog(arguments.root, doc_pack_arguments(arguments))
         if arguments.command == "memory":
             return catalog(arguments.root, memory_arguments(arguments))
+        if arguments.command == "extension":
+            return catalog(arguments.root, extension_arguments(arguments))
+        if arguments.command == "extension-sample":
+            print(json.dumps({
+                "directory": str(arguments.directory),
+                "files": write_extension_sample(arguments.directory),
+            }, sort_keys=True))
+            return 0
         if arguments.command == "doc-pack-sample":
             manifest = write_sample_pack(
                 arguments.directory, arguments.version, arguments.retrieved_on
