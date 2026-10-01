@@ -291,6 +291,7 @@ fn preparation_samples_one_observed_time_without_advancing_it_for_dependent_byte
         RuntimeResourceLedger::new(&request).unwrap(),
         7,
         true,
+        None,
     );
     let references = builder
         .prepare_artifacts(
@@ -384,6 +385,7 @@ fn preparation_checks_each_remaining_budget_before_exposing_references() {
             resources,
             0,
             true,
+            None,
         );
         assert_eq!(
             builder.prepare_artifacts(
@@ -440,6 +442,7 @@ fn prepared_candidates_cannot_spend_the_final_output_allowance() {
         resources,
         0,
         true,
+        None,
     );
     builder
         .prepare_artifacts(
@@ -483,6 +486,7 @@ fn preparation_bounds_total_candidates_across_appends_and_poisoned_sealing() {
         resources,
         0,
         true,
+        None,
     );
     execution.artifact_candidates = vec![candidate(b"x"); 64];
     for chunk in execution.artifact_candidates.chunks(16) {
@@ -531,6 +535,7 @@ fn preparation_refuses_reversed_time_and_clock_failure_without_fallback() {
             RuntimeResourceLedger::new(&request).unwrap(),
             0,
             true,
+            None,
         );
         assert!(
             builder

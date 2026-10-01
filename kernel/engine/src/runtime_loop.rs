@@ -725,6 +725,166 @@ pub trait RuntimeCorrectnessTransactionPort {
     ) -> Result<(RuntimeCheckpointPublication, RuntimeEvent), RuntimePortFailure>;
 }
 
+/// Prefix of the one task constraint that names a run's research admission in
+/// its sealed request (Decision 0137), followed by the admission's digest.
+pub const RESEARCH_ADMISSION_CONSTRAINT_PREFIX: &str = "Research admission digest: ";
+const RESEARCH_ADMISSION_DOMAIN: &str = "agentmage-research-admission";
+const RESEARCH_ADMISSION_VERSION: u16 = 1;
+/// Artifacts a successful public GET completion prepares (Decision 0097): four
+/// source objects, the tool result and the bundle.
+const PUBLIC_GET_COMPLETION_ARTIFACTS: usize = 6;
+
+/// One run's explicit research admission (Decision 0137): the exact plan, the
+/// budget context and the one public GET tool the run may use.
+///
+/// It holds no grant and performs no I/O. The coordinator admits the tool's
+/// network results only for a run whose sealed request names this admission;
+/// reservation, grant consumption and dispatch stay with the existing owners
+/// behind the trusted correctness port.
+#[derive(Clone)]
+pub struct RuntimeResearchAdmission {
+    plan_bytes: Vec<u8>,
+    plan: crate::research_plan::PreparedResearchPlan,
+    context: crate::research_journal::ResearchBudgetContext,
+    tool: RuntimeToolReference,
+    digest: String,
+}
+
+impl std::fmt::Debug for RuntimeResearchAdmission {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("RuntimeResearchAdmission")
+            .field("digest", &self.digest)
+            .field("tool_id", &self.tool.tool_id)
+            .finish_non_exhaustive()
+    }
+}
+
+impl RuntimeResearchAdmission {
+    /// Admits one exactly encoded schema 2 plan that discloses through the
+    /// network, for the given budget context and public GET tool. The tool
+    /// must declare exactly one network effect under a single-use network
+    /// grant. This is not an approval or a grant.
+    pub fn new(
+        plan_bytes: &[u8],
+        context: crate::research_journal::ResearchBudgetContext,
+        tool: &ToolDefinition,
+    ) -> Result<Self, RuntimeLoopError> {
+        let invalid = RuntimeLoopError::UnsupportedMode;
+        let plan =
+            crate::research_plan::PreparedResearchPlan::decode(plan_bytes).map_err(|_| invalid)?;
+        let network =
+            agentmage_kernel_contracts::OperationBinding::new(GrantOperation::NetworkAccess);
+        if plan.draft().task_id != context.task_id.as_str()
+            || plan.draft().search_endpoint.is_none()
+            || plan.scope().network_requirement().is_err()
+            || !valid_identifier(context.session_id.as_str())
+            || !valid_identifier(context.run_id.as_str())
+            || !valid_sha256(&context.policy_sha256)
+            || tool.declared_effects != [network]
+            || tool.required_grant.operation != network
+            || !tool.required_grant.single_use
+        {
+            return Err(invalid);
+        }
+        let tool = RuntimeToolReference {
+            tool_id: tool.tool_id.clone(),
+            tool_version: tool.tool_version.clone(),
+            definition_sha256: contract_sha256(tool)?,
+        };
+        // The plan digest covers the task, the scope and the network mode; the
+        // definition digest covers the tool's identity and version.
+        let preimage = serde_json::to_vec(&(
+            RESEARCH_ADMISSION_DOMAIN,
+            RESEARCH_ADMISSION_VERSION,
+            plan.plan_sha256(),
+            context.session_id.as_str(),
+            context.run_id.as_str(),
+            context.policy_sha256.as_str(),
+            tool.definition_sha256.as_str(),
+        ))
+        .map_err(|_| invalid)?;
+        Ok(Self {
+            plan_bytes: plan_bytes.to_vec(),
+            plan,
+            context,
+            tool,
+            digest: sha256(&preimage),
+        })
+    }
+
+    /// Digest the sealed request names; it binds the plan, the session, run
+    /// and policy, and the tool's definition.
+    #[must_use]
+    pub fn digest(&self) -> &str {
+        &self.digest
+    }
+
+    /// The one task constraint that names this admission.
+    #[must_use]
+    pub fn constraint(&self) -> String {
+        format!("{RESEARCH_ADMISSION_CONSTRAINT_PREFIX}{}", self.digest)
+    }
+
+    /// Budget context the owner opens and reserves under.
+    #[must_use]
+    pub const fn context(&self) -> &crate::research_journal::ResearchBudgetContext {
+        &self.context
+    }
+
+    /// Exact reference of the one admitted public GET tool.
+    #[must_use]
+    pub const fn tool(&self) -> &RuntimeToolReference {
+        &self.tool
+    }
+
+    /// The admitted plan's restrictions, not a grant.
+    #[must_use]
+    pub const fn scope(&self) -> &crate::research_budget::ResearchScope {
+        self.plan.scope()
+    }
+
+    fn binds(&self, request: &RuntimeRunRequest) -> bool {
+        self.context.session_id == request.session_id
+            && self.context.task_id == request.task.task_id
+            && self.context.run_id == request.run_id
+            && self.context.policy_sha256 == request.policy_sha256
+    }
+
+    fn admits(&self, definition: &ToolDefinition) -> bool {
+        definition.tool_id == self.tool.tool_id
+            && definition.tool_version == self.tool.tool_version
+            && definition.required_grant.operation.operation() == GrantOperation::NetworkAccess
+    }
+}
+
+fn research_admission_lines(request: &RuntimeRunRequest) -> Vec<&str> {
+    request
+        .task
+        .constraints
+        .iter()
+        .filter(|line| line.starts_with(RESEARCH_ADMISSION_CONSTRAINT_PREFIX))
+        .map(String::as_str)
+        .collect()
+}
+
+/// Opens the research budget of an admitted run for the plan the coordinator
+/// published (Decision 0137). Implemented by the trusted host over the
+/// existing canonical budget owner. The answer is a description the
+/// coordinator compares with the admission, not a grant.
+pub trait RuntimeResearchBudgetPort {
+    /// Opens the task budget for exactly `plan` under `context` and `scope`
+    /// and returns the owner's projection of it.
+    fn open_research_budget(
+        &mut self,
+        request: &RuntimeRunRequest,
+        context: &crate::research_journal::ResearchBudgetContext,
+        plan: &RuntimeArtifactRef,
+        scope: &crate::research_budget::ResearchScope,
+        now_epoch_ms: u64,
+    ) -> Result<crate::research_journal::ResearchBudgetState, RuntimePortFailure>;
+}
+
 /// Optional durable journal boundary implemented by a trusted runtime host.
 ///
 /// The model, client, and native tool definitions never receive this port. Implementations must
@@ -1048,6 +1208,32 @@ struct RuntimeCorrectnessHooks<T> {
     >,
 }
 
+/// An admitted research run's admission and its budget port (Decision 0137).
+#[allow(clippy::type_complexity)]
+struct RuntimeResearchRun<T> {
+    admission: RuntimeResearchAdmission,
+    open_budget: fn(
+        &mut T,
+        &RuntimeRunRequest,
+        &crate::research_journal::ResearchBudgetContext,
+        &RuntimeArtifactRef,
+        &crate::research_budget::ResearchScope,
+        u64,
+    )
+        -> Result<crate::research_journal::ResearchBudgetState, RuntimePortFailure>,
+}
+
+fn open_research_budget<T: RuntimeResearchBudgetPort>(
+    port: &mut T,
+    request: &RuntimeRunRequest,
+    context: &crate::research_journal::ResearchBudgetContext,
+    plan: &RuntimeArtifactRef,
+    scope: &crate::research_budget::ResearchScope,
+    now_epoch_ms: u64,
+) -> Result<crate::research_journal::ResearchBudgetState, RuntimePortFailure> {
+    port.open_research_budget(request, context, plan, scope, now_epoch_ms)
+}
+
 /// One reusable, interface-neutral runtime coordinator.
 pub struct ReusableRuntimeCoordinator<M, X, T, V, C>
 where
@@ -1070,6 +1256,8 @@ where
     artifact: Option<RuntimeArtifactHooks<T>>,
     checkpoint: Option<RuntimeCheckpointHooks<T>>,
     correctness: Option<RuntimeCorrectnessHooks<T>>,
+    /// The run's explicit research admission, when it has one (Decision 0137).
+    research: Option<RuntimeResearchRun<T>>,
     state: AgentStateController,
     attempt_guard: ToolAttemptGuard,
     events: Vec<RuntimeEvent>,
@@ -1136,6 +1324,7 @@ where
             None,
             None,
             None,
+            None,
         )
     }
 
@@ -1168,6 +1357,7 @@ where
             None,
             None,
             Some(runtime_correctness_hooks::<T>()),
+            None,
         )
     }
 
@@ -1203,6 +1393,7 @@ where
             }),
             None,
             Some(runtime_correctness_hooks::<T>()),
+            None,
         )
     }
 
@@ -1244,6 +1435,58 @@ where
                 load: load_runtime_checkpoint::<T>,
             }),
             Some(runtime_correctness_hooks::<T>()),
+            None,
+        )
+    }
+
+    /// Composes one fully durable, read-only research run under its explicit
+    /// admission (Decision 0137). The sealed request must name the admission
+    /// once; the admission's one public GET tool is the only network tool the
+    /// run may use, and its budget is opened for the plan the run publishes.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_with_research_admission(
+        request: RuntimeRunRequest,
+        model: M,
+        context: X,
+        registry: ToolRegistry,
+        tool_boundary: T,
+        verifier: V,
+        clock: C,
+        admission: RuntimeResearchAdmission,
+    ) -> Result<Self, RuntimeLoopError>
+    where
+        T: RuntimeJournalPort
+            + RuntimeArtifactPort
+            + RuntimeCheckpointPort
+            + RuntimeCorrectnessTransactionPort
+            + RuntimeResearchBudgetPort,
+    {
+        Self::compose(
+            request,
+            model,
+            context,
+            registry,
+            tool_boundary,
+            verifier,
+            clock,
+            Some(RuntimeJournalHooks {
+                append: append_runtime_event::<T>,
+                flush: flush_runtime_events::<T>,
+                load: load_runtime_events::<T>,
+            }),
+            Some(RuntimeArtifactHooks {
+                retain_model_exchanges: retain_model_exchanges::<T>,
+                publish: publish_runtime_artifact::<T>,
+            }),
+            Some(RuntimeCheckpointHooks {
+                commit: commit_runtime_checkpoint::<T>,
+                load: load_runtime_checkpoint::<T>,
+            }),
+            Some(runtime_correctness_hooks::<T>()),
+            Some(RuntimeResearchRun {
+                admission,
+                open_budget: open_research_budget::<T>,
+            }),
         )
     }
 
@@ -1260,8 +1503,26 @@ where
         artifact: Option<RuntimeArtifactHooks<T>>,
         checkpoint: Option<RuntimeCheckpointHooks<T>>,
         correctness: Option<RuntimeCorrectnessHooks<T>>,
+        research: Option<RuntimeResearchRun<T>>,
     ) -> Result<Self, RuntimeLoopError> {
         verify_runtime_run_request(&request)?;
+        // Decision 0137: a request names a research admission exactly when it
+        // is composed with that admission, and only as a durable read-only new
+        // run of the admission's own context. The one constructor that passes
+        // an admission also passes every durable hook.
+        let admission_lines = research_admission_lines(&request);
+        match &research {
+            None if !admission_lines.is_empty() => return Err(RuntimeLoopError::UnsupportedMode),
+            Some(run)
+                if admission_lines != [run.admission.constraint().as_str()]
+                    || request.mode != RuntimeSessionMode::DurableReadOnly
+                    || request.event_cursor.is_some()
+                    || !run.admission.binds(&request) =>
+            {
+                return Err(RuntimeLoopError::UnsupportedMode);
+            }
+            None | Some(_) => {}
+        }
         if request.mode == RuntimeSessionMode::DurableReadOnly && journal.is_none() {
             return Err(RuntimeLoopError::UnsupportedMode);
         }
@@ -1289,7 +1550,12 @@ where
         if registry_tools != request.visible_tools
             || runtime_tool_catalog_sha256(&request.tool_catalog_id, &registry_tools)?
                 != request.tool_catalog_sha256
-            || !catalog_allowed_for_mode(request.mode, &registry)
+            || !catalog_admitted(
+                request.mode,
+                research.as_ref().map(|run| &run.admission),
+                &registry,
+                &registry_tools,
+            )
         {
             return Err(RuntimeLoopError::ToolCatalogBinding);
         }
@@ -1322,6 +1588,7 @@ where
             artifact,
             checkpoint,
             correctness,
+            research,
             state: AgentStateController::new(),
             attempt_guard,
             events: Vec::new(),
@@ -1705,6 +1972,69 @@ where
                 None,
                 false,
             )?;
+            self.open_research_budget()?;
+        }
+        Ok(())
+    }
+
+    /// Decision 0137: an admitted run publishes its plan as a run-level report,
+    /// makes it durable and has its budget opened for exactly that artifact.
+    /// The run continues only when the owner describes that plan, the
+    /// admission's scope and an unspent first revision.
+    fn open_research_budget(&mut self) -> Result<(), RuntimeLoopError> {
+        let Some(run) = &self.research else {
+            return Ok(());
+        };
+        let plan_bytes = run.admission.plan_bytes.clone();
+        self.resources
+            .admit_artifact(
+                u64::try_from(plan_bytes.len())
+                    .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?,
+            )
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        let plan = self.publish_artifact_bytes(
+            &plan_bytes,
+            "application/json",
+            RuntimeArtifactKind::Report,
+            None,
+            None,
+            None,
+            false,
+        )?;
+        let flush = self
+            .journal
+            .as_ref()
+            .ok_or(RuntimeLoopError::UnsupportedMode)?
+            .flush;
+        flush(&mut self.tool_boundary).map_err(RuntimeLoopError::Dependency)?;
+        let now = self
+            .clock
+            .now_epoch_ms()
+            .map_err(RuntimeLoopError::Dependency)?;
+        let run = self
+            .research
+            .as_ref()
+            .ok_or(RuntimeLoopError::UnsupportedMode)?;
+        let state = (run.open_budget)(
+            &mut self.tool_boundary,
+            &self.request,
+            run.admission.context(),
+            &plan,
+            run.admission.scope(),
+            now,
+        )
+        .map_err(RuntimeLoopError::Dependency)?;
+        let progress = &state.progress;
+        if state.plan != plan
+            || &state.scope != run.admission.scope()
+            || state.revision != 0
+            || progress.queries != 0
+            || progress.visits != 0
+            || progress.reserved_bytes != 0
+            || progress.cancelled
+            || progress.deadline_exhausted
+        {
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
         }
         Ok(())
     }
@@ -2970,6 +3300,7 @@ where
                         resources,
                         self.artifact_references.len() as u64,
                         self.artifact.is_some(),
+                        self.research.as_ref().map(|run| &run.admission),
                     );
                     let commit = execute(
                         &mut self.tool_boundary,
@@ -3197,7 +3528,10 @@ where
         prepared_artifacts: Option<Vec<PreparedToolArtifact>>,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<(), RuntimeLoopError> {
-        if !valid_tool_execution(&execution, &definition, &call, &self.request) {
+        // An admitted run always executes through the borrowed builder, which
+        // refuses an admitted success it did not prepare (Decision 0137).
+        let research = self.research.as_ref().map(|run| &run.admission);
+        if !valid_tool_execution(&execution, &definition, &call, &self.request, research) {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
         }
         if let Some(prepared) = &prepared_artifacts {
@@ -5197,20 +5531,26 @@ fn valid_tool_execution(
     definition: &ToolDefinition,
     call: &ToolCall,
     request: &RuntimeRunRequest,
+    research: Option<&RuntimeResearchAdmission>,
 ) -> bool {
     let result = &execution.result;
     let mut evidence_ids = BTreeSet::new();
+    let admitted = research.is_some_and(|admission| admission.admits(definition));
     valid_identifier(execution.receipt_id.as_str())
         && valid_sha256(&execution.receipt_sha256)
         && result.schema_version == CONTRACT_SCHEMA_VERSION
         && result.tool_call_id == call.tool_call_id
         && result.correlation_id == call.correlation_id
-        && valid_runtime_state_change(
-            request.mode,
-            definition.required_grant.operation.operation(),
-            result.outcome,
-            result.state_change,
-        )
+        && if admitted {
+            valid_admitted_network_execution(execution)
+        } else {
+            valid_runtime_state_change(
+                request.mode,
+                definition.required_grant.operation.operation(),
+                result.outcome,
+                result.state_change,
+            )
+        }
         // An uncertain read cannot produce trusted source bytes or completion
         // evidence. Stateful write reports retain their separate verifier path.
         && (definition.required_grant.operation.operation() != GrantOperation::WorkspaceRead
@@ -5316,6 +5656,40 @@ fn runtime_tool_terminal_event(
     }
 }
 
+/// Every registered tool passes the mode's ordinary rule, except, under a
+/// research admission, exactly one tool: the admission's own network tool
+/// (Decision 0137).
+fn catalog_admitted(
+    mode: RuntimeSessionMode,
+    research: Option<&RuntimeResearchAdmission>,
+    registry: &ToolRegistry,
+    references: &[RuntimeToolReference],
+) -> bool {
+    let Some(admission) = research else {
+        return catalog_allowed_for_mode(mode, registry);
+    };
+    let definitions = registry.list_tools();
+    definitions.len() == references.len()
+        && references
+            .iter()
+            .filter(|reference| *reference == admission.tool())
+            .count()
+            == 1
+        && definitions
+            .iter()
+            .zip(references)
+            .all(|(definition, reference)| {
+                if reference == admission.tool() {
+                    admission.admits(definition)
+                } else {
+                    operation_allowed_for_mode(
+                        mode,
+                        definition.required_grant.operation.operation(),
+                    )
+                }
+            })
+}
+
 fn catalog_allowed_for_mode(mode: RuntimeSessionMode, registry: &ToolRegistry) -> bool {
     registry.list_tools().iter().all(|definition| {
         operation_allowed_for_mode(mode, definition.required_grant.operation.operation())
@@ -5333,6 +5707,33 @@ fn operation_allowed_for_mode(mode: RuntimeSessionMode, operation: GrantOperatio
                 | GrantOperation::WorkspaceWrite
                 | GrantOperation::CommandExecute
         ),
+    }
+}
+
+/// The admitted public GET tool of a research run (Decision 0137): a success
+/// disclosed something, so it changed state, and it is the six-member public
+/// GET completion of Decision 0097 with a report output; an uncertain attempt
+/// is uncertain; every other outcome changed nothing.
+fn valid_admitted_network_execution(execution: &RuntimeToolExecution) -> bool {
+    let result = &execution.result;
+    match (result.outcome, result.state_change) {
+        (OperationOutcome::Succeeded, StateChange::Changed) => {
+            execution.result_output_kind == Some(RuntimeArtifactKind::Report)
+                && execution.artifact_candidates.len() == PUBLIC_GET_COMPLETION_ARTIFACTS
+                && execution
+                    .artifact_candidates
+                    .iter()
+                    .all(|candidate| candidate.kind == RuntimeArtifactKind::Report)
+        }
+        (OperationOutcome::Uncertain, StateChange::Uncertain)
+        | (
+            OperationOutcome::Failed
+            | OperationOutcome::Denied
+            | OperationOutcome::Cancelled
+            | OperationOutcome::TimedOut,
+            StateChange::NotChanged,
+        ) => true,
+        _ => false,
     }
 }
 

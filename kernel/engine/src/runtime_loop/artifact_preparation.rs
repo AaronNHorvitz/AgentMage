@@ -32,6 +32,7 @@ pub(super) struct ToolCompletionBuilder<'a, C> {
     failed: bool,
     terminal: Option<RuntimeEvent>,
     execution: Option<ToolExecutionObservation>,
+    research: Option<&'a RuntimeResearchAdmission>,
 }
 
 impl<'a, C: RuntimeClock> ToolCompletionBuilder<'a, C> {
@@ -46,6 +47,7 @@ impl<'a, C: RuntimeClock> ToolCompletionBuilder<'a, C> {
         resources: RuntimeResourceLedger,
         artifact_offset: u64,
         artifact_available: bool,
+        research: Option<&'a RuntimeResearchAdmission>,
     ) -> Self {
         Self {
             request,
@@ -64,13 +66,20 @@ impl<'a, C: RuntimeClock> ToolCompletionBuilder<'a, C> {
             failed: false,
             terminal: None,
             execution: None,
+            research,
         }
     }
 
     pub(super) fn matches_return(&self, commit: &RuntimeToolCorrectnessCommit) -> bool {
         !self.failed
             && self.attempts == 1
-            && valid_tool_execution(&commit.execution, self.definition, self.call, self.request)
+            && valid_tool_execution(
+                &commit.execution,
+                self.definition,
+                self.call,
+                self.request,
+                self.research,
+            )
             && tool_execution_observation(&commit.execution)
                 .is_ok_and(|observed| self.execution.as_ref() == Some(&observed))
             && self
@@ -190,8 +199,25 @@ impl<'a, C: RuntimeClock> ToolCompletionBuilder<'a, C> {
         self.attempts = self.attempts.saturating_add(1);
         if self.failed
             || self.attempts != 1
-            || !valid_tool_execution(execution, self.definition, self.call, self.request)
+            || !valid_tool_execution(
+                execution,
+                self.definition,
+                self.call,
+                self.request,
+                self.research,
+            )
         {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        // An admitted network success must be the completion prepared here
+        // under its receipt (Decision 0137).
+        if self
+            .research
+            .is_some_and(|admission| admission.admits(self.definition))
+            && execution.result.outcome == OperationOutcome::Succeeded
+            && self.receipt.is_none()
+        {
+            self.failed = true;
             return Err(RuntimePortFailure::Invalid);
         }
         if let Some((receipt_id, receipt_sha256)) = &self.receipt {

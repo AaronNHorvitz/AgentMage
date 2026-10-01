@@ -211,6 +211,38 @@ This is a component prerequisite. Ordinary host tools do not yet use preparation
 to construct a research bundle, and every ordinary mode still refuses network
 operations. Native transport, provider/model, independent and release acceptance
 remain separate.
+
+## Explicit Research Admission
+
+[Decision 0137](../decisions/0137-explicit-research-admission-in-the-coordinator.md)
+adds one engine-only way to admit a network operation. A
+`RuntimeResearchAdmission` binds three things: an exactly encoded schema 2 plan,
+the run's budget context, and one public GET tool that declares a single network
+effect under a single-use grant. A dedicated constructor composes a durable
+read-only new run with it. The request must name the admission's digest in
+exactly one sealed constraint line, and the catalog must hold that tool once
+beside ordinary read tools. Every other constructor refuses a request that names
+an admission.
+
+At start the coordinator does three things:
+
+1. publishes the plan as a run-level JSON report;
+2. flushes the journal;
+3. has the trusted `RuntimeResearchBudgetPort` open the budget for exactly that
+   artifact.
+
+It continues only when the owner describes that plan, the admission's scope and
+an unspent first revision.
+
+Only the admitted tool may return a network result:
+
+- a success that changed state, prepared through the borrowed builder as the
+  six-member public GET completion;
+- an uncertain attempt;
+- an outcome that changed nothing.
+
+Reservation, grant consumption and dual-proof dispatch stay with the existing
+owners behind the trusted correctness port. No host composes an admission yet.
 | Workflow attachment | Story 50.2 caller-neutral port | Same coordinator | No |
 
 ## Interface Boundary

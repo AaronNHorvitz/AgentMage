@@ -75,6 +75,8 @@ use crate::tooling::{Tool, ToolRegistry};
 
 #[path = "runtime_loop_artifact_preparation_tests.rs"]
 mod artifact_preparation_tests;
+#[path = "runtime_loop_research_admission_tests.rs"]
+mod research_admission_tests;
 
 const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const SNAPSHOT: &str = "snapshot-0001";
@@ -673,6 +675,9 @@ enum PermissionScript {
     SubstituteTerminalResult(u8),
     RepeatTerminalBuilder,
     PrepareArtifacts(u8),
+    /// Prepares the six-member public GET completion shape (Decision 0137),
+    /// or, for a nonzero value, a mutation of it.
+    PreparePublicGet(u8),
     SubstituteEvaluation,
     RepeatEvaluationBuilder,
     SubstituteResolution,
@@ -1205,6 +1210,13 @@ impl RuntimeCorrectnessTransactionPort for FakeToolBoundary {
         if let PermissionScript::PrepareArtifacts(mutation) = self.script {
             artifact_preparation_tests::prepare(build_terminal_event, &mut execution, mutation)?;
         }
+        if let PermissionScript::PreparePublicGet(mutation) = self.script {
+            research_admission_tests::prepare_public_get(
+                build_terminal_event,
+                &mut execution,
+                mutation,
+            )?;
+        }
         let terminal = build_terminal_event.build_terminal_event(&execution)?;
         if matches!(self.script, PermissionScript::PrepareArtifacts(10)) {
             assert!(
@@ -1255,7 +1267,7 @@ impl RuntimeCorrectnessTransactionPort for FakeToolBoundary {
             // The mutation is independently well-formed; ordinary shape checking
             // must not accidentally account for this callback-consistency test.
             assert!(super::valid_tool_execution(
-                &execution, definition, call, request
+                &execution, definition, call, request, None
             ));
         }
         Ok(RuntimeToolCorrectnessCommit {
@@ -4202,7 +4214,7 @@ fn uncertain_read_boundary_rejects_output_artifacts_and_identity_drift() {
         .execute(&coordinator.request, &permission, &definition, &call, None)
         .unwrap();
     let valid = |value: &RuntimeToolExecution| {
-        super::valid_tool_execution(value, &definition, &call, &coordinator.request)
+        super::valid_tool_execution(value, &definition, &call, &coordinator.request, None)
     };
     assert!(valid(&execution));
     for mutation in 0..7 {
