@@ -17,7 +17,7 @@
   "review_class": "gate-owned-automated-knowledge-boundary",
   "reviewer_identity": "scripts/knowledge_sprint_boundary_review.py",
   "schema_version": 1,
-  "source_revision": "cd99ba035bf80b44012a5df1474d4bcf65be5363",
+  "source_revision": "affb407e093e1b741126ba5ef5ff523aad10660a",
   "source_sha256": {
     "capabilities/knowledge/src/obsidian.rs": "9c30374ba5d54debc7b160389b72dad03e1a23e942407a1e70cde4f35910a2ab",
     "docs/architecture/obsidian-parser-boundary.md": "e91604662a3146d56bfecc0a063598d6cef683aad7e2c38eb0d3c05bec71ed15"
