@@ -1,0 +1,236 @@
+{
+  "started_at_utc": "2026-10-01T11:17:32.292349+00:00",
+  "finished_at_utc": "2026-10-01T11:27:17.431409+00:00",
+  "source_commit": "681a1c9812274d740643698f9cb6c0f4766f7a6c",
+  "source_tree": "8799b6fa2377653564501a13727b95dca621a3de",
+  "source_worktree_clean": true,
+  "binaries": {
+    "agentmage": {
+      "sha256": "6b8fe785a338f6f6d38507c7b7ad12a75d3fbced0eb007354b03ab6de826cfb2",
+      "bytes": 318655176
+    },
+    "agentmage-host": {
+      "sha256": "a808e350db0c771ad31528a1f2a0835705db031d1c00d22367c70038c2eee90d",
+      "bytes": 359212256
+    },
+    "agentmage-read-only-worker": {
+      "sha256": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf",
+      "bytes": 13798696
+    }
+  },
+  "binaries_unchanged": true,
+  "clean": {
+    "exit_code": 5,
+    "preserved": true,
+    "refusal_code": "linux.repository.git_artifact.invalid",
+    "failure_code": "linux.development.launch-envelope.failed"
+  },
+  "catalog_host_memory": {
+    "served": true,
+    "doc_pack_import_exit_code": 0,
+    "list_empty_exit_code": 0,
+    "remembered": [
+      {
+        "workspace_id": "calculator",
+        "memory_type": "semantic",
+        "sources": [
+          {
+            "content_sha256": "b73d67c995858aeaabbe1d6613bc4ec29ac6ddf1cbcb1221b8f401c275111130",
+            "object_id": "path:guide:cache.md",
+            "source_id": "doc-pack:agentmage-sample-guide:1.0.0"
+          }
+        ]
+      },
+      {
+        "workspace_id": "calculator",
+        "memory_type": "procedural",
+        "sources": [
+          {
+            "content_sha256": "ac0486e558bd0d35e1bd90b82f6b825b556c81f0502aeb39d3f588220ac8a8f0",
+            "object_id": "path:notes.txt",
+            "source_id": "doc-pack:agentmage-sample-guide:1.0.0"
+          }
+        ]
+      },
+      {
+        "workspace_id": "website",
+        "memory_type": "semantic",
+        "sources": [
+          {
+            "content_sha256": "b73d67c995858aeaabbe1d6613bc4ec29ac6ddf1cbcb1221b8f401c275111130",
+            "object_id": "path:guide:cache.md",
+            "source_id": "doc-pack:agentmage-sample-guide:1.0.0"
+          }
+        ]
+      }
+    ],
+    "decision_digests_recomputed": true,
+    "refused": {
+      "remember-credential": {
+        "exit_code": 4,
+        "code": "memory.candidate.prohibited"
+      },
+      "remember-machine-path": {
+        "exit_code": 4,
+        "code": "memory.candidate.prohibited"
+      },
+      "remember-missing-file": {
+        "exit_code": 4,
+        "code": "memory.citation-not-found"
+      },
+      "remember-other-version": {
+        "exit_code": 4,
+        "code": "memory.citation-not-found"
+      },
+      "remember-unportable-path": {
+        "exit_code": 2,
+        "code": "memory.citation-not-portable"
+      }
+    },
+    "revoke_source_object": {
+      "exit_code": 0,
+      "revoked": 1,
+      "workspace_id": "calculator"
+    },
+    "revoke_source": {
+      "exit_code": 0,
+      "revoked": 1,
+      "workspace_id": "calculator"
+    },
+    "revoke_source_again": {
+      "exit_code": 4,
+      "code": "memory.not-found"
+    },
+    "revoke_source_other_workspace": {
+      "exit_code": 4,
+      "code": "memory.not-found"
+    },
+    "other_workspace_untouched_by_source_revocation": true,
+    "revoke_item": {
+      "exit_code": 0
+    },
+    "revoke_item_again": {
+      "exit_code": 4,
+      "code": "memory.invalid-transition"
+    },
+    "delete_item": {
+      "exit_code": 0
+    },
+    "delete_item_again": {
+      "exit_code": 4,
+      "code": "memory.invalid-transition"
+    },
+    "delete_unknown": {
+      "exit_code": 4,
+      "code": "memory.not-found"
+    },
+    "final_statuses": [
+      "deleted",
+      "revoked",
+      "revoked"
+    ],
+    "final_catalog_revision": 7,
+    "run_option_refused_exit_code": 2,
+    "harness_invalid_identity_exit_code": 1,
+    "pack_directory_unchanged": true,
+    "workspace_preserved": true
+  },
+  "doc_pack_control_character": {
+    "exit_code": 2,
+    "code": "doc-pack.content-invalid",
+    "catalog_unchanged": true
+  },
+  "catalog_host_extensions": {
+    "served": true,
+    "scopes": [
+      "calculator",
+      "website"
+    ],
+    "installed_per_scope": [
+      "sample-formatter",
+      "sample-linter",
+      "sample-report"
+    ],
+    "first_list": {
+      "exit_code": 0,
+      "deactivated": [
+        "sample-formatter",
+        "sample-report"
+      ]
+    },
+    "same_list_again_unchanged": true,
+    "second_list": {
+      "exit_code": 0,
+      "deactivated": [
+        "sample-linter"
+      ]
+    },
+    "refused_lists": {
+      "1": {
+        "exit_code": 3,
+        "code": "extension.revocations-stale"
+      },
+      "2-fork": {
+        "exit_code": 3,
+        "code": "extension.revocations-stale"
+      },
+      "foreign": {
+        "exit_code": 3,
+        "code": "extension.revocations-untrusted"
+      },
+      "unsigned": {
+        "exit_code": 3,
+        "code": "extension.revocations-invalid"
+      }
+    },
+    "other_scope_untouched_until_its_own_list": true,
+    "foreign_list_in_trusting_scope": {
+      "exit_code": 0,
+      "deactivated": [
+        "sample-linter"
+      ]
+    },
+    "dependency_in_use": {
+      "exit_code": 4,
+      "code": "extension.dependency-in-use"
+    },
+    "issuer_key_in_use": {
+      "exit_code": 4,
+      "code": "extension.key-in-use"
+    },
+    "revoked_reinstall": {
+      "exit_code": 4,
+      "code": "extension.revoked"
+    },
+    "untrusted_signer_scope": {
+      "exit_code": 3,
+      "code": "extension.untrusted-signer"
+    },
+    "linked_file": {
+      "exit_code": 2,
+      "code": "extension.file-invalid"
+    },
+    "relative_file_harness_exit_code": 1,
+    "run_option_refused_exit_code": 2,
+    "decision_digests_recomputed": true,
+    "final_catalog_revision": 16,
+    "sample_directory_unchanged": true,
+    "extensions_granted_or_run": false
+  },
+  "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+  },
+  "idle_stop_exit_code": 1,
+  "idle_pause_exit_code": 1,
+  "idle_resume_exit_code": 1,
+  "network_used": false,
+  "model": "scripted",
+  "real_model_run": false,
+  "complete_coding_workflow_observed": false,
+  "native_tools_executed": false,
+  "coding_run_reads_memory": false,
+  "coding_run_reads_extensions": false,
+  "qualification": "actual-binary-catalog-host-memory-extensions-plus-native-prerequisite-refusal"
+}

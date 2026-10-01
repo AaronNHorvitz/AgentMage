@@ -51,10 +51,12 @@ an uncertain record. See the development guide for lifecycle and cleanup limitat
 
 **Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
 launch returned exit 5 before tools because native prerequisites are unavailable.
-The [review-fix and documentation pack verification](verification/review-fixes-and-documentation-packs-2026-10-01.md)
+The [memory and extension revocation verification](verification/memory-and-extension-revocation-2026-10-01.md)
 retains the latest source, rebuilt binary identities, the startup refusal, and the actual
-catalog host's documentation pack operations and ended-run read, with its logs under
+catalog host's memory and extension operations, with its logs under
 `artifacts/verification-logs/`; the
+[review-fix and documentation pack verification](verification/review-fixes-and-documentation-packs-2026-10-01.md)
+retains the catalog host's documentation pack operations and ended-run read; the
 [durable run action history verification](verification/durable-run-action-histories-2026-09-30.md)
 retains an actual support bundle export and the earlier refused ended-run read; the
 [review-fix, local-only route and support bundle verification](verification/review-fixes-local-only-routes-support-bundles-2026-09-30.md),
@@ -340,7 +342,10 @@ optional `--memory-workspace`), `--memory-revoke-source SOURCE` (with
   content-free code on standard error and exits with its class (2, 4, 5 or 7 as for
   documentation packs).
 
-No coding run reads memory yet.
+**Current lane result:** the actual rebuilt CLI and catalog host remembered, listed,
+revoked and deleted memory items in two workspaces; the
+[memory and extension revocation verification](verification/memory-and-extension-revocation-2026-10-01.md)
+lists the exact results. No coding run reads memory yet.
 
 ### Extensions and revocation lists through the catalog host
 
@@ -389,6 +394,10 @@ The wrapper passes each operation to the CLI's `--extension-trust FILE`,
 - Files are read from absolute paths only, without following links, as bounded
   regular files. A file that cannot be read is refused with `extension.file-invalid`
   (exit 2) before any host starts.
+
+**Current lane result:** the actual rebuilt CLI and catalog host ran these steps in two
+scopes, with the results listed in the
+[memory and extension revocation verification](verification/memory-and-extension-revocation-2026-10-01.md).
 
 An installed extension provides nothing to a coding run, and nothing it declares is
 granted or run. The host keeps no package source. It trusts the source digest your

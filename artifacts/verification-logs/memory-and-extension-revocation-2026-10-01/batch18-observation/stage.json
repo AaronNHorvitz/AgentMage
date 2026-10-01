@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "stage": "batch18-observation",
+  "source_revision": "681a1c9812274d740643698f9cb6c0f4766f7a6c",
+  "scope": "Batch 18 actual Linux CLI observation at the clean security-index commit 681a1c98: rebuilt binaries; the coding host refused at native Git trust; memory remembered, listed, revoked by item and by source within one workspace, and deleted through the actual CLI and catalog host; a documentation pack file with a control character refused before any host; extensions trusted, installed, revoked by signed lists, refused for stale, forked, foreign and badly signed lists, and kept apart in two workspace scopes; pre-existing work preserved.",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch18-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "2605bafbbad991f1fa2401cbc51597506a934ab88f414bc30f1d743d3eece116",
+      "private_sha256": "2605bafbbad991f1fa2401cbc51597506a934ab88f414bc30f1d743d3eece116"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 4.156,
+      "log": "01.log",
+      "log_sha256": "bb037da61a886f73fe088449057593bcdfb35d4e66df0a7c25e8cd98719e4eb9",
+      "private_log_sha256": "26d596513556efc5287a3681dbc9ba2916abc9ac26b0a6e02fd265721fb7ee24"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch18-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 585.178,
+      "log": "02.log",
+      "log_sha256": "657569622bc97dd7724c917094b2dc38a397c6e340bf85ff0af1059d5c8da1ec",
+      "private_log_sha256": "657569622bc97dd7724c917094b2dc38a397c6e340bf85ff0af1059d5c8da1ec"
+    }
+  ]
+}

@@ -1,0 +1,451 @@
+{
+ "record_type": "agentmage-memory-and-extension-revocation-verification",
+ "date": "2026-10-01",
+ "base_commit": "935cfdd8f92aafb2b54cc4a25d3317e21679efa1",
+ "head_commit": "681a1c9812274d740643698f9cb6c0f4766f7a6c",
+ "source_commit": "709f8d7a13bcd467317c0598fc5ba939c4e78892",
+ "retained_logs": "artifacts/verification-logs/memory-and-extension-revocation-2026-10-01",
+ "stages": [
+  "batch18-source",
+  "batch18-core",
+  "batch18-rebind",
+  "batch18-gate",
+  "batch18-boundary",
+  "batch18-security-index",
+  "batch18-blocked-causes",
+  "batch18-extended-rest",
+  "batch18-observation"
+ ],
+ "inventory": "artifacts/verification-logs/memory-and-extension-revocation-2026-10-01/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch18-source/02.log",
+  "engine": "batch18-source/03.log",
+  "repository_map": "batch18-source/04.log",
+  "inference": "batch18-source/05.log",
+  "knowledge": "batch18-source/06.log",
+  "linux": "batch18-source/07.log",
+  "host": "batch18-source/08.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0131-memory-revocation-through-the-catalog-host.md",
+   "docs/decisions/0132-review-fixes-and-extension-revocation-through-the-catalog-host.md"
+  ],
+  "source_commits": [
+   {
+    "commit": "025e3fd5cbb9cac0d4776d16e8cfffda959cfa8d",
+    "scope": "Decision 0131: AMR-05.9.4 split; operational store migration 24 (owner states); the knowledge memory catalog state; memory through the catalog host, IPC wire 13, the CLI's --memory-* operations and the harness memory subcommand"
+   },
+   {
+    "commit": "709f8d7a13bcd467317c0598fc5ba939c4e78892",
+    "scope": "Decision 0132: review F1 to F3, N3 and N6 of 935cfdd8; AMR-05.9.4.2 extensions and revocation lists through the catalog host as the owner state extension-catalog, IPC wire 14, the CLI's --extension-* operations, the harness extension and extension-sample subcommands and the committed synthetic sample"
+   }
+  ],
+  "review_resolved": "the independent review of 935cfdd8 (PASS, F1 to F3 low) is resolved by Decision 0132: F1 (the CLI's pack reader applies the knowledge component's text rule before any host is launched, and a wire test shows the largest chunk of documentation text fits one frame), F2 (an import is refused unless deletion records and kept versions together stay within the store's deletion bound, so retention, deletion and reads keep working when the history is full), F3 (tests for a refused begin discarding a staged import, the host's own chunk bound and a version obtained after the last change); N3 corrects the store module's wording and N6 adds a head dated backwards alone",
+  "components": [
+   {
+    "row": "AMR-05.9.4.1",
+    "scope": "component, store, host-unit, wire, CLI and actual-process row: operational store migration 24 and the kernel owner state store (first revision one, each later state one higher, no deletion, digests checked at every open, load and export); the knowledge memory catalog state encoded in the plaintext of its portable form; the catalog host's memory owner over IPC wire 13; the CLI's --memory-* operations and the harness memory subcommand; the actual CLI and catalog host remembered, listed, revoked by item and by source within one workspace, and deleted memory items in this sandbox"
+   },
+   {
+    "row": "AMR-05.9.4.2",
+    "scope": "component, host-unit, wire, CLI and actual-process row: the catalog host's extension catalog as one owner state, per workspace scope, with trusted package signer and revocation issuer keys, installed extensions verified through the capability package component and the accepted signed revocation list; every operation re-verifies the exact stored encoding; IPC wire 14, the CLI's --extension-* operations, the harness extension and extension-sample subcommands; the actual CLI and catalog host trusted keys, installed signed packages, applied, refused and kept apart signed lists in two scopes in this sandbox; no coding run reads the extension catalog and nothing an extension declares is granted or run"
+   }
+  ],
+  "mutation_checks": "run before each source commit with private tooling, each applying one exact replacement and running the package filter: for 025e3fd5, 17 single mutations over the owner state store, the memory owner, the CLI and the client, all caught; for 709f8d7a, 41 single mutations over the extension owner's decoding, verification, trust, installation, revocation, acknowledgment and file-reading rules, the review fixes (the pack reader's text rule, the history bound and its default, the begin discard, the chunk bound and its frame, the restore rule, the kept version count, the store's day rule) and the owner list; 40 made their expected test fail at once, and the survivor (scope order checked with a strict comparison, which only a duplicated scope distinguishes) exposed a missing test, which was added; the rerun caught it. These runs are not retained logs",
+  "failure_comparison": "linux 189 passed, 19 failed, 51 ignored and host 452 passed, 52 failed, 10 ignored; both failure name sets are identical to the batch 17 source-check baseline; the engine passes 1,478 tests (10 more: the owner state store and migration tests), knowledge 302 (1 more: the memory catalog state) and the host 30 more (eight memory owner and twelve extension owner tests, two catalog host tests, the memory and extension wire tests and the chunk frame test, two CLI parsing tests, two client acknowledgment tests and the history bound test)",
+  "interrupted_stage": "an earlier source check stage at 025e3fd5 (batch18-source-checks) was interrupted after 2 of its 19 commands while waiting for the shared build reservation, when the previous session ended; it is not retained, it is superseded by batch18-source at 709f8d7a, and stage names are never replayed",
+  "retained_failures": [
+   {
+    "stage": "batch18-source",
+    "indexes": [
+     7,
+     8
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, identical names to the batch 17 baseline"
+   },
+   {
+    "stage": "batch18-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch18-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the 52 native-prerequisite host failures (batch18-source/08.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch18-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch18-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch18-blocked-causes/03.log) and the documentation gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+    "stale_since": "before batch 12 (four other inputs)",
+    "blocker": "its producer runs the full host suite (the 52 native-prerequisite failures, batch18-source/08.log); review F3"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the product gate (the workspace suites with the native-prerequisite failures, batch18-source/07.log and 08.log) and the documentation gate (batch18-blocked-causes/04.log and 05.log); its check mode still validates it at its own revision (batch18-extended-rest/01.log); review F3"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the full host suite with all features (the native-prerequisite failures, batch18-source/08.log); its check mode still validates it at its own revision (batch18-extended-rest/02.log); review F3"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-capability-knowledge",
+   "agentmage-host",
+   "agentmage-kernel-engine"
+  ],
+  "cascade": "the operational store migration staled the Sprint 11 store wave, which was renewed in batch18-core for schema 24: operational schema, seeded crash recovery, store unit acceptance, source and workflow schema, lifecycle, invariant and publication reports, crash boundary and exact state, downgrade refusal, migration compatibility and new-family lifecycle reports, durable resume and AC2; the one SBOM write staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index and security map and the Story 3.1 component inventory, configuration family and security map (batch18-core) and the Sprint 79 and Sprint 108 reports, whose producers read the committed supply chain (batch18-rebind); the engine changes staled the Muse codec chain, the Story 12.1 agent progress and the Story 22.1 canary sweep; TASKS.md and the CLI staled the Story 1.2 register, the Sprint 27 to 34 knowledge boundary reviews and the v0.4 coding pack manifest and readiness report (batch18-core); the renewed component inventory staled the Story 11.1 security map and through it the Story 11.2 storage security, frozen-scope, AC1 and AC3 reports and the Story 12.1 map (batch18-rebind); the transport, IPC and catalog host changes staled the Story 23.4 runtime campaign, coordinator boundary review, security map and evidence index (batch18-gate, batch18-boundary, batch18-security-index)",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "083eae6129e9db5ad982f14cf2579a6d808f3d7a",
+    "to": "37a27590327f451d964a753f5d274aa96af3d468",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "kernel/engine/src/operational_store.rs",
+      "reason": "Decision 0131 source change in 025e3fd5: schema version 24, migration 24 after verifying history through 23, owner state verification at open and export, the owner_states derived export family and DurableAuthorityRuntime::owner_states"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-report.json",
+      "reason": "regenerated by the batch 18 store wave for operational schema 24: the operational store source digest and length, the schema 24 fixture and migration 24 artifacts, the new owner state store and the renamed version 24 upgrade test"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-report.json",
+      "reason": "regenerated by the batch 18 store wave for operational schema 24: the operational store source digest and length, the schema 24 fixture and migration 24 artifacts, the new owner state store and the renamed version 24 upgrade test"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-report.json",
+      "reason": "regenerated by the batch 18 store wave for operational schema 24: the operational store source digest and length, the schema 24 fixture and migration 24 artifacts, the new owner state store and the renamed version 24 upgrade test"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-report.json",
+      "reason": "regenerated by the batch 18 store wave for operational schema 24: the operational store source digest and length, the schema 24 fixture and migration 24 artifacts, the new owner state store and the renamed version 24 upgrade test"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-report.json",
+      "reason": "regenerated by the batch 18 store wave for operational schema 24: the operational store source digest and length, the schema 24 fixture and migration 24 artifacts, the new owner state store and the renamed version 24 upgrade test"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-report.json",
+      "reason": "regenerated by the batch 18 store wave for operational schema 24: migration count 24, the migration 24 digest, the schema 24 fixture, the owner state store and its migration tests and Decision 0131 as artifacts, and the retained results with the new migration tests"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-atomic-publication-report.json",
+      "reason": "regenerated by the batch 18 store wave: only the bound operational store source and its retained results digests changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-report.json",
+      "reason": "regenerated by the batch 18 store wave: only the bound operational store source and its retained results digests changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-report.json",
+      "reason": "regenerated by the batch 18 store wave: only the bound operational store source and its retained results digests changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-report.json",
+      "reason": "regenerated by the batch 18 store wave: only the bound operational store source and its retained results digests changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-report.json",
+      "reason": "regenerated by the batch 18 store wave: only the bound operational store source and its retained results digests changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 18 evidence pass after the renewed Story 11.1 security map and store wave reports; only bound digests and lengths changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 18 evidence pass after the renewed store wave and storage security reports; only bound digests and lengths changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "reason": "regenerated by the batch 18 core stage after the renewed store wave reports; only bound digests and lengths changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 18 evidence pass after the renewed store wave, AC2 and storage security reports; only bound digests and lengths changed"
+     }
+    ]
+   }
+  ],
+  "newly_stale_disposition": "only historical records: retained stage records of batch 17, each already pinning inputs as they were at its revision",
+  "runtime_campaign": "renewed at 37a27590 for the CLI, transport, IPC and catalog host changes of Decisions 0131 and 0132 (batch18-gate); the coordinator boundary review passes all 12 checks at f33cf02a (batch18-boundary)",
+  "cli_observation": {
+   "source_commit": "681a1c9812274d740643698f9cb6c0f4766f7a6c",
+   "binaries_sha256": {
+    "agentmage": "6b8fe785a338f6f6d38507c7b7ad12a75d3fbced0eb007354b03ab6de826cfb2",
+    "agentmage-host": "a808e350db0c771ad31528a1f2a0835705db031d1c00d22367c70038c2eee90d",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "catalog_host_memory": {
+    "served": true,
+    "doc_pack_import_exit_code": 0,
+    "list_empty_exit_code": 0,
+    "remembered": [
+     {
+      "workspace_id": "calculator",
+      "memory_type": "semantic",
+      "sources": [
+       {
+        "content_sha256": "b73d67c995858aeaabbe1d6613bc4ec29ac6ddf1cbcb1221b8f401c275111130",
+        "object_id": "path:guide:cache.md",
+        "source_id": "doc-pack:agentmage-sample-guide:1.0.0"
+       }
+      ]
+     },
+     {
+      "workspace_id": "calculator",
+      "memory_type": "procedural",
+      "sources": [
+       {
+        "content_sha256": "ac0486e558bd0d35e1bd90b82f6b825b556c81f0502aeb39d3f588220ac8a8f0",
+        "object_id": "path:notes.txt",
+        "source_id": "doc-pack:agentmage-sample-guide:1.0.0"
+       }
+      ]
+     },
+     {
+      "workspace_id": "website",
+      "memory_type": "semantic",
+      "sources": [
+       {
+        "content_sha256": "b73d67c995858aeaabbe1d6613bc4ec29ac6ddf1cbcb1221b8f401c275111130",
+        "object_id": "path:guide:cache.md",
+        "source_id": "doc-pack:agentmage-sample-guide:1.0.0"
+       }
+      ]
+     }
+    ],
+    "decision_digests_recomputed": true,
+    "refused": {
+     "remember-credential": {
+      "exit_code": 4,
+      "code": "memory.candidate.prohibited"
+     },
+     "remember-machine-path": {
+      "exit_code": 4,
+      "code": "memory.candidate.prohibited"
+     },
+     "remember-missing-file": {
+      "exit_code": 4,
+      "code": "memory.citation-not-found"
+     },
+     "remember-other-version": {
+      "exit_code": 4,
+      "code": "memory.citation-not-found"
+     },
+     "remember-unportable-path": {
+      "exit_code": 2,
+      "code": "memory.citation-not-portable"
+     }
+    },
+    "revoke_source_object": {
+     "exit_code": 0,
+     "revoked": 1,
+     "workspace_id": "calculator"
+    },
+    "revoke_source": {
+     "exit_code": 0,
+     "revoked": 1,
+     "workspace_id": "calculator"
+    },
+    "revoke_source_again": {
+     "exit_code": 4,
+     "code": "memory.not-found"
+    },
+    "revoke_source_other_workspace": {
+     "exit_code": 4,
+     "code": "memory.not-found"
+    },
+    "other_workspace_untouched_by_source_revocation": true,
+    "revoke_item": {
+     "exit_code": 0
+    },
+    "revoke_item_again": {
+     "exit_code": 4,
+     "code": "memory.invalid-transition"
+    },
+    "delete_item": {
+     "exit_code": 0
+    },
+    "delete_item_again": {
+     "exit_code": 4,
+     "code": "memory.invalid-transition"
+    },
+    "delete_unknown": {
+     "exit_code": 4,
+     "code": "memory.not-found"
+    },
+    "final_statuses": [
+     "deleted",
+     "revoked",
+     "revoked"
+    ],
+    "final_catalog_revision": 7,
+    "run_option_refused_exit_code": 2,
+    "harness_invalid_identity_exit_code": 1,
+    "pack_directory_unchanged": true,
+    "workspace_preserved": true
+   },
+   "doc_pack_control_character": {
+    "exit_code": 2,
+    "code": "doc-pack.content-invalid",
+    "catalog_unchanged": true
+   },
+   "catalog_host_extensions": {
+    "served": true,
+    "scopes": [
+     "calculator",
+     "website"
+    ],
+    "installed_per_scope": [
+     "sample-formatter",
+     "sample-linter",
+     "sample-report"
+    ],
+    "first_list": {
+     "exit_code": 0,
+     "deactivated": [
+      "sample-formatter",
+      "sample-report"
+     ]
+    },
+    "same_list_again_unchanged": true,
+    "second_list": {
+     "exit_code": 0,
+     "deactivated": [
+      "sample-linter"
+     ]
+    },
+    "refused_lists": {
+     "1": {
+      "exit_code": 3,
+      "code": "extension.revocations-stale"
+     },
+     "2-fork": {
+      "exit_code": 3,
+      "code": "extension.revocations-stale"
+     },
+     "foreign": {
+      "exit_code": 3,
+      "code": "extension.revocations-untrusted"
+     },
+     "unsigned": {
+      "exit_code": 3,
+      "code": "extension.revocations-invalid"
+     }
+    },
+    "other_scope_untouched_until_its_own_list": true,
+    "foreign_list_in_trusting_scope": {
+     "exit_code": 0,
+     "deactivated": [
+      "sample-linter"
+     ]
+    },
+    "dependency_in_use": {
+     "exit_code": 4,
+     "code": "extension.dependency-in-use"
+    },
+    "issuer_key_in_use": {
+     "exit_code": 4,
+     "code": "extension.key-in-use"
+    },
+    "revoked_reinstall": {
+     "exit_code": 4,
+     "code": "extension.revoked"
+    },
+    "untrusted_signer_scope": {
+     "exit_code": 3,
+     "code": "extension.untrusted-signer"
+    },
+    "linked_file": {
+     "exit_code": 2,
+     "code": "extension.file-invalid"
+    },
+    "relative_file_harness_exit_code": 1,
+    "run_option_refused_exit_code": 2,
+    "decision_digests_recomputed": true,
+    "final_catalog_revision": 16,
+    "sample_directory_unchanged": true,
+    "extensions_granted_or_run": false
+   },
+   "dirty_start_exit": 1,
+   "dirty_preserved": true,
+   "idle_stop_exit": 1,
+   "idle_pause_exit": 1,
+   "idle_resume_exit": 1,
+   "network_used": false,
+   "qualification": "actual-binary-catalog-host-memory-extensions-plus-native-prerequisite-refusal",
+   "reason": "the catalog host builds no repository composition, so it served the actual CLI in this sandbox: memory items were remembered, listed, revoked and deleted, a pack file with a control character was refused before any host, and extensions were trusted, installed and revoked by signed lists in two separate scopes; the coding host itself is still refused at native Git trust before any run",
+   "attachment": "batch18-observation/attachments/observation.json"
+  },
+  "not_run": [
+   "a coding run that reads memory, documentation packs or the extension catalog (no runtime tool uses them yet)",
+   "an installed extension providing a tool or skill to a run, or any granted or executed extension effect",
+   "an actual-process run that stores, reads back and exports a run's histories (AMR-05.10)",
+   "language server observations through a host adapter (AMR-05.9.5.2) and recipe plans handed to the change approval (AMR-05.9.5.3)",
+   "hybrid routing (AMR-05.9.7)",
+   "the native-only Linux boundary tests and the factory's composition glue",
+   "the actual-process AMR-04 rows (AMR-04.2.3, 04.6.3, 04.7.2, 04.9, 04.10)",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [
+    {
+     "row": "AMR-05.9.4.1",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component, store, host-unit, wire, CLI and actual-process row: the actual CLI and catalog host managed memory in this sandbox; no coding run reads memory yet"
+    },
+    {
+     "row": "AMR-05.9.4.2",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component, host-unit, wire, CLI and actual-process row: the actual CLI and catalog host applied and refused signed revocation lists over installed signed extensions in two scopes in this sandbox; no coding run reads the extension catalog"
+    },
+    {
+     "row": "AMR-05.9.4",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "closes because AMR-05.9.4.1 and AMR-05.9.4.2 both close (Decision 0131)"
+    }
+   ],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested; open"
+  }
+ }
+}
