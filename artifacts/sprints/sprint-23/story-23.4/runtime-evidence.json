@@ -4,14 +4,14 @@
     {
       "argv_sha256": "b3bf1a712beea095c7e1f3eaa345c7a01cb714dd183ea72e6eb67820381cb92b",
       "command_id": "prepared-artifact-matrix",
-      "elapsed_ms": 224,
+      "elapsed_ms": 233,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 41852,
+      "peak_rss_kib": 41712,
       "test_result": {
         "failed": 0,
-        "filtered_out": 1405,
+        "filtered_out": 1413,
         "ignored": 0,
         "measured": 0,
         "passed": 12
@@ -20,14 +20,14 @@
     {
       "argv_sha256": "b26bfb863a1251b307c473309b2fa69a8ddccbeb10b4b37bb83f2f2a1e19196f",
       "command_id": "engine-session-matrix",
-      "elapsed_ms": 94,
+      "elapsed_ms": 97,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 41812,
+      "peak_rss_kib": 41456,
       "test_result": {
         "failed": 0,
-        "filtered_out": 1399,
+        "filtered_out": 1407,
         "ignored": 0,
         "measured": 0,
         "passed": 18
@@ -36,11 +36,11 @@
     {
       "argv_sha256": "d25c1a35db190c5821af496f6e3cc07b1ba96ddb12ec19c8b6a21d7bc7325ee1",
       "command_id": "native-read-matrix",
-      "elapsed_ms": 91,
+      "elapsed_ms": 107,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50388,
+      "peak_rss_kib": 50492,
       "test_result": {
         "failed": 0,
         "filtered_out": 515,
@@ -52,11 +52,11 @@
     {
       "argv_sha256": "dfe8124eee6fbf3abfde662ff05627ee295973fb06018fc558fa4c1ff65ae353",
       "command_id": "native-chat-transport",
-      "elapsed_ms": 335,
+      "elapsed_ms": 348,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 49788,
+      "peak_rss_kib": 50164,
       "test_result": {
         "failed": 0,
         "filtered_out": 517,
@@ -68,11 +68,11 @@
     {
       "argv_sha256": "6bd11bbd4996b6e78ff6e621938b77f2c0a339f3b44af3f4d2c09976540d6891",
       "command_id": "three-client-parity",
-      "elapsed_ms": 359,
+      "elapsed_ms": 364,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50576,
+      "peak_rss_kib": 49912,
       "test_result": {
         "failed": 0,
         "filtered_out": 520,
@@ -84,11 +84,11 @@
     {
       "argv_sha256": "dcbd95278f6e59895a67a6092b1c2ffc167a47b68d41b501a1dcc0acf578656f",
       "command_id": "client-confusion-bypass",
-      "elapsed_ms": 83,
+      "elapsed_ms": 90,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 49872,
+      "peak_rss_kib": 50072,
       "test_result": {
         "failed": 0,
         "filtered_out": 520,
@@ -100,11 +100,11 @@
     {
       "argv_sha256": "52f0dcaa22117142bfade3bdb039d530e2264557b36bbc50db671925b010c307",
       "command_id": "workflow-authority-bypass",
-      "elapsed_ms": 339,
+      "elapsed_ms": 327,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 49840,
+      "peak_rss_kib": 50540,
       "test_result": {
         "failed": 0,
         "filtered_out": 520,
@@ -120,17 +120,17 @@
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 12304,
+      "peak_rss_kib": 12620,
       "test_result": null
     },
     {
       "argv_sha256": "1ba5e4e0d2b5860ae9e4b0ed786fc45413e659b7c435186b2ad8dc781a2c4045",
       "command_id": "effect-mediation",
-      "elapsed_ms": 2462,
+      "elapsed_ms": 2533,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 44916,
+      "peak_rss_kib": 44200,
       "test_result": null
     }
   ],
@@ -173,7 +173,7 @@
   "manual_fuzzing_executed": false,
   "performance": {
     "cancellation": {
-      "elapsed_us": 601,
+      "elapsed_us": 592,
       "event_count": 4,
       "model_calls": 0,
       "output_bytes": 0,
@@ -182,7 +182,7 @@
       "turns": 0
     },
     "direct": {
-      "elapsed_us": 2274,
+      "elapsed_us": 2266,
       "event_count": 6,
       "model_calls": 1,
       "output_bytes": 23,
@@ -191,7 +191,7 @@
       "turns": 1
     },
     "maximum": {
-      "elapsed_us": 5165,
+      "elapsed_us": 6500,
       "event_count": 33,
       "model_calls": 4,
       "output_bytes": 23,
@@ -201,7 +201,7 @@
     },
     "maximum_scenario_us": 250000,
     "nominal": {
-      "elapsed_us": 4099,
+      "elapsed_us": 4543,
       "event_count": 15,
       "model_calls": 2,
       "output_bytes": 23,
@@ -210,7 +210,7 @@
       "turns": 2
     },
     "over_limit": {
-      "elapsed_us": 4867,
+      "elapsed_us": 4828,
       "event_count": 33,
       "model_calls": 4,
       "output_bytes": 0,
@@ -227,10 +227,10 @@
     "redactions": [
       "repository-root"
     ],
-    "sha256": "d2e6f5946362fb2255ed6e1e09fe5cec26c52b25d9593c5e0e99863e2e1de05f"
+    "sha256": "757cb9d9aa5112e5cca5f2c09f4e493d0961d2bbbc5704a33bd1a7b02ac66c04"
   },
   "schema_version": 1,
-  "source_revision": "30637800d833a44f3be4143fcacad6c66f47a854",
+  "source_revision": "94d0d3666ccdda343e341f06c9273c186e41496b",
   "sources": [
     {
       "bytes": 14158,
@@ -243,9 +243,9 @@
       "sha256": "8570c1764e7293e6c3c5931fcbab612c9df26ee7ab284c8bdfbb12d22b6553a0"
     },
     {
-      "bytes": 232569,
+      "bytes": 232991,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "04a228eccef706d1f6c001099ca1ff47cea5c096ff29dd5e237f964b748b49fe"
+      "sha256": "c79840afe97a7adb52831e76c7791ecc0e94bac74dbdbf2eb374b1330dc0a8d4"
     },
     {
       "bytes": 12820,

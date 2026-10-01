@@ -70,9 +70,9 @@
         "sha256": "3f2730d0f49d60ce70bf8bb9f8980e32bae74f31ece544e3d99a839918d20c0d"
       },
       {
-        "byte_length": 493656,
+        "byte_length": 495146,
         "path": "kernel/engine/src/operational_store.rs",
-        "sha256": "104017c5fe4d7eb78cf14b7a1e210fc6e803db01272f2cc450aae72a5cf035dc"
+        "sha256": "523a6f6b792d1282d1ee97f9b1af8ebeda550ee123ec7352521bb796d0f4d79f"
       },
       {
         "byte_length": 179926,
@@ -80,9 +80,9 @@
         "sha256": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8"
       },
       {
-        "byte_length": 232569,
+        "byte_length": 232991,
         "path": "kernel/engine/src/runtime_loop.rs",
-        "sha256": "04a228eccef706d1f6c001099ca1ff47cea5c096ff29dd5e237f964b748b49fe"
+        "sha256": "c79840afe97a7adb52831e76c7791ecc0e94bac74dbdbf2eb374b1330dc0a8d4"
       },
       {
         "byte_length": 12820,
@@ -97,93 +97,93 @@
       {
         "byte_length": 7626,
         "path": "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-report.json",
-        "sha256": "3dbb2738547aca898494eaec9d6e4f49d701f88ac227698e27a4ee11468a97d7"
+        "sha256": "a7b05f86df2c96fc4bf004b45177f34f59ea63ef616be4027eb30e0d8a44b1ff"
       },
       {
         "byte_length": 7676,
         "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-report.json",
-        "sha256": "853a8ee8e4ac1fc7f443b1c42bf4ec1cc7f4074cadba42ebdd192ebfd9a5e2a1"
+        "sha256": "122ceb45a444c035eb8e48ebb140ae73bef6b276dc6c4d00eaaf6e61aff6518d"
       },
       {
         "byte_length": 8002,
         "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-report.json",
-        "sha256": "3d04e0826c2d1f9707fc25ad163fa2bc277e103429bc07d0f5c1604ab460ae1f"
+        "sha256": "ca8fb65b86fdddffe9b13283b42e414c54479edbe81d5d7f86a451ca89b24f26"
       },
       {
         "byte_length": 7416,
         "path": "artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-report.json",
-        "sha256": "aa56386b256a328272f892595d1970a1ef7f14fb1516b9c5d1a813a5f0de17be"
+        "sha256": "704eefa56e51045039a6ee972ff9b5bd9660f2b400550076a6fed6936b927640"
       },
       {
         "byte_length": 7184,
         "path": "artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-report.json",
-        "sha256": "76f8265e26552524ebb8e39d1e76bb89e576f9219e11b1ca41538b7772fe878e"
+        "sha256": "12a31bd98136aacf546e60d113d09a49aa728d9e03909559035a61721d4d530e"
       },
       {
         "byte_length": 3019,
         "path": "artifacts/sprints/sprint-11/story-11.2/workflow-atomic-publication-report.json",
-        "sha256": "28e71f46ce94944880e31773e56fde154615bd771761dba2f7dc83ab61dcda5c"
+        "sha256": "bc1a2542fc198a185d86a40af25f08788bb79e3f979817bdf169f2d9bca640a6"
       },
       {
         "byte_length": 10871,
         "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-report.json",
-        "sha256": "03cffd5661a8bae8e12149f252d9792744d929765ce4e07fefc50b0007d9b748"
+        "sha256": "dd27dd9c9fa05a74c5d2bc8f296ef43cbf17a86643ff3090126fbe3e88dbd28b"
       },
       {
         "byte_length": 2952,
         "path": "artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-report.json",
-        "sha256": "154301f7980dd221eae4a0c194a8fb42d8b2d0d40a47cb64ebcb96b2446ebecc"
+        "sha256": "543650930baa8c015845db85d214e25b40ae3c1009dc2cba4c83f7fde5940bdd"
       },
       {
         "byte_length": 3953,
         "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-report.json",
-        "sha256": "8f6ef8050e623c3002f2b3caa7468bc1319dc4b1b5ba5892d6218cd984b5c296"
+        "sha256": "88954d4f529df604b77da680068a3e4ff9163dc494ac4e006c1452e09db4c234"
       },
       {
         "byte_length": 2135,
         "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-report.json",
-        "sha256": "c3bea67c25c8264f8e5b955654d192e6c137dcb1ef90abdcc103a7b8e74c928d"
+        "sha256": "1fb527c960cdf557c10c5641f04aef035f387c1e24ecc5e614852df25839e3b0"
       },
       {
         "byte_length": 2088,
         "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-report.json",
-        "sha256": "9859a6056737ae843940ae7844de512130b6e289ff56b54e0ed4cdd648ba3465"
+        "sha256": "b9bcbe20f1064c8c61a7db17d63243628af1821ea024a2b714430b3d600bbf69"
       },
       {
         "byte_length": 6456,
         "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
-        "sha256": "7339117050eac7121532db8382bd9373a46d6037761489d637f7aed942707838"
+        "sha256": "2df5cc16f8c02fbc429801313312f12402fcc6dd261c0470d63a09e2b407d981"
       },
       {
         "byte_length": 3901,
         "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
-        "sha256": "7f1d6e186776a2995187947a7ffce7c75f6f687a8c2931d3317bff8d3c027294"
+        "sha256": "675b42db4a5ea2c777201d1370ce5cabeda2d50854fcde2530dbd77cf886f1ba"
       },
       {
         "byte_length": 6030,
         "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
-        "sha256": "db6c4251ad316f8563334fa6695a6dd5d0311a4a97d55bd8e2959b92e955ffea"
+        "sha256": "c07ca7c714a8411b0f2cbf998eacd313539d4e019cf053ce97ff5cf9e08242a2"
       },
       {
         "byte_length": 5225,
         "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
-        "sha256": "fac70b91c4b258f480433e1cd77af33652ed765d463b3e34dd55d4f1d272bdbf"
+        "sha256": "906a1f5e7e2c8e00c10c169469da2cb2e7d4420a1a5fd0ce0800ac644f925b01"
       }
     ],
     "external_human_review_status": "not-performed",
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "30637800d833a44f3be4143fcacad6c66f47a854",
-    "reviewed_tree": "c842391734da0b30aec5d46f812d9eaefa9720cf",
+    "reviewed_commit": "94d0d3666ccdda343e341f06c9273c186e41496b",
+    "reviewed_tree": "1c5039d3ecfd12543a3d3f29f4f2c28dcd46d838",
     "reviewer_id": "agentmage-story-11.2-independent-gate-v1"
   },
   "installed_product_claim": "none",
   "platform_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "30637800d833a44f3be4143fcacad6c66f47a854",
-  "reviewed_tree": "c842391734da0b30aec5d46f812d9eaefa9720cf",
+  "reviewed_commit": "94d0d3666ccdda343e341f06c9273c186e41496b",
+  "reviewed_tree": "1c5039d3ecfd12543a3d3f29f4f2c28dcd46d838",
   "schema_version": 1,
   "sprint_completion_claim": false,
   "status": "blocked-open-dependencies-and-platform-integration",
