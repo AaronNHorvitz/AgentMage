@@ -43,7 +43,7 @@
       ],
       "exit_code": 0,
       "id": "muse-edge-codec",
-      "output_sha256": "702277b5684ac819dea222f2fd099b384fa7002d1ea5633cbff0b02b6d528e4a"
+      "output_sha256": "dc6e16861d441c1810dc6ee0ed2268b0671b9dd894dee453d54ed307add4ca8f"
     },
     {
       "argv": [
@@ -56,7 +56,7 @@
       ],
       "exit_code": 0,
       "id": "native-transport-diagnostics",
-      "output_sha256": "55da46e59ce5e4ef39f8c5ff6a61bd8250a8ed5b5742d0d7506264e567f8ad26"
+      "output_sha256": "ecb2cc2e3c81ecc7ee842c41c87f053b206d4497258c1cc9fe16df8f56cb5da7"
     },
     {
       "argv": [
@@ -69,7 +69,7 @@
       ],
       "exit_code": 0,
       "id": "generic-codec",
-      "output_sha256": "f06221c1e47e3e591076f6ce21a51ffd2b386f30712ea96229f10ed1bd232080"
+      "output_sha256": "a325f2b99cdc61fefca565d640a4e6c71d1cd630d4bd95f7349de93d50e44baf"
     },
     {
       "argv": [
@@ -82,7 +82,7 @@
       ],
       "exit_code": 0,
       "id": "bounded-response",
-      "output_sha256": "2cf55db5bfe3f286fbb092c9531c415ed14eedf4c73557ffa1a194dbcaa1dc86"
+      "output_sha256": "e44457ead4ab1416ed739e8f324f026b174877b8b9ee2b57afeb9be45b5dc911"
     },
     {
       "argv": [
@@ -95,7 +95,7 @@
       ],
       "exit_code": 0,
       "id": "fake-family-parity",
-      "output_sha256": "6fbd477315bffe2a65945e39912163399b0eba1f8744601b57de66d2146a5b6e"
+      "output_sha256": "587f100b8c46c2953ef23eae470854438f45af16f0d5fe683e1915fcdee61d6f"
     }
   ],
   "diagnostics": [
@@ -235,7 +235,7 @@
   "production_kernel_family_references": [],
   "record_type": "d027_s13_muse_codec_evidence",
   "schema_version": 3,
-  "source_revision": "65537fc4509cf4cd5e05a2fe9dfb72cb8a0c54ff",
+  "source_revision": "80754b81b5457c3f78fe04aa6c52f1410858b5e2",
   "source_sha256": {
     "kernel/contracts/src/model.rs": "1a19f680cc1468be94930632e4a67ba50f0c16eaf47802ae7ecd65df2ca1695c",
     "kernel/engine/src/accounting_provider.rs": "f0292afed85e4dc1d617061de010622b913749caed5e4620503634c29ef485f4",
@@ -326,7 +326,7 @@
     "kernel/engine/src/incident_lifecycle.rs": "28f1e048d3fa806f194c07e4f0e723522dec25cfd46fbd8a80cb8f861a2a3b94",
     "kernel/engine/src/infrastructure_safety.rs": "ab99b10488d49b777db2241c55475a699f5a7437cb2dcc6d014572ef215e1940",
     "kernel/engine/src/instruction_provenance.rs": "0e88d2dd4d200450f777fc8d8b24b3ba6091ae89cadc6c919af6689205ae9c94",
-    "kernel/engine/src/job_control.rs": "19a2d1e5818875f35750ac9efd6f4f0957db816df640f073806edcc29a10882e",
+    "kernel/engine/src/job_control.rs": "2188a4d36c748f3473714f9919b3066f0b44cb1cfcb0f05956ee4341d8954cdb",
     "kernel/engine/src/job_ledger_migration_tests.rs": "e3753890f429f4a2e9119c7055114816a5a58826a97b0214c0ed63db1649a2ec",
     "kernel/engine/src/job_ledger_store.rs": "1e84d70b6c93b452893c95194cf9e5b2cbf050d4f1c877cc0c4c8eca9f118c0d",
     "kernel/engine/src/job_ledger_store_tests.rs": "9c240f2a4894de5e8033eb274c4a0686bbed3ef0f2fb36565df50ea308eb5e05",
@@ -379,14 +379,14 @@
     "kernel/engine/src/repository_cache.rs": "e881a56cb60e44e1d79aae76d5e5a6f10aec25416bf8276ebde169aa31754796",
     "kernel/engine/src/repository_inspection.rs": "a1322582156a38b317afe5ca410294c969ab0ab4d82aeac52a5ae74a6822d982",
     "kernel/engine/src/repository_safety.rs": "5271b163889aca167cc0aca5484aed8d1e4e6d933009a02bd68dce32c700bd8f",
-    "kernel/engine/src/research_budget.rs": "cbe2d36069cabbf6c956881a4660d1f018ee13735ced1c6d8939200f65044a2f",
+    "kernel/engine/src/research_budget.rs": "85d88f96fecf04a2eebb86e806c3365fba615b3c5d02298aeb5efd753426e0d8",
     "kernel/engine/src/research_completion.rs": "8fd687e6a23ac7b313f18db8e1b6c4db16aaca81dba5559b4db0081701f9d9cd",
     "kernel/engine/src/research_completion_tests.rs": "95219e9148cecc0f743b8d847b15048e88adeaf0f960d90ea7a29e6320e96908",
     "kernel/engine/src/research_dispatch.rs": "da3831497a113d5de7fade97e2b3be311a00cdee37db05f57f9048dbeac10ec8",
     "kernel/engine/src/research_effect_binding.rs": "2b6f5d31d8770ea1f6984ccff798222a35954917560c1e427487036e3171efe7",
     "kernel/engine/src/research_fetch.rs": "1de1b0a3d8e6d1ab5c96e2c611fc7d909cda04cfa56288ab2d1260f53fcfaf01",
     "kernel/engine/src/research_journal.rs": "9087f88f4d84359e4b9b9b9bda39a27fbe4b3911b650640fd313637c7b7c8ed4",
-    "kernel/engine/src/research_journal_tests.rs": "cad2c5c8dd708d7da388bb932aa1d67a67fbc89892812a526c0597b8df414f7d",
+    "kernel/engine/src/research_journal_tests.rs": "9e004221ac797b4ae0e5e658fd1001328ab17c34321ec9d8374a35f7b9c733b8",
     "kernel/engine/src/research_migration_tests.rs": "86d30819c17b02544b93aadd53810feb7a89c7e4f79add3c55fab01e1e03c88a",
     "kernel/engine/src/research_plan.rs": "5cc307ab57d9fec23c97271bb893cf9fe9b1a84b29ebc912f48eea1dad3f3ca1",
     "kernel/engine/src/research_reader_migration_tests.rs": "d9fbb3100e6ebc436d909334615153d5a0a97eb2d94470626f8362a25739e4bb",
