@@ -1,0 +1,107 @@
+[
+ {
+  "id": "A8-grant-operation-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            || tool.required_grant.operation != network\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "A10-digest-without-plan",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            plan.plan_sha256(),\n            context.session_id.as_str(),",
+    "            context.session_id.as_str(),"
+   ]
+  ]
+ },
+ {
+  "id": "A11-digest-without-run",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            context.run_id.as_str(),\n            context.policy_sha256.as_str(),",
+    "            context.policy_sha256.as_str(),"
+   ]
+  ]
+ },
+ {
+  "id": "A13-digest-without-session",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            context.session_id.as_str(),\n            context.run_id.as_str(),",
+    "            context.run_id.as_str(),"
+   ]
+  ]
+ },
+ {
+  "id": "A14-digest-without-policy",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            context.policy_sha256.as_str(),\n            tool.definition_sha256.as_str(),",
+    "            tool.definition_sha256.as_str(),"
+   ]
+  ]
+ },
+ {
+  "id": "A15-digest-without-tool",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            tool.definition_sha256.as_str(),\n        ))",
+    "        ))"
+   ]
+  ]
+ },
+ {
+  "id": "C3-resume-admitted",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::a_resumed_admitted_run_is_refused_even_with_its_checkpoint",
+  "replace": [
+   [
+    "                    || request.event_cursor.is_some()\n                    || !run.admission.binds",
+    "                    || !run.admission.binds"
+   ]
+  ]
+ }
+]

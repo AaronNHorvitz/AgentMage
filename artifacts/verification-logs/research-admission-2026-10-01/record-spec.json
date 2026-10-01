@@ -1,0 +1,302 @@
+{
+ "record_type": "agentmage-research-admission-verification",
+ "date": "2026-10-01",
+ "base_commit": "847327a44bb9bef19b926deb81264da176d84e56",
+ "head_commit": "c67ca6bdaa97bc5877bbed4a640242049aaa7d12",
+ "source_commit": "5fc51a016cce5c85cc63115e170bf937a7e385b7",
+ "retained_logs": "artifacts/verification-logs/research-admission-2026-10-01",
+ "stages": [
+  "batch22-source",
+  "batch22-core",
+  "batch22-canary",
+  "batch22-rebind2",
+  "batch22-gate",
+  "batch22-boundary",
+  "batch22-security-index",
+  "batch22-blocked-causes",
+  "batch22-extended-rest",
+  "batch22-observation"
+ ],
+ "inventory": "artifacts/verification-logs/research-admission-2026-10-01/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch22-source/02.log",
+  "engine": "batch22-source/03.log",
+  "repository_map": "batch22-source/04.log",
+  "inference": "batch22-source/05.log",
+  "knowledge": "batch22-source/06.log",
+  "linux": "batch22-source/07.log",
+  "host": "batch22-source/08.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0137-explicit-research-admission-in-the-coordinator.md"
+  ],
+  "source_commits": [
+   {
+    "commit": "5fc51a016cce5c85cc63115e170bf937a7e385b7",
+    "scope": "Decision 0137 (AMR-03.2.2): RuntimeResearchAdmission binds an exactly encoded schema 2 network plan, the run's budget context and one public GET tool with a single network effect under a single-use grant; the sealed request names it in exactly one 'Research admission digest' constraint; new_with_research_admission composes a durable read-only new run of the admission's own context with the admitted tool once beside ordinary read tools, and every other constructor refuses a request that names an admission; at start the coordinator publishes the plan as a run-level JSON report, flushes the journal and has the RuntimeResearchBudgetPort open the budget for exactly that artifact, continuing only for that plan, the admission's scope and an unspent first revision; only the admitted tool may return a network result (a changed success that is the six-member public GET completion prepared through the borrowed builder under its receipt, an uncertain attempt, or an outcome that changed nothing); a coordinator test module and the coordinator architecture document"
+   }
+  ],
+  "review_resolved": "none: this batch follows batch 21, whose independent review is still requested",
+  "components": [
+   {
+    "row": "AMR-03.2.2",
+    "scope": "component row, engine only: the coordinator's side of an admitted research run as above, tested through the real coordinator with synthetic ports (the positive admitted run with plan publication, journal flush, budget opening and the six prepared completion artifacts; each composition refusal; each budget answer refused; each admitted and refused network result; an unprepared success; a resumed admitted run refused even with its checkpoint; ordinary constructors refusing an admission line). Reservation, grant consumption and dual-proof dispatch stay with the existing owners behind the trusted correctness port and are not composed here (AMR-03.1.2.1); no host, worker, provider, model or grant issuance uses the admission"
+   }
+  ],
+  "mutation_checks": "run on the exact source tree before it was committed, with private tooling that applies one exact replacement, runs the engine's filtered library tests and restores the file; the specifications and results are attached to the batch22-source stage. First run: 35 single mutations over the admission's plan, context and tool checks and its digest, each composition check, the plan publication, flush and budget checks at start, and the admitted execution rule; 31 made their expected test fail. The 4 survivors were resolved before the commit: a tool declaring a network effect under a read grant gained a test case; the digest preimage was reduced to independent members (the plan digest covers the task, scope and network mode, the definition digest covers the tool's identity and version), so two equivalent mutations no longer exist; and a resumed admitted run is now refused in a test that resumes from the run's own committed checkpoint. A rerun of 7 mutations (the four survivors as applicable and each digest member) caught all 7",
+  "failure_comparison": "linux 189 passed, 19 failed, 51 ignored, failure names identical to batch 21; host 474 passed, 53 failed, 11 ignored, failure names identical to batch 21; the engine passes 1,490 tests (nine new: the research admission module), knowledge 302",
+  "retained_failures": [
+   {
+    "stage": "batch22-source",
+    "indexes": [
+     7,
+     8
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, with failure names identical to batch 21"
+   },
+   {
+    "stage": "batch22-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "interrupted_stages": [
+   {
+    "stage": "batch22-rebind",
+    "ran": 3,
+    "planned": 29,
+    "cause": "it ran the Story 22.1 canary first; the canary wrote its report, and the next command, the Muse codec producer, refused to write evidence on a dirty tree (exit 1). The canary output was discarded and rerun alone as batch22-canary, and the rebind list ran as batch22-rebind2. Not retained"
+   }
+  ],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch22-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the native-prerequisite host failures (batch22-source/08.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch22-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch22-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch22-blocked-causes/03.log) and the documentation gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+    "stale_since": "before batch 12 (four other inputs)",
+    "blocker": "its producer runs the full host suite (the native-prerequisite failures, batch22-source/08.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the product gate and the documentation gate; its check mode still validates it at its own revision (batch22-extended-rest/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the full host suite with all features; its check mode still validates it at its own revision (batch22-extended-rest/02.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
+    "stale_since": "before batch 18 (shells/host/src/headless.rs)",
+    "blocker": "already stale at the review base for an input this batch does not change; historical"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-kernel-engine"
+  ],
+  "cascade": "the one SBOM write staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index and security map and the Story 3.1 component inventory, configuration startup report and security map (batch22-core) and the Sprint 79 and Sprint 108 reports (batch22-rebind2); the coordinator change staled the Story 11.2 AC2 report and the Story 13.4 dispatch preflight report (batch22-core), the Story 22.1 canary sweep (batch22-canary), the Muse codec chain and the Sprint 13 report (batch22-rebind2), the Story 11.2 gate report (batch22-gate) and the Story 23.4 runtime campaign, coordinator boundary review, security map and evidence index with the Sprint 50 runtime contract review (batch22-gate, batch22-boundary, batch22-security-index); the renewed component inventory staled the Story 11.1 security map and through it the Story 11.2 storage security, frozen-scope, AC1 and AC3 reports and the Story 12.1 map (batch22-rebind2); no operational store change, so no store wave",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "f1f2bdb5d5a7542b5f3beaf4773f89151417f4cd",
+    "to": "30637800d833a44f3be4143fcacad6c66f47a854",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "reason": "Decision 0137 (AMR-03.2.2) source change in 5fc51a01: the explicit research admission, its budget port, its constructor and composition checks, the plan publication and budget check at start and the admitted execution rule; the ordinary modes' rules are unchanged"
+     },
+     {
+      "path": "kernel/engine/src/runtime_loop/artifact_preparation.rs",
+      "reason": "Decision 0137 (AMR-03.2.2) source change in 5fc51a01: the borrowed builder carries the run's admission and refuses an admitted network success it did not prepare under the call's receipt"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 22 rebind stage after the renewed Story 11.1 security map, which binds the renewed Story 3.1 component inventory; only the bound digest of the Story 11.1 security map changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 22 rebind stage after the renewed storage security report; only its bound digest changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "reason": "regenerated by the batch 22 core stage; only the bound digests (and sizes) of its results log, the runtime coordinator and the coordinator test module changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 22 rebind stage after the renewed storage security report; only its bound digest changed"
+     }
+    ]
+   }
+  ],
+  "newly_stale_disposition": "only historical records: two retained batch 21 stage records and seven dated verification records of 2026-09-27 and 2026-09-28 that were already stale at the review base for other inputs; each pins inputs as they were at its own revision",
+  "runtime_campaign": "renewed at 30637800 for the coordinator's research admission (batch22-gate); the coordinator boundary review passes every check at 483b583c (batch22-boundary)",
+  "cli_observation": {
+   "source_commit": "c67ca6bdaa97bc5877bbed4a640242049aaa7d12",
+   "binaries_sha256": {
+    "agentmage": "ecbf328938b5e6da8bfb9a932b23c4ab2bda2b47e49a888eee011eab370d9128",
+    "agentmage-host": "7722c293a5dfa9bb3c0d79fd0c74a2b30cf5fb3e4e2c2582a3fce40f7288e8b4",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "catalog_host_operations": [
+    {
+     "name": "doc-pack-list-empty",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import-other-license",
+     "operation": "doc-pack",
+     "exit_code": 4
+    },
+    {
+     "name": "doc-pack-search",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-inspect",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember-credential",
+     "operation": "memory",
+     "exit_code": 4
+    },
+    {
+     "name": "memory-list",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-revoke",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-delete",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-signer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-issuer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-install",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-1",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-renamed",
+     "operation": "extension",
+     "exit_code": 3
+    },
+    {
+     "name": "extension-list",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "ended-run-read",
+     "operation": "ended-run",
+     "exit_code": 0
+    }
+   ],
+   "catalog_host_wire_refusals_seen": false,
+   "catalog_workspace_preserved": true,
+   "recipe_shown_before_launch": {
+    "exit_code": 5,
+    "then_refused_at": "linux.repository.git_artifact.invalid",
+    "preserved": true
+   },
+   "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+   },
+   "malformed_frame_injected": false,
+   "research_admission_composed_by_an_actual_process": false,
+   "qualification": "actual-binary-catalog-host-operations-under-exact-wire-decoding-plus-native-prerequisite-refusal"
+  },
+  "not_run": [
+   "a research run through the real owners: reservation, grant consumption, dual-proof dispatch and the canonical reader composed with the real coordinator (AMR-03.1.2.1)",
+   "any host, worker, provider or model composing the admission; no actual process composes it, and no network operation was admitted in an actual process",
+   "the native adversarial matrix and the provider and model campaign (AMR-03.2.3, AMR-03.2.4)",
+   "resuming an admitted run (refused by design in this row)",
+   "the native-only Linux boundary tests and the factory's composition glue",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [
+    {
+     "row": "AMR-03.2.2",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component row, engine only: the coordinator's explicit research admission; no host, worker, provider, model or grant issuance"
+    }
+   ],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested together with batch 21; open"
+  }
+ }
+}

@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "stage": "batch22-observation",
+  "source_revision": "c67ca6bdaa97bc5877bbed4a640242049aaa7d12",
+  "scope": "Batch 22 actual-process observation at the clean security-index commit c67ca6bd: the rebuilt CLI, coding host and read worker; the coding host refused at native Git trust with the workspace preserved, every catalog host operation the CLI has under exact frame decoding, a recipe shown before launch, and pre-existing work refused with every byte kept. The research admission is engine-only; no actual process composes it.",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch22-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "9f1d74f20d6c349a906748066443f1015ad0bd694fccb766467dcd98aa03db1d",
+      "private_sha256": "9f1d74f20d6c349a906748066443f1015ad0bd694fccb766467dcd98aa03db1d"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 15.58,
+      "log": "01.log",
+      "log_sha256": "fdea28c20837225121eecc64cf592eeb5171f0ac851a1143b0261c5fabf6a7c8",
+      "private_log_sha256": "1e592a37b3ce17c7a9f4837cd11c51f9a700bc38890a336ddc9474d9646c7a1d"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch22-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 178.935,
+      "log": "02.log",
+      "log_sha256": "d102492f84ecdb54dd97bcaf6e22669e1ad31cbdd894be69f72f93b85167b1b4",
+      "private_log_sha256": "d102492f84ecdb54dd97bcaf6e22669e1ad31cbdd894be69f72f93b85167b1b4"
+    }
+  ]
+}

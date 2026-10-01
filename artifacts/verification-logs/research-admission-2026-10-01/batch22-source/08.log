@@ -1,0 +1,918 @@
+   Compiling agentmage-kernel-engine v0.0.0 (<repo>/kernel/engine)
+   Compiling agentmage-platform-linux v0.0.0 (<repo>/platforms/linux)
+   Compiling agentmage-host v0.0.0 (<repo>/shells/host)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 43.11s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-094cc34c77d48d9f)
+
+running 521 tests
+test browser_inspection::tests::sprint_83_authenticated_profile_retains_only_broker_digest ... ok
+test browser_inspection::tests::sprint_83_all_actions_produce_visible_content_free_previews ... ok
+test browser_inspection::tests::sprint_83_profiles_urls_domains_and_action_shapes_fail_closed ... ok
+test artifact_ingestion::tests::unsupported_and_malformed_inputs_are_truthful ... ok
+test browser_inspection::tests::sprint_83_result_requires_redaction_quarantine_termination_and_bounds ... ok
+test artifact_ingestion::tests::json_derivative_is_deterministic_and_source_bound ... ok
+test capability_package::tests::all_lifecycle_actions_are_inert_and_approved ... ok
+test capability_package::tests::package_scope_must_be_within_task_scope ... ok
+test capability_package::tests::a_package_revoked_after_it_was_enabled_stops_providing_capabilities ... ok
+test capability_package::tests::signed_exact_package_verifies ... ok
+test capability_package::tests::unverified_enable_fails ... ok
+test capability_package_runtime::tests::all_seven_compatibility_versions_are_compared ... ok
+test capability_package_runtime::tests::catalog_explains_active_provider_and_safe_mode_disables ... ok
+test capability_package_runtime::tests::hook_mutation_or_suppression_fails ... ok
+test capability_package_runtime::tests::hooks_order_and_isolate_failure ... ok
+test capability_package_runtime::tests::incomplete_cleanup_or_kernel_change_fails ... ok
+test capability_package_runtime::tests::interrupted_lifecycle_restores_prior_exact_state ... ok
+test capability_package_runtime::tests::inventory_delta_must_equal_declaration ... ok
+test capability_package_runtime::tests::prohibited_automation_is_rejected ... ok
+test cli::tests::correction_diagnostic_scenarios_reach_the_existing_development_host ... ok
+test cli::tests::documentation_pack_operations_parse_closed_and_alone ... ok
+test cli::tests::every_required_command_family_parses_to_one_closed_command ... ok
+test cli::tests::extension_operations_parse_closed_and_alone ... ok
+test cli::tests::global_surface_format_help_version_and_completion_are_stable ... ok
+test cli::tests::malformed_missing_duplicate_oversized_and_unsafe_arguments_fail ... ok
+test cli::tests::memory_operations_parse_closed_and_alone ... ok
+test cli::tests::recipe_options_go_only_with_a_run_that_asks_for_each_write ... ok
+test cli::tests::verified_events_render_status_content_receipts_errors_and_json ... ok
+test capability_package::tests::tampered_signature_source_license_and_compatibility_fail ... ok
+test capability_package::tests::a_revocation_list_is_trusted_signed_and_never_rolled_back ... ok
+test capability_package::tests::a_revoked_package_manifest_or_signer_key_is_never_admitted ... ok
+test cli_runtime::tests::a_cancellation_is_a_job_control_request_observed_again_after_a_stale_refusal ... ok
+test cli_runtime::tests::a_recipe_plan_is_kept_only_when_the_run_binds_the_recipe_that_was_sent ... ok
+test cli_runtime::tests::a_refused_resumption_about_the_resumed_request_never_rebinds ... ok
+test cli_runtime::tests::a_suspended_run_is_followed_under_the_resumed_request_it_derives ... ok
+test cli_runtime::tests::a_foreign_boundary_or_resumption_answer_is_refused_as_evidence ... ok
+test cli_runtime::tests::a_cancelled_suspended_run_ends_under_the_resumed_request ... ok
+test cli_runtime::tests::cancellation_during_approval_precedes_every_approval_response ... ok
+test cli_runtime::tests::installed_interface_presents_only_the_kernel_owned_zero_profile_audit ... ok
+test cli_runtime::tests::completed_shared_runtime_uses_exact_request_stream_outcome_and_release ... ok
+test cli_runtime::tests::protected_denial_and_cancellation_return_through_exact_runtime_cursor ... ok
+test cli_runtime::tests::a_suspension_the_host_does_not_take_leaves_the_run_unchanged ... ok
+test cli_runtime::tests::request_event_artifact_and_outcome_substitution_fail_before_success ... ok
+test cli_runtime::tests::story_50_2_confusion_and_interface_bypasses_never_present_or_complete ... ok
+test cli_runtime::tests::terminal_presentation_failure_releases_without_claiming_completion ... ok
+test code_change::tests::mixed_language_plans_become_one_exact_authority_free_shadow_change_set ... ok
+test coding_action_history::tests::a_decided_control_request_is_kept_under_its_client_scope ... ok
+test coding_action_history::tests::a_declared_chain_is_used_only_when_it_replays_and_holds_its_owners_kinds ... ok
+test coding_action_history::tests::a_refused_call_is_kept_as_the_persons_denial ... ok
+test coding_action_history::tests::a_write_outside_a_recipe_plan_is_kept_as_an_unauthorized_policy_refusal ... ok
+test coding_action_history::tests::an_ended_run_answer_is_kept_for_its_run_and_each_chain_only_when_it_verifies ... ok
+test code_change::tests::stale_targets_mixed_plans_and_reordering_fail_before_a_shadow_change_exists ... ok
+test coding_action_history::tests::an_executed_call_is_kept_with_its_grant_decision_evidence_and_outcome ... ok
+test coding_action_history::tests::an_export_prints_its_exact_redacted_bytes_in_both_formats ... ok
+test coding_action_history::tests::export_selections_parse_closed ... ok
+test cli_runtime::tests::run_declarations_are_kept_only_for_this_run_and_a_report_only_when_it_verifies ... ok
+test coding_action_history::tests::kinds_and_outcomes_map_closed ... ok
+test coding_authority::tests::story_48_2_allow_decision_derives_only_the_exact_policy_bound_grant ... ok
+test coding_action_history::tests::an_entry_that_cannot_be_kept_leaves_the_history_undeclared ... ok
+test coding_authority::tests::story_48_2_coding_approval_rejects_targets_outside_the_parent_scope ... ok
+test coding_action_history::tests::the_view_shows_each_entry_or_says_the_history_is_unavailable ... ok
+test cli_runtime::tests::a_suspended_run_the_host_released_is_never_shown_as_unchanged ... ok
+test coding_catalog_host::tests::documentation_packs_need_the_host_clock_and_store ... ok
+test coding_authority::tests::story_48_2_coding_approval_binds_parent_call_targets_preimages_and_plan ... ok
+test coding_authority::tests::story_48_2_runtime_policy_is_stable_across_bounded_actions_and_denies_expansion ... ok
+test coding_catalog_host::tests::each_documentation_pack_operation_opens_the_store_and_closes_it_again ... ok
+test coding_catalog_host::tests::the_catalog_host_refuses_every_run_operation ... ok
+test coding_change_review::tests::a_changed_missing_or_refused_target_never_shows_a_misleading_diff ... ok
+test coding_change_review::tests::a_creation_review_shows_every_added_line_escaped_and_refuses_an_existing_file ... ok
+test coding_change_review::tests::a_patch_review_shows_exactly_the_planned_hunks_for_the_bound_preimage ... ok
+test coding_change_review::tests::a_selected_write_review_recomputes_its_selection_and_refuses_tampering ... ok
+test coding_changes::tests::published_edit_variants_match_the_closed_native_parser ... ok
+test coding_changes::tests::retained_gpt_python_text_fallback_remains_rejected ... ok
+test coding_changes::tests::story_48_2_change_tools_reject_traversal_out_of_scope_and_create_overrides ... ok
+test coding_changes::tests::story_48_2_create_proposal_binds_to_exact_parent_and_sibling_projection ... ok
+test coding_changes::tests::story_48_2_create_proposal_supports_the_exact_owned_worktree_root ... ok
+test coding_changes::tests::story_48_2_patch_proposal_binds_to_the_existing_exact_preimage_planner ... ok
+test coding_changes::tests::story_48_2_writable_roots_are_ordered_nonoverlapping_and_exact ... ok
+test coding_catalog_host::tests::an_ended_runs_stored_chains_are_read_with_retention_applied ... ok
+test coding_catalog_host::tests::each_extension_operation_opens_the_store_once_and_closes_it_again ... ok
+test coding_catalog_host::tests::each_memory_operation_opens_the_store_once_and_closes_it_again ... ok
+test coding_context::tests::a_first_composition_that_omits_a_retained_constraint_for_budget_is_refused ... ok
+test coding_context::tests::a_person_selected_write_is_described_by_its_actual_outcome ... ok
+test coding_context::tests::coding_context_accepts_a_contract_valid_resume_cursor ... ok
+test coding_context::tests::each_returned_context_keeps_one_content_free_view_in_order ... ok
+test coding_context::tests::exact_measurement_never_drops_essential_sources_or_retries_other_failures ... ok
+test coding_context::tests::model_visible_usage_examples_obey_operation_specific_native_rules ... ok
+test coding_context::tests::gpt_native_parameter_projection_covers_every_visible_closed_schema ... ok
+test coding_context::tests::model_rejection_is_an_essential_user_observation_never_tool_feedback ... ok
+test coding_context::tests::native_context_projects_verified_observations_without_changing_stored_contracts ... ok
+test coding_context::tests::measured_reflow_keeps_recent_call_result_pairs_in_execution_order ... ok
+test coding_context::tests::pre_effect_rejections_are_host_observations_not_tool_results_or_evidence ... ok
+test coding_context::tests::reflow_omits_supporting_sources_but_never_a_retained_constraint ... ok
+test coding_context::tests::story_48_2_context_accounts_tool_results_and_omits_stale_sources ... ok
+test coding_context::tests::retained_muse_overflow_reselects_whole_sources_with_visible_accounting ... ok
+test coding_context::tests::story_48_2_context_keeps_repository_text_untrusted_and_profile_bound ... ok
+test coding_development_activation::tests::exact_private_marked_git_workspace_is_the_only_activation ... ok
+test coding_development_client::tests::a_declared_route_is_shown_with_its_history_in_both_formats ... ok
+test coding_development_client::tests::a_hunk_selection_names_at_least_one_and_fewer_than_all_hunks ... ok
+test coding_development_client::tests::a_memory_answer_is_shown_only_when_it_acknowledges_the_sent_request ... ok
+test coding_development_client::tests::a_pack_import_keeps_only_answers_that_acknowledge_what_was_sent ... ok
+test coding_development_client::tests::a_requested_export_is_rendered_or_noticed_in_both_formats ... ok
+test coding_development_client::tests::a_requested_export_is_written_before_the_outcome_which_stays_last_on_stdout ... ok
+test coding_development_client::tests::a_selectable_review_lists_its_hunks_and_the_derived_write_shows_only_the_selection ... ok
+test coding_development_client::tests::a_support_bundle_observes_the_invocation_and_is_skipped_only_when_cancelled ... ok
+test coding_development_client::tests::an_ended_runs_stored_histories_are_shown_with_a_requested_export ... ok
+test coding_development_client::tests::an_extension_answer_is_shown_only_when_it_acknowledges_the_sent_request ... ok
+test coding_development_client::tests::an_overlong_selection_is_answered_and_asked_again ... ok
+test coding_development_client::tests::an_unverifiable_or_truncated_run_is_reported_unavailable_in_both_formats ... ok
+test coding_development_client::tests::approval_delay_enforces_its_existing_ceiling_and_preserves_pending_cancellation ... ok
+test coding_development_client::tests::approval_delay_observes_a_later_stop_before_the_full_delay ... ok
+test coding_development_client::tests::each_job_control_event_is_shown_as_it_happens_in_both_formats ... ok
+test coding_development_client::tests::host_launch_refusal_is_preserved_without_relabeling_as_transport ... ok
+test coding_development_client::tests::only_the_exact_word_publishes_a_support_bundle ... ok
+test coding_development_client::tests::preauthorization_cancellation_remains_unconsumed_and_returns_cancelled_exit ... ok
+test coding_development_client::tests::run_declarations_show_recoverability_and_each_context_view_or_say_unavailable ... ok
+test coding_development_client::tests::run_progress_is_projected_per_run_and_never_claims_review_or_delivery ... ok
+test coding_development_client::tests::the_job_state_and_each_control_answer_are_shown_in_both_formats ... ok
+test coding_development_client::tests::the_review_reader_stays_inside_the_workspace_and_renders_both_formats ... ok
+test coding_development_client::tests::the_suspend_resume_probe_suspends_once_and_resumes_only_a_suspended_run ... ok
+test coding_development_runtime::tests::correction_allowlist_never_recovers_identity_capacity_truncation_or_unknown_errors ... ok
+test coding_development_runtime::tests::native_setup_refusals_retain_their_categories_without_private_inputs ... ok
+test coding_development_runtime::tests::native_tool_composition_refusals_keep_local_codes_and_closed_ipc_failure ... ok
+test coding_development_runtime::tests::scripted_rollback_reads_paired_history_without_accepting_identity_or_digest_drift ... ok
+test coding_dispatch::tests::story_48_2_dispatch_fails_closed_before_any_provider_plan_exists ... ok
+test coding_dispatch::tests::story_48_2_dispatches_commands_and_validations_by_exact_digest ... ok
+test coding_context::tests::story_48_2_context_rejects_raw_instruction_authority_and_counter_substitution ... ok
+test coding_dispatch::tests::story_48_2_dispatches_every_read_provider_without_effect_authority ... ok
+test coding_dispatch::tests::story_48_2_dispatches_git_patch_and_create_through_existing_contracts ... ok
+test coding_doc_packs::tests::a_pack_is_read_only_from_regular_files_inside_its_directory ... ok
+test coding_context::tests::story_50_2_checked_continuity_reopens_originals_and_rejects_cross_session_sources ... ok
+test coding_dispatch::tests::story_48_2_profile_dispatch_rejects_forged_change_plan_identity ... ok
+test coding_doc_packs::tests::a_refresh_supersedes_and_retention_deletes_thirty_days_later ... ok
+test coding_doc_packs::tests::a_staged_import_takes_only_chunks_that_continue_a_listed_file ... ok
+test coding_doc_packs::tests::an_import_leaves_room_for_every_later_deletion ... ok
+test coding_doc_packs::tests::answers_render_as_escaped_text_lines_or_json_rows ... ok
+test coding_doc_packs::tests::dates_versions_identities_and_terms_parse_exactly ... ok
+test coding_context::tests::the_view_list_is_unavailable_past_its_bound_or_for_a_resumed_run ... ok
+test coding_doc_packs::tests::only_a_receipt_for_the_sent_manifest_that_recomputes_is_kept ... ok
+test coding_doc_packs::tests::operations_need_a_clock_and_an_open_store_and_refusals_change_nothing ... ok
+test coding_doc_packs::tests::requests_and_answers_are_parsed_closed ... ok
+test coding_doc_packs::tests::deletion_and_search_go_through_the_stored_catalog ... ok
+test coding_doc_packs::tests::an_import_arrives_in_chunks_and_commits_once_every_file_matches ... ok
+test coding_doc_packs::tests::a_stored_version_must_restore_as_the_catalog_kept_it ... ok
+test coding_extensions::tests::a_scope_keeps_at_most_its_bound_of_keys ... ok
+test coding_extensions::tests::a_stored_dependency_must_lock_the_installed_manifest ... ok
+test coding_extensions::tests::a_stored_catalog_is_verified_again_at_every_operation ... ok
+test coding_extensions::tests::files_are_read_only_as_bounded_regular_files ... ok
+test coding_extensions::tests::answers_render_as_escaped_text_lines_or_json_rows ... ok
+test coding_extensions::tests::requests_and_answers_are_parsed_closed ... ok
+test coding_extensions::tests::only_an_answer_to_the_sent_request_is_acknowledged ... ok
+test coding_extensions::tests::the_committed_sample_is_regenerated_from_its_published_seeds ... ok
+test coding_extensions::tests::timestamps_digests_and_identities_parse_exactly ... ok
+test coding_extensions::tests::every_refusal_changes_nothing ... ok
+test coding_guidance::tests::budget_guidance_cannot_widen_the_profile ... ok
+test coding_extensions::tests::a_revocation_list_deactivates_only_what_it_reaches_within_its_scope ... ok
+test coding_history::tests::an_inverse_write_restores_large_and_crlf_files_and_refuses_later_edits ... ok
+test coding_history::tests::exact_record_and_reference_admit_one_fresh_rollback_request ... ok
+test coding_history::tests::record_or_artifact_substitution_fails_closed ... ok
+test coding_extensions::tests::signed_extensions_install_under_a_trusted_signer_and_survive_reopening ... ok
+test coding_hunk_selection::tests::a_strict_subset_derives_one_self_contained_write_of_only_the_accepted_hunks ... ok
+test coding_hunk_selection::tests::stale_mismatched_and_non_subset_selections_are_refused ... ok
+test coding_hunk_selection::tests::the_selected_write_is_registered_for_shells_only ... ok
+test coding_hunk_selection::tests::the_selected_write_refuses_drift_and_tampered_arguments ... ok
+test coding_guidance::tests::stop_guidance_prevents_profile_construction ... ok
+test coding_guidance::tests::trusted_guidance_only_removes_authority_and_strengthens_completion ... ok
+test coding_live_runtime::tests::a_resumed_run_declares_neither_part_whatever_its_owners_hold ... ok
+test coding_live_runtime::tests::a_route_is_declared_only_for_the_composition_that_chose_it ... ok
+test coding_live_runtime::tests::a_withheld_suspension_is_never_claimed_and_then_follows_the_job ... ok
+test coding_live_runtime::tests::each_verified_outcome_ends_the_job_truthfully ... ok
+test coding_live_runtime::tests::matching_terminal_event_and_verified_worker_outcome_are_presented_together ... ok
+test coding_live_runtime::tests::passive_live_cancellation_busy_owner_is_not_an_uncancelled_observation ... ok
+test coding_live_runtime::tests::passive_live_cancellation_poison_remains_unavailable ... ok
+test coding_live_runtime::tests::passive_live_cancellation_preserves_first_exact_signal ... ok
+test coding_live_runtime::tests::a_job_control_history_is_withheld_after_a_restart_or_an_unread_head ... ok
+test coding_live_runtime::tests::without_the_job_phase_a_decision_only_withdraws_a_suspension ... ok
+test coding_live_runtime::tests::worker_outcome_without_terminal_event_keeps_existing_bounded_refusal ... ok
+test coding_live_runtime::tests::terminal_event_without_worker_outcome_cannot_escape_refresh_as_presentable ... ok
+test coding_memory::tests::a_stored_catalog_that_does_not_decode_is_refused ... ok
+test coding_memory::tests::answers_render_as_escaped_text_lines_or_json_rows ... ok
+test coding_memory::tests::citations_paths_and_times_parse_exactly ... ok
+test coding_memory::tests::a_remembered_item_cites_a_kept_file_and_survives_reopening ... ok
+test coding_hunk_selection::tests::selections_over_large_crlf_and_offset_files_bind_and_unparsable_ones_are_refused ... ok
+test coding_memory::tests::requests_and_answers_are_parsed_closed ... ok
+test coding_memory::tests::every_refusal_changes_nothing ... ok
+test coding_operation::tests::story_48_2_operation_digest_binds_profile_call_target_and_effect ... ok
+test coding_operation::tests::story_48_2_target_plans_cover_every_native_effect_family ... ok
+test coding_memory::tests::only_an_answer_to_the_sent_request_is_acknowledged ... ok
+test coding_projection::tests::story_48_2_projection_binds_complete_map_commit_and_workspace ... ok
+test coding_projection::tests::story_48_2_projection_excludes_policy_paths_and_enforces_request_limits ... ok
+test coding_projection::tests::story_48_2_projection_selects_exact_files_and_bounded_descendants ... ok
+test coding_recipe::tests::a_manifest_file_is_read_only_when_absolute_regular_bounded_and_sealed ... ok
+test coding_recipe::tests::a_recipe_crosses_the_wire_closed_and_absent_is_not_encoded ... ok
+test coding_plan::tests::story_48_2_plan_binding_accepts_only_the_verified_record_chain ... ok
+test coding_memory::tests::revoking_a_source_reaches_only_the_named_workspace ... ok
+test coding_recipe::tests::only_writes_have_a_target_the_plan_checks ... ok
+test coding_recipe::tests::the_committed_samples_are_the_manifests_this_test_seals ... ok
+test coding_recipe::tests::a_run_scope_admits_writes_inside_the_plan_until_its_bound ... ok
+test coding_live_runtime::tests::a_resumed_run_continues_only_its_running_job ... ok
+test coding_recipe::tests::parameters_are_typed_by_their_declaration_and_checked_before_launch ... ok
+test coding_recoverability::tests::a_human_edit_or_missing_file_is_a_conflict_that_blocks_older_writes ... ok
+test coding_recipe::tests::the_person_sees_the_recipe_before_launch_and_the_plan_after_the_run ... ok
+test coding_recoverability::tests::a_received_run_declaration_must_match_its_run_seal_and_summary ... ok
+test coding_recoverability::tests::a_run_effect_list_comes_from_executed_calls_and_their_published_records ... ok
+test coding_recoverability::tests::a_write_chain_is_recoverable_newest_first_while_the_file_holds_its_postimage ... ok
+test coding_recoverability::tests::already_reverted_and_broken_chains_are_distinguished ... ok
+test coding_recoverability::tests::creates_commands_and_uncertain_effects_are_never_claimed_recoverable ... ok
+test coding_recoverability::tests::identities_and_paths_follow_record_rules_and_rendering_is_bounded ... ok
+test coding_recoverability::tests::a_resumed_run_is_never_declared_from_its_post_restart_record ... ok
+test coding_recoverability::tests::the_effect_recorder_declares_only_a_complete_record_of_its_own_run ... ok
+test coding_recoverability::tests::independent_paths_foreign_records_duplicates_and_bounds_are_checked ... ok
+test coding_route::tests::a_run_is_routed_locally_and_its_receipt_keeps_the_kernel_digest ... ok
+test coding_route::tests::a_receipt_or_route_history_that_does_not_bind_this_local_run_is_dropped ... ok
+test coding_route::tests::the_route_is_rendered_or_said_to_be_unavailable ... ok
+test coding_route::tests::local_only_mode_keeps_every_remote_route_unavailable_even_with_a_grant ... ok
+test coding_recipe::tests::the_host_instantiates_the_plan_against_the_workspace_registry ... ok
+test coding_run::tests::durable_coding_request_preserves_an_exact_resume_cursor ... ok
+test coding_run::tests::story_48_2_run_request_binds_profile_task_packet_policy_and_ephemeral_mode ... ok
+test coding_run::tests::story_48_2_run_request_rejects_task_packet_and_policy_drift ... ok
+test coding_support_bundle::tests::a_declined_cancelled_or_refused_offer_writes_nothing ... ok
+test coding_support_bundle::tests::a_verified_local_only_route_is_the_offline_observation ... ok
+test coding_support_bundle::tests::an_expired_preview_is_not_published ... ok
+test coding_support_bundle::tests::only_a_confirmed_preview_is_published_once_into_the_private_directory ... ok
+test coding_support_bundle::tests::the_bundle_names_only_what_the_invocation_observed ... ok
+test coding_tools::tests::story_48_2_command_tool_rejects_overrides_and_duplicate_registration ... ok
+test coding_tools::tests::story_48_2_command_tool_selects_only_an_exact_frozen_template ... ok
+test coding_tools::tests::story_48_2_native_catalog_is_exact_local_and_mcp_independent ... ok
+test coding_tools::tests::story_48_2_validation_tool_reuses_the_exact_registered_command ... ok
+test coding_recipe::tests::the_plan_is_bound_into_the_run_and_kept_only_when_it_is_what_was_sent ... ok
+test coding_verifier::tests::story_48_2_changed_completion_requires_later_validation_git_and_receipts ... ok
+test coding_verifier::tests::story_48_2_no_op_requires_clean_git_and_rejects_model_state_substitution ... ok
+test computer_use::tests::sprint_84_irreversible_actions_require_separate_confirmation ... ok
+test computer_use::tests::sprint_84_preview_binds_every_visible_action_field ... ok
+test computer_use::tests::sprint_84_receipt_requires_changed_screenshot_exact_state_and_certain_termination ... ok
+test computer_use::tests::sprint_84_structured_tool_availability_forbids_fallback ... ok
+test conversation_runtime::tests::list_and_search_have_no_non_kernel_context_or_authority ... ok
+test conversation_runtime::tests::state_sensitive_commands_fail_without_exact_kernel_context ... ok
+test demo_documents::tests::boundary_links_hidden_binary_and_unsupported_are_reported ... ok
+test demo_documents::tests::file_total_depth_and_selected_root_bounds_are_enforced ... ok
+test demo_documents::tests::inventory_limit_fails_closed_and_context_omission_is_visible ... ok
+test demo_documents::tests::multiline_source_ranges_extract_exact_utf8_bytes ... ok
+test demo_documents::tests::snapshots_retrieve_exact_sources_and_validate_membership ... ok
+test desktop_experience::tests::approval_claim_requires_a_grant_identity ... ok
+test desktop_experience::tests::approval_screens_carry_no_effect ... ok
+test desktop_experience::tests::architecture_has_no_second_authority_boundary ... ok
+test desktop_experience::tests::checkpoint_comparison_reports_exact_dimensions ... ok
+test desktop_experience::tests::delete_requires_explicit_approval ... ok
+test desktop_experience::tests::every_conversation_action_remains_a_preview ... ok
+test desktop_experience::tests::navigation_filters_every_declared_dimension ... ok
+test desktop_experience::tests::transcript_items_are_inert ... ok
+test desktop_experience::tests::workspace_selection_is_local_relative_and_obsidian_independent ... ok
+test desktop_lifecycle::tests::all_protocol_operations_are_kernel_forwarded_and_inert ... ok
+test desktop_lifecycle::tests::clean_complete_checkpoint_can_resume ... ok
+test desktop_lifecycle::tests::direct_access_or_effect_is_rejected ... ok
+test desktop_lifecycle::tests::only_one_writer_lease_is_admitted ... ok
+test desktop_lifecycle::tests::package_contract_cannot_claim_signing_or_installation ... ok
+test desktop_lifecycle::tests::package_contract_requires_all_local_asset_classes ... ok
+test desktop_lifecycle::tests::status_is_display_only_and_digest_bound ... ok
+test desktop_lifecycle::tests::uncertain_or_locked_checkpoint_enters_read_only_safe_mode ... ok
+test diagnostic_export::tests::a_support_bundle_is_previewed_and_published_only_by_one_approval ... ok
+test diagnostic_export::tests::a_support_bundle_with_a_secret_path_or_disorder_is_refused ... ok
+test diagnostic_export::tests::cancellation_mismatch_expiry_and_existing_destination_write_nothing ... ok
+
+running 1 test
+test diagnostic_export::tests::crash_before_publication_leaves_no_artifact ... ok
+test diagnostic_export::tests::crash_export_child ... ok
+test diagnostic_export::tests::preview_approval_publishes_exactly_once_with_private_mode ... ok
+test diagnostic_export::tests::prohibited_source_canaries_never_reach_preview_receipt_or_export ... ok
+test diagnostic_export::tests::unsafe_nonprivate_and_synchronized_destinations_are_denied ... ok
+test document_control_coordinator::tests::every_native_surface_routes_identity_only_inputs_through_one_coordinator ... ok
+test document_control_coordinator::tests::native_binding_rejects_workspace_input_and_approval_substitution ... ok
+test document_control_coordinator::tests::story_56_cross_record_stale_approval_and_precondition_fail_closed ... ok
+test document_control_coordinator::tests::story_56_incomplete_or_absent_approval_remains_visible_and_inert ... ok
+test document_control_coordinator::tests::story_56_product_composition_binds_register_previews_reviews_and_eight_skills ... ok
+test engineering_gateway::tests::exact_remote_route_executes_and_every_transport_substitution_fails_closed ... ok
+test engineering_model::tests::current_local_profiles_cannot_cross_the_product_bridge ... ok
+test coding_session::tests::story_48_2_profile_binds_repository_worktree_model_offline_state_and_tools ... ok
+test engineering_runtime::tests::model_preflight_refusals_have_closed_codes_and_recovery ... ok
+test coding_verifier::tests::story_48_2_verifier_rejects_stale_evidence_and_git_before_write ... ok
+test engineering_runtime::tests::fifty_thousand_byte_turn_is_exact_durable_and_reopenable ... ok
+test executive_coordinator::tests::every_native_surface_routes_identity_only_executive_inputs_through_one_coordinator ... ok
+test executive_coordinator::tests::native_executive_binding_rejects_workspace_and_record_substitution ... ok
+test executive_coordinator::tests::story_54_duplicate_privacy_scope_and_changes_since_without_prior_fail_closed ... ok
+test executive_coordinator::tests::story_54_native_composition_binds_every_projection_to_one_source_snapshot ... ok
+test executive_coordinator::tests::story_54_privacy_scope_fails_closed_without_partial_cross_class_views ... ok
+test feature_activation::tests::current_activation_is_closed_and_unavailable_features_are_off ... ok
+test feature_activation::tests::disabled_ingress_and_retrieval_leave_no_tool_registration ... ok
+test feature_activation::tests::every_unavailable_feature_and_dependency_broadening_fails_closed ... ok
+test foundational_rollout::tests::legacy_migration_preserves_zero_hidden_retry_and_requires_beta_opt_in ... ok
+test foundational_rollout::tests::post_release_review_is_content_free_local_and_has_no_transport_authority ... ok
+test foundational_rollout::tests::rollback_and_emergency_disable_take_precedence_without_registration ... ok
+test foundational_rollout::tests::rollback_is_complete_monotonic_and_reenrollment_is_explicit ... ok
+test frontier_coordinator::tests::cancellation_and_every_delivery_class_remain_local_denials ... ok
+test frontier_coordinator::tests::measured_native_preview_renders_records_and_never_delivers ... ok
+test frontier_coordinator::tests::stale_measured_state_mutation_expiry_and_bad_confirmation_fail_closed ... ok
+test frontier_import_coordinator::tests::story_52_accepted_steps_enter_native_flows_with_every_authority_gate_pending ... ok
+test frontier_import_coordinator::tests::story_52_directory_store_reopens_exact_chain_and_rejects_tampering ... ok
+test frontier_import_coordinator::tests::story_52_every_checkpoint_boundary_resumes_without_partial_or_duplicate_effect ... ok
+test frontier_import_coordinator::tests::story_52_restart_refuses_state_drift_tamper_and_incomplete_routing ... ok
+test frontier_release_coordinator::tests::story_53_all_delivery_surfaces_fail_to_local_denial_receipts ... ok
+test frontier_release_coordinator::tests::story_53_directory_reopen_rejects_tampering_and_preserves_exact_phase ... ok
+test frontier_release_coordinator::tests::story_53_every_release_phase_recovers_without_delivery_or_duplicate_effect ... ok
+test frontier_release_coordinator::tests::story_53_manual_round_trip_remains_local_authority_free_and_optional ... ok
+test headless::tests::all_surfaces_share_one_kernel_operation_and_terminal_result ... ok
+test headless::tests::closed_request_rejects_unknown_fields_and_every_command_family_is_bounded ... ok
+test headless::tests::headless_authority_is_exact_expiring_and_never_interactive ... ok
+test headless::tests::malformed_oversized_reordered_partial_and_hidden_approval_streams_fail ... ok
+test headless::tests::replay_resume_cancellation_and_transport_failure_do_not_duplicate_launch ... ok
+test knowledge_workflow_runtime::tests::admitted_semantic_index_is_bound_into_application_workflow_evidence ... ok
+test knowledge_workflow_runtime::tests::retrieval_substitution_fails_before_projection ... ok
+test knowledge_workflow_runtime::tests::s_028_it01_every_promoted_workflow_has_native_chat_and_cli_evidence_parity ... ok
+test knowledge_workflow_runtime::tests::semantic_application_adapter_rejects_invalid_or_empty_evidence ... ok
+test engineering_runtime::tests::multi_range_ingestion_is_durable_and_idempotent ... ok
+test knowledge_write::linux_tests::native_knowledge_crash_boundary_child ... ok
+test knowledge_write::linux_tests::native_markdown_preview_commits_and_external_edit_fails_closed ... ok
+test engineering_runtime::tests::plan_turn_persists_exact_hash_bound_markdown_without_implementation_authority ... ok
+test knowledge_write::linux_tests::native_process_stops_rebuild_index_only_from_canonical_markdown ... ok
+test knowledge_write::tests::preview_mutation_stale_bytes_wrong_context_and_unrelated_work_fail_closed ... ok
+test knowledge_write::tests::verified_create_becomes_only_a_closed_kernel_create_draft ... ok
+test knowledge_write::tests::verified_update_becomes_an_exact_whole_document_structured_patch ... ok
+test linux_coding::tests::story_48_2_linux_binding_holds_projection_root_file_and_parent_targets ... ok
+test linux_coding::tests::story_48_2_linux_binding_rejects_wrong_path_preimage_and_parent_relationship ... ok
+test linux_coding::tests::story_48_2_linux_composes_exact_patch_and_controlled_create_drafts ... ok
+test linux_coding::tests::story_48_2_linux_create_binding_detects_stale_root_observation ... ok
+test linux_coding_runtime::selected_write_tests::a_selected_write_is_derived_from_bytes_read_now_and_never_preauthorized ... ok
+test knowledge_write::linux_tests::native_index_publication_persists_and_reopens_exact_checkpoint_phases ... ok
+test coding_session::tests::story_48_2_profile_rejects_every_stale_foundational_binding ... ok
+test knowledge_write::linux_tests::stale_index_publication_retains_updating_checkpoint_without_false_verification ... ok
+test linux_coding_runtime::tests::failed_read_projection_preserves_canonical_terminal_dispositions ... ok
+test linux_coding_runtime::tests::a_write_outside_the_recipe_plan_is_refused_before_any_grant_or_approval ... FAILED
+test linux_coding_runtime::tests::read_output_secret_classes_are_withheld_before_model_projection ... ok
+test linux_coding_runtime::tests::command_git_validation_observers_preserve_consumption_failure_and_reopen ... FAILED
+test linux_coding_runtime::tests::report_wrapping_preserves_source_and_accounting_failure_dispositions ... ok
+test linux_coding_runtime::tests::research_journal_failures_preserve_uncertainty_cancellation_and_limits ... ok
+test linux_coding_runtime::tests::research_retrieval_integrity_faults_remain_uncertain_and_other_refusals_invalid ... ok
+test linux_coding_runtime::tests::durable_coding_run_persists_continuation_artifact_and_checkpoint ... FAILED
+test linux_coding_runtime::tests::read_cancellation_after_consumption_retains_exact_receipt_and_reopens ... FAILED
+test linux_coding_runtime::tests::read_precancel_receipt_precedes_original_acknowledgements_on_reopen ... FAILED
+test linux_coding_runtime::tests::retained_muse_missing_read_is_rejected_before_authority_and_not_path_absence_evidence ... FAILED
+test linux_coding_runtime::tests::s_048_mvp_e2e_denial_and_user_cancellation_start_no_effect ... FAILED
+test linux_coding_runtime::tests::s_048_mvp_e2e_controlled_create_test_git_and_verify_path ... FAILED
+test linux_coding_runtime::tests::story_22_1_native_tool_terminal_resume_child ... ignored, subprocess stop target; invoked only by the Story 22.1 native resume matrix
+test linux_coding_runtime::tests::story_22_1_native_tool_terminal_resume_matrix_never_replays_or_invents_state ... ignored, explicit Story 22.1 native one-hundred-resume campaign
+test linux_coding_runtime::tests::s_048_mvp_e2e_failed_validation_requires_a_repair_before_success ... FAILED
+test linux_coding_runtime::tests::s_048_mvp_e2e_repository_exploration_finishes_as_verified_no_op ... FAILED
+test linux_coding_runtime::tests::story_22_2_linux_generated_file_is_published_and_checkpoint_bound ... FAILED
+test linux_coding_runtime::tests::story_22_1_long_native_session_blocks_drift_and_preserves_exact_history ... FAILED
+test linux_coding_runtime::tests::story_22_2_linux_restart_recovers_large_terminal_model_artifact ... FAILED
+test linux_coding_runtime::tests::story_39_1_native_write_checkpoint_process_child ... ignored, subprocess stop target; invoked only by the Story 39.1 write recovery matrix
+test linux_coding_runtime::tests::story_22_2_linux_restart_rejects_lost_continuation_without_replaying_the_tool ... FAILED
+test linux_coding_runtime::tests::story_39_1_native_write_producer_gate_is_bounded_and_catches_split_canaries ... ok
+test linux_coding_runtime::tests::story_22_2_linux_restart_restores_checkpoint_without_replaying_the_tool ... FAILED
+test linux_coding_runtime::tests::story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay ... FAILED
+test linux_coding_runtime::tests::story_48_2_linux_git_adapter_runs_the_approved_plan_without_a_shell ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test linux_coding_runtime::tests::story_48_2_kernel_and_capability_git_planners_match_every_operation ... ok
+test linux_coding_runtime::tests::story_39_1_native_write_checkpoint_process_matrix_recovers_without_replay ... FAILED
+test linux_coding_runtime::tests::story_48_2_fake_model_completes_real_git_patch_test_git_and_verify_path ... FAILED
+test linux_coding_runtime::tests::story_48_2_linux_runtime_applies_one_exact_structured_patch ... FAILED
+test linux_coding_runtime::tests::story_48_2_linux_runtime_asks_then_derives_one_exact_operation_grant ... FAILED
+test linux_coding_runtime::tests::story_48_2_linux_runtime_creates_one_exact_absent_file ... FAILED
+test linux_coding_runtime::tests::story_48_2_linux_runtime_denial_and_create_collision_are_inert ... FAILED
+test linux_coding_runtime::tests::story_48_2_linux_runtime_executes_one_exact_bounded_command_after_approval ... FAILED
+test linux_coding_runtime::tests::story_48_2_linux_runtime_executes_one_kernel_checked_git_inspection ... FAILED
+test linux_coding_runtime::tests::story_48_2_linux_runtime_normalizes_targeted_validation_after_one_granted_command ... FAILED
+test linux_coding_runtime::tests::story_48_2_linux_runtime_persists_stale_patch_invalidation_without_overwrite ... FAILED
+test linux_coding_runtime::tests::story_48_2_linux_runtime_refuses_a_selection_over_a_changed_file ... FAILED
+test linux_coding_runtime::tests::story_48_2_linux_runtime_rejects_substitution_staleness_and_unbudgeted_actions ... FAILED
+test linux_coding_runtime::tests::story_48_2_linux_runtime_user_denial_is_inert_and_non_replayable ... FAILED
+test linux_coding_runtime::tests::story_48_2_linux_runtime_writes_only_the_selected_hunks_of_a_narrowed_patch ... FAILED
+test linux_coding_runtime::tests::story_48_2_native_command_json_order_preserves_exact_approved_call ... FAILED
+test linux_coding_runtime::tests::story_48_2_native_command_reserialization_after_approval_remains_denied ... FAILED
+test linux_coding_runtime::tests::story_50_2_and_sprint_95_child_caller_use_the_real_no_op_runtime_path ... FAILED
+test linux_coding_runtime::tests::story_50_2_exact_path_preauthorization_uses_kernel_write_grant_and_unknown_path_asks ... FAILED
+test linux_coding_runtime::tests::story_50_2_exact_registered_command_preauthorization_uses_fresh_grant ... FAILED
+test linux_coding_runtime::tests::story_50_2_session_preauthorization_issues_fresh_grants_and_exhausts_exact_budget ... FAILED
+test linux_coding_runtime::tests::story_50_2_workflow_caller_waits_for_user_and_denial_starts_no_effect ... FAILED
+test linux_coding_runtime::tests::story_50_2_session_preauthorization_revocation_and_expiry_fail_closed ... FAILED
+test linux_coding_runtime::tests::uncertain_command_and_validation_never_publish_completion_artifacts_or_replay ... FAILED
+test linux_evidence_reconciliation::tests::held_resolution_distinguishes_current_drift_and_missing ... ok
+test linux_evidence_reconciliation::tests::unsafe_substitution_is_not_downgraded_to_missing ... ok
+test linux_read::tests::absent_read_and_tool_approvals_do_not_require_a_clock_sample ... FAILED
+test linux_read::tests::approved_read_is_receipted_replay_safe_and_restart_verifiable ... ignored, requires the Fedora or Ubuntu systemd user session and Bubblewrap runtime
+test linux_read::tests::authenticated_host_frontier_review_renders_once_and_never_delivers ... FAILED
+test linux_read::tests::diagnostic_export_preview_and_approval_use_the_authenticated_workflow ... FAILED
+test linux_read::tests::doctor_sandbox_observation_does_not_turn_busy_or_uncertain_owner_into_health ... ok
+test linux_read::tests::doctor_uses_the_same_workflow_and_reports_unproved_components_unavailable ... FAILED
+test linux_read::tests::every_generic_tool_worker_returns_verified_result_one_receipt_and_no_workspace_mutation ... ignored, requires an installed root-owned package worker, systemd user session, and Bubblewrap
+test linux_read::tests::generic_tool_preview_binds_every_exact_object_and_cancels_without_receipt ... FAILED
+test linux_read::tests::generic_tool_preview_rejects_duplicate_unscoped_and_wrong_kind_projections ... FAILED
+test linux_read::tests::handoff_source_drift_and_missing_acknowledgment_fail_closed ... FAILED
+test linux_read::tests::handoff_transport_requires_current_review_and_never_delivers ... FAILED
+test linux_read::tests::lifecycle_matrix_retains_one_terminal_receipt_and_never_reports_false_completion ... ignored, requires root-owned lifecycle fixtures, a systemd user session, and Bubblewrap
+test linux_read::tests::model_picker_transport_is_unavailable_until_verified_and_never_falls_back ... FAILED
+test linux_read::tests::production_registry_contains_only_the_complete_closed_read_only_catalog ... ok
+test linux_read::tests::shared_runtime_is_unavailable_until_explicitly_composed_and_then_host_framed ... FAILED
+test linux_read::tests::stale_and_cancelled_previews_start_no_worker_and_publish_no_receipt ... ignored, requires the Fedora or Ubuntu worker manifest binaries
+test linux_read::tests::utc_format_and_preview_identity_are_stable ... ok
+test linux_repository_map::tests::live_projection_is_git_aware_policy_aware_and_non_following ... FAILED
+test linux_repository_map::tests::malformed_or_ambiguous_policy_rules_fail_closed ... ok
+test markdown_artifact_coordinator::tests::every_native_surface_uses_one_identity_bound_markdown_coordinator ... ok
+test markdown_artifact_coordinator::tests::generated_and_updated_markdown_enter_only_exact_unapproved_controlled_drafts ... ok
+test markdown_artifact_coordinator::tests::native_markdown_binding_rejects_mismatch_and_write_context_smuggling ... ok
+test markdown_artifact_coordinator::tests::story_57_product_composition_binds_quality_artifact_edit_round_trip_and_skills ... ok
+test markdown_artifact_coordinator::tests::story_57_stale_edit_and_changed_round_trip_fail_or_remain_visible ... ok
+test markdown_artifact_coordinator::tests::story_57_sticky_cancellation_and_dependency_failure_precede_content_evaluation ... ok
+test mcp_artifact_adapter::tests::sprint_81_all_artifact_definitions_preserve_native_contracts ... ok
+test mcp_artifact_adapter::tests::sprint_81_disablement_leaves_native_artifacts_and_no_mcp_registration ... ok
+test mcp_artifact_adapter::tests::sprint_81_request_reaches_gateway_and_native_pregrant_dispatcher ... ok
+test meeting_coordinator::tests::every_native_surface_routes_identity_only_meeting_inputs_through_one_coordinator ... ok
+test meeting_coordinator::tests::native_meeting_binding_rejects_workspace_and_minutes_substitution ... ok
+test meeting_coordinator::tests::story_55_product_composition_binds_all_records_and_six_skills_without_effects ... ok
+test meeting_coordinator::tests::story_55_product_composition_honors_sticky_cancellation_and_dependency_failure ... ok
+test meeting_coordinator::tests::story_55_product_composition_rejects_cross_meeting_and_cross_source_records ... ok
+test memory_file_runtime::tests::backup_and_portable_export_are_exact_and_authority_bounded ... ok
+test memory_file_runtime::tests::publish_and_last_good_restore_are_complete_controlled_transactions ... ok
+test memory_file_runtime::tests::simultaneous_edit_preserves_complete_conflict_bundle_and_current_identity ... ok
+test native_chat_runtime::tests::a_recipe_the_factory_does_not_bind_is_refused ... ok
+test native_chat_runtime::tests::completed_shared_runtime_is_prepared_started_and_replayed_by_exact_cursor ... ok
+test linux_coding_runtime::tests::uncertain_command_event_is_atomically_published_and_reopens ... FAILED
+test native_chat_runtime::tests::protected_approval_and_cancellation_preserve_exact_runtime_identity ... ok
+test obsidian_watcher::tests::polling_updates_only_the_disposable_index_and_emits_receipt ... ok
+test obsidian_watcher::tests::symlink_is_observed_without_following_and_fails_closed ... ok
+test participant_ingress::tests::headless_and_native_chat_share_the_exact_manifest_vector ... ok
+test participant_ingress::tests::incomplete_duplicate_or_mutated_sources_fail_closed ... ok
+test pdf_source_artifact::tests::admission_cache_context_tool_and_delete_share_exact_identities ... ok
+test pdf_source_artifact::tests::restart_refresh_cancellation_and_no_ocr_degrade_fail_closed ... ok
+test protocol::tests::denial_response_has_no_unbounded_error_detail ... ok
+test protocol::tests::diagnostic_export_protocol_is_closed_and_confirmation_bound ... ok
+test protocol::tests::engineering_rpc_is_closed_and_chunk_remains_inside_frame ... ok
+test protocol::tests::exact_doctor_request_round_trips_without_probe_fields ... ok
+test protocol::tests::exact_preview_request_round_trips ... ok
+test protocol::tests::generic_tool_request_preserves_exact_argument_bytes_and_projection_kind ... ok
+test protocol::tests::handoff_requests_are_local_closed_and_confirmation_bound ... ok
+test protocol::tests::malformed_values_and_digest_are_rejected ... ok
+test protocol::tests::model_discovery_and_revalidation_requests_are_closed ... ok
+test native_chat_runtime::tests::controlled_write_mode_is_admitted_only_from_the_exact_trusted_factory_request ... ok
+test protocol::tests::unknown_version_field_and_oversize_fail_closed ... ok
+test public_research::tests::host_request_type_and_validator_are_the_shared_contract ... ok
+test research_plan::tests::host_plan_decoder_uses_the_canonical_owners_exact_type ... ok
+test linux_coding_runtime::tests::uncertain_git_never_publishes_observations_or_replays_consumed_authority ... FAILED
+test linux_coding_runtime::tests::uncertain_git_event_is_atomically_published_and_reopens ... FAILED
+test runtime_ipc::tests::a_suspended_step_crosses_the_wire_and_names_only_its_boundary ... ok
+test runtime_ipc::tests::an_ended_run_answer_crosses_the_wire_closed_and_only_at_the_current_version ... ok
+test runtime_ipc::tests::a_documentation_pack_request_crosses_the_wire_closed ... ok
+test runtime_ipc::tests::each_authenticated_client_process_has_its_own_ledger_scope ... ok
+test protocol::tests::native_chat_runtime_requests_are_closed_exact_and_host_framed ... ok
+test runtime_ipc::tests::job_control_crosses_the_wire_without_a_client_scope_or_a_direct_cancel ... ok
+test runtime_ipc::tests::a_memory_request_crosses_the_wire_closed ... ok
+test runtime_ipc::tests::run_declarations_cross_the_wire_exactly_and_only_at_the_current_version ... ok
+test runtime_ipc::tests::the_host_decides_job_control_under_the_scope_it_derived ... ok
+test runtime_ipc::tests::an_extension_request_crosses_the_wire_closed ... ok
+test runtime_ipc::tests::the_largest_chunk_of_documentation_text_fits_one_frame ... ok
+test runtime_ipc::tests::oversized_run_declarations_are_refused_and_the_service_keeps_answering ... ok
+test runtime_parity_tests::story_50_2_narrow_workflow_authority_rejects_every_broadening_without_execution ... ok
+test runtime_producer_contract_tests::a_member_the_types_do_not_name_is_refused_in_every_fixture ... ok
+test runtime_producer_contract_tests::a_repeated_member_is_refused_in_every_fixture ... ok
+test runtime_ipc::tests::every_frame_is_decoded_exactly_in_both_directions ... ok
+test runtime_parity_tests::story_50_2_read_only_and_coding_packets_are_equal_across_all_three_callers ... ok
+test runtime_producer_contract_tests::print_runtime_producer_fixtures ... ignored, run by scripts/runtime_producer_fixtures.py
+test runtime_producer_contract_tests::a_changed_record_is_refused_or_dropped_by_the_client ... ok
+test runtime_read_tests::story_22_5_prepared_source_flows_through_model_tool_verifier_and_terminal_lineage ... ok
+test runtime_read_tests::story_22_5_stale_required_source_and_tokenizer_drift_stop_before_model ... ok
+test runtime_read_tests::story_23_4_fake_model_composes_multiple_reads_search_and_read_only_git ... ok
+test runtime_read_tests::story_23_4_fake_model_uses_existing_native_read_tool_then_verifies_completion ... ok
+test runtime_read_tests::story_50_3_artifact_heavy_steps_use_one_supervisor_and_common_coordinator ... ok
+test runtime_producer_contract_tests::a_run_request_with_sampling_values_decodes_exactly_and_verifies ... ok
+test runtime_producer_contract_tests::each_fixture_decodes_exactly_and_verifies_as_a_client_verifies_it ... ok
+test runtime_producer_contract_tests::the_committed_fixtures_are_the_records_the_runtime_builds ... ok
+test runtime_start_tests::a_persisted_recorder_keeps_each_entry_in_memory_and_in_the_store ... ok
+test runtime_start_tests::a_cancellation_of_a_suspended_run_ends_it_from_its_checkpoint ... ok
+test runtime_start_tests::a_run_resumed_after_a_restart_marks_its_stored_job_control_chain_incomplete ... ok
+test runtime_start_tests::a_suspended_run_whose_host_ends_keeps_its_stored_chain_open ... ok
+test runtime_start_tests::cli_start_failure_is_not_replaced_by_failed_best_effort_release ... ok
+test runtime_start_tests::explicit_release_still_discards_unstarted_ticket_without_composition ... ok
+test runtime_start_tests::live_failed_composition_cannot_reenter_factory ... ok
+test runtime_start_tests::live_failed_starts_do_not_retain_prepared_slots ... ok
+test runtime_start_tests::live_invalid_or_substituted_start_preserves_exact_preparation ... ok
+test runtime_start_tests::live_subscription_failure_consumes_ticket_and_drops_owned_coordinator ... ok
+test runtime_start_tests::native_failed_composition_cannot_reenter_factory ... ok
+test runtime_start_tests::native_failed_starts_do_not_retain_prepared_slots ... ok
+test runtime_start_tests::native_initial_advance_failure_keeps_ticket_consumed_and_drops_coordinator ... ok
+test runtime_start_tests::native_invalid_or_substituted_start_preserves_exact_preparation ... ok
+test runtime_start_tests::the_live_service_declares_only_a_held_ended_run_that_is_not_busy ... ok
+test runtime_start_tests::a_withdrawn_or_cancelled_suspension_never_stops_the_run ... ok
+test runtime_tools::tests::coding_retained_muse_read_shape_is_correctable_but_denials_are_not ... ok
+test runtime_tools::tests::story_16_2_artifact_catalog_uses_common_registry_and_closed_validator ... ok
+test runtime_tools::tests::story_16_3_every_native_tool_has_one_complete_composition_policy ... ok
+test runtime_tools::tests::story_23_4_all_existing_read_only_tools_share_the_common_registry ... ok
+test runtime_start_tests::an_applied_suspension_stops_at_the_checkpoint_and_a_resumption_continues_it_in_host ... ok
+test runtime_tools::tests::story_23_4_duplicate_pack_registration_fails_without_replacing_tools ... ok
+test runtime_tools::tests::story_23_4_git_inspection_uses_its_existing_fixed_planner ... ok
+test runtime_tools::tests::story_23_4_registry_runs_the_existing_closed_argument_validator ... ok
+test runtime_tools::tests::story_50_3_disabled_artifact_and_retrieval_features_register_no_tools ... ok
+test runtime_transport::tests::a_member_repeated_in_any_object_is_refused ... ok
+test runtime_transport::tests::bounded_session_preauthorization_is_exact_expiring_and_revocable ... ok
+test source_artifact_runtime::tests::story_22_3_all_native_text_log_tools_use_one_production_dispatcher ... ok
+test source_artifact_runtime::tests::story_22_3_native_log_diagnostics_are_bounded_fresh_and_cancellable ... ok
+test spreadsheet_source_artifact::tests::admission_manifest_sheet_summary_and_cache_bind_exact_source ... ok
+test spreadsheet_source_artifact::tests::chat_cli_and_headless_adapters_return_identical_verified_ranges ... ok
+test spreadsheet_source_artifact::tests::combined_artifact_context_uses_exact_counter_and_one_projection_per_source ... ok
+test spreadsheet_source_artifact::tests::crash_receipt_and_cleanup_leave_no_retrievable_projection_or_effect_claim ... ok
+test spreadsheet_source_artifact::tests::exact_sheet_cell_search_and_context_use_one_fresh_projection ... ok
+test spreadsheet_source_artifact::tests::persisted_restart_invalidation_release_delete_and_reattachment_are_exact ... ok
+test spreadsheet_source_artifact::tests::stale_restricted_missing_and_bounded_sheet_requests_fail_closed ... ok
+test word_artifact_coordinator::tests::cancellation_dependency_source_and_generation_fail_closed ... ok
+test word_artifact_coordinator::tests::every_native_surface_routes_identity_only_generation_through_one_coordinator ... ok
+test runtime_start_tests::a_stop_without_a_request_or_a_continuation_that_differs_is_refused ... ok
+test word_artifact_coordinator::tests::exact_replay_reuses_both_projection_caches_without_storing_source_authority ... ok
+test word_artifact_coordinator::tests::native_word_binding_rejects_command_mismatch_and_write_authority_smuggling ... ok
+test word_artifact_coordinator::tests::generated_binary_enters_controlled_writer_only_as_an_unapproved_exact_draft ... ok
+test word_source_artifact::tests::cancellation_invalidation_delete_and_reattach_are_truthful ... ok
+test word_artifact_coordinator::tests::product_coordinator_binds_inspection_sidecar_source_projection_and_generation ... ok
+test word_source_artifact::tests::common_word_projection_is_identical_for_every_supported_client ... ok
+test word_source_artifact::tests::persisted_manifest_restarts_only_from_exact_existing_payload_reference ... ok
+test word_source_artifact::tests::prepared_word_uses_common_dispatcher_without_parser_or_effect_bypass ... ok
+test word_source_artifact::tests::word_sections_have_complete_multi_profile_and_combined_budget_accounting ... ok
+test runtime_start_tests::the_live_service_owns_each_run_job_and_decides_cancellation_through_the_ledger ... ok
+test workflow_assignment::tests::sprint_95_assignment_is_bound_to_the_shared_runtime_submission ... ok
+test workflow_caller::tests::caller_submission_binds_packet_tools_targets_and_authority ... ok
+test runtime_transport::tests::a_32_bit_value_decodes_exactly_as_the_runtime_writes_it ... ok
+test workflow_supervisor::tests::workflow_attempts_use_the_common_client_driver_and_presentation_cannot_change_results ... ok
+test workflow_assignment::tests::sprint_95_recursive_dependency_parent_drift_and_unreviewed_result_fail_closed ... ok
+test workflow_caller::tests::caller_submission_rejects_substitution_and_broadening ... ok
+
+failures:
+
+---- linux_coding_runtime::tests::a_write_outside_the_recipe_plan_is_refused_before_any_grant_or_approval stdout ----
+
+thread 'linux_coding_runtime::tests::a_write_outside_the_recipe_plan_is_refused_before_any_grant_or_approval' (58994) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::command_git_validation_observers_preserve_consumption_failure_and_reopen stdout ----
+
+thread 'linux_coding_runtime::tests::command_git_validation_observers_preserve_consumption_failure_and_reopen' (58997) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::durable_coding_run_persists_continuation_artifact_and_checkpoint stdout ----
+
+thread 'linux_coding_runtime::tests::durable_coding_run_persists_continuation_artifact_and_checkpoint' (58998) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::read_cancellation_after_consumption_retains_exact_receipt_and_reopens stdout ----
+
+thread 'linux_coding_runtime::tests::read_cancellation_after_consumption_retains_exact_receipt_and_reopens' (59001) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::read_precancel_receipt_precedes_original_acknowledgements_on_reopen stdout ----
+
+thread 'linux_coding_runtime::tests::read_precancel_receipt_precedes_original_acknowledgements_on_reopen' (59004) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::retained_muse_missing_read_is_rejected_before_authority_and_not_path_absence_evidence stdout ----
+
+thread 'linux_coding_runtime::tests::retained_muse_missing_read_is_rejected_before_authority_and_not_path_absence_evidence' (59009) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::s_048_mvp_e2e_denial_and_user_cancellation_start_no_effect stdout ----
+
+thread 'linux_coding_runtime::tests::s_048_mvp_e2e_denial_and_user_cancellation_start_no_effect' (59013) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::s_048_mvp_e2e_controlled_create_test_git_and_verify_path stdout ----
+
+thread 'linux_coding_runtime::tests::s_048_mvp_e2e_controlled_create_test_git_and_verify_path' (59011) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::s_048_mvp_e2e_failed_validation_requires_a_repair_before_success stdout ----
+
+thread 'linux_coding_runtime::tests::s_048_mvp_e2e_failed_validation_requires_a_repair_before_success' (59015) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::s_048_mvp_e2e_repository_exploration_finishes_as_verified_no_op stdout ----
+
+thread 'linux_coding_runtime::tests::s_048_mvp_e2e_repository_exploration_finishes_as_verified_no_op' (59017) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_22_2_linux_generated_file_is_published_and_checkpoint_bound stdout ----
+
+thread 'linux_coding_runtime::tests::story_22_2_linux_generated_file_is_published_and_checkpoint_bound' (59021) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_22_1_long_native_session_blocks_drift_and_preserves_exact_history stdout ----
+
+thread 'linux_coding_runtime::tests::story_22_1_long_native_session_blocks_drift_and_preserves_exact_history' (59020) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_22_2_linux_restart_recovers_large_terminal_model_artifact stdout ----
+
+thread 'linux_coding_runtime::tests::story_22_2_linux_restart_recovers_large_terminal_model_artifact' (59023) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_22_2_linux_restart_rejects_lost_continuation_without_replaying_the_tool stdout ----
+
+thread 'linux_coding_runtime::tests::story_22_2_linux_restart_rejects_lost_continuation_without_replaying_the_tool' (59026) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_22_2_linux_restart_restores_checkpoint_without_replaying_the_tool stdout ----
+
+thread 'linux_coding_runtime::tests::story_22_2_linux_restart_restores_checkpoint_without_replaying_the_tool' (59029) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay stdout ----
+
+thread 'linux_coding_runtime::tests::story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay' (59030) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_39_1_native_write_checkpoint_process_matrix_recovers_without_replay stdout ----
+
+thread 'linux_coding_runtime::tests::story_39_1_native_write_checkpoint_process_matrix_recovers_without_replay' (59032) panicked at shells/host/src/linux_coding_runtime.rs:7170:13:
+assertion `left == right` failed: 
+thread 'linux_coding_runtime::tests::story_39_1_native_write_checkpoint_process_child' (59034) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  left: Some(101)
+ right: Some(93)
+
+---- linux_coding_runtime::tests::story_48_2_fake_model_completes_real_git_patch_test_git_and_verify_path stdout ----
+
+thread 'linux_coding_runtime::tests::story_48_2_fake_model_completes_real_git_patch_test_git_and_verify_path' (59037) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_48_2_linux_runtime_applies_one_exact_structured_patch stdout ----
+
+thread 'linux_coding_runtime::tests::story_48_2_linux_runtime_applies_one_exact_structured_patch' (59041) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_48_2_linux_runtime_asks_then_derives_one_exact_operation_grant stdout ----
+
+thread 'linux_coding_runtime::tests::story_48_2_linux_runtime_asks_then_derives_one_exact_operation_grant' (59042) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_48_2_linux_runtime_creates_one_exact_absent_file stdout ----
+
+thread 'linux_coding_runtime::tests::story_48_2_linux_runtime_creates_one_exact_absent_file' (59044) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_48_2_linux_runtime_denial_and_create_collision_are_inert stdout ----
+
+thread 'linux_coding_runtime::tests::story_48_2_linux_runtime_denial_and_create_collision_are_inert' (59046) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_48_2_linux_runtime_executes_one_exact_bounded_command_after_approval stdout ----
+
+thread 'linux_coding_runtime::tests::story_48_2_linux_runtime_executes_one_exact_bounded_command_after_approval' (59049) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_48_2_linux_runtime_executes_one_kernel_checked_git_inspection stdout ----
+
+thread 'linux_coding_runtime::tests::story_48_2_linux_runtime_executes_one_kernel_checked_git_inspection' (59051) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_48_2_linux_runtime_normalizes_targeted_validation_after_one_granted_command stdout ----
+
+thread 'linux_coding_runtime::tests::story_48_2_linux_runtime_normalizes_targeted_validation_after_one_granted_command' (59053) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_48_2_linux_runtime_persists_stale_patch_invalidation_without_overwrite stdout ----
+
+thread 'linux_coding_runtime::tests::story_48_2_linux_runtime_persists_stale_patch_invalidation_without_overwrite' (59055) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_48_2_linux_runtime_refuses_a_selection_over_a_changed_file stdout ----
+
+thread 'linux_coding_runtime::tests::story_48_2_linux_runtime_refuses_a_selection_over_a_changed_file' (59057) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_48_2_linux_runtime_rejects_substitution_staleness_and_unbudgeted_actions stdout ----
+
+thread 'linux_coding_runtime::tests::story_48_2_linux_runtime_rejects_substitution_staleness_and_unbudgeted_actions' (59059) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_48_2_linux_runtime_user_denial_is_inert_and_non_replayable stdout ----
+
+thread 'linux_coding_runtime::tests::story_48_2_linux_runtime_user_denial_is_inert_and_non_replayable' (59061) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_48_2_linux_runtime_writes_only_the_selected_hunks_of_a_narrowed_patch stdout ----
+
+thread 'linux_coding_runtime::tests::story_48_2_linux_runtime_writes_only_the_selected_hunks_of_a_narrowed_patch' (59063) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_48_2_native_command_json_order_preserves_exact_approved_call stdout ----
+
+thread 'linux_coding_runtime::tests::story_48_2_native_command_json_order_preserves_exact_approved_call' (59065) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_48_2_native_command_reserialization_after_approval_remains_denied stdout ----
+
+thread 'linux_coding_runtime::tests::story_48_2_native_command_reserialization_after_approval_remains_denied' (59067) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_50_2_and_sprint_95_child_caller_use_the_real_no_op_runtime_path stdout ----
+
+thread 'linux_coding_runtime::tests::story_50_2_and_sprint_95_child_caller_use_the_real_no_op_runtime_path' (59069) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_50_2_exact_path_preauthorization_uses_kernel_write_grant_and_unknown_path_asks stdout ----
+
+thread 'linux_coding_runtime::tests::story_50_2_exact_path_preauthorization_uses_kernel_write_grant_and_unknown_path_asks' (59071) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_50_2_exact_registered_command_preauthorization_uses_fresh_grant stdout ----
+
+thread 'linux_coding_runtime::tests::story_50_2_exact_registered_command_preauthorization_uses_fresh_grant' (59073) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_50_2_session_preauthorization_issues_fresh_grants_and_exhausts_exact_budget stdout ----
+
+thread 'linux_coding_runtime::tests::story_50_2_session_preauthorization_issues_fresh_grants_and_exhausts_exact_budget' (59075) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_50_2_workflow_caller_waits_for_user_and_denial_starts_no_effect stdout ----
+
+thread 'linux_coding_runtime::tests::story_50_2_workflow_caller_waits_for_user_and_denial_starts_no_effect' (59079) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::story_50_2_session_preauthorization_revocation_and_expiry_fail_closed stdout ----
+
+thread 'linux_coding_runtime::tests::story_50_2_session_preauthorization_revocation_and_expiry_fail_closed' (59077) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::uncertain_command_and_validation_never_publish_completion_artifacts_or_replay stdout ----
+
+thread 'linux_coding_runtime::tests::uncertain_command_and_validation_never_publish_completion_artifacts_or_replay' (59081) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_read::tests::absent_read_and_tool_approvals_do_not_require_a_clock_sample stdout ----
+
+thread 'linux_read::tests::absent_read_and_tool_approvals_do_not_require_a_clock_sample' (59091) panicked at shells/host/src/linux_read.rs:2345:18:
+verified worker manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_read::tests::authenticated_host_frontier_review_renders_once_and_never_delivers stdout ----
+
+thread 'linux_read::tests::authenticated_host_frontier_review_renders_once_and_never_delivers' (59097) panicked at shells/host/src/linux_read.rs:2345:18:
+verified worker manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_read::tests::diagnostic_export_preview_and_approval_use_the_authenticated_workflow stdout ----
+
+thread 'linux_read::tests::diagnostic_export_preview_and_approval_use_the_authenticated_workflow' (59103) panicked at shells/host/src/linux_read.rs:2345:18:
+verified worker manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_read::tests::doctor_uses_the_same_workflow_and_reports_unproved_components_unavailable stdout ----
+
+thread 'linux_read::tests::doctor_uses_the_same_workflow_and_reports_unproved_components_unavailable' (59110) panicked at shells/host/src/linux_read.rs:2345:18:
+verified worker manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_read::tests::generic_tool_preview_binds_every_exact_object_and_cancels_without_receipt stdout ----
+
+thread 'linux_read::tests::generic_tool_preview_binds_every_exact_object_and_cancels_without_receipt' (59116) panicked at shells/host/src/linux_read.rs:2345:18:
+verified worker manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_read::tests::generic_tool_preview_rejects_duplicate_unscoped_and_wrong_kind_projections stdout ----
+
+thread 'linux_read::tests::generic_tool_preview_rejects_duplicate_unscoped_and_wrong_kind_projections' (59122) panicked at shells/host/src/linux_read.rs:2345:18:
+verified worker manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_read::tests::handoff_source_drift_and_missing_acknowledgment_fail_closed stdout ----
+
+thread 'linux_read::tests::handoff_source_drift_and_missing_acknowledgment_fail_closed' (59128) panicked at shells/host/src/linux_read.rs:2345:18:
+verified worker manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_read::tests::handoff_transport_requires_current_review_and_never_delivers stdout ----
+
+thread 'linux_read::tests::handoff_transport_requires_current_review_and_never_delivers' (59134) panicked at shells/host/src/linux_read.rs:2345:18:
+verified worker manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_read::tests::model_picker_transport_is_unavailable_until_verified_and_never_falls_back stdout ----
+
+thread 'linux_read::tests::model_picker_transport_is_unavailable_until_verified_and_never_falls_back' (59140) panicked at shells/host/src/linux_read.rs:2345:18:
+verified worker manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_read::tests::shared_runtime_is_unavailable_until_explicitly_composed_and_then_host_framed stdout ----
+
+thread 'linux_read::tests::shared_runtime_is_unavailable_until_explicitly_composed_and_then_host_framed' (59147) panicked at shells/host/src/linux_read.rs:2345:18:
+verified worker manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_repository_map::tests::live_projection_is_git_aware_policy_aware_and_non_following stdout ----
+
+thread 'linux_repository_map::tests::live_projection_is_git_aware_policy_aware_and_non_following' (59154) panicked at shells/host/src/linux_repository_map.rs:748:54:
+Git verifies: LinuxRepositoryError { kind: InvalidGitArtifact }
+
+---- linux_coding_runtime::tests::uncertain_command_event_is_atomically_published_and_reopens stdout ----
+
+thread 'linux_coding_runtime::tests::uncertain_command_event_is_atomically_published_and_reopens' (59083) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::uncertain_git_never_publishes_observations_or_replays_consumed_authority stdout ----
+
+thread 'linux_coding_runtime::tests::uncertain_git_never_publishes_observations_or_replays_consumed_authority' (59087) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+---- linux_coding_runtime::tests::uncertain_git_event_is_atomically_published_and_reopens stdout ----
+
+thread 'linux_coding_runtime::tests::uncertain_git_event_is_atomically_published_and_reopens' (59086) panicked at shells/host/src/linux_coding_runtime.rs:11139:10:
+test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }
+
+
+failures:
+    linux_coding_runtime::tests::a_write_outside_the_recipe_plan_is_refused_before_any_grant_or_approval
+    linux_coding_runtime::tests::command_git_validation_observers_preserve_consumption_failure_and_reopen
+    linux_coding_runtime::tests::durable_coding_run_persists_continuation_artifact_and_checkpoint
+    linux_coding_runtime::tests::read_cancellation_after_consumption_retains_exact_receipt_and_reopens
+    linux_coding_runtime::tests::read_precancel_receipt_precedes_original_acknowledgements_on_reopen
+    linux_coding_runtime::tests::retained_muse_missing_read_is_rejected_before_authority_and_not_path_absence_evidence
+    linux_coding_runtime::tests::s_048_mvp_e2e_controlled_create_test_git_and_verify_path
+    linux_coding_runtime::tests::s_048_mvp_e2e_denial_and_user_cancellation_start_no_effect
+    linux_coding_runtime::tests::s_048_mvp_e2e_failed_validation_requires_a_repair_before_success
+    linux_coding_runtime::tests::s_048_mvp_e2e_repository_exploration_finishes_as_verified_no_op
+    linux_coding_runtime::tests::story_22_1_long_native_session_blocks_drift_and_preserves_exact_history
+    linux_coding_runtime::tests::story_22_2_linux_generated_file_is_published_and_checkpoint_bound
+    linux_coding_runtime::tests::story_22_2_linux_restart_recovers_large_terminal_model_artifact
+    linux_coding_runtime::tests::story_22_2_linux_restart_rejects_lost_continuation_without_replaying_the_tool
+    linux_coding_runtime::tests::story_22_2_linux_restart_restores_checkpoint_without_replaying_the_tool
+    linux_coding_runtime::tests::story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay
+    linux_coding_runtime::tests::story_39_1_native_write_checkpoint_process_matrix_recovers_without_replay
+    linux_coding_runtime::tests::story_48_2_fake_model_completes_real_git_patch_test_git_and_verify_path
+    linux_coding_runtime::tests::story_48_2_linux_runtime_applies_one_exact_structured_patch
+    linux_coding_runtime::tests::story_48_2_linux_runtime_asks_then_derives_one_exact_operation_grant
+    linux_coding_runtime::tests::story_48_2_linux_runtime_creates_one_exact_absent_file
+    linux_coding_runtime::tests::story_48_2_linux_runtime_denial_and_create_collision_are_inert
+    linux_coding_runtime::tests::story_48_2_linux_runtime_executes_one_exact_bounded_command_after_approval
+    linux_coding_runtime::tests::story_48_2_linux_runtime_executes_one_kernel_checked_git_inspection
+    linux_coding_runtime::tests::story_48_2_linux_runtime_normalizes_targeted_validation_after_one_granted_command
+    linux_coding_runtime::tests::story_48_2_linux_runtime_persists_stale_patch_invalidation_without_overwrite
+    linux_coding_runtime::tests::story_48_2_linux_runtime_refuses_a_selection_over_a_changed_file
+    linux_coding_runtime::tests::story_48_2_linux_runtime_rejects_substitution_staleness_and_unbudgeted_actions
+    linux_coding_runtime::tests::story_48_2_linux_runtime_user_denial_is_inert_and_non_replayable
+    linux_coding_runtime::tests::story_48_2_linux_runtime_writes_only_the_selected_hunks_of_a_narrowed_patch
+    linux_coding_runtime::tests::story_48_2_native_command_json_order_preserves_exact_approved_call
+    linux_coding_runtime::tests::story_48_2_native_command_reserialization_after_approval_remains_denied
+    linux_coding_runtime::tests::story_50_2_and_sprint_95_child_caller_use_the_real_no_op_runtime_path
+    linux_coding_runtime::tests::story_50_2_exact_path_preauthorization_uses_kernel_write_grant_and_unknown_path_asks
+    linux_coding_runtime::tests::story_50_2_exact_registered_command_preauthorization_uses_fresh_grant
+    linux_coding_runtime::tests::story_50_2_session_preauthorization_issues_fresh_grants_and_exhausts_exact_budget
+    linux_coding_runtime::tests::story_50_2_session_preauthorization_revocation_and_expiry_fail_closed
+    linux_coding_runtime::tests::story_50_2_workflow_caller_waits_for_user_and_denial_starts_no_effect
+    linux_coding_runtime::tests::uncertain_command_and_validation_never_publish_completion_artifacts_or_replay
+    linux_coding_runtime::tests::uncertain_command_event_is_atomically_published_and_reopens
+    linux_coding_runtime::tests::uncertain_git_event_is_atomically_published_and_reopens
+    linux_coding_runtime::tests::uncertain_git_never_publishes_observations_or_replays_consumed_authority
+    linux_read::tests::absent_read_and_tool_approvals_do_not_require_a_clock_sample
+    linux_read::tests::authenticated_host_frontier_review_renders_once_and_never_delivers
+    linux_read::tests::diagnostic_export_preview_and_approval_use_the_authenticated_workflow
+    linux_read::tests::doctor_uses_the_same_workflow_and_reports_unproved_components_unavailable
+    linux_read::tests::generic_tool_preview_binds_every_exact_object_and_cancels_without_receipt
+    linux_read::tests::generic_tool_preview_rejects_duplicate_unscoped_and_wrong_kind_projections
+    linux_read::tests::handoff_source_drift_and_missing_acknowledgment_fail_closed
+    linux_read::tests::handoff_transport_requires_current_review_and_never_delivers
+    linux_read::tests::model_picker_transport_is_unavailable_until_verified_and_never_falls_back
+    linux_read::tests::shared_runtime_is_unavailable_until_explicitly_composed_and_then_host_framed
+    linux_repository_map::tests::live_projection_is_git_aware_policy_aware_and_non_following
+
+test result: FAILED. 459 passed; 53 failed; 9 ignored; 0 measured; 0 filtered out; finished in 22.26s
+
+error: test failed, to rerun pass `-p agentmage-host --lib`
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-85460353a329bad0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-6f743f9a8144c4db)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agentmage-demo-documents.rs (target/debug/deps/agentmage_demo_documents-a93d37f4b2ffd2da)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-0026d62eaf8fd61b)
+
+running 15 tests
+test linux_bootstrap::tests::procfs_parent_parser_returns_the_real_parent_without_environment_input ... ok
+test package_verify::tests::candidate_cannot_satisfy_signed_release_mode_even_with_a_valid_signature ... ok
+test linux_bootstrap::tests::package_failure_precedes_runtime_socket_and_launch_material ... ok
+test package_verify::tests::candidate_manifest_cannot_omit_the_model_installer_boundary ... ok
+test package_verify::tests::candidate_manifest_cannot_omit_the_read_only_worker_boundary ... ok
+test package_verify::tests::candidate_manifest_must_bind_the_complete_payload_set ... ok
+test package_verify::tests::exact_candidate_payload_verifies_and_mutation_fails_closed ... ok
+test package_verify::tests::exact_signed_release_verifies_with_external_trust_root ... ok
+test package_verify::tests::relabeled_v1_manifest_cannot_enable_release_verification ... ok
+test package_verify::tests::signed_release_proof_loads_the_exact_management_only_model_catalog ... ok
+test package_verify::tests::symlinked_payload_parent_fails_closed ... ok
+test tests::host_binary_waits_for_verified_package_bootstrap ... ok
+test package_verify::tests::signed_release_rejects_manifest_mutation_and_wrong_trust_root ... ok
+test linux_bootstrap::tests::unsafe_runtime_parent_and_wrong_peer_fail_closed ... ok
+test linux_bootstrap::tests::verified_package_bootstrap_transfers_exact_one_use_identity_and_authenticates ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.43s
+
+     Running tests/native_read_cancellation.rs (target/debug/deps/native_read_cancellation-0aad7d5ce50e2cdf)
+
+running 2 tests
+test tests::actual_cli_native_command_and_validation_cancel_reopen_and_reuse ... ignored, requires capped native Linux lane, current CLI/host/worker binaries, and fresh private root
+test tests::actual_cli_native_read_cancel_retains_consumed_receipt_and_reopens ... ignored, requires capped native Linux lane, built lifecycle fixture, and fresh private root
+
+test result: ok. 0 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests agentmage_host
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: 1 target failed:
+    `-p agentmage-host --lib`

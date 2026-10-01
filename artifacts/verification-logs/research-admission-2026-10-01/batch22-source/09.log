@@ -1,0 +1,4 @@
+    Checking agentmage-kernel-engine v0.0.0 (<repo>/kernel/engine)
+    Checking agentmage-platform-linux v0.0.0 (<repo>/platforms/linux)
+    Checking agentmage-host v0.0.0 (<repo>/shells/host)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 27.49s

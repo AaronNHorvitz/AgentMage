@@ -1,0 +1,96 @@
+{
+  "schema_version": 2,
+  "stage": "batch22-canary",
+  "source_revision": "7872ab0d155c0cb44b9063cab5ba8809ef45daf7",
+  "scope": "Batch 22 Story 22.1 current-product canary sweep at the core commit 7872ab0d (it binds the coordinator tests), its unit test, the supply-chain check and whitespace; run alone because the codec producers require a clean tree.",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/story_22_1_canary_evidence.py",
+      "--write",
+      "--source-revision",
+      "7872ab0d155c0cb44b9063cab5ba8809ef45daf7"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_22_1_canary_evidence"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/story_22_1_canary_evidence.py": "44ec93b993cd349802825826fb913626c16d9b82ac92c585e68a0cb4e2c91cbf",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_story_22_1_canary_evidence.py": "0aec421735605077f38c148c71ab002a8cd3b535a47f8016f46b60c2dc3b7a6e"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/story_22_1_canary_evidence.py",
+        "--write",
+        "--source-revision",
+        "7872ab0d155c0cb44b9063cab5ba8809ef45daf7"
+      ],
+      "exit_code": 0,
+      "seconds": 4.316,
+      "log": "01.log",
+      "log_sha256": "a31c813afcfee033b10bfd8534145ee2ac195eddff97aa56fbd68a588b4c3028",
+      "private_log_sha256": "a31c813afcfee033b10bfd8534145ee2ac195eddff97aa56fbd68a588b4c3028"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_22_1_canary_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.145,
+      "log": "02.log",
+      "log_sha256": "78751713e675d0962c0443cc19b1e1e33ebb2fd4dce07471ca2973672ee9f940",
+      "private_log_sha256": "78751713e675d0962c0443cc19b1e1e33ebb2fd4dce07471ca2973672ee9f940"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.074,
+      "log": "03.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.004,
+      "log": "04.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

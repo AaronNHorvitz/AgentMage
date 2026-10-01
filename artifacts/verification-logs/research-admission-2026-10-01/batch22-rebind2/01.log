@@ -1,0 +1,9 @@
+{
+  "authority_change": false,
+  "codec_at_platform_edge": true,
+  "kernel_family_neutral": true,
+  "model_loaded": false,
+  "profile_activated": false,
+  "release_approval": false,
+  "status": "PASS-CONTRACT"
+}

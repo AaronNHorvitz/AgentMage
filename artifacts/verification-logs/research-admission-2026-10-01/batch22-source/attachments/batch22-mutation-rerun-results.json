@@ -1,0 +1,72 @@
+[
+  {
+    "id": "A8-grant-operation-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "A10-digest-without-plan",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "A11-digest-without-run",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "A13-digest-without-session",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "A14-digest-without-policy",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "A15-digest-without-tool",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "C3-resume-admitted",
+    "expected": "runtime_loop::tests::research_admission_tests::a_resumed_admitted_run_is_refused_even_with_its_checkpoint",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::a_resumed_admitted_run_is_refused_even_with_its_checkpoint"
+    ],
+    "compile_error": false
+  }
+]

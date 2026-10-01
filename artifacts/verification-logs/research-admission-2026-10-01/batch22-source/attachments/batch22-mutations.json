@@ -1,0 +1,527 @@
+[
+ {
+  "id": "A1-plan-task-unbound",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "        if plan.draft().task_id != context.task_id.as_str()\n            || plan.draft().search_endpoint.is_none()",
+    "        if plan.draft().search_endpoint.is_none()"
+   ]
+  ]
+ },
+ {
+  "id": "A2-schema-one-admitted",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            || plan.draft().search_endpoint.is_none()\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "A3-offline-admitted",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            || plan.scope().network_requirement().is_err()\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "A4-session-id-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            || !valid_identifier(context.session_id.as_str())\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "A5-run-id-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            || !valid_identifier(context.run_id.as_str())\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "A6-policy-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            || !valid_sha256(&context.policy_sha256)\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "A7-effects-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            || tool.declared_effects != [network]\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "A8-grant-operation-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            || tool.required_grant.operation != network\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "A9-reusable-grant",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            || !tool.required_grant.single_use\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "A10-digest-without-plan",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            plan.plan_sha256(),\n            plan.scope().policy_sha256(),",
+    "            plan.scope().policy_sha256(),"
+   ]
+  ]
+ },
+ {
+  "id": "A11-digest-without-run",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            context.run_id.as_str(),\n            context.policy_sha256.as_str(),",
+    "            context.policy_sha256.as_str(),"
+   ]
+  ]
+ },
+ {
+  "id": "A12-digest-without-tool-version",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+  "replace": [
+   [
+    "            tool.tool_version.as_str(),\n            tool.definition_sha256.as_str(),",
+    "            tool.definition_sha256.as_str(),"
+   ]
+  ]
+ },
+ {
+  "id": "C1-line-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission",
+  "replace": [
+   [
+    "                if admission_lines != [run.admission.constraint().as_str()]\n                    || request.mode",
+    "                if request.mode"
+   ]
+  ]
+ },
+ {
+  "id": "C2-mode-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission",
+  "replace": [
+   [
+    "                    || request.mode != RuntimeSessionMode::DurableReadOnly\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "C3-resume-admitted",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission",
+  "replace": [
+   [
+    "                    || request.event_cursor.is_some()\n                    || !run.admission.binds",
+    "                    || !run.admission.binds"
+   ]
+  ]
+ },
+ {
+  "id": "C4-context-unbound",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission",
+  "replace": [
+   [
+    "                    || !run.admission.binds(&request) =>",
+    "                    || false =>"
+   ]
+  ]
+ },
+ {
+  "id": "C5-line-without-admission",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::ordinary_constructors_refuse_a_request_that_names_an_admission",
+  "replace": [
+   [
+    "            None if !admission_lines.is_empty() => return Err(RuntimeLoopError::UnsupportedMode),\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "C6-admitted-tool-count",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission",
+  "replace": [
+   [
+    "            .filter(|reference| *reference == admission.tool())\n            .count()\n            == 1",
+    "            .filter(|reference| *reference == admission.tool())\n            .count()\n            <= 1"
+   ]
+  ]
+ },
+ {
+  "id": "C7-other-tools-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission",
+  "replace": [
+   [
+    "                    operation_allowed_for_mode(\n                        mode,\n                        definition.required_grant.operation.operation(),\n                    )",
+    "                    true"
+   ]
+  ]
+ },
+ {
+  "id": "S1-budget-not-opened",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admitted_run_publishes_its_plan_opens_its_budget_and_accepts_the_public_get_completion",
+  "replace": [
+   [
+    "            self.open_research_budget()?;\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "S2-no-flush",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admitted_run_publishes_its_plan_opens_its_budget_and_accepts_the_public_get_completion",
+  "replace": [
+   [
+    "        flush(&mut self.tool_boundary).map_err(RuntimeLoopError::Dependency)?;\n        let now",
+    "        let _ = flush;\n        let now"
+   ]
+  ]
+ },
+ {
+  "id": "S3-plan-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+  "replace": [
+   [
+    "        if state.plan != plan\n            || &state.scope",
+    "        if &state.scope"
+   ]
+  ]
+ },
+ {
+  "id": "S4-scope-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+  "replace": [
+   [
+    "            || &state.scope != run.admission.scope()\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "S5-revision-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+  "replace": [
+   [
+    "            || state.revision != 0\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "S6-visits-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+  "replace": [
+   [
+    "            || progress.visits != 0\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "S7-cancelled-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+  "replace": [
+   [
+    "            || progress.cancelled\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "S8-port-error-ignored",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+  "replace": [
+   [
+    "        .map_err(RuntimeLoopError::Dependency)?;\n        let progress = &state.progress;",
+    "        .unwrap_or_else(|_| panic!(\"refused\"));\n        let progress = &state.progress;"
+   ]
+  ]
+ },
+ {
+  "id": "X1-ordinary-rule-for-admitted",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admitted_run_publishes_its_plan_opens_its_budget_and_accepts_the_public_get_completion",
+  "replace": [
+   [
+    "        && if admitted {\n            valid_admitted_network_execution(execution)\n        } else {",
+    "        && if false {\n            valid_admitted_network_execution(execution)\n        } else {"
+   ]
+  ]
+ },
+ {
+  "id": "X2-six-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admitted_success_must_be_the_prepared_public_get_completion",
+  "replace": [
+   [
+    "                && execution.artifact_candidates.len() == PUBLIC_GET_COMPLETION_ARTIFACTS\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "X3-report-artifacts-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admitted_success_must_be_the_prepared_public_get_completion",
+  "replace": [
+   [
+    "                && execution\n                    .artifact_candidates\n                    .iter()\n                    .all(|candidate| candidate.kind == RuntimeArtifactKind::Report)",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "X4-report-output-unchecked",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admitted_success_must_be_the_prepared_public_get_completion",
+  "replace": [
+   [
+    "            execution.result_output_kind == Some(RuntimeArtifactKind::Report)\n                && execution",
+    "            execution"
+   ]
+  ]
+ },
+ {
+  "id": "X5-unprepared-success",
+  "file": "kernel/engine/src/runtime_loop/artifact_preparation.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admitted_success_must_be_the_prepared_public_get_completion",
+  "replace": [
+   [
+    "            && self.receipt.is_none()\n        {\n            self.failed = true;",
+    "            && false\n        {\n            self.failed = true;"
+   ]
+  ]
+ },
+ {
+  "id": "X6-uncertain-refused",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results",
+  "replace": [
+   [
+    "        (OperationOutcome::Uncertain, StateChange::Uncertain)\n        | (",
+    "        ("
+   ]
+  ]
+ },
+ {
+  "id": "X7-success-unchanged-admitted",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results",
+  "replace": [
+   [
+    "        (OperationOutcome::Succeeded, StateChange::Changed) => {",
+    "        (OperationOutcome::Succeeded, _) => {"
+   ]
+  ]
+ },
+ {
+  "id": "X8-failure-refused",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admitted_failure_that_changed_nothing_is_accepted",
+  "replace": [
+   [
+    "            OperationOutcome::Failed\n            | OperationOutcome::Denied",
+    "            OperationOutcome::Denied"
+   ]
+  ]
+ }
+]

@@ -1,0 +1,350 @@
+[
+  {
+    "id": "A1-plan-task-unbound",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "A2-schema-one-admitted",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "A3-offline-admitted",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "A4-session-id-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "A5-run-id-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "A6-policy-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "A7-effects-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "A8-grant-operation-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": false,
+    "also_failed": true,
+    "failed": [],
+    "compile_error": false
+  },
+  {
+    "id": "A9-reusable-grant",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "A10-digest-without-plan",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": false,
+    "also_failed": true,
+    "failed": [],
+    "compile_error": false
+  },
+  {
+    "id": "A11-digest-without-run",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "A12-digest-without-tool-version",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admission_binds_its_plan_context_and_tool_and_refuses_what_it_cannot_bind",
+    "caught": false,
+    "also_failed": true,
+    "failed": [],
+    "compile_error": false
+  },
+  {
+    "id": "C1-line-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "C2-mode-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "C3-resume-admitted",
+    "expected": "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission",
+    "caught": false,
+    "also_failed": true,
+    "failed": [],
+    "compile_error": false
+  },
+  {
+    "id": "C4-context-unbound",
+    "expected": "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "C5-line-without-admission",
+    "expected": "runtime_loop::tests::research_admission_tests::ordinary_constructors_refuse_a_request_that_names_an_admission",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::ordinary_constructors_refuse_a_request_that_names_an_admission"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "C6-admitted-tool-count",
+    "expected": "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "C7-other-tools-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "S1-budget-not-opened",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admitted_run_publishes_its_plan_opens_its_budget_and_accepts_the_public_get_completion",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admitted_run_publishes_its_plan_opens_its_budget_and_accepts_the_public_get_completion",
+      "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "S2-no-flush",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admitted_run_publishes_its_plan_opens_its_budget_and_accepts_the_public_get_completion",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admitted_run_publishes_its_plan_opens_its_budget_and_accepts_the_public_get_completion"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "S3-plan-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "S4-scope-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "S5-revision-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "S6-visits-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "S7-cancelled-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "S8-port-error-ignored",
+    "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "X1-ordinary-rule-for-admitted",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admitted_run_publishes_its_plan_opens_its_budget_and_accepts_the_public_get_completion",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admitted_failure_that_changed_nothing_is_accepted",
+      "runtime_loop::tests::research_admission_tests::an_admitted_run_publishes_its_plan_opens_its_budget_and_accepts_the_public_get_completion"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "X2-six-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admitted_success_must_be_the_prepared_public_get_completion",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admitted_success_must_be_the_prepared_public_get_completion",
+      "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "X3-report-artifacts-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admitted_success_must_be_the_prepared_public_get_completion",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admitted_success_must_be_the_prepared_public_get_completion",
+      "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "X4-report-output-unchecked",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admitted_success_must_be_the_prepared_public_get_completion",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admitted_success_must_be_the_prepared_public_get_completion",
+      "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "X5-unprepared-success",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admitted_success_must_be_the_prepared_public_get_completion",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admitted_success_must_be_the_prepared_public_get_completion"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "X6-uncertain-refused",
+    "expected": "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "X7-success-unchanged-admitted",
+    "expected": "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "X8-failure-refused",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admitted_failure_that_changed_nothing_is_accepted",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admitted_failure_that_changed_nothing_is_accepted",
+      "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results"
+    ],
+    "compile_error": false
+  }
+]
