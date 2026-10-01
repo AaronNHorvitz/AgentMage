@@ -221,8 +221,16 @@ and answer the prompts on the terminal.
   that range of the run's history, written before the outcome row. The export includes
   its digest and exact document text, and nothing is written elsewhere. A range the run
   does not have prints a notice with the reason `range` on standard error instead
-  (`reason=range` in text, `"reason": "range"` in JSON). The histories last only as long
-  as the host process; keeping them across restarts is still open (AMR-05.9.6).
+  (`reason=range` in text, `"reason": "range"` in JSON).
+- Ended run: the host also keeps each run's three histories in its encrypted
+  operational store, closed when the run is released (Decision 0129). After the host
+  has ended, run `python3 -m scripts.coding_harness ended-run --root "$demo" --run
+  RUN_ID`, where `RUN_ID` is the `run_id` of the outcome row. The host composes no run.
+  It reads the stored chains back, and the CLI prints each one with whether it was
+  closed and whether it is complete. Add `--action-history-export effects:1:3` for a
+  redacted export of a range. A chain whose host ended before the run did, or that was
+  resumed after a restart, is shown as never closed or incomplete, never as a complete
+  record.
 - Support bundle: create a private directory (`mkdir -m 700 "$demo-bundles"`) and add
   `--support-bundle "$demo-bundles"` to `start` (Decision 0128). After the invocation
   ends, whether it succeeded, failed or could not start, standard error shows a preview

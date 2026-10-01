@@ -94,8 +94,9 @@ use crate::{
         BoundStructuredChange, StructuredShadowChangeSetRequest, build_structured_shadow_change_set,
     },
     coding_action_history::{
-        ExecutedAction, GrantSource, RefusedAction, RunActionHistory, RunActionHistorySource,
-        RunActionRecorder, RunIdentity, executed_action_draft, refused_action_draft,
+        ExecutedAction, GrantSource, PersistedRunChain, RefusedAction, RunActionHistory,
+        RunActionHistorySource, RunActionRecorder, RunIdentity, executed_action_draft,
+        refused_action_draft,
     },
     coding_authority::{
         ApprovedCodingGrant, ApprovedCodingGrantRequest, CodingApprovalRequest,
@@ -796,6 +797,13 @@ where
             run_effects: RunEffectRecorder::new(),
             action_history: RunActionRecorder::new(),
         })
+    }
+
+    /// Also appends every entry of this run's effects history to its stored
+    /// chain (Decision 0129). Called before the run starts, so no entry is
+    /// kept only in memory.
+    pub fn persist_action_history(&mut self, chain: PersistedRunChain) {
+        self.action_history = RunActionRecorder::persisted(chain);
     }
 
     fn evaluate_call(

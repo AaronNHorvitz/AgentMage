@@ -359,6 +359,19 @@ class CodingHarnessTests(unittest.TestCase):
             "--objective", "repair", "--support-bundle", "/expected-bundles",
         ])
         self.assertEqual(parsed.support_bundle, Path("/expected-bundles"))
+        # Decision 0129: an ended run is named closed, and only a valid
+        # identity reaches the CLI.
+        parsed = coding_harness.parser().parse_args([
+            "ended-run", "--root", "/expected", "--run", "coding-development-run-1",
+            "--action-history-export", "job-control:1:2",
+        ])
+        self.assertEqual(
+            (parsed.command, parsed.run, parsed.action_history_export),
+            ("ended-run", "coding-development-run-1", "job-control:1:2"),
+        )
+        for invalid in ("", "run id", "../run", "r" * 129):
+            self.assertIsNone(coding_harness.RUN_ID.fullmatch(invalid))
+        self.assertIsNotNone(coding_harness.RUN_ID.fullmatch("coding-development-run-1"))
         with tempfile.TemporaryDirectory() as temporary:
             self.assertEqual(
                 coding_harness.support_bundle_directory(Path(temporary)), Path(temporary)

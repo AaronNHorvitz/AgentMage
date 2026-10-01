@@ -614,6 +614,7 @@ mod tests {
                 (DiagnosticState::Unavailable, "diagnostic.component.missing")
             );
         }
+        let wire = crate::runtime_ipc::RUNTIME_IPC_WIRE_VERSION.to_string();
         assert_eq!(
             bundle
                 .versions
@@ -622,7 +623,7 @@ mod tests {
                 .collect::<Vec<_>>(),
             [
                 ("agentmage-cli", CLI_VERSION),
-                ("ipc-wire", "10"),
+                ("ipc-wire", wire.as_str()),
                 ("run-declarations", "3"),
             ]
         );

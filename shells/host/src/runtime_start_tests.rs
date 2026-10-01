@@ -471,6 +471,8 @@ struct GatedFactory {
     report: crate::coding_recoverability::RecoverabilityReport,
     job_ledgers: Option<agentmage_kernel_engine::job_ledger_store::DurableJobLedgers>,
     route: Option<crate::coding_route::RunRouteDeclaration>,
+    run_histories:
+        Option<agentmage_kernel_engine::run_action_history_store::DurableRunActionHistories>,
 }
 
 impl NativeChatRuntimeFactory for GatedFactory {
@@ -512,6 +514,42 @@ impl NativeChatRuntimeFactory for GatedFactory {
         run_id: &RuntimeRunId,
     ) -> Option<crate::coding_route::RunRouteDeclaration> {
         self.route.take().filter(|_| run_id == &self.request.run_id)
+    }
+
+    fn take_run_action_histories(
+        &mut self,
+        run_id: &RuntimeRunId,
+    ) -> Option<agentmage_kernel_engine::run_action_history_store::DurableRunActionHistories> {
+        self.run_histories
+            .clone()
+            .filter(|_| run_id == &self.request.run_id)
+    }
+
+    /// Reads the run's stored chains from the shared fixture store, as the
+    /// development factory reads them from its own.
+    fn read_ended_run_action_histories(
+        &mut self,
+        run_id: &RuntimeRunId,
+    ) -> Result<crate::coding_action_history::EndedRunActionHistories, RuntimeTransportError> {
+        use agentmage_kernel_engine::run_action_history_store::RunActionChainName;
+        let histories = self
+            .run_histories
+            .as_ref()
+            .ok_or(RuntimeTransportError::RequestDenied)?;
+        let read = |chain| {
+            match histories.history(run_id.as_str(), chain) {
+            Ok(stored) => Ok(Some(stored.into())),
+            Err(agentmage_kernel_engine::run_action_history_store::RunActionHistoryStoreError::NotFound) => Ok(None),
+            Err(_) => Err(RuntimeTransportError::RuntimeFailed),
+        }
+        };
+        Ok(crate::coding_action_history::EndedRunActionHistories {
+            schema_version: crate::coding_action_history::ENDED_RUN_HISTORIES_SCHEMA_VERSION,
+            run_id: run_id.as_str().to_owned(),
+            effects: read(RunActionChainName::Effects)?,
+            job_control: read(RunActionChainName::JobControl)?,
+            routes: read(RunActionChainName::Routes)?,
+        })
     }
 }
 
@@ -556,6 +594,7 @@ fn the_live_service_declares_only_a_held_ended_run_that_is_not_busy() {
         report: report.clone(),
         job_ledgers: None,
         route: Some(route.clone()),
+        run_histories: None,
     });
     let input = RuntimePrepareInput {
         resume: false,
@@ -689,6 +728,29 @@ mod job_store {
             self.try_ledgers().expect("the store opens")
         }
 
+        /// The job ledgers and run action histories of one open store.
+        pub(crate) fn handles(
+            &self,
+        ) -> (
+            agentmage_kernel_engine::job_ledger_store::DurableJobLedgers,
+            agentmage_kernel_engine::run_action_history_store::DurableRunActionHistories,
+        ) {
+            let runtime =
+                agentmage_kernel_engine::operational_store::DurableAuthorityRuntime::open(
+                    &self.path,
+                    &agentmage_kernel_contracts::StrictLocalStorageObservation {
+                        filesystem: agentmage_kernel_contracts::StorageFilesystemClass::Local,
+                        synchronization_marker: None,
+                        root_identity_sha256: [7; 32],
+                        symlink_free: true,
+                    },
+                    &mut JobStoreKey,
+                    1,
+                )
+                .expect("the store opens");
+            (runtime.job_ledgers(), runtime.run_action_histories())
+        }
+
         /// Opens the store, which fails while another connection holds it.
         pub(crate) fn try_ledgers(
             &self,
@@ -721,6 +783,9 @@ fn gated_live_service(
     events: Vec<RuntimeEvent>,
     outcome: agentmage_kernel_contracts::RuntimeOutcome,
     ledgers: agentmage_kernel_engine::job_ledger_store::DurableJobLedgers,
+    run_histories: Option<
+        agentmage_kernel_engine::run_action_history_store::DurableRunActionHistories,
+    >,
 ) -> (
     LiveCodingRuntimeService<GatedFactory>,
     std::sync::mpsc::Sender<()>,
@@ -744,6 +809,7 @@ fn gated_live_service(
         report,
         job_ledgers: Some(ledgers),
         route: None,
+        run_histories,
     });
     let input = RuntimePrepareInput {
         resume: request.event_cursor.is_some(),
@@ -781,9 +847,14 @@ fn the_live_service_owns_each_run_job_and_decides_cancellation_through_the_ledge
         crate::runtime_read_tests::completed_native_read_fixture();
     assert!(observed_result && events.len() > 1);
     let store = JobLedgerStore::new("owner");
-    let ledgers = store.ledgers();
-    let (mut service, open_gate, input) =
-        gated_live_service(&request, events, outcome.clone(), ledgers.clone());
+    let (ledgers, histories) = store.handles();
+    let (mut service, open_gate, input) = gated_live_service(
+        &request,
+        events,
+        outcome.clone(),
+        ledgers.clone(),
+        Some(histories.clone()),
+    );
     service.prepare(input).unwrap();
     // A prepared run has no job yet.
     assert_eq!(
@@ -982,16 +1053,47 @@ fn the_live_service_owns_each_run_job_and_decides_cancellation_through_the_ledge
     );
     assert_eq!(kept[1].3, vec![applied.status.job.head_sha256.clone()]);
     assert_eq!(kept[4].3, vec![terminal.status.job.head_sha256.clone()]);
+    // Decision 0129: each entry was also stored, and the chain stays open
+    // until the run is released.
+    use agentmage_kernel_engine::run_action_history_store::RunActionChainName;
+    let stored = histories
+        .history(run.as_str(), RunActionChainName::JobControl)
+        .unwrap();
+    assert_eq!(stored.records, history.records);
+    assert_eq!(stored.head, history.head);
+    assert!(stored.complete && !stored.closed);
+    // While a run is held its store is busy, so an ended run is not read.
+    assert_eq!(
+        service.ended_run_action_histories(run),
+        Err(RuntimeTransportError::RequestDenied)
+    );
     service.release(run, sha).unwrap();
     assert_eq!(
         service.job_status(run, sha),
         Err(RuntimeTransportError::RunUnavailable)
     );
+    // Released: the chain is closed, and the ended run's stored histories
+    // are read back through the service.
+    let ended = service.ended_run_action_histories(run).unwrap();
+    let job_control = ended.job_control.clone().expect("stored job control chain");
+    assert!(job_control.closed && job_control.complete);
+    assert_eq!(job_control.records, history.records);
+    assert_eq!((ended.effects.clone(), ended.routes.clone()), (None, None));
+    assert_eq!(
+        crate::coding_action_history::verified_ended_run_histories(ended.clone(), run.as_str()),
+        Some(ended)
+    );
     drop(service);
     // The durable record replays after the store is reopened.
-    drop(ledgers);
-    let reopened = store.ledgers().observation(run.as_str()).unwrap();
+    drop((ledgers, histories));
+    let (ledgers, histories) = store.handles();
+    let reopened = ledgers.observation(run.as_str()).unwrap();
     assert_eq!(reopened, terminal.status.job);
+    let stored = histories
+        .history(run.as_str(), RunActionChainName::JobControl)
+        .unwrap();
+    assert!(stored.closed);
+    assert_eq!(stored.records, history.records);
 }
 
 /// The completed native read fixture as a controlled-write run that committed
@@ -1997,4 +2099,176 @@ fn a_stop_without_a_request_or_a_continuation_that_differs_is_refused() {
             .unwrap();
         assert_eq!((job.phase, job.revision), (JobPhase::Queued, 4));
     }
+}
+
+#[test]
+fn a_persisted_recorder_keeps_each_entry_in_memory_and_in_the_store() {
+    // Decision 0129: a persisted recorder keeps each entry in memory, then in
+    // its run's stored chain; an entry either could not keep leaves both
+    // incomplete; a chain joins as new, continued in this host or resumed
+    // after a restart, which marks it incomplete.
+    use crate::coding_action_history::{
+        PersistedRunChain, RunActionChain, RunActionRecorder, StoredChainStart,
+    };
+    use agentmage_kernel_engine::action_history::{
+        ActionAuthorization, ActionKind, ActionOutcome, ActionRecordDraft,
+    };
+    use agentmage_kernel_engine::run_action_history_store::{
+        RunActionChainName, RunActionHistoryStoreError,
+    };
+    let draft = |id: &str, at: u64| ActionRecordDraft {
+        action_kind: ActionKind::CommandRun,
+        action_id: id.to_owned(),
+        authorization: ActionAuthorization::Grant {
+            grant_id: format!("grant-{id}"),
+            grant_sha256: "7".repeat(64),
+        },
+        effect_sha256: "8".repeat(64),
+        outcome: ActionOutcome::Succeeded,
+        reason_code: "coding.approved.succeeded".to_owned(),
+        evidence_sha256s: vec!["9".repeat(64)],
+        recorded_at_epoch_ms: at,
+        retain_until_epoch_ms: at + 1_000,
+    };
+    let store = JobLedgerStore::new("persisted-recorder");
+    let (_, histories) = store.handles();
+    let begin = |start| {
+        PersistedRunChain::begin(
+            histories.clone(),
+            "run-persisted",
+            RunActionChain::Effects,
+            start,
+        )
+    };
+    // Only a new run creates its chain; nothing else attaches to a missing one.
+    for start in [
+        StoredChainStart::ContinueInHost,
+        StoredChainStart::AfterRestart,
+    ] {
+        assert_eq!(
+            begin(start).err(),
+            Some(RunActionHistoryStoreError::NotFound)
+        );
+    }
+    let mut recorder = RunActionRecorder::persisted(begin(StoredChainStart::New).unwrap());
+    assert!(recorder.is_persisted());
+    assert_eq!(
+        begin(StoredChainStart::New).err(),
+        Some(RunActionHistoryStoreError::Exists)
+    );
+    recorder.record(Some(draft("command-1", 10)));
+    recorder.record(Some(draft("command-2", 20)));
+    let declared = recorder.declare().expect("complete in memory");
+    let stored = histories
+        .history("run-persisted", RunActionChainName::Effects)
+        .unwrap();
+    assert_eq!(stored.records, declared.records);
+    assert_eq!(stored.head, declared.head);
+    assert!(stored.complete);
+    // Continuing in this host keeps the chain complete and appends after it.
+    let mut continued =
+        RunActionRecorder::persisted(begin(StoredChainStart::ContinueInHost).unwrap());
+    continued.record(Some(draft("command-3", 30)));
+    let stored = histories
+        .history("run-persisted", RunActionChainName::Effects)
+        .unwrap();
+    assert_eq!(stored.head.count, 3);
+    assert!(stored.complete);
+    // An entry neither could keep (time backwards) leaves both incomplete.
+    recorder.record(Some(draft("command-4", 5)));
+    assert_eq!(recorder.declare(), None);
+    assert!(
+        !histories
+            .history("run-persisted", RunActionChainName::Effects)
+            .unwrap()
+            .complete
+    );
+    // A store refusal of an entry memory kept (the chain was closed) leaves
+    // both incomplete too.
+    let mut refused = RunActionRecorder::persisted(
+        PersistedRunChain::begin(
+            histories.clone(),
+            "run-refused",
+            RunActionChain::Effects,
+            StoredChainStart::New,
+        )
+        .unwrap(),
+    );
+    refused.record(Some(draft("command-1", 10)));
+    histories
+        .close(
+            "run-refused",
+            RunActionChainName::Effects,
+            crate::coding_action_history::RUN_ACTION_HISTORY_OWNER,
+        )
+        .unwrap();
+    refused.record(Some(draft("command-2", 20)));
+    assert_eq!(refused.declare(), None);
+    // An owner that knows it missed an entry marks the stored chain too.
+    let mut marked = RunActionRecorder::persisted(
+        PersistedRunChain::begin(
+            histories.clone(),
+            "run-marked",
+            RunActionChain::Routes,
+            StoredChainStart::New,
+        )
+        .unwrap(),
+    );
+    marked.mark_incomplete();
+    assert_eq!(marked.declare(), None);
+    assert!(
+        !histories
+            .history("run-marked", RunActionChainName::Routes)
+            .unwrap()
+            .complete
+    );
+    // A detached recorder keeps its memory history and stops appending.
+    let mut detached = RunActionRecorder::persisted(
+        PersistedRunChain::begin(
+            histories.clone(),
+            "run-detached",
+            RunActionChain::Routes,
+            StoredChainStart::New,
+        )
+        .unwrap(),
+    );
+    detached.detach_store();
+    assert!(!detached.is_persisted());
+    detached.record(Some(draft("route-1", 10)));
+    assert_eq!(detached.declare().unwrap().records.len(), 1);
+    assert_eq!(
+        histories
+            .history("run-detached", RunActionChainName::Routes)
+            .unwrap()
+            .head
+            .count,
+        0
+    );
+    // Resuming after a restart marks the chain incomplete for good.
+    let job = PersistedRunChain::begin(
+        histories.clone(),
+        "run-restarted",
+        RunActionChain::JobControl,
+        StoredChainStart::New,
+    )
+    .unwrap();
+    drop(job);
+    PersistedRunChain::begin(
+        histories.clone(),
+        "run-restarted",
+        RunActionChain::JobControl,
+        StoredChainStart::AfterRestart,
+    )
+    .unwrap();
+    assert!(
+        !histories
+            .history("run-restarted", RunActionChainName::JobControl)
+            .unwrap()
+            .complete
+    );
+    // The host keeps every chain under the identity of its job ledgers.
+    assert_eq!(
+        crate::coding_action_history::RUN_ACTION_HISTORY_OWNER,
+        crate::coding_live_runtime::CODING_HOST_JOB_OWNER
+    );
 }

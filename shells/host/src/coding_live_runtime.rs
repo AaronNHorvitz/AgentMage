@@ -56,8 +56,9 @@ use agentmage_kernel_engine::{
 };
 
 use crate::coding_action_history::{
-    DecidedJobControl, MAX_RUN_ACTION_ENTRIES, RunActionHistory, RunActionHistorySource,
-    RunActionRecorder, job_control_draft,
+    DecidedJobControl, EndedRunActionHistories, MAX_RUN_ACTION_ENTRIES, PersistedRunChain,
+    RUN_ACTION_HISTORY_OWNER, RunActionChain, RunActionHistory, RunActionHistorySource,
+    RunActionRecorder, StoredChainStart, job_control_draft,
 };
 use crate::coding_client::{CodingClientError, LiveCodingCoordinatorPort};
 use crate::coding_context::RunContextInspectionSource;
@@ -68,6 +69,9 @@ use crate::runtime_transport::{
     RUN_DECLARATIONS_SCHEMA_VERSION, RuntimeClientScope, RuntimeJobControl, RuntimeJobStatus,
     RuntimePrepareInput, RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort,
     RuntimeTransportStep, is_suspension_event, resumed_run_request,
+};
+use agentmage_kernel_engine::run_action_history_store::{
+    DurableRunActionHistories, RunActionChainName, RunActionHistoryStoreError,
 };
 
 /// Owner identity of the coding host in every job ledger it keeps. The store
@@ -597,11 +601,22 @@ where
         let coordinator = self.factory.compose_runtime(&request)?;
         let job_ledgers = self.factory.take_job_ledgers(&request.run_id);
         let route = self.factory.take_route_declaration(&request.run_id);
+        let histories = self.factory.take_run_action_histories(&request.run_id);
+        // A run started from an event cursor here was resumed after a restart;
+        // a run continued in this host goes through `continue_from_checkpoint`.
+        let start = if request.event_cursor.is_none() {
+            StoredChainStart::New
+        } else {
+            StoredChainStart::AfterRestart
+        };
         let mut session = LiveCodingSession::spawn(request, coordinator, slow_subscriber_probe)
             .inspect_err(|_| {
                 eprintln!("coding.live.spawn-denied");
             })?;
         session.route = route;
+        if let Some(histories) = histories {
+            session.attach_run_histories(histories, start);
+        }
         if let Some(ledgers) = job_ledgers {
             session.begin_job(ledgers).inspect_err(|_| {
                 eprintln!("coding.live.job-start-denied");
@@ -746,8 +761,21 @@ where
         if !session.is_terminal() || session.request.request_sha256 != request_sha256 {
             return Err(RuntimeTransportError::RequestDenied);
         }
+        // Dropping the released, ended session closes its stored chains
+        // (Decision 0129).
         self.active.remove(key);
         Ok(())
+    }
+
+    fn ended_run_action_histories(
+        &mut self,
+        run_id: &RuntimeRunId,
+    ) -> Result<EndedRunActionHistories, RuntimeTransportError> {
+        // The store admits one connection, which a held run keeps open.
+        if !self.prepared.is_empty() || !self.active.is_empty() {
+            return Err(RuntimeTransportError::RequestDenied);
+        }
+        self.factory.read_ended_run_action_histories(run_id)
     }
 }
 
@@ -781,9 +809,12 @@ where
         let presented = std::mem::take(&mut held.events);
         // The same service decided every control request of this run, so its
         // job control history continues in the resumed session (Decision 0127).
-        let job_actions = std::mem::take(&mut held.job_actions);
+        let mut job_actions = std::mem::take(&mut held.job_actions);
         let recorded_controls = std::mem::take(&mut held.recorded_controls);
         let job_history_from_start = held.job_history_from_start;
+        // Every handle of the held run's store closes before it is opened
+        // again for the continuation (Decision 0129).
+        job_actions.detach_store();
         drop(held);
         let expected = resumed_run_request(&request, &point.event_cursor)?;
         let resumed = self
@@ -798,11 +829,15 @@ where
             .take_job_ledgers(&resumed.run_id)
             .ok_or(RuntimeTransportError::JobControlUnavailable)?;
         let route = self.factory.take_route_declaration(&resumed.run_id);
+        let histories = self.factory.take_run_action_histories(&resumed.run_id);
         let mut session = LiveCodingSession::spawn(resumed, coordinator, false)?;
         session.route = route;
         session.job_actions = job_actions;
         session.recorded_controls = recorded_controls;
         session.job_history_from_start = job_history_from_start;
+        if let Some(histories) = histories {
+            session.attach_run_histories(histories, StoredChainStart::ContinueInHost);
+        }
         session.sync_events()?;
         if session.events != presented {
             return Err(RuntimeTransportError::RuntimeEvidenceDenied);
@@ -862,6 +897,9 @@ struct LiveCodingSession {
     job_history_from_start: bool,
     /// The model route the factory chose for this composition (Decision 0128).
     route: Option<RunRouteDeclaration>,
+    /// The run's stored action histories, closed when the run is released
+    /// (Decision 0129).
+    run_histories: Option<DurableRunActionHistories>,
 }
 
 /// The durable job of one live run, owned by this service (Decision 0120).
@@ -983,7 +1021,49 @@ impl LiveCodingSession {
             recorded_controls: BTreeSet::new(),
             job_history_from_start,
             route: None,
+            run_histories: None,
         })
+    }
+
+    /// Appends this run's job control entries to its stored chain as well
+    /// (Decision 0129). A chain that cannot be begun leaves the history
+    /// incomplete; the run itself continues.
+    fn attach_run_histories(
+        &mut self,
+        histories: DurableRunActionHistories,
+        start: StoredChainStart,
+    ) {
+        match PersistedRunChain::begin(
+            histories.clone(),
+            self.request.run_id.as_str(),
+            RunActionChain::JobControl,
+            start,
+        ) {
+            Ok(chain) => self.job_actions.attach_store(chain),
+            Err(_) => {
+                eprintln!("coding.live.history-store-unavailable");
+                self.job_actions.mark_incomplete();
+            }
+        }
+        self.run_histories = Some(histories);
+    }
+
+    /// Closes every stored chain of this ended run. A chain the store does
+    /// not hold, or one already closed, needs nothing.
+    fn close_run_histories(&mut self) {
+        let Some(histories) = &self.run_histories else {
+            return;
+        };
+        for chain in RunActionChainName::ALL {
+            match histories.close(
+                self.request.run_id.as_str(),
+                chain,
+                RUN_ACTION_HISTORY_OWNER,
+            ) {
+                Ok(_) | Err(RunActionHistoryStoreError::NotFound) => {}
+                Err(_) => eprintln!("coding.live.history-close-failed"),
+            }
+        }
     }
 
     /// Records this run's job as started, before any work is dispatched
@@ -1742,6 +1822,12 @@ impl LiveCodingSession {
 
 impl Drop for LiveCodingSession {
     fn drop(&mut self) {
+        // An ended run's stored chains close when its session is dropped:
+        // when the client releases it, or when the host ends while holding
+        // it. A run still running stays open, so its chains say so.
+        if self.is_terminal() {
+            self.close_run_histories();
+        }
         let _ = self.commands.try_send(WorkerCommand::Stop);
         if !self.busy
             && let Some(worker) = self.worker.take()
@@ -1869,6 +1955,7 @@ mod tests {
             recorded_controls: BTreeSet::new(),
             job_history_from_start: true,
             route: None,
+            run_histories: None,
         };
         (session, result_tx, outcome)
     }

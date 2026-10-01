@@ -16,7 +16,7 @@ use agentmage_kernel_engine::runtime_artifact::{RuntimeArtifactPage, RuntimeArti
 use agentmage_kernel_engine::runtime_coordinator::seal_runtime_run_request;
 use agentmage_kernel_engine::runtime_loop::RuntimeSuspensionPoint;
 
-use crate::coding_action_history::RunActionHistory;
+use crate::coding_action_history::{EndedRunActionHistories, RunActionHistory};
 use crate::coding_recoverability::RecoverabilityReport;
 use crate::coding_route::RunRouteReceipt;
 
@@ -494,6 +494,15 @@ pub trait RuntimeTransportPort {
         _run_id: &RuntimeRunId,
         _request_sha256: &str,
     ) -> Result<RuntimeRunDeclarations, RuntimeTransportError> {
+        Err(RuntimeTransportError::RequestDenied)
+    }
+
+    /// Reads the stored action histories of one ended run from the host's
+    /// operational store while no run is held (Decision 0129).
+    fn ended_run_action_histories(
+        &mut self,
+        _run_id: &RuntimeRunId,
+    ) -> Result<EndedRunActionHistories, RuntimeTransportError> {
         Err(RuntimeTransportError::RequestDenied)
     }
 

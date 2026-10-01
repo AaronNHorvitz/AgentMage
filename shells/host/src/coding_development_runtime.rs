@@ -46,6 +46,9 @@ use agentmage_kernel_engine::{
         LocalModelController, ModelAdmissionCatalog, ModelUsePurpose, RejectedModelOutput,
     },
     repository_safety::{OwnedWorktreeRecord, WorktreeDisposition},
+    run_action_history_store::{
+        DurableRunActionHistories, RunActionChainName, RunActionHistoryStoreError,
+    },
     runtime_artifact::{
         MAX_RUNTIME_ARTIFACT_BYTES, RUNTIME_CONTINUATION_MEDIA_TYPE, RUNTIME_REQUEST_MEDIA_TYPE,
         RuntimeArtifactReadRequest, decode_runtime_continuation_state,
@@ -79,6 +82,9 @@ use agentmage_platform_linux_inference::{
 use sha2::{Digest, Sha256};
 
 use crate::{
+    coding_action_history::{
+        PersistedRunChain, RunActionChain, RunActionRecorder, StoredChainStart,
+    },
     coding_authority::{
         CodingRuntimePolicy, CodingRuntimePolicyRequest, build_coding_runtime_policy,
     },
@@ -373,6 +379,9 @@ pub struct CodingDevelopmentRuntimeFactory {
     /// The model route of the last composed run, until the host service
     /// takes it (Decision 0128).
     composed_route: Option<(RuntimeRunId, crate::coding_route::RunRouteDeclaration)>,
+    /// The stored run action histories of the last composed run's store,
+    /// until the host service takes them (Decision 0129).
+    composed_run_histories: Option<(RuntimeRunId, DurableRunActionHistories)>,
 }
 
 impl CodingDevelopmentRuntimeFactory {
@@ -416,6 +425,7 @@ impl CodingDevelopmentRuntimeFactory {
             prepared: BTreeMap::new(),
             composed_job_ledgers: None,
             composed_route: None,
+            composed_run_histories: None,
         })
     }
 
@@ -1006,6 +1016,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         // An untaken handle would keep the previous run's store open.
         self.composed_job_ledgers = None;
         self.composed_route = None;
+        self.composed_run_histories = None;
         self.activation
             .revalidate()
             .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
@@ -1024,15 +1035,63 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             && request.event_cursor.is_none();
         // Decision 0128: every model request of this composition is routed in
         // local-only mode before any model is built; nothing selected refuses.
-        let route = crate::coding_route::route_development_run(
+        let routed_at = now_epoch_ms().map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+        let mut route = crate::coding_route::route_development_run(
             request,
             self.model.admitted_purpose(),
-            now_epoch_ms().map_err(|_| NativeChatRuntimeError::RuntimeFailed)?,
+            routed_at,
         )
         .map_err(|error| {
             eprintln!("coding.development.route.{}", error.code());
             NativeChatRuntimeError::RuntimeFailed
         })?;
+        let mut key = CodingDevelopmentKeyProvider::open(&self.activation)
+            .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+        let authority = open_linux_development_authority(
+            self.platform,
+            self.activation.state_root(),
+            &mut key,
+            now_epoch_ms().map_err(|_| NativeChatRuntimeError::RuntimeFailed)?,
+        )
+        .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+        let job_ledgers = authority.authority().job_ledgers();
+        // Decision 0129: the run's effects and route chains are stored before
+        // any model is built, and the route entry with them.
+        let histories = authority.authority().run_action_histories();
+        let start = if request.event_cursor.is_none() {
+            StoredChainStart::New
+        } else if self.resume_requested {
+            StoredChainStart::AfterRestart
+        } else {
+            StoredChainStart::ContinueInHost
+        };
+        let begin = |chain, start| {
+            PersistedRunChain::begin(histories.clone(), request.run_id.as_str(), chain, start)
+                .map_err(|error| {
+                    eprintln!("coding.development.history-store-{error:?}");
+                    NativeChatRuntimeError::RuntimeFailed
+                })
+        };
+        let effects_chain = begin(RunActionChain::Effects, start)?;
+        // Every route entry is stored before its model is built, so a restart
+        // cannot lose one.
+        let route_start = match start {
+            StoredChainStart::AfterRestart => StoredChainStart::ContinueInHost,
+            other => other,
+        };
+        let mut route_history =
+            RunActionRecorder::persisted(begin(RunActionChain::Routes, route_start)?);
+        route_history.record(crate::coding_route::route_entry_draft(
+            request,
+            &route.receipt,
+            routed_at,
+        ));
+        let Some(route_declared) = route_history.declare() else {
+            eprintln!("coding.development.history-store-route-unrecorded");
+            return Err(NativeChatRuntimeError::RuntimeFailed);
+        };
+        route.history = Some(route_declared);
+        route_history.detach_store();
         let model = match self.model {
             CodingDevelopmentModel::Scripted => {
                 let mut steps = scripted_steps(
@@ -1091,16 +1150,6 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         if request.event_cursor.is_some() {
             context = context.resumed_after_restart();
         }
-        let mut key = CodingDevelopmentKeyProvider::open(&self.activation)
-            .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
-        let authority = open_linux_development_authority(
-            self.platform,
-            self.activation.state_root(),
-            &mut key,
-            now_epoch_ms().map_err(|_| NativeChatRuntimeError::RuntimeFailed)?,
-        )
-        .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
-        let job_ledgers = authority.authority().job_ledgers();
         let command_manifest = LinuxCommandManifest::verify(
             "/usr/bin/systemd-run",
             "/usr/bin/systemctl",
@@ -1148,6 +1197,8 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             eprintln!("coding.development.compose.boundary-{error:?}");
             NativeChatRuntimeError::RuntimeFailed
         })?;
+        let mut boundary = boundary;
+        boundary.persist_action_history(effects_chain);
         let coordinator = compose_durable_coding_coordinator(
             self.profile,
             request.clone(),
@@ -1162,6 +1213,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         })?;
         self.composed_job_ledgers = Some((request.run_id.clone(), job_ledgers));
         self.composed_route = Some((request.run_id.clone(), route));
+        self.composed_run_histories = Some((request.run_id.clone(), histories));
         Ok(if stop_after_checkpoint {
             coordinator.with_development_checkpoint_stop_probe()
         } else {
@@ -1202,6 +1254,77 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             Some((composed, route)) if &composed == run_id => Some(route),
             _ => None,
         }
+    }
+
+    fn take_run_action_histories(
+        &mut self,
+        run_id: &RuntimeRunId,
+    ) -> Option<DurableRunActionHistories> {
+        match self.composed_run_histories.take() {
+            Some((composed, histories)) if &composed == run_id => Some(histories),
+            _ => None,
+        }
+    }
+
+    /// Opens the store only for this read, applies retention to each closed
+    /// chain of the run, reads each chain back and closes the store again
+    /// (Decision 0129). It refuses while a composed run's handles may keep
+    /// the store open.
+    fn read_ended_run_action_histories(
+        &mut self,
+        run_id: &RuntimeRunId,
+    ) -> Result<crate::coding_action_history::EndedRunActionHistories, NativeChatRuntimeError> {
+        if self.composed_job_ledgers.is_some()
+            || self.composed_run_histories.is_some()
+            || !self.prepared.is_empty()
+        {
+            return Err(NativeChatRuntimeError::RequestDenied);
+        }
+        self.activation
+            .revalidate()
+            .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
+        let mut key = CodingDevelopmentKeyProvider::open(&self.activation)
+            .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+        let now = now_epoch_ms().map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+        let authority = open_linux_development_authority(
+            self.platform,
+            self.activation.state_root(),
+            &mut key,
+            now,
+        )
+        .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+        let histories = authority.authority().run_action_histories();
+        let read = |chain: RunActionChainName| -> Result<
+            Option<crate::coding_action_history::StoredRunChain>,
+            NativeChatRuntimeError,
+        > {
+            let run = run_id.as_str();
+            match histories.history(run, chain) {
+                Ok(stored) => {
+                    if stored.closed {
+                        histories
+                            .apply_retention(run, chain, now)
+                            .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+                    }
+                    histories
+                        .history(run, chain)
+                        .map(|stored| Some(stored.into()))
+                        .map_err(|_| NativeChatRuntimeError::RuntimeFailed)
+                }
+                Err(RunActionHistoryStoreError::NotFound) => Ok(None),
+                Err(RunActionHistoryStoreError::InvalidInput) => {
+                    Err(NativeChatRuntimeError::RequestDenied)
+                }
+                Err(_) => Err(NativeChatRuntimeError::RuntimeFailed),
+            }
+        };
+        Ok(crate::coding_action_history::EndedRunActionHistories {
+            schema_version: crate::coding_action_history::ENDED_RUN_HISTORIES_SCHEMA_VERSION,
+            run_id: run_id.as_str().to_owned(),
+            effects: read(RunActionChainName::Effects)?,
+            job_control: read(RunActionChainName::JobControl)?,
+            routes: read(RunActionChainName::Routes)?,
+        })
     }
 
     /// Continues this session's last run from the checkpoint it stopped at

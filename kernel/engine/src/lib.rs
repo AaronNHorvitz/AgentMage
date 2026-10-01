@@ -268,6 +268,8 @@ pub mod research_retrieval;
 pub mod retry_admission;
 /// Integrity-protected review packets and authority-free logical commit plans.
 pub mod review_packet;
+/// Durable run action histories in the operational store.
+pub mod run_action_history_store;
 /// Stateful resource budgets and explicit sticky stop conditions.
 pub mod run_control;
 /// Truthful run progress projected from a verified runtime event stream.

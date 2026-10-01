@@ -91,6 +91,24 @@ pub trait NativeChatRuntimeFactory {
         None
     }
 
+    /// Hands over the stored run action histories of the store the factory
+    /// opened when it composed `run_id` (Decision 0129).
+    fn take_run_action_histories(
+        &mut self,
+        _run_id: &agentmage_kernel_contracts::RuntimeRunId,
+    ) -> Option<agentmage_kernel_engine::run_action_history_store::DurableRunActionHistories> {
+        None
+    }
+
+    /// Reads the stored histories of one ended run while no run is composed
+    /// (Decision 0129). A factory without a store has none.
+    fn read_ended_run_action_histories(
+        &mut self,
+        _run_id: &agentmage_kernel_contracts::RuntimeRunId,
+    ) -> Result<crate::coding_action_history::EndedRunActionHistories, NativeChatRuntimeError> {
+        Err(NativeChatRuntimeError::RequestDenied)
+    }
+
     /// Prepares the request that continues `request`'s run inside this
     /// running host from the checkpoint whose commit event is at `cursor`
     /// (Decision 0122): the same run, bound to that cursor. The run's store

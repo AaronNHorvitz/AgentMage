@@ -108,6 +108,9 @@ pub struct CodingDevelopmentCliOptions {
     /// invocation is previewed and, only after the person confirms it,
     /// written once (Decision 0128).
     pub support_bundle: Option<PathBuf>,
+    /// An ended run whose stored action histories the host reads back
+    /// instead of running an objective (Decision 0129).
+    pub ended_run: Option<String>,
 }
 
 /// Parsed CLI action before any transport or authority boundary.
@@ -261,6 +264,7 @@ fn parse_coding_development(
     let mut approval_delay_ms = None;
     let mut action_history_export = None;
     let mut support_bundle = None;
+    let mut ended_run = None;
     let mut cursor = 0;
     while let Some(argument) = arguments.get(cursor) {
         let target = match argument.as_str() {
@@ -417,6 +421,22 @@ fn parse_coding_development(
                 cursor += 2;
                 continue;
             }
+            "--ended-run" if ended_run.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| {
+                        !value.is_empty()
+                            && value.len() <= 128
+                            && value.bytes().all(|byte| {
+                                byte.is_ascii_alphanumeric()
+                                    || matches!(byte, b'.' | b'_' | b':' | b'-')
+                            })
+                    })
+                    .ok_or(ThinClientError::InvalidValue)?;
+                ended_run = Some(value.clone());
+                cursor += 2;
+                continue;
+            }
             _ => return Err(ThinClientError::InvalidValue),
         };
         let value = arguments
@@ -454,8 +474,37 @@ fn parse_coding_development(
     if !matches!(model.as_str(), "scripted" | "muse" | "gpt-oss") {
         return Err(ThinClientError::InvalidValue);
     }
-    let objective = objective.ok_or(ThinClientError::InvalidValue)?;
-    if objective.trim().is_empty() || objective.len() > 16 * 1024 {
+    // Decision 0129: reading an ended run's stored histories runs nothing,
+    // so it takes no objective and no option that only a run uses.
+    if ended_run.is_some()
+        && (objective.is_some()
+            || !follow_ups.is_empty()
+            || resume
+            || record_session
+            || artifact_release_probe_before_follow_ups
+            || approve_this_run
+            || stale_approval_probe
+            || replay_approval_probe
+            || expired_cursor_probe
+            || artifact_integrity_probe
+            || slow_subscriber_probe
+            || suspend_resume_probe
+            || !preauthorized_paths.is_empty()
+            || !preauthorized_commands.is_empty()
+            || preauthorize_workspace_reads
+            || preauthorization_budget.is_some()
+            || preauthorization_minutes.is_some()
+            || revoke_preauthorization_before_follow_ups
+            || approval_delay_ms.is_some())
+    {
+        return Err(ThinClientError::InvalidValue);
+    }
+    let objective = match (objective, &ended_run) {
+        (None, Some(_)) => String::new(),
+        (Some(objective), None) => objective,
+        _ => return Err(ThinClientError::InvalidValue),
+    };
+    if ended_run.is_none() && (objective.trim().is_empty() || objective.len() > 16 * 1024) {
         return Err(ThinClientError::InvalidValue);
     }
     if resume && (!follow_ups.is_empty() || record_session)
@@ -514,6 +563,7 @@ fn parse_coding_development(
         approval_delay_ms: approval_delay_ms.unwrap_or(0),
         action_history_export,
         support_bundle,
+        ended_run,
     })
 }
 
@@ -1096,6 +1146,8 @@ Commands:\n\
        [--preauthorization-budget N --preauthorization-minutes N] [--revoke-preauthorization-before-follow-ups]\n\
        [--approval-delay-ms 1..10000] [--action-history-export effects|job-control|routes:FROM:TO]\n\
        [--support-bundle ABSOLUTE_PRIVATE_DIRECTORY]\n\
+  code --development --state-root PATH --disposable-root PATH --workspace-root PATH --scenario SCENARIO \\
+       --ended-run RUN_ID [--model scripted|muse|gpt-oss] [--action-history-export effects|job-control|routes:FROM:TO]\n\
   chat MESSAGE\n\
   conversations list [--from YYYY-MM-DD] [--to YYYY-MM-DD]\n\
   conversations search QUERY\n\
@@ -1442,6 +1494,63 @@ mod tests {
         let mut missing = probe.to_vec();
         missing.push("--support-bundle");
         assert!(parse_cli_arguments(&strings(&missing)).is_err());
+        // Decision 0129: an ended run is read back instead of an objective,
+        // and no option that only a run uses goes with it.
+        let ended = [
+            "code",
+            "--development",
+            "--state-root",
+            "/tmp/state",
+            "--disposable-root",
+            "/tmp/disposable",
+            "--workspace-root",
+            "/tmp/disposable/worktree",
+            "--scenario",
+            "failed-test-repair",
+            "--ended-run",
+            "coding-development-run-0123abcd",
+        ];
+        assert!(matches!(
+            parse_cli_arguments(&strings(&ended)),
+            Ok(CliInvocation::Code {
+                development: Some(CodingDevelopmentCliOptions {
+                    ended_run: Some(ref run),
+                    ref objective,
+                    ..
+                }),
+                ..
+            }) if run == "coding-development-run-0123abcd" && objective.is_empty()
+        ));
+        let mut exported = ended.to_vec();
+        exported.extend(["--action-history-export", "effects:1:2"]);
+        assert!(parse_cli_arguments(&strings(&exported)).is_ok());
+        for extra in [
+            &["--objective", "repair"][..],
+            &["--follow-up", "again"],
+            &["--resume"],
+            &["--approve-this-run"],
+            &["--suspend-resume-probe"],
+            &["--preauthorize-workspace-reads"],
+            &["--approval-delay-ms", "5"],
+            &["--ended-run", "coding-development-run-2"],
+        ] {
+            let mut refused = ended.to_vec();
+            refused.extend(extra);
+            assert!(
+                parse_cli_arguments(&strings(&refused)).is_err(),
+                "{extra:?}"
+            );
+        }
+        for invalid in ["", "run/../x", "run id", &"r".repeat(129)] {
+            let mut refused = ended[..10].to_vec();
+            refused.extend(["--ended-run", invalid]);
+            assert!(
+                parse_cli_arguments(&strings(&refused)).is_err(),
+                "{invalid}"
+            );
+        }
+        // Without either an objective or an ended run, nothing parses.
+        assert!(parse_cli_arguments(&strings(&ended[..10])).is_err());
         assert!(matches!(
             parse_cli_arguments(&strings(&[
                 "code",

@@ -35,8 +35,9 @@ use crate::cli_runtime::{
     JobStateUnavailable, KeptJobControl, drive_interactive_cli_runtime,
 };
 use crate::coding_action_history::{
-    ActionHistoryExportSelection, RunActionChain, render_action_history_export,
-    render_run_action_history,
+    ActionHistoryExportSelection, EndedRunActionHistories, RunActionChain, StoredRunChain,
+    render_action_history_export, render_ended_run_histories, render_run_action_history,
+    verified_ended_run_histories,
 };
 use crate::coding_change_review::{
     ChangeReview, ChangeReviewUnavailable, ReviewTarget, render_change_review, review_coding_write,
@@ -274,6 +275,15 @@ fn run_with_child(
         runtime = runtime.with_expired_cursor_probe();
     } else if options.artifact_integrity_probe {
         runtime = runtime.with_artifact_integrity_probe();
+    }
+    // Decision 0129: an ended run's stored histories are read back instead of
+    // running an objective.
+    if let Some(run_id) = &options.ended_run {
+        let shown = show_ended_run(&mut runtime, run_id, options.action_history_export, output);
+        runtime
+            .shutdown()
+            .map_err(|_| CodingDevelopmentClientError::Transport)?;
+        return shown;
     }
     let workspace_id = format!("coding-development-{}", &activation.marker_sha256()[..24]);
     let mut approvals = TerminalApprovals {
@@ -752,6 +762,72 @@ impl TerminalEventSink {
 /// recoverability of its effects, the view of each composed context and the
 /// run's action histories (Decision 0127). Each part the host could not
 /// declare completely is shown as unavailable.
+/// Reads one ended run's stored histories back from the host and writes them
+/// on standard output, a requested export first (Decision 0129). An answer
+/// for another run or schema is refused; a chain that does not verify is
+/// shown as unavailable.
+fn show_ended_run(
+    runtime: &mut impl RuntimeTransportPort,
+    run_id: &str,
+    export: Option<ActionHistoryExportSelection>,
+    output: CliOutputFormat,
+) -> Result<ClientExitCode, CodingDevelopmentClientError> {
+    let answer = runtime
+        .ended_run_action_histories(&agentmage_kernel_contracts::RuntimeRunId::from_raw(run_id))
+        .inspect_err(|error| eprintln!("{}", error.code()))
+        .map_err(|_| CodingDevelopmentClientError::Runtime)?;
+    let verified = verified_ended_run_histories(answer, run_id);
+    let (stdout, notice) = render_ended_run_view(run_id, verified.as_ref(), export, output);
+    print!("{stdout}");
+    eprint!("{notice}");
+    if verified.is_some() {
+        Ok(ClientExitCode::Success)
+    } else {
+        Err(CodingDevelopmentClientError::Runtime)
+    }
+}
+
+/// An ended run's view: a requested export of one stored chain, then the
+/// stored histories, for standard output, and a content-free notice for
+/// standard error when the export could not be made.
+fn render_ended_run_view(
+    run_id: &str,
+    answer: Option<&EndedRunActionHistories>,
+    export: Option<ActionHistoryExportSelection>,
+    output: CliOutputFormat,
+) -> (String, String) {
+    let (mut stdout, notice) = export.map_or_else(
+        || (String::new(), String::new()),
+        |selection| {
+            let history = answer
+                .and_then(|value| value.chain(selection.chain))
+                .map(StoredRunChain::history);
+            render_action_history_export(
+                selection,
+                history.as_ref(),
+                output == CliOutputFormat::Json,
+            )
+        },
+    );
+    match output {
+        CliOutputFormat::Json => {
+            stdout.push_str(&format!(
+                "{}\n",
+                serde_json::json!({
+                    "type": "ended_run_action_histories",
+                    "run_id": run_id,
+                    "available": answer.is_some(),
+                    "effects": answer.and_then(|value| value.effects.as_ref()),
+                    "job_control": answer.and_then(|value| value.job_control.as_ref()),
+                    "routes": answer.and_then(|value| value.routes.as_ref()),
+                })
+            ));
+        }
+        CliOutputFormat::Human => stdout.push_str(&render_ended_run_histories(run_id, answer)),
+    }
+    (stdout, notice)
+}
+
 /// One run's rendered result, in the order [`write_run_result`] writes it
 /// (review F3 of `e5f34910`).
 struct RenderedRunResult {
@@ -1879,6 +1955,66 @@ mod tests {
                 "{result:?}"
             );
         }
+    }
+
+    #[test]
+    fn an_ended_runs_stored_histories_are_shown_with_a_requested_export() {
+        // Decision 0129: the view of an ended run goes to standard output,
+        // after a requested export of one stored chain; an export of a chain
+        // that is not stored leaves a notice on standard error.
+        use crate::coding_action_history::{
+            ENDED_RUN_HISTORIES_SCHEMA_VERSION, EndedRunActionHistories, StoredRunChain,
+        };
+        use agentmage_kernel_engine::action_history::ActionKind;
+        let history = action_history(ActionKind::FileWrite);
+        let answer = EndedRunActionHistories {
+            schema_version: ENDED_RUN_HISTORIES_SCHEMA_VERSION,
+            run_id: "run-ended".to_owned(),
+            effects: Some(StoredRunChain {
+                records: history.records.clone(),
+                head: history.head.clone(),
+                complete: true,
+                closed: true,
+            }),
+            job_control: None,
+            routes: None,
+        };
+        let selection = |text| ActionHistoryExportSelection::parse(text);
+        let (stdout, notice) = render_ended_run_view(
+            "run-ended",
+            Some(&answer),
+            selection("effects:1:1"),
+            CliOutputFormat::Json,
+        );
+        assert!(notice.is_empty());
+        let rows = stdout
+            .lines()
+            .map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap())
+            .collect::<Vec<_>>();
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[0]["type"], "action_history_export");
+        assert_eq!(rows[0]["chain"], "effects");
+        assert_eq!(rows[1]["type"], "ended_run_action_histories");
+        assert_eq!(rows[1]["available"], true);
+        assert_eq!(
+            rows[1]["effects"],
+            serde_json::to_value(answer.effects.as_ref().unwrap()).unwrap()
+        );
+        assert!(rows[1]["routes"].is_null());
+        let (stdout, notice) = render_ended_run_view(
+            "run-ended",
+            Some(&answer),
+            selection("routes:1:1"),
+            CliOutputFormat::Human,
+        );
+        assert!(notice.contains("unavailable"));
+        assert!(stdout.starts_with("stored action histories of run run-ended:\n"));
+        assert!(stdout.contains("effects: closed when the run ended; complete\n"));
+        let (stdout, notice) =
+            render_ended_run_view("run-ended", None, None, CliOutputFormat::Json);
+        assert!(notice.is_empty());
+        let row: serde_json::Value = serde_json::from_str(stdout.trim_end()).unwrap();
+        assert_eq!(row["available"], false);
     }
 
     #[test]

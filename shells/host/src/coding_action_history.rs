@@ -5,6 +5,12 @@
 //! keeps one entry for each job control request the durable job ledger decided.
 //! The development host's runtime factory keeps one entry for each model route
 //! it selected (Decision 0128).
+//!
+//! A recorder may also append each entry to its run's chain in the
+//! authenticated operational store, so the history survives the host process
+//! (Decision 0129). A stored chain that could not take an entry is marked
+//! incomplete, as is the memory history; a closed chain of an ended run can be
+//! read back, verified and shown by the client.
 //! Each owner keeps its own hash chain (Decision 0124) in memory for the run
 //! and declares it with the run's other declarations (Decision 0116). A chain
 //! that could not keep every entry is never declared. The client replays each
@@ -24,6 +30,10 @@ use agentmage_kernel_engine::action_history::{
 use agentmage_kernel_engine::job_control::{
     JobControlAction, JobControlDecision, JobControlRefusal, JobControlRequest,
 };
+use agentmage_kernel_engine::run_action_history_store::{
+    DurableRunActionHistories, RunActionChainName, RunActionHistoryStoreError,
+    StoredRunActionHistory,
+};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -35,6 +45,9 @@ pub const MAX_RUN_ACTION_ENTRIES: usize = 512;
 pub const RUN_ACTION_RETENTION_MS: u64 = 30 * 24 * 60 * 60 * 1_000;
 /// Largest rendered history; longer text ends with an explicit truncation line.
 pub const MAX_RUN_ACTION_RENDER_BYTES: usize = 64 * 1024;
+/// Owner identity of every stored chain the coding host keeps; the same
+/// identity it uses for its job ledgers (Decision 0129).
+pub const RUN_ACTION_HISTORY_OWNER: &str = "agentmage-coding-host";
 
 /// One declared chain: every retained position and the owner's head.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -78,6 +91,16 @@ impl RunActionChain {
         }
     }
 
+    /// The stored chain this owner keeps (Decision 0129).
+    #[must_use]
+    pub const fn stored(self) -> RunActionChainName {
+        match self {
+            Self::Effects => RunActionChainName::Effects,
+            Self::JobControl => RunActionChainName::JobControl,
+            Self::Routes => RunActionChainName::Routes,
+        }
+    }
+
     const fn title(self) -> &'static str {
         match self {
             Self::Effects => "action history of this run's effects",
@@ -98,13 +121,80 @@ pub enum RunActionHistoryError {
     SecretDetected,
 }
 
+/// How a recorder joins its run's stored chain (Decision 0129).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum StoredChainStart {
+    /// A new run: the chain is created empty.
+    New,
+    /// The same run continued in this host: the chain stays as it is.
+    ContinueInHost,
+    /// The run resumed after the host that kept the chain ended, which may
+    /// have missed an entry: the chain is marked incomplete.
+    AfterRestart,
+}
+
+/// The stored chain a recorder also appends to.
+#[derive(Clone, Debug)]
+pub struct PersistedRunChain {
+    histories: DurableRunActionHistories,
+    run_id: String,
+    chain: RunActionChainName,
+}
+
+impl PersistedRunChain {
+    /// Creates or attaches to one chain of a run under the host's owner identity.
+    pub fn begin(
+        histories: DurableRunActionHistories,
+        run_id: &str,
+        chain: RunActionChain,
+        start: StoredChainStart,
+    ) -> Result<Self, RunActionHistoryStoreError> {
+        let stored = chain.stored();
+        match start {
+            StoredChainStart::New => histories.create(run_id, stored, RUN_ACTION_HISTORY_OWNER)?,
+            StoredChainStart::ContinueInHost | StoredChainStart::AfterRestart => {
+                histories.attach(
+                    run_id,
+                    stored,
+                    RUN_ACTION_HISTORY_OWNER,
+                    start == StoredChainStart::AfterRestart,
+                )?;
+            }
+        }
+        Ok(Self {
+            histories,
+            run_id: run_id.to_owned(),
+            chain: stored,
+        })
+    }
+
+    fn append(&self, draft: &ActionRecordDraft) -> Result<(), RunActionHistoryStoreError> {
+        self.histories
+            .append(&self.run_id, self.chain, RUN_ACTION_HISTORY_OWNER, draft)
+            .map(|_| ())
+    }
+
+    fn mark_incomplete(&self) {
+        if self
+            .histories
+            .mark_incomplete(&self.run_id, self.chain, RUN_ACTION_HISTORY_OWNER)
+            .is_err()
+        {
+            eprintln!("coding.action-history.store-mark-failed");
+        }
+    }
+}
+
 /// One run's history as its owner keeps it. An entry that cannot be kept,
 /// because the chain is full, the entry is malformed or its time went
-/// backwards, makes the history incomplete, and it is never declared.
-#[derive(Clone, Debug, PartialEq, Eq)]
+/// backwards, makes the history incomplete, and it is never declared. A
+/// persisted recorder also appends each kept entry to the run's stored chain,
+/// and a stored append that fails makes both incomplete (Decision 0129).
+#[derive(Clone, Debug)]
 pub struct RunActionRecorder {
     history: ActionHistory,
     complete: bool,
+    persisted: Option<PersistedRunChain>,
 }
 
 impl Default for RunActionRecorder {
@@ -120,23 +210,60 @@ impl RunActionRecorder {
         Self {
             history: ActionHistory::new(),
             complete: true,
+            persisted: None,
         }
     }
 
-    /// Keeps one entry, or marks the history incomplete.
+    /// Starts an empty, complete history that also appends to a stored chain.
+    #[must_use]
+    pub const fn persisted(chain: PersistedRunChain) -> Self {
+        Self {
+            history: ActionHistory::new(),
+            complete: true,
+            persisted: Some(chain),
+        }
+    }
+
+    /// Keeps one entry in memory and then in the stored chain, or marks the
+    /// history incomplete in both.
     pub fn record(&mut self, draft: Option<ActionRecordDraft>) {
         let kept = draft.is_some_and(|draft| {
             self.history.records().len() < MAX_RUN_ACTION_ENTRIES
                 && self.history.append(&draft).is_ok()
+                && self
+                    .persisted
+                    .as_ref()
+                    .is_none_or(|chain| chain.append(&draft).is_ok())
         });
         if !kept {
-            self.complete = false;
+            self.mark_incomplete();
         }
     }
 
-    /// Marks the history incomplete, for an owner that knows it missed an entry.
-    pub const fn mark_incomplete(&mut self) {
+    /// Marks the history incomplete, for an owner that knows it missed an
+    /// entry, and its stored chain too.
+    pub fn mark_incomplete(&mut self) {
         self.complete = false;
+        if let Some(chain) = &self.persisted {
+            chain.mark_incomplete();
+        }
+    }
+
+    /// Stops appending to the stored chain and releases the store handle,
+    /// keeping the memory history, before the run's store closes.
+    pub fn detach_store(&mut self) {
+        self.persisted = None;
+    }
+
+    /// Appends later entries to `chain` as well.
+    pub fn attach_store(&mut self, chain: PersistedRunChain) {
+        self.persisted = Some(chain);
+    }
+
+    /// Whether the recorder appends to a stored chain.
+    #[must_use]
+    pub const fn is_persisted(&self) -> bool {
+        self.persisted.is_some()
     }
 
     /// The whole chain, or `None` when an entry could not be kept.
@@ -495,6 +622,169 @@ pub fn export_run_action_history(
             }
             _ => RunActionHistoryError::Range,
         })
+}
+
+/// Current schema of an ended run's stored histories answer.
+pub const ENDED_RUN_HISTORIES_SCHEMA_VERSION: u16 = 1;
+
+/// One stored chain as the host reads it back for an ended run (Decision
+/// 0129). It describes the run and grants nothing.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct StoredRunChain {
+    /// Every retained position in order.
+    pub records: Vec<ActionHistoryRecord>,
+    /// The stored head.
+    pub head: ActionHistoryHead,
+    /// False when the owner knew it missed an entry, or the run was resumed
+    /// after the host that kept the chain ended.
+    pub complete: bool,
+    /// Whether the run ended and the chain was closed.
+    pub closed: bool,
+}
+
+impl From<StoredRunActionHistory> for StoredRunChain {
+    fn from(value: StoredRunActionHistory) -> Self {
+        Self {
+            records: value.records,
+            head: value.head,
+            complete: value.complete,
+            closed: value.closed,
+        }
+    }
+}
+
+impl StoredRunChain {
+    /// The chain's positions and head, as a declared history.
+    #[must_use]
+    pub fn history(&self) -> RunActionHistory {
+        RunActionHistory {
+            records: self.records.clone(),
+            head: self.head.clone(),
+        }
+    }
+}
+
+/// The stored histories of one run, read back from the host's operational
+/// store after the run ended (Decision 0129). A chain the store does not hold
+/// is absent.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EndedRunActionHistories {
+    /// Answer schema version.
+    pub schema_version: u16,
+    /// Exact run.
+    pub run_id: String,
+    /// The tool boundary's chain.
+    #[serde(deserialize_with = "required_option")]
+    pub effects: Option<StoredRunChain>,
+    /// The live runtime service's chain.
+    #[serde(deserialize_with = "required_option")]
+    pub job_control: Option<StoredRunChain>,
+    /// The runtime factory's route chain.
+    #[serde(deserialize_with = "required_option")]
+    pub routes: Option<StoredRunChain>,
+}
+
+/// An optional member that must still be present, as `null` when absent.
+fn required_option<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    Option::<T>::deserialize(deserializer)
+}
+
+impl EndedRunActionHistories {
+    /// The stored chain one owner keeps.
+    #[must_use]
+    pub const fn chain(&self, chain: RunActionChain) -> Option<&StoredRunChain> {
+        match chain {
+            RunActionChain::Effects => self.effects.as_ref(),
+            RunActionChain::JobControl => self.job_control.as_ref(),
+            RunActionChain::Routes => self.routes.as_ref(),
+        }
+    }
+
+    const fn chain_mut(&mut self, chain: RunActionChain) -> &mut Option<StoredRunChain> {
+        match chain {
+            RunActionChain::Effects => &mut self.effects,
+            RunActionChain::JobControl => &mut self.job_control,
+            RunActionChain::Routes => &mut self.routes,
+        }
+    }
+}
+
+/// Every chain, in stable order.
+pub const RUN_ACTION_CHAINS: [RunActionChain; 3] = [
+    RunActionChain::Effects,
+    RunActionChain::JobControl,
+    RunActionChain::Routes,
+];
+
+/// Keeps an ended run's answer only for this exact run and schema, and drops
+/// as unavailable each chain that does not replay to its stored head or that
+/// holds another owner's kinds. Whether a kept chain is complete and closed
+/// is the host's statement, shown as it is.
+#[must_use]
+pub fn verified_ended_run_histories(
+    mut answer: EndedRunActionHistories,
+    run_id: &str,
+) -> Option<EndedRunActionHistories> {
+    if answer.schema_version != ENDED_RUN_HISTORIES_SCHEMA_VERSION || answer.run_id != run_id {
+        return None;
+    }
+    for chain in RUN_ACTION_CHAINS {
+        let slot = answer.chain_mut(chain);
+        if slot
+            .as_ref()
+            .is_some_and(|stored| verify_run_action_history(&stored.history(), chain).is_err())
+        {
+            *slot = None;
+        }
+    }
+    Some(answer)
+}
+
+/// Bounded text for an ended run's stored histories, with whether each chain
+/// was closed and complete; an unread answer says so.
+#[must_use]
+pub fn render_ended_run_histories(
+    run_id: &str,
+    answer: Option<&EndedRunActionHistories>,
+) -> String {
+    let Some(answer) = answer else {
+        return format!(
+            "stored action histories of run {run_id}: unavailable; the host could not answer them\n"
+        );
+    };
+    let mut output = format!("stored action histories of run {run_id}:\n");
+    for chain in RUN_ACTION_CHAINS {
+        match answer.chain(chain) {
+            None => {
+                let _ = writeln!(output, "{}: not stored, or not verified", chain.title());
+            }
+            Some(stored) => {
+                let _ = writeln!(
+                    output,
+                    "{}: {}; {}",
+                    chain.name(),
+                    if stored.closed {
+                        "closed when the run ended"
+                    } else {
+                        "never closed: the host ended before the run did"
+                    },
+                    if stored.complete {
+                        "complete"
+                    } else {
+                        "incomplete: an entry may be missing"
+                    }
+                );
+                output.push_str(&render_run_action_history(chain, Some(&stored.history())));
+            }
+        }
+    }
+    output
 }
 
 const fn kind_name(kind: ActionKind) -> &'static str {
@@ -1225,6 +1515,91 @@ mod tests {
                 assert!(!notice.contains(OPERATION));
             }
         }
+    }
+
+    #[test]
+    fn an_ended_run_answer_is_kept_for_its_run_and_each_chain_only_when_it_verifies() {
+        // Decision 0129: the client keeps the host's answer only for this
+        // run and schema, drops a chain that does not replay or holds another
+        // owner's kinds, and shows each kept chain with its stated flags.
+        let history = effects_history();
+        let stored = |history: &RunActionHistory, complete, closed| StoredRunChain {
+            records: history.records.clone(),
+            head: history.head.clone(),
+            complete,
+            closed,
+        };
+        let answer = EndedRunActionHistories {
+            schema_version: ENDED_RUN_HISTORIES_SCHEMA_VERSION,
+            run_id: "run-ended".to_owned(),
+            effects: Some(stored(&history, true, true)),
+            job_control: Some(stored(&history, false, false)),
+            routes: None,
+        };
+        assert_eq!(
+            verified_ended_run_histories(answer.clone(), "run-other"),
+            None
+        );
+        assert_eq!(
+            verified_ended_run_histories(
+                EndedRunActionHistories {
+                    schema_version: 2,
+                    ..answer.clone()
+                },
+                "run-ended"
+            ),
+            None
+        );
+        // The effects chain is kept; job control entries of the effects kind
+        // are not that owner's, so that chain is dropped.
+        let verified = verified_ended_run_histories(answer.clone(), "run-ended").unwrap();
+        assert_eq!(verified.effects, answer.effects);
+        assert_eq!(verified.job_control, None);
+        let mut tampered = answer.clone();
+        tampered.effects.as_mut().unwrap().head.head_sha256 = digest('f');
+        assert_eq!(
+            verified_ended_run_histories(tampered, "run-ended")
+                .unwrap()
+                .effects,
+            None
+        );
+        let text = render_ended_run_histories("run-ended", Some(&verified));
+        assert!(text.starts_with("stored action histories of run run-ended:\n"));
+        assert!(text.contains("effects: closed when the run ended; complete\n"));
+        assert!(text.contains("action history of this run's effects: 3 entries, head "));
+        assert!(
+            text.contains(
+                "action history of this run's job control: not stored, or not verified\n"
+            )
+        );
+        assert!(
+            text.ends_with(
+                "action history of this run's model routes: not stored, or not verified\n"
+            )
+        );
+        let open = EndedRunActionHistories {
+            effects: Some(stored(&history, false, false)),
+            ..verified.clone()
+        };
+        let text = render_ended_run_histories("run-ended", Some(&open));
+        assert!(text.contains(
+            "effects: never closed: the host ended before the run did; incomplete: an entry may be missing\n"
+        ));
+        assert_eq!(
+            render_ended_run_histories("run-ended", None),
+            "stored action histories of run run-ended: unavailable; the host could not answer them\n"
+        );
+        // The answer parses closed: every chain member is required.
+        let mut value = serde_json::to_value(&answer).unwrap();
+        assert_eq!(
+            serde_json::from_value::<EndedRunActionHistories>(value.clone()).unwrap(),
+            answer
+        );
+        value.as_object_mut().unwrap().remove("routes");
+        assert!(serde_json::from_value::<EndedRunActionHistories>(value).is_err());
+        let mut value = serde_json::to_value(&answer).unwrap();
+        value["effects"]["sealed"] = serde_json::Value::Bool(true);
+        assert!(serde_json::from_value::<EndedRunActionHistories>(value).is_err());
     }
 
     #[test]

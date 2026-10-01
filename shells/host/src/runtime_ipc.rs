@@ -16,12 +16,13 @@ use agentmage_platform_linux::{LinuxAuthenticatedIpcSession, LinuxPeerIdentity};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
+use crate::coding_action_history::EndedRunActionHistories;
 use crate::runtime_transport::{
     RuntimeClientScope, RuntimeJobControl, RuntimeJobStatus, RuntimePrepareInput,
     RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
 };
 
-const WIRE_VERSION: u16 = 10;
+const WIRE_VERSION: u16 = 11;
 /// The wire version this build speaks, as named in a support bundle.
 pub const RUNTIME_IPC_WIRE_VERSION: u16 = WIRE_VERSION;
 const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
@@ -72,6 +73,9 @@ enum RuntimeIpcRequest {
         run_id: RuntimeRunId,
         request_sha256: String,
     },
+    EndedRunActionHistories {
+        run_id: RuntimeRunId,
+    },
     RevokeSessionPreauthorization {
         session_id: SessionId,
         preauthorization_sha256: String,
@@ -103,6 +107,9 @@ enum RuntimeIpcResponse {
     },
     RunDeclarations {
         declarations: RuntimeRunDeclarations,
+    },
+    EndedRunActionHistories {
+        histories: EndedRunActionHistories,
     },
     JobStatus {
         status: RuntimeJobStatus,
@@ -414,6 +421,18 @@ impl RuntimeTransportPort for LinuxRuntimeIpcClient {
         }
     }
 
+    fn ended_run_action_histories(
+        &mut self,
+        run_id: &RuntimeRunId,
+    ) -> Result<EndedRunActionHistories, RuntimeTransportError> {
+        match self.exchange(RuntimeIpcRequest::EndedRunActionHistories {
+            run_id: run_id.clone(),
+        })? {
+            RuntimeIpcResponse::EndedRunActionHistories { histories } => Ok(histories),
+            _ => Err(RuntimeTransportError::RuntimeEvidenceDenied),
+        }
+    }
+
     fn revoke_session_preauthorization(
         &mut self,
         session_id: &SessionId,
@@ -576,6 +595,23 @@ fn answer<P: RuntimeTransportPort>(
             ),
             Err(error) => (RuntimeIpcResponse::Error { error }, false),
         },
+        Some(RuntimeIpcRequest::EndedRunActionHistories { run_id }) => {
+            match runtime.ended_run_action_histories(&run_id) {
+                // Three full chains stay well inside the bound; anything
+                // larger is refused rather than ending the service.
+                Ok(histories) if answer_fits(&histories) => (
+                    RuntimeIpcResponse::EndedRunActionHistories { histories },
+                    false,
+                ),
+                Ok(_) => (
+                    RuntimeIpcResponse::Error {
+                        error: RuntimeTransportError::CapacityExceeded,
+                    },
+                    false,
+                ),
+                Err(error) => (RuntimeIpcResponse::Error { error }, false),
+            }
+        }
         Some(RuntimeIpcRequest::RevokeSessionPreauthorization {
             session_id,
             preauthorization_sha256,
@@ -603,7 +639,11 @@ fn answer<P: RuntimeTransportPort>(
 }
 
 fn declarations_fit(declarations: &RuntimeRunDeclarations) -> bool {
-    serde_json::to_vec(declarations).is_ok_and(|bytes| bytes.len() <= MAX_DECLARATION_BYTES)
+    answer_fits(declarations)
+}
+
+fn answer_fits(answer: &impl Serialize) -> bool {
+    serde_json::to_vec(answer).is_ok_and(|bytes| bytes.len() <= MAX_DECLARATION_BYTES)
 }
 
 #[cfg(test)]
@@ -690,7 +730,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 10);
+        assert_eq!(decoded.version, 11);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::RunDeclarations {
             declarations: declarations.clone(),
@@ -730,6 +770,83 @@ mod tests {
             assert_ne!(nested, text);
             assert!(serde_json::from_str::<RuntimeIpcResponse>(&nested).is_err());
         }
+    }
+
+    #[test]
+    fn an_ended_run_answer_crosses_the_wire_closed_and_only_at_the_current_version() {
+        // Decision 0129: the stored histories of an ended run cross wire 11
+        // closed, and a transport without the operation refuses it.
+        use crate::coding_action_history::{
+            ENDED_RUN_HISTORIES_SCHEMA_VERSION, EndedRunActionHistories, StoredRunChain,
+        };
+        use agentmage_kernel_engine::action_history::ActionKind;
+        let history = fixture_history(ActionKind::JobControl);
+        let histories = EndedRunActionHistories {
+            schema_version: ENDED_RUN_HISTORIES_SCHEMA_VERSION,
+            run_id: "run-ended".to_owned(),
+            effects: None,
+            job_control: Some(StoredRunChain {
+                records: history.records.clone(),
+                head: history.head.clone(),
+                complete: true,
+                closed: true,
+            }),
+            routes: None,
+        };
+        let request = RuntimeIpcEnvelope {
+            version: WIRE_VERSION,
+            payload: RuntimeIpcRequest::EndedRunActionHistories {
+                run_id: RuntimeRunId::from_raw("run-ended"),
+            },
+        };
+        let bytes = serde_json::to_vec(&request).unwrap();
+        let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
+            serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(decoded.version, 11);
+        assert_eq!(decoded.payload, request.payload);
+        let response = RuntimeIpcResponse::EndedRunActionHistories {
+            histories: histories.clone(),
+        };
+        let bytes = serde_json::to_vec(&response).unwrap();
+        assert_eq!(
+            serde_json::from_slice::<RuntimeIpcResponse>(&bytes).unwrap(),
+            response
+        );
+        let text = String::from_utf8(bytes).unwrap();
+        for nested in [
+            text.replacen("\"closed\":true", "\"closed\":true,\"x\":1", 1),
+            text.replacen("\"effects\":null,", "", 1),
+            text.replacen(
+                "\"run_id\":\"run-ended\"",
+                "\"run_id\":\"run-ended\",\"x\":1",
+                1,
+            ),
+        ] {
+            assert_ne!(nested, text);
+            assert!(serde_json::from_str::<RuntimeIpcResponse>(&nested).is_err());
+        }
+        // A port without stored histories refuses the operation, and the
+        // service keeps answering.
+        let mut port = DeclaringPort {
+            session_id_bytes: 0,
+            released: 0,
+        };
+        assert_eq!(
+            answer(
+                &mut port,
+                &fixture_client(),
+                Some(RuntimeIpcRequest::EndedRunActionHistories {
+                    run_id: RuntimeRunId::from_raw("run-ended"),
+                })
+            ),
+            (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::RequestDenied,
+                },
+                false
+            )
+        );
+        assert!(answer_fits(&histories));
     }
 
     /// Answers declarations of a chosen size and counts releases.
@@ -945,7 +1062,7 @@ mod tests {
             .unwrap();
             let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
                 serde_json::from_slice(&bytes).unwrap();
-            assert_eq!(decoded.version, 10);
+            assert_eq!(decoded.version, 11);
             assert_eq!(decoded.payload, request);
         }
         let mut scoped = serde_json::to_value(RuntimeIpcRequest::ControlJob {
@@ -1175,7 +1292,7 @@ mod tests {
         .unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcResponse> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 10);
+        assert_eq!(decoded.version, 11);
         assert_eq!(decoded.payload, response);
         let mut extra = serde_json::to_value(&suspended).unwrap();
         extra["suspended"]["resumable"] = serde_json::Value::Bool(true);

@@ -406,7 +406,7 @@ pub fn route_development_run(
     let routes = [development_route(&request.model_profile, purpose)?];
     let receipt = RunRouteReceipt::of(&route(request, &routes, Vec::new(), now_epoch_ms)?);
     let mut history = RunActionRecorder::new();
-    history.record(route_draft(request, &receipt, now_epoch_ms));
+    history.record(route_entry_draft(request, &receipt, now_epoch_ms));
     Ok(RunRouteDeclaration {
         receipt,
         history: history.declare(),
@@ -435,7 +435,8 @@ fn route_effect_sha256(receipt: &RunRouteReceipt) -> Option<String> {
 
 /// The route history entry of one composition. The person's decision is the
 /// exact run request, which the person started with this profile.
-fn route_draft(
+#[must_use]
+pub fn route_entry_draft(
     request: &RuntimeRunRequest,
     receipt: &RunRouteReceipt,
     now_epoch_ms: u64,
@@ -793,7 +794,7 @@ mod tests {
             Err(RunRouteVerificationError::History)
         );
         let mut foreign = RunActionRecorder::new();
-        let mut draft = route_draft(&request, &receipt, 5_000).unwrap();
+        let mut draft = route_entry_draft(&request, &receipt, 5_000).unwrap();
         draft.action_kind = ActionKind::ToolCall;
         foreign.record(Some(draft));
         assert_eq!(

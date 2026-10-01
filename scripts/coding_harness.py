@@ -908,6 +908,49 @@ def start(
     return exit_code
 
 
+RUN_ID = re.compile(r"[A-Za-z0-9._:-]{1,128}")
+
+
+def ended_run(base: Path, run_id: str, action_history_export: str | None = None) -> int:
+    """Reads an ended run's stored action histories back through the actual
+    CLI and host (Decision 0129). The host composes no run; it opens the store
+    only for the read. The same run record reservation as `start` keeps a
+    second invocation out of the root while it runs."""
+    base = base.resolve(strict=True)
+    state, disposable, workspace = paths(base)
+    current = diagnose(base)
+    if current["lifecycle"] != "ready" or not current["transport_path"]:
+        raise HarnessError("coding.harness.start-state-denied")
+    if RUN_ID.fullmatch(run_id) is None:
+        raise HarnessError("coding.harness.run-id-denied")
+    executable = binary("agentmage")
+    command = [
+        str(executable), "--json", "code", "--development",
+        "--state-root", str(state), "--disposable-root", str(disposable),
+        "--workspace-root", str(workspace), "--scenario", "no-op",
+        "--ended-run", run_id,
+    ]
+    if action_history_export is not None:
+        command.extend(("--action-history-export", export_selection(action_history_export)))
+    reservation = RunRecordReservation(state, base, executable)
+    process = None
+    try:
+        process = subprocess.Popen(command, stdin=None)
+        reservation.identify(process)
+        return process.wait()
+    finally:
+        try:
+            if process is not None and process.poll() is None:
+                process.send_signal(signal.SIGINT)
+                try:
+                    process.wait(timeout=30)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(timeout=10)
+        finally:
+            reservation.close(child_reaped=process is None or process.poll() is not None)
+
+
 def stop(base: Path) -> None:
     signal_running_cli(base, signal.SIGINT)
     print("coding.harness.cancellation-requested")
@@ -994,6 +1037,10 @@ def parser() -> argparse.ArgumentParser:
             command.add_argument(
                 "--fixture", choices=("repair", "new-file", "multi-file", "stable"), default="repair"
             )
+    ended_run_command = commands.add_parser("ended-run")
+    ended_run_command.add_argument("--root", type=Path, required=True)
+    ended_run_command.add_argument("--run", required=True)
+    ended_run_command.add_argument("--action-history-export", type=export_selection)
     start_command = commands.add_parser("start")
     start_command.add_argument("--root", type=Path, required=True)
     start_command.add_argument(
@@ -1049,6 +1096,8 @@ def main() -> int:
         if arguments.command in JOB_CONTROL_SIGNALS:
             control(arguments.root, arguments.command)
             return 0
+        if arguments.command == "ended-run":
+            return ended_run(arguments.root, arguments.run, arguments.action_history_export)
         return start(
             arguments.root, arguments.scenario, arguments.objective,
             arguments.approve_this_run, arguments.stale_approval_probe, arguments.log_dir,

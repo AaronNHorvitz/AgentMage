@@ -25,12 +25,12 @@ class SourceContentDeduplicationEvidenceTests(unittest.TestCase):
         for module in (deduplication, lifecycle, attempts):
             with self.subTest(module=module.__name__):
                 source = (module.ROOT / "kernel/engine/src/operational_store.rs").read_text()
-                upgrade = "version_one_upgrades_through_twenty_one_with_exact_history"
+                upgrade = "version_one_upgrades_through_twenty_two_with_exact_history"
                 self.assertIn(f"fn {upgrade}()", source)
                 self.assertTrue(any(f"operational_store::tests::{upgrade}" in command for command in module.COMMANDS))
                 self.assertIn(f"{upgrade} ... ok", module.MARKERS)
                 report = module.expected_report()
-                self.assertEqual(report["operational_store_schema_version"], 21)
+                self.assertEqual(report["operational_store_schema_version"], 22)
                 paths = {item["path"] for item in report["artifacts"]}
                 self.assertTrue({
                     "kernel/engine/fixtures/operational-store/schema-18.json",
@@ -40,6 +40,9 @@ class SourceContentDeduplicationEvidenceTests(unittest.TestCase):
                     "kernel/engine/fixtures/operational-store/schema-21.json",
                     "kernel/engine/migrations/operational-store/0021-job-control-ledgers.sql",
                     "kernel/engine/src/job_ledger_store.rs",
+                    "kernel/engine/fixtures/operational-store/schema-22.json",
+                    "kernel/engine/migrations/operational-store/0022-run-action-histories.sql",
+                    "kernel/engine/src/run_action_history_store.rs",
                     "kernel/engine/migrations/operational-store/0019-research-budgets.sql",
                     "kernel/engine/src/research_journal.rs",
                 } <= paths)
