@@ -18,8 +18,8 @@ ROOT: Final = Path(__file__).resolve().parents[1]
 EVIDENCE_DIR: Final = ROOT / "artifacts/sprints/sprint-11/story-11.2"
 REPORT_PATH: Final = EVIDENCE_DIR / "story-gate-report.json"
 RAW_PATH: Final = EVIDENCE_DIR / "story-gate-results.log"
-REVIEWED_COMMIT: Final = "083eae6129e9db5ad982f14cf2579a6d808f3d7a"
-REVIEWED_TREE: Final = "2b06d7b56ccfbc1adbf8edeb28dd1531539323e9"
+REVIEWED_COMMIT: Final = "37a27590327f451d964a753f5d274aa96af3d468"
+REVIEWED_TREE: Final = "33567418406689250962dcfe9161e531c6481816"
 VALIDATOR_COMMANDS: Final = (
     ("python3", "scripts/story_11_2_ac1_evidence.py"),
     ("python3", "scripts/story_11_2_ac2_evidence.py"),
