@@ -4,7 +4,7 @@
     {
       "argv_sha256": "cc4a25de1ec491c408fa47a4f724d34dcac8cc52040cbae67f7a080b1c283b74",
       "command_id": "retained-runtime-evidence",
-      "elapsed_ms": 64,
+      "elapsed_ms": 67,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -12,7 +12,7 @@
     {
       "argv_sha256": "04097c4689903a4ef8fa630b7dd87fa756a1c0e0741d9556492342c372cb7306",
       "command_id": "coordinator-boundary-review",
-      "elapsed_ms": 172,
+      "elapsed_ms": 184,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -20,12 +20,12 @@
     {
       "argv_sha256": "b26bfb863a1251b307c473309b2fa69a8ddccbeb10b4b37bb83f2f2a1e19196f",
       "command_id": "engine-security-matrix",
-      "elapsed_ms": 124,
+      "elapsed_ms": 113,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": {
         "failed": 0,
-        "filtered_out": 1399,
+        "filtered_out": 1407,
         "ignored": 0,
         "measured": 0,
         "passed": 18
@@ -34,7 +34,7 @@
     {
       "argv_sha256": "d25c1a35db190c5821af496f6e3cc07b1ba96ddb12ec19c8b6a21d7bc7325ee1",
       "command_id": "native-read-security-matrix",
-      "elapsed_ms": 79,
+      "elapsed_ms": 89,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": {
@@ -48,7 +48,7 @@
     {
       "argv_sha256": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
       "command_id": "engine-strict-clippy",
-      "elapsed_ms": 89,
+      "elapsed_ms": 91,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -56,7 +56,7 @@
     {
       "argv_sha256": "65e69937c136fc6ddff76a8bd81a066958fed2f9858f8642f8e36f08b08ee814",
       "command_id": "host-strict-clippy",
-      "elapsed_ms": 23898,
+      "elapsed_ms": 15526,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -64,7 +64,7 @@
     {
       "argv_sha256": "47cdc321aaa5c7c4ed9eed236a4c8f7fcf3cee3ea5f1542a8e3304e1832cac09",
       "command_id": "dependency-direction",
-      "elapsed_ms": 19,
+      "elapsed_ms": 16,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -72,7 +72,7 @@
     {
       "argv_sha256": "1ba5e4e0d2b5860ae9e4b0ed786fc45413e659b7c435186b2ad8dc781a2c4045",
       "command_id": "effect-mediation",
-      "elapsed_ms": 2448,
+      "elapsed_ms": 2519,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -464,10 +464,10 @@
     "redactions": [
       "repository-root"
     ],
-    "sha256": "5368287794d81e5feda25280a08272402f8101c704dd368ea74a0483d38e8bd3"
+    "sha256": "5e0efb5af6f051ec590416d9694f9a3b8174abf9f551cf6597c6d376fa6c3b75"
   },
   "schema_version": 1,
-  "source_revision": "5aedc5b71247e87e05285a8f2eb4ec573b872f39",
+  "source_revision": "95c6d912f0963fdf7bd6b4d0239e0ef004fb4fe6",
   "sources": [
     {
       "bytes": 160606,
@@ -475,9 +475,9 @@
       "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
     },
     {
-      "bytes": 16644,
+      "bytes": 17822,
       "path": "docs/architecture/reusable-runtime-coordinator.md",
-      "sha256": "b4da5d2aed3d378364da4201a7a18446edd0cc46b5f0278ddd41f8d0f8207ebd"
+      "sha256": "b755b50d84a60d2798313a1682c1c0dd2b4d4babf831a4646fcb97bb88dd39cd"
     },
     {
       "bytes": 5665,
@@ -485,19 +485,19 @@
       "sha256": "77d1bc194a7de23e47d186778a36210cd8838bfc2e7096805808496fa3a39c1a"
     },
     {
-      "bytes": 10743,
+      "bytes": 10744,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "b6962af56d0fef9a2f4569d579649d83d00e78a1ca8cde61353aa785a77227de"
+      "sha256": "80e8ef07965390864bdd93f47c1741321f7415fd0abadd0d97f078a7818def9a"
     },
     {
       "bytes": 8021,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "d2e6f5946362fb2255ed6e1e09fe5cec26c52b25d9593c5e0e99863e2e1de05f"
+      "sha256": "757cb9d9aa5112e5cca5f2c09f4e493d0961d2bbbc5704a33bd1a7b02ac66c04"
     },
     {
       "bytes": 7514,
       "path": "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
-      "sha256": "0d3c11f68912fcfe03d52faa4e5ff543ca34fa36c20f0485749ccd35f092f2ce"
+      "sha256": "459600b26327dedf6981c0df98d4f112a570aefa5c5e21bdc96422aeb2d68e84"
     },
     {
       "bytes": 18186,
@@ -520,9 +520,9 @@
       "sha256": "c335d45282843159ad0cb97f22f965407112a9b0d9de6fe17677725266ef7f3d"
     },
     {
-      "bytes": 232569,
+      "bytes": 232991,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "04a228eccef706d1f6c001099ca1ff47cea5c096ff29dd5e237f964b748b49fe"
+      "sha256": "c79840afe97a7adb52831e76c7791ecc0e94bac74dbdbf2eb374b1330dc0a8d4"
     },
     {
       "bytes": 12820,
