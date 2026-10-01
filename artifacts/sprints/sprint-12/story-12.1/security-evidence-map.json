@@ -172,7 +172,7 @@
     "SR-TST-006"
   ],
   "schema_version": 1,
-  "source_revision": "60e1b7a0531ca0b27cba7c998f89d2b9a139b452",
+  "source_revision": "249d886e1b598c135a9091c1ec823af92a69530c",
   "sources": [
     {
       "bytes": 3627,
@@ -197,7 +197,7 @@
     {
       "bytes": 3846,
       "path": "artifacts/sprints/sprint-12/story-12.1/agent-progress.json",
-      "sha256": "7b5b61f2daee8b2336b7dd55a528f2653e1cd51ecb9d3d099f5acb32cf439b61"
+      "sha256": "55e259ad5ce9e654621a115fa18c02466c30ccf53553ed1be7e677b28b54fedd"
     },
     {
       "bytes": 3866,

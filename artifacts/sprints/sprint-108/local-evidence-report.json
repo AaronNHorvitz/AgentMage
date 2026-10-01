@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "record_type": "sprint_108_local_evidence",
-  "source_revision": "60e1b7a0531ca0b27cba7c998f89d2b9a139b452",
+  "source_revision": "249d886e1b598c135a9091c1ec823af92a69530c",
   "source_sha256": {
     "Cargo.toml": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc",
     "Cargo.lock": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd",
@@ -12,9 +12,9 @@
     "artifacts/sprints/sprint-108/multi-provider-source-corpus.json": "b4b010308946e2613931917e41ad0f85efb790370c2296640e4b0ff9a210c9bc",
     "scripts/multi_provider_source_contract.py": "d49c33d960f19379f0ae0f6ea8fbbd9c89b8742b9bc9a03fbc29d9585f504bcd",
     "tests/test_multi_provider_source_contract.py": "9cceb31ddd9860399514223e7256e90116e3a7e4c8122c7b8909866d18bbb18c",
-    "supply-chain/dependency-hashes.sha256": "72f8f8b5dece2a69ecef2ef0b5d9f086339989eabb693145c41ea7c392d6461a",
-    "supply-chain/dependency-provenance.json": "cd86c851de09920281fcc44593526ac7d88aab7b452f3b593e34e48781819f91",
-    "supply-chain/sbom.cdx.json": "1dff1ab2457e92ac51c4ae51daaf4c9d272cbdd97d8f48189edbe653922608ff",
+    "supply-chain/dependency-hashes.sha256": "bc3a703c6df83f462155405c578a09ea4ac18079b3ae50c46bcd44160801a8e8",
+    "supply-chain/dependency-provenance.json": "6e7a26d71e3ebb31a6783ccd467fbc68a5a85826ddce66842e24aac7353b3f4a",
+    "supply-chain/sbom.cdx.json": "3886abf704fb0ae62cfa067219ad4238230f9b5f0ac6267569c88d0af9b48b63",
     "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
     "scripts/sprint_108_evidence.py": "baaf3a3b8e057bffaf2c1884feb0e1a124645d92639d58faac0c342428821a6c",
     "tests/test_sprint_108_evidence.py": "2f31f90abdaa08a1ded37973b82cc23e507bafe93941feb311d997b8a4215279"
@@ -41,7 +41,7 @@
         "--lib"
       ],
       "exit_code": 0,
-      "output_sha256": "2e6b0d829a20620695ae03777dd127affd3d632ce3e70af6b808cd645e63d4e2",
+      "output_sha256": "7fc1a43626228bf9c7765ee9caf2550e08208cc00adfcc3cf35a4f9757724bf5",
       "blocking_skip_count": 0
     },
     {
@@ -53,7 +53,7 @@
         "tests.test_multi_provider_source_contract"
       ],
       "exit_code": 0,
-      "output_sha256": "7137eeba0f1475e79f6dce65a349431fdd4c73ecad493315cc596f599d3a273f",
+      "output_sha256": "9d654695c0a90577e252109954dd749137ace81d33f39cf1a31990e7f48cf31d",
       "blocking_skip_count": 0
     },
     {
