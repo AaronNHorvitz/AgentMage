@@ -1,0 +1,143 @@
+[
+  {
+    "id": "F2a-uncertain-output",
+    "expected": "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F2b-uncertain-evidence",
+    "expected": "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F2c-uncertain-kind",
+    "expected": "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F2d-uncertain-candidates",
+    "expected": "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admitted_attempt_that_did_not_succeed_retains_no_output_or_artifacts",
+      "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F2e-rule-removed",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admitted_attempt_that_did_not_succeed_retains_no_output_or_artifacts",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admitted_attempt_that_did_not_succeed_retains_no_output_or_artifacts",
+      "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F3a-task-unbound",
+    "expected": "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F3b-session-unbound",
+    "expected": "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F3c-spent-queries",
+    "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F3d-spent-bytes",
+    "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F3e-deadline",
+    "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R1-forged-receipt-digest",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::a_forged_receipt_is_refused_before_preparation_and_nothing_is_published",
+    "caught": false,
+    "also_failed": true,
+    "failed": [],
+    "compile_error": false
+  },
+  {
+    "id": "R2-artifact-event-without-operation",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::an_admitted_public_get_completes_through_the_real_owners_and_reads_back",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::completion_tests::a_partial_bundle_is_never_readable_even_after_reopening",
+      "runtime_loop::tests::research_admission_tests::completion_tests::a_stale_receipt_cannot_complete_a_later_attempt",
+      "runtime_loop::tests::research_admission_tests::completion_tests::an_admitted_public_get_completes_through_the_real_owners_and_reads_back",
+      "runtime_loop::tests::research_admission_tests::completion_tests::source_drift_after_publication_is_refused_on_each_read"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R3-terminal-stale-transaction",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::a_stale_receipt_cannot_complete_a_later_attempt",
+    "caught": false,
+    "also_failed": true,
+    "failed": [],
+    "compile_error": false
+  },
+  {
+    "id": "R4-plan-not-flushed",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::an_admitted_public_get_completes_through_the_real_owners_and_reads_back",
+    "caught": false,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admitted_run_publishes_its_plan_opens_its_budget_and_accepts_the_public_get_completion"
+    ],
+    "compile_error": false
+  }
+]

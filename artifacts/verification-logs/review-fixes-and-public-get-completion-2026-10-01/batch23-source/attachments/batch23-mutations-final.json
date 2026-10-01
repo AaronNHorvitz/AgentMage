@@ -1,0 +1,98 @@
+[
+ {
+  "id": "O1-terminal-unchecked-final",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+  "replace": [
+   [
+    "            || !terminal_names_pending_effect(&pending, &terminal_event)\n",
+    ""
+   ]
+  ],
+  "also": [
+   "runtime_loop::tests::research_admission_tests::completion_tests::a_receipt_the_owner_did_not_issue_cannot_close_the_effect"
+  ]
+ },
+ {
+  "id": "O2-completed-receipt-final",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::a_receipt_the_owner_did_not_issue_cannot_close_the_effect",
+  "replace": [
+   [
+    "        } => tool_call_id == started_call && receipt_id == &pending.receipt_id,",
+    "        } => tool_call_id == started_call,"
+   ]
+  ],
+  "also": [
+   "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect"
+  ]
+ },
+ {
+  "id": "O3-completed-call-final",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+  "replace": [
+   [
+    "        } => tool_call_id == started_call && receipt_id == &pending.receipt_id,",
+    "        } => receipt_id == &pending.receipt_id,"
+   ]
+  ]
+ },
+ {
+  "id": "O4-failed-receipt-final",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+  "replace": [
+   [
+    "        } => tool_call_id == started_call && receipt_id.as_ref() == Some(&pending.receipt_id),",
+    "        } => tool_call_id == started_call,"
+   ]
+  ]
+ },
+ {
+  "id": "O10-turn-final",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+  "replace": [
+   [
+    "        && terminal.turn_id == started.turn_id\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "O11-operation-final",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+  "replace": [
+   [
+    "        && terminal.operation_id == started.operation_id\n",
+    ""
+   ]
+  ]
+ }
+]

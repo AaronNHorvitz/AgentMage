@@ -1,0 +1,203 @@
+[
+ {
+  "id": "R1b-forged-receipt-digest",
+  "file": "kernel/engine/src/research_completion.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::a_forged_receipt_is_refused_before_preparation_and_nothing_is_published",
+  "replace": [
+   [
+    "    if digest(&to_canonical_json(&unhashed).map_err(|_| E::Binding)?) != receipt.receipt_sha256 {\n        return Err(E::Binding);\n    }\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "R4b-plan-not-flushed",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admitted_run_publishes_its_plan_opens_its_budget_and_accepts_the_public_get_completion",
+  "replace": [
+   [
+    "        flush(&mut self.tool_boundary).map_err(RuntimeLoopError::Dependency)?;\n        let now = self\n            .clock",
+    "        let now = self\n            .clock"
+   ]
+  ]
+ },
+ {
+  "id": "O1-terminal-unchecked",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+  "replace": [
+   [
+    "            || !terminal_names_pending_effect(&pending, &terminal_event)\n",
+    ""
+   ]
+  ],
+  "also": [
+   "runtime_loop::tests::research_admission_tests::completion_tests::a_receipt_the_owner_did_not_issue_cannot_close_the_effect"
+  ]
+ },
+ {
+  "id": "O2-completed-receipt",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::a_receipt_the_owner_did_not_issue_cannot_close_the_effect",
+  "replace": [
+   [
+    "        } => tool_call_id == started_call && receipt_id == &pending.receipt_id,",
+    "        } => tool_call_id == started_call,"
+   ]
+  ],
+  "also": [
+   "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect"
+  ]
+ },
+ {
+  "id": "O3-completed-call",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+  "replace": [
+   [
+    "        } => tool_call_id == started_call && receipt_id == &pending.receipt_id,",
+    "        } => receipt_id == &pending.receipt_id,"
+   ]
+  ]
+ },
+ {
+  "id": "O4-failed-receipt",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+  "replace": [
+   [
+    "        } => tool_call_id == started_call && receipt_id.as_ref() == Some(&pending.receipt_id),",
+    "        } => tool_call_id == started_call,"
+   ]
+  ]
+ },
+ {
+  "id": "O5-sequence",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+  "replace": [
+   [
+    "        && started.sequence.checked_add(1) == Some(terminal.sequence)\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "O6-predecessor",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+  "replace": [
+   [
+    "        && terminal.previous_event_sha256 == started.event_sha256\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "O7-run",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+  "replace": [
+   [
+    "        && terminal.run_id == started.run_id\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "O8-session",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+  "replace": [
+   [
+    "        && terminal.session_id == started.session_id\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "O9-task",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+  "replace": [
+   [
+    "        && terminal.task_id == started.task_id\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "O10-turn",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+  "replace": [
+   [
+    "        && terminal.turn_id == started.turn_id\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "O11-operation",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+  "replace": [
+   [
+    "        && terminal.operation_id == started.operation_id\n",
+    ""
+   ]
+  ]
+ }
+]

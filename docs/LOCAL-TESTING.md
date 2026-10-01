@@ -501,6 +501,32 @@ each run. Keep failed and refused runs. A scripted run proves the executable pat
 only; it is not model qualification. Real-model runs additionally need the exact
 admitted development profile and its resource and confinement checks.
 
+### Research completion through the real owners
+
+No host composes a research admission yet, so a research run cannot be launched from
+the CLI ([Decisions 0137](decisions/0137-explicit-research-admission-in-the-coordinator.md)
+and [0138](decisions/0138-review-fixes-and-the-public-get-completion-through-the-real-owners.md)).
+The engine test that composes the real coordinator with the real research owners runs
+in process. The owners are the encrypted store, the budget owner, grant consumption,
+the authority transaction, completion normalization and the canonical reader. The
+native result is synthetic, and nothing is sent:
+
+```sh
+cargo test --locked --offline -p agentmage-kernel-engine --lib research_admission_tests
+```
+
+It runs 17 tests:
+
+- the coordinator's admission checks;
+- the public GET read back through the canonical reader, before and after the store is
+  reopened;
+- a forged receipt digest, a receipt the owner did not issue and a stale receipt;
+- ten changed terminals;
+- partial bundles and source drift.
+
+This is a component check, not a research demonstration. No worker, provider or model
+runs.
+
 ## Separate document demonstration
 
 The following historical Fedora Kinoite document demo requires its recorded native host

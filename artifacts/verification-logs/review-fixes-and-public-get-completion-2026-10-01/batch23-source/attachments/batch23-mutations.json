@@ -1,0 +1,218 @@
+[
+ {
+  "id": "F2a-uncertain-output",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results",
+  "replace": [
+   [
+    "            result.output.is_none()\n                && result.evidence.is_empty()",
+    "            result.evidence.is_empty()"
+   ]
+  ]
+ },
+ {
+  "id": "F2b-uncertain-evidence",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results",
+  "replace": [
+   [
+    "            result.output.is_none()\n                && result.evidence.is_empty()\n",
+    "            result.output.is_none()\n"
+   ]
+  ]
+ },
+ {
+  "id": "F2c-uncertain-kind",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results",
+  "replace": [
+   [
+    "                && execution.result_output_kind.is_none()\n                && execution.artifact_candidates.is_empty()\n        }\n",
+    "                && execution.artifact_candidates.is_empty()\n        }\n"
+   ]
+  ]
+ },
+ {
+  "id": "F2d-uncertain-candidates",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results",
+  "replace": [
+   [
+    "                && execution.artifact_candidates.is_empty()\n        }\n        _ => false,",
+    "        }\n        _ => false,"
+   ]
+  ],
+  "also": [
+   "runtime_loop::tests::research_admission_tests::an_admitted_attempt_that_did_not_succeed_retains_no_output_or_artifacts"
+  ]
+ },
+ {
+  "id": "F2e-rule-removed",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admitted_attempt_that_did_not_succeed_retains_no_output_or_artifacts",
+  "replace": [
+   [
+    "        ) => {\n            result.output.is_none()",
+    "        ) => {\n            true || result.output.is_none()"
+   ]
+  ],
+  "also": [
+   "runtime_loop::tests::research_admission_tests::the_admitted_tool_returns_only_these_network_results"
+  ]
+ },
+ {
+  "id": "F3a-task-unbound",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission",
+  "replace": [
+   [
+    "            && self.context.task_id == request.task.task_id\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "F3b-session-unbound",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::composition_refuses_a_run_that_does_not_name_or_fit_its_admission",
+  "replace": [
+   [
+    "        self.context.session_id == request.session_id\n            && self.context.task_id",
+    "        self.context.task_id"
+   ]
+  ]
+ },
+ {
+  "id": "F3c-spent-queries",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+  "replace": [
+   [
+    "            || progress.queries != 0\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "F3d-spent-bytes",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+  "replace": [
+   [
+    "            || progress.reserved_bytes != 0\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "F3e-deadline",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::the_run_continues_only_when_the_owner_opens_exactly_the_published_plan",
+  "replace": [
+   [
+    "            || progress.deadline_exhausted\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "R1-forged-receipt-digest",
+  "file": "kernel/engine/src/research_completion.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::a_forged_receipt_is_refused_before_preparation_and_nothing_is_published",
+  "replace": [
+   [
+    "    if digest(&to_canonical_json(&unhashed).map_err(|_| E::Binding)?) != receipt.receipt_sha256 {\n        return Err(E::Binding);\n    }\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "R2-artifact-event-without-operation",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::an_admitted_public_get_completes_through_the_real_owners_and_reads_back",
+  "replace": [
+   [
+    "            manifest.producer_turn_id.as_ref(),\n            manifest.producer_operation_id.as_ref(),\n            Some(payload_reference.clone()),",
+    "            manifest.producer_turn_id.as_ref(),\n            None,\n            Some(payload_reference.clone()),"
+   ]
+  ]
+ },
+ {
+  "id": "R3-terminal-stale-transaction",
+  "file": "kernel/engine/src/research_completion.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::a_stale_receipt_cannot_complete_a_later_attempt",
+  "replace": [
+   [
+    "        || tx.receipt_id.as_ref() != Some(&receipt.receipt_id)\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "R4-plan-not-flushed",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::an_admitted_public_get_completes_through_the_real_owners_and_reads_back",
+  "replace": [
+   [
+    "        flush(&mut self.tool_boundary).map_err(RuntimeLoopError::Dependency)?;\n        let now = self\n            .clock",
+    "        let now = self\n            .clock"
+   ]
+  ]
+ }
+]

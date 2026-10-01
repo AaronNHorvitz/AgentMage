@@ -1,0 +1,64 @@
+[
+  {
+    "id": "O1-terminal-unchecked-final",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::completion_tests::a_receipt_the_owner_did_not_issue_cannot_close_the_effect",
+      "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "O2-completed-receipt-final",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::a_receipt_the_owner_did_not_issue_cannot_close_the_effect",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::completion_tests::a_receipt_the_owner_did_not_issue_cannot_close_the_effect",
+      "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "O3-completed-call-final",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "O4-failed-receipt-final",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "O10-turn-final",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "O11-operation-final",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect"
+    ],
+    "compile_error": false
+  }
+]
