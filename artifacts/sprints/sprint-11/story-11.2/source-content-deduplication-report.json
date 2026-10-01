@@ -16,9 +16,9 @@
       "sha256": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8"
     },
     {
-      "byte_length": 489324,
+      "byte_length": 491739,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "28aafafb739eb8d358d4422f063ac943ac2b3f13592e6dd9ac4a03f77cd29bec"
+      "sha256": "660387aaf1627758b9d47bce2604266e552db108f68751eae753200f0c56ce05"
     },
     {
       "byte_length": 4166,
@@ -46,6 +46,11 @@
       "sha256": "6755935271adf2e753d73a5011310c86033537c50eff36895be09312e8c130af"
     },
     {
+      "byte_length": 5441,
+      "path": "kernel/engine/fixtures/operational-store/schema-23.json",
+      "sha256": "5e61371539c2651f7f2f08f603866dba79545c7451f8699f5804de8b2d569e9d"
+    },
+    {
       "byte_length": 250,
       "path": "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
@@ -61,6 +66,11 @@
       "sha256": "84ed1485d0d2144a00eee86bd5052add809fc18af0c0483348d9fdbe5873ff09"
     },
     {
+      "byte_length": 6354,
+      "path": "kernel/engine/migrations/operational-store/0023-documentation-packs.sql",
+      "sha256": "1b756961aa77b81f4f600ebc2ba9e07564f50b8844d840eac2b20b312a828b12"
+    },
+    {
       "byte_length": 14900,
       "path": "kernel/engine/src/job_ledger_store.rs",
       "sha256": "1e84d70b6c93b452893c95194cf9e5b2cbf050d4f1c877cc0c4c8eca9f118c0d"
@@ -69,6 +79,11 @@
       "byte_length": 23667,
       "path": "kernel/engine/src/run_action_history_store.rs",
       "sha256": "6209df603f6a5e38f4d925ae06501eca6d1289e3dc1c86a8c902d74602194616"
+    },
+    {
+      "byte_length": 35330,
+      "path": "kernel/engine/src/doc_pack_store.rs",
+      "sha256": "57181949eec1035ceebba107f9cd342527ca356d827cf4eb7cd94429af89030d"
     },
     {
       "byte_length": 2335,
@@ -86,25 +101,25 @@
       "sha256": "ccdbe1e44487558f2bb0748982d72a2e62e2f763706077b08f5b13267deebe6f"
     },
     {
-      "byte_length": 9731,
+      "byte_length": 9974,
       "path": "scripts/source_content_deduplication_evidence.py",
-      "sha256": "f27f9b36c99b93fd35db70734bf54837683c669203872c30f22dc714a55e92b9"
+      "sha256": "c4887c5fe1453e24e99133e81c545498adc36d9a8700b65ac47d0f13bb37fc59"
     },
     {
-      "byte_length": 5128,
+      "byte_length": 5363,
       "path": "tests/test_source_content_deduplication_evidence.py",
-      "sha256": "2282df0927e00f71a00e55ee27b01941594f6c892369bf24b079c3e90e525f8a"
+      "sha256": "29c877752dd99cabf5b2208c2bad5131ccf464625fa96366f7f94d14cdddfd9a"
     },
     {
-      "byte_length": 17962,
+      "byte_length": 17966,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-results.log",
-      "sha256": "35da651ac618a86fa3e4f70b5bea4b48a2ded21f2e76b25fda3e68326aea543d"
+      "sha256": "45d765404297879c83edd3633de0c82150c45ba2876a964075f3c353338ab991"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine runtime_artifact::tests::publication_deduplicates_without_broadening_owner_or_reference_state --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::source_content_deduplication_preserves_every_logical_identity --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_two_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_three_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
@@ -123,7 +138,7 @@
     ]
   },
   "generated_on": "2026-09-26",
-  "operational_store_schema_version": 22,
+  "operational_store_schema_version": 23,
   "physical_payload_authority": {
     "artifact_table": "runtime_artifacts",
     "migration": "0007-runtime-artifacts.sql",
@@ -148,7 +163,7 @@
   "required_markers": [
     "publication_deduplicates_without_broadening_owner_or_reference_state ... ok",
     "source_content_deduplication_preserves_every_logical_identity ... ok",
-    "version_one_upgrades_through_twenty_two_with_exact_history ... ok",
+    "version_one_upgrades_through_twenty_three_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

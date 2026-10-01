@@ -22,14 +22,14 @@
   "review_class": "gate-owned-automated-knowledge-boundary",
   "reviewer_identity": "scripts/knowledge_sprint_boundary_review.py",
   "schema_version": 1,
-  "source_revision": "cd6d368a2c434372d27aa28c35bec1e797772a36",
+  "source_revision": "0e818e86b037688864bc4d2cdfa4de17057dc0d9",
   "source_sha256": {
     "kernel/engine/src/conversation_archive.rs": "89bc61a06c8196c1a60ce9c1f97e8a9ad94903dc81a3b1ee5b85340cdba5c633",
     "kernel/engine/src/evidence_bundle.rs": "95945112e0a009c827825f4be463a15257094579f0ff12012d65364657f34d55",
-    "shells/host/src/cli.rs": "7cf456d658f7f8ff166bc356000c18d6ac2f119fe211bf65c66ca6f10e73ddcb",
+    "shells/host/src/cli.rs": "4e2d36a949b20bd062beb5203a79ac353e936c4ff5b5add6610463eacbbd6a13",
     "shells/host/src/conversation_runtime.rs": "82548ff63da5befbd5bdc535bef5bed4b6889f28d75d5ec280a5a453ab080e70",
     "shells/host/src/headless.rs": "9437a13398dc59a8babf7f9f14b60a4ba43c830c277614e90a3dfea1f89be318",
-    "shells/host/src/native_chat_runtime.rs": "613f36944e75e38e4fb92e18cec03d026248c3c01ba392c1f1207cfb60f4ecd1",
+    "shells/host/src/native_chat_runtime.rs": "e3080359eba8f3c19ac7611675ad2be170981fd7fb0661d4957d9ea152b05e2c",
     "shells/vscode/src/host_bridge.ts": "b7ea16224f2cf178af2a1d98302ce315fe81b934a19ffbd59fceaba350d63707",
     "shells/vscode/src/runtime_transport.ts": "b54c672fd6ffea2ccb90af9c74ca563065e99da426e254fe70fa2958b80bd9ac"
   },

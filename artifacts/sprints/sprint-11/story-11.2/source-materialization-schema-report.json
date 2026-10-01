@@ -11,9 +11,9 @@
       "sha256": "5821bc16e3f91dd88faadba445f663a00794c402c0472940380062c5a5051f4e"
     },
     {
-      "byte_length": 489324,
+      "byte_length": 491739,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "28aafafb739eb8d358d4422f063ac943ac2b3f13592e6dd9ac4a03f77cd29bec"
+      "sha256": "660387aaf1627758b9d47bce2604266e552db108f68751eae753200f0c56ce05"
     },
     {
       "byte_length": 4698,
@@ -36,6 +36,11 @@
       "sha256": "6755935271adf2e753d73a5011310c86033537c50eff36895be09312e8c130af"
     },
     {
+      "byte_length": 5441,
+      "path": "kernel/engine/fixtures/operational-store/schema-23.json",
+      "sha256": "5e61371539c2651f7f2f08f603866dba79545c7451f8699f5804de8b2d569e9d"
+    },
+    {
       "byte_length": 250,
       "path": "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
@@ -51,6 +56,11 @@
       "sha256": "84ed1485d0d2144a00eee86bd5052add809fc18af0c0483348d9fdbe5873ff09"
     },
     {
+      "byte_length": 6354,
+      "path": "kernel/engine/migrations/operational-store/0023-documentation-packs.sql",
+      "sha256": "1b756961aa77b81f4f600ebc2ba9e07564f50b8844d840eac2b20b312a828b12"
+    },
+    {
       "byte_length": 14900,
       "path": "kernel/engine/src/job_ledger_store.rs",
       "sha256": "1e84d70b6c93b452893c95194cf9e5b2cbf050d4f1c877cc0c4c8eca9f118c0d"
@@ -59,6 +69,11 @@
       "byte_length": 23667,
       "path": "kernel/engine/src/run_action_history_store.rs",
       "sha256": "6209df603f6a5e38f4d925ae06501eca6d1289e3dc1c86a8c902d74602194616"
+    },
+    {
+      "byte_length": 35330,
+      "path": "kernel/engine/src/doc_pack_store.rs",
+      "sha256": "57181949eec1035ceebba107f9cd342527ca356d827cf4eb7cd94429af89030d"
     },
     {
       "byte_length": 2335,
@@ -76,9 +91,9 @@
       "sha256": "f04af91a9de2762dca16359bd8a7f78c72e1c5aa5e3599f0f515540031ff2f44"
     },
     {
-      "byte_length": 9614,
+      "byte_length": 9861,
       "path": "scripts/source_materialization_schema_evidence.py",
-      "sha256": "691e0f2489d4163e998d1da93b8364a1e8169ff32442479fccfe1605de04579d"
+      "sha256": "51a5ea9155f8ba3f9906e3cec8031c1530acaab03511efe871795e0c6ce338b6"
     },
     {
       "byte_length": 2258,
@@ -86,19 +101,19 @@
       "sha256": "f1ed002bd3a2d443c886fc71afc506cdbdef47d8863623e7a955b497bcdf4a21"
     },
     {
-      "byte_length": 18006,
+      "byte_length": 18014,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-results.log",
-      "sha256": "dd5dbde56e1c02c0195433528107ec1306c535fc0e77f2315ab741a87ca9b5c2"
+      "sha256": "a2c089d7ab7deb2f82e323f092baac404bc8bafbf942e52d7e6521db4e2efd73"
     }
   ],
   "commands": [
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_twenty_two_schema_matches_fixture_snapshot_and_is_relational --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_twenty_three_schema_matches_fixture_snapshot_and_is_relational --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_two_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_three_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
-  "current_operational_store_schema_version": 22,
+  "current_operational_store_schema_version": 23,
   "generated_on": "2026-09-26",
   "materialization_migration_version": 12,
   "normalized_tables": [
@@ -134,9 +149,9 @@
   },
   "record_type": "agentmage-source-materialization-schema-evidence",
   "required_markers": [
-    "version_twenty_two_schema_matches_fixture_snapshot_and_is_relational ... ok",
+    "version_twenty_three_schema_matches_fixture_snapshot_and_is_relational ... ok",
     "source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store ... ok",
-    "version_one_upgrades_through_twenty_two_with_exact_history ... ok",
+    "version_one_upgrades_through_twenty_three_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

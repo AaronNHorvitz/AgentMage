@@ -44,8 +44,8 @@
     "json_lines_export_rejects_occupied_or_ineligible_destinations_without_change",
     "schema_constraints_and_atomic_rollback_reject_partial_authority",
     "required_writer_and_database_configuration_is_verified",
-    "version_twenty_two_schema_matches_fixture_snapshot_and_is_relational",
-    "version_one_upgrades_through_twenty_two_with_exact_history",
+    "version_twenty_three_schema_matches_fixture_snapshot_and_is_relational",
+    "version_one_upgrades_through_twenty_three_with_exact_history",
     "version_two_retention_rows_upgrade_to_three_with_initial_event",
     "failed_version_three_migration_rolls_back_all_alterations",
     "failed_version_two_migration_rolls_back_without_partial_schema",
@@ -61,17 +61,17 @@
   ],
   "private_user_data_used": false,
   "schema_version": 1,
-  "source_revision": "cd6d368a2c434372d27aa28c35bec1e797772a36",
+  "source_revision": "0e818e86b037688864bc4d2cdfa4de17057dc0d9",
   "sources": [
     {
-      "bytes": 5707,
+      "bytes": 5715,
       "path": "docs/verification/s-011-ut01-store-unit-results.md",
-      "sha256": "7befcc377bf38d8cab5190a3905cf4b587e75674f22d7341f0654827e1fe2776"
+      "sha256": "d6c8ee39bc91bbeb8c89562821e7022b6cddd5846853e7819ef12c148857aa2a"
     },
     {
-      "bytes": 489324,
+      "bytes": 491739,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "28aafafb739eb8d358d4422f063ac943ac2b3f13592e6dd9ac4a03f77cd29bec"
+      "sha256": "660387aaf1627758b9d47bce2604266e552db108f68751eae753200f0c56ce05"
     },
     {
       "bytes": 4912,
@@ -79,9 +79,9 @@
       "sha256": "86d30819c17b02544b93aadd53810feb7a89c7e4f79add3c55fab01e1e03c88a"
     },
     {
-      "bytes": 7945,
+      "bytes": 8298,
       "path": "kernel/engine/src/research_reader_migration_tests.rs",
-      "sha256": "848e58923117d92fb7db8a66fc5493dc029998cd14c1cc312bb977c8412f20b2"
+      "sha256": "e700e41ff6f827d378c8e4218a65b52a8d13dfc142b656701dc86c3893585563"
     },
     {
       "bytes": 4815,
@@ -94,9 +94,9 @@
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
     },
     {
-      "bytes": 6429,
+      "bytes": 6458,
       "path": "kernel/engine/src/job_ledger_migration_tests.rs",
-      "sha256": "e9a388048032299f8728e06de1c185141562cda3dd8ddb7c46dcf2df95cf3a1e"
+      "sha256": "8a3fe6712914c65b94e0416aec89d36f053a0c83c9e1b209e61d34f76d49bd01"
     },
     {
       "bytes": 5006,
@@ -109,9 +109,9 @@
       "sha256": "6f27f41680d76642fbaae8efded29934bc2ccb797c75c23d7142986d7414573d"
     },
     {
-      "bytes": 6336,
+      "bytes": 6539,
       "path": "kernel/engine/src/run_action_history_migration_tests.rs",
-      "sha256": "79395fcf85d3ab848d01ac4839cb9aa609efbb61a51e7cd7143078e3cc89a16f"
+      "sha256": "1e6d0f45cf0f5c406c59c5ea30a7d5522fb115ff29537bee7df866403b7e1a62"
     },
     {
       "bytes": 5221,
@@ -124,9 +124,24 @@
       "sha256": "84ed1485d0d2144a00eee86bd5052add809fc18af0c0483348d9fdbe5873ff09"
     },
     {
-      "bytes": 12251,
+      "bytes": 6271,
+      "path": "kernel/engine/src/doc_pack_migration_tests.rs",
+      "sha256": "358b444150c0f7bbd103ef4b2b27c1399969b95c7c2d261151b0f624a4f0a937"
+    },
+    {
+      "bytes": 5441,
+      "path": "kernel/engine/fixtures/operational-store/schema-23.json",
+      "sha256": "5e61371539c2651f7f2f08f603866dba79545c7451f8699f5804de8b2d569e9d"
+    },
+    {
+      "bytes": 6354,
+      "path": "kernel/engine/migrations/operational-store/0023-documentation-packs.sql",
+      "sha256": "1b756961aa77b81f4f600ebc2ba9e07564f50b8844d840eac2b20b312a828b12"
+    },
+    {
+      "bytes": 12450,
       "path": "scripts/store_unit_acceptance_evidence.py",
-      "sha256": "76141d8a43283566d8d7eb3d8cba9e38af3251808ab15365864c4d96332519ca"
+      "sha256": "b4f2acc069c9b3022b0aa68b4254c073e6de309ab5f0f1c27e5436ef37ae58a8"
     },
     {
       "bytes": 3600,
@@ -143,7 +158,7 @@
     {
       "command_id": "8bc5e8635f51ef1995b5f3e693d844a4d92df5362eaa088ed55c2f91691bab37",
       "exit_code": 0,
-      "expected_marker_sha256": "daf355cf33f7fe1d255571b1f30bafd9daebd623e06d9b1e32016448a4681531",
+      "expected_marker_sha256": "80d222521254e66f02994f4be0255c84adc8250eb9e752b72b73c39170f10e55",
       "status": "pass"
     },
     {
