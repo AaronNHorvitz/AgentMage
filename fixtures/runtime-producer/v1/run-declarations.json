@@ -1,0 +1,297 @@
+{
+  "schema_version": 4,
+  "run_id": "coding-run-0001",
+  "request_sha256": "8b77279f058f9eb6ec8d6cbbdf6235d0c586aa6cdf36f6801c225189dd620ef1",
+  "recoverability": {
+    "schema_version": 1,
+    "session_id": "coding-session-0001",
+    "task_id": "task-coding-0001",
+    "run_id": "coding-run-0001",
+    "assessments": [
+      {
+        "operation_id": "operation-validation-0001",
+        "recoverability": "external-or-uncertain",
+        "reason_code": "command-effects-not-tracked"
+      }
+    ],
+    "revert_order": [],
+    "fully_recoverable": false,
+    "requires_reconciliation": true,
+    "report_sha256": "17fcb444f3cc9e8b339694e1c693d212de77f3a58df6cd882f383a85b2224e57"
+  },
+  "context_inspections": [
+    {
+      "schema_version": 1,
+      "context_packet_id": "packet-producer-fixture",
+      "packet_sha256": "12a0218d32f90cc95444b87ce3f483425d7f1c9e6ff02be04184b3a62151b67f",
+      "token_counter_id": "counter-producer-fixture",
+      "max_tokens": 200,
+      "used_tokens": 45,
+      "max_bytes": 1048576,
+      "used_bytes": 45,
+      "pinned": [
+        {
+          "item_id": "system",
+          "kind": "instruction",
+          "sensitivity": "internal",
+          "source_id": "source:system",
+          "source_revision": "r1",
+          "content_sha256": "adfbf1df810fe2bef09a7023f883d001c78eaf6c8c960360975f33b8c3ad1ad4",
+          "token_count": 16,
+          "byte_count": 16,
+          "omission": null
+        },
+        {
+          "item_id": "request",
+          "kind": "newest_request",
+          "sensitivity": "internal",
+          "source_id": "source:request",
+          "source_revision": "r1",
+          "content_sha256": "ad089b499d48a1dbda3c4e539c2771540ceeaebb3cd2d7f20fdae394685508c1",
+          "token_count": 12,
+          "byte_count": 12,
+          "omission": null
+        }
+      ],
+      "selected": [
+        {
+          "item_id": "source-a",
+          "kind": "supporting",
+          "sensitivity": "internal",
+          "source_id": "source:source-a",
+          "source_revision": "r1",
+          "content_sha256": "8c9dbb953ba2f359088a54fe2be1cba2add2a768df7054f0e4b6faf460aedac4",
+          "token_count": 17,
+          "byte_count": 17,
+          "omission": null
+        }
+      ],
+      "omitted": [
+        {
+          "item_id": "memory-a",
+          "kind": "memory",
+          "sensitivity": "internal",
+          "source_id": "source:memory-a",
+          "source_revision": "r1",
+          "content_sha256": "c064fbca9d9de8dd9bb0624984403b28d0da807a69365d4f7fb09123ecb0c405",
+          "token_count": 6,
+          "byte_count": 6,
+          "omission": "denied"
+        }
+      ],
+      "kind_totals": [
+        {
+          "kind": "instruction",
+          "items": 1,
+          "tokens": 16,
+          "bytes": 16
+        },
+        {
+          "kind": "newest_request",
+          "items": 1,
+          "tokens": 12,
+          "bytes": 12
+        },
+        {
+          "kind": "supporting",
+          "items": 1,
+          "tokens": 17,
+          "bytes": 17
+        }
+      ]
+    }
+  ],
+  "effect_history": {
+    "records": [
+      {
+        "state": "kept",
+        "schema_version": 1,
+        "sequence": 1,
+        "action_kind": "file_write",
+        "action_id": "operation-write-0001",
+        "authorization": {
+          "kind": "grant",
+          "grant_id": "grant-write-0001",
+          "grant_sha256": "c05d2465b585de012652e2196dcc5ef41a36c97e618bceda347e482874784351"
+        },
+        "effect_sha256": "a0b6dd31e38e6fe91e64136e8af2e35e92eb4361e0dcd2e4c6bea0fc725f1c7c",
+        "outcome": "succeeded",
+        "reason_code": "coding.approved.succeeded",
+        "evidence_sha256s": [
+          "45007613b7a6ebef4c403b02eafcbaaed754a4bc693b9bac4ddce15f301d9955",
+          "8300296b1d109cb80f60be9622e79bd2150b0d7c5ed5aca4583c3b46732ae0c4",
+          "c597ce25a3e616e5ab700a1146d766695c6336e9452aef6fed44081c82b14daf"
+        ],
+        "recorded_at_epoch_ms": 1790000000000,
+        "retain_until_epoch_ms": 1792592000000,
+        "redacted_fields": 0,
+        "previous_entry_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "entry_sha256": "5d45923394bf8e97978b788f6a60a174e76097443cfa0739533e9b1c6ba99280"
+      },
+      {
+        "state": "kept",
+        "schema_version": 1,
+        "sequence": 2,
+        "action_kind": "file_write",
+        "action_id": "operation-write-0002",
+        "authorization": {
+          "kind": "unauthorized"
+        },
+        "effect_sha256": "9e20bd2ede084897bf90cea86d774e8e06edcf17ba36205b15038f577b1462c7",
+        "outcome": "denied",
+        "reason_code": "recipe.out-of-scope",
+        "evidence_sha256s": [
+          "5ed9d04ae6cc543a84fc94997acd028cff04ed8f1236635291bab689388ffa7a",
+          "9cd5c65c8693bf5fcf8fd6c4a0b51154f9073f09127b69d446809fdf635c77c6"
+        ],
+        "recorded_at_epoch_ms": 1790000000001,
+        "retain_until_epoch_ms": 1792592000001,
+        "redacted_fields": 0,
+        "previous_entry_sha256": "5d45923394bf8e97978b788f6a60a174e76097443cfa0739533e9b1c6ba99280",
+        "entry_sha256": "9794a410d8732801a6617b3a81d881afa4ffdea4c2e72b206717bf7d454889c7"
+      }
+    ],
+    "head": {
+      "count": 2,
+      "head_sha256": "9794a410d8732801a6617b3a81d881afa4ffdea4c2e72b206717bf7d454889c7"
+    }
+  },
+  "job_control_history": {
+    "records": [
+      {
+        "state": "kept",
+        "schema_version": 1,
+        "sequence": 1,
+        "action_kind": "job_control",
+        "action_id": "cancel-producer-fixture-0001",
+        "authorization": {
+          "kind": "person_decision",
+          "decision_sha256": "47be122f8086eb6287df836a933da50752658a83333c2edfa4f49ea303a0fdee"
+        },
+        "effect_sha256": "276b3a18d1807aba2ecafaf39ea9483c6f1e4ef6b491884284f7cb8d3235024a",
+        "outcome": "succeeded",
+        "reason_code": "job.control.cancel.applied",
+        "evidence_sha256s": [
+          "d9d5d8c6c0b3e94a497f11a6b5f63ca76cb8f0bd66bbe36f75259056fd42c76d"
+        ],
+        "recorded_at_epoch_ms": 1790000000002,
+        "retain_until_epoch_ms": 1792592000002,
+        "redacted_fields": 0,
+        "previous_entry_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "entry_sha256": "a784847af93b05eb6aec590a54ac2cd0b55515c0b7213315da814d0aae756341"
+      }
+    ],
+    "head": {
+      "count": 1,
+      "head_sha256": "a784847af93b05eb6aec590a54ac2cd0b55515c0b7213315da814d0aae756341"
+    }
+  },
+  "route_receipt": {
+    "schema_version": 2,
+    "request_id": "coding-run-0001",
+    "route_policy_sha256": "d96f990dada25ee9d0514b1a18965dcee569254421987e7c68bbab34638ecb43",
+    "considered_routes": [
+      {
+        "route_id": "fixture-coding-profile",
+        "candidate_sha256": "9dce4fa59169fd7d3b02c2cb79bb85d2b40192c75f8b6fbb4a8a1e65386bb7ec",
+        "eligible": true,
+        "reason_code": "model-gateway.route.eligible"
+      }
+    ],
+    "selected_route_id": "fixture-coding-profile",
+    "fallback_used": false,
+    "fallback_policy_sha256": null,
+    "disclosure_class": "strict_local",
+    "mode": "local_only",
+    "transmitted_data": [
+      "conversation",
+      "workspace_excerpts",
+      "tool_outputs"
+    ],
+    "hybrid_grant_sha256": null,
+    "provider_id": null,
+    "reason_code": "model-gateway.route.qualified-selected",
+    "receipt_sha256": "a5be002fc36080e5a1309a0d7b5d07495ce617c6d4bf6991406598e1f5eac933"
+  },
+  "route_history": {
+    "records": [
+      {
+        "state": "kept",
+        "schema_version": 1,
+        "sequence": 1,
+        "action_kind": "model_route",
+        "action_id": "coding-run-0001",
+        "authorization": {
+          "kind": "person_decision",
+          "decision_sha256": "8b77279f058f9eb6ec8d6cbbdf6235d0c586aa6cdf36f6801c225189dd620ef1"
+        },
+        "effect_sha256": "f8341460b6ec610cac4d09932f6ad7cc7f456f594b1590f952e1baa53e39417d",
+        "outcome": "succeeded",
+        "reason_code": "model-gateway.route.qualified-selected",
+        "evidence_sha256s": [
+          "a5be002fc36080e5a1309a0d7b5d07495ce617c6d4bf6991406598e1f5eac933",
+          "d96f990dada25ee9d0514b1a18965dcee569254421987e7c68bbab34638ecb43"
+        ],
+        "recorded_at_epoch_ms": 1790000000000,
+        "retain_until_epoch_ms": 1792592000000,
+        "redacted_fields": 0,
+        "previous_entry_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "entry_sha256": "f2b66ca2bb329699521665e7cfd72ec93bc717c30f7c410cc89d6dc4b324a316"
+      }
+    ],
+    "head": {
+      "count": 1,
+      "head_sha256": "f2b66ca2bb329699521665e7cfd72ec93bc717c30f7c410cc89d6dc4b324a316"
+    }
+  },
+  "recipe_plan": {
+    "schema_version": 1,
+    "recipe_id": "agentmage-sample-repair",
+    "recipe_version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "recipe_kind": "tests",
+    "manifest_sha256": "73002a357e9ce574a9293da85f20463952327d1badd47bd9b359b7caeefcf45d",
+    "workspace_id": "workspace-coding",
+    "parameters": {
+      "attempts": {
+        "type": "integer",
+        "value": 2
+      },
+      "target": {
+        "type": "path",
+        "value": "src/calc.py"
+      }
+    },
+    "scope": [
+      {
+        "workspace_id": "workspace-coding",
+        "components": [
+          "src"
+        ]
+      }
+    ],
+    "max_changed_files": 1,
+    "prerequisites": [
+      {
+        "kind": "clean_worktree"
+      }
+    ],
+    "validations": [
+      {
+        "validation_id": "validation-unit",
+        "kind": "unit",
+        "template_sha256": "c5915ea68b5e457e1a7cef1c72ff5e1e8f63509b200f16b0c0d65815d377f5ea"
+      }
+    ],
+    "validation_registry_sha256": "b53d9915c3dd4daef135d316bad6dd1aafc76eab53984dcd1ada2179ddc09294",
+    "rollback": {
+      "boundary": "revert_writes_only"
+    },
+    "network_grant_required": false,
+    "proposal_only": true,
+    "plan_sha256": "3e7a906efc78fbf913e7a03cbeaf19660d0c33d86e56e18000983c99b82b4a37"
+  }
+}

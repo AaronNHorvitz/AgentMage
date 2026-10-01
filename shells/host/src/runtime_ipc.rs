@@ -8,7 +8,8 @@
 //! requests (Decision 0130), memory requests (Decision 0131) and extension
 //! requests (Decision 0132) over the same channel. Wire 15 carries a run's
 //! recipe, its declared plan and an extension list's issuer identity
-//! (Decision 0133).
+//! (Decision 0133). Every frame is decoded exactly, in both directions
+//! (Decision 0135).
 
 use agentmage_kernel_contracts::{
     CancellationId, RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEventCursor, RuntimeRunId,
@@ -27,6 +28,7 @@ use crate::coding_memory::{MemoryAnswer, MemoryRequest};
 use crate::runtime_transport::{
     RuntimeClientScope, RuntimeJobControl, RuntimeJobStatus, RuntimePrepareInput,
     RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
+    decode_exact,
 };
 
 const WIRE_VERSION: u16 = 15;
@@ -249,12 +251,7 @@ impl LinuxRuntimeIpcClient {
             .session
             .read_frame(MAX_WIRE_BYTES)
             .map_err(|_| RuntimeTransportError::RuntimeFailed)?;
-        let response: RuntimeIpcEnvelope<RuntimeIpcResponse> = serde_json::from_slice(&bytes)
-            .map_err(|_| RuntimeTransportError::RuntimeEvidenceDenied)?;
-        if response.version != WIRE_VERSION {
-            return Err(RuntimeTransportError::RuntimeEvidenceDenied);
-        }
-        match response.payload {
+        match decode_response(&bytes)? {
             RuntimeIpcResponse::Error { error } => Err(error),
             response => Ok(response),
         }
@@ -524,11 +521,7 @@ pub fn serve_linux_runtime_ipc<P: RuntimeTransportPort>(
         let bytes = session
             .read_frame(MAX_WIRE_BYTES)
             .map_err(|_| RuntimeTransportError::RuntimeFailed)?;
-        let request = serde_json::from_slice::<RuntimeIpcEnvelope<RuntimeIpcRequest>>(&bytes)
-            .ok()
-            .filter(|request| request.version == WIRE_VERSION)
-            .map(|request| request.payload);
-        let (response, shutdown) = answer(runtime, &client, request);
+        let (response, shutdown) = answer(runtime, &client, decode_request(&bytes));
         let bytes = serde_json::to_vec(&RuntimeIpcEnvelope {
             version: WIRE_VERSION,
             payload: response,
@@ -722,6 +715,22 @@ fn answer<P: RuntimeTransportPort>(
             false,
         ),
     }
+}
+
+/// The request one frame holds, when it decodes exactly at this wire version.
+fn decode_request(bytes: &[u8]) -> Option<RuntimeIpcRequest> {
+    decode_exact::<RuntimeIpcEnvelope<RuntimeIpcRequest>>(bytes)
+        .filter(|request| request.version == WIRE_VERSION)
+        .map(|request| request.payload)
+}
+
+/// The response one frame holds; a frame that does not decode exactly at
+/// this wire version is evidence the client refuses.
+fn decode_response(bytes: &[u8]) -> Result<RuntimeIpcResponse, RuntimeTransportError> {
+    decode_exact::<RuntimeIpcEnvelope<RuntimeIpcResponse>>(bytes)
+        .filter(|response| response.version == WIRE_VERSION)
+        .map(|response| response.payload)
+        .ok_or(RuntimeTransportError::RuntimeEvidenceDenied)
 }
 
 fn declarations_fit(declarations: &RuntimeRunDeclarations) -> bool {
@@ -934,6 +943,183 @@ mod tests {
             )
         );
         assert!(answer_fits(&histories));
+    }
+
+    /// Every JSON pointer of an object inside `value`, the root included.
+    fn object_pointers(value: &serde_json::Value, pointer: &str, found: &mut Vec<String>) {
+        match value {
+            serde_json::Value::Object(members) => {
+                found.push(pointer.to_owned());
+                for (name, member) in members {
+                    object_pointers(member, &format!("{pointer}/{name}"), found);
+                }
+            }
+            serde_json::Value::Array(items) => {
+                for (index, item) in items.iter().enumerate() {
+                    object_pointers(item, &format!("{pointer}/{index}"), found);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// Frames with a member added at each object position, as bytes, with
+    /// that position.
+    fn frames_with_a_member_added(value: &serde_json::Value) -> Vec<(String, Vec<u8>)> {
+        let mut pointers = Vec::new();
+        object_pointers(value, "", &mut pointers);
+        pointers
+            .into_iter()
+            .map(|pointer| {
+                let mut extra = value.clone();
+                extra.pointer_mut(&pointer).unwrap()["review"] = serde_json::Value::Bool(true);
+                (pointer, serde_json::to_vec(&extra).unwrap())
+            })
+            .collect()
+    }
+
+    #[test]
+    fn every_frame_is_decoded_exactly_in_both_directions() {
+        // Decision 0135 (review F1 of `84e531fb`): a frame decodes only when
+        // its re-encoding equals what was received, so a member the types do
+        // not name is refused at every position of a request and a response,
+        // including the positions the types alone would let through.
+        use agentmage_kernel_engine::action_history::ActionKind;
+        use agentmage_kernel_engine::job_control::{JobControlDecision, JobPhase};
+        let workspace = agentmage_kernel_contracts::WorkspaceId::from_raw("workspace-wire");
+        let (recipe, plan) = crate::coding_recipe::test_recipe(&workspace, "src", 1);
+        let requests = [
+            RuntimeIpcRequest::Prepare {
+                input: RuntimePrepareInput {
+                    resume: false,
+                    record_session: false,
+                    slow_subscriber_probe: false,
+                    preauthorization: None,
+                    engineering_session_id: None,
+                    profile_id: "profile".to_owned(),
+                    expected_entry_sha256: "a".repeat(64),
+                    workspace_id: workspace.as_str().to_owned(),
+                    workspace_root: "/workspace".to_owned(),
+                    prompt: "Repair".to_owned(),
+                    recipe: Some(recipe),
+                },
+            },
+            RuntimeIpcRequest::ControlJob {
+                run_id: RuntimeRunId::from_raw("run-job-control"),
+                request_sha256: "1".repeat(64),
+                request: fixture_control_request(),
+            },
+            RuntimeIpcRequest::Shutdown,
+        ];
+        let history = fixture_history(ActionKind::JobControl);
+        let responses = [
+            RuntimeIpcResponse::RunDeclarations {
+                declarations: RuntimeRunDeclarations {
+                    schema_version: crate::runtime_transport::RUN_DECLARATIONS_SCHEMA_VERSION,
+                    run_id: RuntimeRunId::from_raw("run-declarations"),
+                    request_sha256: "1".repeat(64),
+                    recoverability: None,
+                    context_inspections: Some(Vec::new()),
+                    effect_history: Some(fixture_history(ActionKind::FileWrite)),
+                    job_control_history: Some(history.clone()),
+                    route_receipt: Some(fixture_route_receipt()),
+                    route_history: Some(fixture_history(ActionKind::ModelRoute)),
+                    recipe_plan: Some(plan),
+                },
+            },
+            RuntimeIpcResponse::JobControl {
+                control: RuntimeJobControl {
+                    decision: JobControlDecision::Applied {
+                        revision: 2,
+                        phase: JobPhase::Cancelling,
+                    },
+                    status: fixture_status(),
+                },
+            },
+            RuntimeIpcResponse::EndedRunActionHistories {
+                histories: EndedRunActionHistories {
+                    schema_version:
+                        crate::coding_action_history::ENDED_RUN_HISTORIES_SCHEMA_VERSION,
+                    run_id: "run-ended".to_owned(),
+                    effects: None,
+                    job_control: Some(crate::coding_action_history::StoredRunChain {
+                        records: history.records,
+                        head: history.head,
+                        complete: true,
+                        closed: true,
+                    }),
+                    routes: None,
+                },
+            },
+            RuntimeIpcResponse::Released,
+        ];
+        let mut only_exact = Vec::new();
+        for request in requests {
+            let value = serde_json::to_value(RuntimeIpcEnvelope {
+                version: WIRE_VERSION,
+                payload: request.clone(),
+            })
+            .unwrap();
+            assert_eq!(
+                decode_request(&serde_json::to_vec(&value).unwrap()),
+                Some(request.clone())
+            );
+            for (pointer, bytes) in frames_with_a_member_added(&value) {
+                assert_eq!(decode_request(&bytes), None, "{pointer}");
+                if serde_json::from_slice::<RuntimeIpcEnvelope<RuntimeIpcRequest>>(&bytes).is_ok() {
+                    only_exact.push(format!("request {pointer}"));
+                }
+            }
+        }
+        for response in responses {
+            let value = serde_json::to_value(RuntimeIpcEnvelope {
+                version: WIRE_VERSION,
+                payload: response.clone(),
+            })
+            .unwrap();
+            assert_eq!(
+                decode_response(&serde_json::to_vec(&value).unwrap()),
+                Ok(response.clone())
+            );
+            for (pointer, bytes) in frames_with_a_member_added(&value) {
+                assert_eq!(
+                    decode_response(&bytes),
+                    Err(RuntimeTransportError::RuntimeEvidenceDenied),
+                    "{pointer}"
+                );
+                if serde_json::from_slice::<RuntimeIpcEnvelope<RuntimeIpcResponse>>(&bytes).is_ok()
+                {
+                    only_exact.push(format!("response {pointer}"));
+                }
+            }
+        }
+        // The types alone admit a member beside a tag-only operation or
+        // result and inside a job control decision; only exact decoding
+        // refuses those.
+        assert_eq!(
+            only_exact,
+            [
+                "request /payload",
+                "response /payload/control/decision",
+                "response /payload",
+            ]
+        );
+        // A frame at another version is refused in both directions.
+        let other = serde_json::to_vec(&RuntimeIpcEnvelope {
+            version: WIRE_VERSION - 1,
+            payload: RuntimeIpcRequest::Shutdown,
+        })
+        .unwrap();
+        assert_eq!(decode_request(&other), None);
+        let other = serde_json::to_vec(&RuntimeIpcEnvelope {
+            version: WIRE_VERSION - 1,
+            payload: RuntimeIpcResponse::Released,
+        })
+        .unwrap();
+        assert_eq!(
+            decode_response(&other),
+            Err(RuntimeTransportError::RuntimeEvidenceDenied)
+        );
     }
 
     #[test]

@@ -64,6 +64,10 @@ pub enum RecipeKind {
 }
 
 /// Closed parameter type.
+///
+/// A variant without members has an empty member list, so decoding refuses a
+/// member beside its tag (review F1 of `84e531fb`); its encoding is the tag
+/// alone.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum RecipeParameterType {
@@ -80,9 +84,9 @@ pub enum RecipeParameterType {
         maximum: i64,
     },
     /// A workspace-relative path inside the recipe's scope.
-    Path,
+    Path {},
     /// Dot-separated decimal numbers, such as a dependency version.
-    Version,
+    Version {},
 }
 
 /// One declared parameter.
@@ -100,13 +104,17 @@ pub struct RecipeParameter {
 }
 
 /// Closed prerequisite a host checks before applying a plan.
+///
+/// A variant without members has an empty member list, so decoding refuses a
+/// member beside its tag (review F1 of `84e531fb`); its encoding is the tag
+/// alone.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum RecipePrerequisite {
     /// The worktree has no uncommitted change.
-    CleanWorktree,
+    CleanWorktree {},
     /// Dependencies are resolved from a lock file.
-    LockedDependencies,
+    LockedDependencies {},
     /// A registered tool is available.
     Tool {
         /// Plain tool identity.
@@ -115,12 +123,16 @@ pub enum RecipePrerequisite {
 }
 
 /// What can be undone after a plan is applied.
+///
+/// A variant without members has an empty member list, so decoding refuses a
+/// member beside its tag (review F1 of `84e531fb`); its encoding is the tag
+/// alone.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "boundary", rename_all = "snake_case", deny_unknown_fields)]
 pub enum RecipeRollback {
     /// Only the plan's own file writes, each by an inverse write that needs
     /// a fresh approval.
-    RevertWritesOnly,
+    RevertWritesOnly {},
     /// Nothing can be undone.
     Irreversible {
         /// Plain reason code.
@@ -293,9 +305,8 @@ pub fn admit_recipe_manifest(manifest: &RecipeManifest) -> Result<(), RecipeErro
 /// Parses and admits a manifest; unknown fields and variants and repeated
 /// members are refused. The bytes are parsed into the manifest directly, which
 /// refuses a repeated member (review F3 of `7c593b3b`), and the manifest must
-/// serialize back to exactly the bytes' value, which also refuses members that
-/// the field attributes alone would ignore, such as extra members beside a tag
-/// without fields.
+/// serialize back to exactly the bytes' value, which refuses any member that
+/// the types do not name.
 pub fn parse_recipe_manifest(bytes: &[u8]) -> Result<RecipeManifest, RecipeError> {
     let invalid = RecipeError::ManifestInvalid;
     let manifest: RecipeManifest = serde_json::from_slice(bytes).map_err(|_| invalid)?;
@@ -344,7 +355,7 @@ fn validate_manifest(manifest: &RecipeManifest) -> Result<(), RecipeError> {
                     && values.iter().all(|value| plain_identifier(value, b".-_"))
             }
             RecipeParameterType::Integer { minimum, maximum } => minimum <= maximum,
-            RecipeParameterType::Path | RecipeParameterType::Version => true,
+            RecipeParameterType::Path {} | RecipeParameterType::Version {} => true,
         };
         if !type_valid || !plain_identifier(&parameter.name, b"_") || !label(&parameter.summary) {
             return Err(invalid);
@@ -372,12 +383,12 @@ fn validate_kind_rules(manifest: &RecipeManifest) -> Result<(), RecipeError> {
     };
     let clean = manifest
         .prerequisites
-        .contains(&RecipePrerequisite::CleanWorktree);
+        .contains(&RecipePrerequisite::CleanWorktree {});
     let satisfied = match manifest.kind {
         RecipeKind::DependencyUpdate => {
             manifest
                 .prerequisites
-                .contains(&RecipePrerequisite::LockedDependencies)
+                .contains(&RecipePrerequisite::LockedDependencies {})
                 && verifies(&[ValidationKind::Build])
         }
         RecipeKind::Migration => clean && verifies(&[]),
@@ -495,11 +506,13 @@ fn recipe_scope(
             (RecipeParameterType::Integer { minimum, maximum }, RecipeValue::Integer(number)) => {
                 (minimum..=maximum).contains(&number)
             }
-            (RecipeParameterType::Path, RecipeValue::Path(path)) => {
+            (RecipeParameterType::Path {}, RecipeValue::Path(path)) => {
                 workspace_path(workspace_id, path)
                     .is_some_and(|path| scope.iter().any(|prefix| prefix.contains_path(&path)))
             }
-            (RecipeParameterType::Version, RecipeValue::Version(version)) => valid_version(version),
+            (RecipeParameterType::Version {}, RecipeValue::Version(version)) => {
+                valid_version(version)
+            }
             _ => false,
         };
         if !valid {
@@ -681,7 +694,7 @@ mod tests {
                 RecipeParameter {
                     name: "manifest".to_owned(),
                     summary: "Manifest to change".to_owned(),
-                    parameter_type: RecipeParameterType::Path,
+                    parameter_type: RecipeParameterType::Path {},
                     required: true,
                 },
                 RecipeParameter {
@@ -696,21 +709,21 @@ mod tests {
                 RecipeParameter {
                     name: "target_version".to_owned(),
                     summary: "Version to pin".to_owned(),
-                    parameter_type: RecipeParameterType::Version,
+                    parameter_type: RecipeParameterType::Version {},
                     required: true,
                 },
             ],
             scope: vec!["Cargo.lock".to_owned(), "crates/core".to_owned()],
             max_changed_files: 2,
             prerequisites: vec![
-                RecipePrerequisite::CleanWorktree,
-                RecipePrerequisite::LockedDependencies,
+                RecipePrerequisite::CleanWorktree {},
+                RecipePrerequisite::LockedDependencies {},
                 RecipePrerequisite::Tool {
                     tool_id: "cargo".to_owned(),
                 },
             ],
             verification: vec![ValidationKind::Unit, ValidationKind::Build],
-            rollback: RecipeRollback::RevertWritesOnly,
+            rollback: RecipeRollback::RevertWritesOnly {},
             needs_network_grant: true,
             manifest_sha256: String::new(),
         }
@@ -1140,9 +1153,56 @@ mod tests {
         let mut extra_validation = encoded.clone();
         extra_validation["validations"][0]["command"] = serde_json::Value::Null;
         assert!(serde_json::from_value::<RecipePlan>(extra_validation).is_err());
-        let mut extra_value = encoded;
+        let mut extra_value = encoded.clone();
         extra_value["parameters"]["retries"]["unit"] = serde_json::Value::Null;
         assert!(serde_json::from_value::<RecipePlan>(extra_value).is_err());
+        // Review F1 of `84e531fb`: a variant without members is encoded as its
+        // tag alone, and a member beside that tag is refused by the types, in
+        // a manifest and in a plan.
+        let sealed = serde_json::to_value(manifest()).unwrap();
+        for (pointer, tag) in [
+            (
+                "/parameters/1/parameter_type",
+                serde_json::json!({"type": "path"}),
+            ),
+            (
+                "/parameters/3/parameter_type",
+                serde_json::json!({"type": "version"}),
+            ),
+            (
+                "/prerequisites/0",
+                serde_json::json!({"kind": "clean_worktree"}),
+            ),
+            (
+                "/prerequisites/1",
+                serde_json::json!({"kind": "locked_dependencies"}),
+            ),
+            (
+                "/rollback",
+                serde_json::json!({"boundary": "revert_writes_only"}),
+            ),
+        ] {
+            assert_eq!(sealed.pointer(pointer), Some(&tag), "{pointer}");
+            let mut extra = sealed.clone();
+            extra.pointer_mut(pointer).unwrap()["review"] = serde_json::Value::Bool(true);
+            assert!(
+                serde_json::from_value::<RecipeManifest>(extra.clone()).is_err(),
+                "{pointer}"
+            );
+            assert_eq!(
+                parse_recipe_manifest(&serde_json::to_vec(&extra).unwrap()),
+                Err(RecipeError::ManifestInvalid),
+                "{pointer}"
+            );
+        }
+        for pointer in ["/prerequisites/0", "/prerequisites/1", "/rollback"] {
+            let mut extra = encoded.clone();
+            extra.pointer_mut(pointer).unwrap()["review"] = serde_json::Value::Bool(true);
+            assert!(
+                serde_json::from_value::<RecipePlan>(extra).is_err(),
+                "{pointer}"
+            );
+        }
         for (value, expected) in [
             (
                 serde_json::json!({"type": "integer", "value": 3}),

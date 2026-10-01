@@ -289,6 +289,11 @@ the CLI shows the recipe first, as a `recipe_requested` row or, without `--json`
 lines ending in "proposal only: a write outside the plan is refused; each write inside it
 still needs your approval". Here the host is then refused at native Git trust (exit 5).
 
+On a native host, the plan's file bound counts each distinct path when a write to it is
+proposed, whether or not you approve that write. Declining in-scope proposals therefore
+still uses the bound, and the next new path past it ends the run with
+`recipe.too-many-changes` (Decision 0135).
+
 **Current lane result:** the actual rebuilt CLI ran these checks and the extension
 issuer check below; the
 [review-fix and recipe plan verification](verification/review-fixes-and-recipe-plans-2026-10-01.md)

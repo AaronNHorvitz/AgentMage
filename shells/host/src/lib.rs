@@ -214,6 +214,14 @@ pub const COMPONENT_ID: &str = "shell-host";
     feature = "workflow-supervisor"
 ))]
 mod runtime_parity_tests;
+#[cfg(all(
+    test,
+    target_os = "linux",
+    feature = "interactive-cli",
+    feature = "source-artifacts",
+    feature = "workflow-supervisor"
+))]
+mod runtime_producer_contract_tests;
 #[cfg(all(test, feature = "source-artifacts", feature = "workflow-supervisor"))]
 mod runtime_read_tests;
 #[cfg(all(

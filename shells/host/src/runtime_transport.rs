@@ -185,6 +185,22 @@ fn hex(bytes: &[u8]) -> String {
     output
 }
 
+/// Decodes one transport frame or record exactly (Decision 0135): the bytes
+/// decode into the types, and their re-encoding must equal the bytes' JSON
+/// value. A member the types do not name is refused at any position, also
+/// where a type's own attributes would ignore it, such as beside the tag of
+/// a variant without members. A repeated member of a struct is refused by
+/// the types.
+#[must_use]
+pub fn decode_exact<T>(bytes: &[u8]) -> Option<T>
+where
+    T: serde::de::DeserializeOwned + Serialize,
+{
+    let decoded = serde_json::from_slice::<T>(bytes).ok()?;
+    let received = serde_json::from_slice::<serde_json::Value>(bytes).ok()?;
+    (serde_json::to_value(&decoded).ok()? == received).then_some(decoded)
+}
+
 /// Trusted inputs from one authenticated runtime preparation request.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

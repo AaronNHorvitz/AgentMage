@@ -94,15 +94,15 @@ fn repair_manifest() -> RecipeManifest {
             RecipeParameter {
                 name: "target".to_owned(),
                 summary: "The source file the repair is about".to_owned(),
-                parameter_type: RecipeParameterType::Path,
+                parameter_type: RecipeParameterType::Path {},
                 required: true,
             },
         ],
         scope: vec!["src".to_owned()],
         max_changed_files: 1,
-        prerequisites: vec![RecipePrerequisite::CleanWorktree],
+        prerequisites: vec![RecipePrerequisite::CleanWorktree {}],
         verification: vec![ValidationKind::Unit],
-        rollback: RecipeRollback::RevertWritesOnly,
+        rollback: RecipeRollback::RevertWritesOnly {},
         needs_network_grant: false,
         manifest_sha256: String::new(),
     })
@@ -134,8 +134,8 @@ fn build_verified_manifest() -> RecipeManifest {
     manifest.recipe_id = "agentmage-sample-build-verified".to_owned();
     manifest.kind = RecipeKind::DependencyUpdate;
     manifest.prerequisites = vec![
-        RecipePrerequisite::CleanWorktree,
-        RecipePrerequisite::LockedDependencies,
+        RecipePrerequisite::CleanWorktree {},
+        RecipePrerequisite::LockedDependencies {},
     ];
     manifest.verification = vec![ValidationKind::Build];
     seal_recipe_manifest(manifest).unwrap()
@@ -487,7 +487,23 @@ fn the_plan_is_bound_into_the_run_and_kept_only_when_it_is_what_was_sent() {
         (plan.clone(), request(), Some(sent())),
         (foreign.clone(), bound_request(&foreign), Some(sent())),
     ];
-    let changes: [&dyn Fn(&mut RecipePlan); 6] = [
+    let changes: [&dyn Fn(&mut RecipePlan); 14] = [
+        // Review F2 of `84e531fb`: each identity term alone.
+        &|plan| plan.recipe_id = "agentmage-other".to_owned(),
+        &|plan| {
+            plan.recipe_version = RecipeVersion {
+                major: 2,
+                ..plan.recipe_version
+            }
+        },
+        &|plan| plan.recipe_kind = RecipeKind::Documentation,
+        &|plan| plan.manifest_sha256 = "0".repeat(64),
+        // Review N2 of `84e531fb`: what the client cannot recompute must
+        // still have its shape before it is shown.
+        &|plan| plan.validations[0].validation_id = "validation-\u{1b}[31m".to_owned(),
+        &|plan| plan.validations[0].validation_id.clear(),
+        &|plan| plan.validations[0].template_sha256 = "A".repeat(64),
+        &|plan| plan.validation_registry_sha256 = "1".repeat(63),
         &|plan| plan.max_changed_files = 9,
         &|plan| {
             plan.scope =
@@ -695,11 +711,25 @@ fn a_recipe_crosses_the_wire_closed_and_absent_is_not_encoded() {
             .unwrap(),
         with_recipe
     );
-    let mut extra = encoded;
+    let mut extra = encoded.clone();
     extra["recipe"]["granted"] = serde_json::Value::Bool(true);
     assert!(
         serde_json::from_value::<crate::runtime_transport::RuntimePrepareInput>(extra).is_err()
     );
+    // Review F1 of `84e531fb`: a member beside the tag of a variant without
+    // members is refused too.
+    for pointer in [
+        "/recipe/manifest/parameters/1/parameter_type",
+        "/recipe/manifest/prerequisites/0",
+        "/recipe/manifest/rollback",
+    ] {
+        let mut extra = encoded.clone();
+        extra.pointer_mut(pointer).unwrap()["review"] = serde_json::Value::Bool(true);
+        assert!(
+            serde_json::from_value::<crate::runtime_transport::RuntimePrepareInput>(extra).is_err(),
+            "{pointer}"
+        );
+    }
     assert_eq!(
         crate::runtime_transport::RuntimeTransportError::RecipeDenied.code(),
         "host.runtime.recipe_denied"

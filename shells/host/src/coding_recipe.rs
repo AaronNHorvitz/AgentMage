@@ -115,8 +115,8 @@ pub fn recipe_value(parameter_type: &RecipeParameterType, text: &str) -> Option<
             .ok()
             .filter(|number| number.to_string() == text)
             .map(RecipeValue::Integer),
-        RecipeParameterType::Path => Some(RecipeValue::Path(text.to_owned())),
-        RecipeParameterType::Version => Some(RecipeValue::Version(text.to_owned())),
+        RecipeParameterType::Path {} => Some(RecipeValue::Path(text.to_owned())),
+        RecipeParameterType::Version {} => Some(RecipeValue::Version(text.to_owned())),
     }
 }
 
@@ -274,7 +274,10 @@ pub fn request_binds_recipe(
 
 /// Whether a plan a host declared for a run is the plan of what the client
 /// sent: it verifies, names the sent manifest, values and the run's
-/// workspace, and its digest is the one the run's constraints bind.
+/// workspace, and its digest is the one the run's constraints bind. The
+/// client cannot recompute the validations the host bound, so each must at
+/// least name a plain identity and a lowercase digest, as does the registry
+/// digest (review N2 of `84e531fb`), before the plan is shown.
 #[must_use]
 pub fn verify_declared_recipe_plan(
     plan: &RecipePlan,
@@ -310,6 +313,10 @@ pub fn verify_declared_recipe_plan(
         && plan.prerequisites == manifest.prerequisites
         && plan.max_changed_files == manifest.max_changed_files
         && !plan.network_grant_required
+        && is_sha256(&plan.validation_registry_sha256)
+        && plan.validations.iter().all(|validation| {
+            plain_identity(&validation.validation_id) && is_sha256(&validation.template_sha256)
+        })
         && declared_plan_sha256s(request) == [plan.plan_sha256.as_str()]
 }
 
@@ -434,15 +441,15 @@ fn validation_kind_text(kind: ValidationKind) -> String {
 
 fn prerequisite_text(prerequisite: &RecipePrerequisite) -> String {
     match prerequisite {
-        RecipePrerequisite::CleanWorktree => "clean worktree".to_owned(),
-        RecipePrerequisite::LockedDependencies => "locked dependencies".to_owned(),
+        RecipePrerequisite::CleanWorktree {} => "clean worktree".to_owned(),
+        RecipePrerequisite::LockedDependencies {} => "locked dependencies".to_owned(),
         RecipePrerequisite::Tool { tool_id } => format!("tool {tool_id}"),
     }
 }
 
 fn rollback_text(rollback: &RecipeRollback) -> String {
     match rollback {
-        RecipeRollback::RevertWritesOnly => {
+        RecipeRollback::RevertWritesOnly {} => {
             "the plan's own writes, each by an inverse write with its own approval".to_owned()
         }
         RecipeRollback::Irreversible { reason_code } => format!("nothing ({reason_code})"),
@@ -622,6 +629,15 @@ fn is_sha256(value: &str) -> bool {
             .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
 }
 
+/// The identity shape a validation template registry admits.
+fn plain_identity(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 128
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b':' | b'-'))
+}
+
 /// A run scope of a synthetic `tests` recipe holding writes to `prefix`, with
 /// one registered unit validation, for the tool boundary's tests.
 #[cfg(test)]
@@ -634,18 +650,13 @@ pub(crate) fn test_scope(
     SharedRecipeScope::new(RecipeRunScope::new(plan).unwrap())
 }
 
-/// A synthetic `tests` recipe holding writes to `prefix` and its plan for
-/// one registered unit validation, for the host's tests.
+/// A registry with one unit validation template, as the development
+/// profile registers it, for the host's tests.
 #[cfg(test)]
-pub(crate) fn test_recipe(
-    workspace_id: &WorkspaceId,
-    prefix: &str,
-    max_changed_files: u32,
-) -> (RuntimeRecipeRequest, RecipePlan) {
+pub(crate) fn test_registry(workspace_id: &WorkspaceId) -> ValidationTemplateRegistry {
     use agentmage_kernel_engine::command_runner::{
         CommandBounds, CommandRisk, CommandSpec, CommandWorkingDirectory,
     };
-    use agentmage_kernel_engine::engineering_recipe::{RecipeVersion, seal_recipe_manifest};
     use agentmage_kernel_engine::validation_template::{
         ValidationParserKind, ValidationTemplateInput, ValidationTemplateSource,
         seal_validation_template,
@@ -682,7 +693,20 @@ pub(crate) fn test_recipe(
         expected_artifacts: Vec::new(),
     })
     .unwrap();
-    let registry = ValidationTemplateRegistry::build(vec![template]).unwrap();
+    ValidationTemplateRegistry::build(vec![template]).unwrap()
+}
+
+/// A synthetic `tests` recipe holding writes to `prefix` and its plan for
+/// one registered unit validation, for the host's tests.
+#[cfg(test)]
+pub(crate) fn test_recipe(
+    workspace_id: &WorkspaceId,
+    prefix: &str,
+    max_changed_files: u32,
+) -> (RuntimeRecipeRequest, RecipePlan) {
+    use agentmage_kernel_engine::engineering_recipe::{RecipeVersion, seal_recipe_manifest};
+
+    let registry = test_registry(workspace_id);
     let manifest = seal_recipe_manifest(RecipeManifest {
         schema_version: 1,
         recipe_id: "agentmage-test-recipe".to_owned(),
@@ -698,7 +722,7 @@ pub(crate) fn test_recipe(
         max_changed_files,
         prerequisites: Vec::new(),
         verification: vec![ValidationKind::Unit],
-        rollback: RecipeRollback::RevertWritesOnly,
+        rollback: RecipeRollback::RevertWritesOnly {},
         needs_network_grant: false,
         manifest_sha256: String::new(),
     })

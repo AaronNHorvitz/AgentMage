@@ -758,7 +758,7 @@ fn lower_hex(bytes: &[u8]) -> String {
 /// strict-local selection for this run, a route history without its kept
 /// receipt (Decision 0128), and a recipe plan that is not the plan of the
 /// recipe sent with the run (Decision 0133), is dropped as unavailable.
-fn verified_run_declarations(
+pub(crate) fn verified_run_declarations(
     mut declarations: RuntimeRunDeclarations,
     request: &RuntimeRunRequest,
     recipe: Option<&crate::coding_recipe::RuntimeRecipeRequest>,
