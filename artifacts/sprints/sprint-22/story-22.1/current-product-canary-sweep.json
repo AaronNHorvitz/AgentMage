@@ -3,7 +3,7 @@
   "commands": [
     {
       "command_id": "6147400fb3af627c2fe95ac302b598f86454145964d69b8fe78fee7600f8cb28",
-      "elapsed_ms": 79,
+      "elapsed_ms": 54,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "context-admission",
@@ -11,7 +11,7 @@
     },
     {
       "command_id": "5e565890568892ad049a51415396b0640f96f2c1128570e8d1ef659f42a85f12",
-      "elapsed_ms": 54,
+      "elapsed_ms": 57,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "persistence-policy",
@@ -19,7 +19,7 @@
     },
     {
       "command_id": "90774bc47105a422d76a6c89ce3311073fe7c59046a92a6dc4ad2141e110e1ec",
-      "elapsed_ms": 415,
+      "elapsed_ms": 399,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "encrypted-store-export",
@@ -27,7 +27,7 @@
     },
     {
       "command_id": "b31f43f832074fcea18c54b1d516795db859469549ea42080a56133d3df50cc2",
-      "elapsed_ms": 57,
+      "elapsed_ms": 59,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "runtime-projections",
@@ -35,7 +35,7 @@
     },
     {
       "command_id": "097bb636caa2450918164a00a0f65b6bf7f7974edd913b4443e94092b3adba4d",
-      "elapsed_ms": 249,
+      "elapsed_ms": 236,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "runtime-artifacts",
@@ -43,7 +43,7 @@
     },
     {
       "command_id": "039d53ce1e540bf7e08bc90d21db4fb8638272c6e5cbcc4bef0f48ae21e71943",
-      "elapsed_ms": 58,
+      "elapsed_ms": 60,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "runtime-model-tool-events",
@@ -51,7 +51,7 @@
     },
     {
       "command_id": "9d01542265a1ffd3d0a08de8f89f062e93d01990c9f3e61b03e79bc1fb9c9755",
-      "elapsed_ms": 80,
+      "elapsed_ms": 62,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "native-encrypted-payloads",
@@ -59,7 +59,7 @@
     },
     {
       "command_id": "6c1a95258b657afcf0ec844de7801c3201df63aad821576097181e4eb1b8920d",
-      "elapsed_ms": 3168,
+      "elapsed_ms": 3301,
       "exit_code": 0,
       "expected_marker": "zero undeclared network paths",
       "id": "strict-local-telemetry",
@@ -109,10 +109,10 @@
     "redactions": [
       "repository-root"
     ],
-    "sha256": "8fec7297dcd5ae27dc03a640de801bbdd2b3a5395c903c5ecb31a41e6dedfbfe"
+    "sha256": "5a714ca65244fee0ea1fd9f91e26311e28b758af47b14f5fdb5376cbb5f3a5b7"
   },
   "schema_version": 1,
-  "source_revision": "709f8d7a13bcd467317c0598fc5ba939c4e78892",
+  "source_revision": "7872ab0d155c0cb44b9063cab5ba8809ef45daf7",
   "sources": [
     {
       "bytes": 43165,
@@ -140,9 +140,9 @@
       "sha256": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8"
     },
     {
-      "bytes": 310866,
+      "bytes": 311371,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "fc6aa5e1e2ea7b24247aca5785b07340b2a90be7b2b435850f45c1b1348a0a99"
+      "sha256": "f79584b9eaae7dc8ea348e67eabe3c0357e71d303237e1eb2a74ed4a7fd4e108"
     },
     {
       "bytes": 97078,
