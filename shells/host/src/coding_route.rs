@@ -464,11 +464,18 @@ pub fn route_entry_draft(
 
 /// Keeps a declared receipt only when it recomputes, names this run, and
 /// describes a local-only selection of exactly one strict-local route for the
-/// declared data, with no grant, provider or fallback.
+/// declared data, with no grant, provider or fallback. The selected route
+/// must be the run's own profile, by identity and canonical digest, under the
+/// development host's fixed policy (Decision 0130).
 pub fn verify_run_route_receipt(
     receipt: &RunRouteReceipt,
     request: &RuntimeRunRequest,
 ) -> Result<(), RunRouteVerificationError> {
+    let profile_id = request.model_profile.profile_id.as_str();
+    let profile_sha256 = to_canonical_json(&request.model_profile)
+        .map(|bytes| sha256_hex(&bytes))
+        .map_err(|_| RunRouteVerificationError::Receipt)?;
+    let policy_sha256 = route_policy_sha256().map_err(|_| RunRouteVerificationError::Receipt)?;
     let selected = receipt.selected_route_id.as_deref();
     let selected_audits = receipt
         .considered_routes
@@ -478,9 +485,14 @@ pub fn verify_run_route_receipt(
     let kept = receipt.schema_version == ROUTE_RECEIPT_SCHEMA_VERSION
         && receipt.request_id == request.run_id.as_str()
         && receipt.computed_sha256().as_deref() == Some(receipt.receipt_sha256.as_str())
+        && receipt.route_policy_sha256 == policy_sha256
         && receipt.mode == RunRouteMode::LocalOnly
         && receipt.disclosure_class == Some(CanonicalEndpointClass::StrictLocal)
-        && matches!(selected_audits.as_slice(), [audit] if audit.eligible)
+        && selected == Some(profile_id)
+        && matches!(
+            selected_audits.as_slice(),
+            [audit] if audit.eligible && audit.candidate_sha256 == profile_sha256
+        )
         && !receipt.fallback_used
         && receipt.fallback_policy_sha256.is_none()
         && receipt.hybrid_grant_sha256.is_none()
@@ -752,6 +764,37 @@ mod tests {
             }),
             resealed(RunRouteReceipt {
                 schema_version: ROUTE_RECEIPT_SCHEMA_VERSION + 1,
+                ..receipt.clone()
+            }),
+            // Another local route than the person's profile, consistently
+            // renamed in its audit.
+            resealed(RunRouteReceipt {
+                selected_route_id: Some("another-local-profile".to_owned()),
+                considered_routes: receipt
+                    .considered_routes
+                    .iter()
+                    .map(|audit| RunRouteAudit {
+                        route_id: "another-local-profile".to_owned(),
+                        ..audit.clone()
+                    })
+                    .collect(),
+                ..receipt.clone()
+            }),
+            // The profile's identity with another candidate digest.
+            resealed(RunRouteReceipt {
+                considered_routes: receipt
+                    .considered_routes
+                    .iter()
+                    .map(|audit| RunRouteAudit {
+                        candidate_sha256: "c".repeat(64),
+                        ..audit.clone()
+                    })
+                    .collect(),
+                ..receipt.clone()
+            }),
+            // Another routing policy.
+            resealed(RunRouteReceipt {
+                route_policy_sha256: "b".repeat(64),
                 ..receipt.clone()
             }),
         ];

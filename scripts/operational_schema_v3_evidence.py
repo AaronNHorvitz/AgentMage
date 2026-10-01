@@ -34,11 +34,14 @@ SOURCE_PATHS: Final = (
     "kernel/engine/src/run_action_history_migration_tests.rs",
     "kernel/engine/fixtures/operational-store/schema-22.json",
     "kernel/engine/migrations/operational-store/0022-run-action-histories.sql",
+    "kernel/engine/src/doc_pack_migration_tests.rs",
+    "kernel/engine/fixtures/operational-store/schema-23.json",
+    "kernel/engine/migrations/operational-store/0023-documentation-packs.sql",
     "scripts/operational_schema_v3_evidence.py",
     "tests/test_operational_schema_v3_evidence.py",
 )
 COMMAND_SPECS: Final = (
-    (("cargo", "test", "-p", "agentmage-kernel-engine", "operational_store", "--locked"), "56 passed; 0 failed"),
+    (("cargo", "test", "-p", "agentmage-kernel-engine", "operational_store", "--locked"), "59 passed; 0 failed"),
     (("python3", "-m", "unittest", "tests.test_operational_schema_v3_evidence"), "Ran 7 tests"),
     (("npm", "run", "product:lint"), "Structural effect mediation boundary validated."),
     (("npm", "run", "docs:lint"), "Summary: 0 issues in 0 files"),
@@ -99,7 +102,7 @@ V3_FRAGMENTS: Final = (
     "CREATE INDEX retention_hold_expiry_idx",
 )
 SOURCE_FRAGMENTS: Final = (
-    "fn version_one_upgrades_through_twenty_two_with_exact_history()",
+    "fn version_one_upgrades_through_twenty_three_with_exact_history()",
     "fn version_two_retention_rows_upgrade_to_three_with_initial_event()",
     "fn failed_version_two_migration_rolls_back_without_partial_schema()",
     "fn failed_version_three_migration_rolls_back_all_alterations()",

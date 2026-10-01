@@ -108,9 +108,12 @@ pub struct CodingDevelopmentCliOptions {
     /// invocation is previewed and, only after the person confirms it,
     /// written once (Decision 0128).
     pub support_bundle: Option<PathBuf>,
-    /// An ended run whose stored action histories the host reads back
-    /// instead of running an objective (Decision 0129).
+    /// An ended run whose stored action histories the catalog host reads
+    /// back instead of running an objective (Decisions 0129 and 0130).
     pub ended_run: Option<String>,
+    /// A documentation pack operation of the catalog host instead of a run
+    /// (Decision 0130).
+    pub doc_pack: Option<Box<crate::coding_doc_packs::DocPackCommand>>,
 }
 
 /// Parsed CLI action before any transport or authority boundary.
@@ -265,6 +268,15 @@ fn parse_coding_development(
     let mut action_history_export = None;
     let mut support_bundle = None;
     let mut ended_run = None;
+    let mut doc_pack_import = None;
+    let mut allowed_licenses: Vec<String> = Vec::new();
+    let mut refresh_version = None;
+    let mut doc_pack_list = false;
+    let mut doc_pack_inspect = None;
+    let mut doc_pack_delete = None;
+    let mut doc_pack_search = None;
+    let mut doc_pack_filter = None;
+    let mut include_history = false;
     let mut cursor = 0;
     while let Some(argument) = arguments.get(cursor) {
         let target = match argument.as_str() {
@@ -421,6 +433,95 @@ fn parse_coding_development(
                 cursor += 2;
                 continue;
             }
+            "--doc-pack-import" if doc_pack_import.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| {
+                        value.starts_with('/') && !value.contains('\0') && value.len() <= 4_096
+                    })
+                    .ok_or(ThinClientError::InvalidValue)?;
+                doc_pack_import = Some(PathBuf::from(value));
+                cursor += 2;
+                continue;
+            }
+            "--allow-license"
+                if allowed_licenses.len()
+                    < crate::coding_doc_packs::MAX_DOC_PACK_ALLOWED_LICENSES =>
+            {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| {
+                        crate::coding_doc_packs::doc_pack_license_id(value)
+                            && !allowed_licenses.contains(value)
+                    })
+                    .ok_or(ThinClientError::InvalidValue)?;
+                allowed_licenses.push(value.clone());
+                cursor += 2;
+                continue;
+            }
+            "--refresh-version" if refresh_version.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .and_then(|value| crate::coding_doc_packs::parse_doc_pack_version(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                refresh_version = Some(value);
+                cursor += 2;
+                continue;
+            }
+            "--doc-pack-list" if !doc_pack_list => {
+                doc_pack_list = true;
+                cursor += 1;
+                continue;
+            }
+            "--doc-pack-inspect" if doc_pack_inspect.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| crate::coding_doc_packs::plain_doc_pack_id(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                doc_pack_inspect = Some(value.clone());
+                cursor += 2;
+                continue;
+            }
+            "--doc-pack-delete" if doc_pack_delete.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .and_then(|value| match value.split_once('@') {
+                        None => Some((value.clone(), None)),
+                        Some((pack_id, version)) => {
+                            crate::coding_doc_packs::parse_doc_pack_version(version)
+                                .map(|version| (pack_id.to_owned(), Some(version)))
+                        }
+                    })
+                    .filter(|(pack_id, _)| crate::coding_doc_packs::plain_doc_pack_id(pack_id))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                doc_pack_delete = Some(value);
+                cursor += 2;
+                continue;
+            }
+            "--doc-pack-search" if doc_pack_search.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| !value.starts_with("--"))
+                    .and_then(|value| crate::coding_doc_packs::doc_pack_search_terms(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                doc_pack_search = Some(value);
+                cursor += 2;
+                continue;
+            }
+            "--doc-pack" if doc_pack_filter.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| crate::coding_doc_packs::plain_doc_pack_id(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                doc_pack_filter = Some(value.clone());
+                cursor += 2;
+                continue;
+            }
+            "--include-history" if !include_history => {
+                include_history = true;
+                cursor += 1;
+                continue;
+            }
             "--ended-run" if ended_run.is_none() => {
                 let value = arguments
                     .get(cursor + 1)
@@ -445,6 +546,100 @@ fn parse_coding_development(
             .ok_or(ThinClientError::InvalidValue)?;
         *target = Some(value.clone());
         cursor += 2;
+    }
+    // Decision 0130: a catalog operation (an ended run's histories or one
+    // documentation pack operation) launches only the catalog host. It runs
+    // nothing, so it takes no scenario, model, objective or run option, and
+    // its auxiliary options go only with their own operation.
+    let operations = usize::from(doc_pack_import.is_some())
+        + usize::from(doc_pack_list)
+        + usize::from(doc_pack_inspect.is_some())
+        + usize::from(doc_pack_delete.is_some())
+        + usize::from(doc_pack_search.is_some())
+        + usize::from(ended_run.is_some());
+    if operations > 1
+        || doc_pack_import.is_some() == allowed_licenses.is_empty()
+        || refresh_version.is_some() && doc_pack_import.is_none()
+        || (doc_pack_filter.is_some() || include_history) && doc_pack_search.is_none()
+        || action_history_export.is_some() && operations == 1 && ended_run.is_none()
+    {
+        return Err(ThinClientError::InvalidValue);
+    }
+    let doc_pack = if let Some(directory) = doc_pack_import {
+        Some(crate::coding_doc_packs::DocPackCommand::Import {
+            directory,
+            allowed_licenses,
+            refresh: refresh_version,
+        })
+    } else if doc_pack_list {
+        Some(crate::coding_doc_packs::DocPackCommand::List)
+    } else if let Some(pack_id) = doc_pack_inspect {
+        Some(crate::coding_doc_packs::DocPackCommand::Inspect { pack_id })
+    } else if let Some((pack_id, version)) = doc_pack_delete {
+        Some(crate::coding_doc_packs::DocPackCommand::Delete { pack_id, version })
+    } else {
+        doc_pack_search.map(|terms| crate::coding_doc_packs::DocPackCommand::Search {
+            terms,
+            pack_id: doc_pack_filter,
+            include_history,
+        })
+    };
+    if operations == 1 {
+        if scenario.is_some()
+            || model.is_some()
+            || objective.is_some()
+            || support_bundle.is_some()
+            || !follow_ups.is_empty()
+            || resume
+            || record_session
+            || artifact_release_probe_before_follow_ups
+            || approve_this_run
+            || stale_approval_probe
+            || replay_approval_probe
+            || expired_cursor_probe
+            || artifact_integrity_probe
+            || slow_subscriber_probe
+            || suspend_resume_probe
+            || !preauthorized_paths.is_empty()
+            || !preauthorized_commands.is_empty()
+            || preauthorize_workspace_reads
+            || preauthorization_budget.is_some()
+            || preauthorization_minutes.is_some()
+            || revoke_preauthorization_before_follow_ups
+            || approval_delay_ms.is_some()
+        {
+            return Err(ThinClientError::InvalidValue);
+        }
+        return Ok(CodingDevelopmentCliOptions {
+            state_root: PathBuf::from(state_root.ok_or(ThinClientError::InvalidValue)?),
+            disposable_root: PathBuf::from(disposable_root.ok_or(ThinClientError::InvalidValue)?),
+            workspace_root: PathBuf::from(workspace_root.ok_or(ThinClientError::InvalidValue)?),
+            scenario: String::new(),
+            model: String::new(),
+            objective: String::new(),
+            follow_ups: Vec::new(),
+            resume: false,
+            record_session: false,
+            artifact_release_probe_before_follow_ups: false,
+            approve_this_run: false,
+            stale_approval_probe: false,
+            replay_approval_probe: false,
+            expired_cursor_probe: false,
+            artifact_integrity_probe: false,
+            slow_subscriber_probe: false,
+            suspend_resume_probe: false,
+            preauthorized_paths: Vec::new(),
+            preauthorized_commands: Vec::new(),
+            preauthorize_workspace_reads: false,
+            preauthorization_budget: 0,
+            preauthorization_minutes: 0,
+            revoke_preauthorization_before_follow_ups: false,
+            approval_delay_ms: 0,
+            action_history_export,
+            support_bundle: None,
+            ended_run,
+            doc_pack: doc_pack.map(Box::new),
+        });
     }
     let scenario = scenario.ok_or(ThinClientError::InvalidValue)?;
     if !matches!(
@@ -474,37 +669,8 @@ fn parse_coding_development(
     if !matches!(model.as_str(), "scripted" | "muse" | "gpt-oss") {
         return Err(ThinClientError::InvalidValue);
     }
-    // Decision 0129: reading an ended run's stored histories runs nothing,
-    // so it takes no objective and no option that only a run uses.
-    if ended_run.is_some()
-        && (objective.is_some()
-            || !follow_ups.is_empty()
-            || resume
-            || record_session
-            || artifact_release_probe_before_follow_ups
-            || approve_this_run
-            || stale_approval_probe
-            || replay_approval_probe
-            || expired_cursor_probe
-            || artifact_integrity_probe
-            || slow_subscriber_probe
-            || suspend_resume_probe
-            || !preauthorized_paths.is_empty()
-            || !preauthorized_commands.is_empty()
-            || preauthorize_workspace_reads
-            || preauthorization_budget.is_some()
-            || preauthorization_minutes.is_some()
-            || revoke_preauthorization_before_follow_ups
-            || approval_delay_ms.is_some())
-    {
-        return Err(ThinClientError::InvalidValue);
-    }
-    let objective = match (objective, &ended_run) {
-        (None, Some(_)) => String::new(),
-        (Some(objective), None) => objective,
-        _ => return Err(ThinClientError::InvalidValue),
-    };
-    if ended_run.is_none() && (objective.trim().is_empty() || objective.len() > 16 * 1024) {
+    let objective = objective.ok_or(ThinClientError::InvalidValue)?;
+    if objective.trim().is_empty() || objective.len() > 16 * 1024 {
         return Err(ThinClientError::InvalidValue);
     }
     if resume && (!follow_ups.is_empty() || record_session)
@@ -563,7 +729,8 @@ fn parse_coding_development(
         approval_delay_ms: approval_delay_ms.unwrap_or(0),
         action_history_export,
         support_bundle,
-        ended_run,
+        ended_run: None,
+        doc_pack: None,
     })
 }
 
@@ -1146,8 +1313,12 @@ Commands:\n\
        [--preauthorization-budget N --preauthorization-minutes N] [--revoke-preauthorization-before-follow-ups]\n\
        [--approval-delay-ms 1..10000] [--action-history-export effects|job-control|routes:FROM:TO]\n\
        [--support-bundle ABSOLUTE_PRIVATE_DIRECTORY]\n\
-  code --development --state-root PATH --disposable-root PATH --workspace-root PATH --scenario SCENARIO \\
-       --ended-run RUN_ID [--model scripted|muse|gpt-oss] [--action-history-export effects|job-control|routes:FROM:TO]\n\
+  code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
+       --ended-run RUN_ID [--action-history-export effects|job-control|routes:FROM:TO]\n\
+  code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
+       --doc-pack-import ABSOLUTE_DIRECTORY --allow-license ID... [--refresh-version MAJOR.MINOR.PATCH]\n\
+       | --doc-pack-list | --doc-pack-inspect PACK_ID | --doc-pack-delete PACK_ID[@MAJOR.MINOR.PATCH]\n\
+       | --doc-pack-search TERMS [--doc-pack PACK_ID] [--include-history]\n\
   chat MESSAGE\n\
   conversations list [--from YYYY-MM-DD] [--to YYYY-MM-DD]\n\
   conversations search QUERY\n\
@@ -1494,8 +1665,9 @@ mod tests {
         let mut missing = probe.to_vec();
         missing.push("--support-bundle");
         assert!(parse_cli_arguments(&strings(&missing)).is_err());
-        // Decision 0129: an ended run is read back instead of an objective,
-        // and no option that only a run uses goes with it.
+        // Decisions 0129 and 0130: an ended run is read back by the catalog
+        // host instead of an objective, so it takes no scenario, model,
+        // support bundle or option that only a run uses.
         let ended = [
             "code",
             "--development",
@@ -1505,8 +1677,6 @@ mod tests {
             "/tmp/disposable",
             "--workspace-root",
             "/tmp/disposable/worktree",
-            "--scenario",
-            "failed-test-repair",
             "--ended-run",
             "coding-development-run-0123abcd",
         ];
@@ -1516,16 +1686,21 @@ mod tests {
                 development: Some(CodingDevelopmentCliOptions {
                     ended_run: Some(ref run),
                     ref objective,
+                    ref scenario,
+                    doc_pack: None,
                     ..
                 }),
                 ..
-            }) if run == "coding-development-run-0123abcd" && objective.is_empty()
+            }) if run == "coding-development-run-0123abcd" && objective.is_empty() && scenario.is_empty()
         ));
         let mut exported = ended.to_vec();
         exported.extend(["--action-history-export", "effects:1:2"]);
         assert!(parse_cli_arguments(&strings(&exported)).is_ok());
         for extra in [
-            &["--objective", "repair"][..],
+            &["--scenario", "failed-test-repair"][..],
+            &["--model", "scripted"],
+            &["--support-bundle", "/tmp/private-bundles"],
+            &["--objective", "repair"],
             &["--follow-up", "again"],
             &["--resume"],
             &["--approve-this-run"],
@@ -1533,6 +1708,7 @@ mod tests {
             &["--preauthorize-workspace-reads"],
             &["--approval-delay-ms", "5"],
             &["--ended-run", "coding-development-run-2"],
+            &["--doc-pack-list"],
         ] {
             let mut refused = ended.to_vec();
             refused.extend(extra);
@@ -1542,15 +1718,19 @@ mod tests {
             );
         }
         for invalid in ["", "run/../x", "run id", &"r".repeat(129)] {
-            let mut refused = ended[..10].to_vec();
+            let mut refused = ended[..8].to_vec();
             refused.extend(["--ended-run", invalid]);
             assert!(
                 parse_cli_arguments(&strings(&refused)).is_err(),
                 "{invalid}"
             );
         }
-        // Without either an objective or an ended run, nothing parses.
-        assert!(parse_cli_arguments(&strings(&ended[..10])).is_err());
+        // Without an objective, an ended run or a pack operation, nothing
+        // parses.
+        assert!(parse_cli_arguments(&strings(&ended[..8])).is_err());
+        let mut scenario_only = ended[..8].to_vec();
+        scenario_only.extend(["--scenario", "no-op"]);
+        assert!(parse_cli_arguments(&strings(&scenario_only)).is_err());
         assert!(matches!(
             parse_cli_arguments(&strings(&[
                 "code",
@@ -1648,6 +1828,215 @@ mod tests {
         assert!(!command_help().contains("http"));
         assert!(!shell_completion(CompletionShell::Fish).contains("exec"));
         assert!(parse_cli_arguments(&strings(&["--surface", "json", "code"])).is_err());
+    }
+
+    #[test]
+    fn documentation_pack_operations_parse_closed_and_alone() {
+        // Decision 0130: each pack operation replaces the objective, goes to
+        // the catalog host alone, and takes only its own auxiliary options.
+        use crate::coding_doc_packs::DocPackCommand;
+        use agentmage_capability_knowledge::DocPackVersion;
+        let roots = [
+            "code",
+            "--development",
+            "--state-root",
+            "/tmp/state",
+            "--disposable-root",
+            "/tmp/disposable",
+            "--workspace-root",
+            "/tmp/disposable/worktree",
+        ];
+        let parse = |extra: &[&str]| {
+            let mut arguments = roots.to_vec();
+            arguments.extend(extra);
+            match parse_cli_arguments(&strings(&arguments)) {
+                Ok(CliInvocation::Code {
+                    development: Some(options),
+                    ..
+                }) => Ok(options),
+                Ok(_) => panic!("development options"),
+                Err(error) => Err(error),
+            }
+        };
+        let version = DocPackVersion {
+            major: 1,
+            minor: 2,
+            patch: 3,
+        };
+        for (extra, command) in [
+            (
+                &[
+                    "--doc-pack-import",
+                    "/tmp/pack",
+                    "--allow-license",
+                    "CC-BY-4.0",
+                    "--allow-license",
+                    "MIT",
+                ][..],
+                DocPackCommand::Import {
+                    directory: PathBuf::from("/tmp/pack"),
+                    allowed_licenses: vec!["CC-BY-4.0".to_owned(), "MIT".to_owned()],
+                    refresh: None,
+                },
+            ),
+            (
+                &[
+                    "--refresh-version",
+                    "1.2.3",
+                    "--allow-license",
+                    "MIT",
+                    "--doc-pack-import",
+                    "/tmp/pack",
+                ],
+                DocPackCommand::Import {
+                    directory: PathBuf::from("/tmp/pack"),
+                    allowed_licenses: vec!["MIT".to_owned()],
+                    refresh: Some(version),
+                },
+            ),
+            (&["--doc-pack-list"], DocPackCommand::List),
+            (
+                &["--doc-pack-inspect", "build-tool-guide"],
+                DocPackCommand::Inspect {
+                    pack_id: "build-tool-guide".to_owned(),
+                },
+            ),
+            (
+                &["--doc-pack-delete", "build-tool-guide"],
+                DocPackCommand::Delete {
+                    pack_id: "build-tool-guide".to_owned(),
+                    version: None,
+                },
+            ),
+            (
+                &["--doc-pack-delete", "build-tool-guide@1.2.3"],
+                DocPackCommand::Delete {
+                    pack_id: "build-tool-guide".to_owned(),
+                    version: Some(version),
+                },
+            ),
+            (
+                &["--doc-pack-search", " build  cache "],
+                DocPackCommand::Search {
+                    terms: vec!["build".to_owned(), "cache".to_owned()],
+                    pack_id: None,
+                    include_history: false,
+                },
+            ),
+            (
+                &[
+                    "--include-history",
+                    "--doc-pack-search",
+                    "cache",
+                    "--doc-pack",
+                    "build-tool-guide",
+                ],
+                DocPackCommand::Search {
+                    terms: vec!["cache".to_owned()],
+                    pack_id: Some("build-tool-guide".to_owned()),
+                    include_history: true,
+                },
+            ),
+        ] {
+            let options = parse(extra).unwrap();
+            assert_eq!(options.doc_pack, Some(Box::new(command)), "{extra:?}");
+            assert!(
+                options.ended_run.is_none()
+                    && options.objective.is_empty()
+                    && options.scenario.is_empty()
+                    && options.model.is_empty()
+                    && options.support_bundle.is_none()
+                    && options.action_history_export.is_none()
+            );
+        }
+        for refused in [
+            // Two operations, or one with another operation's options.
+            &["--doc-pack-list", "--doc-pack-inspect", "build-tool-guide"][..],
+            &["--doc-pack-list", "--ended-run", "coding-development-run-1"],
+            &["--doc-pack-list", "--allow-license", "MIT"],
+            &["--doc-pack-list", "--refresh-version", "1.0.0"],
+            &["--doc-pack-list", "--doc-pack", "build-tool-guide"],
+            &["--doc-pack-list", "--include-history"],
+            &["--doc-pack-list", "--action-history-export", "effects:1:2"],
+            &["--doc-pack-import", "/tmp/pack"],
+            &["--doc-pack-search", "cache", "--allow-license", "MIT"],
+            &["--allow-license", "MIT"],
+            &["--include-history"],
+            // Run options do not go with a catalog operation.
+            &["--doc-pack-list", "--scenario", "no-op"],
+            &["--doc-pack-list", "--model", "scripted"],
+            &["--doc-pack-list", "--objective", "inspect"],
+            &[
+                "--doc-pack-list",
+                "--support-bundle",
+                "/tmp/private-bundles",
+            ],
+            &["--doc-pack-list", "--approve-this-run"],
+            // Malformed values.
+            &[
+                "--doc-pack-import",
+                "relative/pack",
+                "--allow-license",
+                "MIT",
+            ],
+            &[
+                "--doc-pack-import",
+                "/tmp/pack",
+                "--allow-license",
+                "MIT License",
+            ],
+            &[
+                "--doc-pack-import",
+                "/tmp/pack",
+                "--allow-license",
+                "MIT",
+                "--allow-license",
+                "MIT",
+            ],
+            &[
+                "--doc-pack-import",
+                "/tmp/pack",
+                "--allow-license",
+                "MIT",
+                "--refresh-version",
+                "1.0",
+            ],
+            &["--doc-pack-inspect", "Build-Tool-Guide"],
+            &["--doc-pack-delete", "build-tool-guide@1.0"],
+            &["--doc-pack-delete", "@1.0.0"],
+            &["--doc-pack-search", "   "],
+            &["--doc-pack-search", "--doc-pack-list"],
+            &["--doc-pack-search", "cache", "--doc-pack", "Bad"],
+            &["--doc-pack-list", "--doc-pack-list"],
+            // Two operations are refused even beside a complete run.
+            &[
+                "--scenario",
+                "no-op",
+                "--objective",
+                "inspect",
+                "--doc-pack-list",
+                "--doc-pack-inspect",
+                "build-tool-guide",
+            ],
+        ] {
+            assert!(parse(refused).is_err(), "{refused:?}");
+        }
+        let too_many = (0..=crate::coding_doc_packs::MAX_DOC_PACK_ALLOWED_LICENSES)
+            .flat_map(|index| ["--allow-license".to_owned(), format!("License-{index}")])
+            .collect::<Vec<_>>();
+        let mut arguments = vec!["--doc-pack-import", "/tmp/pack"];
+        arguments.extend(too_many.iter().map(String::as_str));
+        assert!(parse(&arguments).is_err());
+        for operation in [
+            "--doc-pack-import",
+            "--doc-pack-list",
+            "--doc-pack-inspect",
+            "--doc-pack-delete",
+            "--doc-pack-search",
+            "--include-history",
+        ] {
+            assert!(command_help().contains(operation), "{operation}");
+        }
     }
 
     #[test]

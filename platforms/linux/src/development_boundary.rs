@@ -266,6 +266,53 @@ impl LinuxDevelopmentHostProcess {
                 LinuxDevelopmentBoundaryErrorKind::InvalidInput,
             ));
         }
+        Self::spawn_sibling(|host| {
+            let mut command = Command::new(host);
+            command
+                .arg("--coding-development-host")
+                .arg(state_root)
+                .arg(disposable_root)
+                .arg(workspace_root)
+                .arg(scenario)
+                .arg(model)
+                .arg(if resume { "resume" } else { "new" });
+            command
+        })
+    }
+
+    /// Launches the exact sibling host with the closed catalog operation
+    /// (Decision 0130): the same activation, and no repository composition,
+    /// model, tool or run.
+    pub fn launch_catalog(
+        state_root: &Path,
+        disposable_root: &Path,
+        workspace_root: &Path,
+    ) -> Result<Self, LinuxDevelopmentBoundaryError> {
+        if [state_root, disposable_root, workspace_root]
+            .iter()
+            .any(|path| !path.is_absolute())
+        {
+            return Err(development_error(
+                LinuxDevelopmentBoundaryErrorKind::InvalidInput,
+            ));
+        }
+        Self::spawn_sibling(|host| {
+            let mut command = Command::new(host);
+            command
+                .arg("--coding-development-catalog-host")
+                .arg(state_root)
+                .arg(disposable_root)
+                .arg(workspace_root);
+            command
+        })
+    }
+
+    /// Reserves the one host slot, verifies the exact sibling host and spawns
+    /// the command built for it, with standard input closed and its launch
+    /// envelope on standard output.
+    fn spawn_sibling(
+        command: impl FnOnce(&Path) -> Command,
+    ) -> Result<Self, LinuxDevelopmentBoundaryError> {
         let mut admission = HostAdmission::reserve(Arc::clone(&HOST_SLOT))?;
         let startup_deadline = Instant::now()
             .checked_add(STARTUP_TIME)
@@ -293,14 +340,7 @@ impl LinuxDevelopmentHostProcess {
                 LinuxDevelopmentBoundaryErrorKind::UnsafeExecutable,
             ));
         }
-        let child = Command::new(host)
-            .arg("--coding-development-host")
-            .arg(state_root)
-            .arg(disposable_root)
-            .arg(workspace_root)
-            .arg(scenario)
-            .arg(model)
-            .arg(if resume { "resume" } else { "new" })
+        let child = command(&host)
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
@@ -635,7 +675,7 @@ const fn development_error(
 mod tests {
     use std::fs;
     use std::os::unix::fs::{MetadataExt, PermissionsExt};
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use super::{
@@ -719,6 +759,27 @@ mod tests {
             error.kind(),
             LinuxDevelopmentBoundaryErrorKind::InvalidInput
         );
+        fs::remove_dir_all(fixture).expect("fixture cleanup");
+    }
+
+    #[test]
+    fn catalog_host_rejects_relative_roots_before_launch() {
+        // Decision 0130: the catalog host takes the same absolute roots.
+        let fixture = private_fixture();
+        let relative = Path::new("relative-root");
+        for roots in [
+            [relative, fixture.as_path(), fixture.as_path()],
+            [fixture.as_path(), relative, fixture.as_path()],
+            [fixture.as_path(), fixture.as_path(), relative],
+        ] {
+            let error = LinuxDevelopmentHostProcess::launch_catalog(roots[0], roots[1], roots[2])
+                .err()
+                .expect("absolute roots");
+            assert_eq!(
+                error.kind(),
+                LinuxDevelopmentBoundaryErrorKind::InvalidInput
+            );
+        }
         fs::remove_dir_all(fixture).expect("fixture cleanup");
     }
 

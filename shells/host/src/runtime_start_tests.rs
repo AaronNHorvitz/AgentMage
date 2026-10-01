@@ -524,33 +524,6 @@ impl NativeChatRuntimeFactory for GatedFactory {
             .clone()
             .filter(|_| run_id == &self.request.run_id)
     }
-
-    /// Reads the run's stored chains from the shared fixture store, as the
-    /// development factory reads them from its own.
-    fn read_ended_run_action_histories(
-        &mut self,
-        run_id: &RuntimeRunId,
-    ) -> Result<crate::coding_action_history::EndedRunActionHistories, RuntimeTransportError> {
-        use agentmage_kernel_engine::run_action_history_store::RunActionChainName;
-        let histories = self
-            .run_histories
-            .as_ref()
-            .ok_or(RuntimeTransportError::RequestDenied)?;
-        let read = |chain| {
-            match histories.history(run_id.as_str(), chain) {
-            Ok(stored) => Ok(Some(stored.into())),
-            Err(agentmage_kernel_engine::run_action_history_store::RunActionHistoryStoreError::NotFound) => Ok(None),
-            Err(_) => Err(RuntimeTransportError::RuntimeFailed),
-        }
-        };
-        Ok(crate::coding_action_history::EndedRunActionHistories {
-            schema_version: crate::coding_action_history::ENDED_RUN_HISTORIES_SCHEMA_VERSION,
-            run_id: run_id.as_str().to_owned(),
-            effects: read(RunActionChainName::Effects)?,
-            job_control: read(RunActionChainName::JobControl)?,
-            routes: read(RunActionChainName::Routes)?,
-        })
-    }
 }
 
 fn last_cursor(
@@ -735,26 +708,32 @@ mod job_store {
             agentmage_kernel_engine::job_ledger_store::DurableJobLedgers,
             agentmage_kernel_engine::run_action_history_store::DurableRunActionHistories,
         ) {
-            let runtime =
-                agentmage_kernel_engine::operational_store::DurableAuthorityRuntime::open(
-                    &self.path,
-                    &agentmage_kernel_contracts::StrictLocalStorageObservation {
-                        filesystem: agentmage_kernel_contracts::StorageFilesystemClass::Local,
-                        synchronization_marker: None,
-                        root_identity_sha256: [7; 32],
-                        symlink_free: true,
-                    },
-                    &mut JobStoreKey,
-                    1,
-                )
-                .expect("the store opens");
-            (runtime.job_ledgers(), runtime.run_action_histories())
+            self.try_handles().expect("the store opens")
         }
 
         /// Opens the store, which fails while another connection holds it.
         pub(crate) fn try_ledgers(
             &self,
         ) -> Option<agentmage_kernel_engine::job_ledger_store::DurableJobLedgers> {
+            self.try_handles().map(|(ledgers, _)| ledgers)
+        }
+
+        /// Both handles of one open store, or `None` while another
+        /// connection holds it.
+        pub(crate) fn try_handles(
+            &self,
+        ) -> Option<(
+            agentmage_kernel_engine::job_ledger_store::DurableJobLedgers,
+            agentmage_kernel_engine::run_action_history_store::DurableRunActionHistories,
+        )> {
+            self.try_runtime()
+                .map(|runtime| (runtime.job_ledgers(), runtime.run_action_histories()))
+        }
+
+        /// The store's runtime, or `None` while another connection holds it.
+        pub(crate) fn try_runtime(
+            &self,
+        ) -> Option<agentmage_kernel_engine::operational_store::DurableAuthorityRuntime> {
             agentmage_kernel_engine::operational_store::DurableAuthorityRuntime::open(
                 &self.path,
                 &agentmage_kernel_contracts::StrictLocalStorageObservation {
@@ -767,7 +746,6 @@ mod job_store {
                 1,
             )
             .ok()
-            .map(|runtime| runtime.job_ledgers())
         }
     }
 
@@ -1062,7 +1040,8 @@ fn the_live_service_owns_each_run_job_and_decides_cancellation_through_the_ledge
     assert_eq!(stored.records, history.records);
     assert_eq!(stored.head, history.head);
     assert!(stored.complete && !stored.closed);
-    // While a run is held its store is busy, so an ended run is not read.
+    // The catalog host, not the development host, reads ended runs
+    // (Decision 0130).
     assert_eq!(
         service.ended_run_action_histories(run),
         Err(RuntimeTransportError::RequestDenied)
@@ -1072,9 +1051,22 @@ fn the_live_service_owns_each_run_job_and_decides_cancellation_through_the_ledge
         service.job_status(run, sha),
         Err(RuntimeTransportError::RunUnavailable)
     );
+    assert_eq!(
+        service.ended_run_action_histories(run),
+        Err(RuntimeTransportError::RequestDenied)
+    );
     // Released: the chain is closed, and the ended run's stored histories
-    // are read back through the service.
-    let ended = service.ended_run_action_histories(run).unwrap();
+    // are read back from the store as the catalog host reads them.
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|elapsed| u64::try_from(elapsed.as_millis()).unwrap())
+        .unwrap();
+    let ended = crate::coding_action_history::read_ended_run_action_histories(
+        &histories,
+        run.as_str(),
+        now,
+    )
+    .unwrap();
     let job_control = ended.job_control.clone().expect("stored job control chain");
     assert!(job_control.closed && job_control.complete);
     assert_eq!(job_control.records, history.records);
@@ -1503,11 +1495,15 @@ impl LiveCodingCoordinatorPort for CheckpointingCoordinator {
 
 /// Composes the fixture's run and its continuation from the checkpoint,
 /// opening a fresh store handle for each composition as the development host
-/// does. Preparing a continuation first opens the store, which proves the
-/// service closed its own handle.
+/// does, and handing over that store's job ledgers and run action histories.
+/// Preparing a continuation first opens the store, which proves the service
+/// closed every handle of its own, the job control recorder's included.
 struct CheckpointingFactory {
     fixture: Arc<SuspendedRunFixture>,
     store: Arc<JobLedgerStore>,
+    /// Prepares the continuation from the checkpoint, as a host started
+    /// again after the one that held the run ended.
+    restarted: bool,
     gate: Option<std::sync::mpsc::Receiver<()>>,
     after_claim: Option<std::sync::mpsc::Receiver<()>>,
     suspend_unasked: bool,
@@ -1522,7 +1518,39 @@ struct CheckpointingFactory {
     )>,
     consulted: Arc<AtomicUsize>,
     dropped: Arc<AtomicUsize>,
+    /// How many compositions opened the store.
+    opened: usize,
     ledgers: Option<agentmage_kernel_engine::job_ledger_store::DurableJobLedgers>,
+    run_histories:
+        Option<agentmage_kernel_engine::run_action_history_store::DurableRunActionHistories>,
+}
+
+impl CheckpointingFactory {
+    fn new(
+        fixture: &Arc<SuspendedRunFixture>,
+        store: &Arc<JobLedgerStore>,
+        gate: Option<std::sync::mpsc::Receiver<()>>,
+        consulted: &Arc<AtomicUsize>,
+        dropped: &Arc<AtomicUsize>,
+    ) -> Self {
+        Self {
+            fixture: Arc::clone(fixture),
+            store: Arc::clone(store),
+            restarted: false,
+            gate,
+            after_claim: None,
+            suspend_unasked: false,
+            tamper_history: false,
+            foreign_resumed: false,
+            composed: Vec::new(),
+            resumptions: Vec::new(),
+            consulted: Arc::clone(consulted),
+            dropped: Arc::clone(dropped),
+            opened: 0,
+            ledgers: None,
+            run_histories: None,
+        }
+    }
 }
 
 impl NativeChatRuntimeFactory for CheckpointingFactory {
@@ -1532,7 +1560,11 @@ impl NativeChatRuntimeFactory for CheckpointingFactory {
         &mut self,
         _input: &RuntimePrepareInput,
     ) -> Result<RuntimeRunRequest, RuntimeTransportError> {
-        Ok(self.fixture.request.clone())
+        Ok(if self.restarted {
+            self.fixture.resumed()
+        } else {
+            self.fixture.request.clone()
+        })
     }
 
     fn compose_runtime(
@@ -1546,11 +1578,13 @@ impl NativeChatRuntimeFactory for CheckpointingFactory {
             return Err(RuntimeTransportError::RequestDenied);
         }
         self.composed.push(request.clone());
-        self.ledgers = Some(
-            self.store
-                .try_ledgers()
-                .ok_or(RuntimeTransportError::RuntimeFailed)?,
-        );
+        let (ledgers, histories) = self
+            .store
+            .try_handles()
+            .ok_or(RuntimeTransportError::RuntimeFailed)?;
+        self.opened += 1;
+        self.ledgers = Some(ledgers);
+        self.run_histories = Some(histories);
         // As the engine does when it restores a checkpoint, the history is
         // published before any subscriber attaches.
         let publisher = agentmage_kernel_engine::runtime_event::RuntimeEventPublisher::new();
@@ -1591,6 +1625,13 @@ impl NativeChatRuntimeFactory for CheckpointingFactory {
         self.ledgers.take()
     }
 
+    fn take_run_action_histories(
+        &mut self,
+        _run_id: &RuntimeRunId,
+    ) -> Option<agentmage_kernel_engine::run_action_history_store::DurableRunActionHistories> {
+        self.run_histories.take()
+    }
+
     fn prepare_in_host_resume(
         &mut self,
         request: &RuntimeRunRequest,
@@ -1610,6 +1651,23 @@ impl NativeChatRuntimeFactory for CheckpointingFactory {
             return crate::runtime_transport::resumed_run_request(request, &other);
         }
         Ok(self.fixture.resumed())
+    }
+}
+
+/// The preparation of the fixture's run, or of its continuation after a
+/// restart when `request` was resumed from an event cursor.
+fn suspension_prepare_input(request: &RuntimeRunRequest) -> RuntimePrepareInput {
+    RuntimePrepareInput {
+        resume: request.event_cursor.is_some(),
+        record_session: false,
+        slow_subscriber_probe: false,
+        preauthorization: None,
+        engineering_session_id: None,
+        profile_id: request.model_profile.profile_id.as_str().to_owned(),
+        expected_entry_sha256: "a".repeat(64),
+        workspace_id: request.workspace_id.as_str().to_owned(),
+        workspace_root: "/tmp/agentmage-suspension-fixture".to_owned(),
+        prompt: request.task.objective.clone(),
     }
 }
 
@@ -1636,37 +1694,12 @@ impl SuspensionHarness {
         let (open_gate, gate) = std::sync::mpsc::channel();
         let consulted = Arc::new(AtomicUsize::new(0));
         let dropped = Arc::new(AtomicUsize::new(0));
-        let mut factory = CheckpointingFactory {
-            fixture: Arc::clone(&fixture),
-            store: Arc::clone(&store),
-            gate: Some(gate),
-            after_claim: None,
-            suspend_unasked: false,
-            tamper_history: false,
-            foreign_resumed: false,
-            composed: Vec::new(),
-            resumptions: Vec::new(),
-            consulted: Arc::clone(&consulted),
-            dropped: Arc::clone(&dropped),
-            ledgers: None,
-        };
+        let mut factory =
+            CheckpointingFactory::new(&fixture, &store, Some(gate), &consulted, &dropped);
         configure(&mut factory);
         let mut service = LiveCodingRuntimeService::new(factory);
         let request = &fixture.request;
-        service
-            .prepare(RuntimePrepareInput {
-                resume: false,
-                record_session: false,
-                slow_subscriber_probe: false,
-                preauthorization: None,
-                engineering_session_id: None,
-                profile_id: request.model_profile.profile_id.as_str().to_owned(),
-                expected_entry_sha256: "a".repeat(64),
-                workspace_id: request.workspace_id.as_str().to_owned(),
-                workspace_root: "/tmp/agentmage-suspension-fixture".to_owned(),
-                prompt: request.task.objective.clone(),
-            })
-            .unwrap();
+        service.prepare(suspension_prepare_input(request)).unwrap();
         let step = service.start(request.clone()).unwrap();
         assert!(step.outcome.is_none() && step.suspended.is_none());
         let status = service
@@ -1825,6 +1858,8 @@ fn an_applied_suspension_stops_at_the_checkpoint_and_a_resumption_continues_it_i
         harness.factory().composed,
         [request.clone(), resumed.clone()]
     );
+    // Each composition opened the store afresh (Decision 0129).
+    assert_eq!(harness.factory().opened, 2);
     // The run is now held under the resumed request only.
     assert_eq!(
         harness.service.advance(run, sha, Some(&cursor), None).err(),
@@ -1882,6 +1917,18 @@ fn an_applied_suspension_stops_at_the_checkpoint_and_a_resumption_continues_it_i
             ("r1", "job.control.resume.applied"),
         ]
     );
+    // A request decided after the outcome is stored through the
+    // continuation's own handle (review F2 of `bc1e2d39`).
+    let terminal = harness
+        .control(&resumed, "c9", JobControlAction::Cancel, 6)
+        .unwrap();
+    assert!(matches!(
+        terminal.decision,
+        JobControlDecision::Refused {
+            refusal: JobControlRefusal::Terminal,
+            ..
+        }
+    ));
     harness
         .service
         .release(run, &resumed.request_sha256)
@@ -1889,8 +1936,127 @@ fn an_applied_suspension_stops_at_the_checkpoint_and_a_resumption_continues_it_i
     assert_eq!(harness.dropped.load(Ordering::SeqCst), 2);
     let store = Arc::clone(&harness.store);
     drop(harness);
-    let reopened = store.ledgers().observation(run.as_str()).unwrap();
-    assert_eq!(reopened, ended.job);
+    let (ledgers, histories) = store.handles();
+    let reopened = ledgers.observation(run.as_str()).unwrap();
+    assert_eq!(reopened, terminal.status.job);
+    assert_eq!(reopened.revision, ended.job.revision);
+    // Decision 0129: the job control chain stayed open and complete across
+    // the suspension and the continuation in this host, holds every decided
+    // request, and closed when the ended run was released.
+    let stored = histories
+        .history(
+            run.as_str(),
+            agentmage_kernel_engine::run_action_history_store::RunActionChainName::JobControl,
+        )
+        .unwrap();
+    assert!(stored.complete && stored.closed);
+    assert_eq!(stored.records.len(), 4);
+    assert_eq!(stored.records[..3], history.records[..]);
+}
+
+#[test]
+fn a_suspended_run_whose_host_ends_keeps_its_stored_chain_open() {
+    // Review F2 of `bc1e2d39` (Decision 0129): only an ended run's chains
+    // close when its session is dropped. A run suspended when its host ends
+    // keeps its job control chain open and complete.
+    let mut harness = SuspensionHarness::start("suspend-host-ends");
+    let request = harness.fixture.request.clone();
+    harness
+        .control(&request, "s1", JobControlAction::Suspend, 1)
+        .unwrap();
+    harness.open_gate.send(()).unwrap();
+    harness.advance_until_stopped(&request);
+    assert!(harness.step.suspended.is_some());
+    let store = Arc::clone(&harness.store);
+    drop(harness);
+    let (ledgers, histories) = store.handles();
+    assert_eq!(
+        ledgers.observation(request.run_id.as_str()).unwrap().phase,
+        JobPhase::Suspended
+    );
+    let stored = histories
+        .history(
+            request.run_id.as_str(),
+            agentmage_kernel_engine::run_action_history_store::RunActionChainName::JobControl,
+        )
+        .unwrap();
+    assert!(stored.complete && !stored.closed);
+    assert_eq!(stored.records.len(), 1);
+}
+
+#[test]
+fn a_run_resumed_after_a_restart_marks_its_stored_job_control_chain_incomplete() {
+    // Review F2 of `bc1e2d39` (Decision 0129): the host that ended may have
+    // missed an entry, so the same run started again from an event cursor
+    // attaches to its open job control chain marked incomplete, and declares
+    // no job control history.
+    use agentmage_kernel_engine::run_action_history_store::RunActionChainName;
+    let mut harness = SuspensionHarness::start("restart-chain");
+    let request = harness.fixture.request.clone();
+    let resumed = harness.fixture.resumed();
+    let run = &request.run_id;
+    // One decided request is stored before the host ends with the run
+    // still running.
+    let stale = harness
+        .control(&request, "c0", JobControlAction::Cancel, 0)
+        .unwrap();
+    assert!(matches!(
+        stale.decision,
+        JobControlDecision::Refused {
+            refusal: JobControlRefusal::StaleRevision,
+            ..
+        }
+    ));
+    let (fixture, store) = (Arc::clone(&harness.fixture), Arc::clone(&harness.store));
+    let (consulted, dropped) = (Arc::clone(&harness.consulted), Arc::clone(&harness.dropped));
+    drop(harness);
+    {
+        let (ledgers, histories) = store.handles();
+        assert_eq!(
+            ledgers.observation(run.as_str()).unwrap().phase,
+            JobPhase::Running
+        );
+        let stored = histories
+            .history(run.as_str(), RunActionChainName::JobControl)
+            .unwrap();
+        assert!(stored.complete && !stored.closed);
+        assert_eq!(stored.records.len(), 1);
+    }
+
+    // A new host continues the running job from the checkpoint.
+    let mut factory = CheckpointingFactory::new(&fixture, &store, None, &consulted, &dropped);
+    factory.restarted = true;
+    let mut service = LiveCodingRuntimeService::new(factory);
+    service.prepare(suspension_prepare_input(&resumed)).unwrap();
+    let mut step = service.start(resumed.clone()).unwrap();
+    for _ in 0..400 {
+        if step.outcome.is_some() {
+            break;
+        }
+        let cursor = last_cursor(&step);
+        let next = service
+            .advance(run, &resumed.request_sha256, Some(&cursor), None)
+            .unwrap();
+        let mut events = step.events.clone();
+        events.extend(next.events.iter().cloned());
+        step = crate::runtime_transport::RuntimeTransportStep { events, ..next };
+    }
+    assert_eq!(
+        step.outcome.as_ref().map(|outcome| outcome.state),
+        Some(agentmage_kernel_contracts::AgentStateKind::Success)
+    );
+    let declared = service
+        .run_declarations(run, &resumed.request_sha256)
+        .unwrap();
+    assert_eq!(declared.job_control_history, None);
+    service.release(run, &resumed.request_sha256).unwrap();
+    drop(service);
+    let (_, histories) = store.handles();
+    let stored = histories
+        .history(run.as_str(), RunActionChainName::JobControl)
+        .unwrap();
+    assert!(!stored.complete && stored.closed);
+    assert_eq!(stored.records.len(), 1);
 }
 
 #[test]
@@ -2140,15 +2306,29 @@ fn a_persisted_recorder_keeps_each_entry_in_memory_and_in_the_store() {
             start,
         )
     };
-    // Only a new run creates its chain; nothing else attaches to a missing one.
-    for start in [
-        StoredChainStart::ContinueInHost,
-        StoredChainStart::AfterRestart,
+    // A run continued in this host never attaches to a missing chain.
+    assert_eq!(
+        begin(StoredChainStart::ContinueInHost).err(),
+        Some(RunActionHistoryStoreError::NotFound)
+    );
+    // A run resumed after a restart whose chain the ended host never stored
+    // (review N4 of `bc1e2d39`) begins it marked incomplete, whatever the
+    // chain's owner stores first.
+    for (run, start) in [
+        ("run-before-22-effects", StoredChainStart::AfterRestart),
+        (
+            "run-before-22-routes",
+            StoredChainStart::AfterRestartStoredFirst,
+        ),
     ] {
-        assert_eq!(
-            begin(start).err(),
-            Some(RunActionHistoryStoreError::NotFound)
+        let mut resumed = RunActionRecorder::persisted(
+            PersistedRunChain::begin(histories.clone(), run, RunActionChain::Effects, start)
+                .unwrap(),
         );
+        resumed.record(Some(draft("command-after-restart", 10)));
+        let stored = histories.history(run, RunActionChainName::Effects).unwrap();
+        assert!(!stored.complete && !stored.closed);
+        assert_eq!(stored.head.count, 1);
     }
     let mut recorder = RunActionRecorder::persisted(begin(StoredChainStart::New).unwrap());
     assert!(recorder.is_persisted());
@@ -2244,28 +2424,37 @@ fn a_persisted_recorder_keeps_each_entry_in_memory_and_in_the_store() {
             .count,
         0
     );
-    // Resuming after a restart marks the chain incomplete for good.
-    let job = PersistedRunChain::begin(
-        histories.clone(),
-        "run-restarted",
-        RunActionChain::JobControl,
-        StoredChainStart::New,
-    )
-    .unwrap();
-    drop(job);
-    PersistedRunChain::begin(
-        histories.clone(),
-        "run-restarted",
-        RunActionChain::JobControl,
-        StoredChainStart::AfterRestart,
-    )
-    .unwrap();
-    assert!(
-        !histories
-            .history("run-restarted", RunActionChainName::JobControl)
-            .unwrap()
-            .complete
-    );
+    // Resuming after a restart marks the chain incomplete for good; a chain
+    // whose owner stores each entry first stays complete.
+    for (chain, start, complete) in [
+        (
+            RunActionChain::JobControl,
+            StoredChainStart::AfterRestart,
+            false,
+        ),
+        (
+            RunActionChain::Routes,
+            StoredChainStart::AfterRestartStoredFirst,
+            true,
+        ),
+    ] {
+        let created = PersistedRunChain::begin(
+            histories.clone(),
+            "run-restarted",
+            chain,
+            StoredChainStart::New,
+        )
+        .unwrap();
+        drop(created);
+        PersistedRunChain::begin(histories.clone(), "run-restarted", chain, start).unwrap();
+        assert_eq!(
+            histories
+                .history("run-restarted", chain.stored())
+                .unwrap()
+                .complete,
+            complete
+        );
+    }
     // The host keeps every chain under the identity of its job ledgers.
     assert_eq!(
         crate::coding_action_history::RUN_ACTION_HISTORY_OWNER,

@@ -131,6 +131,10 @@ pub enum StoredChainStart {
     /// The run resumed after the host that kept the chain ended, which may
     /// have missed an entry: the chain is marked incomplete.
     AfterRestart,
+    /// The run resumed after a restart, and its owner stores each entry
+    /// before the effect it records, so nothing can have been missed: the
+    /// chain stays as it is (the route chain).
+    AfterRestartStoredFirst,
 }
 
 /// The stored chain a recorder also appends to.
@@ -152,13 +156,26 @@ impl PersistedRunChain {
         let stored = chain.stored();
         match start {
             StoredChainStart::New => histories.create(run_id, stored, RUN_ACTION_HISTORY_OWNER)?,
-            StoredChainStart::ContinueInHost | StoredChainStart::AfterRestart => {
-                histories.attach(
+            StoredChainStart::ContinueInHost => {
+                histories.attach(run_id, stored, RUN_ACTION_HISTORY_OWNER, false)?;
+            }
+            StoredChainStart::AfterRestart | StoredChainStart::AfterRestartStoredFirst => {
+                match histories.attach(
                     run_id,
                     stored,
                     RUN_ACTION_HISTORY_OWNER,
                     start == StoredChainStart::AfterRestart,
-                )?;
+                ) {
+                    Ok(_) => {}
+                    // A run recorded by a host before schema 22 has no stored
+                    // chain (review N4 of `bc1e2d39`). It begins here, marked
+                    // incomplete, so it never claims an entry that host kept.
+                    Err(RunActionHistoryStoreError::NotFound) => {
+                        histories.create(run_id, stored, RUN_ACTION_HISTORY_OWNER)?;
+                        histories.mark_incomplete(run_id, stored, RUN_ACTION_HISTORY_OWNER)?;
+                    }
+                    Err(error) => return Err(error),
+                }
             }
         }
         Ok(Self {
@@ -713,6 +730,35 @@ impl EndedRunActionHistories {
             RunActionChain::Routes => &mut self.routes,
         }
     }
+}
+
+/// Reads one ended run's stored chains for the catalog host (Decisions 0129
+/// and 0130): retention is applied to each closed chain first, a chain the
+/// store does not hold is absent, and nothing else is changed.
+pub fn read_ended_run_action_histories(
+    histories: &DurableRunActionHistories,
+    run_id: &str,
+    now_epoch_ms: u64,
+) -> Result<EndedRunActionHistories, RunActionHistoryStoreError> {
+    let read = |chain: RunActionChainName| match histories.history(run_id, chain) {
+        Ok(stored) => {
+            if stored.closed {
+                histories.apply_retention(run_id, chain, now_epoch_ms)?;
+            }
+            histories
+                .history(run_id, chain)
+                .map(|stored| Some(stored.into()))
+        }
+        Err(RunActionHistoryStoreError::NotFound) => Ok(None),
+        Err(error) => Err(error),
+    };
+    Ok(EndedRunActionHistories {
+        schema_version: ENDED_RUN_HISTORIES_SCHEMA_VERSION,
+        run_id: run_id.to_owned(),
+        effects: read(RunActionChainName::Effects)?,
+        job_control: read(RunActionChainName::JobControl)?,
+        routes: read(RunActionChainName::Routes)?,
+    })
 }
 
 /// Every chain, in stable order.

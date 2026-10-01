@@ -1,4 +1,5 @@
 import argparse
+import hashlib
 import json
 import os
 import signal
@@ -382,6 +383,102 @@ class CodingHarnessTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             with self.assertRaises(coding_harness.HarnessError):
                 coding_harness.control(Path(temporary), "pause")
+
+    def test_catalog_operations_pass_closed_arguments_to_the_catalog_host(self):
+        # Decision 0130: ended-run reads and documentation pack operations go
+        # to the catalog host, with no scenario and only closed arguments.
+        def doc_pack(*arguments):
+            parsed = coding_harness.parser().parse_args(["doc-pack", "--root", "/expected", *arguments])
+            return coding_harness.doc_pack_arguments(parsed)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            self.assertEqual(
+                doc_pack("--import", temporary, "--allow-license", "MIT", "--refresh-version", "1.2.3"),
+                ["--doc-pack-import", temporary, "--allow-license", "MIT", "--refresh-version", "1.2.3"],
+            )
+            for invalid in (
+                ("--import", temporary),
+                ("--import", temporary, "--allow-license", "MIT License"),
+                ("--import", temporary, "--allow-license", "MIT", "--refresh-version", "1.0"),
+                ("--import", "relative", "--allow-license", "MIT"),
+                ("--import", str(Path(temporary) / "missing"), "--allow-license", "MIT"),
+            ):
+                with self.assertRaises(coding_harness.HarnessError):
+                    doc_pack(*invalid)
+        self.assertEqual(doc_pack("--list"), ["--doc-pack-list"])
+        self.assertEqual(doc_pack("--inspect", "build-guide"), ["--doc-pack-inspect", "build-guide"])
+        self.assertEqual(doc_pack("--delete", "build-guide@1.0.0"), ["--doc-pack-delete", "build-guide@1.0.0"])
+        self.assertEqual(
+            doc_pack("--search", "remote cache", "--pack", "build-guide", "--include-history"),
+            ["--doc-pack-search", "remote cache", "--doc-pack", "build-guide", "--include-history"],
+        )
+        for invalid in (
+            ("--list", "--allow-license", "MIT"),
+            ("--list", "--pack", "build-guide"),
+            ("--inspect", "Build"),
+            ("--delete", "build-guide@1.0"),
+            ("--search", "   "),
+            ("--search", "cache", "--pack", "Bad"),
+        ):
+            with self.assertRaises(coding_harness.HarnessError):
+                doc_pack(*invalid)
+        with self.assertRaises(SystemExit):
+            coding_harness.parser().parse_args(["doc-pack", "--root", "/expected", "--list", "--inspect", "x"])
+        # The catalog command names no scenario and reserves the root.
+        launched = []
+
+        class Process:
+            def __init__(self, command, stdin=None):
+                launched.append(command)
+
+            def wait(self):
+                return 0
+
+            def poll(self):
+                return 0
+
+        with mock.patch.object(coding_harness, "diagnose", return_value={"lifecycle": "ready", "transport_path": True}), \
+                mock.patch.object(coding_harness, "binary", return_value=Path("/expected/agentmage")), \
+                mock.patch.object(coding_harness, "RunRecordReservation"), \
+                mock.patch.object(coding_harness.subprocess, "Popen", Process), \
+                tempfile.TemporaryDirectory() as temporary:
+            self.assertEqual(coding_harness.ended_run(Path(temporary), "coding-development-run-1"), 0)
+            self.assertEqual(coding_harness.catalog(Path(temporary), ["--doc-pack-list"]), 0)
+        root = str(Path(temporary).resolve())
+        for command, tail in zip(launched, (["--ended-run", "coding-development-run-1"], ["--doc-pack-list"])):
+            self.assertEqual(command[:4], ["/expected/agentmage", "--json", "code", "--development"])
+            self.assertNotIn("--scenario", command)
+            self.assertEqual(command[-len(tail):], tail)
+            self.assertIn(f"{root}/state", command)
+
+    def test_the_sample_pack_is_sealed_as_the_knowledge_component_seals_it(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary) / "sample"
+            manifest = coding_harness.write_sample_pack(directory, "1.2.0", "2026-01-02")
+            stored = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(stored, manifest)
+            unsigned = dict(stored, manifest_sha256="")
+            self.assertEqual(
+                hashlib.sha256(json.dumps(unsigned, separators=(",", ":")).encode()).hexdigest(),
+                stored["manifest_sha256"],
+            )
+            self.assertEqual(stored["version"], {"major": 1, "minor": 2, "patch": 0})
+            self.assertEqual([file["path"] for file in stored["files"]], sorted(coding_harness.SAMPLE_PACK_FILES))
+            for file in stored["files"]:
+                content = (directory / file["path"]).read_bytes()
+                self.assertEqual(
+                    (file["byte_len"], file["sha256"]),
+                    (len(content), hashlib.sha256(content).hexdigest()),
+                )
+            self.assertEqual(stat.S_IMODE((directory / "notes.txt").stat().st_mode), 0o600)
+            for target, version, day in (
+                (directory, "1.0.0", "2026-01-02"),
+                (Path("relative"), "1.0.0", "2026-01-02"),
+                (Path(temporary) / "other", "1.0", "2026-01-02"),
+                (Path(temporary) / "other", "1.0.0", "2026-1-2"),
+            ):
+                with self.assertRaises(coding_harness.HarnessError):
+                    coding_harness.write_sample_pack(target, version, day)
 
     def test_setup_builds_exact_new_and_multi_file_fixtures(self):
         with tempfile.TemporaryDirectory() as temporary:

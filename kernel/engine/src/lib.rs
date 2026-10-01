@@ -89,6 +89,8 @@ pub mod delivery_graph;
 pub mod deployment_safety;
 /// Kernel-owned redacted local doctor report construction.
 pub mod diagnostics;
+/// Durable documentation pack catalog in the operational store.
+pub mod doc_pack_store;
 /// Deterministic document registers, records review, and exact local action previews.
 pub mod document_control;
 pub mod document_repository_adapter;

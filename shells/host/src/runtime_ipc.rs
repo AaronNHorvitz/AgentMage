@@ -4,7 +4,8 @@
 //! which the host decides through its durable job ledger under the client
 //! scope it derives from the authenticated peer (Decision 0120). Suspension and
 //! resumption are job control requests too; a step names where a suspended run
-//! stopped (Decision 0122).
+//! stopped (Decision 0122). The catalog host answers documentation pack
+//! requests over the same channel (Decision 0130).
 
 use agentmage_kernel_contracts::{
     CancellationId, RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEventCursor, RuntimeRunId,
@@ -17,12 +18,13 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::coding_action_history::EndedRunActionHistories;
+use crate::coding_doc_packs::{DocPackAnswer, DocPackRequest};
 use crate::runtime_transport::{
     RuntimeClientScope, RuntimeJobControl, RuntimeJobStatus, RuntimePrepareInput,
     RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
 };
 
-const WIRE_VERSION: u16 = 11;
+const WIRE_VERSION: u16 = 12;
 /// The wire version this build speaks, as named in a support bundle.
 pub const RUNTIME_IPC_WIRE_VERSION: u16 = WIRE_VERSION;
 const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
@@ -76,6 +78,9 @@ enum RuntimeIpcRequest {
     EndedRunActionHistories {
         run_id: RuntimeRunId,
     },
+    DocPack {
+        request: DocPackRequest,
+    },
     RevokeSessionPreauthorization {
         session_id: SessionId,
         preauthorization_sha256: String,
@@ -110,6 +115,9 @@ enum RuntimeIpcResponse {
     },
     EndedRunActionHistories {
         histories: EndedRunActionHistories,
+    },
+    DocPack {
+        answer: DocPackAnswer,
     },
     JobStatus {
         status: RuntimeJobStatus,
@@ -433,6 +441,16 @@ impl RuntimeTransportPort for LinuxRuntimeIpcClient {
         }
     }
 
+    fn doc_pack(
+        &mut self,
+        request: DocPackRequest,
+    ) -> Result<DocPackAnswer, RuntimeTransportError> {
+        match self.exchange(RuntimeIpcRequest::DocPack { request })? {
+            RuntimeIpcResponse::DocPack { answer } => Ok(answer),
+            _ => Err(RuntimeTransportError::RuntimeEvidenceDenied),
+        }
+    }
+
     fn revoke_session_preauthorization(
         &mut self,
         session_id: &SessionId,
@@ -612,6 +630,18 @@ fn answer<P: RuntimeTransportPort>(
                 Err(error) => (RuntimeIpcResponse::Error { error }, false),
             }
         }
+        Some(RuntimeIpcRequest::DocPack { request }) => match runtime.doc_pack(request) {
+            // A listing or search stays well inside the bound; anything
+            // larger is refused rather than ending the service.
+            Ok(answer) if answer_fits(&answer) => (RuntimeIpcResponse::DocPack { answer }, false),
+            Ok(_) => (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::CapacityExceeded,
+                },
+                false,
+            ),
+            Err(error) => (RuntimeIpcResponse::Error { error }, false),
+        },
         Some(RuntimeIpcRequest::RevokeSessionPreauthorization {
             session_id,
             preauthorization_sha256,
@@ -730,7 +760,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 11);
+        assert_eq!(decoded.version, 12);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::RunDeclarations {
             declarations: declarations.clone(),
@@ -774,7 +804,7 @@ mod tests {
 
     #[test]
     fn an_ended_run_answer_crosses_the_wire_closed_and_only_at_the_current_version() {
-        // Decision 0129: the stored histories of an ended run cross wire 11
+        // Decision 0129: the stored histories of an ended run cross the wire
         // closed, and a transport without the operation refuses it.
         use crate::coding_action_history::{
             ENDED_RUN_HISTORIES_SCHEMA_VERSION, EndedRunActionHistories, StoredRunChain,
@@ -802,7 +832,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 11);
+        assert_eq!(decoded.version, 12);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::EndedRunActionHistories {
             histories: histories.clone(),
@@ -847,6 +877,196 @@ mod tests {
             )
         );
         assert!(answer_fits(&histories));
+    }
+
+    #[test]
+    fn a_documentation_pack_request_crosses_the_wire_closed() {
+        // Decision 0130: documentation pack requests and answers cross wire
+        // 12 closed; a port that is not a catalog host refuses them, and an
+        // oversized answer is refused without ending the service.
+        use crate::coding_doc_packs::{DocPackHitView, DocPackRefusal};
+        use agentmage_capability_knowledge::DocPackVersion;
+        let request = RuntimeIpcEnvelope {
+            version: WIRE_VERSION,
+            payload: RuntimeIpcRequest::DocPack {
+                request: DocPackRequest::Search {
+                    terms: vec!["cache".to_owned()],
+                    pack_id: None,
+                    include_history: false,
+                },
+            },
+        };
+        let bytes = serde_json::to_vec(&request).unwrap();
+        let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
+            serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(decoded.version, 12);
+        assert_eq!(decoded.payload, request.payload);
+        let text = String::from_utf8(bytes).unwrap();
+        for nested in [
+            text.replacen(
+                "\"include_history\":false",
+                "\"include_history\":false,\"x\":1",
+                1,
+            ),
+            text.replacen("\"pack_id\":null,", "", 1),
+            text.replacen("\"operation\":\"search\"", "\"operation\":\"upload\"", 1),
+        ] {
+            assert_ne!(nested, text);
+            assert!(
+                serde_json::from_str::<RuntimeIpcEnvelope<RuntimeIpcRequest>>(&nested).is_err()
+            );
+        }
+        let hit = DocPackHitView {
+            pack_id: "build-tool-guide".to_owned(),
+            version: DocPackVersion {
+                major: 1,
+                minor: 0,
+                patch: 0,
+            },
+            historical: false,
+            path: "guide/cache.md".to_owned(),
+            start_line: 1,
+            end_line: 1,
+            heading: true,
+            text: "# Build cache".to_owned(),
+            citation_sha256: "c".repeat(64),
+        };
+        let response = RuntimeIpcResponse::DocPack {
+            answer: DocPackAnswer::Found {
+                hits: vec![hit],
+                omitted: 0,
+                retention: Vec::new(),
+            },
+        };
+        let bytes = serde_json::to_vec(&response).unwrap();
+        assert_eq!(
+            serde_json::from_slice::<RuntimeIpcResponse>(&bytes).unwrap(),
+            response
+        );
+        let text = String::from_utf8(bytes).unwrap();
+        for nested in [
+            text.replacen("\"heading\":true", "\"heading\":true,\"x\":1", 1),
+            text.replacen("\"omitted\":0", "\"omitted\":0,\"x\":1", 1),
+            text.replacen("\"answer\":\"found\"", "\"answer\":\"uploaded\"", 1),
+        ] {
+            assert_ne!(nested, text);
+            assert!(serde_json::from_str::<RuntimeIpcResponse>(&nested).is_err());
+        }
+        let mut port = DeclaringPort {
+            session_id_bytes: 0,
+            released: 0,
+        };
+        assert_eq!(
+            answer(
+                &mut port,
+                &fixture_client(),
+                Some(RuntimeIpcRequest::DocPack {
+                    request: DocPackRequest::List {},
+                })
+            ),
+            (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::RequestDenied,
+                },
+                false
+            )
+        );
+        struct CatalogPort(DocPackAnswer);
+        impl RuntimeTransportPort for CatalogPort {
+            fn prepare(
+                &mut self,
+                _input: RuntimePrepareInput,
+            ) -> Result<RuntimeRunRequest, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn start(
+                &mut self,
+                _request: RuntimeRunRequest,
+            ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn advance(
+                &mut self,
+                _run_id: &RuntimeRunId,
+                _request_sha256: &str,
+                _after_event_cursor: Option<&RuntimeEventCursor>,
+                _response: Option<&RuntimeApprovalResponse>,
+            ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn cancel(
+                &mut self,
+                _run_id: &RuntimeRunId,
+                _request_sha256: &str,
+                _cancellation_id: CancellationId,
+                _after_event_cursor: Option<&RuntimeEventCursor>,
+            ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn release(
+                &mut self,
+                _run_id: &RuntimeRunId,
+                _request_sha256: &str,
+            ) -> Result<(), RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn doc_pack(
+                &mut self,
+                _request: DocPackRequest,
+            ) -> Result<DocPackAnswer, RuntimeTransportError> {
+                Ok(self.0.clone())
+            }
+        }
+        let refused = DocPackAnswer::Refused {
+            refusal: DocPackRefusal::NotFound,
+        };
+        assert_eq!(
+            answer(
+                &mut CatalogPort(refused.clone()),
+                &fixture_client(),
+                Some(RuntimeIpcRequest::DocPack {
+                    request: DocPackRequest::List {},
+                })
+            ),
+            (RuntimeIpcResponse::DocPack { answer: refused }, false)
+        );
+        let oversized = DocPackAnswer::Found {
+            hits: vec![
+                DocPackHitView {
+                    pack_id: "build-tool-guide".to_owned(),
+                    version: DocPackVersion {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                    },
+                    historical: false,
+                    path: "guide/cache.md".to_owned(),
+                    start_line: 1,
+                    end_line: 1,
+                    heading: false,
+                    text: "x".repeat(MAX_WIRE_BYTES),
+                    citation_sha256: "c".repeat(64),
+                };
+                1
+            ],
+            omitted: 0,
+            retention: Vec::new(),
+        };
+        assert_eq!(
+            answer(
+                &mut CatalogPort(oversized),
+                &fixture_client(),
+                Some(RuntimeIpcRequest::DocPack {
+                    request: DocPackRequest::List {},
+                })
+            ),
+            (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::CapacityExceeded,
+                },
+                false
+            )
+        );
     }
 
     /// Answers declarations of a chosen size and counts releases.
@@ -1062,7 +1282,7 @@ mod tests {
             .unwrap();
             let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
                 serde_json::from_slice(&bytes).unwrap();
-            assert_eq!(decoded.version, 11);
+            assert_eq!(decoded.version, 12);
             assert_eq!(decoded.payload, request);
         }
         let mut scoped = serde_json::to_value(RuntimeIpcRequest::ControlJob {
@@ -1292,7 +1512,7 @@ mod tests {
         .unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcResponse> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 11);
+        assert_eq!(decoded.version, 12);
         assert_eq!(decoded.payload, response);
         let mut extra = serde_json::to_value(&suspended).unwrap();
         extra["suspended"]["resumable"] = serde_json::Value::Bool(true);

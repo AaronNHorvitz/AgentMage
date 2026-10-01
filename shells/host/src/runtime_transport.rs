@@ -498,11 +498,21 @@ pub trait RuntimeTransportPort {
     }
 
     /// Reads the stored action histories of one ended run from the host's
-    /// operational store while no run is held (Decision 0129).
+    /// operational store (Decision 0129); the catalog host serves it
+    /// (Decision 0130).
     fn ended_run_action_histories(
         &mut self,
         _run_id: &RuntimeRunId,
     ) -> Result<EndedRunActionHistories, RuntimeTransportError> {
+        Err(RuntimeTransportError::RequestDenied)
+    }
+
+    /// Answers one documentation pack request of the catalog host
+    /// (Decision 0130).
+    fn doc_pack(
+        &mut self,
+        _request: crate::coding_doc_packs::DocPackRequest,
+    ) -> Result<crate::coding_doc_packs::DocPackAnswer, RuntimeTransportError> {
         Err(RuntimeTransportError::RequestDenied)
     }
 

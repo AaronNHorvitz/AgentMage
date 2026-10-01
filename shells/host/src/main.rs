@@ -40,6 +40,16 @@ fn main() -> Result<(), HostExit> {
                     resume,
                 );
             }
+            #[cfg(target_os = "linux")]
+            [command, state_root, disposable_root, workspace_root]
+                if command == "--coding-development-catalog-host" =>
+            {
+                return coding_development_catalog_host(
+                    state_root,
+                    disposable_root,
+                    workspace_root,
+                );
+            }
             [command, root] if command == "--verify-package-candidate-root" => {
                 package_verify::verify_package_candidate_root(root)
             }
@@ -134,6 +144,39 @@ fn coding_development_host(
         .map_err(|error| HostExit(error.kind().code()))?;
     let mut runtime = LiveCodingRuntimeService::new(factory);
     serve_linux_runtime_ipc(&mut session, &mut runtime).map_err(|error| HostExit(error.code()))
+}
+
+/// The catalog host (Decision 0130): the same activation and authenticated
+/// session as the development host, serving only documentation packs and
+/// ended-run reads, with no repository composition, model or run.
+#[cfg(target_os = "linux")]
+fn coding_development_catalog_host(
+    state_root: &std::ffi::OsStr,
+    disposable_root: &std::ffi::OsStr,
+    workspace_root: &std::ffi::OsStr,
+) -> Result<(), HostExit> {
+    use agentmage_host::coding_catalog_host::{CodingCatalogService, DevelopmentCatalogStore};
+    use agentmage_host::coding_development_activation::CodingDevelopmentActivation;
+    use agentmage_host::runtime_ipc::serve_linux_runtime_ipc;
+
+    let activation = CodingDevelopmentActivation::validate(
+        std::path::Path::new(state_root),
+        std::path::Path::new(disposable_root),
+        std::path::Path::new(workspace_root),
+    )
+    .map_err(|error| HostExit(error.code()))?;
+    let store = DevelopmentCatalogStore::new(activation.clone()).map_err(HostExit)?;
+    let parent = linux_bootstrap::parent_process_id().map_err(|error| HostExit(error.code()))?;
+    let bootstrap = linux_bootstrap::bootstrap_development_for_peer(&activation, parent)
+        .map_err(|error| HostExit(error.code()))?;
+    bootstrap
+        .write_launch_envelope(&mut std::io::stdout().lock())
+        .map_err(|error| HostExit(error.code()))?;
+    let mut session = bootstrap
+        .accept()
+        .map_err(|error| HostExit(error.kind().code()))?;
+    let mut catalog = CodingCatalogService::new(store);
+    serve_linux_runtime_ipc(&mut session, &mut catalog).map_err(|error| HostExit(error.code()))
 }
 
 #[cfg(target_os = "linux")]

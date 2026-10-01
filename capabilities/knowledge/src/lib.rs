@@ -117,9 +117,10 @@ pub use database_adapter::{
     StructuredEvidenceReviewerDecision, StructuredEvidenceRow, StructuredValue,
 };
 pub use doc_packs::{
-    DocPackCatalog, DocPackDeletion, DocPackDeletionReason, DocPackError, DocPackFile,
-    DocPackFreshness, DocPackImportIntent, DocPackIndex, DocPackManifest, DocPackMediaType,
-    DocPackPolicy, DocPackReceipt, DocPackStatus, DocPackVersion, DocPackVersionState,
+    DocPackCatalog, DocPackCatalogState, DocPackDeletion, DocPackDeletionReason, DocPackError,
+    DocPackFile, DocPackFreshness, DocPackImportIntent, DocPackIndex, DocPackKeptState,
+    DocPackManifest, DocPackMediaType, DocPackPolicy, DocPackReceipt, DocPackSearchHit,
+    DocPackSearchQuery, DocPackSearchResult, DocPackStatus, DocPackVersion, DocPackVersionState,
     DocPackVersionStatus, parse_doc_pack_manifest, seal_doc_pack_manifest,
 };
 pub use document_control_skills::{DocumentControlSkill, built_in_document_control_skill_pack};

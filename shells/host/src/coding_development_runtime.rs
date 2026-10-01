@@ -46,9 +46,7 @@ use agentmage_kernel_engine::{
         LocalModelController, ModelAdmissionCatalog, ModelUsePurpose, RejectedModelOutput,
     },
     repository_safety::{OwnedWorktreeRecord, WorktreeDisposition},
-    run_action_history_store::{
-        DurableRunActionHistories, RunActionChainName, RunActionHistoryStoreError,
-    },
+    run_action_history_store::DurableRunActionHistories,
     runtime_artifact::{
         MAX_RUNTIME_ARTIFACT_BYTES, RUNTIME_CONTINUATION_MEDIA_TYPE, RUNTIME_REQUEST_MEDIA_TYPE,
         RuntimeArtifactReadRequest, decode_runtime_continuation_state,
@@ -1076,7 +1074,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         // Every route entry is stored before its model is built, so a restart
         // cannot lose one.
         let route_start = match start {
-            StoredChainStart::AfterRestart => StoredChainStart::ContinueInHost,
+            StoredChainStart::AfterRestart => StoredChainStart::AfterRestartStoredFirst,
             other => other,
         };
         let mut route_history =
@@ -1264,67 +1262,6 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             Some((composed, histories)) if &composed == run_id => Some(histories),
             _ => None,
         }
-    }
-
-    /// Opens the store only for this read, applies retention to each closed
-    /// chain of the run, reads each chain back and closes the store again
-    /// (Decision 0129). It refuses while a composed run's handles may keep
-    /// the store open.
-    fn read_ended_run_action_histories(
-        &mut self,
-        run_id: &RuntimeRunId,
-    ) -> Result<crate::coding_action_history::EndedRunActionHistories, NativeChatRuntimeError> {
-        if self.composed_job_ledgers.is_some()
-            || self.composed_run_histories.is_some()
-            || !self.prepared.is_empty()
-        {
-            return Err(NativeChatRuntimeError::RequestDenied);
-        }
-        self.activation
-            .revalidate()
-            .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
-        let mut key = CodingDevelopmentKeyProvider::open(&self.activation)
-            .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
-        let now = now_epoch_ms().map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
-        let authority = open_linux_development_authority(
-            self.platform,
-            self.activation.state_root(),
-            &mut key,
-            now,
-        )
-        .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
-        let histories = authority.authority().run_action_histories();
-        let read = |chain: RunActionChainName| -> Result<
-            Option<crate::coding_action_history::StoredRunChain>,
-            NativeChatRuntimeError,
-        > {
-            let run = run_id.as_str();
-            match histories.history(run, chain) {
-                Ok(stored) => {
-                    if stored.closed {
-                        histories
-                            .apply_retention(run, chain, now)
-                            .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
-                    }
-                    histories
-                        .history(run, chain)
-                        .map(|stored| Some(stored.into()))
-                        .map_err(|_| NativeChatRuntimeError::RuntimeFailed)
-                }
-                Err(RunActionHistoryStoreError::NotFound) => Ok(None),
-                Err(RunActionHistoryStoreError::InvalidInput) => {
-                    Err(NativeChatRuntimeError::RequestDenied)
-                }
-                Err(_) => Err(NativeChatRuntimeError::RuntimeFailed),
-            }
-        };
-        Ok(crate::coding_action_history::EndedRunActionHistories {
-            schema_version: crate::coding_action_history::ENDED_RUN_HISTORIES_SCHEMA_VERSION,
-            run_id: run_id.as_str().to_owned(),
-            effects: read(RunActionChainName::Effects)?,
-            job_control: read(RunActionChainName::JobControl)?,
-            routes: read(RunActionChainName::Routes)?,
-        })
     }
 
     /// Continues this session's last run from the checkpoint it stopped at

@@ -47,6 +47,11 @@ use crate::coding_client::{
 };
 use crate::coding_development_activation::CodingDevelopmentActivation;
 use crate::coding_development_runtime::CodingDevelopmentModel;
+use crate::coding_doc_packs::{
+    DocPackAnswer, DocPackCommand, DocPackRefusal, DocPackRequest, doc_pack_import_requests,
+    doc_pack_refusal_exit, read_doc_pack_source, render_doc_pack_answer, render_doc_pack_refusal,
+    verify_doc_pack_receipt,
+};
 use crate::coding_recoverability::render_recoverability;
 use crate::coding_route::render_run_route_receipt;
 use crate::coding_support_bundle::{
@@ -143,6 +148,11 @@ fn run_invocation(
         &options.workspace_root,
     )
     .map_err(|_| CodingDevelopmentClientError::Activation)?;
+    // Decision 0130: an ended run's histories and documentation packs are
+    // served by the catalog host, which composes no run.
+    if options.ended_run.is_some() || options.doc_pack.is_some() {
+        return run_catalog_invocation(&activation, options, output, cancellation);
+    }
     cancellation.check_startup()?;
     let mut child = LinuxDevelopmentHostProcess::launch(
         activation.state_root(),
@@ -197,17 +207,30 @@ fn offer_invocation_support_bundle(
             output,
             &mut stderr,
             &mut current_epoch_ms,
-            &mut || match read_development_line(&cancellation.requested) {
-                Ok(LinuxDevelopmentInputLine::Line(line)) if line == "yes" => {
-                    SupportBundleAnswer::Confirmed
-                }
-                Ok(LinuxDevelopmentInputLine::Cancelled) => SupportBundleAnswer::Cancelled,
-                Ok(_) | Err(_) => SupportBundleAnswer::Declined,
-            },
+            &mut || support_bundle_answer(read_development_line(&cancellation.requested)),
         )
     };
     let _ = stderr.write_all(render_support_bundle_outcome(&outcome, output).as_bytes());
     let _ = stderr.flush();
+}
+
+/// The person's answer to a support bundle preview. Only the exact word
+/// `yes` publishes; the platform reader has already removed the line's
+/// terminator and surrounding whitespace. Every other line, end of input, a
+/// too-long line and a read failure decline; a signal cancels.
+fn support_bundle_answer<E>(line: Result<LinuxDevelopmentInputLine, E>) -> SupportBundleAnswer {
+    match line {
+        Ok(LinuxDevelopmentInputLine::Line(line)) if line == "yes" => {
+            SupportBundleAnswer::Confirmed
+        }
+        Ok(LinuxDevelopmentInputLine::Cancelled) => SupportBundleAnswer::Cancelled,
+        Ok(
+            LinuxDevelopmentInputLine::Line(_)
+            | LinuxDevelopmentInputLine::Ended
+            | LinuxDevelopmentInputLine::TooLong,
+        )
+        | Err(_) => SupportBundleAnswer::Declined,
+    }
 }
 
 /// What this invocation observed, for its support bundle: the selected
@@ -275,15 +298,6 @@ fn run_with_child(
         runtime = runtime.with_expired_cursor_probe();
     } else if options.artifact_integrity_probe {
         runtime = runtime.with_artifact_integrity_probe();
-    }
-    // Decision 0129: an ended run's stored histories are read back instead of
-    // running an objective.
-    if let Some(run_id) = &options.ended_run {
-        let shown = show_ended_run(&mut runtime, run_id, options.action_history_export, output);
-        runtime
-            .shutdown()
-            .map_err(|_| CodingDevelopmentClientError::Transport)?;
-        return shown;
     }
     let workspace_id = format!("coding-development-{}", &activation.marker_sha256()[..24]);
     let mut approvals = TerminalApprovals {
@@ -762,6 +776,221 @@ impl TerminalEventSink {
 /// recoverability of its effects, the view of each composed context and the
 /// run's action histories (Decision 0127). Each part the host could not
 /// declare completely is shown as unavailable.
+/// The requests of one documentation pack command, with the manifest an
+/// import sends. An import reads and checks its pack before any host is
+/// launched.
+fn doc_pack_requests(
+    command: &DocPackCommand,
+) -> Result<
+    (
+        Option<agentmage_capability_knowledge::DocPackManifest>,
+        Vec<DocPackRequest>,
+    ),
+    DocPackRefusal,
+> {
+    Ok(match command {
+        DocPackCommand::Import {
+            directory,
+            allowed_licenses,
+            refresh,
+        } => {
+            let source = read_doc_pack_source(directory)?;
+            let requests = doc_pack_import_requests(&source, allowed_licenses, *refresh);
+            (Some(source.manifest), requests)
+        }
+        DocPackCommand::List => (None, vec![DocPackRequest::List {}]),
+        DocPackCommand::Inspect { pack_id } => (
+            None,
+            vec![DocPackRequest::Inspect {
+                pack_id: pack_id.clone(),
+            }],
+        ),
+        DocPackCommand::Delete { pack_id, version } => (
+            None,
+            vec![DocPackRequest::Delete {
+                pack_id: pack_id.clone(),
+                version: *version,
+            }],
+        ),
+        DocPackCommand::Search {
+            terms,
+            pack_id,
+            include_history,
+        } => (
+            None,
+            vec![DocPackRequest::Search {
+                terms: terms.clone(),
+                pack_id: pack_id.clone(),
+                include_history: *include_history,
+            }],
+        ),
+    })
+}
+
+/// Runs one catalog operation through the catalog host (Decision 0130).
+fn run_catalog_invocation(
+    activation: &CodingDevelopmentActivation,
+    options: &CodingDevelopmentCliOptions,
+    output: CliOutputFormat,
+    cancellation: &mut InstalledSignalCancellation,
+) -> Result<ClientExitCode, CodingDevelopmentClientError> {
+    let json = output == CliOutputFormat::Json;
+    let doc_pack = match options
+        .doc_pack
+        .as_deref()
+        .map(doc_pack_requests)
+        .transpose()
+    {
+        Ok(requests) => requests,
+        Err(refusal) => {
+            eprint!("{}", render_doc_pack_refusal(refusal, json));
+            return Ok(doc_pack_refusal_exit(refusal));
+        }
+    };
+    cancellation.check_startup()?;
+    let mut child = LinuxDevelopmentHostProcess::launch_catalog(
+        activation.state_root(),
+        activation.disposable_root(),
+        activation.workspace_root(),
+    )
+    .map_err(CodingDevelopmentClientError::from)?;
+    let result = catalog_with_child(options, output, &mut child, cancellation, doc_pack);
+    if result.is_err() {
+        child
+            .terminate_and_reap()
+            .map_err(CodingDevelopmentClientError::from)?;
+        return result;
+    }
+    let success = child
+        .wait_success()
+        .map_err(CodingDevelopmentClientError::from)?;
+    if !success {
+        return Err(CodingDevelopmentClientError::Transport);
+    }
+    result
+}
+
+fn catalog_with_child(
+    options: &CodingDevelopmentCliOptions,
+    output: CliOutputFormat,
+    child: &mut LinuxDevelopmentHostProcess,
+    cancellation: &mut InstalledSignalCancellation,
+    doc_pack: Option<(
+        Option<agentmage_capability_knowledge::DocPackManifest>,
+        Vec<DocPackRequest>,
+    )>,
+) -> Result<ClientExitCode, CodingDevelopmentClientError> {
+    let envelope = child
+        .read_launch_envelope_cancellable(&cancellation.requested)
+        .map_err(CodingDevelopmentClientError::from)?;
+    cancellation.check_startup()?;
+    let session = envelope
+        .connect_development()
+        .map_err(|_| CodingDevelopmentClientError::Transport)?;
+    let mut runtime = LinuxRuntimeIpcClient::new(session);
+    let shown = match (&options.ended_run, doc_pack) {
+        (Some(run_id), None) => {
+            show_ended_run(&mut runtime, run_id, options.action_history_export, output)
+        }
+        (None, Some((sent, requests))) => run_doc_pack_requests(
+            &mut runtime,
+            sent.as_ref(),
+            requests,
+            output,
+            &cancellation.requested,
+        ),
+        _ => Err(CodingDevelopmentClientError::Activation),
+    };
+    runtime
+        .shutdown()
+        .map_err(|_| CodingDevelopmentClientError::Transport)?;
+    shown
+}
+
+/// Sends each documentation pack request in order and writes each answer.
+/// A staged answer and each accepted chunk must acknowledge exactly what was
+/// sent, and an import receipt is kept only when it names the sent manifest
+/// and recomputes. A refusal ends the operation with its exit class; a
+/// cancellation between requests stops sending, and the host discards a
+/// staged import when the session ends.
+fn run_doc_pack_requests(
+    runtime: &mut impl RuntimeTransportPort,
+    sent: Option<&agentmage_capability_knowledge::DocPackManifest>,
+    requests: Vec<DocPackRequest>,
+    output: CliOutputFormat,
+    cancellation: &AtomicBool,
+) -> Result<ClientExitCode, CodingDevelopmentClientError> {
+    let json = output == CliOutputFormat::Json;
+    for request in requests {
+        if cancellation.load(Ordering::Acquire) {
+            eprint!(
+                "{}",
+                if json {
+                    "{\"type\":\"doc_pack_cancelled\"}\n"
+                } else {
+                    "doc pack operation cancelled; nothing was imported\n"
+                }
+            );
+            return Ok(ClientExitCode::Cancelled);
+        }
+        let expected = match &request {
+            DocPackRequest::ImportChunk { path, offset, text } => {
+                Some((path.clone(), offset + text.len() as u64))
+            }
+            _ => None,
+        };
+        let answer = runtime
+            .doc_pack(request)
+            .inspect_err(|error| eprintln!("{}", error.code()))
+            .map_err(|_| CodingDevelopmentClientError::Runtime)?;
+        let acknowledged = match (&answer, &expected, sent) {
+            (DocPackAnswer::Refused { refusal }, _, _) => {
+                eprint!("{}", render_doc_pack_refusal(*refusal, json));
+                return Ok(doc_pack_refusal_exit(*refusal));
+            }
+            (
+                DocPackAnswer::ImportStaged {
+                    pack_id,
+                    version,
+                    manifest_sha256,
+                },
+                None,
+                Some(sent),
+            ) => {
+                *pack_id == sent.pack_id
+                    && *version == sent.version
+                    && *manifest_sha256 == sent.manifest_sha256
+            }
+            (
+                DocPackAnswer::ChunkAccepted {
+                    path,
+                    received_bytes,
+                },
+                Some((sent_path, sent_bytes)),
+                Some(_),
+            ) => path == sent_path && received_bytes == sent_bytes,
+            (DocPackAnswer::Imported { receipt, .. }, None, Some(sent)) => {
+                verify_doc_pack_receipt(receipt, sent)
+            }
+            (
+                DocPackAnswer::Listed { .. }
+                | DocPackAnswer::Inspected { .. }
+                | DocPackAnswer::Deleted { .. }
+                | DocPackAnswer::Found { .. },
+                None,
+                None,
+            ) => true,
+            _ => false,
+        };
+        if !acknowledged {
+            eprintln!("coding.development.client.doc-pack-answer-denied");
+            return Err(CodingDevelopmentClientError::Presentation);
+        }
+        print!("{}", render_doc_pack_answer(&answer, json));
+    }
+    Ok(ClientExitCode::Success)
+}
+
 /// Reads one ended run's stored histories back from the host and writes them
 /// on standard output, a requested export first (Decision 0129). An answer
 /// for another run or schema is refused; a chain that does not verify is
@@ -1955,6 +2184,284 @@ mod tests {
                 "{result:?}"
             );
         }
+    }
+
+    use crate::runtime_transport::RuntimeTransportError;
+
+    /// A catalog host that answers documentation pack requests from a
+    /// script and records what it was sent.
+    struct ScriptedCatalog {
+        answers: std::collections::VecDeque<Result<DocPackAnswer, RuntimeTransportError>>,
+        sent: Vec<DocPackRequest>,
+    }
+
+    impl RuntimeTransportPort for ScriptedCatalog {
+        fn prepare(
+            &mut self,
+            _input: RuntimePrepareInput,
+        ) -> Result<agentmage_kernel_contracts::RuntimeRunRequest, RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+        fn start(
+            &mut self,
+            _request: agentmage_kernel_contracts::RuntimeRunRequest,
+        ) -> Result<crate::runtime_transport::RuntimeTransportStep, RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+        fn advance(
+            &mut self,
+            _run_id: &agentmage_kernel_contracts::RuntimeRunId,
+            _request_sha256: &str,
+            _after_event_cursor: Option<&agentmage_kernel_contracts::RuntimeEventCursor>,
+            _response: Option<&agentmage_kernel_contracts::RuntimeApprovalResponse>,
+        ) -> Result<crate::runtime_transport::RuntimeTransportStep, RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+        fn cancel(
+            &mut self,
+            _run_id: &agentmage_kernel_contracts::RuntimeRunId,
+            _request_sha256: &str,
+            _cancellation_id: agentmage_kernel_contracts::CancellationId,
+            _after_event_cursor: Option<&agentmage_kernel_contracts::RuntimeEventCursor>,
+        ) -> Result<crate::runtime_transport::RuntimeTransportStep, RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+        fn release(
+            &mut self,
+            _run_id: &agentmage_kernel_contracts::RuntimeRunId,
+            _request_sha256: &str,
+        ) -> Result<(), RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+        fn doc_pack(
+            &mut self,
+            request: DocPackRequest,
+        ) -> Result<DocPackAnswer, RuntimeTransportError> {
+            self.sent.push(request);
+            self.answers
+                .pop_front()
+                .unwrap_or(Err(RuntimeTransportError::RuntimeFailed))
+        }
+    }
+
+    #[test]
+    fn a_pack_import_keeps_only_answers_that_acknowledge_what_was_sent() {
+        // Decision 0130: the staged answer, each chunk and the receipt must
+        // acknowledge exactly what the CLI sent; a refusal stops the import
+        // with its exit class; cancellation stops sending.
+        use crate::coding_doc_packs::{
+            DocPackImportReceiptView, DocPackSource, doc_pack_receipt_sha256,
+        };
+        use agentmage_capability_knowledge::{
+            DocPackFile, DocPackManifest, DocPackMediaType, DocPackVersion, seal_doc_pack_manifest,
+        };
+        let text = "Offline notes.\n";
+        let version = DocPackVersion {
+            major: 1,
+            minor: 0,
+            patch: 0,
+        };
+        let manifest = seal_doc_pack_manifest(DocPackManifest {
+            schema_version: 1,
+            pack_id: "build-tool-guide".to_owned(),
+            version,
+            title: "Build tool guide".to_owned(),
+            publisher: "Synthetic sample".to_owned(),
+            license: "LicenseRef-sample".to_owned(),
+            retrieved_on: "2026-01-01".to_owned(),
+            fresh_for_days: 30,
+            files: vec![DocPackFile {
+                path: "notes.txt".to_owned(),
+                media_type: DocPackMediaType::PlainText,
+                byte_len: text.len() as u64,
+                sha256: {
+                    use sha2::Digest as _;
+                    sha2::Sha256::digest(text.as_bytes())
+                        .iter()
+                        .map(|byte| format!("{byte:02x}"))
+                        .collect()
+                },
+            }],
+            total_bytes: text.len() as u64,
+            manifest_sha256: String::new(),
+        })
+        .unwrap();
+        let source = DocPackSource {
+            manifest: manifest.clone(),
+            files: [("notes.txt".to_owned(), text.to_owned())].into(),
+        };
+        let requests = doc_pack_import_requests(&source, &["LicenseRef-sample".to_owned()], None);
+        let staged = DocPackAnswer::ImportStaged {
+            pack_id: manifest.pack_id.clone(),
+            version,
+            manifest_sha256: manifest.manifest_sha256.clone(),
+        };
+        let accepted = DocPackAnswer::ChunkAccepted {
+            path: "notes.txt".to_owned(),
+            received_bytes: text.len() as u64,
+        };
+        let mut receipt = DocPackImportReceiptView {
+            pack_id: manifest.pack_id.clone(),
+            version,
+            manifest_sha256: manifest.manifest_sha256.clone(),
+            license: manifest.license.clone(),
+            superseded: None,
+            file_count: 1,
+            total_bytes: text.len() as u64,
+            fragment_count: 1,
+            withheld_fragment_count: 0,
+            network_used: false,
+            receipt_sha256: String::new(),
+        };
+        receipt.receipt_sha256 = doc_pack_receipt_sha256(&receipt).unwrap();
+        let imported = |receipt: DocPackImportReceiptView| DocPackAnswer::Imported {
+            receipt,
+            retention: Vec::new(),
+        };
+        let run = |answers: Vec<Result<DocPackAnswer, RuntimeTransportError>>, cancelled: bool| {
+            let mut catalog = ScriptedCatalog {
+                answers: answers.into(),
+                sent: Vec::new(),
+            };
+            let result = run_doc_pack_requests(
+                &mut catalog,
+                Some(&manifest),
+                requests.clone(),
+                CliOutputFormat::Json,
+                &AtomicBool::new(cancelled),
+            );
+            (result, catalog.sent.len())
+        };
+        assert_eq!(
+            run(
+                vec![
+                    Ok(staged.clone()),
+                    Ok(accepted.clone()),
+                    Ok(imported(receipt.clone()))
+                ],
+                false
+            ),
+            (Ok(ClientExitCode::Success), 3)
+        );
+        let mut tampered = receipt.clone();
+        tampered.fragment_count = 2;
+        let other_staged = DocPackAnswer::ImportStaged {
+            pack_id: manifest.pack_id.clone(),
+            version,
+            manifest_sha256: "a".repeat(64),
+        };
+        let short_chunk = DocPackAnswer::ChunkAccepted {
+            path: "notes.txt".to_owned(),
+            received_bytes: 1,
+        };
+        let other_path = DocPackAnswer::ChunkAccepted {
+            path: "other.txt".to_owned(),
+            received_bytes: text.len() as u64,
+        };
+        let listed = DocPackAnswer::Listed {
+            packs: Vec::new(),
+            retention: Vec::new(),
+        };
+        for (answers, sent) in [
+            (vec![Ok(other_staged)], 1),
+            (vec![Ok(listed.clone())], 1),
+            (vec![Ok(staged.clone()), Ok(short_chunk)], 2),
+            (vec![Ok(staged.clone()), Ok(other_path)], 2),
+            (vec![Ok(staged.clone()), Ok(staged.clone())], 2),
+            (
+                vec![
+                    Ok(staged.clone()),
+                    Ok(accepted.clone()),
+                    Ok(imported(tampered)),
+                ],
+                3,
+            ),
+            (
+                vec![Ok(staged.clone()), Ok(accepted.clone()), Ok(listed)],
+                3,
+            ),
+        ] {
+            assert_eq!(
+                run(answers, false),
+                (Err(CodingDevelopmentClientError::Presentation), sent)
+            );
+        }
+        // A refusal stops sending and exits with its class; a transport
+        // failure is a runtime failure; cancellation sends nothing.
+        assert_eq!(
+            run(
+                vec![
+                    Ok(staged),
+                    Ok(DocPackAnswer::Refused {
+                        refusal: DocPackRefusal::ChunkInvalid
+                    })
+                ],
+                false
+            ),
+            (Ok(ClientExitCode::InvalidInput), 2)
+        );
+        assert_eq!(
+            run(vec![Err(RuntimeTransportError::RuntimeFailed)], false),
+            (Err(CodingDevelopmentClientError::Runtime), 1)
+        );
+        assert_eq!(run(Vec::new(), true), (Ok(ClientExitCode::Cancelled), 0));
+        // An operation that is not an import takes only its own answer kind.
+        let mut catalog = ScriptedCatalog {
+            answers: vec![Ok(accepted)].into(),
+            sent: Vec::new(),
+        };
+        assert_eq!(
+            run_doc_pack_requests(
+                &mut catalog,
+                None,
+                vec![DocPackRequest::List {}],
+                CliOutputFormat::Human,
+                &AtomicBool::new(false),
+            ),
+            Err(CodingDevelopmentClientError::Presentation)
+        );
+    }
+
+    #[test]
+    fn only_the_exact_word_publishes_a_support_bundle() {
+        // Review F3 of `bc1e2d39`: the mapping from the read line to the
+        // answer. The reader trims the line, so any other spelling, a prefix,
+        // a repetition or a lone letter is a different answer and declines.
+        let line = |text: &str| Ok::<_, ()>(LinuxDevelopmentInputLine::Line(text.to_owned()));
+        assert_eq!(
+            support_bundle_answer(line("yes")),
+            SupportBundleAnswer::Confirmed
+        );
+        for declined in [
+            "yes ",
+            " yes",
+            "Yes",
+            "YES",
+            "yesyes",
+            "yes please",
+            "y",
+            "",
+        ] {
+            assert_eq!(
+                support_bundle_answer(line(declined)),
+                SupportBundleAnswer::Declined,
+                "{declined:?}"
+            );
+        }
+        for declined in [
+            Ok(LinuxDevelopmentInputLine::Ended),
+            Ok(LinuxDevelopmentInputLine::TooLong),
+            Err(()),
+        ] {
+            assert_eq!(
+                support_bundle_answer(declined),
+                SupportBundleAnswer::Declined
+            );
+        }
+        assert_eq!(
+            support_bundle_answer(Ok::<_, ()>(LinuxDevelopmentInputLine::Cancelled)),
+            SupportBundleAnswer::Cancelled
+        );
     }
 
     #[test]

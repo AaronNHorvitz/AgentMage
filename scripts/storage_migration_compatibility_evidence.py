@@ -20,7 +20,8 @@ SOURCE_PATH: Final = ROOT / "kernel/engine/src/operational_store.rs"
 READER_TEST_PATH: Final = ROOT / "kernel/engine/src/research_reader_migration_tests.rs"
 JOB_LEDGER_TEST_PATH: Final = ROOT / "kernel/engine/src/job_ledger_migration_tests.rs"
 RUN_HISTORY_TEST_PATH: Final = ROOT / "kernel/engine/src/run_action_history_migration_tests.rs"
-FIXTURE_PATH: Final = ROOT / "kernel/engine/fixtures/operational-store/schema-22.json"
+DOC_PACK_TEST_PATH: Final = ROOT / "kernel/engine/src/doc_pack_migration_tests.rs"
+FIXTURE_PATH: Final = ROOT / "kernel/engine/fixtures/operational-store/schema-23.json"
 COMMANDS: Final = (
     (
         "cargo", "test", "-p", "agentmage-kernel-engine",
@@ -28,12 +29,12 @@ COMMANDS: Final = (
     ),
     (
         "cargo", "test", "-p", "agentmage-kernel-engine",
-        "operational_store::tests::version_twenty_two_schema_matches_fixture_snapshot_and_is_relational",
+        "operational_store::tests::version_twenty_three_schema_matches_fixture_snapshot_and_is_relational",
         "--locked",
     ),
     (
         "cargo", "test", "-p", "agentmage-kernel-engine",
-        "operational_store::tests::version_one_upgrades_through_twenty_two_with_exact_history",
+        "operational_store::tests::version_one_upgrades_through_twenty_three_with_exact_history",
         "--locked",
     ),
     (
@@ -64,6 +65,9 @@ COMMANDS: Final = (
     ),
 )
 MARKERS: Final = (
+    "version_twenty_two_upgrades_to_documentation_packs_preserving_records_and_history ... ok",
+    "failed_version_twenty_three_migration_rolls_back_and_stays_retryable ... ok",
+    "version_twenty_two_corrupt_history_cannot_add_documentation_packs ... ok",
     "version_twenty_one_upgrades_to_run_action_histories_preserving_records_and_history ... ok",
     "failed_version_twenty_two_migration_rolls_back_and_stays_retryable ... ok",
     "version_twenty_one_corrupt_history_cannot_add_run_action_histories ... ok",
@@ -76,8 +80,8 @@ MARKERS: Final = (
     "failed_version_twenty_reader_epoch_keeps_version_nineteen_retryable ... ok",
     "version_eighteen_upgrades_without_losing_existing_records ... ok",
     "failed_version_nineteen_migration_rolls_back_tables_history_and_version ... ok",
-    "version_twenty_two_schema_matches_fixture_snapshot_and_is_relational ... ok",
-    "version_one_upgrades_through_twenty_two_with_exact_history ... ok",
+    "version_twenty_three_schema_matches_fixture_snapshot_and_is_relational ... ok",
+    "version_one_upgrades_through_twenty_three_with_exact_history ... ok",
     "failed_version_two_migration_rolls_back_without_partial_schema ... ok",
     "failed_version_three_migration_rolls_back_all_alterations ... ok",
     "future_schema_and_page_corruption_are_refused ... ok",
@@ -89,12 +93,14 @@ SOURCE_MARKERS: Final = (
     "verify_schema_history_through(connection, 19)?;",
     "verify_schema_history_through(connection, 20)?;",
     "verify_schema_history_through(connection, 21)?;",
+    "verify_schema_history_through(connection, 22)?;",
     "fn verify_schema_history_through(",
     "../migrations/operational-store/0020-research-draft-readers.sql",
     "../migrations/operational-store/0021-job-control-ledgers.sql",
     "../migrations/operational-store/0022-run-action-histories.sql",
-    "const SCHEMA_VERSION: i64 = 22;",
-    "../fixtures/operational-store/schema-22.json",
+    "../migrations/operational-store/0023-documentation-packs.sql",
+    "const SCHEMA_VERSION: i64 = 23;",
+    "../fixtures/operational-store/schema-23.json",
     "fn verify_schema_history(connection: &Connection)",
     "fn failed_version_three_migration_rolls_back_all_alterations()",
     "fn failed_version_two_migration_rolls_back_without_partial_schema()",
@@ -120,6 +126,12 @@ RUN_HISTORY_TEST_MARKERS: Final = (
     "fn version_twenty_one_upgrades_to_run_action_histories_preserving_records_and_history()",
     "fn failed_version_twenty_two_migration_rolls_back_and_stays_retryable()",
     "fn version_twenty_one_corrupt_history_cannot_add_run_action_histories()",
+    "include!(\"doc_pack_migration_tests.rs\");",
+)
+DOC_PACK_TEST_MARKERS: Final = (
+    "fn version_twenty_two_upgrades_to_documentation_packs_preserving_records_and_history()",
+    "fn failed_version_twenty_three_migration_rolls_back_and_stays_retryable()",
+    "fn version_twenty_two_corrupt_history_cannot_add_documentation_packs()",
 )
 MIGRATION_SHA256: Final = (
     "da2acbccbe4e37e1920ce3941b68716de1a095c45bdbcfe37b39ef239cf45a7d",
@@ -144,6 +156,7 @@ MIGRATION_SHA256: Final = (
     "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea",
     "6f27f41680d76642fbaae8efded29934bc2ccb797c75c23d7142986d7414573d",
     "84ed1485d0d2144a00eee86bd5052add809fc18af0c0483348d9fdbe5873ff09",
+    "1b756961aa77b81f4f600ebc2ba9e07564f50b8844d840eac2b20b312a828b12",
 )
 TRUTH: Final = {
     "synthetic_data_only": True,
@@ -177,11 +190,11 @@ def expected_report() -> dict[str, Any]:
         "record_type": "agentmage-storage-migration-compatibility-evidence",
         "story_id": "11.2",
         "task_id": "11.2.3.1",
-        "generated_on": "2026-09-30",
+        "generated_on": "2026-10-01",
         "status": "pass-local-migration-compatibility",
         "canonical_store": "operational-store",
-        "operational_schema_version": 22,
-        "migration_count": 22,
+        "operational_schema_version": 23,
+        "migration_count": 23,
         "commands": [" ".join(command) for command in COMMANDS],
         "required_markers": list(MARKERS),
         "artifacts": [
@@ -191,20 +204,25 @@ def expected_report() -> dict[str, Any]:
             artifact("kernel/engine/fixtures/operational-store/schema-20.json"),
             artifact("kernel/engine/fixtures/operational-store/schema-21.json"),
             artifact("kernel/engine/fixtures/operational-store/schema-22.json"),
+            artifact("kernel/engine/fixtures/operational-store/schema-23.json"),
             artifact("kernel/engine/migrations/operational-store/0020-research-draft-readers.sql"),
             artifact("kernel/engine/migrations/operational-store/0021-job-control-ledgers.sql"),
             artifact("kernel/engine/migrations/operational-store/0022-run-action-histories.sql"),
+            artifact("kernel/engine/migrations/operational-store/0023-documentation-packs.sql"),
             artifact("kernel/engine/src/job_ledger_store.rs"),
             artifact("kernel/engine/src/run_action_history_store.rs"),
+            artifact("kernel/engine/src/doc_pack_store.rs"),
             artifact("kernel/engine/migrations/operational-store/0019-research-budgets.sql"),
             artifact("kernel/engine/src/research_journal.rs"),
             artifact("kernel/engine/src/research_migration_tests.rs"),
             artifact("kernel/engine/src/research_reader_migration_tests.rs"),
             artifact("kernel/engine/src/job_ledger_migration_tests.rs"),
             artifact("kernel/engine/src/run_action_history_migration_tests.rs"),
+            artifact("kernel/engine/src/doc_pack_migration_tests.rs"),
             artifact("docs/decisions/0087-research-draft-reader-version-barrier.md"),
             artifact("docs/decisions/0118-durable-job-control-ledgers.md"),
             artifact("docs/decisions/0129-durable-run-action-histories.md"),
+            artifact("docs/decisions/0130-review-fixes-and-documentation-packs-through-a-catalog-host.md"),
             artifact("docs/verification/story-11-2-storage-migration-compatibility-evidence.md"),
             artifact("scripts/storage_migration_compatibility_evidence.py"),
             artifact("tests/test_storage_migration_compatibility_evidence.py"),
@@ -234,13 +252,17 @@ def validate_run_history_tests(value: str) -> list[str]:
     return [f"run action history migration test source missing marker: {marker}" for marker in RUN_HISTORY_TEST_MARKERS if marker not in value]
 
 
+def validate_doc_pack_tests(value: str) -> list[str]:
+    return [f"documentation pack migration test source missing marker: {marker}" for marker in DOC_PACK_TEST_MARKERS if marker not in value]
+
+
 def validate_fixture(value: Any) -> list[str]:
     failures: list[str] = []
     if not isinstance(value, dict) or value.get("record_type") != "agentmage-operational-store-schema-fixture":
         failures.append("fixture record type is not exact")
         return failures
-    if value.get("schema_version") != 22:
-        failures.append("fixture schema version is not 22")
+    if value.get("schema_version") != 23:
+        failures.append("fixture schema version is not 23")
     migrations = value.get("migrations")
     expected = [
         {"version": index, "sha256": digest}
@@ -299,6 +321,7 @@ def main() -> int:
         failures += validate_reader_tests(READER_TEST_PATH.read_text(encoding="utf-8"))
         failures += validate_job_ledger_tests(JOB_LEDGER_TEST_PATH.read_text(encoding="utf-8"))
         failures += validate_run_history_tests(RUN_HISTORY_TEST_PATH.read_text(encoding="utf-8"))
+        failures += validate_doc_pack_tests(DOC_PACK_TEST_PATH.read_text(encoding="utf-8"))
         failures += validate_fixture(json.loads(FIXTURE_PATH.read_text(encoding="utf-8")))
         failures += validate_raw(raw)
         if failures:
@@ -316,11 +339,12 @@ def main() -> int:
         reader_tests = READER_TEST_PATH.read_text(encoding="utf-8")
         job_ledger_tests = JOB_LEDGER_TEST_PATH.read_text(encoding="utf-8")
         run_history_tests = RUN_HISTORY_TEST_PATH.read_text(encoding="utf-8")
+        doc_pack_tests = DOC_PACK_TEST_PATH.read_text(encoding="utf-8")
         fixture = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
         print(f"storage migration compatibility evidence validation failed: {error}", file=sys.stderr)
         return 1
-    failures = validate_source(source) + validate_reader_tests(reader_tests) + validate_job_ledger_tests(job_ledger_tests) + validate_run_history_tests(run_history_tests) + validate_fixture(fixture) + validate_raw(raw) + validate_report(report)
+    failures = validate_source(source) + validate_reader_tests(reader_tests) + validate_job_ledger_tests(job_ledger_tests) + validate_run_history_tests(run_history_tests) + validate_doc_pack_tests(doc_pack_tests) + validate_fixture(fixture) + validate_raw(raw) + validate_report(report)
     if failures:
         for failure in failures:
             print(f"storage migration compatibility evidence validation failed: {failure}", file=sys.stderr)

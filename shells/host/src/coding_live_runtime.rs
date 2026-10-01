@@ -56,9 +56,9 @@ use agentmage_kernel_engine::{
 };
 
 use crate::coding_action_history::{
-    DecidedJobControl, EndedRunActionHistories, MAX_RUN_ACTION_ENTRIES, PersistedRunChain,
-    RUN_ACTION_HISTORY_OWNER, RunActionChain, RunActionHistory, RunActionHistorySource,
-    RunActionRecorder, StoredChainStart, job_control_draft,
+    DecidedJobControl, MAX_RUN_ACTION_ENTRIES, PersistedRunChain, RUN_ACTION_HISTORY_OWNER,
+    RunActionChain, RunActionHistory, RunActionHistorySource, RunActionRecorder, StoredChainStart,
+    job_control_draft,
 };
 use crate::coding_client::{CodingClientError, LiveCodingCoordinatorPort};
 use crate::coding_context::RunContextInspectionSource;
@@ -765,17 +765,6 @@ where
         // (Decision 0129).
         self.active.remove(key);
         Ok(())
-    }
-
-    fn ended_run_action_histories(
-        &mut self,
-        run_id: &RuntimeRunId,
-    ) -> Result<EndedRunActionHistories, RuntimeTransportError> {
-        // The store admits one connection, which a held run keeps open.
-        if !self.prepared.is_empty() || !self.active.is_empty() {
-            return Err(RuntimeTransportError::RequestDenied);
-        }
-        self.factory.read_ended_run_action_histories(run_id)
     }
 }
 

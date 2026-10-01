@@ -228,12 +228,14 @@ and answer the prompts on the terminal.
 - Ended run: the host also keeps each run's three histories in its encrypted
   operational store, closed when the run is released (Decision 0129). After the host
   has ended, run `python3 -m scripts.coding_harness ended-run --root "$demo" --run
-  RUN_ID`, where `RUN_ID` is the `run_id` of the outcome row. The host composes no run.
-  It reads the stored chains back, and the CLI prints each one with whether it was
+  RUN_ID`, where `RUN_ID` is the `run_id` of the outcome row. The CLI launches the
+  catalog host (Decision 0130), which composes no run and needs no native Git. It
+  reads the stored chains back, and the CLI prints each one with whether it was
   closed and whether it is complete. Add `--action-history-export effects:1:3` for a
   redacted export of a range. A chain whose host ended before the run did, or that was
   resumed after a restart, is shown as never closed or incomplete, never as a complete
-  record.
+  record. A run recorded before schema 22 has no stored chain; when it is resumed
+  after a restart, its chains begin there, marked incomplete.
 - Support bundle: create a private directory (`mkdir -m 700 "$demo-bundles"`) and add
   `--support-bundle "$demo-bundles"` to `start` (Decision 0128). After the invocation
   ends, whether it succeeded, failed or could not start, standard error shows a preview
@@ -245,6 +247,54 @@ and answer the prompts on the terminal.
   component the CLI did not observe is reported missing. Nothing is uploaded, and
   `--approve-this-run` does not answer this question. A cancelled invocation asks
   nothing. Omit `--log-dir` to see the preview and question on the terminal.
+
+### Documentation packs through the catalog host
+
+Documentation packs work in the implementation lane too, because the catalog host
+(Decision 0130) builds no repository composition and needs no native Git, `bwrap` or
+user manager. It validates the same disposable activation, serves the authenticated
+session of the CLI that launched it, keeps the packs in its encrypted operational
+store and ends with the CLI. Nothing is downloaded: a pack is a directory of Markdown
+or plain text files with a sealed `manifest.json` that you already hold. To try it
+with a small synthetic pack (its text was written for this project):
+
+```sh
+python3 -m scripts.coding_harness setup --root "$demo"      # if not already set up
+python3 -m scripts.coding_harness doc-pack-sample --directory "$demo-pack"
+python3 -m scripts.coding_harness doc-pack --root "$demo" \
+  --import "$demo-pack" --allow-license LicenseRef-agentmage-sample
+python3 -m scripts.coding_harness doc-pack --root "$demo" --list
+python3 -m scripts.coding_harness doc-pack --root "$demo" --search 'remote cache'
+python3 -m scripts.coding_harness doc-pack --root "$demo" --inspect agentmage-sample-guide
+python3 -m scripts.coding_harness doc-pack --root "$demo" --delete agentmage-sample-guide
+```
+
+The wrapper passes each operation to the CLI's `--doc-pack-import`,
+`--doc-pack-list`, `--doc-pack-inspect`, `--doc-pack-delete PACK[@VERSION]` and
+`--doc-pack-search TERMS [--doc-pack PACK] [--include-history]`, and the CLI prints one
+JSON row per result (the CLI alone prints text lines without `--json`).
+
+- An import names every license you accept for it with `--allow-license`; any other
+  license is refused with `doc-pack.license-not-allowed` (exit 4). The CLI reads the
+  manifest and every listed file without following links, sends them to the host in
+  chunks of at most 1 MiB, and keeps the host's receipt only when it names the manifest
+  it sent and used no network.
+- A refresh is an import of a newer version with `--refresh-version` naming the
+  current one. The old version is then searched only with `--include-history`, and it
+  is deleted 30 days after it was superseded; each operation applies that retention
+  first and reports what it deleted.
+- A search returns at most 20 cited fragments of current versions, each with its
+  pack, version, path, lines and citation digest; its text is escaped for the terminal.
+- A refusal prints one content-free code on standard error and exits with its class
+  (2 for malformed input, 4 for a policy refusal or an unknown pack, 5 when the store
+  or clock is unavailable, 7 at a bound).
+
+**Current lane result:** the actual rebuilt CLI and catalog host imported, listed,
+searched, inspected and deleted the sample pack, refused another license, and read
+back an ended run; the batch record lists the exact results. The search is the
+deterministic knowledge retrieval through the CLI; no coding run's model reads a pack
+yet. Language server observations and recipe plans remain AMR-05.9.5.2 and
+AMR-05.9.5.3.
 
 To run the whole declared scripted matrix in one step instead (edits, denial,
 cancellation, pause and resume, stale approvals, rollback and the other cases, each in

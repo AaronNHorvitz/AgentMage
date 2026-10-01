@@ -913,25 +913,81 @@ RUN_ID = re.compile(r"[A-Za-z0-9._:-]{1,128}")
 
 def ended_run(base: Path, run_id: str, action_history_export: str | None = None) -> int:
     """Reads an ended run's stored action histories back through the actual
-    CLI and host (Decision 0129). The host composes no run; it opens the store
-    only for the read. The same run record reservation as `start` keeps a
+    CLI and catalog host (Decisions 0129 and 0130). The catalog host composes
+    no run; it opens the store only for the read."""
+    if RUN_ID.fullmatch(run_id) is None:
+        raise HarnessError("coding.harness.run-id-denied")
+    arguments = ["--ended-run", run_id]
+    if action_history_export is not None:
+        arguments.extend(("--action-history-export", export_selection(action_history_export)))
+    return catalog(base, arguments)
+
+
+PACK_ID = re.compile(r"[a-z][a-z0-9.-]{0,63}")
+LICENSE_ID = re.compile(r"[A-Za-z0-9.+-]{1,64}")
+PACK_VERSION = re.compile(r"(0|[1-9][0-9]{0,9})\.(0|[1-9][0-9]{0,9})\.(0|[1-9][0-9]{0,9})")
+
+
+def doc_pack_arguments(arguments: argparse.Namespace) -> list[str]:
+    """The CLI arguments of one documentation pack operation (Decision 0130),
+    in the closed forms the CLI accepts."""
+    if arguments.import_directory is not None:
+        directory = arguments.import_directory
+        if not directory.is_absolute() or not directory.is_dir():
+            raise HarnessError("coding.harness.doc-pack-directory-denied")
+        licenses = arguments.allow_license or []
+        if not licenses or any(LICENSE_ID.fullmatch(value) is None for value in licenses):
+            raise HarnessError("coding.harness.doc-pack-license-denied")
+        result = ["--doc-pack-import", str(directory)]
+        for value in licenses:
+            result.extend(("--allow-license", value))
+        if arguments.refresh_version is not None:
+            if PACK_VERSION.fullmatch(arguments.refresh_version) is None:
+                raise HarnessError("coding.harness.doc-pack-version-denied")
+            result.extend(("--refresh-version", arguments.refresh_version))
+        return result
+    if arguments.allow_license or arguments.refresh_version is not None:
+        raise HarnessError("coding.harness.doc-pack-arguments-denied")
+    if arguments.search is not None:
+        if not arguments.search.split() or len(arguments.search) > 2_048:
+            raise HarnessError("coding.harness.doc-pack-query-denied")
+        result = ["--doc-pack-search", arguments.search]
+        if arguments.pack is not None:
+            if PACK_ID.fullmatch(arguments.pack) is None:
+                raise HarnessError("coding.harness.doc-pack-id-denied")
+            result.extend(("--doc-pack", arguments.pack))
+        if arguments.include_history:
+            result.append("--include-history")
+        return result
+    if arguments.pack is not None or arguments.include_history:
+        raise HarnessError("coding.harness.doc-pack-arguments-denied")
+    if arguments.list:
+        return ["--doc-pack-list"]
+    if arguments.inspect is not None:
+        if PACK_ID.fullmatch(arguments.inspect) is None:
+            raise HarnessError("coding.harness.doc-pack-id-denied")
+        return ["--doc-pack-inspect", arguments.inspect]
+    pack_id, _, version = arguments.delete.partition("@")
+    if PACK_ID.fullmatch(pack_id) is None or "@" in arguments.delete and PACK_VERSION.fullmatch(version) is None:
+        raise HarnessError("coding.harness.doc-pack-id-denied")
+    return ["--doc-pack-delete", arguments.delete]
+
+
+def catalog(base: Path, arguments: list[str]) -> int:
+    """Runs one catalog operation through the actual CLI and catalog host
+    (Decision 0130). The same run record reservation as `start` keeps a
     second invocation out of the root while it runs."""
     base = base.resolve(strict=True)
     state, disposable, workspace = paths(base)
     current = diagnose(base)
     if current["lifecycle"] != "ready" or not current["transport_path"]:
         raise HarnessError("coding.harness.start-state-denied")
-    if RUN_ID.fullmatch(run_id) is None:
-        raise HarnessError("coding.harness.run-id-denied")
     executable = binary("agentmage")
     command = [
         str(executable), "--json", "code", "--development",
         "--state-root", str(state), "--disposable-root", str(disposable),
-        "--workspace-root", str(workspace), "--scenario", "no-op",
-        "--ended-run", run_id,
+        "--workspace-root", str(workspace), *arguments,
     ]
-    if action_history_export is not None:
-        command.extend(("--action-history-export", export_selection(action_history_export)))
     reservation = RunRecordReservation(state, base, executable)
     process = None
     try:
@@ -949,6 +1005,70 @@ def ended_run(base: Path, run_id: str, action_history_export: str | None = None)
                     process.wait(timeout=10)
         finally:
             reservation.close(child_reaped=process is None or process.poll() is not None)
+
+
+SAMPLE_PACK_FILES = {
+    "guide/cache.md": (
+        "# Build cache\n\n"
+        "The build cache keeps compiled units between runs.\n"
+        "Clear it with the clean step when a toolchain changes.\n\n"
+        "## Remote cache\n\n"
+        "A remote cache is not used by this sample; every entry stays local.\n"
+    ),
+    "guide/tests.md": (
+        "# Running tests\n\n"
+        "Run the validation script after each change to the calculator.\n"
+        "A failing test names the function and the expected value.\n"
+    ),
+    "notes.txt": "Synthetic offline notes written for the AgentMage sample pack, version {version}.\n",
+}
+
+
+def write_sample_pack(directory: Path, version: str, retrieved_on: str) -> dict:
+    """Writes a small sealed documentation pack of synthetic text into a new
+    private directory, for trying the documentation pack commands (Decision
+    0130). The manifest is sealed exactly as the knowledge component seals
+    it: the SHA-256 of its compact encoding with the digest field empty."""
+    match = PACK_VERSION.fullmatch(version)
+    if match is None or re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", retrieved_on) is None:
+        raise HarnessError("coding.harness.doc-pack-sample-denied")
+    if not directory.is_absolute() or directory.exists() or directory.is_symlink():
+        raise HarnessError("coding.harness.doc-pack-sample-target-denied")
+    directory.mkdir(mode=0o700)
+    files = []
+    for path, template in sorted(SAMPLE_PACK_FILES.items()):
+        # Each version's notes name it, so a search with history finds both.
+        text = template.replace("{version}", version)
+        target = directory / path
+        target.parent.mkdir(mode=0o700, exist_ok=True)
+        private_file(target, text)
+        encoded = text.encode("utf-8")
+        files.append({
+            "path": path,
+            "media_type": "markdown" if path.endswith(".md") else "plain_text",
+            "byte_len": len(encoded),
+            "sha256": hashlib.sha256(encoded).hexdigest(),
+        })
+    manifest = {
+        "schema_version": 1,
+        "pack_id": "agentmage-sample-guide",
+        "version": {
+            "major": int(match.group(1)), "minor": int(match.group(2)), "patch": int(match.group(3)),
+        },
+        "title": "AgentMage sample guide",
+        "publisher": "AgentMage synthetic sample",
+        "license": "LicenseRef-agentmage-sample",
+        "retrieved_on": retrieved_on,
+        "fresh_for_days": 30,
+        "files": files,
+        "total_bytes": sum(file["byte_len"] for file in files),
+        "manifest_sha256": "",
+    }
+    manifest["manifest_sha256"] = hashlib.sha256(
+        json.dumps(manifest, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    ).hexdigest()
+    private_file(directory / "manifest.json", json.dumps(manifest, indent=2) + "\n")
+    return manifest
 
 
 def stop(base: Path) -> None:
@@ -1041,6 +1161,22 @@ def parser() -> argparse.ArgumentParser:
     ended_run_command.add_argument("--root", type=Path, required=True)
     ended_run_command.add_argument("--run", required=True)
     ended_run_command.add_argument("--action-history-export", type=export_selection)
+    doc_pack_command = commands.add_parser("doc-pack")
+    doc_pack_command.add_argument("--root", type=Path, required=True)
+    operation = doc_pack_command.add_mutually_exclusive_group(required=True)
+    operation.add_argument("--import", dest="import_directory", type=Path)
+    operation.add_argument("--list", action="store_true")
+    operation.add_argument("--inspect")
+    operation.add_argument("--delete")
+    operation.add_argument("--search")
+    doc_pack_command.add_argument("--allow-license", action="append")
+    doc_pack_command.add_argument("--refresh-version")
+    doc_pack_command.add_argument("--pack")
+    doc_pack_command.add_argument("--include-history", action="store_true")
+    sample_command = commands.add_parser("doc-pack-sample")
+    sample_command.add_argument("--directory", type=Path, required=True)
+    sample_command.add_argument("--version", default="1.0.0")
+    sample_command.add_argument("--retrieved-on", default=time.strftime("%Y-%m-%d", time.gmtime()))
     start_command = commands.add_parser("start")
     start_command.add_argument("--root", type=Path, required=True)
     start_command.add_argument(
@@ -1098,6 +1234,19 @@ def main() -> int:
             return 0
         if arguments.command == "ended-run":
             return ended_run(arguments.root, arguments.run, arguments.action_history_export)
+        if arguments.command == "doc-pack":
+            return catalog(arguments.root, doc_pack_arguments(arguments))
+        if arguments.command == "doc-pack-sample":
+            manifest = write_sample_pack(
+                arguments.directory, arguments.version, arguments.retrieved_on
+            )
+            print(json.dumps({
+                "directory": str(arguments.directory),
+                "license": manifest["license"],
+                "manifest_sha256": manifest["manifest_sha256"],
+                "pack_id": manifest["pack_id"],
+            }, sort_keys=True))
+            return 0
         return start(
             arguments.root, arguments.scenario, arguments.objective,
             arguments.approve_this_run, arguments.stale_approval_probe, arguments.log_dir,

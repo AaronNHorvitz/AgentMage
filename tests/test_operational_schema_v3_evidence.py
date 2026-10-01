@@ -26,7 +26,7 @@ class OperationalSchemaV3EvidenceTests(unittest.TestCase):
 
     def test_success_requires_exact_current_command_marker(self) -> None:
         arguments, marker = evidence.COMMAND_SPECS[0]
-        self.assertEqual(marker, "56 passed; 0 failed")
+        self.assertEqual(marker, "59 passed; 0 failed")
         result = subprocess.CompletedProcess(arguments, 0, marker, "")
         with mock.patch.object(evidence.subprocess, "run", return_value=result):
             self.assertEqual(evidence.run_checked(arguments, marker), evidence.command_record(arguments, marker))

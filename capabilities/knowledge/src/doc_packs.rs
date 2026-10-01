@@ -21,8 +21,8 @@ use sha2::{Digest, Sha256};
 
 use crate::domain::secret_candidate;
 use crate::{
-    KnowledgeFileType, KnowledgeSourceAuthority, KnowledgeSourceDocument, KnowledgeSourceFragment,
-    KnowledgeSourceFragmentKind, ObsidianSourceRange,
+    KnowledgeContextQuery, KnowledgeFileType, KnowledgeSourceAuthority, KnowledgeSourceDocument,
+    KnowledgeSourceFragment, KnowledgeSourceFragmentKind, ObsidianSourceRange, retrieve_knowledge,
 };
 
 const SCHEMA_VERSION: u16 = 1;
@@ -37,6 +37,8 @@ const MAX_FRESH_DAYS: u32 = 3_650;
 const MAX_RETENTION_DAYS: u32 = 3_650;
 const MAX_FRAGMENT_BYTES: usize = 4 * 1024;
 const MAX_VERSION_FRAGMENTS: u64 = 200_000;
+const MAX_SEARCH_RESULTS: u32 = 20;
+const MAX_SEARCH_CONTEXT_BYTES: u64 = 64 * 1024;
 const NOTE_KIND: &str = "documentation-pack";
 
 /// Semantic version of a pack; later fields order within earlier ones.
@@ -245,6 +247,74 @@ pub struct DocPackIndex {
     pub withheld_fragment_count: u64,
 }
 
+/// One kept version of an exported catalog state.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DocPackKeptState {
+    /// The version's sealed manifest.
+    pub manifest: DocPackManifest,
+    /// Its file bytes, keyed by path.
+    pub contents: BTreeMap<String, Vec<u8>>,
+    /// ISO date it was superseded; none while it is current.
+    pub superseded_on: Option<String>,
+}
+
+/// The complete state of a catalog, which its durable owner keeps and later
+/// restores (Decision 0130).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct DocPackCatalogState {
+    /// Every kept version, ordered by pack and then version.
+    pub versions: Vec<DocPackKeptState>,
+    /// Every deletion so far, in order.
+    pub deletions: Vec<DocPackDeletion>,
+    /// ISO date of the last change; none before the first.
+    pub last_changed_on: Option<String>,
+}
+
+/// A search of the kept packs.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DocPackSearchQuery {
+    /// Case-insensitive terms, all required.
+    pub terms: Vec<String>,
+    /// One pack, or every pack.
+    pub pack_id: Option<String>,
+    /// Whether superseded versions may answer.
+    pub include_history: bool,
+    /// Most hits, at most 20.
+    pub max_results: u32,
+}
+
+/// One cited fragment a search found.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DocPackSearchHit {
+    /// Pack identity.
+    pub pack_id: String,
+    /// Version the fragment belongs to.
+    pub version: DocPackVersion,
+    /// Whether that version is superseded.
+    pub historical: bool,
+    /// File path inside the pack.
+    pub path: String,
+    /// First line of the fragment.
+    pub start_line: u32,
+    /// Last line of the fragment.
+    pub end_line: u32,
+    /// Whether the fragment is a heading.
+    pub heading: bool,
+    /// The bounded exact cited text.
+    pub text: String,
+    /// The retrieval's citation digest.
+    pub citation_sha256: String,
+}
+
+/// What a search found, in the retrieval's deterministic order.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DocPackSearchResult {
+    /// Ranked hits.
+    pub hits: Vec<DocPackSearchHit>,
+    /// Matching fragments left out by the result or byte bound.
+    pub omitted_count: u64,
+}
+
 /// Content-free documentation pack failure. A failed operation changes
 /// nothing.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -273,6 +343,10 @@ pub enum DocPackError {
     InvalidDate,
     /// The policy is out of bounds.
     PolicyInvalid,
+    /// The search query is empty, too long or out of bounds.
+    QueryInvalid,
+    /// A restored state is not one the catalog's own operations produce.
+    StateInvalid,
 }
 
 impl DocPackError {
@@ -292,6 +366,8 @@ impl DocPackError {
             Self::ResourceLimit => "doc-pack.resource-limit",
             Self::InvalidDate => "doc-pack.invalid-date",
             Self::PolicyInvalid => "doc-pack.policy-invalid",
+            Self::QueryInvalid => "doc-pack.query-invalid",
+            Self::StateInvalid => "doc-pack.state-invalid",
         }
     }
 }
@@ -417,24 +493,7 @@ impl DocPackCatalog {
         if !policy.allowed_licenses.contains(&manifest.license) {
             return Err(DocPackError::LicenseNotAllowed);
         }
-        if contents.len() != manifest.files.len() {
-            return Err(DocPackError::ContentMismatch);
-        }
-        for file in &manifest.files {
-            let bytes = contents
-                .get(&file.path)
-                .ok_or(DocPackError::ContentMismatch)?;
-            if bytes.len() as u64 != file.byte_len || sha256_hex(bytes) != file.sha256 {
-                return Err(DocPackError::ContentMismatch);
-            }
-            let text = std::str::from_utf8(bytes).map_err(|_| DocPackError::ContentInvalid)?;
-            if text
-                .chars()
-                .any(|character| character.is_control() && !matches!(character, '\n' | '\r' | '\t'))
-            {
-                return Err(DocPackError::ContentInvalid);
-            }
-        }
+        check_contents(manifest, contents)?;
         let kept = self.packs.get(&manifest.pack_id);
         if let Some(existing) = kept.and_then(|versions| versions.get(&manifest.version)) {
             return Err(
@@ -627,6 +686,217 @@ impl DocPackCatalog {
         self.total_bytes
     }
 
+    /// The identities of every pack with a kept version.
+    #[must_use]
+    pub fn pack_ids(&self) -> Vec<String> {
+        self.packs.keys().cloned().collect()
+    }
+
+    /// The complete state, for the catalog's durable owner.
+    pub fn state(&self) -> Result<DocPackCatalogState, DocPackError> {
+        let versions = self
+            .packs
+            .values()
+            .flat_map(BTreeMap::values)
+            .map(|kept| {
+                Ok(DocPackKeptState {
+                    manifest: kept.manifest.clone(),
+                    contents: kept.contents.clone(),
+                    superseded_on: kept.superseded_on.map(day_text).transpose()?,
+                })
+            })
+            .collect::<Result<Vec<_>, DocPackError>>()?;
+        Ok(DocPackCatalogState {
+            versions,
+            deletions: self.deletions.clone(),
+            last_changed_on: if self.last_day == 0 {
+                None
+            } else {
+                Some(day_text(self.last_day)?)
+            },
+        })
+    }
+
+    /// Restores a catalog from a kept state. Everything an import, retention
+    /// or deletion checked is checked again: every manifest seal, file length,
+    /// digest and text rule, the fragment and catalog bounds, the order of
+    /// versions, that at most one version of a pack is current and that it is
+    /// the newest, that supersession days follow the versions, and that no
+    /// date passes the last change.
+    pub fn restore(state: DocPackCatalogState) -> Result<Self, DocPackError> {
+        let invalid = DocPackError::StateInvalid;
+        let last_day = match &state.last_changed_on {
+            Some(day) => day_number(day).map_err(|_| invalid)?,
+            None if state.versions.is_empty() && state.deletions.is_empty() => 0,
+            None => return Err(invalid),
+        };
+        let mut catalog = Self {
+            packs: BTreeMap::new(),
+            deletions: Vec::with_capacity(state.deletions.len()),
+            total_bytes: 0,
+            last_day,
+        };
+        let mut previous: Option<(String, DocPackVersion)> = None;
+        for kept in state.versions {
+            let manifest = &kept.manifest;
+            verify_manifest(manifest).map_err(|_| invalid)?;
+            let key = (manifest.pack_id.clone(), manifest.version);
+            if previous.as_ref().is_some_and(|previous| *previous >= key) {
+                return Err(invalid);
+            }
+            previous = Some(key);
+            check_contents(manifest, &kept.contents).map_err(|_| invalid)?;
+            let retrieved = day_number(&manifest.retrieved_on).map_err(|_| invalid)?;
+            let superseded_on = kept
+                .superseded_on
+                .as_deref()
+                .map(day_number)
+                .transpose()
+                .map_err(|_| invalid)?;
+            if retrieved > last_day
+                || superseded_on.is_some_and(|day| day < retrieved || day > last_day)
+            {
+                return Err(invalid);
+            }
+            let version = KeptVersion {
+                manifest: manifest.clone(),
+                contents: kept.contents,
+                superseded_on,
+            };
+            version_documents(&version).map_err(|_| invalid)?;
+            catalog.total_bytes = catalog
+                .total_bytes
+                .checked_add(manifest.total_bytes)
+                .filter(|total| *total <= MAX_CATALOG_BYTES)
+                .ok_or(invalid)?;
+            let versions = catalog.packs.entry(manifest.pack_id.clone()).or_default();
+            // Versions arrive in order, so the previous one is the newest
+            // kept so far: it must already be superseded, no later than this
+            // one is.
+            if let Some(older) = versions.values().next_back() {
+                match (older.superseded_on, superseded_on) {
+                    (Some(older_day), Some(day)) if older_day <= day => {}
+                    (Some(_), None) => {}
+                    _ => return Err(invalid),
+                }
+            }
+            versions.insert(manifest.version, version);
+        }
+        let mut last_deleted = 0;
+        for deletion in state.deletions {
+            let day = day_number(&deletion.deleted_on).map_err(|_| invalid)?;
+            if !plain_pack_id(&deletion.pack_id)
+                || !valid_sha256(&deletion.manifest_sha256)
+                || day < last_deleted
+                || day > last_day
+            {
+                return Err(invalid);
+            }
+            last_deleted = day;
+            catalog.deletions.push(deletion);
+        }
+        Ok(catalog)
+    }
+
+    /// Searches the kept packs through the deterministic knowledge retrieval,
+    /// on a day no earlier than the last change. Only current versions answer
+    /// unless history is included.
+    pub fn search(
+        &self,
+        query: &DocPackSearchQuery,
+        today: &str,
+    ) -> Result<DocPackSearchResult, DocPackError> {
+        self.day(today)?;
+        if query.max_results == 0 || query.max_results > MAX_SEARCH_RESULTS {
+            return Err(DocPackError::QueryInvalid);
+        }
+        let pack_ids = match &query.pack_id {
+            Some(pack_id) if self.packs.contains_key(pack_id) => vec![pack_id.clone()],
+            Some(_) => return Err(DocPackError::NotFound),
+            None => self.pack_ids(),
+        };
+        let mut documents = Vec::new();
+        for pack_id in &pack_ids {
+            documents.extend(self.index(pack_id)?.documents);
+        }
+        let mut roots = documents
+            .iter()
+            .map(|document| document.root.clone())
+            .collect::<Vec<_>>();
+        roots.dedup();
+        if roots.is_empty() {
+            return Ok(DocPackSearchResult {
+                hits: Vec::new(),
+                omitted_count: 0,
+            });
+        }
+        let result = retrieve_knowledge(
+            &KnowledgeContextQuery {
+                terms: query.terms.clone(),
+                phrases: Vec::new(),
+                roots,
+                date_from: None,
+                date_to: None,
+                as_of_date: today.to_owned(),
+                file_types: BTreeSet::from([KnowledgeFileType::Markdown, KnowledgeFileType::Text]),
+                authorities: BTreeSet::from([KnowledgeSourceAuthority::DirectEvidence]),
+                include_historical: query.include_history,
+                max_results: query.max_results,
+                max_context_bytes: MAX_SEARCH_CONTEXT_BYTES,
+            },
+            &documents,
+        )
+        .map_err(|error| match error {
+            crate::KnowledgeRetrievalError::ResourceLimit => DocPackError::ResourceLimit,
+            _ => DocPackError::QueryInvalid,
+        })?;
+        let hits = result
+            .hits
+            .into_iter()
+            .map(|hit| {
+                let (pack_id, version) = self
+                    .version_of_workspace(hit.path.workspace_id().as_str())
+                    .ok_or(DocPackError::NotFound)?;
+                let historical = self
+                    .packs
+                    .get(&pack_id)
+                    .and_then(|versions| versions.get(&version))
+                    .is_none_or(|kept| kept.superseded_on.is_some());
+                Ok(DocPackSearchHit {
+                    pack_id,
+                    version,
+                    historical,
+                    path: hit
+                        .path
+                        .components()
+                        .iter()
+                        .map(|component| component.as_str())
+                        .collect::<Vec<_>>()
+                        .join("/"),
+                    start_line: hit.source_range.start_line,
+                    end_line: hit.source_range.end_line,
+                    heading: hit.fragment_kind == KnowledgeSourceFragmentKind::Heading,
+                    text: hit.text,
+                    citation_sha256: hit.citation_sha256,
+                })
+            })
+            .collect::<Result<Vec<_>, DocPackError>>()?;
+        Ok(DocPackSearchResult {
+            hits,
+            omitted_count: result.omitted_candidate_count,
+        })
+    }
+
+    /// The pack and version a search workspace identity names.
+    fn version_of_workspace(&self, workspace: &str) -> Option<(String, DocPackVersion)> {
+        self.packs.iter().find_map(|(pack_id, versions)| {
+            versions.keys().find_map(|version| {
+                (pack_workspace(pack_id, *version).as_str() == workspace)
+                    .then(|| (pack_id.clone(), *version))
+            })
+        })
+    }
+
     fn remove(
         &mut self,
         pack_id: &str,
@@ -659,6 +929,33 @@ impl DocPackCatalog {
         }
         Ok(day)
     }
+}
+
+/// Checks that the file bytes are exactly the manifest's files and are text
+/// without control characters.
+fn check_contents(
+    manifest: &DocPackManifest,
+    contents: &BTreeMap<String, Vec<u8>>,
+) -> Result<(), DocPackError> {
+    if contents.len() != manifest.files.len() {
+        return Err(DocPackError::ContentMismatch);
+    }
+    for file in &manifest.files {
+        let bytes = contents
+            .get(&file.path)
+            .ok_or(DocPackError::ContentMismatch)?;
+        if bytes.len() as u64 != file.byte_len || sha256_hex(bytes) != file.sha256 {
+            return Err(DocPackError::ContentMismatch);
+        }
+        let text = std::str::from_utf8(bytes).map_err(|_| DocPackError::ContentInvalid)?;
+        if text
+            .chars()
+            .any(|character| character.is_control() && !matches!(character, '\n' | '\r' | '\t'))
+        {
+            return Err(DocPackError::ContentInvalid);
+        }
+    }
+    Ok(())
 }
 
 fn current_version(versions: &BTreeMap<DocPackVersion, KeptVersion>) -> Option<DocPackVersion> {
@@ -1646,5 +1943,433 @@ mod tests {
                 .any(|hit| hit.path.workspace_id().as_str() == "doc-pack:build-tool-guide:1.0.0")
         );
         assert!(!history.semantic_components_used);
+    }
+
+    const V3: DocPackVersion = DocPackVersion {
+        major: 2,
+        minor: 0,
+        patch: 0,
+    };
+
+    /// A catalog with a superseded and a current version of one pack, a
+    /// second pack and one deletion.
+    fn populated() -> DocPackCatalog {
+        let mut catalog = DocPackCatalog::new();
+        let (first, first_contents) = guide(V1, "2026-01-01");
+        // The newer version rewrites the paragraph, so a search with history
+        // finds both versions of it; identical fragments are deduplicated.
+        let (second, second_contents) = pack(
+            V2,
+            "2026-01-15",
+            &[
+                (
+                    "guide/cache.md",
+                    "# Build cache\n\nThe cache keeps compiled units and test results.\n",
+                ),
+                ("notes.txt", "Offline notes about the cache.\n"),
+            ],
+        );
+        catalog
+            .import(
+                &policy(),
+                &first,
+                &first_contents,
+                DocPackImportIntent::New,
+                "2026-01-02",
+            )
+            .unwrap();
+        catalog
+            .import(
+                &policy(),
+                &second,
+                &second_contents,
+                DocPackImportIntent::Refresh { replaces: V1 },
+                "2026-02-01",
+            )
+            .unwrap();
+        let (other, other_contents) = other_pack(V1, "2026-01-20");
+        catalog
+            .import(
+                &policy(),
+                &other,
+                &other_contents,
+                DocPackImportIntent::New,
+                "2026-02-02",
+            )
+            .unwrap();
+        let (doomed, doomed_contents) = pack_named("doomed-pack", V1, "2026-01-20");
+        catalog
+            .import(
+                &policy(),
+                &doomed,
+                &doomed_contents,
+                DocPackImportIntent::New,
+                "2026-02-02",
+            )
+            .unwrap();
+        catalog.delete("doomed-pack", None, "2026-02-03").unwrap();
+        catalog
+    }
+
+    fn pack_named(
+        pack_id: &str,
+        version: DocPackVersion,
+        retrieved_on: &str,
+    ) -> (DocPackManifest, BTreeMap<String, Vec<u8>>) {
+        let (manifest, contents) = pack(
+            version,
+            retrieved_on,
+            &[("index.md", "# Overview\n\nThe linker joins objects.\n")],
+        );
+        (
+            reseal(&manifest, |value| value.pack_id = pack_id.to_owned()).unwrap(),
+            contents,
+        )
+    }
+
+    fn other_pack(
+        version: DocPackVersion,
+        retrieved_on: &str,
+    ) -> (DocPackManifest, BTreeMap<String, Vec<u8>>) {
+        pack_named("linker-notes", version, retrieved_on)
+    }
+
+    #[test]
+    fn a_catalog_state_restores_exactly_and_keeps_working() {
+        // Decision 0130: the durable owner keeps the state and restores it.
+        assert_eq!(
+            DocPackCatalog::new().state().unwrap(),
+            DocPackCatalogState::default()
+        );
+        assert_eq!(
+            DocPackCatalog::restore(DocPackCatalogState::default()).unwrap(),
+            DocPackCatalog::new()
+        );
+        let catalog = populated();
+        let state = catalog.state().unwrap();
+        assert_eq!(state.versions.len(), 3);
+        assert_eq!(
+            state
+                .versions
+                .iter()
+                .map(|kept| (
+                    kept.manifest.pack_id.as_str(),
+                    kept.manifest.version,
+                    kept.superseded_on.as_deref()
+                ))
+                .collect::<Vec<_>>(),
+            [
+                ("build-tool-guide", V1, Some("2026-02-01")),
+                ("build-tool-guide", V2, None),
+                ("linker-notes", V1, None),
+            ]
+        );
+        assert_eq!(state.deletions.len(), 1);
+        assert_eq!(state.last_changed_on.as_deref(), Some("2026-02-03"));
+        let mut restored = DocPackCatalog::restore(state.clone()).unwrap();
+        assert_eq!(restored, catalog);
+        assert_eq!(restored.state().unwrap(), state);
+        // The restored catalog decides later operations as the original does.
+        let mut original = catalog;
+        let (third, third_contents) = guide(V3, "2026-02-10");
+        for catalog in [&mut original, &mut restored] {
+            assert_eq!(
+                catalog.import(
+                    &policy(),
+                    &third,
+                    &third_contents,
+                    DocPackImportIntent::Refresh { replaces: V1 },
+                    "2026-02-10",
+                ),
+                Err(DocPackError::IntentMismatch)
+            );
+            assert_eq!(
+                catalog.apply_retention(&policy(), "2026-02-02"),
+                Err(DocPackError::InvalidDate)
+            );
+            catalog
+                .import(
+                    &policy(),
+                    &third,
+                    &third_contents,
+                    DocPackImportIntent::Refresh { replaces: V2 },
+                    "2026-02-10",
+                )
+                .unwrap();
+            catalog.apply_retention(&policy(), "2026-03-04").unwrap();
+        }
+        assert_eq!(original, restored);
+        assert_eq!(
+            original
+                .inspect(&policy(), "build-tool-guide", "2026-03-04")
+                .unwrap()
+                .versions
+                .len(),
+            2
+        );
+    }
+
+    #[test]
+    fn a_restored_state_is_refused_unless_the_catalogs_own_operations_could_produce_it() {
+        let state = populated().state().unwrap();
+        type StateChange = Box<dyn Fn(&mut DocPackCatalogState)>;
+        let refused: Vec<(&str, StateChange)> = vec![
+            (
+                "unsealed manifest",
+                Box::new(|state| state.versions[0].manifest.title = "Changed".to_owned()),
+            ),
+            (
+                "changed content",
+                Box::new(|state| {
+                    state.versions[0].contents.insert(
+                        "notes.txt".to_owned(),
+                        b"Offline notes about the cachE.\n".to_vec(),
+                    );
+                }),
+            ),
+            (
+                "missing content",
+                Box::new(|state| {
+                    state.versions[0].contents.remove("notes.txt");
+                }),
+            ),
+            (
+                "versions out of order",
+                Box::new(|state| state.versions.swap(0, 1)),
+            ),
+            (
+                "duplicate version",
+                Box::new(|state| {
+                    let copy = state.versions[2].clone();
+                    state.versions.push(copy);
+                }),
+            ),
+            (
+                "two current versions",
+                Box::new(|state| state.versions[0].superseded_on = None),
+            ),
+            (
+                "the current version is not the newest",
+                Box::new(|state| {
+                    state.versions[0].superseded_on = None;
+                    state.versions[1].superseded_on = Some("2026-02-01".to_owned());
+                }),
+            ),
+            (
+                "superseded before its content was obtained",
+                Box::new(|state| state.versions[0].superseded_on = Some("2025-12-31".to_owned())),
+            ),
+            (
+                "superseded after the last change",
+                Box::new(|state| state.versions[0].superseded_on = Some("2026-02-04".to_owned())),
+            ),
+            (
+                "obtained after the last change",
+                Box::new(|state| state.last_changed_on = Some("2026-01-10".to_owned())),
+            ),
+            (
+                "a malformed supersession day",
+                Box::new(|state| state.versions[0].superseded_on = Some("2026-02-30".to_owned())),
+            ),
+            (
+                "no last change with kept versions",
+                Box::new(|state| state.last_changed_on = None),
+            ),
+            (
+                "a malformed last change",
+                Box::new(|state| state.last_changed_on = Some("2026-2-03".to_owned())),
+            ),
+            (
+                "a deletion of another pack identity",
+                Box::new(|state| state.deletions[0].pack_id = "Doomed".to_owned()),
+            ),
+            (
+                "a deletion with a malformed digest",
+                Box::new(|state| state.deletions[0].manifest_sha256 = "x".repeat(64)),
+            ),
+            (
+                "a deletion after the last change",
+                Box::new(|state| state.deletions[0].deleted_on = "2026-02-04".to_owned()),
+            ),
+            (
+                "deletions out of order",
+                Box::new(|state| {
+                    let mut earlier = state.deletions[0].clone();
+                    earlier.deleted_on = "2026-02-02".to_owned();
+                    state.deletions.push(earlier);
+                }),
+            ),
+        ];
+        for (name, change) in refused {
+            let mut changed = state.clone();
+            change(&mut changed);
+            assert_eq!(
+                DocPackCatalog::restore(changed),
+                Err(DocPackError::StateInvalid),
+                "{name}"
+            );
+        }
+        // The state is in canonical order: packs and versions ascending, each
+        // version once, even where the rest would restore.
+        let mut packs_reordered = state.clone();
+        packs_reordered.versions.rotate_right(1);
+        assert_eq!(packs_reordered.versions[0].manifest.pack_id, "linker-notes");
+        assert_eq!(
+            DocPackCatalog::restore(packs_reordered),
+            Err(DocPackError::StateInvalid)
+        );
+        let mut duplicated = state.clone();
+        let superseded = duplicated.versions[0].clone();
+        duplicated.versions.insert(1, superseded);
+        assert_eq!(
+            DocPackCatalog::restore(duplicated),
+            Err(DocPackError::StateInvalid)
+        );
+        // Deletions alone also need a last change.
+        let mut deletions_only = state.clone();
+        deletions_only.versions.clear();
+        deletions_only.last_changed_on = None;
+        assert_eq!(
+            DocPackCatalog::restore(deletions_only),
+            Err(DocPackError::StateInvalid)
+        );
+        // A superseded version with no current one is what deleting the
+        // current version leaves.
+        let mut without_current = state.clone();
+        without_current.versions.remove(1);
+        assert!(DocPackCatalog::restore(without_current).is_ok());
+        // Supersession days follow the versions.
+        let mut catalog = populated();
+        let (third, third_contents) = guide(V3, "2026-02-10");
+        catalog
+            .import(
+                &policy(),
+                &third,
+                &third_contents,
+                DocPackImportIntent::Refresh { replaces: V2 },
+                "2026-02-10",
+            )
+            .unwrap();
+        let mut reversed = catalog.state().unwrap();
+        assert_eq!(
+            reversed.versions[1].superseded_on.as_deref(),
+            Some("2026-02-10")
+        );
+        reversed.versions[0].superseded_on = Some("2026-02-10".to_owned());
+        reversed.versions[1].superseded_on = Some("2026-02-01".to_owned());
+        assert_eq!(
+            DocPackCatalog::restore(reversed),
+            Err(DocPackError::StateInvalid)
+        );
+    }
+
+    #[test]
+    fn a_search_answers_from_current_versions_unless_history_is_included() {
+        let catalog = populated();
+        let query = |pack: Option<&str>, include_history| DocPackSearchQuery {
+            terms: vec!["cache".to_owned()],
+            pack_id: pack.map(str::to_owned),
+            include_history,
+            max_results: 20,
+        };
+        let current = catalog.search(&query(None, false), "2026-02-03").unwrap();
+        assert!(!current.hits.is_empty());
+        assert!(
+            current
+                .hits
+                .iter()
+                .all(|hit| hit.pack_id == "build-tool-guide"
+                    && hit.version == V2
+                    && !hit.historical)
+        );
+        let heading = current
+            .hits
+            .iter()
+            .find(|hit| hit.heading)
+            .expect("the heading matches");
+        assert_eq!(
+            (heading.path.as_str(), heading.start_line, heading.end_line),
+            ("guide/cache.md", 1, 1)
+        );
+        assert_eq!(heading.text, "# Build cache");
+        assert_eq!(heading.citation_sha256.len(), 64);
+        // The fragment the secret screen withheld never answers.
+        assert!(current.hits.iter().all(|hit| !hit.text.contains(CANARY)));
+        let history = catalog.search(&query(None, true), "2026-02-03").unwrap();
+        let historical = history
+            .hits
+            .iter()
+            .filter(|hit| hit.historical)
+            .collect::<Vec<_>>();
+        assert_eq!(historical.len(), 1);
+        assert_eq!(
+            (historical[0].version, historical[0].text.as_str()),
+            (
+                V1,
+                "The cache keeps compiled units.\nClear it with the clean step."
+            )
+        );
+        // One pack only; a pack without a match finds nothing.
+        let linker = catalog
+            .search(&query(Some("linker-notes"), false), "2026-02-03")
+            .unwrap();
+        assert!(linker.hits.is_empty());
+        let mut linker_query = query(Some("linker-notes"), false);
+        linker_query.terms = vec!["LINKER".to_owned()];
+        let found = catalog.search(&linker_query, "2026-02-03").unwrap();
+        assert_eq!(found.hits.len(), 1);
+        assert_eq!(
+            (
+                found.hits[0].pack_id.as_str(),
+                found.hits[0].path.as_str(),
+                found.hits[0].text.as_str()
+            ),
+            ("linker-notes", "index.md", "The linker joins objects.")
+        );
+        // A bound on the hits leaves the rest counted.
+        let mut one = query(None, true);
+        one.max_results = 1;
+        let bounded = catalog.search(&one, "2026-02-03").unwrap();
+        assert_eq!(bounded.hits.len(), 1);
+        assert!(bounded.omitted_count > 0);
+        // Refusals.
+        assert_eq!(
+            catalog.search(&query(Some("doomed-pack"), false), "2026-02-03"),
+            Err(DocPackError::NotFound)
+        );
+        for max_results in [0, MAX_SEARCH_RESULTS + 1] {
+            let mut bad = query(None, false);
+            bad.max_results = max_results;
+            assert_eq!(
+                catalog.search(&bad, "2026-02-03"),
+                Err(DocPackError::QueryInvalid)
+            );
+        }
+        let mut empty = query(None, false);
+        empty.terms.clear();
+        assert_eq!(
+            catalog.search(&empty, "2026-02-03"),
+            Err(DocPackError::QueryInvalid)
+        );
+        let mut long = query(None, false);
+        long.terms = vec!["x".repeat(300)];
+        assert_eq!(
+            catalog.search(&long, "2026-02-03"),
+            Err(DocPackError::QueryInvalid)
+        );
+        assert_eq!(
+            catalog.search(&query(None, false), "2026-02-02"),
+            Err(DocPackError::InvalidDate)
+        );
+        // An empty catalog finds nothing.
+        assert_eq!(
+            DocPackCatalog::new()
+                .search(&query(None, false), "2026-02-03")
+                .unwrap(),
+            DocPackSearchResult {
+                hits: Vec::new(),
+                omitted_count: 0
+            }
+        );
     }
 }
