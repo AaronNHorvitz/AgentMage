@@ -85,15 +85,15 @@
         },
         {
           "path": "supply-chain/dependency-hashes.sha256",
-          "sha256": "72f8f8b5dece2a69ecef2ef0b5d9f086339989eabb693145c41ea7c392d6461a"
+          "sha256": "bc3a703c6df83f462155405c578a09ea4ac18079b3ae50c46bcd44160801a8e8"
         },
         {
           "path": "supply-chain/dependency-provenance.json",
-          "sha256": "cd86c851de09920281fcc44593526ac7d88aab7b452f3b593e34e48781819f91"
+          "sha256": "6e7a26d71e3ebb31a6783ccd467fbc68a5a85826ddce66842e24aac7353b3f4a"
         },
         {
           "path": "supply-chain/sbom.cdx.json",
-          "sha256": "1dff1ab2457e92ac51c4ae51daaf4c9d272cbdd97d8f48189edbe653922608ff"
+          "sha256": "3886abf704fb0ae62cfa067219ad4238230f9b5f0ac6267569c88d0af9b48b63"
         }
       ],
       "task_id": "1.1.2.3"

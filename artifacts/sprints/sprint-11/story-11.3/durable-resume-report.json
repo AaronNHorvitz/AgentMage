@@ -6,9 +6,9 @@
       "sha256": "a6404b5ab64ce63297f92eaa608e9182f7c522d20a0a745233ca61f13ecaeda0"
     },
     {
-      "byte_length": 487095,
+      "byte_length": 489324,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "d1d06e9bd9490947fb35939cce8d5e0389ca924a841417371fb31faa685ad97f"
+      "sha256": "28aafafb739eb8d358d4422f063ac943ac2b3f13592e6dd9ac4a03f77cd29bec"
     },
     {
       "byte_length": 1417,
@@ -66,6 +66,21 @@
       "sha256": "1e84d70b6c93b452893c95194cf9e5b2cbf050d4f1c877cc0c4c8eca9f118c0d"
     },
     {
+      "byte_length": 5221,
+      "path": "kernel/engine/fixtures/operational-store/schema-22.json",
+      "sha256": "6755935271adf2e753d73a5011310c86033537c50eff36895be09312e8c130af"
+    },
+    {
+      "byte_length": 3268,
+      "path": "kernel/engine/migrations/operational-store/0022-run-action-histories.sql",
+      "sha256": "84ed1485d0d2144a00eee86bd5052add809fc18af0c0483348d9fdbe5873ff09"
+    },
+    {
+      "byte_length": 23667,
+      "path": "kernel/engine/src/run_action_history_store.rs",
+      "sha256": "6209df603f6a5e38f4d925ae06501eca6d1289e3dc1c86a8c902d74602194616"
+    },
+    {
       "byte_length": 2335,
       "path": "kernel/engine/migrations/operational-store/0019-research-budgets.sql",
       "sha256": "03800068d00ea422acc3702e48bb3cae4c736f104680bb57767ce0b8b1fb6db3"
@@ -81,9 +96,9 @@
       "sha256": "7415c156e7aefc61c5a2a782f5cd0e9cc8195d05b0b4ffc368ca36c9ce8d69c1"
     },
     {
-      "byte_length": 9960,
+      "byte_length": 10156,
       "path": "scripts/story_11_3_resume_evidence.py",
-      "sha256": "946a8909c157de22b2c2625ad09982e469d1170a7c6128f4d82fc919d28a377b"
+      "sha256": "70ddf7e4fb6baacdcca48d75231f6509fa84fbaef63fdb1e91444ca503553d16"
     },
     {
       "byte_length": 1827,
@@ -93,7 +108,7 @@
     {
       "byte_length": 27013,
       "path": "artifacts/sprints/sprint-11/story-11.3/durable-resume-results.log",
-      "sha256": "88feb674db6142f1d2ad23ef3e512954a8ddde607768130d131b80f63bfbe79e"
+      "sha256": "5f4f96ec54bed07597600a0146d93ab5a9b4441853c22af384bc3c322a4e4b17"
     }
   ],
   "commands": [

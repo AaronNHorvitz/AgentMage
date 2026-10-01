@@ -1,5 +1,5 @@
 $ cargo test -p agentmage-kernel-engine story_11_3 --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 5 tests
@@ -9,7 +9,7 @@ test workflow_resume::tests::story_11_3_budget_and_terminal_state_are_absorbing 
 test workflow_resume::tests::story_11_3_malformed_or_mismatched_durable_records_fail_closed ... ok
 test workflow_resume::tests::story_11_3_uncertain_or_completed_effect_never_replays ... ok
 
-test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1343 filtered out; finished in 0.00s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1377 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -127,7 +127,7 @@ $ cargo test -p agentmage-kernel-engine workflow_checkpoint_ --locked
 running 1 test
 test operational_store::tests::workflow_checkpoint_reopens_exactly_and_tamper_blocks_restart ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1347 filtered out; finished in 0.21s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1381 filtered out; finished in 0.21s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -245,7 +245,7 @@ $ cargo test -p agentmage-kernel-engine workflow_projection_failure_retains_no_e
 running 1 test
 test operational_store::tests::workflow_projection_failure_retains_no_event_checkpoint_cursor_or_state ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1347 filtered out; finished in 0.16s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1381 filtered out; finished in 0.17s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -363,7 +363,7 @@ $ cargo test -p agentmage-kernel-engine d027_s12_restart_grant_worker_receipt_an
 running 1 test
 test authority_transaction::tests::d027_s12_restart_grant_worker_receipt_and_terminal_boundaries_reconcile ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1347 filtered out; finished in 1.87s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1381 filtered out; finished in 1.91s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -481,7 +481,7 @@ $ cargo test -p agentmage-kernel-engine session_reconstructs_after_supervisor_an
 running 1 test
 test persistent_supervisor::tests::session_reconstructs_after_supervisor_and_view_disappear ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1347 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1381 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -593,13 +593,13 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; fini
 
 
 $ cargo test -p agentmage-kernel-engine story_21_2_process_stop_matrix_preserves_one_truthful_replay --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 1 test
 test runtime_journal::tests::story_21_2_process_stop_matrix_preserves_one_truthful_replay ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1347 filtered out; finished in 1.72s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1381 filtered out; finished in 1.87s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -711,4 +711,4 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; fini
 
 
 $ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s

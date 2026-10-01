@@ -1,11 +1,11 @@
 $ cargo test -p agentmage-kernel-engine seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked -- --nocapture
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 1 test
 test operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1347 filtered out; finished in 43.06s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1381 filtered out; finished in 46.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
