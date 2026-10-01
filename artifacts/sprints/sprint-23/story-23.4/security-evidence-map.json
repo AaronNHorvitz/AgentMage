@@ -4,7 +4,7 @@
     {
       "argv_sha256": "cc4a25de1ec491c408fa47a4f724d34dcac8cc52040cbae67f7a080b1c283b74",
       "command_id": "retained-runtime-evidence",
-      "elapsed_ms": 64,
+      "elapsed_ms": 67,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -12,7 +12,7 @@
     {
       "argv_sha256": "04097c4689903a4ef8fa630b7dd87fa756a1c0e0741d9556492342c372cb7306",
       "command_id": "coordinator-boundary-review",
-      "elapsed_ms": 175,
+      "elapsed_ms": 179,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -20,12 +20,12 @@
     {
       "argv_sha256": "b26bfb863a1251b307c473309b2fa69a8ddccbeb10b4b37bb83f2f2a1e19196f",
       "command_id": "engine-security-matrix",
-      "elapsed_ms": 89,
+      "elapsed_ms": 85,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": {
         "failed": 0,
-        "filtered_out": 1387,
+        "filtered_out": 1388,
         "ignored": 0,
         "measured": 0,
         "passed": 18
@@ -34,12 +34,12 @@
     {
       "argv_sha256": "d25c1a35db190c5821af496f6e3cc07b1ba96ddb12ec19c8b6a21d7bc7325ee1",
       "command_id": "native-read-security-matrix",
-      "elapsed_ms": 82,
+      "elapsed_ms": 81,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": {
         "failed": 0,
-        "filtered_out": 491,
+        "filtered_out": 505,
         "ignored": 0,
         "measured": 0,
         "passed": 6
@@ -48,7 +48,7 @@
     {
       "argv_sha256": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
       "command_id": "engine-strict-clippy",
-      "elapsed_ms": 91,
+      "elapsed_ms": 94,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -56,7 +56,7 @@
     {
       "argv_sha256": "65e69937c136fc6ddff76a8bd81a066958fed2f9858f8642f8e36f08b08ee814",
       "command_id": "host-strict-clippy",
-      "elapsed_ms": 22014,
+      "elapsed_ms": 18553,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -64,7 +64,7 @@
     {
       "argv_sha256": "47cdc321aaa5c7c4ed9eed236a4c8f7fcf3cee3ea5f1542a8e3304e1832cac09",
       "command_id": "dependency-direction",
-      "elapsed_ms": 20,
+      "elapsed_ms": 18,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -72,7 +72,7 @@
     {
       "argv_sha256": "1ba5e4e0d2b5860ae9e4b0ed786fc45413e659b7c435186b2ad8dc781a2c4045",
       "command_id": "effect-mediation",
-      "elapsed_ms": 2423,
+      "elapsed_ms": 2441,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -464,10 +464,10 @@
     "redactions": [
       "repository-root"
     ],
-    "sha256": "b3d2999d1d50660acd3a06e272c54ee67f792f822c5adfdd176fd1104a4f9103"
+    "sha256": "4d5b754796721cf6264ebc8085b1d4839163e6c402af8c9ccded06f685599491"
   },
   "schema_version": 1,
-  "source_revision": "3e1f7fa892c4a973f2dc7c66a104677dac76db02",
+  "source_revision": "eab3cab02fa77ec7ff4d6c7ebeb2ffc7f5b9a31b",
   "sources": [
     {
       "bytes": 160606,
@@ -487,17 +487,17 @@
     {
       "bytes": 10744,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "a9868b440c3f67b57d672787cf80093480a8b776d32765d8f04379999f7d42e6"
+      "sha256": "23a1cfe6926398918dc04c91d177dbb0f3281a4bd1fc8d4b274c4aff77413c40"
     },
     {
-      "bytes": 7935,
+      "bytes": 8021,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "4a65f5b798683ca5924c84a19ac5523741bb4252c6d3f8d10c6716d1ec79a991"
+      "sha256": "05f4d83fbc070441ef8e23a88d851c06158e19ee0518db48ff542378545689a7"
     },
     {
       "bytes": 7514,
       "path": "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
-      "sha256": "49075c3d6ef6f7c5764a12eb02e356d2dfe729b86dff9abe9e00d98ef2364926"
+      "sha256": "39ee4eb745e7c8ee1bf3c09744d53a5028e9fbda08c2346ff8f3544d499f9801"
     },
     {
       "bytes": 18186,
@@ -535,9 +535,9 @@
       "sha256": "76c052a6265dfd0acbf33367b2d297cfe7ced195f1484c54d0ef2b0ef6575712"
     },
     {
-      "bytes": 459285,
+      "bytes": 466569,
       "path": "shells/host/src/linux_coding_runtime.rs",
-      "sha256": "a0282a59920add39dc6876e5d2e2bf4a052f45394bb0396c9d06cdefe1a9a291"
+      "sha256": "af64cf79148e0229ef7d1f505a1917915892334c6a3f13912eaaf5ecec8ba3a8"
     },
     {
       "bytes": 310866,
@@ -550,19 +550,19 @@
       "sha256": "857f1ecbd7cec393dc04dac06e454499ff86e49c3c7eef3bccd9c776b4609d37"
     },
     {
-      "bytes": 127695,
+      "bytes": 131455,
       "path": "shells/host/src/cli_runtime.rs",
-      "sha256": "b648d8f359c97642847116f076632ed66caa24a1592601efc867886f33ae8397"
+      "sha256": "a94fbf5ab4eb019554d2dd0c5626b964c19d378f2231f690c982b1068fef9411"
     },
     {
-      "bytes": 44545,
+      "bytes": 46620,
       "path": "shells/host/src/native_chat_runtime.rs",
-      "sha256": "e3080359eba8f3c19ac7611675ad2be170981fd7fb0661d4957d9ea152b05e2c"
+      "sha256": "c1e327624841ec16e0afd9ef1436af9c4c75d8ed2e3d2becc485a21603db596a"
     },
     {
-      "bytes": 26833,
+      "bytes": 26855,
       "path": "shells/host/src/runtime_parity_tests.rs",
-      "sha256": "792bf5308d7a9bb40d92d8a9320129fb279e28798b107023b4722d184f727861"
+      "sha256": "7a1b624e235a772b37dea3380771658b72ec993614eb87cd65cbca196aa64434"
     },
     {
       "bytes": 64569,
