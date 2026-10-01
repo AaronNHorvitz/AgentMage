@@ -8,27 +8,27 @@
     {
       "bytes": 7514,
       "path": "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
-      "sha256": "81bd54dd04fc510acd13b3ecd828d49af7e3ee5434d6a9a7c3ce4c553472f297"
+      "sha256": "49075c3d6ef6f7c5764a12eb02e356d2dfe729b86dff9abe9e00d98ef2364926"
     },
     {
       "bytes": 10744,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "8d3696934365637c1568997ebcd8a3f4ab322a839ac5b701c5a0f96ccf5e8d74"
+      "sha256": "a9868b440c3f67b57d672787cf80093480a8b776d32765d8f04379999f7d42e6"
     },
     {
       "bytes": 7935,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "5170a31ae44e6f90e0e6d9ca849aabaf4b197ecb054f8bb5565f10d2ff4fb03a"
+      "sha256": "4a65f5b798683ca5924c84a19ac5523741bb4252c6d3f8d10c6716d1ec79a991"
     },
     {
       "bytes": 22661,
       "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence-map.json",
-      "sha256": "82589cedac59751c08a521d0bc4fc12a1e11b00456dd71cc1ce2925366c4707c"
+      "sha256": "407e1082f3140a8dd2e7fff4d9f1aaa7fd50833f25965e10bffb802c6b661674"
     },
     {
       "bytes": 4430,
       "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence.log",
-      "sha256": "6f9b873e6517e75d7d2332ad7002b6ad8769ffd0e8e14c621505e3a0acced1ea"
+      "sha256": "b3d2999d1d50660acd3a06e272c54ee67f792f822c5adfdd176fd1104a4f9103"
     },
     {
       "bytes": 9999,
@@ -202,7 +202,7 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "3292bc47df790f1a28089fd1cc605edfd231abd470d26d69cb52b240bbd2bd78",
+  "index_sha256": "b3a6f47f88e61360cdac897f01ccdd80183079810ed30c205b3e9741383876c5",
   "limitations": [
     "The installed host still lacks a production runtime factory and admitted local model.",
     "The source-level boundary-by-boundary failure matrix is complete; physical process faults remain outside this source campaign.",
@@ -506,7 +506,7 @@
   ],
   "record_type": "story_23_4_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "d6413aaa0f20e062135aaa9d145d4afcb295afc2",
+  "source_revision": "3e1f7fa892c4a973f2dc7c66a104677dac76db02",
   "story_id": "23.4",
   "summary": {
     "complete_count": 16,

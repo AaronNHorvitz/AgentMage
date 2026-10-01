@@ -4,7 +4,7 @@
     {
       "argv_sha256": "cc4a25de1ec491c408fa47a4f724d34dcac8cc52040cbae67f7a080b1c283b74",
       "command_id": "retained-runtime-evidence",
-      "elapsed_ms": 72,
+      "elapsed_ms": 64,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -12,7 +12,7 @@
     {
       "argv_sha256": "04097c4689903a4ef8fa630b7dd87fa756a1c0e0741d9556492342c372cb7306",
       "command_id": "coordinator-boundary-review",
-      "elapsed_ms": 171,
+      "elapsed_ms": 175,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -20,12 +20,12 @@
     {
       "argv_sha256": "b26bfb863a1251b307c473309b2fa69a8ddccbeb10b4b37bb83f2f2a1e19196f",
       "command_id": "engine-security-matrix",
-      "elapsed_ms": 93,
+      "elapsed_ms": 89,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": {
         "failed": 0,
-        "filtered_out": 1377,
+        "filtered_out": 1387,
         "ignored": 0,
         "measured": 0,
         "passed": 18
@@ -34,12 +34,12 @@
     {
       "argv_sha256": "d25c1a35db190c5821af496f6e3cc07b1ba96ddb12ec19c8b6a21d7bc7325ee1",
       "command_id": "native-read-security-matrix",
-      "elapsed_ms": 81,
+      "elapsed_ms": 82,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": {
         "failed": 0,
-        "filtered_out": 461,
+        "filtered_out": 491,
         "ignored": 0,
         "measured": 0,
         "passed": 6
@@ -48,7 +48,7 @@
     {
       "argv_sha256": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
       "command_id": "engine-strict-clippy",
-      "elapsed_ms": 95,
+      "elapsed_ms": 91,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -56,7 +56,7 @@
     {
       "argv_sha256": "65e69937c136fc6ddff76a8bd81a066958fed2f9858f8642f8e36f08b08ee814",
       "command_id": "host-strict-clippy",
-      "elapsed_ms": 21283,
+      "elapsed_ms": 22014,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -64,7 +64,7 @@
     {
       "argv_sha256": "47cdc321aaa5c7c4ed9eed236a4c8f7fcf3cee3ea5f1542a8e3304e1832cac09",
       "command_id": "dependency-direction",
-      "elapsed_ms": 18,
+      "elapsed_ms": 20,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -72,7 +72,7 @@
     {
       "argv_sha256": "1ba5e4e0d2b5860ae9e4b0ed786fc45413e659b7c435186b2ad8dc781a2c4045",
       "command_id": "effect-mediation",
-      "elapsed_ms": 2417,
+      "elapsed_ms": 2423,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -464,10 +464,10 @@
     "redactions": [
       "repository-root"
     ],
-    "sha256": "6f9b873e6517e75d7d2332ad7002b6ad8769ffd0e8e14c621505e3a0acced1ea"
+    "sha256": "b3d2999d1d50660acd3a06e272c54ee67f792f822c5adfdd176fd1104a4f9103"
   },
   "schema_version": 1,
-  "source_revision": "d6413aaa0f20e062135aaa9d145d4afcb295afc2",
+  "source_revision": "3e1f7fa892c4a973f2dc7c66a104677dac76db02",
   "sources": [
     {
       "bytes": 160606,
@@ -487,17 +487,17 @@
     {
       "bytes": 10744,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "8d3696934365637c1568997ebcd8a3f4ab322a839ac5b701c5a0f96ccf5e8d74"
+      "sha256": "a9868b440c3f67b57d672787cf80093480a8b776d32765d8f04379999f7d42e6"
     },
     {
       "bytes": 7935,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "5170a31ae44e6f90e0e6d9ca849aabaf4b197ecb054f8bb5565f10d2ff4fb03a"
+      "sha256": "4a65f5b798683ca5924c84a19ac5523741bb4252c6d3f8d10c6716d1ec79a991"
     },
     {
       "bytes": 7514,
       "path": "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
-      "sha256": "81bd54dd04fc510acd13b3ecd828d49af7e3ee5434d6a9a7c3ce4c553472f297"
+      "sha256": "49075c3d6ef6f7c5764a12eb02e356d2dfe729b86dff9abe9e00d98ef2364926"
     },
     {
       "bytes": 18186,
