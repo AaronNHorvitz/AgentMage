@@ -74,9 +74,9 @@
   ],
   "manual_fuzzing_executed": false,
   "release_approved": false,
-  "report_sha256": "b3f151ffc5bcc7930f40e56464d4767746d8a124c5c103a981257c0f347efa20",
+  "report_sha256": "7cff5a03f4d1b86737d7ee39fc5ebb6110acaa686f6a530ace2bd28493afcac8",
   "schema_version": 1,
-  "source_revision": "dbaa9535e7b255fc0cce9d7de4d58664e6463329",
+  "source_revision": "bfa01074c27f0897e29549b8ca0bde2536fb5904",
   "sources": [
     {
       "bytes": 217068,
@@ -94,9 +94,9 @@
       "sha256": "76c052a6265dfd0acbf33367b2d297cfe7ced195f1484c54d0ef2b0ef6575712"
     },
     {
-      "bytes": 455695,
+      "bytes": 458929,
       "path": "shells/host/src/linux_coding_runtime.rs",
-      "sha256": "7e0da5ca881171798e312173288df7c5a14b44db9eed0aeb7ac843340705a663"
+      "sha256": "6e387db18e7f7d0598fc764e20ec4b4f4293f25933931baf1d5204529cac6156"
     },
     {
       "bytes": 14220,
@@ -104,14 +104,14 @@
       "sha256": "857f1ecbd7cec393dc04dac06e454499ff86e49c3c7eef3bccd9c776b4609d37"
     },
     {
-      "bytes": 124969,
+      "bytes": 127695,
       "path": "shells/host/src/cli_runtime.rs",
-      "sha256": "548c41a21c3111fbcdb42d33d2c7f2fd92f088d80fdafd3c25f39aedfd7c13ba"
+      "sha256": "b648d8f359c97642847116f076632ed66caa24a1592601efc867886f33ae8397"
     },
     {
-      "bytes": 43793,
+      "bytes": 44182,
       "path": "shells/host/src/native_chat_runtime.rs",
-      "sha256": "58b0ed5aab63c312efe8b831c8ad9bb51de6612c4f53d7d476c8532e747ff835"
+      "sha256": "1812d2e15b73280ffbe207cd1652c699e1c3e23a117ca54aa6f6b062df9e235b"
     },
     {
       "bytes": 26833,
@@ -161,12 +161,12 @@
     {
       "bytes": 10744,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "a3373b3be42bf7716743d6540abba85ed4d805e508f5e5289b2ee9ea76bbde52"
+      "sha256": "8a18bbca81ba17d797354ba8e5c9932c8a91e7cb78afbc67bc3623251e475130"
     },
     {
       "bytes": 7935,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "b5fd03422a15ef8a1c36872b7a46ceb40e63214f2ede34acae879aade4781556"
+      "sha256": "32ff8b6dba16ccb42f869d1735df1c2faff4fab15ac09e931a6a5917dfbcc146"
     },
     {
       "bytes": 10830,
