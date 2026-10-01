@@ -1,12 +1,12 @@
 $ cargo test -p agentmage-kernel-engine --locked dispatch_preflight_ -- --test-threads=1
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 2 tests
 test model_runtime::tests::dispatch_preflight_accepts_exact_fit_and_refuses_one_token_over_before_stream ... ok
 test model_runtime::tests::dispatch_preflight_refuses_7000_plus_2048_against_8192_and_invalid_margin ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 1358 filtered out; finished in 0.00s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 1415 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -124,7 +124,7 @@ $ cargo test -p agentmage-kernel-engine --locked prepared_request_mutation_stale
 running 1 test
 test model_runtime::tests::prepared_request_mutation_stale_binding_and_token_drift_send_no_generation_bytes ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1359 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1416 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -242,7 +242,7 @@ $ cargo test -p agentmage-kernel-engine --locked orchestration_plan_and_tool_hea
 running 1 test
 test model_runtime::tests::orchestration_plan_and_tool_heavy_unicode_render_reconcile_once ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1359 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1416 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -360,7 +360,7 @@ $ cargo test -p agentmage-host --locked model_preflight_refusals_have_closed_cod
 running 1 test
 test engineering_runtime::tests::model_preflight_refusals_have_closed_codes_and_recovery ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 417 filtered out; finished in 0.01s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 520 filtered out; finished in 0.00s
 
      Running unittests src/bin/agent.rs (target/debug/deps/agent-85460353a329bad0)
 
