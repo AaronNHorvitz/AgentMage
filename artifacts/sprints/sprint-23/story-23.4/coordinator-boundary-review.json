@@ -74,9 +74,9 @@
   ],
   "manual_fuzzing_executed": false,
   "release_approved": false,
-  "report_sha256": "7cff5a03f4d1b86737d7ee39fc5ebb6110acaa686f6a530ace2bd28493afcac8",
+  "report_sha256": "15ee8eb7e3dcae9db95c8c51384da60434913547f80cf31161ef2ea39e3a7c17",
   "schema_version": 1,
-  "source_revision": "bfa01074c27f0897e29549b8ca0bde2536fb5904",
+  "source_revision": "1c21bf1e011130ffb7d78e9fb5f60a4d98c4d358",
   "sources": [
     {
       "bytes": 217068,
@@ -94,9 +94,9 @@
       "sha256": "76c052a6265dfd0acbf33367b2d297cfe7ced195f1484c54d0ef2b0ef6575712"
     },
     {
-      "bytes": 458929,
+      "bytes": 459285,
       "path": "shells/host/src/linux_coding_runtime.rs",
-      "sha256": "6e387db18e7f7d0598fc764e20ec4b4f4293f25933931baf1d5204529cac6156"
+      "sha256": "a0282a59920add39dc6876e5d2e2bf4a052f45394bb0396c9d06cdefe1a9a291"
     },
     {
       "bytes": 14220,
@@ -109,9 +109,9 @@
       "sha256": "b648d8f359c97642847116f076632ed66caa24a1592601efc867886f33ae8397"
     },
     {
-      "bytes": 44182,
+      "bytes": 44957,
       "path": "shells/host/src/native_chat_runtime.rs",
-      "sha256": "1812d2e15b73280ffbe207cd1652c699e1c3e23a117ca54aa6f6b062df9e235b"
+      "sha256": "613f36944e75e38e4fb92e18cec03d026248c3c01ba392c1f1207cfb60f4ecd1"
     },
     {
       "bytes": 26833,
@@ -159,14 +159,14 @@
       "sha256": "034237dbf30bbc33ea2a1dac5f9d04127e5f1e0e1358c186f025310afb662181"
     },
     {
-      "bytes": 10744,
+      "bytes": 10743,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "8a18bbca81ba17d797354ba8e5c9932c8a91e7cb78afbc67bc3623251e475130"
+      "sha256": "b46f1811ba9550bb7a56fd0c224d40a6a662ce66a5e94c99e4e6ba6fe66ff709"
     },
     {
       "bytes": 7935,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "32ff8b6dba16ccb42f869d1735df1c2faff4fab15ac09e931a6a5917dfbcc146"
+      "sha256": "a85a4e1e730513277b5998821122b3027443359d75767aa27662085fe2fb9200"
     },
     {
       "bytes": 10830,
