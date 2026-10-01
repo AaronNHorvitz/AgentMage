@@ -995,10 +995,11 @@ fn parse_coding_development(
     // write inside it still needs its own approval, so it goes with no
     // session preauthorization and no approval of the whole run. A run
     // resumed after a restart is composed without a plan, so it takes none.
+    // Any preauthorization option needs a budget and a lifetime (above), so
+    // refusing those two refuses every one.
     if !recipe_parameters.is_empty() && recipe.is_none()
         || recipe.is_some()
             && (resume
-                || preauthorization_requested
                 || preauthorization_budget.is_some()
                 || preauthorization_minutes.is_some()
                 || approve_this_run)
@@ -2702,6 +2703,12 @@ mod tests {
                 "/tmp/recipe.json",
                 "--preauthorization-budget",
                 "2",
+            ]),
+            with_run(&[
+                "--recipe",
+                "/tmp/recipe.json",
+                "--preauthorization-minutes",
+                "5",
             ]),
             vec!["--doc-pack-list", "--recipe", "/tmp/recipe.json"],
             vec!["--memory-list", "--recipe-param", "target=src/calc.py"],

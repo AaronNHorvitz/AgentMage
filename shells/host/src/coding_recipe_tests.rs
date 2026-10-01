@@ -307,8 +307,12 @@ fn a_manifest_file_is_read_only_when_absolute_regular_bounded_and_sealed() {
         "large.json",
         &vec![b' '; usize::try_from(MAX_RECIPE_FILE_BYTES).unwrap() + 1],
     );
+    // A relative path is refused even where it names a readable manifest:
+    // tests run in the package directory, which holds the samples.
+    let relative = PathBuf::from("fixtures/recipe-sample/repair-in-src.json");
+    assert!(relative.is_file());
     for path in [
-        PathBuf::from("recipe.json"),
+        relative,
         directory.0.join("missing.json"),
         link,
         fifo,
@@ -457,31 +461,57 @@ fn the_plan_is_bound_into_the_run_and_kept_only_when_it_is_what_was_sent() {
         &ValidationTemplateRegistry::build(vec![template("unit", ValidationKind::Unit)]).unwrap(),
     )
     .unwrap();
-    let mut resealed = tampered.clone();
-    resealed.plan_sha256.clear();
-    resealed.plan_sha256 = {
-        use sha2::{Digest as _, Sha256};
-        Sha256::digest(serde_json::to_vec(&resealed).unwrap())
-            .iter()
-            .fold(String::new(), |mut output, byte| {
-                let _ = write!(output, "{byte:02x}");
-                output
-            })
+    // A host could reseal a plan that differs from the sent manifest in any
+    // one member; each such plan verifies on its own and is still refused.
+    let resealed = |change: &dyn Fn(&mut RecipePlan)| {
+        let mut changed = plan.clone();
+        change(&mut changed);
+        changed.plan_sha256.clear();
+        changed.plan_sha256 = {
+            use sha2::{Digest as _, Sha256};
+            Sha256::digest(serde_json::to_vec(&changed).unwrap())
+                .iter()
+                .fold(String::new(), |mut output, byte| {
+                    let _ = write!(output, "{byte:02x}");
+                    output
+                })
+        };
+        assert!(verify_recipe_plan(&changed));
+        changed
     };
-    assert!(verify_recipe_plan(&resealed));
-    for (declared, request, sent_request) in [
-        (&plan, &bound, None),
-        (&plan, &bound, Some(&other_values)),
-        (&other_plan, &bound, Some(&sent())),
-        (&tampered, &bound, Some(&sent())),
-        (&resealed, &bound_request(&resealed), Some(&sent())),
-        (&plan, &request(), Some(&sent())),
-        (&foreign, &bound_request(&foreign), Some(&sent())),
-    ] {
+    let mut refused = vec![
+        (plan.clone(), bound.clone(), None),
+        (plan.clone(), bound.clone(), Some(other_values)),
+        (other_plan, bound.clone(), Some(sent())),
+        (tampered, bound.clone(), Some(sent())),
+        (plan.clone(), request(), Some(sent())),
+        (foreign.clone(), bound_request(&foreign), Some(sent())),
+    ];
+    let changes: [&dyn Fn(&mut RecipePlan); 6] = [
+        &|plan| plan.max_changed_files = 9,
+        &|plan| {
+            plan.scope =
+                vec![WorkspaceScopePath::new(plan.workspace_id.clone(), ["tests"]).unwrap()];
+        },
+        &|plan| plan.validations.clear(),
+        &|plan| {
+            plan.rollback = RecipeRollback::Irreversible {
+                reason_code: "recipe.no-rollback".to_owned(),
+            }
+        },
+        &|plan| plan.prerequisites.clear(),
+        &|plan| plan.network_grant_required = true,
+    ];
+    for change in changes {
+        let changed = resealed(change);
+        let request = bound_request(&changed);
+        refused.push((changed, request, Some(sent())));
+    }
+    for (declared, request, sent_request) in &refused {
         assert!(!verify_declared_recipe_plan(
             declared,
             request,
-            sent_request
+            sent_request.as_ref()
         ));
     }
 }

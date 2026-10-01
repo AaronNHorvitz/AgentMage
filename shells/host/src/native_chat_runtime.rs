@@ -573,6 +573,41 @@ mod tests {
 
     #[test]
     #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    fn a_recipe_the_factory_does_not_bind_is_refused() {
+        // Decision 0133: a factory that frames a run without the plan of the
+        // recipe sent with it cannot serve that run.
+        let (request, events, outcome, _) =
+            crate::runtime_read_tests::completed_native_read_fixture();
+        let (recipe, _) = crate::coding_recipe::test_recipe(&request.workspace_id, "src", 1);
+        let input = NativeChatPrepareInput {
+            resume: false,
+            record_session: false,
+            slow_subscriber_probe: false,
+            preauthorization: None,
+            engineering_session_id: None,
+            profile_id: request.model_profile.profile_id.as_str().to_owned(),
+            expected_entry_sha256: "a".repeat(64),
+            workspace_id: request.workspace_id.as_str().to_owned(),
+            workspace_root: "/tmp/agentmage-native-chat-fixture".to_owned(),
+            prompt: request.task.objective.clone(),
+            recipe: Some(recipe),
+        };
+        let mut service = NativeChatRuntimeService::new(ReplayFactory {
+            expected_input: input.clone(),
+            request: request.clone(),
+            events,
+            artifacts: Vec::new(),
+            outcome,
+        });
+        assert_eq!(
+            service.prepare(input.clone()),
+            Err(NativeChatRuntimeError::RequestDenied)
+        );
+        assert!(service.prepared.is_empty());
+    }
+
+    #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
     fn completed_shared_runtime_is_prepared_started_and_replayed_by_exact_cursor() {
         let (request, events, outcome, observed_result) =
             crate::runtime_read_tests::completed_native_read_fixture();
