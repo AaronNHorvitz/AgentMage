@@ -43,7 +43,7 @@
       ],
       "exit_code": 0,
       "id": "muse-edge-codec",
-      "output_sha256": "583d66406e70a2a382f989a9adc4bcacaa15c4089d731186f3fbff97a89f3491"
+      "output_sha256": "702277b5684ac819dea222f2fd099b384fa7002d1ea5633cbff0b02b6d528e4a"
     },
     {
       "argv": [
@@ -235,7 +235,7 @@
   "production_kernel_family_references": [],
   "record_type": "d027_s13_muse_codec_evidence",
   "schema_version": 3,
-  "source_revision": "6b1b0a384d6cbff913da75e086972cabb482f6e0",
+  "source_revision": "65537fc4509cf4cd5e05a2fe9dfb72cb8a0c54ff",
   "source_sha256": {
     "kernel/contracts/src/model.rs": "1a19f680cc1468be94930632e4a67ba50f0c16eaf47802ae7ecd65df2ca1695c",
     "kernel/engine/src/accounting_provider.rs": "f0292afed85e4dc1d617061de010622b913749caed5e4620503634c29ef485f4",
@@ -296,7 +296,7 @@
     "kernel/engine/src/engineering_mode.rs": "4221d85733295634f602ecf2deb94dd7ff9190e1cbad8d2f09f06de70a1ed260",
     "kernel/engine/src/engineering_persistence.rs": "9a0d4b361cef36fd19ced65950ea4f5c1d24ff9bc90d6aa44daaebbd61303ffa",
     "kernel/engine/src/engineering_plan.rs": "2089ec4cadfa105f225f3d4cf1499778654bd2928fe4ee25a2b47a462ed4c236",
-    "kernel/engine/src/engineering_recipe.rs": "fbb37399d958d25ac6aef7c73924a9a1b4cfda6c2218e434317ebdc8f2cdd144",
+    "kernel/engine/src/engineering_recipe.rs": "35e110a88a5c0d7557a9937af1d8c17d30010dc6972993b03f98f6f9edec931a",
     "kernel/engine/src/engineering_records.rs": "0edd44976cdc3fc7f65de9e65f5b5d5ae4f845e4f598bf4411bf8acd75a1f398",
     "kernel/engine/src/evidence_bundle.rs": "95945112e0a009c827825f4be463a15257094579f0ff12012d65364657f34d55",
     "kernel/engine/src/evidence_reconciliation.rs": "25e0f0af506aeb3da4dce2b87369b2c2cad6f6da90b9793360f1edbad4519b3a",

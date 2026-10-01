@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "record_type": "sprint_108_local_evidence",
-  "source_revision": "6b1b0a384d6cbff913da75e086972cabb482f6e0",
+  "source_revision": "65537fc4509cf4cd5e05a2fe9dfb72cb8a0c54ff",
   "source_sha256": {
     "Cargo.toml": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc",
     "Cargo.lock": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd",
@@ -12,9 +12,9 @@
     "artifacts/sprints/sprint-108/multi-provider-source-corpus.json": "b4b010308946e2613931917e41ad0f85efb790370c2296640e4b0ff9a210c9bc",
     "scripts/multi_provider_source_contract.py": "d49c33d960f19379f0ae0f6ea8fbbd9c89b8742b9bc9a03fbc29d9585f504bcd",
     "tests/test_multi_provider_source_contract.py": "9cceb31ddd9860399514223e7256e90116e3a7e4c8122c7b8909866d18bbb18c",
-    "supply-chain/dependency-hashes.sha256": "1f7bcd0345065579bf3829180e564504e05015306c0d3b2ff5fc3e29a748bc73",
-    "supply-chain/dependency-provenance.json": "6d6b72e2a842f5774febcb4319762a987dd1c2c753829255e6aeab8c5c4344eb",
-    "supply-chain/sbom.cdx.json": "c5caac97307ca4e183475db980df3e3e4b5bc345f803ee8614fd4ae81e0eec45",
+    "supply-chain/dependency-hashes.sha256": "983297338e7451c331ccef2bbe85d5da6a1f4befda244d516a18734ee5ddbf7d",
+    "supply-chain/dependency-provenance.json": "9632cbf75293f3b60b993866aba3485595c05d86ff06fd720a5d9390bb7edb82",
+    "supply-chain/sbom.cdx.json": "83831f6eff0413ff5eb23ecb7626f5d238be1a6eb8f6936c761a71928b351415",
     "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
     "scripts/sprint_108_evidence.py": "baaf3a3b8e057bffaf2c1884feb0e1a124645d92639d58faac0c342428821a6c",
     "tests/test_sprint_108_evidence.py": "2f31f90abdaa08a1ded37973b82cc23e507bafe93941feb311d997b8a4215279"

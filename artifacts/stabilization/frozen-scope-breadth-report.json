@@ -28,12 +28,12 @@
     {
       "byte_length": 24663,
       "path": "artifacts/sprints/sprint-11/story-11.1/security-evidence-map.json",
-      "sha256": "565da419fddcb6bfd5dd5f15ebaa95048384bce789b8657b1b8656bbcc823eef"
+      "sha256": "9cbb0d86f6079b7084f32ee2596dc5d2587299c2daed0edae9eba1ebcf4f475b"
     },
     {
       "byte_length": 6456,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
-      "sha256": "f162fc1af742f68c2f9824da18cb60800a27a0204b3ae78bc1de5d4191ccdd8c"
+      "sha256": "b945e18d203143fa1db5e5d129acaf497a3d690db122d65a8143a19c0e0335e5"
     },
     {
       "byte_length": 9104,
