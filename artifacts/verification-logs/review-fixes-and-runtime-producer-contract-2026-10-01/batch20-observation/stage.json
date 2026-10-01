@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "stage": "batch20-observation",
+  "source_revision": "e5d74f29e790d337b6c61de6dcb0f1c8acf56692",
+  "scope": "Batch 20 actual Linux CLI observation at the clean security-index commit e5d74f29: rebuilt binaries; the coding host refused at native Git trust and its workspace preserved; every catalog host operation the CLI has (documentation pack list, import, license refusal, search and inspection; memory remember, prohibited candidate, list, revoke and delete; extension trust, install, revocation lists with the renamed issuer refused, and list; the ended-run read) through the actual CLI and catalog host with every frame decoded exactly and no wire refusal; a recipe shown before launch and then refused at native Git trust; pre-existing work preserved.",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch20-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "d987b944d28c5a6ab79ef9e151fd31e61cb3906b0aa5e17cba06d8132db49d6b",
+      "private_sha256": "d987b944d28c5a6ab79ef9e151fd31e61cb3906b0aa5e17cba06d8132db49d6b"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 13.732,
+      "log": "01.log",
+      "log_sha256": "d1e64dea3bbd5d340548d402c510f0e4b8f55aa88b6c30706edc9206ef64cdea",
+      "private_log_sha256": "6da708628b5146d48fd4f590b21c56c39fdf1dca4ae4446bd1dff7ef730be5f5"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch20-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 178.842,
+      "log": "02.log",
+      "log_sha256": "c6ad5d12259dbe7faf90fb44ab43d38a55dc3e45bb2a4eba90fce9aad3a49fe0",
+      "private_log_sha256": "c6ad5d12259dbe7faf90fb44ab43d38a55dc3e45bb2a4eba90fce9aad3a49fe0"
+    }
+  ]
+}

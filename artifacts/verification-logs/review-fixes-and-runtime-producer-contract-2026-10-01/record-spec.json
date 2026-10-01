@@ -1,0 +1,282 @@
+{
+ "record_type": "agentmage-review-fixes-and-runtime-producer-contract-verification",
+ "date": "2026-10-01",
+ "base_commit": "84e531fb5ecf7f8fa756d0003bf19da6275eb04f",
+ "head_commit": "e5d74f29e790d337b6c61de6dcb0f1c8acf56692",
+ "source_commit": "affb407e093e1b741126ba5ef5ff523aad10660a",
+ "retained_logs": "artifacts/verification-logs/review-fixes-and-runtime-producer-contract-2026-10-01",
+ "stages": [
+  "batch20-source",
+  "batch20-core",
+  "batch20-rebind",
+  "batch20-gate",
+  "batch20-boundary",
+  "batch20-security-index",
+  "batch20-blocked-causes",
+  "batch20-extended-rest",
+  "batch20-observation"
+ ],
+ "inventory": "artifacts/verification-logs/review-fixes-and-runtime-producer-contract-2026-10-01/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch20-source/02.log",
+  "engine": "batch20-source/03.log",
+  "repository_map": "batch20-source/04.log",
+  "inference": "batch20-source/05.log",
+  "knowledge": "batch20-source/06.log",
+  "linux": "batch20-source/07.log",
+  "host": "batch20-source/08.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0135-review-fixes-exact-wire-decoding-and-the-runtime-producer-contract.md"
+  ],
+  "source_commits": [
+   {
+    "commit": "affb407e093e1b741126ba5ef5ff523aad10660a",
+    "scope": "Decision 0135: review F1, F2, N2 and N5 of 84e531fb (the recipe variants that name only their tag get an empty member list so a member beside the tag is refused by the types, with unchanged encoding; every runtime IPC frame decoded exactly in both directions; a resealed declared plan for each identity term; the declared plan's validation identity and digest shapes; the file bound sentence in LOCAL-TESTING); AMR-06.1: the runtime producer contract document, producer fixtures under fixtures/runtime-producer/v1 built from the runtime's own types, the host test module that reproduces, decodes exactly and verifies them, a regeneration script and a Python check"
+   }
+  ],
+  "review_resolved": "the independent review of 84e531fb (PASS, F1 and F2 low) is resolved by Decision 0135: F1 in the types (the five tag-only recipe variants have empty member lists; encoding, seals, plan digests and committed samples unchanged) and on the wire (every frame of the runtime transport decoded exactly in both directions, so a member the types do not name is refused at any position, including beside a tag-only operation or result and inside a job control decision); F2 (four resealed plans, one per identity term, each refused); note N2 (validation identities and digests of a declared plan must have their shape before the client keeps and shows it); note N5 (LOCAL-TESTING states that the file bound counts proposed paths, approved or not)",
+  "components": [
+   {
+    "row": "AMR-06.1",
+    "scope": "unexecuted producer specification with producer fixtures: docs/architecture/runtime-producer-contract-v1.md names roles only and pins versions (contract 1, wire 15, run request schema 2, declarations schema 4, job status 1, ended-run histories 1 and the parts they hold), the transport, each record's members, absence, seal and verification function, and the consumer's obligations; fixtures/runtime-producer/v1 holds eight records and a manifest of their digests, built by the host test module runtime_producer_contract_tests from the runtime's own types (a controlled-write coding run held to the committed repair recipe sample, its declarations with every part present and with every part absent, a cancellation request with its answer and the job status, and three stored chains), reproduced byte for byte, decoded exactly and verified as the client verifies them, with an added member refused at every object position and changed records refused or dropped; scripts/runtime_producer_fixtures.py regenerates or compares them through an ignored printing test, and tests/test_runtime_producer_contract.py checks the manifest digests and the document. No consumer has read these records; it is not a consumer contract, counterpart approval or integration proof"
+   }
+  ],
+  "mutation_checks": "run before the source commit with private tooling, each applying one exact replacement and running the package filter: 17 single mutations over the closed recipe variants (three enums opened), exact decoding (the comparison dropped, plain decoding of requests and of responses, any version accepted in either direction), each identity term of the declared-plan check, and the declared plan's validation shape checks (registry digest, validation identity, template digest, empty identity, any byte); all 17 made their expected test fail at once. These runs are not retained logs. The serving loop and the client exchange that call the exact decoders are glue run only by actual processes; the observation exercised them",
+  "failure_comparison": "linux 189 passed, 19 failed, 51 ignored, failure names identical to batch 19; host 470 passed, 53 failed, 11 ignored, failure names identical to batch 19; the engine passes 1,479 tests (its recipe decoding test gained the cases beside tags), knowledge 302; the host gains five tests (the exact frame decoding test and four producer contract tests) and one ignored test (the fixture printer run by the regeneration script)",
+  "retained_failures": [
+   {
+    "stage": "batch20-source",
+    "indexes": [
+     7,
+     8
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, with failure names identical to batch 19"
+   },
+   {
+    "stage": "batch20-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch20-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the native-prerequisite host failures (batch20-source/08.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch20-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch20-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch20-blocked-causes/03.log) and the documentation gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+    "stale_since": "before batch 12 (four other inputs)",
+    "blocker": "its producer runs the full host suite (the native-prerequisite failures, batch20-source/08.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the product gate and the documentation gate; its check mode still validates it at its own revision (batch20-extended-rest/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the full host suite with all features; its check mode still validates it at its own revision (batch20-extended-rest/02.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
+    "stale_since": "before batch 18 (shells/host/src/headless.rs)",
+    "blocker": "already stale at the review base for an input this batch does not change; historical"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-host",
+   "agentmage-kernel-engine"
+  ],
+  "cascade": "the one SBOM write staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index and security map and the Story 3.1 component inventory, configuration startup report and security map (batch20-core) and the Sprint 79 and Sprint 108 reports, whose producers read the committed supply chain (batch20-rebind); the engine's recipe module staled the Muse codec chain (batch20-rebind); the core list also reran the Story 1.2 contract boundary gate, renewing its raw results log, and renewed the Sprint 27 to 34 knowledge boundary reviews at the source revision; the renewed component inventory staled the Story 11.1 security map and through it the Story 11.2 storage security, frozen-scope, AC1 and AC3 reports and the Story 12.1 map (batch20-rebind); the transport and IPC changes staled the Story 23.4 runtime campaign, coordinator boundary review, security map and evidence index (batch20-gate, batch20-boundary, batch20-security-index); no operational store change, so no Sprint 11 store wave",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "eec1e63f87f694c6d30918370d91781f38b2e565",
+    "to": "97950ab8ebbebb4ca37866888e5c8f78d7f5fbc5",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 20 rebind stage after the renewed Story 11.1 security map, which binds the renewed Story 3.1 component inventory; only the bound digest of the Story 11.1 security map changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 20 rebind stage after the renewed storage security report; only its bound digest changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 20 rebind stage after the renewed storage security report; only its bound digest changed"
+     }
+    ]
+   }
+  ],
+  "newly_stale_disposition": "only historical records: two retained stage records of batch 19, each already pinning inputs as they were at its revision",
+  "runtime_campaign": "renewed at 97950ab8 for the exact frame decoding of Decision 0135 (batch20-gate); the coordinator boundary review passes at efd238ef (batch20-boundary)",
+  "cli_observation": {
+   "source_commit": "e5d74f29e790d337b6c61de6dcb0f1c8acf56692",
+   "binaries_sha256": {
+    "agentmage": "3067128fbf76061a562f1dfedaba383aed04680c6e17e05ee67c1c318e4174b0",
+    "agentmage-host": "1295b0f3c9001abd34270a25e6e8a9e909212718e8c01e12fd9252671ed3a54e",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "catalog_host_operations": [
+    {
+     "name": "doc-pack-list-empty",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import-other-license",
+     "operation": "doc-pack",
+     "exit_code": 4
+    },
+    {
+     "name": "doc-pack-search",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-inspect",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember-credential",
+     "operation": "memory",
+     "exit_code": 4
+    },
+    {
+     "name": "memory-list",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-revoke",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-delete",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-signer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-issuer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-install",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-1",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-renamed",
+     "operation": "extension",
+     "exit_code": 3
+    },
+    {
+     "name": "extension-list",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "ended-run-read",
+     "operation": "ended-run",
+     "exit_code": 0
+    }
+   ],
+   "catalog_host_wire_refusals_seen": false,
+   "catalog_workspace_preserved": true,
+   "recipe_shown_before_launch": {
+    "exit_code": 5,
+    "then_refused_at": "linux.repository.git_artifact.invalid",
+    "preserved": true
+   },
+   "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+   },
+   "malformed_frame_injected": false,
+   "qualification": "actual-binary-catalog-host-operations-under-exact-wire-decoding-plus-native-prerequisite-refusal"
+  },
+  "not_run": [
+   "a malformed frame sent to an actual host or client process: exact decoding is tested at the unit level; the actual processes showed only that every real frame of the catalog host operations still decodes",
+   "a consumer reading the producer records through the transport (no consumer contract is pinned; AMR-06.2 to AMR-06.10)",
+   "actual records from a coding run: the coding host needs a native Linux host (AMR-05.10)",
+   "the native-only Linux boundary tests and the factory's composition glue",
+   "language server observations through a host adapter (AMR-05.9.5.2) and hybrid routing (AMR-05.9.7)",
+   "the actual-process AMR-04 rows (AMR-04.2.3, 04.6.3, 04.7.2, 04.9, 04.10)",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [
+    {
+     "row": "AMR-06.1",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "unexecuted producer specification with producer fixtures the runtime's own types reproduce and a test that decodes and verifies them; not a consumer contract, counterpart approval or integration proof"
+    }
+   ],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested; open"
+  }
+ }
+}

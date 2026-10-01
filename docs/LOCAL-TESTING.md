@@ -456,6 +456,29 @@ An installed extension provides nothing to a coding run, and nothing it declares
 granted or run. The host keeps no package source. It trusts the source digest your
 own authenticated CLI observed.
 
+Every frame between the CLI and either host is decoded exactly (Decision 0135): a
+member the types do not name is refused at any position. The catalog host steps above
+ran with this rule through the actual processes, as listed in the
+[review-fix and producer contract verification](verification/review-fixes-and-runtime-producer-contract-2026-10-01.md).
+
+### Runtime producer contract fixtures
+
+The records a separate consumer may read from the runtime (the sealed run request,
+run declarations, job status and control answers, and an ended run's stored histories)
+are specified in the
+[runtime producer contract](architecture/runtime-producer-contract-v1.md), with one
+synthetic fixture each under `fixtures/runtime-producer/v1/`. To check that the
+committed fixtures are exactly what the runtime's own types build, and that their
+manifest and document agree:
+
+```sh
+python3 scripts/runtime_producer_fixtures.py          # builds the host tests once
+python3 -m unittest tests.test_runtime_producer_contract
+```
+
+The first prints `runtime producer fixtures match (9 files)`. Nothing reads these
+records through the transport yet; a consumer's own contract is pinned separately.
+
 To run the whole declared scripted matrix in one step instead (edits, denial,
 cancellation, pause and resume, stale approvals, rollback and the other cases, each in
 a fresh root), use

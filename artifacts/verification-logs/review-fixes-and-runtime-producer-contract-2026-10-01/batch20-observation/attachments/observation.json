@@ -1,0 +1,136 @@
+{
+  "started_at_utc": "2026-10-01T15:56:42.691358+00:00",
+  "finished_at_utc": "2026-10-01T15:59:41.499650+00:00",
+  "source_commit": "e5d74f29e790d337b6c61de6dcb0f1c8acf56692",
+  "source_tree": "728cdad46732d1ba635a086e670969524f5677bb",
+  "source_worktree_clean": true,
+  "binaries": {
+    "agentmage": {
+      "sha256": "3067128fbf76061a562f1dfedaba383aed04680c6e17e05ee67c1c318e4174b0",
+      "bytes": 324146416
+    },
+    "agentmage-host": {
+      "sha256": "1295b0f3c9001abd34270a25e6e8a9e909212718e8c01e12fd9252671ed3a54e",
+      "bytes": 362592192
+    },
+    "agentmage-read-only-worker": {
+      "sha256": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf",
+      "bytes": 13798696
+    }
+  },
+  "binaries_unchanged": true,
+  "clean": {
+    "exit_code": 5,
+    "preserved": true,
+    "refusal_code": "linux.repository.git_artifact.invalid",
+    "failure_code": "linux.development.launch-envelope.failed"
+  },
+  "catalog_host_operations": [
+    {
+      "name": "doc-pack-list-empty",
+      "operation": "doc-pack",
+      "exit_code": 0
+    },
+    {
+      "name": "doc-pack-import",
+      "operation": "doc-pack",
+      "exit_code": 0
+    },
+    {
+      "name": "doc-pack-import-other-license",
+      "operation": "doc-pack",
+      "exit_code": 4
+    },
+    {
+      "name": "doc-pack-search",
+      "operation": "doc-pack",
+      "exit_code": 0
+    },
+    {
+      "name": "doc-pack-inspect",
+      "operation": "doc-pack",
+      "exit_code": 0
+    },
+    {
+      "name": "memory-remember",
+      "operation": "memory",
+      "exit_code": 0
+    },
+    {
+      "name": "memory-remember-credential",
+      "operation": "memory",
+      "exit_code": 4
+    },
+    {
+      "name": "memory-list",
+      "operation": "memory",
+      "exit_code": 0
+    },
+    {
+      "name": "memory-revoke",
+      "operation": "memory",
+      "exit_code": 0
+    },
+    {
+      "name": "memory-delete",
+      "operation": "memory",
+      "exit_code": 0
+    },
+    {
+      "name": "extension-trust-signer",
+      "operation": "extension",
+      "exit_code": 0
+    },
+    {
+      "name": "extension-trust-issuer",
+      "operation": "extension",
+      "exit_code": 0
+    },
+    {
+      "name": "extension-install",
+      "operation": "extension",
+      "exit_code": 0
+    },
+    {
+      "name": "extension-revocations-1",
+      "operation": "extension",
+      "exit_code": 0
+    },
+    {
+      "name": "extension-revocations-renamed",
+      "operation": "extension",
+      "exit_code": 3
+    },
+    {
+      "name": "extension-list",
+      "operation": "extension",
+      "exit_code": 0
+    },
+    {
+      "name": "ended-run-read",
+      "operation": "ended-run",
+      "exit_code": 0
+    }
+  ],
+  "catalog_host_wire_refusals_seen": false,
+  "catalog_workspace_preserved": true,
+  "extension_renamed_issuer_refused": true,
+  "ended_run_chains_present": false,
+  "recipe_shown_before_launch": {
+    "exit_code": 5,
+    "then_refused_at": "linux.repository.git_artifact.invalid",
+    "preserved": true
+  },
+  "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+  },
+  "malformed_frame_injected": false,
+  "network_used": false,
+  "model": "scripted",
+  "real_model_run": false,
+  "complete_coding_workflow_observed": false,
+  "native_tools_executed": false,
+  "qualification": "actual-binary-catalog-host-operations-under-exact-wire-decoding-plus-native-prerequisite-refusal"
+}
