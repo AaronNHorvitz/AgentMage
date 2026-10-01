@@ -8,27 +8,27 @@
     {
       "bytes": 7514,
       "path": "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
-      "sha256": "e51923c66d21ca4e518b6a2c7b3a9e1982fae74c28ec2a6991abd1a8ff802000"
+      "sha256": "0d3c11f68912fcfe03d52faa4e5ff543ca34fa36c20f0485749ccd35f092f2ce"
     },
     {
-      "bytes": 10744,
+      "bytes": 10743,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "25ed6f80f313a8a1d1795cf290089b661fbbf26fdd3438e2a12857e6f1ca0805"
+      "sha256": "b6962af56d0fef9a2f4569d579649d83d00e78a1ca8cde61353aa785a77227de"
     },
     {
       "bytes": 8021,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "8db19cd1512fad400c337e9057219d1c8ad8d97901d887720490f8e8ef6bba31"
+      "sha256": "d2e6f5946362fb2255ed6e1e09fe5cec26c52b25d9593c5e0e99863e2e1de05f"
     },
     {
-      "bytes": 22661,
+      "bytes": 22662,
       "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence-map.json",
-      "sha256": "39c162b02cf0bcd1d4f5989abad934dfdbf4f56e164077366c399e014d4568f6"
+      "sha256": "0af882be983f4981263780d89122710bbe6a9bde2edf52a697b103de599285ec"
     },
     {
       "bytes": 4430,
       "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence.log",
-      "sha256": "b4e69c23ec76de5877fa6ddb0eab24c657832e3682b27640df08ebe3ceaf8799"
+      "sha256": "5368287794d81e5feda25280a08272402f8101c704dd368ea74a0483d38e8bd3"
     },
     {
       "bytes": 9999,
@@ -36,9 +36,9 @@
       "sha256": "6031e5197e359d087cda6522b699d29ca4bc475bcb0efa9c84138e59a9e1b4e8"
     },
     {
-      "bytes": 15279,
+      "bytes": 16644,
       "path": "docs/architecture/reusable-runtime-coordinator.md",
-      "sha256": "034237dbf30bbc33ea2a1dac5f9d04127e5f1e0e1358c186f025310afb662181"
+      "sha256": "b4da5d2aed3d378364da4201a7a18446edd0cc46b5f0278ddd41f8d0f8207ebd"
     },
     {
       "bytes": 5665,
@@ -61,24 +61,24 @@
       "sha256": "8570c1764e7293e6c3c5931fcbab612c9df26ee7ab284c8bdfbb12d22b6553a0"
     },
     {
-      "bytes": 217068,
+      "bytes": 232569,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "ac2b2f93407d23c5c27f08d111af6b360cb4a3248489b369e15253a3ce9d0de2"
+      "sha256": "04a228eccef706d1f6c001099ca1ff47cea5c096ff29dd5e237f964b748b49fe"
     },
     {
-      "bytes": 12024,
+      "bytes": 12820,
       "path": "kernel/engine/src/runtime_loop/artifact_preparation.rs",
-      "sha256": "927799cc0abee91289ad650072941a59d20a456dfb2e289a5a17b754e85e66fc"
+      "sha256": "b9524ce4964acce2ca1635a389637da5d58b3fbeaeca9bd62eec61eedac04b0d"
     },
     {
-      "bytes": 25106,
+      "bytes": 25184,
       "path": "kernel/engine/src/runtime_loop_artifact_preparation_tests.rs",
-      "sha256": "76c052a6265dfd0acbf33367b2d297cfe7ced195f1484c54d0ef2b0ef6575712"
+      "sha256": "1496ede7ae8e74887edb17b331a98ae9ba43b3691897ba15e49bd23b2f447e57"
     },
     {
-      "bytes": 310866,
+      "bytes": 311371,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "fc6aa5e1e2ea7b24247aca5785b07340b2a90be7b2b435850f45c1b1348a0a99"
+      "sha256": "f79584b9eaae7dc8ea348e67eabe3c0357e71d303237e1eb2a74ed4a7fd4e108"
     },
     {
       "bytes": 10830,
@@ -202,7 +202,7 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "636410634306a69afbfe70a6a283cf5e31ff3d54102e441d44abcb13d1a256f8",
+  "index_sha256": "23f66abe1ab56dfcc00b5b7d0937f27a363242343015821e06f8281802d259a1",
   "limitations": [
     "The installed host still lacks a production runtime factory and admitted local model.",
     "The source-level boundary-by-boundary failure matrix is complete; physical process faults remain outside this source campaign.",
@@ -506,7 +506,7 @@
   ],
   "record_type": "story_23_4_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "454bac5f3e14534191923410cc06d8da5c392424",
+  "source_revision": "5aedc5b71247e87e05285a8f2eb4ec573b872f39",
   "story_id": "23.4",
   "summary": {
     "complete_count": 16,
