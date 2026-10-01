@@ -18,11 +18,11 @@ test operational_store::tests::research_migration_tests::reader_compatibility::v
 test operational_store::tests::research_migration_tests::reader_compatibility::job_ledger_migration::version_twenty_upgrades_to_job_ledgers_preserving_records_and_history ... ok
 test operational_store::tests::research_migration_tests::reader_compatibility::job_ledger_migration::run_action_history_migration::version_twenty_one_corrupt_history_cannot_add_run_action_histories ... ok
 test operational_store::tests::research_migration_tests::reader_compatibility::version_nineteen_reader_epoch_preserves_tables_records_and_history ... ok
-test operational_store::tests::research_migration_tests::reader_compatibility::job_ledger_migration::version_twenty_corrupt_history_cannot_add_job_ledgers ... ok
 test operational_store::tests::research_migration_tests::version_eighteen_upgrades_without_losing_existing_records ... ok
+test operational_store::tests::research_migration_tests::reader_compatibility::job_ledger_migration::version_twenty_corrupt_history_cannot_add_job_ledgers ... ok
 test operational_store::tests::research_migration_tests::reader_compatibility::version_nineteen_corrupt_history_cannot_advance_reader_epoch ... ok
 
-test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 1387 filtered out; finished in 4.57s
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 1407 filtered out; finished in 4.93s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -138,7 +138,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::version_twenty
 running 1 test
 test operational_store::tests::version_twenty_four_schema_matches_fixture_snapshot_and_is_relational ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1404 filtered out; finished in 0.19s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1424 filtered out; finished in 0.23s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -254,7 +254,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::version_one_up
 running 1 test
 test operational_store::tests::version_one_upgrades_through_twenty_four_with_exact_history ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1404 filtered out; finished in 0.16s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1424 filtered out; finished in 0.19s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -364,14 +364,14 @@ running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-engine operational_store::tests::failed_version_ --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 2 tests
 test operational_store::tests::failed_version_two_migration_rolls_back_without_partial_schema ... ok
 test operational_store::tests::failed_version_three_migration_rolls_back_all_alterations ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 1403 filtered out; finished in 0.04s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 1423 filtered out; finished in 0.04s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -481,13 +481,13 @@ running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-engine operational_store::tests::future_schema_and_page_corruption_are_refused --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 1 test
 test operational_store::tests::future_schema_and_page_corruption_are_refused ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1404 filtered out; finished in 0.50s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1424 filtered out; finished in 0.52s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -597,13 +597,13 @@ running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-engine operational_store::tests::exclusive_writer_and_encrypted_backup_are_verified --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 1 test
 test operational_store::tests::exclusive_writer_and_encrypted_backup_are_verified ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1404 filtered out; finished in 0.26s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1424 filtered out; finished in 0.28s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -719,7 +719,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::encrypted_back
 running 1 test
 test operational_store::tests::encrypted_backup_restores_only_to_a_verified_fresh_candidate ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1404 filtered out; finished in 0.35s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1424 filtered out; finished in 0.36s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -835,7 +835,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_r
 running 1 test
 test operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1404 filtered out; finished in 51.48s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1424 filtered out; finished in 52.82s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -945,4 +945,4 @@ running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
 $ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s
