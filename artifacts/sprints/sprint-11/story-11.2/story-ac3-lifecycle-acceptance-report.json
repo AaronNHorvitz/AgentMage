@@ -63,9 +63,9 @@
   ],
   "retained_evidence": [
     {
-      "byte_length": 491739,
+      "byte_length": 493656,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "660387aaf1627758b9d47bce2604266e552db108f68751eae753200f0c56ce05"
+      "sha256": "104017c5fe4d7eb78cf14b7a1e210fc6e803db01272f2cc450aae72a5cf035dc"
     },
     {
       "byte_length": 69345,
@@ -80,27 +80,27 @@
     {
       "byte_length": 3953,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-report.json",
-      "sha256": "b5a1c47c4132c9a1b71c47fc1ede366143efab0bcd40e3f1b6243d04e90f7f71"
+      "sha256": "8f6ef8050e623c3002f2b3caa7468bc1319dc4b1b5ba5892d6218cd984b5c296"
     },
     {
       "byte_length": 31234,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-results.log",
-      "sha256": "d1b2124ccd343ffcf63bfa31a025f61630f28c4c782b20c5523d1e26418b19c4"
+      "sha256": "f5d9a43a369142ede2737791240716ec60e839eda7ca871909630a02f1f42985"
     },
     {
-      "byte_length": 7424,
+      "byte_length": 8002,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-report.json",
-      "sha256": "69fc4d971d0febabec48a85ec81ce5b475877c0360db6ef016f5cdfe8ce6416d"
+      "sha256": "3d04e0826c2d1f9707fc25ad163fa2bc277e103429bc07d0f5c1604ab460ae1f"
     },
     {
-      "byte_length": 18022,
+      "byte_length": 18020,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-results.log",
-      "sha256": "6af48fe5d2f80e6864a4bd4deecd2469562ab3a26467370120c7d37719f0b96a"
+      "sha256": "03b9dbbd4279703f18c5039d4c8dab2dce778ad68ba6c487fba191babe86cd67"
     },
     {
-      "byte_length": 6455,
+      "byte_length": 6456,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
-      "sha256": "48de82a26de182f275fcdb337f4590eddf71391af1658e3183643450ca9d8e8b"
+      "sha256": "9ae2062e459584d95982b819b478255f98a3901a485effa10438ac72ed369bbd"
     },
     {
       "byte_length": 455,
