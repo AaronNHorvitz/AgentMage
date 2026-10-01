@@ -162,8 +162,13 @@ pub struct RecipeManifest {
 }
 
 /// A parameter value supplied at instantiation.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-#[serde(tag = "type", content = "value", rename_all = "snake_case")]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(
+    tag = "type",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum RecipeValue {
     /// A choice.
     Choice(String),
@@ -176,7 +181,8 @@ pub enum RecipeValue {
 }
 
 /// One registered validation a plan binds.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct RecipePlanValidation {
     /// Validation identity.
     pub validation_id: String,
@@ -186,8 +192,10 @@ pub struct RecipePlanValidation {
     pub template_sha256: String,
 }
 
-/// An instantiated recipe: a proposal with an exact digest.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+/// An instantiated recipe: a proposal with an exact digest. A host hands it
+/// to its client in a run's declarations (Decision 0133), so it also decodes.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct RecipePlan {
     /// Plan schema version.
     pub schema_version: u16,
@@ -384,6 +392,20 @@ fn validate_kind_rules(manifest: &RecipeManifest) -> Result<(), RecipeError> {
     }
 }
 
+/// Checks parameter values against an admitted manifest for one workspace,
+/// without a validation registry: every value must name a declared parameter
+/// of its type, within its bounds, and every required parameter must have
+/// one. A client can check what it sends before a host instantiates the
+/// recipe (Decision 0133).
+pub fn check_recipe_parameters(
+    manifest: &RecipeManifest,
+    workspace_id: &WorkspaceId,
+    values: &BTreeMap<String, RecipeValue>,
+) -> Result<(), RecipeError> {
+    admit_recipe_manifest(manifest)?;
+    recipe_scope(manifest, workspace_id, values).map(|_| ())
+}
+
 /// Instantiates an admitted recipe for one workspace. Every value must name a
 /// declared parameter of its type, and every declared validation kind must
 /// have at least one registered template, all of which the plan binds.
@@ -397,6 +419,54 @@ pub fn instantiate_recipe(
     if !registry.verify() {
         return Err(RecipeError::RegistryInvalid);
     }
+    let scope = recipe_scope(manifest, workspace_id, values)?;
+    let mut validations = Vec::new();
+    for kind in &manifest.verification {
+        let before = validations.len();
+        validations.extend(
+            registry
+                .templates
+                .iter()
+                .filter(|template| template.kind == *kind)
+                .map(|template| RecipePlanValidation {
+                    validation_id: template.validation_id.clone(),
+                    kind: template.kind,
+                    template_sha256: template.template_sha256.clone(),
+                }),
+        );
+        if validations.len() == before {
+            return Err(RecipeError::VerificationUnavailable);
+        }
+    }
+    let mut plan = RecipePlan {
+        schema_version: SCHEMA_VERSION,
+        recipe_id: manifest.recipe_id.clone(),
+        recipe_version: manifest.version,
+        recipe_kind: manifest.kind,
+        manifest_sha256: manifest.manifest_sha256.clone(),
+        workspace_id: workspace_id.clone(),
+        parameters: values.clone(),
+        scope,
+        max_changed_files: manifest.max_changed_files,
+        prerequisites: manifest.prerequisites.clone(),
+        validations,
+        validation_registry_sha256: registry.registry_sha256.clone(),
+        rollback: manifest.rollback.clone(),
+        network_grant_required: manifest.needs_network_grant,
+        proposal_only: true,
+        plan_sha256: String::new(),
+    };
+    plan.plan_sha256 = sha256_json(&plan).map_err(|_| RecipeError::PlanInvalid)?;
+    Ok(plan)
+}
+
+/// The plan's scope for one workspace, once every value is checked against
+/// its declared parameter.
+fn recipe_scope(
+    manifest: &RecipeManifest,
+    workspace_id: &WorkspaceId,
+    values: &BTreeMap<String, RecipeValue>,
+) -> Result<Vec<WorkspaceScopePath>, RecipeError> {
     let scope = manifest
         .scope
         .iter()
@@ -436,44 +506,7 @@ pub fn instantiate_recipe(
             return Err(RecipeError::ParameterInvalid);
         }
     }
-    let mut validations = Vec::new();
-    for kind in &manifest.verification {
-        let before = validations.len();
-        validations.extend(
-            registry
-                .templates
-                .iter()
-                .filter(|template| template.kind == *kind)
-                .map(|template| RecipePlanValidation {
-                    validation_id: template.validation_id.clone(),
-                    kind: template.kind,
-                    template_sha256: template.template_sha256.clone(),
-                }),
-        );
-        if validations.len() == before {
-            return Err(RecipeError::VerificationUnavailable);
-        }
-    }
-    let mut plan = RecipePlan {
-        schema_version: SCHEMA_VERSION,
-        recipe_id: manifest.recipe_id.clone(),
-        recipe_version: manifest.version,
-        recipe_kind: manifest.kind,
-        manifest_sha256: manifest.manifest_sha256.clone(),
-        workspace_id: workspace_id.clone(),
-        parameters: values.clone(),
-        scope,
-        max_changed_files: manifest.max_changed_files,
-        prerequisites: manifest.prerequisites.clone(),
-        validations,
-        validation_registry_sha256: registry.registry_sha256.clone(),
-        rollback: manifest.rollback.clone(),
-        network_grant_required: manifest.needs_network_grant,
-        proposal_only: true,
-        plan_sha256: String::new(),
-    };
-    plan.plan_sha256 = sha256_json(&plan).map_err(|_| RecipeError::PlanInvalid)?;
-    Ok(plan)
+    Ok(scope)
 }
 
 /// Verifies a plan's digest and fixed proposal marker.
@@ -1020,7 +1053,23 @@ mod tests {
                 instantiate_recipe(&manifest(), &workspace(), &changed, &registry),
                 Err(RecipeError::ParameterInvalid)
             );
+            // A client's check without a registry refuses the same values
+            // (Decision 0133).
+            assert_eq!(
+                check_recipe_parameters(&manifest(), &workspace(), &changed),
+                Err(RecipeError::ParameterInvalid)
+            );
         }
+        assert_eq!(
+            check_recipe_parameters(&manifest(), &workspace(), &values()),
+            Ok(())
+        );
+        let mut unsealed = manifest();
+        unsealed.title = "Another title".to_owned();
+        assert_eq!(
+            check_recipe_parameters(&unsealed, &workspace(), &values()),
+            Err(RecipeError::ManifestInvalid)
+        );
         // An optional parameter may be absent; the scope prefix itself holds
         // no file path, but a path under a single-file scope entry is exact.
         let mut minimal = values();
@@ -1073,5 +1122,41 @@ mod tests {
             check_recipe_changes(&tampered, &[path("Cargo.lock")]),
             Err(RecipeError::PlanInvalid)
         );
+    }
+
+    #[test]
+    fn a_plan_decodes_exactly_as_a_host_declares_it() {
+        // Decision 0133: a client reads the plan back from a run's
+        // declarations; it decodes to the same plan, still verifies, and
+        // unknown members are refused.
+        let plan = instantiate_recipe(&manifest(), &workspace(), &values(), &registry()).unwrap();
+        let encoded = serde_json::to_value(&plan).unwrap();
+        let decoded: RecipePlan = serde_json::from_value(encoded.clone()).unwrap();
+        assert_eq!(decoded, plan);
+        assert!(verify_recipe_plan(&decoded));
+        let mut extra = encoded.clone();
+        extra["granted"] = serde_json::Value::Bool(true);
+        assert!(serde_json::from_value::<RecipePlan>(extra).is_err());
+        let mut extra_validation = encoded.clone();
+        extra_validation["validations"][0]["command"] = serde_json::Value::Null;
+        assert!(serde_json::from_value::<RecipePlan>(extra_validation).is_err());
+        let mut extra_value = encoded;
+        extra_value["parameters"]["retries"]["unit"] = serde_json::Value::Null;
+        assert!(serde_json::from_value::<RecipePlan>(extra_value).is_err());
+        for (value, expected) in [
+            (
+                serde_json::json!({"type": "integer", "value": 3}),
+                Some(RecipeValue::Integer(3)),
+            ),
+            (
+                serde_json::json!({"type": "path", "value": "Cargo.lock"}),
+                Some(RecipeValue::Path("Cargo.lock".to_owned())),
+            ),
+            (serde_json::json!({"type": "integer", "value": "3"}), None),
+            (serde_json::json!({"type": "url", "value": "x"}), None),
+            (serde_json::json!({"type": "choice"}), None),
+        ] {
+            assert_eq!(serde_json::from_value::<RecipeValue>(value).ok(), expected);
+        }
     }
 }

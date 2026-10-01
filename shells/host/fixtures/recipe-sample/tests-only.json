@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "recipe_id": "agentmage-sample-tests-only",
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "kind": "tests",
+  "title": "Change only the tests",
+  "parameters": [],
+  "scope": [
+    "tests"
+  ],
+  "max_changed_files": 1,
+  "prerequisites": [
+    {
+      "kind": "clean_worktree"
+    }
+  ],
+  "verification": [
+    "unit"
+  ],
+  "rollback": {
+    "boundary": "revert_writes_only"
+  },
+  "needs_network_grant": false,
+  "manifest_sha256": "a7a017c69f2d62318211f75d6dedc00f4a2e99a7af1ac77a7f2e3b7b1df24545"
+}

@@ -158,6 +158,38 @@ fn run_invocation(
     {
         return run_catalog_invocation(&activation, options, output, cancellation);
     }
+    // Decision 0133: a recipe is read and checked before any host is
+    // launched; a recipe that cannot be sent launches nothing.
+    let json = output == CliOutputFormat::Json;
+    let recipe = match options
+        .recipe
+        .as_deref()
+        .map(|recipe| {
+            crate::coding_recipe::read_recipe_manifest(&recipe.manifest).and_then(|manifest| {
+                crate::coding_recipe::recipe_request(
+                    manifest,
+                    &recipe.parameters,
+                    &WorkspaceId::from_raw(development_workspace_id(&activation)),
+                )
+            })
+        })
+        .transpose()
+    {
+        Ok(recipe) => recipe,
+        Err(refusal) => {
+            eprint!(
+                "{}",
+                crate::coding_recipe::render_recipe_refusal(refusal, json)
+            );
+            return Ok(refusal.exit_code());
+        }
+    };
+    if let Some(recipe) = &recipe {
+        eprint!(
+            "{}",
+            crate::coding_recipe::render_recipe_request(recipe, json)
+        );
+    }
     cancellation.check_startup()?;
     let mut child = LinuxDevelopmentHostProcess::launch(
         activation.state_root(),
@@ -168,7 +200,15 @@ fn run_invocation(
         options.resume,
     )
     .map_err(CodingDevelopmentClientError::from)?;
-    let result = run_with_child(&activation, options, output, &mut child, cancellation, runs);
+    let result = run_with_child(
+        &activation,
+        options,
+        output,
+        &mut child,
+        cancellation,
+        runs,
+        recipe.as_ref(),
+    );
     if result.is_err() {
         child
             .terminate_and_reap()
@@ -279,6 +319,11 @@ fn current_epoch_ms() -> Option<u64> {
         .and_then(|elapsed| u64::try_from(elapsed.as_millis()).ok())
 }
 
+/// The workspace identity the development host composes for an activation.
+fn development_workspace_id(activation: &CodingDevelopmentActivation) -> String {
+    format!("coding-development-{}", &activation.marker_sha256()[..24])
+}
+
 fn run_with_child(
     activation: &CodingDevelopmentActivation,
     options: &CodingDevelopmentCliOptions,
@@ -286,6 +331,7 @@ fn run_with_child(
     child: &mut LinuxDevelopmentHostProcess,
     cancellation: &mut InstalledSignalCancellation,
     runs: &mut Vec<ObservedRun>,
+    recipe: Option<&crate::coding_recipe::RuntimeRecipeRequest>,
 ) -> Result<ClientExitCode, CodingDevelopmentClientError> {
     let envelope = child
         .read_launch_envelope_cancellable(&cancellation.requested)
@@ -304,7 +350,7 @@ fn run_with_child(
     } else if options.artifact_integrity_probe {
         runtime = runtime.with_artifact_integrity_probe();
     }
-    let workspace_id = format!("coding-development-{}", &activation.marker_sha256()[..24]);
+    let workspace_id = development_workspace_id(activation);
     let mut approvals = TerminalApprovals {
         output,
         preauthorized: options.approve_this_run,
@@ -342,6 +388,7 @@ fn run_with_child(
                 workspace_id: workspace_id.clone(),
                 workspace_root: activation.workspace_root().to_string_lossy().into_owned(),
                 prompt: objective.to_owned(),
+                recipe: recipe.cloned(),
             },
             &mut approvals,
             &mut sink,
@@ -377,13 +424,23 @@ fn run_with_child(
             result.declarations.as_ref(),
             output,
         );
+        // Decision 0133: the plan the run was held to follows its other
+        // declarations.
+        let recipe_plan = crate::coding_recipe::render_declared_recipe_plan(
+            result
+                .declarations
+                .as_ref()
+                .and_then(|declarations| declarations.recipe_plan.as_ref()),
+            recipe.is_some(),
+            output == CliOutputFormat::Json,
+        );
         let rendered = RenderedRunResult {
             artifacts: render_verified_artifacts(&result.verified_artifacts, output),
             export,
             export_notice,
             outcome,
             after_outcome: format!(
-                "{}{}{}",
+                "{}{}{recipe_plan}{}",
                 sink.take_progress(&result.request.limits),
                 render_run_declarations(result.declarations.as_ref(), output),
                 render_job_state(
@@ -1975,6 +2032,7 @@ mod tests {
             job_control_history: None,
             route_receipt: None,
             route_history: None,
+            recipe_plan: None,
         };
         let human = render_run_declarations(Some(&declarations), CliOutputFormat::Human);
         assert!(human.starts_with("recoverability of this run's effects: "));
@@ -2053,6 +2111,7 @@ mod tests {
             job_control_history: None,
             route_receipt: Some(route.receipt.clone()),
             route_history: route.history.clone(),
+            recipe_plan: None,
         };
         let human = render_run_declarations(Some(&declarations), CliOutputFormat::Human);
         assert!(human.contains(&format!(
@@ -2124,6 +2183,7 @@ mod tests {
             job_control_history: Some(action_history(ActionKind::JobControl)),
             route_receipt: None,
             route_history: Some(action_history(ActionKind::ModelRoute)),
+            recipe_plan: None,
         };
         let selection = |text| ActionHistoryExportSelection::parse(text).unwrap();
         assert_eq!(
@@ -2193,6 +2253,7 @@ mod tests {
             job_control_history: None,
             route_receipt: None,
             route_history: None,
+            recipe_plan: None,
         };
         let selection = |text| ActionHistoryExportSelection::parse(text);
         for output in [CliOutputFormat::Human, CliOutputFormat::Json] {

@@ -59,6 +59,8 @@ pub mod coding_operation;
 /// Verified descriptive planning identity for bounded coding sessions.
 pub mod coding_plan;
 pub mod coding_projection;
+/// Recipe plans handed to the ordinary change approval (Decision 0133).
+pub mod coding_recipe;
 pub mod coding_recoverability;
 /// Local-only model routes of the development coding host and their receipts.
 pub mod coding_route;

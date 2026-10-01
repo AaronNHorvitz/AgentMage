@@ -93,6 +93,7 @@ fn the_catalog_host_refuses_every_run_operation() {
                 workspace_id: request.workspace_id.as_str().to_owned(),
                 workspace_root: "/tmp/agentmage-catalog-fixture".to_owned(),
                 prompt: request.task.objective.clone(),
+                recipe: None,
             })
             .err(),
         Some(RuntimeTransportError::RequestDenied)

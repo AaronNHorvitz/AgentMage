@@ -495,6 +495,7 @@ fn prepare_input(request: &RuntimeRunRequest) -> NativeChatPrepareInput {
         workspace_id: request.workspace_id.as_str().to_owned(),
         workspace_root: "/tmp/agentmage-runtime-parity".to_owned(),
         prompt: request.task.objective.clone(),
+        recipe: None,
     }
 }
 

@@ -1,5 +1,6 @@
 //! Executable development-only composition of the real coding coordinator and Linux boundaries.
 
+use agentmage_kernel_engine::engineering_recipe::RecipePlan;
 use agentmage_kernel_engine::runtime_loop::RuntimeModelOperationFailure;
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt::Write as _;
@@ -354,6 +355,8 @@ struct PreparedDevelopmentRun {
     preauthorization: Option<LinuxCodingSessionPreauthorization>,
     continuity: Option<CodingContextContinuityInput>,
     record_session: bool,
+    /// The plan this run's writes are held to (Decision 0133).
+    recipe: Option<crate::coding_recipe::SharedRecipeScope>,
 }
 
 /// Factory that composes the real coordinator only for one explicit disposable activation.
@@ -380,6 +383,12 @@ pub struct CodingDevelopmentRuntimeFactory {
     /// The stored run action histories of the last composed run's store,
     /// until the host service takes them (Decision 0129).
     composed_run_histories: Option<(RuntimeRunId, DurableRunActionHistories)>,
+    /// The recipe plan of the last composed run, until the host service
+    /// takes it (Decision 0133).
+    composed_recipe: Option<(RuntimeRunId, RecipePlan)>,
+    /// The plan scope of the session's last prepared run, so a run continued
+    /// in this host keeps the paths its plan admitted (Decision 0133).
+    prior_recipe: Option<(RuntimeRunId, crate::coding_recipe::SharedRecipeScope)>,
 }
 
 impl CodingDevelopmentRuntimeFactory {
@@ -424,6 +433,8 @@ impl CodingDevelopmentRuntimeFactory {
             composed_job_ledgers: None,
             composed_route: None,
             composed_run_histories: None,
+            composed_recipe: None,
+            prior_recipe: None,
         })
     }
 
@@ -451,6 +462,11 @@ impl CodingDevelopmentRuntimeFactory {
             return Err(prepare_denied("resume-state"));
         }
         let (request, policy, skip_scripted_steps) = self.load_resume_request(&input.prompt)?;
+        // Decision 0133: a restarted host has no plan scope for a run held
+        // to a recipe, so such a run is not resumed without its plan.
+        if !crate::coding_recipe::declared_plan_sha256s(&request).is_empty() {
+            return Err(recipe_denied("resume-unavailable"));
+        }
         self.session_id = Some(request.session_id.clone());
         self.prior_run_id = Some(request.run_id.clone());
         self.resume_requested = false;
@@ -463,6 +479,7 @@ impl CodingDevelopmentRuntimeFactory {
                 preauthorization: None,
                 continuity: None,
                 record_session: false,
+                recipe: None,
             },
         );
         Ok(request)
@@ -842,7 +859,12 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             .revalidate()
             .map_err(|_| prepare_denied("activation"))?;
         if input.resume != self.resume_requested
-            || self.resume_requested && (input.preauthorization.is_some() || input.record_session)
+            || self.resume_requested
+                && (input.preauthorization.is_some()
+                    || input.record_session
+                    || input.recipe.is_some())
+            || input.recipe.is_some()
+                && (input.preauthorization.is_some() || self.preauthorization.is_some())
             || input.profile_id != self.model.profile_id()
             || input.expected_entry_sha256 != self.activation.marker_sha256()
             || input.workspace_id != self.profile.write_scope().workspace_id().as_str()
@@ -865,6 +887,24 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 .verify(&input.workspace_id, preparation_time)
                 .map_err(|_| prepare_denied("preauthorization"))?;
         }
+        // Decision 0133: the plan is instantiated against this workspace's
+        // validation templates before anything else of the run is prepared.
+        let recipe = input
+            .recipe
+            .as_ref()
+            .map(|recipe| {
+                crate::coding_recipe::instantiate_run_recipe(
+                    recipe,
+                    self.profile.write_scope().workspace_id(),
+                    self.profile.validations(),
+                )
+                .map_err(|refusal| recipe_denied(refusal.code()))
+                .and_then(|plan| {
+                    crate::coding_recipe::RecipeRunScope::new(plan)
+                        .map_err(|error| recipe_denied(error.code()))
+                })
+            })
+            .transpose()?;
         let current_session = self.session_id.clone();
         let existing_session = current_session.is_some();
         let session_id = match (current_session, &input.engineering_session_id) {
@@ -984,6 +1024,9 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                                 .map_err(|_| prepare_denied("preauthorization-state"))?
                         ));
                     }
+                    if let Some(recipe) = &recipe {
+                        constraints.extend(crate::coding_recipe::recipe_constraints(recipe.plan()));
+                    }
                     constraints
                 },
                 work_packet: packet,
@@ -1001,8 +1044,16 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 preauthorization: self.preauthorization.clone(),
                 continuity,
                 record_session: input.record_session,
+                recipe: recipe
+                    .clone()
+                    .map(crate::coding_recipe::SharedRecipeScope::new),
             },
         );
+        self.prior_recipe = self
+            .prepared
+            .get(request.run_id.as_str())
+            .and_then(|prepared| prepared.recipe.clone())
+            .map(|scope| (request.run_id.clone(), scope));
         self.prior_run_id = Some(request.run_id.clone());
         Ok(request)
     }
@@ -1015,6 +1066,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         self.composed_job_ledgers = None;
         self.composed_route = None;
         self.composed_run_histories = None;
+        self.composed_recipe = None;
         self.activation
             .revalidate()
             .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
@@ -1025,6 +1077,12 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         if prepared.request != *request {
             return Err(NativeChatRuntimeError::RequestDenied);
         }
+        // Decision 0133: the plan is declared with the run it was held to.
+        self.composed_recipe = prepared
+            .recipe
+            .as_ref()
+            .and_then(crate::coding_recipe::SharedRecipeScope::plan)
+            .map(|plan| (request.run_id.clone(), plan));
         let stop_after_checkpoint = matches!(
             self.scenario,
             CodingDevelopmentScenario::RestartRepair
@@ -1190,6 +1248,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             identities: OsCodingIdentitySource,
             preauthorization: prepared.preauthorization,
             retain_model_exchanges: prepared.record_session,
+            recipe: prepared.recipe,
         })
         .map_err(|error| {
             eprintln!("coding.development.compose.boundary-{error:?}");
@@ -1264,6 +1323,13 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         }
     }
 
+    fn take_recipe_plan(&mut self, run_id: &RuntimeRunId) -> Option<RecipePlan> {
+        match self.composed_recipe.take() {
+            Some((composed, plan)) if &composed == run_id => Some(plan),
+            _ => None,
+        }
+    }
+
     /// Continues this session's last run from the checkpoint it stopped at
     /// (Decision 0122). The store must name that checkpoint as the session's
     /// current one and hold the run's base request, and the journal must end
@@ -1291,6 +1357,21 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         if resumed != expected {
             return Err(prepare_denied("in-host-resume-drift"));
         }
+        // Decision 0133: the continued run keeps its plan and the paths the
+        // plan admitted before it was suspended.
+        let recipe = match (
+            crate::coding_recipe::declared_plan_sha256s(&resumed).as_slice(),
+            &self.prior_recipe,
+        ) {
+            ([], _) => None,
+            ([digest], Some((run_id, scope)))
+                if run_id == &resumed.run_id
+                    && scope.plan().is_some_and(|plan| plan.plan_sha256 == *digest) =>
+            {
+                Some(scope.clone())
+            }
+            _ => return Err(recipe_denied("in-host-resume-plan")),
+        };
         self.prepared.insert(
             resumed.run_id.as_str().to_owned(),
             PreparedDevelopmentRun {
@@ -1300,6 +1381,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 preauthorization: self.preauthorization.clone(),
                 continuity: None,
                 record_session: self.record_session.unwrap_or(false),
+                recipe,
             },
         );
         Ok(resumed)
@@ -1309,6 +1391,13 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
 fn prepare_denied(stage: &str) -> NativeChatRuntimeError {
     eprintln!("coding.development.prepare.{stage}-denied");
     NativeChatRuntimeError::RequestDenied
+}
+
+/// A run's recipe refused while it is prepared (Decision 0133); the cause is
+/// a closed recipe code or stage.
+fn recipe_denied(cause: &str) -> NativeChatRuntimeError {
+    eprintln!("coding.development.prepare.recipe-denied {cause}");
+    NativeChatRuntimeError::RecipeDenied
 }
 
 fn next_development_identity(prefix: &str) -> Result<String, NativeChatRuntimeError> {

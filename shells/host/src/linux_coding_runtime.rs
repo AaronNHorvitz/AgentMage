@@ -527,6 +527,9 @@ where
     pub preauthorization: Option<LinuxCodingSessionPreauthorization>,
     /// Whether the user explicitly consented to retain exact model exchanges for this session.
     pub retain_model_exchanges: bool,
+    /// The recipe plan this run's writes are held to, shared with the host
+    /// so a run continued in it keeps the paths admitted (Decision 0133).
+    pub recipe: Option<crate::coding_recipe::SharedRecipeScope>,
 }
 
 /// Production Linux implementation of the reusable runtime's native coding boundary.
@@ -548,6 +551,9 @@ where
     identities: I,
     preauthorization: Option<LinuxCodingSessionPreauthorization>,
     retain_model_exchanges: bool,
+    /// Each write outside this plan is refused before any approval is asked
+    /// (Decision 0133).
+    recipe: Option<crate::coding_recipe::SharedRecipeScope>,
     pending: BTreeMap<String, PendingCodingOperation<'workspace>>,
     issued: BTreeMap<String, IssuedCodingOperation<'workspace>>,
     pending_write_completion: Option<PendingWriteCheckpointCompletion>,
@@ -557,6 +563,18 @@ where
     /// The run's action history: one entry for each call whose grant this
     /// boundary consumed and each call a person refused (Decision 0127).
     action_history: RunActionRecorder,
+}
+
+/// One proposed write a run's recipe plan refused (Decision 0133).
+struct RecipeRefusal<'call> {
+    operation_id: &'call RuntimeOperationId,
+    call: &'call ToolCall,
+    kind: ExecutedEffectKind,
+    approval_id: ApprovalId,
+    grant_id: GrantId,
+    preview_sha256: String,
+    expires_at_epoch_ms: u64,
+    reason_code: &'static str,
 }
 
 #[derive(Clone)]
@@ -752,6 +770,7 @@ where
             identities,
             preauthorization,
             retain_model_exchanges,
+            recipe,
         } = input;
         let root = workspace.workspace();
         if policy.parent_targets().len() != 1
@@ -791,6 +810,7 @@ where
             identities,
             preauthorization,
             retain_model_exchanges,
+            recipe,
             pending: BTreeMap::new(),
             issued: BTreeMap::new(),
             pending_write_completion: None,
@@ -863,6 +883,26 @@ where
         let approval_id = ApprovalId::from_raw(self.next_id("approval")?);
         let proposed_grant_id = GrantId::from_raw(self.next_id("grant-operation")?);
         let plan_id = self.next_id("change-plan")?;
+        // Decision 0133: a write outside the run's recipe plan, or beyond its
+        // file bound, is refused before any grant is issued, any session
+        // preauthorization is consulted or any approval is asked.
+        if let Some(recipe) = &self.recipe
+            && let Some(path) =
+                crate::coding_recipe::recipe_write_target(prepared.operation().target())
+            && let Err(error) = recipe.admit(path)
+        {
+            let refusal = RecipeRefusal {
+                operation_id,
+                call,
+                kind: ExecutedEffectKind::of(prepared.operation().prepared()),
+                approval_id,
+                grant_id: proposed_grant_id,
+                preview_sha256: parent_preview_sha256,
+                expires_at_epoch_ms,
+                reason_code: error.code(),
+            };
+            return self.refuse_outside_recipe(request, refusal, now_epoch_ms, build_event);
+        }
         let grant_request = SessionReadGrantRequest {
             grant_id: parent_grant_id,
             actor_id: self.actor_id.clone(),
@@ -1535,6 +1575,68 @@ where
 
     /// Keeps a person's refusal of one pending call in the run's action
     /// history (Decision 0127).
+    /// Refuses one proposed write the run's recipe plan does not admit
+    /// (Decision 0133): a policy refusal that issues no grant, records an
+    /// unauthorized, denied entry in the run's action history and, when the
+    /// caller builds the correctness event, journals it.
+    fn refuse_outside_recipe(
+        &mut self,
+        request: &RuntimeRunRequest,
+        refusal: RecipeRefusal<'_>,
+        now_epoch_ms: u64,
+        mut build_event: Option<&mut PermissionEventBuilder<'_>>,
+    ) -> Result<(RuntimePermissionEvaluation, Option<RuntimeEvent>), RuntimePortFailure> {
+        let plan_sha256 = self
+            .recipe
+            .as_ref()
+            .and_then(crate::coding_recipe::SharedRecipeScope::plan)
+            .map(|plan| plan.plan_sha256)
+            .ok_or(RuntimePortFailure::Invalid)?;
+        let decision_sha256 = sha256(
+            &serde_json::to_vec(&serde_json::json!({
+                "record_type": "agentmage-recipe-refusal",
+                "run_id": request.run_id.as_str(),
+                "operation_id": refusal.operation_id.as_str(),
+                "plan_sha256": plan_sha256,
+                "preview_sha256": refusal.preview_sha256,
+                "reason_code": refusal.reason_code,
+            }))
+            .map_err(|_| RuntimePortFailure::Invalid)?,
+        );
+        self.action_history
+            .record(crate::coding_action_history::policy_refused_action_draft(
+                &RefusedAction {
+                    run: run_identity(request),
+                    operation_id: refusal.operation_id.as_str(),
+                    call: refusal.call,
+                    kind: &refusal.kind,
+                    decision_sha256: &decision_sha256,
+                    preview_sha256: &refusal.preview_sha256,
+                    reason_code: refusal.reason_code,
+                    decided_at_epoch_ms: now_epoch_ms,
+                },
+            ));
+        let evaluation = RuntimePermissionEvaluation::Deny {
+            approval_id: refusal.approval_id,
+            grant_id: refusal.grant_id,
+            preview_sha256: refusal.preview_sha256,
+            expires_at_epoch_ms: refusal.expires_at_epoch_ms,
+            decision_sha256,
+            reason_code: refusal.reason_code.to_owned(),
+        };
+        let event = if let Some(builder) = build_event.as_mut() {
+            let event = builder(&evaluation)?;
+            self.authority
+                .authority_mut()
+                .record_runtime_event_with_authority_snapshot(event.clone())
+                .map_err(map_journal_failure)?;
+            Some(event)
+        } else {
+            None
+        };
+        Ok((evaluation, event))
+    }
+
     fn record_refusal(
         &mut self,
         request: &RuntimeRunRequest,
@@ -5758,6 +5860,7 @@ mod tests {
             ),
             preauthorization: None,
             retain_model_exchanges: false,
+            recipe: None,
         })
         .expect("coding runtime boundary");
         Fixture {
@@ -7284,6 +7387,7 @@ mod tests {
                 identities: TestIdentities::new(30_000),
                 preauthorization: None,
                 retain_model_exchanges: false,
+                recipe: None,
             })
             .expect("long-session resumed boundary");
         let mut resumed_request = base_request.clone();
@@ -7778,6 +7882,7 @@ mod tests {
                 identities: TestIdentities::new(30_000),
                 preauthorization: None,
                 retain_model_exchanges: false,
+                recipe: None,
             })
             .expect("large-artifact resumed boundary");
         let mut resumed_request = base_request.clone();
@@ -8061,6 +8166,7 @@ mod tests {
                 identities: TestIdentities::new(10_000),
                 preauthorization: None,
                 retain_model_exchanges: false,
+                recipe: None,
             })
             .expect("resumed Linux boundary");
         let mut resumed_request = base_request.clone();
@@ -8336,6 +8442,7 @@ mod tests {
                     identities: TestIdentities::new(20_000),
                     preauthorization: None,
                     retain_model_exchanges: false,
+                    recipe: None,
                 })
                 .expect("lost-continuation Linux boundary");
             let mut resumed_request = base_request.clone();
@@ -9062,6 +9169,70 @@ mod tests {
             event_sha256: "e".repeat(64),
         });
         assert_eq!(fixture.boundary.declare_run_action_history(&resumed), None);
+    }
+
+    #[test]
+    fn a_write_outside_the_recipe_plan_is_refused_before_any_grant_or_approval() {
+        // Decision 0133: the plan admits only `tests`; the patch of
+        // `src/lib.rs` is a policy denial that issues nothing and is kept as an
+        // unauthorized entry of the run's history.
+        let mut fixture = fixture();
+        configure_structured_patch(&mut fixture);
+        let workspace_id = fixture.request.workspace_id.clone();
+        fixture.boundary.recipe = Some(crate::coding_recipe::test_scope(&workspace_id, "tests", 1));
+        let denied = fixture
+            .boundary
+            .evaluate(
+                &fixture.request,
+                &fixture.operation_id,
+                &fixture.definition,
+                &fixture.call,
+                6_000,
+            )
+            .expect("policy refusal");
+        let RuntimePermissionEvaluation::Deny {
+            reason_code,
+            decision_sha256,
+            ..
+        } = &denied
+        else {
+            panic!("expected a recipe refusal, got {denied:?}");
+        };
+        assert_eq!(reason_code, "recipe.out-of-scope");
+        assert!(fixture.boundary.pending.is_empty());
+        assert!(fixture.boundary.issued.is_empty());
+        assert!(fixture.boundary.authority.authority().receipts().is_empty());
+        let history = fixture
+            .boundary
+            .declare_run_action_history(&fixture.request)
+            .expect("declared history");
+        let [ActionHistoryRecord::Kept(entry)] = history.records.as_slice() else {
+            panic!("one kept entry");
+        };
+        assert_eq!(entry.authorization, ActionAuthorization::Unauthorized {});
+        assert_eq!(entry.outcome, ActionOutcome::Denied);
+        assert_eq!(entry.reason_code, "recipe.out-of-scope");
+        assert!(entry.evidence_sha256s.contains(decision_sha256));
+        assert_eq!(
+            fs::read(fixture.root.join("worktree/src/lib.rs")).expect("source"),
+            b"pub fn runtime_fixture() {}\n"
+        );
+        // A plan that admits `src` leaves the write to the ordinary approval.
+        let mut fixture = fixture_with_git(FakeGitExecutor::default());
+        configure_structured_patch(&mut fixture);
+        fixture.boundary.recipe = Some(crate::coding_recipe::test_scope(&workspace_id, "src", 1));
+        let asked = fixture
+            .boundary
+            .evaluate(
+                &fixture.request,
+                &fixture.operation_id,
+                &fixture.definition,
+                &fixture.call,
+                6_000,
+            )
+            .expect("approval preview");
+        assert!(matches!(asked, RuntimePermissionEvaluation::Ask { .. }));
+        assert_eq!(fixture.boundary.pending.len(), 1);
     }
 
     #[test]

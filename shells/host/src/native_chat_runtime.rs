@@ -91,6 +91,16 @@ pub trait NativeChatRuntimeFactory {
         None
     }
 
+    /// Hands over the recipe plan this factory held `run_id`'s writes to when
+    /// it composed the run (Decision 0133), for the host service to declare
+    /// with the run. A factory that honors no recipe has none.
+    fn take_recipe_plan(
+        &mut self,
+        _run_id: &agentmage_kernel_contracts::RuntimeRunId,
+    ) -> Option<agentmage_kernel_engine::engineering_recipe::RecipePlan> {
+        None
+    }
+
     /// Hands over the stored run action histories of the store the factory
     /// opened when it composed `run_id` (Decision 0129).
     fn take_run_action_histories(
@@ -155,7 +165,8 @@ where
         if !matches!(
             request.mode,
             RuntimeSessionMode::EphemeralReadOnly | RuntimeSessionMode::ControlledWrite
-        ) || request.event_cursor.is_some()
+        ) || !crate::coding_recipe::request_binds_recipe(&request, input.recipe.as_ref())
+            || request.event_cursor.is_some()
             || request.model_profile.profile_id.as_str() != input.profile_id
             || request.workspace_id.as_str() != input.workspace_id
             || request.task.objective != input.prompt
@@ -577,6 +588,7 @@ mod tests {
             workspace_id: request.workspace_id.as_str().to_owned(),
             workspace_root: "/tmp/agentmage-native-chat-fixture".to_owned(),
             prompt: request.task.objective.clone(),
+            recipe: None,
         };
         let factory = ReplayFactory {
             expected_input: input.clone(),
@@ -669,6 +681,7 @@ mod tests {
             workspace_id: controlled_request.workspace_id.as_str().to_owned(),
             workspace_root: "/tmp/agentmage-controlled-chat-fixture".to_owned(),
             prompt: controlled_request.task.objective.clone(),
+            recipe: None,
         };
         let factory = ReplayFactory {
             expected_input: input.clone(),

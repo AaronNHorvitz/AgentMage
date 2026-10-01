@@ -209,6 +209,12 @@ pub struct RuntimePrepareInput {
     pub workspace_root: String,
     /// Bounded user objective retained as inert task input.
     pub prompt: String,
+    /// A recipe the run is held to (Decision 0133): the host instantiates
+    /// its plan against the workspace's validation templates and the tool
+    /// boundary refuses each write outside it. Absent for most runs, and
+    /// then not encoded.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recipe: Option<crate::coding_recipe::RuntimeRecipeRequest>,
 }
 
 /// One verified coordinator boundary returned to a transport-only client.
@@ -268,9 +274,10 @@ pub fn is_suspension_event(event: Option<&RuntimeEvent>, point: &RuntimeSuspensi
 }
 
 /// Current run declarations schema: schema 2 adds each run's action
-/// histories (Decision 0127), and schema 3 its model route receipt and route
-/// history (Decision 0128).
-pub const RUN_DECLARATIONS_SCHEMA_VERSION: u16 = 3;
+/// histories (Decision 0127), schema 3 its model route receipt and route
+/// history (Decision 0128), and schema 4 the recipe plan it was held to
+/// (Decision 0133).
+pub const RUN_DECLARATIONS_SCHEMA_VERSION: u16 = 4;
 
 /// Host declarations about one ended run, read before the run is released
 /// (Decision 0116). They describe the run and grant nothing.
@@ -301,6 +308,9 @@ pub struct RuntimeRunDeclarations {
     /// Action history of the run's model routes, kept by the routing owner;
     /// absent with the receipt or when its entry could not be kept.
     pub route_history: Option<RunActionHistory>,
+    /// The recipe plan the run's writes were held to, absent when the run
+    /// had no recipe (Decision 0133).
+    pub recipe_plan: Option<agentmage_kernel_engine::engineering_recipe::RecipePlan>,
 }
 
 /// Reconciled control state of one held run's job, replayed from the host's
@@ -405,6 +415,9 @@ pub enum RuntimeTransportError {
     CapacityExceeded,
     /// The run has no durable job ledger this caller can use (Decision 0120).
     JobControlUnavailable,
+    /// The run's recipe could not be instantiated for its workspace
+    /// (Decision 0133).
+    RecipeDenied,
 }
 
 impl RuntimeTransportError {
@@ -421,6 +434,7 @@ impl RuntimeTransportError {
             Self::RuntimeEvidenceDenied => "host.runtime.evidence_denied",
             Self::CapacityExceeded => "host.runtime.capacity_exceeded",
             Self::JobControlUnavailable => "host.runtime.job_control_unavailable",
+            Self::RecipeDenied => "host.runtime.recipe_denied",
         }
     }
 }

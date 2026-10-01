@@ -182,6 +182,7 @@ fn fixture(
         workspace_id: request.workspace_id.as_str().to_owned(),
         workspace_root: "/tmp/agentmage-startup-fixture".to_owned(),
         prompt: request.task.objective.clone(),
+        recipe: None,
     };
     let observed = Arc::new(Observed::default());
     let factory = RefusingFactory {
@@ -473,6 +474,7 @@ struct GatedFactory {
     route: Option<crate::coding_route::RunRouteDeclaration>,
     run_histories:
         Option<agentmage_kernel_engine::run_action_history_store::DurableRunActionHistories>,
+    recipe_plan: Option<agentmage_kernel_engine::engineering_recipe::RecipePlan>,
 }
 
 impl NativeChatRuntimeFactory for GatedFactory {
@@ -524,6 +526,15 @@ impl NativeChatRuntimeFactory for GatedFactory {
             .clone()
             .filter(|_| run_id == &self.request.run_id)
     }
+
+    fn take_recipe_plan(
+        &mut self,
+        run_id: &RuntimeRunId,
+    ) -> Option<agentmage_kernel_engine::engineering_recipe::RecipePlan> {
+        self.recipe_plan
+            .take()
+            .filter(|_| run_id == &self.request.run_id)
+    }
 }
 
 fn last_cursor(
@@ -556,6 +567,7 @@ fn the_live_service_declares_only_a_held_ended_run_that_is_not_busy() {
     .unwrap();
     let route =
         crate::coding_route::route_development_run(&request, "contract-test", 5_000).unwrap();
+    let (recipe, plan) = crate::coding_recipe::test_recipe(&request.workspace_id, "src", 1);
     let (open_gate, gate) = std::sync::mpsc::channel();
     let declarations = Arc::new(AtomicUsize::new(0));
     let mut service = LiveCodingRuntimeService::new(GatedFactory {
@@ -568,6 +580,7 @@ fn the_live_service_declares_only_a_held_ended_run_that_is_not_busy() {
         job_ledgers: None,
         route: Some(route.clone()),
         run_histories: None,
+        recipe_plan: Some(plan.clone()),
     });
     let input = RuntimePrepareInput {
         resume: false,
@@ -580,7 +593,17 @@ fn the_live_service_declares_only_a_held_ended_run_that_is_not_busy() {
         workspace_id: request.workspace_id.as_str().to_owned(),
         workspace_root: "/tmp/agentmage-declaration-fixture".to_owned(),
         prompt: request.task.objective.clone(),
+        recipe: None,
     };
+    // Decision 0133: a factory whose request binds no plan cannot serve a
+    // run sent with a recipe.
+    assert_eq!(
+        service.prepare(RuntimePrepareInput {
+            recipe: Some(recipe),
+            ..input.clone()
+        }),
+        Err(RuntimeTransportError::RequestDenied)
+    );
     let prepared = service.prepare(input).unwrap();
     assert_eq!(prepared, request);
     // Prepared but not started: nothing to declare.
@@ -638,7 +661,7 @@ fn the_live_service_declares_only_a_held_ended_run_that_is_not_busy() {
     assert_eq!(declared.context_inspections, Some(Vec::new()));
     // Decision 0127: the tool boundary's history is declared; this run has no
     // job, so it declares no job control history.
-    assert_eq!(declared.schema_version, 3);
+    assert_eq!(declared.schema_version, 4);
     assert_eq!(
         declared.effect_history,
         crate::coding_action_history::RunActionRecorder::new().declare()
@@ -648,6 +671,8 @@ fn the_live_service_declares_only_a_held_ended_run_that_is_not_busy() {
     // declared by the service with its history.
     assert_eq!(declared.route_receipt, Some(route.receipt));
     assert_eq!(declared.route_history, route.history);
+    // Decision 0133: the plan the factory held the run to is declared with it.
+    assert_eq!(declared.recipe_plan, Some(plan));
     service
         .release(&request.run_id, &request.request_sha256)
         .unwrap();
@@ -788,6 +813,7 @@ fn gated_live_service(
         job_ledgers: Some(ledgers),
         route: None,
         run_histories,
+        recipe_plan: None,
     });
     let input = RuntimePrepareInput {
         resume: request.event_cursor.is_some(),
@@ -800,6 +826,7 @@ fn gated_live_service(
         workspace_id: request.workspace_id.as_str().to_owned(),
         workspace_root: "/tmp/agentmage-job-fixture".to_owned(),
         prompt: request.task.objective.clone(),
+        recipe: None,
     };
     (service, open_gate, input)
 }
@@ -1668,6 +1695,7 @@ fn suspension_prepare_input(request: &RuntimeRunRequest) -> RuntimePrepareInput 
         workspace_id: request.workspace_id.as_str().to_owned(),
         workspace_root: "/tmp/agentmage-suspension-fixture".to_owned(),
         prompt: request.task.objective.clone(),
+        recipe: None,
     }
 }
 

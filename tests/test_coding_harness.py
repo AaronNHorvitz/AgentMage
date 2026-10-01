@@ -589,6 +589,60 @@ class CodingHarnessTests(unittest.TestCase):
             with self.assertRaises(coding_harness.HarnessError):
                 coding_harness.write_extension_sample(link)
 
+    def test_the_recipe_sample_is_copied_privately_and_its_arguments_are_closed(self):
+        # Decision 0133: the four committed manifests are copied into a new
+        # private directory, and a run's recipe reaches the CLI only as an
+        # absolute file with closed NAME=VALUE values.
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary) / "recipes"
+            files = coding_harness.write_recipe_sample(directory)
+            self.assertEqual(
+                files,
+                ["build-verified.json", "needs-network.json", "repair-in-src.json", "tests-only.json"],
+            )
+            self.assertEqual(stat.S_IMODE(directory.stat().st_mode), 0o700)
+            for relative in files:
+                copied = directory / relative
+                self.assertEqual(stat.S_IMODE(copied.stat().st_mode), 0o600)
+                self.assertEqual(
+                    copied.read_bytes(), (coding_harness.RECIPE_SAMPLE / relative).read_bytes()
+                )
+            with self.assertRaises(coding_harness.HarnessError):
+                coding_harness.write_recipe_sample(directory)
+        self.assertEqual(coding_harness.recipe_arguments(None, ()), [])
+        self.assertEqual(
+            coding_harness.recipe_arguments(
+                Path("/r/repair-in-src.json"), ("target=src/calc.py", "attempts=2")
+            ),
+            [
+                "--recipe", "/r/repair-in-src.json",
+                "--recipe-param", "target=src/calc.py",
+                "--recipe-param", "attempts=2",
+            ],
+        )
+        for recipe, parameters in (
+            (None, ("target=src/calc.py",)),
+            (Path("relative.json"), ()),
+            (Path("/r/a.json"), ("target",)),
+            (Path("/r/a.json"), ("Target=x",)),
+            (Path("/r/a.json"), ("target=",)),
+            (Path("/r/a.json"), ("target=a\tb",)),
+            (Path("/r/a.json"), ("attempts=1",) * 17),
+        ):
+            with self.assertRaises(coding_harness.HarnessError, msg=(recipe, parameters)):
+                coding_harness.recipe_arguments(recipe, parameters)
+        parsed = coding_harness.parser().parse_args([
+            "start", "--root", "/expected", "--scenario", "failed-test-repair",
+            "--objective", "repair", "--recipe", "/r/repair-in-src.json",
+            "--recipe-param", "target=src/calc.py",
+        ])
+        self.assertEqual(
+            (parsed.recipe, parsed.recipe_param),
+            (Path("/r/repair-in-src.json"), ["target=src/calc.py"]),
+        )
+        parsed = coding_harness.parser().parse_args(["recipe-sample", "--directory", "/r"])
+        self.assertEqual((parsed.command, parsed.directory), ("recipe-sample", Path("/r")))
+
     def test_the_sample_pack_is_sealed_as_the_knowledge_component_seals_it(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary) / "sample"

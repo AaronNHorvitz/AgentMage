@@ -157,6 +157,7 @@ fn declare_run<R: LiveRunDeclarationPort>(
         job_control_history: None,
         route_receipt: None,
         route_history: None,
+        recipe_plan: None,
     }
 }
 
@@ -558,7 +559,8 @@ where
         if !matches!(
             request.mode,
             RuntimeSessionMode::EphemeralReadOnly | RuntimeSessionMode::ControlledWrite
-        ) || request.event_cursor.is_some() != input.resume
+        ) || !crate::coding_recipe::request_binds_recipe(&request, input.recipe.as_ref())
+            || request.event_cursor.is_some() != input.resume
             || request.model_profile.profile_id.as_str() != input.profile_id
             || request.workspace_id.as_str() != input.workspace_id
             || request.task.objective != input.prompt
@@ -601,6 +603,7 @@ where
         let coordinator = self.factory.compose_runtime(&request)?;
         let job_ledgers = self.factory.take_job_ledgers(&request.run_id);
         let route = self.factory.take_route_declaration(&request.run_id);
+        let recipe_plan = self.factory.take_recipe_plan(&request.run_id);
         let histories = self.factory.take_run_action_histories(&request.run_id);
         // A run started from an event cursor here was resumed after a restart;
         // a run continued in this host goes through `continue_from_checkpoint`.
@@ -614,6 +617,7 @@ where
                 eprintln!("coding.live.spawn-denied");
             })?;
         session.route = route;
+        session.recipe_plan = recipe_plan;
         if let Some(histories) = histories {
             session.attach_run_histories(histories, start);
         }
@@ -818,9 +822,11 @@ where
             .take_job_ledgers(&resumed.run_id)
             .ok_or(RuntimeTransportError::JobControlUnavailable)?;
         let route = self.factory.take_route_declaration(&resumed.run_id);
+        let recipe_plan = self.factory.take_recipe_plan(&resumed.run_id);
         let histories = self.factory.take_run_action_histories(&resumed.run_id);
         let mut session = LiveCodingSession::spawn(resumed, coordinator, false)?;
         session.route = route;
+        session.recipe_plan = recipe_plan;
         session.job_actions = job_actions;
         session.recorded_controls = recorded_controls;
         session.job_history_from_start = job_history_from_start;
@@ -886,6 +892,8 @@ struct LiveCodingSession {
     job_history_from_start: bool,
     /// The model route the factory chose for this composition (Decision 0128).
     route: Option<RunRouteDeclaration>,
+    /// The recipe plan the factory held this run's writes to (Decision 0133).
+    recipe_plan: Option<agentmage_kernel_engine::engineering_recipe::RecipePlan>,
     /// The run's stored action histories, closed when the run is released
     /// (Decision 0129).
     run_histories: Option<DurableRunActionHistories>,
@@ -1010,6 +1018,7 @@ impl LiveCodingSession {
             recorded_controls: BTreeSet::new(),
             job_history_from_start,
             route: None,
+            recipe_plan: None,
             run_histories: None,
         })
     }
@@ -1779,6 +1788,7 @@ impl LiveCodingSession {
             Ok(Ok(WorkerResponse::Declarations(mut declarations))) => {
                 declarations.job_control_history = self.declare_job_control_history();
                 (declarations.route_receipt, declarations.route_history) = self.declare_route();
+                declarations.recipe_plan.clone_from(&self.recipe_plan);
                 Ok(declarations)
             }
             Ok(Ok(_)) => Err(RuntimeTransportError::RuntimeEvidenceDenied),
@@ -1944,6 +1954,7 @@ mod tests {
             recorded_controls: BTreeSet::new(),
             job_history_from_start: true,
             route: None,
+            recipe_plan: None,
             run_histories: None,
         };
         (session, result_tx, outcome)

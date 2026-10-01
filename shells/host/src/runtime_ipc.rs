@@ -6,7 +6,9 @@
 //! resumption are job control requests too; a step names where a suspended run
 //! stopped (Decision 0122). The catalog host answers documentation pack
 //! requests (Decision 0130), memory requests (Decision 0131) and extension
-//! requests (Decision 0132) over the same channel.
+//! requests (Decision 0132) over the same channel. Wire 15 carries a run's
+//! recipe, its declared plan and an extension list's issuer identity
+//! (Decision 0133).
 
 use agentmage_kernel_contracts::{
     CancellationId, RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEventCursor, RuntimeRunId,
@@ -27,7 +29,7 @@ use crate::runtime_transport::{
     RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
 };
 
-const WIRE_VERSION: u16 = 14;
+const WIRE_VERSION: u16 = 15;
 /// The wire version this build speaks, as named in a support bundle.
 pub const RUNTIME_IPC_WIRE_VERSION: u16 = WIRE_VERSION;
 const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
@@ -803,6 +805,7 @@ mod tests {
             job_control_history: Some(fixture_history(ActionKind::JobControl)),
             route_receipt: Some(fixture_route_receipt()),
             route_history: Some(fixture_history(ActionKind::ModelRoute)),
+            recipe_plan: None,
         };
         let request = RuntimeIpcEnvelope {
             version: WIRE_VERSION,
@@ -814,7 +817,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 14);
+        assert_eq!(decoded.version, 15);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::RunDeclarations {
             declarations: declarations.clone(),
@@ -886,7 +889,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 14);
+        assert_eq!(decoded.version, 15);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::EndedRunActionHistories {
             histories: histories.clone(),
@@ -987,7 +990,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 14);
+        assert_eq!(decoded.version, 15);
         assert_eq!(decoded.payload, request.payload);
         let text = String::from_utf8(bytes).unwrap();
         for nested in [
@@ -1178,7 +1181,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 14);
+        assert_eq!(decoded.version, 15);
         assert_eq!(decoded.payload, request.payload);
         let text = String::from_utf8(bytes).unwrap();
         for nested in [
@@ -1350,7 +1353,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 14);
+        assert_eq!(decoded.version, 15);
         assert_eq!(decoded.payload, request.payload);
         let text = String::from_utf8(bytes).unwrap();
         for nested in [
@@ -1566,6 +1569,7 @@ mod tests {
                 job_control_history: None,
                 route_receipt: None,
                 route_history: None,
+                recipe_plan: None,
             })
         }
 
@@ -1712,7 +1716,7 @@ mod tests {
             .unwrap();
             let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
                 serde_json::from_slice(&bytes).unwrap();
-            assert_eq!(decoded.version, 14);
+            assert_eq!(decoded.version, 15);
             assert_eq!(decoded.payload, request);
         }
         let mut scoped = serde_json::to_value(RuntimeIpcRequest::ControlJob {
@@ -1942,7 +1946,7 @@ mod tests {
         .unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcResponse> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 14);
+        assert_eq!(decoded.version, 15);
         assert_eq!(decoded.payload, response);
         let mut extra = serde_json::to_value(&suspended).unwrap();
         extra["suspended"]["resumable"] = serde_json::Value::Bool(true);

@@ -541,6 +541,7 @@ mod tests {
                     job_control_history: Some(history(ActionKind::JobControl, '3')),
                     route_receipt: None,
                     route_history: Some(history(ActionKind::ModelRoute, '4')),
+                    recipe_plan: None,
                 }),
                 job: Some(job(JobPhase::Completed)),
             }],
@@ -624,7 +625,7 @@ mod tests {
             [
                 ("agentmage-cli", CLI_VERSION),
                 ("ipc-wire", wire.as_str()),
-                ("run-declarations", "3"),
+                ("run-declarations", "4"),
             ]
         );
         assert_eq!(

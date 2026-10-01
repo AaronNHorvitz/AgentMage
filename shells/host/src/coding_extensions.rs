@@ -281,6 +281,9 @@ pub struct ExtensionRevocationsView {
     pub sequence: u64,
     /// List digest.
     pub list_sha256: String,
+    /// The identity its issuer signs as, which the scope's trust statement
+    /// for the issuer key names (Decision 0133).
+    pub issuer_id: String,
     /// SHA-256 of its issuer key.
     pub issuer_key_sha256: String,
 }
@@ -797,6 +800,7 @@ fn revocations_view(list: &CapabilityRevocationList) -> ExtensionRevocationsView
         list_id: list.list_id.clone(),
         sequence: list.sequence,
         list_sha256: list.list_sha256.clone(),
+        issuer_id: list.issuer_id.clone(),
         issuer_key_sha256: list.issuer_public_key_sha256.clone(),
     }
 }
@@ -810,7 +814,7 @@ fn sha256_hex(bytes: &[u8]) -> String {
 }
 
 /// Whether a value has the shape `YYYY-MM-DDTHH:MM:SSZ` with each part in
-/// range.
+/// range; the day exists in its month (review N2 of `e197fe95`).
 fn timestamp_shape(value: &str) -> bool {
     let bytes = value.as_bytes();
     let number = |range: std::ops::Range<usize>| {
@@ -834,10 +838,26 @@ fn timestamp_shape(value: &str) -> bool {
         .all(|(index, separator)| bytes[*index] == *separator)
         && number(0..4).is_some_and(|year| year >= 1)
         && number(5..7).is_some_and(|month| (1..=12).contains(&month))
-        && number(8..10).is_some_and(|day| (1..=31).contains(&day))
+        && number(8..10).is_some_and(|day| {
+            let (Some(year), Some(month)) = (number(0..4), number(5..7)) else {
+                return false;
+            };
+            day >= 1 && day <= days_in_month(year, month)
+        })
         && number(11..13).is_some_and(|hour| hour < 24)
         && number(14..16).is_some_and(|minute| minute < 60)
         && number(17..19).is_some_and(|second| second < 60)
+}
+
+const fn days_in_month(year: u32, month: u32) -> u32 {
+    match month {
+        2 if year.is_multiple_of(4) && (!year.is_multiple_of(100) || year.is_multiple_of(400)) => {
+            29
+        }
+        2 => 28,
+        4 | 6 | 9 | 11 => 30,
+        _ => 31,
+    }
 }
 
 fn lowercase_hex(value: &str, length: usize) -> bool {
@@ -1099,7 +1119,9 @@ fn verify_scope(state: ScopeState) -> Result<Scope, ExtensionRefusal> {
 }
 
 /// Verifies a list against the scope's issuer key and, when given, the
-/// scope's accepted list.
+/// scope's accepted list. The list must name the identity the scope trusts
+/// its key as (Decision 0133, review F2 of `e197fe95`), as a package must
+/// name its signer's.
 fn verify_list(
     scope: &Scope,
     list: &SignedRevocationList,
@@ -1110,6 +1132,7 @@ fn verify_list(
             ExtensionKeyRole::RevocationIssuer,
             &list.list.issuer_public_key_sha256,
         )
+        .filter(|issuer| issuer.statement.key_id == list.list.issuer_id)
         .ok_or(ExtensionRefusal::RevocationsUntrusted)?;
     let signature =
         decode_signature(&list.signature).ok_or(ExtensionRefusal::RevocationsInvalid)?;
@@ -1556,10 +1579,11 @@ fn render_extension(workspace_id: &str, extension: &ExtensionView, json: bool) -
 
 fn render_revocations(workspace_id: &str, revocations: &ExtensionRevocationsView) -> String {
     format!(
-        "extension revocations {} sequence {} ({}) in {workspace_id}; issuer {}\n",
+        "extension revocations {} sequence {} ({}) in {workspace_id}; issuer {} ({})\n",
         revocations.list_id,
         revocations.sequence,
         short(&revocations.list_sha256),
+        revocations.issuer_id,
         short(&revocations.issuer_key_sha256)
     )
 }

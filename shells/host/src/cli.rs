@@ -120,6 +120,17 @@ pub struct CodingDevelopmentCliOptions {
     /// An extension operation of the catalog host instead of a run
     /// (Decision 0132).
     pub extension: Option<Box<crate::coding_extensions::ExtensionCommand>>,
+    /// A recipe each run of this invocation is held to (Decision 0133).
+    pub recipe: Option<Box<DevelopmentRecipeOption>>,
+}
+
+/// A recipe named for each run of a development invocation (Decision 0133).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DevelopmentRecipeOption {
+    /// Absolute manifest file.
+    pub manifest: PathBuf,
+    /// `NAME=VALUE` parameter values, in the order given.
+    pub parameters: Vec<(String, String)>,
 }
 
 /// Parsed CLI action before any transport or authority boundary.
@@ -300,6 +311,8 @@ fn parse_coding_development(
     let mut extension_revocations = None;
     let mut extension_list = false;
     let mut extension_workspace = None;
+    let mut recipe = None;
+    let mut recipe_parameters = Vec::new();
     let absolute_path =
         |value: &&String| value.starts_with('/') && !value.contains('\0') && value.len() <= 4_096;
     let mut cursor = 0;
@@ -685,6 +698,26 @@ fn parse_coding_development(
                 cursor += 1;
                 continue;
             }
+            "--recipe" if recipe.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(absolute_path)
+                    .ok_or(ThinClientError::InvalidValue)?;
+                recipe = Some(PathBuf::from(value));
+                cursor += 2;
+                continue;
+            }
+            "--recipe-param"
+                if recipe_parameters.len() < crate::coding_recipe::MAX_RECIPE_PARAMETERS =>
+            {
+                let value = arguments
+                    .get(cursor + 1)
+                    .and_then(|value| crate::coding_recipe::parse_recipe_parameter(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                recipe_parameters.push(value);
+                cursor += 2;
+                continue;
+            }
             "--extension-workspace" if extension_workspace.is_none() => {
                 let value = arguments
                     .get(cursor + 1)
@@ -871,6 +904,8 @@ fn parse_coding_development(
             || preauthorization_minutes.is_some()
             || revoke_preauthorization_before_follow_ups
             || approval_delay_ms.is_some()
+            || recipe.is_some()
+            || !recipe_parameters.is_empty()
         {
             return Err(ThinClientError::InvalidValue);
         }
@@ -905,6 +940,7 @@ fn parse_coding_development(
             doc_pack: doc_pack.map(Box::new),
             memory: memory.map(Box::new),
             extension: extension.map(Box::new),
+            recipe: None,
         });
     }
     let scenario = scenario.ok_or(ThinClientError::InvalidValue)?;
@@ -955,6 +991,20 @@ fn parse_coding_development(
     {
         return Err(ThinClientError::InvalidValue);
     }
+    // Decision 0133: a recipe holds each run's writes to its plan, and each
+    // write inside it still needs its own approval, so it goes with no
+    // session preauthorization and no approval of the whole run. A run
+    // resumed after a restart is composed without a plan, so it takes none.
+    if !recipe_parameters.is_empty() && recipe.is_none()
+        || recipe.is_some()
+            && (resume
+                || preauthorization_requested
+                || preauthorization_budget.is_some()
+                || preauthorization_minutes.is_some()
+                || approve_this_run)
+    {
+        return Err(ThinClientError::InvalidValue);
+    }
     if [
         stale_approval_probe,
         replay_approval_probe,
@@ -999,6 +1049,12 @@ fn parse_coding_development(
         doc_pack: None,
         memory: None,
         extension: None,
+        recipe: recipe.map(|manifest| {
+            Box::new(DevelopmentRecipeOption {
+                manifest,
+                parameters: recipe_parameters,
+            })
+        }),
     })
 }
 
@@ -1580,7 +1636,7 @@ Commands:\n\
        [--preauthorize-workspace-reads] [--preauthorize-path RELATIVE_PATH]... [--preauthorize-command ID@VERSION@SHA256]...\n\
        [--preauthorization-budget N --preauthorization-minutes N] [--revoke-preauthorization-before-follow-ups]\n\
        [--approval-delay-ms 1..10000] [--action-history-export effects|job-control|routes:FROM:TO]\n\
-       [--support-bundle ABSOLUTE_PRIVATE_DIRECTORY]\n\
+       [--support-bundle ABSOLUTE_PRIVATE_DIRECTORY] [--recipe ABSOLUTE_FILE [--recipe-param NAME=VALUE]...]\n\
   code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
        --ended-run RUN_ID [--action-history-export effects|job-control|routes:FROM:TO]\n\
   code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
@@ -2545,6 +2601,132 @@ mod tests {
     }
 
     #[test]
+    fn recipe_options_go_only_with_a_run_that_asks_for_each_write() {
+        // Decision 0133: a recipe names an absolute manifest file and its
+        // parameter values; it goes with a run, never with a catalog
+        // operation, a resume, a session preauthorization or an approval of
+        // the whole run.
+        let roots = [
+            "code",
+            "--development",
+            "--state-root",
+            "/tmp/state",
+            "--disposable-root",
+            "/tmp/disposable",
+            "--workspace-root",
+            "/tmp/disposable/worktree",
+        ];
+        let run = [
+            "--scenario",
+            "failed-test-repair",
+            "--objective",
+            "Repair the failing test",
+        ];
+        let parse = |extra: &[&str]| {
+            let mut arguments = roots.to_vec();
+            arguments.extend(extra);
+            match parse_cli_arguments(&strings(&arguments)) {
+                Ok(CliInvocation::Code {
+                    development: Some(options),
+                    ..
+                }) => Ok(options),
+                Ok(_) => panic!("development options"),
+                Err(error) => Err(error),
+            }
+        };
+        let with_run = |extra: &[&'static str]| {
+            let mut arguments = run.to_vec();
+            arguments.extend(extra);
+            arguments
+        };
+        let options = parse(&with_run(&[
+            "--recipe",
+            "/tmp/recipe-sample/repair-in-src.json",
+            "--recipe-param",
+            "target=src/calc.py",
+            "--recipe-param",
+            "attempts=2",
+        ]))
+        .unwrap();
+        assert_eq!(
+            options.recipe,
+            Some(Box::new(DevelopmentRecipeOption {
+                manifest: PathBuf::from("/tmp/recipe-sample/repair-in-src.json"),
+                parameters: vec![
+                    ("target".to_owned(), "src/calc.py".to_owned()),
+                    ("attempts".to_owned(), "2".to_owned()),
+                ],
+            }))
+        );
+        let follow_up = parse(&with_run(&[
+            "--recipe",
+            "/tmp/recipe.json",
+            "--follow-up",
+            "Run the validation again",
+        ]))
+        .unwrap();
+        assert!(
+            follow_up
+                .recipe
+                .is_some_and(|recipe| recipe.parameters.is_empty())
+        );
+        assert!(parse(&run).unwrap().recipe.is_none());
+        let mut many = with_run(&["--recipe", "/tmp/recipe.json"]);
+        for _ in 0..crate::coding_recipe::MAX_RECIPE_PARAMETERS {
+            many.extend(["--recipe-param", "attempts=1"]);
+        }
+        assert!(parse(&many).is_ok());
+        many.extend(["--recipe-param", "attempts=1"]);
+        assert!(parse(&many).is_err());
+        for refused in [
+            with_run(&["--recipe", "relative/recipe.json"]),
+            with_run(&["--recipe", "/tmp/a.json", "--recipe", "/tmp/b.json"]),
+            with_run(&["--recipe"]),
+            with_run(&["--recipe-param", "target=src/calc.py"]),
+            with_run(&["--recipe", "/tmp/recipe.json", "--recipe-param", "target"]),
+            with_run(&["--recipe", "/tmp/recipe.json", "--recipe-param", "Target=x"]),
+            with_run(&["--recipe", "/tmp/recipe.json", "--recipe-param", "target="]),
+            with_run(&["--recipe", "/tmp/recipe.json", "--resume"]),
+            with_run(&["--recipe", "/tmp/recipe.json", "--approve-this-run"]),
+            with_run(&[
+                "--recipe",
+                "/tmp/recipe.json",
+                "--preauthorize-workspace-reads",
+                "--preauthorization-budget",
+                "2",
+                "--preauthorization-minutes",
+                "5",
+            ]),
+            with_run(&[
+                "--recipe",
+                "/tmp/recipe.json",
+                "--preauthorization-budget",
+                "2",
+            ]),
+            vec!["--doc-pack-list", "--recipe", "/tmp/recipe.json"],
+            vec!["--memory-list", "--recipe-param", "target=src/calc.py"],
+            vec![
+                "--extension-list",
+                "--recipe",
+                "/tmp/recipe.json",
+                "--recipe-param",
+                "target=src/calc.py",
+            ],
+            vec![
+                "--ended-run",
+                "coding-development-run-1",
+                "--recipe",
+                "/tmp/recipe.json",
+            ],
+        ] {
+            assert!(parse(&refused).is_err(), "{refused:?}");
+        }
+        for option in ["--recipe ABSOLUTE_FILE", "--recipe-param NAME=VALUE"] {
+            assert!(command_help().contains(option), "{option}");
+        }
+    }
+
+    #[test]
     fn extension_operations_parse_closed_and_alone() {
         // Decision 0132: each extension operation replaces the objective, goes
         // to the catalog host alone, names its scope, and takes only its own
@@ -2682,6 +2864,24 @@ mod tests {
                 "coding-development-run-1",
             ],
             vec!["--extension-list", "--memory-workspace", "workspace-a"],
+            // A scope goes only with an extension operation (review F1 of
+            // `e197fe95`): every other rule admits each of these.
+            vec!["--memory-list", "--extension-workspace", "workspace-a"],
+            vec!["--doc-pack-list", "--extension-workspace", "workspace-a"],
+            vec![
+                "--ended-run",
+                "coding-development-run-1",
+                "--extension-workspace",
+                "workspace-a",
+            ],
+            vec![
+                "--scenario",
+                "failed-test-repair",
+                "--objective",
+                "Repair the failing test",
+                "--extension-workspace",
+                "workspace-a",
+            ],
             // Run options do not go with a catalog operation.
             vec!["--extension-list", "--scenario", "no-op"],
             vec!["--extension-list", "--model", "scripted"],

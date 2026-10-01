@@ -734,8 +734,11 @@ def start(
     suspend_resume_probe: bool = False,
     action_history_export: str | None = None,
     support_bundle: Path | None = None,
+    recipe: Path | None = None,
+    recipe_parameters: tuple[str, ...] = (),
 ) -> int:
     base = base.resolve(strict=True)
+    recipe_options = recipe_arguments(recipe, recipe_parameters)
     state, disposable, workspace = paths(base)
     current = diagnose(base)
     if (
@@ -790,6 +793,7 @@ def start(
         command.extend(("--preauthorization-minutes", str(preauthorization_minutes)))
     if revoke_preauthorization_before_follow_ups:
         command.append("--revoke-preauthorization-before-follow-ups")
+    command.extend(recipe_options)
     resource_guard = None
     stdout_target = None
     stderr_target = None
@@ -1082,26 +1086,62 @@ def extension_arguments(arguments: argparse.Namespace) -> list[str]:
     return ["--extension-uninstall", arguments.uninstall] + scope
 
 
-def write_extension_sample(directory: Path) -> list[str]:
-    """Copies the committed synthetic extension sample into a new private
-    directory (Decision 0132). Its keys come from fixed, published seeds:
-    trust them only inside a disposable demonstration root."""
+def copy_private_sample(sample: Path, directory: Path, name: str) -> list[str]:
+    """Copies one committed synthetic sample into a new private directory:
+    0700 directories and 0600 files. An existing or linked target is refused."""
     if not directory.is_absolute() or directory.exists() or directory.is_symlink():
-        raise HarnessError("coding.harness.extension-sample-target-denied")
+        raise HarnessError(f"coding.harness.{name}-sample-target-denied")
     files = sorted(
-        path.relative_to(EXTENSION_SAMPLE)
-        for path in EXTENSION_SAMPLE.rglob("*")
+        path.relative_to(sample)
+        for path in sample.rglob("*")
         if path.is_file() and not path.is_symlink()
     )
     if not files:
-        raise HarnessError("coding.harness.extension-sample-missing")
+        raise HarnessError(f"coding.harness.{name}-sample-missing")
     directory.mkdir(mode=0o700)
     for relative in files:
         target = directory / relative
         for parent in reversed(target.relative_to(directory).parents[:-1]):
             (directory / parent).mkdir(mode=0o700, exist_ok=True)
-        private_file(target, (EXTENSION_SAMPLE / relative).read_text(encoding="utf-8"))
+        private_file(target, (sample / relative).read_text(encoding="utf-8"))
     return [str(relative) for relative in files]
+
+
+def write_extension_sample(directory: Path) -> list[str]:
+    """Copies the committed synthetic extension sample into a new private
+    directory (Decision 0132). Its keys come from fixed, published seeds:
+    trust them only inside a disposable demonstration root."""
+    return copy_private_sample(EXTENSION_SAMPLE, directory, "extension")
+
+
+RECIPE_SAMPLE = ROOT / "shells" / "host" / "fixtures" / "recipe-sample"
+RECIPE_PARAMETER = re.compile(r"[a-z][a-z0-9_]{0,63}=[^\x00-\x1f\x7f]+")
+
+
+def write_recipe_sample(directory: Path) -> list[str]:
+    """Copies the committed synthetic recipe manifests into a new private
+    directory (Decision 0133): a repair held to one file under `src`, a plan
+    scoped to `tests` only, a recipe that needs a network grant and one
+    verified by a build validation the development profile lacks."""
+    return copy_private_sample(RECIPE_SAMPLE, directory, "recipe")
+
+
+def recipe_arguments(recipe: Path | None, parameters: tuple[str, ...]) -> list[str]:
+    """The CLI arguments of a run's recipe (Decision 0133): an absolute
+    manifest file and `NAME=VALUE` values, which the CLI checks again against
+    the manifest before it launches anything."""
+    if recipe is None:
+        if parameters:
+            raise HarnessError("coding.harness.recipe-arguments-denied")
+        return []
+    if not recipe.is_absolute() or len(parameters) > 16:
+        raise HarnessError("coding.harness.recipe-arguments-denied")
+    arguments = ["--recipe", str(recipe)]
+    for parameter in parameters:
+        if len(parameter) > 1024 or RECIPE_PARAMETER.fullmatch(parameter) is None:
+            raise HarnessError("coding.harness.recipe-parameter-denied")
+        arguments.extend(("--recipe-param", parameter))
+    return arguments
 
 
 def catalog(base: Path, arguments: list[str]) -> int:
@@ -1329,6 +1369,8 @@ def parser() -> argparse.ArgumentParser:
     extension_command.add_argument("--allow-license")
     extension_sample_command = commands.add_parser("extension-sample")
     extension_sample_command.add_argument("--directory", type=Path, required=True)
+    recipe_sample_command = commands.add_parser("recipe-sample")
+    recipe_sample_command.add_argument("--directory", type=Path, required=True)
     sample_command = commands.add_parser("doc-pack-sample")
     sample_command.add_argument("--directory", type=Path, required=True)
     sample_command.add_argument("--version", default="1.0.0")
@@ -1369,6 +1411,8 @@ def parser() -> argparse.ArgumentParser:
     start_command.add_argument(
         "--revoke-preauthorization-before-follow-ups", action="store_true"
     )
+    start_command.add_argument("--recipe", type=Path)
+    start_command.add_argument("--recipe-param", action="append", default=[])
     start_command.add_argument("--log-dir", type=Path)
     return result
 
@@ -1402,6 +1446,12 @@ def main() -> int:
                 "files": write_extension_sample(arguments.directory),
             }, sort_keys=True))
             return 0
+        if arguments.command == "recipe-sample":
+            print(json.dumps({
+                "directory": str(arguments.directory),
+                "files": write_recipe_sample(arguments.directory),
+            }, sort_keys=True))
+            return 0
         if arguments.command == "doc-pack-sample":
             manifest = write_sample_pack(
                 arguments.directory, arguments.version, arguments.retrieved_on
@@ -1429,6 +1479,8 @@ def main() -> int:
             arguments.suspend_resume_probe,
             arguments.action_history_export,
             arguments.support_bundle,
+            arguments.recipe,
+            tuple(arguments.recipe_param),
         )
     except (HarnessError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as error:
         print(str(error), file=sys.stderr)

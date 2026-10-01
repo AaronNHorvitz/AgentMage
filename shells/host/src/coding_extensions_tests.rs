@@ -253,6 +253,18 @@ fn foreign_list() -> SignedRevocationList {
     )
 }
 
+/// Signed by the trusted issuer key under another identity than the one the
+/// scope trusts it as (review F2 of `e197fe95`).
+fn renamed_list() -> SignedRevocationList {
+    list(
+        LIST_ID,
+        3,
+        vec![package_entry(FORMATTER), package_entry(LINTER)],
+        ("agentmage-sample-renamed-issuer", ISSUER_SEED),
+        ISSUER_SEED,
+    )
+}
+
 /// Names the trusted issuer but is signed by another key.
 fn unsigned_list() -> SignedRevocationList {
     list(
@@ -299,6 +311,7 @@ fn sample_files() -> BTreeMap<String, Vec<u8>> {
         ("2-fork", forked_list()),
         ("foreign", foreign_list()),
         ("unsigned", unsigned_list()),
+        ("renamed", renamed_list()),
     ] {
         files.insert(format!("revocations/{name}.json"), pretty(&list));
     }
@@ -634,6 +647,7 @@ fn a_revocation_list_deactivates_only_what_it_reaches_within_its_scope() {
             list_id: LIST_ID.to_owned(),
             sequence: 1,
             list_sha256: first_list().list.list_sha256,
+            issuer_id: ISSUER_ID.to_owned(),
             issuer_key_sha256: key_digest(ISSUER_SEED),
         }
     );
@@ -687,13 +701,15 @@ fn a_revocation_list_deactivates_only_what_it_reaches_within_its_scope() {
         panic!("applied");
     };
     assert_eq!(deactivated, [LINTER]);
-    // Older, forked, foreign and badly signed lists are refused, and the
-    // scope keeps the second list.
+    // Older, forked, foreign and badly signed lists are refused, as is a
+    // newer list the trusted key signed under another identity than the one
+    // the scope trusts it as; the scope keeps the second list.
     for (list, refusal) in [
         (first_list(), ExtensionRefusal::RevocationsStale),
         (forked_list(), ExtensionRefusal::RevocationsStale),
         (foreign_list(), ExtensionRefusal::RevocationsUntrusted),
         (unsigned_list(), ExtensionRefusal::RevocationsInvalid),
+        (renamed_list(), ExtensionRefusal::RevocationsUntrusted),
     ] {
         assert_eq!(refused(&harness.apply("workspace-a", list)), Some(refusal));
     }
@@ -1071,6 +1087,16 @@ fn a_stored_catalog_is_verified_again_at_every_operation() {
                 state.scopes[0]
                     .keys
                     .retain(|key| key.role != ExtensionKeyRole::PackageSigner);
+            }),
+        ),
+        (
+            "a list whose issuer the scope trusts under another identity",
+            Box::new(|state| {
+                for key in &mut state.scopes[0].keys {
+                    if key.role == ExtensionKeyRole::RevocationIssuer {
+                        key.key_id = "agentmage-sample-renamed-issuer".to_owned();
+                    }
+                }
             }),
         ),
         (
@@ -1694,7 +1720,13 @@ fn answers_render_as_escaped_text_lines_or_json_rows() {
 
 #[test]
 fn timestamps_digests_and_identities_parse_exactly() {
-    for value in ["2026-10-01T00:00:00Z", "0001-01-01T23:59:59Z"] {
+    for value in [
+        "2026-10-01T00:00:00Z",
+        "0001-01-01T23:59:59Z",
+        "2026-10-31T00:00:00Z",
+        "2024-02-29T00:00:00Z",
+        "2000-02-29T00:00:00Z",
+    ] {
         assert!(timestamp_shape(value), "{value}");
     }
     for value in [
@@ -1706,6 +1738,11 @@ fn timestamps_digests_and_identities_parse_exactly() {
         "2026-10-01 00:00:00Z",
         "0000-10-01T00:00:00Z",
         "２026-10-01T00:00:00Z",
+        // Review N2 of `e197fe95`: a day its month does not have.
+        "2026-09-31T00:00:00Z",
+        "2026-02-29T00:00:00Z",
+        "1900-02-29T00:00:00Z",
+        "2026-10-32T00:00:00Z",
     ] {
         assert!(!timestamp_shape(value), "{value}");
     }

@@ -495,6 +495,26 @@ pub fn refused_action_draft(action: &RefusedAction<'_>) -> Option<ActionRecordDr
     })
 }
 
+/// The entry for one call the host's policy refused before any grant or
+/// approval, such as a write outside the run's recipe plan (Decision 0133):
+/// nothing authorized it, and the decision digest is the policy's.
+#[must_use]
+pub fn policy_refused_action_draft(action: &RefusedAction<'_>) -> Option<ActionRecordDraft> {
+    Some(ActionRecordDraft {
+        action_kind: effect_action_kind(action.kind),
+        action_id: action.operation_id.to_owned(),
+        authorization: ActionAuthorization::Unauthorized {},
+        effect_sha256: effect_identity_sha256(action.run, action.operation_id, action.call)?,
+        outcome: ActionOutcome::Denied,
+        reason_code: action.reason_code.to_owned(),
+        evidence_sha256s: evidence(&[action.preview_sha256, action.decision_sha256]),
+        recorded_at_epoch_ms: action.decided_at_epoch_ms,
+        retain_until_epoch_ms: action
+            .decided_at_epoch_ms
+            .checked_add(RUN_ACTION_RETENTION_MS)?,
+    })
+}
+
 const fn control_name(action: JobControlAction) -> &'static str {
     match action {
         JobControlAction::Suspend => "suspend",
@@ -1256,6 +1276,30 @@ mod tests {
             executed_action_draft(&facts.executed(completed(OperationOutcome::Succeeded), 8))
                 .unwrap();
         assert_eq!(executed.effect_sha256, draft.effect_sha256);
+    }
+
+    #[test]
+    fn a_write_outside_a_recipe_plan_is_kept_as_an_unauthorized_policy_refusal() {
+        // Decision 0133: nothing authorized it; the policy's decision and the
+        // preview are its evidence, and it names the same effect.
+        let facts = Facts::new(ExecutedEffectKind::Write);
+        let refused = facts.refused("recipe.out-of-scope", 9);
+        let draft = policy_refused_action_draft(&refused).unwrap();
+        assert_eq!(draft.action_kind, ActionKind::FileWrite);
+        assert_eq!(draft.authorization, ActionAuthorization::Unauthorized {});
+        assert_eq!(draft.outcome, ActionOutcome::Denied);
+        assert_eq!(draft.reason_code, "recipe.out-of-scope");
+        assert_eq!(draft.evidence_sha256s, vec![digest('b'), digest('d')]);
+        assert_eq!(draft.recorded_at_epoch_ms, 9);
+        assert_eq!(
+            draft.effect_sha256,
+            refused_action_draft(&refused).unwrap().effect_sha256
+        );
+        // It is kept in a history that replays.
+        let mut recorder = RunActionRecorder::new();
+        recorder.record(Some(draft));
+        let history = recorder.declare().unwrap();
+        assert!(verify_run_action_history(&history, RunActionChain::Effects).is_ok());
     }
 
     #[test]

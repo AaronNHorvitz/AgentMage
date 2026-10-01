@@ -583,6 +583,7 @@ where
                     workspace_id,
                     workspace_root,
                     prompt,
+                    recipe: None,
                 },
             ),
             HostRequest::StartRuntime { run_request, .. } => {

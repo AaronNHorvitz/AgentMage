@@ -251,6 +251,22 @@ and answer the prompts on the terminal.
   component the CLI did not observe is reported missing. Nothing is uploaded, and
   `--approve-this-run` does not answer this question. A cancelled invocation asks
   nothing. Omit `--log-dir` to see the preview and question on the terminal.
+- Recipe: copy the synthetic recipe manifests with
+  `python3 -m scripts.coding_harness recipe-sample --directory "$demo-recipes"` and add
+  `--recipe "$demo-recipes/repair-in-src.json" --recipe-param target=src/calc.py` to
+  `start` (Decision 0133). Before the host starts, standard error shows the recipe:
+  what it may change, its file bound, its validation kinds, prerequisites, values and
+  rollback. The host instantiates the plan against the workspace's validation
+  templates and binds its digest into the run. Every write the plan admits still asks
+  for your approval as usual. After the run, the declarations show the plan with each
+  bound validation template. With `tests-only.json` instead, the scripted repair of
+  `src/calc.py` is refused with `recipe.out-of-scope` before any prompt, and the run
+  ends declined (exit 4) with no file changed. With `build-verified.json` the host
+  refuses the run with `host.runtime.recipe_denied`, because the development profile
+  registers only a unit validation. A recipe does not go with `--resume`,
+  `--approve-this-run` or any `--preauthorize-*` option. These native steps have not
+  been observed through actual processes yet (AMR-05.10); the checks below that run
+  before a host starts have.
 
 ### Documentation packs through the catalog host
 
@@ -353,7 +369,7 @@ The catalog host also keeps one extension catalog in the same encrypted store
 (Decision 0132). Extensions live in workspace scopes. Each scope holds the keys you
 trust in it, the extensions you installed in it and the revocation list it accepted
 last, and nothing crosses scopes. The harness copies a synthetic sample: trust
-statements, three signed packages and five signed lists. The sample's keys come from
+statements, three signed packages and six signed lists. The sample's keys come from
 fixed, published seeds, so trust them only inside a disposable demonstration root:
 
 ```sh
@@ -382,7 +398,11 @@ The wrapper passes each operation to the CLI's `--extension-trust FILE`,
   linter's exact manifest. Applying the first list again is then refused with
   `extension.revocations-stale` (exit 3), as is `2-fork.json`. `foreign.json` is
   refused with `extension.revocations-untrusted`, and `unsigned.json` with
-  `extension.revocations-invalid`. The same list twice changes nothing.
+  `extension.revocations-invalid`. `renamed.json` is signed by the trusted issuer
+  key but names another issuer identity than the one the scope trusts it as, so it
+  is refused with `extension.revocations-untrusted` too (Decision 0133). The listing
+  shows the accepted list's issuer identity beside its key digest. The same list
+  twice changes nothing.
 - Each scope is separate. A second scope that trusts `foreign-issuer-trust.json`
   accepts `foreign.json`, which then revokes the linter only there.
 - An installation checks the manifest seal, the source file's digest, the license you

@@ -296,6 +296,7 @@ where
         job_controls: Vec::new(),
         control_sequence: 0,
         announced: None,
+        recipe: input.recipe.clone(),
     };
     let result = driver.drive(runtime, &mut step, approvals, sink, cancellation);
     if result.is_err() {
@@ -312,6 +313,9 @@ struct RunDriver {
     control_sequence: u64,
     /// The suspension boundary already presented.
     announced: Option<RuntimeEventCursor>,
+    /// The recipe sent with the run, against which its declared plan is
+    /// checked (Decision 0133).
+    recipe: Option<crate::coding_recipe::RuntimeRecipeRequest>,
 }
 
 impl RunDriver {
@@ -428,7 +432,9 @@ impl RunDriver {
         let declarations = runtime
             .run_declarations(&request.run_id, &request.request_sha256)
             .ok()
-            .and_then(|declarations| verified_run_declarations(declarations, &request));
+            .and_then(|declarations| {
+                verified_run_declarations(declarations, &request, self.recipe.as_ref())
+            });
         let job = match runtime.job_status(&request.run_id, &request.request_sha256) {
             Ok(status) if status.describes(&request) => Ok(status),
             Ok(_) => Err(JobStateUnavailable::NotDescribed),
@@ -749,11 +755,13 @@ fn lower_hex(bytes: &[u8]) -> String {
 /// whose seal, scope or summary does not verify, an action history that does
 /// not replay to its head or holds another owner's kinds (Decision 0127), a
 /// route receipt that does not recompute or describe a local-only,
-/// strict-local selection for this run, and a route history without its kept
-/// receipt (Decision 0128), is dropped as unavailable.
+/// strict-local selection for this run, a route history without its kept
+/// receipt (Decision 0128), and a recipe plan that is not the plan of the
+/// recipe sent with the run (Decision 0133), is dropped as unavailable.
 fn verified_run_declarations(
     mut declarations: RuntimeRunDeclarations,
     request: &RuntimeRunRequest,
+    recipe: Option<&crate::coding_recipe::RuntimeRecipeRequest>,
 ) -> Option<RuntimeRunDeclarations> {
     if declarations.schema_version != crate::runtime_transport::RUN_DECLARATIONS_SCHEMA_VERSION
         || declarations.run_id != request.run_id
@@ -803,6 +811,11 @@ fn verified_run_declarations(
     }) {
         declarations.route_history = None;
     }
+    if declarations.recipe_plan.as_ref().is_some_and(|plan| {
+        !crate::coding_recipe::verify_declared_recipe_plan(plan, request, recipe)
+    }) {
+        declarations.recipe_plan = None;
+    }
     Some(declarations)
 }
 
@@ -821,7 +834,8 @@ fn verify_prepared_request(
     if !matches!(
         request.mode,
         RuntimeSessionMode::EphemeralReadOnly | RuntimeSessionMode::ControlledWrite
-    ) || request.event_cursor.is_some() != input.resume
+    ) || !crate::coding_recipe::request_binds_recipe(request, input.recipe.as_ref())
+        || request.event_cursor.is_some() != input.resume
         || request.model_profile.profile_id.as_str() != input.profile_id
         || request.workspace_id.as_str() != input.workspace_id
         || request.task.objective != input.prompt
@@ -1635,6 +1649,7 @@ mod tests {
             job_control_history: history(ActionKind::JobControl),
             route_receipt: Some(route.receipt.clone()),
             route_history: route.history.clone(),
+            recipe_plan: None,
         };
         let mut foreign_run = valid.clone();
         foreign_run.run_id = agentmage_kernel_contracts::RuntimeRunId::from_raw("another-run");
@@ -1754,6 +1769,82 @@ mod tests {
             .expect("terminal runtime completes");
             assert_eq!(result.declarations, expected);
             assert_eq!(port.released, 1);
+        }
+    }
+
+    #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    fn a_recipe_plan_is_kept_only_when_the_run_binds_the_recipe_that_was_sent() {
+        // Decision 0133: a prepared request must bind a plan exactly when a
+        // recipe was sent, and a declared plan is kept only when it is the
+        // plan of that recipe for this run.
+        let (request, _, _, _) = crate::runtime_read_tests::completed_native_read_fixture();
+        let (recipe, plan) = crate::coding_recipe::test_recipe(&request.workspace_id, "src", 1);
+        assert_eq!(verify_prepared_request(&request, &input(&request)), Ok(()));
+        let with_recipe = NativeChatPrepareInput {
+            recipe: Some(recipe.clone()),
+            ..input(&request)
+        };
+        assert_eq!(
+            verify_prepared_request(&request, &with_recipe),
+            Err(InteractiveCliRuntimeError::Request)
+        );
+        let mut bound = request.clone();
+        bound
+            .task
+            .constraints
+            .extend(crate::coding_recipe::recipe_constraints(&plan));
+        let declared = RuntimeRunDeclarations {
+            schema_version: crate::runtime_transport::RUN_DECLARATIONS_SCHEMA_VERSION,
+            run_id: request.run_id.clone(),
+            request_sha256: request.request_sha256.clone(),
+            recoverability: None,
+            context_inspections: None,
+            effect_history: None,
+            job_control_history: None,
+            route_receipt: None,
+            route_history: None,
+            recipe_plan: Some(plan.clone()),
+        };
+        let without_plan = RuntimeRunDeclarations {
+            recipe_plan: None,
+            ..declared.clone()
+        };
+        let (_, foreign) = crate::coding_recipe::test_recipe(
+            &agentmage_kernel_contracts::WorkspaceId::from_raw("workspace-other"),
+            "src",
+            1,
+        );
+        let mut tampered = plan.clone();
+        tampered.max_changed_files = 2;
+        for (declarations, run, sent, expected) in [
+            (&declared, &bound, Some(&recipe), &declared),
+            (&declared, &bound, None, &without_plan),
+            (&declared, &request, Some(&recipe), &without_plan),
+            (
+                &RuntimeRunDeclarations {
+                    recipe_plan: Some(foreign),
+                    ..declared.clone()
+                },
+                &bound,
+                Some(&recipe),
+                &without_plan,
+            ),
+            (
+                &RuntimeRunDeclarations {
+                    recipe_plan: Some(tampered),
+                    ..declared.clone()
+                },
+                &bound,
+                Some(&recipe),
+                &without_plan,
+            ),
+            (&without_plan, &bound, Some(&recipe), &without_plan),
+        ] {
+            assert_eq!(
+                verified_run_declarations(declarations.clone(), run, sent).as_ref(),
+                Some(expected)
+            );
         }
     }
 
@@ -2292,6 +2383,7 @@ mod tests {
             workspace_id: request.workspace_id.as_str().to_owned(),
             workspace_root: "/tmp/agentmage-cli-runtime-fixture".to_owned(),
             prompt: request.task.objective.clone(),
+            recipe: None,
         }
     }
 
