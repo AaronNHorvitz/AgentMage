@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "stage": "batch16-observation",
+  "source_revision": "ee2fa49262f0737bbbcfd39d5712e886f8caa229",
+  "scope": "Batch 16 actual Linux CLI observation at the clean security-index commit ee2fa492: rebuilt binaries, the clean scripted start with --support-bundle and a typed yes, a declined bundle, a refused bundle directory, the harness ended-run read of a stored run (refused at native Git trust before the host serves), malformed ended-run identities and combinations refused before launch, idle stop, pause and resume, and the dirty fixture.",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch16-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "071a47a06c29d55bb24e88028fec24f2db5c0480b4f84e3fd76d6b7d18331317",
+      "private_sha256": "071a47a06c29d55bb24e88028fec24f2db5c0480b4f84e3fd76d6b7d18331317"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 14.098,
+      "log": "01.log",
+      "log_sha256": "a386fcedce0fd83b279d6e343f2120ab9792472c5d0cfc1f23292b5f1ac19b08",
+      "private_log_sha256": "5b7a6219c04a92211c0d770ee0006febdba5720fd409648070a1c2e7e286cb9d"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch16-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 2.742,
+      "log": "02.log",
+      "log_sha256": "f5a0171969cd3b821cd616d5324e7969430faf861bee4f3b21a6be97f83eb756",
+      "private_log_sha256": "f5a0171969cd3b821cd616d5324e7969430faf861bee4f3b21a6be97f83eb756"
+    }
+  ]
+}
