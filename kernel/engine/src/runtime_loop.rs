@@ -792,7 +792,8 @@ impl RuntimeResearchAdmission {
             tool_version: tool.tool_version.clone(),
             definition_sha256: contract_sha256(tool)?,
         };
-        // The plan digest covers the task, the scope and the network mode; the
+        // The plan digest covers the plan's whole canonical bytes: the task,
+        // network mode, queries, domains, ceilings and endpoint. The
         // definition digest covers the tool's identity and version.
         let preimage = serde_json::to_vec(&(
             RESEARCH_ADMISSION_DOMAIN,
@@ -5713,7 +5714,9 @@ fn operation_allowed_for_mode(mode: RuntimeSessionMode, operation: GrantOperatio
 /// The admitted public GET tool of a research run (Decision 0137): a success
 /// disclosed something, so it changed state, and it is the six-member public
 /// GET completion of Decision 0097 with a report output; an uncertain attempt
-/// is uncertain; every other outcome changed nothing.
+/// is uncertain; every other outcome changed nothing. Only a success carries
+/// output, evidence or artifacts: an uncertain or failed attempt has no
+/// trusted source bytes to retain (Decision 0138).
 fn valid_admitted_network_execution(execution: &RuntimeToolExecution) -> bool {
     let result = &execution.result;
     match (result.outcome, result.state_change) {
@@ -5732,7 +5735,12 @@ fn valid_admitted_network_execution(execution: &RuntimeToolExecution) -> bool {
             | OperationOutcome::Cancelled
             | OperationOutcome::TimedOut,
             StateChange::NotChanged,
-        ) => true,
+        ) => {
+            result.output.is_none()
+                && result.evidence.is_empty()
+                && execution.result_output_kind.is_none()
+                && execution.artifact_candidates.is_empty()
+        }
         _ => false,
     }
 }

@@ -15,8 +15,8 @@ use agentmage_kernel_contracts::{
     ActionState, AuthorityTransactionId, AuthorityTransactionRecord, AuthorityTransactionState,
     CONTRACT_SCHEMA_VERSION, CanonicalAttemptCheckpoint, CanonicalCheckpointEffectState,
     CanonicalWorkflowCheckpoint, CapabilityGrant, GrantId, GrantNonce, GrantStatus,
-    OperationOutcome, Receipt, RuntimeEvent, RuntimeEventCursor, RuntimeEventPersistenceClass,
-    RuntimeResumeBinding, RuntimeRunId, SessionCheckpoint, SessionId,
+    OperationOutcome, Receipt, RuntimeEvent, RuntimeEventCursor, RuntimeEventKind,
+    RuntimeEventPersistenceClass, RuntimeResumeBinding, RuntimeRunId, SessionCheckpoint, SessionId,
     StrictLocalStorageObservation, from_json, to_canonical_json,
 };
 use rusqlite::{
@@ -1645,6 +1645,41 @@ pub struct PendingRuntimeEffectCommit {
     receipt_id: agentmage_kernel_contracts::ReceiptId,
     receipt_sha256: String,
     started_event: RuntimeEvent,
+}
+
+/// A pending effect's terminal closes the start's call, in the start's turn
+/// and operation, under the receipt this owner issued (Decision 0138). A
+/// terminal under any other receipt would record a completion the authority
+/// never issued. The journal already refuses a terminal that does not
+/// directly follow the start in the same run, session and task.
+fn terminal_names_pending_effect(
+    pending: &PendingRuntimeEffectCommit,
+    terminal: &RuntimeEvent,
+) -> bool {
+    let started = &pending.started_event;
+    let RuntimeEventKind::ToolStarted {
+        tool_call_id: started_call,
+        ..
+    } = &started.kind
+    else {
+        return false;
+    };
+    let names_receipt = match &terminal.kind {
+        RuntimeEventKind::ToolCompleted {
+            tool_call_id,
+            receipt_id,
+            ..
+        } => tool_call_id == started_call && receipt_id == &pending.receipt_id,
+        RuntimeEventKind::ToolFailed {
+            tool_call_id,
+            receipt_id,
+            ..
+        } => tool_call_id == started_call && receipt_id.as_ref() == Some(&pending.receipt_id),
+        _ => false,
+    };
+    names_receipt
+        && terminal.turn_id == started.turn_id
+        && terminal.operation_id == started.operation_id
 }
 
 /// Single-use proof that one specialized effect awaits its terminal receipt event.
@@ -3412,6 +3447,8 @@ impl DurableAuthorityRuntime {
     }
 
     /// Commits one pending terminal authority snapshot with its exact receipt event.
+    /// The event must close the start's call, in the start's turn and operation,
+    /// under this owner's pending receipt (Decision 0138).
     pub fn finish_effect_with_runtime_event(
         &mut self,
         pending: PendingRuntimeEffectCommit,
@@ -3424,6 +3461,7 @@ impl DurableAuthorityRuntime {
                     && receipt.receipt_id == pending.receipt_id
                     && receipt.receipt_sha256 == pending.receipt_sha256
             })
+            || !terminal_names_pending_effect(&pending, &terminal_event)
         {
             self.poisoned = true;
             return Err(DurableAuthorityError::Poisoned);

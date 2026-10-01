@@ -183,6 +183,7 @@ command, process, or client-specific execution branch.
 | Artifacts | Story 22.2 artifact lifecycle | Optional `RuntimeArtifactPort` | No |
 | Resume | Story 22.1 checkpoint and binding | Optional `RuntimeCheckpointPort` | No |
 | Client presentation | Native Chat or terminal adapter | `CodingCoordinatorPort` and event sink | No |
+| Workflow attachment | Story 50.2 caller-neutral port | Same coordinator | No |
 
 ### Preparing artifact references before terminal sealing
 
@@ -241,9 +242,29 @@ Only the admitted tool may return a network result:
 - an uncertain attempt;
 - an outcome that changed nothing.
 
+Only the success carries output, evidence or artifacts
+([Decision 0138](../decisions/0138-review-fixes-and-the-public-get-completion-through-the-real-owners.md)).
+
 Reservation, grant consumption and dual-proof dispatch stay with the existing
 owners behind the trusted correctness port. No host composes an admission yet.
-| Workflow attachment | Story 50.2 caller-neutral port | Same coordinator | No |
+
+Under Decision 0138 (AMR-03.1.2.1), an engine test composes the coordinator with
+the real owners, and only the native result is synthetic. The owners are the
+encrypted store and journal, the budget owner, grant issuance and consumption,
+the authority transaction with its start observer, the fresh-reservation dispatch
+proof, completion normalization, the terminal commit, artifact publication and the
+canonical reader. Its trusted glue is test code. The test covers these cases:
+
+- the positive read-back, before and after reopening the store;
+- forged and stale receipts;
+- partial bundles;
+- source drift;
+- no replay of a dispatched request.
+
+The authority owner commits a pending effect's terminal only when that terminal
+names the start's call, turn and operation and the receipt the owner issued; the
+journal already requires it to follow the start directly in the same run. A completion the authority never issued therefore
+cannot enter the journal, even when the descriptions handed to completion agree.
 
 ## Interface Boundary
 

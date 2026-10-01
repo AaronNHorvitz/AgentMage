@@ -63,10 +63,11 @@ version as an older one.
   decimal, for example `0.95`. A consumer reads them as 32-bit values and sends a request back
   unchanged; the same value written another way, such as `0.950000001`, or `1` for `1.0`, is not
   exact and is refused.
-- An optional member is encoded as `null` when absent. Three are omitted instead: the prepare
-  request's `recipe`, the recoverability report's `run_id` and a step's `suspended`. An explicit
-  `null` for one of these is not exact and is refused. A record's members never change meaning
-  within one schema version.
+- An optional member is encoded as `null` when absent. Four members of the transport are
+  omitted instead: the prepare request's `recipe`, the recoverability report's `run_id`, a
+  step's `suspended` and the `selection` of an approval response, which an `advance` request
+  carries. An explicit `null` for one of these is not exact and is refused. A record's members
+  never change meaning within one schema version.
 
 The operations that carry these records are `prepare` (answer `prepared`, the run request),
 `run_declarations`, `job_status`, `control_job` (answer `job_control`) and

@@ -1222,6 +1222,36 @@ mod tests {
         let bytes = serde_json::to_vec(&value).unwrap();
         assert!(serde_json::from_slice::<RuntimeIpcEnvelope<RuntimeIpcRequest>>(&bytes).is_ok());
         assert_eq!(decode_request(&bytes), None);
+        // An approval response omits its absent hunk selection; an advance
+        // request that sends it as null is refused (review F1 of `7611c8bf`).
+        let advance = RuntimeIpcRequest::Advance {
+            run_id: sampling.run_id.clone(),
+            request_sha256: sampling.request_sha256.clone(),
+            after_event_cursor: None,
+            response: Some(RuntimeApprovalResponse {
+                schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                run_id: sampling.run_id.clone(),
+                approval_id: agentmage_kernel_contracts::ApprovalId::from_raw("approval-wire"),
+                disposition: agentmage_kernel_contracts::RuntimeApprovalDisposition::Deny,
+                challenge_sha256: "c".repeat(64),
+                grant_id: None,
+                selection: None,
+            }),
+        };
+        let mut value = serde_json::to_value(RuntimeIpcEnvelope {
+            version: WIRE_VERSION,
+            payload: advance.clone(),
+        })
+        .unwrap();
+        assert!(value["payload"]["response"].get("selection").is_none());
+        assert_eq!(
+            decode_request(&serde_json::to_vec(&value).unwrap()),
+            Some(advance)
+        );
+        value["payload"]["response"]["selection"] = serde_json::Value::Null;
+        let bytes = serde_json::to_vec(&value).unwrap();
+        assert!(serde_json::from_slice::<RuntimeIpcEnvelope<RuntimeIpcRequest>>(&bytes).is_ok());
+        assert_eq!(decode_request(&bytes), None);
         let step = RuntimeIpcResponse::Step {
             step: RuntimeTransportStep {
                 run_id: sampling.run_id.clone(),

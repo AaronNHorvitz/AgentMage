@@ -18,6 +18,9 @@ use crate::runtime_loop::{
 };
 use agentmage_kernel_contracts::{RuntimeEventCursor, RuntimeEventId};
 
+#[path = "runtime_loop_research_completion_tests.rs"]
+mod completion_tests;
+
 /// How the synthetic budget owner answers the coordinator's opening.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum BudgetAnswer {
@@ -25,7 +28,10 @@ enum BudgetAnswer {
     OtherPlan,
     OtherScope,
     Spent,
+    SpentQueries,
+    SpentBytes,
     Cancelled,
+    DeadlineExhausted,
     LaterRevision,
     Refused,
 }
@@ -109,7 +115,10 @@ impl RuntimeResearchBudgetPort for FakeToolBoundary {
                 .clone();
             }
             BudgetAnswer::Spent => state.progress.visits = 1,
+            BudgetAnswer::SpentQueries => state.progress.queries = 1,
+            BudgetAnswer::SpentBytes => state.progress.reserved_bytes = 1,
             BudgetAnswer::Cancelled => state.progress.cancelled = true,
+            BudgetAnswer::DeadlineExhausted => state.progress.deadline_exhausted = true,
             BudgetAnswer::LaterRevision => state.revision = 1,
             BudgetAnswer::Exact | BudgetAnswer::Refused => {}
         }
@@ -567,6 +576,23 @@ fn composition_refuses_a_run_that_does_not_name_or_fit_its_admission() {
             }),
         ),
         ("resume", Box::new(move |parts| cursor(&mut parts.request))),
+        // The line names this admission exactly, but the request belongs to
+        // another task or session than the admission's context (review F3
+        // of `7611c8bf`).
+        (
+            "another task",
+            Box::new(|parts| {
+                parts.request.task.task_id = TaskId::from_raw("task-other");
+                parts.request.work_packet.task_id = TaskId::from_raw("task-other");
+            }),
+        ),
+        (
+            "another session",
+            Box::new(|parts| {
+                parts.request.session_id = SessionId::from_raw("session-other");
+                parts.request.task.session_id = SessionId::from_raw("session-other");
+            }),
+        ),
         (
             "another run",
             Box::new(|parts| {
@@ -674,7 +700,10 @@ fn the_run_continues_only_when_the_owner_opens_exactly_the_published_plan() {
         BudgetAnswer::OtherPlan,
         BudgetAnswer::OtherScope,
         BudgetAnswer::Spent,
+        BudgetAnswer::SpentQueries,
+        BudgetAnswer::SpentBytes,
         BudgetAnswer::Cancelled,
+        BudgetAnswer::DeadlineExhausted,
         BudgetAnswer::LaterRevision,
         BudgetAnswer::Refused,
     ] {
@@ -751,6 +780,7 @@ fn an_admitted_failure_that_changed_nothing_is_accepted() {
         OperationOutcome::Failed,
         OperationOutcome::Denied,
         OperationOutcome::TimedOut,
+        OperationOutcome::Uncertain,
     ] {
         reset_budget(BudgetAnswer::Exact);
         let (mut runtime, executions) = admitted_run(PermissionScript::Allow);
@@ -772,27 +802,76 @@ fn an_admitted_failure_that_changed_nothing_is_accepted() {
 }
 
 #[test]
+fn an_admitted_attempt_that_did_not_succeed_retains_no_output_or_artifacts() {
+    // Review F2 of `7611c8bf`: the coordinator refuses an uncertain or failed
+    // attempt that carries output or artifact candidates, and publishes
+    // nothing under its receipt.
+    for (outcome, output, candidates) in [
+        (OperationOutcome::Uncertain, true, 0),
+        (OperationOutcome::Uncertain, false, 3),
+        (OperationOutcome::Failed, true, 0),
+        (OperationOutcome::Cancelled, false, 1),
+    ] {
+        reset_budget(BudgetAnswer::Exact);
+        let (mut runtime, executions) = admitted_run(PermissionScript::Allow);
+        runtime.tool_boundary.outcome = outcome;
+        runtime.tool_boundary.emit_evidence = false;
+        runtime.tool_boundary.tool_output_bytes = if output { 16 } else { 0 };
+        runtime.tool_boundary.artifact_candidates = (0..candidates)
+            .map(|index| artifact_preparation_tests::candidate(&[b'0' + index]))
+            .collect();
+        // The borrowed builder refuses to seal it, or the coordinator refuses
+        // what the port returned.
+        let refused = runtime.run_until_boundary(None, None).err();
+        assert!(
+            matches!(
+                refused,
+                Some(
+                    RuntimeLoopError::Dependency(RuntimePortFailure::Invalid)
+                        | RuntimeLoopError::InvalidBoundaryResult
+                )
+            ),
+            "{outcome:?} {output} {candidates} {refused:?}"
+        );
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        assert!(runtime.tool_results.is_empty());
+        let artifacts = runtime.tool_boundary.artifacts.lock().unwrap();
+        assert!(
+            artifacts
+                .iter()
+                .all(|(manifest, _)| manifest.receipt_id.is_none()),
+            "{outcome:?} {output} {candidates}"
+        );
+        // Only the request and the plan were published.
+        assert_eq!(artifacts.len(), 2);
+    }
+}
+
+#[test]
 fn the_admitted_tool_returns_only_these_network_results() {
-    let execution = |outcome, state_change, candidates: usize, kind| RuntimeToolExecution {
-        receipt_id: ReceiptId::from_raw("receipt-1"),
-        receipt_sha256: SHA.to_owned(),
-        result: ToolResult {
-            schema_version: CONTRACT_SCHEMA_VERSION,
-            tool_call_id: agentmage_kernel_contracts::ToolCallId::from_raw("call-1"),
-            correlation_id: CorrelationId::from_raw("correlation-1"),
-            outcome,
-            output: Some(payload("runtime.tool-result", b"{}")),
-            validation_issues: Vec::new(),
-            evidence: Vec::new(),
-            error: None,
-            elapsed_ms: 1,
-            state_change,
-        },
-        result_output_kind: kind,
-        artifact_candidates: (0..candidates)
-            .map(|_| artifact_preparation_tests::candidate(b"x"))
-            .collect(),
-    };
+    let execution =
+        |outcome, state_change, candidates: usize, kind: Option<RuntimeArtifactKind>| {
+            RuntimeToolExecution {
+                receipt_id: ReceiptId::from_raw("receipt-1"),
+                receipt_sha256: SHA.to_owned(),
+                result: ToolResult {
+                    schema_version: CONTRACT_SCHEMA_VERSION,
+                    tool_call_id: agentmage_kernel_contracts::ToolCallId::from_raw("call-1"),
+                    correlation_id: CorrelationId::from_raw("correlation-1"),
+                    outcome,
+                    output: kind.map(|_| payload("runtime.tool-result", b"{}")),
+                    validation_issues: Vec::new(),
+                    evidence: Vec::new(),
+                    error: None,
+                    elapsed_ms: 1,
+                    state_change,
+                },
+                result_output_kind: kind,
+                artifact_candidates: (0..candidates)
+                    .map(|_| artifact_preparation_tests::candidate(b"x"))
+                    .collect(),
+            }
+        };
     let report = Some(RuntimeArtifactKind::Report);
     for (outcome, state_change, candidates, kind, accepted) in [
         (
@@ -917,6 +996,46 @@ fn the_admitted_tool_returns_only_these_network_results() {
     let mut non_report = execution(OperationOutcome::Succeeded, StateChange::Changed, 6, report);
     non_report.artifact_candidates[2].kind = RuntimeArtifactKind::StandardError;
     assert!(!valid_admitted_network_execution(&non_report));
+    // Only a success carries output, evidence or artifacts: an uncertain or
+    // failed attempt has no trusted source bytes to retain (review F2 of
+    // `7611c8bf`).
+    for (outcome, state_change) in [
+        (OperationOutcome::Uncertain, StateChange::Uncertain),
+        (OperationOutcome::Failed, StateChange::NotChanged),
+        (OperationOutcome::Denied, StateChange::NotChanged),
+        (OperationOutcome::Cancelled, StateChange::NotChanged),
+        (OperationOutcome::TimedOut, StateChange::NotChanged),
+    ] {
+        assert!(valid_admitted_network_execution(&execution(
+            outcome,
+            state_change,
+            0,
+            None
+        )));
+        for (candidates, kind) in [(0, report), (1, None), (6, None), (6, report)] {
+            assert!(
+                !valid_admitted_network_execution(&execution(
+                    outcome,
+                    state_change,
+                    candidates,
+                    kind
+                )),
+                "{outcome:?} {candidates} {kind:?}"
+            );
+        }
+        let mut kind_without_output = execution(outcome, state_change, 0, report);
+        kind_without_output.result.output = None;
+        assert!(!valid_admitted_network_execution(&kind_without_output));
+        let mut output_without_kind = execution(outcome, state_change, 0, None);
+        output_without_kind.result.output = Some(payload("runtime.tool-result", b"{}"));
+        assert!(!valid_admitted_network_execution(&output_without_kind));
+        let mut with_evidence = execution(outcome, state_change, 0, None);
+        with_evidence.result.evidence = vec![evidence("evidence-1", EvidenceKind::ToolOutput)];
+        assert!(
+            !valid_admitted_network_execution(&with_evidence),
+            "{outcome:?} evidence"
+        );
+    }
 }
 
 #[test]

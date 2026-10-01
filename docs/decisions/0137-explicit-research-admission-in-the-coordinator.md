@@ -54,9 +54,10 @@ the one public GET tool definition. Construction refuses each of these:
 
 Its digest covers a domain label, its own version, the plan digest, the
 session, run and policy, and the tool definition's digest. The plan digest
-covers the task, the scope and the network mode. The definition digest covers
-the tool's identity and version. The admission holds no grant and makes no
-I/O.
+covers the plan's whole canonical bytes: its task, network mode, queries,
+domains, ceilings and endpoint. (Corrected under Decision 0138, note N1 of
+the review of `7611c8bf`.) The definition digest covers the tool's identity
+and version. The admission holds no grant and makes no I/O.
 
 ### Naming the admission in the sealed request
 
@@ -102,7 +103,8 @@ Only the admitted tool may return a network result, and only these:
 A success must carry a report output and exactly six report artifacts. Those
 must have been prepared through the borrowed builder under the call's
 receipt; this is the public GET completion of Decision 0097. Any other
-network result is refused, as now.
+network result is refused, as now. (Decision 0138 adds that only a success
+carries output, evidence or artifacts.)
 
 ### What stays with the trusted port
 

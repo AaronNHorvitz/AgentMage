@@ -199,6 +199,83 @@ pub(crate) mod tests {
         }
     }
 
+    // Synthetic native worker for the composed coordinator test (Decision
+    // 0138), kept in this audited effect-test boundary. At its trusted launch
+    // time it checks the consumed grant and the dispatch proof, then seals one
+    // complete result from the proof's own reservation. Nothing is sent.
+    pub(crate) struct SyntheticNativeResearchDriver<'a> {
+        pub(crate) packet: &'a PublicGetWorkerPacket,
+        pub(crate) native: crate::research_result_binding::PublicGetNativeIdentity,
+        pub(crate) body: &'a [u8],
+        pub(crate) now: u64,
+        pub(crate) calls: usize,
+        pub(crate) binding: Option<crate::research_result_binding::PublicGetResultBinding>,
+    }
+
+    impl ResearchEffectDriver for SyntheticNativeResearchDriver<'_> {
+        fn execute_research(
+            &mut self,
+            authorization: EffectAuthorization<'_>,
+            dispatch: ResearchDispatch<'_>,
+        ) -> EffectLaunch {
+            use crate::research_response::{
+                PublicGetHop, PublicGetObservation, PublicGetResponse, PublicSourceMedia,
+            };
+            use crate::research_result_binding::{PublicGetParentInterval, PublicGetResultBinding};
+            use sha2::{Digest, Sha256};
+            self.calls += 1;
+            if authorization.operation().operation() != GrantOperation::NetworkAccess
+                || !authorization.grant_live_at(self.now)
+                || !dispatch.matches_packet_at(self.packet, self.now)
+            {
+                return EffectLaunch::failed();
+            }
+            let request = self.packet.request();
+            let observation = PublicGetObservation {
+                schema_version: 1,
+                request_sha256: self.packet.sha256().to_owned(),
+                operation_id: request.operation_id.clone(),
+                started_epoch_ms: self.now,
+                completed_epoch_ms: self.now,
+                hops: vec![PublicGetHop {
+                    target: request.target.clone(),
+                    status: 200,
+                    header_bytes: 60,
+                    body_bytes: self.body.len() as u64,
+                }],
+                media: PublicSourceMedia::Text,
+                body_sha256: Sha256::digest(self.body)
+                    .iter()
+                    .map(|byte| format!("{byte:02x}"))
+                    .collect(),
+            };
+            let Ok(response) =
+                PublicGetResponse::encode(self.packet, observation, self.body, self.now)
+            else {
+                return EffectLaunch::failed();
+            };
+            let Ok(binding) = PublicGetResultBinding::seal(
+                self.packet,
+                dispatch.reservation_sha256(),
+                self.native.clone(),
+                PublicGetParentInterval {
+                    started_epoch_ms: self.now,
+                    cleanup_verified_epoch_ms: self.now,
+                },
+                response.frame(),
+            ) else {
+                return EffectLaunch::failed();
+            };
+            let launch = EffectLaunch::completed(EffectResult::from_redacted_material(
+                OperationOutcome::Succeeded,
+                binding.redacted_material(),
+                StateChange::Changed,
+            ));
+            self.binding = Some(binding);
+            launch
+        }
+    }
+
     // Synthetic ordering probe kept in the existing audited effect-test boundary.
     pub(crate) struct ObservedResearchDriver<'a> {
         pub(crate) inner: RecordingResearchDriver<'a>,
