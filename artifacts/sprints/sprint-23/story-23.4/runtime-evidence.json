@@ -4,14 +4,14 @@
     {
       "argv_sha256": "b3bf1a712beea095c7e1f3eaa345c7a01cb714dd183ea72e6eb67820381cb92b",
       "command_id": "prepared-artifact-matrix",
-      "elapsed_ms": 216,
+      "elapsed_ms": 224,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 41676,
+      "peak_rss_kib": 41852,
       "test_result": {
         "failed": 0,
-        "filtered_out": 1394,
+        "filtered_out": 1405,
         "ignored": 0,
         "measured": 0,
         "passed": 12
@@ -24,10 +24,10 @@
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 41616,
+      "peak_rss_kib": 41812,
       "test_result": {
         "failed": 0,
-        "filtered_out": 1388,
+        "filtered_out": 1399,
         "ignored": 0,
         "measured": 0,
         "passed": 18
@@ -36,14 +36,14 @@
     {
       "argv_sha256": "d25c1a35db190c5821af496f6e3cc07b1ba96ddb12ec19c8b6a21d7bc7325ee1",
       "command_id": "native-read-matrix",
-      "elapsed_ms": 94,
+      "elapsed_ms": 91,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50904,
+      "peak_rss_kib": 50388,
       "test_result": {
         "failed": 0,
-        "filtered_out": 511,
+        "filtered_out": 515,
         "ignored": 0,
         "measured": 0,
         "passed": 6
@@ -52,14 +52,14 @@
     {
       "argv_sha256": "dfe8124eee6fbf3abfde662ff05627ee295973fb06018fc558fa4c1ff65ae353",
       "command_id": "native-chat-transport",
-      "elapsed_ms": 327,
+      "elapsed_ms": 335,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50960,
+      "peak_rss_kib": 49788,
       "test_result": {
         "failed": 0,
-        "filtered_out": 513,
+        "filtered_out": 517,
         "ignored": 0,
         "measured": 0,
         "passed": 4
@@ -68,14 +68,14 @@
     {
       "argv_sha256": "6bd11bbd4996b6e78ff6e621938b77f2c0a339f3b44af3f4d2c09976540d6891",
       "command_id": "three-client-parity",
-      "elapsed_ms": 349,
+      "elapsed_ms": 359,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50756,
+      "peak_rss_kib": 50576,
       "test_result": {
         "failed": 0,
-        "filtered_out": 516,
+        "filtered_out": 520,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -84,14 +84,14 @@
     {
       "argv_sha256": "dcbd95278f6e59895a67a6092b1c2ffc167a47b68d41b501a1dcc0acf578656f",
       "command_id": "client-confusion-bypass",
-      "elapsed_ms": 100,
+      "elapsed_ms": 83,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50284,
+      "peak_rss_kib": 49872,
       "test_result": {
         "failed": 0,
-        "filtered_out": 516,
+        "filtered_out": 520,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -100,14 +100,14 @@
     {
       "argv_sha256": "52f0dcaa22117142bfade3bdb039d530e2264557b36bbc50db671925b010c307",
       "command_id": "workflow-authority-bypass",
-      "elapsed_ms": 329,
+      "elapsed_ms": 339,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50088,
+      "peak_rss_kib": 49840,
       "test_result": {
         "failed": 0,
-        "filtered_out": 516,
+        "filtered_out": 520,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -116,21 +116,21 @@
     {
       "argv_sha256": "47cdc321aaa5c7c4ed9eed236a4c8f7fcf3cee3ea5f1542a8e3304e1832cac09",
       "command_id": "dependency-direction",
-      "elapsed_ms": 20,
+      "elapsed_ms": 17,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 12296,
+      "peak_rss_kib": 12304,
       "test_result": null
     },
     {
       "argv_sha256": "1ba5e4e0d2b5860ae9e4b0ed786fc45413e659b7c435186b2ad8dc781a2c4045",
       "command_id": "effect-mediation",
-      "elapsed_ms": 2442,
+      "elapsed_ms": 2462,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 44348,
+      "peak_rss_kib": 44916,
       "test_result": null
     }
   ],
@@ -173,7 +173,7 @@
   "manual_fuzzing_executed": false,
   "performance": {
     "cancellation": {
-      "elapsed_us": 598,
+      "elapsed_us": 601,
       "event_count": 4,
       "model_calls": 0,
       "output_bytes": 0,
@@ -182,7 +182,7 @@
       "turns": 0
     },
     "direct": {
-      "elapsed_us": 2280,
+      "elapsed_us": 2274,
       "event_count": 6,
       "model_calls": 1,
       "output_bytes": 23,
@@ -191,7 +191,7 @@
       "turns": 1
     },
     "maximum": {
-      "elapsed_us": 5116,
+      "elapsed_us": 5165,
       "event_count": 33,
       "model_calls": 4,
       "output_bytes": 23,
@@ -201,7 +201,7 @@
     },
     "maximum_scenario_us": 250000,
     "nominal": {
-      "elapsed_us": 4073,
+      "elapsed_us": 4099,
       "event_count": 15,
       "model_calls": 2,
       "output_bytes": 23,
@@ -210,7 +210,7 @@
       "turns": 2
     },
     "over_limit": {
-      "elapsed_us": 4773,
+      "elapsed_us": 4867,
       "event_count": 33,
       "model_calls": 4,
       "output_bytes": 0,
@@ -227,10 +227,10 @@
     "redactions": [
       "repository-root"
     ],
-    "sha256": "8db19cd1512fad400c337e9057219d1c8ad8d97901d887720490f8e8ef6bba31"
+    "sha256": "d2e6f5946362fb2255ed6e1e09fe5cec26c52b25d9593c5e0e99863e2e1de05f"
   },
   "schema_version": 1,
-  "source_revision": "97950ab8ebbebb4ca37866888e5c8f78d7f5fbc5",
+  "source_revision": "30637800d833a44f3be4143fcacad6c66f47a854",
   "sources": [
     {
       "bytes": 14158,
@@ -243,19 +243,19 @@
       "sha256": "8570c1764e7293e6c3c5931fcbab612c9df26ee7ab284c8bdfbb12d22b6553a0"
     },
     {
-      "bytes": 217068,
+      "bytes": 232569,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "ac2b2f93407d23c5c27f08d111af6b360cb4a3248489b369e15253a3ce9d0de2"
+      "sha256": "04a228eccef706d1f6c001099ca1ff47cea5c096ff29dd5e237f964b748b49fe"
     },
     {
-      "bytes": 12024,
+      "bytes": 12820,
       "path": "kernel/engine/src/runtime_loop/artifact_preparation.rs",
-      "sha256": "927799cc0abee91289ad650072941a59d20a456dfb2e289a5a17b754e85e66fc"
+      "sha256": "b9524ce4964acce2ca1635a389637da5d58b3fbeaeca9bd62eec61eedac04b0d"
     },
     {
-      "bytes": 25106,
+      "bytes": 25184,
       "path": "kernel/engine/src/runtime_loop_artifact_preparation_tests.rs",
-      "sha256": "76c052a6265dfd0acbf33367b2d297cfe7ced195f1484c54d0ef2b0ef6575712"
+      "sha256": "1496ede7ae8e74887edb17b331a98ae9ba43b3691897ba15e49bd23b2f447e57"
     },
     {
       "bytes": 466569,
@@ -263,9 +263,9 @@
       "sha256": "af64cf79148e0229ef7d1f505a1917915892334c6a3f13912eaaf5ecec8ba3a8"
     },
     {
-      "bytes": 310866,
+      "bytes": 311371,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "fc6aa5e1e2ea7b24247aca5785b07340b2a90be7b2b435850f45c1b1348a0a99"
+      "sha256": "f79584b9eaae7dc8ea348e67eabe3c0357e71d303237e1eb2a74ed4a7fd4e108"
     },
     {
       "bytes": 14220,
