@@ -141,9 +141,10 @@ pub enum JobControlRefusal {
     NotAllowed,
 }
 
-/// Decision for one control request.
+/// Decision for one control request. Closed in the types (Decision 0136):
+/// a member beside the decision's own is refused wherever it is decoded.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "decision", rename_all = "snake_case")]
+#[serde(tag = "decision", rename_all = "snake_case", deny_unknown_fields)]
 pub enum JobControlDecision {
     /// The request changed the job.
     Applied {
@@ -835,6 +836,23 @@ mod tests {
             r#"{"schema_version":1,"job_id":"j","request_id":"r","action":"cancel","observed_revision":0,"force":true}"#
         )
         .is_err());
+        // Decision 0136 (review F4 of `4bef629b`): a decision is closed in the
+        // types, so a stored or embedded decision with another member is
+        // refused rather than read without it.
+        for (decision, extra) in [
+            (
+                r#"{"decision":"applied","revision":2,"phase":"cancelling"}"#,
+                r#"{"decision":"applied","revision":2,"phase":"cancelling","force":true}"#,
+            ),
+            (
+                r#"{"decision":"refused","refusal":"terminal","revision":2,"phase":"completed"}"#,
+                r#"{"decision":"refused","refusal":"terminal","revision":2,"phase":"completed","force":true}"#,
+            ),
+        ] {
+            let decoded: JobControlDecision = serde_json::from_str(decision).unwrap();
+            assert_eq!(serde_json::to_string(&decoded).unwrap(), decision);
+            assert!(serde_json::from_str::<JobControlDecision>(extra).is_err());
+        }
     }
 
     #[test]

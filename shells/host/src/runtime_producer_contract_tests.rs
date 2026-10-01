@@ -572,6 +572,55 @@ fn a_member_the_types_do_not_name_is_refused_in_every_fixture() {
 }
 
 #[test]
+fn a_repeated_member_is_refused_in_every_fixture() {
+    // Decision 0136 (review F2 of `4bef629b`): a member written twice is
+    // refused at every object position, inside a map as well as a struct.
+    let files = committed();
+    let mut positions = 0;
+    for (name, bytes) in files.iter().filter(|(name, _)| *name != "manifest.json") {
+        let value: serde_json::Value = serde_json::from_slice(bytes).unwrap();
+        let mut pointers = Vec::new();
+        object_pointers(&value, "", &mut pointers);
+        for pointer in pointers {
+            let members = value
+                .pointer(&pointer)
+                .and_then(serde_json::Value::as_object);
+            if members.is_none_or(serde_json::Map::is_empty) {
+                continue;
+            }
+            let repeated = crate::runtime_transport::with_first_member_repeated(&value, &pointer);
+            assert!(!decodes(name, &repeated), "{name} {pointer}");
+            positions += 1;
+        }
+    }
+    assert!(positions > 100, "{positions}");
+}
+
+#[test]
+fn a_run_request_with_sampling_values_decodes_exactly_and_verifies() {
+    // Decision 0136 (review F1 of `4bef629b`): the decoding values are 32-bit
+    // and written as their shortest decimal; a request carrying values that
+    // are not short binary fractions decodes exactly and verifies.
+    let mut request = records().request;
+    request.model_profile.decoding.temperature = 0.7;
+    request.model_profile.decoding.top_p = 0.95;
+    request.model_profile.decoding.repeat_penalty = 1.1;
+    let request = seal_runtime_run_request(request).unwrap();
+    let bytes = pretty(&request);
+    let text = String::from_utf8(bytes.clone()).unwrap();
+    for written in [
+        "\"temperature\": 0.7,",
+        "\"top_p\": 0.95,",
+        "\"repeat_penalty\": 1.1,",
+    ] {
+        assert!(text.contains(written), "{written}");
+    }
+    let decoded = decode_exact::<RuntimeRunRequest>(&bytes).unwrap();
+    assert_eq!(decoded, request);
+    assert!(verify_runtime_run_request(&decoded).is_ok());
+}
+
+#[test]
 fn a_changed_record_is_refused_or_dropped_by_the_client() {
     let built = records();
     let request = &built.request;

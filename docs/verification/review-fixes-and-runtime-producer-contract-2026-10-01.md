@@ -28,7 +28,12 @@ The review fixes:
   run declarations with every part, a job control answer, stored histories and a release. Three of
   those positions decode under the types alone: beside the tag-only `shutdown` operation, beside
   the tag-only `released` result, and inside a job control decision. Exact decoding refuses all
-  three. The wire version stays 15, because no conforming frame changed.
+  three. The wire version stays 15, because no member or encoding changed. (Correction under
+  [Decision 0136](../decisions/0136-review-fixes-for-exact-decoding-and-the-research-decomposition.md):
+  this record first said that no conforming frame changed. As verified here, exact decoding
+  refused a run request whose 32-bit decoding values are not short binary fractions, such as
+  `top_p` `0.95`, and let a member repeated inside a map pass. Neither case was exercised by
+  this batch's tests or observation.)
 - F2: the declared-plan test gains a resealed plan that differs only in its recipe identity, only
   in its version, only in its kind and only in its manifest digest. Each is refused.
 - N2: the client keeps a declared plan only when each bound validation names a plain identity and

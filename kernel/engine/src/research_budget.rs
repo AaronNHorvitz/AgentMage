@@ -332,6 +332,10 @@ impl ResearchScope {
 
     /// Derives query versus visit from the exact prepared target, never from a
     /// caller label. Only the disclosed endpoint shape carries a search query.
+    /// Under a task grant a visit carries no query fields (Decision 0136,
+    /// residual R10 of Decision 0109): the plan discloses its queries, and a
+    /// visit's fields were never disclosed. In ask mode each exact request,
+    /// its fields included, is approved before it is sent.
     pub(crate) fn classify<'a>(
         &self,
         target: &'a PublicGetTarget,
@@ -342,6 +346,9 @@ impl ResearchScope {
             .as_ref()
             .ok_or(ResearchBudgetError::Invalid)?;
         if target.domain != endpoint.domain {
+            if self.network == ResearchNetworkMode::TaskAuthorized && !target.query.is_empty() {
+                return Err(ResearchBudgetError::Destination);
+            }
             return Ok(ResearchOperation::Visit);
         }
         if target.path != endpoint.path || target.query.len() != endpoint.fixed_fields.len() + 1 {
@@ -1147,6 +1154,52 @@ mod tests {
             legacy.classify(&target("docs.example.com", "/guide", &[])),
             Err(ResearchBudgetError::Invalid)
         ));
+    }
+    #[test]
+    fn a_visit_under_a_task_grant_carries_no_query_fields() {
+        // Decision 0136 (AMR-03.2.1, residual R10 of Decision 0109): the plan
+        // discloses only its queries, so under a task grant a visit with any
+        // query field is refused; in ask mode the exact request, fields
+        // included, is approved before it is sent.
+        let task = ResearchScope::new(
+            "task-1".into(),
+            ResearchDepth::Quick,
+            ResearchNetworkMode::TaskAuthorized,
+            ResearchLimits::ceiling(ResearchDepth::Quick),
+            BTreeSet::from(["docs.example.com".into(), "search.example.com".into()]),
+            &["public Rust documentation".into()],
+        )
+        .unwrap()
+        .with_search_endpoint(endpoint())
+        .unwrap();
+        let ask = endpoint_scope();
+        let disclosed = [("format", "json"), ("q", "public Rust documentation")];
+        for visit in [
+            target("docs.example.com", "/search", &disclosed),
+            target(
+                "docs.example.com",
+                "/search",
+                &[("q", "public Rust documentation")],
+            ),
+            target("docs.example.com", "/guide", &[("page", "2")]),
+            target("docs.example.com", "/guide", &[("version", "")]),
+        ] {
+            assert!(matches!(
+                task.classify(&visit),
+                Err(ResearchBudgetError::Destination)
+            ));
+            assert!(matches!(ask.classify(&visit), Ok(ResearchOperation::Visit)));
+        }
+        for scope in [&task, &ask] {
+            assert!(matches!(
+                scope.classify(&target("docs.example.com", "/guide", &[])),
+                Ok(ResearchOperation::Visit)
+            ));
+            assert!(matches!(
+                scope.classify(&target("search.example.com", "/search", &disclosed)),
+                Ok(ResearchOperation::Query("public Rust documentation"))
+            ));
+        }
     }
     #[test]
     fn offline_and_changed_disclosure_never_consume_budget() {

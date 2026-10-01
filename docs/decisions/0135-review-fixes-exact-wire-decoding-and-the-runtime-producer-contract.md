@@ -59,8 +59,11 @@ must equal the frame as received. A member the types do not name is
 refused at any position, whatever the type's own attributes allow. This is
 the rule the manifest file parser already applies. A host answers a frame
 that is not exact as a denied request; a client treats such an answer as
-evidence the runtime cannot be trusted for this step. A conforming frame
-is unchanged, so the wire version stays 15.
+evidence the runtime cannot be trusted for this step. No member or
+encoding changed, so the wire version stays 15. (Corrected under Decision
+0136: as first implemented, the comparison refused a run request whose
+32-bit decoding values are not short binary fractions, so not every
+conforming frame decoded; and a member repeated inside a map passed.)
 
 F2. The test of the declared plan gains a resealed plan that differs only
 in its recipe identity, only in its version, only in its kind and only in
@@ -111,9 +114,10 @@ themselves are unchanged by it.
 
 ## Limits
 
-- The fixtures are synthetic: the request comes from the deterministic
-  native read fixture and the histories from test recorders. They show the
-  shape and verification of each record, not a coding run.
+- The fixtures are synthetic: the request comes from the controlled-write
+  coding-run fixture (corrected under Decision 0136) and the histories from
+  test recorders. They show the shape and verification of each record, not
+  a coding run.
 - Exact decoding refuses members the types do not name. It does not make a
   record authoritative; each consumer still verifies what it uses.
 - Rows AMR-06.2 to AMR-06.10 stay open until their consumer contracts,

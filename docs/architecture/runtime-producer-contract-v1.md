@@ -2,7 +2,10 @@
 
 Revision: 2026-10-01, version 1. Registered under AMR-06.1 in [TASKS.md](../../TASKS.md);
 design in [Decision 0135](../decisions/0135-review-fixes-exact-wire-decoding-and-the-runtime-producer-contract.md),
-row split in [Decision 0134](../decisions/0134-amr-06-decomposition.md).
+row split in [Decision 0134](../decisions/0134-amr-06-decomposition.md). Exact decoding of numbers
+and repeated members, the omitted members and the content obligation were corrected under
+[Decision 0136](../decisions/0136-review-fixes-for-exact-decoding-and-the-research-decomposition.md);
+no record, encoding or version changed.
 
 This is an unexecuted producer specification. It states which records the AgentMage runtime
 produces for a consumer and how a consumer verifies them. It is not a consumer's contract, a
@@ -50,13 +53,20 @@ version as an older one.
 - Each frame is one JSON envelope, `{"version": 15, "payload": {...}}`, of at most 4 MiB.
   Run declarations are at most 4 MiB less 64 KiB.
 - Every frame is decoded exactly in both directions. The frame decodes into its types, and its
-  re-encoding must equal the frame as received. A member the types do not name is refused at
-  any position. The host answers such a request as a denied request
+  re-encoding, read back as JSON, must equal the frame read as JSON. A member the types do not
+  name is refused at any position, and so is a member named twice in any object, a map's
+  included. The host answers such a request as a denied request
   (`host.runtime.request_denied`); a client refuses such an answer as untrusted evidence
   (`host.runtime.evidence_denied`).
-- An optional member is encoded as `null` when absent. Two are omitted instead: the prepare
-  request's `recipe` and the recoverability report's `run_id`. A record's members never change
-  meaning within one schema version.
+- Numbers are written as the runtime writes them. The run request's decoding values
+  `temperature`, `top_p` and `repeat_penalty` are 32-bit values written as their shortest
+  decimal, for example `0.95`. A consumer reads them as 32-bit values and sends a request back
+  unchanged; the same value written another way, such as `0.950000001`, or `1` for `1.0`, is not
+  exact and is refused.
+- An optional member is encoded as `null` when absent. Three are omitted instead: the prepare
+  request's `recipe`, the recoverability report's `run_id` and a step's `suspended`. An explicit
+  `null` for one of these is not exact and is refused. A record's members never change meaning
+  within one schema version.
 
 The operations that carry these records are `prepare` (answer `prepared`, the run request),
 `run_declarations`, `job_status`, `control_job` (answer `job_control`) and
@@ -148,7 +158,9 @@ to its head or holds another owner's kinds.
    effect needs the runtime's own approval and grant.
 4. Never read absence as success or as nothing having happened.
 5. Identify a run by its run identity and request digest together.
-6. Expect no content: records carry identities, digests and closed codes only.
+6. Treat two parts as the person's content: the run request's `task` (its objective, acceptance
+   criteria and constraints) and the run recipe's parameter values, which may name workspace
+   paths. Apart from those, records carry identities, digests and closed codes only.
 
 ## Fixtures
 

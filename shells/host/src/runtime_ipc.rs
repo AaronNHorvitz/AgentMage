@@ -978,6 +978,26 @@ mod tests {
             .collect()
     }
 
+    /// Frames with the first member of each object position written twice,
+    /// as bytes, with that position.
+    fn frames_with_a_member_repeated(value: &serde_json::Value) -> Vec<(String, Vec<u8>)> {
+        let mut pointers = Vec::new();
+        object_pointers(value, "", &mut pointers);
+        pointers
+            .into_iter()
+            .filter(|pointer| {
+                value
+                    .pointer(pointer)
+                    .and_then(serde_json::Value::as_object)
+                    .is_some_and(|members| !members.is_empty())
+            })
+            .map(|pointer| {
+                let bytes = crate::runtime_transport::with_first_member_repeated(value, &pointer);
+                (pointer, bytes)
+            })
+            .collect()
+    }
+
     #[test]
     fn every_frame_is_decoded_exactly_in_both_directions() {
         // Decision 0135 (review F1 of `84e531fb`): a frame decodes only when
@@ -987,7 +1007,40 @@ mod tests {
         use agentmage_kernel_engine::action_history::ActionKind;
         use agentmage_kernel_engine::job_control::{JobControlDecision, JobPhase};
         let workspace = agentmage_kernel_contracts::WorkspaceId::from_raw("workspace-wire");
-        let (recipe, plan) = crate::coding_recipe::test_recipe(&workspace, "src", 1);
+        // The committed repair recipe sample, whose parameter values are a
+        // map in the types, in the request and in the declared plan.
+        let recipe = crate::coding_recipe::recipe_request(
+            agentmage_kernel_engine::engineering_recipe::parse_recipe_manifest(include_bytes!(
+                "../fixtures/recipe-sample/repair-in-src.json"
+            ))
+            .unwrap(),
+            &[
+                ("attempts".to_owned(), "2".to_owned()),
+                ("target".to_owned(), "src/calc.py".to_owned()),
+            ],
+            &workspace,
+        )
+        .unwrap();
+        let plan = crate::coding_recipe::instantiate_run_recipe(
+            &recipe,
+            &workspace,
+            &crate::coding_recipe::test_registry(&workspace),
+        )
+        .unwrap();
+        // Decision 0136 (review F1 of `4bef629b`): a run request whose 32-bit
+        // decoding values are not short binary fractions, as a sampling
+        // profile carries them, crosses the wire exactly in both directions.
+        let mut sampling = crate::coding_run::tests::fixture_profile_and_request().1;
+        sampling.model_profile.decoding.temperature = 0.7;
+        sampling.model_profile.decoding.top_p = 0.95;
+        sampling.model_profile.decoding.repeat_penalty = 1.1;
+        let sampling =
+            agentmage_kernel_engine::runtime_coordinator::seal_runtime_run_request(sampling)
+                .unwrap();
+        assert!(
+            agentmage_kernel_engine::runtime_coordinator::verify_runtime_run_request(&sampling)
+                .is_ok()
+        );
         let requests = [
             RuntimeIpcRequest::Prepare {
                 input: RuntimePrepareInput {
@@ -1008,6 +1061,9 @@ mod tests {
                 run_id: RuntimeRunId::from_raw("run-job-control"),
                 request_sha256: "1".repeat(64),
                 request: fixture_control_request(),
+            },
+            RuntimeIpcRequest::Start {
+                request: sampling.clone(),
             },
             RuntimeIpcRequest::Shutdown,
         ];
@@ -1051,14 +1107,22 @@ mod tests {
                     routes: None,
                 },
             },
+            RuntimeIpcResponse::Prepared {
+                request: sampling.clone(),
+            },
             RuntimeIpcResponse::Released,
         ];
         let mut only_exact = Vec::new();
+        let mut repeated_only_exact = Vec::new();
         for request in requests {
-            let value = serde_json::to_value(RuntimeIpcEnvelope {
-                version: WIRE_VERSION,
-                payload: request.clone(),
-            })
+            // The frame as the runtime writes it, read as a receiver reads it.
+            let value: serde_json::Value = serde_json::from_slice(
+                &serde_json::to_vec(&RuntimeIpcEnvelope {
+                    version: WIRE_VERSION,
+                    payload: request.clone(),
+                })
+                .unwrap(),
+            )
             .unwrap();
             assert_eq!(
                 decode_request(&serde_json::to_vec(&value).unwrap()),
@@ -1070,12 +1134,22 @@ mod tests {
                     only_exact.push(format!("request {pointer}"));
                 }
             }
+            for (pointer, bytes) in frames_with_a_member_repeated(&value) {
+                assert_eq!(decode_request(&bytes), None, "{pointer}");
+                if serde_json::from_slice::<RuntimeIpcEnvelope<RuntimeIpcRequest>>(&bytes).is_ok() {
+                    repeated_only_exact.push(format!("request {pointer}"));
+                }
+            }
         }
         for response in responses {
-            let value = serde_json::to_value(RuntimeIpcEnvelope {
-                version: WIRE_VERSION,
-                payload: response.clone(),
-            })
+            // The frame as the runtime writes it, read as a receiver reads it.
+            let value: serde_json::Value = serde_json::from_slice(
+                &serde_json::to_vec(&RuntimeIpcEnvelope {
+                    version: WIRE_VERSION,
+                    payload: response.clone(),
+                })
+                .unwrap(),
+            )
             .unwrap();
             assert_eq!(
                 decode_response(&serde_json::to_vec(&value).unwrap()),
@@ -1092,17 +1166,88 @@ mod tests {
                     only_exact.push(format!("response {pointer}"));
                 }
             }
+            for (pointer, bytes) in frames_with_a_member_repeated(&value) {
+                assert_eq!(
+                    decode_response(&bytes),
+                    Err(RuntimeTransportError::RuntimeEvidenceDenied),
+                    "{pointer}"
+                );
+                if serde_json::from_slice::<RuntimeIpcEnvelope<RuntimeIpcResponse>>(&bytes).is_ok()
+                {
+                    repeated_only_exact.push(format!("response {pointer}"));
+                }
+            }
         }
         // The types alone admit a member beside a tag-only operation or
-        // result and inside a job control decision; only exact decoding
-        // refuses those.
+        // result; only exact decoding refuses those. A job control decision
+        // is closed in the types (Decision 0136, review F4 of `4bef629b`).
+        assert_eq!(only_exact, ["request /payload", "response /payload"]);
+        // The types alone keep the last of a repeated name inside a map, here
+        // the recipe's and the declared plan's parameter values; only exact
+        // decoding refuses those (review F2 of `4bef629b`).
         assert_eq!(
-            only_exact,
+            repeated_only_exact,
             [
-                "request /payload",
-                "response /payload/control/decision",
-                "response /payload",
+                "request /payload/input/recipe/parameters",
+                "response /payload/declarations/recipe_plan/parameters",
             ]
+        );
+        // An explicit null where an absent member is omitted is refused,
+        // though the types alone read it as absent.
+        let prepare = RuntimeIpcRequest::Prepare {
+            input: RuntimePrepareInput {
+                resume: false,
+                record_session: false,
+                slow_subscriber_probe: false,
+                preauthorization: None,
+                engineering_session_id: None,
+                profile_id: "profile".to_owned(),
+                expected_entry_sha256: "a".repeat(64),
+                workspace_id: workspace.as_str().to_owned(),
+                workspace_root: "/workspace".to_owned(),
+                prompt: "Repair".to_owned(),
+                recipe: None,
+            },
+        };
+        let mut value = serde_json::to_value(RuntimeIpcEnvelope {
+            version: WIRE_VERSION,
+            payload: prepare.clone(),
+        })
+        .unwrap();
+        assert_eq!(
+            decode_request(&serde_json::to_vec(&value).unwrap()),
+            Some(prepare)
+        );
+        value["payload"]["input"]["recipe"] = serde_json::Value::Null;
+        let bytes = serde_json::to_vec(&value).unwrap();
+        assert!(serde_json::from_slice::<RuntimeIpcEnvelope<RuntimeIpcRequest>>(&bytes).is_ok());
+        assert_eq!(decode_request(&bytes), None);
+        let step = RuntimeIpcResponse::Step {
+            step: RuntimeTransportStep {
+                run_id: sampling.run_id.clone(),
+                request_sha256: sampling.request_sha256.clone(),
+                events: Vec::new(),
+                artifacts: Vec::new(),
+                approval: None,
+                outcome: None,
+                suspended: None,
+            },
+        };
+        let mut value = serde_json::to_value(RuntimeIpcEnvelope {
+            version: WIRE_VERSION,
+            payload: step.clone(),
+        })
+        .unwrap();
+        assert_eq!(
+            decode_response(&serde_json::to_vec(&value).unwrap()),
+            Ok(step)
+        );
+        value["payload"]["step"]["suspended"] = serde_json::Value::Null;
+        let bytes = serde_json::to_vec(&value).unwrap();
+        assert!(serde_json::from_slice::<RuntimeIpcEnvelope<RuntimeIpcResponse>>(&bytes).is_ok());
+        assert_eq!(
+            decode_response(&bytes),
+            Err(RuntimeTransportError::RuntimeEvidenceDenied)
         );
         // A frame at another version is refused in both directions.
         let other = serde_json::to_vec(&RuntimeIpcEnvelope {

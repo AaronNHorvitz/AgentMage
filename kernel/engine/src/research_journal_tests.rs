@@ -2065,6 +2065,84 @@ fn search_accounting_is_derived_from_the_exact_disclosed_endpoint_request() {
 }
 
 #[test]
+fn a_task_authorized_visit_with_query_fields_spends_nothing() {
+    // Decision 0136 (AMR-03.2.1, residual R10 of Decision 0109): a task grant
+    // covers the plan's disclosed queries, so a visit under it carries no
+    // query fields. Such a visit is refused before anything is spent; a
+    // visit without fields and the disclosed search are still reserved.
+    let directory = temporary_directory();
+    let path = directory.join("authority.db");
+    let mut runtime = runtime_with_run(&path);
+    let mut payloads = FakePayloadStore::default();
+    let mut draft = plan_draft();
+    draft.network_mode = ResearchNetworkMode::TaskAuthorized;
+    let plan = PreparedResearchPlan::prepare(draft).unwrap();
+    let reference = publish_plan(
+        &mut runtime,
+        &mut payloads,
+        &serde_json::to_vec(plan.draft()).unwrap(),
+        true,
+    );
+    runtime
+        .open_research_budget(&payloads, &context(), &reference, plan.scope(), 100)
+        .unwrap();
+    let visit = |query: Vec<(&str, &str)>| PublicGetTarget {
+        domain: "docs.example.com".into(),
+        path: "/search".into(),
+        query: query
+            .into_iter()
+            .map(|(name, value)| (name.to_owned(), value.to_owned()))
+            .collect(),
+    };
+    for (index, query) in [
+        vec![("q", "public Rust documentation")],
+        vec![("q", "text that was never disclosed")],
+        vec![("page", "2")],
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let before = runtime.research_budget_state(&context()).unwrap();
+        assert_eq!(
+            runtime
+                .reserve_research_request(
+                    &payloads,
+                    &context(),
+                    &target_packet(&plan, &format!("visit-query-{index}"), 101, visit(query)),
+                    101,
+                )
+                .err(),
+            Some(DurableAuthorityError::ResearchJournal(
+                ResearchJournalError::Budget(ResearchBudgetError::Destination)
+            )),
+            "{index}"
+        );
+        let after = runtime.research_budget_state(&context()).unwrap();
+        assert_eq!(after.progress.queries, before.progress.queries);
+        assert_eq!(after.progress.visits, before.progress.visits);
+        assert_eq!(after.progress.reserved_bytes, before.progress.reserved_bytes);
+    }
+    runtime
+        .reserve_research_request(
+            &payloads,
+            &context(),
+            &target_packet(&plan, "visit-plain", 102, visit(vec![])),
+            102,
+        )
+        .unwrap();
+    runtime
+        .reserve_research_request(&payloads, &context(), &search_packet(&plan, "query-1", 103), 103)
+        .unwrap();
+    drop(runtime);
+    let mut reopened =
+        DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey, 104).unwrap();
+    let state = reopened.research_budget_state(&context()).unwrap();
+    assert_eq!((state.progress.queries, state.progress.visits), (1, 1));
+    drop(reopened);
+    fs::remove_dir_all(directory).unwrap();
+}
+
+#[test]
 fn schema_one_plan_budgets_stay_readable_but_cannot_reserve() {
     let directory = temporary_directory();
     let path = directory.join("authority.db");

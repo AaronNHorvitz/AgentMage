@@ -185,20 +185,136 @@ fn hex(bytes: &[u8]) -> String {
     output
 }
 
-/// Decodes one transport frame or record exactly (Decision 0135): the bytes
-/// decode into the types, and their re-encoding must equal the bytes' JSON
-/// value. A member the types do not name is refused at any position, also
-/// where a type's own attributes would ignore it, such as beside the tag of
-/// a variant without members. A repeated member of a struct is refused by
-/// the types.
+/// Decodes one transport frame or record exactly (Decisions 0135 and 0136):
+/// the bytes decode into the types, and their re-encoding, read back as JSON,
+/// must equal the bytes read as JSON. A member the types do not name is
+/// refused at any position, also where a type's own attributes would ignore
+/// it, such as beside the tag of a variant without members. A member repeated
+/// in any object is refused, inside a map as well as a struct. Numbers are
+/// compared after the same encoding and reading, so a 32-bit value written as
+/// its shortest decimal decodes exactly.
 #[must_use]
 pub fn decode_exact<T>(bytes: &[u8]) -> Option<T>
 where
     T: serde::de::DeserializeOwned + Serialize,
 {
+    let received = serde_json::from_slice::<UniqueMembers>(bytes).ok()?.0;
     let decoded = serde_json::from_slice::<T>(bytes).ok()?;
-    let received = serde_json::from_slice::<serde_json::Value>(bytes).ok()?;
-    (serde_json::to_value(&decoded).ok()? == received).then_some(decoded)
+    let reencoded = serde_json::to_vec(&decoded).ok()?;
+    (serde_json::from_slice::<serde_json::Value>(&reencoded).ok()? == received).then_some(decoded)
+}
+
+/// The JSON text of `value` with the first member of the object at `pointer`
+/// written twice, for tests of exact decoding.
+#[cfg(test)]
+pub(crate) fn with_first_member_repeated(value: &serde_json::Value, pointer: &str) -> Vec<u8> {
+    fn write(value: &serde_json::Value, here: &str, pointer: &str, text: &mut String) {
+        match value {
+            serde_json::Value::Object(members) => {
+                text.push('{');
+                for (index, (name, member)) in members.iter().enumerate() {
+                    let times = if index == 0 && here == pointer { 2 } else { 1 };
+                    for time in 0..times {
+                        if index > 0 || time > 0 {
+                            text.push(',');
+                        }
+                        text.push_str(&serde_json::to_string(name).unwrap());
+                        text.push(':');
+                        write(member, &format!("{here}/{name}"), pointer, text);
+                    }
+                }
+                text.push('}');
+            }
+            serde_json::Value::Array(items) => {
+                text.push('[');
+                for (index, item) in items.iter().enumerate() {
+                    if index > 0 {
+                        text.push(',');
+                    }
+                    write(item, &format!("{here}/{index}"), pointer, text);
+                }
+                text.push(']');
+            }
+            other => text.push_str(&serde_json::to_string(other).unwrap()),
+        }
+    }
+    let mut text = String::new();
+    write(value, "", pointer, &mut text);
+    text.into_bytes()
+}
+
+/// A JSON value read so that an object naming one member twice is refused
+/// (Decision 0136). A JSON value, like a map in the types, keeps only the
+/// last of two equal names, so neither can refuse it.
+struct UniqueMembers(serde_json::Value);
+
+impl<'de> Deserialize<'de> for UniqueMembers {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        deserializer.deserialize_any(UniqueMembersVisitor).map(Self)
+    }
+}
+
+struct UniqueMembersVisitor;
+
+impl<'de> serde::de::Visitor<'de> for UniqueMembersVisitor {
+    type Value = serde_json::Value;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("a JSON value whose objects name each member once")
+    }
+
+    fn visit_bool<E>(self, value: bool) -> Result<Self::Value, E> {
+        Ok(serde_json::Value::Bool(value))
+    }
+
+    fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E> {
+        Ok(value.into())
+    }
+
+    fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E> {
+        Ok(value.into())
+    }
+
+    fn visit_f64<E>(self, value: f64) -> Result<Self::Value, E> {
+        Ok(serde_json::Number::from_f64(value).map_or(serde_json::Value::Null, Into::into))
+    }
+
+    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E> {
+        Ok(serde_json::Value::String(value.to_owned()))
+    }
+
+    fn visit_string<E>(self, value: String) -> Result<Self::Value, E> {
+        Ok(serde_json::Value::String(value))
+    }
+
+    fn visit_unit<E>(self) -> Result<Self::Value, E> {
+        Ok(serde_json::Value::Null)
+    }
+
+    fn visit_seq<A>(self, mut items: A) -> Result<Self::Value, A::Error>
+    where
+        A: serde::de::SeqAccess<'de>,
+    {
+        let mut values = Vec::new();
+        while let Some(UniqueMembers(item)) = items.next_element()? {
+            values.push(item);
+        }
+        Ok(serde_json::Value::Array(values))
+    }
+
+    fn visit_map<A>(self, mut members: A) -> Result<Self::Value, A::Error>
+    where
+        A: serde::de::MapAccess<'de>,
+    {
+        let mut object = serde_json::Map::new();
+        while let Some(name) = members.next_key::<String>()? {
+            let UniqueMembers(member) = members.next_value()?;
+            if object.insert(name, member).is_some() {
+                return Err(serde::de::Error::custom("repeated member"));
+            }
+        }
+        Ok(serde_json::Value::Object(object))
+    }
 }
 
 /// Trusted inputs from one authenticated runtime preparation request.
@@ -670,6 +786,108 @@ mod tests {
         assert_eq!(
             revoked.verify("workspace-fixture", 20_000),
             Err(RuntimeTransportError::RequestDenied)
+        );
+    }
+
+    #[derive(Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct Sample {
+        values: std::collections::BTreeMap<String, u32>,
+        items: Vec<SampleItem>,
+        ratio: f32,
+    }
+
+    #[derive(Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct SampleItem {
+        name: String,
+    }
+
+    #[test]
+    fn a_member_repeated_in_any_object_is_refused() {
+        // Decision 0136 (review F2 of `4bef629b`): the types keep the last of
+        // two equal names inside a map, and so does a JSON value, so only
+        // reading the frame with unique members refuses the repetition.
+        let decode = |text: &str| decode_exact::<Sample>(text.as_bytes());
+        let base = r#"{"values":{"a":1,"b":2},"items":[{"name":"x"}],"ratio":0.5}"#;
+        assert!(decode(base).is_some());
+        let in_map = r#"{"values":{"a":1,"a":2},"items":[{"name":"x"}],"ratio":0.5}"#;
+        assert_eq!(
+            serde_json::from_str::<Sample>(in_map).unwrap().values["a"],
+            2
+        );
+        assert_eq!(decode(in_map), None);
+        for repeated in [
+            r#"{"values":{"a":1},"items":[{"name":"x","name":"x"}],"ratio":0.5}"#,
+            r#"{"values":{"a":1},"items":[],"ratio":0.5,"ratio":0.5}"#,
+            r#"{"values":{"a":1,"b":2,"a":1},"items":[],"ratio":0.5}"#,
+        ] {
+            assert_eq!(decode(repeated), None, "{repeated}");
+        }
+        // One name in different objects is not a repetition.
+        let distinct = r#"{"values":{"name":1},"items":[{"name":"x"},{"name":"y"}],"ratio":0.5}"#;
+        assert!(decode(distinct).is_some());
+    }
+
+    #[test]
+    fn a_32_bit_value_decodes_exactly_as_the_runtime_writes_it() {
+        // Decision 0136 (review F1 of `4bef629b`): a 32-bit value is written
+        // as its shortest decimal, which is read back as a different 64-bit
+        // number than the 32-bit value widened. The comparison reads both
+        // sides from text, so every finite value the runtime writes decodes.
+        let sample = |ratio: f32| Sample {
+            values: std::collections::BTreeMap::new(),
+            items: Vec::new(),
+            ratio,
+        };
+        let mut values = vec![
+            0.95,
+            0.7,
+            0.2,
+            1.1,
+            0.1,
+            0.0,
+            1.0,
+            f32::MIN_POSITIVE,
+            f32::MAX,
+            f32::MIN,
+            f32::EPSILON,
+            1.0e-45,
+        ];
+        values.extend(
+            (0..=u32::MAX)
+                .step_by(65_537)
+                .map(f32::from_bits)
+                .filter(|value| value.is_finite()),
+        );
+        for value in values {
+            let bytes = serde_json::to_vec(&sample(value)).unwrap();
+            assert_eq!(
+                decode_exact::<Sample>(&bytes),
+                Some(sample(value)),
+                "{value}"
+            );
+        }
+        // The widened value is not what the frame says, which is what the
+        // previous comparison held against the runtime's own frames.
+        assert_ne!(
+            serde_json::to_value(sample(0.95)).unwrap()["ratio"],
+            serde_json::json!(0.95)
+        );
+        // A number written otherwise than the runtime writes it is refused,
+        // even where the types alone read the same 32-bit value from it.
+        for other in [
+            r#"{"values":{},"items":[],"ratio":0.950000001}"#,
+            r#"{"values":{},"items":[],"ratio":1}"#,
+        ] {
+            assert!(serde_json::from_str::<Sample>(other).is_ok());
+            assert_eq!(decode_exact::<Sample>(other.as_bytes()), None, "{other}");
+        }
+        assert_eq!(
+            serde_json::from_str::<Sample>(r#"{"values":{},"items":[],"ratio":0.950000001}"#)
+                .unwrap()
+                .ratio,
+            0.95
         );
     }
 }
