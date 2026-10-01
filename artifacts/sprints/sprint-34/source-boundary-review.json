@@ -21,12 +21,12 @@
   "review_class": "gate-owned-automated-knowledge-boundary",
   "reviewer_identity": "scripts/knowledge_sprint_boundary_review.py",
   "schema_version": 1,
-  "source_revision": "709f8d7a13bcd467317c0598fc5ba939c4e78892",
+  "source_revision": "cd99ba035bf80b44012a5df1474d4bcf65be5363",
   "source_sha256": {
     "capabilities/knowledge/src/skills.rs": "c434f68ba7661ae3421519d359b1b10aecfd21b7c57f5b9e4b7e21802ecaa3e5",
     "capabilities/knowledge/src/tasks.rs": "87940d62205826c2e5f6d859a607bd3a7644fdd680613e0b219e7e435fba6b68",
     "capabilities/knowledge/src/workflows.rs": "3ba7e069979dafa5d213150bf8996a0d00773996794ca6d6ac2055c9d310e5c9",
-    "shells/host/src/cli.rs": "b1def3dd6ce1ef668d32d1c42738d11d32ccdb8a06617b8a785fe300c219d7fc",
+    "shells/host/src/cli.rs": "298f7546abc7beb235f8b439abb314195514006fbe005ec2ee56d996d9b5ef63",
     "shells/host/src/headless.rs": "9437a13398dc59a8babf7f9f14b60a4ba43c830c277614e90a3dfea1f89be318",
     "shells/host/src/knowledge_workflow_runtime.rs": "2ee76b3efb28e3813a6cc1b005b058ec64f5ead8a8d6c23a04ce49ac3ce6a514"
   },

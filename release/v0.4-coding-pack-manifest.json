@@ -112,7 +112,7 @@
     },
     {
       "path": "shells/host/src/cli.rs",
-      "sha256": "b1def3dd6ce1ef668d32d1c42738d11d32ccdb8a06617b8a785fe300c219d7fc"
+      "sha256": "298f7546abc7beb235f8b439abb314195514006fbe005ec2ee56d996d9b5ef63"
     },
     {
       "path": "shells/host/src/coding_client.rs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "shells/host/src/runtime_parity_tests.rs",
-      "sha256": "792bf5308d7a9bb40d92d8a9320129fb279e28798b107023b4722d184f727861"
+      "sha256": "7a1b624e235a772b37dea3380771658b72ec993614eb87cd65cbca196aa64434"
     }
   ],
   "source_level_cross_interface_parity": true,
