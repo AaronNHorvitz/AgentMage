@@ -1,0 +1,114 @@
+{
+  "schema_version": 2,
+  "stage": "batch21-gate",
+  "source_revision": "f1f2bdb5d5a7542b5f3beaf4773f89151417f4cd",
+  "scope": "Batch 21 Story 11.2 gate after the routine pin advance to the rebind commit f1f2bdb5 under AGENTS.md section 7 (3 explained reviewed-path changes, all 25 paths retained): the gate report regenerated, its unit test and check mode, then the supply-chain check and whitespace. The Story 23.4 chain binds no path this batch changed, so it is not renewed.",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/story_11_2_gate.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_11_2_gate"
+    ],
+    [
+      "python3",
+      "scripts/story_11_2_gate.py"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/story_11_2_gate.py": "2cc9b406aa2bd2fbe6b5cdb1f4fa3d06ec3358b4bfab4ef1eb5a245a7d27e27c",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_story_11_2_gate.py": "2295e32739e644c00f65f746c88214e7399e3f62208c89bbe2e4bdb9269a13bc"
+  },
+  "changed_sources": [
+    {
+      "path": "scripts/story_11_2_gate.py",
+      "sha256": "2cc9b406aa2bd2fbe6b5cdb1f4fa3d06ec3358b4bfab4ef1eb5a245a7d27e27c",
+      "commit": "f5014c708079eb93450d393a5c95ba1dd6e4a28f"
+    }
+  ],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/story_11_2_gate.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.249,
+      "log": "01.log",
+      "log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195",
+      "private_log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_11_2_gate"
+      ],
+      "exit_code": 0,
+      "seconds": 0.325,
+      "log": "02.log",
+      "log_sha256": "5a43ac1739b053729a38c421c78e11eb37262f2ca2f0214ed6161b99c9715414",
+      "private_log_sha256": "5a43ac1739b053729a38c421c78e11eb37262f2ca2f0214ed6161b99c9715414"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/story_11_2_gate.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.082,
+      "log": "03.log",
+      "log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195",
+      "private_log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.076,
+      "log": "04.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.009,
+      "log": "05.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

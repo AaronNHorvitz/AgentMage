@@ -1,0 +1,205 @@
+[
+ {
+  "id": "H1-widened-comparison",
+  "file": "shells/host/src/runtime_transport.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_transport",
+   "runtime_ipc",
+   "runtime_producer_contract"
+  ],
+  "expected": "runtime_transport::tests::a_32_bit_value_decodes_exactly_as_the_runtime_writes_it",
+  "also": [
+   "runtime_ipc::tests::every_frame_is_decoded_exactly_in_both_directions",
+   "runtime_producer_contract_tests::a_run_request_with_sampling_values_decodes_exactly_and_verifies"
+  ],
+  "replace": [
+   [
+    "    let reencoded = serde_json::to_vec(&decoded).ok()?;\n    (serde_json::from_slice::<serde_json::Value>(&reencoded).ok()? == received).then_some(decoded)",
+    "    (serde_json::to_value(&decoded).ok()? == received).then_some(decoded)"
+   ]
+  ]
+ },
+ {
+  "id": "H2-plain-value-reader",
+  "file": "shells/host/src/runtime_transport.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_transport",
+   "runtime_ipc",
+   "runtime_producer_contract"
+  ],
+  "expected": "runtime_transport::tests::a_member_repeated_in_any_object_is_refused",
+  "also": [
+   "runtime_ipc::tests::every_frame_is_decoded_exactly_in_both_directions",
+   "runtime_producer_contract_tests::a_repeated_member_is_refused_in_every_fixture"
+  ],
+  "replace": [
+   [
+    "    let received = serde_json::from_slice::<UniqueMembers>(bytes).ok()?.0;",
+    "    let received = serde_json::from_slice::<serde_json::Value>(bytes).ok()?;"
+   ]
+  ]
+ },
+ {
+  "id": "H3-repetition-kept",
+  "file": "shells/host/src/runtime_transport.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_transport",
+   "runtime_ipc",
+   "runtime_producer_contract"
+  ],
+  "expected": "runtime_transport::tests::a_member_repeated_in_any_object_is_refused",
+  "also": [
+   "runtime_ipc::tests::every_frame_is_decoded_exactly_in_both_directions",
+   "runtime_producer_contract_tests::a_repeated_member_is_refused_in_every_fixture"
+  ],
+  "replace": [
+   [
+    "            if object.insert(name, member).is_some() {\n                return Err(serde::de::Error::custom(\"repeated member\"));\n            }",
+    "            object.insert(name, member);"
+   ]
+  ]
+ },
+ {
+  "id": "H4-float-as-null",
+  "file": "shells/host/src/runtime_transport.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_transport"
+  ],
+  "expected": "runtime_transport::tests::a_32_bit_value_decodes_exactly_as_the_runtime_writes_it",
+  "also": [],
+  "replace": [
+   [
+    "        Ok(serde_json::Number::from_f64(value).map_or(serde_json::Value::Null, Into::into))",
+    "        let _ = value;\n        Ok(serde_json::Value::Null)"
+   ]
+  ]
+ },
+ {
+  "id": "H5-array-items-dropped",
+  "file": "shells/host/src/runtime_transport.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_transport"
+  ],
+  "expected": "runtime_transport::tests::a_member_repeated_in_any_object_is_refused",
+  "also": [],
+  "replace": [
+   [
+    "        while let Some(UniqueMembers(item)) = items.next_element()? {\n            values.push(item);\n        }",
+    "        while let Some(UniqueMembers(_item)) = items.next_element()? {}"
+   ]
+  ]
+ },
+ {
+  "id": "E1-decision-open",
+  "file": "kernel/engine/src/job_control.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "job_control"
+  ],
+  "expected": "job_control::tests::conflicting_foreign_and_malformed_requests_are_refused_without_entries",
+  "also": [],
+  "replace": [
+   [
+    "#[serde(tag = \"decision\", rename_all = \"snake_case\", deny_unknown_fields)]",
+    "#[serde(tag = \"decision\", rename_all = \"snake_case\")]"
+   ]
+  ]
+ },
+ {
+  "id": "H6-decision-open-wire",
+  "file": "kernel/engine/src/job_control.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_ipc::tests::every_frame"
+  ],
+  "expected": "runtime_ipc::tests::every_frame_is_decoded_exactly_in_both_directions",
+  "also": [],
+  "replace": [
+   [
+    "#[serde(tag = \"decision\", rename_all = \"snake_case\", deny_unknown_fields)]",
+    "#[serde(tag = \"decision\", rename_all = \"snake_case\")]"
+   ]
+  ]
+ },
+ {
+  "id": "E2-r10-removed",
+  "file": "kernel/engine/src/research_budget.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_budget",
+   "research_journal"
+  ],
+  "expected": "research_budget::tests::a_visit_under_a_task_grant_carries_no_query_fields",
+  "also": [
+   "runtime_artifact::tests::research_journal_tests::a_task_authorized_visit_with_query_fields_spends_nothing"
+  ],
+  "replace": [
+   [
+    "            if self.network == ResearchNetworkMode::TaskAuthorized && !target.query.is_empty() {\n                return Err(ResearchBudgetError::Destination);\n            }\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "E3-r10-every-mode",
+  "file": "kernel/engine/src/research_budget.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_budget",
+   "research_journal"
+  ],
+  "expected": "research_budget::tests::a_visit_under_a_task_grant_carries_no_query_fields",
+  "also": [
+   "runtime_artifact::tests::research_journal_tests::search_accounting_is_derived_from_the_exact_disclosed_endpoint_request"
+  ],
+  "replace": [
+   [
+    "            if self.network == ResearchNetworkMode::TaskAuthorized && !target.query.is_empty() {",
+    "            if !target.query.is_empty() {"
+   ]
+  ]
+ },
+ {
+  "id": "E4-r10-only-several-fields",
+  "file": "kernel/engine/src/research_budget.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_budget",
+   "research_journal"
+  ],
+  "expected": "research_budget::tests::a_visit_under_a_task_grant_carries_no_query_fields",
+  "also": [
+   "runtime_artifact::tests::research_journal_tests::a_task_authorized_visit_with_query_fields_spends_nothing"
+  ],
+  "replace": [
+   [
+    "            if self.network == ResearchNetworkMode::TaskAuthorized && !target.query.is_empty() {",
+    "            if self.network == ResearchNetworkMode::TaskAuthorized && target.query.len() > 1 {"
+   ]
+  ]
+ },
+ {
+  "id": "E5-r10-visit-allowed-as-query",
+  "file": "kernel/engine/src/research_budget.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_budget",
+   "research_journal"
+  ],
+  "expected": "research_budget::tests::a_visit_under_a_task_grant_carries_no_query_fields",
+  "also": [
+   "runtime_artifact::tests::research_journal_tests::a_task_authorized_visit_with_query_fields_spends_nothing"
+  ],
+  "replace": [
+   [
+    "                return Err(ResearchBudgetError::Destination);\n            }\n            return Ok(ResearchOperation::Visit);",
+    "                return Ok(ResearchOperation::Visit);\n            }\n            return Ok(ResearchOperation::Visit);"
+   ]
+  ]
+ }
+]

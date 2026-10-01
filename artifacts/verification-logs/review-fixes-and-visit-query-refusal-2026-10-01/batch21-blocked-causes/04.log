@@ -1,0 +1,1478 @@
+
+> agentmage-planning-docs@0.0.0 docs:mermaid
+> python3 scripts/check_mermaid.py
+
+CODEBASE-AUDIT.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+DELIVERY-SYSTEM.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+DELIVERY-SYSTEM.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+DELIVERY-SYSTEM.md: Mermaid block 3: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+ENGINEERING-RUNTIME.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+IMPLEMENTATION-PLAN.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+IMPLEMENTATION-PLAN.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+IMPLEMENTATION-PLAN.md: Mermaid block 3: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+IMPLEMENTATION-PLAN.md: Mermaid block 4: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+MODEL-GATEWAY.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+PRD.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+PRD.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+PRD.md: Mermaid block 3: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+PRD.md: Mermaid block 4: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+PRD.md: Mermaid block 5: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+PRD.md: Mermaid block 6: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+PRODUCTIVITY-SYSTEM.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+PRODUCTIVITY-SYSTEM.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+README.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+README.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+README.md: Mermaid block 3: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+RUNTIME-BOUNDARIES.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+RUNTIME-BOUNDARIES.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+TRUSTED-OPERATIONS.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+WINDOWS-BOUNDARIES.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/agent-state-contract-reference.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/atomic-write-transaction-and-rollback.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/bounded-command-runner.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/change-intent-and-planning.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/coding-skills-and-release-boundary.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/coding-skills-and-release-boundary.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/controlled-filesystem-mutations.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/controlled-markdown-knowledge-writes.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/deep-repository-comprehension.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/dependency-direction.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/dependency-direction.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/desktop-thin-client.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/deterministic-and-advisory-policy-reference.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/deterministic-knowledge-retrieval.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/document-correspondence-and-filing-control.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/document-correspondence-and-filing-control.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/durable-authority-store.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/durable-authority-store.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/effect-mediation.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/effect-mediation.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/encrypted-conversation-library.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/encrypted-conversation-library.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/engineering-runtime-vertical-slice.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/exact-preimage-write-approval.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/executive-assistant-and-portfolio.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/foundational-artifact-and-workflow-runtime.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/grant-state-transitions.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/grant-state-transitions.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/json-reconciliation-and-workbook-output.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/kernel-contract-reference.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/kernel-contract-reference.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/kernel-dependency-report.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/knowledge-authority-boundary.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/knowledge-tasks-and-declarative-skills.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/linux-docker-runtime-topology.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/linux-docker-runtime-topology.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/linux-docker-runtime-topology.md: Mermaid block 3: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/linux-platform-lifecycle.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/linux-platform-lifecycle.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/linux-platform-lifecycle.md: Mermaid block 3: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/linux-vscode-read-workflow.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/linux-worker-isolation.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/local-codex-handoff-boundary.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/local-review-and-commit-boundary.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/manual-frontier-recommendation.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/markdown-artifacts-and-round-trip.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/measured-local-model-routing.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/meeting-records-and-continuity.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/meeting-records-and-continuity.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/native-chat-model-discovery.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/obsidian-index-boundary.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/obsidian-parser-boundary.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/optional-local-semantic-retrieval.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/pdf-extraction-and-page-citations.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/pdf-generation-redaction-and-visual-evidence.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/pinned-repository-map.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/planning-review-and-delivery-agent-profiles.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/planning-review-and-delivery-agent-profiles.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/planning-review-and-delivery-agent-profiles.md: Mermaid block 3: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/planning-review-and-delivery-agent-profiles.md: Mermaid block 4: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/platform-adapter-contract.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/platform-adapter-contract.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/private-archives-evidence-bundles.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/private-archives-evidence-bundles.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/read-only-git-and-instruction-trust.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/read-only-tool-protocol.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/repository-worktree-boundary.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/reusable-runtime-coordinator.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/reusable-runtime-coordinator.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/reusable-runtime-coordinator.md: Mermaid block 3: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/runtime-artifact-lifecycle.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/runtime-artifact-lifecycle.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/runtime-artifact-lifecycle.md: Mermaid block 3: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/runtime-artifact-lifecycle.md: Mermaid block 4: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/runtime-event-journal.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/runtime-event-journal.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/secret-store-encrypted-backup-format.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/shared-runtime-workflow-and-mcp.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/shared-runtime-workflow-and-mcp.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/source-artifact-preparation-and-context.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/source-backed-memory-boundary.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/stable-chat-participant-ingress.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/standalone-coding-harness.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/strict-local-boundary.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/strict-local-boundary.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/strict-local-boundary.md: Mermaid block 3: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/strict-local-boundary.md: Mermaid block 4: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/structured-code-changes.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/tabular-and-spreadsheet-inspection.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/thin-client-boundary.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/thin-client-boundary.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/trusted-validation-runner.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/untrusted-frontier-result-import.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/word-ooxml-extraction-and-generation.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/word-rich-edit-and-visual-evidence.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/write-privacy-recovery-audit.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/architecture/write-privacy-recovery-audit.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/decisions/0004-language-and-build-system-architecture.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/decisions/0005-signed-manual-update-design.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/decisions/0006-update-rollback-design.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/decisions/0007-local-emergency-disablement.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/decisions/0013-kernel-authority-transaction-and-operation-taxonomy.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/decisions/0016-encrypted-canonical-authority-and-recovery.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/verification/story-5-2-policy-evidence.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/verification/story-5-2-policy-evidence.md: Mermaid block 2: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/verification/story-5-3-workflow-budget-evidence.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/verification/story-5-3-workflow-definition-evidence.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/verification/story-5-3-workflow-identity-evidence.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)
+docs/verification/story-5-3-workflow-verifier-evidence.md: Mermaid block 1: Error: Could not find chrome-headless-shell (ver. 151.0.7922.71). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome-headless-shell`) or
+ 2. your cache path is incorrectly configured (which is: <home>/.cache/puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+    at ChromeLauncher.resolveExecutablePath (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:319:19)
+    at async ChromeLauncher.computeLaunchArguments (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:92:19)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/BrowserLauncher.js:67:28)
+    at async ChromeLauncher.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/ChromeLauncher.js:39:16)
+    at async PuppeteerNode.launch (file://<repo>/node_modules/puppeteer-core/lib/puppeteer/node/PuppeteerNode.js:120:16)
+    at async run (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:862:19)
+    at async cli (file://<repo>/node_modules/@mermaid-js/mermaid-cli/src/index.js:374:3)

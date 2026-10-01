@@ -1,0 +1,29 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.07s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-094cc34c77d48d9f)
+
+running 3 tests
+test protocol::tests::handoff_requests_are_local_closed_and_confirmation_bound ... ok
+test linux_read::tests::handoff_transport_requires_current_review_and_never_delivers ... FAILED
+test linux_read::tests::handoff_source_drift_and_missing_acknowledgment_fail_closed ... FAILED
+
+failures:
+
+---- linux_read::tests::handoff_transport_requires_current_review_and_never_delivers stdout ----
+
+thread 'linux_read::tests::handoff_transport_requires_current_review_and_never_delivers' (28642) panicked at shells/host/src/linux_read.rs:2345:18:
+verified worker manifest: LinuxSandboxError { kind: InvalidManifest }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- linux_read::tests::handoff_source_drift_and_missing_acknowledgment_fail_closed stdout ----
+
+thread 'linux_read::tests::handoff_source_drift_and_missing_acknowledgment_fail_closed' (28641) panicked at shells/host/src/linux_read.rs:2345:18:
+verified worker manifest: LinuxSandboxError { kind: InvalidManifest }
+
+
+failures:
+    linux_read::tests::handoff_source_drift_and_missing_acknowledgment_fail_closed
+    linux_read::tests::handoff_transport_requires_current_review_and_never_delivers
+
+test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 518 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p agentmage-host --lib`

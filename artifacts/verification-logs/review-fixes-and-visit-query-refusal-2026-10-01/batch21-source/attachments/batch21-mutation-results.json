@@ -1,0 +1,124 @@
+[
+  {
+    "id": "H1-widened-comparison",
+    "expected": "runtime_transport::tests::a_32_bit_value_decodes_exactly_as_the_runtime_writes_it",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_ipc::tests::every_frame_is_decoded_exactly_in_both_directions",
+      "runtime_producer_contract_tests::a_run_request_with_sampling_values_decodes_exactly_and_verifies",
+      "runtime_transport::tests::a_32_bit_value_decodes_exactly_as_the_runtime_writes_it"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "H2-plain-value-reader",
+    "expected": "runtime_transport::tests::a_member_repeated_in_any_object_is_refused",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_ipc::tests::every_frame_is_decoded_exactly_in_both_directions",
+      "runtime_producer_contract_tests::a_repeated_member_is_refused_in_every_fixture",
+      "runtime_transport::tests::a_member_repeated_in_any_object_is_refused"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "H3-repetition-kept",
+    "expected": "runtime_transport::tests::a_member_repeated_in_any_object_is_refused",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_ipc::tests::every_frame_is_decoded_exactly_in_both_directions",
+      "runtime_producer_contract_tests::a_repeated_member_is_refused_in_every_fixture",
+      "runtime_transport::tests::a_member_repeated_in_any_object_is_refused"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "H4-float-as-null",
+    "expected": "runtime_transport::tests::a_32_bit_value_decodes_exactly_as_the_runtime_writes_it",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_transport::tests::a_32_bit_value_decodes_exactly_as_the_runtime_writes_it",
+      "runtime_transport::tests::a_member_repeated_in_any_object_is_refused"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "H5-array-items-dropped",
+    "expected": "runtime_transport::tests::a_member_repeated_in_any_object_is_refused",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_transport::tests::a_member_repeated_in_any_object_is_refused"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "E1-decision-open",
+    "expected": "job_control::tests::conflicting_foreign_and_malformed_requests_are_refused_without_entries",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "job_control::tests::conflicting_foreign_and_malformed_requests_are_refused_without_entries"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "H6-decision-open-wire",
+    "expected": "runtime_ipc::tests::every_frame_is_decoded_exactly_in_both_directions",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_ipc::tests::every_frame_is_decoded_exactly_in_both_directions"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "E2-r10-removed",
+    "expected": "research_budget::tests::a_visit_under_a_task_grant_carries_no_query_fields",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "research_budget::tests::a_visit_under_a_task_grant_carries_no_query_fields",
+      "runtime_artifact::tests::research_journal_tests::a_task_authorized_visit_with_query_fields_spends_nothing"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "E3-r10-every-mode",
+    "expected": "research_budget::tests::a_visit_under_a_task_grant_carries_no_query_fields",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "research_budget::tests::a_visit_under_a_task_grant_carries_no_query_fields",
+      "research_budget::tests::classification_derives_a_query_only_from_the_exact_endpoint_shape",
+      "runtime_artifact::tests::research_journal_tests::search_accounting_is_derived_from_the_exact_disclosed_endpoint_request"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "E4-r10-only-several-fields",
+    "expected": "research_budget::tests::a_visit_under_a_task_grant_carries_no_query_fields",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "research_budget::tests::a_visit_under_a_task_grant_carries_no_query_fields",
+      "runtime_artifact::tests::research_journal_tests::a_task_authorized_visit_with_query_fields_spends_nothing"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "E5-r10-visit-allowed-as-query",
+    "expected": "research_budget::tests::a_visit_under_a_task_grant_carries_no_query_fields",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "research_budget::tests::a_visit_under_a_task_grant_carries_no_query_fields",
+      "runtime_artifact::tests::research_journal_tests::a_task_authorized_visit_with_query_fields_spends_nothing"
+    ],
+    "compile_error": false
+  }
+]

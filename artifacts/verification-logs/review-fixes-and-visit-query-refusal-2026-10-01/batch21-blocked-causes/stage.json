@@ -1,0 +1,133 @@
+{
+  "schema_version": 2,
+  "stage": "batch21-blocked-causes",
+  "source_revision": "f5014c708079eb93450d393a5c95ba1dd6e4a28f",
+  "scope": "Batch 21 blocked causes at f5014c70: each command is the underlying failing step of a still-blocked producer, run to show its cause (pytest missing; two host handoff tests and one host frontier test failing at native fixtures; the Mermaid step without its headless browser; requirements:current-check failing on the platforms/linux dependency graph). Every command is expected to fail.",
+  "planned_commands": [
+    [
+      "python3",
+      "-m",
+      "pytest",
+      "--version"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "handoff"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "frontier",
+      "--lib"
+    ],
+    [
+      "npm",
+      "run",
+      "docs:mermaid"
+    ],
+    [
+      "npm",
+      "run",
+      "requirements:current-check"
+    ]
+  ],
+  "continue_after_failure_indexes": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "-m",
+        "pytest",
+        "--version"
+      ],
+      "exit_code": 1,
+      "seconds": 0.009,
+      "log": "01.log",
+      "log_sha256": "b72695fcb3e2889d64484497e2ea8079822f1532c2505f226cde970957bedf7d",
+      "private_log_sha256": "b72695fcb3e2889d64484497e2ea8079822f1532c2505f226cde970957bedf7d"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "handoff"
+      ],
+      "exit_code": 101,
+      "seconds": 0.11,
+      "log": "02.log",
+      "log_sha256": "6e51c8ff1f9681b6df0dda680a02e02092cd45ec4e919e33e122ea5d880fcee7",
+      "private_log_sha256": "6e51c8ff1f9681b6df0dda680a02e02092cd45ec4e919e33e122ea5d880fcee7"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "frontier",
+        "--lib"
+      ],
+      "exit_code": 101,
+      "seconds": 0.097,
+      "log": "03.log",
+      "log_sha256": "bd209fdcf028df7c1376e4aba8b1ab000d38f057f21bc10c2c2e35c30a742735",
+      "private_log_sha256": "bd209fdcf028df7c1376e4aba8b1ab000d38f057f21bc10c2c2e35c30a742735"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "npm",
+        "run",
+        "docs:mermaid"
+      ],
+      "exit_code": 1,
+      "seconds": 13.03,
+      "log": "04.log",
+      "log_sha256": "a20d6569f9f853f15c00f5fd16db79ad34e210759962150c6b94d2c66058dd6e",
+      "private_log_sha256": "37e7698d7215736f002229f27ceb43105aba0ed6c9279aac29c3be664009e3ee"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "npm",
+        "run",
+        "requirements:current-check"
+      ],
+      "exit_code": 1,
+      "seconds": 3.52,
+      "log": "05.log",
+      "log_sha256": "251e60671f80cce61b1b970dfdd61343589166c59f18955dc4ae679c0a4d65db",
+      "private_log_sha256": "251e60671f80cce61b1b970dfdd61343589166c59f18955dc4ae679c0a4d65db"
+    }
+  ]
+}

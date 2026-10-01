@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "stage": "batch21-observation",
+  "source_revision": "f5014c708079eb93450d393a5c95ba1dd6e4a28f",
+  "scope": "Batch 21 actual-process observation at the clean gate commit f5014c70: the rebuilt CLI, coding host and read worker; the coding host refused at native Git trust with the workspace preserved, every catalog host operation the CLI has under exact frame decoding (Decision 0136), a recipe shown before launch, and pre-existing work refused with every byte kept.",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch21-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "16087ee8ac3c7f8bd4b0e3f51ec92f9768b0c04c22e42cf11c1b0f6944a675ae",
+      "private_sha256": "16087ee8ac3c7f8bd4b0e3f51ec92f9768b0c04c22e42cf11c1b0f6944a675ae"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 14.346,
+      "log": "01.log",
+      "log_sha256": "7bc83f6a6086123448b9d7fcba3d826bc26c0b7207fa97f987aeafeaac281e2b",
+      "private_log_sha256": "fb2a8c04f3acbbc6b6d62fefdc000b6188f77e47670b74926bb0d7e59e482714"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch21-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 178.646,
+      "log": "02.log",
+      "log_sha256": "3a3c91e7685dc9f9954165214ab1fc9c4fe67398ea8e0ec2247fd421f3f7e737",
+      "private_log_sha256": "3a3c91e7685dc9f9954165214ab1fc9c4fe67398ea8e0ec2247fd421f3f7e737"
+    }
+  ]
+}

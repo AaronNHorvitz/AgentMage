@@ -1,0 +1,1291 @@
+{
+  "schema_version": 1,
+  "record_type": "agentmage-review-fixes-and-visit-query-refusal-verification",
+  "date": "2026-10-01",
+  "base_commit": "4bef629b5c44eacaeeab8fdba9addcbaefb3ac1d",
+  "head_commit": "f5014c708079eb93450d393a5c95ba1dd6e4a28f",
+  "source_commit": "534e1d379cceb484a4e44e68f80019f7ca7cada8",
+  "generator": "scripts/verification_batch.py",
+  "specification": "artifacts/verification-logs/review-fixes-and-visit-query-refusal-2026-10-01/record-spec.json",
+  "commits": [
+    {
+      "commit": "534e1d379cceb484a4e44e68f80019f7ca7cada8",
+      "subject": "Decode numbers and repeated members exactly; refuse task-authorized visit queries"
+    },
+    {
+      "commit": "80754b81b5457c3f78fe04aa6c52f1410858b5e2",
+      "subject": "Renew core evidence for the batch 21 source commit"
+    },
+    {
+      "commit": "f1f2bdb5d5a7542b5f3beaf4773f89151417f4cd",
+      "subject": "Renew the codec chain, the Sprint 11 and 12 maps and the Sprint 79 and 108 reports for batch 21"
+    },
+    {
+      "commit": "f5014c708079eb93450d393a5c95ba1dd6e4a28f",
+      "subject": "Advance the routine Story 11.2 pin for batch 21"
+    }
+  ],
+  "check_logs": {
+    "contracts": {
+      "log": "batch21-source/02.log",
+      "log_sha256": "3f31ba4164ffb4229422b17267c6656f0b44e7f795cdf5fef85c35b5b3d4f93c",
+      "passed": 86,
+      "failed": 0,
+      "ignored": 0,
+      "result_lines": 8
+    },
+    "engine": {
+      "log": "batch21-source/03.log",
+      "log_sha256": "587d37e74a913ae28e38fd65ae7191d0fda7dc1223e4e0645add7627baf6fc43",
+      "passed": 1481,
+      "failed": 0,
+      "ignored": 7,
+      "result_lines": 20
+    },
+    "repository_map": {
+      "log": "batch21-source/04.log",
+      "log_sha256": "a6135665fed82111e2da8fd3cf0531725f693e7b18b672916e2ad2274892cdde",
+      "passed": 73,
+      "failed": 0,
+      "ignored": 0,
+      "result_lines": 5
+    },
+    "inference": {
+      "log": "batch21-source/05.log",
+      "log_sha256": "8f4edf15d03e189a7bdbe759a039e34e89dfe149ef57a4b0b8ea2e3dd92eaf20",
+      "passed": 166,
+      "failed": 0,
+      "ignored": 8,
+      "result_lines": 9
+    },
+    "knowledge": {
+      "log": "batch21-source/06.log",
+      "log_sha256": "9a6a04f09117088b9e3f959d3f9e9dbaac134f3fdcb5c37057adad1ff0852394",
+      "passed": 302,
+      "failed": 0,
+      "ignored": 0,
+      "result_lines": 3
+    },
+    "linux": {
+      "log": "batch21-source/07.log",
+      "log_sha256": "a8f289f21e85a5f4046325ccae74dc5c9d63c9e0168c84091bf15b499a8d6080",
+      "passed": 189,
+      "failed": 19,
+      "ignored": 51,
+      "result_lines": 3
+    },
+    "host": {
+      "log": "batch21-source/08.log",
+      "log_sha256": "523fe470fdfeca8153a60ceb8e4821f7996f3308c6a0ab3a34eefe200044d177",
+      "passed": 474,
+      "failed": 53,
+      "ignored": 11,
+      "result_lines": 7
+    }
+  },
+  "evidence_stages": [
+    {
+      "stage": "batch21-source",
+      "source_revision": "534e1d379cceb484a4e44e68f80019f7ca7cada8",
+      "scope": "Batch 21 source checks at the source commit 534e1d37 (Decision 0136): formatting, every workspace crate suite (the Linux and host suites run to completion and keep their known native-prerequisite failures), workspace clippy, the Python check suites with the runtime producer contract and work selection tests, the producer fixtures regenerated from the runtime's types and compared, the repository contract scripts, documentation lint and whitespace.",
+      "planned_commands": 20,
+      "ran": 20,
+      "results": [
+        {
+          "argv": [
+            "cargo",
+            "fmt",
+            "--all",
+            "--",
+            "--check"
+          ],
+          "exit_code": 0,
+          "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "--offline",
+            "-p",
+            "agentmage-kernel-contracts"
+          ],
+          "exit_code": 0,
+          "log_sha256": "3f31ba4164ffb4229422b17267c6656f0b44e7f795cdf5fef85c35b5b3d4f93c"
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "--offline",
+            "-p",
+            "agentmage-kernel-engine"
+          ],
+          "exit_code": 0,
+          "log_sha256": "587d37e74a913ae28e38fd65ae7191d0fda7dc1223e4e0645add7627baf6fc43"
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "--offline",
+            "-p",
+            "agentmage-capability-repository-map"
+          ],
+          "exit_code": 0,
+          "log_sha256": "a6135665fed82111e2da8fd3cf0531725f693e7b18b672916e2ad2274892cdde"
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "--offline",
+            "-p",
+            "agentmage-platform-linux-inference"
+          ],
+          "exit_code": 0,
+          "log_sha256": "8f4edf15d03e189a7bdbe759a039e34e89dfe149ef57a4b0b8ea2e3dd92eaf20"
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "--offline",
+            "-p",
+            "agentmage-capability-knowledge"
+          ],
+          "exit_code": 0,
+          "log_sha256": "9a6a04f09117088b9e3f959d3f9e9dbaac134f3fdcb5c37057adad1ff0852394"
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "--offline",
+            "-p",
+            "agentmage-platform-linux",
+            "--no-fail-fast"
+          ],
+          "exit_code": 101,
+          "log_sha256": "a8f289f21e85a5f4046325ccae74dc5c9d63c9e0168c84091bf15b499a8d6080"
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "--offline",
+            "-p",
+            "agentmage-host",
+            "--no-fail-fast"
+          ],
+          "exit_code": 101,
+          "log_sha256": "523fe470fdfeca8153a60ceb8e4821f7996f3308c6a0ab3a34eefe200044d177"
+        },
+        {
+          "argv": [
+            "cargo",
+            "clippy",
+            "--workspace",
+            "--all-targets",
+            "--locked",
+            "--offline",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "exit_code": 0,
+          "log_sha256": "fdd9d18e54f898fb88f05aefc3e01953ae1e0f57acfa607a78c4e1d928c4b919"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_rust_test_ownership",
+            "tests.test_muse_codec_evidence",
+            "tests.test_evidence_core",
+            "tests.test_sprint_13_evidence",
+            "tests.test_amendment_work_selection",
+            "tests.test_remaining_plan_blocker_audit",
+            "tests.test_strict_local_source_audit",
+            "tests.test_verification_batch",
+            "tests.test_runtime_coordinator_boundary_review",
+            "tests.test_storage_migration_compatibility_evidence",
+            "tests.test_operational_schema_v3_evidence",
+            "tests.test_store_unit_acceptance_evidence",
+            "tests.test_source_content_deduplication_evidence",
+            "tests.test_story_11_3_resume_evidence",
+            "tests.test_coding_harness",
+            "tests.test_capability_package_contract",
+            "tests.test_capability_package_runtime_contract",
+            "tests.test_runtime_producer_contract"
+          ],
+          "exit_code": 0,
+          "log_sha256": "469f587c21a1d985665d13eb9ee25247d0afb0b4ac92ff19114475ef3e8209cf"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/runtime_producer_fixtures.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "0362deb934e58dfe3c1029b5eccf3ca6a19c659c5275b7316adb8c70653604a8"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/capability_package_contract.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "e118a88b371dfed7e9a17d976649d9e88943722a31039571db1d55b90f6b7616"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/capability_package_runtime_contract.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "d077a35ad869170209d4bd0cee79108a61681dd2872d670f9883d7b2b957ae52"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/strict_local_source_audit.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/effect_boundary.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/hostile_network_injection_gate.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "1de6fd57283816a6a0fb967947ec48087406ba2eed70bacbd8f6c2480587bc6b"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/task_graph.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "15d8e0e14132186c2378805e2280d68427986ed9055a3aabafe08fd3c76d916a"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/validate_docs.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "c99ae458cd6d3f9cfd40fa79e594a9b6e35e2f46f222218f8d21284574fbc150"
+        },
+        {
+          "argv": [
+            "npm",
+            "run",
+            "docs:lint"
+          ],
+          "exit_code": 0,
+          "log_sha256": "a41a619a7eca8af2f30a3e0824452bbfede916bb1dce39588b942dda617432fc"
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0,
+          "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "stage": "batch21-core",
+      "source_revision": "534e1d379cceb484a4e44e68f80019f7ca7cada8",
+      "scope": "Batch 21 core evidence at the source commit 534e1d37: one supply-chain write (engine and host components), the Story 1.1, 1.2 and 3.1 reports bound to it, the configuration startup report, the Sprint 27 to 34 knowledge boundary reviews at the source revision, the v0.4 coding release gate, the remaining-plan register with the five new amendment rows of Decision 0136, then the supply-chain check and whitespace.",
+      "planned_commands": 24,
+      "ran": 24,
+      "results": [
+        {
+          "argv": [
+            "python3",
+            "scripts/supply_chain.py",
+            "--write"
+          ],
+          "exit_code": 0,
+          "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_supply_chain"
+          ],
+          "exit_code": 0,
+          "log_sha256": "32fd2c95100c60a0e6f794220e035f3bb507000948b964c4395ff3e13a09ca90"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/contract_boundary_gate.py",
+            "--write"
+          ],
+          "exit_code": 0,
+          "log_sha256": "ffb0929bcd3e0c156f11d6ee3d4dcfdbdec2f9f41746916b7af56d3ea0c430a4"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_contract_boundary_gate"
+          ],
+          "exit_code": 0,
+          "log_sha256": "6b80f1f7116fee7db8b792cc8801e6602ae419af1c2d8fa423134d3232861b75"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/contract_evidence_index.py",
+            "--write"
+          ],
+          "exit_code": 0,
+          "log_sha256": "d64a13683ec5874fafecbdc8621edda9fcf5798c2b1b9fcb6b7e6535af020932"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_contract_evidence_index"
+          ],
+          "exit_code": 0,
+          "log_sha256": "0f0149f92c2183ef7246fcaec2decd1c651e8502ce280acaef0e7400e32feec8"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/story_1_1_artifacts.py",
+            "--write"
+          ],
+          "exit_code": 0,
+          "log_sha256": "6ddd04e6060dd8158475e3b5fdf90fe3c4b34164f84f00a1644878af50a98fea"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_story_1_1_artifacts"
+          ],
+          "exit_code": 0,
+          "log_sha256": "74202dc09a3347400de94f86db7081b0c92ff6270bca74570c143aa53888e576"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/story_1_1_security_evidence.py",
+            "--write"
+          ],
+          "exit_code": 0,
+          "log_sha256": "04bdfd167bbbe669073900a46f4091d33d4d3a817a465699ea8502567598fb3c"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_story_1_1_security_evidence"
+          ],
+          "exit_code": 0,
+          "log_sha256": "0d628f37216e0a286bb4dc09c3961e6b1490ff1c53d56a39af806e9c2cc5da78"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/component_inventory.py",
+            "--write"
+          ],
+          "exit_code": 0,
+          "log_sha256": "f253aac66972f434f7ae0f1c81879a85da4620a4f1c5cc7738a640e4b28492a8"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_component_inventory"
+          ],
+          "exit_code": 0,
+          "log_sha256": "72c5e72548a6b9b02b1ef27e8cb382944f4ee87a068b381fe2c2a76be1eda1d9"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/configuration_startup_evidence.py",
+            "--write"
+          ],
+          "exit_code": 0,
+          "log_sha256": "635a7a089caf4f25d2e772a819fb5d83c083bf266914373128419caea0dbe78f"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_configuration_startup_evidence"
+          ],
+          "exit_code": 0,
+          "log_sha256": "e19a86747084065fc6026e9e5463e2291a2e56061843e8a27e0424f4fed284be"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/story_3_1_security_evidence.py",
+            "--write"
+          ],
+          "exit_code": 0,
+          "log_sha256": "0cd2aa4156909f95f43fc90f612df6209e475456b9fc49a528576ae94ff610aa"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_story_3_1_security_evidence"
+          ],
+          "exit_code": 0,
+          "log_sha256": "24edfcbc2549113fe7abbbfacb074a95b215fff63f0ebeca917005d1c2174137"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/knowledge_sprint_boundary_review.py",
+            "--write",
+            "--source-revision",
+            "534e1d379cceb484a4e44e68f80019f7ca7cada8"
+          ],
+          "exit_code": 0,
+          "log_sha256": "f08ed91b1a4dcf60f8b1db63e08cc009d1bee9a0866fa97ff1480b815c695f96"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_knowledge_sprint_boundary_review"
+          ],
+          "exit_code": 0,
+          "log_sha256": "6f283ee6225d2cef4c0127d95456a6f954c45141c92b97dd89016cb1c630e8f4"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/v0_4_coding_release_gate.py",
+            "--write"
+          ],
+          "exit_code": 0,
+          "log_sha256": "9e0bec13e71fb8971225fd1525af6e535af11ccc92d20216392abe43f0e6d97f"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_v0_4_coding_release_gate"
+          ],
+          "exit_code": 0,
+          "log_sha256": "946acfd74cc11aff8da84cf35f68137c7af2d277f03e4bec7c5baf2f80df4833"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/remaining_plan_blocker_audit.py",
+            "--write"
+          ],
+          "exit_code": 0,
+          "log_sha256": "8f40d8d00f3c2e98b871555dc634107804594d5125aaa7c664d36e204188f45d"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_remaining_plan_blocker_audit",
+            "tests.test_amendment_work_selection"
+          ],
+          "exit_code": 0,
+          "log_sha256": "4a07ad50414eff0c73bd405d80580743378265182971281f1db0000079064fe6"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/supply_chain.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0,
+          "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "stage": "batch21-rebind",
+      "source_revision": "80754b81b5457c3f78fe04aa6c52f1410858b5e2",
+      "scope": "Batch 21 rebind from the core commit 80754b81, in order: the Muse codec chain (codec evidence, early disposition, Sprint 13, Story 13.4 context profile), the Story 11.1 security map, the Story 11.2 storage security, frozen-scope, AC1 and AC3 reports and the AC2 check, the Story 12.1 map, and the Sprint 108 and Sprint 79 reports, which read the committed supply chain; then the supply-chain check and whitespace.",
+      "planned_commands": 27,
+      "ran": 27,
+      "results": [
+        {
+          "argv": [
+            "python3",
+            "scripts/muse_codec_evidence.py",
+            "--write",
+            "--source-revision",
+            "80754b81b5457c3f78fe04aa6c52f1410858b5e2"
+          ],
+          "exit_code": 0,
+          "log_sha256": "ee3124d287be0df61d007cd156af955e50affb61d03a0b4d5d6262b378cde672"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_muse_codec_evidence"
+          ],
+          "exit_code": 0,
+          "log_sha256": "b6e0cc8afe80d94dfccd06eb5ce6a59559a9c574701dd3b357f5fe5c59a0cff8"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/muse_early_disposition.py",
+            "--write",
+            "--source-revision",
+            "80754b81b5457c3f78fe04aa6c52f1410858b5e2"
+          ],
+          "exit_code": 0,
+          "log_sha256": "1bb05364c5bb717c54e36038673e34d01453f399f775aa76e6b2e02a716861f0"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_muse_early_disposition"
+          ],
+          "exit_code": 0,
+          "log_sha256": "24adda79e21044fef19cdc7f0606a9cd7770fc9a99c705a8622ee923c13bce5d"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/sprint_13_evidence.py",
+            "--write",
+            "--source-revision",
+            "80754b81b5457c3f78fe04aa6c52f1410858b5e2"
+          ],
+          "exit_code": 0,
+          "log_sha256": "80457ccc5c51f38b35dc2255d88c0fd06740d4b2948155d7313219be9eb80659"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_sprint_13_evidence"
+          ],
+          "exit_code": 0,
+          "log_sha256": "bdd4b7566f976fc701e14221810dc9b768a8930089b5ce3e9ce715addedb937e"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/story_13_4_context_profile_evidence.py",
+            "--write"
+          ],
+          "exit_code": 0,
+          "log_sha256": "7023a5bb989a18088e85c0187fdf7d7c4cfbabc27bae8ef733086f002259cad0"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_story_13_4_context_profile_evidence"
+          ],
+          "exit_code": 0,
+          "log_sha256": "eb8c88bdf6d7bffd457b38469078be30b7e97db745e82c5f24162939bad78be2"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/sprint_11_security_evidence.py",
+            "--write",
+            "--source-revision",
+            "80754b81b5457c3f78fe04aa6c52f1410858b5e2"
+          ],
+          "exit_code": 0,
+          "log_sha256": "8d469696cbc98fb27b41dd9a289ea7550b57136dc2a9632eba7483dc03a74288"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_sprint_11_security_evidence"
+          ],
+          "exit_code": 0,
+          "log_sha256": "0f7e4b97443e54aca647179972594d13bb587afcbf151fab8228148587ea844a"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/storage_security_evidence.py",
+            "--write"
+          ],
+          "exit_code": 0,
+          "log_sha256": "86e970fb885d55cbf27b70a3de72c555d8acc24b370662a942ce58f1a3d546f2"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_storage_security_evidence"
+          ],
+          "exit_code": 0,
+          "log_sha256": "0f7e4b97443e54aca647179972594d13bb587afcbf151fab8228148587ea844a"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/frozen_scope_breadth_evidence.py",
+            "--write"
+          ],
+          "exit_code": 0,
+          "log_sha256": "0091f1120943a991f6d39da9abb54153340cba65c38df8441e8e42dfe3031ed6"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_frozen_scope_breadth_evidence"
+          ],
+          "exit_code": 0,
+          "log_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/story_11_2_ac1_evidence.py",
+            "--write"
+          ],
+          "exit_code": 0,
+          "log_sha256": "8d839bbfeaf6a2654d704f23d8ecb4628a2ea06bda23ca80d8cc647d76c71755"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_story_11_2_ac1_evidence"
+          ],
+          "exit_code": 0,
+          "log_sha256": "3872f5a85da677f909ec5c55a5821758c34e2394460567a29f8043b480cc1105"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/story_11_2_ac3_evidence.py",
+            "--write"
+          ],
+          "exit_code": 0,
+          "log_sha256": "94b8ff66ca6be8495daa74b759533bdfe48fefa8e3b4680627e4f707a8b3942f"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_story_11_2_ac3_evidence"
+          ],
+          "exit_code": 0,
+          "log_sha256": "6299c61ecefc2c6e262ba2dccd92b35e4ade4e41b723fe2eac602dbd7b324b98"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/story_11_2_ac2_evidence.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "d1dbbcf2d1a85681596bea7bebe16b9ea742d87ee647fd7075565bb5aa4f3a7a"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/story_12_1_security_evidence.py",
+            "--write",
+            "--source-revision",
+            "80754b81b5457c3f78fe04aa6c52f1410858b5e2"
+          ],
+          "exit_code": 0,
+          "log_sha256": "cb8fc4f95c4446db13a1cee1aaecf99f25bee1a1ccd5509ea5e4642cddfb209f"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_story_12_1_security_evidence"
+          ],
+          "exit_code": 0,
+          "log_sha256": "56e03afda220e7ba78bbcecf9a2e53a0149cfc3e311fa10bbd01b25e8e5ba671"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/sprint_108_evidence.py",
+            "--write",
+            "--source-revision",
+            "80754b81b5457c3f78fe04aa6c52f1410858b5e2"
+          ],
+          "exit_code": 0,
+          "log_sha256": "5534a6cb4535a4fa1bb63188b514753d2944eb335700f7b3031fc9d6c127b9dc"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_sprint_108_evidence"
+          ],
+          "exit_code": 0,
+          "log_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/sprint_79_evidence.py",
+            "--write",
+            "--source-revision",
+            "80754b81b5457c3f78fe04aa6c52f1410858b5e2"
+          ],
+          "exit_code": 0,
+          "log_sha256": "a4d7ae55c14473c7edf183b334fc2e68a90c84a705bdf6fa308ab8c281c17633"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_sprint_79_evidence"
+          ],
+          "exit_code": 0,
+          "log_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/supply_chain.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0,
+          "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "stage": "batch21-gate",
+      "source_revision": "f1f2bdb5d5a7542b5f3beaf4773f89151417f4cd",
+      "scope": "Batch 21 Story 11.2 gate after the routine pin advance to the rebind commit f1f2bdb5 under AGENTS.md section 7 (3 explained reviewed-path changes, all 25 paths retained): the gate report regenerated, its unit test and check mode, then the supply-chain check and whitespace. The Story 23.4 chain binds no path this batch changed, so it is not renewed.",
+      "planned_commands": 5,
+      "ran": 5,
+      "results": [
+        {
+          "argv": [
+            "python3",
+            "scripts/story_11_2_gate.py",
+            "--write"
+          ],
+          "exit_code": 0,
+          "log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195"
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_story_11_2_gate"
+          ],
+          "exit_code": 0,
+          "log_sha256": "5a43ac1739b053729a38c421c78e11eb37262f2ca2f0214ed6161b99c9715414"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/story_11_2_gate.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/supply_chain.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0,
+          "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "stage": "batch21-blocked-causes",
+      "source_revision": "f5014c708079eb93450d393a5c95ba1dd6e4a28f",
+      "scope": "Batch 21 blocked causes at f5014c70: each command is the underlying failing step of a still-blocked producer, run to show its cause (pytest missing; two host handoff tests and one host frontier test failing at native fixtures; the Mermaid step without its headless browser; requirements:current-check failing on the platforms/linux dependency graph). Every command is expected to fail.",
+      "planned_commands": 5,
+      "ran": 5,
+      "results": [
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "pytest",
+            "--version"
+          ],
+          "exit_code": 1,
+          "log_sha256": "b72695fcb3e2889d64484497e2ea8079822f1532c2505f226cde970957bedf7d"
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "--offline",
+            "-p",
+            "agentmage-host",
+            "handoff"
+          ],
+          "exit_code": 101,
+          "log_sha256": "6e51c8ff1f9681b6df0dda680a02e02092cd45ec4e919e33e122ea5d880fcee7"
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "--offline",
+            "-p",
+            "agentmage-host",
+            "frontier",
+            "--lib"
+          ],
+          "exit_code": 101,
+          "log_sha256": "bd209fdcf028df7c1376e4aba8b1ab000d38f057f21bc10c2c2e35c30a742735"
+        },
+        {
+          "argv": [
+            "npm",
+            "run",
+            "docs:mermaid"
+          ],
+          "exit_code": 1,
+          "log_sha256": "a20d6569f9f853f15c00f5fd16db79ad34e210759962150c6b94d2c66058dd6e"
+        },
+        {
+          "argv": [
+            "npm",
+            "run",
+            "requirements:current-check"
+          ],
+          "exit_code": 1,
+          "log_sha256": "251e60671f80cce61b1b970dfdd61343589166c59f18955dc4ae679c0a4d65db"
+        }
+      ]
+    },
+    {
+      "stage": "batch21-extended-rest",
+      "source_revision": "f5014c708079eb93450d393a5c95ba1dd6e4a28f",
+      "scope": "Batch 21 check modes of the Sprint 31 and Sprint 34 reports at f5014c70, which validate them at their own revisions, then the supply-chain check and whitespace.",
+      "planned_commands": 4,
+      "ran": 4,
+      "results": [
+        {
+          "argv": [
+            "python3",
+            "scripts/sprint_31_evidence.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "95be5554dc82d8f04e9a83158352a1d8b315c35ab30e5ae2553360f71a1cd25c"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/sprint_34_evidence.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "3f2c1eacbf4c2db28377ac2efc46724da1a3ca84cd5c89a43a3f5b7d1ba0883a"
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/supply_chain.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0,
+          "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "stage": "batch21-observation",
+      "source_revision": "f5014c708079eb93450d393a5c95ba1dd6e4a28f",
+      "scope": "Batch 21 actual-process observation at the clean gate commit f5014c70: the rebuilt CLI, coding host and read worker; the coding host refused at native Git trust with the workspace preserved, every catalog host operation the CLI has under exact frame decoding (Decision 0136), a recipe shown before launch, and pre-existing work refused with every byte kept.",
+      "planned_commands": 2,
+      "ran": 2,
+      "results": [
+        {
+          "argv": [
+            "cargo",
+            "build",
+            "--locked",
+            "--offline",
+            "-p",
+            "agentmage-host",
+            "-p",
+            "agentmage-capability-read-only",
+            "--bins"
+          ],
+          "exit_code": 0,
+          "log_sha256": "7bc83f6a6086123448b9d7fcba3d826bc26c0b7207fa97f987aeafeaac281e2b"
+        },
+        {
+          "argv": [
+            "python3",
+            "<state>/batch21-observation.py"
+          ],
+          "exit_code": 0,
+          "log_sha256": "3a3c91e7685dc9f9954165214ab1fc9c4fe67398ea8e0ec2247fd421f3f7e737"
+        }
+      ]
+    }
+  ],
+  "binding_inventory": {
+    "path": "artifacts/verification-logs/review-fixes-and-visit-query-refusal-2026-10-01/binding-inventory.json",
+    "scope": "direct whole-file hash records naming paths changed between the revisions; not transitive or line-span",
+    "counts": {
+      "current": 49,
+      "newly-stale": 12,
+      "previously-stale-or-historical": 2368
+    },
+    "newly_stale_artifacts": [
+      "artifacts/verification-logs/review-fixes-and-recipe-plans-2026-10-01/batch19-core/stage.json",
+      "artifacts/verification-logs/review-fixes-and-recipe-plans-2026-10-01/batch19-ledger/stage.json",
+      "artifacts/verification-logs/review-fixes-and-recipe-plans-2026-10-01/batch19-source-final/stage.json",
+      "artifacts/verification-logs/review-fixes-and-runtime-producer-contract-2026-10-01/batch20-core/stage.json",
+      "artifacts/verification-logs/review-fixes-and-runtime-producer-contract-2026-10-01/batch20-gate/stage.json",
+      "artifacts/verification-logs/review-fixes-and-runtime-producer-contract-2026-10-01/batch20-ledger/stage.json",
+      "artifacts/verification-logs/review-fixes-and-runtime-producer-contract-2026-10-01/batch20-source/stage.json"
+    ]
+  },
+  "decisions": [
+    "docs/decisions/0136-review-fixes-for-exact-decoding-and-the-research-decomposition.md"
+  ],
+  "source_commits": [
+    {
+      "commit": "534e1d379cceb484a4e44e68f80019f7ca7cada8",
+      "scope": "Decision 0136: review F1 to F4 and notes N1 and N2 of 4bef629b (exact decoding reads the decoded value's re-encoding back as JSON, so a 32-bit value written as its shortest decimal decodes; a reader that refuses an object naming a member twice at any depth, maps included; the producer contract document's content obligation, three omitted members and refusal of an explicit null; JobControlDecision closed in the types; Decision 0135 and the batch 20 record corrected in place); the AMR-03.2 split into AMR-03.2.1 to AMR-03.2.4 and the component row AMR-03.1.2.1, recorded in the work selector (78 amendment rows); AMR-03.2.1: under a task grant the owner's classification refuses a visit carrying any query field as a destination error, so the durable reservation spends nothing"
+    }
+  ],
+  "review_resolved": "the independent review of 4bef629b (PASS, F1 medium, F2 to F4 low) is resolved by Decision 0136: F1 (the comparison re-encodes the decoded value to bytes and reads them back as JSON, so a run request with decoding values 0.7, 0.95 and 1.1 crosses the wire exactly in both directions, while a number written otherwise, such as 0.950000001 or 1 for 1.0, is refused; Decision 0135 and the batch 20 record no longer claim that no conforming frame changed); F2 (a member named twice in any object is refused, including the recipe's and the declared plan's parameter maps); F3 and N1 (obligation 6 names the run request's task and the recipe's parameter values as the person's content; the transport section names three omitted members and refuses an explicit null for them); F4 (JobControlDecision refuses unknown members in the types); N2 (Decision 0135 names the controlled-write coding-run fixture); N4 (the mutation specification and results are attached to the source stage); N5 (no change; recorded as a residual)",
+  "components": [
+    {
+      "row": "AMR-03.2.1",
+      "scope": "component row: under a task-authorized research scope, ResearchScope::classify refuses a request to an allowed domain other than the search provider's that carries one or more query fields, as a destination error; the durable reservation then spends nothing and records only a clock observation, as for every refused shape. Ask mode, where each exact request with its fields is approved before it is sent, a visit without query fields and the disclosed search are unchanged; schema 2 scopes and plans, their bytes and their policy digests are unchanged. Tested by a classification test in both modes and a durable reservation test through the operational store with reopening. No runtime mode admits a network operation yet; no task grant is issued and no worker, provider or model runs"
+    }
+  ],
+  "mutation_checks": "run on the exact source tree before it was committed, with private tooling that applies one exact replacement, runs the package's filtered library tests and restores the file; the specification and results are attached to the batch21-source stage. 11 single mutations: the widened comparison, a plain JSON reader, a kept repetition, floats read as null and array items dropped in the unique-member reader, the job control decision opened (engine and wire), the visit refusal removed, applied in every mode, applied only to several fields, and replaced by an accepted visit; each made its expected test fail, and every other test listed for it failed too",
+  "failure_comparison": "linux 189 passed, 19 failed, 51 ignored, failure names identical to batch 20; host 474 passed, 53 failed, 11 ignored, failure names identical to batch 20; the engine passes 1,481 tests (two new: the task-grant visit classification and the durable reservation that spends nothing), knowledge 302; the host gains four tests (repeated members and 32-bit values in the transport, repeated members in every fixture and a run request with sampling values in the producer contract)",
+  "retained_failures": [
+    {
+      "stage": "batch21-source",
+      "indexes": [
+        7,
+        8
+      ],
+      "cause": "the known native-prerequisite failures of the Linux and host suites, with failure names identical to batch 20"
+    },
+    {
+      "stage": "batch21-blocked-causes",
+      "indexes": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+    }
+  ],
+  "blocked_refreshes": [
+    {
+      "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+      "stale_since": "batch 7",
+      "blocker": "pytest is not installed (batch21-blocked-causes/01.log)"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+      "stale_since": "batch 7",
+      "blocker": "full host suite and product gate: the native-prerequisite host failures (batch21-source/08.log)"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+      "stale_since": "batch 7",
+      "blocker": "host handoff tests fail at native fixtures (batch21-blocked-causes/02.log) and the product gate as above"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+      "stale_since": "batch 7",
+      "blocker": "documentation gate: Mermaid cannot find its headless browser (batch21-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+      "stale_since": "batch 7",
+      "blocker": "host frontier test fails at a native fixture (batch21-blocked-causes/03.log) and the documentation gate as above"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+      "stale_since": "before batch 12 (four other inputs)",
+      "blocker": "its producer runs the full host suite (the native-prerequisite failures, batch21-source/08.log)"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+      "stale_since": "before batch 12",
+      "blocker": "its producer runs the product gate and the documentation gate; its check mode still validates it at its own revision (batch21-extended-rest/01.log)"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+      "stale_since": "before batch 12",
+      "blocker": "its producer runs the full host suite with all features; its check mode still validates it at its own revision (batch21-extended-rest/02.log)"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
+      "stale_since": "before batch 18 (shells/host/src/headless.rs)",
+      "blocker": "already stale at the review base for an input this batch does not change; historical"
+    }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+    "agentmage-host",
+    "agentmage-kernel-engine"
+  ],
+  "cascade": "the one SBOM write staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index and security map and the Story 3.1 component inventory, configuration startup report and security map (batch21-core) and the Sprint 79 and Sprint 108 reports, whose producers read the committed supply chain (batch21-rebind); the engine's job control and research budget modules staled the Muse codec chain and the Sprint 13 report (batch21-rebind); the core list also reran the Story 1.2 contract boundary gate, renewed the Sprint 27 to 34 knowledge boundary reviews at the source revision and the remaining-plan register with the five new rows; the renewed component inventory staled the Story 11.1 security map and through it the Story 11.2 storage security, frozen-scope, AC1 and AC3 reports and the Story 12.1 map (batch21-rebind), and the Story 11.2 gate report (batch21-gate); no Story 23.4 input and no operational store changed, so neither the Story 23.4 chain nor a store wave ran",
+  "review_pins": [
+    {
+      "gate": "scripts/story_11_2_gate.py",
+      "from": "97950ab8ebbebb4ca37866888e5c8f78d7f5fbc5",
+      "to": "f1f2bdb5d5a7542b5f3beaf4773f89151417f4cd",
+      "reviewed_paths_retained": 25,
+      "changed_reviewed_paths": [
+        {
+          "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+          "reason": "regenerated by the batch 21 rebind stage after the renewed Story 11.1 security map, which binds the renewed Story 3.1 component inventory; only the bound digest of the Story 11.1 security map changed"
+        },
+        {
+          "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+          "reason": "regenerated by the batch 21 rebind stage after the renewed storage security report; only its bound digest changed"
+        },
+        {
+          "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+          "reason": "regenerated by the batch 21 rebind stage after the renewed storage security report; only its bound digest changed"
+        }
+      ]
+    }
+  ],
+  "newly_stale_disposition": "only historical records: retained stage records of batches 19 and 20, each already pinning inputs as they were at its revision",
+  "runtime_campaign": "not renewed: the Story 23.4 runtime campaign, coordinator boundary review, security map and evidence index bind no path this batch changed and stay current; the coordinator boundary review and the Sprint 50 runtime contract review check modes pass in the ledger stage",
+  "cli_observation": {
+    "source_commit": "f5014c708079eb93450d393a5c95ba1dd6e4a28f",
+    "binaries_sha256": {
+      "agentmage": "3fd4bcaa27a4496d5c717ef4b9585d3850cce9b7c740351c4a51f0c9d0c38649",
+      "agentmage-host": "d54e883cc182e30896e849a3b1b95ccdd6785e6a886c5790e2dbb6c75a14b2b0",
+      "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+    },
+    "clean_scripted_start_exit": 5,
+    "clean_refusal_code": "linux.repository.git_artifact.invalid",
+    "clean_preserved": true,
+    "catalog_host_operations": [
+      {
+        "name": "doc-pack-list-empty",
+        "operation": "doc-pack",
+        "exit_code": 0
+      },
+      {
+        "name": "doc-pack-import",
+        "operation": "doc-pack",
+        "exit_code": 0
+      },
+      {
+        "name": "doc-pack-import-other-license",
+        "operation": "doc-pack",
+        "exit_code": 4
+      },
+      {
+        "name": "doc-pack-search",
+        "operation": "doc-pack",
+        "exit_code": 0
+      },
+      {
+        "name": "doc-pack-inspect",
+        "operation": "doc-pack",
+        "exit_code": 0
+      },
+      {
+        "name": "memory-remember",
+        "operation": "memory",
+        "exit_code": 0
+      },
+      {
+        "name": "memory-remember-credential",
+        "operation": "memory",
+        "exit_code": 4
+      },
+      {
+        "name": "memory-list",
+        "operation": "memory",
+        "exit_code": 0
+      },
+      {
+        "name": "memory-revoke",
+        "operation": "memory",
+        "exit_code": 0
+      },
+      {
+        "name": "memory-delete",
+        "operation": "memory",
+        "exit_code": 0
+      },
+      {
+        "name": "extension-trust-signer",
+        "operation": "extension",
+        "exit_code": 0
+      },
+      {
+        "name": "extension-trust-issuer",
+        "operation": "extension",
+        "exit_code": 0
+      },
+      {
+        "name": "extension-install",
+        "operation": "extension",
+        "exit_code": 0
+      },
+      {
+        "name": "extension-revocations-1",
+        "operation": "extension",
+        "exit_code": 0
+      },
+      {
+        "name": "extension-revocations-renamed",
+        "operation": "extension",
+        "exit_code": 3
+      },
+      {
+        "name": "extension-list",
+        "operation": "extension",
+        "exit_code": 0
+      },
+      {
+        "name": "ended-run-read",
+        "operation": "ended-run",
+        "exit_code": 0
+      }
+    ],
+    "catalog_host_wire_refusals_seen": false,
+    "catalog_workspace_preserved": true,
+    "recipe_shown_before_launch": {
+      "exit_code": 5,
+      "then_refused_at": "linux.repository.git_artifact.invalid",
+      "preserved": true
+    },
+    "dirty": {
+      "exit_code": 1,
+      "preserved": true,
+      "log_directory_created": false
+    },
+    "malformed_frame_injected": false,
+    "qualification": "actual-binary-catalog-host-operations-under-exact-wire-decoding-plus-native-prerequisite-refusal"
+  },
+  "not_run": [
+    "a malformed, repeated-member or sampling-value frame sent to an actual host or client process: exact decoding of such frames is tested at the unit level; the actual processes showed only that every real frame of the catalog host operations still decodes, and no actual frame carried a run request",
+    "a research run: no runtime mode admits a network operation (AMR-03.2.2), no task grant is issued and no worker, provider or model ran",
+    "a consumer reading the producer records through the transport (AMR-06.2 to AMR-06.10)",
+    "the native-only Linux boundary tests and the factory's composition glue",
+    "the actual-process AMR-04 rows and AMR-05.10",
+    "positive native coding workflow",
+    "real model or GPU",
+    "manual user acceptance",
+    "release"
+  ],
+  "claims": {
+    "task_rows_closed": [
+      {
+        "row": "AMR-03.2.1",
+        "closed_by": "the ledger commit that follows this record",
+        "scope": "component row: the task-grant visit query refusal and its durable reservation; no research run, grant, worker, provider or model"
+      }
+    ],
+    "release_claim": "none",
+    "independent_review_of_this_batch": "requested; open"
+  }
+}

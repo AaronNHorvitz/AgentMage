@@ -456,10 +456,14 @@ An installed extension provides nothing to a coding run, and nothing it declares
 granted or run. The host keeps no package source. It trusts the source digest your
 own authenticated CLI observed.
 
-Every frame between the CLI and either host is decoded exactly (Decision 0135): a
-member the types do not name is refused at any position. The catalog host steps above
-ran with this rule through the actual processes, as listed in the
-[review-fix and producer contract verification](verification/review-fixes-and-runtime-producer-contract-2026-10-01.md).
+Every frame between the CLI and either host is decoded exactly (Decisions 0135 and
+0136). A member the types do not name is refused at any position, and so is a member
+named twice in any object. Numbers must be written as the runtime writes them, so a
+run request's sampling values such as `0.95` decode exactly. The catalog host steps
+above ran with this rule through the actual processes, as listed in the
+[review-fix and producer contract verification](verification/review-fixes-and-runtime-producer-contract-2026-10-01.md)
+and the
+[exact decoding and visit query verification](verification/review-fixes-and-visit-query-refusal-2026-10-01.md).
 
 ### Runtime producer contract fixtures
 
