@@ -74,9 +74,9 @@
   ],
   "manual_fuzzing_executed": false,
   "release_approved": false,
-  "report_sha256": "120c3e2a557ac07ff0422aa58a3064c09f385a9e299aa7f11171275e2776cd02",
+  "report_sha256": "e4faf33704ad718d5eecb6f596f211c59fa4bfb2d839fae5c5f495de39937f65",
   "schema_version": 1,
-  "source_revision": "5481746d8b5db9bdd261f93773059929afb031b0",
+  "source_revision": "f33cf02a8e75bf35a3d22cc6ddddb6bf96a3a6d3",
   "sources": [
     {
       "bytes": 217068,
@@ -161,12 +161,12 @@
     {
       "bytes": 10744,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "8d3696934365637c1568997ebcd8a3f4ab322a839ac5b701c5a0f96ccf5e8d74"
+      "sha256": "a9868b440c3f67b57d672787cf80093480a8b776d32765d8f04379999f7d42e6"
     },
     {
       "bytes": 7935,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "5170a31ae44e6f90e0e6d9ca849aabaf4b197ecb054f8bb5565f10d2ff4fb03a"
+      "sha256": "4a65f5b798683ca5924c84a19ac5523741bb4252c6d3f8d10c6716d1ec79a991"
     },
     {
       "bytes": 10830,
