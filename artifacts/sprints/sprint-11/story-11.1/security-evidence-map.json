@@ -47,9 +47,9 @@
       "sha256": "a35c5898054278693c8bdc93f029a20ce95940e2c3716e0b29bad1da43173ef0"
     },
     {
-      "bytes": 5707,
+      "bytes": 5715,
       "path": "docs/verification/s-011-ut01-store-unit-results.md",
-      "sha256": "7befcc377bf38d8cab5190a3905cf4b587e75674f22d7341f0654827e1fe2776"
+      "sha256": "d6c8ee39bc91bbeb8c89562821e7022b6cddd5846853e7819ef12c148857aa2a"
     },
     {
       "bytes": 128372,
@@ -57,9 +57,9 @@
       "sha256": "ba4319939bc4e57d6357e80d217dd872cd8c790447a1d185265736acdb9a2852"
     },
     {
-      "bytes": 489324,
+      "bytes": 491739,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "28aafafb739eb8d358d4422f063ac943ac2b3f13592e6dd9ac4a03f77cd29bec"
+      "sha256": "660387aaf1627758b9d47bce2604266e552db108f68751eae753200f0c56ce05"
     },
     {
       "bytes": 45680,
@@ -97,9 +97,9 @@
       "sha256": "dd2c0d58cd87ea5ecd6aa5a64af11aeeeab546202772f374350450cf56d5e240"
     },
     {
-      "bytes": 6800,
+      "bytes": 7376,
       "path": "artifacts/sprints/sprint-11/story-11.1/operational-schema-v3.json",
-      "sha256": "c148717e47e8a019e6c2b21146d5017026456e6f08489598f1c373135f70c021"
+      "sha256": "0f275d2623d0f828adf60eda3fedc94159f2f5bee8a99e80bcecdbe943f3ab1a"
     },
     {
       "bytes": 3761,
@@ -114,7 +114,7 @@
     {
       "bytes": 4117,
       "path": "artifacts/sprints/sprint-11/story-11.1/s-011-rt01.json",
-      "sha256": "10acdd1db8f808a05e758cb51b06e1cb6ec73f7a9701dcfa5886ad229663e637"
+      "sha256": "b0bc21b8996b11b7db825a99329a68bfa5a4506d373bdf3aab84bd310fcbc9aa"
     },
     {
       "bytes": 4286,
@@ -122,9 +122,9 @@
       "sha256": "644669b4da500aa86f343fbb7416598a00774a57b4f9e2c43b05dc8343e418b8"
     },
     {
-      "bytes": 6789,
+      "bytes": 7369,
       "path": "artifacts/sprints/sprint-11/story-11.1/s-011-ut01.json",
-      "sha256": "d82df5906555968bf01ca74f240ef2521152ad0a432225f62618bb18b7323ca5"
+      "sha256": "72361638ce56f7a9d3192927b9e30ce0c0c5ec4dbed2e8436a3f3b15cab977fd"
     },
     {
       "bytes": 4667,
@@ -149,7 +149,7 @@
     {
       "bytes": 17136,
       "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
-      "sha256": "b3333762388ae7a47c86efbb24b2d1e0643dae732a3c0eb8695da0737a1b48e9"
+      "sha256": "e3b0cc57d0eb7d383caf011eec9accc4e921ea602ad4b31e6caac6f72696ca47"
     },
     {
       "bytes": 51,
@@ -471,7 +471,7 @@
   "product_requirement_completion_claim": "none",
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "249d886e1b598c135a9091c1ec823af92a69530c",
+  "source_revision": "f71bdb6f8c15ce42257aad6e7b518019945db4e3",
   "status": "pass-story-security-mapping-with-open-product-controls",
   "summary": {
     "demonstrated_story_scope_count": 7,

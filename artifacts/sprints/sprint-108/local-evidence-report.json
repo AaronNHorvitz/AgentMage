@@ -1,20 +1,20 @@
 {
   "schema_version": 1,
   "record_type": "sprint_108_local_evidence",
-  "source_revision": "249d886e1b598c135a9091c1ec823af92a69530c",
+  "source_revision": "f71bdb6f8c15ce42257aad6e7b518019945db4e3",
   "source_sha256": {
     "Cargo.toml": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc",
     "Cargo.lock": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd",
     "capabilities/knowledge/Cargo.toml": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de",
-    "capabilities/knowledge/src/lib.rs": "83c0dc15cb80105ad83070fade6cf8fb61efa0da267675deff39a6149052ddf9",
+    "capabilities/knowledge/src/lib.rs": "b2bc8ab0a13eeead7b305897d1f1f282c3a4349fba346b7164db17a5b9b0f90c",
     "capabilities/knowledge/src/multi_provider_source.rs": "76ff79e66895d53fed058ed8b83de1297a4f5cb9dd4ee1e7972e92dc0bdc42c3",
     "DELIVERY-SYSTEM.md": "ca62de984cd9da28d28f183e768e8c07898f7b38ae2d89894dcec66a3293f72c",
     "artifacts/sprints/sprint-108/multi-provider-source-corpus.json": "b4b010308946e2613931917e41ad0f85efb790370c2296640e4b0ff9a210c9bc",
     "scripts/multi_provider_source_contract.py": "d49c33d960f19379f0ae0f6ea8fbbd9c89b8742b9bc9a03fbc29d9585f504bcd",
     "tests/test_multi_provider_source_contract.py": "9cceb31ddd9860399514223e7256e90116e3a7e4c8122c7b8909866d18bbb18c",
-    "supply-chain/dependency-hashes.sha256": "bc3a703c6df83f462155405c578a09ea4ac18079b3ae50c46bcd44160801a8e8",
-    "supply-chain/dependency-provenance.json": "6e7a26d71e3ebb31a6783ccd467fbc68a5a85826ddce66842e24aac7353b3f4a",
-    "supply-chain/sbom.cdx.json": "3886abf704fb0ae62cfa067219ad4238230f9b5f0ac6267569c88d0af9b48b63",
+    "supply-chain/dependency-hashes.sha256": "9472c8a8d836042221f7b5f335efa0eb484f2fd18c383c205424ef64230c5b06",
+    "supply-chain/dependency-provenance.json": "6e111a6f677f7db46077b65a007cbe995ab250f8420da198d4a8a0cfe7848445",
+    "supply-chain/sbom.cdx.json": "20481567f3c1b638eb387aaed8b7d877f774c3310d443a39a14c0401b8dbc947",
     "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
     "scripts/sprint_108_evidence.py": "baaf3a3b8e057bffaf2c1884feb0e1a124645d92639d58faac0c342428821a6c",
     "tests/test_sprint_108_evidence.py": "2f31f90abdaa08a1ded37973b82cc23e507bafe93941feb311d997b8a4215279"
@@ -41,7 +41,7 @@
         "--lib"
       ],
       "exit_code": 0,
-      "output_sha256": "7fc1a43626228bf9c7765ee9caf2550e08208cc00adfcc3cf35a4f9757724bf5",
+      "output_sha256": "1486fd2c12e219fce67c1cf6f8579a7ffaff1f13da15474aa2b238dce29c8210",
       "blocking_skip_count": 0
     },
     {
