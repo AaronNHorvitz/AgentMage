@@ -1,9 +1,9 @@
 {
   "artifacts": [
     {
-      "byte_length": 491739,
+      "byte_length": 493656,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "660387aaf1627758b9d47bce2604266e552db108f68751eae753200f0c56ce05"
+      "sha256": "104017c5fe4d7eb78cf14b7a1e210fc6e803db01272f2cc450aae72a5cf035dc"
     },
     {
       "byte_length": 1453,
@@ -23,7 +23,7 @@
     {
       "byte_length": 4613,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-results.log",
-      "sha256": "00e2554bb78f73b0a56546f29bd6ffbfc37bd9f1906a6ab48d13dabfa00411b6"
+      "sha256": "17fdc74e363959c03517308170de76659689a1d687dd9c75e28d4d8daf640744"
     }
   ],
   "commands": [

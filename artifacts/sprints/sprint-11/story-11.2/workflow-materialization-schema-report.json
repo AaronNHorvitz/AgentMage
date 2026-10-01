@@ -11,9 +11,9 @@
       "sha256": "4caabc1a09d7cdedc69ffb231d03a467d9c5dd1aa0f706d917682c17f8aaf223"
     },
     {
-      "byte_length": 491739,
+      "byte_length": 493656,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "660387aaf1627758b9d47bce2604266e552db108f68751eae753200f0c56ce05"
+      "sha256": "104017c5fe4d7eb78cf14b7a1e210fc6e803db01272f2cc450aae72a5cf035dc"
     },
     {
       "byte_length": 4698,
@@ -41,6 +41,11 @@
       "sha256": "5e61371539c2651f7f2f08f603866dba79545c7451f8699f5804de8b2d569e9d"
     },
     {
+      "byte_length": 5578,
+      "path": "kernel/engine/fixtures/operational-store/schema-24.json",
+      "sha256": "a717dc92573b9d93cca6ea1232935c70888e62bca9177b9a2e1f0350a647a7b7"
+    },
+    {
       "byte_length": 250,
       "path": "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
@@ -61,6 +66,11 @@
       "sha256": "1b756961aa77b81f4f600ebc2ba9e07564f50b8844d840eac2b20b312a828b12"
     },
     {
+      "byte_length": 1195,
+      "path": "kernel/engine/migrations/operational-store/0024-owner-states.sql",
+      "sha256": "d40b61ead6245ee5f56adb61c22e2aef5c9ce696c538314350182e637938173f"
+    },
+    {
       "byte_length": 14900,
       "path": "kernel/engine/src/job_ledger_store.rs",
       "sha256": "1e84d70b6c93b452893c95194cf9e5b2cbf050d4f1c877cc0c4c8eca9f118c0d"
@@ -71,9 +81,14 @@
       "sha256": "6209df603f6a5e38f4d925ae06501eca6d1289e3dc1c86a8c902d74602194616"
     },
     {
-      "byte_length": 35330,
+      "byte_length": 35595,
       "path": "kernel/engine/src/doc_pack_store.rs",
-      "sha256": "57181949eec1035ceebba107f9cd342527ca356d827cf4eb7cd94429af89030d"
+      "sha256": "08c958bb8d1097bd31cfc2411ab7eaaf40acd8a2c20db8107d8ff36fd59a9269"
+    },
+    {
+      "byte_length": 8833,
+      "path": "kernel/engine/src/owner_state_store.rs",
+      "sha256": "f32aab1ee1bf8fe8589b308712c4425f92234c37f38fffc2e09b33e6b0b7d8c7"
     },
     {
       "byte_length": 2335,
@@ -91,9 +106,9 @@
       "sha256": "bed95f4b316d35e7f9ec48544dc02a34b43fb718ca1bb7c93cfb3f065d36e6fb"
     },
     {
-      "byte_length": 10477,
+      "byte_length": 10710,
       "path": "scripts/workflow_materialization_schema_evidence.py",
-      "sha256": "cecfc4b2009d43cd558746070b4e90f9c9d839ad72ec940ecaae6b4bab839a4b"
+      "sha256": "f501256b42188ec32848b1bc2d515073f9b294252dc582a0e0f97e0400057a0e"
     },
     {
       "byte_length": 2494,
@@ -101,18 +116,18 @@
       "sha256": "453042a3bd98c10f1036744c4d08ff698929b6c35f711ad9a4ce644df5230a96"
     },
     {
-      "byte_length": 13550,
+      "byte_length": 13548,
       "path": "artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-results.log",
-      "sha256": "d7ef9e0dc7c6c3bd2b7bae64ae5dec652cefa1aa3148763b900ae724705b162c"
+      "sha256": "deb1ad13394bb518865fbb31c2b727254581b423c8dc07c665a45b912af03407"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine operational_store::tests::workflow_materializations_bind_existing_run_session_event_and_receipt_authorities --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_three_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_four_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
-  "current_operational_store_schema_version": 23,
+  "current_operational_store_schema_version": 24,
   "existing_authorities": {
     "event_table": "runtime_events",
     "metadata_store": "operational-store",
@@ -152,7 +167,7 @@
   "record_type": "agentmage-workflow-materialization-schema-evidence",
   "required_markers": [
     "workflow_materializations_bind_existing_run_session_event_and_receipt_authorities ... ok",
-    "version_one_upgrades_through_twenty_three_with_exact_history ... ok",
+    "version_one_upgrades_through_twenty_four_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

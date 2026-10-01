@@ -6,9 +6,9 @@
       "sha256": "a6404b5ab64ce63297f92eaa608e9182f7c522d20a0a745233ca61f13ecaeda0"
     },
     {
-      "byte_length": 491739,
+      "byte_length": 493656,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "660387aaf1627758b9d47bce2604266e552db108f68751eae753200f0c56ce05"
+      "sha256": "104017c5fe4d7eb78cf14b7a1e210fc6e803db01272f2cc450aae72a5cf035dc"
     },
     {
       "byte_length": 1417,
@@ -91,9 +91,24 @@
       "sha256": "1b756961aa77b81f4f600ebc2ba9e07564f50b8844d840eac2b20b312a828b12"
     },
     {
-      "byte_length": 35330,
+      "byte_length": 35595,
       "path": "kernel/engine/src/doc_pack_store.rs",
-      "sha256": "57181949eec1035ceebba107f9cd342527ca356d827cf4eb7cd94429af89030d"
+      "sha256": "08c958bb8d1097bd31cfc2411ab7eaaf40acd8a2c20db8107d8ff36fd59a9269"
+    },
+    {
+      "byte_length": 5578,
+      "path": "kernel/engine/fixtures/operational-store/schema-24.json",
+      "sha256": "a717dc92573b9d93cca6ea1232935c70888e62bca9177b9a2e1f0350a647a7b7"
+    },
+    {
+      "byte_length": 1195,
+      "path": "kernel/engine/migrations/operational-store/0024-owner-states.sql",
+      "sha256": "d40b61ead6245ee5f56adb61c22e2aef5c9ce696c538314350182e637938173f"
+    },
+    {
+      "byte_length": 8833,
+      "path": "kernel/engine/src/owner_state_store.rs",
+      "sha256": "f32aab1ee1bf8fe8589b308712c4425f92234c37f38fffc2e09b33e6b0b7d8c7"
     },
     {
       "byte_length": 2335,
@@ -111,9 +126,9 @@
       "sha256": "7415c156e7aefc61c5a2a782f5cd0e9cc8195d05b0b4ffc368ca36c9ce8d69c1"
     },
     {
-      "byte_length": 10341,
+      "byte_length": 10522,
       "path": "scripts/story_11_3_resume_evidence.py",
-      "sha256": "b6ff9e6b54aa9b93bb1133f28b98da3f3f261855a4d367eb3fbfe888d015d206"
+      "sha256": "7550fdd1f217966135a98468aa637a4ba6db9dd8d61c443c4a30f20707753b99"
     },
     {
       "byte_length": 1827,
@@ -123,7 +138,7 @@
     {
       "byte_length": 27013,
       "path": "artifacts/sprints/sprint-11/story-11.3/durable-resume-results.log",
-      "sha256": "ec5817d15c0944fcf2773deeea77253fbca3129bc0da5bc6dcc13bf72c54e608"
+      "sha256": "139fa97aa2a2145990fe17b0ffc55ba64a38868014b1f143fa53b157bcde17be"
     }
   ],
   "commands": [

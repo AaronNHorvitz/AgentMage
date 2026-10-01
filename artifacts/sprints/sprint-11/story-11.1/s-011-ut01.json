@@ -44,8 +44,8 @@
     "json_lines_export_rejects_occupied_or_ineligible_destinations_without_change",
     "schema_constraints_and_atomic_rollback_reject_partial_authority",
     "required_writer_and_database_configuration_is_verified",
-    "version_twenty_three_schema_matches_fixture_snapshot_and_is_relational",
-    "version_one_upgrades_through_twenty_three_with_exact_history",
+    "version_twenty_four_schema_matches_fixture_snapshot_and_is_relational",
+    "version_one_upgrades_through_twenty_four_with_exact_history",
     "version_two_retention_rows_upgrade_to_three_with_initial_event",
     "failed_version_three_migration_rolls_back_all_alterations",
     "failed_version_two_migration_rolls_back_without_partial_schema",
@@ -61,17 +61,17 @@
   ],
   "private_user_data_used": false,
   "schema_version": 1,
-  "source_revision": "0e818e86b037688864bc4d2cdfa4de17057dc0d9",
+  "source_revision": "709f8d7a13bcd467317c0598fc5ba939c4e78892",
   "sources": [
     {
-      "bytes": 5715,
+      "bytes": 5711,
       "path": "docs/verification/s-011-ut01-store-unit-results.md",
-      "sha256": "d6c8ee39bc91bbeb8c89562821e7022b6cddd5846853e7819ef12c148857aa2a"
+      "sha256": "8e7ab5d36e15dd73d9ac1d0019e8e167bd768b02a295e20fe168e807800cafb3"
     },
     {
-      "bytes": 491739,
+      "bytes": 493656,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "660387aaf1627758b9d47bce2604266e552db108f68751eae753200f0c56ce05"
+      "sha256": "104017c5fe4d7eb78cf14b7a1e210fc6e803db01272f2cc450aae72a5cf035dc"
     },
     {
       "bytes": 4912,
@@ -79,9 +79,9 @@
       "sha256": "86d30819c17b02544b93aadd53810feb7a89c7e4f79add3c55fab01e1e03c88a"
     },
     {
-      "bytes": 8298,
+      "bytes": 8509,
       "path": "kernel/engine/src/research_reader_migration_tests.rs",
-      "sha256": "e700e41ff6f827d378c8e4218a65b52a8d13dfc142b656701dc86c3893585563"
+      "sha256": "d9fbb3100e6ebc436d909334615153d5a0a97eb2d94470626f8362a25739e4bb"
     },
     {
       "bytes": 4815,
@@ -94,9 +94,9 @@
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
     },
     {
-      "bytes": 6458,
+      "bytes": 6470,
       "path": "kernel/engine/src/job_ledger_migration_tests.rs",
-      "sha256": "8a3fe6712914c65b94e0416aec89d36f053a0c83c9e1b209e61d34f76d49bd01"
+      "sha256": "e3753890f429f4a2e9119c7055114816a5a58826a97b0214c0ed63db1649a2ec"
     },
     {
       "bytes": 5006,
@@ -109,9 +109,9 @@
       "sha256": "6f27f41680d76642fbaae8efded29934bc2ccb797c75c23d7142986d7414573d"
     },
     {
-      "bytes": 6539,
+      "bytes": 6562,
       "path": "kernel/engine/src/run_action_history_migration_tests.rs",
-      "sha256": "1e6d0f45cf0f5c406c59c5ea30a7d5522fb115ff29537bee7df866403b7e1a62"
+      "sha256": "077638612632333ff9ba099cbcc89cc64fe20df3de92ffe553c8960c604014b7"
     },
     {
       "bytes": 5221,
@@ -124,9 +124,9 @@
       "sha256": "84ed1485d0d2144a00eee86bd5052add809fc18af0c0483348d9fdbe5873ff09"
     },
     {
-      "bytes": 6271,
+      "bytes": 6460,
       "path": "kernel/engine/src/doc_pack_migration_tests.rs",
-      "sha256": "358b444150c0f7bbd103ef4b2b27c1399969b95c7c2d261151b0f624a4f0a937"
+      "sha256": "3e478efec48c7b1b411b9484b55531ee9195e01712b49fed36a17743970fb592"
     },
     {
       "bytes": 5441,
@@ -139,9 +139,24 @@
       "sha256": "1b756961aa77b81f4f600ebc2ba9e07564f50b8844d840eac2b20b312a828b12"
     },
     {
-      "bytes": 12450,
+      "bytes": 6344,
+      "path": "kernel/engine/src/owner_state_migration_tests.rs",
+      "sha256": "bb6aebccbe93d87171d847e623aeec2b2906d80bef6edde70340eaabefac62f4"
+    },
+    {
+      "bytes": 5578,
+      "path": "kernel/engine/fixtures/operational-store/schema-24.json",
+      "sha256": "a717dc92573b9d93cca6ea1232935c70888e62bca9177b9a2e1f0350a647a7b7"
+    },
+    {
+      "bytes": 1195,
+      "path": "kernel/engine/migrations/operational-store/0024-owner-states.sql",
+      "sha256": "d40b61ead6245ee5f56adb61c22e2aef5c9ce696c538314350182e637938173f"
+    },
+    {
+      "bytes": 12639,
       "path": "scripts/store_unit_acceptance_evidence.py",
-      "sha256": "b4f2acc069c9b3022b0aa68b4254c073e6de309ab5f0f1c27e5436ef37ae58a8"
+      "sha256": "5eeb9391fc46f18cfb02e23a04c80494d8a6d90a20f5b94accb1d08062d4f7bb"
     },
     {
       "bytes": 3600,
@@ -158,7 +173,7 @@
     {
       "command_id": "8bc5e8635f51ef1995b5f3e693d844a4d92df5362eaa088ed55c2f91691bab37",
       "exit_code": 0,
-      "expected_marker_sha256": "80d222521254e66f02994f4be0255c84adc8250eb9e752b72b73c39170f10e55",
+      "expected_marker_sha256": "affdad3316d41d420605f66cf26cfae2cd64a82ad769b76b2e6e041feb7fe487",
       "status": "pass"
     },
     {

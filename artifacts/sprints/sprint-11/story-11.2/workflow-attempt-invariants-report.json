@@ -15,9 +15,9 @@
       "sha256": "3f2730d0f49d60ce70bf8bb9f8980e32bae74f31ece544e3d99a839918d20c0d"
     },
     {
-      "byte_length": 491739,
+      "byte_length": 493656,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "660387aaf1627758b9d47bce2604266e552db108f68751eae753200f0c56ce05"
+      "sha256": "104017c5fe4d7eb78cf14b7a1e210fc6e803db01272f2cc450aae72a5cf035dc"
     },
     {
       "byte_length": 4166,
@@ -50,6 +50,11 @@
       "sha256": "5e61371539c2651f7f2f08f603866dba79545c7451f8699f5804de8b2d569e9d"
     },
     {
+      "byte_length": 5578,
+      "path": "kernel/engine/fixtures/operational-store/schema-24.json",
+      "sha256": "a717dc92573b9d93cca6ea1232935c70888e62bca9177b9a2e1f0350a647a7b7"
+    },
+    {
       "byte_length": 250,
       "path": "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
@@ -70,6 +75,11 @@
       "sha256": "1b756961aa77b81f4f600ebc2ba9e07564f50b8844d840eac2b20b312a828b12"
     },
     {
+      "byte_length": 1195,
+      "path": "kernel/engine/migrations/operational-store/0024-owner-states.sql",
+      "sha256": "d40b61ead6245ee5f56adb61c22e2aef5c9ce696c538314350182e637938173f"
+    },
+    {
       "byte_length": 14900,
       "path": "kernel/engine/src/job_ledger_store.rs",
       "sha256": "1e84d70b6c93b452893c95194cf9e5b2cbf050d4f1c877cc0c4c8eca9f118c0d"
@@ -80,9 +90,14 @@
       "sha256": "6209df603f6a5e38f4d925ae06501eca6d1289e3dc1c86a8c902d74602194616"
     },
     {
-      "byte_length": 35330,
+      "byte_length": 35595,
       "path": "kernel/engine/src/doc_pack_store.rs",
-      "sha256": "57181949eec1035ceebba107f9cd342527ca356d827cf4eb7cd94429af89030d"
+      "sha256": "08c958bb8d1097bd31cfc2411ab7eaaf40acd8a2c20db8107d8ff36fd59a9269"
+    },
+    {
+      "byte_length": 8833,
+      "path": "kernel/engine/src/owner_state_store.rs",
+      "sha256": "f32aab1ee1bf8fe8589b308712c4425f92234c37f38fffc2e09b33e6b0b7d8c7"
     },
     {
       "byte_length": 2335,
@@ -100,9 +115,9 @@
       "sha256": "adedcb573bfeceebc5cba6456341dd93cd5fcc6f6ec33ef919f0db4a0d169c6c"
     },
     {
-      "byte_length": 9829,
+      "byte_length": 10062,
       "path": "scripts/workflow_attempt_invariants_evidence.py",
-      "sha256": "b610b153ea3f16224c1a105c0bbdcec6a50fa914d8d6dbd3c7405d70b2599c6c"
+      "sha256": "e1cca29de2cdbcd4b891b505275c65cc6576560d70d6e9430a233778cc8d9496"
     },
     {
       "byte_length": 2091,
@@ -110,14 +125,14 @@
       "sha256": "2f966a72cfcba38380280a8da8ea8c533d4ead99e136a3eeaae5d09dba5360a9"
     },
     {
-      "byte_length": 13526,
+      "byte_length": 13524,
       "path": "artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-results.log",
-      "sha256": "528ece4d8c5de8265515e9e62b99ada13c2d9b43070f60ee7c84c950799a3cc0"
+      "sha256": "f71b296e08932c9936ce029a6c6454203317af29170d36e1279f8eaee0e91d95"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine operational_store::tests::workflow_attempt_chain_receipt_and_uncertainty_invariants_fail_closed --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_three_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_four_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
@@ -133,7 +148,7 @@
     "unique_idempotency_key_digest": true,
     "unique_step_attempt_ordinal": true
   },
-  "operational_store_schema_version": 23,
+  "operational_store_schema_version": 24,
   "product_truth": {
     "atomic_event_projection_checkpoint_commit_complete": false,
     "attempt_and_idempotency_invariants_complete": true,
@@ -147,7 +162,7 @@
   "record_type": "agentmage-workflow-attempt-invariants-evidence",
   "required_markers": [
     "workflow_attempt_chain_receipt_and_uncertainty_invariants_fail_closed ... ok",
-    "version_one_upgrades_through_twenty_three_with_exact_history ... ok",
+    "version_one_upgrades_through_twenty_four_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

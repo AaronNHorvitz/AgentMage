@@ -75,7 +75,7 @@
     ]
   },
   "schema_version": 1,
-  "source_revision": "0e818e86b037688864bc4d2cdfa4de17057dc0d9",
+  "source_revision": "709f8d7a13bcd467317c0598fc5ba939c4e78892",
   "sources": [
     {
       "bytes": 16604,
@@ -93,9 +93,9 @@
       "sha256": "7bbac20f36ed80a1b07bea98641d98c3f894500a11dc7ef7193a1eb29cbc40b6"
     },
     {
-      "bytes": 491739,
+      "bytes": 493656,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "660387aaf1627758b9d47bce2604266e552db108f68751eae753200f0c56ce05"
+      "sha256": "104017c5fe4d7eb78cf14b7a1e210fc6e803db01272f2cc450aae72a5cf035dc"
     },
     {
       "bytes": 4912,
@@ -103,9 +103,9 @@
       "sha256": "86d30819c17b02544b93aadd53810feb7a89c7e4f79add3c55fab01e1e03c88a"
     },
     {
-      "bytes": 8298,
+      "bytes": 8509,
       "path": "kernel/engine/src/research_reader_migration_tests.rs",
-      "sha256": "e700e41ff6f827d378c8e4218a65b52a8d13dfc142b656701dc86c3893585563"
+      "sha256": "d9fbb3100e6ebc436d909334615153d5a0a97eb2d94470626f8362a25739e4bb"
     },
     {
       "bytes": 4815,
@@ -118,9 +118,9 @@
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
     },
     {
-      "bytes": 6458,
+      "bytes": 6470,
       "path": "kernel/engine/src/job_ledger_migration_tests.rs",
-      "sha256": "8a3fe6712914c65b94e0416aec89d36f053a0c83c9e1b209e61d34f76d49bd01"
+      "sha256": "e3753890f429f4a2e9119c7055114816a5a58826a97b0214c0ed63db1649a2ec"
     },
     {
       "bytes": 5006,
@@ -133,9 +133,9 @@
       "sha256": "6f27f41680d76642fbaae8efded29934bc2ccb797c75c23d7142986d7414573d"
     },
     {
-      "bytes": 6539,
+      "bytes": 6562,
       "path": "kernel/engine/src/run_action_history_migration_tests.rs",
-      "sha256": "1e6d0f45cf0f5c406c59c5ea30a7d5522fb115ff29537bee7df866403b7e1a62"
+      "sha256": "077638612632333ff9ba099cbcc89cc64fe20df3de92ffe553c8960c604014b7"
     },
     {
       "bytes": 5221,
@@ -148,9 +148,9 @@
       "sha256": "84ed1485d0d2144a00eee86bd5052add809fc18af0c0483348d9fdbe5873ff09"
     },
     {
-      "bytes": 6271,
+      "bytes": 6460,
       "path": "kernel/engine/src/doc_pack_migration_tests.rs",
-      "sha256": "358b444150c0f7bbd103ef4b2b27c1399969b95c7c2d261151b0f624a4f0a937"
+      "sha256": "3e478efec48c7b1b411b9484b55531ee9195e01712b49fed36a17743970fb592"
     },
     {
       "bytes": 5441,
@@ -163,14 +163,29 @@
       "sha256": "1b756961aa77b81f4f600ebc2ba9e07564f50b8844d840eac2b20b312a828b12"
     },
     {
-      "bytes": 13028,
+      "bytes": 6344,
+      "path": "kernel/engine/src/owner_state_migration_tests.rs",
+      "sha256": "bb6aebccbe93d87171d847e623aeec2b2906d80bef6edde70340eaabefac62f4"
+    },
+    {
+      "bytes": 5578,
+      "path": "kernel/engine/fixtures/operational-store/schema-24.json",
+      "sha256": "a717dc92573b9d93cca6ea1232935c70888e62bca9177b9a2e1f0350a647a7b7"
+    },
+    {
+      "bytes": 1195,
+      "path": "kernel/engine/migrations/operational-store/0024-owner-states.sql",
+      "sha256": "d40b61ead6245ee5f56adb61c22e2aef5c9ce696c538314350182e637938173f"
+    },
+    {
+      "bytes": 13218,
       "path": "scripts/operational_schema_v3_evidence.py",
-      "sha256": "ff22b8aeb1031a8d352a464633a4b4029ab76c0537b63b742177c560b7d7dc21"
+      "sha256": "a937998ec35c187ec8add891a32ec9327873e16565b7ca3574e37fb9860ee505"
     },
     {
       "bytes": 5428,
       "path": "tests/test_operational_schema_v3_evidence.py",
-      "sha256": "17a5f70b3ab578900f04683001541a00900712f48c78471ca84b5ab980fdfa4b"
+      "sha256": "8f532a768f6d97bc2e9e868557d56b8e3c7bdf79b83b30752c7a285b90d2af52"
     }
   ],
   "status": "pass-versioned-schema-and-migration-chain",
@@ -181,7 +196,7 @@
     {
       "command_id": "8bc5e8635f51ef1995b5f3e693d844a4d92df5362eaa088ed55c2f91691bab37",
       "exit_code": 0,
-      "expected_marker_sha256": "80d222521254e66f02994f4be0255c84adc8250eb9e752b72b73c39170f10e55",
+      "expected_marker_sha256": "affdad3316d41d420605f66cf26cfae2cd64a82ad769b76b2e6e041feb7fe487",
       "status": "pass"
     },
     {
