@@ -47,7 +47,7 @@ SOURCE_MARKERS: Final = {
         '"workflow.resume.effect_uncertain"',
     ),
     "kernel/engine/src/operational_store.rs": (
-        "const SCHEMA_VERSION: i64 = 24;",
+        "const SCHEMA_VERSION: i64 = 25;",
         "fn persist_workflow_checkpoint(",
         "fn verify_workflow_checkpoints(",
         "fn workflow_checkpoint_reopens_exactly_and_tamper_blocks_restart()",
@@ -86,6 +86,9 @@ RETAINED_PATHS: Final = tuple(SOURCE_MARKERS) + (
     "kernel/engine/fixtures/operational-store/schema-24.json",
     "kernel/engine/migrations/operational-store/0024-owner-states.sql",
     "kernel/engine/src/owner_state_store.rs",
+    "kernel/engine/fixtures/operational-store/schema-25.json",
+    "kernel/engine/migrations/operational-store/0025-run-effect-records.sql",
+    "kernel/engine/src/run_effect_record_store.rs",
     "kernel/engine/migrations/operational-store/0019-research-budgets.sql",
     "kernel/engine/src/research_journal.rs",
     "docs/verification/story-11-3-durable-resume.md",

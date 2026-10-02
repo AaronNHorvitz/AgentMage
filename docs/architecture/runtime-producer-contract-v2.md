@@ -1,16 +1,13 @@
-# AgentMage runtime producer contract — version 1
+# AgentMage runtime producer contract — version 2
 
-Superseded by [version 2](runtime-producer-contract-v2.md) under
-[Decision 0143](../decisions/0143-review-fixes-restart-marking-and-durable-session-recoverability.md),
-which adds the session's recoverability to the run declarations. This version and its fixtures
-are kept unchanged; the current client reads its run declarations as unavailable.
-
-Revision: 2026-10-01, version 1. Registered under AMR-06.1 in [TASKS.md](../../TASKS.md);
+Revision: 2026-10-02, version 2. Registered under AMR-06.1 in [TASKS.md](../../TASKS.md);
 design in [Decision 0135](../decisions/0135-review-fixes-exact-wire-decoding-and-the-runtime-producer-contract.md),
-row split in [Decision 0134](../decisions/0134-amr-06-decomposition.md). Exact decoding of numbers
-and repeated members, the omitted members and the content obligation were corrected under
-[Decision 0136](../decisions/0136-review-fixes-for-exact-decoding-and-the-research-decomposition.md);
-no record, encoding or version changed.
+row split in [Decision 0134](../decisions/0134-amr-06-decomposition.md), exact decoding corrected
+under [Decision 0136](../decisions/0136-review-fixes-for-exact-decoding-and-the-research-decomposition.md).
+Version 2, under [Decision 0143](../decisions/0143-review-fixes-restart-marking-and-durable-session-recoverability.md),
+adds the recoverability of the run's whole session to the run declarations (schema 5) and
+raises the transport wire to 16. Every other record, encoding and meaning is unchanged.
+[Version 1](runtime-producer-contract-v1.md) and its fixtures stay as they were.
 
 This is an unexecuted producer specification. It states which records the AgentMage runtime
 produces for a consumer and how a consumer verifies them. It is not a consumer's contract, a
@@ -34,11 +31,11 @@ runtime's own approvals and kernel grants remain the only source of authority fo
 
 | Item | Version | Where it is defined |
 | --- | --- | --- |
-| This contract | 1 | `fixtures/runtime-producer/v1/manifest.json` |
-| Transport wire | 15 | `shells/host/src/runtime_ipc.rs` |
+| This contract | 2 | `fixtures/runtime-producer/v2/manifest.json` |
+| Transport wire | 16 | `shells/host/src/runtime_ipc.rs` |
 | Run request | schema 2 | `kernel/contracts/src/runtime_run.rs` (`RuntimeRunRequest`) |
 | Run recipe (sent by a client) | manifest schema 1 | `shells/host/src/coding_recipe.rs` (`RuntimeRecipeRequest`) |
-| Run declarations | schema 4 | `shells/host/src/runtime_transport.rs` (`RuntimeRunDeclarations`) |
+| Run declarations | schema 5 | `shells/host/src/runtime_transport.rs` (`RuntimeRunDeclarations`) |
 | Recoverability report | schema 1 | `shells/host/src/coding_recoverability.rs` |
 | Context inspection | schema 1 | `kernel/engine/src/context_inspection.rs` |
 | Action history entry | schema 1 | `kernel/engine/src/action_history.rs` |
@@ -55,7 +52,7 @@ version as an older one.
 
 - One authenticated local IPC channel per client process. The host authenticates the peer
   and derives the client's scope from it; a client never names its own scope.
-- Each frame is one JSON envelope, `{"version": 15, "payload": {...}}`, of at most 4 MiB.
+- Each frame is one JSON envelope, `{"version": 16, "payload": {...}}`, of at most 4 MiB.
   Run declarations are at most 4 MiB less 64 KiB.
 - Every frame is decoded exactly in both directions. The frame decodes into its types, and its
   re-encoding, read back as JSON, must equal the frame read as JSON. A member the types do not
@@ -81,7 +78,7 @@ host answers the last.
 
 ## Records
 
-Each record has one fixture in `fixtures/runtime-producer/v1/`.
+Each record has one fixture in `fixtures/runtime-producer/v2/`.
 
 ### Run request
 
@@ -116,6 +113,7 @@ run. Each part is then verified alone, and a part that fails is dropped alone:
 | Part | Verification | Absent means |
 | --- | --- | --- |
 | `recoverability` | `verify_run_recoverability(report, session, task, run)` | the host cannot declare every effect's recoverability, for example after a resume |
+| `session_recoverability` | `verify_session_recoverability(report, session, task)`; the report names no run | the host cannot declare every run of the session from its stored records, for example after a restart or while an earlier run is unreleased |
 | `context_inspections` | content-free views; shown, not recomputed | the host cannot show every composed context |
 | `effect_history` | `verify_run_action_history(history, Effects)` | the tool boundary could not keep every entry |
 | `job_control_history` | `verify_run_action_history(history, JobControl)` | the job service cannot declare every decided request |
@@ -174,7 +172,7 @@ to its head or holds another owner's kinds.
 | --- | --- | --- |
 | `run-request.json` | run request | a controlled-write coding run held to a recipe plan |
 | `run-recipe.json` | run recipe | the committed repair recipe sample with two typed values |
-| `run-declarations.json` | run declarations | every part present and verifying |
+| `run-declarations.json` | run declarations | every part present and verifying; the session's declaration covers an earlier run's creation and this run's command |
 | `run-declarations-absent.json` | run declarations | every part absent |
 | `job-control-request.json` | job control request | a cancellation request |
 | `job-control.json` | job control | the request applied |
@@ -184,21 +182,28 @@ to its head or holds another owner's kinds.
 
 The fixtures are synthetic. The request is the coding-run test fixture with the recipe's
 constraints added and re-sealed; the histories are kept by the runtime's own recorders over
-synthetic digests; the job was cancelled by one client request. They show each record's shape
+synthetic digests; the declarations are assessed by the runtime's own functions over synthetic
+effects; the job was cancelled by one client request. They show each record's shape
 and verification, not a coding run or a model.
 
 The host unit test module `runtime_producer_contract_tests` builds every fixture from the
 runtime's types and functions and compares it byte for byte, decodes each exactly, runs each
 verification, refuses an added member at every object position and shows that a changed record
 is refused or dropped. `tests/test_runtime_producer_contract.py` checks the manifest's digests
-and that this document names every fixture. After a deliberate change to a record,
-`python3 scripts/runtime_producer_fixtures.py --write` regenerates the files from the runtime's
-types; without `--write` it only compares.
+and that this document names every fixture; it also checks that version 1's files still match
+their own manifest. After a deliberate change to a record within this version,
+`python3 scripts/runtime_producer_fixtures.py --write` regenerates this version's files from the
+runtime's types; without `--write` it only compares. It never writes version 1.
 
 ## Change control
 
 A change to the encoding or meaning of any record raises that record's schema version and this
-contract's version, and adds a new fixture directory beside `v1`. Version 1 stays as it is.
+contract's version, and adds a new fixture directory beside the earlier ones, which stay as they
+are. Version 2 added the session's recoverability to the run declarations; a consumer of version
+1 reads version 2's declarations as an unknown schema, and so as unavailable. The host unit test
+`the_first_contract_version_stays_as_it_was_and_reads_as_unavailable` shows that version 1's
+files still match their manifest and that its run declarations are dropped whole by the current
+client.
 
 ## Limits
 

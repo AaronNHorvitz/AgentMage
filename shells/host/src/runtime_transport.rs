@@ -407,9 +407,10 @@ pub fn is_suspension_event(event: Option<&RuntimeEvent>, point: &RuntimeSuspensi
 
 /// Current run declarations schema: schema 2 adds each run's action
 /// histories (Decision 0127), schema 3 its model route receipt and route
-/// history (Decision 0128), and schema 4 the recipe plan it was held to
-/// (Decision 0133).
-pub const RUN_DECLARATIONS_SCHEMA_VERSION: u16 = 4;
+/// history (Decision 0128), schema 4 the recipe plan it was held to
+/// (Decision 0133), and schema 5 the recoverability of its whole session
+/// (Decision 0143).
+pub const RUN_DECLARATIONS_SCHEMA_VERSION: u16 = 5;
 
 /// Host declarations about one ended run, read before the run is released
 /// (Decision 0116). They describe the run and grant nothing.
@@ -425,6 +426,10 @@ pub struct RuntimeRunDeclarations {
     /// Recoverability of this run's effects, absent when the host cannot
     /// declare it completely.
     pub recoverability: Option<RecoverabilityReport>,
+    /// Recoverability of every effect of the run's session, from the stored
+    /// records of each of its runs; absent when the host cannot declare the
+    /// whole session completely (Decision 0143).
+    pub session_recoverability: Option<RecoverabilityReport>,
     /// Content-free view of each context composed for a model call, in order,
     /// absent when the host cannot show every one.
     pub context_inspections: Option<Vec<ContextInspection>>,

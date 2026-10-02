@@ -115,6 +115,9 @@ use crate::{
         ExecutedEffect, ExecutedEffectKind, ExecutedEffectOutcome, RecoverabilityError,
         RecoverabilityReport, RunEffectRecorder, RunRecoverabilitySource,
     },
+    coding_session_recoverability::{
+        MAX_CHANGE_RECORD_READ_BYTES, PersistedRunEffects, declare_session_recoverability,
+    },
     linux_coding::{
         LinuxCodingTargetBinding, LinuxCodingWorkspace, LinuxCodingWriteDraft,
         PreparedLinuxCodingOperation,
@@ -824,6 +827,13 @@ where
     /// kept only in memory.
     pub fn persist_action_history(&mut self, chain: PersistedRunChain) {
         self.action_history = RunActionRecorder::persisted(chain);
+    }
+
+    /// Also appends every execution and change record of this run's effect
+    /// record to its stored chain (Decision 0143). Called before the run
+    /// starts, so no record is kept only in memory.
+    pub fn persist_run_effects(&mut self, chain: PersistedRunEffects) {
+        self.run_effects = RunEffectRecorder::persisted(chain);
     }
 
     fn evaluate_call(
@@ -4152,8 +4162,11 @@ where
         if publication.manifest != manifest {
             return Err(RuntimePortFailure::Invalid);
         }
-        self.run_effects
-            .record_publication(&publication.reference, payload);
+        self.run_effects.record_publication(
+            &publication.reference,
+            &publication.manifest.policy_sha256,
+            payload,
+        );
         Ok(publication.reference)
     }
 }
@@ -4175,6 +4188,44 @@ where
         }
         self.run_effects
             .declare_run(request, &|path| self.workspace.current_file_sha256(path))
+    }
+
+    /// Declares the effects of this run's whole session from the stored
+    /// records of each of its runs (Decision 0143). Each change record is
+    /// read back from the canonical artifact store under the run and policy
+    /// revision that published it; current bytes come from the held worktree.
+    fn declare_session_recoverability(
+        &self,
+        request: &RuntimeRunRequest,
+        now_epoch_ms: u64,
+    ) -> Result<RecoverabilityReport, RecoverabilityError> {
+        if !self.request_matches(request) {
+            return Err(RecoverabilityError::Invalid);
+        }
+        let chain = self
+            .run_effects
+            .stored_chain()
+            .ok_or(RecoverabilityError::Invalid)?;
+        let runs = chain
+            .session(request.session_id.as_str())
+            .map_err(|_| RecoverabilityError::Invalid)?;
+        declare_session_recoverability(
+            &runs,
+            request,
+            &|run, reference, policy_sha256| {
+                self.authority
+                    .read_runtime_artifact(&RuntimeArtifactReadRequest {
+                        session_id: SessionId::from_raw(run.session_id.clone()),
+                        task_id: agentmage_kernel_contracts::TaskId::from_raw(run.task_id.clone()),
+                        policy_sha256: policy_sha256.to_owned(),
+                        reference: reference.clone(),
+                        now_epoch_ms,
+                        maximum_bytes: MAX_CHANGE_RECORD_READ_BYTES,
+                    })
+                    .ok()
+            },
+            &|path| self.workspace.current_file_sha256(path),
+        )
     }
 }
 

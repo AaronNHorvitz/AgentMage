@@ -83,6 +83,16 @@ accounting readable, the run not yet ended, and the manifest's classification,
 retention and policy must cover every source. A refusal retains nothing. The coordinator
 records the creation event only after the owner retained the draft.
 
+That creation event stays in the coordinator's memory until the run's terminal is
+flushed. A run that ends with a dependency error or an interruption after the owner
+retained the draft and before its terminal, for example a clock failure at the next
+phase check, leaves a draft whose manifest and payload are retained without a creation
+event. An admitted run cannot be resumed, and `read_retained_research_report` refuses
+every read of such a draft as a binding failure, so it is permanently unreadable; it
+stays in the payload store until retention removes it. A host should expect such a draft
+after an interrupted completion and must not present it as a report (Decision 0143,
+review F2 of `8842c770`).
+
 Composed tests read the retained draft back through `read_retained_research_report`:
 checked, partial with unresolved questions, expired at the plan's elapsed limit, and
 cancelled after a cancellation that arrived once the draft was retained. Source drift

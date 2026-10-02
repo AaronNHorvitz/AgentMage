@@ -31,7 +31,7 @@ use crate::runtime_transport::{
     decode_exact,
 };
 
-const WIRE_VERSION: u16 = 15;
+const WIRE_VERSION: u16 = 16;
 /// The wire version this build speaks, as named in a support bundle.
 pub const RUNTIME_IPC_WIRE_VERSION: u16 = WIRE_VERSION;
 const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
@@ -809,6 +809,7 @@ mod tests {
             run_id: RuntimeRunId::from_raw("run-declarations"),
             request_sha256: "1".repeat(64),
             recoverability: None,
+            session_recoverability: None,
             context_inspections: Some(Vec::new()),
             effect_history: Some(fixture_history(ActionKind::FileWrite)),
             job_control_history: Some(fixture_history(ActionKind::JobControl)),
@@ -826,7 +827,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 15);
+        assert_eq!(decoded.version, 16);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::RunDeclarations {
             declarations: declarations.clone(),
@@ -898,7 +899,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 15);
+        assert_eq!(decoded.version, 16);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::EndedRunActionHistories {
             histories: histories.clone(),
@@ -1075,6 +1076,7 @@ mod tests {
                     run_id: RuntimeRunId::from_raw("run-declarations"),
                     request_sha256: "1".repeat(64),
                     recoverability: None,
+                    session_recoverability: None,
                     context_inspections: Some(Vec::new()),
                     effect_history: Some(fixture_history(ActionKind::FileWrite)),
                     job_control_history: Some(history.clone()),
@@ -1351,7 +1353,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 15);
+        assert_eq!(decoded.version, 16);
         assert_eq!(decoded.payload, request.payload);
         let text = String::from_utf8(bytes).unwrap();
         for nested in [
@@ -1542,7 +1544,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 15);
+        assert_eq!(decoded.version, 16);
         assert_eq!(decoded.payload, request.payload);
         let text = String::from_utf8(bytes).unwrap();
         for nested in [
@@ -1714,7 +1716,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 15);
+        assert_eq!(decoded.version, 16);
         assert_eq!(decoded.payload, request.payload);
         let text = String::from_utf8(bytes).unwrap();
         for nested in [
@@ -1925,6 +1927,7 @@ mod tests {
                 run_id: run_id.clone(),
                 request_sha256: request_sha256.to_owned(),
                 recoverability: Some(report),
+                session_recoverability: None,
                 context_inspections: None,
                 effect_history: None,
                 job_control_history: None,
@@ -2077,7 +2080,7 @@ mod tests {
             .unwrap();
             let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
                 serde_json::from_slice(&bytes).unwrap();
-            assert_eq!(decoded.version, 15);
+            assert_eq!(decoded.version, 16);
             assert_eq!(decoded.payload, request);
         }
         let mut scoped = serde_json::to_value(RuntimeIpcRequest::ControlJob {
@@ -2307,7 +2310,7 @@ mod tests {
         .unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcResponse> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 15);
+        assert_eq!(decoded.version, 16);
         assert_eq!(decoded.payload, response);
         let mut extra = serde_json::to_value(&suspended).unwrap();
         extra["suspended"]["resumable"] = serde_json::Value::Bool(true);

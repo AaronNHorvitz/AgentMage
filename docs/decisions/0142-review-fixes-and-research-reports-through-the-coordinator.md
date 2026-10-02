@@ -115,7 +115,12 @@ checked, partial, cancelled or expired.
 A new composed module drives the real coordinator and the real owners. A
 deep plan with three disclosed queries and three visits makes three
 searches and two visits, and the run completes with a draft that cites one
-search result and both pages. The tests then check:
+search result and both pages. The run uses six turns, but its fixture sets
+`max_turns` to 12 and `max_tool_calls` to 8: the run's artifact allowance,
+three per turn plus one per tool call plus two, must hold the five bundles'
+retained artifacts, the plan and the draft, which the allowance of six
+turns does not (Decision 0143, review F1 of `8842c770`; the test asserts
+both counts). The tests then check:
 
 - the retained draft reads back through the retained-report reader as
   checked;
@@ -156,6 +161,15 @@ AMR-03.1.3 (the external consumer pin).
   verifier judges whether a report answers its task.
 - A cancellation that arrives after the publication cannot withdraw it.
   The draft stays retained, and its reads say the run was cancelled.
+- The draft's creation event stays in the coordinator's memory until the
+  terminal is flushed. If the run ends with a dependency error or an
+  interruption between the owner's answer and its terminal, for example a
+  clock failure at the next phase check, the owner keeps a manifest and
+  payload without a creation event. Admitted runs cannot resume, and the
+  retained-report reader refuses every read of that draft as a binding
+  failure, so it is permanently unreadable and stays in the payload store
+  until retention removes it. A host should expect such a draft after an
+  interrupted completion (Decision 0143, review F2 of `8842c770`).
 
 ## Consequences
 

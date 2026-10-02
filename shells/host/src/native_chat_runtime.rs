@@ -110,6 +110,16 @@ pub trait NativeChatRuntimeFactory {
         None
     }
 
+    /// Hands over the stored run effect records of the store the factory
+    /// opened when it composed `run_id`, so the host service closes the run's
+    /// effect record when it releases the run (Decision 0143).
+    fn take_run_effect_records(
+        &mut self,
+        _run_id: &agentmage_kernel_contracts::RuntimeRunId,
+    ) -> Option<agentmage_kernel_engine::run_effect_record_store::DurableRunEffectRecords> {
+        None
+    }
+
     /// Prepares the request that continues `request`'s run inside this
     /// running host from the checkpoint whose commit event is at `cursor`
     /// (Decision 0122): the same run, bound to that cursor. The run's store

@@ -57,8 +57,9 @@ fn version_nineteen_reader_epoch_preserves_tables_records_and_history() {
     let version: i64 = store.connection.pragma_query_value(None, "user_version", |row| row.get(0)).unwrap();
     assert_eq!(version, SCHEMA_VERSION);
     // The reader epoch adds no table; the later job ledger, run action
-    // history and documentation pack migrations add only their own tables
-    // (Decisions 0118 and 0129 to 0131).
+    // history, documentation pack, owner state and run effect record
+    // migrations add only their own tables (Decisions 0118, 0129 to 0131
+    // and 0143).
     let mut expected_tables: Vec<String> = serde_json::from_value(original_tables).unwrap();
     expected_tables.extend(["job_ledger_entries", "job_ledger_heads", "job_ledger_roots"].map(str::to_owned));
     expected_tables.extend([
@@ -73,6 +74,11 @@ fn version_nineteen_reader_epoch_preserves_tables_records_and_history() {
         "doc_pack_versions",
     ].map(str::to_owned));
     expected_tables.push("owner_states".to_owned());
+    expected_tables.extend([
+        "run_effect_record_heads",
+        "run_effect_record_roots",
+        "run_effect_records",
+    ].map(str::to_owned));
     expected_tables.sort();
     assert_eq!(tables(&store.connection), serde_json::to_value(expected_tables).unwrap());
     assert_eq!(legacy_record(&store.connection), original_record);
@@ -88,6 +94,8 @@ fn version_nineteen_reader_epoch_preserves_tables_records_and_history() {
         "sha256":sha256_hex(crate::operational_store::MIGRATION_23_SCHEMA_SQL.as_bytes())}));
     assert_eq!(migrated[23], serde_json::json!({"version":24,
         "sha256":sha256_hex(crate::operational_store::MIGRATION_24_SCHEMA_SQL.as_bytes())}));
+    assert_eq!(migrated[24], serde_json::json!({"version":25,
+        "sha256":sha256_hex(crate::operational_store::MIGRATION_25_SCHEMA_SQL.as_bytes())}));
     drop(store);
     drop(OperationalStore::open(&path, &observation(), &mut TestKey(key)).unwrap());
     fs::remove_dir_all(directory).unwrap();
@@ -143,7 +151,7 @@ fn failed_version_twenty_reader_epoch_keeps_version_nineteen_retryable() {
     connection.execute_batch("DROP TRIGGER reject_reader_epoch;").unwrap();
     drop(connection);
     let current = OperationalStore::open(&path, &observation(), &mut TestKey(key)).unwrap();
-    assert_eq!(history(&current.connection).as_array().unwrap().len(), 24);
+    assert_eq!(history(&current.connection).as_array().unwrap().len(), 25);
     assert_eq!(legacy_record(&current.connection), record);
     drop(current);
     fs::remove_dir_all(directory).unwrap();

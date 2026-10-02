@@ -67,6 +67,9 @@ pub mod coding_route;
 /// Exact interface-neutral runtime request framing for coding sessions.
 pub mod coding_run;
 pub mod coding_session;
+/// Durable run effect records and session-scope recoverability declarations
+/// (Decision 0143).
+pub mod coding_session_recoverability;
 #[cfg(all(target_os = "linux", feature = "interactive-cli"))]
 /// Support bundles of one development CLI invocation, exported only on approval.
 pub mod coding_support_bundle;

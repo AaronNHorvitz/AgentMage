@@ -276,6 +276,8 @@ pub mod review_packet;
 pub mod run_action_history_store;
 /// Stateful resource budgets and explicit sticky stop conditions.
 pub mod run_control;
+/// Durable run effect records of coding runs in the operational store.
+pub mod run_effect_record_store;
 /// Truthful run progress projected from a verified runtime event stream.
 pub mod run_progress;
 /// Hash-bound evidence assignment required by successful rendered runtime answers.

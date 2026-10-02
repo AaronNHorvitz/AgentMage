@@ -189,7 +189,11 @@ and answer the prompts on the terminal.
   established by the runtime. It then shows the host's declarations about that run
   (Decision 0116): which of the run's effects a fresh approved inverse write could
   restore, which need your reconciliation, and a content-free view of each context
-  the model received. A part the host cannot declare completely says so. It also
+  the model received. Under Decision 0143 the run's declaration is followed by the
+  same declaration for the whole session, built from the host's stored record of
+  every run of the session and the change records read back from its artifact store;
+  it is unavailable once a run of the session was resumed after a restart. A part the
+  host cannot declare completely says so. It also
   shows the run's two action histories (Decision 0127): one line for each call whose
   grant was used, and for each call you refused, with its outcome, grant or decision
   and reason; and one line for each job control request the host decided. It then
@@ -469,11 +473,13 @@ and the
 
 The records a separate consumer may read from the runtime (the sealed run request,
 run declarations, job status and control answers, and an ended run's stored histories)
-are specified in the
-[runtime producer contract](architecture/runtime-producer-contract-v1.md), with one
-synthetic fixture each under `fixtures/runtime-producer/v1/`. To check that the
-committed fixtures are exactly what the runtime's own types build, and that their
-manifest and document agree:
+are specified in
+[version 2 of the runtime producer contract](architecture/runtime-producer-contract-v2.md),
+with one synthetic fixture each under `fixtures/runtime-producer/v2/`. Version 2
+(Decision 0143) adds the session's recoverability to the run declarations; version 1
+and its fixtures stay unchanged beside it. To check that the committed fixtures are
+exactly what the runtime's own types build, and that their manifests and documents
+agree:
 
 ```sh
 python3 scripts/runtime_producer_fixtures.py          # builds the host tests once
@@ -482,6 +488,26 @@ python3 -m unittest tests.test_runtime_producer_contract
 
 The first prints `runtime producer fixtures match (9 files)`. Nothing reads these
 records through the transport yet; a consumer's own contract is pinned separately.
+
+### Session recoverability from stored run records
+
+The session-scope declaration of Decision 0143 can be exercised without a native host.
+These tests store run effect records in a real encrypted operational store, declare a
+session from them, and show refusals and both CLI output formats:
+
+```sh
+cargo test --locked --offline -p agentmage-kernel-engine --lib -- run_effect_record
+cargo test --locked --offline -p agentmage-host --lib -- \
+  coding_session_recoverability cli_runtime::tests::run_declarations \
+  coding_development_client::tests::run_declarations
+```
+
+In this lane, run them under the shared build reservation (`bash /tools/build-slot ...`).
+
+They are component, store, host-unit, wire and CLI checks. The boundary glue that
+appends records during a run, its reads from the artifact store and the factory's
+composition run only on a native Linux host (AMR-04.7.2), which this lane does not
+provide.
 
 ### Public research worker contract fixtures
 

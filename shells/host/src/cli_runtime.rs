@@ -752,7 +752,8 @@ fn lower_hex(bytes: &[u8]) -> String {
 }
 
 /// Keeps declarations only for this exact run. A recoverability declaration
-/// whose seal, scope or summary does not verify, an action history that does
+/// whose seal, scope or summary does not verify, for the run or for its whole
+/// session (Decision 0143), an action history that does
 /// not replay to its head or holds another owner's kinds (Decision 0127), a
 /// route receipt that does not recompute or describe a local-only,
 /// strict-local selection for this run, a route history without its kept
@@ -779,6 +780,20 @@ pub(crate) fn verified_run_declarations(
         .is_err()
     }) {
         declarations.recoverability = None;
+    }
+    if declarations
+        .session_recoverability
+        .as_ref()
+        .is_some_and(|report| {
+            crate::coding_recoverability::verify_session_recoverability(
+                report,
+                request.session_id.as_str(),
+                request.task.task_id.as_str(),
+            )
+            .is_err()
+        })
+    {
+        declarations.session_recoverability = None;
     }
     for (history, chain) in [
         (
@@ -1639,11 +1654,24 @@ mod tests {
         use agentmage_kernel_engine::action_history::ActionKind;
         let route =
             crate::coding_route::route_development_run(&request, "contract-test", 5_000).unwrap();
+        // Decision 0143: a session declaration names no run.
+        let session_report_for = |session_id: &str| {
+            crate::coding_recoverability::assess_recoverability(
+                session_id,
+                request.task.task_id.as_str(),
+                &[crate::coding_recoverability::SessionEffect::Command {
+                    operation_id: "command-1".to_owned(),
+                }],
+                &|_| None,
+            )
+            .unwrap()
+        };
         let valid = RuntimeRunDeclarations {
             schema_version: crate::runtime_transport::RUN_DECLARATIONS_SCHEMA_VERSION,
             run_id: request.run_id.clone(),
             request_sha256: request.request_sha256.clone(),
             recoverability: Some(report_for(request.run_id.as_str())),
+            session_recoverability: Some(session_report_for(request.session_id.as_str())),
             context_inspections: Some(Vec::new()),
             effect_history: history(ActionKind::CommandRun),
             job_control_history: history(ActionKind::JobControl),
@@ -1662,6 +1690,32 @@ mod tests {
         report.requires_reconciliation = !report.requires_reconciliation;
         let without_report = RuntimeRunDeclarations {
             recoverability: None,
+            ..valid.clone()
+        };
+        // Decision 0143: a session declaration for another session, one that
+        // names a run, or one whose summary no longer follows its
+        // assessments is dropped alone; the run's own declaration stays.
+        let foreign_session = RuntimeRunDeclarations {
+            session_recoverability: Some(session_report_for("another-session")),
+            ..valid.clone()
+        };
+        let run_as_session = RuntimeRunDeclarations {
+            session_recoverability: Some(report_for(request.run_id.as_str())),
+            ..valid.clone()
+        };
+        let session_as_run = RuntimeRunDeclarations {
+            recoverability: valid.session_recoverability.clone(),
+            ..valid.clone()
+        };
+        let mut tampered_session = valid.clone();
+        let report = tampered_session.session_recoverability.as_mut().unwrap();
+        report.fully_recoverable = !report.fully_recoverable;
+        let without_session = RuntimeRunDeclarations {
+            session_recoverability: None,
+            ..valid.clone()
+        };
+        let schema_four = RuntimeRunDeclarations {
+            schema_version: 4,
             ..valid.clone()
         };
         // Decision 0127: an older schema is dropped whole; a history that does
@@ -1734,7 +1788,13 @@ mod tests {
             (Some(older_schema), None),
             (Some(schema_two), None),
             (Some(foreign_report), Some(without_report.clone())),
-            (Some(tampered), Some(without_report)),
+            (Some(tampered), Some(without_report.clone())),
+            (Some(session_as_run), Some(without_report)),
+            (Some(foreign_session), Some(without_session.clone())),
+            (Some(run_as_session), Some(without_session.clone())),
+            (Some(tampered_session), Some(without_session.clone())),
+            (Some(without_session.clone()), Some(without_session)),
+            (Some(schema_four), None),
             (Some(tampered_history), Some(without_effects)),
             (Some(swapped), Some(without_histories)),
             (Some(tampered_receipt), Some(without_route.clone())),
@@ -1799,6 +1859,7 @@ mod tests {
             run_id: request.run_id.clone(),
             request_sha256: request.request_sha256.clone(),
             recoverability: None,
+            session_recoverability: None,
             context_inspections: None,
             effect_history: None,
             job_control_history: None,

@@ -48,6 +48,7 @@ use agentmage_kernel_engine::{
     },
     repository_safety::{OwnedWorktreeRecord, WorktreeDisposition},
     run_action_history_store::DurableRunActionHistories,
+    run_effect_record_store::{DurableRunEffectRecords, RunEffectRecordStoreError},
     runtime_artifact::{
         MAX_RUNTIME_ARTIFACT_BYTES, RUNTIME_CONTINUATION_MEDIA_TYPE, RUNTIME_REQUEST_MEDIA_TYPE,
         RuntimeArtifactReadRequest, decode_runtime_continuation_state,
@@ -107,6 +108,7 @@ use crate::{
     coding_plan::build_coding_development_plan_binding,
     coding_run::{CodingRunRequestInput, build_ephemeral_coding_run_request},
     coding_session::{CodingSessionProfile, CodingSessionProfileInput},
+    coding_session_recoverability::{PersistedRunEffects, RUN_EFFECT_RECORD_OWNER},
     coding_tools::{
         TARGETED_VALIDATION_TOOL_ID, TARGETED_VALIDATION_TOOL_VERSION, TargetedValidationRequest,
     },
@@ -357,6 +359,23 @@ struct PreparedDevelopmentRun {
     record_session: bool,
     /// The plan this run's writes are held to (Decision 0133).
     recipe: Option<crate::coding_recipe::SharedRecipeScope>,
+    /// Whether this run was resumed after the host that ran it ended, so its
+    /// stored chains are marked incomplete when it is composed (Decision
+    /// 0143, D1).
+    after_restart: bool,
+}
+
+/// How a composition's stored chains begin (Decisions 0129 and 0143): a new
+/// run creates them, a run resumed after a restart marks them incomplete, and
+/// a run continued in this host keeps them as they are. The restart belongs
+/// to the prepared run, so nothing between preparing and composing it can
+/// lose it (D1).
+const fn stored_chain_start(resumed: bool, after_restart: bool) -> StoredChainStart {
+    match (resumed, after_restart) {
+        (false, _) => StoredChainStart::New,
+        (true, true) => StoredChainStart::AfterRestart,
+        (true, false) => StoredChainStart::ContinueInHost,
+    }
 }
 
 /// Factory that composes the real coordinator only for one explicit disposable activation.
@@ -383,6 +402,9 @@ pub struct CodingDevelopmentRuntimeFactory {
     /// The stored run action histories of the last composed run's store,
     /// until the host service takes them (Decision 0129).
     composed_run_histories: Option<(RuntimeRunId, DurableRunActionHistories)>,
+    /// The stored run effect records of the last composed run's store,
+    /// until the host service takes them (Decision 0143).
+    composed_run_effect_records: Option<(RuntimeRunId, DurableRunEffectRecords)>,
     /// The recipe plan of the last composed run, until the host service
     /// takes it (Decision 0133).
     composed_recipe: Option<(RuntimeRunId, RecipePlan)>,
@@ -433,6 +455,7 @@ impl CodingDevelopmentRuntimeFactory {
             composed_job_ledgers: None,
             composed_route: None,
             composed_run_histories: None,
+            composed_run_effect_records: None,
             composed_recipe: None,
             prior_recipe: None,
         })
@@ -480,6 +503,7 @@ impl CodingDevelopmentRuntimeFactory {
                 continuity: None,
                 record_session: false,
                 recipe: None,
+                after_restart: true,
             },
         );
         Ok(request)
@@ -1047,6 +1071,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 recipe: recipe
                     .clone()
                     .map(crate::coding_recipe::SharedRecipeScope::new),
+                after_restart: false,
             },
         );
         self.prior_recipe = self
@@ -1066,6 +1091,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         self.composed_job_ledgers = None;
         self.composed_route = None;
         self.composed_run_histories = None;
+        self.composed_run_effect_records = None;
         self.composed_recipe = None;
         self.activation
             .revalidate()
@@ -1114,13 +1140,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         // Decision 0129: the run's effects and route chains are stored before
         // any model is built, and the route entry with them.
         let histories = authority.authority().run_action_histories();
-        let start = if request.event_cursor.is_none() {
-            StoredChainStart::New
-        } else if self.resume_requested {
-            StoredChainStart::AfterRestart
-        } else {
-            StoredChainStart::ContinueInHost
-        };
+        let start = stored_chain_start(request.event_cursor.is_some(), prepared.after_restart);
         let begin = |chain, start| {
             PersistedRunChain::begin(histories.clone(), request.run_id.as_str(), chain, start)
                 .map_err(|error| {
@@ -1235,6 +1255,35 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         let sandbox = LinuxSandboxRunner::new(sandbox_manifest, LinuxSandboxLimits::default())
             .map_err(CodingDevelopmentRuntimeError::from)
             .map_err(CodingDevelopmentRuntimeError::report_composition_failure)?;
+        // Decision 0143: the run's effect record is stored before any call
+        // can run. A session holds at most its recorded runs, and a run whose
+        // chain is not held runs without one; its session is never declared
+        // again, because a declaration needs the declaring run's chain.
+        let effect_records = authority.authority().run_effect_records();
+        let effect_chain = match PersistedRunEffects::begin(effect_records.clone(), request, start)
+        {
+            Ok(chain) => Some(chain),
+            Err(RunEffectRecordStoreError::Full | RunEffectRecordStoreError::NotFound) => {
+                eprintln!("coding.development.effect-record-unavailable");
+                None
+            }
+            Err(error) => {
+                eprintln!("coding.development.effect-record-store-{error:?}");
+                return Err(NativeChatRuntimeError::RuntimeFailed);
+            }
+        };
+        // A composition that fails from here on ran nothing, so a new run's
+        // chain is closed empty rather than left open in its session.
+        let close_unused_chain = || {
+            if effect_chain.is_some()
+                && start == StoredChainStart::New
+                && effect_records
+                    .close(request.run_id.as_str(), RUN_EFFECT_RECORD_OWNER)
+                    .is_err()
+            {
+                eprintln!("coding.development.effect-record-close-failed");
+            }
+        };
         let boundary = LinuxCodingRuntimeBoundary::new(LinuxCodingRuntimeBoundaryInput {
             workspace: self.workspace,
             authority,
@@ -1252,10 +1301,14 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         })
         .map_err(|error| {
             eprintln!("coding.development.compose.boundary-{error:?}");
+            close_unused_chain();
             NativeChatRuntimeError::RuntimeFailed
         })?;
         let mut boundary = boundary;
         boundary.persist_action_history(effects_chain);
+        if let Some(chain) = effect_chain.clone() {
+            boundary.persist_run_effects(chain);
+        }
         let coordinator = compose_durable_coding_coordinator(
             self.profile,
             request.clone(),
@@ -1266,11 +1319,13 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         )
         .map_err(|error| {
             eprintln!("coding.development.compose.coordinator-{error:?}");
+            close_unused_chain();
             NativeChatRuntimeError::RuntimeFailed
         })?;
         self.composed_job_ledgers = Some((request.run_id.clone(), job_ledgers));
         self.composed_route = Some((request.run_id.clone(), route));
         self.composed_run_histories = Some((request.run_id.clone(), histories));
+        self.composed_run_effect_records = Some((request.run_id.clone(), effect_records));
         Ok(if stop_after_checkpoint {
             coordinator.with_development_checkpoint_stop_probe()
         } else {
@@ -1319,6 +1374,16 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
     ) -> Option<DurableRunActionHistories> {
         match self.composed_run_histories.take() {
             Some((composed, histories)) if &composed == run_id => Some(histories),
+            _ => None,
+        }
+    }
+
+    fn take_run_effect_records(
+        &mut self,
+        run_id: &RuntimeRunId,
+    ) -> Option<DurableRunEffectRecords> {
+        match self.composed_run_effect_records.take() {
+            Some((composed, records)) if &composed == run_id => Some(records),
             _ => None,
         }
     }
@@ -1382,6 +1447,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 continuity: None,
                 record_session: self.record_session.unwrap_or(false),
                 recipe,
+                after_restart: false,
             },
         );
         Ok(resumed)
@@ -3721,6 +3787,24 @@ mod tests {
         }
     }
     use super::*;
+
+    #[test]
+    fn a_run_resumed_after_a_restart_marks_its_stored_chains_whatever_the_host_flag_says() {
+        // D1 of Decision 0143: the restart belongs to the prepared run. The
+        // host's resume flag is cleared when the resumed run is prepared,
+        // before it is composed, so only the prepared run can say how its
+        // stored chains begin.
+        assert_eq!(stored_chain_start(false, false), StoredChainStart::New);
+        assert_eq!(stored_chain_start(false, true), StoredChainStart::New);
+        assert_eq!(
+            stored_chain_start(true, true),
+            StoredChainStart::AfterRestart
+        );
+        assert_eq!(
+            stored_chain_start(true, false),
+            StoredChainStart::ContinueInHost
+        );
+    }
 
     #[test]
     fn scripted_rollback_reads_paired_history_without_accepting_identity_or_digest_drift() {

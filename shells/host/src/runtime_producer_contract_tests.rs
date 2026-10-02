@@ -1,7 +1,10 @@
 //! Producer fixtures of the runtime producer contract (Decision 0135,
-//! AMR-06.1). Every committed fixture is built here from the runtime's own
-//! types and functions and compared byte for byte; each decodes exactly and
-//! verifies as a client verifies it, and a changed record does not.
+//! AMR-06.1). Every committed fixture of the current version is built here
+//! from the runtime's own types and functions and compared byte for byte;
+//! each decodes exactly and verifies as a client verifies it, and a changed
+//! record does not. Version 2 adds the session's recoverability to the run
+//! declarations (Decision 0143); version 1 stays as it was and reads as
+//! unavailable.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -37,7 +40,8 @@ use crate::coding_recipe::{
     test_registry, verify_declared_recipe_plan,
 };
 use crate::coding_recoverability::{
-    SessionEffect, assess_run_recoverability, verify_run_recoverability,
+    SessionEffect, assess_recoverability, assess_run_recoverability, verify_run_recoverability,
+    verify_session_recoverability,
 };
 use crate::coding_route::{
     route_development_run, verify_run_route_history, verify_run_route_receipt,
@@ -48,7 +52,7 @@ use crate::runtime_transport::{
 };
 
 const CONTRACT: &str = "agentmage-runtime-producer";
-const CONTRACT_VERSION: u16 = 1;
+const CONTRACT_VERSION: u16 = 2;
 /// The synthetic time every fixture record was made at.
 const MADE_AT_EPOCH_MS: u64 = 1_790_000_000_000;
 /// The scope a host derives for the client that sent the control request.
@@ -83,6 +87,12 @@ struct Manifest {
 }
 
 fn fixture_root() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/runtime-producer/v2")
+}
+
+/// The first contract version's fixtures, kept unchanged beside the current
+/// ones.
+fn first_version_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/runtime-producer/v1")
 }
 
@@ -151,6 +161,23 @@ fn records() -> Records {
         &[SessionEffect::Command {
             operation_id: "operation-validation-0001".to_owned(),
         }],
+        &|_| None,
+    )
+    .unwrap();
+    // Decision 0143: the session's declaration covers an earlier run's
+    // creation as well as this run's command, and names no run.
+    let session_recoverability = assess_recoverability(
+        request.session_id.as_str(),
+        request.task.task_id.as_str(),
+        &[
+            SessionEffect::Create {
+                operation_id: "operation-create-0001".to_owned(),
+                path: vec!["src".to_owned(), "helpers.py".to_owned()],
+            },
+            SessionEffect::Command {
+                operation_id: "operation-validation-0001".to_owned(),
+            },
+        ],
         &|_| None,
     )
     .unwrap();
@@ -270,6 +297,7 @@ fn records() -> Records {
         run_id: request.run_id.clone(),
         request_sha256: request.request_sha256.clone(),
         recoverability: Some(recoverability),
+        session_recoverability: Some(session_recoverability),
         context_inspections: Some(vec![inspection]),
         effect_history: Some(effect_history.clone()),
         job_control_history: Some(job_control_history.clone()),
@@ -279,6 +307,7 @@ fn records() -> Records {
     };
     let absent = RuntimeRunDeclarations {
         recoverability: None,
+        session_recoverability: None,
         context_inspections: None,
         effect_history: None,
         job_control_history: None,
@@ -461,7 +490,53 @@ fn the_committed_fixtures_are_the_records_the_runtime_builds() {
     let manifest: serde_json::Value = serde_json::from_slice(&committed["manifest.json"]).unwrap();
     assert_eq!(manifest["contract"], CONTRACT);
     assert_eq!(manifest["contract_version"], CONTRACT_VERSION);
+    assert_eq!(manifest["wire_version"], 16);
+}
+
+#[test]
+fn the_first_contract_version_stays_as_it_was_and_reads_as_unavailable() {
+    // Decision 0143: a change of a record raises the contract's version
+    // beside the first one, which keeps every byte its manifest names. Its
+    // run declarations are not this version's and are dropped whole.
+    let mut files = BTreeMap::new();
+    for entry in std::fs::read_dir(first_version_root()).unwrap() {
+        let path = entry.unwrap().path();
+        files.insert(
+            path.file_name().unwrap().to_str().unwrap().to_owned(),
+            std::fs::read(&path).unwrap(),
+        );
+    }
+    let manifest: serde_json::Value = serde_json::from_slice(&files["manifest.json"]).unwrap();
+    assert_eq!(manifest["contract_version"], 1);
     assert_eq!(manifest["wire_version"], 15);
+    let listed = manifest["records"].as_array().unwrap();
+    assert_eq!(listed.len() + 1, files.len());
+    for entry in listed {
+        let name = entry["file"].as_str().unwrap();
+        assert_eq!(entry["sha256"], sha256_hex(&files[name]), "{name}");
+    }
+    for name in ["run-declarations.json", "run-declarations-absent.json"] {
+        assert!(!decodes(name, &files[name]), "{name}");
+        // Read leniently, it is still the older schema.
+        let older: RuntimeRunDeclarations = serde_json::from_slice(&files[name]).unwrap();
+        assert_eq!(older.schema_version, 4);
+        let request: RuntimeRunRequest = exact(&files, "run-request.json");
+        assert_eq!(
+            crate::cli_runtime::verified_run_declarations(older, &request, None),
+            None
+        );
+    }
+    // The records the version did not change still decode exactly.
+    for name in [
+        "run-request.json",
+        "run-recipe.json",
+        "job-control-request.json",
+        "job-control.json",
+        "job-status.json",
+        "ended-run-histories.json",
+    ] {
+        assert!(decodes(name, &files[name]), "{name}");
+    }
 }
 
 #[test]
@@ -492,6 +567,14 @@ fn each_fixture_decodes_exactly_and_verifies_as_a_client_verifies_it() {
             request.session_id.as_str(),
             request.task.task_id.as_str(),
             request.run_id.as_str(),
+        )
+        .is_ok()
+    );
+    assert!(
+        verify_session_recoverability(
+            declarations.session_recoverability.as_ref().unwrap(),
+            request.session_id.as_str(),
+            request.task.task_id.as_str(),
         )
         .is_ok()
     );
@@ -646,9 +729,13 @@ fn a_changed_record_is_refused_or_dropped_by_the_client() {
     let mut tampered = built.declarations.clone();
     tampered.effect_history.as_mut().unwrap().head.head_sha256 = digest("another-head");
     tampered.recipe_plan.as_mut().unwrap().max_changed_files += 1;
+    tampered.session_recoverability.as_mut().unwrap().run_id =
+        Some(request.run_id.as_str().to_owned());
     let kept = crate::cli_runtime::verified_run_declarations(tampered, request, recipe).unwrap();
     assert_eq!(kept.effect_history, None);
     assert_eq!(kept.recipe_plan, None);
+    assert_eq!(kept.session_recoverability, None);
+    assert_eq!(kept.recoverability, built.declarations.recoverability);
     assert_eq!(
         kept.job_control_history,
         built.declarations.job_control_history

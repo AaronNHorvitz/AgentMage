@@ -20,6 +20,7 @@ use crate::coding_history::{
     CODING_CHANGE_RECORD_MEDIA_TYPE, CodingChangeRecord, RetainedCodingChange, valid_identifier,
     valid_record_path, verify_retained_change,
 };
+use crate::coding_session_recoverability::PersistedRunEffects;
 
 /// Largest number of effects assessed in one report.
 pub const MAX_RECOVERABILITY_EFFECTS: usize = 512;
@@ -333,6 +334,25 @@ pub fn verify_run_recoverability(
     task_id: &str,
     run_id: &str,
 ) -> Result<(), RecoverabilityError> {
+    verify_declaration(report, session_id, task_id, Some(run_id))
+}
+
+/// Verifies a declaration received from the host for one whole session
+/// (Decision 0143), as for a run, except that it must name no run.
+pub fn verify_session_recoverability(
+    report: &RecoverabilityReport,
+    session_id: &str,
+    task_id: &str,
+) -> Result<(), RecoverabilityError> {
+    verify_declaration(report, session_id, task_id, None)
+}
+
+fn verify_declaration(
+    report: &RecoverabilityReport,
+    session_id: &str,
+    task_id: &str,
+    run_id: Option<&str>,
+) -> Result<(), RecoverabilityError> {
     let mut seen = BTreeSet::new();
     let valid_items = report.assessments.iter().all(|assessment| {
         valid_identifier(&assessment.operation_id)
@@ -349,7 +369,7 @@ pub fn verify_run_recoverability(
     if report.schema_version != 1
         || report.session_id != session_id
         || report.task_id != task_id
-        || report.run_id.as_deref() != Some(run_id)
+        || report.run_id.as_deref() != run_id
         || report.assessments.len() > MAX_RECOVERABILITY_EFFECTS
         || !valid_items
         || report.revert_order != revert_order
@@ -528,12 +548,15 @@ impl ExecutedEffectOutcome {
 }
 
 /// One run's execution and change records, kept by the effect owner that
-/// executed the calls and published the records (Decision 0116).
-#[derive(Clone, Debug, PartialEq, Eq)]
+/// executed the calls and published the records (Decision 0116). A persisted
+/// recorder also appends each kept record to the run's stored chain, after
+/// keeping it in memory (Decision 0143).
+#[derive(Clone, Debug)]
 pub struct RunEffectRecorder {
     executed: Vec<ExecutedEffect>,
     changes: Vec<RetainedCodingChange>,
     complete: bool,
+    persisted: Option<PersistedRunEffects>,
 }
 
 impl Default for RunEffectRecorder {
@@ -550,21 +573,47 @@ impl RunEffectRecorder {
             executed: Vec::new(),
             changes: Vec::new(),
             complete: true,
+            persisted: None,
         }
     }
 
-    /// Records how one executed call ended.
+    /// Starts an empty, complete record that also appends to a stored chain.
+    #[must_use]
+    pub const fn persisted(chain: PersistedRunEffects) -> Self {
+        Self {
+            executed: Vec::new(),
+            changes: Vec::new(),
+            complete: true,
+            persisted: Some(chain),
+        }
+    }
+
+    /// Records how one executed call ended, in memory and then in the stored
+    /// chain.
     pub fn record_execution(&mut self, effect: ExecutedEffect) {
-        if self.executed.len() < MAX_RECOVERABILITY_EFFECTS {
-            self.executed.push(effect);
-        } else {
-            self.complete = false;
+        if self.executed.len() >= MAX_RECOVERABILITY_EFFECTS {
+            self.mark_incomplete();
+            return;
+        }
+        let entry = self
+            .persisted
+            .is_some()
+            .then(|| crate::coding_session_recoverability::execution_entry(&effect));
+        self.executed.push(effect);
+        if let (Some(chain), Some(entry)) = (&mut self.persisted, entry) {
+            chain.append(&entry);
         }
     }
 
-    /// Records one published artifact; only a verified change record is kept.
-    /// A change record that does not verify makes the record incomplete.
-    pub fn record_publication(&mut self, reference: &RuntimeArtifactRef, payload: &[u8]) {
+    /// Records one published artifact; only a verified change record is kept,
+    /// with the policy revision it was published under. A change record that
+    /// does not verify makes the record incomplete.
+    pub fn record_publication(
+        &mut self,
+        reference: &RuntimeArtifactRef,
+        policy_sha256: &str,
+        payload: &[u8],
+    ) {
         if reference.media_type != CODING_CHANGE_RECORD_MEDIA_TYPE {
             return;
         }
@@ -578,9 +627,34 @@ impl RunEffectRecorder {
         match retained {
             Some(retained) if self.changes.len() < MAX_RECOVERABILITY_EFFECTS => {
                 self.changes.push(retained);
+                if let Some(chain) = &mut self.persisted {
+                    chain.append(
+                        &agentmage_kernel_engine::run_effect_record_store::RunEffectEntry::Publication {
+                            reference: reference.clone(),
+                            policy_sha256: policy_sha256.to_owned(),
+                        },
+                    );
+                }
             }
-            _ => self.complete = false,
+            _ => self.mark_incomplete(),
         }
+    }
+
+    /// Marks the record incomplete, and its stored chain too.
+    fn mark_incomplete(&mut self) {
+        self.complete = false;
+        if let Some(chain) = &self.persisted {
+            chain.mark_incomplete();
+        }
+    }
+
+    /// The stored chain, when this record is persisted and every record it
+    /// kept reached the store (Decision 0143).
+    #[must_use]
+    pub fn stored_chain(&self) -> Option<&PersistedRunEffects> {
+        self.persisted
+            .as_ref()
+            .filter(|chain| self.complete && chain.kept_every_entry())
     }
 
     /// Declares the recorded run. An incomplete record is never declared, so
@@ -627,6 +701,14 @@ pub trait RunRecoverabilitySource {
         &self,
         request: &RuntimeRunRequest,
     ) -> Result<RecoverabilityReport, RecoverabilityError>;
+
+    /// Declares the effects of the ended run's whole session from the stored
+    /// records of each of its runs, read at `now_epoch_ms` (Decision 0143).
+    fn declare_session_recoverability(
+        &self,
+        request: &RuntimeRunRequest,
+        now_epoch_ms: u64,
+    ) -> Result<RecoverabilityReport, RecoverabilityError>;
 }
 
 /// Bounded user-facing text. It states how each effect could be reversed, if
@@ -648,7 +730,12 @@ pub fn render_recoverability(report: &RecoverabilityReport) -> String {
         let summary = summary.replacen("session ", "", 1);
         let _ = writeln!(output, "recoverability of this run's effects: {summary}");
     } else {
-        let _ = writeln!(output, "recoverability: {summary}");
+        // A declaration that names no run covers the whole session
+        // (Decision 0143).
+        let _ = writeln!(
+            output,
+            "recoverability of this session's effects: {summary}"
+        );
     }
     for (index, assessment) in report.assessments.iter().enumerate() {
         let class = match assessment.recoverability {
@@ -956,8 +1043,8 @@ mod tests {
         // Other artifacts are not change records and are ignored.
         let mut other = change.reference.clone();
         other.media_type = "text/plain".to_owned();
-        recorder.record_publication(&other, b"not a record");
-        recorder.record_publication(&change.reference, &payload);
+        recorder.record_publication(&other, &digest("policy"), b"not a record");
+        recorder.record_publication(&change.reference, &digest("policy"), &payload);
         let current = |path: &[String]| (path == CALC).then(|| digest("v1\n"));
         let report = recorder
             .declare(SESSION, TASK, "run-fixture", &current)
@@ -973,7 +1060,7 @@ mod tests {
         // A change record that does not verify, or too many executions, makes
         // the record incomplete and nothing is declared.
         let mut corrupt = recorder.clone();
-        corrupt.record_publication(&change.reference, b"{}");
+        corrupt.record_publication(&change.reference, &digest("policy"), b"{}");
         assert!(
             corrupt
                 .declare(SESSION, TASK, "run-fixture", &current)

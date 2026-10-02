@@ -1280,6 +1280,8 @@ fn render_run_declarations(
     output: CliOutputFormat,
 ) -> String {
     let recoverability = declarations.and_then(|value| value.recoverability.as_ref());
+    let session_recoverability =
+        declarations.and_then(|value| value.session_recoverability.as_ref());
     let contexts = declarations.and_then(|value| value.context_inspections.as_ref());
     let effect_history = declarations.and_then(|value| value.effect_history.as_ref());
     let job_control_history = declarations.and_then(|value| value.job_control_history.as_ref());
@@ -1292,6 +1294,8 @@ fn render_run_declarations(
                 "type": "run_declarations",
                 "recoverability_available": recoverability.is_some(),
                 "recoverability": recoverability,
+                "session_recoverability_available": session_recoverability.is_some(),
+                "session_recoverability": session_recoverability,
                 "context_inspections_available": contexts.is_some(),
                 "context_inspections": contexts,
                 "effect_history_available": effect_history.is_some(),
@@ -1309,6 +1313,12 @@ fn render_run_declarations(
         || "recoverability of this run's effects: unavailable; the host could not declare them completely\n".to_owned(),
         render_recoverability,
     );
+    // Decision 0143: the whole session, from the host's stored records of
+    // each of its runs.
+    rendered.push_str(&session_recoverability.map_or_else(
+        || "recoverability of this session's effects: unavailable; the host could not declare every run of this session completely\n".to_owned(),
+        render_recoverability,
+    ));
     match contexts {
         Some(views) => {
             for (index, view) in views.iter().enumerate() {
@@ -2022,11 +2032,28 @@ mod tests {
         };
         let effects =
             action_history(agentmage_kernel_engine::action_history::ActionKind::FileWrite);
+        // Decision 0143: the whole session's declaration names no run.
+        let session = crate::coding_recoverability::assess_recoverability(
+            "session-cli",
+            "task-cli",
+            &[
+                crate::coding_recoverability::SessionEffect::Create {
+                    operation_id: "operation-earlier".to_owned(),
+                    path: vec!["src".to_owned(), "new.py".to_owned()],
+                },
+                crate::coding_recoverability::SessionEffect::Command {
+                    operation_id: "operation-test".to_owned(),
+                },
+            ],
+            &|_| None,
+        )
+        .unwrap();
         let declarations = RuntimeRunDeclarations {
             schema_version: crate::runtime_transport::RUN_DECLARATIONS_SCHEMA_VERSION,
             run_id: agentmage_kernel_contracts::RuntimeRunId::from_raw("run-cli"),
             request_sha256: "c".repeat(64),
             recoverability: Some(report.clone()),
+            session_recoverability: Some(session.clone()),
             context_inspections: Some(vec![view.clone(), view]),
             effect_history: Some(effects.clone()),
             job_control_history: None,
@@ -2037,6 +2064,14 @@ mod tests {
         let human = render_run_declarations(Some(&declarations), CliOutputFormat::Human);
         assert!(human.starts_with("recoverability of this run's effects: "));
         assert!(human.contains("operation-test external or uncertain: reconcile manually"));
+        // The session's declaration follows the run's and lists every run's
+        // effects, still never as undone.
+        assert!(human.contains(
+            "\nrecoverability of this session's effects: some effects are external or uncertain and need your reconciliation; no reset reverses them\n\
+             - operation-earlier not recoverable by an admitted operation (create-has-no-admitted-inverse)\n\
+             - operation-test external or uncertain: reconcile manually (command-effects-not-tracked)\n\
+             context view 1 of 2:\n"
+        ));
         assert!(human.contains("context view 1 of 2:\n"));
         assert!(human.contains("context view 2 of 2:\n"));
         assert!(!human.contains("undone"));
@@ -2063,6 +2098,11 @@ mod tests {
             json["recoverability"],
             serde_json::to_value(&report).unwrap()
         );
+        assert_eq!(json["session_recoverability_available"], true);
+        assert_eq!(
+            json["session_recoverability"],
+            serde_json::to_value(&session).unwrap()
+        );
         assert_eq!(json["context_inspections"].as_array().unwrap().len(), 2);
         assert_eq!(json["effect_history_available"], true);
         assert_eq!(
@@ -2079,9 +2119,13 @@ mod tests {
         // Nothing declared, or only part of it, is said to be unavailable.
         let human = render_run_declarations(None, CliOutputFormat::Human);
         assert!(human.contains("recoverability of this run's effects: unavailable"));
+        assert!(human.contains(
+            "recoverability of this session's effects: unavailable; the host could not declare every run of this session completely\n"
+        ));
         assert!(human.contains("context views: unavailable"));
         let partial = RuntimeRunDeclarations {
             recoverability: None,
+            session_recoverability: None,
             context_inspections: None,
             ..declarations
         };
@@ -2090,6 +2134,8 @@ mod tests {
         )
         .unwrap();
         assert_eq!(json["recoverability_available"], false);
+        assert_eq!(json["session_recoverability_available"], false);
+        assert!(json["session_recoverability"].is_null());
         assert_eq!(json["context_inspections_available"], false);
     }
 
@@ -2106,6 +2152,7 @@ mod tests {
             run_id: request.run_id.clone(),
             request_sha256: request.request_sha256.clone(),
             recoverability: None,
+            session_recoverability: None,
             context_inspections: None,
             effect_history: None,
             job_control_history: None,
@@ -2178,6 +2225,7 @@ mod tests {
             run_id: agentmage_kernel_contracts::RuntimeRunId::from_raw("run-cli"),
             request_sha256: "c".repeat(64),
             recoverability: None,
+            session_recoverability: None,
             context_inspections: None,
             effect_history: Some(action_history(ActionKind::CommandRun)),
             job_control_history: Some(action_history(ActionKind::JobControl)),
@@ -2248,6 +2296,7 @@ mod tests {
             run_id: agentmage_kernel_contracts::RuntimeRunId::from_raw("run-cli"),
             request_sha256: "c".repeat(64),
             recoverability: None,
+            session_recoverability: None,
             context_inspections: None,
             effect_history: Some(action_history(ActionKind::CommandRun)),
             job_control_history: None,

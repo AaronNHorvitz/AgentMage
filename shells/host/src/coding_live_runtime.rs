@@ -64,6 +64,7 @@ use crate::coding_client::{CodingClientError, LiveCodingCoordinatorPort};
 use crate::coding_context::RunContextInspectionSource;
 use crate::coding_recoverability::{RecoverabilityReport, RunRecoverabilitySource};
 use crate::coding_route::{RunRouteDeclaration, RunRouteReceipt};
+use crate::coding_session_recoverability::RUN_EFFECT_RECORD_OWNER;
 use crate::native_chat_runtime::NativeChatRuntimeFactory;
 use crate::runtime_transport::{
     RUN_DECLARATIONS_SCHEMA_VERSION, RuntimeClientScope, RuntimeJobControl, RuntimeJobStatus,
@@ -72,6 +73,9 @@ use crate::runtime_transport::{
 };
 use agentmage_kernel_engine::run_action_history_store::{
     DurableRunActionHistories, RunActionChainName, RunActionHistoryStoreError,
+};
+use agentmage_kernel_engine::run_effect_record_store::{
+    DurableRunEffectRecords, RunEffectRecordStoreError,
 };
 
 /// Owner identity of the coding host in every job ledger it keeps. The store
@@ -84,6 +88,16 @@ pub trait LiveRunDeclarationPort {
     /// Recoverability of the ended run's effects, or `None` while the run can
     /// still advance or when its effects cannot be declared completely.
     fn run_recoverability(&self, request: &RuntimeRunRequest) -> Option<RecoverabilityReport>;
+
+    /// Recoverability of every effect of the ended run's session, from the
+    /// stored records of each of its runs read at `now_epoch_ms`, or `None`
+    /// while the run can still advance or when the session cannot be declared
+    /// completely (Decision 0143).
+    fn session_recoverability(
+        &self,
+        request: &RuntimeRunRequest,
+        now_epoch_ms: u64,
+    ) -> Option<RecoverabilityReport>;
 
     /// The view of every context composed in the ended run, or `None` while
     /// the run can still advance or when not every view was retained.
@@ -112,6 +126,16 @@ where
             .ok()
     }
 
+    fn session_recoverability(
+        &self,
+        request: &RuntimeRunRequest,
+        now_epoch_ms: u64,
+    ) -> Option<RecoverabilityReport> {
+        self.ended_tool_boundary()?
+            .declare_session_recoverability(request, now_epoch_ms)
+            .ok()
+    }
+
     fn run_context_inspections(&self) -> Option<Vec<ContextInspection>> {
         self.ended_context_port()?
             .run_context_inspections()
@@ -127,9 +151,12 @@ where
 /// The declarations of one ended run. A run resumed from an event cursor was
 /// composed again after a restart, so its owners hold only what happened
 /// since; every part they keep is unavailable rather than partial (review V1
-/// of `8fbd2bc6`, Decisions 0117 and 0127). The service adds the job control
-/// history it keeps itself and the route the factory handed over (Decision
-/// 0128).
+/// of `8fbd2bc6`, Decisions 0117 and 0127). The session's recoverability
+/// comes from the stored records of every run of the session instead, so a
+/// run continued in this host declares it, and a run resumed after a restart,
+/// whose stored record is marked incomplete, does not (Decision 0143). The
+/// service adds the job control history it keeps itself and the route the
+/// factory handed over (Decision 0128).
 fn declare_run<R: LiveRunDeclarationPort>(
     runtime: &R,
     request: &RuntimeRunRequest,
@@ -144,6 +171,8 @@ fn declare_run<R: LiveRunDeclarationPort>(
         } else {
             runtime.run_recoverability(request)
         },
+        session_recoverability: host_now_epoch_ms()
+            .and_then(|now| runtime.session_recoverability(request, now)),
         context_inspections: if resumed {
             None
         } else {
@@ -605,6 +634,7 @@ where
         let route = self.factory.take_route_declaration(&request.run_id);
         let recipe_plan = self.factory.take_recipe_plan(&request.run_id);
         let histories = self.factory.take_run_action_histories(&request.run_id);
+        let effect_records = self.factory.take_run_effect_records(&request.run_id);
         // A run started from an event cursor here was resumed after a restart;
         // a run continued in this host goes through `continue_from_checkpoint`.
         let start = if request.event_cursor.is_none() {
@@ -618,6 +648,7 @@ where
             })?;
         session.route = route;
         session.recipe_plan = recipe_plan;
+        session.run_effect_records = effect_records;
         if let Some(histories) = histories {
             session.attach_run_histories(histories, start);
         }
@@ -824,9 +855,11 @@ where
         let route = self.factory.take_route_declaration(&resumed.run_id);
         let recipe_plan = self.factory.take_recipe_plan(&resumed.run_id);
         let histories = self.factory.take_run_action_histories(&resumed.run_id);
+        let effect_records = self.factory.take_run_effect_records(&resumed.run_id);
         let mut session = LiveCodingSession::spawn(resumed, coordinator, false)?;
         session.route = route;
         session.recipe_plan = recipe_plan;
+        session.run_effect_records = effect_records;
         session.job_actions = job_actions;
         session.recorded_controls = recorded_controls;
         session.job_history_from_start = job_history_from_start;
@@ -897,6 +930,9 @@ struct LiveCodingSession {
     /// The run's stored action histories, closed when the run is released
     /// (Decision 0129).
     run_histories: Option<DurableRunActionHistories>,
+    /// The run's stored effect record, closed with its action histories
+    /// (Decision 0143).
+    run_effect_records: Option<DurableRunEffectRecords>,
 }
 
 /// The durable job of one live run, owned by this service (Decision 0120).
@@ -1020,6 +1056,7 @@ impl LiveCodingSession {
             route: None,
             recipe_plan: None,
             run_histories: None,
+            run_effect_records: None,
         })
     }
 
@@ -1046,20 +1083,26 @@ impl LiveCodingSession {
         self.run_histories = Some(histories);
     }
 
-    /// Closes every stored chain of this ended run. A chain the store does
-    /// not hold, or one already closed, needs nothing.
+    /// Closes every stored chain of this ended run, its effect record
+    /// included (Decision 0143). A chain the store does not hold, or one
+    /// already closed, needs nothing.
     fn close_run_histories(&mut self) {
-        let Some(histories) = &self.run_histories else {
-            return;
-        };
-        for chain in RunActionChainName::ALL {
-            match histories.close(
-                self.request.run_id.as_str(),
-                chain,
-                RUN_ACTION_HISTORY_OWNER,
-            ) {
-                Ok(_) | Err(RunActionHistoryStoreError::NotFound) => {}
-                Err(_) => eprintln!("coding.live.history-close-failed"),
+        if let Some(histories) = &self.run_histories {
+            for chain in RunActionChainName::ALL {
+                match histories.close(
+                    self.request.run_id.as_str(),
+                    chain,
+                    RUN_ACTION_HISTORY_OWNER,
+                ) {
+                    Ok(_) | Err(RunActionHistoryStoreError::NotFound) => {}
+                    Err(_) => eprintln!("coding.live.history-close-failed"),
+                }
+            }
+        }
+        if let Some(records) = &self.run_effect_records {
+            match records.close(self.request.run_id.as_str(), RUN_EFFECT_RECORD_OWNER) {
+                Ok(_) | Err(RunEffectRecordStoreError::NotFound) => {}
+                Err(_) => eprintln!("coding.live.effect-record-close-failed"),
             }
         }
     }
@@ -1956,6 +1999,7 @@ mod tests {
             route: None,
             recipe_plan: None,
             run_histories: None,
+            run_effect_records: None,
         };
         (session, result_tx, outcome)
     }
@@ -2237,7 +2281,7 @@ mod tests {
         assert_eq!(session.declare_route(), (None, None));
     }
 
-    struct CountingDeclarations(std::cell::Cell<usize>);
+    struct CountingDeclarations(std::cell::Cell<usize>, std::cell::Cell<usize>);
 
     impl LiveRunDeclarationPort for CountingDeclarations {
         fn run_recoverability(&self, request: &RuntimeRunRequest) -> Option<RecoverabilityReport> {
@@ -2246,6 +2290,22 @@ mod tests {
                 request.session_id.as_str(),
                 request.task.task_id.as_str(),
                 request.run_id.as_str(),
+                &[],
+                &|_| None,
+            )
+            .ok()
+        }
+
+        fn session_recoverability(
+            &self,
+            request: &RuntimeRunRequest,
+            now_epoch_ms: u64,
+        ) -> Option<RecoverabilityReport> {
+            assert!(now_epoch_ms > 0);
+            self.1.set(self.1.get() + 1);
+            crate::coding_recoverability::assess_recoverability(
+                request.session_id.as_str(),
+                request.task.task_id.as_str(),
                 &[],
                 &|_| None,
             )
@@ -2270,10 +2330,12 @@ mod tests {
         // composed again after a restart, so its owners' records begin there.
         let (mut request, events, _, _) =
             crate::runtime_read_tests::completed_native_read_fixture();
-        let owners = CountingDeclarations(std::cell::Cell::new(0));
+        let owners = CountingDeclarations(std::cell::Cell::new(0), std::cell::Cell::new(0));
         let declared = declare_run(&owners, &request);
         assert_eq!(owners.0.get(), 3);
         assert!(declared.recoverability.is_some());
+        let session = declared.session_recoverability.clone().unwrap();
+        assert_eq!(session.run_id, None);
         assert_eq!(declared.context_inspections, Some(Vec::new()));
         assert_eq!(declared.effect_history, RunActionRecorder::new().declare());
         // The service adds the job control history it keeps itself.
@@ -2292,6 +2354,12 @@ mod tests {
         assert_eq!(declared.recoverability, None);
         assert_eq!(declared.context_inspections, None);
         assert_eq!(declared.effect_history, None);
+        // Decision 0143: the session's declaration comes from the stored
+        // records of each of its runs, so the service asks the owner for it
+        // whether or not the run was resumed; the owner refuses a session
+        // whose stored record a restart marked incomplete.
+        assert_eq!(owners.1.get(), 2);
+        assert_eq!(declared.session_recoverability, Some(session));
     }
 
     #[test]

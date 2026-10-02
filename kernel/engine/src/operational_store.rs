@@ -87,7 +87,7 @@ pub use research_grant::{
     IssuedPublicGetGrant, PublicGetAuthorization, PublicGetGrantError, PublicGetGrantRequest,
 };
 
-const SCHEMA_VERSION: i64 = 24;
+const SCHEMA_VERSION: i64 = 25;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
 const MAX_DERIVED_EXPORT_RECORDS: usize = 100_000;
@@ -200,6 +200,8 @@ const MIGRATION_23_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0023-documentation-packs.sql");
 const MIGRATION_24_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0024-owner-states.sql");
+const MIGRATION_25_SCHEMA_SQL: &str =
+    include_str!("../migrations/operational-store/0025-run-effect-records.sql");
 
 /// Closed record families governed by the canonical retention engine.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -784,6 +786,8 @@ impl OperationalStore {
             .map_err(|_| OperationalStoreError::IntegrityFailure)?;
         crate::owner_state_store::verify_all(self)
             .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        crate::run_effect_record_store::verify_all(self)
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
         let canonical_state_sha256: String = self
             .connection
             .query_row(
@@ -1089,6 +1093,8 @@ impl OperationalStore {
         crate::doc_pack_store::verify_all(self)
             .map_err(|_| OperationalStoreError::IntegrityFailure)?;
         crate::owner_state_store::verify_all(self)
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        crate::run_effect_record_store::verify_all(self)
             .map_err(|_| OperationalStoreError::IntegrityFailure)?;
         crate::engineering_persistence::verify_all(self)
             .map_err(|_| OperationalStoreError::IntegrityFailure)?;
@@ -1895,6 +1901,14 @@ impl DurableAuthorityRuntime {
     #[must_use]
     pub fn owner_states(&self) -> crate::owner_state_store::DurableOwnerStates {
         crate::owner_state_store::DurableOwnerStates::new(Arc::clone(&self.store))
+    }
+
+    /// The durable run effect records of this store (Decision 0143). The
+    /// handle shares the store's lock; it grants no authority and performs no
+    /// effect.
+    #[must_use]
+    pub fn run_effect_records(&self) -> crate::run_effect_record_store::DurableRunEffectRecords {
+        crate::run_effect_record_store::DurableRunEffectRecords::new(Arc::clone(&self.store))
     }
 
     /// Projects original research accounting without resetting time, consuming a
@@ -4520,6 +4534,30 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
             )
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
+            .pragma_update(None, "user_version", 24_i64)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        version = 24;
+    }
+    if version == 24 {
+        // Never add the run effect record tables over a corrupt source
+        // history (Decision 0143).
+        verify_schema_history_through(connection, 24)?;
+        let transaction = connection
+            .unchecked_transaction()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute_batch(MIGRATION_25_SCHEMA_SQL)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (25, ?1)",
+                [sha256_hex(MIGRATION_25_SCHEMA_SQL.as_bytes())],
+            )
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
             .pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
@@ -4573,6 +4611,7 @@ fn verify_schema_history_through(
         (22, sha256_hex(MIGRATION_22_SCHEMA_SQL.as_bytes())),
         (23, sha256_hex(MIGRATION_23_SCHEMA_SQL.as_bytes())),
         (24, sha256_hex(MIGRATION_24_SCHEMA_SQL.as_bytes())),
+        (25, sha256_hex(MIGRATION_25_SCHEMA_SQL.as_bytes())),
     ];
     if Some(rows.as_slice()) != expected.get(..version as usize) {
         return Err(OperationalStoreError::MigrationFailed);
@@ -6454,6 +6493,14 @@ const DERIVED_EXPORT_QUERIES: &[DerivedExportQuery] = &[
     DerivedExportQuery {
         family: "owner_states",
         sql: "SELECT owner_id, revision, state_sha256 FROM owner_states",
+    },
+    DerivedExportQuery {
+        family: "run_effect_records",
+        sql: "SELECT run_id, sequence, entry_sha256 FROM run_effect_records",
+    },
+    DerivedExportQuery {
+        family: "run_effect_record_heads",
+        sql: "SELECT run_id, entry_count, head_sha256 FROM run_effect_record_heads",
     },
     DerivedExportQuery {
         family: "doc_pack_deletions",
@@ -9124,13 +9171,13 @@ mod tests {
     }
 
     #[test]
-    fn version_twenty_four_schema_matches_fixture_snapshot_and_is_relational() {
+    fn version_twenty_five_schema_matches_fixture_snapshot_and_is_relational() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([14; 32]))
-            .expect("version twenty-four store");
+            .expect("version twenty-five store");
         let fixture: serde_json::Value =
-            serde_json::from_str(include_str!("../fixtures/operational-store/schema-24.json"))
+            serde_json::from_str(include_str!("../fixtures/operational-store/schema-25.json"))
                 .expect("schema fixture parses");
         assert_eq!(fixture["schema_version"].as_i64(), Some(SCHEMA_VERSION));
         let tables: Vec<String> = store
@@ -10859,7 +10906,7 @@ mod tests {
     }
 
     #[test]
-    fn version_one_upgrades_through_twenty_four_with_exact_history() {
+    fn version_one_upgrades_through_twenty_five_with_exact_history() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         create_version_one_store(&path, &[15; 32]);
@@ -10880,7 +10927,7 @@ mod tests {
             })
             .expect("migration history");
         let fixture: serde_json::Value =
-            serde_json::from_str(include_str!("../fixtures/operational-store/schema-24.json"))
+            serde_json::from_str(include_str!("../fixtures/operational-store/schema-25.json"))
                 .expect("schema fixture parses");
         let fixture_history = fixture["migrations"]
             .as_array()

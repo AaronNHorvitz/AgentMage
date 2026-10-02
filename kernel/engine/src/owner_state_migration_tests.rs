@@ -49,8 +49,10 @@ fn version_twenty_three_upgrades_to_owner_states_preserving_records_and_history(
         .pragma_query_value(None, "user_version", |row| row.get(0))
         .unwrap();
     assert_eq!(version, SCHEMA_VERSION);
+    // The later run effect record migration adds only its own tables
+    // (Decision 0143).
     let fixture: Value =
-        serde_json::from_str(include_str!("../fixtures/operational-store/schema-24.json")).unwrap();
+        serde_json::from_str(include_str!("../fixtures/operational-store/schema-25.json")).unwrap();
     assert_eq!(tables(&store.connection), fixture["tables"]);
     assert_eq!(history(&store.connection), fixture["migrations"]);
     let migrated = history(&store.connection);
@@ -105,7 +107,7 @@ fn failed_version_twenty_four_migration_rolls_back_and_stays_retryable() {
         .unwrap();
     drop(connection);
     let current = OperationalStore::open(&path, &observation(), &mut TestKey(key)).unwrap();
-    assert_eq!(history(&current.connection).as_array().unwrap().len(), 24);
+    assert_eq!(history(&current.connection).as_array().unwrap().len(), 25);
     assert_eq!(owner_state_tables(&current.connection), 1);
     assert_eq!(legacy_record(&current.connection), record);
     drop(current);
@@ -160,3 +162,7 @@ fn version_twenty_three_corrupt_history_cannot_add_owner_states() {
     }
 }
 
+mod run_effect_record_migration {
+    use super::*;
+    include!("run_effect_record_migration_tests.rs");
+}

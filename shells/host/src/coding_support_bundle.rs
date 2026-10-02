@@ -536,6 +536,7 @@ mod tests {
                     run_id: agentmage_kernel_contracts::RuntimeRunId::from_raw("run-bundle"),
                     request_sha256: "1".repeat(64),
                     recoverability: None,
+                    session_recoverability: None,
                     context_inspections: None,
                     effect_history: Some(history(ActionKind::FileWrite, '2')),
                     job_control_history: Some(history(ActionKind::JobControl, '3')),
@@ -625,7 +626,7 @@ mod tests {
             [
                 ("agentmage-cli", CLI_VERSION),
                 ("ipc-wire", wire.as_str()),
-                ("run-declarations", "4"),
+                ("run-declarations", "5"),
             ]
         );
         assert_eq!(

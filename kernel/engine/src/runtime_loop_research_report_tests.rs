@@ -285,6 +285,20 @@ fn a_deep_run_retains_its_report_through_the_owner_and_reads_it_back() {
         })
     );
     let coordinator_events = runtime.events().to_vec();
+    // Review F1 of `8842c770`: the run uses six turns. Its turn limit is
+    // twice that only because the artifact allowance, three per turn plus
+    // one per tool call plus two, must hold the bundles' retained artifacts,
+    // the plan and the draft, which the allowance of six turns does not.
+    let turns = coordinator_events
+        .iter()
+        .filter(|event| matches!(event.kind, RuntimeEventKind::TurnStarted))
+        .count();
+    let limits = &runtime.request.limits;
+    let allowance = |turns: usize| 3 * turns + limits.max_tool_calls as usize + 2;
+    assert_eq!(turns, 6);
+    assert!(turns < limits.max_turns as usize);
+    assert!(runtime.artifact_references.len() <= allowance(limits.max_turns as usize));
+    assert!(runtime.artifact_references.len() > allowance(turns));
     let mut port = runtime.tool_boundary;
     assert_eq!(port.report_publications, 1);
     assert_eq!(port.report_refusal, None);

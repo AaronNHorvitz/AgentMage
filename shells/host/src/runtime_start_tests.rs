@@ -119,6 +119,14 @@ impl crate::coding_live_runtime::LiveRunDeclarationPort for RefusingCoordinator 
         panic!("failed startup cannot declare recoverability")
     }
 
+    fn session_recoverability(
+        &self,
+        _request: &RuntimeRunRequest,
+        _now_epoch_ms: u64,
+    ) -> Option<crate::coding_recoverability::RecoverabilityReport> {
+        panic!("failed startup cannot declare its session's recoverability")
+    }
+
     fn run_context_inspections(
         &self,
     ) -> Option<Vec<agentmage_kernel_engine::context_inspection::ContextInspection>> {
@@ -422,6 +430,14 @@ impl crate::coding_live_runtime::LiveRunDeclarationPort for GatedCoordinator {
         Some(self.report.clone())
     }
 
+    fn session_recoverability(
+        &self,
+        _request: &RuntimeRunRequest,
+        _now_epoch_ms: u64,
+    ) -> Option<crate::coding_recoverability::RecoverabilityReport> {
+        None
+    }
+
     fn run_context_inspections(
         &self,
     ) -> Option<Vec<agentmage_kernel_engine::context_inspection::ContextInspection>> {
@@ -661,7 +677,9 @@ fn the_live_service_declares_only_a_held_ended_run_that_is_not_busy() {
     assert_eq!(declared.context_inspections, Some(Vec::new()));
     // Decision 0127: the tool boundary's history is declared; this run has no
     // job, so it declares no job control history.
-    assert_eq!(declared.schema_version, 4);
+    assert_eq!(declared.schema_version, 5);
+    // Decision 0143: this fixture's owner declares no session.
+    assert_eq!(declared.session_recoverability, None);
     assert_eq!(
         declared.effect_history,
         crate::coding_action_history::RunActionRecorder::new().declare()
@@ -1415,6 +1433,14 @@ impl crate::coding_live_runtime::LiveRunDeclarationPort for CheckpointingCoordin
     fn run_recoverability(
         &self,
         _request: &RuntimeRunRequest,
+    ) -> Option<crate::coding_recoverability::RecoverabilityReport> {
+        None
+    }
+
+    fn session_recoverability(
+        &self,
+        _request: &RuntimeRunRequest,
+        _now_epoch_ms: u64,
     ) -> Option<crate::coding_recoverability::RecoverabilityReport> {
         None
     }
