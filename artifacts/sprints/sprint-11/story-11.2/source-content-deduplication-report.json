@@ -16,9 +16,9 @@
       "sha256": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8"
     },
     {
-      "byte_length": 495449,
+      "byte_length": 497598,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "f2071806b6af114fdb2126f12e3d1abfb2462afd1efd26532b1ff8bb84c468c3"
+      "sha256": "189fbfefd7ee050d38bd01b7d242ae1fb82b5ee6d08bd4f53ab6239f5ef41967"
     },
     {
       "byte_length": 4166,
@@ -56,6 +56,11 @@
       "sha256": "a717dc92573b9d93cca6ea1232935c70888e62bca9177b9a2e1f0350a647a7b7"
     },
     {
+      "byte_length": 5783,
+      "path": "kernel/engine/fixtures/operational-store/schema-25.json",
+      "sha256": "df69911a5ffa6a831071f850ec64b64b40b9a939175dcad4f01ecb895b444669"
+    },
+    {
       "byte_length": 250,
       "path": "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
@@ -81,6 +86,11 @@
       "sha256": "d40b61ead6245ee5f56adb61c22e2aef5c9ce696c538314350182e637938173f"
     },
     {
+      "byte_length": 3497,
+      "path": "kernel/engine/migrations/operational-store/0025-run-effect-records.sql",
+      "sha256": "20354202385ac4d93f43cac1bf3eacfeacae212792d9d0501c1262d15eef039a"
+    },
+    {
       "byte_length": 14900,
       "path": "kernel/engine/src/job_ledger_store.rs",
       "sha256": "1e84d70b6c93b452893c95194cf9e5b2cbf050d4f1c877cc0c4c8eca9f118c0d"
@@ -101,6 +111,11 @@
       "sha256": "f32aab1ee1bf8fe8589b308712c4425f92234c37f38fffc2e09b33e6b0b7d8c7"
     },
     {
+      "byte_length": 26580,
+      "path": "kernel/engine/src/run_effect_record_store.rs",
+      "sha256": "ed3751c8dca8edbc7cc13802098921a6d85a929c3bb08c182c8880734f29ea53"
+    },
+    {
       "byte_length": 2335,
       "path": "kernel/engine/migrations/operational-store/0019-research-budgets.sql",
       "sha256": "03800068d00ea422acc3702e48bb3cae4c736f104680bb57767ce0b8b1fb6db3"
@@ -116,25 +131,25 @@
       "sha256": "ccdbe1e44487558f2bb0748982d72a2e62e2f763706077b08f5b13267deebe6f"
     },
     {
-      "byte_length": 10207,
+      "byte_length": 10454,
       "path": "scripts/source_content_deduplication_evidence.py",
-      "sha256": "38a5d0aa184d8b417e183543e2bb7468264223e4f8d1866b08f96487f60a62ca"
+      "sha256": "89bacf7ab47b4138e24aa3dbaf5fd4edce620d3b8a4f203ea2ca7241d544aac7"
     },
     {
-      "byte_length": 5591,
+      "byte_length": 5832,
       "path": "tests/test_source_content_deduplication_evidence.py",
-      "sha256": "9d346083d1c0ed29ad1ff85510e02c04ddcf8e8d3616f54ed769f342a923c960"
+      "sha256": "c4ab82897a4258f48361b6292386031130a5d336a07775fbe3019d7432a54b70"
     },
     {
       "byte_length": 17964,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-results.log",
-      "sha256": "91a760a5d6e6719d4df8ff0b35774250e54037cdfa2e38350e5addbce3b803ae"
+      "sha256": "c143663bb785b873ae08b1b62355b7ced709f41053ff177371dd2e2d8f4491eb"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine runtime_artifact::tests::publication_deduplicates_without_broadening_owner_or_reference_state --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::source_content_deduplication_preserves_every_logical_identity --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_four_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_five_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
@@ -153,7 +168,7 @@
     ]
   },
   "generated_on": "2026-09-26",
-  "operational_store_schema_version": 24,
+  "operational_store_schema_version": 25,
   "physical_payload_authority": {
     "artifact_table": "runtime_artifacts",
     "migration": "0007-runtime-artifacts.sql",
@@ -178,7 +193,7 @@
   "required_markers": [
     "publication_deduplicates_without_broadening_owner_or_reference_state ... ok",
     "source_content_deduplication_preserves_every_logical_identity ... ok",
-    "version_one_upgrades_through_twenty_four_with_exact_history ... ok",
+    "version_one_upgrades_through_twenty_five_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

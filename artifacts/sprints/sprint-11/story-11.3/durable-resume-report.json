@@ -6,9 +6,9 @@
       "sha256": "a6404b5ab64ce63297f92eaa608e9182f7c522d20a0a745233ca61f13ecaeda0"
     },
     {
-      "byte_length": 495449,
+      "byte_length": 497598,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "f2071806b6af114fdb2126f12e3d1abfb2462afd1efd26532b1ff8bb84c468c3"
+      "sha256": "189fbfefd7ee050d38bd01b7d242ae1fb82b5ee6d08bd4f53ab6239f5ef41967"
     },
     {
       "byte_length": 1417,
@@ -111,6 +111,21 @@
       "sha256": "f32aab1ee1bf8fe8589b308712c4425f92234c37f38fffc2e09b33e6b0b7d8c7"
     },
     {
+      "byte_length": 5783,
+      "path": "kernel/engine/fixtures/operational-store/schema-25.json",
+      "sha256": "df69911a5ffa6a831071f850ec64b64b40b9a939175dcad4f01ecb895b444669"
+    },
+    {
+      "byte_length": 3497,
+      "path": "kernel/engine/migrations/operational-store/0025-run-effect-records.sql",
+      "sha256": "20354202385ac4d93f43cac1bf3eacfeacae212792d9d0501c1262d15eef039a"
+    },
+    {
+      "byte_length": 26580,
+      "path": "kernel/engine/src/run_effect_record_store.rs",
+      "sha256": "ed3751c8dca8edbc7cc13802098921a6d85a929c3bb08c182c8880734f29ea53"
+    },
+    {
       "byte_length": 2335,
       "path": "kernel/engine/migrations/operational-store/0019-research-budgets.sql",
       "sha256": "03800068d00ea422acc3702e48bb3cae4c736f104680bb57767ce0b8b1fb6db3"
@@ -126,9 +141,9 @@
       "sha256": "7415c156e7aefc61c5a2a782f5cd0e9cc8195d05b0b4ffc368ca36c9ce8d69c1"
     },
     {
-      "byte_length": 10522,
+      "byte_length": 10715,
       "path": "scripts/story_11_3_resume_evidence.py",
-      "sha256": "7550fdd1f217966135a98468aa637a4ba6db9dd8d61c443c4a30f20707753b99"
+      "sha256": "421301af7c4ed59565b4cd44c624dbf49b893827530f34f52a8e1624cc0760b8"
     },
     {
       "byte_length": 1827,
@@ -138,7 +153,7 @@
     {
       "byte_length": 27013,
       "path": "artifacts/sprints/sprint-11/story-11.3/durable-resume-results.log",
-      "sha256": "ab2c8476507deaf196ad634dc38c37c986f621a6c2995d96b4338bf219e840fe"
+      "sha256": "4136891a374b0ebef909dd33a0779e31d8ddc78a2ce02037f3784e9f59641c11"
     }
   ],
   "commands": [

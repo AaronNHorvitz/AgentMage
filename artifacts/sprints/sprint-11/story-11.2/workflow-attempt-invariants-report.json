@@ -15,9 +15,9 @@
       "sha256": "3f2730d0f49d60ce70bf8bb9f8980e32bae74f31ece544e3d99a839918d20c0d"
     },
     {
-      "byte_length": 495449,
+      "byte_length": 497598,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "f2071806b6af114fdb2126f12e3d1abfb2462afd1efd26532b1ff8bb84c468c3"
+      "sha256": "189fbfefd7ee050d38bd01b7d242ae1fb82b5ee6d08bd4f53ab6239f5ef41967"
     },
     {
       "byte_length": 4166,
@@ -55,6 +55,11 @@
       "sha256": "a717dc92573b9d93cca6ea1232935c70888e62bca9177b9a2e1f0350a647a7b7"
     },
     {
+      "byte_length": 5783,
+      "path": "kernel/engine/fixtures/operational-store/schema-25.json",
+      "sha256": "df69911a5ffa6a831071f850ec64b64b40b9a939175dcad4f01ecb895b444669"
+    },
+    {
       "byte_length": 250,
       "path": "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
@@ -80,6 +85,11 @@
       "sha256": "d40b61ead6245ee5f56adb61c22e2aef5c9ce696c538314350182e637938173f"
     },
     {
+      "byte_length": 3497,
+      "path": "kernel/engine/migrations/operational-store/0025-run-effect-records.sql",
+      "sha256": "20354202385ac4d93f43cac1bf3eacfeacae212792d9d0501c1262d15eef039a"
+    },
+    {
       "byte_length": 14900,
       "path": "kernel/engine/src/job_ledger_store.rs",
       "sha256": "1e84d70b6c93b452893c95194cf9e5b2cbf050d4f1c877cc0c4c8eca9f118c0d"
@@ -100,6 +110,11 @@
       "sha256": "f32aab1ee1bf8fe8589b308712c4425f92234c37f38fffc2e09b33e6b0b7d8c7"
     },
     {
+      "byte_length": 26580,
+      "path": "kernel/engine/src/run_effect_record_store.rs",
+      "sha256": "ed3751c8dca8edbc7cc13802098921a6d85a929c3bb08c182c8880734f29ea53"
+    },
+    {
       "byte_length": 2335,
       "path": "kernel/engine/migrations/operational-store/0019-research-budgets.sql",
       "sha256": "03800068d00ea422acc3702e48bb3cae4c736f104680bb57767ce0b8b1fb6db3"
@@ -115,9 +130,9 @@
       "sha256": "adedcb573bfeceebc5cba6456341dd93cd5fcc6f6ec33ef919f0db4a0d169c6c"
     },
     {
-      "byte_length": 10062,
+      "byte_length": 10309,
       "path": "scripts/workflow_attempt_invariants_evidence.py",
-      "sha256": "e1cca29de2cdbcd4b891b505275c65cc6576560d70d6e9430a233778cc8d9496"
+      "sha256": "7c4b53254996f20ad273220438be9b54ce3594ade2d0a81efc6b553ff9520387"
     },
     {
       "byte_length": 2091,
@@ -127,12 +142,12 @@
     {
       "byte_length": 13524,
       "path": "artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-results.log",
-      "sha256": "fe9aef315c79f7a49890f9a78c35e7e83b4f058d0d19d934764e44d061214b3b"
+      "sha256": "28a9fc6d204a2ab4d9d1922a0ec793e7909b213d8d1be9b42dba48c4aaa8ea5c"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine operational_store::tests::workflow_attempt_chain_receipt_and_uncertainty_invariants_fail_closed --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_four_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_five_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
@@ -148,7 +163,7 @@
     "unique_idempotency_key_digest": true,
     "unique_step_attempt_ordinal": true
   },
-  "operational_store_schema_version": 24,
+  "operational_store_schema_version": 25,
   "product_truth": {
     "atomic_event_projection_checkpoint_commit_complete": false,
     "attempt_and_idempotency_invariants_complete": true,
@@ -162,7 +177,7 @@
   "record_type": "agentmage-workflow-attempt-invariants-evidence",
   "required_markers": [
     "workflow_attempt_chain_receipt_and_uncertainty_invariants_fail_closed ... ok",
-    "version_one_upgrades_through_twenty_four_with_exact_history ... ok",
+    "version_one_upgrades_through_twenty_five_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

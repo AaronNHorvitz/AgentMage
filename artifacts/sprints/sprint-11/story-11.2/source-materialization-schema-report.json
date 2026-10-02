@@ -11,9 +11,9 @@
       "sha256": "5821bc16e3f91dd88faadba445f663a00794c402c0472940380062c5a5051f4e"
     },
     {
-      "byte_length": 495449,
+      "byte_length": 497598,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "f2071806b6af114fdb2126f12e3d1abfb2462afd1efd26532b1ff8bb84c468c3"
+      "sha256": "189fbfefd7ee050d38bd01b7d242ae1fb82b5ee6d08bd4f53ab6239f5ef41967"
     },
     {
       "byte_length": 4698,
@@ -46,6 +46,11 @@
       "sha256": "a717dc92573b9d93cca6ea1232935c70888e62bca9177b9a2e1f0350a647a7b7"
     },
     {
+      "byte_length": 5783,
+      "path": "kernel/engine/fixtures/operational-store/schema-25.json",
+      "sha256": "df69911a5ffa6a831071f850ec64b64b40b9a939175dcad4f01ecb895b444669"
+    },
+    {
       "byte_length": 250,
       "path": "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
@@ -71,6 +76,11 @@
       "sha256": "d40b61ead6245ee5f56adb61c22e2aef5c9ce696c538314350182e637938173f"
     },
     {
+      "byte_length": 3497,
+      "path": "kernel/engine/migrations/operational-store/0025-run-effect-records.sql",
+      "sha256": "20354202385ac4d93f43cac1bf3eacfeacae212792d9d0501c1262d15eef039a"
+    },
+    {
       "byte_length": 14900,
       "path": "kernel/engine/src/job_ledger_store.rs",
       "sha256": "1e84d70b6c93b452893c95194cf9e5b2cbf050d4f1c877cc0c4c8eca9f118c0d"
@@ -91,6 +101,11 @@
       "sha256": "f32aab1ee1bf8fe8589b308712c4425f92234c37f38fffc2e09b33e6b0b7d8c7"
     },
     {
+      "byte_length": 26580,
+      "path": "kernel/engine/src/run_effect_record_store.rs",
+      "sha256": "ed3751c8dca8edbc7cc13802098921a6d85a929c3bb08c182c8880734f29ea53"
+    },
+    {
       "byte_length": 2335,
       "path": "kernel/engine/migrations/operational-store/0019-research-budgets.sql",
       "sha256": "03800068d00ea422acc3702e48bb3cae4c736f104680bb57767ce0b8b1fb6db3"
@@ -106,9 +121,9 @@
       "sha256": "f04af91a9de2762dca16359bd8a7f78c72e1c5aa5e3599f0f515540031ff2f44"
     },
     {
-      "byte_length": 10092,
+      "byte_length": 10339,
       "path": "scripts/source_materialization_schema_evidence.py",
-      "sha256": "29367dae74323aeac0a85e76184b119ee1dca5cd38a2feddf70d33d2ec8b4434"
+      "sha256": "a3ed4b4c982e542cffda4bb7f7134199862f18291cc5fc26d91ab1fb8499601e"
     },
     {
       "byte_length": 2258,
@@ -118,17 +133,17 @@
     {
       "byte_length": 18010,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-results.log",
-      "sha256": "0342bf137a7391fcd5880cd45bb31dac3936903fe2e3faa00e9fdbc9b930d1bb"
+      "sha256": "587747628489a359b1f0928f6759fcb4ab86a262a7877f59310030cfc2a00f4b"
     }
   ],
   "commands": [
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_twenty_four_schema_matches_fixture_snapshot_and_is_relational --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_twenty_five_schema_matches_fixture_snapshot_and_is_relational --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_four_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_five_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
-  "current_operational_store_schema_version": 24,
+  "current_operational_store_schema_version": 25,
   "generated_on": "2026-09-26",
   "materialization_migration_version": 12,
   "normalized_tables": [
@@ -164,9 +179,9 @@
   },
   "record_type": "agentmage-source-materialization-schema-evidence",
   "required_markers": [
-    "version_twenty_four_schema_matches_fixture_snapshot_and_is_relational ... ok",
+    "version_twenty_five_schema_matches_fixture_snapshot_and_is_relational ... ok",
     "source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store ... ok",
-    "version_one_upgrades_through_twenty_four_with_exact_history ... ok",
+    "version_one_upgrades_through_twenty_five_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

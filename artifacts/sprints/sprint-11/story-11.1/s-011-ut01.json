@@ -44,8 +44,8 @@
     "json_lines_export_rejects_occupied_or_ineligible_destinations_without_change",
     "schema_constraints_and_atomic_rollback_reject_partial_authority",
     "required_writer_and_database_configuration_is_verified",
-    "version_twenty_four_schema_matches_fixture_snapshot_and_is_relational",
-    "version_one_upgrades_through_twenty_four_with_exact_history",
+    "version_twenty_five_schema_matches_fixture_snapshot_and_is_relational",
+    "version_one_upgrades_through_twenty_five_with_exact_history",
     "version_two_retention_rows_upgrade_to_three_with_initial_event",
     "failed_version_three_migration_rolls_back_all_alterations",
     "failed_version_two_migration_rolls_back_without_partial_schema",
@@ -61,17 +61,17 @@
   ],
   "private_user_data_used": false,
   "schema_version": 1,
-  "source_revision": "aac928e70c2808ae5baab81883782a33ddfef6b7",
+  "source_revision": "d6d409deed123a25bc8b9a086d4a6c331e9fe665",
   "sources": [
     {
       "bytes": 5711,
       "path": "docs/verification/s-011-ut01-store-unit-results.md",
-      "sha256": "8e7ab5d36e15dd73d9ac1d0019e8e167bd768b02a295e20fe168e807800cafb3"
+      "sha256": "cbcf7d2ba23ccd1034cb5048dece6e3dc593c4ee71a6080b3b7ea414181344da"
     },
     {
-      "bytes": 495449,
+      "bytes": 497598,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "f2071806b6af114fdb2126f12e3d1abfb2462afd1efd26532b1ff8bb84c468c3"
+      "sha256": "189fbfefd7ee050d38bd01b7d242ae1fb82b5ee6d08bd4f53ab6239f5ef41967"
     },
     {
       "bytes": 4912,
@@ -79,9 +79,9 @@
       "sha256": "86d30819c17b02544b93aadd53810feb7a89c7e4f79add3c55fab01e1e03c88a"
     },
     {
-      "bytes": 8509,
+      "bytes": 8866,
       "path": "kernel/engine/src/research_reader_migration_tests.rs",
-      "sha256": "d9fbb3100e6ebc436d909334615153d5a0a97eb2d94470626f8362a25739e4bb"
+      "sha256": "80587fa0f6ba2f2ee51b9598e55ca1cb684bf1bb7101d22b8eea0a010e990cd0"
     },
     {
       "bytes": 4815,
@@ -94,9 +94,9 @@
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
     },
     {
-      "bytes": 6470,
+      "bytes": 6505,
       "path": "kernel/engine/src/job_ledger_migration_tests.rs",
-      "sha256": "e3753890f429f4a2e9119c7055114816a5a58826a97b0214c0ed63db1649a2ec"
+      "sha256": "d181395465bb9dc6c5a14bbe3bc5eb2c7d84133a4bc909c0596219c3e6080cd9"
     },
     {
       "bytes": 5006,
@@ -109,9 +109,9 @@
       "sha256": "6f27f41680d76642fbaae8efded29934bc2ccb797c75c23d7142986d7414573d"
     },
     {
-      "bytes": 6562,
+      "bytes": 6587,
       "path": "kernel/engine/src/run_action_history_migration_tests.rs",
-      "sha256": "077638612632333ff9ba099cbcc89cc64fe20df3de92ffe553c8960c604014b7"
+      "sha256": "a86acb5d8dff9a644511f36ea08fbd6fdd1ba6c39a5272e8d0c049fc20d1d395"
     },
     {
       "bytes": 5221,
@@ -124,9 +124,9 @@
       "sha256": "84ed1485d0d2144a00eee86bd5052add809fc18af0c0483348d9fdbe5873ff09"
     },
     {
-      "bytes": 6460,
+      "bytes": 6502,
       "path": "kernel/engine/src/doc_pack_migration_tests.rs",
-      "sha256": "3e478efec48c7b1b411b9484b55531ee9195e01712b49fed36a17743970fb592"
+      "sha256": "b09418686f96c96cbb093b36d4a0f98ab6f0585c6302bfbc711f4283603c05d5"
     },
     {
       "bytes": 5441,
@@ -139,9 +139,9 @@
       "sha256": "1b756961aa77b81f4f600ebc2ba9e07564f50b8844d840eac2b20b312a828b12"
     },
     {
-      "bytes": 6344,
+      "bytes": 6546,
       "path": "kernel/engine/src/owner_state_migration_tests.rs",
-      "sha256": "bb6aebccbe93d87171d847e623aeec2b2906d80bef6edde70340eaabefac62f4"
+      "sha256": "90057cfd39877f2419c621d5d1334755750084236db8fde2ce2b2fd973e14eb8"
     },
     {
       "bytes": 5578,
@@ -154,9 +154,24 @@
       "sha256": "d40b61ead6245ee5f56adb61c22e2aef5c9ce696c538314350182e637938173f"
     },
     {
-      "bytes": 12639,
+      "bytes": 6511,
+      "path": "kernel/engine/src/run_effect_record_migration_tests.rs",
+      "sha256": "8f9b19e1dd5d1f8241e992f716d66d4fad9b8d1556775cb368c14a217300cbcb"
+    },
+    {
+      "bytes": 5783,
+      "path": "kernel/engine/fixtures/operational-store/schema-25.json",
+      "sha256": "df69911a5ffa6a831071f850ec64b64b40b9a939175dcad4f01ecb895b444669"
+    },
+    {
+      "bytes": 3497,
+      "path": "kernel/engine/migrations/operational-store/0025-run-effect-records.sql",
+      "sha256": "20354202385ac4d93f43cac1bf3eacfeacae212792d9d0501c1262d15eef039a"
+    },
+    {
+      "bytes": 12842,
       "path": "scripts/store_unit_acceptance_evidence.py",
-      "sha256": "5eeb9391fc46f18cfb02e23a04c80494d8a6d90a20f5b94accb1d08062d4f7bb"
+      "sha256": "4a0e62ed61fc83870d6371c4cf949bd935c11c4c54840de8a1864b4506746a0c"
     },
     {
       "bytes": 3600,
@@ -173,7 +188,7 @@
     {
       "command_id": "8bc5e8635f51ef1995b5f3e693d844a4d92df5362eaa088ed55c2f91691bab37",
       "exit_code": 0,
-      "expected_marker_sha256": "affdad3316d41d420605f66cf26cfae2cd64a82ad769b76b2e6e041feb7fe487",
+      "expected_marker_sha256": "e9bfc6d7a22f5c79edfba33d4810abfe23aef79baf7f514fd0e9b0c28bfceb87",
       "status": "pass"
     },
     {
