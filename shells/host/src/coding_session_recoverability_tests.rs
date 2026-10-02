@@ -424,6 +424,8 @@ fn each_change_record_must_read_back_as_that_runs_own_verified_record() {
         declare(&runs, &request, &tampered, &current).err(),
         Some(RecoverabilityError::ForeignOrInvalid)
     );
+    // The declaring run's record in the earlier run's chain names an
+    // operation that run never executed.
     let mut swapped = runs.clone();
     swapped[0].entries.swap(0, 2);
     let RunEffectEntry::Publication {
@@ -439,6 +441,25 @@ fn each_change_record_must_read_back_as_that_runs_own_verified_record() {
     };
     assert_eq!(
         declare(&swapped, &request, &payloads, &current).err(),
+        Some(RecoverabilityError::ForeignOrInvalid)
+    );
+    // A sealed, readable record of the earlier run's own operation, but
+    // produced by another run, is not that run's record (mutation S4 of the
+    // batch 28 campaign).
+    let (foreign, foreign_bytes) = change(&request, "run-other", "w1", CALC, "v0\n", "v1\n");
+    let foreign = RetainedCodingChange {
+        reference: RuntimeArtifactRef {
+            artifact_id: RuntimeArtifactId::from_raw("artifact-w1-of-run-other"),
+            ..foreign.reference
+        },
+        record: foreign.record,
+    };
+    let mut foreign_payloads = Payloads(payloads.0.clone());
+    foreign_payloads.keep(&foreign.reference, &digest("policy"), foreign_bytes);
+    let mut foreign_producer = runs.clone();
+    foreign_producer[0].entries[1] = publication(&foreign);
+    assert_eq!(
+        declare(&foreign_producer, &request, &foreign_payloads, &current).err(),
         Some(RecoverabilityError::ForeignOrInvalid)
     );
     let mut other_media = runs.clone();
