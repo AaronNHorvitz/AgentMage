@@ -13,8 +13,8 @@ use crate::research_fetch::PublicSearchEndpoint;
 use crate::research_journal::{ResearchBudgetContext, ResearchBudgetState};
 use crate::research_plan::{PreparedResearchPlan, ResearchPlanDraft};
 use crate::runtime_loop::{
-    RESEARCH_ADMISSION_CONSTRAINT_PREFIX, RuntimeResearchAdmission, RuntimeResearchBudgetPort,
-    valid_admitted_network_execution,
+    RESEARCH_ADMISSION_CONSTRAINT_PREFIX, RESEARCH_BUDGET_CANCELLATION_UNCONFIRMED,
+    RuntimeResearchAdmission, RuntimeResearchBudgetPort, valid_admitted_network_execution,
 };
 use agentmage_kernel_contracts::{RuntimeEventCursor, RuntimeEventId};
 
@@ -45,9 +45,28 @@ struct Opening {
     flushes: usize,
 }
 
+/// How the synthetic budget owner answers a cancellation (Decision 0140).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CancelAnswer {
+    Exact,
+    NotCancelled,
+    OtherPlan,
+    OtherScope,
+    Refused,
+}
+
+/// One budget cancellation as the synthetic owner saw it.
+struct Cancellation {
+    context: ResearchBudgetContext,
+    after_observation: bool,
+    before_terminal: bool,
+}
+
 thread_local! {
     static BUDGET_ANSWER: Cell<BudgetAnswer> = const { Cell::new(BudgetAnswer::Exact) };
     static OPENINGS: RefCell<Vec<Opening>> = const { RefCell::new(Vec::new()) };
+    static CANCEL_ANSWER: Cell<CancelAnswer> = const { Cell::new(CancelAnswer::Exact) };
+    static CANCELLATIONS: RefCell<Vec<Cancellation>> = const { RefCell::new(Vec::new()) };
 }
 
 impl RuntimeResearchBudgetPort for FakeToolBoundary {
@@ -124,11 +143,85 @@ impl RuntimeResearchBudgetPort for FakeToolBoundary {
         }
         Ok(state)
     }
+
+    fn cancel_research_budget(
+        &mut self,
+        _request: &RuntimeRunRequest,
+        context: &ResearchBudgetContext,
+    ) -> Result<ResearchBudgetState, RuntimePortFailure> {
+        // The owner sees where the run's journal stood when it was asked.
+        let journal = self.journal.lock().unwrap();
+        let cancellation = Cancellation {
+            context: context.clone(),
+            after_observation: journal
+                .iter()
+                .any(|event| matches!(event.kind, RuntimeEventKind::CancellationObserved { .. })),
+            before_terminal: !journal
+                .iter()
+                .any(|event| matches!(event.kind, RuntimeEventKind::RunTerminal { .. })),
+        };
+        drop(journal);
+        CANCELLATIONS.with(|cancellations| cancellations.borrow_mut().push(cancellation));
+        let answer = CANCEL_ANSWER.with(Cell::get);
+        if answer == CancelAnswer::Refused {
+            return Err(RuntimePortFailure::Uncertain);
+        }
+        // The budget the owner opened, now cancelled, with nothing spent.
+        let (plan, scope) = OPENINGS.with(|openings| {
+            let openings = openings.borrow();
+            let opening = openings.last().unwrap();
+            (
+                opening.plan.clone(),
+                PreparedResearchPlan::decode(&opening.plan_bytes)
+                    .unwrap()
+                    .scope()
+                    .clone(),
+            )
+        });
+        let mut state = ResearchBudgetState {
+            plan,
+            scope,
+            progress: ResearchBudgetProgress {
+                started_epoch_ms: 1,
+                last_epoch_ms: 1,
+                queries: 0,
+                visits: 0,
+                reserved_bytes: 0,
+                cancelled: true,
+                deadline_exhausted: false,
+            },
+            revision: 1,
+            head_sha256: SHA.to_owned(),
+            remaining_revisions: 126,
+        };
+        match answer {
+            CancelAnswer::NotCancelled => state.progress.cancelled = false,
+            CancelAnswer::OtherPlan => state.plan.payload_sha256 = sha256(b"another plan"),
+            CancelAnswer::OtherScope => {
+                state.scope = PreparedResearchPlan::decode(&plan_bytes_for(
+                    ResearchNetworkMode::Ask,
+                    "another public query",
+                    true,
+                ))
+                .unwrap()
+                .scope()
+                .clone();
+            }
+            CancelAnswer::Exact | CancelAnswer::Refused => {}
+        }
+        Ok(state)
+    }
 }
 
 fn reset_budget(answer: BudgetAnswer) {
     BUDGET_ANSWER.with(|cell| cell.set(answer));
     OPENINGS.with(|openings| openings.borrow_mut().clear());
+    CANCEL_ANSWER.with(|cell| cell.set(CancelAnswer::Exact));
+    CANCELLATIONS.with(|cancellations| cancellations.borrow_mut().clear());
+}
+
+fn cancellations() -> usize {
+    CANCELLATIONS.with(|cancellations| cancellations.borrow().len())
 }
 
 fn openings() -> usize {
@@ -1035,6 +1128,134 @@ fn the_admitted_tool_returns_only_these_network_results() {
             !valid_admitted_network_execution(&with_evidence),
             "{outcome:?} evidence"
         );
+    }
+}
+
+/// A user's cancellation of the admitted run's own task.
+fn cancellation_of(runtime: &FixtureCoordinator) -> CancellationSignal {
+    CancellationSignal {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        cancellation_id: CancellationId::from_raw("research-cancellation-0001"),
+        correlation_id: runtime.correlation_id.clone(),
+        task_id: runtime.request.task.task_id.clone(),
+        reason: CancellationReason::UserRequested,
+        requested_by: BoundaryKind::Shell,
+    }
+}
+
+/// A cancellation the probe reports only after the tool was executed.
+struct CancelAfterExecution {
+    executions: Arc<AtomicUsize>,
+    signal: CancellationSignal,
+}
+
+impl agentmage_kernel_contracts::ModelCancellationProbe for CancelAfterExecution {
+    fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+        Ok((self.executions.load(Ordering::SeqCst) > 0).then(|| self.signal.clone()))
+    }
+}
+
+#[test]
+fn a_cancelled_admitted_run_cancels_its_budget_before_its_outcome() {
+    // Decision 0140: between phases, and when the cancelled tool's outcome
+    // observes the cancellation.
+    for during_tool in [false, true] {
+        reset_budget(BudgetAnswer::Exact);
+        let (mut runtime, executions) = admitted_run(PermissionScript::Allow);
+        runtime.tool_boundary.outcome = OperationOutcome::Cancelled;
+        runtime.tool_boundary.emit_evidence = false;
+        let context = runtime
+            .research
+            .as_ref()
+            .unwrap()
+            .admission
+            .context()
+            .clone();
+        // Between phases the probe reports the cancellation at once; during
+        // the tool it follows the fixture's own execution count.
+        let probe = CancelAfterExecution {
+            executions: if during_tool {
+                Arc::clone(&executions)
+            } else {
+                Arc::new(AtomicUsize::new(1))
+            },
+            signal: cancellation_of(&runtime),
+        };
+        let RuntimeCoordinatorStep::Complete { outcome } =
+            runtime.run_until_boundary(None, Some(&probe)).unwrap()
+        else {
+            panic!("a cancelled run ends");
+        };
+        assert_eq!(
+            executions.load(Ordering::SeqCst),
+            usize::from(during_tool),
+            "{during_tool}"
+        );
+        assert_eq!(outcome.state, AgentStateKind::Cancelled, "{during_tool}");
+        assert!(
+            !outcome
+                .unresolved_codes
+                .contains(&RESEARCH_BUDGET_CANCELLATION_UNCONFIRMED.to_owned()),
+            "{during_tool}"
+        );
+        CANCELLATIONS.with(|cancellations| {
+            let cancellations = cancellations.borrow();
+            assert_eq!(cancellations.len(), 1, "{during_tool}");
+            assert_eq!(cancellations[0].context, context);
+            assert!(cancellations[0].after_observation);
+            assert!(cancellations[0].before_terminal);
+        });
+        assert_valid_terminal_stream(&runtime);
+    }
+}
+
+#[test]
+fn a_run_that_observed_no_cancellation_leaves_its_budget_alone() {
+    for outcome in [OperationOutcome::Succeeded, OperationOutcome::Failed] {
+        reset_budget(BudgetAnswer::Exact);
+        let script = if outcome == OperationOutcome::Succeeded {
+            PermissionScript::PreparePublicGet(0)
+        } else {
+            PermissionScript::Allow
+        };
+        let (mut runtime, _) = admitted_run(script);
+        runtime.tool_boundary.outcome = outcome;
+        runtime.tool_boundary.emit_evidence = outcome == OperationOutcome::Succeeded;
+        runtime.run_until_boundary(None, None).unwrap();
+        assert!(runtime.outcome().is_some(), "{outcome:?}");
+        assert_eq!(cancellations(), 0, "{outcome:?}");
+    }
+}
+
+#[test]
+fn an_unconfirmed_budget_cancellation_is_named_in_the_outcome() {
+    for answer in [
+        CancelAnswer::NotCancelled,
+        CancelAnswer::OtherPlan,
+        CancelAnswer::OtherScope,
+        CancelAnswer::Refused,
+    ] {
+        reset_budget(BudgetAnswer::Exact);
+        CANCEL_ANSWER.with(|cell| cell.set(answer));
+        let (mut runtime, executions) = admitted_run(PermissionScript::PreparePublicGet(0));
+        let signal = cancellation_of(&runtime);
+        let RuntimeCoordinatorStep::Complete { outcome } =
+            runtime.run_until_boundary(None, Some(&signal)).unwrap()
+        else {
+            panic!("the run still ends");
+        };
+        assert_eq!(outcome.state, AgentStateKind::Cancelled, "{answer:?}");
+        assert_eq!(
+            outcome.unresolved_codes,
+            [
+                "runtime.cancelled",
+                RESEARCH_BUDGET_CANCELLATION_UNCONFIRMED
+            ],
+            "{answer:?}"
+        );
+        assert_eq!(cancellations(), 1, "{answer:?}");
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert_valid_terminal_stream(&runtime);
     }
 }
 

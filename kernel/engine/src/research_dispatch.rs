@@ -203,11 +203,15 @@ pub(crate) mod tests {
     // 0138), kept in this audited effect-test boundary. At its trusted launch
     // time it checks the consumed grant and the dispatch proof, then seals one
     // complete result from the proof's own reservation. Nothing is sent.
+    // Under Decision 0140 it can instead report a worker that failed, timed
+    // out or became uncertain after both proofs were checked; such an attempt
+    // seals no result.
     pub(crate) struct SyntheticNativeResearchDriver<'a> {
         pub(crate) packet: &'a PublicGetWorkerPacket,
         pub(crate) native: crate::research_result_binding::PublicGetNativeIdentity,
         pub(crate) body: &'a [u8],
         pub(crate) now: u64,
+        pub(crate) outcome: OperationOutcome,
         pub(crate) calls: usize,
         pub(crate) binding: Option<crate::research_result_binding::PublicGetResultBinding>,
     }
@@ -229,6 +233,18 @@ pub(crate) mod tests {
                 || !dispatch.matches_packet_at(self.packet, self.now)
             {
                 return EffectLaunch::failed();
+            }
+            if self.outcome != OperationOutcome::Succeeded {
+                let state_change = if self.outcome == OperationOutcome::Uncertain {
+                    StateChange::Uncertain
+                } else {
+                    StateChange::NotChanged
+                };
+                return EffectLaunch::completed(EffectResult::from_redacted_material(
+                    self.outcome,
+                    b"synthetic-native-research-worker-failure",
+                    state_change,
+                ));
             }
             let request = self.packet.request();
             let observation = PublicGetObservation {

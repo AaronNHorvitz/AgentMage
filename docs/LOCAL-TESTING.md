@@ -516,9 +516,10 @@ reader. The native result is synthetic, and nothing is sent:
 cargo test --locked --offline -p agentmage-kernel-engine --lib research_admission_tests
 ```
 
-It runs 26 tests:
+It runs 39 tests:
 
-- the coordinator's admission checks;
+- the coordinator's admission checks, and its cancellation of the task budget when an
+  admitted run is cancelled ([Decision 0140](decisions/0140-review-fixes-and-research-persistence-through-the-coordinator.md));
 - the public GET read back through the canonical reader, before and after the store is
   reopened;
 - a plan that asks before each request: the person approves the exact request, or
@@ -528,7 +529,11 @@ It runs 26 tests:
   exhausted parent and a finished run;
 - a forged receipt digest, a receipt the owner did not issue and a stale receipt;
 - eleven changed terminals, and a start that names another destination;
-- partial bundles and source drift.
+- partial bundles and source drift;
+- a plan and its reservations persisted before the start: an interruption after a
+  reservation or after a start, recovered on reopening with the original clocks and
+  without replay; failed and uncertain workers; cancellation and expiry that survive
+  reopening; and one budget per task and one owner per store.
 
 This is a component check, not a research demonstration. No worker, provider or model
 runs.

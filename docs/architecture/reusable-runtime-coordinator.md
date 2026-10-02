@@ -248,6 +248,15 @@ Only the success carries output, evidence or artifacts
 Reservation, grant consumption and dual-proof dispatch stay with the existing
 owners behind the trusted correctness port. No host composes an admission yet.
 
+When an admitted run has observed a cancellation, by any path, the coordinator has
+the same port cancel the run's task budget before it seals the outcome
+([Decision 0140](../decisions/0140-review-fixes-and-research-persistence-through-the-coordinator.md)).
+It accepts only the owner's description of the published plan, the admission's scope
+and a cancelled budget. Otherwise the run still ends, and its outcome names
+`runtime.research.budget_cancellation_unconfirmed`. A run that observed no
+cancellation leaves its budget alone; its terminal already stops further
+reservations.
+
 Under Decision 0138 (AMR-03.1.2.1), an engine test composes the coordinator with
 the real owners, and only the native result is synthetic. The owners are the
 encrypted store and journal, the budget owner, grant issuance and consumption,
@@ -260,6 +269,11 @@ canonical reader. Its trusted glue is test code. The test covers these cases:
 - partial bundles;
 - source drift;
 - no replay of a dispatched request.
+
+Under Decision 0140 (AMR-03.1.1) a further module interrupts the glue after a
+reservation and after a start, reopens the store, and covers recovery with the
+original clocks, failed and uncertain workers, cancellation, expiry, and one budget
+per task and one owner per store.
 
 The authority owner commits a pending effect's terminal only when that terminal
 names the start's call, turn and operation and the receipt the owner issued; the

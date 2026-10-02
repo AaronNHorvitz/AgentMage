@@ -22,8 +22,9 @@ admission, and the canonical consumer cannot qualify a native producer by itself
 
 Decision 0139 adds `issue_public_get_grant` to `DurableAuthorityRuntime`. The existing
 grant issuer derives one exact single-use network grant from the session parent whose
-preview is the digest of the plan's full canonical bytes. That parent records that the
-person confirmed this exact plan. A task-authorized plan needs nothing more for a
+preview is the digest of the plan's full canonical bytes. The trusted host attests that
+this is the plan the person confirmed (Decision 0140, note N1). A task-authorized plan
+needs nothing more for a
 request inside it. An ask plan also needs the person's approval of the exact request,
 whose preview is the packet's digest; `prepare_public_get` returns that packet without
 recording anything.
@@ -42,7 +43,27 @@ caller's permission event atomically. A refusal commits nothing and spends nothi
 Issuance is not a reservation or a dispatch proof. At the start, the authority
 transaction also requires its policy context to name the packet's own destination.
 No host, worker or provider issues these grants yet; Decision 0084 still governs
-activation.
+activation. The owner bounds the call's argument bytes and checks their digest before
+it decodes them (Decision 0140, note N2).
+
+## Persistence through the coordinator
+
+Under Decision 0140 (AMR-03.1.1) the plan and each reservation persist through the
+real coordinator and the real owners before the effect starts. The coordinator
+publishes the plan and has its budget opened when the run starts, and the trusted port
+reserves each request before it begins the effect. When an admitted run observes a
+cancellation, the coordinator has the port cancel the task budget before it seals the
+outcome, and it accepts only the owner's description of a cancelled budget for the
+published plan and scope. Otherwise the outcome names
+`runtime.research.budget_cancellation_unconfirmed`.
+
+Composed tests interrupt the trusted glue after a reservation and after a start, and
+reopen the store. The budget comes back with the same revision, head, counts and
+original clocks. A spent request is never reserved or dispatched again, and an
+interrupted effect is closed by recovery without a published result. A worker that
+fails, times out or becomes uncertain keeps its spent visit. An expiry or a
+cancellation is retained and survives reopening. A second run of the same task, or a
+second owner of the same store, is refused. The native worker stays synthetic.
 
 ## Acyclic artifact publication
 

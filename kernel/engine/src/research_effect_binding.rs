@@ -15,7 +15,7 @@ use sha2::{Digest, Sha256};
 use crate::authority_transaction::EffectAuthorization;
 use crate::research_fetch::{PreparedPublicGet, PublicGetDraft, PublicGetWorkerPacket};
 
-const MAX_ARGUMENT_BYTES: usize = 16 * 1024;
+pub(crate) const MAX_ARGUMENT_BYTES: usize = 16 * 1024;
 const MAX_CALL_BYTES: usize = 128 * 1024;
 
 /// Content-free binding refusal. No rejected arguments or destination are logged.

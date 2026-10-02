@@ -361,10 +361,7 @@ impl DurableAuthorityRuntime {
         let issued = IssuedPublicGetGrant {
             grant,
             authority_sha256,
-            decision_sha256: Sha256::digest(&decision_bytes)
-                .iter()
-                .map(|byte| format!("{byte:02x}"))
-                .collect(),
+            decision_sha256: sha256_hex(&decision_bytes),
             network: checked.network,
             prepared: checked.prepared,
         };
@@ -390,6 +387,15 @@ impl DurableAuthorityRuntime {
         let definition = registry
             .get_tool(&call.tool_id, &call.tool_version)
             .ok_or(PublicGetGrantError::Call)?;
+        // The argument bytes are bounded and bound to their digest before they
+        // are decoded (Decision 0140, note N2); the call validation below
+        // repeats both checks against the prepared packet.
+        if call.arguments.bytes.is_empty()
+            || call.arguments.bytes.len() > crate::research_effect_binding::MAX_ARGUMENT_BYTES
+            || sha256_hex(&call.arguments.bytes) != call.arguments.sha256
+        {
+            return Err(PublicGetGrantError::Call);
+        }
         let request: PublicGetDraft =
             serde_json::from_slice(&call.arguments.bytes).map_err(|_| PublicGetGrantError::Call)?;
         let result = {
@@ -413,4 +419,11 @@ impl DurableAuthorityRuntime {
             .map_err(|_| PublicGetGrantError::Call)?;
         Ok(checked)
     }
+}
+
+fn sha256_hex(bytes: &[u8]) -> String {
+    Sha256::digest(bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
 }

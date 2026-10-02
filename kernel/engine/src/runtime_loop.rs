@@ -733,6 +733,10 @@ const RESEARCH_ADMISSION_VERSION: u16 = 1;
 /// Artifacts a successful public GET completion prepares (Decision 0097): four
 /// source objects, the tool result and the bundle.
 const PUBLIC_GET_COMPLETION_ARTIFACTS: usize = 6;
+/// Unresolved code of a cancelled admitted run whose budget cancellation the
+/// owner did not confirm (Decision 0140).
+const RESEARCH_BUDGET_CANCELLATION_UNCONFIRMED: &str =
+    "runtime.research.budget_cancellation_unconfirmed";
 
 /// One run's explicit research admission (Decision 0137): the exact plan, the
 /// budget context and the one public GET tool the run may use.
@@ -883,6 +887,16 @@ pub trait RuntimeResearchBudgetPort {
         plan: &RuntimeArtifactRef,
         scope: &crate::research_budget::ResearchScope,
         now_epoch_ms: u64,
+    ) -> Result<crate::research_journal::ResearchBudgetState, RuntimePortFailure>;
+
+    /// Cancels the task budget of an admitted run that observed a cancellation
+    /// and returns the owner's projection of it (Decision 0140). Cancelling a
+    /// budget that is already cancelled is not an error. This does not claim
+    /// that any effect was undone.
+    fn cancel_research_budget(
+        &mut self,
+        request: &RuntimeRunRequest,
+        context: &crate::research_journal::ResearchBudgetContext,
     ) -> Result<crate::research_journal::ResearchBudgetState, RuntimePortFailure>;
 }
 
@@ -1222,6 +1236,14 @@ struct RuntimeResearchRun<T> {
         u64,
     )
         -> Result<crate::research_journal::ResearchBudgetState, RuntimePortFailure>,
+    cancel_budget: fn(
+        &mut T,
+        &RuntimeRunRequest,
+        &crate::research_journal::ResearchBudgetContext,
+    )
+        -> Result<crate::research_journal::ResearchBudgetState, RuntimePortFailure>,
+    /// The plan the run published, once the owner opened its budget for it.
+    plan: Option<RuntimeArtifactRef>,
 }
 
 fn open_research_budget<T: RuntimeResearchBudgetPort>(
@@ -1233,6 +1255,14 @@ fn open_research_budget<T: RuntimeResearchBudgetPort>(
     now_epoch_ms: u64,
 ) -> Result<crate::research_journal::ResearchBudgetState, RuntimePortFailure> {
     port.open_research_budget(request, context, plan, scope, now_epoch_ms)
+}
+
+fn cancel_research_budget<T: RuntimeResearchBudgetPort>(
+    port: &mut T,
+    request: &RuntimeRunRequest,
+    context: &crate::research_journal::ResearchBudgetContext,
+) -> Result<crate::research_journal::ResearchBudgetState, RuntimePortFailure> {
+    port.cancel_research_budget(request, context)
 }
 
 /// One reusable, interface-neutral runtime coordinator.
@@ -1487,6 +1517,8 @@ where
             Some(RuntimeResearchRun {
                 admission,
                 open_budget: open_research_budget::<T>,
+                cancel_budget: cancel_research_budget::<T>,
+                plan: None,
             }),
         )
     }
@@ -2037,7 +2069,37 @@ where
         {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
         }
+        if let Some(run) = self.research.as_mut() {
+            run.plan = Some(plan);
+        }
         Ok(())
+    }
+
+    /// Decision 0140: an admitted run that observed a cancellation, by any
+    /// path, has the trusted port cancel its task budget before the outcome
+    /// is sealed. The coordinator accepts only the owner's description of the
+    /// published plan, the admission's scope and a cancelled budget; otherwise
+    /// it returns the code the outcome names. The run still ends, and nothing
+    /// claims that an effect was undone.
+    fn cancel_research_budget(&mut self) -> Option<&'static str> {
+        let run = self.research.as_ref()?;
+        let plan = run.plan.as_ref()?;
+        if !self
+            .events
+            .iter()
+            .any(|event| matches!(event.kind, RuntimeEventKind::CancellationObserved { .. }))
+        {
+            return None;
+        }
+        let confirmed = (run.cancel_budget)(
+            &mut self.tool_boundary,
+            &self.request,
+            run.admission.context(),
+        )
+        .is_ok_and(|state| {
+            &state.plan == plan && &state.scope == run.admission.scope() && state.progress.cancelled
+        });
+        (!confirmed).then_some(RESEARCH_BUDGET_CANCELLATION_UNCONFIRMED)
     }
 
     fn run_turn(
@@ -4251,6 +4313,9 @@ where
                 None,
                 None,
             )?;
+        }
+        if let Some(code) = self.cancel_research_budget() {
+            unresolved_codes.push(code.to_owned());
         }
         unresolved_codes.sort();
         unresolved_codes.dedup();

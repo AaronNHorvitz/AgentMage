@@ -9,6 +9,7 @@ use std::collections::{BTreeMap, VecDeque};
 use std::io::{Cursor, Read};
 use std::path::PathBuf;
 use std::rc::Rc;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use super::*;
 use crate::authority_transaction::AuthorityTransactionRequest;
@@ -40,6 +41,9 @@ use agentmage_kernel_contracts::{
     Receipt, RuntimeArtifactId, RuntimeEventId, RuntimeTurnId, ToolCallId, ValidationIssue,
     ValidationSeverity,
 };
+
+#[path = "runtime_loop_research_persistence_tests.rs"]
+mod persistence_tests;
 
 const TOOL: &str = "research.public-get";
 /// The plan names three domains; the policy admits only the first two.
@@ -86,6 +90,22 @@ enum Fault {
     CancelBeforeIssue,
     /// The glue reserves the request itself before it issues.
     ReserveBeforeIssue,
+    /// While the first effect is pending, the glue sends the owner one changed
+    /// request, records the refusal, and then commits the terminal as usual.
+    ProbeWhilePending(Probe),
+    /// After its first issuance the glue moves the coordinator's clock past
+    /// the plan's elapsed limit (Decision 0140).
+    ExpireAfterIssue,
+    /// The glue reserves the first request and then stops before its start,
+    /// as if its process ended.
+    InterruptAfterReservation,
+    /// The glue begins the first effect and stops before it commits the
+    /// terminal, as if its process ended.
+    InterruptAfterStart,
+    /// The synthetic worker reports this outcome after it checks both proofs.
+    /// For a cancellation the person's request arrives during the effect: the
+    /// glue raises the run's cancellation before it dispatches.
+    WorkerOutcome(OperationOutcome),
 }
 
 /// One change to an otherwise valid issuance request (Decision 0139).
@@ -125,6 +145,76 @@ enum Probe {
     AfterDeadline,
     /// An issuance instant before the packet was prepared.
     BeforePreparation,
+    /// The budget context of another run of the same task (review F1).
+    AnotherRunContext,
+    /// The budget context of another session (review F1).
+    AnotherSessionContext,
+    /// The budget context under another policy digest (review F1).
+    AnotherPolicyContext,
+    /// Argument bytes one byte over the call validator's bound, bound to their
+    /// own digest (review note N2).
+    OversizedArguments,
+    /// A valid request for another call of the run, under the run's next
+    /// action.
+    AnotherCall,
+}
+
+/// The private directory of one test's canonical store. It is removed when it
+/// is dropped, also when the test panics, and its name carries the clock, so a
+/// later run whose process id was recycled never meets a leftover directory
+/// (review note N8).
+struct StoreDirectory(PathBuf);
+
+impl StoreDirectory {
+    fn create() -> Self {
+        let sequence = NEXT_DIRECTORY.fetch_add(1, Ordering::Relaxed);
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_or(0, |elapsed| elapsed.as_nanos());
+        let path = std::env::temp_dir().join(format!(
+            "agentmage-research-completion-{}-{sequence}-{nanos}",
+            std::process::id()
+        ));
+        fs::create_dir(&path).unwrap();
+        Self(path)
+    }
+
+    fn store(&self) -> PathBuf {
+        self.0.join("authority.db")
+    }
+}
+
+impl Drop for StoreDirectory {
+    fn drop(&mut self) {
+        let _ = fs::remove_dir_all(&self.0);
+    }
+}
+
+/// The coordinator's kernel clock, one millisecond later at each reading. The
+/// trusted glue holds a copy, so a fault can move time forward.
+#[derive(Clone)]
+struct SharedClock(Arc<AtomicU64>);
+
+impl RuntimeClock for SharedClock {
+    fn now_epoch_ms(&mut self) -> Result<u64, RuntimePortFailure> {
+        Ok(self.0.fetch_add(1, Ordering::SeqCst) + 1)
+    }
+}
+
+/// The person's cancellation of the run's task, which the probe reports once
+/// it is raised.
+struct RaisedCancellation {
+    raised: Arc<AtomicBool>,
+    signal: CancellationSignal,
+}
+
+impl agentmage_kernel_contracts::ModelCancellationProbe for RaisedCancellation {
+    fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+        Ok(self
+            .raised
+            .load(Ordering::SeqCst)
+            .then(|| self.signal.clone()))
+    }
 }
 
 struct TestKey;
@@ -437,8 +527,10 @@ struct Attempt {
 /// the completion through the coordinator's borrowed builder and commits its
 /// terminal. Every event and artifact goes through the canonical store.
 struct OwnerPort {
-    directory: PathBuf,
     authority: DurableAuthorityRuntime,
+    /// Declared after the owner, so the owner closes before its directory is
+    /// removed.
+    directory: StoreDirectory,
     payloads: MemoryPayloads,
     registry: ToolRegistry,
     policy: PolicyEngine,
@@ -460,6 +552,12 @@ struct OwnerPort {
     receipt_artifacts: usize,
     /// Checkpoint descriptions only; the canonical store commits them.
     checkpoints: FakeToolBoundary,
+    /// The coordinator's clock.
+    clock: SharedClock,
+    /// The person's cancellation of the run, raised by a worker fault.
+    cancellation: Arc<AtomicBool>,
+    /// Budget cancellations the coordinator asked for.
+    budget_cancellations: usize,
 }
 
 fn failure(_error: DurableAuthorityError) -> RuntimePortFailure {
@@ -622,6 +720,11 @@ impl OwnerPort {
                 )
                 .err();
         }
+        if self.fault == Fault::ExpireAfterIssue && first {
+            // The plan allows this long from the budget's opening.
+            let elapsed = ResearchLimits::ceiling(ResearchDepth::Quick).elapsed_ms;
+            self.clock.0.fetch_add(elapsed, Ordering::SeqCst);
+        }
         let (grant, prepared) = issued.into_parts();
         let ordinal = self.attempts.len() + 1;
         self.attempts.push(Attempt {
@@ -665,6 +768,7 @@ impl OwnerPort {
         now_epoch_ms: u64,
     ) -> PublicGetGrantError {
         let mut call = call.clone();
+        let mut context = self.context.clone();
         let mut authorization = authorization.clone();
         let mut parent = self.parent_grant.clone();
         let mut nonce = GrantNonce::from_raw("probe-nonce");
@@ -733,6 +837,27 @@ impl OwnerPort {
             Probe::ReusedNonce => nonce = GrantNonce::from_raw("research-parent-nonce"),
             Probe::AfterDeadline => now = prepared_at_epoch_ms + 1_000,
             Probe::BeforePreparation => now = prepared_at_epoch_ms - 1,
+            Probe::AnotherRunContext => {
+                context.run_id = RuntimeRunId::from_raw("runtime-run-other")
+            }
+            Probe::AnotherSessionContext => {
+                context.session_id = SessionId::from_raw("session-other");
+            }
+            Probe::AnotherPolicyContext => context.policy_sha256 = sha256(b"another policy"),
+            Probe::OversizedArguments => {
+                // Valid JSON for the same request, padded past the bound.
+                let mut bytes =
+                    serde_json::to_vec(&draft(call.tool_call_id.as_str(), "/guide")).unwrap();
+                bytes.resize(crate::research_effect_binding::MAX_ARGUMENT_BYTES + 1, b' ');
+                call.arguments.sha256 = sha256(&bytes);
+                call.arguments.bytes = bytes;
+            }
+            Probe::AnotherCall => {
+                let request = draft("public-get-other", "/reference");
+                call.tool_call_id = ToolCallId::from_raw("public-get-other");
+                call.action_id = runtime_action_id(&self.context.run_id, 2);
+                reencode(&mut call, &request);
+            }
         }
         let policy = if probe == Probe::AnotherPolicy {
             &self.other_policy
@@ -745,7 +870,7 @@ impl OwnerPort {
                 &self.registry,
                 policy,
                 PublicGetGrantRequest {
-                    context: &self.context,
+                    context: &context,
                     call: &call,
                     parent_grant_id: &parent,
                     authorization,
@@ -789,7 +914,7 @@ impl OwnerPort {
     fn reopen(mut self, now: u64) -> Self {
         drop(self.authority);
         self.authority = DurableAuthorityRuntime::open(
-            &self.directory.join("authority.db"),
+            &self.directory.store(),
             &observation(),
             &mut TestKey,
             now,
@@ -798,9 +923,11 @@ impl OwnerPort {
         self
     }
 
+    /// Closes the owner and removes its directory.
     fn close(self) {
-        drop(self.authority);
-        fs::remove_dir_all(self.directory).unwrap();
+        let path = self.directory.0.clone();
+        drop(self);
+        assert!(!path.exists(), "the test store is removed");
     }
 }
 
@@ -923,6 +1050,20 @@ impl RuntimeResearchBudgetPort for OwnerPort {
     ) -> Result<ResearchBudgetState, RuntimePortFailure> {
         self.authority
             .open_research_budget(&self.payloads, context, plan, scope, now_epoch_ms)
+            .map_err(failure)?;
+        self.authority
+            .research_budget_state(context)
+            .map_err(failure)
+    }
+
+    fn cancel_research_budget(
+        &mut self,
+        _request: &RuntimeRunRequest,
+        context: &ResearchBudgetContext,
+    ) -> Result<ResearchBudgetState, RuntimePortFailure> {
+        self.budget_cancellations += 1;
+        self.authority
+            .cancel_research_budget(context)
             .map_err(failure)?;
         self.authority
             .research_budget_state(context)
@@ -1061,6 +1202,11 @@ impl RuntimeCorrectnessTransactionPort for OwnerPort {
             .map_err(failure)?;
         let reservation_sha256 = reservation.reservation_sha256().to_owned();
         self.attempts[index].reservation_sha256 = Some(reservation_sha256.clone());
+        if self.fault == Fault::InterruptAfterReservation && index == 0 {
+            // The process ends here: the spent reservation's proof is lost.
+            drop(reservation);
+            return Err(RuntimePortFailure::Uncertain);
+        }
         let attempt = &self.attempts[index];
         let request = AuthorityTransactionRequest::new(
             attempt.transaction_id.clone(),
@@ -1096,11 +1242,19 @@ impl RuntimeCorrectnessTransactionPort for OwnerPort {
         .map_err(|_| RuntimePortFailure::Invalid)?;
         let prepared = Rc::clone(&attempt.prepared);
         let transaction_id = attempt.transaction_id.clone();
+        let outcome = match self.fault {
+            Fault::WorkerOutcome(outcome) => outcome,
+            _ => OperationOutcome::Succeeded,
+        };
+        if outcome == OperationOutcome::Cancelled {
+            self.cancellation.store(true, Ordering::SeqCst);
+        }
         let mut driver = SyntheticNativeResearchDriver {
             packet: prepared.packet(),
             native: self.native.clone(),
             body: BODY,
             now,
+            outcome,
             calls: 0,
             binding: None,
         };
@@ -1120,6 +1274,55 @@ impl RuntimeCorrectnessTransactionPort for OwnerPort {
         );
         self.attempts[index].driver_calls = driver.calls;
         let (receipt, pending) = begun.map_err(failure)?;
+        match self.fault {
+            Fault::ProbeWhilePending(probe) if index == 0 => {
+                self.refusal =
+                    Some(self.probe(probe, call, &PublicGetAuthorization::TaskPlan, now, now));
+            }
+            Fault::InterruptAfterStart if index == 0 => {
+                // The process ends with the effect's terminal still pending.
+                self.attempts[index].receipt = Some(receipt);
+                drop(pending);
+                return Err(RuntimePortFailure::Uncertain);
+            }
+            _ => {}
+        }
+        if receipt.outcome != OperationOutcome::Succeeded {
+            // A worker that did not succeed seals no result. The owner's
+            // receipt closes the effect with an attempt that retained nothing.
+            let execution = RuntimeToolExecution {
+                receipt_id: receipt.receipt_id.clone(),
+                receipt_sha256: receipt.receipt_sha256.clone(),
+                result: ToolResult {
+                    schema_version: CONTRACT_SCHEMA_VERSION,
+                    tool_call_id: call.tool_call_id.clone(),
+                    correlation_id: call.correlation_id.clone(),
+                    outcome: receipt.outcome,
+                    output: None,
+                    validation_issues: Vec::new(),
+                    evidence: Vec::new(),
+                    error: None,
+                    elapsed_ms: 0,
+                    state_change: if receipt.outcome == OperationOutcome::Uncertain {
+                        StateChange::Uncertain
+                    } else {
+                        StateChange::NotChanged
+                    },
+                },
+                result_output_kind: None,
+                artifact_candidates: Vec::new(),
+            };
+            let terminal = build_terminal_event.build_terminal_event(&execution)?;
+            let events = self
+                .authority
+                .finish_effect_with_runtime_event(pending, terminal)
+                .map_err(failure)?;
+            self.attempts[index].receipt = Some(receipt);
+            return Ok(RuntimeToolCorrectnessCommit {
+                execution,
+                events: events.to_vec(),
+            });
+        }
         let binding = driver.binding.ok_or(RuntimePortFailure::Uncertain)?;
         let transaction = self
             .authority
@@ -1262,7 +1465,7 @@ fn mutate_terminal(mut terminal: RuntimeEvent, mutation: u8) -> RuntimeEvent {
 }
 
 type OwnerCoordinator =
-    ReusableRuntimeCoordinator<PublicGetModel, FakeContext, OwnerPort, FakeVerifier, FakeClock>;
+    ReusableRuntimeCoordinator<PublicGetModel, FakeContext, OwnerPort, FakeVerifier, SharedClock>;
 
 fn rules<T: Ord>(values: impl IntoIterator<Item = T>) -> ScopeRules<T> {
     ScopeRules {
@@ -1342,19 +1545,9 @@ fn compose(
     parent_expires_at: u64,
     drafts: Vec<PublicGetDraft>,
 ) -> OwnerCoordinator {
-    let sequence = NEXT_DIRECTORY.fetch_add(1, Ordering::Relaxed);
-    let directory = std::env::temp_dir().join(format!(
-        "agentmage-research-completion-{}-{sequence}",
-        std::process::id()
-    ));
-    fs::create_dir(&directory).unwrap();
-    let mut authority = DurableAuthorityRuntime::open(
-        &directory.join("authority.db"),
-        &observation(),
-        &mut TestKey,
-        1,
-    )
-    .unwrap();
+    let directory = StoreDirectory::create();
+    let mut authority =
+        DurableAuthorityRuntime::open(&directory.store(), &observation(), &mut TestKey, 1).unwrap();
     let registry = public_get_registry();
     let profile = profile("runtime-loop-research-completion");
     let mut request = request(profile.clone(), &registry);
@@ -1466,9 +1659,10 @@ fn compose(
         .map(|_| ModelScript::Tool)
         .chain([ModelScript::Completion])
         .collect();
+    let clock = SharedClock(Arc::new(AtomicU64::new(9_000)));
     let port = OwnerPort {
-        directory,
         authority,
+        directory,
         payloads: MemoryPayloads::default(),
         registry: public_get_registry(),
         policy,
@@ -1488,6 +1682,9 @@ fn compose(
         other_policy,
         receipt_artifacts: 0,
         checkpoints: boundary(PermissionScript::Allow, &executions),
+        clock: clock.clone(),
+        cancellation: Arc::new(AtomicBool::new(false)),
+        budget_cancellations: 0,
     };
     ReusableRuntimeCoordinator::new_with_research_admission(
         request,
@@ -1502,7 +1699,7 @@ fn compose(
             verifier_id: VerifierId::from_raw("verifier-research-completion"),
             source: VerifierSource::DeterministicPostcondition,
         },
-        FakeClock { now: 9_000 },
+        clock,
         admission,
     )
     .unwrap()
@@ -1970,6 +2167,22 @@ fn the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize() {
             Probe::BeforePreparation,
             Refusal::Research(crate::research_journal::ResearchJournalError::Binding),
         ),
+        // Review F1 of `f0e85caa`: only the budget owner's context match
+        // refuses another run; another session or policy would otherwise
+        // reach the parent or policy clause.
+        (
+            Probe::AnotherRunContext,
+            Refusal::Research(crate::research_journal::ResearchJournalError::Binding),
+        ),
+        (
+            Probe::AnotherSessionContext,
+            Refusal::Research(crate::research_journal::ResearchJournalError::Binding),
+        ),
+        (
+            Probe::AnotherPolicyContext,
+            Refusal::Research(crate::research_journal::ResearchJournalError::Binding),
+        ),
+        (Probe::OversizedArguments, Refusal::Call),
     ];
     for (probe, expected) in task_plan {
         let mut runtime = admitted_run(Fault::Probe(probe), one_get());
@@ -2016,6 +2229,33 @@ fn the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize() {
         assert_nothing_issued_by_probe(&mut port, 1, 1);
         port.close();
     }
+}
+
+#[test]
+fn the_owner_issues_nothing_while_an_effect_is_pending() {
+    // Review F1 of `f0e85caa`: a valid request for the run's next call, sent
+    // while the first effect's terminal is pending, is refused before the
+    // budget owner is asked, and the pending effect still completes.
+    let mut runtime = admitted_run(Fault::ProbeWhilePending(Probe::AnotherCall), one_get());
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        runtime.run_until_boundary(None, None).unwrap()
+    else {
+        panic!("the pending effect completes after the refused issuance");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    let mut port = runtime.tool_boundary;
+    assert_eq!(
+        port.refusal,
+        Some(PublicGetGrantError::Authority(
+            DurableAuthorityError::Poisoned
+        ))
+    );
+    assert_eq!(
+        completed_calls(&mut port),
+        [ToolCallId::from_raw("public-get-1")]
+    );
+    assert_nothing_issued_by_probe(&mut port, 1, 1);
+    port.close();
 }
 
 #[test]

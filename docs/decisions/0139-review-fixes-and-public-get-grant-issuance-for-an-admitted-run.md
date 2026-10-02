@@ -100,8 +100,9 @@ it checks the following in order, and it refuses the first one that fails.
      approved preview must be the packet's digest.
 6. The policy is the run's policy.
 7. The parent belongs to the run's session and task. Its preview is the
-   digest of the plan's full canonical bytes. This means the person confirmed
-   this exact plan when the parent was issued.
+   digest of the plan's full canonical bytes. The trusted host attests that
+   this is the plan the person confirmed when the parent was issued.
+   (Corrected under Decision 0140, note N1 of the review of `f0e85caa`.)
 8. The call's action holds no grant yet, in any state. A call receives at most
    one grant.
 9. The existing issuer derives the child grant. The parent must be a session
