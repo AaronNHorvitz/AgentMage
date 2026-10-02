@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "stage": "batch25-observation",
+  "source_revision": "602a60df63dad26139e40caa7be24db8fca42544",
+  "scope": "Batch 25 actual CLI and catalog host observation at the clean evidence revision",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch25-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "f57035a10ea5a9f663b20674d9529912bf4547ea576c0c7c91929921436593b4",
+      "private_sha256": "f57035a10ea5a9f663b20674d9529912bf4547ea576c0c7c91929921436593b4"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 7.013,
+      "log": "01.log",
+      "log_sha256": "0c853cce149e6b8158d12d10fe7dc2334e4c4445ab19f3cc4372f25add1f4e59",
+      "private_log_sha256": "118c7ec6211ea17260a3218870db1e601032f0a7de02ea521e65b020c77b17b7"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch25-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 179.051,
+      "log": "02.log",
+      "log_sha256": "47f5ec38d825a790ac95dd3ddfca434d54319817d55a68b822622278481eef0c",
+      "private_log_sha256": "47f5ec38d825a790ac95dd3ddfca434d54319817d55a68b822622278481eef0c"
+    }
+  ]
+}

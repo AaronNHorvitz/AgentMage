@@ -1,0 +1,294 @@
+{
+ "record_type": "agentmage-review-fixes-and-research-persistence-verification",
+ "date": "2026-10-01",
+ "base_commit": "f0e85caa31a2be8fa32789e8bf4c214355129857",
+ "head_commit": "602a60df63dad26139e40caa7be24db8fca42544",
+ "source_commit": "39543f503ceb2f49adbcfd5e6becf5d9e73af03b",
+ "retained_logs": "artifacts/verification-logs/review-fixes-and-research-persistence-2026-10-01",
+ "stages": [
+  "batch25-source",
+  "batch25-core",
+  "batch25-rebind",
+  "batch25-gate",
+  "batch25-boundary",
+  "batch25-security-index",
+  "batch25-blocked-causes",
+  "batch25-extended-rest",
+  "batch25-observation"
+ ],
+ "inventory": "artifacts/verification-logs/review-fixes-and-research-persistence-2026-10-01/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch25-source/02.log",
+  "engine": "batch25-source/03.log",
+  "repository_map": "batch25-source/04.log",
+  "inference": "batch25-source/05.log",
+  "knowledge": "batch25-source/06.log",
+  "linux": "batch25-source/07.log",
+  "linux_research_feature_build": "batch25-source/08.log",
+  "linux_research_feature_tests": "batch25-source/09.log",
+  "host": "batch25-source/10.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0140-review-fixes-and-research-persistence-through-the-coordinator.md"
+  ],
+  "source_commits": [
+   {
+    "commit": "39543f503ceb2f49adbcfd5e6becf5d9e73af03b",
+    "scope": "Decision 0140: review F1 (composed probes send budget contexts of another run, another session and another policy digest, refused as binding errors by the budget owner, and a valid request for the run's next call while the first effect is pending, refused as unusable while the effect completes), N1 (Decision 0139 step 7 and the canonical research source document: the trusted host attests that the parent's preview is the confirmed plan), N2 (the owner bounds the argument bytes and checks their digest before decoding them; an oversized-arguments probe) and N8 (the composed test's store directory carries the clock in its name and is removed on drop, after the owner closes, also on panic); AMR-03.1.1: RuntimeResearchBudgetPort::cancel_research_budget, the coordinator cancels the task budget of an admitted run that observed a cancellation before it seals the outcome and names runtime.research.budget_cancellation_unconfirmed when the owner does not confirm it, the synthetic native worker can report a non-success outcome, and a new composed persistence module; the coordinator and canonical research source architecture documents and LOCAL-TESTING"
+   }
+  ],
+  "review_resolved": "f0e85caa31a2 (PASS; finding F1 low; notes N1, N2 and N8), by Decision 0140",
+  "components": [
+   {
+    "row": "AMR-03.1.1",
+    "scope": "component row, engine only: full plans and conservative research reservations persist through the existing owner before the effect starts, composed through the real coordinator and the real owners. The coordinator publishes the plan and has its budget opened at start; the trusted port reserves each request before it begins the effect; when an admitted run observes a cancellation the coordinator has the port cancel the task budget before sealing the outcome and accepts only a cancelled budget for the published plan and scope. Composed cases: interruption after a reservation and after a start, recovered on reopening with the same revision, head, counts and original clocks and without replay; rolled-back and late clocks retained as the budget's end; failed, timed-out and uncertain workers keep their spent visit; cancellation before, between and during requests; expiry between issuance and start; one budget per task and one owner per store. The native result is synthetic and the payload store is in memory; no host, worker, provider, model or network takes part, and the native dispatch stays with AMR-03.1.2 and AMR-03.2.3"
+   }
+  ],
+  "mutation_checks": "run on the exact source tree before it was committed, with private tooling that applies one exact replacement, runs the engine's filtered library tests (research_admission_tests) and restores the file; the specification and results are attached to the batch25-source stage. One run of 15 single mutations, 14 caught: the budget owner's context match and the issuance owner's usability check (review F1); the coordinator's budget cancellation call, the unconfirmed code, the cancelled, plan and scope checks of the owner's answer, a port failure taken as confirmed, cancelling without an observed cancellation and the kept plan reference; the owner's durable cancellation, its retained restriction on a refused reservation and its persisted reservation; and the synthetic worker's outcome. The one survivor is the N2 reorder, equivalent by design (the non-spending check writes nothing, so the refusal is the same call mismatch either way). The tree was verified identical afterwards, and no test store directory was left behind",
+  "failure_comparison": "linux 189 passed, 19 failed, 51 ignored, failure names identical to batch 24; with the public-research-worker feature the Linux crate's tests build and its research tests pass (12 passed, 6 ignored native); host 474 passed, 53 failed, 11 ignored, failure names identical to batch 24; the engine passes 1,520 tests (13 new: three synthetic coordinator cases, one composed issuance case and nine composed persistence cases), knowledge 302",
+  "retained_failures": [
+   {
+    "stage": "batch25-source",
+    "indexes": [
+     7,
+     10
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, with failure names identical to batch 24"
+   },
+   {
+    "stage": "batch25-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "interrupted_stages": [],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch25-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the native-prerequisite host failures (batch25-source/10.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch25-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch25-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch25-blocked-causes/03.log) and the documentation gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+    "stale_since": "before batch 12 (four other inputs)",
+    "blocker": "its producer runs the full host suite (the native-prerequisite failures, batch25-source/10.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the product gate and the documentation gate; its check mode still validates it at its own revision (batch25-extended-rest/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the full host suite with all features; its check mode still validates it at its own revision (batch25-extended-rest/02.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
+    "stale_since": "before batch 18 (shells/host/src/headless.rs)",
+    "blocker": "already stale at the review base for an input this batch does not change; historical"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-kernel-engine"
+  ],
+  "cascade": "the one SBOM write staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index and security map, the Story 3.1 component inventory, configuration startup report and security map and the Sprint 27 to 34 knowledge boundary reviews (batch25-core) and the Sprint 79 and Sprint 108 reports (batch25-rebind); the coordinator change staled the Story 13.4 dispatch preflight report (batch25-core), the Story 11.2 AC2 report (batch25-rebind), the Story 11.2 gate report and the Story 23.4 runtime evidence (batch25-gate), the Story 23.4 coordinator boundary review and the Sprint 50 runtime contract review (batch25-boundary) and the Story 23.4 security map and evidence index (batch25-security-index); every kernel change staled the Muse codec chain and the Sprint 13 report, and through them the Story 13.4 context profile report (batch25-rebind); the renewed component inventory staled the Story 11.1 security map and through it the Story 11.2 storage security, frozen-scope, AC1 and AC3 reports and the Story 12.1 map (batch25-rebind). The operational store and research journal did not change, so the store wave and the Story 22.1 canary sweep were not stale",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "6ed5aa0c632cab6b62fa3e55fe9090f8f15c137e",
+    "to": "0e42648096b73f8559b860eadbc7272fb097721f",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "reason": "Decision 0140 source change in 39543f50: the research budget port gains cancel_research_budget, the coordinator keeps the published plan's reference after the budget opens and, before sealing the outcome of an admitted run that observed a cancellation, has the port cancel the task budget and names runtime.research.budget_cancellation_unconfirmed when the owner does not confirm it; no operational store, schema or migration path changes"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 25 rebind stage; only the bound digest of artifacts/sprints/sprint-11/story-11.1/security-evidence-map.json (renewed in the same stage) changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 25 rebind stage; only the bound digest of artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "reason": "regenerated by the batch 25 rebind stage; only the bound digests of kernel/engine/src/runtime_loop.rs and of its own results log, and that log's byte length, changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 25 rebind stage; only the bound digest of artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json changed"
+     }
+    ]
+   }
+  ],
+  "newly_stale_disposition": "only historical records: two retained batch 24 stage records that bind the Story 11.2 gate script, and six dated verification records of 2026-09-28 that bind the research effect binding or the research dispatch module as they were at their own revisions (each was already stale through other inputs)",
+  "runtime_campaign": "renewed: the Story 23.4 runtime evidence (batch25-gate) and the coordinator boundary review, the Sprint 50 runtime contract review, the security map and the evidence index (batch25-boundary, batch25-security-index)",
+  "cli_observation": {
+   "source_commit": "602a60df63dad26139e40caa7be24db8fca42544",
+   "binaries_sha256": {
+    "agentmage": "b8d477f4ce6d8ff791d481cb6a6a8c386df71d87a4d75a22e8a7c21a3ff84a7b",
+    "agentmage-host": "d126214ef01b329678a59e1fa77bd4e17db908a7607142108890609303b85ea9",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "catalog_host_operations": [
+    {
+     "name": "doc-pack-list-empty",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import-other-license",
+     "operation": "doc-pack",
+     "exit_code": 4
+    },
+    {
+     "name": "doc-pack-search",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-inspect",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember-credential",
+     "operation": "memory",
+     "exit_code": 4
+    },
+    {
+     "name": "memory-list",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-revoke",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-delete",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-signer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-issuer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-install",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-1",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-renamed",
+     "operation": "extension",
+     "exit_code": 3
+    },
+    {
+     "name": "extension-list",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "ended-run-read",
+     "operation": "ended-run",
+     "exit_code": 0
+    }
+   ],
+   "catalog_host_wire_refusals_seen": false,
+   "catalog_workspace_preserved": true,
+   "recipe_shown_before_launch": {
+    "exit_code": 5,
+    "then_refused_at": "linux.repository.git_artifact.invalid",
+    "preserved": true
+   },
+   "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+   },
+   "malformed_frame_injected": false,
+   "research_admission_composed_by_an_actual_process": false,
+   "qualification": "actual-binary-catalog-host-operations-under-exact-wire-decoding-plus-native-prerequisite-refusal"
+  },
+  "not_run": [
+   "any host, worker, provider or model composing the research admission, issuing its grants or cancelling its budget; no actual process composes it, and no network operation was admitted in an actual process",
+   "where a host shows the plan or the exact request to the person; the parent's plan digest and the approval's preview are the trusted host's attestations, as for every approval digest",
+   "a host's reconciliation of a run whose start was refused or interrupted (the run has no terminal; every port failure needs it)",
+   "the native adversarial matrix and the provider and model campaign (AMR-03.2.3, AMR-03.2.4) and the native boundary of AMR-03.1.2",
+   "the two native Linux dispatch tests that commit terminals through the owner: compiled with the feature, not run (they need the native DNS, HTTP and model fixtures)",
+   "resuming an admitted run (refused by design)",
+   "the native-only Linux boundary tests and the factory's composition glue",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [
+    {
+     "row": "AMR-03.1.1",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component row, engine only: plans and reservations persisted through the real coordinator and owners before the start, with recovery, original clocks, terminal cancellation and expiry, failed attempts, one budget per task and one owner per store; no host, worker, provider, model or network"
+    }
+   ],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested after the ledger commit; open"
+  }
+ }
+}

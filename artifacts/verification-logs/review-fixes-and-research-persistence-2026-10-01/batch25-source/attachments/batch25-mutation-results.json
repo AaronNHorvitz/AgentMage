@@ -1,0 +1,187 @@
+[
+  {
+    "id": "F1a-context-match",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F1b-owner-usable",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_issues_nothing_while_an_effect_is_pending",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_issues_nothing_while_an_effect_is_pending"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "N2-bound-before-decode-equivalent",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+    "caught": false,
+    "also_failed": true,
+    "failed": [],
+    "compile_error": false
+  },
+  {
+    "id": "C1-no-budget-cancellation",
+    "expected": "runtime_loop::tests::research_admission_tests::a_cancelled_admitted_run_cancels_its_budget_before_its_outcome",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::a_cancelled_admitted_run_cancels_its_budget_before_its_outcome",
+      "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_cancellation_after_a_completed_request_keeps_the_spent_visit",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_cancellation_during_the_effect_ends_the_run_and_its_budget",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_cancelled_run_cancels_its_budget_durably"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "C2-unconfirmed-not-named",
+    "expected": "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "C3-cancelled-flag",
+    "expected": "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "C4-plan-match",
+    "expected": "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "C5-scope-match",
+    "expected": "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "C6-port-failure-confirmed",
+    "expected": "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "C7-only-after-observation",
+    "expected": "runtime_loop::tests::research_admission_tests::a_run_that_observed_no_cancellation_leaves_its_budget_alone",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::a_run_that_observed_no_cancellation_leaves_its_budget_alone",
+      "runtime_loop::tests::research_admission_tests::completion_tests::a_finished_run_receives_no_grant",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_worker_that_did_not_succeed_keeps_its_spent_visit"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "C8-plan-kept",
+    "expected": "runtime_loop::tests::research_admission_tests::a_cancelled_admitted_run_cancels_its_budget_before_its_outcome",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::a_cancelled_admitted_run_cancels_its_budget_before_its_outcome",
+      "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_cancellation_after_a_completed_request_keeps_the_spent_visit",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_cancellation_during_the_effect_ends_the_run_and_its_budget",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_cancelled_run_cancels_its_budget_durably"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "O1-cancellation-not-durable",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_cancelled_run_cancels_its_budget_durably",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::completion_tests::a_cancelled_budget_or_a_spent_request_receives_no_grant",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_cancellation_after_a_completed_request_keeps_the_spent_visit",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_cancellation_during_the_effect_ends_the_run_and_its_budget",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_cancelled_run_cancels_its_budget_durably"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "O2-restriction-not-retained",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::an_expired_plan_refuses_the_start_and_stays_expired",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_rolled_back_or_late_clock_ends_the_budget_and_the_end_survives_reopening",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::an_expired_plan_refuses_the_start_and_stays_expired"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "O3-reservation-not-persisted",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_reservation_is_durable_before_the_start_and_survives_an_interruption",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::completion_tests::a_call_receives_at_most_one_grant",
+      "runtime_loop::tests::research_admission_tests::completion_tests::a_cancelled_budget_or_a_spent_request_receives_no_grant",
+      "runtime_loop::tests::research_admission_tests::completion_tests::a_finished_run_receives_no_grant",
+      "runtime_loop::tests::research_admission_tests::completion_tests::a_forged_receipt_is_refused_before_preparation_and_nothing_is_published",
+      "runtime_loop::tests::research_admission_tests::completion_tests::a_grant_expires_no_later_than_its_parent",
+      "runtime_loop::tests::research_admission_tests::completion_tests::a_partial_bundle_is_never_readable_even_after_reopening",
+      "runtime_loop::tests::research_admission_tests::completion_tests::a_receipt_the_owner_did_not_issue_cannot_close_the_effect",
+      "runtime_loop::tests::research_admission_tests::completion_tests::a_stale_receipt_cannot_complete_a_later_attempt",
+      "runtime_loop::tests::research_admission_tests::completion_tests::a_start_must_name_the_packets_own_destination",
+      "runtime_loop::tests::research_admission_tests::completion_tests::an_admitted_public_get_completes_through_the_real_owners_and_reads_back",
+      "runtime_loop::tests::research_admission_tests::completion_tests::an_ask_plan_issues_only_the_grant_the_person_approved",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_cancellation_after_a_completed_request_keeps_the_spent_visit",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_cancellation_during_the_effect_ends_the_run_and_its_budget",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_reservation_is_durable_before_the_start_and_survives_an_interruption",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_rolled_back_or_late_clock_ends_the_budget_and_the_end_survives_reopening",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_task_budget_admits_one_run_and_its_store_one_owner",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_worker_that_did_not_succeed_keeps_its_spent_visit",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::an_interrupted_effect_is_recovered_and_never_dispatched_again",
+      "runtime_loop::tests::research_admission_tests::completion_tests::source_drift_after_publication_is_refused_on_each_read",
+      "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+      "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_issues_nothing_while_an_effect_is_pending",
+      "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+      "runtime_loop::tests::research_admission_tests::completion_tests::the_parent_bounds_how_many_requests_the_person_can_approve"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "D1-worker-outcome-ignored",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_worker_that_did_not_succeed_keeps_its_spent_visit",
+    "caught": true,
+    "also_failed": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_cancellation_during_the_effect_ends_the_run_and_its_budget",
+      "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_worker_that_did_not_succeed_keeps_its_spent_visit"
+    ],
+    "compile_error": false
+  }
+]

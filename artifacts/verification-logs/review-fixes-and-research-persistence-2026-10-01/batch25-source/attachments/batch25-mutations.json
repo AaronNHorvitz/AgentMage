@@ -1,0 +1,227 @@
+[
+ {
+  "id": "F1a-context-match",
+  "file": "kernel/engine/src/research_journal.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+  "replace": [
+   [
+    "    let mut retained = load(store, &context.task_id)?;\n    if !context_matches(&retained.root, context) {\n        return Err(ResearchJournalError::Binding);\n    }\n    let network = retained",
+    "    let mut retained = load(store, &context.task_id)?;\n    let network = retained"
+   ]
+  ]
+ },
+ {
+  "id": "F1b-owner-usable",
+  "file": "kernel/engine/src/research_grant.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_issues_nothing_while_an_effect_is_pending",
+  "replace": [
+   [
+    "        self.ensure_usable()\n            .map_err(PublicGetGrantError::Authority)?;\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "N2-bound-before-decode-equivalent",
+  "file": "kernel/engine/src/research_grant.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+  "replace": [
+   [
+    "        if call.arguments.bytes.is_empty()\n            || call.arguments.bytes.len() > crate::research_effect_binding::MAX_ARGUMENT_BYTES\n            || sha256_hex(&call.arguments.bytes) != call.arguments.sha256\n        {\n            return Err(PublicGetGrantError::Call);\n        }\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "C1-no-budget-cancellation",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::a_cancelled_admitted_run_cancels_its_budget_before_its_outcome",
+  "replace": [
+   [
+    "        if let Some(code) = self.cancel_research_budget() {\n            unresolved_codes.push(code.to_owned());\n        }\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "C2-unconfirmed-not-named",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome",
+  "replace": [
+   [
+    "            unresolved_codes.push(code.to_owned());\n",
+    "            let _ = code;\n"
+   ]
+  ]
+ },
+ {
+  "id": "C3-cancelled-flag",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome",
+  "replace": [
+   [
+    " && state.progress.cancelled\n",
+    "\n"
+   ]
+  ]
+ },
+ {
+  "id": "C4-plan-match",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome",
+  "replace": [
+   [
+    "&state.plan == plan && &state.scope",
+    "&state.scope"
+   ]
+  ]
+ },
+ {
+  "id": "C5-scope-match",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome",
+  "replace": [
+   [
+    " && &state.scope == run.admission.scope()",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "C6-port-failure-confirmed",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_unconfirmed_budget_cancellation_is_named_in_the_outcome",
+  "replace": [
+   [
+    "        .is_ok_and(|state| {",
+    "        .map_or(true, |state| {"
+   ]
+  ]
+ },
+ {
+  "id": "C7-only-after-observation",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::a_run_that_observed_no_cancellation_leaves_its_budget_alone",
+  "replace": [
+   [
+    "            .any(|event| matches!(event.kind, RuntimeEventKind::CancellationObserved { .. }))\n        {\n            return None;",
+    "            .any(|event| matches!(event.kind, RuntimeEventKind::CancellationObserved { .. }))\n            && false\n        {\n            return None;"
+   ]
+  ]
+ },
+ {
+  "id": "C8-plan-kept",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::a_cancelled_admitted_run_cancels_its_budget_before_its_outcome",
+  "replace": [
+   [
+    "            run.plan = Some(plan);\n",
+    "            let _ = plan;\n"
+   ]
+  ]
+ },
+ {
+  "id": "O1-cancellation-not-durable",
+  "file": "kernel/engine/src/research_journal.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_cancelled_run_cancels_its_budget_durably",
+  "replace": [
+   [
+    "    retained.budget.cancel();\n    append(store, &retained, RevisionKind::Cancelled, \"\", \"\").map(|_| ())",
+    "    retained.budget.cancel();\n    Ok(())"
+   ]
+  ]
+ },
+ {
+  "id": "O2-restriction-not-retained",
+  "file": "kernel/engine/src/research_journal.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::an_expired_plan_refuses_the_start_and_stays_expired",
+  "replace": [
+   [
+    "    if let Err(error) = result {\n        if encode(&retained.budget, 8192)? != before {\n            append(store, &retained, RevisionKind::Restricted, \"\", \"\")?;\n        }\n",
+    "    if let Err(error) = result {\n        let _ = before;\n"
+   ]
+  ]
+ },
+ {
+  "id": "O3-reservation-not-persisted",
+  "file": "kernel/engine/src/research_journal.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_reservation_is_durable_before_the_start_and_survives_an_interruption",
+  "replace": [
+   [
+    "    let hash = append(\n        store,\n        &retained,\n        RevisionKind::Reserved,\n        &packet.request().operation_id,\n        packet.sha256(),\n    )?;\n",
+    "    // The reservation is kept in memory only.\n    let hash = digest(&encode(&retained.budget, 8192)?);\n"
+   ]
+  ]
+ },
+ {
+  "id": "D1-worker-outcome-ignored",
+  "file": "kernel/engine/src/research_dispatch.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::persistence_tests::a_worker_that_did_not_succeed_keeps_its_spent_visit",
+  "replace": [
+   [
+    "            if self.outcome != OperationOutcome::Succeeded {",
+    "            if false {"
+   ]
+  ]
+ }
+]

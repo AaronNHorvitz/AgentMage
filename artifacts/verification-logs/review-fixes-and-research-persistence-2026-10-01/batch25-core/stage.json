@@ -1,0 +1,459 @@
+{
+  "schema_version": 2,
+  "stage": "batch25-core",
+  "source_revision": "39543f503ceb2f49adbcfd5e6becf5d9e73af03b",
+  "scope": "Batch 25 core: one SBOM write (engine), contract/foundation/configuration/knowledge renewals and the Story 13.4 dispatch preflight report (runtime_loop.rs changed)",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/supply_chain.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_supply_chain"
+    ],
+    [
+      "python3",
+      "scripts/contract_boundary_gate.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_contract_boundary_gate"
+    ],
+    [
+      "python3",
+      "scripts/contract_evidence_index.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_contract_evidence_index"
+    ],
+    [
+      "python3",
+      "scripts/story_1_1_artifacts.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_1_1_artifacts"
+    ],
+    [
+      "python3",
+      "scripts/story_1_1_security_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_1_1_security_evidence"
+    ],
+    [
+      "python3",
+      "scripts/component_inventory.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_component_inventory"
+    ],
+    [
+      "python3",
+      "scripts/configuration_startup_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_configuration_startup_evidence"
+    ],
+    [
+      "python3",
+      "scripts/story_3_1_security_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_3_1_security_evidence"
+    ],
+    [
+      "python3",
+      "scripts/knowledge_sprint_boundary_review.py",
+      "--write",
+      "--source-revision",
+      "39543f503ceb2f49adbcfd5e6becf5d9e73af03b"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_knowledge_sprint_boundary_review"
+    ],
+    [
+      "python3",
+      "scripts/story_13_4_dispatch_preflight_evidence.py",
+      "--write",
+      "--source-revision",
+      "39543f503ceb2f49adbcfd5e6becf5d9e73af03b"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_13_4_dispatch_preflight_evidence"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/component_inventory.py": "108e6eda80fb6e8097c2db9e40b7c1201bbadefffc6d386efb72851a39575d74",
+    "scripts/configuration_startup_evidence.py": "100cb2aa68cd39b57ef5fb4666789f07a66c6c59309b66e27da873106b141da8",
+    "scripts/contract_boundary_gate.py": "468853a9ef2ec970a96dc6664b28f9b2f938de1b17e854104b618a8499db4b7d",
+    "scripts/contract_evidence_index.py": "0fdd6986a58bbed1fe8b554c6c15735b202be7750d7976dc2311795acc97b42c",
+    "scripts/knowledge_sprint_boundary_review.py": "a6dcf0958258b342a7d53feb34bdee2316504fee253f47cc5cddafe047d737cb",
+    "scripts/story_13_4_dispatch_preflight_evidence.py": "740381f7d313eac95ff2252c212fd3f88639f377a16210287c0a362222d45470",
+    "scripts/story_1_1_artifacts.py": "724bc4d28adee71af08d3750e2653e2f77b7aab35ec33fc1657a1f4c31ae8b71",
+    "scripts/story_1_1_security_evidence.py": "f07d35e89dffb65931c19d85a9360b9b818e9eff767bff6b486f4f889c6c270a",
+    "scripts/story_3_1_security_evidence.py": "6d03fbe67e55c27c0aa2808b78bf26e1fcea6203fa0dc1e223e7c8ff22d2e056",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_component_inventory.py": "12757ff847d9e6820d1d39c02c05f42819e0e718d7b54332affd6ccae3621844",
+    "tests/test_configuration_startup_evidence.py": "693dda9812499528ea0f8739bd93b2884bb5c5a51abe639bf0c58776ed85dc69",
+    "tests/test_contract_boundary_gate.py": "ac2f32c1503381e1f00c90035a9b718768e48a6b3250fa364b1a491d1702f53d",
+    "tests/test_contract_evidence_index.py": "198e4c3255c914d696fd7d2bdd0a8de55aa01bbec5eba83eb754e57754c22d75",
+    "tests/test_knowledge_sprint_boundary_review.py": "d29876f29ccd26daa17e96c992c68554279787a64e07803ba50c1de0f91c0ab6",
+    "tests/test_story_13_4_dispatch_preflight_evidence.py": "419045284a7c2998cc9887b7d3bcc14de9611dac1f6e84eb9f2cb22d87a03bb7",
+    "tests/test_story_1_1_artifacts.py": "19c6fe84d73abc27f443e8e31e6adbfce07f3f486e3b9b473c3e362b3c51b96e",
+    "tests/test_story_1_1_security_evidence.py": "20eb9f6dd06d06a75c72c2fa5fea7dd07e24f77842cd32af2e3f2c49231be6dc",
+    "tests/test_story_3_1_security_evidence.py": "f9d223878166c92dc21fc4e50e7cc1dfaa68bf3241db5a367e6cc8ea97f2ed19",
+    "tests/test_supply_chain.py": "29593e31bb43f33beb064efb5b7b366ae5a0f964c2544b4bfb5e5b365e9026ae"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.114,
+      "log": "01.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_supply_chain"
+      ],
+      "exit_code": 0,
+      "seconds": 0.648,
+      "log": "02.log",
+      "log_sha256": "b7704a96cef6aa266d88060481236d184c1c52fa6ce8f2f2acf3f9a8397fd6e2",
+      "private_log_sha256": "b7704a96cef6aa266d88060481236d184c1c52fa6ce8f2f2acf3f9a8397fd6e2"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/contract_boundary_gate.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.098,
+      "log": "03.log",
+      "log_sha256": "ffb0929bcd3e0c156f11d6ee3d4dcfdbdec2f9f41746916b7af56d3ea0c430a4",
+      "private_log_sha256": "ffb0929bcd3e0c156f11d6ee3d4dcfdbdec2f9f41746916b7af56d3ea0c430a4"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_contract_boundary_gate"
+      ],
+      "exit_code": 0,
+      "seconds": 0.115,
+      "log": "04.log",
+      "log_sha256": "083942298db36f78deff965481032c1f6473e9820a9993bdcd4b58f3708b4fda",
+      "private_log_sha256": "083942298db36f78deff965481032c1f6473e9820a9993bdcd4b58f3708b4fda"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "python3",
+        "scripts/contract_evidence_index.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 2.257,
+      "log": "05.log",
+      "log_sha256": "d64a13683ec5874fafecbdc8621edda9fcf5798c2b1b9fcb6b7e6535af020932",
+      "private_log_sha256": "d64a13683ec5874fafecbdc8621edda9fcf5798c2b1b9fcb6b7e6535af020932"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_contract_evidence_index"
+      ],
+      "exit_code": 0,
+      "seconds": 0.082,
+      "log": "06.log",
+      "log_sha256": "0f0149f92c2183ef7246fcaec2decd1c651e8502ce280acaef0e7400e32feec8",
+      "private_log_sha256": "0f0149f92c2183ef7246fcaec2decd1c651e8502ce280acaef0e7400e32feec8"
+    },
+    {
+      "index": 7,
+      "argv": [
+        "python3",
+        "scripts/story_1_1_artifacts.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.032,
+      "log": "07.log",
+      "log_sha256": "6ddd04e6060dd8158475e3b5fdf90fe3c4b34164f84f00a1644878af50a98fea",
+      "private_log_sha256": "6ddd04e6060dd8158475e3b5fdf90fe3c4b34164f84f00a1644878af50a98fea"
+    },
+    {
+      "index": 8,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_1_1_artifacts"
+      ],
+      "exit_code": 0,
+      "seconds": 0.066,
+      "log": "08.log",
+      "log_sha256": "74202dc09a3347400de94f86db7081b0c92ff6270bca74570c143aa53888e576",
+      "private_log_sha256": "74202dc09a3347400de94f86db7081b0c92ff6270bca74570c143aa53888e576"
+    },
+    {
+      "index": 9,
+      "argv": [
+        "python3",
+        "scripts/story_1_1_security_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.046,
+      "log": "09.log",
+      "log_sha256": "04bdfd167bbbe669073900a46f4091d33d4d3a817a465699ea8502567598fb3c",
+      "private_log_sha256": "04bdfd167bbbe669073900a46f4091d33d4d3a817a465699ea8502567598fb3c"
+    },
+    {
+      "index": 10,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_1_1_security_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.093,
+      "log": "10.log",
+      "log_sha256": "0d628f37216e0a286bb4dc09c3961e6b1490ff1c53d56a39af806e9c2cc5da78",
+      "private_log_sha256": "0d628f37216e0a286bb4dc09c3961e6b1490ff1c53d56a39af806e9c2cc5da78"
+    },
+    {
+      "index": 11,
+      "argv": [
+        "python3",
+        "scripts/component_inventory.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 1.548,
+      "log": "11.log",
+      "log_sha256": "f253aac66972f434f7ae0f1c81879a85da4620a4f1c5cc7738a640e4b28492a8",
+      "private_log_sha256": "f253aac66972f434f7ae0f1c81879a85da4620a4f1c5cc7738a640e4b28492a8"
+    },
+    {
+      "index": 12,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_component_inventory"
+      ],
+      "exit_code": 0,
+      "seconds": 7.314,
+      "log": "12.log",
+      "log_sha256": "d80eb6496b220ae6c94796963cd3bea8f0de2ebf376151e31127d8f1d7bb2e0b",
+      "private_log_sha256": "d80eb6496b220ae6c94796963cd3bea8f0de2ebf376151e31127d8f1d7bb2e0b"
+    },
+    {
+      "index": 13,
+      "argv": [
+        "python3",
+        "scripts/configuration_startup_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 16.724,
+      "log": "13.log",
+      "log_sha256": "635a7a089caf4f25d2e772a819fb5d83c083bf266914373128419caea0dbe78f",
+      "private_log_sha256": "635a7a089caf4f25d2e772a819fb5d83c083bf266914373128419caea0dbe78f"
+    },
+    {
+      "index": 14,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_configuration_startup_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.072,
+      "log": "14.log",
+      "log_sha256": "e19a86747084065fc6026e9e5463e2291a2e56061843e8a27e0424f4fed284be",
+      "private_log_sha256": "e19a86747084065fc6026e9e5463e2291a2e56061843e8a27e0424f4fed284be"
+    },
+    {
+      "index": 15,
+      "argv": [
+        "python3",
+        "scripts/story_3_1_security_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 1.613,
+      "log": "15.log",
+      "log_sha256": "0cd2aa4156909f95f43fc90f612df6209e475456b9fc49a528576ae94ff610aa",
+      "private_log_sha256": "0cd2aa4156909f95f43fc90f612df6209e475456b9fc49a528576ae94ff610aa"
+    },
+    {
+      "index": 16,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_3_1_security_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 5.456,
+      "log": "16.log",
+      "log_sha256": "d150c9af18289ccc909a30f15d5196108d88ac3ae83f0c1fdb17f7a2a938129f",
+      "private_log_sha256": "d150c9af18289ccc909a30f15d5196108d88ac3ae83f0c1fdb17f7a2a938129f"
+    },
+    {
+      "index": 17,
+      "argv": [
+        "python3",
+        "scripts/knowledge_sprint_boundary_review.py",
+        "--write",
+        "--source-revision",
+        "39543f503ceb2f49adbcfd5e6becf5d9e73af03b"
+      ],
+      "exit_code": 0,
+      "seconds": 0.127,
+      "log": "17.log",
+      "log_sha256": "f08ed91b1a4dcf60f8b1db63e08cc009d1bee9a0866fa97ff1480b815c695f96",
+      "private_log_sha256": "f08ed91b1a4dcf60f8b1db63e08cc009d1bee9a0866fa97ff1480b815c695f96"
+    },
+    {
+      "index": 18,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_knowledge_sprint_boundary_review"
+      ],
+      "exit_code": 0,
+      "seconds": 0.087,
+      "log": "18.log",
+      "log_sha256": "fe008aab760eb03ccac7578e2b84665b1b50b0d7f855b17a0c7a8d039435b658",
+      "private_log_sha256": "fe008aab760eb03ccac7578e2b84665b1b50b0d7f855b17a0c7a8d039435b658"
+    },
+    {
+      "index": 19,
+      "argv": [
+        "python3",
+        "scripts/story_13_4_dispatch_preflight_evidence.py",
+        "--write",
+        "--source-revision",
+        "39543f503ceb2f49adbcfd5e6becf5d9e73af03b"
+      ],
+      "exit_code": 0,
+      "seconds": 0.408,
+      "log": "19.log",
+      "log_sha256": "5668f00e99c01c89daeaca3572f978ba04fe9aca6e68236f86a34ef1f9b78412",
+      "private_log_sha256": "5668f00e99c01c89daeaca3572f978ba04fe9aca6e68236f86a34ef1f9b78412"
+    },
+    {
+      "index": 20,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_13_4_dispatch_preflight_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.078,
+      "log": "20.log",
+      "log_sha256": "d094b1bd2c8318c96097f80c50da282add5b2972970a77046de8db6c8935f6ca",
+      "private_log_sha256": "d094b1bd2c8318c96097f80c50da282add5b2972970a77046de8db6c8935f6ca"
+    },
+    {
+      "index": 21,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.075,
+      "log": "21.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 22,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.019,
+      "log": "22.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
