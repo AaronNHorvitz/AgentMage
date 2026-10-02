@@ -27,7 +27,7 @@
       ],
       "exit_code": 0,
       "id": "model-contracts",
-      "output_sha256": "ed307aab39c1dbc5497d5f318de0af0fa936f3001ab648272ab2b237f428ba75",
+      "output_sha256": "5f7d07734b447e19dec99d625dc096cee3ec691f4bcfbf9a4efad1a3cb37b45f",
       "story_id": "13.1"
     },
     {
@@ -40,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "model-engine",
-      "output_sha256": "3786f34e9a4c99d182acd45aecf552d7dc176d87b7d3bc82f746d278fa2b0a14",
+      "output_sha256": "3ac3ac765c64ddceaa64bb1cb9d712fe69817fef2ef216cd78436a6d37452022",
       "story_id": "13.1"
     },
     {
@@ -53,7 +53,7 @@
       ],
       "exit_code": 0,
       "id": "linux-native-adapter",
-      "output_sha256": "38f1527762efba621e5d49aee33f7bde313dcb193ad8bd607b55a7a90a26a326",
+      "output_sha256": "535ebe280bae6fa9126adf5c401a3f7d40ccd05bf97b43b96ab395d48962a0ae",
       "story_id": "13.1"
     },
     {
@@ -65,7 +65,7 @@
       ],
       "exit_code": 0,
       "id": "model-json-contracts",
-      "output_sha256": "1366bde0d40b8bcab2a78b30c66910456e9d550f5e5f9e026e39b5eb95989c12",
+      "output_sha256": "e853086ed9ffff5003a916a1189b41d81ff4f8bea05e980ceaa060c0e7a66237",
       "story_id": "13.1"
     },
     {
@@ -84,7 +84,7 @@
       ],
       "exit_code": 0,
       "id": "model-policy-evidence",
-      "output_sha256": "1dab51ff283b7fd1540ce952a0bb2f1b656902cf362e5770f902317787ea7e13",
+      "output_sha256": "a9bd77bf52f25a9d2d17181cd11341cc0f3aad4ef87c4a2fb31ac9a899cf74e8",
       "story_id": "13.2"
     }
   ],
@@ -92,14 +92,14 @@
     "artifacts/sprints/sprint-13/story-13.1/finish-usage-report.json": "f4902131f2ca3322bc424a9af280a795769d44be499345997b2929c56041bfa3",
     "artifacts/sprints/sprint-13/story-13.1/muse-native-adapter-contract-v2.json": "9c4980f2167f052c4da1a063f470bb1d5852b616247d3b6dc507910eddedaf19",
     "artifacts/sprints/sprint-13/story-13.2/linux-cross-adapter-parity.json": "6733691ce2a645dec00fc7dfec22403d82d1daf00bf1970d69b8ff3752ce1503",
-    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "cdd68d2b355f2d0770c6447b4dfc50849d23c9c158c2531a993ad2ba04dfcaa5",
+    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "db67d12a9b6dd94d3a71d6e052937658318a801760615c8773096826d7ff098a",
     "artifacts/sprints/sprint-13/story-13.3/muse-live-install.json": "91826d99f497a212ab32f87176a5b034a8b7e1fe510c9a12a05d95fc38a8dd18",
     "artifacts/sprints/sprint-13/story-13.3/muse-profile-evaluation.json": "88f560db0a1486f39a1004a0cd88e699948d194bf9221ee6e1a6d037c2e5b670",
     "artifacts/sprints/sprint-13/story-13.3/muse-sandbox-inference.json": "07260b4b60bc5d19d986fdea9bea807b3aa9e0cc543e0ce3a145a3c56a0bd547",
-    "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-report.json": "b8954a12c7011882e14d0ce1a81715299dc20a2675355fe7b2587734fa39a23d",
+    "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-report.json": "c86c07f2d472ba81a710d6b803b9d285993ff74564f8c0799d3b11b507e6d3d1",
     "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json": "571913bbf14d520847118a6988edecef0950be0118ea8392dfca33718bf76a75",
     "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json": "1230b416221d7e28b3ff038a3b9bd8eca972220eb1549763b4b0d68b1416ed69",
-    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "aa07df03254077584234e14f7203039944c62ccc2cf1f81f38e7aeec7094d2e0"
+    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "d711918e88293b626af0b9401bcf68486188f1859c5174e46cee5b1756350900"
   },
   "evidence_state": {
     "adapter_contract": "CONTRACT-PASS-LIVE-BLOCKED",
@@ -175,7 +175,7 @@
       "SR-MGM-004"
     ]
   },
-  "source_revision": "a645eaee6770a5bfabe33247ebe38afe25169f91",
+  "source_revision": "449422ba4f84f3d392f60ba168d269cc72260240",
   "source_sha256": {
     "kernel/contracts/src/agent.rs": "c8cc0af7aa697ba6fb0ef0be8bafc8c2100c910169ee6f9fa2a2807ba48243c5",
     "kernel/contracts/src/agent_proposal.rs": "cd77cca5b9a6c6fd64c54053e9bdae5233cf50942c111c52fefba0945998519f",
@@ -401,12 +401,13 @@
     "kernel/engine/src/runtime_inspector.rs": "8f00a2b76a920baae95eff61f71be4c0ec14bf2959091167e4ddb6af9933bd4d",
     "kernel/engine/src/runtime_journal.rs": "3588470c9ed56647802638f766c16418b9f61a8d7ea82a422371c56063b3d464",
     "kernel/engine/src/runtime_lifecycle.rs": "56823d70a711ba278d8918d3cf288061b5addcfd97c6ed228c2ed184b03eb2d2",
-    "kernel/engine/src/runtime_loop.rs": "ecb9fb7df596b2a57024f51380ee84662720960154a9c6e445b3256b3268d620",
+    "kernel/engine/src/runtime_loop.rs": "d67cab35687815d5b2cc65697fa4097a131d0a45ad170a6d53c3cdc7772cdffe",
     "kernel/engine/src/runtime_loop/artifact_preparation.rs": "b9524ce4964acce2ca1635a389637da5d58b3fbeaeca9bd62eec61eedac04b0d",
     "kernel/engine/src/runtime_loop_artifact_preparation_tests.rs": "1496ede7ae8e74887edb17b331a98ae9ba43b3691897ba15e49bd23b2f447e57",
-    "kernel/engine/src/runtime_loop_research_admission_tests.rs": "e278ea3ef9d548d2fcf8479e993a617ea81863c35f5fec0bdc4c881dfacbf581",
-    "kernel/engine/src/runtime_loop_research_completion_tests.rs": "68cf14347bdec5995f1704389725cc666f872ea2c1c98ff002d4516b16f05f43",
-    "kernel/engine/src/runtime_loop_research_persistence_tests.rs": "b268338319efcfe5067f9eacf69348273d7a90744a1d339a344ac51909f04d9c",
+    "kernel/engine/src/runtime_loop_research_admission_tests.rs": "b716f26c6ad0af9538e10e95bbb1818dc76f741c9b437783aa1b130aee1a6842",
+    "kernel/engine/src/runtime_loop_research_completion_tests.rs": "80249f29f208705236a31259b8cab14beee7aeb71ed4db3decec6ea67c47e001",
+    "kernel/engine/src/runtime_loop_research_persistence_tests.rs": "38014e7c212c942470a0b2c053a19b45680ff7e936c13f39d88aafb4361ef22d",
+    "kernel/engine/src/runtime_loop_research_report_tests.rs": "e2567cc32fba4c12c4b1553c3ae20c943cfe720225d9566e3ba58839c7660f88",
     "kernel/engine/src/runtime_loop_tests.rs": "f79584b9eaae7dc8ea348e67eabe3c0357e71d303237e1eb2a74ed4a7fd4e108",
     "kernel/engine/src/runtime_projection.rs": "9b2a2274f3328ac8e33d1e8a493b4e374fb8a4dc7c28582b186002647b6de25d",
     "kernel/engine/src/runtime_recovery.rs": "7997cf0ccae000d132eee6b92b990a0891884887441b06ba69cf28dd8494dcb6",

@@ -43,7 +43,7 @@
       ],
       "exit_code": 0,
       "id": "muse-edge-codec",
-      "output_sha256": "a17737fff057c17a794033715eb7b23f66470fe863f7b4385d643a5ffca40acb"
+      "output_sha256": "0731047c8e1a6389acf149b0247b52f16b9289786ccb0bccae0bd13d61c78397"
     },
     {
       "argv": [
@@ -56,7 +56,7 @@
       ],
       "exit_code": 0,
       "id": "native-transport-diagnostics",
-      "output_sha256": "629f99a26b6d82b00b7df2c5a910e6f354bba032818924f4bbd70545965cca17"
+      "output_sha256": "7d3c63326f54e4b15ee0a53f0db421286e2d3f2f6621819eec9b4e64bcaea27c"
     },
     {
       "argv": [
@@ -69,7 +69,7 @@
       ],
       "exit_code": 0,
       "id": "generic-codec",
-      "output_sha256": "6d64b02c93ace50cbc524f682ffed2fcef498722119af6ae416edc9bc8cd8d3c"
+      "output_sha256": "bdfb3043effd174120de010dea84760a70807dfcc64755f62f502903b9985cc4"
     },
     {
       "argv": [
@@ -82,7 +82,7 @@
       ],
       "exit_code": 0,
       "id": "bounded-response",
-      "output_sha256": "25d2f5b5a2a482bb5c00028f035d6cd27bbe8a750738fd662c3ee4145acb128c"
+      "output_sha256": "8c5c0249ebc51ff118d721f43f056b8abeb37676dff0d86445ba864d019c0f0c"
     },
     {
       "argv": [
@@ -95,7 +95,7 @@
       ],
       "exit_code": 0,
       "id": "fake-family-parity",
-      "output_sha256": "3793a0713fbc6924b66cfad65b7e932b240424fcfd2a0d0cbc63a1c8d142d660"
+      "output_sha256": "2ce09c47c8371f1efdc764d6bc15ec36b31f1e15006d6fd0c8cfd71f0ca3630b"
     }
   ],
   "diagnostics": [
@@ -235,7 +235,7 @@
   "production_kernel_family_references": [],
   "record_type": "d027_s13_muse_codec_evidence",
   "schema_version": 3,
-  "source_revision": "a645eaee6770a5bfabe33247ebe38afe25169f91",
+  "source_revision": "449422ba4f84f3d392f60ba168d269cc72260240",
   "source_sha256": {
     "kernel/contracts/src/model.rs": "1a19f680cc1468be94930632e4a67ba50f0c16eaf47802ae7ecd65df2ca1695c",
     "kernel/engine/src/accounting_provider.rs": "f0292afed85e4dc1d617061de010622b913749caed5e4620503634c29ef485f4",
@@ -417,12 +417,13 @@
     "kernel/engine/src/runtime_inspector.rs": "8f00a2b76a920baae95eff61f71be4c0ec14bf2959091167e4ddb6af9933bd4d",
     "kernel/engine/src/runtime_journal.rs": "3588470c9ed56647802638f766c16418b9f61a8d7ea82a422371c56063b3d464",
     "kernel/engine/src/runtime_lifecycle.rs": "56823d70a711ba278d8918d3cf288061b5addcfd97c6ed228c2ed184b03eb2d2",
-    "kernel/engine/src/runtime_loop.rs": "ecb9fb7df596b2a57024f51380ee84662720960154a9c6e445b3256b3268d620",
+    "kernel/engine/src/runtime_loop.rs": "d67cab35687815d5b2cc65697fa4097a131d0a45ad170a6d53c3cdc7772cdffe",
     "kernel/engine/src/runtime_loop/artifact_preparation.rs": "b9524ce4964acce2ca1635a389637da5d58b3fbeaeca9bd62eec61eedac04b0d",
     "kernel/engine/src/runtime_loop_artifact_preparation_tests.rs": "1496ede7ae8e74887edb17b331a98ae9ba43b3691897ba15e49bd23b2f447e57",
-    "kernel/engine/src/runtime_loop_research_admission_tests.rs": "e278ea3ef9d548d2fcf8479e993a617ea81863c35f5fec0bdc4c881dfacbf581",
-    "kernel/engine/src/runtime_loop_research_completion_tests.rs": "68cf14347bdec5995f1704389725cc666f872ea2c1c98ff002d4516b16f05f43",
-    "kernel/engine/src/runtime_loop_research_persistence_tests.rs": "b268338319efcfe5067f9eacf69348273d7a90744a1d339a344ac51909f04d9c",
+    "kernel/engine/src/runtime_loop_research_admission_tests.rs": "b716f26c6ad0af9538e10e95bbb1818dc76f741c9b437783aa1b130aee1a6842",
+    "kernel/engine/src/runtime_loop_research_completion_tests.rs": "80249f29f208705236a31259b8cab14beee7aeb71ed4db3decec6ea67c47e001",
+    "kernel/engine/src/runtime_loop_research_persistence_tests.rs": "38014e7c212c942470a0b2c053a19b45680ff7e936c13f39d88aafb4361ef22d",
+    "kernel/engine/src/runtime_loop_research_report_tests.rs": "e2567cc32fba4c12c4b1553c3ae20c943cfe720225d9566e3ba58839c7660f88",
     "kernel/engine/src/runtime_loop_tests.rs": "f79584b9eaae7dc8ea348e67eabe3c0357e71d303237e1eb2a74ed4a7fd4e108",
     "kernel/engine/src/runtime_projection.rs": "9b2a2274f3328ac8e33d1e8a493b4e374fb8a4dc7c28582b186002647b6de25d",
     "kernel/engine/src/runtime_recovery.rs": "7997cf0ccae000d132eee6b92b990a0891884887441b06ba69cf28dd8494dcb6",
