@@ -1,0 +1,315 @@
+{
+ "record_type": "agentmage-public-research-worker-contract-verification",
+ "date": "2026-10-02",
+ "base_commit": "fc70abd2db7f527221232310d072e536e0ce2d85",
+ "head_commit": "57fdc5524523b6a01ddd9ad7b0dc5e6fd26fc7cb",
+ "source_commit": "2a3125c5d30e50429fc768405652b1dd2bcebb0c",
+ "retained_logs": "artifacts/verification-logs/public-research-worker-contract-2026-10-02",
+ "stages": [
+  "batch26-source",
+  "batch26-core",
+  "batch26-rebind",
+  "batch26-gate",
+  "batch26-blocked-causes",
+  "batch26-extended-rest",
+  "batch26-observation"
+ ],
+ "inventory": "artifacts/verification-logs/public-research-worker-contract-2026-10-02/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch26-source/02.log",
+  "engine": "batch26-source/03.log",
+  "repository_map": "batch26-source/04.log",
+  "inference": "batch26-source/05.log",
+  "knowledge": "batch26-source/06.log",
+  "linux": "batch26-source/07.log",
+  "linux_research_feature_build": "batch26-source/08.log",
+  "linux_research_feature_tests": "batch26-source/09.log",
+  "linux_research_worker_binary_tests": "batch26-source/10.log",
+  "host": "batch26-source/11.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0141-public-research-worker-contract.md"
+  ],
+  "source_commits": [
+   {
+    "commit": "2a3125c5d30e50429fc768405652b1dd2bcebb0c",
+    "scope": "Decision 0141 (AMR-02.3.1): the packet (research_fetch.rs) and the frame metadata (research_response.rs) are accepted only as the exact canonical encoding of their decoded values; PublicGetWorkerFailure names the worker's eight closed failures with stable codes, an exact report (code and newline) and decode_report (exit status 5); the Linux worker uses the engine type and writes the exact report; research_sandbox reads a closed report only as the failure's reason; the contract document docs/architecture/public-research-worker-contract-v1.md, fixtures/public-research-worker/v1 (two packets, three frames, failure reports, the call-to-permit binding, manifest), the printer research_response::contract_tests with five consumer tests, scripts/public_research_worker_fixtures.py, tests/test_public_research_worker_contract.py, a research_fetch exact-bytes test, a Linux reason test and LOCAL-TESTING"
+   }
+  ],
+  "review_resolved": "none in this batch: the independent review of fc70abd2 (batch 25) was requested and is still open",
+  "components": [
+   {
+    "row": "AMR-02.3.1",
+    "scope": "component row: the public research worker's closed request and outcome are frozen with exact-byte producer and consumer fixtures built by the engine's types; the packet and frame metadata decode exactly in both directions; the worker's eight failures are closed reports that the parent reads only as diagnostics while the authority outcome stays uncertain; the call's exact arguments, the packet's disclosure and the network scope bind to the consumed permit through the shared call validator, issuance and the start; the default offline dependency closure and the inventoried optional worker closure are checked unchanged. No worker ran in a sandbox and nothing was sent; the native qualification stays with AMR-02.3.2"
+   }
+  ],
+  "mutation_checks": "run on the exact source tree before it was committed, with private tooling that applies one exact replacement, runs the package's filtered library tests (engine research_, Linux research with the public-research-worker feature) and restores the file; the specification, results and rerun are attached to the batch26-source stage. 9 single mutations: the packet's and the frame's exact-bytes checks, the report's exit status, a prefix-only report match, a report without its newline, a changed code, the call validator's argument digest, and in the Linux parent a truncated report and an ignored report. All seven engine mutations were caught. The two Linux mutations failed the intended test, but the specification named it under a wrong module path (research_sandbox:: instead of sandbox::research::), so the first run recorded them as not caught; a rerun with the corrected name caught both (2/2). The tree was verified identical afterwards",
+  "failure_comparison": "linux 189 passed, 19 failed, 51 ignored, failure names identical to batch 25; with the public-research-worker feature the Linux crate's tests build, its research tests pass (13 passed, 6 ignored native) and the worker binary's tests pass (21 passed, 3 ignored); host 474 passed, 53 failed, 11 ignored, failure names identical to batch 25; the engine passes 1,526 tests (six new) with 8 ignored (the fixture printer is the new one), knowledge 302",
+  "retained_failures": [
+   {
+    "stage": "batch26-source",
+    "indexes": [
+     7,
+     11
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, with failure names identical to batch 25"
+   },
+   {
+    "stage": "batch26-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "interrupted_stages": [],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch26-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the native-prerequisite host failures (batch26-source/11.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch26-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch26-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch26-blocked-causes/03.log) and the documentation gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+    "stale_since": "before batch 12 (four other inputs)",
+    "blocker": "its producer runs the full host suite (the native-prerequisite failures, batch26-source/11.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the product gate and the documentation gate; its check mode still validates it at its own revision (batch26-extended-rest/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the full host suite with all features; its check mode still validates it at its own revision (batch26-extended-rest/02.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
+    "stale_since": "before batch 18 (shells/host/src/headless.rs)",
+    "blocker": "already stale at the review base for an input this batch does not change; historical"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-kernel-engine",
+   "agentmage-platform-linux"
+  ],
+  "cascade": "the one SBOM write staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index and security map, the Story 3.1 component inventory, configuration startup report and security map and the Sprint 27 to 34 knowledge boundary reviews (batch26-core) and the Sprint 79 and Sprint 108 reports (batch26-rebind); every kernel change staled the Muse codec chain and the Sprint 13 report, and through them the Story 13.4 context profile report (batch26-rebind); the renewed component inventory staled the Story 11.1 security map and through it the Story 11.2 storage security, frozen-scope, AC1 and AC3 reports and the Story 12.1 map (batch26-rebind); the Story 11.2 gate report (batch26-gate). The coordinator, the operational store and the research journal did not change, so no Story 23.4, Sprint 50, Story 13.4 dispatch, Story 11.2 AC2, store wave or Story 22.1 canary artifact was stale",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "0e42648096b73f8559b860eadbc7272fb097721f",
+    "to": "5bfb4dabaadd62a2f5ad91a7a175333f98a524be",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 26 rebind stage; only the bound digest of artifacts/sprints/sprint-11/story-11.1/security-evidence-map.json (renewed in the same stage) changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 26 rebind stage; only the bound digest of artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 26 rebind stage; only the bound digest of artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json changed"
+     }
+    ]
+   }
+  ],
+  "newly_stale_disposition": "only historical records: two retained batch 25 stage records that bind the Story 11.2 gate script, and three dated verification records of 2026-09-27 that bind the research response module as it was at their own revisions (each was already stale through other inputs)",
+  "runtime_campaign": "not renewed: the coordinator and its port contracts did not change, and no Story 23.4 or Sprint 50 artifact was stale",
+  "cli_observation": {
+   "source_commit": "57fdc5524523b6a01ddd9ad7b0dc5e6fd26fc7cb",
+   "binaries_sha256": {
+    "agentmage": "bf57ebd05a66dc6c241f8cb9e1c4e0a1ee40a0c2c9012f622110f40ec8a281a3",
+    "agentmage-host": "e4a908fd0bf1dd822f4f3cae872d4691b8869353f377c0992cdd395b51e0fc23",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "catalog_host_operations": [
+    {
+     "name": "doc-pack-list-empty",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import-other-license",
+     "operation": "doc-pack",
+     "exit_code": 4
+    },
+    {
+     "name": "doc-pack-search",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-inspect",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember-credential",
+     "operation": "memory",
+     "exit_code": 4
+    },
+    {
+     "name": "memory-list",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-revoke",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-delete",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-signer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-issuer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-install",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-1",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-renamed",
+     "operation": "extension",
+     "exit_code": 3
+    },
+    {
+     "name": "extension-list",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "ended-run-read",
+     "operation": "ended-run",
+     "exit_code": 0
+    }
+   ],
+   "catalog_host_wire_refusals_seen": false,
+   "catalog_workspace_preserved": true,
+   "recipe_shown_before_launch": {
+    "exit_code": 5,
+    "then_refused_at": "linux.repository.git_artifact.invalid",
+    "preserved": true
+   },
+   "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+   },
+   "malformed_frame_injected": false,
+   "research_worker": {
+    "binary": {
+     "sha256": "3aa44e280a63780f4747d7648a06115b8cad23c2610a8d2900bec9f17a3d5a8f",
+     "bytes": 157818128
+    },
+    "runs": [
+     {
+      "name": "worker-ambient-environment",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     },
+     {
+      "name": "worker-extra-argument",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     },
+     {
+      "name": "worker-admitted-environment",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     }
+    ],
+    "sandboxed": false,
+    "network_attempted": false
+   },
+   "research_admission_composed_by_an_actual_process": false,
+   "qualification": "actual-binary-catalog-host-operations-under-exact-wire-decoding-plus-native-prerequisite-refusal"
+  },
+  "not_run": [
+   "the public research worker in its sandbox, with a packet, DNS, TLS or a network; the actual worker binary ran only outside its sandbox, where it refused at its first check",
+   "the native adversarial matrix of AMR-02.3.2 and the parent's actual decoding of a worker's frame or report from a sandboxed process",
+   "any host, provider or model using the worker contract; Decision 0084 forbids activation before the native matrix",
+   "the native boundary of AMR-03.1.2, AMR-03.2.3 and AMR-03.2.4",
+   "the native-only Linux boundary tests and the factory's composition glue",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [
+    {
+     "row": "AMR-02.3.1",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component row: the worker contract frozen with exact-byte fixtures, exact decoding, closed failure reports and the permit binding; no worker ran in its sandbox"
+    }
+   ],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested after the ledger commit; open"
+  }
+ }
+}

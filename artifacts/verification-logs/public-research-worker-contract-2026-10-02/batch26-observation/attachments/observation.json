@@ -1,0 +1,167 @@
+{
+  "started_at_utc": "2026-10-02T05:36:28.522628+00:00",
+  "finished_at_utc": "2026-10-02T05:39:27.715530+00:00",
+  "source_commit": "57fdc5524523b6a01ddd9ad7b0dc5e6fd26fc7cb",
+  "source_tree": "d4cfa7d87effeed0a4026c245dccb1d42c8e6deb",
+  "source_worktree_clean": true,
+  "binaries": {
+    "agentmage": {
+      "sha256": "bf57ebd05a66dc6c241f8cb9e1c4e0a1ee40a0c2c9012f622110f40ec8a281a3",
+      "bytes": 323466536
+    },
+    "agentmage-host": {
+      "sha256": "e4a908fd0bf1dd822f4f3cae872d4691b8869353f377c0992cdd395b51e0fc23",
+      "bytes": 361887712
+    },
+    "agentmage-read-only-worker": {
+      "sha256": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf",
+      "bytes": 13798696
+    }
+  },
+  "binaries_unchanged": true,
+  "clean": {
+    "exit_code": 5,
+    "preserved": true,
+    "refusal_code": "linux.repository.git_artifact.invalid",
+    "failure_code": "linux.development.launch-envelope.failed"
+  },
+  "catalog_host_operations": [
+    {
+      "name": "doc-pack-list-empty",
+      "operation": "doc-pack",
+      "exit_code": 0
+    },
+    {
+      "name": "doc-pack-import",
+      "operation": "doc-pack",
+      "exit_code": 0
+    },
+    {
+      "name": "doc-pack-import-other-license",
+      "operation": "doc-pack",
+      "exit_code": 4
+    },
+    {
+      "name": "doc-pack-search",
+      "operation": "doc-pack",
+      "exit_code": 0
+    },
+    {
+      "name": "doc-pack-inspect",
+      "operation": "doc-pack",
+      "exit_code": 0
+    },
+    {
+      "name": "memory-remember",
+      "operation": "memory",
+      "exit_code": 0
+    },
+    {
+      "name": "memory-remember-credential",
+      "operation": "memory",
+      "exit_code": 4
+    },
+    {
+      "name": "memory-list",
+      "operation": "memory",
+      "exit_code": 0
+    },
+    {
+      "name": "memory-revoke",
+      "operation": "memory",
+      "exit_code": 0
+    },
+    {
+      "name": "memory-delete",
+      "operation": "memory",
+      "exit_code": 0
+    },
+    {
+      "name": "extension-trust-signer",
+      "operation": "extension",
+      "exit_code": 0
+    },
+    {
+      "name": "extension-trust-issuer",
+      "operation": "extension",
+      "exit_code": 0
+    },
+    {
+      "name": "extension-install",
+      "operation": "extension",
+      "exit_code": 0
+    },
+    {
+      "name": "extension-revocations-1",
+      "operation": "extension",
+      "exit_code": 0
+    },
+    {
+      "name": "extension-revocations-renamed",
+      "operation": "extension",
+      "exit_code": 3
+    },
+    {
+      "name": "extension-list",
+      "operation": "extension",
+      "exit_code": 0
+    },
+    {
+      "name": "ended-run-read",
+      "operation": "ended-run",
+      "exit_code": 0
+    }
+  ],
+  "catalog_host_wire_refusals_seen": false,
+  "catalog_workspace_preserved": true,
+  "extension_renamed_issuer_refused": true,
+  "ended_run_chains_present": false,
+  "recipe_shown_before_launch": {
+    "exit_code": 5,
+    "then_refused_at": "linux.repository.git_artifact.invalid",
+    "preserved": true
+  },
+  "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+  },
+  "malformed_frame_injected": false,
+  "research_worker": {
+    "binary": {
+      "sha256": "3aa44e280a63780f4747d7648a06115b8cad23c2610a8d2900bec9f17a3d5a8f",
+      "bytes": 157818128
+    },
+    "runs": [
+      {
+        "name": "worker-ambient-environment",
+        "exit_code": 5,
+        "stdout_bytes": 0,
+        "report": "research.worker.environment-denied",
+        "closed_report": true
+      },
+      {
+        "name": "worker-extra-argument",
+        "exit_code": 5,
+        "stdout_bytes": 0,
+        "report": "research.worker.environment-denied",
+        "closed_report": true
+      },
+      {
+        "name": "worker-admitted-environment",
+        "exit_code": 5,
+        "stdout_bytes": 0,
+        "report": "research.worker.environment-denied",
+        "closed_report": true
+      }
+    ],
+    "sandboxed": false,
+    "network_attempted": false
+  },
+  "network_used": false,
+  "model": "scripted",
+  "real_model_run": false,
+  "complete_coding_workflow_observed": false,
+  "native_tools_executed": false,
+  "qualification": "actual-binary-catalog-host-operations-under-exact-wire-decoding-plus-native-prerequisite-refusal"
+}

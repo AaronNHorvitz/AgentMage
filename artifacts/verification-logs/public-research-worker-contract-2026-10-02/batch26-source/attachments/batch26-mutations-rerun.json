@@ -1,0 +1,34 @@
+[
+ {
+  "id": "L1-truncated-report",
+  "file": "platforms/linux/src/research_sandbox.rs",
+  "package": "agentmage-platform-linux",
+  "features": "public-research-worker",
+  "filters": [
+   "research"
+  ],
+  "expected": "sandbox::research::tests::a_closed_worker_report_is_only_the_failure_reason",
+  "replace": [
+   [
+    "    if result.stderr.total != result.stderr.retained.len() {\n        return \"native-nonsuccess\";\n    }\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "L2-report-ignored",
+  "file": "platforms/linux/src/research_sandbox.rs",
+  "package": "agentmage-platform-linux",
+  "features": "public-research-worker",
+  "filters": [
+   "research"
+  ],
+  "expected": "sandbox::research::tests::a_closed_worker_report_is_only_the_failure_reason",
+  "replace": [
+   [
+    ".map_or(\"native-nonsuccess\", PublicGetWorkerFailure::code)",
+    ".map_or(\"native-nonsuccess\", |_| \"native-nonsuccess\")"
+   ]
+  ]
+ }
+]

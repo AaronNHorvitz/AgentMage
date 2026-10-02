@@ -1,0 +1,146 @@
+[
+ {
+  "id": "E1-packet-exact-bytes",
+  "file": "kernel/engine/src/research_fetch.rs",
+  "package": "agentmage-kernel-engine",
+  "features": null,
+  "filters": [
+   "research_"
+  ],
+  "expected": "research_response::contract_tests::each_packet_decodes_exactly_and_no_other_encoding_does",
+  "replace": [
+   [
+    "        if serde_json::to_vec(&wire).ok().as_deref() != Some(bytes) {\n            return Err(ResearchFetchError::Invalid);\n        }\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "E2-frame-exact-bytes",
+  "file": "kernel/engine/src/research_response.rs",
+  "package": "agentmage-kernel-engine",
+  "features": null,
+  "filters": [
+   "research_"
+  ],
+  "expected": "research_response::contract_tests::each_frame_decodes_exactly_and_no_other_metadata_encoding_does",
+  "replace": [
+   [
+    "        if canonical.ok().as_deref() != Some(metadata) {\n            return Err(ResearchResponseError::Invalid);\n        }\n",
+    "        let _ = canonical;\n"
+   ]
+  ]
+ },
+ {
+  "id": "E3-report-any-status",
+  "file": "kernel/engine/src/research_response.rs",
+  "package": "agentmage-kernel-engine",
+  "features": null,
+  "filters": [
+   "research_"
+  ],
+  "expected": "research_response::contract_tests::each_failure_report_decodes_and_nothing_else_does",
+  "replace": [
+   [
+    "        if exit_status != Some(PUBLIC_GET_WORKER_FAILURE_STATUS) {\n            return None;\n        }\n",
+    "        let _ = exit_status;\n"
+   ]
+  ]
+ },
+ {
+  "id": "E4-report-prefix-only",
+  "file": "kernel/engine/src/research_response.rs",
+  "package": "agentmage-kernel-engine",
+  "features": null,
+  "filters": [
+   "research_"
+  ],
+  "expected": "research_response::contract_tests::each_failure_report_decodes_and_nothing_else_does",
+  "replace": [
+   [
+    ".find(|failure| failure.report() == stderr)",
+    ".find(|failure| stderr.starts_with(failure.code().as_bytes()))"
+   ]
+  ]
+ },
+ {
+  "id": "E5-report-without-newline",
+  "file": "kernel/engine/src/research_response.rs",
+  "package": "agentmage-kernel-engine",
+  "features": null,
+  "filters": [
+   "research_"
+  ],
+  "expected": "research_response::contract_tests::each_fixture_is_exactly_what_the_engine_builds",
+  "replace": [
+   [
+    "        report.push(b'\\n');\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "E6-changed-code",
+  "file": "kernel/engine/src/research_response.rs",
+  "package": "agentmage-kernel-engine",
+  "features": null,
+  "filters": [
+   "research_"
+  ],
+  "expected": "research_response::contract_tests::each_fixture_is_exactly_what_the_engine_builds",
+  "replace": [
+   [
+    "            Self::Limit => \"research.worker.limit\",",
+    "            Self::Limit => \"research.worker.limit-reached\","
+   ]
+  ]
+ },
+ {
+  "id": "B1-argument-digest",
+  "file": "kernel/engine/src/research_effect_binding.rs",
+  "package": "agentmage-kernel-engine",
+  "features": null,
+  "filters": [
+   "research_"
+  ],
+  "expected": "research_response::contract_tests::the_call_binds_its_packet_effect_and_network_scope",
+  "replace": [
+   [
+    "        || digest(&call.arguments.bytes) != call.arguments.sha256\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "L1-truncated-report",
+  "file": "platforms/linux/src/research_sandbox.rs",
+  "package": "agentmage-platform-linux",
+  "features": "public-research-worker",
+  "filters": [
+   "research"
+  ],
+  "expected": "research_sandbox::tests::a_closed_worker_report_is_only_the_failure_reason",
+  "replace": [
+   [
+    "    if result.stderr.total != result.stderr.retained.len() {\n        return \"native-nonsuccess\";\n    }\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "L2-report-ignored",
+  "file": "platforms/linux/src/research_sandbox.rs",
+  "package": "agentmage-platform-linux",
+  "features": "public-research-worker",
+  "filters": [
+   "research"
+  ],
+  "expected": "research_sandbox::tests::a_closed_worker_report_is_only_the_failure_reason",
+  "replace": [
+   [
+    ".map_or(\"native-nonsuccess\", PublicGetWorkerFailure::code)",
+    ".map_or(\"native-nonsuccess\", |_| \"native-nonsuccess\")"
+   ]
+  ]
+ }
+]

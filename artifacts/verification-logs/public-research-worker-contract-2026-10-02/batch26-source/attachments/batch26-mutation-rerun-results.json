@@ -1,0 +1,20 @@
+[
+  {
+    "id": "L1-truncated-report",
+    "expected": "sandbox::research::tests::a_closed_worker_report_is_only_the_failure_reason",
+    "caught": true,
+    "failed": [
+      "sandbox::research::tests::a_closed_worker_report_is_only_the_failure_reason"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "L2-report-ignored",
+    "expected": "sandbox::research::tests::a_closed_worker_report_is_only_the_failure_reason",
+    "caught": true,
+    "failed": [
+      "sandbox::research::tests::a_closed_worker_report_is_only_the_failure_reason"
+    ],
+    "compile_error": false
+  }
+]

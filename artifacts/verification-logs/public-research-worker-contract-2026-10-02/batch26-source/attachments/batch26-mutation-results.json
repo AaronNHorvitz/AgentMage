@@ -1,0 +1,88 @@
+[
+  {
+    "id": "E1-packet-exact-bytes",
+    "expected": "research_response::contract_tests::each_packet_decodes_exactly_and_no_other_encoding_does",
+    "caught": true,
+    "failed": [
+      "research_fetch::tests::only_the_exact_canonical_packet_bytes_decode",
+      "research_response::contract_tests::each_packet_decodes_exactly_and_no_other_encoding_does"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "E2-frame-exact-bytes",
+    "expected": "research_response::contract_tests::each_frame_decodes_exactly_and_no_other_metadata_encoding_does",
+    "caught": true,
+    "failed": [
+      "research_response::contract_tests::each_frame_decodes_exactly_and_no_other_metadata_encoding_does"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "E3-report-any-status",
+    "expected": "research_response::contract_tests::each_failure_report_decodes_and_nothing_else_does",
+    "caught": true,
+    "failed": [
+      "research_response::contract_tests::each_failure_report_decodes_and_nothing_else_does"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "E4-report-prefix-only",
+    "expected": "research_response::contract_tests::each_failure_report_decodes_and_nothing_else_does",
+    "caught": true,
+    "failed": [
+      "research_response::contract_tests::each_failure_report_decodes_and_nothing_else_does"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "E5-report-without-newline",
+    "expected": "research_response::contract_tests::each_fixture_is_exactly_what_the_engine_builds",
+    "caught": true,
+    "failed": [
+      "research_response::contract_tests::each_failure_report_decodes_and_nothing_else_does",
+      "research_response::contract_tests::each_fixture_is_exactly_what_the_engine_builds"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "E6-changed-code",
+    "expected": "research_response::contract_tests::each_fixture_is_exactly_what_the_engine_builds",
+    "caught": true,
+    "failed": [
+      "research_response::contract_tests::each_failure_report_decodes_and_nothing_else_does",
+      "research_response::contract_tests::each_fixture_is_exactly_what_the_engine_builds"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "B1-argument-digest",
+    "expected": "research_response::contract_tests::the_call_binds_its_packet_effect_and_network_scope",
+    "caught": true,
+    "failed": [
+      "research_effect_binding::tests::closed_request_and_registered_definition_mismatches_refuse_preparation",
+      "research_response::contract_tests::the_call_binds_its_packet_effect_and_network_scope",
+      "runtime_artifact::tests::research_journal_tests::dispatch_owner::retrieval::completion::research_completion_rejects_substituted_descriptions_before_builder_invocation"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "L1-truncated-report",
+    "expected": "research_sandbox::tests::a_closed_worker_report_is_only_the_failure_reason",
+    "caught": false,
+    "failed": [
+      "sandbox::research::tests::a_closed_worker_report_is_only_the_failure_reason"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "L2-report-ignored",
+    "expected": "research_sandbox::tests::a_closed_worker_report_is_only_the_failure_reason",
+    "caught": false,
+    "failed": [
+      "sandbox::research::tests::a_closed_worker_report_is_only_the_failure_reason"
+    ],
+    "compile_error": false
+  }
+]
