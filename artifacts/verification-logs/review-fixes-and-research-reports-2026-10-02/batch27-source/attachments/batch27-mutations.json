@@ -1,0 +1,216 @@
+[
+ {
+  "id": "MG-cancel-only-cancelled-terminal",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "runtime_loop::tests::research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::a_cancellation_latched_before_a_dependency_failure_cancels_the_budget",
+  "replace": [
+   [
+    "        if let Some(code) = self.cancel_research_budget() {\n            unresolved_codes.push(code.to_owned());\n        }\n",
+    "        if state == AgentStateKind::Cancelled\n            && let Some(code) = self.cancel_research_budget()\n        {\n            unresolved_codes.push(code.to_owned());\n        }\n"
+   ]
+  ]
+ },
+ {
+  "id": "MA-owner-before-latched-observation",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "runtime_loop::tests::research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::a_cancellation_latched_before_a_dependency_failure_cancels_the_budget",
+  "replace": [
+   [
+    "        if let Some(code) = self.cancel_research_budget() {\n            unresolved_codes.push(code.to_owned());\n        }\n",
+    ""
+   ],
+   [
+    "        if let Some(signal) = self.latched_cancellation.take() {\n            // A dependency",
+    "        if let Some(code) = self.cancel_research_budget() {\n            unresolved_codes.push(code.to_owned());\n        }\n        if let Some(signal) = self.latched_cancellation.take() {\n            // A dependency"
+   ]
+  ]
+ },
+ {
+  "id": "R1-inexact-draft-accepted",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "runtime_loop::tests::research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::a_report_draft_is_accepted_only_as_an_exact_admitted_completion",
+  "replace": [
+   [
+    "if report && (self.research.is_none() || !exact_report_draft(&payload.bytes)) {",
+    "if report && self.research.is_none() {"
+   ]
+  ]
+ },
+ {
+  "id": "R2-draft-outside-admitted-run",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "runtime_loop::tests::research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::a_report_draft_is_accepted_only_as_an_exact_admitted_completion",
+  "replace": [
+   [
+    "if report && (self.research.is_none() || !exact_report_draft(&payload.bytes)) {",
+    "if report && !exact_report_draft(&payload.bytes) {"
+   ]
+  ]
+ },
+ {
+  "id": "R3-blocked-draft-routed",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "runtime_loop::tests::research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::a_report_draft_is_accepted_only_as_an_exact_admitted_completion",
+  "replace": [
+   [
+    "                    Some(payload) if payload.media_type == RESEARCH_REPORT_DRAFT_MEDIA_TYPE => {\n                        return self.finish_invalid_proposal(&turn_id);\n                    }\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "R4-unverified-draft-output",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "runtime_loop::tests::research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_unverified_report_is_never_retained",
+  "replace": [
+   [
+    "                let output = if report {\n                    None\n                } else {",
+    "                let output = if false {\n                    None\n                } else {"
+   ]
+  ]
+ },
+ {
+  "id": "R5-no-flush-before-owner",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "runtime_loop::tests::research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admitted_run_retains_its_report_through_the_owner_before_its_outcome",
+  "replace": [
+   [
+    "            .flush;\n        flush(&mut self.tool_boundary).map_err(RuntimeLoopError::Dependency)?;\n        let run = self\n            .research",
+    "            .flush;\n        let _ = flush;\n        let run = self\n            .research"
+   ]
+  ]
+ },
+ {
+  "id": "R6-refusal-as-dependency",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "runtime_loop::tests::research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::a_refused_report_ends_the_run_without_output_or_retention",
+  "replace": [
+   [
+    "            Err(RuntimePortFailure::Invalid) => return Ok(ResearchReportPublication::Refused),\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "R7-reference-not-compared",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "runtime_loop::tests::research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::a_failed_or_mismatched_report_publication_stops_the_run",
+  "replace": [
+   [
+    "        verify_runtime_artifact_ref(&reference, &manifest)\n            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;\n        if reference != expected {\n            return Err(RuntimeLoopError::InvalidBoundaryResult);\n        }\n        let payload_reference = runtime_payload_reference(&manifest)\n            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;\n        self.emit_at_with_payload(\n            manifest.created_at_epoch_ms,\n            RuntimeEventKind::ArtifactCreated {\n                artifact_id: manifest.artifact_id.clone(),\n                manifest_sha256: manifest.manifest_sha256.clone(),\n            },\n            Some(turn_id),",
+    "        let _ = &expected;\n        let payload_reference = runtime_payload_reference(&manifest)\n            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;\n        self.emit_at_with_payload(\n            manifest.created_at_epoch_ms,\n            RuntimeEventKind::ArtifactCreated {\n                artifact_id: manifest.artifact_id.clone(),\n                manifest_sha256: manifest.manifest_sha256.clone(),\n            },\n            Some(turn_id),"
+   ]
+  ]
+ },
+ {
+  "id": "R8-no-creation-event",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "runtime_loop::tests::research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admitted_run_retains_its_report_through_the_owner_before_its_outcome",
+  "replace": [
+   [
+    "        self.emit_at_with_payload(\n            manifest.created_at_epoch_ms,\n            RuntimeEventKind::ArtifactCreated {\n                artifact_id: manifest.artifact_id.clone(),\n                manifest_sha256: manifest.manifest_sha256.clone(),\n            },\n            Some(turn_id),\n            None,\n            Some(payload_reference),\n        )?;\n",
+    "        let _ = payload_reference;\n"
+   ]
+  ]
+ },
+ {
+  "id": "R9-output-budget-not-charged",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "runtime_loop::tests::research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::a_report_the_output_budget_cannot_hold_is_not_retained",
+  "replace": [
+   [
+    "        if self\n            .resources\n            .consume(BudgetResource::OutputBytes, bytes)\n            .is_err()\n            || self.resources.admit_artifact(bytes).is_err()\n        {\n            return Ok(ResearchReportPublication::Exhausted);",
+    "        if self.resources.admit_artifact(bytes).is_err() {\n            return Ok(ResearchReportPublication::Exhausted);"
+   ]
+  ]
+ },
+ {
+  "id": "R10-draft-preview-retained",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "runtime_loop::tests::research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::an_admitted_run_retains_its_report_through_the_owner_before_its_outcome",
+  "replace": [
+   [
+    "            RESEARCH_REPORT_DRAFT_MEDIA_TYPE,\n            RuntimeArtifactKind::Report,\n            Some(turn_id),\n            None,\n            None,\n            false,",
+    "            RESEARCH_REPORT_DRAFT_MEDIA_TYPE,\n            RuntimeArtifactKind::Report,\n            Some(turn_id),\n            None,\n            None,\n            true,"
+   ]
+  ]
+ },
+ {
+  "id": "R11-no-stop-after-report",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "runtime_loop::tests::research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::a_cancellation_after_the_report_keeps_it_and_cancels_the_budget",
+  "replace": [
+   [
+    "            output\n        };\n        if self.stop_before_phase(cancellation, false)? {\n            return Ok(());\n        }\n",
+    "            output\n        };\n"
+   ]
+  ]
+ },
+ {
+  "id": "R12-refused-run-keeps-output-path",
+  "file": "kernel/engine/src/runtime_loop.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "runtime_loop::tests::research_admission_tests::completion_tests::report_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::report_tests::the_owner_refuses_a_draft_its_sources_do_not_support_and_retains_nothing",
+  "replace": [
+   [
+    "                ResearchReportPublication::Refused => {\n                    self.state\n                        .transition(AgentStateKind::Failed)\n                        .map_err(|_| RuntimeLoopError::State)?;\n                    self.close_turn(&turn_id, proposal.proposal_sha256)?;\n                    return self.finish_terminal(\n                        AgentStateKind::Failed,\n                        vec![RESEARCH_REPORT_REFUSED.to_owned()],\n                        None,\n                    );\n                }",
+    "                ResearchReportPublication::Refused => {\n                    return self.finish_invalid_proposal(&turn_id);\n                }"
+   ]
+  ]
+ }
+]

@@ -1,0 +1,101 @@
+{
+  "schema_version": 2,
+  "stage": "batch27-observation",
+  "source_revision": "14951e1b1b4daeb543904ef05ffc84294b554347",
+  "scope": "Batch 27 actual-process observation at 14951e1b: CLI help, catalog host operations, coding host startup refusal, recipe pre-launch checks, dirty-tree preservation and the public research worker outside its sandbox",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux",
+      "--features",
+      "public-research-worker",
+      "--bin",
+      "agentmage-public-research-worker"
+    ],
+    [
+      "python3",
+      "<state>/batch27-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "e2f09b828dc272dba25a0733f85b455f2f51a72f48cdf98cb4cdc6a3f7e7f520",
+      "private_sha256": "e2f09b828dc272dba25a0733f85b455f2f51a72f48cdf98cb4cdc6a3f7e7f520"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 8.792,
+      "log": "01.log",
+      "log_sha256": "4b59f06cc4826beff80bdec5fa8d69ca73b87776ace54042dd54565a799c1664",
+      "private_log_sha256": "1a5f9d85a7d07d4dca9030450b34a8409a5126c2d531b3da2d9b61078b59e8a6"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux",
+        "--features",
+        "public-research-worker",
+        "--bin",
+        "agentmage-public-research-worker"
+      ],
+      "exit_code": 0,
+      "seconds": 0.065,
+      "log": "02.log",
+      "log_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
+      "private_log_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "<state>/batch27-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 179.235,
+      "log": "03.log",
+      "log_sha256": "830ebe3b69267e42b72dad0ee9acd7cc8ece3b3cd68ac575356f0c332dd1bd5f",
+      "private_log_sha256": "830ebe3b69267e42b72dad0ee9acd7cc8ece3b3cd68ac575356f0c332dd1bd5f"
+    }
+  ]
+}

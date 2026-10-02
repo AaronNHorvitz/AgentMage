@@ -1,0 +1,143 @@
+[
+  {
+    "id": "MG-cancel-only-cancelled-terminal",
+    "expected": "runtime_loop::tests::research_admission_tests::a_cancellation_latched_before_a_dependency_failure_cancels_the_budget",
+    "caught": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::a_cancellation_latched_before_a_dependency_failure_cancels_the_budget"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "MA-owner-before-latched-observation",
+    "expected": "runtime_loop::tests::research_admission_tests::a_cancellation_latched_before_a_dependency_failure_cancels_the_budget",
+    "caught": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::a_cancellation_latched_before_a_dependency_failure_cancels_the_budget"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R1-inexact-draft-accepted",
+    "expected": "runtime_loop::tests::research_admission_tests::a_report_draft_is_accepted_only_as_an_exact_admitted_completion",
+    "caught": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::a_report_draft_is_accepted_only_as_an_exact_admitted_completion",
+      "runtime_loop::tests::research_admission_tests::completion_tests::report_tests::a_draft_that_is_not_exact_never_reaches_the_owner"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R2-draft-outside-admitted-run",
+    "expected": "runtime_loop::tests::research_admission_tests::a_report_draft_is_accepted_only_as_an_exact_admitted_completion",
+    "caught": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::a_report_draft_is_accepted_only_as_an_exact_admitted_completion"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R3-blocked-draft-routed",
+    "expected": "runtime_loop::tests::research_admission_tests::a_report_draft_is_accepted_only_as_an_exact_admitted_completion",
+    "caught": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::a_report_draft_is_accepted_only_as_an_exact_admitted_completion"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R4-unverified-draft-output",
+    "expected": "runtime_loop::tests::research_admission_tests::an_unverified_report_is_never_retained",
+    "caught": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_unverified_report_is_never_retained"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R5-no-flush-before-owner",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admitted_run_retains_its_report_through_the_owner_before_its_outcome",
+    "caught": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admitted_run_retains_its_report_through_the_owner_before_its_outcome"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R6-refusal-as-dependency",
+    "expected": "runtime_loop::tests::research_admission_tests::a_refused_report_ends_the_run_without_output_or_retention",
+    "caught": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::a_refused_report_ends_the_run_without_output_or_retention",
+      "runtime_loop::tests::research_admission_tests::completion_tests::report_tests::the_owner_refuses_a_draft_its_sources_do_not_support_and_retains_nothing"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R7-reference-not-compared",
+    "expected": "runtime_loop::tests::research_admission_tests::a_failed_or_mismatched_report_publication_stops_the_run",
+    "caught": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::a_failed_or_mismatched_report_publication_stops_the_run"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R8-no-creation-event",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admitted_run_retains_its_report_through_the_owner_before_its_outcome",
+    "caught": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::an_admitted_run_retains_its_report_through_the_owner_before_its_outcome",
+      "runtime_loop::tests::research_admission_tests::completion_tests::report_tests::a_cancellation_after_the_report_keeps_it_and_reads_back_as_cancelled",
+      "runtime_loop::tests::research_admission_tests::completion_tests::report_tests::a_deep_run_retains_its_report_through_the_owner_and_reads_it_back",
+      "runtime_loop::tests::research_admission_tests::completion_tests::report_tests::a_report_with_unresolved_questions_reads_back_as_partial",
+      "runtime_loop::tests::research_admission_tests::completion_tests::report_tests::source_drift_after_the_report_is_refused_on_each_read"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R9-output-budget-not-charged",
+    "expected": "runtime_loop::tests::research_admission_tests::a_report_the_output_budget_cannot_hold_is_not_retained",
+    "caught": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::a_report_the_output_budget_cannot_hold_is_not_retained"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R10-draft-preview-retained",
+    "expected": "runtime_loop::tests::research_admission_tests::an_admitted_run_retains_its_report_through_the_owner_before_its_outcome",
+    "caught": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::a_cancellation_after_the_report_keeps_it_and_cancels_the_budget",
+      "runtime_loop::tests::research_admission_tests::a_failed_or_mismatched_report_publication_stops_the_run",
+      "runtime_loop::tests::research_admission_tests::a_refused_report_ends_the_run_without_output_or_retention",
+      "runtime_loop::tests::research_admission_tests::an_admitted_run_retains_its_report_through_the_owner_before_its_outcome",
+      "runtime_loop::tests::research_admission_tests::completion_tests::report_tests::a_cancellation_after_the_report_keeps_it_and_reads_back_as_cancelled",
+      "runtime_loop::tests::research_admission_tests::completion_tests::report_tests::a_deep_run_retains_its_report_through_the_owner_and_reads_it_back",
+      "runtime_loop::tests::research_admission_tests::completion_tests::report_tests::a_report_with_unresolved_questions_reads_back_as_partial",
+      "runtime_loop::tests::research_admission_tests::completion_tests::report_tests::source_drift_after_the_report_is_refused_on_each_read",
+      "runtime_loop::tests::research_admission_tests::completion_tests::report_tests::the_owner_refuses_a_draft_its_sources_do_not_support_and_retains_nothing"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R11-no-stop-after-report",
+    "expected": "runtime_loop::tests::research_admission_tests::a_cancellation_after_the_report_keeps_it_and_cancels_the_budget",
+    "caught": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::a_cancellation_after_the_report_keeps_it_and_cancels_the_budget",
+      "runtime_loop::tests::research_admission_tests::completion_tests::report_tests::a_cancellation_after_the_report_keeps_it_and_reads_back_as_cancelled"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R12-refused-run-keeps-output-path",
+    "expected": "runtime_loop::tests::research_admission_tests::completion_tests::report_tests::the_owner_refuses_a_draft_its_sources_do_not_support_and_retains_nothing",
+    "caught": true,
+    "failed": [
+      "runtime_loop::tests::research_admission_tests::completion_tests::report_tests::the_owner_refuses_a_draft_its_sources_do_not_support_and_retains_nothing"
+    ],
+    "compile_error": false
+  }
+]

@@ -1,0 +1,324 @@
+{
+ "record_type": "agentmage-review-fixes-and-research-reports-verification",
+ "date": "2026-10-02",
+ "base_commit": "a8fd53e3a591a6182d509e9cc53f64ac88df2f75",
+ "head_commit": "14951e1b1b4daeb543904ef05ffc84294b554347",
+ "source_commit": "f31195a4d7fc51e90631b6a7e73a201218b2440d",
+ "retained_logs": "artifacts/verification-logs/review-fixes-and-research-reports-2026-10-02",
+ "stages": [
+  "batch27-source",
+  "batch27-core",
+  "batch27-rebind",
+  "batch27-gate",
+  "batch27-boundary",
+  "batch27-security-index",
+  "batch27-blocked-causes",
+  "batch27-extended-rest",
+  "batch27-observation"
+ ],
+ "inventory": "artifacts/verification-logs/review-fixes-and-research-reports-2026-10-02/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch27-source/02.log",
+  "engine": "batch27-source/03.log",
+  "repository_map": "batch27-source/04.log",
+  "inference": "batch27-source/05.log",
+  "knowledge": "batch27-source/06.log",
+  "linux": "batch27-source/07.log",
+  "linux_research_feature_build": "batch27-source/08.log",
+  "linux_research_feature_tests": "batch27-source/09.log",
+  "linux_research_worker_binary_tests": "batch27-source/10.log",
+  "host": "batch27-source/11.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0142-review-fixes-and-research-reports-through-the-coordinator.md"
+  ],
+  "source_commits": [
+   {
+    "commit": "f31195a4d7fc51e90631b6a7e73a201218b2440d",
+    "scope": "Decision 0142: review F1 (a synthetic admitted run whose model phase observes the cancellation and then reports an uncertain, unavailable or exhausted dependency; the outcome names the failure's own code, the observation follows the closed turn and the budget owner is asked once, after the observation and before the terminal), N1 (the canonical research source document on the owner's Poisoned answer during a pending effect), N2 (Decision 0139 step 2 corrected in place) and N4 (the worker contract: no complete frame); AMR-03.1.4: RuntimeResearchBudgetPort::publish_research_report, the coordinator retains an admitted run's verified exact report draft through the canonical report owner before its terminal (output and artifact budgets, a run-level report manifest of the completing turn without operation, receipt or preview, a journal flush, only the reference its manifest describes, then the creation event), names runtime.research.report_refused on an owner refusal and refuses the draft media type outside an admitted run's completion; synthetic coordinator tests, a composed report module through the real owners, the coordinator and canonical research source architecture documents, LOCAL-TESTING, the new open TASKS row and the work selector (79 amendment rows)"
+   }
+  ],
+  "review_resolved": "a8fd53e3a591 (PASS; finding F1 low; notes N1, N2 and N4), by Decision 0142",
+  "components": [
+   {
+    "row": "AMR-03.1.4",
+    "scope": "component row, engine only: through the real coordinator and the real owners an admitted run with a deep plan makes three searches and two visits and completes with a report draft citing three of its sources; the canonical report owner checks the draft against the run's complete source bundles and accounting before it retains it, and the retained-report reader rebuilds it as checked, partial, expired or cancelled; the owner refuses, with nothing retained, a draft citing the plan, a forged source reference, an absent excerpt, an excerpt bound to another body and more sources than the plan's visits; a draft that is not an admitted run's exact completion never reaches the owner; source drift refuses every read, and reopening reads the same report without replay. The native result is synthetic, the payload store is in memory and the fixture model takes the source references from the test glue; no host, worker, provider or model publishes a report"
+   }
+  ],
+  "mutation_checks": "run on the exact source tree before it was committed, with private tooling that applies one exact replacement, runs the engine's filtered library tests (research_admission_tests, or its report module) and restores the file; the specification and results are attached to the batch27-source stage. 14 single mutations, 14 caught: the review's two survivors (cancelling the budget only for a cancelled terminal, and asking the owner before the latched observation is emitted), and in the report path an inexact draft accepted, a draft outside an admitted run, a draft in a blocked proposal, an unverified draft as output, no flush before the owner is asked, a refusal taken as a dependency failure, the returned reference not compared, no creation event, the output budget not charged, a retained preview, no stop check after the publication and a refused run ended as an invalid proposal. The tree was verified identical afterwards",
+  "failure_comparison": "linux 189 passed, 19 failed, 51 ignored, failure names identical to batch 26; with the public-research-worker feature the Linux crate's tests build, its research tests pass (13 passed, 6 ignored native) and the worker binary's tests pass (21 passed, 3 ignored); host 474 passed, 53 failed, 11 ignored, failure names identical to batch 26; the engine passes 1,540 tests (14 new: eight synthetic coordinator cases and six composed report cases) with 8 ignored, knowledge 302",
+  "retained_failures": [
+   {
+    "stage": "batch27-source",
+    "indexes": [
+     7,
+     11
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, with failure names identical to batch 26"
+   },
+   {
+    "stage": "batch27-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "interrupted_stages": [],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch27-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the native-prerequisite host failures (batch27-source/11.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch27-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch27-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch27-blocked-causes/03.log) and the documentation gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+    "stale_since": "before batch 12 (four other inputs)",
+    "blocker": "its producer runs the full host suite (the native-prerequisite failures, batch27-source/11.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the product gate and the documentation gate; its check mode still validates it at its own revision (batch27-extended-rest/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the full host suite with all features; its check mode still validates it at its own revision (batch27-extended-rest/02.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
+    "stale_since": "before batch 18 (shells/host/src/headless.rs)",
+    "blocker": "already stale at the review base for an input this batch does not change; historical"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-kernel-engine"
+  ],
+  "cascade": "the one SBOM write staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index and security map, the Story 3.1 component inventory, configuration startup report and security map and the Sprint 27 to 34 knowledge boundary reviews (batch27-core) and the Sprint 79 and Sprint 108 reports (batch27-rebind); the coordinator change staled the Story 1.2 contract boundary report and the Story 13.4 dispatch preflight report (batch27-core), the Story 11.2 AC2 report (batch27-rebind), the Story 11.2 gate report and the Story 23.4 runtime evidence (batch27-gate), the Story 23.4 coordinator boundary review and the Sprint 50 runtime contract review (batch27-boundary) and the Story 23.4 security map and evidence index (batch27-security-index); every kernel change staled the Muse codec chain and the Sprint 13 report, and through them the Story 13.4 context profile report (batch27-rebind); the renewed component inventory staled the Story 11.1 security map and through it the Story 11.2 storage security, frozen-scope, AC1 and AC3 reports and the Story 12.1 map (batch27-rebind). The operational store and research journal did not change, so the store wave and the Story 22.1 canary were not stale",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "5bfb4dabaadd62a2f5ad91a7a175333f98a524be",
+    "to": "db42f1ce78d5e3ed156f75171e47e241f1da6dbb",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "reason": "Decision 0142 source change in f31195a4: the research budget port gains publish_research_report, and an admitted run's verified completion that is an exact report draft is retained through the canonical report owner before its terminal (refusal named runtime.research.report_refused; the draft media type is refused outside an admitted run's completion); no operational store, schema or migration path changes"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 27 rebind stage; only the bound digest of artifacts/sprints/sprint-11/story-11.1/security-evidence-map.json (renewed in the same stage) changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 27 rebind stage; only the bound digest of artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "reason": "regenerated by the batch 27 rebind stage; only the bound digests of kernel/engine/src/runtime_loop.rs and of its own results log, and that log's byte length, changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 27 rebind stage; only the bound digest of artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json changed"
+     }
+    ]
+   }
+  ],
+  "newly_stale_disposition": "only historical records: retained stage records of batches 21 to 26 that bind the work selector, its test or the Story 11.2 gate script as they were at their own revisions",
+  "runtime_campaign": "renewed: the Story 23.4 runtime evidence (batch27-gate) and the coordinator boundary review, the Sprint 50 runtime contract review, the security map and the evidence index (batch27-boundary, batch27-security-index)",
+  "cli_observation": {
+   "source_commit": "14951e1b1b4daeb543904ef05ffc84294b554347",
+   "binaries_sha256": {
+    "agentmage": "1b8057399d984cab2cb9e5eeeac36916617d2b7c98a6cf519ce68fd0a3337715",
+    "agentmage-host": "1692730604a7f3955d725643063c548f155d64d7f22c893dd4088c91b7f85ace",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "catalog_host_operations": [
+    {
+     "name": "doc-pack-list-empty",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import-other-license",
+     "operation": "doc-pack",
+     "exit_code": 4
+    },
+    {
+     "name": "doc-pack-search",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-inspect",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember-credential",
+     "operation": "memory",
+     "exit_code": 4
+    },
+    {
+     "name": "memory-list",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-revoke",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-delete",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-signer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-issuer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-install",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-1",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-renamed",
+     "operation": "extension",
+     "exit_code": 3
+    },
+    {
+     "name": "extension-list",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "ended-run-read",
+     "operation": "ended-run",
+     "exit_code": 0
+    }
+   ],
+   "catalog_host_wire_refusals_seen": false,
+   "catalog_workspace_preserved": true,
+   "recipe_shown_before_launch": {
+    "exit_code": 5,
+    "then_refused_at": "linux.repository.git_artifact.invalid",
+    "preserved": true
+   },
+   "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+   },
+   "malformed_frame_injected": false,
+   "research_worker": {
+    "binary": {
+     "sha256": "1b01fb60bdec4894883e61ca5fea8906d57760c78ce629f77b71e80cc0ea0403",
+     "bytes": 157829432
+    },
+    "runs": [
+     {
+      "name": "worker-ambient-environment",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     },
+     {
+      "name": "worker-extra-argument",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     },
+     {
+      "name": "worker-admitted-environment",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     }
+    ],
+    "sandboxed": false,
+    "network_attempted": false
+   },
+   "research_admission_composed_by_an_actual_process": false,
+   "qualification": "actual-binary-catalog-host-operations-under-exact-wire-decoding-plus-native-prerequisite-refusal"
+  },
+  "not_run": [
+   "any host, worker, provider or model composing a research admission or publishing a report; the report path ran only in engine tests",
+   "a real model citing sources: the fixture model took the source references from the test glue",
+   "the public research worker in its sandbox, with a packet, DNS, TLS or a network",
+   "the native boundary of AMR-03.1.2, AMR-03.2.3 and AMR-03.2.4",
+   "the native-only Linux boundary tests and the factory's composition glue",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [
+    {
+     "row": "AMR-03.1.4",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component row, engine only: an admitted run's report draft retained through the coordinator and the canonical report owner and read back through fresh checks; no host, worker, provider or model"
+    }
+   ],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested after the ledger commit; open"
+  }
+ }
+}
