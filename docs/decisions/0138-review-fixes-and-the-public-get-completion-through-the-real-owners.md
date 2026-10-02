@@ -105,8 +105,10 @@ The owners are the engine's own:
 - the encrypted operational store and its journal;
 - the budget owner, which opens the budget for the plan the coordinator
   publishes and reserves each request;
-- grant issuance: one session parent grant and one exact single-use network
-  grant per call;
+- the grant issuer: one session parent grant and one exact single-use
+  network grant per call. The issuer is the engine's; the decision to issue
+  under a task-authorized plan is the glue's. (Corrected under Decision 0139,
+  note N2 of the review of `b59afdb9`.)
 - the authority transaction, which consumes the grant and commits the start
   before dispatch;
 - the fresh-reservation dispatch proof;

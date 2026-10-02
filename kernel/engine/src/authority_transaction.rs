@@ -144,6 +144,10 @@ impl AuthorityTransactionRequest {
             && self.context.task_id.as_str() == packet.task_id()
             && self.context.now_epoch_ms == self.occurred_at_epoch_ms
             && self.context.argument_sha256 == self.call.arguments.sha256
+            // The governing policy evaluates the packet's own destination
+            // (Decision 0139), not a scope the caller chose.
+            && self.context.network_scope.as_deref()
+                == Some(format!("https:{}:443", packet.request().target.domain).as_str())
             && self.occurred_at_epoch_ms == event.occurred_at_epoch_ms
             && event.run_id == context.run_id
             && event.session_id == context.session_id

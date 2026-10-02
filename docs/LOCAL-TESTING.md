@@ -504,24 +504,30 @@ admitted development profile and its resource and confinement checks.
 ### Research completion through the real owners
 
 No host composes a research admission yet, so a research run cannot be launched from
-the CLI ([Decisions 0137](decisions/0137-explicit-research-admission-in-the-coordinator.md)
-and [0138](decisions/0138-review-fixes-and-the-public-get-completion-through-the-real-owners.md)).
+the CLI ([Decisions 0137](decisions/0137-explicit-research-admission-in-the-coordinator.md),
+[0138](decisions/0138-review-fixes-and-the-public-get-completion-through-the-real-owners.md)
+and [0139](decisions/0139-review-fixes-and-public-get-grant-issuance-for-an-admitted-run.md)).
 The engine test that composes the real coordinator with the real research owners runs
-in process. The owners are the encrypted store, the budget owner, grant consumption,
-the authority transaction, completion normalization and the canonical reader. The
-native result is synthetic, and nothing is sent:
+in process. The owners are the encrypted store, the budget owner, grant issuance and
+consumption, the authority transaction, completion normalization and the canonical
+reader. The native result is synthetic, and nothing is sent:
 
 ```sh
 cargo test --locked --offline -p agentmage-kernel-engine --lib research_admission_tests
 ```
 
-It runs 17 tests:
+It runs 26 tests:
 
 - the coordinator's admission checks;
 - the public GET read back through the canonical reader, before and after the store is
   reopened;
+- a plan that asks before each request: the person approves the exact request, or
+  declines it and nothing is issued or spent;
+- the owner's refusal of each issuance the plan, the parent or the policy does not
+  authorize, a second grant for one call, a cancelled budget, a spent request, an
+  exhausted parent and a finished run;
 - a forged receipt digest, a receipt the owner did not issue and a stale receipt;
-- ten changed terminals;
+- eleven changed terminals, and a start that names another destination;
 - partial bundles and source drift.
 
 This is a component check, not a research demonstration. No worker, provider or model

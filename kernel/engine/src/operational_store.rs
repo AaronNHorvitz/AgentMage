@@ -81,6 +81,12 @@ use crate::write_transaction::{
     execute_write_transaction_with_checkpoint,
 };
 
+#[path = "research_grant.rs"]
+mod research_grant;
+pub use research_grant::{
+    IssuedPublicGetGrant, PublicGetAuthorization, PublicGetGrantError, PublicGetGrantRequest,
+};
+
 const SCHEMA_VERSION: i64 = 24;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
@@ -1648,10 +1654,11 @@ pub struct PendingRuntimeEffectCommit {
 }
 
 /// A pending effect's terminal closes the start's call, in the start's turn
-/// and operation, under the receipt this owner issued (Decision 0138). A
-/// terminal under any other receipt would record a completion the authority
-/// never issued. The journal already refuses a terminal that does not
-/// directly follow the start in the same run, session and task.
+/// and operation, under the receipt this owner issued (Decision 0138), and
+/// names the start as its cause (Decision 0139). A terminal under any other
+/// receipt would record a completion the authority never issued. The journal
+/// already refuses a terminal that does not directly follow the start in the
+/// same run, session and task.
 fn terminal_names_pending_effect(
     pending: &PendingRuntimeEffectCommit,
     terminal: &RuntimeEvent,
@@ -1680,6 +1687,7 @@ fn terminal_names_pending_effect(
     names_receipt
         && terminal.turn_id == started.turn_id
         && terminal.operation_id == started.operation_id
+        && terminal.causation_event_id.as_ref() == Some(&started.event_id)
 }
 
 /// Single-use proof that one specialized effect awaits its terminal receipt event.

@@ -18,6 +18,32 @@ Expected worker, runtime-manifest and confinement identities come independently 
 trusted admitted composition. Finding those identities inside retained material is not
 admission, and the canonical consumer cannot qualify a native producer by itself.
 
+## Grant issuance for an admitted run
+
+Decision 0139 adds `issue_public_get_grant` to `DurableAuthorityRuntime`. The existing
+grant issuer derives one exact single-use network grant from the session parent whose
+preview is the digest of the plan's full canonical bytes. That parent records that the
+person confirmed this exact plan. A task-authorized plan needs nothing more for a
+request inside it. An ask plan also needs the person's approval of the exact request,
+whose preview is the packet's digest; `prepare_public_get` returns that packet without
+recording anything.
+
+Before anything is committed, the budget owner checks the request without spending.
+The plan must not be offline, and the budget must not be cancelled. The packet is
+prepared from the retained plan's restrictions and original clock. The target must
+classify as a disclosed query or a visit, and a dry-run reservation must fit. The full
+plan must still be live. The call must match its registered tool and the packet
+exactly. An action that already holds a grant never receives another. The governing
+policy evaluates the exact child grant against the packet's own destination. The grant
+names the packet as its only effect and expires with the packet or the parent,
+whichever comes first. The owner commits the parent's new revision, the child and the
+caller's permission event atomically. A refusal commits nothing and spends nothing.
+
+Issuance is not a reservation or a dispatch proof. At the start, the authority
+transaction also requires its policy context to name the packet's own destination.
+No host, worker or provider issues these grants yet; Decision 0084 still governs
+activation.
+
 ## Acyclic artifact publication
 
 Retain six ordinary Report artifacts through the existing full-payload owner:

@@ -13,9 +13,9 @@ use sha2::{Digest, Sha256};
 
 use crate::operational_store::OperationalStore;
 use crate::research_budget::{
-    ResearchBudget, ResearchBudgetError, ResearchBudgetProgress, ResearchScope,
+    ResearchBudget, ResearchBudgetError, ResearchBudgetProgress, ResearchNetworkMode, ResearchScope,
 };
-use crate::research_fetch::{PreparedPublicGet, PublicGetWorkerPacket};
+use crate::research_fetch::{PreparedPublicGet, PublicGetDraft, PublicGetWorkerPacket};
 use crate::research_plan::PreparedResearchPlan;
 use crate::runtime_artifact::{
     RuntimeArtifactPayloadStore, RuntimeArtifactReadRequest, load_artifact_manifest,
@@ -472,6 +472,70 @@ pub(crate) fn reserve<S: RuntimeArtifactPayloadStore>(
         operation_id: packet.request().operation_id.clone(),
         request_sha256: packet.sha256().to_owned(),
         reservation_sha256: hash,
+    })
+}
+
+/// One request the budget owner would reserve at the checked instant, with its
+/// packet prepared from the original plan. Nothing was spent or recorded, and
+/// it is not a reservation, approval or grant (Decision 0139).
+pub(crate) struct CheckedResearchRequest {
+    pub(crate) prepared: PreparedPublicGet,
+    pub(crate) network: ResearchNetworkMode,
+    pub(crate) plan_sha256: String,
+}
+
+/// Checks, without appending a revision, that the open budget would reserve
+/// this exact request at `now_epoch_ms`. The packet is prepared from the
+/// retained plan's restrictions and original clock at `prepared_at_epoch_ms`.
+/// A clock observation, a refusal and the dry-run reservation, including its
+/// cancellation check, all stay on the loaded copy; only `reserve` spends, at
+/// the effect's start, where the journal's capacity is also checked.
+pub(crate) fn check_request<S: RuntimeArtifactPayloadStore>(
+    store: &OperationalStore,
+    payloads: &S,
+    context: &ResearchBudgetContext,
+    request: PublicGetDraft,
+    prepared_at_epoch_ms: u64,
+    now_epoch_ms: u64,
+) -> Result<CheckedResearchRequest, ResearchJournalError> {
+    let mut retained = load(store, &context.task_id)?;
+    if !context_matches(&retained.root, context) {
+        return Err(ResearchJournalError::Binding);
+    }
+    let network = retained
+        .scope
+        .network_requirement()
+        .map_err(ResearchJournalError::Budget)?;
+    let prepared = PreparedPublicGet::prepare(
+        &retained.scope,
+        request,
+        retained.budget.started_epoch_ms(),
+        prepared_at_epoch_ms,
+    )
+    .map_err(|_| ResearchJournalError::Binding)?;
+    let packet = prepared.packet();
+    if now_epoch_ms < packet.prepared_at_epoch_ms() || now_epoch_ms >= packet.deadline_epoch_ms() {
+        return Err(ResearchJournalError::Binding);
+    }
+    let operation = retained
+        .scope
+        .classify(&packet.request().target)
+        .map_err(ResearchJournalError::Budget)?;
+    retained
+        .budget
+        .reserve(
+            &retained.scope,
+            &packet.request().operation_id,
+            operation,
+            packet.request().maximum_response_bytes,
+            now_epoch_ms,
+        )
+        .map_err(ResearchJournalError::Budget)?;
+    verify_live_plan(store, payloads, &retained.root, now_epoch_ms)?;
+    Ok(CheckedResearchRequest {
+        prepared,
+        network,
+        plan_sha256: retained.root.plan.payload_sha256,
     })
 }
 
