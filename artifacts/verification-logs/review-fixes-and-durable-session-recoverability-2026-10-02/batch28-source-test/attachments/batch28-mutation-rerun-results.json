@@ -1,0 +1,11 @@
+[
+  {
+    "id": "S4-foreign-producer-accepted",
+    "expected": "coding_session_recoverability::tests::each_change_record_must_read_back_as_that_runs_own_verified_record",
+    "caught": true,
+    "failed": [
+      "coding_session_recoverability::tests::each_change_record_must_read_back_as_that_runs_own_verified_record"
+    ],
+    "compile_error": false
+  }
+]

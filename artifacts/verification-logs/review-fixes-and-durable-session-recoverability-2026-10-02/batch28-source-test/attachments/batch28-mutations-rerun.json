@@ -1,0 +1,17 @@
+[
+ {
+  "id": "S4-foreign-producer-accepted",
+  "file": "shells/host/src/coding_session_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_session_recoverability"
+  ],
+  "expected": "coding_session_recoverability::tests::each_change_record_must_read_back_as_that_runs_own_verified_record",
+  "replace": [
+   [
+    "                || change.record.producer_run_id != run.run_id\n",
+    ""
+   ]
+  ]
+ }
+]

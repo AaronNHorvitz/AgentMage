@@ -1,0 +1,86 @@
+{
+  "schema_version": 2,
+  "stage": "batch28-extended-rest",
+  "source_revision": "a20caa2de41feb35df22369e66d8729f3497482f",
+  "scope": "Batch 28 extended-rest at the security index commit a20caa2d",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/sprint_31_evidence.py"
+    ],
+    [
+      "python3",
+      "scripts/sprint_34_evidence.py"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/sprint_31_evidence.py": "4ac024bde75da8d6051c2da52cbc061432f1e7f1b03fea49ef783abbc5429e16",
+    "scripts/sprint_34_evidence.py": "0d38905ecc698f53d44170c42879ee7d73f75de32c14d6ace0c0a113459ac056",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/sprint_31_evidence.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.061,
+      "log": "01.log",
+      "log_sha256": "95be5554dc82d8f04e9a83158352a1d8b315c35ab30e5ae2553360f71a1cd25c",
+      "private_log_sha256": "95be5554dc82d8f04e9a83158352a1d8b315c35ab30e5ae2553360f71a1cd25c"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "scripts/sprint_34_evidence.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.073,
+      "log": "02.log",
+      "log_sha256": "3f2c1eacbf4c2db28377ac2efc46724da1a3ca84cd5c89a43a3f5b7d1ba0883a",
+      "private_log_sha256": "3f2c1eacbf4c2db28377ac2efc46724da1a3ca84cd5c89a43a3f5b7d1ba0883a"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.077,
+      "log": "03.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.004,
+      "log": "04.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

@@ -1,0 +1,287 @@
+[
+ {
+  "id": "S1-earlier-run-open-accepted",
+  "file": "shells/host/src/coding_session_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_session_recoverability"
+  ],
+  "expected": "coding_session_recoverability::tests::a_session_with_any_unreleased_incomplete_or_foreign_run_is_never_declared",
+  "replace": [
+   [
+    "        || earlier.iter().any(|run| !run.closed)\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "S2-declaring-run-closed-accepted",
+  "file": "shells/host/src/coding_session_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_session_recoverability"
+  ],
+  "expected": "coding_session_recoverability::tests::a_session_with_any_unreleased_incomplete_or_foreign_run_is_never_declared",
+  "replace": [
+   [
+    "        || declaring.closed\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "S3-incomplete-accepted",
+  "file": "shells/host/src/coding_session_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_session_recoverability"
+  ],
+  "expected": "coding_session_recoverability::tests::a_session_with_any_unreleased_incomplete_or_foreign_run_is_never_declared",
+  "replace": [
+   [
+    "            !run.complete\n                ||",
+    "            false\n                ||"
+   ]
+  ]
+ },
+ {
+  "id": "S4-foreign-producer-accepted",
+  "file": "shells/host/src/coding_session_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_session_recoverability"
+  ],
+  "expected": "coding_session_recoverability::tests::each_change_record_must_read_back_as_that_runs_own_verified_record",
+  "replace": [
+   [
+    "                || change.record.producer_run_id != run.run_id\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "S5-read-bound-ignored",
+  "file": "shells/host/src/coding_session_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_session_recoverability"
+  ],
+  "expected": "coding_session_recoverability::tests::each_change_record_must_read_back_as_that_runs_own_verified_record",
+  "replace": [
+   [
+    "                    reference.byte_size <= MAX_CHANGE_RECORD_READ_BYTES\n                        &&",
+    "                    true &&"
+   ]
+  ]
+ },
+ {
+  "id": "S6-unknown-stored-as-success",
+  "file": "shells/host/src/coding_session_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_session_recoverability"
+  ],
+  "expected": "coding_session_recoverability::tests::each_execution_maps_to_its_stored_entry_and_back",
+  "replace": [
+   [
+    "        ExecutedEffectOutcome::Unknown => (None, false),",
+    "        ExecutedEffectOutcome::Unknown => (Some(agentmage_kernel_contracts::OperationOutcome::Succeeded), false),"
+   ]
+  ]
+ },
+ {
+  "id": "S7-store-miss-forgotten",
+  "file": "shells/host/src/coding_session_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_session_recoverability"
+  ],
+  "expected": "coding_session_recoverability::tests::persisted::a_restart_or_a_missed_record_leaves_the_session_undeclared",
+  "replace": [
+   [
+    "            self.missed = true;\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "S8-restart-not-marked",
+  "file": "shells/host/src/coding_session_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_session_recoverability"
+  ],
+  "expected": "coding_session_recoverability::tests::persisted::a_restart_or_a_missed_record_leaves_the_session_undeclared",
+  "replace": [
+   [
+    "                match records.attach(run_id, RUN_EFFECT_RECORD_OWNER, true) {",
+    "                match records.attach(run_id, RUN_EFFECT_RECORD_OWNER, false) {"
+   ]
+  ]
+ },
+ {
+  "id": "R1-publication-not-stored",
+  "file": "shells/host/src/coding_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_session_recoverability"
+  ],
+  "expected": "coding_session_recoverability::tests::persisted::a_persisted_recorder_stores_each_kept_record_and_the_session_declares_it_later",
+  "replace": [
+   [
+    "                if let Some(chain) = &mut self.persisted {\n                    chain.append(",
+    "                if let Some(chain) = &mut self.persisted.as_mut().filter(|_| false) {\n                    chain.append("
+   ]
+  ]
+ },
+ {
+  "id": "R2-stored-chain-ignores-memory",
+  "file": "shells/host/src/coding_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_session_recoverability"
+  ],
+  "expected": "coding_session_recoverability::tests::persisted::a_restart_or_a_missed_record_leaves_the_session_undeclared",
+  "replace": [
+   [
+    "            .filter(|chain| self.complete && chain.kept_every_entry())",
+    "            .filter(|chain| chain.kept_every_entry())"
+   ]
+  ]
+ },
+ {
+  "id": "R3-session-may-name-run",
+  "file": "shells/host/src/coding_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "cli_runtime"
+  ],
+  "expected": "cli_runtime::tests::run_declarations_are_kept_only_for_this_run_and_a_report_only_when_it_verifies",
+  "replace": [
+   [
+    "        || report.run_id.as_deref() != run_id\n",
+    "        || (run_id.is_some() && report.run_id.as_deref() != run_id)\n"
+   ]
+  ]
+ },
+ {
+  "id": "C1-session-not-verified",
+  "file": "shells/host/src/cli_runtime.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "cli_runtime"
+  ],
+  "expected": "cli_runtime::tests::run_declarations_are_kept_only_for_this_run_and_a_report_only_when_it_verifies",
+  "replace": [
+   [
+    "        declarations.session_recoverability = None;\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "C2-session-not-shown",
+  "file": "shells/host/src/coding_development_client.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_development_client"
+  ],
+  "expected": "coding_development_client::tests::run_declarations_show_recoverability_and_each_context_view_or_say_unavailable",
+  "replace": [
+   [
+    "    rendered.push_str(&session_recoverability.map_or_else(",
+    "    rendered.push_str(&None::<&crate::coding_recoverability::RecoverabilityReport>.map_or_else("
+   ]
+  ]
+ },
+ {
+  "id": "D1-restart-as-continuation",
+  "file": "shells/host/src/coding_development_runtime.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_development_runtime"
+  ],
+  "expected": "coding_development_runtime::tests::a_run_resumed_after_a_restart_marks_its_stored_chains_whatever_the_host_flag_says",
+  "replace": [
+   [
+    "        (true, true) => StoredChainStart::AfterRestart,",
+    "        (true, true) => StoredChainStart::ContinueInHost,"
+   ]
+  ]
+ },
+ {
+  "id": "L1-resumed-run-no-session",
+  "file": "shells/host/src/coding_live_runtime.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_live_runtime"
+  ],
+  "expected": "coding_live_runtime::tests::a_resumed_run_declares_neither_part_whatever_its_owners_hold",
+  "replace": [
+   [
+    "        session_recoverability: host_now_epoch_ms()\n            .and_then(|now| runtime.session_recoverability(request, now)),",
+    "        session_recoverability: host_now_epoch_ms()\n            .filter(|_| !resumed)\n            .and_then(|now| runtime.session_recoverability(request, now)),"
+   ]
+  ]
+ },
+ {
+  "id": "E1-policy-unchecked",
+  "file": "kernel/engine/src/run_effect_record_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "run_effect_record_store"
+  ],
+  "expected": "run_effect_record_store::tests::malformed_identities_and_entries_are_refused_before_anything_is_written",
+  "replace": [
+   [
+    "                digest(policy_sha256)\n                    &&",
+    "                true &&"
+   ]
+  ]
+ },
+ {
+  "id": "E2-session-position-unchecked",
+  "file": "kernel/engine/src/run_effect_record_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "run_effect_record_store"
+  ],
+  "expected": "run_effect_record_store::tests::a_tampered_chain_is_refused_poisons_the_store_and_blocks_reopening",
+  "replace": [
+   [
+    "            || Some(loaded.stored.session_position) != u64::try_from(index + 1).ok()\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "E3-noncanonical-accepted",
+  "file": "kernel/engine/src/run_effect_record_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "run_effect_record_store"
+  ],
+  "expected": "run_effect_record_store::tests::a_tampered_chain_is_refused_poisons_the_store_and_blocks_reopening",
+  "replace": [
+   [
+    "            || !encode(&entry).is_ok_and(|encoded| encoded == bytes)\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "E4-unknown-may-claim-change",
+  "file": "kernel/engine/src/run_effect_record_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "run_effect_record_store"
+  ],
+  "expected": "run_effect_record_store::tests::malformed_identities_and_entries_are_refused_before_anything_is_written",
+  "replace": [
+   [
+    "                    && (outcome.is_some() || !changed)\n",
+    ""
+   ]
+  ]
+ }
+]

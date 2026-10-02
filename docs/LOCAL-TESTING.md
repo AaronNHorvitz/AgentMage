@@ -507,7 +507,10 @@ In this lane, run them under the shared build reservation (`bash /tools/build-sl
 They are component, store, host-unit, wire and CLI checks. The boundary glue that
 appends records during a run, its reads from the artifact store and the factory's
 composition run only on a native Linux host (AMR-04.7.2), which this lane does not
-provide.
+provide. The
+[durable session recoverability verification](verification/review-fixes-and-durable-session-recoverability-2026-10-02.md)
+retains these checks, the mutation results and the actual catalog host's operations over
+wire 16.
 
 ### Public research worker contract fixtures
 

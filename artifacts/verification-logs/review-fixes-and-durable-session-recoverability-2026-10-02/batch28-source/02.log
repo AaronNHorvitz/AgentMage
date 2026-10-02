@@ -1,0 +1,135 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_contracts-6eb6c44b4ce1fddc)
+
+running 69 tests
+test boundary::tests::cancellation_signal_binds_task_correlation_origin_and_reason ... ok
+test agent_state::tests::terminal_and_success_sets_are_exact ... ok
+test classification::tests::task_12_2_2_1_action_risk_schema_is_not_a_data_or_capability_label ... ok
+test classification::tests::task_12_2_2_1_data_sensitivity_schema_covers_its_separate_dimension ... ok
+test approval::tests::approval_request_round_trips_without_grant_lifecycle_authority ... ok
+test classification::tests::task_12_2_2_1_advisory_schema_has_only_restrictive_dispositions ... ok
+test classification::tests::task_12_2_2_1_deterministic_policy_facts_are_complete_and_advisory_free ... ok
+test classification::tests::task_12_2_2_1_unknown_cross_schema_and_authority_fields_fail_closed ... ok
+test common::tests::first_contract_family_is_explicitly_versioned ... ok
+test common::tests::payload_keeps_media_bytes_and_digest_separate ... ok
+test classification::tests::task_12_2_2_1_model_capability_schema_closes_every_role_and_status ... ok
+test engineering::tests::operating_modes_and_terminal_states_are_closed ... ok
+test display_link::tests::display_link_retains_only_explicit_rendering_evidence ... ok
+test display_link::tests::malformed_or_authority_like_display_candidates_fail_closed ... ok
+test engineering_records::execution_envelope_tests::only_a_classified_transient_failure_is_transient ... ok
+test engineering_records::execution_envelope_tests::the_protected_contracts_stay_reachable_by_their_own_identity_types ... ok
+test engineering_records::execution_envelope_tests::unknown_envelope_states_do_not_deserialize ... ok
+test engineering_records::execution_envelope_tests::unknown_and_missing_envelope_fields_are_rejected ... ok
+test engineering_records::retry_admission_tests::a_permitted_retry_is_a_new_attempt_and_round_trips ... ok
+test engineering_records::execution_envelope_tests::no_envelope_restates_content_the_protected_contracts_own ... ok
+test engineering_records::retry_admission_tests::attempts_form_an_ordered_chain_and_honour_approval_and_reconciliation ... ok
+test engineering_records::retry_admission_tests::reusing_any_prior_identity_is_a_replay_and_is_refused ... ok
+test engineering_records::retry_admission_tests::an_admission_carries_no_receipt_and_no_replay_surface ... ok
+test engineering_records::source_locator_tests::every_coordinate_space_round_trips_with_its_own_payload ... ok
+test engineering_records::execution_envelope_tests::every_envelope_round_trips_and_is_established_only_by_the_runtime ... ok
+test engineering_records::source_locator_tests::unknown_locator_kinds_and_states_do_not_deserialize ... ok
+test engineering_records::source_locator_tests::unknown_and_missing_fields_are_rejected ... ok
+test engineering_records::source_retention_tests::memory_only_retention_round_trips_without_durable_binding ... ok
+test engineering_records::source_retention_tests::physical_kinds_mirror_the_existing_runtime_artifact_kind ... ok
+test engineering_records::source_locator_tests::unresolved_states_round_trip_without_any_position ... ok
+test engineering_records::source_retention_tests::persisted_retention_round_trips_with_an_existing_physical_family ... ok
+test engineering_records::source_retention_tests::source_specific_physical_kinds_do_not_deserialize ... ok
+test engineering_records::step_execution_policy_tests::every_canonical_operation_has_one_conservative_effect_class ... ok
+test engineering_records::source_retention_tests::unknown_and_missing_fields_are_rejected ... ok
+test engineering_records::step_execution_policy_tests::every_effect_class_admits_only_its_own_retry_classes ... ok
+test engineering_records::step_execution_policy_tests::story_5_2_every_registered_operation_failure_pair_has_one_model_independent_disposition ... ok
+test engineering_records::step_execution_policy_tests::the_policy_restates_no_plan_step_tool_grant_receipt_or_completion_state ... ok
+test engineering_records::step_execution_policy_tests::policy_is_keyed_to_the_existing_plan_step_identity ... ok
+test engineering_records::step_execution_policy_tests::unknown_requirement_values_do_not_deserialize ... ok
+test engineering_records::step_execution_policy_tests::unknown_and_missing_fields_are_rejected ... ok
+test engineering_records::step_execution_policy_tests::workflow_failure_taxonomy_has_one_exact_conservative_default_per_class ... ok
+test evidence::tests::evidence_reference_is_content_addressed_not_path_authority ... ok
+test ids::tests::identities_preserve_exact_candidate_values ... ok
+test model::tests::candidate_runtime_vocabulary_is_closed_and_non_authoritative ... ok
+test model::tests::unknown_proposal_fields_fail_closed ... ok
+test grant::tests::schema_binds_exact_authority_fields_without_a_wildcard_operation ... ok
+test network::tests::endpoint_identity_admits_only_the_two_guarded_topologies ... ok
+test network::tests::endpoint_deserialization_reapplies_all_invariants ... ok
+test network::tests::ip_classification_covers_local_lan_multicast_and_external_ranges ... ok
+test engineering_records::step_execution_policy_tests::effect_taxonomy_is_closed_versioned_and_independent_of_authority_and_risk ... ok
+test operation::tests::every_operation_has_one_exact_authority_class_and_all_classes_are_represented ... ok
+test operation::tests::destructive_or_implicit_git_operations_are_not_representable ... ok
+test operation::tests::legacy_migration_is_explicit_exact_and_non_broadening ... ok
+test operation::tests::current_bindings_round_trip_and_reject_version_or_class_drift ... ok
+test path::tests::construction_rejects_non_relative_or_noncanonical_components ... ok
+test path::tests::deserialization_revalidates_private_path_fields ... ok
+test path::tests::path_and_component_bounds_fail_before_allocation_or_authority ... ok
+test path::tests::path_contains_only_workspace_identity_and_normalized_components ... ok
+test platform_path::tests::adapter_contract_binds_handle_path_platform_and_intent ... ok
+test platform_path::tests::mismatched_workspace_and_foreign_handle_fail_before_observation ... ok
+test prompt::tests::authority_claims_remain_inert_prompt_content ... ok
+test serialization::tests::canonical_bytes_are_stable_and_round_trip ... ok
+test serialization::tests::malformed_missing_extra_duplicate_and_trailing_inputs_fail_closed ... ok
+test task::tests::action_is_descriptive_and_has_no_embedded_authority ... ok
+test tests::component_identity_is_stable ... ok
+test tool::tests::call_binds_exact_tool_version_and_correlation_identity ... ok
+test transaction::tests::transaction_record_is_descriptive_and_binds_every_authority_identity ... ok
+test serialization::tests::oversized_input_and_unsupported_versions_have_exact_error_paths ... ok
+test grant::tests::every_top_level_key_is_required_and_unknown_authority_shapes_fail_closed ... ok
+
+test result: ok. 69 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/contract_family.rs (target/debug/deps/contract_family-e6be84c9440ed9d0)
+
+running 2 tests
+test workspace_path_is_canonical_and_cannot_deserialize_ambient_authority ... ok
+test complete_contract_family_preserves_linked_identities ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/engineering_runtime_record_types.rs (target/debug/deps/engineering_runtime_record_types-111fa984dc6ae74e)
+
+running 3 tests
+test schema_required_nullable_fields_cannot_be_omitted ... ok
+test every_runtime_record_family_rejects_unsupported_versions ... ok
+test all_nine_runtime_record_families_match_their_admitted_schema_shape ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/grant_target_contract.rs (target/debug/deps/grant_target_contract-c2fbf4cd5e305ded)
+
+running 6 tests
+test authorization_platform_identity_and_preimage_drift_change_the_exact_target ... ok
+test held_workspace_root_is_an_exact_root_operation_target ... ok
+test scope_and_object_targets_reuse_canonical_path_types_without_reparsing ... ok
+test scope_constructor_rejects_a_path_from_another_workspace_handle ... ok
+test held_target_wire_requires_every_binding_and_rejects_cross_platform_identity ... ok
+test every_workspace_path_rejection_is_also_a_grant_target_rejection ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/path_corpus.rs (target/debug/deps/path_corpus-4ba5289de3479052)
+
+running 1 test
+test generated_path_corpus_fails_closed_without_authority_or_observation ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/platform_path_contract.rs (target/debug/deps/platform_path_contract-8818aa1a953159c2)
+
+running 2 tests
+test logical_fixture_has_equivalent_fake_policy_semantics ... ok
+test public_adapter_contract_preserves_handle_affinity_and_zero_observation_denials ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/runtime_approval_selection.rs (target/debug/deps/runtime_approval_selection-036a953c43db7a61)
+
+running 3 tests
+test a_narrowing_response_carries_its_exact_selection ... ok
+test allow_and_deny_responses_keep_their_prior_encoding ... ok
+test unknown_selection_fields_and_dispositions_are_refused ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests agentmage_kernel_contracts
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

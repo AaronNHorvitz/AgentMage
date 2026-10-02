@@ -1,0 +1,173 @@
+[
+  {
+    "id": "S1-earlier-run-open-accepted",
+    "expected": "coding_session_recoverability::tests::a_session_with_any_unreleased_incomplete_or_foreign_run_is_never_declared",
+    "caught": true,
+    "failed": [
+      "coding_session_recoverability::tests::a_session_with_any_unreleased_incomplete_or_foreign_run_is_never_declared"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "S2-declaring-run-closed-accepted",
+    "expected": "coding_session_recoverability::tests::a_session_with_any_unreleased_incomplete_or_foreign_run_is_never_declared",
+    "caught": true,
+    "failed": [
+      "coding_session_recoverability::tests::a_session_with_any_unreleased_incomplete_or_foreign_run_is_never_declared"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "S3-incomplete-accepted",
+    "expected": "coding_session_recoverability::tests::a_session_with_any_unreleased_incomplete_or_foreign_run_is_never_declared",
+    "caught": true,
+    "failed": [
+      "coding_session_recoverability::tests::a_session_with_any_unreleased_incomplete_or_foreign_run_is_never_declared",
+      "coding_session_recoverability::tests::persisted::a_restart_or_a_missed_record_leaves_the_session_undeclared"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "S4-foreign-producer-accepted",
+    "expected": "coding_session_recoverability::tests::each_change_record_must_read_back_as_that_runs_own_verified_record",
+    "caught": false,
+    "failed": [],
+    "compile_error": false
+  },
+  {
+    "id": "S5-read-bound-ignored",
+    "expected": "coding_session_recoverability::tests::each_change_record_must_read_back_as_that_runs_own_verified_record",
+    "caught": true,
+    "failed": [
+      "coding_session_recoverability::tests::each_change_record_must_read_back_as_that_runs_own_verified_record"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "S6-unknown-stored-as-success",
+    "expected": "coding_session_recoverability::tests::each_execution_maps_to_its_stored_entry_and_back",
+    "caught": true,
+    "failed": [
+      "coding_session_recoverability::tests::a_session_is_declared_from_every_run_oldest_first_and_names_no_run",
+      "coding_session_recoverability::tests::each_execution_maps_to_its_stored_entry_and_back"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "S7-store-miss-forgotten",
+    "expected": "coding_session_recoverability::tests::persisted::a_restart_or_a_missed_record_leaves_the_session_undeclared",
+    "caught": true,
+    "failed": [
+      "coding_session_recoverability::tests::persisted::a_restart_or_a_missed_record_leaves_the_session_undeclared"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "S8-restart-not-marked",
+    "expected": "coding_session_recoverability::tests::persisted::a_restart_or_a_missed_record_leaves_the_session_undeclared",
+    "caught": true,
+    "failed": [
+      "coding_session_recoverability::tests::persisted::a_restart_or_a_missed_record_leaves_the_session_undeclared"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R1-publication-not-stored",
+    "expected": "coding_session_recoverability::tests::persisted::a_persisted_recorder_stores_each_kept_record_and_the_session_declares_it_later",
+    "caught": true,
+    "failed": [
+      "coding_session_recoverability::tests::persisted::a_persisted_recorder_stores_each_kept_record_and_the_session_declares_it_later"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R2-stored-chain-ignores-memory",
+    "expected": "coding_session_recoverability::tests::persisted::a_restart_or_a_missed_record_leaves_the_session_undeclared",
+    "caught": true,
+    "failed": [
+      "coding_session_recoverability::tests::persisted::a_restart_or_a_missed_record_leaves_the_session_undeclared"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R3-session-may-name-run",
+    "expected": "cli_runtime::tests::run_declarations_are_kept_only_for_this_run_and_a_report_only_when_it_verifies",
+    "caught": true,
+    "failed": [
+      "cli_runtime::tests::run_declarations_are_kept_only_for_this_run_and_a_report_only_when_it_verifies"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "C1-session-not-verified",
+    "expected": "cli_runtime::tests::run_declarations_are_kept_only_for_this_run_and_a_report_only_when_it_verifies",
+    "caught": true,
+    "failed": [
+      "cli_runtime::tests::run_declarations_are_kept_only_for_this_run_and_a_report_only_when_it_verifies"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "C2-session-not-shown",
+    "expected": "coding_development_client::tests::run_declarations_show_recoverability_and_each_context_view_or_say_unavailable",
+    "caught": true,
+    "failed": [
+      "coding_development_client::tests::run_declarations_show_recoverability_and_each_context_view_or_say_unavailable"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "D1-restart-as-continuation",
+    "expected": "coding_development_runtime::tests::a_run_resumed_after_a_restart_marks_its_stored_chains_whatever_the_host_flag_says",
+    "caught": true,
+    "failed": [
+      "coding_development_runtime::tests::a_run_resumed_after_a_restart_marks_its_stored_chains_whatever_the_host_flag_says"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "L1-resumed-run-no-session",
+    "expected": "coding_live_runtime::tests::a_resumed_run_declares_neither_part_whatever_its_owners_hold",
+    "caught": true,
+    "failed": [
+      "coding_live_runtime::tests::a_resumed_run_declares_neither_part_whatever_its_owners_hold"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "E1-policy-unchecked",
+    "expected": "run_effect_record_store::tests::malformed_identities_and_entries_are_refused_before_anything_is_written",
+    "caught": true,
+    "failed": [
+      "run_effect_record_store::tests::malformed_identities_and_entries_are_refused_before_anything_is_written"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "E2-session-position-unchecked",
+    "expected": "run_effect_record_store::tests::a_tampered_chain_is_refused_poisons_the_store_and_blocks_reopening",
+    "caught": true,
+    "failed": [
+      "run_effect_record_store::tests::a_tampered_chain_is_refused_poisons_the_store_and_blocks_reopening"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "E3-noncanonical-accepted",
+    "expected": "run_effect_record_store::tests::a_tampered_chain_is_refused_poisons_the_store_and_blocks_reopening",
+    "caught": true,
+    "failed": [
+      "run_effect_record_store::tests::a_tampered_chain_is_refused_poisons_the_store_and_blocks_reopening"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "E4-unknown-may-claim-change",
+    "expected": "run_effect_record_store::tests::malformed_identities_and_entries_are_refused_before_anything_is_written",
+    "caught": true,
+    "failed": [
+      "run_effect_record_store::tests::malformed_identities_and_entries_are_refused_before_anything_is_written"
+    ],
+    "compile_error": false
+  }
+]

@@ -1,0 +1,101 @@
+{
+  "schema_version": 2,
+  "stage": "batch28-observation",
+  "source_revision": "a20caa2de41feb35df22369e66d8729f3497482f",
+  "scope": "Batch 28 observation at the security index commit a20caa2d",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux",
+      "--features",
+      "public-research-worker",
+      "--bin",
+      "agentmage-public-research-worker"
+    ],
+    [
+      "python3",
+      "<state>/batch28-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "8a365ccec5b473b76cf8d6fc780acc1105aa65cd662b83cca1d8a5bee38ab4fe",
+      "private_sha256": "8a365ccec5b473b76cf8d6fc780acc1105aa65cd662b83cca1d8a5bee38ab4fe"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 16.774,
+      "log": "01.log",
+      "log_sha256": "56bf25b3d162509c34fed9a861df81fffc7c031dc0ba9a224e9cf25d1e451205",
+      "private_log_sha256": "a8728733734cf92a2e847a219c46371543159f1b0d482f912f0c866dae7cf14b"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux",
+        "--features",
+        "public-research-worker",
+        "--bin",
+        "agentmage-public-research-worker"
+      ],
+      "exit_code": 0,
+      "seconds": 4.729,
+      "log": "02.log",
+      "log_sha256": "c7d68cca5a75914e038bb7ef92f41f65503c164a86d3f8d04b8af7697ca56174",
+      "private_log_sha256": "eb4f7ef468b9e09583cbacdbcdb31d76d6a58fde7586db6be3f6d71fa4e09854"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "<state>/batch28-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 180.873,
+      "log": "03.log",
+      "log_sha256": "54ec45b46f094a601ab8c7ca9885b8b96f53fdfb4f848603f0b0c8048643ba9a",
+      "private_log_sha256": "54ec45b46f094a601ab8c7ca9885b8b96f53fdfb4f848603f0b0c8048643ba9a"
+    }
+  ]
+}

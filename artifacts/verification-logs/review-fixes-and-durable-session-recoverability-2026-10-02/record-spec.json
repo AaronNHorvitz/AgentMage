@@ -1,0 +1,380 @@
+{
+ "record_type": "agentmage-review-fixes-and-durable-session-recoverability-verification",
+ "date": "2026-10-02",
+ "base_commit": "8842c770f167e51e4f40aac49b016b527684e858",
+ "head_commit": "a20caa2de41feb35df22369e66d8729f3497482f",
+ "source_commit": "90ca140cfbe107e0a26d21349ffd14de2ebf3692",
+ "retained_logs": "artifacts/verification-logs/review-fixes-and-durable-session-recoverability-2026-10-02",
+ "stages": [
+  "batch28-source",
+  "batch28-source-test",
+  "batch28-core",
+  "batch28-canary",
+  "batch28-rebind",
+  "batch28-gate",
+  "batch28-boundary",
+  "batch28-security-index",
+  "batch28-blocked-causes",
+  "batch28-extended-rest",
+  "batch28-observation"
+ ],
+ "inventory": "artifacts/verification-logs/review-fixes-and-durable-session-recoverability-2026-10-02/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch28-source/02.log",
+  "engine": "batch28-source/03.log",
+  "repository_map": "batch28-source/04.log",
+  "inference": "batch28-source/05.log",
+  "knowledge": "batch28-source/06.log",
+  "linux": "batch28-source/07.log",
+  "linux_research_feature_build": "batch28-source/08.log",
+  "linux_research_feature_tests": "batch28-source/09.log",
+  "linux_research_worker_binary_tests": "batch28-source/10.log",
+  "host": "batch28-source/11.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0143-review-fixes-restart-marking-and-durable-session-recoverability.md"
+  ],
+  "source_commits": [
+   {
+    "commit": "90ca140cfbe107e0a26d21349ffd14de2ebf3692",
+    "scope": "Decision 0143: review F1 (the composed deep research run asserts six turns below its limit of 12 and that its artifacts fit the allowance of 12 turns but not of six; Decision 0142 states the limits and the reason) and F2 (Decision 0142's limits and the canonical research source document describe a draft retained without its creation event); defect D1 (a run resumed after a host restart attached its effects chain as if continued in the same host; the restart now belongs to the prepared run); AMR-04.7.3: operational store migration 25 and the run effect record store, the persisted effect recorder, the boundary's session declaration from the stored chains of every run of the session with each change record read back from the canonical artifact store, the factory's chain and handover, the service's declaration and closing, run declarations schema 5 over wire 16, the CLI's session verification and output in both formats, runtime producer contract version 2 beside an unchanged version 1, the Sprint 11 store producers for schema 25, LOCAL-TESTING, the new open TASKS row and the work selector (80 amendment rows)"
+   },
+   {
+    "commit": "d6d409deed123a25bc8b9a086d4a6c331e9fe665",
+    "scope": "a test that a sealed, readable change record of a run's own operation produced by another run is refused, which the first mutation campaign showed no test caught"
+   }
+  ],
+  "review_resolved": "8842c770f167 (PASS; findings F1 and F2 low), by Decision 0143",
+  "components": [
+   {
+    "row": "AMR-04.7.3",
+    "scope": "component, store, host-unit, wire and CLI row: operational store migration 25 keeps each coding run's effect record in an append-only chain at a position of its session and replays every chain at open; the persisted recorder stores each kept execution and change record after memory and remembers a store refusal; the session declaration is built from the stored chains of every run of the session, each change record read back as that run's own verified record, and refused for an incomplete chain, an unreleased earlier run, a run resumed after a restart or an unreadable record; the service asks for it for every ended run, the wire carries it in run declarations schema 5, and the CLI verifies it as a session declaration and shows it after the run's own in both formats. The boundary glue, its artifact reads and the factory's composition run only on a native Linux host, which this sandbox refuses, so no actual process stored or declared a session's effects"
+   }
+  ],
+  "mutation_checks": "run on the exact source commit 90ca140c after its source stage, with private tooling that applies one exact replacement, runs the package's filtered library tests and restores the file; the specification and results are attached to the batch28-source stage. 19 single mutations, 18 caught: in the session declaration an unreleased earlier run, a released declaring run and an incomplete chain accepted, the read bound ignored, an unknown outcome stored as success, a store refusal forgotten, a restart not marked, a publication not stored and the stored chain used after a memory miss; in the client a session report naming a run, an unverified session report and an unshown session report; the restart start mapped to a continuation; a resumed run's session declaration withheld; and in the store an unchecked policy digest, an unchecked session position, a non-canonical record and an unknown outcome claiming a change. The survivor, a change record's producing run left unchecked, was caught after the test commit d6d409de added the case it needed (1 of 1 on rerun, attached to the batch28-source-test stage). The tree was verified identical afterwards",
+  "failure_comparison": "linux 189 passed, 19 failed, 51 ignored, failure names identical to batch 27; with the public-research-worker feature the Linux crate's tests build, its research tests pass (13 passed, 6 ignored native) and the worker binary's tests pass (21 passed, 3 ignored); host 482 passed, 53 failed, 11 ignored, failure names identical to batch 27, at both source commits; the engine passes 1,553 tests (13 new: ten run effect record store cases and three migration 25 cases) with 8 ignored, knowledge 302",
+  "retained_failures": [
+   {
+    "stage": "batch28-source",
+    "indexes": [
+     7,
+     11
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, with failure names identical to batch 27"
+   },
+   {
+    "stage": "batch28-source-test",
+    "indexes": [
+     2
+    ],
+    "cause": "the same native-prerequisite host failures, with failure names identical to batch 27"
+   },
+   {
+    "stage": "batch28-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "interrupted_stages": [],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch28-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the native-prerequisite host failures (batch28-source/11.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch28-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch28-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch28-blocked-causes/03.log) and the documentation gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+    "stale_since": "before batch 12 (four other inputs)",
+    "blocker": "its producer runs the full host suite (the native-prerequisite failures, batch28-source/11.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the product gate and the documentation gate; its check mode still validates it at its own revision (batch28-extended-rest/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the full host suite with all features; its check mode still validates it at its own revision (batch28-extended-rest/02.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
+    "stale_since": "before batch 18 (shells/host/src/headless.rs)",
+    "blocker": "already stale at the review base for an input this batch does not change; historical"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-kernel-engine",
+   "agentmage-host"
+  ],
+  "cascade": "the one SBOM write staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index and security map, the Story 3.1 component inventory and security map and the Sprint 27 to 34 knowledge boundary reviews (batch28-core) and the Sprint 79 and Sprint 108 reports (batch28-rebind); the operational store and its migration staled the Sprint 11 store wave (operational schema v3, store unit, crash recovery, eleven Story 11.2 store reports and the Story 11.3 durable resume report, batch28-core) and the Story 22.1 canary sweep (batch28-canary); the engine's module list staled the six Story 3.1 configuration reports and the Story 12.1 agent progress report (batch28-core); the work selector change staled the Story 1.2 contract boundary report (batch28-core); every kernel change staled the Muse codec chain and the Sprint 13 report, and through them the Story 13.4 context profile report, and the renewed store wave and component inventory staled the Story 11.1 security map and through it the Story 11.2 storage security, frozen-scope, AC1, AC2 and AC3 reports and the Story 12.1 map (batch28-rebind); the Story 11.2 gate report followed its pin (batch28-gate); the coding host's CLI runtime, Linux boundary and chat runtime staled the Story 23.4 runtime evidence (batch28-gate), the coordinator boundary review and the Sprint 50 runtime contract review (batch28-boundary) and the Story 23.4 security map and evidence index (batch28-security-index). The coordinator (runtime_loop.rs) did not change, so the Story 13.4 dispatch preflight report was not stale",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "db42f1ce78d5e3ed156f75171e47e241f1da6dbb",
+    "to": "31e56e5fd7254bd4a99d7d27ece2c55a217c9305",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "kernel/engine/src/operational_store.rs",
+      "reason": "Decision 0143 source change in 90ca140c: operational store migration 25 for durable run effect records (SCHEMA_VERSION 25, its migration step and schema history entry, verification of every run effect chain at open, DurableAuthorityRuntime::run_effect_records, two derived export families) and the renamed schema 25 fixture tests; no existing table, migration or store path changes"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-report.json",
+      "reason": "regenerated by the batch 28 core stage (the operational store wave); the bound digests and sizes of kernel/engine/src/operational_store.rs, its producer script and its results log changed, and the report now also binds the schema 25 fixture, migration 0025-run-effect-records.sql and run_effect_record_store.rs, names the version_twenty_five schema and version_one_upgrades_through_twenty_five tests and records schema version 25"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-report.json",
+      "reason": "regenerated by the batch 28 core stage (the operational store wave); the bound digests and sizes of kernel/engine/src/operational_store.rs, its producer script, its unit test and its results log changed, and the report now also binds the schema 25 fixture, migration 0025-run-effect-records.sql and run_effect_record_store.rs, names the version_one_upgrades_through_twenty_five test and records schema version 25"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-report.json",
+      "reason": "regenerated by the batch 28 core stage (the operational store wave); the bound digests and sizes of kernel/engine/src/operational_store.rs, its producer script and its results log changed, and the report now also binds the schema 25 fixture, migration 0025-run-effect-records.sql and run_effect_record_store.rs, names the version_one_upgrades_through_twenty_five test and records schema version 25"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-report.json",
+      "reason": "regenerated by the batch 28 core stage (the operational store wave); the bound digests and sizes of kernel/engine/src/operational_store.rs, its producer script and its results log changed, and the report now also binds the schema 25 fixture, migration 0025-run-effect-records.sql and run_effect_record_store.rs, names the version_one_upgrades_through_twenty_five test and records schema version 25"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-report.json",
+      "reason": "regenerated by the batch 28 core stage (the operational store wave); the bound digests and sizes of kernel/engine/src/operational_store.rs, its producer script and its results log changed, and the report now also binds the schema 25 fixture, migration 0025-run-effect-records.sql and run_effect_record_store.rs, names the version_one_upgrades_through_twenty_five test and records schema version 25"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-atomic-publication-report.json",
+      "reason": "regenerated by the batch 28 core stage (the operational store wave); only the bound digests and sizes of kernel/engine/src/operational_store.rs and its workflow atomic publication results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-report.json",
+      "reason": "regenerated by the batch 28 core stage (the operational store wave) for migration 25: the bound digests and sizes of kernel/engine/src/operational_store.rs, the five earlier migration test files, its document, producer script, unit test and results log changed; it now also binds the schema 25 fixture, migration 0025-run-effect-records.sql, run_effect_record_store.rs, run_effect_record_migration_tests.rs and Decision 0143, requires the three run effect record migration markers, names the schema 25 tests and records 25 migrations and schema version 25 (generated on 2026-10-02)"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-report.json",
+      "reason": "regenerated by the batch 28 core stage (the operational store wave); only the bound digests and sizes of kernel/engine/src/operational_store.rs and its storage downgrade refusal results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-report.json",
+      "reason": "regenerated by the batch 28 core stage (the operational store wave); only the bound digests and sizes of kernel/engine/src/operational_store.rs and its storage new family lifecycle results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-report.json",
+      "reason": "regenerated by the batch 28 core stage (the operational store wave); only the bound digests and sizes of kernel/engine/src/operational_store.rs and its storage crash boundary results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-report.json",
+      "reason": "regenerated by the batch 28 core stage (the operational store wave); only the bound digests and sizes of kernel/engine/src/operational_store.rs and its storage crash exact state results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 28 rebind stage; only the bound digests of the renewed storage wave reports and logs, the Story 11.1 crash report (s-011-rt01) and the renewed Story 11.1 security map, and the retained evidence summary that follows them, changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 28 rebind stage; only the bound digests and sizes of the operational store, the renewed crash boundary and exact-state reports and logs and the renewed storage security report, and the retained evidence summary, changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "reason": "regenerated by the batch 28 core and rebind stages; only the bound digests and sizes of its results log and the renewed source lifecycle and workflow attempt reports and logs, and the retained evidence summary, changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 28 rebind stage; only the bound digests and sizes of the operational store, the renewed new family lifecycle and source lifecycle reports and logs and the renewed storage security report, and the retained evidence summary, changed"
+     }
+    ]
+   }
+  ],
+  "newly_stale_disposition": "only historical records: retained stage records of batches 18 to 27 that bind the store wave producers and their tests, the runtime producer contract script and test, the work selector or the Story 11.2 gate script as they were at their own revisions",
+  "runtime_campaign": "renewed: the Story 23.4 runtime evidence (batch28-gate) and the coordinator boundary review, the Sprint 50 runtime contract review, the security map and the evidence index (batch28-boundary, batch28-security-index)",
+  "cli_observation": {
+   "source_commit": "a20caa2de41feb35df22369e66d8729f3497482f",
+   "binaries_sha256": {
+    "agentmage": "3bf15059dbaa221e29ae1d521429f0ad9092a44c8c7dfd7bd8819184eb4d7db9",
+    "agentmage-host": "2d12439b8bddf7b118c668c1a1551f69a97e26fd936ddf5ab47d655e7ba2f297",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "catalog_host_operations": [
+    {
+     "name": "doc-pack-list-empty",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import-other-license",
+     "operation": "doc-pack",
+     "exit_code": 4
+    },
+    {
+     "name": "doc-pack-search",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-inspect",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember-credential",
+     "operation": "memory",
+     "exit_code": 4
+    },
+    {
+     "name": "memory-list",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-revoke",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-delete",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-signer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-issuer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-install",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-1",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-renamed",
+     "operation": "extension",
+     "exit_code": 3
+    },
+    {
+     "name": "extension-list",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "ended-run-read",
+     "operation": "ended-run",
+     "exit_code": 0
+    }
+   ],
+   "catalog_host_wire_refusals_seen": false,
+   "catalog_workspace_preserved": true,
+   "recipe_shown_before_launch": {
+    "exit_code": 5,
+    "then_refused_at": "linux.repository.git_artifact.invalid",
+    "preserved": true
+   },
+   "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+   },
+   "malformed_frame_injected": false,
+   "research_worker": {
+    "binary": {
+     "sha256": "6e1b5a6ca1c4bf03d5294158673d8fa112a1e64d527dbdb743ce0e49b52f11e6",
+     "bytes": 158345064
+    },
+    "runs": [
+     {
+      "name": "worker-ambient-environment",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     },
+     {
+      "name": "worker-extra-argument",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     },
+     {
+      "name": "worker-admitted-environment",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     }
+    ],
+    "sandboxed": false,
+    "network_attempted": false
+   },
+   "session_recoverability_declared_by_an_actual_process": false,
+   "qualification": "actual-binary-catalog-host-operations-under-exact-wire-decoding-plus-native-prerequisite-refusal"
+  },
+  "not_run": [
+   "the coding host storing or declaring a session's effects: the boundary glue, its artifact reads and the factory's composition run only on a native Linux host, which this sandbox refuses at native Git trust",
+   "a run resumed after an actual host restart (D1 is shown by its unit test and the store's marking tests)",
+   "the native-only Linux boundary tests and the factory's composition glue",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [
+    {
+     "row": "AMR-04.7.3",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component, store, host-unit, wire and CLI row: durable run effect records and the session-scope recoverability declaration; no actual process stored or declared a session yet (AMR-04.7.2)"
+    }
+   ],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested after the ledger commit; open"
+  }
+ }
+}
