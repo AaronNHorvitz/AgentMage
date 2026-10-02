@@ -3,7 +3,7 @@
   "commands": [
     {
       "command_id": "6147400fb3af627c2fe95ac302b598f86454145964d69b8fe78fee7600f8cb28",
-      "elapsed_ms": 51,
+      "elapsed_ms": 71,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "context-admission",
@@ -11,7 +11,7 @@
     },
     {
       "command_id": "5e565890568892ad049a51415396b0640f96f2c1128570e8d1ef659f42a85f12",
-      "elapsed_ms": 57,
+      "elapsed_ms": 54,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "persistence-policy",
@@ -19,7 +19,7 @@
     },
     {
       "command_id": "90774bc47105a422d76a6c89ce3311073fe7c59046a92a6dc4ad2141e110e1ec",
-      "elapsed_ms": 390,
+      "elapsed_ms": 364,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "encrypted-store-export",
@@ -35,7 +35,7 @@
     },
     {
       "command_id": "097bb636caa2450918164a00a0f65b6bf7f7974edd913b4443e94092b3adba4d",
-      "elapsed_ms": 238,
+      "elapsed_ms": 271,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "runtime-artifacts",
@@ -43,7 +43,7 @@
     },
     {
       "command_id": "039d53ce1e540bf7e08bc90d21db4fb8638272c6e5cbcc4bef0f48ae21e71943",
-      "elapsed_ms": 57,
+      "elapsed_ms": 55,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "runtime-model-tool-events",
@@ -51,7 +51,7 @@
     },
     {
       "command_id": "9d01542265a1ffd3d0a08de8f89f062e93d01990c9f3e61b03e79bc1fb9c9755",
-      "elapsed_ms": 77,
+      "elapsed_ms": 60,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "native-encrypted-payloads",
@@ -59,7 +59,7 @@
     },
     {
       "command_id": "6c1a95258b657afcf0ec844de7801c3201df63aad821576097181e4eb1b8920d",
-      "elapsed_ms": 3294,
+      "elapsed_ms": 3276,
       "exit_code": 0,
       "expected_marker": "zero undeclared network paths",
       "id": "strict-local-telemetry",
@@ -109,10 +109,10 @@
     "redactions": [
       "repository-root"
     ],
-    "sha256": "60729f59120f4ef86c575167ee01452340d7b94b7f403c321bd67b07aeca985f"
+    "sha256": "28ad962d690cb7dd0ff4ceff359e973cebd6974d49a5483e70295841d6322c22"
   },
   "schema_version": 1,
-  "source_revision": "9e1c0833873bee358c9df4fa9f6e2320ca71eb84",
+  "source_revision": "6fd8a243c1562baf40c3b987f04fd355516a1ba6",
   "sources": [
     {
       "bytes": 43165,
@@ -125,9 +125,9 @@
       "sha256": "fb537c04df0d687af10e36eea98834910f8760877858266bb1f54cb1ca28d540"
     },
     {
-      "bytes": 495146,
+      "bytes": 495449,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "523a6f6b792d1282d1ee97f9b1af8ebeda550ee123ec7352521bb796d0f4d79f"
+      "sha256": "f2071806b6af114fdb2126f12e3d1abfb2462afd1efd26532b1ff8bb84c468c3"
     },
     {
       "bytes": 60943,
