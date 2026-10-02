@@ -1,0 +1,336 @@
+{
+ "record_type": "agentmage-review-fixes-and-public-get-grant-issuance-verification",
+ "date": "2026-10-01",
+ "base_commit": "b59afdb95bfd77a161f497ceb5e66165b9b47e06",
+ "head_commit": "a2e7efe1a476e23ea0bee09110e3dcbb49b6df61",
+ "source_commit": "aac928e70c2808ae5baab81883782a33ddfef6b7",
+ "retained_logs": "artifacts/verification-logs/review-fixes-and-public-get-grant-issuance-2026-10-01",
+ "stages": [
+  "batch24-source",
+  "batch24-core",
+  "batch24-canary",
+  "batch24-rebind",
+  "batch24-gate",
+  "batch24-blocked-causes",
+  "batch24-extended-rest",
+  "batch24-observation"
+ ],
+ "inventory": "artifacts/verification-logs/review-fixes-and-public-get-grant-issuance-2026-10-01/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch24-source/02.log",
+  "engine": "batch24-source/03.log",
+  "repository_map": "batch24-source/04.log",
+  "inference": "batch24-source/05.log",
+  "knowledge": "batch24-source/06.log",
+  "linux": "batch24-source/07.log",
+  "linux_research_feature_build": "batch24-source/08.log",
+  "linux_research_feature_tests": "batch24-source/09.log",
+  "host": "batch24-source/10.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0139-review-fixes-and-public-get-grant-issuance-for-an-admitted-run.md"
+  ],
+  "source_commits": [
+   {
+    "commit": "aac928e70c2808ae5baab81883782a33ddfef6b7",
+    "scope": "Decision 0139: review F1 (the owner commits a pending effect's terminal only when it also names the start as its cause; an eleventh changed terminal names a real earlier event of the run), F2 (the source stage builds the Linux crate's tests with the public-research-worker feature, runs its research tests and runs clippy with the feature) and N2 (Decision 0138 corrected in place: the issuer is the engine's, the task-authorized issuance decision there was the glue's); the AMR-02.2 remainder: DurableAuthorityRuntime::issue_public_get_grant and prepare_public_get in a new research_grant submodule of the operational store, the budget owner's non-spending request check in research_journal.rs, a new closed refusal type, and the start's binding of its policy network scope to the packet's own destination in authority_transaction.rs; the AMR-03.1.2.1 test glue issues through the owner, with new composed cases; the canonical research source architecture document and LOCAL-TESTING"
+   }
+  ],
+  "review_resolved": "b59afdb95bfd (PASS; findings F1 and F2 low; note N2), by Decision 0139",
+  "components": [
+   {
+    "row": "AMR-02.2",
+    "scope": "component row, engine only: the remainder of AMR-02.2. The engine's owner issues one exact single-use network grant for an admitted research run under the plan's mode: a task-authorized plan takes the plan confirmation recorded by a session parent whose preview is the plan's digest, and an ask plan also takes the person's approval of the exact packet digest; the budget owner checks the request without spending (offline, cancellation, R10 visit and disclosed-query classification, a dry-run reservation, the packet interval and a live plan); one grant per call; the existing issuer derives the child, which names the packet as its only effect and expires with the packet or the parent; the governing policy evaluates the exact grant against the packet's own destination; parent, child and the caller's permission event commit atomically, and a refusal commits and spends nothing. The start of a research effect requires its policy network scope to name the packet's destination. Tested through the real coordinator and the real owners with a synthetic native result and an in-memory payload store; no host, worker, provider, model or network takes part, and Decision 0084 still forbids host or provider activation"
+   }
+  ],
+  "mutation_checks": "run on the exact source tree before it was committed, with private tooling that applies one exact replacement, runs the engine's filtered library tests (research_admission_tests) and restores the file; the specification and results are attached to the batch24-source stage. One run of 19 single mutations, all caught: the owner's terminal cause clause and the start's destination binding; the issuance mode match (any mode, and the plan confirmation under any mode), the approved preview, the policy digest, the parent's session, task and plan binding, one grant per call, the policy allow, the policy destination, the parent expiry bound, the effect details and the shared call validation; and in the budget check the packet interval, the R10 and disclosed-query classification, the dry-run reservation and the live plan. The tree was verified identical afterwards",
+  "failure_comparison": "linux 189 passed, 19 failed, 51 ignored, failure names identical to batch 23; with the public-research-worker feature the Linux crate's tests build and its research tests pass (12 passed, 6 ignored native); host 474 passed, 53 failed, 11 ignored, failure names identical to batch 23; the engine passes 1,507 tests (nine new composed cases), knowledge 302",
+  "retained_failures": [
+   {
+    "stage": "batch24-source",
+    "indexes": [
+     7,
+     10
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, with failure names identical to batch 23"
+   },
+   {
+    "stage": "batch24-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "interrupted_stages": [],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch24-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the native-prerequisite host failures (batch24-source/10.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch24-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch24-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch24-blocked-causes/03.log) and the documentation gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+    "stale_since": "before batch 12 (four other inputs)",
+    "blocker": "its producer runs the full host suite (the native-prerequisite failures, batch24-source/10.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the product gate and the documentation gate; its check mode still validates it at its own revision (batch24-extended-rest/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the full host suite with all features; its check mode still validates it at its own revision (batch24-extended-rest/02.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
+    "stale_since": "before batch 18 (shells/host/src/headless.rs)",
+    "blocker": "already stale at the review base for an input this batch does not change; historical"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-kernel-engine"
+  ],
+  "cascade": "the one SBOM write staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index and security map, the Story 3.1 component inventory, configuration startup report and security map and the Sprint 27 to 34 knowledge boundary reviews (batch24-core) and the Sprint 79 and Sprint 108 reports (batch24-rebind); the operational store and research journal changes staled the store wave: the Story 11.1 operational schema, crash recovery and store unit reports, the Story 11.2 source, storage and workflow reports and the Story 11.3 durable resume report (batch24-core); the operational store change staled the Story 22.1 canary sweep (batch24-canary); every kernel change staled the Muse codec chain and the Sprint 13 report (batch24-rebind); the renewed component inventory and store wave staled the Story 11.1 security map and through it the Story 11.2 storage security, frozen-scope, AC1 and AC3 reports and the Story 12.1 map, and the renewed source lifecycle and workflow attempt reports staled the Story 11.2 AC2 report (batch24-rebind); the Story 11.2 gate report (batch24-gate). The coordinator, the host and the coordinator document did not change, so no Story 23.4 or Sprint 50 artifact was stale",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "94d0d3666ccdda343e341f06c9273c186e41496b",
+    "to": "6ed5aa0c632cab6b62fa3e55fe9090f8f15c137e",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "kernel/engine/src/operational_store.rs",
+      "reason": "Decision 0139 source change in aac928e7: finish_effect_with_runtime_event also requires a pending effect's terminal to name the start as its cause (review F1), and the module declares the research_grant submodule (issue_public_get_grant and prepare_public_get) and re-exports its request, authorization, refusal and issued-grant types; no schema, migration or other store path changes"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-report.json",
+      "reason": "regenerated by the batch 24 core stage (the operational store wave); only the bound digests and sizes of kernel/engine/src/operational_store.rs, kernel/engine/src/research_journal.rs and its source materialization schema results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-report.json",
+      "reason": "regenerated by the batch 24 core stage (the operational store wave); only the bound digests and sizes of kernel/engine/src/operational_store.rs, kernel/engine/src/research_journal.rs and its source content deduplication results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-report.json",
+      "reason": "regenerated by the batch 24 core stage (the operational store wave); only the bound digests and sizes of kernel/engine/src/operational_store.rs, kernel/engine/src/research_journal.rs and its source lifecycle transactions results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-report.json",
+      "reason": "regenerated by the batch 24 core stage (the operational store wave); only the bound digests and sizes of kernel/engine/src/operational_store.rs, kernel/engine/src/research_journal.rs and its workflow materialization schema results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-report.json",
+      "reason": "regenerated by the batch 24 core stage (the operational store wave); only the bound digests and sizes of kernel/engine/src/operational_store.rs, kernel/engine/src/research_journal.rs and its workflow attempt invariants results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-atomic-publication-report.json",
+      "reason": "regenerated by the batch 24 core stage (the operational store wave); only the bound digests and sizes of kernel/engine/src/operational_store.rs and its workflow atomic publication results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-report.json",
+      "reason": "regenerated by the batch 24 core stage (the operational store wave); only the bound digests and sizes of kernel/engine/src/operational_store.rs, kernel/engine/src/research_journal.rs and its storage migration compatibility results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-report.json",
+      "reason": "regenerated by the batch 24 core stage (the operational store wave); only the bound digests and sizes of kernel/engine/src/operational_store.rs and its storage downgrade refusal results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-report.json",
+      "reason": "regenerated by the batch 24 core stage (the operational store wave); only the bound digests and sizes of kernel/engine/src/operational_store.rs and its storage new family lifecycle results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-report.json",
+      "reason": "regenerated by the batch 24 core stage (the operational store wave); only the bound digests and sizes of kernel/engine/src/operational_store.rs and its storage crash boundary results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-report.json",
+      "reason": "regenerated by the batch 24 core stage (the operational store wave); only the bound digests and sizes of kernel/engine/src/operational_store.rs and its storage crash exact state results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 24 rebind stage; only the bound digests of the renewed Story 11.1 reports and security map and of the renewed Story 11.2 crash reports and logs changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 24 rebind stage; only the bound digests and sizes of kernel/engine/src/operational_store.rs and of the renewed Story 11.2 crash and storage security reports and logs changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "reason": "regenerated by the batch 24 rebind stage after the core stage renewed the source lifecycle and workflow attempt reports; only the bound digests of those reports and logs and of its rerun results log (same single passing test) changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 24 rebind stage; only the bound digests and sizes of kernel/engine/src/operational_store.rs and of the renewed Story 11.2 lifecycle and storage security reports and logs changed"
+     }
+    ]
+   }
+  ],
+  "newly_stale_disposition": "only historical records: two retained batch 23 stage records that bind the Story 11.2 gate script, and nine dated verification records of 2026-09-27 and 2026-09-28 that bind the authority transaction, the operational store or the canonical research source document as they were at their own revisions",
+  "runtime_campaign": "not renewed: the coordinator and its port contracts did not change, and no Story 23.4 or Sprint 50 artifact was stale",
+  "cli_observation": {
+   "source_commit": "a2e7efe1a476e23ea0bee09110e3dcbb49b6df61",
+   "binaries_sha256": {
+    "agentmage": "11a6b206035dba20bf1305e17271d9cb301b74b1d514fa6a99f19193176d9006",
+    "agentmage-host": "c702a35517d9ddc88d380647b5abd966216c59578451ff9d33c05a2fe6ecd065",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "catalog_host_operations": [
+    {
+     "name": "doc-pack-list-empty",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import-other-license",
+     "operation": "doc-pack",
+     "exit_code": 4
+    },
+    {
+     "name": "doc-pack-search",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-inspect",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember-credential",
+     "operation": "memory",
+     "exit_code": 4
+    },
+    {
+     "name": "memory-list",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-revoke",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-delete",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-signer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-issuer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-install",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-1",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-renamed",
+     "operation": "extension",
+     "exit_code": 3
+    },
+    {
+     "name": "extension-list",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "ended-run-read",
+     "operation": "ended-run",
+     "exit_code": 0
+    }
+   ],
+   "catalog_host_wire_refusals_seen": false,
+   "catalog_workspace_preserved": true,
+   "recipe_shown_before_launch": {
+    "exit_code": 5,
+    "then_refused_at": "linux.repository.git_artifact.invalid",
+    "preserved": true
+   },
+   "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+   },
+   "malformed_frame_injected": false,
+   "research_admission_composed_by_an_actual_process": false,
+   "qualification": "actual-binary-catalog-host-operations-under-exact-wire-decoding-plus-native-prerequisite-refusal"
+  },
+  "not_run": [
+   "any host, worker, provider or model composing the research admission or issuing its grants; no actual process composes it, and no network operation was admitted in an actual process",
+   "where a host shows the plan or the exact request to the person; the parent's plan digest and the approval's preview are the trusted host's attestations, as for every approval digest",
+   "the native adversarial matrix and the provider and model campaign (AMR-03.2.3, AMR-03.2.4) and the native boundary of AMR-03.1.2",
+   "the two native Linux dispatch tests that commit terminals through the owner: compiled with the feature, not run (they need the native DNS, HTTP and model fixtures)",
+   "resuming an admitted run (refused by design)",
+   "the native-only Linux boundary tests and the factory's composition glue",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [
+    {
+     "row": "AMR-02.2",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component row, engine only: grant issuance for an admitted run under the plan's mode, with the budget, parent, policy and destination checks; no host, worker, provider, model or network"
+    }
+   ],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested after the ledger commit; open"
+  }
+ }
+}

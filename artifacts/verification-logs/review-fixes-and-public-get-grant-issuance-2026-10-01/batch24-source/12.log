@@ -1,0 +1,4 @@
+    Checking agentmage-kernel-contracts v0.0.0 (<repo>/kernel/contracts)
+    Checking agentmage-kernel-engine v0.0.0 (<repo>/kernel/engine)
+    Checking agentmage-platform-linux v0.0.0 (<repo>/platforms/linux)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 23.98s

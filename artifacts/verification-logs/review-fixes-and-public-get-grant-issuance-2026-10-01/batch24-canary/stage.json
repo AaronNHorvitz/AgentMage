@@ -1,0 +1,96 @@
+{
+  "schema_version": 2,
+  "stage": "batch24-canary",
+  "source_revision": "6fd8a243c1562baf40c3b987f04fd355516a1ba6",
+  "scope": "Batch 24 Story 22.1 canary sweep in its own stage from the core commit 6fd8a243",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/story_22_1_canary_evidence.py",
+      "--write",
+      "--source-revision",
+      "6fd8a243c1562baf40c3b987f04fd355516a1ba6"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_22_1_canary_evidence"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/story_22_1_canary_evidence.py": "44ec93b993cd349802825826fb913626c16d9b82ac92c585e68a0cb4e2c91cbf",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_story_22_1_canary_evidence.py": "0aec421735605077f38c148c71ab002a8cd3b535a47f8016f46b60c2dc3b7a6e"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/story_22_1_canary_evidence.py",
+        "--write",
+        "--source-revision",
+        "6fd8a243c1562baf40c3b987f04fd355516a1ba6"
+      ],
+      "exit_code": 0,
+      "seconds": 4.302,
+      "log": "01.log",
+      "log_sha256": "a31c813afcfee033b10bfd8534145ee2ac195eddff97aa56fbd68a588b4c3028",
+      "private_log_sha256": "a31c813afcfee033b10bfd8534145ee2ac195eddff97aa56fbd68a588b4c3028"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_22_1_canary_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.15,
+      "log": "02.log",
+      "log_sha256": "11c69acfd08562618d61d28224fd6db3ce5b8c81b206b1b62dd4e0c2f4273d22",
+      "private_log_sha256": "11c69acfd08562618d61d28224fd6db3ce5b8c81b206b1b62dd4e0c2f4273d22"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.078,
+      "log": "03.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.004,
+      "log": "04.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

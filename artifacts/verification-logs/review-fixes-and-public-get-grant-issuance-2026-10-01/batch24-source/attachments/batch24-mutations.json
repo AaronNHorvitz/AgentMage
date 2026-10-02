@@ -1,0 +1,287 @@
+[
+ {
+  "id": "B1-terminal-cause",
+  "file": "kernel/engine/src/operational_store.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_commits_only_the_terminal_of_its_pending_effect",
+  "replace": [
+   [
+    "        && terminal.causation_event_id.as_ref() == Some(&started.event_id)\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "B2-start-destination",
+  "file": "kernel/engine/src/authority_transaction.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::a_start_must_name_the_packets_own_destination",
+  "replace": [
+   [
+    "            && self.context.network_scope.as_deref()\n                == Some(format!(\"https:{}:443\", packet.request().target.domain).as_str())\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "G1-mode-any",
+  "file": "kernel/engine/src/research_grant.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+  "replace": [
+   [
+    "            _ => return Err(PublicGetGrantError::Mode),",
+    "            _ => None,"
+   ]
+  ]
+ },
+ {
+  "id": "G2-task-plan-any-mode",
+  "file": "kernel/engine/src/research_grant.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+  "replace": [
+   [
+    "(PublicGetAuthorization::TaskPlan, ResearchNetworkMode::TaskAuthorized) => None,",
+    "(PublicGetAuthorization::TaskPlan, _) => None,"
+   ]
+  ]
+ },
+ {
+  "id": "G3-approved-preview",
+  "file": "kernel/engine/src/research_grant.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+  "replace": [
+   [
+    "                if approved_preview_sha256 != packet.sha256() {\n                    return Err(PublicGetGrantError::Approval);\n                }\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "G4-policy-digest",
+  "file": "kernel/engine/src/research_grant.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+  "replace": [
+   [
+    "        if policy.policy_sha256() != context.policy_sha256 {\n            return Err(PublicGetGrantError::Grant(GrantIssueError::PolicyChanged));\n        }\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "G5-parent-session",
+  "file": "kernel/engine/src/research_grant.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+  "replace": [
+   [
+    "        if parent.session_id != context.session_id\n            || parent.task_id",
+    "        if parent.task_id"
+   ]
+  ]
+ },
+ {
+  "id": "G6-parent-task",
+  "file": "kernel/engine/src/research_grant.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+  "replace": [
+   [
+    "            || parent.task_id != context.task_id\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "G7-parent-plan",
+  "file": "kernel/engine/src/research_grant.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+  "replace": [
+   [
+    "            || parent.preview_sha256 != checked.plan_sha256\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "G8-one-grant-per-call",
+  "file": "kernel/engine/src/research_grant.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::a_call_receives_at_most_one_grant",
+  "replace": [
+   [
+    ".any(|grant| grant.action_id.as_ref() == Some(&call.action_id))",
+    ".any(|_| false)"
+   ]
+  ]
+ },
+ {
+  "id": "G9-policy-allowed",
+  "file": "kernel/engine/src/research_grant.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+  "replace": [
+   [
+    "        if !decision.allowed {",
+    "        if false {"
+   ]
+  ]
+ },
+ {
+  "id": "G10-policy-destination",
+  "file": "kernel/engine/src/research_grant.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+  "replace": [
+   [
+    "network_scope: Some(format!(\"https:{}:443\", packet.request().target.domain)),",
+    "network_scope: Some(\"https:docs.example.com:443\".to_owned()),"
+   ]
+  ]
+ },
+ {
+  "id": "G11-parent-expiry",
+  "file": "kernel/engine/src/research_grant.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::a_grant_expires_no_later_than_its_parent",
+  "replace": [
+   [
+    ".min(parent.expires_at_epoch_ms)",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "G12-effect-details",
+  "file": "kernel/engine/src/research_grant.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::an_admitted_public_get_completes_through_the_real_owners_and_reads_back",
+  "replace": [
+   [
+    "                        details_sha256: packet.sha256().to_owned(),",
+    "                        details_sha256: call.arguments.sha256.clone(),"
+   ]
+  ]
+ },
+ {
+  "id": "G13-call-validation",
+  "file": "kernel/engine/src/research_grant.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+  "replace": [
+   [
+    "        crate::research_effect_binding::validate_call(definition, call, checked.prepared.packet())\n            .map_err(|_| PublicGetGrantError::Call)?;\n",
+    "        let _ = definition;\n"
+   ]
+  ]
+ },
+ {
+  "id": "J1-deadline-window",
+  "file": "kernel/engine/src/research_journal.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+  "replace": [
+   [
+    "    if now_epoch_ms < packet.prepared_at_epoch_ms() || now_epoch_ms >= packet.deadline_epoch_ms() {\n        return Err(ResearchJournalError::Binding);\n    }\n    let operation",
+    "    let operation"
+   ]
+  ]
+ },
+ {
+  "id": "J2-classification",
+  "file": "kernel/engine/src/research_journal.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::the_owner_refuses_each_issuance_the_plan_and_parent_do_not_authorize",
+  "replace": [
+   [
+    "    let operation = retained\n        .scope\n        .classify(&packet.request().target)\n        .map_err(ResearchJournalError::Budget)?;\n    retained\n        .budget\n        .reserve(",
+    "    let operation = crate::research_budget::ResearchOperation::Visit;\n    retained\n        .budget\n        .reserve("
+   ]
+  ]
+ },
+ {
+  "id": "J3-dry-run-reservation",
+  "file": "kernel/engine/src/research_journal.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::a_cancelled_budget_or_a_spent_request_receives_no_grant",
+  "replace": [
+   [
+    "            packet.request().maximum_response_bytes,\n            now_epoch_ms,\n        )\n        .map_err(ResearchJournalError::Budget)?;\n    verify_live_plan(store, payloads, &retained.root, now_epoch_ms)?;\n    Ok(CheckedResearchRequest {",
+    "            packet.request().maximum_response_bytes,\n            now_epoch_ms,\n        )\n        .ok();\n    verify_live_plan(store, payloads, &retained.root, now_epoch_ms)?;\n    Ok(CheckedResearchRequest {"
+   ]
+  ]
+ },
+ {
+  "id": "J4-live-plan",
+  "file": "kernel/engine/src/research_journal.rs",
+  "package": "agentmage-kernel-engine",
+  "filters": [
+   "research_admission_tests"
+  ],
+  "expected": "runtime_loop::tests::research_admission_tests::completion_tests::a_finished_run_receives_no_grant",
+  "replace": [
+   [
+    "        .map_err(ResearchJournalError::Budget)?;\n    verify_live_plan(store, payloads, &retained.root, now_epoch_ms)?;\n    Ok(CheckedResearchRequest {",
+    "        .map_err(ResearchJournalError::Budget)?;\n    Ok(CheckedResearchRequest {"
+   ]
+  ]
+ }
+]

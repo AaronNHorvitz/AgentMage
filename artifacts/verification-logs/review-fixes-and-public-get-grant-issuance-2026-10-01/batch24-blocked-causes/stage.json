@@ -1,0 +1,133 @@
+{
+  "schema_version": 2,
+  "stage": "batch24-blocked-causes",
+  "source_revision": "a2e7efe1a476e23ea0bee09110e3dcbb49b6df61",
+  "scope": "Batch 24 underlying failing steps of the still-blocked producers",
+  "planned_commands": [
+    [
+      "python3",
+      "-m",
+      "pytest",
+      "--version"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "handoff"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "frontier",
+      "--lib"
+    ],
+    [
+      "npm",
+      "run",
+      "docs:mermaid"
+    ],
+    [
+      "npm",
+      "run",
+      "requirements:current-check"
+    ]
+  ],
+  "continue_after_failure_indexes": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "-m",
+        "pytest",
+        "--version"
+      ],
+      "exit_code": 1,
+      "seconds": 0.007,
+      "log": "01.log",
+      "log_sha256": "b72695fcb3e2889d64484497e2ea8079822f1532c2505f226cde970957bedf7d",
+      "private_log_sha256": "b72695fcb3e2889d64484497e2ea8079822f1532c2505f226cde970957bedf7d"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "handoff"
+      ],
+      "exit_code": 101,
+      "seconds": 0.094,
+      "log": "02.log",
+      "log_sha256": "87571bc2a67351da836c0a7a19e5241602e19bcbf40e370bca09554bbfc6e732",
+      "private_log_sha256": "87571bc2a67351da836c0a7a19e5241602e19bcbf40e370bca09554bbfc6e732"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "frontier",
+        "--lib"
+      ],
+      "exit_code": 101,
+      "seconds": 0.11,
+      "log": "03.log",
+      "log_sha256": "b9831d9ed7d1ef154e2472951b0080ed61ab7fc5dd18f9ae986751e9eefa92ac",
+      "private_log_sha256": "b9831d9ed7d1ef154e2472951b0080ed61ab7fc5dd18f9ae986751e9eefa92ac"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "npm",
+        "run",
+        "docs:mermaid"
+      ],
+      "exit_code": 1,
+      "seconds": 12.86,
+      "log": "04.log",
+      "log_sha256": "a20d6569f9f853f15c00f5fd16db79ad34e210759962150c6b94d2c66058dd6e",
+      "private_log_sha256": "37e7698d7215736f002229f27ceb43105aba0ed6c9279aac29c3be664009e3ee"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "npm",
+        "run",
+        "requirements:current-check"
+      ],
+      "exit_code": 1,
+      "seconds": 3.376,
+      "log": "05.log",
+      "log_sha256": "251e60671f80cce61b1b970dfdd61343589166c59f18955dc4ae679c0a4d65db",
+      "private_log_sha256": "251e60671f80cce61b1b970dfdd61343589166c59f18955dc4ae679c0a4d65db"
+    }
+  ]
+}
