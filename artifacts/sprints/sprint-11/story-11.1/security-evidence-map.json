@@ -52,14 +52,14 @@
       "sha256": "8e7ab5d36e15dd73d9ac1d0019e8e167bd768b02a295e20fe168e807800cafb3"
     },
     {
-      "bytes": 128372,
+      "bytes": 128652,
       "path": "kernel/engine/src/authority_transaction.rs",
-      "sha256": "ba4319939bc4e57d6357e80d217dd872cd8c790447a1d185265736acdb9a2852"
+      "sha256": "5aa6fa935809953a37873919f3fc7ebfd472e0f345d9de9bfeaeece308db4d97"
     },
     {
-      "bytes": 495146,
+      "bytes": 495449,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "523a6f6b792d1282d1ee97f9b1af8ebeda550ee123ec7352521bb796d0f4d79f"
+      "sha256": "f2071806b6af114fdb2126f12e3d1abfb2462afd1efd26532b1ff8bb84c468c3"
     },
     {
       "bytes": 45680,
@@ -99,7 +99,7 @@
     {
       "bytes": 7948,
       "path": "artifacts/sprints/sprint-11/story-11.1/operational-schema-v3.json",
-      "sha256": "d1f076edfb351d21eadfcd4c94cd1769c6c0df6c1a7bfb9f49578885404f942b"
+      "sha256": "73ba2de35eed14e093e10a13c46f3034cb2fbea0d27ca0098d6b08e535e9d8ff"
     },
     {
       "bytes": 3761,
@@ -114,7 +114,7 @@
     {
       "bytes": 4117,
       "path": "artifacts/sprints/sprint-11/story-11.1/s-011-rt01.json",
-      "sha256": "0ca7f99edb91ea0ea1c13d335855dc25a704872383eba9656c8a950e84d9073e"
+      "sha256": "7ae2e210db1155bc90f661cb8024019f8fc338a8e69870d720a58edef1c2d2a6"
     },
     {
       "bytes": 4286,
@@ -124,7 +124,7 @@
     {
       "bytes": 7939,
       "path": "artifacts/sprints/sprint-11/story-11.1/s-011-ut01.json",
-      "sha256": "d9205f79d506d51b577e3d07ef9ff7ab3fe1441c8ee3f8afe0af8fed323e2404"
+      "sha256": "c79c4def8dcad4f60cc9284a4d3d8c340d7ee372bf4fdca5fb2179a77205e1e7"
     },
     {
       "bytes": 4667,
@@ -149,7 +149,7 @@
     {
       "bytes": 17136,
       "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
-      "sha256": "34228cbeab9eebffe82c9104d746574d9c8981961354bb885d56abb552ffcaea"
+      "sha256": "8ca35639310c03940158e54422a22cac3708c88f3c8501f36f4a8a1159eada40"
     },
     {
       "bytes": 51,
@@ -471,7 +471,7 @@
   "product_requirement_completion_claim": "none",
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "9b61b099bacf6bff0d4ee702495ca25d6b8361c8",
+  "source_revision": "46c9d2ff6b81f0760eb67edf1265fd1413ac6e63",
   "status": "pass-story-security-mapping-with-open-product-controls",
   "summary": {
     "demonstrated_story_scope_count": 7,

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "record_type": "sprint_79_local_evidence",
-  "source_revision": "9b61b099bacf6bff0d4ee702495ca25d6b8361c8",
+  "source_revision": "46c9d2ff6b81f0760eb67edf1265fd1413ac6e63",
   "source_sha256": {
     "Cargo.toml": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc",
     "Cargo.lock": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd",
@@ -16,9 +16,9 @@
     "artifacts/sprints/sprint-78/local-evidence-report.json": "fa890b49a3a42caf6ead9eb071b74f86e325ebc74d6e66d36c69c710751a5ebf",
     "scripts/capability_package_runtime_contract.py": "1eada96d44517051f66d7d6ead796088f340d0c580752057f6faff6e9b1e5d21",
     "tests/test_capability_package_runtime_contract.py": "f2a5ad3b1403241a7ae6b4ac3069033dab6a70e907142a6efa6a94346891db0b",
-    "supply-chain/dependency-hashes.sha256": "f39e063b4a321db2856a9699257a24823274799f69b8aad9404e6d784116987a",
-    "supply-chain/dependency-provenance.json": "6a1f64fe128494de11e23b002e6fd1cad81296d2686c7f4fcb48c23a203784b4",
-    "supply-chain/sbom.cdx.json": "b4bbf7335e7e7629c6df63b6eb84dece12b13428631e7ea8f127276d1a8445a2",
+    "supply-chain/dependency-hashes.sha256": "15076ed12f44015e140c892c8ebed7146403579ad8dbb0b01e66f14a3fa43809",
+    "supply-chain/dependency-provenance.json": "12546429dea9f0fe48801ddfec16a89ea1672ce4d6e0feeae4df5dd45e9d858d",
+    "supply-chain/sbom.cdx.json": "2e8b3380e1255ebd957dc11d07ef0041f4d6e60024248f60a1d1156bd56a45e6",
     "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
     "scripts/sprint_79_evidence.py": "747e4146d760edf9bc1a82b79a5b02f289d14d656ae3ae2e4f556667a8750320",
     "tests/test_sprint_79_evidence.py": "7f7aa394462a040f980723389e3a4384aa861a287639eb086aa1e49d42b83a3f"
@@ -45,7 +45,7 @@
         "--all-features"
       ],
       "exit_code": 0,
-      "output_sha256": "44c1e205d1d6e2170c8beba290ec7317a6387eb3d435c7f03d2f46163732380d",
+      "output_sha256": "6a76352a83f21f65498521d9266dd600ed16ffe610cb1706ea3e716da66165a3",
       "blocking_skip_count": 0
     },
     {
@@ -69,7 +69,7 @@
         "schemas:test"
       ],
       "exit_code": 0,
-      "output_sha256": "627d4ffd18b1b893e1810d4cc724a8503d9df89cd81a2991b391dd64b052c9a0",
+      "output_sha256": "84ed59b487d6707f4b2058ac584dad12ac934ac7a3dc4465acd08437e3e3c384",
       "blocking_skip_count": null
     },
     {
