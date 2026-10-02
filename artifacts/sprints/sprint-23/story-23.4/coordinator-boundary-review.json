@@ -74,14 +74,14 @@
   ],
   "manual_fuzzing_executed": false,
   "release_approved": false,
-  "report_sha256": "01e9f027cabcada1f90decbaf8a1dddb89d3218bb62eab85d64169d356aa3bc9",
+  "report_sha256": "887bb527740aa40c1b43c45e73e859d68da553f506d1b4f345635eca775b5662",
   "schema_version": 1,
-  "source_revision": "140766518e9ee41afc08cda222171e0b5b14df33",
+  "source_revision": "ff9134a781f93e3492076b2c7b2112a58aeaa4ed",
   "sources": [
     {
-      "bytes": 235829,
+      "bytes": 243831,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "ecb9fb7df596b2a57024f51380ee84662720960154a9c6e445b3256b3268d620"
+      "sha256": "d67cab35687815d5b2cc65697fa4097a131d0a45ad170a6d53c3cdc7772cdffe"
     },
     {
       "bytes": 12820,
@@ -154,19 +154,19 @@
       "sha256": "0fe5e51673cdcef3b99a993b4a93f65a2cd8019579efd3c15aacab565dd38bd0"
     },
     {
-      "bytes": 18679,
+      "bytes": 20674,
       "path": "docs/architecture/reusable-runtime-coordinator.md",
-      "sha256": "f18b9ebded78ee68211b841363fbebb81d8f5bb6f7ff67cb89da735a1aa019eb"
+      "sha256": "adeecc3a6a603d50a212be096395177b5063d91bf2d9263708512593c583ac15"
     },
     {
-      "bytes": 10744,
+      "bytes": 10743,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "6a7b65626e3cfe49dae958ee42a35e2cc155eaa5479cc17a3963929a8ef2cd5b"
+      "sha256": "ac4b76ea3aaafbad1d19db9f45ede1908185559d52335434d0c0d16cbf188a5f"
     },
     {
       "bytes": 8021,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "3c8c11fe811e2a558087700c115a9f810e6bc2e99312e22102536d10020f0a1c"
+      "sha256": "42c05b87674e1362058f47e795ae5a1efa36692006e30657aa4248aee310abf4"
     },
     {
       "bytes": 10830,
