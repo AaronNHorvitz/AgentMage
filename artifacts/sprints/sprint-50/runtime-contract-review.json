@@ -48,7 +48,7 @@
   "review_class": "gate-owned-automated-shared-runtime-contract-review",
   "reviewer_identity": "scripts/sprint_50_runtime_contract_review.py",
   "schema_version": 1,
-  "source_revision": "d35bf6994e21543bdee035c2f74160001acc7ff4",
+  "source_revision": "140766518e9ee41afc08cda222171e0b5b14df33",
   "source_sha256": {
     "kernel/contracts/Cargo.toml": "41b9192d56af6e360f2a77d065b823af009cc30ad04fdcb96c08f22cfc6fd6c8",
     "kernel/contracts/src/runtime_artifact.rs": "f4e07606661ee1193eac26d4ad730f9d8348259a927343e3bce4f916482234e4",
@@ -57,7 +57,7 @@
     "kernel/engine/src/runtime_coordinator.rs": "8570c1764e7293e6c3c5931fcbab612c9df26ee7ab284c8bdfbb12d22b6553a0",
     "kernel/engine/src/runtime_hardening.rs": "cfa81f9a78783c949bd9a7e4873b5e1fa7c377cb3383679be36f802a9b73f1f8",
     "kernel/engine/src/runtime_lifecycle.rs": "56823d70a711ba278d8918d3cf288061b5addcfd97c6ed228c2ed184b03eb2d2",
-    "kernel/engine/src/runtime_loop.rs": "c79840afe97a7adb52831e76c7791ecc0e94bac74dbdbf2eb374b1330dc0a8d4",
+    "kernel/engine/src/runtime_loop.rs": "ecb9fb7df596b2a57024f51380ee84662720960154a9c6e445b3256b3268d620",
     "kernel/engine/src/runtime_loop_tests.rs": "f79584b9eaae7dc8ea348e67eabe3c0357e71d303237e1eb2a74ed4a7fd4e108",
     "kernel/engine/src/runtime_recovery.rs": "7997cf0ccae000d132eee6b92b990a0891884887441b06ba69cf28dd8494dcb6"
   },
