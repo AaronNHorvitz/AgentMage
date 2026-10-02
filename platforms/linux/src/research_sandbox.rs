@@ -19,7 +19,7 @@ use agentmage_kernel_engine::propagation::{
 use agentmage_kernel_engine::research_dispatch::{ResearchDispatch, ResearchEffectDriver};
 use agentmage_kernel_engine::research_effect_binding::PublicGetEffectBinding;
 use agentmage_kernel_engine::research_fetch::PublicGetWorkerPacket;
-use agentmage_kernel_engine::research_response::PublicGetResponse;
+use agentmage_kernel_engine::research_response::{PublicGetResponse, PublicGetWorkerFailure};
 use agentmage_kernel_engine::research_result_binding::{
     PublicGetNativeIdentity, PublicGetParentInterval, PublicGetResultBinding,
 };
@@ -567,6 +567,23 @@ fn native_output_succeeded(result: &supervision::SupervisedResult) -> bool {
         && result.stdout.sha256 == digest_bytes(&result.stdout.retained)
 }
 
+/// The worker's closed failure report as the failure's reason (Decision 0141):
+/// it exited with status 5 and wrote exactly one known code and its newline,
+/// all of it retained. Any other output keeps the generic reason. This is a
+/// diagnostic only; the authority outcome stays conservative whatever the
+/// worker reports.
+fn worker_failure_reason(result: &supervision::SupervisedResult) -> &'static str {
+    let status = result
+        .status
+        .as_ref()
+        .and_then(std::process::ExitStatus::code);
+    if result.stderr.total != result.stderr.retained.len() {
+        return "native-nonsuccess";
+    }
+    PublicGetWorkerFailure::decode_report(status, &result.stderr.retained)
+        .map_or("native-nonsuccess", PublicGetWorkerFailure::code)
+}
+
 /// Redacted failure details; cleanup never reverses an attempted external disclosure.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct LinuxPublicResearchFailure {
@@ -748,7 +765,7 @@ impl ResearchEffectDriver for LinuxPublicResearchEffectDriver<'_> {
                 } else {
                     outcome
                 },
-                "native-nonsuccess",
+                worker_failure_reason(&result),
                 true,
             );
         }
@@ -832,5 +849,44 @@ mod tests {
                 "mutation {mutation}"
             );
         }
+    }
+
+    #[test]
+    fn a_closed_worker_report_is_only_the_failure_reason() {
+        use std::os::unix::process::ExitStatusExt;
+        let failed = |status: i32, stderr: &[u8], total: usize| supervision::SupervisedResult {
+            outcome: Ok(OperationOutcome::Failed),
+            status: Some(std::process::ExitStatus::from_raw(status << 8)),
+            stdout: supervision::CapturedStream {
+                retained: vec![],
+                sha256: digest_bytes(&[]),
+                total: 0,
+            },
+            stderr: supervision::CapturedStream {
+                retained: stderr.to_vec(),
+                sha256: digest_bytes(stderr),
+                total,
+            },
+            resources: None,
+            output_complete: true,
+        };
+        for failure in PublicGetWorkerFailure::ALL {
+            let report = failure.report();
+            let result = failed(5, &report, report.len());
+            assert_eq!(worker_failure_reason(&result), failure.code());
+            assert!(!native_output_succeeded(&result));
+            // Another status, a truncated capture or other bytes keep the
+            // generic reason.
+            for other in [
+                failed(1, &report, report.len()),
+                failed(5, &report, report.len() + 1),
+                failed(5, failure.code().as_bytes(), failure.code().len()),
+            ] {
+                assert_eq!(worker_failure_reason(&other), "native-nonsuccess");
+            }
+        }
+        let mut signalled = failed(5, &PublicGetWorkerFailure::Input.report(), 29);
+        signalled.status = Some(std::process::ExitStatus::from_raw(9));
+        assert_eq!(worker_failure_reason(&signalled), "native-nonsuccess");
     }
 }

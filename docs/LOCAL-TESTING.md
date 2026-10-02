@@ -483,6 +483,24 @@ python3 -m unittest tests.test_runtime_producer_contract
 The first prints `runtime producer fixtures match (9 files)`. Nothing reads these
 records through the transport yet; a consumer's own contract is pinned separately.
 
+### Public research worker contract fixtures
+
+The packet the engine hands the optional public research worker, the frame the worker
+returns, its closed failure reports and the binding of one call to its permit are
+specified in the [public research worker contract](architecture/public-research-worker-contract-v1.md)
+([Decision 0141](decisions/0141-public-research-worker-contract.md)), with exact-byte
+fixtures under `fixtures/public-research-worker/v1/`. To check that the committed
+fixtures are exactly what the engine's types build, and that their manifest and document
+agree:
+
+```sh
+python3 scripts/public_research_worker_fixtures.py    # builds the engine tests once
+python3 -m unittest tests.test_public_research_worker_contract
+```
+
+The first prints `public research worker fixtures match (8 files)`. No worker runs for
+these checks; the worker's native qualification needs a native Linux host (AMR-02.3.2).
+
 To run the whole declared scripted matrix in one step instead (edits, denial,
 cancellation, pause and resume, stale approvals, rollback and the other cases, each in
 a fresh root), use

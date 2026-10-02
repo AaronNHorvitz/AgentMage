@@ -223,6 +223,8 @@ impl PreparedPublicGet {
 
 impl PublicGetWorkerPacket {
     /// Validates the entire bounded worker envelope, including duplicate/unknown fields.
+    /// Only the exact canonical encoding is accepted: compact JSON in the declared
+    /// member order (Decision 0141).
     /// This proves only packet syntax/restrictions, not grant consumption or model admission.
     /// It is stateless: the existing task budget and authority owner must enforce terminal
     /// expiry, cancellation and no replay; decoding cannot restore those owners' state.
@@ -235,6 +237,11 @@ impl PublicGetWorkerPacket {
         }
         let wire: WireRequest =
             serde_json::from_slice(bytes).map_err(|_| ResearchFetchError::Invalid)?;
+        // Exact bytes (Decision 0141): only the canonical encoding of the
+        // decoded packet is accepted, so one request has one identity.
+        if serde_json::to_vec(&wire).ok().as_deref() != Some(bytes) {
+            return Err(ResearchFetchError::Invalid);
+        }
         validate_draft(&wire.request)?;
         if wire.schema_version != 1
             || !valid_id(&wire.task_id)
@@ -479,6 +486,34 @@ mod tests {
             changed.target.path = path.into();
             assert_eq!(
                 PreparedPublicGet::prepare(&allowed, changed, 100, 200).err(),
+                Some(ResearchFetchError::Invalid)
+            );
+        }
+    }
+    #[test]
+    fn only_the_exact_canonical_packet_bytes_decode() {
+        let allowed = scope(ResearchNetworkMode::Ask);
+        let prepared = PreparedPublicGet::prepare(&allowed, draft(), 100, 200).unwrap();
+        let bytes = prepared.packet().bytes();
+        assert!(PublicGetWorkerPacket::decode_worker_packet(bytes, 200).is_ok());
+        let text = String::from_utf8(bytes.to_vec()).unwrap();
+        let value: serde_json::Value = serde_json::from_slice(bytes).unwrap();
+        // The same members, with the first one moved to the end.
+        let mut reordered = value.clone();
+        let object = reordered.as_object_mut().unwrap();
+        let first = object.remove("schema_version").unwrap();
+        object.insert("schema_version".into(), first);
+        for changed in [
+            serde_json::to_vec_pretty(&value).unwrap(),
+            serde_json::to_vec(&reordered).unwrap(),
+            format!("{text}\n").into_bytes(),
+            format!(" {text}").into_bytes(),
+            text.replacen(':', ": ", 1).into_bytes(),
+            text.replacen("docs", "\\u0064ocs", 1).into_bytes(),
+        ] {
+            assert_ne!(changed, bytes);
+            assert_eq!(
+                PublicGetWorkerPacket::decode_worker_packet(&changed, 200).err(),
                 Some(ResearchFetchError::Invalid)
             );
         }

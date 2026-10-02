@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "packet": "request-visit.json",
+  "tool_id": "research.public-get",
+  "tool_version": "1.0.0",
+  "tool_call_id": "public-get-1",
+  "arguments": "{\"schema_version\":1,\"operation_id\":\"public-get-1\",\"target\":{\"domain\":\"docs.example.com\",\"path\":\"/guide\",\"query\":[]},\"maximum_response_bytes\":4096,\"redirect_limit\":1,\"timeout_ms\":10000}",
+  "arguments_sha256": "44012ac999b23f9690bdcfcd5641fee57a14bd564816a8292d70ce45abb77aed",
+  "packet_sha256": "7b7c1565692bb469d4ac9e5a34cf6605babc05248db9eb45b9228caac6323102",
+  "grant": {
+    "operation": "network_access",
+    "single_use": true,
+    "preview_sha256": "7b7c1565692bb469d4ac9e5a34cf6605babc05248db9eb45b9228caac6323102",
+    "expected_effect": {
+      "operation": "network_access",
+      "target_indexes": [
+        0
+      ],
+      "details_sha256": "7b7c1565692bb469d4ac9e5a34cf6605babc05248db9eb45b9228caac6323102"
+    }
+  },
+  "network_scope": "https:docs.example.com:443"
+}

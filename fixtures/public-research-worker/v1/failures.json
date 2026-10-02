@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "exit_status": 5,
+  "reports": [
+    {
+      "code": "research.worker.environment-denied",
+      "stderr": "research.worker.environment-denied\n"
+    },
+    {
+      "code": "research.worker.input-denied",
+      "stderr": "research.worker.input-denied\n"
+    },
+    {
+      "code": "research.worker.destination-denied",
+      "stderr": "research.worker.destination-denied\n"
+    },
+    {
+      "code": "research.worker.transport-failed",
+      "stderr": "research.worker.transport-failed\n"
+    },
+    {
+      "code": "research.worker.response-denied",
+      "stderr": "research.worker.response-denied\n"
+    },
+    {
+      "code": "research.worker.limit",
+      "stderr": "research.worker.limit\n"
+    },
+    {
+      "code": "research.worker.deadline",
+      "stderr": "research.worker.deadline\n"
+    },
+    {
+      "code": "research.worker.output-failed",
+      "stderr": "research.worker.output-failed\n"
+    }
+  ]
+}

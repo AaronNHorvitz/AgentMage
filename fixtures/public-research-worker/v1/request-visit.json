@@ -1,0 +1,1 @@
+{"schema_version":1,"task_id":"task-0001","policy_sha256":"4d74bf533674e289c8213ad43597e2f0f09b74ff254b9871c576e4e659871e72","prepared_at_epoch_ms":1000100,"deadline_epoch_ms":1010100,"request":{"schema_version":1,"operation_id":"public-get-1","target":{"domain":"docs.example.com","path":"/guide","query":[]},"maximum_response_bytes":4096,"redirect_limit":1,"timeout_ms":10000}}

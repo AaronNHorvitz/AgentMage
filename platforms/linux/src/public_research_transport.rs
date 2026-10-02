@@ -29,31 +29,9 @@ const MAX_FRAMING: u64 = 64 * 1024;
 // headers and bodies. A peer cannot send unlimited TLS records before HTTP parsing.
 const MAX_TLS_OVERHEAD: u64 = 256 * 1024;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum WorkerError {
-    Environment,
-    Input,
-    Destination,
-    Transport,
-    Response,
-    Limit,
-    Deadline,
-    Output,
-}
-impl WorkerError {
-    pub(crate) const fn code(self) -> &'static str {
-        match self {
-            Self::Environment => "research.worker.environment-denied",
-            Self::Input => "research.worker.input-denied",
-            Self::Destination => "research.worker.destination-denied",
-            Self::Transport => "research.worker.transport-failed",
-            Self::Response => "research.worker.response-denied",
-            Self::Limit => "research.worker.limit",
-            Self::Deadline => "research.worker.deadline",
-            Self::Output => "research.worker.output-failed",
-        }
-    }
-}
+// The closed failure the worker reports, shared with the parent that reads it
+// (Decision 0141).
+pub(crate) use agentmage_kernel_engine::research_response::PublicGetWorkerFailure as WorkerError;
 
 pub(crate) fn epoch_ms() -> Result<u64, WorkerError> {
     SystemTime::now()

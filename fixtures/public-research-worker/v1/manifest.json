@@ -1,0 +1,48 @@
+{
+  "contract": "agentmage-public-research-worker",
+  "contract_version": 1,
+  "records": [
+    {
+      "file": "request-visit.json",
+      "record": "request",
+      "schema_version": 1,
+      "sha256": "7b7c1565692bb469d4ac9e5a34cf6605babc05248db9eb45b9228caac6323102"
+    },
+    {
+      "file": "request-search.json",
+      "record": "request",
+      "schema_version": 1,
+      "sha256": "32b2fe531a77c33f605c79f29a94095631c6bb68559475bf2f7cebd664ff9efd"
+    },
+    {
+      "file": "response-visit-v1.frame",
+      "record": "frame",
+      "schema_version": 1,
+      "sha256": "466c8c033a3ce66256adf371ce60eef2ba9381aae3c8433571a9162ab14d0e7e"
+    },
+    {
+      "file": "response-visit-v2.frame",
+      "record": "frame",
+      "schema_version": 2,
+      "sha256": "ab89a91d5f23d4dd86c2ac80f97c3296e4febfb82e1bfc5e6c780232a2303af6"
+    },
+    {
+      "file": "response-search-v1.frame",
+      "record": "frame",
+      "schema_version": 1,
+      "sha256": "f5f368cffbc5b4d3512490a11259e74d9e4b758b897f13c1c5211c7a06188668"
+    },
+    {
+      "file": "failures.json",
+      "record": "failure_reports",
+      "schema_version": 1,
+      "sha256": "e18c41e410f5e793605e08a90c8a566cff4503b51321d270acc3ba55f9975403"
+    },
+    {
+      "file": "binding-visit.json",
+      "record": "permit_binding",
+      "schema_version": 1,
+      "sha256": "92c25c08023b9e54ebdf8468106b1cfddf2fa5564ad3d9082f838f1b8b5b6edc"
+    }
+  ]
+}

@@ -11,6 +11,10 @@ use std::io::{Read, Write};
 use std::process::ExitCode;
 
 use agentmage_kernel_engine::research_fetch::PublicGetWorkerPacket;
+use agentmage_kernel_engine::research_response::PUBLIC_GET_WORKER_FAILURE_STATUS;
+
+const FAILURE_STATUS: u8 = 5;
+const _: () = assert!(PUBLIC_GET_WORKER_FAILURE_STATUS == FAILURE_STATUS as i32);
 
 fn run() -> Result<(), transport::WorkerError> {
     if std::env::args_os().count() != 1 || !environment_is_admitted(std::env::vars_os()) {
@@ -71,9 +75,10 @@ fn main() -> ExitCode {
     match run() {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
+            // Exactly the closed report: the code and one newline (Decision 0141).
             // Never format a URL, library error, query, environment or response body.
-            eprintln!("{}", error.code());
-            ExitCode::from(5)
+            let _ = std::io::stderr().lock().write_all(&error.report());
+            ExitCode::from(FAILURE_STATUS)
         }
     }
 }
