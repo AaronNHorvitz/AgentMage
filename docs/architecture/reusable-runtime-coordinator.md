@@ -273,7 +273,40 @@ canonical reader. Its trusted glue is test code. The test covers these cases:
 Under Decision 0140 (AMR-03.1.1) a further module interrupts the glue after a
 reservation and after a start, reopens the store, and covers recovery with the
 original clocks, failed and uncertain workers, cancellation, expiry, and one budget
-per task and one owner per store.
+per task and one owner per store. A synthetic test covers the third cancellation
+path: a model phase that observed the cancellation before a dependency failure
+outranked it (Decision 0142, review F1 of `a8fd53e3`).
+
+### Reports of an admitted run
+
+Under [Decision 0142](../decisions/0142-review-fixes-and-research-reports-through-the-coordinator.md)
+(AMR-03.1.4) an admitted run may complete with a research report draft: a payload
+with the report draft media type. The coordinator accepts it only as the completion
+of an admitted run, and only when the bytes decode as a draft and are its exact
+encoding; anything else, including a draft in another proposal or another run, is an
+invalid proposal. After the verifier passes, the coordinator:
+
+1. charges the output and artifact budgets;
+2. prepares a run-level report manifest of the completing turn, without an
+   operation, receipt or preview;
+3. flushes the journal;
+4. has `RuntimeResearchBudgetPort::publish_research_report` retain the draft through
+   the canonical report owner, which checks it against the run's own complete
+   sources and accounting;
+5. accepts only the reference its manifest describes, records the creation event
+   and completes with the draft's reference as the output.
+
+An owner refusal ends the run `Failed` with `runtime.research.report_refused` and
+retains nothing; any other port failure is a dependency failure. An unverified draft
+is never retained. A cancellation observed after the publication still cancels the
+run and its budget, and the retained draft then reads back as cancelled. Every read
+rebuilds the report through fresh source, accounting and lifecycle checks.
+
+A composed module drives a deep plan through the real owners: three searches and two
+visits, a draft citing three of the sources, its read-back as checked, partial,
+expired or cancelled, refusals of unsupported drafts with nothing retained, source
+drift and reopening without replay. The model is the fixture model; it takes the
+bundle references from the test glue.
 
 The authority owner commits a pending effect's terminal only when that terminal
 names the start's call, turn and operation and the receipt the owner issued; the

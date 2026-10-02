@@ -12,11 +12,14 @@ use crate::research_budget::{
 use crate::research_fetch::PublicSearchEndpoint;
 use crate::research_journal::{ResearchBudgetContext, ResearchBudgetState};
 use crate::research_plan::{PreparedResearchPlan, ResearchPlanDraft};
+use crate::research_report::{ResearchReportClaimDraft, ResearchReportDraft, ResearchSourceSpan};
+use crate::runtime_artifact::{RESEARCH_REPORT_DRAFT_MEDIA_TYPE, runtime_payload_reference};
 use crate::runtime_loop::{
     RESEARCH_ADMISSION_CONSTRAINT_PREFIX, RESEARCH_BUDGET_CANCELLATION_UNCONFIRMED,
-    RuntimeResearchAdmission, RuntimeResearchBudgetPort, valid_admitted_network_execution,
+    RESEARCH_REPORT_REFUSED, RuntimeModelOperationFailure, RuntimeResearchAdmission,
+    RuntimeResearchBudgetPort, valid_admitted_network_execution,
 };
-use agentmage_kernel_contracts::{RuntimeEventCursor, RuntimeEventId};
+use agentmage_kernel_contracts::{RuntimeArtifactId, RuntimeEventCursor, RuntimeEventId};
 
 #[path = "runtime_loop_research_completion_tests.rs"]
 mod completion_tests;
@@ -62,11 +65,31 @@ struct Cancellation {
     before_terminal: bool,
 }
 
+/// How the synthetic report owner answers a draft (Decision 0142).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ReportAnswer {
+    Exact,
+    Refused,
+    Uncertain,
+    OtherReference,
+}
+
+/// One report publication as the synthetic owner saw it.
+struct ReportPublication {
+    context: ResearchBudgetContext,
+    manifest: RuntimeArtifactManifest,
+    draft: Vec<u8>,
+    flushes: usize,
+    journaled: usize,
+}
+
 thread_local! {
     static BUDGET_ANSWER: Cell<BudgetAnswer> = const { Cell::new(BudgetAnswer::Exact) };
     static OPENINGS: RefCell<Vec<Opening>> = const { RefCell::new(Vec::new()) };
     static CANCEL_ANSWER: Cell<CancelAnswer> = const { Cell::new(CancelAnswer::Exact) };
     static CANCELLATIONS: RefCell<Vec<Cancellation>> = const { RefCell::new(Vec::new()) };
+    static REPORT_ANSWER: Cell<ReportAnswer> = const { Cell::new(ReportAnswer::Exact) };
+    static REPORTS: RefCell<Vec<ReportPublication>> = const { RefCell::new(Vec::new()) };
 }
 
 impl RuntimeResearchBudgetPort for FakeToolBoundary {
@@ -211,6 +234,41 @@ impl RuntimeResearchBudgetPort for FakeToolBoundary {
         }
         Ok(state)
     }
+
+    fn publish_research_report(
+        &mut self,
+        _request: &RuntimeRunRequest,
+        context: &ResearchBudgetContext,
+        manifest: &RuntimeArtifactManifest,
+        draft: &[u8],
+    ) -> Result<RuntimeArtifactRef, RuntimePortFailure> {
+        // The owner sees how far the run's journal was made durable.
+        let journaled = self.journal.lock().unwrap().len();
+        REPORTS.with(|reports| {
+            reports.borrow_mut().push(ReportPublication {
+                context: context.clone(),
+                manifest: manifest.clone(),
+                draft: draft.to_vec(),
+                flushes: self.journal_flushes.load(Ordering::SeqCst),
+                journaled,
+            });
+        });
+        match REPORT_ANSWER.with(Cell::get) {
+            ReportAnswer::Refused => Err(RuntimePortFailure::Invalid),
+            ReportAnswer::Uncertain => Err(RuntimePortFailure::Uncertain),
+            answer => {
+                let mut reference = runtime_artifact_ref(manifest).unwrap();
+                if answer == ReportAnswer::OtherReference {
+                    reference.manifest_sha256 = sha256(b"another manifest");
+                }
+                self.artifacts
+                    .lock()
+                    .unwrap()
+                    .push((manifest.clone(), draft.to_vec()));
+                Ok(reference)
+            }
+        }
+    }
 }
 
 fn reset_budget(answer: BudgetAnswer) {
@@ -218,6 +276,12 @@ fn reset_budget(answer: BudgetAnswer) {
     OPENINGS.with(|openings| openings.borrow_mut().clear());
     CANCEL_ANSWER.with(|cell| cell.set(CancelAnswer::Exact));
     CANCELLATIONS.with(|cancellations| cancellations.borrow_mut().clear());
+    REPORT_ANSWER.with(|cell| cell.set(ReportAnswer::Exact));
+    REPORTS.with(|reports| reports.borrow_mut().clear());
+}
+
+fn reports() -> usize {
+    REPORTS.with(|reports| reports.borrow().len())
 }
 
 fn cancellations() -> usize {
@@ -420,13 +484,26 @@ fn parts(script: PermissionScript, registry: ToolRegistry) -> Parts {
     }
 }
 
+/// An admitted coordinator over the fixture's ports with any model.
+type AdmittedCoordinator<M> =
+    ReusableRuntimeCoordinator<M, FakeContext, FakeToolBoundary, FakeVerifier, FakeClock>;
+
 fn compose(parts: Parts) -> Result<FixtureCoordinator, RuntimeLoopError> {
+    compose_with(parts, |profile| {
+        FakeModel::new(profile, [ModelScript::Tool, ModelScript::Completion])
+    })
+}
+
+fn compose_with<M: RuntimeModelPort>(
+    parts: Parts,
+    model: impl FnOnce(ExactModelProfile) -> M,
+) -> Result<AdmittedCoordinator<M>, RuntimeLoopError> {
     let mut request = parts.request;
     request.request_sha256 = "0".repeat(64);
     let request = seal_runtime_run_request(request).unwrap();
     ReusableRuntimeCoordinator::new_with_research_admission(
         request,
-        FakeModel::new(parts.profile, [ModelScript::Tool, ModelScript::Completion]),
+        model(parts.profile),
         FakeContext,
         parts.registry,
         parts.boundary,
@@ -1132,7 +1209,7 @@ fn the_admitted_tool_returns_only_these_network_results() {
 }
 
 /// A user's cancellation of the admitted run's own task.
-fn cancellation_of(runtime: &FixtureCoordinator) -> CancellationSignal {
+fn cancellation_of<M: RuntimeModelPort>(runtime: &AdmittedCoordinator<M>) -> CancellationSignal {
     CancellationSignal {
         schema_version: CONTRACT_SCHEMA_VERSION,
         cancellation_id: CancellationId::from_raw("research-cancellation-0001"),
@@ -1298,4 +1375,513 @@ fn a_resumed_admitted_run_is_refused_even_with_its_checkpoint() {
     assert_eq!(composed.err(), Some(RuntimeLoopError::UnsupportedMode));
     assert_eq!(executions.load(Ordering::SeqCst), 1);
     assert_eq!(openings(), 1);
+}
+
+/// A model whose dispatch observes the run's cancellation and then reports a
+/// dependency failure, which outranks it (review F1 of `a8fd53e3`).
+struct LatchingModel {
+    profile: ExactModelProfile,
+    requested: Arc<AtomicUsize>,
+    failure: RuntimePortFailure,
+}
+
+impl RuntimeModelPort for LatchingModel {
+    fn exact_profile(&self) -> &ExactModelProfile {
+        &self.profile
+    }
+
+    fn run_model(
+        &mut self,
+        _request: &ModelRunRequest,
+        _context: &ModelContextPacket,
+        _cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
+    ) -> Result<ModelRunResult, RuntimePortFailure> {
+        panic!("the coordinator dispatches under run control")
+    }
+
+    fn run_model_controlled(
+        &mut self,
+        _request: &ModelRunRequest,
+        _context: &ModelContextPacket,
+        _cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
+        control: &dyn agentmage_kernel_contracts::ModelOperationControl,
+    ) -> Result<ModelRunResult, RuntimeModelOperationFailure> {
+        control
+            .remaining_ms()
+            .map_err(RuntimeModelOperationFailure::Stopped)?;
+        self.requested.store(1, Ordering::SeqCst);
+        assert!(
+            control.remaining_ms().is_err(),
+            "the phase observes the cancellation"
+        );
+        Err(RuntimeModelOperationFailure::Port(self.failure))
+    }
+}
+
+#[test]
+fn a_cancellation_latched_before_a_dependency_failure_cancels_the_budget() {
+    // Review F1 of `a8fd53e3`, the third path of Decision 0140: the model
+    // phase observes the cancellation, a dependency failure outranks it, and
+    // the observation is recorded only when the terminal is sealed.
+    for (failure, state) in [
+        (RuntimePortFailure::Uncertain, AgentStateKind::Failed),
+        (RuntimePortFailure::Unavailable, AgentStateKind::Failed),
+        (
+            RuntimePortFailure::ResourceExhausted,
+            AgentStateKind::Exhausted,
+        ),
+    ] {
+        reset_budget(BudgetAnswer::Exact);
+        let requested = Arc::new(AtomicUsize::new(0));
+        let mut runtime = compose_with(
+            parts(PermissionScript::Allow, registry_with(&[])),
+            |profile| LatchingModel {
+                profile,
+                requested: Arc::clone(&requested),
+                failure,
+            },
+        )
+        .unwrap();
+        let context = runtime
+            .research
+            .as_ref()
+            .unwrap()
+            .admission
+            .context()
+            .clone();
+        let probe = CancelAfterExecution {
+            executions: Arc::clone(&requested),
+            signal: cancellation_of(&runtime),
+        };
+        let RuntimeCoordinatorStep::Complete { outcome } =
+            runtime.run_until_boundary(None, Some(&probe)).unwrap()
+        else {
+            panic!("the run ends");
+        };
+        assert_eq!(requested.load(Ordering::SeqCst), 1, "{failure:?}");
+        assert_eq!(outcome.state, state, "{failure:?}");
+        assert_eq!(outcome.unresolved_codes, [failure.code()], "{failure:?}");
+        // The observation follows the closed turn and names no turn.
+        let events = runtime.events();
+        let closed = events
+            .iter()
+            .position(|event| matches!(event.kind, RuntimeEventKind::TurnCompleted { .. }))
+            .unwrap();
+        let observed = events
+            .iter()
+            .position(|event| matches!(event.kind, RuntimeEventKind::CancellationObserved { .. }))
+            .unwrap();
+        assert!(closed < observed, "{failure:?}");
+        assert_eq!(events[observed].turn_id, None);
+        CANCELLATIONS.with(|cancellations| {
+            let cancellations = cancellations.borrow();
+            assert_eq!(cancellations.len(), 1, "{failure:?}");
+            assert_eq!(cancellations[0].context, context);
+            assert!(cancellations[0].after_observation, "{failure:?}");
+            assert!(cancellations[0].before_terminal, "{failure:?}");
+        });
+        assert_valid_terminal_stream(&runtime);
+    }
+}
+
+/// The fixture model with its completion's payload replaced by `draft` under
+/// the report draft media type and proposed as `kind` (Decision 0142). At its
+/// dispatch it records how often the run's journal had been flushed.
+struct ReportModel {
+    inner: FakeModel,
+    draft: Vec<u8>,
+    kind: ModelProposalKind,
+    journal_flushes: Arc<AtomicUsize>,
+    flushes_at_dispatch: Arc<AtomicUsize>,
+}
+
+impl RuntimeModelPort for ReportModel {
+    fn exact_profile(&self) -> &ExactModelProfile {
+        self.inner.exact_profile()
+    }
+
+    fn bind_context_tokens(
+        &self,
+        packet: &mut ModelContextPacket,
+    ) -> Result<(), RuntimePortFailure> {
+        self.inner.bind_context_tokens(packet)
+    }
+
+    fn run_model(
+        &mut self,
+        request: &ModelRunRequest,
+        context: &ModelContextPacket,
+        cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
+    ) -> Result<ModelRunResult, RuntimePortFailure> {
+        self.flushes_at_dispatch.store(
+            self.journal_flushes.load(Ordering::SeqCst),
+            Ordering::SeqCst,
+        );
+        let mut result = self.inner.run_model(request, context, cancellation)?;
+        if let Some(proposal) = result.proposal.as_mut()
+            && proposal.kind == ModelProposalKind::CompletionCandidate
+        {
+            let mut draft = payload("research.report-draft", &self.draft);
+            draft.media_type = RESEARCH_REPORT_DRAFT_MEDIA_TYPE.to_owned();
+            proposal.kind = self.kind;
+            proposal.payload = Some(draft);
+            proposal.proposal_sha256 = "0".repeat(64);
+            proposal.proposal_sha256 =
+                proposal_digest(proposal).map_err(|_| RuntimePortFailure::Invalid)?;
+            result.response_sha256 = sha256(proposal.proposal_sha256.as_bytes());
+        }
+        Ok(result)
+    }
+}
+
+/// A well-formed draft citing one source; only the owner can say whether it
+/// holds. `unresolved` questions of `unresolved_bytes` each enlarge it.
+fn report_draft(unresolved: usize, unresolved_bytes: usize) -> Vec<u8> {
+    serde_json::to_vec(&ResearchReportDraft {
+        schema_version: 1,
+        report_id: "report-0001".into(),
+        sources: vec![RuntimeArtifactRef {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            artifact_id: RuntimeArtifactId::from_raw("artifact-source-0001"),
+            manifest_sha256: sha256(b"source manifest"),
+            payload_sha256: sha256(b"source bundle"),
+            byte_size: 512,
+            media_type: "application/json".into(),
+        }],
+        spans: vec![ResearchSourceSpan {
+            source_index: 0,
+            body_sha256: sha256(b"source body"),
+            start_byte: 0,
+            end_byte: 6,
+            excerpt: "Public".into(),
+        }],
+        claims: vec![ResearchReportClaimDraft::Observed {
+            claim_id: "claim-1".into(),
+            span_index: 0,
+        }],
+        conflicts: vec![],
+        unresolved: (0..unresolved)
+            .map(|index| format!("{index} {}", "q".repeat(unresolved_bytes)))
+            .collect(),
+    })
+    .unwrap()
+}
+
+/// An admitted run whose model completes at once with `draft` as `kind`.
+fn report_run(
+    draft: Vec<u8>,
+    kind: ModelProposalKind,
+    max_output_bytes: u64,
+) -> AdmittedCoordinator<ReportModel> {
+    let mut parts = parts(PermissionScript::Allow, registry_with(&[]));
+    parts.request.limits.max_output_bytes = max_output_bytes;
+    let journal_flushes = Arc::clone(&parts.boundary.journal_flushes);
+    compose_with(parts, |profile| ReportModel {
+        inner: FakeModel::new(profile, [ModelScript::Completion]),
+        draft,
+        kind,
+        journal_flushes,
+        flushes_at_dispatch: Arc::new(AtomicUsize::new(0)),
+    })
+    .unwrap()
+}
+
+fn draft_artifacts<M: RuntimeModelPort>(runtime: &AdmittedCoordinator<M>) -> usize {
+    runtime
+        .artifact_references
+        .iter()
+        .filter(|reference| reference.media_type == RESEARCH_REPORT_DRAFT_MEDIA_TYPE)
+        .count()
+}
+
+#[test]
+fn an_admitted_run_retains_its_report_through_the_owner_before_its_outcome() {
+    reset_budget(BudgetAnswer::Exact);
+    let draft = report_draft(0, 0);
+    let mut runtime = report_run(
+        draft.clone(),
+        ModelProposalKind::CompletionCandidate,
+        MAX_RUNTIME_INLINE_OUTPUT_BYTES as u64,
+    );
+    let context = runtime
+        .research
+        .as_ref()
+        .unwrap()
+        .admission
+        .context()
+        .clone();
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        runtime.run_until_boundary(None, None).unwrap()
+    else {
+        panic!("the run completes");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert!(outcome.unresolved_codes.is_empty());
+    assert!(outcome.answer_evidence.is_some());
+    let (manifest, flushes, journaled) = REPORTS.with(|reports| {
+        let reports = reports.borrow();
+        assert_eq!(reports.len(), 1);
+        assert_eq!(reports[0].context, context);
+        assert_eq!(reports[0].draft, draft);
+        (
+            reports[0].manifest.clone(),
+            reports[0].flushes,
+            reports[0].journaled,
+        )
+    });
+    // A run-level report of the completing turn, without an operation,
+    // receipt or preview, created when the owner checks it.
+    let events = runtime.events();
+    let turn = events
+        .iter()
+        .rev()
+        .find_map(|event| event.turn_id.clone())
+        .unwrap();
+    assert_eq!(manifest.media_type, RESEARCH_REPORT_DRAFT_MEDIA_TYPE);
+    assert_eq!(manifest.kind, RuntimeArtifactKind::Report);
+    assert_eq!(manifest.producer_turn_id, Some(turn.clone()));
+    assert_eq!(manifest.producer_operation_id, None);
+    assert_eq!(manifest.receipt_id, None);
+    assert_eq!(manifest.preview, None);
+    assert_eq!(manifest.payload_sha256, sha256(&draft));
+    // The journal was flushed after the model's dispatch and before the owner
+    // was asked, and the creation event follows the owner's answer.
+    assert_eq!(
+        flushes,
+        runtime.model.flushes_at_dispatch.load(Ordering::SeqCst) + 1
+    );
+    let created = events
+        .iter()
+        .position(|event| {
+            matches!(&event.kind, RuntimeEventKind::ArtifactCreated { artifact_id, manifest_sha256 }
+                if artifact_id == &manifest.artifact_id && manifest_sha256 == &manifest.manifest_sha256)
+        })
+        .unwrap();
+    assert_eq!(created, journaled);
+    assert_eq!(events[created].turn_id, Some(turn));
+    assert_eq!(events[created].operation_id, None);
+    assert_eq!(
+        events[created].occurred_at_epoch_ms,
+        manifest.created_at_epoch_ms
+    );
+    assert_eq!(
+        events[created].payload_reference,
+        Some(runtime_payload_reference(&manifest).unwrap())
+    );
+    assert_eq!(
+        outcome.output,
+        Some(RuntimeOutput::Artifact {
+            reference: runtime_payload_reference(&manifest).unwrap(),
+        })
+    );
+    assert_eq!(draft_artifacts(&runtime), 1);
+    assert_eq!(cancellations(), 0);
+    assert_valid_terminal_stream(&runtime);
+}
+
+#[test]
+fn a_refused_report_ends_the_run_without_output_or_retention() {
+    reset_budget(BudgetAnswer::Exact);
+    REPORT_ANSWER.with(|cell| cell.set(ReportAnswer::Refused));
+    let mut runtime = report_run(
+        report_draft(0, 0),
+        ModelProposalKind::CompletionCandidate,
+        MAX_RUNTIME_INLINE_OUTPUT_BYTES as u64,
+    );
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        runtime.run_until_boundary(None, None).unwrap()
+    else {
+        panic!("the run ends");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Failed);
+    assert_eq!(outcome.unresolved_codes, [RESEARCH_REPORT_REFUSED]);
+    assert_eq!(outcome.output, None);
+    assert_eq!(outcome.answer_evidence, None);
+    assert_eq!(reports(), 1);
+    assert_eq!(draft_artifacts(&runtime), 0);
+    assert_valid_terminal_stream(&runtime);
+}
+
+#[test]
+fn a_failed_or_mismatched_report_publication_stops_the_run() {
+    for (answer, error) in [
+        (
+            ReportAnswer::Uncertain,
+            RuntimeLoopError::Dependency(RuntimePortFailure::Uncertain),
+        ),
+        (
+            ReportAnswer::OtherReference,
+            RuntimeLoopError::InvalidBoundaryResult,
+        ),
+    ] {
+        reset_budget(BudgetAnswer::Exact);
+        REPORT_ANSWER.with(|cell| cell.set(answer));
+        let mut runtime = report_run(
+            report_draft(0, 0),
+            ModelProposalKind::CompletionCandidate,
+            MAX_RUNTIME_INLINE_OUTPUT_BYTES as u64,
+        );
+        assert_eq!(
+            runtime.run_until_boundary(None, None).err(),
+            Some(error),
+            "{answer:?}"
+        );
+        assert!(runtime.outcome().is_none(), "{answer:?}");
+        assert_eq!(reports(), 1, "{answer:?}");
+        assert_eq!(draft_artifacts(&runtime), 0, "{answer:?}");
+    }
+}
+
+#[test]
+fn a_report_draft_is_accepted_only_as_an_exact_admitted_completion() {
+    let draft = report_draft(0, 0);
+    let pretty =
+        serde_json::to_vec_pretty(&serde_json::from_slice::<ResearchReportDraft>(&draft).unwrap())
+            .unwrap();
+    let mut trailing = draft.clone();
+    trailing.push(b' ');
+    for (bytes, kind) in [
+        (pretty, ModelProposalKind::CompletionCandidate),
+        (trailing, ModelProposalKind::CompletionCandidate),
+        (b"{}".to_vec(), ModelProposalKind::CompletionCandidate),
+        (draft.clone(), ModelProposalKind::Blocked),
+        (draft.clone(), ModelProposalKind::UserQuestion),
+    ] {
+        reset_budget(BudgetAnswer::Exact);
+        let mut runtime = report_run(bytes, kind, MAX_RUNTIME_INLINE_OUTPUT_BYTES as u64);
+        let RuntimeCoordinatorStep::Complete { outcome } =
+            runtime.run_until_boundary(None, None).unwrap()
+        else {
+            panic!("the run ends");
+        };
+        assert_eq!(outcome.state, AgentStateKind::Failed, "{kind:?}");
+        assert_eq!(outcome.unresolved_codes, ["runtime.proposal.invalid"]);
+        assert_eq!(outcome.output, None);
+        assert_eq!(reports(), 0, "{kind:?}");
+        assert_eq!(draft_artifacts(&runtime), 0);
+        assert_valid_terminal_stream(&runtime);
+    }
+    // A run without a research admission never retains a draft either.
+    reset_budget(BudgetAnswer::Exact);
+    let (template, _) = coordinator([ModelScript::Completion], PermissionScript::Allow, true);
+    let mut ordinary = ReusableRuntimeCoordinator::new(
+        template.request.clone(),
+        ReportModel {
+            inner: FakeModel::new(template.model.profile.clone(), [ModelScript::Completion]),
+            draft,
+            kind: ModelProposalKind::CompletionCandidate,
+            journal_flushes: Arc::new(AtomicUsize::new(0)),
+            flushes_at_dispatch: Arc::new(AtomicUsize::new(0)),
+        },
+        FakeContext,
+        template.registry,
+        template.tool_boundary,
+        template.verifier,
+        FakeClock { now: 9_000 },
+    )
+    .unwrap();
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        ordinary.run_until_boundary(None, None).unwrap()
+    else {
+        panic!("the ordinary run ends");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Failed);
+    assert_eq!(outcome.unresolved_codes, ["runtime.proposal.invalid"]);
+    assert_eq!(outcome.output, None);
+    assert_eq!(reports(), 0);
+}
+
+#[test]
+fn an_unverified_report_is_never_retained() {
+    reset_budget(BudgetAnswer::Exact);
+    let mut runtime = report_run(
+        report_draft(0, 0),
+        ModelProposalKind::CompletionCandidate,
+        MAX_RUNTIME_INLINE_OUTPUT_BYTES as u64,
+    );
+    runtime.verifier.source = VerifierSource::ModelProse;
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        runtime.run_until_boundary(None, None).unwrap()
+    else {
+        panic!("the run ends");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Failed);
+    assert_eq!(outcome.unresolved_codes, ["runtime.verification.failed"]);
+    assert_eq!(outcome.output, None);
+    assert_eq!(reports(), 0);
+    assert_eq!(draft_artifacts(&runtime), 0);
+    assert_valid_terminal_stream(&runtime);
+}
+
+#[test]
+fn a_report_the_output_budget_cannot_hold_is_not_retained() {
+    // The draft fits the run's payload bound, but the task's output budget
+    // is one byte short of it.
+    reset_budget(BudgetAnswer::Exact);
+    let draft = report_draft(0, 0);
+    let mut parts = parts(PermissionScript::Allow, registry_with(&[]));
+    parts.request.limits.max_output_bytes = MAX_RUNTIME_INLINE_OUTPUT_BYTES as u64;
+    for budget in &mut parts.request.work_packet.budgets {
+        if budget.resource == BudgetResource::OutputBytes {
+            budget.limit = draft.len() as u64 - 1;
+        }
+    }
+    let journal_flushes = Arc::clone(&parts.boundary.journal_flushes);
+    let mut runtime = compose_with(parts, |profile| ReportModel {
+        inner: FakeModel::new(profile, [ModelScript::Completion]),
+        draft,
+        kind: ModelProposalKind::CompletionCandidate,
+        journal_flushes,
+        flushes_at_dispatch: Arc::new(AtomicUsize::new(0)),
+    })
+    .unwrap();
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        runtime.run_until_boundary(None, None).unwrap()
+    else {
+        panic!("the run ends");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Exhausted);
+    assert_eq!(outcome.unresolved_codes, ["runtime.budget.exhausted"]);
+    assert_eq!(outcome.output, None);
+    assert_eq!(reports(), 0);
+    assert_eq!(draft_artifacts(&runtime), 0);
+    assert_valid_terminal_stream(&runtime);
+}
+
+/// A cancellation the probe reports once a report was published.
+struct CancelAfterReport(CancellationSignal);
+
+impl agentmage_kernel_contracts::ModelCancellationProbe for CancelAfterReport {
+    fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+        Ok((reports() > 0).then(|| self.0.clone()))
+    }
+}
+
+#[test]
+fn a_cancellation_after_the_report_keeps_it_and_cancels_the_budget() {
+    reset_budget(BudgetAnswer::Exact);
+    let mut runtime = report_run(
+        report_draft(0, 0),
+        ModelProposalKind::CompletionCandidate,
+        MAX_RUNTIME_INLINE_OUTPUT_BYTES as u64,
+    );
+    let probe = CancelAfterReport(cancellation_of(&runtime));
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        runtime.run_until_boundary(None, Some(&probe)).unwrap()
+    else {
+        panic!("the run ends");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Cancelled);
+    assert_eq!(outcome.unresolved_codes, ["runtime.cancelled"]);
+    assert_eq!(outcome.output, None);
+    // The draft stays retained; the cancellation cannot withdraw it.
+    assert_eq!(reports(), 1);
+    assert_eq!(draft_artifacts(&runtime), 1);
+    CANCELLATIONS.with(|cancellations| {
+        let cancellations = cancellations.borrow();
+        assert_eq!(cancellations.len(), 1);
+        assert!(cancellations[0].after_observation);
+        assert!(cancellations[0].before_terminal);
+    });
+    assert_valid_terminal_stream(&runtime);
 }

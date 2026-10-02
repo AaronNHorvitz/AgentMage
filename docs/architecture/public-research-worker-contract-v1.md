@@ -80,7 +80,10 @@ verified. Consistency is not attestation: a frame proves nothing about a connect
 ## The failure report
 
 A worker that does not complete writes exactly one report to standard error, the failure's
-code and one newline, writes no frame, and exits with status 5. The codes are closed:
+code and one newline, writes no complete frame, and exits with status 5. When writing the
+frame fails (`research.worker.output-failed`), part of it may already be on standard output;
+after status 5 the parent never treats standard output as a frame (Decision 0142, note N4 of
+the review of `a8fd53e3`). The codes are closed:
 
 | Failure | Code |
 | --- | --- |

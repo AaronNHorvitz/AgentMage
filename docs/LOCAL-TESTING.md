@@ -534,10 +534,12 @@ reader. The native result is synthetic, and nothing is sent:
 cargo test --locked --offline -p agentmage-kernel-engine --lib research_admission_tests
 ```
 
-It runs 39 tests:
+It runs 53 tests:
 
 - the coordinator's admission checks, and its cancellation of the task budget when an
-  admitted run is cancelled ([Decision 0140](decisions/0140-review-fixes-and-research-persistence-through-the-coordinator.md));
+  admitted run is cancelled ([Decision 0140](decisions/0140-review-fixes-and-research-persistence-through-the-coordinator.md)),
+  including a cancellation a dependency failure outranked
+  ([Decision 0142](decisions/0142-review-fixes-and-research-reports-through-the-coordinator.md));
 - the public GET read back through the canonical reader, before and after the store is
   reopened;
 - a plan that asks before each request: the person approves the exact request, or
@@ -551,10 +553,16 @@ It runs 39 tests:
 - a plan and its reservations persisted before the start: an interruption after a
   reservation or after a start, recovered on reopening with the original clocks and
   without replay; failed and uncertain workers; cancellation and expiry that survive
-  reopening; and one budget per task and one owner per store.
+  reopening; and one budget per task and one owner per store;
+- a deep plan's three searches and two visits followed by a report draft that the
+  owner checks and retains before the run ends (Decision 0142): read back as checked,
+  partial, expired or cancelled; refused, with nothing retained, when its sources do
+  not support it; refused on every read after source drift; and read again after
+  reopening without replay. The synthetic coordinator tests cover each refusal of a
+  draft that is not an admitted run's exact completion.
 
 This is a component check, not a research demonstration. No worker, provider or model
-runs.
+runs; the fixture model takes the source references from the test glue.
 
 ## Separate document demonstration
 

@@ -5,6 +5,7 @@
 //! engine's own. Only the native result is synthetic: nothing is sent, no
 //! worker, provider or model runs, and the payload store is in memory.
 
+use std::cell::RefCell;
 use std::collections::{BTreeMap, VecDeque};
 use std::io::{Cursor, Read};
 use std::path::PathBuf;
@@ -25,12 +26,17 @@ use crate::policy::{
 use crate::research_completion::{PublicGetCompletionRequest, prepare_public_get_completion};
 use crate::research_dispatch::tests::SyntheticNativeResearchDriver;
 use crate::research_fetch::{PreparedPublicGet, PublicGetDraft, PublicGetTarget};
+use crate::research_report::{
+    ResearchReportDraft, ResearchReportError, ResearchReportPublicationRequest,
+    ResearchReportReadRequest,
+};
 use crate::research_result_binding::PublicGetNativeIdentity;
 use crate::research_retrieval::{CanonicalPublicGetSource, PublicGetReadRequest};
 use crate::runtime_artifact::{
-    MAX_RUNTIME_ARTIFACT_BYTES, RuntimeArtifactPayloadError, RuntimeArtifactPayloadInventoryEntry,
-    RuntimeArtifactPayloadInventoryIntegrity, RuntimeArtifactPayloadObservation,
-    RuntimeArtifactPayloadPlacement, RuntimeArtifactPayloadStore,
+    MAX_RUNTIME_ARTIFACT_BYTES, RESEARCH_REPORT_DRAFT_MEDIA_TYPE, RuntimeArtifactPayloadError,
+    RuntimeArtifactPayloadInventoryEntry, RuntimeArtifactPayloadInventoryIntegrity,
+    RuntimeArtifactPayloadObservation, RuntimeArtifactPayloadPlacement,
+    RuntimeArtifactPayloadStore,
 };
 use crate::runtime_event::seal_runtime_event;
 use crate::runtime_journal::RuntimeJournalError;
@@ -44,6 +50,8 @@ use agentmage_kernel_contracts::{
 
 #[path = "runtime_loop_research_persistence_tests.rs"]
 mod persistence_tests;
+#[path = "runtime_loop_research_report_tests.rs"]
+mod report_tests;
 
 const TOOL: &str = "research.public-get";
 /// The plan names three domains; the policy admits only the first two.
@@ -106,6 +114,9 @@ enum Fault {
     /// For a cancellation the person's request arrives during the effect: the
     /// glue raises the run's cancellation before it dispatches.
     WorkerOutcome(OperationOutcome),
+    /// The person's cancellation arrives once the owner retained the run's
+    /// report draft (Decision 0142).
+    CancelAfterReport,
 }
 
 /// One change to an otherwise valid issuance request (Decision 0139).
@@ -453,11 +464,19 @@ fn draft_to(domain: &str, operation_id: &str, path: &str) -> PublicGetDraft {
     }
 }
 
+/// Writes a completion's report draft from the source bundles the run has
+/// retrieved so far, in order (Decision 0142).
+type ReportScript = Box<dyn Fn(&[RuntimeArtifactRef]) -> Vec<u8>>;
+
 /// The fixture model, whose tool proposals become the next public GET drafts
-/// in order. Each proposal keeps its closed digest.
+/// in order. Each proposal keeps its closed digest. With a report script, its
+/// completion is that report draft; it reads the bundles from the test glue,
+/// standing in for a context owner that would show them to a real model.
 struct PublicGetModel {
     inner: FakeModel,
     drafts: VecDeque<PublicGetDraft>,
+    report: Option<ReportScript>,
+    bundles: Rc<RefCell<Vec<RuntimeArtifactRef>>>,
 }
 
 impl RuntimeModelPort for PublicGetModel {
@@ -497,6 +516,18 @@ impl RuntimeModelPort for PublicGetModel {
                 tool_version: "1.0.0".to_owned(),
                 arguments,
             });
+            proposal.proposal_sha256 = "0".repeat(64);
+            proposal.proposal_sha256 =
+                proposal_digest(proposal).map_err(|_| RuntimePortFailure::Invalid)?;
+            result.response_sha256 = sha256(proposal.proposal_sha256.as_bytes());
+        }
+        if let Some(proposal) = result.proposal.as_mut()
+            && proposal.kind == ModelProposalKind::CompletionCandidate
+            && let Some(report) = &self.report
+        {
+            let mut draft = payload("research.report-draft", &report(&self.bundles.borrow()));
+            draft.media_type = RESEARCH_REPORT_DRAFT_MEDIA_TYPE.to_owned();
+            proposal.payload = Some(draft);
             proposal.proposal_sha256 = "0".repeat(64);
             proposal.proposal_sha256 =
                 proposal_digest(proposal).map_err(|_| RuntimePortFailure::Invalid)?;
@@ -558,6 +589,12 @@ struct OwnerPort {
     cancellation: Arc<AtomicBool>,
     /// Budget cancellations the coordinator asked for.
     budget_cancellations: usize,
+    /// Every bundle the run retrieved, in order, shared with the model.
+    bundles: Rc<RefCell<Vec<RuntimeArtifactRef>>>,
+    /// Report drafts the coordinator asked the owner to retain.
+    report_publications: usize,
+    /// The report owner's last refusal of a draft.
+    report_refusal: Option<ResearchReportError>,
 }
 
 fn failure(_error: DurableAuthorityError) -> RuntimePortFailure {
@@ -1069,6 +1106,51 @@ impl RuntimeResearchBudgetPort for OwnerPort {
             .research_budget_state(context)
             .map_err(failure)
     }
+
+    fn publish_research_report(
+        &mut self,
+        _request: &RuntimeRunRequest,
+        context: &ResearchBudgetContext,
+        manifest: &RuntimeArtifactManifest,
+        draft: &[u8],
+    ) -> Result<RuntimeArtifactRef, RuntimePortFailure> {
+        // The trusted host decodes the draft and supplies the independently
+        // admitted native identity. The owner checks the draft at the
+        // manifest's creation instant and retains it (Decision 0142).
+        self.report_publications += 1;
+        let draft = ResearchReportDraft::decode(draft).map_err(|_| RuntimePortFailure::Invalid)?;
+        let published = self.authority.publish_research_report_draft(
+            &mut self.payloads,
+            &self.registry,
+            &ResearchReportPublicationRequest {
+                read: ResearchReportReadRequest {
+                    context,
+                    draft: &draft,
+                    expected_native: &self.native,
+                    now_epoch_ms: manifest.created_at_epoch_ms,
+                },
+                manifest,
+            },
+        );
+        match published {
+            Ok(publication) => {
+                if self.fault == Fault::CancelAfterReport {
+                    self.cancellation.store(true, Ordering::SeqCst);
+                }
+                Ok(publication.reference)
+            }
+            // A refusal of the draft itself retains nothing; a storage or
+            // integrity failure is uncertain.
+            Err(DurableAuthorityError::ResearchReport(error))
+                if !error.poisons_runtime()
+                    && !matches!(error, ResearchReportError::Artifact(_)) =>
+            {
+                self.report_refusal = Some(error);
+                Err(RuntimePortFailure::Invalid)
+            }
+            Err(error) => Err(failure(error)),
+        }
+    }
 }
 
 impl RuntimeCorrectnessTransactionPort for OwnerPort {
@@ -1388,6 +1470,7 @@ impl RuntimeCorrectnessTransactionPort for OwnerPort {
             .authority
             .finish_effect_with_runtime_event(pending, terminal)
             .map_err(failure)?;
+        self.bundles.borrow_mut().push(bundle.clone());
         self.attempts[index].bundle = Some(bundle);
         Ok(RuntimeToolCorrectnessCommit {
             execution,
@@ -1545,6 +1628,39 @@ fn compose(
     parent_expires_at: u64,
     drafts: Vec<PublicGetDraft>,
 ) -> OwnerCoordinator {
+    compose_shaped(
+        mode,
+        fault,
+        parent_uses,
+        parent_expires_at,
+        drafts,
+        RunShape::default(),
+    )
+}
+
+/// What a composed run changes from the default plan, policy, limits and
+/// model (Decision 0142).
+#[derive(Default)]
+struct RunShape {
+    /// The plan the person confirmed; by default `confirmed_plan`.
+    plan: Option<Vec<u8>>,
+    /// How many of the run's precomputed action identities the policy admits;
+    /// by default four.
+    actions: Option<u32>,
+    /// Changes the fixture request's limits and budgets before it is sealed.
+    adjust: Option<fn(&mut RuntimeRunRequest)>,
+    /// The model's report draft at completion; by default none.
+    report: Option<ReportScript>,
+}
+
+fn compose_shaped(
+    mode: ResearchNetworkMode,
+    fault: Fault,
+    parent_uses: u32,
+    parent_expires_at: u64,
+    drafts: Vec<PublicGetDraft>,
+    shape: RunShape,
+) -> OwnerCoordinator {
     let directory = StoreDirectory::create();
     let mut authority =
         DurableAuthorityRuntime::open(&directory.store(), &observation(), &mut TestKey, 1).unwrap();
@@ -1552,13 +1668,19 @@ fn compose(
     let profile = profile("runtime-loop-research-completion");
     let mut request = request(profile.clone(), &registry);
     request.mode = RuntimeSessionMode::DurableReadOnly;
+    if let Some(adjust) = shape.adjust {
+        adjust(&mut request);
+    }
     let actor = ActorId::from_raw("research-actor-1");
     let document = PolicyDocument {
         schema_version: 1,
         revision: 1,
         actors: rules(vec![actor.clone()]),
         tasks: rules(vec![request.task.task_id.clone()]),
-        actions: rules((1..=4).map(|ordinal| runtime_action_id(&request.run_id, ordinal))),
+        actions: rules(
+            (1..=shape.actions.unwrap_or(4))
+                .map(|ordinal| runtime_action_id(&request.run_id, ordinal)),
+        ),
         tools: rules(vec![ToolPolicyBinding {
             tool_id: ToolId::from_raw(TOOL),
             tool_version: "1.0.0".to_owned(),
@@ -1584,7 +1706,7 @@ fn compose(
         run_id: request.run_id.clone(),
         policy_sha256: request.policy_sha256.clone(),
     };
-    let plan = confirmed_plan(mode);
+    let plan = shape.plan.unwrap_or_else(|| confirmed_plan(mode));
     let admission = RuntimeResearchAdmission::new(
         &plan,
         context.clone(),
@@ -1660,6 +1782,7 @@ fn compose(
         .chain([ModelScript::Completion])
         .collect();
     let clock = SharedClock(Arc::new(AtomicU64::new(9_000)));
+    let bundles = Rc::new(RefCell::new(Vec::new()));
     let port = OwnerPort {
         authority,
         directory,
@@ -1685,12 +1808,17 @@ fn compose(
         clock: clock.clone(),
         cancellation: Arc::new(AtomicBool::new(false)),
         budget_cancellations: 0,
+        bundles: Rc::clone(&bundles),
+        report_publications: 0,
+        report_refusal: None,
     };
     ReusableRuntimeCoordinator::new_with_research_admission(
         request,
         PublicGetModel {
             inner: FakeModel::new(profile, model_scripts),
             drafts: drafts.into(),
+            report: shape.report,
+            bundles,
         },
         FakeContext,
         registry,

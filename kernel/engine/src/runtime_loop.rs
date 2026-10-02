@@ -36,12 +36,12 @@ use crate::propagation::{
 };
 use crate::runtime_answer::compose_inferred_runtime_answer;
 use crate::runtime_artifact::{
-    MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES, RUNTIME_CONTEXT_PACKET_MEDIA_TYPE,
-    RUNTIME_CONTINUATION_MEDIA_TYPE, RUNTIME_MODEL_RESULT_MEDIA_TYPE, RUNTIME_REQUEST_MEDIA_TYPE,
-    RuntimeArtifactPage, RuntimeArtifactState, encode_runtime_continuation_state,
-    runtime_artifact_ref, runtime_payload_reference, seal_runtime_artifact_manifest,
-    seal_runtime_continuation_state, verify_runtime_artifact_ref,
-    verify_runtime_continuation_state, verify_runtime_resume_binding,
+    MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES, RESEARCH_REPORT_DRAFT_MEDIA_TYPE,
+    RUNTIME_CONTEXT_PACKET_MEDIA_TYPE, RUNTIME_CONTINUATION_MEDIA_TYPE,
+    RUNTIME_MODEL_RESULT_MEDIA_TYPE, RUNTIME_REQUEST_MEDIA_TYPE, RuntimeArtifactPage,
+    RuntimeArtifactState, encode_runtime_continuation_state, runtime_artifact_ref,
+    runtime_payload_reference, seal_runtime_artifact_manifest, seal_runtime_continuation_state,
+    verify_runtime_artifact_ref, verify_runtime_continuation_state, verify_runtime_resume_binding,
 };
 use crate::runtime_coordinator::{
     RuntimeCoordinatorError, runtime_tool_catalog_sha256, seal_runtime_approval_challenge,
@@ -737,6 +737,9 @@ const PUBLIC_GET_COMPLETION_ARTIFACTS: usize = 6;
 /// owner did not confirm (Decision 0140).
 const RESEARCH_BUDGET_CANCELLATION_UNCONFIRMED: &str =
     "runtime.research.budget_cancellation_unconfirmed";
+/// Unresolved code of an admitted run whose report draft the canonical report
+/// owner refused; nothing was retained (Decision 0142).
+const RESEARCH_REPORT_REFUSED: &str = "runtime.research.report_refused";
 
 /// One run's explicit research admission (Decision 0137): the exact plan, the
 /// budget context and the one public GET tool the run may use.
@@ -898,6 +901,21 @@ pub trait RuntimeResearchBudgetPort {
         request: &RuntimeRunRequest,
         context: &crate::research_journal::ResearchBudgetContext,
     ) -> Result<crate::research_journal::ResearchBudgetState, RuntimePortFailure>;
+
+    /// Retains the report draft an admitted run completes with through the
+    /// canonical report owner (Decision 0142). The owner checks the draft
+    /// against this run's own complete sources and accounting at the
+    /// manifest's creation instant, then retains `draft` under `manifest`;
+    /// the coordinator records the creation event afterwards. A refusal
+    /// returns `RuntimePortFailure::Invalid` and retains nothing. The
+    /// reference is a description to compare, not proof of the draft's claims.
+    fn publish_research_report(
+        &mut self,
+        request: &RuntimeRunRequest,
+        context: &crate::research_journal::ResearchBudgetContext,
+        manifest: &RuntimeArtifactManifest,
+        draft: &[u8],
+    ) -> Result<RuntimeArtifactRef, RuntimePortFailure>;
 }
 
 /// Optional durable journal boundary implemented by a trusted runtime host.
@@ -1242,6 +1260,13 @@ struct RuntimeResearchRun<T> {
         &crate::research_journal::ResearchBudgetContext,
     )
         -> Result<crate::research_journal::ResearchBudgetState, RuntimePortFailure>,
+    publish_report: fn(
+        &mut T,
+        &RuntimeRunRequest,
+        &crate::research_journal::ResearchBudgetContext,
+        &RuntimeArtifactManifest,
+        &[u8],
+    ) -> Result<RuntimeArtifactRef, RuntimePortFailure>,
     /// The plan the run published, once the owner opened its budget for it.
     plan: Option<RuntimeArtifactRef>,
 }
@@ -1263,6 +1288,16 @@ fn cancel_research_budget<T: RuntimeResearchBudgetPort>(
     context: &crate::research_journal::ResearchBudgetContext,
 ) -> Result<crate::research_journal::ResearchBudgetState, RuntimePortFailure> {
     port.cancel_research_budget(request, context)
+}
+
+fn publish_research_report<T: RuntimeResearchBudgetPort>(
+    port: &mut T,
+    request: &RuntimeRunRequest,
+    context: &crate::research_journal::ResearchBudgetContext,
+    manifest: &RuntimeArtifactManifest,
+    draft: &[u8],
+) -> Result<RuntimeArtifactRef, RuntimePortFailure> {
+    port.publish_research_report(request, context, manifest, draft)
 }
 
 /// One reusable, interface-neutral runtime coordinator.
@@ -1518,6 +1553,7 @@ where
                 admission,
                 open_budget: open_research_budget::<T>,
                 cancel_budget: cancel_research_budget::<T>,
+                publish_report: publish_research_report::<T>,
                 plan: None,
             }),
         )
@@ -2102,6 +2138,91 @@ where
         (!confirmed).then_some(RESEARCH_BUDGET_CANCELLATION_UNCONFIRMED)
     }
 
+    /// Decision 0142: the trusted port retains an admitted run's verified report
+    /// draft through the canonical report owner, which checks it against the
+    /// run's own sources. The coordinator prepares the manifest, makes its
+    /// journal durable first, accepts only the reference its manifest
+    /// describes and then records the draft's creation. A refusal retains
+    /// nothing; any other port failure is a dependency failure.
+    fn publish_research_report(
+        &mut self,
+        payload: &ContractPayload,
+        turn_id: &RuntimeTurnId,
+    ) -> Result<ResearchReportPublication, RuntimeLoopError> {
+        let bytes = u64::try_from(payload.bytes.len())
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        if self
+            .resources
+            .consume(BudgetResource::OutputBytes, bytes)
+            .is_err()
+            || self.resources.admit_artifact(bytes).is_err()
+        {
+            return Ok(ResearchReportPublication::Exhausted);
+        }
+        let created_at_epoch_ms = self
+            .clock
+            .now_epoch_ms()
+            .map_err(RuntimeLoopError::Dependency)?;
+        let manifest = artifact_preparation::prepare_artifact_manifest(
+            &self.request,
+            self.artifact_references.len() as u64 + 1,
+            created_at_epoch_ms,
+            &payload.bytes,
+            RESEARCH_REPORT_DRAFT_MEDIA_TYPE,
+            RuntimeArtifactKind::Report,
+            Some(turn_id),
+            None,
+            None,
+            false,
+        )
+        .map_err(RuntimeLoopError::Dependency)?;
+        let expected =
+            runtime_artifact_ref(&manifest).map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        let flush = self
+            .journal
+            .as_ref()
+            .ok_or(RuntimeLoopError::UnsupportedMode)?
+            .flush;
+        flush(&mut self.tool_boundary).map_err(RuntimeLoopError::Dependency)?;
+        let run = self
+            .research
+            .as_ref()
+            .ok_or(RuntimeLoopError::UnsupportedMode)?;
+        let reference = match (run.publish_report)(
+            &mut self.tool_boundary,
+            &self.request,
+            run.admission.context(),
+            &manifest,
+            &payload.bytes,
+        ) {
+            Ok(reference) => reference,
+            Err(RuntimePortFailure::Invalid) => return Ok(ResearchReportPublication::Refused),
+            Err(failure) => return Err(RuntimeLoopError::Dependency(failure)),
+        };
+        verify_runtime_artifact_ref(&reference, &manifest)
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        if reference != expected {
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        }
+        let payload_reference = runtime_payload_reference(&manifest)
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        self.emit_at_with_payload(
+            manifest.created_at_epoch_ms,
+            RuntimeEventKind::ArtifactCreated {
+                artifact_id: manifest.artifact_id.clone(),
+                manifest_sha256: manifest.manifest_sha256.clone(),
+            },
+            Some(turn_id),
+            None,
+            Some(payload_reference),
+        )?;
+        let output = RuntimeOutput::Artifact {
+            reference: runtime_payload_reference_from_artifact(&reference)?,
+        };
+        self.artifact_references.push(reference);
+        Ok(ResearchReportPublication::Published(output))
+    }
+
     fn run_turn(
         &mut self,
         cancellation: Option<&dyn ModelCancellationProbe>,
@@ -2570,6 +2691,11 @@ where
             | ModelProposalKind::UserQuestion
             | ModelProposalKind::Blocked => {
                 let output = match proposal.payload {
+                    // Decision 0142: a report draft is only an admitted run's
+                    // completion, retained through the canonical report owner.
+                    Some(payload) if payload.media_type == RESEARCH_REPORT_DRAFT_MEDIA_TYPE => {
+                        return self.finish_invalid_proposal(&turn_id);
+                    }
                     Some(payload) => {
                         let Some(output) = self.route_runtime_output(
                             payload,
@@ -2614,6 +2740,13 @@ where
         if !valid_output_payload(&payload, self.request.limits.max_output_bytes) {
             return self.finish_invalid_proposal(&turn_id);
         }
+        // Decision 0142: a report draft is accepted only as an admitted run's
+        // completion and only in its exact canonical encoding, the bytes the
+        // canonical report owner retains under the coordinator's manifest.
+        let report = payload.media_type == RESEARCH_REPORT_DRAFT_MEDIA_TYPE;
+        if report && (self.research.is_none() || !exact_report_draft(&payload.bytes)) {
+            return self.finish_invalid_proposal(&turn_id);
+        }
         self.state
             .transition(AgentStateKind::Approval)
             .map_err(|_| RuntimeLoopError::State)?;
@@ -2649,15 +2782,21 @@ where
         let completion = match registry.verify(&candidate) {
             Ok(completion) => completion,
             Err(_) => {
-                let Some(output) = self.route_runtime_output(
-                    payload,
-                    RuntimeArtifactKind::ModelOutput,
-                    &turn_id,
-                    None,
-                    None,
-                )?
-                else {
-                    return self.finish_budget_exhaustion(&turn_id);
+                // An unverified report draft is never retained (Decision 0142).
+                let output = if report {
+                    None
+                } else {
+                    let Some(output) = self.route_runtime_output(
+                        payload,
+                        RuntimeArtifactKind::ModelOutput,
+                        &turn_id,
+                        None,
+                        None,
+                    )?
+                    else {
+                        return self.finish_budget_exhaustion(&turn_id);
+                    };
+                    Some(output)
                 };
                 self.state
                     .transition(AgentStateKind::Failed)
@@ -2666,7 +2805,7 @@ where
                 return self.finish_terminal(
                     AgentStateKind::Failed,
                     vec!["runtime.verification.failed".to_owned()],
-                    Some(output),
+                    output,
                 );
             }
         };
@@ -2699,15 +2838,36 @@ where
             self.evidence.clone(),
         )
         .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
-        let Some(output) = self.route_runtime_output(
-            payload,
-            RuntimeArtifactKind::ModelOutput,
-            &turn_id,
-            None,
-            None,
-        )?
-        else {
-            return self.finish_budget_exhaustion(&turn_id);
+        let output = if report {
+            match self.publish_research_report(&payload, &turn_id)? {
+                ResearchReportPublication::Published(output) => output,
+                ResearchReportPublication::Exhausted => {
+                    return self.finish_budget_exhaustion(&turn_id);
+                }
+                ResearchReportPublication::Refused => {
+                    self.state
+                        .transition(AgentStateKind::Failed)
+                        .map_err(|_| RuntimeLoopError::State)?;
+                    self.close_turn(&turn_id, proposal.proposal_sha256)?;
+                    return self.finish_terminal(
+                        AgentStateKind::Failed,
+                        vec![RESEARCH_REPORT_REFUSED.to_owned()],
+                        None,
+                    );
+                }
+            }
+        } else {
+            let Some(output) = self.route_runtime_output(
+                payload,
+                RuntimeArtifactKind::ModelOutput,
+                &turn_id,
+                None,
+                None,
+            )?
+            else {
+                return self.finish_budget_exhaustion(&turn_id);
+            };
+            output
         };
         if self.stop_before_phase(cancellation, false)? {
             return Ok(());
@@ -5848,6 +6008,27 @@ fn valid_output_payload(
         && valid_media_type(&payload.media_type)
         && u64::try_from(payload.bytes.len()).is_ok_and(|bytes| bytes > 0 && bytes <= maximum_bytes)
         && payload.sha256 == sha256(&payload.bytes)
+}
+
+/// How the canonical report owner answered an admitted run's report draft
+/// (Decision 0142).
+enum ResearchReportPublication {
+    /// Retained under the coordinator's manifest; the output names it.
+    Published(RuntimeOutput),
+    /// Refused by the owner; nothing was retained.
+    Refused,
+    /// The run's output or artifact budget cannot hold the draft.
+    Exhausted,
+}
+
+/// Decision 0142: the canonical report owner retains a draft's own encoding,
+/// so only bytes that decode as a draft and are its exact encoding can be
+/// retained under the coordinator's manifest.
+fn exact_report_draft(bytes: &[u8]) -> bool {
+    crate::research_report::ResearchReportDraft::decode(bytes)
+        .ok()
+        .and_then(|draft| serde_json::to_vec(&draft).ok())
+        .is_some_and(|encoded| encoded == bytes)
 }
 
 fn observe_cancellation(

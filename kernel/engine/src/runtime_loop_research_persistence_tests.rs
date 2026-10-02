@@ -73,11 +73,14 @@ fn another_run(port: OwnerPort, run_id: &str, plan: &[u8]) -> OwnerCoordinator {
     request.request_sha256 = "0".repeat(64);
     let request = seal_runtime_run_request(request).unwrap();
     let clock = port.clock.clone();
+    let bundles = Rc::clone(&port.bundles);
     ReusableRuntimeCoordinator::new_with_research_admission(
         request,
         PublicGetModel {
             inner: FakeModel::new(profile, [ModelScript::Tool, ModelScript::Completion]),
             drafts: one_get().into(),
+            report: None,
+            bundles,
         },
         FakeContext,
         registry,

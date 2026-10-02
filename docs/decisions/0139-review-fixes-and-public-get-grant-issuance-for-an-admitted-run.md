@@ -76,8 +76,11 @@ packet was prepared and when the grant is issued. Before committing anything,
 it checks the following in order, and it refuses the first one that fails.
 
 1. The owner is usable.
-2. The registry has the call's tool. The call's arguments decode to one
-   public GET request.
+2. The registry has the call's tool. The call's argument bytes are not empty,
+   are at most the call validator's bound and match their digest (added by
+   Decision 0140, note N2). They decode to one public GET request.
+   (Corrected in place under Decision 0142, note N2 of the review of
+   `a8fd53e3`.)
 3. The budget owner would reserve this exact request at the issuance
    instant, without spending:
    - the budget exists for the run's context, and the plan is not offline;

@@ -65,6 +65,34 @@ fails, times out or becomes uncertain keeps its spent visit. An expiry or a
 cancellation is retained and survives reopening. A second run of the same task, or a
 second owner of the same store, is refused. The native worker stays synthetic.
 
+While an effect's terminal is pending, the owner refuses every other call with
+`DurableAuthorityError::Poisoned`, the same error it returns for a poisoned store. A host
+must not read that error alone as damage: the pending effect is closed by its own terminal
+commit or, after an interruption, by recovery when the store is reopened (Decision 0142,
+note N1 of the review of `a8fd53e3`).
+
+## Reports through the coordinator
+
+Under Decision 0142 (AMR-03.1.4) an admitted run that completes with a report draft has
+it retained through `publish_research_report_draft` before its terminal. The trusted
+host decodes the draft, supplies the independently admitted native identity and asks
+the owner to check it at the coordinator's manifest instant. The owner's existing checks
+decide: every source must be a complete public GET bundle of this run, every excerpt
+the exact byte range of its source body within the quotation bounds, the run's own
+accounting readable, the run not yet ended, and the manifest's classification,
+retention and policy must cover every source. A refusal retains nothing. The coordinator
+records the creation event only after the owner retained the draft.
+
+Composed tests read the retained draft back through `read_retained_research_report`:
+checked, partial with unresolved questions, expired at the plan's elapsed limit, and
+cancelled after a cancellation that arrived once the draft was retained. Source drift
+refuses every read, and reopening reads the same report without reserving or
+dispatching any request again. The owner refuses, and retains nothing for, a draft
+that cites the plan, a forged bundle reference, an excerpt absent from its source, an
+excerpt bound to another body, or more sources than the plan's visits. A draft that is
+not the exact encoding of a valid draft never reaches the owner. Publication proves
+only what was checked when the draft was retained; the claims stay the model's.
+
 ## Acyclic artifact publication
 
 Retain six ordinary Report artifacts through the existing full-payload owner:
