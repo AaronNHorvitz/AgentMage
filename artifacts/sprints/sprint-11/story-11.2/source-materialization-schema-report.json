@@ -11,9 +11,9 @@
       "sha256": "5821bc16e3f91dd88faadba445f663a00794c402c0472940380062c5a5051f4e"
     },
     {
-      "byte_length": 495146,
+      "byte_length": 495449,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "523a6f6b792d1282d1ee97f9b1af8ebeda550ee123ec7352521bb796d0f4d79f"
+      "sha256": "f2071806b6af114fdb2126f12e3d1abfb2462afd1efd26532b1ff8bb84c468c3"
     },
     {
       "byte_length": 4698,
@@ -96,9 +96,9 @@
       "sha256": "03800068d00ea422acc3702e48bb3cae4c736f104680bb57767ce0b8b1fb6db3"
     },
     {
-      "byte_length": 34260,
+      "byte_length": 36755,
       "path": "kernel/engine/src/research_journal.rs",
-      "sha256": "9087f88f4d84359e4b9b9b9bda39a27fbe4b3911b650640fd313637c7b7c8ed4"
+      "sha256": "0beb125594518ed6b4f22e00b6059f5e27b341be2a5a733f117a1332123b4b00"
     },
     {
       "byte_length": 2290,
@@ -118,7 +118,7 @@
     {
       "byte_length": 18010,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-results.log",
-      "sha256": "7ff719f797a4f9d88c4bea46f94654e59fffb21151d7c3f04a230e80a7d0af23"
+      "sha256": "0342bf137a7391fcd5880cd45bb31dac3936903fe2e3faa00e9fdbc9b930d1bb"
     }
   ],
   "commands": [

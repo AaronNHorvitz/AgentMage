@@ -47,7 +47,7 @@
   ],
   "private_user_data_used": false,
   "schema_version": 1,
-  "source_revision": "fb9720e206a7dc185d7a59dfda93ccaf4860b0cd",
+  "source_revision": "aac928e70c2808ae5baab81883782a33ddfef6b7",
   "sources": [
     {
       "bytes": 5674,
@@ -55,14 +55,14 @@
       "sha256": "44cfa9918c4a8e61d5e2c94a4c576c3a5e6571321c46f2e27fde7da566ed5c8a"
     },
     {
-      "bytes": 128372,
+      "bytes": 128652,
       "path": "kernel/engine/src/authority_transaction.rs",
-      "sha256": "ba4319939bc4e57d6357e80d217dd872cd8c790447a1d185265736acdb9a2852"
+      "sha256": "5aa6fa935809953a37873919f3fc7ebfd472e0f345d9de9bfeaeece308db4d97"
     },
     {
-      "bytes": 495146,
+      "bytes": 495449,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "523a6f6b792d1282d1ee97f9b1af8ebeda550ee123ec7352521bb796d0f4d79f"
+      "sha256": "f2071806b6af114fdb2126f12e3d1abfb2462afd1efd26532b1ff8bb84c468c3"
     },
     {
       "bytes": 10204,
