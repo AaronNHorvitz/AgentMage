@@ -171,9 +171,9 @@
       "sha256": "6f7ef1943f8b21f10b684f866f33feeecf3369e9e02e2d78ba8ced87cd154d80"
     },
     {
-      "byte_length": 12000,
+      "byte_length": 12403,
       "path": "docs/decisions/0143-review-fixes-restart-marking-and-durable-session-recoverability.md",
-      "sha256": "dd0fada399bc2afea64d6486af565d110823f109ea6d9fb8fa85cfb6aa86c41d"
+      "sha256": "260bb19d0fe20fed8eeab19d7d1d6234fc31e35cc3e6abea56ee00e8bbdb6c98"
     },
     {
       "byte_length": 4717,
@@ -193,7 +193,7 @@
     {
       "byte_length": 39912,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-results.log",
-      "sha256": "2cd110bc0184cf588e860908e1286beebb16d12065b01e493f95657ccf58354a"
+      "sha256": "6b33490dae4008cd53990d00427123401ae40ab6e9bebd4a093edb340d9de67a"
     }
   ],
   "canonical_store": "operational-store",

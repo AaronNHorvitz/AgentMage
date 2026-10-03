@@ -38,7 +38,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
-      "sha256": "1b9032fca346c14b71efa1743a3c81219c04556a4413be09a114d69104430835"
+      "sha256": "0446ad930e638f283b7acf60cfa00df8207b136d27d9a79eade6b604e041558c"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/artifact-scan-report.json",
@@ -102,15 +102,15 @@
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "df069bcbb17ad134a7b8803eabf8b5fd9ac33d228569b07567ec07d09d7885e1"
+      "sha256": "732723a996f0b4f0bfcfaca4c872f9e4c2b054d6a81350306aaf547439c8e29f"
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "8061e2143a6983debf73540a389025d4eef64cc84a7d518876f80ed0cb7bb335"
+      "sha256": "6e59b4f5e447a0e0d73015a85d210f6c359bc9baa62cab383b88cc0bd1e4dfcd"
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "a6d6785f883431de415da1145b61c85cce23d663107ba573f581c0ff73b5f860"
+      "sha256": "d89f62832a00a60e7929703920d4440c3bcded63790b5b8d08177edb731f6c0d"
     }
   ],
   "macos": {

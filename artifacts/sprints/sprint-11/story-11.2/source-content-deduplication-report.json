@@ -131,19 +131,19 @@
       "sha256": "ccdbe1e44487558f2bb0748982d72a2e62e2f763706077b08f5b13267deebe6f"
     },
     {
-      "byte_length": 10454,
+      "byte_length": 10891,
       "path": "scripts/source_content_deduplication_evidence.py",
-      "sha256": "89bacf7ab47b4138e24aa3dbaf5fd4edce620d3b8a4f203ea2ca7241d544aac7"
+      "sha256": "7deb1b6d86e3be99f532153021afdbfdfb63d71d076e5fafaf7587fca53716e8"
     },
     {
-      "byte_length": 5832,
+      "byte_length": 7173,
       "path": "tests/test_source_content_deduplication_evidence.py",
-      "sha256": "c4ab82897a4258f48361b6292386031130a5d336a07775fbe3019d7432a54b70"
+      "sha256": "16742abb4d0282b3cae8fd0ef11fa6f28f15b6fe3312bbc38d1ae3c605fb9f78"
     },
     {
-      "byte_length": 18179,
+      "byte_length": 18121,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-results.log",
-      "sha256": "d5ae036801c23a0b0bbfe5be2821bcb861fdbc2740e7cace7290e58ffdd0825b"
+      "sha256": "0745fe5de732f5ebcda59c30fa4f0042d232f854902eebcb2e60736d7f5123c3"
     }
   ],
   "commands": [
