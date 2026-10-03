@@ -1,0 +1,114 @@
+{
+  "schema_version": 2,
+  "stage": "batch34-gate",
+  "source_revision": "dcd1518716ca7c37dda80acd4f0977d428eb4d94",
+  "scope": "Batch 34 Story 11.2 gate: the routine AGENTS.md section 7 pin renewal from e5cc4788 to dcd15187 (three explained reviewed-path changes), the rebuilt gate report, its test and check",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/story_11_2_gate.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_11_2_gate"
+    ],
+    [
+      "python3",
+      "scripts/story_11_2_gate.py"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/story_11_2_gate.py": "3ed21113a663f0b5366cc8528f0f39953854b9407af569d5d7948b5d4826847d",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_story_11_2_gate.py": "2295e32739e644c00f65f746c88214e7399e3f62208c89bbe2e4bdb9269a13bc"
+  },
+  "changed_sources": [
+    {
+      "path": "scripts/story_11_2_gate.py",
+      "sha256": "3ed21113a663f0b5366cc8528f0f39953854b9407af569d5d7948b5d4826847d",
+      "commit": "a0bfed2171a3270e922f8f1215ca82d8764e24ef"
+    }
+  ],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/story_11_2_gate.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.238,
+      "log": "01.log",
+      "log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195",
+      "private_log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_11_2_gate"
+      ],
+      "exit_code": 0,
+      "seconds": 0.343,
+      "log": "02.log",
+      "log_sha256": "1d775cbac3538017d58602bbe5e31e70cad59058e3364f8d112d077aabed9968",
+      "private_log_sha256": "1d775cbac3538017d58602bbe5e31e70cad59058e3364f8d112d077aabed9968"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/story_11_2_gate.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.082,
+      "log": "03.log",
+      "log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195",
+      "private_log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.086,
+      "log": "04.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.012,
+      "log": "05.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

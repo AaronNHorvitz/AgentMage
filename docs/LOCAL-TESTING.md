@@ -581,7 +581,9 @@ fails too. Both are tested under `runtime_start_tests` and `runtime_ipc`
 ([Decision 0148](decisions/0148-review-fixes-for-the-first-refusal-of-a-run-and-refused-releases.md),
 [Decision 0149](decisions/0149-review-fixes-for-the-start-path-of-the-first-refusal.md)).
 The [first refusal review-fix verification](verification/review-fixes-first-refusal-and-refused-releases-2026-10-03.md)
-retains those tests and their mutation results.
+retains those tests and their mutation results, and the
+[start path review-fix verification](verification/review-fixes-start-path-of-first-refusal-2026-10-03.md)
+retains the extended test and its mutation results.
 
 ### Public research worker contract fixtures
 

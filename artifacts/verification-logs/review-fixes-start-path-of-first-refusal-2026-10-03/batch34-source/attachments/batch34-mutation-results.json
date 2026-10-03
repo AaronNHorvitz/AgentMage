@@ -1,0 +1,38 @@
+[
+  {
+    "id": "F1d-start-clears-refusal",
+    "expected": "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare",
+    "caught": true,
+    "failed": [
+      "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F1e-advance-clears-refusal",
+    "expected": "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare",
+    "caught": true,
+    "failed": [
+      "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F1f-start-bypasses-exchange",
+    "expected": "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare",
+    "caught": true,
+    "failed": [
+      "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F1g-advance-bypasses-exchange",
+    "expected": "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare",
+    "caught": true,
+    "failed": [
+      "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare"
+    ],
+    "compile_error": false
+  }
+]

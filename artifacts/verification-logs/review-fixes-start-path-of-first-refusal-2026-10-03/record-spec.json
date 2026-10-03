@@ -1,0 +1,373 @@
+{
+ "record_type": "agentmage-review-fixes-start-path-of-first-refusal-verification",
+ "date": "2026-10-03",
+ "base_commit": "f33245fb8359717d1c5dc59796d3eb4ead36cab6",
+ "head_commit": "a0bfed2171a3270e922f8f1215ca82d8764e24ef",
+ "source_commit": "74488c3bcb1a09a0f067012689b3fb6df02a6000",
+ "retained_logs": "artifacts/verification-logs/review-fixes-start-path-of-first-refusal-2026-10-03",
+ "stages": [
+  "batch34-source",
+  "batch34-core",
+  "batch34-rebind",
+  "batch34-gate",
+  "batch34-blocked-causes",
+  "batch34-extended-rest",
+  "batch34-observation"
+ ],
+ "inventory": "artifacts/verification-logs/review-fixes-start-path-of-first-refusal-2026-10-03/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch34-source/02.log",
+  "engine": "batch34-source/03.log",
+  "repository_map": "batch34-source/04.log",
+  "inference": "batch34-source/05.log",
+  "knowledge": "batch34-source/06.log",
+  "linux": "batch34-source/07.log",
+  "linux_research_feature_build": "batch34-source/08.log",
+  "linux_research_feature_tests": "batch34-source/09.log",
+  "linux_research_worker_binary_tests": "batch34-source/10.log",
+  "host": "batch34-source/11.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0149-review-fixes-for-the-start-path-of-the-first-refusal.md"
+  ],
+  "source_commits": [
+   {
+    "commit": "74488c3bcb1a09a0f067012689b3fb6df02a6000",
+    "scope": "Decision 0149: the first-refusal test of the runtime IPC client now also drives start and advance over the in-process channel answered by the host's own answer: a refused start keeps its code through a refused cleanup release and a later refused advance, and a refused advance, refused by the test runtime with a code of its own, keeps its code through a refused cleanup release and a later refused start (F1 of f33245fb); the test channel refuses a frame above the receive bound (N3); N1 is declined because scripts/verification_batch.py is bound by 297 retained artifacts; Decision 0148's Limits and LOCAL-TESTING point at Decision 0149"
+   }
+  ],
+  "review_resolved": "f33245fb8359 (PASS; finding F1 low), by Decision 0149, which also resolves notes N1 and N3",
+  "first_refusal_start_path_test_of_f33245fb": {
+   "test": "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare",
+   "reviewer_mutation": "RB (start clears the kept refusal before its exchange), reproduced here as F1d",
+   "stage": "batch34-source",
+   "log": "batch34-source/11.log",
+   "result": "run, passed"
+  },
+  "mutation_checks": "run with private tooling that applies one exact replacement, runs the package's filtered library tests and restores the file, on the uncommitted source tree that was then committed unchanged as 74488c3b; the specification, results and the runner are attached to the batch34-source stage. 4 single Rust mutations, 4 caught by the first-refusal test: a start that clears the kept refusal before its exchange (the reviewer's surviving mutation RB), an advance that does the same, and a start and an advance that bypass the client's recording exchange. The files were verified restored afterwards",
+  "failure_comparison": "linux 189 passed, 19 failed, 51 ignored, failure names identical to batch 33; with the public-research-worker feature the Linux crate's tests build, its research tests pass (13 passed, 6 ignored native) and the worker binary's tests pass (21 passed, 3 ignored); host 508 passed, 53 failed, 11 ignored, failure names identical to batch 33 (counts unchanged: this batch extends an existing test); the engine passes 1,553 tests with 8 ignored",
+  "retained_failures": [
+   {
+    "stage": "batch34-source",
+    "indexes": [
+     7,
+     11
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, with failure names identical to batch 33"
+   },
+   {
+    "stage": "batch34-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "withdrawn_stages": [],
+  "interrupted_stages": [],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch34-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the native-prerequisite host failures (batch34-source/11.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch34-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch34-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch34-blocked-causes/03.log) and the documentation gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+    "stale_since": "before batch 12 (four other inputs)",
+    "blocker": "its producer runs the full host suite (the native-prerequisite failures, batch34-source/11.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the product gate and the documentation gate; its check mode still validates it at its own revision (batch34-extended-rest/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the full host suite with all features; its check mode still validates it at its own revision (batch34-extended-rest/02.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
+    "stale_since": "before batch 18 (shells/host/src/headless.rs)",
+    "blocker": "already stale at the review base for an input this batch does not change; historical"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-host"
+  ],
+  "cascade": "the one SBOM write (agentmage-host) staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index, raw contract boundary log and security map, the Story 3.1 component inventory, configuration startup report and security map and the Sprint 27 to 34 knowledge boundary reviews (batch34-core), and the Story 11.1 security map and the Sprint 79 and Sprint 108 reports (batch34-rebind); through the Story 11.1 map, the Story 11.2 storage security report, the frozen-scope report, the AC1 and AC3 reports and the Story 12.1 map (batch34-rebind); the Story 11.2 gate report followed its pin (batch34-gate). The AC2 report binds nothing this batch changed and was not renewed. No current artifact binds the changed source file directly (inventory f33245fb..74488c3b: no binding). The engine, the operational store, the CLI, the coding host's CLI runtime and the Linux boundary did not change, so the storage migration compatibility report, the Story 22.1 canary, the Story 13.4 dispatch preflight report, the Muse codec chain, the Sprint 13 report and the v0.4 coding pack manifest were not stale; their check modes pass at the gate commit",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "e5cc4788696ad01619dd3c6715aea642ed71607f",
+    "to": "dcd1518716ca7c37dda80acd4f0977d428eb4d94",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 34 rebind stage; only the bound digest of the renewed Story 11.1 security map changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 34 rebind stage; only the bound digest of the renewed storage security report changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 34 rebind stage; only the bound digest of the renewed storage security report changed"
+     }
+    ]
+   }
+  ],
+  "newly_stale_disposition": "only a historical record: the retained batch33-gate stage record, which binds the Story 11.2 gate script as it was at its own revision",
+  "runtime_campaign": "not run in this batch: the Story 23.4 runtime evidence, coordinator boundary review, security map and evidence index and the Sprint 50 runtime contract review bind none of this batch's changed inputs, and each producer's check mode passes at a0bfed21",
+  "cli_observation": {
+   "source_commit": "a0bfed2171a3270e922f8f1215ca82d8764e24ef",
+   "binaries_sha256": {
+    "agentmage": "f872cf67766455e6153e648595a59c8e500d838b6237cfb628105a01df09e44f",
+    "agentmage-host": "21a0f60413b2f6fb81dade7451021809c3d50c020110f87f0fbe5c18f2784268",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "catalog_host_operations": [
+    {
+     "name": "doc-pack-list-empty",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import-other-license",
+     "operation": "doc-pack",
+     "exit_code": 4
+    },
+    {
+     "name": "doc-pack-search",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-inspect",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember-credential",
+     "operation": "memory",
+     "exit_code": 4
+    },
+    {
+     "name": "memory-list",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-revoke",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-delete",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-signer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-issuer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-install",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-1",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-renamed",
+     "operation": "extension",
+     "exit_code": 3
+    },
+    {
+     "name": "extension-list",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-grant",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-same-route",
+     "operation": "route-grant",
+     "exit_code": 4
+    },
+    {
+     "name": "route-grant-list",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-revoke",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-revoke-again",
+     "operation": "route-grant",
+     "exit_code": 4
+    },
+    {
+     "name": "route-grant-list-all",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "ended-run-read",
+     "operation": "ended-run",
+     "exit_code": 0
+    }
+   ],
+   "catalog_host_wire_refusals_seen": false,
+   "catalog_workspace_preserved": true,
+   "route_grants": {
+    "runs": [
+     {
+      "name": "route-grant-declined",
+      "exit_code": 6
+     },
+     {
+      "name": "route-grant-grant",
+      "exit_code": 0
+     },
+     {
+      "name": "route-grant-same-route",
+      "exit_code": 4
+     },
+     {
+      "name": "route-grant-list",
+      "exit_code": 0
+     },
+     {
+      "name": "route-grant-revoke",
+      "exit_code": 0
+     },
+     {
+      "name": "route-grant-revoke-again",
+      "exit_code": 4
+     },
+     {
+      "name": "route-grant-list-all",
+      "exit_code": 0
+     }
+    ],
+    "declined_sent_nothing": true,
+    "remote_route_offered": false
+   },
+   "recipe_shown_before_launch": {
+    "exit_code": 5,
+    "then_refused_at": "linux.repository.git_artifact.invalid",
+    "preserved": true
+   },
+   "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+   },
+   "malformed_frame_injected": false,
+   "research_worker": {
+    "binary": {
+     "sha256": "6255bc24924a9c351dbb7ba6ec3ebcc4366dcd1fb034905a4478b2305d17cfac",
+     "bytes": 158345560
+    },
+    "runs": [
+     {
+      "name": "worker-ambient-environment",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     },
+     {
+      "name": "worker-extra-argument",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     },
+     {
+      "name": "worker-admitted-environment",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     }
+    ],
+    "sandboxed": false,
+    "network_attempted": false
+   },
+   "binaries_identical_to_batch33": true,
+   "start_refused_by_an_actual_process": false,
+   "qualification": "actual-binary-catalog-host-operations-under-exact-wire-decoding-plus-native-prerequisite-refusal"
+  },
+  "not_run": [
+   "any actual process refusing a start, an advance or a release, or printing a run's first refusal: the development host is refused at native Git trust in this sandbox",
+   "an authenticated session carrying the first-refusal test's frames: the test's in-process channel is not an authenticated session",
+   "the native-only Linux boundary tests and the factory's composition glue",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested after this record; open"
+  }
+ }
+}

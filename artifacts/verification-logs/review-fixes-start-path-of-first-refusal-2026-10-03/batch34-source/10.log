@@ -1,0 +1,31 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running unittests src/bin/agentmage-public-research-worker.rs (target/debug/deps/agentmage_public_research_worker-b67cd045f713534b)
+
+running 24 tests
+test target::absolute_dns_tests::absolute_dns_form_does_not_relax_input_or_add_lookup_destinations ... ok
+test target::tests::complete_dns_set_must_be_public_on_the_exact_port ... ok
+test target::absolute_dns_tests::dns_lookup_is_absolute_but_http_and_tls_origin_remain_exact ... ok
+test target::tests::query_disclosure_is_encoded_once_without_becoming_url_syntax ... ok
+test target::tests::structured_target_ambiguity_and_secrets_refuse_before_resolution ... ok
+test tests::exact_bubblewrap_environment_is_admitted_without_host_variables ... ok
+test transport::namespace_tests::real_nss_rejects_private_mixed_and_oversized_complete_answers_before_tcp ... ignored, requires explicitly isolated rootless DNS/TCP fixture; not native admission
+test transport::namespace_tests::real_pinned_connection_has_one_dns_snapshot_ignores_proxy_and_rejects_plaintext_tls_peer ... ignored, requires explicitly isolated rootless DNS/TCP fixture; not TLS success or native admission
+test transport::namespace_tests::real_tls_verifies_hostname_and_trust_then_enforces_response_and_redirect_bounds ... ignored, requires isolated namespace and supervised synthetic-CA TLS server; not native/model admission
+test tests::missing_duplicated_noncanonical_or_non_unicode_environment_is_denied ... ok
+test target::tests::redirect_preserves_origin_and_rejects_ambiguous_or_sensitive_disclosure ... ok
+test transport::tests::encoded_executable_attachment_and_duplicate_headers_are_refused ... ok
+test tests::fixed_request_reader_denies_fifo_symlink_directory_empty_and_oversize ... ok
+test transport::tests::informational_headers_and_chunk_framing_have_distinct_exact_counts ... ok
+test transport::tests::no_proxy_redirect_or_pooling_and_original_timeout_are_fixed ... ok
+test transport::tests::missing_tls_oversized_headers_and_wire_ceiling_are_not_success ... ok
+test transport::tests::original_deadline_and_clock_are_not_reset_on_completion ... ok
+test transport::tests::informational_header_flood_cannot_spend_the_body_budget ... ok
+test transport::tests::raw_header_count_does_not_include_body_from_the_same_read ... ok
+test transport::tests::redirect_bodies_consume_the_original_aggregate_reservation ... ok
+test transport::tests::reported_hop_urls_use_the_same_library_encoding_as_actual_requests ... ok
+test transport::tests::invalid_http_content_is_never_encoded_as_a_verified_response ... ok
+test transport::tests::retrieved_instructions_remain_exact_inert_body_bytes ... ok
+test transport::tests::refused_redirect_cannot_become_a_second_outbound_attempt ... ok
+
+test result: ok. 21 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

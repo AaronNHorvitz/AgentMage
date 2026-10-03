@@ -1,0 +1,62 @@
+[
+ {
+  "id": "F1d-start-clears-refusal",
+  "file": "shells/host/src/runtime_ipc.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_ipc"
+  ],
+  "expected": "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare",
+  "replace": [
+   [
+    "    ) -> Result<RuntimeTransportStep, RuntimeTransportError> {\n        match self.exchange(RuntimeIpcRequest::Start { request })? {\n",
+    "    ) -> Result<RuntimeTransportStep, RuntimeTransportError> {\n        self.last_error = None;\n        match self.exchange(RuntimeIpcRequest::Start { request })? {\n"
+   ]
+  ]
+ },
+ {
+  "id": "F1e-advance-clears-refusal",
+  "file": "shells/host/src/runtime_ipc.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_ipc"
+  ],
+  "expected": "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare",
+  "replace": [
+   [
+    "    ) -> Result<RuntimeTransportStep, RuntimeTransportError> {\n        let mut after_event_cursor = after_event_cursor.cloned();\n",
+    "    ) -> Result<RuntimeTransportStep, RuntimeTransportError> {\n        self.last_error = None;\n        let mut after_event_cursor = after_event_cursor.cloned();\n"
+   ]
+  ]
+ },
+ {
+  "id": "F1f-start-bypasses-exchange",
+  "file": "shells/host/src/runtime_ipc.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_ipc"
+  ],
+  "expected": "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare",
+  "replace": [
+   [
+    "        match self.exchange(RuntimeIpcRequest::Start { request })? {\n",
+    "        match self.exchange_inner(RuntimeIpcRequest::Start { request })? {\n"
+   ]
+  ]
+ },
+ {
+  "id": "F1g-advance-bypasses-exchange",
+  "file": "shells/host/src/runtime_ipc.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_ipc"
+  ],
+  "expected": "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare",
+  "replace": [
+   [
+    "        match self.exchange(RuntimeIpcRequest::Advance {\n",
+    "        match self.exchange_inner(RuntimeIpcRequest::Advance {\n"
+   ]
+  ]
+ }
+]

@@ -1,0 +1,685 @@
+{
+  "schema_version": 2,
+  "stage": "batch34-source",
+  "source_revision": "74488c3bcb1a09a0f067012689b3fb6df02a6000",
+  "scope": "Batch 34 source verification at the source commit (Decision 0149: the first-refusal test of the runtime IPC client drives start and advance; the test channel enforces its receive bound): formatting, every workspace test suite, clippy, Python unit tests and repository checks",
+  "planned_commands": [
+    [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-kernel-contracts"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-kernel-engine"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-capability-repository-map"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux-inference"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-capability-knowledge"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux",
+      "--no-fail-fast"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux",
+      "--features",
+      "public-research-worker",
+      "--no-run"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux",
+      "--features",
+      "public-research-worker",
+      "--lib",
+      "research"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux",
+      "--features",
+      "public-research-worker",
+      "--bin",
+      "agentmage-public-research-worker"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "--no-fail-fast"
+    ],
+    [
+      "cargo",
+      "clippy",
+      "--workspace",
+      "--all-targets",
+      "--locked",
+      "--offline",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    [
+      "cargo",
+      "clippy",
+      "-p",
+      "agentmage-platform-linux",
+      "--all-targets",
+      "--features",
+      "public-research-worker",
+      "--locked",
+      "--offline",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_rust_test_ownership",
+      "tests.test_muse_codec_evidence",
+      "tests.test_evidence_core",
+      "tests.test_sprint_13_evidence",
+      "tests.test_amendment_work_selection",
+      "tests.test_remaining_plan_blocker_audit",
+      "tests.test_strict_local_source_audit",
+      "tests.test_verification_batch",
+      "tests.test_runtime_coordinator_boundary_review",
+      "tests.test_storage_migration_compatibility_evidence",
+      "tests.test_operational_schema_v3_evidence",
+      "tests.test_store_unit_acceptance_evidence",
+      "tests.test_source_content_deduplication_evidence",
+      "tests.test_story_11_3_resume_evidence",
+      "tests.test_coding_harness",
+      "tests.test_capability_package_contract",
+      "tests.test_capability_package_runtime_contract",
+      "tests.test_runtime_producer_contract",
+      "tests.test_public_research_worker_contract",
+      "tests.test_research_dependency_closure",
+      "tests.test_source_lifecycle_transactions_evidence",
+      "tests.test_workflow_attempt_invariants_evidence"
+    ],
+    [
+      "python3",
+      "scripts/runtime_producer_fixtures.py"
+    ],
+    [
+      "python3",
+      "scripts/public_research_worker_fixtures.py"
+    ],
+    [
+      "python3",
+      "scripts/research_dependency_closure.py"
+    ],
+    [
+      "python3",
+      "scripts/capability_package_contract.py"
+    ],
+    [
+      "python3",
+      "scripts/capability_package_runtime_contract.py"
+    ],
+    [
+      "python3",
+      "scripts/strict_local_source_audit.py"
+    ],
+    [
+      "python3",
+      "scripts/effect_boundary.py"
+    ],
+    [
+      "python3",
+      "scripts/hostile_network_injection_gate.py"
+    ],
+    [
+      "python3",
+      "scripts/task_graph.py"
+    ],
+    [
+      "python3",
+      "scripts/validate_docs.py"
+    ],
+    [
+      "npm",
+      "run",
+      "docs:lint"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [
+    7,
+    11
+  ],
+  "sources": {
+    "scripts/capability_package_contract.py": "fee1b784d675ce3c811a9d88598d81818b275bad3aaabe03954364e1f0bd2045",
+    "scripts/capability_package_runtime_contract.py": "1eada96d44517051f66d7d6ead796088f340d0c580752057f6faff6e9b1e5d21",
+    "scripts/effect_boundary.py": "799d423fa9e9b90799fac26f6936de6d27875566034239210f131cc23be20093",
+    "scripts/hostile_network_injection_gate.py": "2437a87078c9b7ce064de7fd120c3cc3fc0dff4562987d241156a6fca078f4ee",
+    "scripts/public_research_worker_fixtures.py": "6fb5acf03fe0aabbde1bdaa8916a824aafd3cbbfec36f9751a58cd9ff8116e89",
+    "scripts/research_dependency_closure.py": "c090cd4d73b6129f2962ecce865205ba77cfa16bfebff786f07593b49f8ec0a5",
+    "scripts/runtime_producer_fixtures.py": "df95a23c415882a2e33583769458e6e8b8adb17c976db7cdb99f6b6d1d5e2c36",
+    "scripts/strict_local_source_audit.py": "07f3748f12fb5f01f867d356f0c3071b0e8ed0719b0e2b64401fa10e981f495c",
+    "scripts/task_graph.py": "897829d84ada8e965101b38cd1763a23501fa45081c152d803ea74f2a8713f7b",
+    "scripts/validate_docs.py": "73ffa14016dd89a5b7959827e12762422c6881ae0ec6465585e2901f2e2f1dfb",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_amendment_work_selection.py": "a58166d060f0f6c4afc120fffb116399023e1f959d8a96f265d0a09e18260ade",
+    "tests/test_capability_package_contract.py": "cdf552e6531a19563aea062c4491421fba93793b9fd8c54a4407483834106c25",
+    "tests/test_capability_package_runtime_contract.py": "f2a5ad3b1403241a7ae6b4ac3069033dab6a70e907142a6efa6a94346891db0b",
+    "tests/test_coding_harness.py": "642d905ee52c458db423a3f1efc17c716a332b4e2947bc61e229f021342754b8",
+    "tests/test_evidence_core.py": "20bf41f20ce5c19e3a90efcd9caa32e252f17a303cc23a2b4274df210dad150a",
+    "tests/test_muse_codec_evidence.py": "ff315ed909e1d49c48b22cdf426b0234f8e7c7797ccd850ed98c93b839aab62f",
+    "tests/test_operational_schema_v3_evidence.py": "315316e08ab7d55a7e9fa005d7e2e19f4f25e179e2f9358c02f6b20d84670d23",
+    "tests/test_public_research_worker_contract.py": "8e631bce7466cbc49836f2034095848c6da9dcd3ed254e986a319f648a9b9a79",
+    "tests/test_remaining_plan_blocker_audit.py": "04497ba56432ac722b7eccde0243b5a35c830d827ab6e179503bb5fbd36d44e8",
+    "tests/test_research_dependency_closure.py": "734e9f07d8a6cecd9c73df5785d57fdfe663ccce7230951c7a3bb5807c58d4b8",
+    "tests/test_runtime_coordinator_boundary_review.py": "c924f773805ef17e90c73d621aa292cfffb8756d5f93556abcdcbb129e97224a",
+    "tests/test_runtime_producer_contract.py": "922e444799f9539e6c60638cf12d40b8c39b3560227a903d3355c14afd64162a",
+    "tests/test_rust_test_ownership.py": "3d05c65b512cebc0dd37671612073ae6cf21b89281430a846920c10e758a7cd2",
+    "tests/test_source_content_deduplication_evidence.py": "16742abb4d0282b3cae8fd0ef11fa6f28f15b6fe3312bbc38d1ae3c605fb9f78",
+    "tests/test_source_lifecycle_transactions_evidence.py": "e0d6adcdd0cb446614a5b7c58b1d5f969d8b6e0d94856265edcb4414b0b579d1",
+    "tests/test_sprint_13_evidence.py": "88d5725da16cd3e1a794920ebbc1deac93a2fdc03a25ea0a4ba232130158a3e2",
+    "tests/test_storage_migration_compatibility_evidence.py": "a463c2ac2a165578ef3471b3a37a9db225eae4eac0bd0982afe2c150ba4d62b4",
+    "tests/test_store_unit_acceptance_evidence.py": "12e57bbba38734eb83e579f169f2cffa090e86ac2fa5d2b03e5a9760275adf82",
+    "tests/test_story_11_3_resume_evidence.py": "6a7c898ef2ffb7fa40b14aeea93d7c748642f90caaf369999f4130f95a3770d4",
+    "tests/test_strict_local_source_audit.py": "883671312c87b67b3d83b9b2f28e3e4a394b8c991baef424940f516749f17eca",
+    "tests/test_verification_batch.py": "f578cab015f8548aa30cb46dd39bec7e759282e2b18460f4eef9c249e2801d38",
+    "tests/test_workflow_attempt_invariants_evidence.py": "2f966a72cfcba38380280a8da8ea8c533d4ead99e136a3eeaae5d09dba5360a9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "batch34-mutations.json",
+      "sha256": "3be8be9818aa402981b721b76cdcccb51006645ef8f2335d621383d0c0a49102",
+      "private_sha256": "3be8be9818aa402981b721b76cdcccb51006645ef8f2335d621383d0c0a49102"
+    },
+    {
+      "name": "batch34-mutation-results.json",
+      "sha256": "0d2af4819c9b78c70d390b81bf922543d285b0c8e274dbf881c9c4d0db8b4fcf",
+      "private_sha256": "0d2af4819c9b78c70d390b81bf922543d285b0c8e274dbf881c9c4d0db8b4fcf"
+    },
+    {
+      "name": "batch34-mutations.py",
+      "sha256": "d16833de2049e208cf1116eee2bd0766cea0a0c554aebfbb1cc1334e7765fc38",
+      "private_sha256": "bce7adfe79684b9a33874dfa4ea597a3191704cc3dfba988b9d675790acc2bfb"
+    },
+    {
+      "name": "batch34-mkmutations.py",
+      "sha256": "d517318bbe765b315ca769e765d21b52d994dba137c9fdda3e77ebabd57fa928",
+      "private_sha256": "a30a678601927fef7ca552bb15b19eac3b252adfdc9808b5429f24416f0bdc4f"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 2.23,
+      "log": "01.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-kernel-contracts"
+      ],
+      "exit_code": 0,
+      "seconds": 1.391,
+      "log": "02.log",
+      "log_sha256": "a518ca0d30ca7fdb4a4e1fb9213f60251bbd462984188cf79047766bf28c3991",
+      "private_log_sha256": "a518ca0d30ca7fdb4a4e1fb9213f60251bbd462984188cf79047766bf28c3991"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine"
+      ],
+      "exit_code": 0,
+      "seconds": 121.005,
+      "log": "03.log",
+      "log_sha256": "d674c2d2ed8ce1f23e73f7adf7dba2fc6c2d5540cdc0eccebb7dfcf1fc84d892",
+      "private_log_sha256": "d674c2d2ed8ce1f23e73f7adf7dba2fc6c2d5540cdc0eccebb7dfcf1fc84d892"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-capability-repository-map"
+      ],
+      "exit_code": 0,
+      "seconds": 16.537,
+      "log": "04.log",
+      "log_sha256": "cd28463b8bfb243ec40dc3b3f3d993c37b4c42f3e69126f0ebb2b6d4ac1f2b0e",
+      "private_log_sha256": "cd28463b8bfb243ec40dc3b3f3d993c37b4c42f3e69126f0ebb2b6d4ac1f2b0e"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux-inference"
+      ],
+      "exit_code": 0,
+      "seconds": 1.205,
+      "log": "05.log",
+      "log_sha256": "876e9b089ee4868971e0c93c14db5d736c48dbdc3147a2280e908becf818e88e",
+      "private_log_sha256": "876e9b089ee4868971e0c93c14db5d736c48dbdc3147a2280e908becf818e88e"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-capability-knowledge"
+      ],
+      "exit_code": 0,
+      "seconds": 1.125,
+      "log": "06.log",
+      "log_sha256": "95e75082de6617057dbd1721413b2ba1b40ba08597c7c3410eb20bd375d12992",
+      "private_log_sha256": "95e75082de6617057dbd1721413b2ba1b40ba08597c7c3410eb20bd375d12992"
+    },
+    {
+      "index": 7,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux",
+        "--no-fail-fast"
+      ],
+      "exit_code": 101,
+      "seconds": 16.192,
+      "log": "07.log",
+      "log_sha256": "c13bf4082756803be9d31457d212b6450b0a1bd991793c704170c973afa53295",
+      "private_log_sha256": "c13bf4082756803be9d31457d212b6450b0a1bd991793c704170c973afa53295"
+    },
+    {
+      "index": 8,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux",
+        "--features",
+        "public-research-worker",
+        "--no-run"
+      ],
+      "exit_code": 0,
+      "seconds": 0.066,
+      "log": "08.log",
+      "log_sha256": "59af3ee7933c2b1e575689a98e71af5bfac4e9e7c1aabb9ffce6924c0c3b9dc3",
+      "private_log_sha256": "59af3ee7933c2b1e575689a98e71af5bfac4e9e7c1aabb9ffce6924c0c3b9dc3"
+    },
+    {
+      "index": 9,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux",
+        "--features",
+        "public-research-worker",
+        "--lib",
+        "research"
+      ],
+      "exit_code": 0,
+      "seconds": 0.072,
+      "log": "09.log",
+      "log_sha256": "6fe8daad870a757b38efd99a15b0513a61c6480f9d30020896dc83c1f46bc1f4",
+      "private_log_sha256": "6fe8daad870a757b38efd99a15b0513a61c6480f9d30020896dc83c1f46bc1f4"
+    },
+    {
+      "index": 10,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux",
+        "--features",
+        "public-research-worker",
+        "--bin",
+        "agentmage-public-research-worker"
+      ],
+      "exit_code": 0,
+      "seconds": 0.071,
+      "log": "10.log",
+      "log_sha256": "9a1007be5ee77669a37cc191b2d86f38935f7e58c9d267540bb3e8355fe80682",
+      "private_log_sha256": "9a1007be5ee77669a37cc191b2d86f38935f7e58c9d267540bb3e8355fe80682"
+    },
+    {
+      "index": 11,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "--no-fail-fast"
+      ],
+      "exit_code": 101,
+      "seconds": 42.42,
+      "log": "11.log",
+      "log_sha256": "7d1116be2a67f4023a0aebd08eda34247081b532f35ecf76c50e1241040741c8",
+      "private_log_sha256": "7df959f11a4991a28bfbc43a177ccd02b78e6ba10c1cc9a9cc17282d6626b966"
+    },
+    {
+      "index": 12,
+      "argv": [
+        "cargo",
+        "clippy",
+        "--workspace",
+        "--all-targets",
+        "--locked",
+        "--offline",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "seconds": 5.347,
+      "log": "12.log",
+      "log_sha256": "fa4659ae7eaa316b498729466bbf71f97c71c89431acd0ca6425f1d8aa368b6c",
+      "private_log_sha256": "3369f098cccdd2c512a889e3b8cab9b49646970b38a13340f8cbccc6409990ae"
+    },
+    {
+      "index": 13,
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-platform-linux",
+        "--all-targets",
+        "--features",
+        "public-research-worker",
+        "--locked",
+        "--offline",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "seconds": 0.074,
+      "log": "13.log",
+      "log_sha256": "736e2582f563605dd272e5fb977840b0c0767377d27b6940c440caf75eec7157",
+      "private_log_sha256": "736e2582f563605dd272e5fb977840b0c0767377d27b6940c440caf75eec7157"
+    },
+    {
+      "index": 14,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_rust_test_ownership",
+        "tests.test_muse_codec_evidence",
+        "tests.test_evidence_core",
+        "tests.test_sprint_13_evidence",
+        "tests.test_amendment_work_selection",
+        "tests.test_remaining_plan_blocker_audit",
+        "tests.test_strict_local_source_audit",
+        "tests.test_verification_batch",
+        "tests.test_runtime_coordinator_boundary_review",
+        "tests.test_storage_migration_compatibility_evidence",
+        "tests.test_operational_schema_v3_evidence",
+        "tests.test_store_unit_acceptance_evidence",
+        "tests.test_source_content_deduplication_evidence",
+        "tests.test_story_11_3_resume_evidence",
+        "tests.test_coding_harness",
+        "tests.test_capability_package_contract",
+        "tests.test_capability_package_runtime_contract",
+        "tests.test_runtime_producer_contract",
+        "tests.test_public_research_worker_contract",
+        "tests.test_research_dependency_closure",
+        "tests.test_source_lifecycle_transactions_evidence",
+        "tests.test_workflow_attempt_invariants_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 73.619,
+      "log": "14.log",
+      "log_sha256": "4811752f5254b5e56c10dc0ca87c259d56c20e76e969e9fa4cd2da3561ed6615",
+      "private_log_sha256": "64ba789d6ed8b883a64572b9a6e9187274a88d1a42cd665d5aa290a99ccd4c1e"
+    },
+    {
+      "index": 15,
+      "argv": [
+        "python3",
+        "scripts/runtime_producer_fixtures.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.349,
+      "log": "15.log",
+      "log_sha256": "0362deb934e58dfe3c1029b5eccf3ca6a19c659c5275b7316adb8c70653604a8",
+      "private_log_sha256": "0362deb934e58dfe3c1029b5eccf3ca6a19c659c5275b7316adb8c70653604a8"
+    },
+    {
+      "index": 16,
+      "argv": [
+        "python3",
+        "scripts/public_research_worker_fixtures.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.09,
+      "log": "16.log",
+      "log_sha256": "367a369668af161d9175acb9023930dcf2cb16fa94911a4af09a21b5df6be450",
+      "private_log_sha256": "367a369668af161d9175acb9023930dcf2cb16fa94911a4af09a21b5df6be450"
+    },
+    {
+      "index": 17,
+      "argv": [
+        "python3",
+        "scripts/research_dependency_closure.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.023,
+      "log": "17.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "index": 18,
+      "argv": [
+        "python3",
+        "scripts/capability_package_contract.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.015,
+      "log": "18.log",
+      "log_sha256": "e118a88b371dfed7e9a17d976649d9e88943722a31039571db1d55b90f6b7616",
+      "private_log_sha256": "e118a88b371dfed7e9a17d976649d9e88943722a31039571db1d55b90f6b7616"
+    },
+    {
+      "index": 19,
+      "argv": [
+        "python3",
+        "scripts/capability_package_runtime_contract.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.014,
+      "log": "19.log",
+      "log_sha256": "d077a35ad869170209d4bd0cee79108a61681dd2872d670f9883d7b2b957ae52",
+      "private_log_sha256": "d077a35ad869170209d4bd0cee79108a61681dd2872d670f9883d7b2b957ae52"
+    },
+    {
+      "index": 20,
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "seconds": 3.271,
+      "log": "20.log",
+      "log_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710",
+      "private_log_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "index": 21,
+      "argv": [
+        "python3",
+        "scripts/effect_boundary.py"
+      ],
+      "exit_code": 0,
+      "seconds": 2.552,
+      "log": "21.log",
+      "log_sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b",
+      "private_log_sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b"
+    },
+    {
+      "index": 22,
+      "argv": [
+        "python3",
+        "scripts/hostile_network_injection_gate.py"
+      ],
+      "exit_code": 0,
+      "seconds": 9.819,
+      "log": "22.log",
+      "log_sha256": "1de6fd57283816a6a0fb967947ec48087406ba2eed70bacbd8f6c2480587bc6b",
+      "private_log_sha256": "1de6fd57283816a6a0fb967947ec48087406ba2eed70bacbd8f6c2480587bc6b"
+    },
+    {
+      "index": 23,
+      "argv": [
+        "python3",
+        "scripts/task_graph.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.096,
+      "log": "23.log",
+      "log_sha256": "15d8e0e14132186c2378805e2280d68427986ed9055a3aabafe08fd3c76d916a",
+      "private_log_sha256": "15d8e0e14132186c2378805e2280d68427986ed9055a3aabafe08fd3c76d916a"
+    },
+    {
+      "index": 24,
+      "argv": [
+        "python3",
+        "scripts/validate_docs.py"
+      ],
+      "exit_code": 0,
+      "seconds": 135.162,
+      "log": "24.log",
+      "log_sha256": "4c878fe6282044366ea96d69c4b382b0a8dbc56521aa2fbb5cc25ff0202cf554",
+      "private_log_sha256": "4c878fe6282044366ea96d69c4b382b0a8dbc56521aa2fbb5cc25ff0202cf554"
+    },
+    {
+      "index": 25,
+      "argv": [
+        "npm",
+        "run",
+        "docs:lint"
+      ],
+      "exit_code": 0,
+      "seconds": 3.166,
+      "log": "25.log",
+      "log_sha256": "7faf2bb646443d3666ea07eb8ae8d21521859ebf76757525d974905e4cc318d9",
+      "private_log_sha256": "7faf2bb646443d3666ea07eb8ae8d21521859ebf76757525d974905e4cc318d9"
+    },
+    {
+      "index": 26,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.004,
+      "log": "26.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
