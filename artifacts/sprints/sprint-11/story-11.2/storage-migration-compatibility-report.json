@@ -171,9 +171,9 @@
       "sha256": "6f7ef1943f8b21f10b684f866f33feeecf3369e9e02e2d78ba8ced87cd154d80"
     },
     {
-      "byte_length": 12403,
+      "byte_length": 12517,
       "path": "docs/decisions/0143-review-fixes-restart-marking-and-durable-session-recoverability.md",
-      "sha256": "260bb19d0fe20fed8eeab19d7d1d6234fc31e35cc3e6abea56ee00e8bbdb6c98"
+      "sha256": "d4f692e0eba0d0bdc72db94d8ca876ac92cfd2a8ab49fc19506c03f18bf28c6d"
     },
     {
       "byte_length": 4717,
@@ -181,19 +181,19 @@
       "sha256": "7f7cc572346eb7ce3b14466928dd0820c1ee757a942077d01e6e242b1a0d1b86"
     },
     {
-      "byte_length": 21677,
+      "byte_length": 22114,
       "path": "scripts/storage_migration_compatibility_evidence.py",
-      "sha256": "e23b0c53458bcd7d329d1b85f1c5002f3df39554cd8eef365e932d3061215e4b"
+      "sha256": "613106edbded15a2429277d4ac84612533608ef9708c1adb4189e6baef2abe30"
     },
     {
-      "byte_length": 2930,
+      "byte_length": 4248,
       "path": "tests/test_storage_migration_compatibility_evidence.py",
-      "sha256": "00c3581b8386efd70f7f1d82a0f2a6602280e1c9c70a14c2add7417fdf2472fc"
+      "sha256": "a463c2ac2a165578ef3471b3a37a9db225eae4eac0bd0982afe2c150ba4d62b4"
     },
     {
-      "byte_length": 39912,
+      "byte_length": 40069,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-results.log",
-      "sha256": "6b33490dae4008cd53990d00427123401ae40ab6e9bebd4a093edb340d9de67a"
+      "sha256": "2a2e312b1599e89b5e068de52dfea9b412ab9f7540fdef7f5dafe77646938c01"
     }
   ],
   "canonical_store": "operational-store",
