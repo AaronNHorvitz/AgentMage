@@ -78,8 +78,8 @@ Three new host tests run over a real encrypted store:
 
 - A run resumed after a restart whose session cannot spawn, and one whose
   job cannot begin because its job already ended, keep the effect record
-  and the job control chain open and incomplete. A later host can still
-  attach both.
+  open and incomplete and the job control chain open. A later host can
+  still attach both.
 - A new run whose session cannot spawn closes its effect record empty. No
   job and no job control chain were begun for it.
 - A release is refused while the store refuses the effect record's pending

@@ -1,0 +1,386 @@
+{
+ "record_type": "agentmage-review-fixes-chain-closing-at-release-verification",
+ "date": "2026-10-03",
+ "base_commit": "22a2662f6590eab91dd54d4f8c51715cea2c519a",
+ "head_commit": "9dc744f16a2134fb419472d0e27a5aa151063a43",
+ "source_commit": "55bef249c7fe719cb53ced5be0b1f37471fd2dcd",
+ "retained_logs": "artifacts/verification-logs/review-fixes-chain-closing-at-release-2026-10-03",
+ "stages": [
+  "batch31-source",
+  "batch31-core",
+  "batch31-source2",
+  "batch31-core2",
+  "batch31-rebind",
+  "batch31-gate",
+  "batch31-blocked-causes",
+  "batch31-extended-rest",
+  "batch31-observation"
+ ],
+ "inventory": "artifacts/verification-logs/review-fixes-chain-closing-at-release-2026-10-03/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch31-source/02.log",
+  "engine": "batch31-source/03.log",
+  "repository_map": "batch31-source/04.log",
+  "inference": "batch31-source/05.log",
+  "knowledge": "batch31-source/06.log",
+  "linux": "batch31-source/07.log",
+  "linux_research_feature_build": "batch31-source/08.log",
+  "linux_research_feature_tests": "batch31-source/09.log",
+  "linux_research_worker_binary_tests": "batch31-source/10.log",
+  "host": "batch31-source/11.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0146-review-fixes-for-chain-closing-at-release-and-resumed-start-failures.md"
+  ],
+  "source_commits": [
+   {
+    "commit": "55bef249c7fe719cb53ced5be0b1f37471fd2dcd",
+    "scope": "Decision 0146: the live service closes an ended run's stored chains (its effect record and action history chains) when the client releases it; while a chain cannot be closed the release is refused with host.runtime.failed and the ended run stays held, so a later release or the host's end retries (F2); a run resumed after a restart whose session cannot spawn or whose job cannot begin keeps its chains open, its effect record incomplete, and a later host can still attach them (F1, tested for both failures); a new run whose session cannot spawn closes its effect record empty (N6, tested); Decision 0143's Limits clause on later hosts is corrected (N2); LOCAL-TESTING says what a refused release prints"
+   },
+   {
+    "commit": "d57374f43b66b6e070854e8e23ce71755e89a760",
+    "scope": "Decision 0146 D1: the Sprint 11 storage migration compatibility producer replaces the checkout root with <repository-root> in the Cargo output it retains and refuses retained output that names the checkout or a home directory, with a test"
+   }
+  ],
+  "review_resolved": "22a2662f6590 (PASS; findings F1 and F2 low; notes N2 and N6 acted on), by Decision 0146",
+  "mutation_checks": "run with private tooling that applies one exact replacement, runs the package's filtered library tests and restores the file, on the uncommitted source tree that was then committed unchanged as 55bef249; the specification, results and the runner are attached to the batch31-source stage. 7 single Rust mutations, 7 caught: a resumed run's spawn failure that closes its chains, a resumed run's job failure that closes its chains, a new run's spawn failure that leaves its effect record open, a release that ignores a refused close, a refused release that forgets the run, a refused history close that does not count and a refused effect record close that does not count. 2 Python mutations of the storage migration compatibility producer (redaction removed, refusal removed), 2 caught, run on the producer and test committed unchanged as d57374f4 and attached to the batch31-source2 stage. The files were verified restored afterwards",
+  "failure_comparison": "linux 189 passed, 19 failed, 51 ignored, failure names identical to batch 30; with the public-research-worker feature the Linux crate's tests build, its research tests pass (13 passed, 6 ignored native) and the worker binary's tests pass (21 passed, 3 ignored); host 506 passed, 53 failed, 11 ignored (three new tests), failure names identical to batch 30; the engine passes 1,553 tests with 8 ignored",
+  "retained_failures": [
+   {
+    "stage": "batch31-source",
+    "indexes": [
+     7,
+     11
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, with failure names identical to batch 30"
+   },
+   {
+    "stage": "batch31-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "withdrawn_stages": [
+   {
+    "stage": "batch31-core",
+    "source_revision": "55bef249c7fe719cb53ced5be0b1f37471fd2dcd",
+    "superseded_by": "batch31-core2",
+    "reason": "every command passed, but the storage migration compatibility log it regenerated named the private checkout in two of Cargo's progress lines (Decision 0146, D1); its output was withdrawn before any commit and the worktree restored; the producer was fixed in d57374f4 and the same commands ran again as batch31-core2, whose output is committed. Its retained logs hold the producers' own output only, not the withdrawn files"
+   }
+  ],
+  "interrupted_stages": [],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch31-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the native-prerequisite host failures (batch31-source/11.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch31-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch31-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch31-blocked-causes/03.log) and the documentation gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+    "stale_since": "before batch 12 (four other inputs)",
+    "blocker": "its producer runs the full host suite (the native-prerequisite failures, batch31-source/11.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the product gate and the documentation gate; its check mode still validates it at its own revision (batch31-extended-rest/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the full host suite with all features; its check mode still validates it at its own revision (batch31-extended-rest/02.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
+    "stale_since": "before batch 18 (shells/host/src/headless.rs)",
+    "blocker": "already stale at the review base for an input this batch does not change; historical"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-host"
+  ],
+  "cascade": "the one SBOM write (agentmage-host) staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index, raw contract boundary log and security map, the Story 3.1 component inventory, configuration startup report and security map and the Sprint 27 to 34 knowledge boundary reviews (batch31-core2) and the Sprint 79 and Sprint 108 reports (batch31-rebind); the corrected Decision 0143 text and the redacting storage migration compatibility producer and its test staled the storage migration compatibility report (batch31-core2) and through it the Story 11.1 security map, the Story 11.2 storage security, AC1 and AC3 reports and the Story 12.1 map; the frozen-scope and AC2 reports were renewed in the same stage, AC2 changing only in its own run log's timings (batch31-rebind); the Story 11.2 gate report followed its pin (batch31-gate). The live service's release, its tests and the recoverability module's comment are bound by no Story 23.4 or Sprint 50 input: their check modes pass at 9dc744f1, so the Story 23.4 chain did not run. The engine, the operational store, the CLI, the coding host's CLI runtime, native chat runtime and Linux boundary did not change, so the Story 22.1 canary, the Story 13.4 dispatch preflight report, the Muse codec chain, the Sprint 13 report and the v0.4 coding pack manifest were not stale",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "f8b05c6de940cba6926d0888abbad951bb06e6ec",
+    "to": "5b45d0bebe821cf63a498265fbb4321e93b50722",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-report.json",
+      "reason": "regenerated by the batch 31 core2 stage; only the bound digests and sizes of Decision 0143 (its Limits clause on later hosts corrected by Decision 0146, review N2 of 22a2662f), of its producer and test (Decision 0146 D1: retained Cargo output names <repository-root>, and output naming a private path is refused) and of its results log, which now names <repository-root> where Cargo printed the checkout, changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 31 rebind stage; only the bound digests of the renewed storage migration compatibility report and log and of the renewed Story 11.1 security map, and the log's size, changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 31 rebind stage; only the bound digest of the renewed storage security report changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "reason": "regenerated by the batch 31 rebind stage; only the bound digest of its own results log changed, whose test timings differ"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 31 rebind stage; only the bound digest of the renewed storage security report changed"
+     }
+    ]
+   }
+  ],
+  "newly_stale_disposition": "only historical records: retained stage records of batches 28 to 30 that bind the storage migration compatibility producer, its test or the Story 11.2 gate script as they were at their own revisions",
+  "runtime_campaign": "not run in this batch: the Story 23.4 runtime evidence, coordinator boundary review, security map and evidence index and the Sprint 50 runtime contract review bind none of this batch's changed inputs, and each producer's check mode passes at 9dc744f1",
+  "cli_observation": {
+   "source_commit": "9dc744f16a2134fb419472d0e27a5aa151063a43",
+   "binaries_sha256": {
+    "agentmage": "d0601d6c317861f68a25ac8a1d649e379099f7c2c45e2ccf3ead9bd978a8fe85",
+    "agentmage-host": "8d0a84c09903b97e7d70675d4970163bd207a40842c7efdef0f7434bedb5a0bd",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "catalog_host_operations": [
+    {
+     "name": "doc-pack-list-empty",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import-other-license",
+     "operation": "doc-pack",
+     "exit_code": 4
+    },
+    {
+     "name": "doc-pack-search",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-inspect",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember-credential",
+     "operation": "memory",
+     "exit_code": 4
+    },
+    {
+     "name": "memory-list",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-revoke",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-delete",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-signer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-issuer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-install",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-1",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-renamed",
+     "operation": "extension",
+     "exit_code": 3
+    },
+    {
+     "name": "extension-list",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-grant",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-same-route",
+     "operation": "route-grant",
+     "exit_code": 4
+    },
+    {
+     "name": "route-grant-list",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-revoke",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-revoke-again",
+     "operation": "route-grant",
+     "exit_code": 4
+    },
+    {
+     "name": "route-grant-list-all",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "ended-run-read",
+     "operation": "ended-run",
+     "exit_code": 0
+    }
+   ],
+   "catalog_host_wire_refusals_seen": false,
+   "catalog_workspace_preserved": true,
+   "route_grants": {
+    "runs": [
+     {
+      "name": "route-grant-declined",
+      "exit_code": 6
+     },
+     {
+      "name": "route-grant-grant",
+      "exit_code": 0
+     },
+     {
+      "name": "route-grant-same-route",
+      "exit_code": 4
+     },
+     {
+      "name": "route-grant-list",
+      "exit_code": 0
+     },
+     {
+      "name": "route-grant-revoke",
+      "exit_code": 0
+     },
+     {
+      "name": "route-grant-revoke-again",
+      "exit_code": 4
+     },
+     {
+      "name": "route-grant-list-all",
+      "exit_code": 0
+     }
+    ],
+    "declined_sent_nothing": true,
+    "remote_route_offered": false
+   },
+   "recipe_shown_before_launch": {
+    "exit_code": 5,
+    "then_refused_at": "linux.repository.git_artifact.invalid",
+    "preserved": true
+   },
+   "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+   },
+   "malformed_frame_injected": false,
+   "research_worker": {
+    "binary": {
+     "sha256": "6255bc24924a9c351dbb7ba6ec3ebcc4366dcd1fb034905a4478b2305d17cfac",
+     "bytes": 158345560
+    },
+    "runs": [
+     {
+      "name": "worker-ambient-environment",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     },
+     {
+      "name": "worker-extra-argument",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     },
+     {
+      "name": "worker-admitted-environment",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     }
+    ],
+    "sandboxed": false,
+    "network_attempted": false
+   },
+   "release_refused_by_an_actual_process": false,
+   "qualification": "actual-binary-catalog-host-operations-under-exact-wire-decoding-plus-native-prerequisite-refusal"
+  },
+  "not_run": [
+   "any actual process closing a run's chains at release or refusing a release: the development host is refused at native Git trust in this sandbox",
+   "a store write failure inside SQLite: the host tests refuse writes at the effect record's write seam and by another owner's chain",
+   "the native-only Linux boundary tests and the factory's composition glue",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested after this record; open"
+  }
+ }
+}

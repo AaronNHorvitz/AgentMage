@@ -1,0 +1,103 @@
+{
+  "schema_version": 2,
+  "stage": "batch31-source2",
+  "source_revision": "d57374f43b66b6e070854e8e23ce71755e89a760",
+  "scope": "batch 31 checks of the second source commit (the storage migration compatibility producer's redaction): its tests, the shared helpers, the sibling producers' privacy test and the document checks",
+  "planned_commands": [
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_storage_migration_compatibility_evidence",
+      "tests.test_evidence_core",
+      "tests.test_source_content_deduplication_evidence"
+    ],
+    [
+      "python3",
+      "scripts/validate_docs.py"
+    ],
+    [
+      "npm",
+      "run",
+      "docs:lint"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/validate_docs.py": "73ffa14016dd89a5b7959827e12762422c6881ae0ec6465585e2901f2e2f1dfb",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_evidence_core.py": "20bf41f20ce5c19e3a90efcd9caa32e252f17a303cc23a2b4274df210dad150a",
+    "tests/test_source_content_deduplication_evidence.py": "16742abb4d0282b3cae8fd0ef11fa6f28f15b6fe3312bbc38d1ae3c605fb9f78",
+    "tests/test_storage_migration_compatibility_evidence.py": "a463c2ac2a165578ef3471b3a37a9db225eae4eac0bd0982afe2c150ba4d62b4"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "batch31-python-mutations.log",
+      "sha256": "7964f82d265a293ab7921c80de5c10a97993735b827199287a5ca8b213270a30",
+      "private_sha256": "7964f82d265a293ab7921c80de5c10a97993735b827199287a5ca8b213270a30"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_storage_migration_compatibility_evidence",
+        "tests.test_evidence_core",
+        "tests.test_source_content_deduplication_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.133,
+      "log": "01.log",
+      "log_sha256": "7bec1d0a6beacc70a516c3c2dd2a0e9a6e147368f8d8ffcc2ba61abfe947c984",
+      "private_log_sha256": "7bec1d0a6beacc70a516c3c2dd2a0e9a6e147368f8d8ffcc2ba61abfe947c984"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "scripts/validate_docs.py"
+      ],
+      "exit_code": 0,
+      "seconds": 126.432,
+      "log": "02.log",
+      "log_sha256": "c708f31693708195a5869e10721220c7734c52a27e19b90dc4ecb1131b22bb34",
+      "private_log_sha256": "c708f31693708195a5869e10721220c7734c52a27e19b90dc4ecb1131b22bb34"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "npm",
+        "run",
+        "docs:lint"
+      ],
+      "exit_code": 0,
+      "seconds": 3.133,
+      "log": "03.log",
+      "log_sha256": "4c380fa5e9bc66d0a42790a2979092043a3774002669823d4df09fea4757ec9a",
+      "private_log_sha256": "4c380fa5e9bc66d0a42790a2979092043a3774002669823d4df09fea4757ec9a"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.003,
+      "log": "04.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

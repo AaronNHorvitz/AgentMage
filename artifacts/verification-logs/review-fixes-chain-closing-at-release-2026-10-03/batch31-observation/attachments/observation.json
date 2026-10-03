@@ -1,0 +1,231 @@
+{
+  "started_at_utc": "2026-10-03T16:06:46.933857+00:00",
+  "finished_at_utc": "2026-10-03T16:10:51.180026+00:00",
+  "source_commit": "9dc744f16a2134fb419472d0e27a5aa151063a43",
+  "source_tree": "7c99c9913606026d7fdbc89db167ef6482eeedfa",
+  "source_worktree_clean": true,
+  "binaries": {
+    "agentmage": {
+      "sha256": "d0601d6c317861f68a25ac8a1d649e379099f7c2c45e2ccf3ead9bd978a8fe85",
+      "bytes": 326609416
+    },
+    "agentmage-host": {
+      "sha256": "8d0a84c09903b97e7d70675d4970163bd207a40842c7efdef0f7434bedb5a0bd",
+      "bytes": 365622456
+    },
+    "agentmage-read-only-worker": {
+      "sha256": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf",
+      "bytes": 13798696
+    }
+  },
+  "binaries_unchanged": true,
+  "clean": {
+    "exit_code": 5,
+    "preserved": true,
+    "refusal_code": "linux.repository.git_artifact.invalid",
+    "failure_code": "linux.development.launch-envelope.failed"
+  },
+  "catalog_host_operations": [
+    {
+      "name": "doc-pack-list-empty",
+      "operation": "doc-pack",
+      "exit_code": 0
+    },
+    {
+      "name": "doc-pack-import",
+      "operation": "doc-pack",
+      "exit_code": 0
+    },
+    {
+      "name": "doc-pack-import-other-license",
+      "operation": "doc-pack",
+      "exit_code": 4
+    },
+    {
+      "name": "doc-pack-search",
+      "operation": "doc-pack",
+      "exit_code": 0
+    },
+    {
+      "name": "doc-pack-inspect",
+      "operation": "doc-pack",
+      "exit_code": 0
+    },
+    {
+      "name": "memory-remember",
+      "operation": "memory",
+      "exit_code": 0
+    },
+    {
+      "name": "memory-remember-credential",
+      "operation": "memory",
+      "exit_code": 4
+    },
+    {
+      "name": "memory-list",
+      "operation": "memory",
+      "exit_code": 0
+    },
+    {
+      "name": "memory-revoke",
+      "operation": "memory",
+      "exit_code": 0
+    },
+    {
+      "name": "memory-delete",
+      "operation": "memory",
+      "exit_code": 0
+    },
+    {
+      "name": "extension-trust-signer",
+      "operation": "extension",
+      "exit_code": 0
+    },
+    {
+      "name": "extension-trust-issuer",
+      "operation": "extension",
+      "exit_code": 0
+    },
+    {
+      "name": "extension-install",
+      "operation": "extension",
+      "exit_code": 0
+    },
+    {
+      "name": "extension-revocations-1",
+      "operation": "extension",
+      "exit_code": 0
+    },
+    {
+      "name": "extension-revocations-renamed",
+      "operation": "extension",
+      "exit_code": 3
+    },
+    {
+      "name": "extension-list",
+      "operation": "extension",
+      "exit_code": 0
+    },
+    {
+      "name": "route-grant-grant",
+      "operation": "route-grant",
+      "exit_code": 0
+    },
+    {
+      "name": "route-grant-same-route",
+      "operation": "route-grant",
+      "exit_code": 4
+    },
+    {
+      "name": "route-grant-list",
+      "operation": "route-grant",
+      "exit_code": 0
+    },
+    {
+      "name": "route-grant-revoke",
+      "operation": "route-grant",
+      "exit_code": 0
+    },
+    {
+      "name": "route-grant-revoke-again",
+      "operation": "route-grant",
+      "exit_code": 4
+    },
+    {
+      "name": "route-grant-list-all",
+      "operation": "route-grant",
+      "exit_code": 0
+    },
+    {
+      "name": "ended-run-read",
+      "operation": "ended-run",
+      "exit_code": 0
+    }
+  ],
+  "catalog_host_wire_refusals_seen": false,
+  "catalog_workspace_preserved": true,
+  "extension_renamed_issuer_refused": true,
+  "route_grants": {
+    "runs": [
+      {
+        "name": "route-grant-declined",
+        "exit_code": 6
+      },
+      {
+        "name": "route-grant-grant",
+        "exit_code": 0
+      },
+      {
+        "name": "route-grant-same-route",
+        "exit_code": 4
+      },
+      {
+        "name": "route-grant-list",
+        "exit_code": 0
+      },
+      {
+        "name": "route-grant-revoke",
+        "exit_code": 0
+      },
+      {
+        "name": "route-grant-revoke-again",
+        "exit_code": 4
+      },
+      {
+        "name": "route-grant-list-all",
+        "exit_code": 0
+      }
+    ],
+    "declined_sent_nothing": true,
+    "remote_route_offered": false
+  },
+  "ended_run_chains_present": false,
+  "recipe_shown_before_launch": {
+    "exit_code": 5,
+    "then_refused_at": "linux.repository.git_artifact.invalid",
+    "preserved": true
+  },
+  "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+  },
+  "malformed_frame_injected": false,
+  "research_worker": {
+    "binary": {
+      "sha256": "6255bc24924a9c351dbb7ba6ec3ebcc4366dcd1fb034905a4478b2305d17cfac",
+      "bytes": 158345560
+    },
+    "runs": [
+      {
+        "name": "worker-ambient-environment",
+        "exit_code": 5,
+        "stdout_bytes": 0,
+        "report": "research.worker.environment-denied",
+        "closed_report": true
+      },
+      {
+        "name": "worker-extra-argument",
+        "exit_code": 5,
+        "stdout_bytes": 0,
+        "report": "research.worker.environment-denied",
+        "closed_report": true
+      },
+      {
+        "name": "worker-admitted-environment",
+        "exit_code": 5,
+        "stdout_bytes": 0,
+        "report": "research.worker.environment-denied",
+        "closed_report": true
+      }
+    ],
+    "sandboxed": false,
+    "network_attempted": false
+  },
+  "network_used": false,
+  "model": "scripted",
+  "real_model_run": false,
+  "complete_coding_workflow_observed": false,
+  "native_tools_executed": false,
+  "qualification": "actual-binary-catalog-host-operations-under-exact-wire-decoding-plus-native-prerequisite-refusal"
+}

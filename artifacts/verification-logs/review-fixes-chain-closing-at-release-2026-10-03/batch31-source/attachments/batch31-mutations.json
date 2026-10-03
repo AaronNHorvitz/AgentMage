@@ -1,0 +1,107 @@
+[
+ {
+  "id": "F1a-resumed-spawn-failure-closes",
+  "file": "shells/host/src/coding_live_runtime.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_start_tests"
+  ],
+  "expected": "runtime_start_tests::a_run_resumed_after_a_restart_keeps_its_chains_open_when_it_cannot_start",
+  "replace": [
+   [
+    "                    if start == StoredChainStart::New {\n                        let _ =\n",
+    "                    if true {\n                        let _ =\n"
+   ]
+  ]
+ },
+ {
+  "id": "F1b-resumed-job-failure-closes",
+  "file": "shells/host/src/coding_live_runtime.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_start_tests"
+  ],
+  "expected": "runtime_start_tests::a_run_resumed_after_a_restart_keeps_its_chains_open_when_it_cannot_start",
+  "replace": [
+   [
+    "            if start == StoredChainStart::New {\n                let _ = session.close_run_histories();",
+    "            if true {\n                let _ = session.close_run_histories();"
+   ]
+  ]
+ },
+ {
+  "id": "N6-new-spawn-failure-left-open",
+  "file": "shells/host/src/coding_live_runtime.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_start_tests"
+  ],
+  "expected": "runtime_start_tests::a_new_run_whose_session_cannot_spawn_closes_its_effect_record_empty",
+  "replace": [
+   [
+    "                    if start == StoredChainStart::New {\n                        let _ =\n",
+    "                    if false {\n                        let _ =\n"
+   ]
+  ]
+ },
+ {
+  "id": "F2a-release-ignores-close",
+  "file": "shells/host/src/coding_live_runtime.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_start_tests"
+  ],
+  "expected": "runtime_start_tests::a_release_whose_chains_cannot_be_closed_is_refused_and_keeps_the_run_held",
+  "replace": [
+   [
+    "        if !session.close_run_histories() {\n            return Err(RuntimeTransportError::RuntimeFailed);",
+    "        if !session.close_run_histories() && false {\n            return Err(RuntimeTransportError::RuntimeFailed);"
+   ]
+  ]
+ },
+ {
+  "id": "F2b-refused-release-forgets-run",
+  "file": "shells/host/src/coding_live_runtime.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_start_tests"
+  ],
+  "expected": "runtime_start_tests::a_release_whose_chains_cannot_be_closed_is_refused_and_keeps_the_run_held",
+  "replace": [
+   [
+    "        if !session.close_run_histories() {\n            return Err(RuntimeTransportError::RuntimeFailed);",
+    "        if !session.close_run_histories() {\n            self.active.remove(key);\n            return Err(RuntimeTransportError::RuntimeFailed);"
+   ]
+  ]
+ },
+ {
+  "id": "F2c-history-close-failure-ignored",
+  "file": "shells/host/src/coding_live_runtime.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_start_tests"
+  ],
+  "expected": "runtime_start_tests::a_release_whose_chains_cannot_be_closed_is_refused_and_keeps_the_run_held",
+  "replace": [
+   [
+    "                    eprintln!(\"coding.live.history-close-failed\");\n                    closed = false;",
+    "                    eprintln!(\"coding.live.history-close-failed\");"
+   ]
+  ]
+ },
+ {
+  "id": "F2d-effect-close-failure-ignored",
+  "file": "shells/host/src/coding_live_runtime.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_start_tests"
+  ],
+  "expected": "runtime_start_tests::a_release_whose_chains_cannot_be_closed_is_refused_and_keeps_the_run_held",
+  "replace": [
+   [
+    "                eprintln!(\"coding.live.effect-record-close-failed\");\n                closed = false;",
+    "                eprintln!(\"coding.live.effect-record-close-failed\");"
+   ]
+  ]
+ }
+]

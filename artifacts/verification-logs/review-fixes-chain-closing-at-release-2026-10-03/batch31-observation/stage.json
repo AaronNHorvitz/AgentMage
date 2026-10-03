@@ -1,0 +1,106 @@
+{
+  "schema_version": 2,
+  "stage": "batch31-observation",
+  "source_revision": "9dc744f16a2134fb419472d0e27a5aa151063a43",
+  "scope": "Batch 31 actual process observation at 9dc744f1: rebuilt CLI, catalog host, coding host refusal, recipe, dirty refusal and research worker",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux",
+      "--features",
+      "public-research-worker",
+      "--bin",
+      "agentmage-public-research-worker"
+    ],
+    [
+      "python3",
+      "<state>/batch31-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "7ae882b3485e38e952c3a57aab5356929ca619a2338c38e14464cb57f2c0fa1b",
+      "private_sha256": "7ae882b3485e38e952c3a57aab5356929ca619a2338c38e14464cb57f2c0fa1b"
+    },
+    {
+      "name": "batch31-observation.py",
+      "sha256": "7cc027ceed175b95d6763331a62dc65732b0b982eeb8370c163c3e2aa41c0dcf",
+      "private_sha256": "4f0694b7c59498d73c1083ba54610116b978716181b5fad6e45fcafa06b5f14a"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 5.705,
+      "log": "01.log",
+      "log_sha256": "842f061211c6c4e2ad1525ba21189107684d81d3bfdfc38e3e8b84c65df48c0b",
+      "private_log_sha256": "cc3444f110d55ca1a62d3fa14c2fd39b7714b7739984926cb5d03b61c00e3c9a"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux",
+        "--features",
+        "public-research-worker",
+        "--bin",
+        "agentmage-public-research-worker"
+      ],
+      "exit_code": 0,
+      "seconds": 0.09,
+      "log": "02.log",
+      "log_sha256": "99f71393b9903dca098310bb446022a4bdee195ea9996f351a787195555210a6",
+      "private_log_sha256": "99f71393b9903dca098310bb446022a4bdee195ea9996f351a787195555210a6"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "<state>/batch31-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 244.283,
+      "log": "03.log",
+      "log_sha256": "68ec6153fb8a0b7051b918f7e4599ca9f34a6ae633e1e17dbada76c814a4ff34",
+      "private_log_sha256": "68ec6153fb8a0b7051b918f7e4599ca9f34a6ae633e1e17dbada76c814a4ff34"
+    }
+  ]
+}

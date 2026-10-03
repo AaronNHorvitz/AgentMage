@@ -569,7 +569,9 @@ without the run's final report. The host's standard error names the refused writ
 `coding.live.effect-record-close-failed`, `coding.live.history-close-failed` or
 `coding.recoverability.store-mark-failed`. The host keeps the ended run until a later
 release, or its own end, closes the chain. Until the effect record closes, every later
-declaration of that session is unavailable.
+declaration of that session is unavailable. The
+[chain closing review-fix verification](verification/review-fixes-chain-closing-at-release-2026-10-03.md)
+retains those tests (under `runtime_start_tests`) and their mutation results.
 
 ### Public research worker contract fixtures
 

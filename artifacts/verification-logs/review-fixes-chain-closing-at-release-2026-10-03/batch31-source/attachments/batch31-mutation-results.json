@@ -1,0 +1,65 @@
+[
+  {
+    "id": "F1a-resumed-spawn-failure-closes",
+    "expected": "runtime_start_tests::a_run_resumed_after_a_restart_keeps_its_chains_open_when_it_cannot_start",
+    "caught": true,
+    "failed": [
+      "runtime_start_tests::a_run_resumed_after_a_restart_keeps_its_chains_open_when_it_cannot_start"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F1b-resumed-job-failure-closes",
+    "expected": "runtime_start_tests::a_run_resumed_after_a_restart_keeps_its_chains_open_when_it_cannot_start",
+    "caught": true,
+    "failed": [
+      "runtime_start_tests::a_run_resumed_after_a_restart_keeps_its_chains_open_when_it_cannot_start"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "N6-new-spawn-failure-left-open",
+    "expected": "runtime_start_tests::a_new_run_whose_session_cannot_spawn_closes_its_effect_record_empty",
+    "caught": true,
+    "failed": [
+      "runtime_start_tests::a_new_run_whose_session_cannot_spawn_closes_its_effect_record_empty"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F2a-release-ignores-close",
+    "expected": "runtime_start_tests::a_release_whose_chains_cannot_be_closed_is_refused_and_keeps_the_run_held",
+    "caught": true,
+    "failed": [
+      "runtime_start_tests::a_release_whose_chains_cannot_be_closed_is_refused_and_keeps_the_run_held"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F2b-refused-release-forgets-run",
+    "expected": "runtime_start_tests::a_release_whose_chains_cannot_be_closed_is_refused_and_keeps_the_run_held",
+    "caught": true,
+    "failed": [
+      "runtime_start_tests::a_release_whose_chains_cannot_be_closed_is_refused_and_keeps_the_run_held"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F2c-history-close-failure-ignored",
+    "expected": "runtime_start_tests::a_release_whose_chains_cannot_be_closed_is_refused_and_keeps_the_run_held",
+    "caught": true,
+    "failed": [
+      "runtime_start_tests::a_release_whose_chains_cannot_be_closed_is_refused_and_keeps_the_run_held"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F2d-effect-close-failure-ignored",
+    "expected": "runtime_start_tests::a_release_whose_chains_cannot_be_closed_is_refused_and_keeps_the_run_held",
+    "caught": true,
+    "failed": [
+      "runtime_start_tests::a_release_whose_chains_cannot_be_closed_is_refused_and_keeps_the_run_held"
+    ],
+    "compile_error": false
+  }
+]
