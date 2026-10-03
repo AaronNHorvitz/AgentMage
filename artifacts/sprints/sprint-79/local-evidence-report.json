@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "record_type": "sprint_79_local_evidence",
-  "source_revision": "441df99ab86a605623129fc111cdcd97039fc442",
+  "source_revision": "9ac71384e2ae21220eb864a1c82594c46dcf4fff",
   "source_sha256": {
     "Cargo.toml": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc",
     "Cargo.lock": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd",
@@ -16,9 +16,9 @@
     "artifacts/sprints/sprint-78/local-evidence-report.json": "fa890b49a3a42caf6ead9eb071b74f86e325ebc74d6e66d36c69c710751a5ebf",
     "scripts/capability_package_runtime_contract.py": "1eada96d44517051f66d7d6ead796088f340d0c580752057f6faff6e9b1e5d21",
     "tests/test_capability_package_runtime_contract.py": "f2a5ad3b1403241a7ae6b4ac3069033dab6a70e907142a6efa6a94346891db0b",
-    "supply-chain/dependency-hashes.sha256": "732723a996f0b4f0bfcfaca4c872f9e4c2b054d6a81350306aaf547439c8e29f",
-    "supply-chain/dependency-provenance.json": "6e59b4f5e447a0e0d73015a85d210f6c359bc9baa62cab383b88cc0bd1e4dfcd",
-    "supply-chain/sbom.cdx.json": "d89f62832a00a60e7929703920d4440c3bcded63790b5b8d08177edb731f6c0d",
+    "supply-chain/dependency-hashes.sha256": "dee6965f7379b4fbdbee9cbb9dfd6d6608a1a018e5d86c7081cc28536e7088c6",
+    "supply-chain/dependency-provenance.json": "086245f52672bd6c7fe92472e0b8e4f7aef527d5242b33f134c9e1bf3f6acbe3",
+    "supply-chain/sbom.cdx.json": "14a3efacc1ddbd1c15255bbace27257a2ea40294d9ac312c96793bf727ce586f",
     "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
     "scripts/sprint_79_evidence.py": "747e4146d760edf9bc1a82b79a5b02f289d14d656ae3ae2e4f556667a8750320",
     "tests/test_sprint_79_evidence.py": "7f7aa394462a040f980723389e3a4384aa861a287639eb086aa1e49d42b83a3f"
@@ -45,7 +45,7 @@
         "--all-features"
       ],
       "exit_code": 0,
-      "output_sha256": "844110243b1c104f4e7a974d6d93e8984850c85f69af375995c02680de8f2392",
+      "output_sha256": "aef920a60e69d54e663edb39c820a6fdc7e4caa4e789431796847cbe633d46a7",
       "blocking_skip_count": 0
     },
     {
@@ -69,7 +69,7 @@
         "schemas:test"
       ],
       "exit_code": 0,
-      "output_sha256": "e56f5a7e58ae1eab68c2ad66b158b49a0fee84339f21d40d6253e5b61aeacda7",
+      "output_sha256": "9e92ea4056d78c4e96e3e17fb3295820959fa713c21e57a8711b46c86299b5f9",
       "blocking_skip_count": null
     },
     {
