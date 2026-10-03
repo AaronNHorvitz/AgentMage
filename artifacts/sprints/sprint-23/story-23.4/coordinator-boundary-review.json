@@ -74,9 +74,9 @@
   ],
   "manual_fuzzing_executed": false,
   "release_approved": false,
-  "report_sha256": "bfa2d7a74d818ed116519a1d6a8885102e26651fee3ecdb8ec01b5c6b127479e",
+  "report_sha256": "bd4882ecf7131d30e367d0f50a9d9de6aa257c4b25ef1b00f45e06fd6b0afe9b",
   "schema_version": 1,
-  "source_revision": "b17014036a67475dae456b1ec0d2e8dd6352393a",
+  "source_revision": "5e676f3fabae4f1e6b00cde495f98b9cd08d73f3",
   "sources": [
     {
       "bytes": 243831,
@@ -109,9 +109,9 @@
       "sha256": "59bb0875aeb1e6eb4fa3e6cd512a74448d1cb5b7a30a331a706ed1bb27f227ca"
     },
     {
-      "bytes": 47061,
+      "bytes": 47053,
       "path": "shells/host/src/native_chat_runtime.rs",
-      "sha256": "8bb346ab6d5d99da90d9cc716ec3d8152645872d3958d08d28101d60025b2880"
+      "sha256": "0075c8f79ab2fcdc2e1fa8b23cb33b82f053586a30978a4aab914f5101459d45"
     },
     {
       "bytes": 26855,
