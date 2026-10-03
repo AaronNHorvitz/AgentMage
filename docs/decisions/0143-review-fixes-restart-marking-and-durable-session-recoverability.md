@@ -216,9 +216,10 @@ moves to version 2:
   host shares the miss, each later append retries the mark, an in-host
   continuation carries the miss over, and the chain is closed only after the
   store holds the mark. A chain whose mark never reaches the store stays
-  open, so no later run of its session declares it. A later host reaches the
-  session only by resuming it after a restart, and that marks the resumed run
-  incomplete.
+  open, so no later run of its session declares it. In a later host, a run
+  resumed after a restart is marked incomplete, and a new run of the session
+  is refused its declaration because the earlier run's chain is still open
+  (note N2 of the review of `22a2662f`, Decision 0146).
 - A session is declared only at the end of one of its runs. A view of a
   session after its host ended, without a run, is later work.
 - A change record whose retention has expired makes its session's

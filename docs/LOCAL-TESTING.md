@@ -562,6 +562,15 @@ incomplete mark, also across an in-host continuation; the
 retains those tests (under `coding_session_recoverability` and `runtime_start_tests`) and
 their mutation results.
 
+If the store cannot close a chain of an ended run, the host refuses its release
+([Decision 0146](decisions/0146-review-fixes-for-chain-closing-at-release-and-resumed-start-failures.md)).
+The development CLI then prints `host.runtime.failed` and `cli.runtime.release_failed`
+without the run's final report. The host's standard error names the refused write:
+`coding.live.effect-record-close-failed`, `coding.live.history-close-failed` or
+`coding.recoverability.store-mark-failed`. The host keeps the ended run until a later
+release, or its own end, closes the chain. Until the effect record closes, every later
+declaration of that session is unavailable.
+
 ### Public research worker contract fixtures
 
 The packet the engine hands the optional public research worker, the frame the worker

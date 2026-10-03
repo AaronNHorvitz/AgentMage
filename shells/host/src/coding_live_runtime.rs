@@ -644,13 +644,15 @@ where
         // nothing, so they close empty rather than stay open in its session.
         // A run resumed after a restart keeps them open, already marked
         // incomplete, so a later host can still resume it (Decision 0145).
+        // The start fails either way, so a chain left open is only logged.
         let mut session =
             match LiveCodingSession::spawn(request, coordinator, slow_subscriber_probe) {
                 Ok(session) => session,
                 Err(error) => {
                     eprintln!("coding.live.spawn-denied");
                     if start == StoredChainStart::New {
-                        close_stored_chains(&key, histories.as_ref(), effect_records.as_ref());
+                        let _ =
+                            close_stored_chains(&key, histories.as_ref(), effect_records.as_ref());
                     }
                     return Err(error);
                 }
@@ -666,7 +668,7 @@ where
         {
             eprintln!("coding.live.job-start-denied");
             if start == StoredChainStart::New {
-                session.close_run_histories();
+                let _ = session.close_run_histories();
             }
             return Err(error);
         }
@@ -809,8 +811,14 @@ where
         if !session.is_terminal() || session.request.request_sha256 != request_sha256 {
             return Err(RuntimeTransportError::RequestDenied);
         }
-        // Dropping the released, ended session closes its stored chains
-        // (Decision 0129).
+        // A released, ended run's stored chains close before the host
+        // forgets it (Decision 0129). While one cannot be closed the release
+        // is refused and the run stays held, so the client learns of it and
+        // a later release, or the host's end, retries (Decision 0146).
+        if !session.close_run_histories() {
+            return Err(RuntimeTransportError::RuntimeFailed);
+        }
+        // Dropping the session closes its chains again, which writes nothing.
         self.active.remove(key);
         Ok(())
     }
@@ -903,25 +911,34 @@ where
 /// Closes every stored chain of one run. A chain the store does not hold, or
 /// one already closed, needs nothing. An effect record that missed an entry
 /// stays open until the store holds its incomplete mark (Decision 0145).
+/// Returns whether every chain is now closed (Decision 0146).
 fn close_stored_chains(
     run_id: &str,
     histories: Option<&DurableRunActionHistories>,
     effect_records: Option<&PersistedRunEffects>,
-) {
+) -> bool {
+    let mut closed = true;
     if let Some(histories) = histories {
         for chain in RunActionChainName::ALL {
             match histories.close(run_id, chain, RUN_ACTION_HISTORY_OWNER) {
                 Ok(_) | Err(RunActionHistoryStoreError::NotFound) => {}
-                Err(_) => eprintln!("coding.live.history-close-failed"),
+                Err(_) => {
+                    eprintln!("coding.live.history-close-failed");
+                    closed = false;
+                }
             }
         }
     }
     if let Some(chain) = effect_records {
         match chain.close_released() {
             Ok(()) | Err(RunEffectRecordStoreError::NotFound) => {}
-            Err(_) => eprintln!("coding.live.effect-record-close-failed"),
+            Err(_) => {
+                eprintln!("coding.live.effect-record-close-failed");
+                closed = false;
+            }
         }
     }
+    closed
 }
 
 /// What the service does after a session decided a control request.
@@ -1131,13 +1148,13 @@ impl LiveCodingSession {
     }
 
     /// Closes every stored chain of this ended run, its effect record
-    /// included (Decision 0143).
-    fn close_run_histories(&self) {
+    /// included (Decision 0143), and returns whether every one is closed.
+    fn close_run_histories(&self) -> bool {
         close_stored_chains(
             self.request.run_id.as_str(),
             self.run_histories.as_ref(),
             self.run_effect_records.as_ref(),
-        );
+        )
     }
 
     /// Records this run's job as started, before any work is dispatched
@@ -1897,11 +1914,13 @@ impl LiveCodingSession {
 
 impl Drop for LiveCodingSession {
     fn drop(&mut self) {
-        // An ended run's stored chains close when its session is dropped:
-        // when the client releases it, or when the host ends while holding
-        // it. A run still running stays open, so its chains say so.
+        // An ended run's stored chains close when its session is dropped. A
+        // release closed them already, so this writes nothing; a host that
+        // ends while holding the run, released or not, closes them here.
+        // Nothing remains to retry a close the store refuses now, so it is
+        // only logged. A run still running stays open, so its chains say so.
         if self.is_terminal() {
-            self.close_run_histories();
+            let _ = self.close_run_histories();
         }
         let _ = self.commands.try_send(WorkerCommand::Stop);
         if !self.busy

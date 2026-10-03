@@ -240,6 +240,8 @@ impl PersistedRunEffects {
     /// missed an entry closes only after the store holds its incomplete mark;
     /// otherwise it stays open, and every later declaration of its session
     /// is refused because an earlier run was never released (Decision 0145).
+    /// The service then refuses the release and keeps the run held, so a
+    /// later release retries (Decision 0146).
     pub fn close_released(&self) -> Result<(), RunEffectRecordStoreError> {
         if !self.store_pending_mark() {
             return Err(RunEffectRecordStoreError::Storage);

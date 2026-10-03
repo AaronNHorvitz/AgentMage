@@ -389,6 +389,8 @@ struct GatedCoordinator {
     gate: std::sync::mpsc::Receiver<()>,
     declarations: Arc<AtomicUsize>,
     report: crate::coding_recoverability::RecoverabilityReport,
+    /// Refuses every event subscription, so a session cannot spawn.
+    refuse_subscription: bool,
 }
 
 impl CodingCoordinatorPort for GatedCoordinator {
@@ -457,6 +459,9 @@ impl LiveCodingCoordinatorPort for GatedCoordinator {
         &self,
         capacity: usize,
     ) -> Result<RuntimeEventSubscription, CodingClientError> {
+        if self.refuse_subscription {
+            return Err(CodingClientError::EventStream);
+        }
         self.publisher
             .subscribe(capacity)
             .map_err(|_| CodingClientError::EventStream)
@@ -492,6 +497,7 @@ struct GatedFactory {
         Option<agentmage_kernel_engine::run_action_history_store::DurableRunActionHistories>,
     recipe_plan: Option<agentmage_kernel_engine::engineering_recipe::RecipePlan>,
     run_effects: Option<crate::coding_session_recoverability::PersistedRunEffects>,
+    refuse_subscription: bool,
 }
 
 impl NativeChatRuntimeFactory for GatedFactory {
@@ -518,6 +524,7 @@ impl NativeChatRuntimeFactory for GatedFactory {
                 .ok_or(RuntimeTransportError::RuntimeFailed)?,
             declarations: Arc::clone(&self.declarations),
             report: self.report.clone(),
+            refuse_subscription: self.refuse_subscription,
         })
     }
 
@@ -608,6 +615,7 @@ fn the_live_service_declares_only_a_held_ended_run_that_is_not_busy() {
         run_histories: None,
         recipe_plan: Some(plan.clone()),
         run_effects: None,
+        refuse_subscription: false,
     });
     let input = RuntimePrepareInput {
         resume: false,
@@ -824,6 +832,34 @@ fn gated_live_service(
     std::sync::mpsc::Sender<()>,
     RuntimePrepareInput,
 ) {
+    gated_live_service_with(
+        request,
+        events,
+        outcome,
+        ledgers,
+        run_histories,
+        run_effects,
+        false,
+    )
+}
+
+/// A gated live service whose coordinator refuses every event subscription
+/// when `refuse_subscription` is set, so no session of it can spawn.
+fn gated_live_service_with(
+    request: &RuntimeRunRequest,
+    events: Vec<RuntimeEvent>,
+    outcome: agentmage_kernel_contracts::RuntimeOutcome,
+    ledgers: agentmage_kernel_engine::job_ledger_store::DurableJobLedgers,
+    run_histories: Option<
+        agentmage_kernel_engine::run_action_history_store::DurableRunActionHistories,
+    >,
+    run_effects: Option<crate::coding_session_recoverability::PersistedRunEffects>,
+    refuse_subscription: bool,
+) -> (
+    LiveCodingRuntimeService<GatedFactory>,
+    std::sync::mpsc::Sender<()>,
+    RuntimePrepareInput,
+) {
     let report = crate::coding_recoverability::assess_run_recoverability(
         request.session_id.as_str(),
         request.task.task_id.as_str(),
@@ -845,6 +881,7 @@ fn gated_live_service(
         run_histories,
         recipe_plan: None,
         run_effects,
+        refuse_subscription,
     });
     let input = RuntimePrepareInput {
         resume: request.event_cursor.is_some(),
@@ -1258,6 +1295,269 @@ fn the_live_service_closes_the_effect_record_of_a_held_ended_run_and_of_a_new_ru
         .unwrap();
     assert!(job_control.closed && job_control.records.is_empty());
     drop(service);
+}
+
+/// Starts a prepared gated run, opens its gate and advances it until it ends.
+fn run_gated_to_end(
+    service: &mut LiveCodingRuntimeService<GatedFactory>,
+    request: &RuntimeRunRequest,
+    open_gate: &std::sync::mpsc::Sender<()>,
+) -> crate::runtime_transport::RuntimeTransportStep {
+    let mut step = service.start(request.clone()).unwrap();
+    open_gate.send(()).unwrap();
+    for _ in 0..400 {
+        if step.outcome.is_some() {
+            break;
+        }
+        let cursor = last_cursor(&step);
+        let next = service
+            .advance(
+                &request.run_id,
+                &request.request_sha256,
+                Some(&cursor),
+                None,
+            )
+            .unwrap();
+        if !next.events.is_empty() || next.outcome.is_some() {
+            let mut events = step.events.clone();
+            events.extend(next.events.iter().cloned());
+            step = crate::runtime_transport::RuntimeTransportStep { events, ..next };
+        }
+    }
+    step
+}
+
+#[test]
+fn a_new_run_whose_session_cannot_spawn_closes_its_effect_record_empty() {
+    // Note N6 of 22a2662f: a new run whose session cannot spawn ran nothing,
+    // so its effect record closes empty (Decision 0145). Its job and job
+    // control chain were never begun.
+    use crate::coding_action_history::StoredChainStart;
+    use crate::coding_session_recoverability::PersistedRunEffects;
+    use agentmage_kernel_engine::run_action_history_store::{
+        RunActionChainName, RunActionHistoryStoreError,
+    };
+    let (request, events, outcome, _) = crate::runtime_read_tests::completed_native_read_fixture();
+    let run = request.run_id.as_str();
+    let store = JobLedgerStore::new("unspawned-effects");
+    let runtime = store.try_runtime().unwrap();
+    let (ledgers, histories, effects) = (
+        runtime.job_ledgers(),
+        runtime.run_action_histories(),
+        runtime.run_effect_records(),
+    );
+    drop(runtime);
+    let chain =
+        PersistedRunEffects::begin(effects.clone(), &request, StoredChainStart::New).unwrap();
+    let (mut service, _open_gate, input) = gated_live_service_with(
+        &request,
+        events,
+        outcome,
+        ledgers.clone(),
+        Some(histories.clone()),
+        Some(chain),
+        true,
+    );
+    service.prepare(input).unwrap();
+    assert!(service.start(request.clone()).is_err());
+    let stored = effects.run(run).unwrap();
+    assert!(stored.complete && stored.closed && stored.entries.is_empty());
+    assert!(matches!(
+        histories.history(run, RunActionChainName::JobControl),
+        Err(RunActionHistoryStoreError::NotFound)
+    ));
+    assert!(ledgers.observation(run).is_err());
+    drop(service);
+}
+
+#[test]
+fn a_run_resumed_after_a_restart_keeps_its_chains_open_when_it_cannot_start() {
+    // Review F1 of 22a2662f (Decision 0146): a run resumed after a restart
+    // whose session cannot spawn, or whose job cannot begin, keeps its effect
+    // record and job control chain open, already marked incomplete
+    // (Decision 0145). The store refuses to attach a closed chain, so a
+    // later host can resume the run only while they stay open.
+    use crate::coding_action_history::{PersistedRunChain, RunActionChain, StoredChainStart};
+    use crate::coding_live_runtime::CODING_HOST_JOB_OWNER;
+    use crate::coding_session_recoverability::PersistedRunEffects;
+    use agentmage_kernel_engine::job_control::JobOwnerEvent;
+    use agentmage_kernel_engine::run_action_history_store::RunActionChainName;
+    let fixture = SuspendedRunFixture::new();
+    let resumed = fixture.resumed();
+    let run = resumed.run_id.as_str();
+    for (tag, refuse_subscription) in [("resumed-unspawned", true), ("resumed-unstarted", false)] {
+        let store = JobLedgerStore::new(tag);
+        let runtime = store.try_runtime().unwrap();
+        let (ledgers, histories, effects) = (
+            runtime.job_ledgers(),
+            runtime.run_action_histories(),
+            runtime.run_effect_records(),
+        );
+        drop(runtime);
+        // The host that ended had begun the run's chains and its job. The
+        // job has since completed, so the resumed run's job cannot begin.
+        PersistedRunEffects::begin(effects.clone(), &fixture.request, StoredChainStart::New)
+            .unwrap();
+        PersistedRunChain::begin(
+            histories.clone(),
+            run,
+            RunActionChain::JobControl,
+            StoredChainStart::New,
+        )
+        .unwrap();
+        ledgers.create(run, CODING_HOST_JOB_OWNER).unwrap();
+        for event in [JobOwnerEvent::Started, JobOwnerEvent::Completed] {
+            ledgers
+                .observe_owner(run, CODING_HOST_JOB_OWNER, event)
+                .unwrap();
+        }
+        let chain =
+            PersistedRunEffects::begin(effects.clone(), &resumed, StoredChainStart::AfterRestart)
+                .unwrap();
+        let (events, outcome) = fixture.ending(&resumed, None);
+        let (mut service, _open_gate, input) = gated_live_service_with(
+            &resumed,
+            events,
+            outcome,
+            ledgers,
+            Some(histories.clone()),
+            Some(chain),
+            refuse_subscription,
+        );
+        service.prepare(input).unwrap();
+        let started = service.start(resumed.clone());
+        if refuse_subscription {
+            assert!(started.is_err(), "{tag}");
+        } else {
+            assert!(
+                matches!(started, Err(RuntimeTransportError::RequestDenied)),
+                "{tag}"
+            );
+        }
+        drop(service);
+        let stored = effects.run(run).unwrap();
+        assert!(
+            !stored.closed && !stored.complete && stored.entries.is_empty(),
+            "{tag}"
+        );
+        let job_control = histories
+            .history(run, RunActionChainName::JobControl)
+            .unwrap();
+        assert!(!job_control.closed, "{tag}");
+        // A later host can still resume the run.
+        PersistedRunEffects::begin(effects, &resumed, StoredChainStart::AfterRestart).unwrap();
+        PersistedRunChain::begin(
+            histories,
+            run,
+            RunActionChain::JobControl,
+            StoredChainStart::AfterRestart,
+        )
+        .unwrap();
+    }
+}
+
+#[test]
+fn a_release_whose_chains_cannot_be_closed_is_refused_and_keeps_the_run_held() {
+    // Review F2 of 22a2662f (Decision 0146): while a stored chain of an
+    // ended run cannot be closed, its release is refused, so the client
+    // learns of it, and the run stays held, so a later release retries.
+    use crate::coding_action_history::StoredChainStart;
+    use crate::coding_session_recoverability::PersistedRunEffects;
+    use agentmage_kernel_engine::run_action_history_store::RunActionChainName;
+    let (request, events, outcome, _) = crate::runtime_read_tests::completed_native_read_fixture();
+    let run = &request.run_id;
+    let sha = request.request_sha256.as_str();
+
+    // The run missed an entry and the store refuses its incomplete mark.
+    let refuse = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let store = JobLedgerStore::new("refused-effect-release");
+    let runtime = store.try_runtime().unwrap();
+    let (ledgers, histories, effects) = (
+        runtime.job_ledgers(),
+        runtime.run_action_histories(),
+        runtime.run_effect_records(),
+    );
+    drop(runtime);
+    let chain = PersistedRunEffects::begin(effects.clone(), &request, StoredChainStart::New)
+        .unwrap()
+        .refusing_writes(&refuse);
+    let recorder = chain.clone();
+    let (mut service, open_gate, input) = gated_live_service(
+        &request,
+        events.clone(),
+        outcome.clone(),
+        ledgers,
+        Some(histories.clone()),
+        Some(chain),
+    );
+    service.prepare(input).unwrap();
+    let step = run_gated_to_end(&mut service, &request, &open_gate);
+    assert_eq!(step.outcome, Some(outcome.clone()));
+    refuse.store(true, Ordering::SeqCst);
+    recorder.mark_incomplete();
+    for _ in 0..2 {
+        assert!(matches!(
+            service.release(run, sha),
+            Err(RuntimeTransportError::RuntimeFailed)
+        ));
+        let stored = effects.run(run.as_str()).unwrap();
+        assert!(stored.complete && !stored.closed);
+        // The run is still held, so its declarations are still served.
+        assert!(service.run_declarations(run, sha).is_ok());
+    }
+    // Once the store writes again, the next release stores the mark and
+    // closes the chain as incomplete, and the run is no longer held.
+    refuse.store(false, Ordering::SeqCst);
+    service.release(run, sha).unwrap();
+    let stored = effects.run(run.as_str()).unwrap();
+    assert!(!stored.complete && stored.closed);
+    assert!(matches!(
+        service.release(run, sha),
+        Err(RuntimeTransportError::RunUnavailable)
+    ));
+    drop(service);
+    drop((effects, store));
+
+    // An action history chain the store refuses to close, here because
+    // another owner holds it, refuses the release the same way.
+    let store = JobLedgerStore::new("refused-history-release");
+    let runtime = store.try_runtime().unwrap();
+    let (ledgers, histories) = (runtime.job_ledgers(), runtime.run_action_histories());
+    drop(runtime);
+    histories
+        .create(run.as_str(), RunActionChainName::Routes, "another-owner")
+        .unwrap();
+    let (mut service, open_gate, input) = gated_live_service(
+        &request,
+        events,
+        outcome.clone(),
+        ledgers,
+        Some(histories.clone()),
+        None,
+    );
+    service.prepare(input).unwrap();
+    let step = run_gated_to_end(&mut service, &request, &open_gate);
+    assert_eq!(step.outcome, Some(outcome));
+    assert!(matches!(
+        service.release(run, sha),
+        Err(RuntimeTransportError::RuntimeFailed)
+    ));
+    let job_control = histories
+        .history(run.as_str(), RunActionChainName::JobControl)
+        .unwrap();
+    assert!(job_control.closed);
+    let routes = histories
+        .history(run.as_str(), RunActionChainName::Routes)
+        .unwrap();
+    assert!(!routes.closed);
+    assert!(service.run_declarations(run, sha).is_ok());
+    // The host ends while it holds the run: the close is tried again, and
+    // the store still refuses it.
+    drop(service);
+    let routes = histories
+        .history(run.as_str(), RunActionChainName::Routes)
+        .unwrap();
+    assert!(!routes.closed);
 }
 
 /// The completed native read fixture as a controlled-write run that committed
