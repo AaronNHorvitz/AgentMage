@@ -2625,16 +2625,19 @@ mod tests {
 
         fn receive_frame(
             &mut self,
-            _maximum_bytes: usize,
+            maximum_bytes: usize,
         ) -> Result<Vec<u8>, RuntimeTransportError> {
+            // Like the session, refuse a frame above the receive bound.
             self.answered
                 .take()
+                .filter(|frame| frame.len() <= maximum_bytes)
                 .ok_or(RuntimeTransportError::RuntimeFailed)
         }
     }
 
-    /// Prepares one run and refuses its declarations and its job status, each
-    /// with its own code; a release is refused only when told.
+    /// Prepares one run and refuses its start, its advance, its declarations
+    /// and its job status, each with its own code; a release is refused only
+    /// when told.
     struct RefusingPort {
         request: RuntimeRunRequest,
         refuse_prepare: bool,
@@ -2666,7 +2669,7 @@ mod tests {
             _after_event_cursor: Option<&RuntimeEventCursor>,
             _response: Option<&RuntimeApprovalResponse>,
         ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
-            Err(RuntimeTransportError::RequestDenied)
+            Err(RuntimeTransportError::EventCursorDenied)
         }
 
         fn cancel(
@@ -2777,6 +2780,50 @@ mod tests {
         assert_eq!(
             client.last_error(),
             Some(RuntimeTransportError::RuntimeFailed)
+        );
+        // A failed start keeps its own code when the release that cleans it
+        // up fails too: the start's code is the cause the CLI prints
+        // (cli_runtime.rs; finding F1 of f33245fb). A later refused advance
+        // does not replace it.
+        assert_eq!(client.prepare(input()).unwrap(), request);
+        assert_eq!(
+            client.start(request.clone()).unwrap_err(),
+            RuntimeTransportError::RequestDenied
+        );
+        assert_eq!(
+            client.release(run, sha).unwrap_err(),
+            RuntimeTransportError::RuntimeFailed
+        );
+        assert_eq!(
+            client.last_error(),
+            Some(RuntimeTransportError::RequestDenied)
+        );
+        assert_eq!(
+            client.advance(run, sha, None, None).unwrap_err(),
+            RuntimeTransportError::EventCursorDenied
+        );
+        assert_eq!(
+            client.last_error(),
+            Some(RuntimeTransportError::RequestDenied)
+        );
+        // A refused advance keeps its own code the same way, and a later
+        // refused start does not replace it.
+        assert_eq!(client.prepare(input()).unwrap(), request);
+        assert_eq!(
+            client.advance(run, sha, None, None).unwrap_err(),
+            RuntimeTransportError::EventCursorDenied
+        );
+        assert_eq!(
+            client.release(run, sha).unwrap_err(),
+            RuntimeTransportError::RuntimeFailed
+        );
+        assert_eq!(
+            client.start(request.clone()).unwrap_err(),
+            RuntimeTransportError::RequestDenied
+        );
+        assert_eq!(
+            client.last_error(),
+            Some(RuntimeTransportError::EventCursorDenied)
         );
         // A refused prepare is the first refusal of the run it would begin.
         client.channel.runtime.refuse_prepare = true;

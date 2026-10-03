@@ -50,6 +50,8 @@ Add both tests in this batch, and name them in its retained record.
   authenticated session, and no actual process exchanges these frames here.
   The authenticated session's own frame handling is unchanged.
 - No actual process has refused a release in this sandbox (Decision 0146).
+- The client test did not drive `start` or `advance`; Decision 0149 adds
+  both.
 - Independent review remains open.
 
 ## Consequences
