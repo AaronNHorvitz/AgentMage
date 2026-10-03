@@ -127,7 +127,7 @@
       {
         "byte_length": 12145,
         "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-report.json",
-        "sha256": "da2212646c3acfcef2f776193fe9e4dfb68328cbd729f1de5f381231537e6905"
+        "sha256": "f8fcceaae6db31fb173de87f113c7f51e5b5dc65cf602faee9c0fa4eac1a3963"
       },
       {
         "byte_length": 2952,
@@ -152,38 +152,38 @@
       {
         "byte_length": 6456,
         "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
-        "sha256": "fa244c8a956bc4794298c7eb5a63679ae80c962939f74266bb1981975b62fd1a"
+        "sha256": "63a315bb8a0ade7102542f47043211ca814409629dbb64011e42fe5fb7c40862"
       },
       {
         "byte_length": 3901,
         "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
-        "sha256": "1ac3edcc1cbe58f2e25622467b8600ed668567f9b25daf9a057d3e222442b59e"
+        "sha256": "a61ee4997891b193c33ddad51cbf21b0dd2367a3375f2ccad9060a5830de5347"
       },
       {
         "byte_length": 6030,
         "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
-        "sha256": "60282acba08ec00501c5d9f258da6334c4321e39a75aa2d2a02bb07ac1dd8926"
+        "sha256": "26fefd277348b3c988a308b04959e5d6285925c3ec2b6bd9dc3816de780093a7"
       },
       {
         "byte_length": 5225,
         "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
-        "sha256": "cbabfc518b8b35143c8678f2dd840dd94796564d7d9c9db29ed3bb9f52adc204"
+        "sha256": "9cd46288f600b166afd0fb91e64481937a38376c462028d9cae781cd3b684906"
       }
     ],
     "external_human_review_status": "not-performed",
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "f8b05c6de940cba6926d0888abbad951bb06e6ec",
-    "reviewed_tree": "1d7b7ab6e109fa67e5edb8b210feb58c7ec6704c",
+    "reviewed_commit": "5b45d0bebe821cf63a498265fbb4321e93b50722",
+    "reviewed_tree": "d4dc13c0c7106619509436353dda987eae00847c",
     "reviewer_id": "agentmage-story-11.2-independent-gate-v1"
   },
   "installed_product_claim": "none",
   "platform_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "f8b05c6de940cba6926d0888abbad951bb06e6ec",
-  "reviewed_tree": "1d7b7ab6e109fa67e5edb8b210feb58c7ec6704c",
+  "reviewed_commit": "5b45d0bebe821cf63a498265fbb4321e93b50722",
+  "reviewed_tree": "d4dc13c0c7106619509436353dda987eae00847c",
   "schema_version": 1,
   "sprint_completion_claim": false,
   "status": "blocked-open-dependencies-and-platform-integration",
