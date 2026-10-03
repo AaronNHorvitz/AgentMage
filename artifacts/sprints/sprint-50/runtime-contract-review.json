@@ -48,7 +48,7 @@
   "review_class": "gate-owned-automated-shared-runtime-contract-review",
   "reviewer_identity": "scripts/sprint_50_runtime_contract_review.py",
   "schema_version": 1,
-  "source_revision": "5e676f3fabae4f1e6b00cde495f98b9cd08d73f3",
+  "source_revision": "c64abc5382741cb92ab369ddec69841e83f90e3d",
   "source_sha256": {
     "kernel/contracts/Cargo.toml": "41b9192d56af6e360f2a77d065b823af009cc30ad04fdcb96c08f22cfc6fd6c8",
     "kernel/contracts/src/runtime_artifact.rs": "f4e07606661ee1193eac26d4ad730f9d8348259a927343e3bce4f916482234e4",
