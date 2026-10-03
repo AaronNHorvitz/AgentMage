@@ -1,0 +1,48 @@
+[
+  {
+    "id": "F1a-latest-refusal-kept",
+    "expected": "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare",
+    "caught": true,
+    "failed": [
+      "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F1b-prepare-keeps-refusal",
+    "expected": "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare",
+    "caught": true,
+    "failed": [
+      "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "F1c-refusal-never-kept",
+    "expected": "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare",
+    "caught": true,
+    "failed": [
+      "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "N3a-close-before-every-check",
+    "expected": "runtime_start_tests::a_release_refused_for_a_running_run_or_another_digest_closes_no_chain",
+    "caught": true,
+    "failed": [
+      "runtime_start_tests::a_release_refused_for_a_running_run_or_another_digest_closes_no_chain",
+      "runtime_start_tests::an_applied_suspension_stops_at_the_checkpoint_and_a_resumption_continues_it_in_host"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "N3b-close-before-digest-check",
+    "expected": "runtime_start_tests::a_release_refused_for_a_running_run_or_another_digest_closes_no_chain",
+    "caught": true,
+    "failed": [
+      "runtime_start_tests::a_release_refused_for_a_running_run_or_another_digest_closes_no_chain"
+    ],
+    "compile_error": false
+  }
+]

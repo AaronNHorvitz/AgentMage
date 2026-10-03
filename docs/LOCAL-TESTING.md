@@ -578,6 +578,8 @@ A release refused because the run has not ended, or because it names another req
 digest, closes no chain. The runtime client keeps the first refusal of a run until the
 next `prepare`. Both are tested under `runtime_start_tests` and `runtime_ipc`
 ([Decision 0148](decisions/0148-review-fixes-for-the-first-refusal-of-a-run-and-refused-releases.md)).
+The [first refusal review-fix verification](verification/review-fixes-first-refusal-and-refused-releases-2026-10-03.md)
+retains those tests and their mutation results.
 
 ### Public research worker contract fixtures
 

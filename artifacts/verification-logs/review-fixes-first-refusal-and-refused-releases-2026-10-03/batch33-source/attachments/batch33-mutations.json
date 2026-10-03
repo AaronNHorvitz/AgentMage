@@ -1,0 +1,77 @@
+[
+ {
+  "id": "F1a-latest-refusal-kept",
+  "file": "shells/host/src/runtime_ipc.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_ipc"
+  ],
+  "expected": "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare",
+  "replace": [
+   [
+    "        if let Err(error) = &result\n            && self.last_error.is_none()\n        {",
+    "        if let Err(error) = &result {"
+   ]
+  ]
+ },
+ {
+  "id": "F1b-prepare-keeps-refusal",
+  "file": "shells/host/src/runtime_ipc.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_ipc"
+  ],
+  "expected": "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare",
+  "replace": [
+   [
+    "        self.last_error = None;\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "F1c-refusal-never-kept",
+  "file": "shells/host/src/runtime_ipc.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_ipc"
+  ],
+  "expected": "runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare",
+  "replace": [
+   [
+    "            && self.last_error.is_none()\n",
+    "            && self.last_error.is_none()\n            && false\n"
+   ]
+  ]
+ },
+ {
+  "id": "N3a-close-before-every-check",
+  "file": "shells/host/src/coding_live_runtime.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_start_tests"
+  ],
+  "expected": "runtime_start_tests::a_release_refused_for_a_running_run_or_another_digest_closes_no_chain",
+  "replace": [
+   [
+    "        if !session.is_terminal() || session.request.request_sha256 != request_sha256 {\n            return Err(RuntimeTransportError::RequestDenied);\n        }\n",
+    "        if !session.close_run_histories() {\n            return Err(RuntimeTransportError::RuntimeFailed);\n        }\n        if !session.is_terminal() || session.request.request_sha256 != request_sha256 {\n            return Err(RuntimeTransportError::RequestDenied);\n        }\n"
+   ]
+  ]
+ },
+ {
+  "id": "N3b-close-before-digest-check",
+  "file": "shells/host/src/coding_live_runtime.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_start_tests"
+  ],
+  "expected": "runtime_start_tests::a_release_refused_for_a_running_run_or_another_digest_closes_no_chain",
+  "replace": [
+   [
+    "        if !session.is_terminal() || session.request.request_sha256 != request_sha256 {\n            return Err(RuntimeTransportError::RequestDenied);\n        }\n",
+    "        if !session.is_terminal() {\n            return Err(RuntimeTransportError::RequestDenied);\n        }\n        if !session.close_run_histories() {\n            return Err(RuntimeTransportError::RuntimeFailed);\n        }\n        if session.request.request_sha256 != request_sha256 {\n            return Err(RuntimeTransportError::RequestDenied);\n        }\n"
+   ]
+  ]
+ }
+]

@@ -1,0 +1,106 @@
+{
+  "schema_version": 2,
+  "stage": "batch33-observation",
+  "source_revision": "104e8bfe0aebbeea3915b27837c874c6adf55520",
+  "scope": "Batch 33 actual-process observation at the gate commit: the development CLI, coding host, catalog host and public research worker binaries built from this tree, run in fresh disposable roots",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux",
+      "--features",
+      "public-research-worker",
+      "--bin",
+      "agentmage-public-research-worker"
+    ],
+    [
+      "python3",
+      "<state>/batch33-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "a8bcdbbacbd463241fc4faff8520aef17d6a73b4ad5b6dd298cc444035e23bc1",
+      "private_sha256": "a8bcdbbacbd463241fc4faff8520aef17d6a73b4ad5b6dd298cc444035e23bc1"
+    },
+    {
+      "name": "batch33-observation.py",
+      "sha256": "b07f6d1f890038b963c369e9b70cce4878510e375ec5fade9df4f72fb804c7a2",
+      "private_sha256": "e967680f2a6fec5ad824146d098e53102a38a80205ebf741984c7de603dab4eb"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 7.532,
+      "log": "01.log",
+      "log_sha256": "c166e9ec7ffd67947835a5a79baa770c75ea12e27325833dceb02a73de727ee9",
+      "private_log_sha256": "2795c4795f476b55a7e4a7c53a1d492fb8e5ba7ab13a77de95f5e89462dc9fb3"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux",
+        "--features",
+        "public-research-worker",
+        "--bin",
+        "agentmage-public-research-worker"
+      ],
+      "exit_code": 0,
+      "seconds": 0.064,
+      "log": "02.log",
+      "log_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
+      "private_log_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "<state>/batch33-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 243.11,
+      "log": "03.log",
+      "log_sha256": "aa76e89fcc7dd27d044c029bcb357d57c8fc54b7a457b440e25d5682244da8bd",
+      "private_log_sha256": "aa76e89fcc7dd27d044c029bcb357d57c8fc54b7a457b440e25d5682244da8bd"
+    }
+  ]
+}
