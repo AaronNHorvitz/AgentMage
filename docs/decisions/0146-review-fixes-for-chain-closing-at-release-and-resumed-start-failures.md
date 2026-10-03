@@ -114,10 +114,15 @@ declaration because the earlier run's chain is still open.
 ## Limits
 
 - The development CLI treats a refused release like any other: it prints
-  `host.runtime.failed` and `cli.runtime.release_failed` and ends with the
-  runtime exit code. It does not print the run's final report. The run's
-  events, including its terminal event, were already printed as they
-  arrived.
+  the run's first transport error, which is `host.runtime.failed` when no
+  earlier exchange of the run failed, then `cli.runtime.release_failed`,
+  and ends with the runtime exit code. As first written, this said it
+  always prints `host.runtime.failed`. An earlier exchange that failed
+  without ending the run, such as a read of the run's declarations or job
+  status just before the release, is printed instead (review F1 of
+  `58df8b56`, Decision 0147). It does not print the run's
+  final report. The run's events, including its terminal event, were
+  already printed as they arrived.
 - While a held run cannot be released, the host refuses any resumed run and
   any other run of the same session, as it does while any run of the
   session is held. A held run also takes one of the service's run slots.

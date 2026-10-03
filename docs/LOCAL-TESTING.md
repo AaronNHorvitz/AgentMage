@@ -564,8 +564,10 @@ their mutation results.
 
 If the store cannot close a chain of an ended run, the host refuses its release
 ([Decision 0146](decisions/0146-review-fixes-for-chain-closing-at-release-and-resumed-start-failures.md)).
-The development CLI then prints `host.runtime.failed` and `cli.runtime.release_failed`
-without the run's final report. The host's standard error names the refused write:
+The development CLI then prints the run's first transport error, which is
+`host.runtime.failed` when no earlier exchange of the run failed, and
+`cli.runtime.release_failed`, without the run's final report
+([Decision 0147](decisions/0147-review-disposition-for-the-host-code-of-a-refused-release.md)). The host's standard error names the refused write:
 `coding.live.effect-record-close-failed`, `coding.live.history-close-failed` or
 `coding.recoverability.store-mark-failed`. The host keeps the ended run until a later
 release, or its own end, closes the chain. Until the effect record closes, every later
