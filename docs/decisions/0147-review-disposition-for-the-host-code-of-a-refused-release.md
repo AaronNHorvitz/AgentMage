@@ -57,6 +57,8 @@ The notes:
 
 - This changes documentation only. No source, test or evidence changes. No
   actual process has refused a release in this sandbox (Decision 0146).
+- The N3 test, and a test of the first-error rule, were added by
+  [Decision 0148](0148-review-fixes-for-the-first-refusal-of-a-run-and-refused-releases.md).
 - Independent review remains open.
 
 ## Consequences

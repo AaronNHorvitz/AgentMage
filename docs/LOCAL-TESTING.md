@@ -574,6 +574,10 @@ release, or its own end, closes the chain. Until the effect record closes, every
 declaration of that session is unavailable. The
 [chain closing review-fix verification](verification/review-fixes-chain-closing-at-release-2026-10-03.md)
 retains those tests (under `runtime_start_tests`) and their mutation results.
+A release refused because the run has not ended, or because it names another request
+digest, closes no chain. The runtime client keeps the first refusal of a run until the
+next `prepare`. Both are tested under `runtime_start_tests` and `runtime_ipc`
+([Decision 0148](decisions/0148-review-fixes-for-the-first-refusal-of-a-run-and-refused-releases.md)).
 
 ### Public research worker contract fixtures
 

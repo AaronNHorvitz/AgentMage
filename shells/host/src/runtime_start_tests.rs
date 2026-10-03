@@ -1303,7 +1303,17 @@ fn run_gated_to_end(
     request: &RuntimeRunRequest,
     open_gate: &std::sync::mpsc::Sender<()>,
 ) -> crate::runtime_transport::RuntimeTransportStep {
-    let mut step = service.start(request.clone()).unwrap();
+    let step = service.start(request.clone()).unwrap();
+    advance_gated_to_end(service, request, open_gate, step)
+}
+
+/// Opens the gate of a started run and advances it from `step` to its end.
+fn advance_gated_to_end(
+    service: &mut LiveCodingRuntimeService<GatedFactory>,
+    request: &RuntimeRunRequest,
+    open_gate: &std::sync::mpsc::Sender<()>,
+    mut step: crate::runtime_transport::RuntimeTransportStep,
+) -> crate::runtime_transport::RuntimeTransportStep {
     open_gate.send(()).unwrap();
     for _ in 0..400 {
         if step.outcome.is_some() {
@@ -1558,6 +1568,74 @@ fn a_release_whose_chains_cannot_be_closed_is_refused_and_keeps_the_run_held() {
         .history(run.as_str(), RunActionChainName::Routes)
         .unwrap();
     assert!(!routes.closed);
+}
+
+#[test]
+fn a_release_refused_for_a_running_run_or_another_digest_closes_no_chain() {
+    // Note N3 of 58df8b56 and finding F2 of 7ddc1713 (Decision 0148): the
+    // host refuses the release of a run that has not ended, or one named
+    // with another request digest, before it closes any stored chain, so the
+    // run's chains stay open and a later release closes them.
+    use crate::coding_action_history::StoredChainStart;
+    use crate::coding_session_recoverability::PersistedRunEffects;
+    use agentmage_kernel_engine::run_action_history_store::RunActionChainName;
+    let (request, events, outcome, _) = crate::runtime_read_tests::completed_native_read_fixture();
+    let run = &request.run_id;
+    let sha = request.request_sha256.as_str();
+    let store = JobLedgerStore::new("refused-release-open-chains");
+    let runtime = store.try_runtime().unwrap();
+    let (ledgers, histories, effects) = (
+        runtime.job_ledgers(),
+        runtime.run_action_histories(),
+        runtime.run_effect_records(),
+    );
+    drop(runtime);
+    let chain =
+        PersistedRunEffects::begin(effects.clone(), &request, StoredChainStart::New).unwrap();
+    let (mut service, open_gate, input) = gated_live_service(
+        &request,
+        events,
+        outcome.clone(),
+        ledgers,
+        Some(histories.clone()),
+        Some(chain),
+    );
+    let chains_closed = || {
+        let effect_record = effects.run(run.as_str()).unwrap();
+        let job_control = histories
+            .history(run.as_str(), RunActionChainName::JobControl)
+            .unwrap();
+        (effect_record.closed, job_control.closed)
+    };
+    service.prepare(input).unwrap();
+    // The gate holds the run after its first event: it has not ended.
+    let step = service.start(request.clone()).unwrap();
+    assert!(step.outcome.is_none());
+    for digest in [sha.to_owned(), "0".repeat(64)] {
+        assert!(matches!(
+            service.release(run, &digest),
+            Err(RuntimeTransportError::RequestDenied)
+        ));
+        assert_eq!(chains_closed(), (false, false));
+    }
+    let step = advance_gated_to_end(&mut service, &request, &open_gate, step);
+    assert_eq!(step.outcome, Some(outcome));
+    // The run has ended; a release under another digest is still refused
+    // and closes nothing, and the run is still held.
+    assert!(matches!(
+        service.release(run, &"0".repeat(64)),
+        Err(RuntimeTransportError::RequestDenied)
+    ));
+    assert_eq!(chains_closed(), (false, false));
+    assert!(service.run_declarations(run, sha).is_ok());
+    // The exact release closes both chains and forgets the run.
+    service.release(run, sha).unwrap();
+    assert_eq!(chains_closed(), (true, true));
+    assert!(effects.run(run.as_str()).unwrap().complete);
+    assert!(matches!(
+        service.release(run, sha),
+        Err(RuntimeTransportError::RunUnavailable)
+    ));
 }
 
 /// The completed native read fixture as a controlled-write run that committed

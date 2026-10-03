@@ -176,9 +176,42 @@ enum DevelopmentIpcProbe {
     ArtifactIntegrity,
 }
 
+/// One bounded, length-framed byte channel a runtime client exchanges over.
+///
+/// A channel carries bytes but no capability grant or effect authority.
+/// Outside tests a client is built only over the authenticated Linux session
+/// (Decision 0148).
+pub trait RuntimeFrameChannel {
+    /// Sends one frame of at most `maximum_bytes`.
+    fn send_frame(
+        &mut self,
+        frame: &[u8],
+        maximum_bytes: usize,
+    ) -> Result<(), RuntimeTransportError>;
+
+    /// Receives one frame of at most `maximum_bytes`.
+    fn receive_frame(&mut self, maximum_bytes: usize) -> Result<Vec<u8>, RuntimeTransportError>;
+}
+
+impl RuntimeFrameChannel for LinuxAuthenticatedIpcSession {
+    fn send_frame(
+        &mut self,
+        frame: &[u8],
+        maximum_bytes: usize,
+    ) -> Result<(), RuntimeTransportError> {
+        self.write_frame(frame, maximum_bytes)
+            .map_err(|_| RuntimeTransportError::RuntimeFailed)
+    }
+
+    fn receive_frame(&mut self, maximum_bytes: usize) -> Result<Vec<u8>, RuntimeTransportError> {
+        self.read_frame(maximum_bytes)
+            .map_err(|_| RuntimeTransportError::RuntimeFailed)
+    }
+}
+
 /// Client-side adapter that contains transport authority but no runtime or effect authority.
-pub struct LinuxRuntimeIpcClient {
-    session: LinuxAuthenticatedIpcSession,
+pub struct LinuxRuntimeIpcClient<C = LinuxAuthenticatedIpcSession> {
+    channel: C,
     last_error: Option<RuntimeTransportError>,
     development_probe: DevelopmentIpcProbe,
 }
@@ -188,7 +221,19 @@ impl LinuxRuntimeIpcClient {
     #[must_use]
     pub const fn new(session: LinuxAuthenticatedIpcSession) -> Self {
         Self {
-            session,
+            channel: session,
+            last_error: None,
+            development_probe: DevelopmentIpcProbe::None,
+        }
+    }
+}
+
+impl<C: RuntimeFrameChannel> LinuxRuntimeIpcClient<C> {
+    /// Binds an in-process channel; only tests build a client this way.
+    #[cfg(test)]
+    const fn over(channel: C) -> Self {
+        Self {
+            channel,
             last_error: None,
             development_probe: DevelopmentIpcProbe::None,
         }
@@ -225,7 +270,9 @@ impl LinuxRuntimeIpcClient {
         self
     }
 
-    /// Returns the last exact transport refusal observed from the host or local channel.
+    /// Returns the first exact transport refusal observed from the host or
+    /// local channel since the last `prepare` (Decision 0147). A failed start
+    /// keeps its own code when the release that cleans it up fails too.
     #[must_use]
     pub const fn last_error(&self) -> Option<RuntimeTransportError> {
         self.last_error
@@ -253,13 +300,8 @@ impl LinuxRuntimeIpcClient {
             payload: request,
         })
         .map_err(|_| RuntimeTransportError::RequestDenied)?;
-        self.session
-            .write_frame(&bytes, MAX_WIRE_BYTES)
-            .map_err(|_| RuntimeTransportError::RuntimeFailed)?;
-        let bytes = self
-            .session
-            .read_frame(MAX_WIRE_BYTES)
-            .map_err(|_| RuntimeTransportError::RuntimeFailed)?;
+        self.channel.send_frame(&bytes, MAX_WIRE_BYTES)?;
+        let bytes = self.channel.receive_frame(MAX_WIRE_BYTES)?;
         match decode_response(&bytes)? {
             RuntimeIpcResponse::Error { error } => Err(error),
             response => Ok(response),
@@ -275,7 +317,7 @@ impl LinuxRuntimeIpcClient {
     }
 }
 
-impl RuntimeTransportPort for LinuxRuntimeIpcClient {
+impl<C: RuntimeFrameChannel> RuntimeTransportPort for LinuxRuntimeIpcClient<C> {
     fn prepare(
         &mut self,
         input: RuntimePrepareInput,
@@ -2553,6 +2595,198 @@ mod tests {
             ledger
                 .control(scope.as_str(), &fixture_control_request())
                 .is_ok()
+        );
+    }
+
+    /// The client's end of an in-process channel to the host's [`answer`]:
+    /// each frame it sends is answered as the host answers that frame.
+    struct Loopback<P> {
+        runtime: P,
+        answered: Option<Vec<u8>>,
+    }
+
+    impl<P: RuntimeTransportPort> RuntimeFrameChannel for Loopback<P> {
+        fn send_frame(
+            &mut self,
+            frame: &[u8],
+            maximum_bytes: usize,
+        ) -> Result<(), RuntimeTransportError> {
+            assert!(frame.len() <= maximum_bytes && self.answered.is_none());
+            let (response, _) = answer(&mut self.runtime, &fixture_client(), decode_request(frame));
+            self.answered = Some(
+                serde_json::to_vec(&RuntimeIpcEnvelope {
+                    version: WIRE_VERSION,
+                    payload: response,
+                })
+                .unwrap(),
+            );
+            Ok(())
+        }
+
+        fn receive_frame(
+            &mut self,
+            _maximum_bytes: usize,
+        ) -> Result<Vec<u8>, RuntimeTransportError> {
+            self.answered
+                .take()
+                .ok_or(RuntimeTransportError::RuntimeFailed)
+        }
+    }
+
+    /// Prepares one run and refuses its declarations and its job status, each
+    /// with its own code; a release is refused only when told.
+    struct RefusingPort {
+        request: RuntimeRunRequest,
+        refuse_prepare: bool,
+        refuse_release: bool,
+    }
+
+    impl RuntimeTransportPort for RefusingPort {
+        fn prepare(
+            &mut self,
+            _input: RuntimePrepareInput,
+        ) -> Result<RuntimeRunRequest, RuntimeTransportError> {
+            if self.refuse_prepare {
+                return Err(RuntimeTransportError::CapacityExceeded);
+            }
+            Ok(self.request.clone())
+        }
+
+        fn start(
+            &mut self,
+            _request: RuntimeRunRequest,
+        ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+
+        fn advance(
+            &mut self,
+            _run_id: &RuntimeRunId,
+            _request_sha256: &str,
+            _after_event_cursor: Option<&RuntimeEventCursor>,
+            _response: Option<&RuntimeApprovalResponse>,
+        ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+
+        fn cancel(
+            &mut self,
+            _run_id: &RuntimeRunId,
+            _request_sha256: &str,
+            _cancellation_id: CancellationId,
+            _after_event_cursor: Option<&RuntimeEventCursor>,
+        ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+
+        fn run_declarations(
+            &mut self,
+            _run_id: &RuntimeRunId,
+            _request_sha256: &str,
+        ) -> Result<RuntimeRunDeclarations, RuntimeTransportError> {
+            Err(RuntimeTransportError::RunUnavailable)
+        }
+
+        fn job_status(
+            &mut self,
+            _run_id: &RuntimeRunId,
+            _request_sha256: &str,
+        ) -> Result<RuntimeJobStatus, RuntimeTransportError> {
+            Err(RuntimeTransportError::JobControlUnavailable)
+        }
+
+        fn release(
+            &mut self,
+            _run_id: &RuntimeRunId,
+            _request_sha256: &str,
+        ) -> Result<(), RuntimeTransportError> {
+            if self.refuse_release {
+                return Err(RuntimeTransportError::RuntimeFailed);
+            }
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare() {
+        // Finding F1 of 7ddc1713 (Decision 0148): the client keeps the first
+        // refusal of a run on purpose (Decision 0147), and only `prepare`
+        // clears it. Every frame crosses the host's own answer.
+        let (request, ..) = crate::runtime_read_tests::completed_native_read_fixture();
+        let (run, sha) = (&request.run_id, request.request_sha256.as_str());
+        let input = || RuntimePrepareInput {
+            resume: false,
+            record_session: false,
+            slow_subscriber_probe: false,
+            preauthorization: None,
+            engineering_session_id: None,
+            profile_id: "profile".to_owned(),
+            expected_entry_sha256: "a".repeat(64),
+            workspace_id: request.workspace_id.as_str().to_owned(),
+            workspace_root: "/workspace".to_owned(),
+            prompt: "Repair".to_owned(),
+            recipe: None,
+        };
+        let mut client = LinuxRuntimeIpcClient::over(Loopback {
+            runtime: RefusingPort {
+                request: request.clone(),
+                refuse_prepare: false,
+                refuse_release: false,
+            },
+            answered: None,
+        });
+        // Nothing failed: no error, also after a successful exchange.
+        assert_eq!(client.last_error(), None);
+        assert_eq!(client.prepare(input()).unwrap(), request);
+        client.release(run, sha).unwrap();
+        assert_eq!(client.last_error(), None);
+        // Two refused reads keep the first one's code, and so does a later
+        // successful exchange.
+        assert_eq!(
+            client.run_declarations(run, sha).unwrap_err(),
+            RuntimeTransportError::RunUnavailable
+        );
+        assert_eq!(
+            client.job_status(run, sha).unwrap_err(),
+            RuntimeTransportError::JobControlUnavailable
+        );
+        client.release(run, sha).unwrap();
+        assert_eq!(
+            client.last_error(),
+            Some(RuntimeTransportError::RunUnavailable)
+        );
+        // A release refused after a refused read: the read's code is the one
+        // the development CLI prints (Decisions 0146 and 0147).
+        client.channel.runtime.refuse_release = true;
+        assert_eq!(
+            client.release(run, sha).unwrap_err(),
+            RuntimeTransportError::RuntimeFailed
+        );
+        assert_eq!(
+            client.last_error(),
+            Some(RuntimeTransportError::RunUnavailable)
+        );
+        // The next prepare clears it; a release refused with no earlier
+        // refusal shows the release's own code.
+        assert_eq!(client.prepare(input()).unwrap(), request);
+        assert_eq!(client.last_error(), None);
+        assert_eq!(
+            client.release(run, sha).unwrap_err(),
+            RuntimeTransportError::RuntimeFailed
+        );
+        assert_eq!(
+            client.last_error(),
+            Some(RuntimeTransportError::RuntimeFailed)
+        );
+        // A refused prepare is the first refusal of the run it would begin.
+        client.channel.runtime.refuse_prepare = true;
+        assert_eq!(
+            client.prepare(input()).unwrap_err(),
+            RuntimeTransportError::CapacityExceeded
+        );
+        assert_eq!(
+            client.last_error(),
+            Some(RuntimeTransportError::CapacityExceeded)
         );
     }
 }
