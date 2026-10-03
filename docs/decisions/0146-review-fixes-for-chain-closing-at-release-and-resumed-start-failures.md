@@ -5,7 +5,7 @@
 | Status | Accepted under owner delegation, 2026-10-03 |
 | Date | 2026-10-03 |
 | Authority | Decisions 0054, 0081, 0129, 0143 and 0145; current owner restart |
-| Scope | Findings F1 and F2 and notes N2 and N6 of the independent review of `22a2662f` |
+| Scope | Findings F1 and F2 and notes N2 and N6 of the independent review of `22a2662f`; defect D1 found by this batch's evidence pass |
 
 ## Findings
 
@@ -30,6 +30,16 @@ The notes:
   of the session.
 - N6: Decision 0145 rightly said that only the job case of a new run that
   cannot start was tested, not the spawn case.
+
+This batch's evidence pass found a defect of the same kind as the review's
+F2 of `6c0f51fe`.
+
+- D1: the Sprint 11 storage migration compatibility producer appends
+  Cargo's output to its retained log unredacted. When Cargo recompiles, its
+  progress lines name the private checkout. Decision 0145 fixed the three
+  sibling producers; this one was not covered, because its committed log
+  held no path at the time. The batch's first core evidence stage
+  regenerated the log with two such lines.
 
 ## Decision
 
@@ -82,6 +92,19 @@ Three new host tests run over a real encrypted store:
 The test service's coordinator can now refuse every event subscription, so
 a session cannot spawn.
 
+### D1: the fourth store producer redacts the checkout
+
+The storage migration compatibility producer now uses the same shared
+helpers as its three siblings. It replaces the checkout root with
+`<repository-root>` in the output it retains, and it refuses to write, or
+to accept, retained output that still names the checkout or a home
+directory. A test covers both rules.
+
+The first core stage's output was withdrawn before any commit. The core
+stage was run again after this fix, and this batch's verification record
+says so. Other producers that retain raw Cargo output stay an open owner
+question: each is fixed when a batch would otherwise commit the path.
+
 ### N2
 
 Decision 0143's Limits now say that, in a later host, a run resumed after a
@@ -108,6 +131,7 @@ declaration because the earlier run's chain is still open.
 
 - `shells/host`: the live service's release and chain closing, the gated
   test coordinator, and three new service tests.
+- `scripts`: the storage migration compatibility producer, with its test.
 - `docs`: Decision 0143's Limits and the local testing guide.
 - No TASKS.md row changes state. AMR-04.7.3 keeps its evidence. This
   batch's verification record lists the fixes.

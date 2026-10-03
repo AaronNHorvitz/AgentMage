@@ -11,6 +11,11 @@ import sys
 from pathlib import Path
 from typing import Any, Final
 
+try:
+    from scripts.evidence_core import contains_private_path, redact_checkout_root
+except ModuleNotFoundError:  # Direct execution places scripts/ rather than the repository on sys.path.
+    from evidence_core import contains_private_path, redact_checkout_root
+
 
 ROOT: Final = Path(__file__).resolve().parents[1]
 EVIDENCE_DIR: Final = ROOT / "artifacts/sprints/sprint-11/story-11.2"
@@ -328,6 +333,8 @@ def validate_raw(value: str) -> list[str]:
     for prohibited in ("test result: FAILED", "error: could not compile", "warning:"):
         if prohibited in value:
             failures.append(f"raw results contain prohibited marker: {prohibited}")
+    if contains_private_path(value, ROOT):
+        failures.append("raw results name a private checkout or home path")
     return failures
 
 
@@ -346,7 +353,8 @@ def capture() -> tuple[str, int]:
             command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             text=True, check=False,
         )
-        chunks.append(f"$ {' '.join(command)}\n{result.stdout.rstrip(chr(10))}\n")
+        output = redact_checkout_root(result.stdout.rstrip(chr(10)), ROOT)
+        chunks.append(f"$ {' '.join(command)}\n{output}\n")
         if result.returncode != 0:
             return "".join(chunks), result.returncode
     return "".join(chunks), 0

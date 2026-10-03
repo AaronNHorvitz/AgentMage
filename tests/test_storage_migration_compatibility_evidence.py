@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import copy
+import subprocess
 import unittest
+from pathlib import Path
+from unittest import mock
 
+from scripts import storage_migration_compatibility_evidence as compatibility
 from scripts.storage_migration_compatibility_evidence import (
     FIXTURE_PATH,
     MARKERS,
@@ -74,6 +78,24 @@ class StorageMigrationCompatibilityEvidenceTests(unittest.TestCase):
         self.assertEqual(validate_raw(valid), [])
         self.assertTrue(validate_raw(valid.replace(MARKERS[0], "")))
         self.assertTrue(validate_raw(f"{valid}\ntest result: FAILED"))
+
+    def test_raw_results_never_name_the_checkout_or_home_directory(self) -> None:
+        # Batch 31 (Decision 0146): Cargo's progress lines name the checkout,
+        # as for the three sibling producers in review F2 of 6c0f51fe.
+        valid = "\n".join(MARKERS)
+        for private in (str(compatibility.ROOT), str(Path.home())):
+            with self.subTest(private=private):
+                leaked = f"{valid}\n   Compiling agentmage-kernel-engine v0.0.0 ({private}/kernel/engine)\n"
+                self.assertIn("raw results name a private checkout or home path", validate_raw(leaked))
+        completed = subprocess.CompletedProcess(
+            [], 0, stdout=f"   Compiling agentmage-kernel-engine v0.0.0 ({compatibility.ROOT}/kernel/engine)\n"
+        )
+        with mock.patch.object(compatibility.subprocess, "run", return_value=completed):
+            raw, returncode = compatibility.capture()
+        self.assertEqual(returncode, 0)
+        self.assertNotIn(str(compatibility.ROOT), raw)
+        self.assertIn("(<repository-root>/kernel/engine)", raw)
+        self.assertEqual(raw.count("(<repository-root>/kernel/engine)"), len(compatibility.COMMANDS))
 
 
 if __name__ == "__main__":
