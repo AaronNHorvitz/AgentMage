@@ -1,0 +1,417 @@
+{
+ "record_type": "agentmage-hybrid-route-grants-verification",
+ "date": "2026-10-02",
+ "base_commit": "a84646265bce483cee76aa3a51714389be2d1e05",
+ "head_commit": "80cfff020e5a62cf1f02a02d254925cac307d162",
+ "source_commit": "d649b6e4d2320e8d3b2bd291ffe72077a06540fb",
+ "retained_logs": "artifacts/verification-logs/hybrid-route-grants-2026-10-02",
+ "stages": [
+  "batch29-source",
+  "batch29-source-test",
+  "batch29-core",
+  "batch29-rebind",
+  "batch29-gate",
+  "batch29-blocked-causes",
+  "batch29-extended-rest",
+  "batch29-observation"
+ ],
+ "inventory": "artifacts/verification-logs/hybrid-route-grants-2026-10-02/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch29-source/02.log",
+  "engine": "batch29-source/03.log",
+  "repository_map": "batch29-source/04.log",
+  "inference": "batch29-source/05.log",
+  "knowledge": "batch29-source/06.log",
+  "linux": "batch29-source/07.log",
+  "linux_research_feature_build": "batch29-source/08.log",
+  "linux_research_feature_tests": "batch29-source/09.log",
+  "linux_research_worker_binary_tests": "batch29-source/10.log",
+  "host": "batch29-source/11.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0144-hybrid-route-grants-through-the-catalog-host.md"
+  ],
+  "source_commits": [
+   {
+    "commit": "d649b6e4d2320e8d3b2bd291ffe72077a06540fb",
+    "scope": "Decision 0144: AMR-05.9.7 split into AMR-05.9.7.1 and AMR-05.9.7.2; the owner state route-grant-catalog; the catalog host's route grant owner (grant, list, revoke, bounds, permanent revocation, a refused backwards clock, a counting operation called nowhere); the CLI's --route-grant, --route-grant-list and --route-grant-revoke with --route-grant-workspace, a closed grant request file sealed from the client's clock, shown and sent only after a typed yes; the harness route-grant command; hybrid routing under a fixed hybrid policy when the run's workspace holds a live grant, the factory refusing any remote selection; the client keeping hybrid receipts for the local selection or a named remote route and showing a remote selection on its own line; wire 17; runtime producer contract version 3 beside an unchanged version 2; the new TASKS rows, the work selector (82 amendment rows) and LOCAL-TESTING"
+   },
+   {
+    "commit": "52c784a2f8e22f7ea49710a18b01d37d11bfea68",
+    "scope": "the route grant preview as one JSON row in JSON output, with its test"
+   }
+  ],
+  "review_resolved": "none in this batch; the review of batch 28 (a8464626) was requested and is open",
+  "components": [
+   {
+    "row": "AMR-05.9.7.1",
+    "scope": "component, store, host-unit, wire, CLI and actual catalog-host row: the catalog host keeps route grants per workspace in its operational store with their expiry and counters; the actual CLI and catalog host granted after a typed yes, declined without sending anything, refused a second live grant of a route, listed, revoked and refused a second revocation; the routing function sources live grants and counters into hybrid routing, and with fixture remote routes host tests show selection under a grant, expiry, exhausted counters, uncovered data, a refused fallback and local-only refusal, and the client's receipt rules and REMOTE line. The development host offers no remote route and the factory's grant lookup runs only in native composition, which this sandbox refuses"
+   }
+  ],
+  "mutation_checks": "run on the exact source commit d649b6e4 after its source stage, with private tooling that applies one exact replacement, runs the package's filtered library tests and restores the file; the specification and results are attached to the batch29-source stage. 19 single mutations, 19 caught: in the grant owner a second live grant of a route, the expiry bound, a duplicate identity, a second revocation, a revoked grant counted live, the request budget, a backwards clock, a non-canonical catalog, an answer for another workspace, a repeated data class and the live bound; in routing a remote receipt without a grant digest, a hybrid receipt under the local policy, hybrid disclosure not accepted, a remote selection shown as local, the grant missing from the route history and a fallback receipt kept; in the client any line taken as confirmation; in the CLI a grant without a workspace. The confirmation mutation was rerun at the follow-up commit 52c784a2 (1 of 1 caught, attached to batch29-source-test). The tree was verified identical afterwards",
+  "failure_comparison": "linux 189 passed, 19 failed, 51 ignored, failure names identical to batch 28; with the public-research-worker feature the Linux crate's tests build, its research tests pass (13 passed, 6 ignored native) and the worker binary's tests pass (21 passed, 3 ignored); host 498 passed, 53 failed, 11 ignored, failure names identical to batch 28, at both source commits; the engine passes 1,553 tests with 8 ignored, knowledge 302",
+  "retained_failures": [
+   {
+    "stage": "batch29-source",
+    "indexes": [
+     7,
+     11
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, with failure names identical to batch 28"
+   },
+   {
+    "stage": "batch29-source-test",
+    "indexes": [
+     2
+    ],
+    "cause": "the same native-prerequisite host failures, with failure names identical to batch 28"
+   },
+   {
+    "stage": "batch29-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "interrupted_stages": [],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch29-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the native-prerequisite host failures (batch29-source/11.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch29-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch29-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch29-blocked-causes/03.log) and the documentation gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+    "stale_since": "before batch 12 (four other inputs)",
+    "blocker": "its producer runs the full host suite (the native-prerequisite failures, batch29-source/11.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the product gate and the documentation gate; its check mode still validates it at its own revision (batch29-extended-rest/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the full host suite with all features; its check mode still validates it at its own revision (batch29-extended-rest/02.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
+    "stale_since": "before batch 18 (shells/host/src/headless.rs)",
+    "blocker": "already stale at the review base for an input this batch does not change; historical"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-kernel-engine",
+   "agentmage-host"
+  ],
+  "cascade": "the one SBOM write staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index and security map, the Story 3.1 component inventory, configuration startup report and security map and the Sprint 27 to 34 knowledge boundary reviews (batch29-core) and the Sprint 79 and Sprint 108 reports (batch29-rebind); the owner state store's new owner name staled the six Story 11.2 store reports and the Story 11.3 durable resume report that bind it (batch29-core), the Muse codec chain and the Sprint 13 report and through them the Story 13.4 context profile report, and through the renewed store reports the Story 11.1 security map, the Story 11.2 storage security, frozen-scope, AC1, AC2 and AC3 reports and the Story 12.1 map (batch29-rebind); the CLI change staled the v0.4 coding pack manifest and its release readiness report and the Story 1.2 contract boundary report with the TASKS change (batch29-core); the Story 11.2 gate report followed its pin (batch29-gate). The operational store, its migrations, the coordinator and the coding host's CLI runtime, Linux boundary and chat runtime did not change, so the Story 22.1 canary, the Story 13.4 dispatch preflight report, the Story 23.4 chain and the Sprint 50 review were not stale",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "31e56e5fd7254bd4a99d7d27ece2c55a217c9305",
+    "to": "ff2453e7730ac54d04fd742c5329132cbcababb7",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-report.json",
+      "reason": "regenerated by the batch 29 core stage; only the bound digests and sizes of kernel/engine/src/owner_state_store.rs (Decision 0144: the new owner name route-grant-catalog) and its source materialization schema results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-report.json",
+      "reason": "regenerated by the batch 29 core stage; only the bound digests and sizes of kernel/engine/src/owner_state_store.rs (Decision 0144: the new owner name route-grant-catalog) and its source content deduplication results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-report.json",
+      "reason": "regenerated by the batch 29 core stage; only the bound digests and sizes of kernel/engine/src/owner_state_store.rs (Decision 0144: the new owner name route-grant-catalog) and its source lifecycle transactions results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-report.json",
+      "reason": "regenerated by the batch 29 core stage; only the bound digests and sizes of kernel/engine/src/owner_state_store.rs (Decision 0144: the new owner name route-grant-catalog) and its workflow materialization schema results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-report.json",
+      "reason": "regenerated by the batch 29 core stage; only the bound digests and sizes of kernel/engine/src/owner_state_store.rs (Decision 0144: the new owner name route-grant-catalog) and its workflow attempt invariants results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-report.json",
+      "reason": "regenerated by the batch 29 core stage; only the bound digests and sizes of kernel/engine/src/owner_state_store.rs (Decision 0144: the new owner name route-grant-catalog) and its storage migration compatibility results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 29 rebind stage; only the bound digests of the renewed storage migration compatibility report and log and the renewed Story 11.1 security map, and the retained evidence summary that holds them, changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 29 rebind stage; only the bound digest of the renewed storage security report, and the retained evidence summary that holds it, changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "reason": "regenerated by the batch 29 rebind stage; only the bound digests and sizes of its results log and the renewed source lifecycle and workflow attempt reports and logs, and the retained evidence summary that holds them, changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 29 rebind stage; only the bound digests and sizes of the renewed source lifecycle report and log and the renewed storage security report, and the retained evidence summary that holds them, changed"
+     }
+    ]
+   }
+  ],
+  "newly_stale_disposition": "only historical records: retained stage records of batches 19 to 28 that bind the harness test, the producer contract script and test, the work selector or the Story 11.2 gate script as they were at their own revisions",
+  "runtime_campaign": "not stale: the coding host's CLI runtime, Linux boundary and chat runtime and the coordinator did not change, so the Story 23.4 chain and the Sprint 50 runtime contract review were not renewed",
+  "cli_observation": {
+   "source_commit": "80cfff020e5a62cf1f02a02d254925cac307d162",
+   "binaries_sha256": {
+    "agentmage": "1a8d2e313b1780d7a9b4eaf5b2e8b65e8a43ff01f1e349f9c8a5865d2f13a003",
+    "agentmage-host": "cdf43afac9d93301dd4c667fd9341858d96f1eac4fa4d9e66830aa341e336f04",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "catalog_host_operations": [
+    {
+     "name": "doc-pack-list-empty",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import-other-license",
+     "operation": "doc-pack",
+     "exit_code": 4
+    },
+    {
+     "name": "doc-pack-search",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-inspect",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember-credential",
+     "operation": "memory",
+     "exit_code": 4
+    },
+    {
+     "name": "memory-list",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-revoke",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-delete",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-signer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-issuer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-install",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-1",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-renamed",
+     "operation": "extension",
+     "exit_code": 3
+    },
+    {
+     "name": "extension-list",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-grant",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-same-route",
+     "operation": "route-grant",
+     "exit_code": 4
+    },
+    {
+     "name": "route-grant-list",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-revoke",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-revoke-again",
+     "operation": "route-grant",
+     "exit_code": 4
+    },
+    {
+     "name": "route-grant-list-all",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "ended-run-read",
+     "operation": "ended-run",
+     "exit_code": 0
+    }
+   ],
+   "catalog_host_wire_refusals_seen": false,
+   "catalog_workspace_preserved": true,
+   "route_grants": {
+    "runs": [
+     {
+      "name": "route-grant-declined",
+      "exit_code": 6
+     },
+     {
+      "name": "route-grant-grant",
+      "exit_code": 0
+     },
+     {
+      "name": "route-grant-same-route",
+      "exit_code": 4
+     },
+     {
+      "name": "route-grant-list",
+      "exit_code": 0
+     },
+     {
+      "name": "route-grant-revoke",
+      "exit_code": 0
+     },
+     {
+      "name": "route-grant-revoke-again",
+      "exit_code": 4
+     },
+     {
+      "name": "route-grant-list-all",
+      "exit_code": 0
+     }
+    ],
+    "declined_sent_nothing": true,
+    "remote_route_offered": false
+   },
+   "recipe_shown_before_launch": {
+    "exit_code": 5,
+    "then_refused_at": "linux.repository.git_artifact.invalid",
+    "preserved": true
+   },
+   "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+   },
+   "malformed_frame_injected": false,
+   "research_worker": {
+    "binary": {
+     "sha256": "6255bc24924a9c351dbb7ba6ec3ebcc4366dcd1fb034905a4478b2305d17cfac",
+     "bytes": 158345560
+    },
+    "runs": [
+     {
+      "name": "worker-ambient-environment",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     },
+     {
+      "name": "worker-extra-argument",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     },
+     {
+      "name": "worker-admitted-environment",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     }
+    ],
+    "sandboxed": false,
+    "network_attempted": false
+   },
+   "remote_route_used_by_an_actual_process": false,
+   "qualification": "actual-binary-catalog-host-operations-under-exact-wire-decoding-plus-native-prerequisite-refusal"
+  },
+  "not_run": [
+   "any remote route: the development host offers none and no remote provider is configured (AMR-05.9.7.2)",
+   "the factory's grant lookup and hybrid routing in an actual coding run: native composition is refused in this sandbox",
+   "the native-only Linux boundary tests and the factory's composition glue",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [
+    {
+     "row": "AMR-05.9.7.1",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component, store, host-unit, wire, CLI and actual catalog-host row: hybrid route grants kept by the catalog host and sourced into hybrid routing; no remote route is offered or used"
+    }
+   ],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested after the ledger commit; open"
+  }
+ }
+}

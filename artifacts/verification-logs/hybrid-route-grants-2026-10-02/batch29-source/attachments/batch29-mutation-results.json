@@ -1,0 +1,181 @@
+[
+  {
+    "id": "G1-second-live-grant-of-a-route",
+    "expected": "coding_route_grants::tests::a_grant_outside_its_rules_is_refused_and_changes_nothing",
+    "caught": true,
+    "failed": [
+      "coding_route_grants::tests::a_grant_outside_its_rules_is_refused_and_changes_nothing"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "G2-expiry-upper-bound-ignored",
+    "expected": "coding_route_grants::tests::a_grant_outside_its_rules_is_refused_and_changes_nothing",
+    "caught": true,
+    "failed": [
+      "coding_route_grants::tests::a_grant_outside_its_rules_is_refused_and_changes_nothing"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "G3-duplicate-identity-kept",
+    "expected": "coding_route_grants::tests::a_grant_outside_its_rules_is_refused_and_changes_nothing",
+    "caught": true,
+    "failed": [
+      "coding_route_grants::tests::a_grant_outside_its_rules_is_refused_and_changes_nothing"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "G4-revoked-twice",
+    "expected": "coding_route_grants::tests::a_grant_is_kept_listed_revoked_and_survives_reopening",
+    "caught": true,
+    "failed": [
+      "coding_route_grants::tests::a_grant_is_kept_listed_revoked_and_survives_reopening"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "G5-revoked-grant-live",
+    "expected": "coding_route_grants::tests::live_grants_carry_their_counters_and_counting_stops_at_each_bound",
+    "caught": true,
+    "failed": [
+      "coding_route_grants::tests::a_grant_is_kept_listed_revoked_and_survives_reopening",
+      "coding_route_grants::tests::a_workspace_holds_at_most_its_live_grants_and_the_catalog_its_workspaces",
+      "coding_route_grants::tests::live_grants_carry_their_counters_and_counting_stops_at_each_bound"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "G6-request-budget-unchecked",
+    "expected": "coding_route_grants::tests::live_grants_carry_their_counters_and_counting_stops_at_each_bound",
+    "caught": true,
+    "failed": [
+      "coding_route_grants::tests::live_grants_carry_their_counters_and_counting_stops_at_each_bound"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "G7-clock-going-back-accepted",
+    "expected": "coding_route_grants::tests::a_grant_outside_its_rules_is_refused_and_changes_nothing",
+    "caught": true,
+    "failed": [
+      "coding_route_grants::tests::a_grant_outside_its_rules_is_refused_and_changes_nothing"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "G8-noncanonical-catalog-accepted",
+    "expected": "coding_route_grants::tests::a_changed_catalog_is_refused_and_an_answer_must_name_what_was_sent",
+    "caught": true,
+    "failed": [
+      "coding_route_grants::tests::a_changed_catalog_is_refused_and_an_answer_must_name_what_was_sent"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "G9-grant-answer-for-another-workspace",
+    "expected": "coding_route_grants::tests::a_changed_catalog_is_refused_and_an_answer_must_name_what_was_sent",
+    "caught": true,
+    "failed": [
+      "coding_route_grants::tests::a_changed_catalog_is_refused_and_an_answer_must_name_what_was_sent"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "G10-repeated-data-class",
+    "expected": "coding_route_grants::tests::a_request_file_becomes_a_sealed_grant_only_within_its_rules",
+    "caught": true,
+    "failed": [
+      "coding_route_grants::tests::a_request_file_becomes_a_sealed_grant_only_within_its_rules"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "G11-live-bound-ignored",
+    "expected": "coding_route_grants::tests::a_workspace_holds_at_most_its_live_grants_and_the_catalog_its_workspaces",
+    "caught": true,
+    "failed": [
+      "coding_route_grants::tests::a_workspace_holds_at_most_its_live_grants_and_the_catalog_its_workspaces"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R1-remote-without-grant-digest",
+    "expected": "coding_route::tests::a_hybrid_receipt_is_kept_only_for_a_local_or_named_remote_selection",
+    "caught": true,
+    "failed": [
+      "coding_route::tests::a_hybrid_receipt_is_kept_only_for_a_local_or_named_remote_selection"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R2-hybrid-under-local-policy",
+    "expected": "coding_route::tests::a_workspace_with_live_grants_routes_in_hybrid_mode_and_still_selects_its_local_route",
+    "caught": true,
+    "failed": [
+      "coding_route::tests::a_granted_remote_route_is_selected_only_within_its_grant_and_is_never_silent",
+      "coding_route::tests::a_hybrid_receipt_is_kept_only_for_a_local_or_named_remote_selection",
+      "coding_route::tests::a_receipt_or_route_history_that_does_not_bind_this_local_run_is_dropped",
+      "coding_route::tests::a_workspace_with_live_grants_routes_in_hybrid_mode_and_still_selects_its_local_route"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R3-hybrid-disclosure-not-accepted",
+    "expected": "coding_route::tests::a_granted_remote_route_is_selected_only_within_its_grant_and_is_never_silent",
+    "caught": true,
+    "failed": [
+      "coding_route::tests::a_granted_remote_route_is_selected_only_within_its_grant_and_is_never_silent",
+      "coding_route::tests::a_hybrid_receipt_is_kept_only_for_a_local_or_named_remote_selection",
+      "coding_route::tests::a_remote_fallback_is_refused_unless_its_grant_allows_one_and_the_client_keeps_none"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R4-remote-selection-shown-as-local",
+    "expected": "coding_route::tests::a_granted_remote_route_is_selected_only_within_its_grant_and_is_never_silent",
+    "caught": true,
+    "failed": [
+      "coding_route::tests::a_granted_remote_route_is_selected_only_within_its_grant_and_is_never_silent"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R5-grant-not-in-history",
+    "expected": "coding_route::tests::a_granted_remote_route_is_selected_only_within_its_grant_and_is_never_silent",
+    "caught": true,
+    "failed": [
+      "coding_route::tests::a_granted_remote_route_is_selected_only_within_its_grant_and_is_never_silent"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "R6-fallback-receipt-kept",
+    "expected": "coding_route::tests::a_remote_fallback_is_refused_unless_its_grant_allows_one_and_the_client_keeps_none",
+    "caught": true,
+    "failed": [
+      "coding_route::tests::a_receipt_or_route_history_that_does_not_bind_this_local_run_is_dropped",
+      "coding_route::tests::a_remote_fallback_is_refused_unless_its_grant_allows_one_and_the_client_keeps_none"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "C1-any-line-confirms",
+    "expected": "coding_development_client::tests::a_route_grant_is_sent_only_after_a_typed_yes_and_shown_only_when_acknowledged",
+    "caught": true,
+    "failed": [
+      "coding_development_client::tests::a_route_grant_is_sent_only_after_a_typed_yes_and_shown_only_when_acknowledged"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "L1-grant-without-workspace",
+    "expected": "cli::tests::route_grant_operations_parse_closed_and_alone",
+    "caught": true,
+    "failed": [
+      "cli::tests::route_grant_operations_parse_closed_and_alone"
+    ],
+    "compile_error": false
+  }
+]

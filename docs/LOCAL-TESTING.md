@@ -501,6 +501,10 @@ covers no run. The wrapper passes each operation to the CLI's `--route-grant FIL
   by host tests with fixture routes; such a selection would be shown on its own line as
   `REMOTE route ... of provider ... under grant ...`.
 
+**Current lane result:** the actual rebuilt CLI and catalog host declined, kept, refused,
+listed and revoked grants as above, with the results listed in the
+[hybrid route grant verification](verification/hybrid-route-grants-2026-10-02.md).
+
 Every frame between the CLI and either host is decoded exactly (Decisions 0135 and
 0136). A member the types do not name is refused at any position, and so is a member
 named twice in any object. Numbers must be written as the runtime writes them, so a

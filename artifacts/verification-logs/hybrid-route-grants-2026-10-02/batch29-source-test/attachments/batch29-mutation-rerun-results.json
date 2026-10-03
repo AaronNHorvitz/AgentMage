@@ -1,0 +1,11 @@
+[
+  {
+    "id": "C1-any-line-confirms",
+    "expected": "coding_development_client::tests::a_route_grant_is_sent_only_after_a_typed_yes_and_shown_only_when_acknowledged",
+    "caught": true,
+    "failed": [
+      "coding_development_client::tests::a_route_grant_is_sent_only_after_a_typed_yes_and_shown_only_when_acknowledged"
+    ],
+    "compile_error": false
+  }
+]

@@ -1,0 +1,287 @@
+[
+ {
+  "id": "G1-second-live-grant-of-a-route",
+  "file": "shells/host/src/coding_route_grants.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route_grants"
+  ],
+  "expected": "coding_route_grants::tests::a_grant_outside_its_rules_is_refused_and_changes_nothing",
+  "replace": [
+   [
+    "                .any(|kept| kept.live(now) && kept.grant.route_id == grant.route_id)",
+    "                .any(|kept| kept.live(now) && kept.grant.route_id == grant.route_id && false)"
+   ]
+  ]
+ },
+ {
+  "id": "G2-expiry-upper-bound-ignored",
+  "file": "shells/host/src/coding_route_grants.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route_grants"
+  ],
+  "expected": "coding_route_grants::tests::a_grant_outside_its_rules_is_refused_and_changes_nothing",
+  "replace": [
+   [
+    "                || grant.expires_at_epoch_ms - now > MAX_EXPIRY_AFTER_MS\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "G3-duplicate-identity-kept",
+  "file": "shells/host/src/coding_route_grants.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route_grants"
+  ],
+  "expected": "coding_route_grants::tests::a_grant_outside_its_rules_is_refused_and_changes_nothing",
+  "replace": [
+   [
+    "                .any(|kept| kept.grant.grant_id == grant.grant_id)",
+    "                .any(|kept| kept.grant.grant_id == grant.grant_id && false)"
+   ]
+  ]
+ },
+ {
+  "id": "G4-revoked-twice",
+  "file": "shells/host/src/coding_route_grants.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route_grants"
+  ],
+  "expected": "coding_route_grants::tests::a_grant_is_kept_listed_revoked_and_survives_reopening",
+  "replace": [
+   [
+    "            if kept.revoked_at_epoch_ms.is_some() {\n                return Err(RouteGrantRefusal::AlreadyRevoked);",
+    "            if kept.revoked_at_epoch_ms.is_some() && false {\n                return Err(RouteGrantRefusal::AlreadyRevoked);"
+   ]
+  ]
+ },
+ {
+  "id": "G5-revoked-grant-live",
+  "file": "shells/host/src/coding_route_grants.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route_grants"
+  ],
+  "expected": "coding_route_grants::tests::live_grants_carry_their_counters_and_counting_stops_at_each_bound",
+  "replace": [
+   [
+    "        self.revoked_at_epoch_ms.is_none() && now_epoch_ms < self.grant.expires_at_epoch_ms",
+    "        now_epoch_ms < self.grant.expires_at_epoch_ms"
+   ]
+  ]
+ },
+ {
+  "id": "G6-request-budget-unchecked",
+  "file": "shells/host/src/coding_route_grants.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route_grants"
+  ],
+  "expected": "coding_route_grants::tests::live_grants_carry_their_counters_and_counting_stops_at_each_bound",
+  "replace": [
+   [
+    "        || tokens > kept.grant.max_input_tokens\n    {",
+    "    {"
+   ]
+  ]
+ },
+ {
+  "id": "G7-clock-going-back-accepted",
+  "file": "shells/host/src/coding_route_grants.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route_grants"
+  ],
+  "expected": "coding_route_grants::tests::a_grant_outside_its_rules_is_refused_and_changes_nothing",
+  "replace": [
+   [
+    "        kept.granted_at_epoch_ms <= now_epoch_ms\n",
+    "        true\n"
+   ]
+  ]
+ },
+ {
+  "id": "G8-noncanonical-catalog-accepted",
+  "file": "shells/host/src/coding_route_grants.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route_grants"
+  ],
+  "expected": "coding_route_grants::tests::a_changed_catalog_is_refused_and_an_answer_must_name_what_was_sent",
+  "replace": [
+   [
+    "        && serde_json::to_vec(&state).is_ok_and(|encoded| encoded == bytes);",
+    ";"
+   ]
+  ]
+ },
+ {
+  "id": "G9-grant-answer-for-another-workspace",
+  "file": "shells/host/src/coding_route_grants.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route_grants"
+  ],
+  "expected": "coding_route_grants::tests::a_changed_catalog_is_refused_and_an_answer_must_name_what_was_sent",
+  "replace": [
+   [
+    "            decided(receipt)\n                && view.workspace_id == *workspace_id\n                && view.grant == *grant",
+    "            decided(receipt)\n                && view.grant == *grant"
+   ]
+  ]
+ },
+ {
+  "id": "G10-repeated-data-class",
+  "file": "shells/host/src/coding_route_grants.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route_grants"
+  ],
+  "expected": "coding_route_grants::tests::a_request_file_becomes_a_sealed_grant_only_within_its_rules",
+  "replace": [
+   [
+    "        (grant.data_classes.len() == file.data_classes.len() && grant.well_formed())",
+    "        grant.well_formed()"
+   ]
+  ]
+ },
+ {
+  "id": "G11-live-bound-ignored",
+  "file": "shells/host/src/coding_route_grants.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route_grants"
+  ],
+  "expected": "coding_route_grants::tests::a_workspace_holds_at_most_its_live_grants_and_the_catalog_its_workspaces",
+  "replace": [
+   [
+    "                || grants.iter().filter(|kept| kept.live(now)).count() >= MAX_LIVE_GRANTS_PER_SCOPE\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "R1-remote-without-grant-digest",
+  "file": "shells/host/src/coding_route.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route::"
+  ],
+  "expected": "coding_route::tests::a_hybrid_receipt_is_kept_only_for_a_local_or_named_remote_selection",
+  "replace": [
+   [
+    "        && receipt\n            .hybrid_grant_sha256\n            .as_deref()\n            .is_some_and(lower_hex_sha256)",
+    "        && true"
+   ]
+  ]
+ },
+ {
+  "id": "R2-hybrid-under-local-policy",
+  "file": "shells/host/src/coding_route.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route::"
+  ],
+  "expected": "coding_route::tests::a_workspace_with_live_grants_routes_in_hybrid_mode_and_still_selects_its_local_route",
+  "replace": [
+   [
+    "        RunRouteMode::Hybrid => hybrid_route_policy_sha256(),",
+    "        RunRouteMode::Hybrid => route_policy_sha256(),"
+   ]
+  ]
+ },
+ {
+  "id": "R3-hybrid-disclosure-not-accepted",
+  "file": "shells/host/src/coding_route.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route::"
+  ],
+  "expected": "coding_route::tests::a_granted_remote_route_is_selected_only_within_its_grant_and_is_never_silent",
+  "replace": [
+   [
+    "        disclosure_accepted: hybrid,",
+    "        disclosure_accepted: false,"
+   ]
+  ]
+ },
+ {
+  "id": "R4-remote-selection-shown-as-local",
+  "file": "shells/host/src/coding_route.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route::"
+  ],
+  "expected": "coding_route::tests::a_granted_remote_route_is_selected_only_within_its_grant_and_is_never_silent",
+  "replace": [
+   [
+    "    let selection = match (&receipt.hybrid_grant_sha256, &receipt.provider_id) {",
+    "    let selection = match (&None::<String>, &receipt.provider_id) {"
+   ]
+  ]
+ },
+ {
+  "id": "R5-grant-not-in-history",
+  "file": "shells/host/src/coding_route.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route::"
+  ],
+  "expected": "coding_route::tests::a_granted_remote_route_is_selected_only_within_its_grant_and_is_never_silent",
+  "replace": [
+   [
+    "    evidence.extend(receipt.hybrid_grant_sha256.clone());\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "R6-fallback-receipt-kept",
+  "file": "shells/host/src/coding_route.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route::"
+  ],
+  "expected": "coding_route::tests::a_remote_fallback_is_refused_unless_its_grant_allows_one_and_the_client_keeps_none",
+  "replace": [
+   [
+    "        && !receipt.fallback_used\n        && receipt.fallback_policy_sha256.is_none()\n        && receipt.transmitted_data == DEVELOPMENT_ROUTED_DATA;",
+    "        && receipt.transmitted_data == DEVELOPMENT_ROUTED_DATA;"
+   ]
+  ]
+ },
+ {
+  "id": "C1-any-line-confirms",
+  "file": "shells/host/src/coding_development_client.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_development_client"
+  ],
+  "expected": "coding_development_client::tests::a_route_grant_is_sent_only_after_a_typed_yes_and_shown_only_when_acknowledged",
+  "replace": [
+   [
+    "    matches!(next_line(), Ok(LinuxDevelopmentInputLine::Line(line)) if line == \"yes\")",
+    "    matches!(next_line(), Ok(LinuxDevelopmentInputLine::Line(_)))"
+   ]
+  ]
+ },
+ {
+  "id": "L1-grant-without-workspace",
+  "file": "shells/host/src/cli.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "cli::tests::route_grant"
+  ],
+  "expected": "cli::tests::route_grant_operations_parse_closed_and_alone",
+  "replace": [
+   [
+    "        || route_grant_workspace.is_some()\n            != (route_grant.is_some() || route_grant_revoke.is_some())\n            && !(route_grant_list && route_grant_workspace.is_some())\n",
+    ""
+   ]
+  ]
+ }
+]

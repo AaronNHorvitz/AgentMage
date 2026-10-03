@@ -1,0 +1,150 @@
+{
+  "schema_version": 2,
+  "stage": "batch29-source-test",
+  "source_revision": "52c784a2f8e22f7ea49710a18b01d37d11bfea68",
+  "scope": "Batch 29 host checks at the follow-up commit 52c784a2",
+  "planned_commands": [
+    [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "--no-fail-fast"
+    ],
+    [
+      "cargo",
+      "clippy",
+      "--workspace",
+      "--all-targets",
+      "--locked",
+      "--offline",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_rust_test_ownership",
+      "tests.test_coding_harness"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [
+    2
+  ],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_coding_harness.py": "642d905ee52c458db423a3f1efc17c716a332b4e2947bc61e229f021342754b8",
+    "tests/test_rust_test_ownership.py": "3d05c65b512cebc0dd37671612073ae6cf21b89281430a846920c10e758a7cd2"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "batch29-mutations-rerun.json",
+      "sha256": "9950c42588beca5a9da2f5dbcd36f79558571fc8aaec10c7cdd8bc54df951d54",
+      "private_sha256": "9950c42588beca5a9da2f5dbcd36f79558571fc8aaec10c7cdd8bc54df951d54"
+    },
+    {
+      "name": "batch29-mutation-rerun-results.json",
+      "sha256": "1e1ef4772022fab27c78a096f40fe1521a5faaab4abf39790d51072c9c80af80",
+      "private_sha256": "1e1ef4772022fab27c78a096f40fe1521a5faaab4abf39790d51072c9c80af80"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 2.227,
+      "log": "01.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "--no-fail-fast"
+      ],
+      "exit_code": 101,
+      "seconds": 40.468,
+      "log": "02.log",
+      "log_sha256": "a803f813ba7b60b74e8f661e22113b202ae9bdd236362b6b3c6666562b0b1825",
+      "private_log_sha256": "95dee59a4444f46af4b6c3097462b8e8a809c3e9b3d7b3e73bc9c1c075f985dc"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "cargo",
+        "clippy",
+        "--workspace",
+        "--all-targets",
+        "--locked",
+        "--offline",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "seconds": 0.132,
+      "log": "03.log",
+      "log_sha256": "8c233a54790c4800d3dd585436af679aa838da259bfdb129412e2d51cdb75cdc",
+      "private_log_sha256": "8c233a54790c4800d3dd585436af679aa838da259bfdb129412e2d51cdb75cdc"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_rust_test_ownership",
+        "tests.test_coding_harness"
+      ],
+      "exit_code": 0,
+      "seconds": 2.205,
+      "log": "04.log",
+      "log_sha256": "ea17f1505e42a5f955153559c88be1b1f38cdd9415cbb804bc884995ecc4ff32",
+      "private_log_sha256": "2a9f4c29aa81c72bf051cbebf1c402262f0f38f279f0dcabd4d60e8b74702b98"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.003,
+      "log": "05.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

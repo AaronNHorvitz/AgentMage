@@ -1,0 +1,101 @@
+{
+  "schema_version": 2,
+  "stage": "batch29-observation",
+  "source_revision": "80cfff020e5a62cf1f02a02d254925cac307d162",
+  "scope": "Batch 29 observation at the gate commit 80cfff02",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux",
+      "--features",
+      "public-research-worker",
+      "--bin",
+      "agentmage-public-research-worker"
+    ],
+    [
+      "python3",
+      "<state>/batch29-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "baa6d457e037a2bdbc1be6b1633b9e7dabc93ce9cfe4f7e91a6fe4488c34648d",
+      "private_sha256": "baa6d457e037a2bdbc1be6b1633b9e7dabc93ce9cfe4f7e91a6fe4488c34648d"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 15.739,
+      "log": "01.log",
+      "log_sha256": "6681de38225f6a5228277cc48e5b7ac36eef1f58097a48b8a2e24e005e34fb78",
+      "private_log_sha256": "e80e9200c18df1a34176f50422eddd3b2a9f91316f3c6e9e09d9d8870f00365d"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux",
+        "--features",
+        "public-research-worker",
+        "--bin",
+        "agentmage-public-research-worker"
+      ],
+      "exit_code": 0,
+      "seconds": 0.113,
+      "log": "02.log",
+      "log_sha256": "59639588a6f1826f129cbcd121edc07279dab94786f5fa5bde6b3439b2e845cc",
+      "private_log_sha256": "59639588a6f1826f129cbcd121edc07279dab94786f5fa5bde6b3439b2e845cc"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "<state>/batch29-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 243.095,
+      "log": "03.log",
+      "log_sha256": "3715a69ceea9ceeb71294ee3c1bf20efec5631542fe7248f893b5392aa4b067b",
+      "private_log_sha256": "3715a69ceea9ceeb71294ee3c1bf20efec5631542fe7248f893b5392aa4b067b"
+    }
+  ]
+}

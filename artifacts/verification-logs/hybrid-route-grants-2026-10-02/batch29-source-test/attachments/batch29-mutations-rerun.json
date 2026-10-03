@@ -1,0 +1,17 @@
+[
+ {
+  "id": "C1-any-line-confirms",
+  "file": "shells/host/src/coding_development_client.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_development_client"
+  ],
+  "expected": "coding_development_client::tests::a_route_grant_is_sent_only_after_a_typed_yes_and_shown_only_when_acknowledged",
+  "replace": [
+   [
+    "    matches!(next_line(), Ok(LinuxDevelopmentInputLine::Line(line)) if line == \"yes\")",
+    "    matches!(next_line(), Ok(LinuxDevelopmentInputLine::Line(_)))"
+   ]
+  ]
+ }
+]

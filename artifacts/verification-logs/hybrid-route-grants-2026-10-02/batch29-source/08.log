@@ -1,0 +1,6 @@
+   Compiling agentmage-kernel-engine v0.0.0 (<repo>/kernel/engine)
+   Compiling agentmage-platform-linux v0.0.0 (<repo>/platforms/linux)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.17s
+  Executable unittests src/lib.rs (target/debug/deps/agentmage_platform_linux-28f606209526cf9e)
+  Executable unittests src/bin/agentmage-public-research-worker.rs (target/debug/deps/agentmage_public_research_worker-b67cd045f713534b)
+  Executable tests/strict_local_classification.rs (target/debug/deps/strict_local_classification-e0aa97010504353b)
