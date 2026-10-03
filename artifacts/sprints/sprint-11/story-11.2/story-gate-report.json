@@ -97,27 +97,27 @@
       {
         "byte_length": 8219,
         "path": "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-report.json",
-        "sha256": "1bbd2948b1753c56c9e00d4a95145e625a5570ee6d1aacbae1b2947473796dd3"
+        "sha256": "80fd241115f5fbf1b0852de22b4e8fc276d762c782a997fd5d5579105b4af884"
       },
       {
         "byte_length": 8269,
         "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-report.json",
-        "sha256": "70772eef7db483320448bf7f62d6d95b29c93283244f89e1f32b2e662f431909"
+        "sha256": "f2627027070a7dd121a24b151063c8aaa05de8a89aebddb7d81ac6492ad544e7"
       },
       {
         "byte_length": 8595,
         "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-report.json",
-        "sha256": "3bcb82237a4be16fca5675c95c321a697b6e33217c38a0683b9daf44bb4b797e"
+        "sha256": "d7909eae01f1e77593c8ecfa5a2649e726ffceca130f4aced8cdb2f8d129f2b2"
       },
       {
         "byte_length": 8009,
         "path": "artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-report.json",
-        "sha256": "77b5321fa441d3b1c3ec025b522cd76026784e2941e5097de125b9c44079ad3c"
+        "sha256": "3b5c7aa02d0b1a94bec2ef7635cb7acd96332cb066a22ed46f5c37471e739d03"
       },
       {
         "byte_length": 7777,
         "path": "artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-report.json",
-        "sha256": "6b1f8ca8ce931f0a000f426711b49c1e295a04b8f50fff687ab7d574267f53f8"
+        "sha256": "86f4205bc970308a54c3c05709698032792f4884e4b9b85547e279fcbfa8aa0f"
       },
       {
         "byte_length": 3019,
@@ -127,7 +127,7 @@
       {
         "byte_length": 12145,
         "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-report.json",
-        "sha256": "20d3712914559e7a1bcb31f6a336f5e7fe706ab9a6aa491b169bd0aec8d13ff0"
+        "sha256": "8ff7db38734200433c23b861dd41c90fa93fe96b23513afb0cd26941aa59328f"
       },
       {
         "byte_length": 2952,
@@ -152,38 +152,38 @@
       {
         "byte_length": 6456,
         "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
-        "sha256": "30419d0b9d159118488a1afbcc6461b3574dceac9c7eef7bfb577bd02213f71e"
+        "sha256": "51173549d413218cef3a4556e6a90501a65fe99c5b809caeb01fe57163c9b683"
       },
       {
         "byte_length": 3901,
         "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
-        "sha256": "a95cd130ef7946c7e8fc0bd7dfa2c962776301078b1fed477e3b47994d2203f2"
+        "sha256": "3ea2f8fc74336fe0cb062209f4cd70759cf6d93867433bd081ad4a2e5ffce05b"
       },
       {
         "byte_length": 6030,
         "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
-        "sha256": "668be8fb4d9729851ba94ca390319d141b2904b0732b3fec7fc08e753b6b251d"
+        "sha256": "98a3c908f283441ae1eddb60e9b9ecc123f4ccc39896b30295ea52619ab5bdd0"
       },
       {
         "byte_length": 5225,
         "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
-        "sha256": "6ed4bd9c8ccdd4da587f746d07d1fbafd9036078b273ba4792e5da4a4ca95e76"
+        "sha256": "1bfb547d077a79107242c82017a06db52d3cd2fc98274bad8e62c94efff5345f"
       }
     ],
     "external_human_review_status": "not-performed",
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "31e56e5fd7254bd4a99d7d27ece2c55a217c9305",
-    "reviewed_tree": "73103700354db58e369420c9c182f4928e732228",
+    "reviewed_commit": "ff2453e7730ac54d04fd742c5329132cbcababb7",
+    "reviewed_tree": "24fb10bed925ee199e1df499ce6b8343f6c3b95d",
     "reviewer_id": "agentmage-story-11.2-independent-gate-v1"
   },
   "installed_product_claim": "none",
   "platform_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "31e56e5fd7254bd4a99d7d27ece2c55a217c9305",
-  "reviewed_tree": "73103700354db58e369420c9c182f4928e732228",
+  "reviewed_commit": "ff2453e7730ac54d04fd742c5329132cbcababb7",
+  "reviewed_tree": "24fb10bed925ee199e1df499ce6b8343f6c3b95d",
   "schema_version": 1,
   "sprint_completion_claim": false,
   "status": "blocked-open-dependencies-and-platform-integration",
