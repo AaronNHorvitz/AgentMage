@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "record_type": "sprint_108_local_evidence",
-  "source_revision": "a56f8e342b67f2dc8806026b9a97a3ad5c5cb310",
+  "source_revision": "0d5c054c657111c7a31a287b7d3afe609a3302e6",
   "source_sha256": {
     "Cargo.toml": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc",
     "Cargo.lock": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd",
@@ -12,9 +12,9 @@
     "artifacts/sprints/sprint-108/multi-provider-source-corpus.json": "b4b010308946e2613931917e41ad0f85efb790370c2296640e4b0ff9a210c9bc",
     "scripts/multi_provider_source_contract.py": "d49c33d960f19379f0ae0f6ea8fbbd9c89b8742b9bc9a03fbc29d9585f504bcd",
     "tests/test_multi_provider_source_contract.py": "9cceb31ddd9860399514223e7256e90116e3a7e4c8122c7b8909866d18bbb18c",
-    "supply-chain/dependency-hashes.sha256": "6dbcf17aa78c4cfdced1777dd793ee20b14fdda18a792c395e3ebcd26418f52a",
-    "supply-chain/dependency-provenance.json": "589ff0b0edc48c55e97788bd114e3b5283f4ab74d41a621f5aa11d78fbee46b2",
-    "supply-chain/sbom.cdx.json": "2e22898408778a880048551ecbf09e440822a76d42c074282f2bfc37624c5dde",
+    "supply-chain/dependency-hashes.sha256": "038d9bf94ddb20639d55bb4f7ae8a7629771c1c81c5d8a3de426ef93b88a36c5",
+    "supply-chain/dependency-provenance.json": "36facbebe4dd92c8a99a632ae7e85535af1c04ba7e8f62ffdb4f7795fa116888",
+    "supply-chain/sbom.cdx.json": "d7694c9c3ccfd1a9f943c3709eb8a97cfdfecc10250a67db58f533fb22ce438e",
     "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
     "scripts/sprint_108_evidence.py": "baaf3a3b8e057bffaf2c1884feb0e1a124645d92639d58faac0c342428821a6c",
     "tests/test_sprint_108_evidence.py": "2f31f90abdaa08a1ded37973b82cc23e507bafe93941feb311d997b8a4215279"
@@ -53,7 +53,7 @@
         "tests.test_multi_provider_source_contract"
       ],
       "exit_code": 0,
-      "output_sha256": "9d654695c0a90577e252109954dd749137ace81d33f39cf1a31990e7f48cf31d",
+      "output_sha256": "7137eeba0f1475e79f6dce65a349431fdd4c73ecad493315cc596f599d3a273f",
       "blocking_skip_count": 0
     },
     {
