@@ -956,7 +956,7 @@ fn run_catalog_invocation(
     }) = &route_grant
     {
         let mut stderr = std::io::stderr().lock();
-        let confirmed = confirm_route_grant(workspace_id, grant, &mut stderr, &mut || {
+        let confirmed = confirm_route_grant(workspace_id, grant, output, &mut stderr, &mut || {
             read_development_line(&cancellation.requested)
         });
         if !confirmed {
@@ -1195,18 +1195,30 @@ fn run_extension_request(
     Ok(ClientExitCode::Success)
 }
 
-/// Shows a grant before it is sent and asks for the exact word `yes`
-/// (Decision 0144). Every other line, end of input, a too-long line, a read
-/// failure and a cancellation decline.
+/// Shows a grant before it is sent, as text or as one JSON row, and asks for
+/// the exact word `yes` (Decision 0144). Every other line, end of input, a
+/// too-long line, a read failure and a cancellation decline.
 fn confirm_route_grant<E>(
     workspace_id: &str,
     grant: &crate::coding_route_grants::RouteGrant,
+    output: CliOutputFormat,
     prompts: &mut dyn Write,
     next_line: &mut dyn FnMut() -> Result<LinuxDevelopmentInputLine, E>,
 ) -> bool {
-    let _ = prompts.write_all(
-        crate::coding_route_grants::render_route_grant_preview(workspace_id, grant).as_bytes(),
-    );
+    let preview = if output == CliOutputFormat::Json {
+        format!(
+            "{}\n",
+            serde_json::json!({
+                "type": "route_grant_preview",
+                "workspace_id": workspace_id,
+                "grant": grant,
+                "remote_route_offered": false,
+            })
+        )
+    } else {
+        crate::coding_route_grants::render_route_grant_preview(workspace_id, grant)
+    };
+    let _ = prompts.write_all(preview.as_bytes());
     let _ = prompts.write_all(b"Type yes to keep this grant: ");
     let _ = prompts.flush();
     matches!(next_line(), Ok(LinuxDevelopmentInputLine::Line(line)) if line == "yes")
@@ -2867,9 +2879,13 @@ mod tests {
             let mut prompts = Vec::new();
             let mut answered = Some(line);
             assert_eq!(
-                confirm_route_grant("workspace-a", &grant, &mut prompts, &mut || {
-                    answered.take().unwrap()
-                }),
+                confirm_route_grant(
+                    "workspace-a",
+                    &grant,
+                    CliOutputFormat::Human,
+                    &mut prompts,
+                    &mut || answered.take().unwrap()
+                ),
                 confirmed
             );
             let shown = String::from_utf8(prompts).unwrap();
@@ -2878,6 +2894,22 @@ mod tests {
             );
             assert!(shown.ends_with("Type yes to keep this grant: "));
         }
+        // In JSON output the preview is one row; only the prompt is text.
+        let mut prompts = Vec::new();
+        assert!(confirm_route_grant(
+            "workspace-a",
+            &grant,
+            CliOutputFormat::Json,
+            &mut prompts,
+            &mut || Ok::<_, ()>(LinuxDevelopmentInputLine::Line("yes".to_owned()))
+        ));
+        let shown = String::from_utf8(prompts).unwrap();
+        let (row, prompt) = shown.split_once('\n').unwrap();
+        let row: serde_json::Value = serde_json::from_str(row).unwrap();
+        assert_eq!(row["type"], "route_grant_preview");
+        assert_eq!(row["grant"], serde_json::to_value(&grant).unwrap());
+        assert_eq!(row["remote_route_offered"], false);
+        assert_eq!(prompt, "Type yes to keep this grant: ");
         let request = RouteGrantRequest::Grant {
             workspace_id: "workspace-a".to_owned(),
             grant: grant.clone(),

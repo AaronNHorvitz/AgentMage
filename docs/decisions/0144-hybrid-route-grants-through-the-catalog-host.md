@@ -125,9 +125,9 @@ a revocation, and optional for a list.
   of at most 4 KiB. The request names the grant identity, the route and
   candidate, the provider, the data classes, both budgets, whether a fallback
   is allowed, and a validity of 1 to 720 hours. The CLI computes the expiry
-  from its clock and the grant's digest. It shows the grant: what the route may
-  receive, from which workspace's runs, for how much, until when, and that this
-  development host offers no remote route yet. It sends the grant only after
+  from its clock and the grant's digest. It shows the grant, as text or as one
+  JSON row: what the route may receive, from which workspace's runs, for how
+  much, until when, and that this development host offers no remote route yet. It sends the grant only after
   the person types `yes`. Every other answer, end of input and cancellation
   decline, and nothing is sent. The decision digest is the digest of the
   exact request, which names the scope and the sealed grant.
