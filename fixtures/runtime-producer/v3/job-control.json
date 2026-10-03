@@ -1,0 +1,19 @@
+{
+  "decision": {
+    "decision": "applied",
+    "revision": 2,
+    "phase": "cancelling"
+  },
+  "status": {
+    "schema_version": 1,
+    "run_id": "coding-run-0001",
+    "request_sha256": "8b77279f058f9eb6ec8d6cbbdf6235d0c586aa6cdf36f6801c225189dd620ef1",
+    "job": {
+      "job_id": "coding-run-0001",
+      "phase": "cancelling",
+      "revision": 2,
+      "cancellation_requested": true,
+      "head_sha256": "d9d5d8c6c0b3e94a497f11a6b5f63ca76cb8f0bd66bbe36f75259056fd42c76d"
+    }
+  }
+}

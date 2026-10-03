@@ -28,11 +28,17 @@ pub enum OwnerStateName {
     MemoryCatalog,
     /// The catalog host's extension catalog (Decision 0132).
     ExtensionCatalog,
+    /// The catalog host's hybrid route grant catalog (Decision 0144).
+    RouteGrantCatalog,
 }
 
 impl OwnerStateName {
     /// Every owner, in stable order.
-    pub const ALL: [Self; 2] = [Self::MemoryCatalog, Self::ExtensionCatalog];
+    pub const ALL: [Self; 3] = [
+        Self::MemoryCatalog,
+        Self::ExtensionCatalog,
+        Self::RouteGrantCatalog,
+    ];
 
     /// The stored owner identity.
     #[must_use]
@@ -40,6 +46,7 @@ impl OwnerStateName {
         match self {
             Self::MemoryCatalog => "memory-catalog",
             Self::ExtensionCatalog => "extension-catalog",
+            Self::RouteGrantCatalog => "route-grant-catalog",
         }
     }
 

@@ -64,6 +64,8 @@ pub mod coding_recipe;
 pub mod coding_recoverability;
 /// Local-only model routes of the development coding host and their receipts.
 pub mod coding_route;
+/// Hybrid route grants through the development catalog host (Decision 0144).
+pub mod coding_route_grants;
 /// Exact interface-neutral runtime request framing for coding sessions.
 pub mod coding_run;
 pub mod coding_session;

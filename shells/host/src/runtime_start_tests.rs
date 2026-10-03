@@ -1086,9 +1086,15 @@ fn the_live_service_owns_each_run_job_and_decides_cancellation_through_the_ledge
     assert_eq!(stored.head, history.head);
     assert!(stored.complete && !stored.closed);
     // The catalog host, not the development host, reads ended runs
-    // (Decision 0130).
+    // (Decision 0130) and keeps route grants (Decision 0144).
     assert_eq!(
         service.ended_run_action_histories(run),
+        Err(RuntimeTransportError::RequestDenied)
+    );
+    assert_eq!(
+        service.route_grant(crate::coding_route_grants::RouteGrantRequest::List {
+            workspace_id: None
+        }),
         Err(RuntimeTransportError::RequestDenied)
     );
     service.release(run, sha).unwrap();

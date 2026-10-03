@@ -3,8 +3,9 @@
 //! from the runtime's own types and functions and compared byte for byte;
 //! each decodes exactly and verifies as a client verifies it, and a changed
 //! record does not. Version 2 adds the session's recoverability to the run
-//! declarations (Decision 0143); version 1 stays as it was and reads as
-//! unavailable.
+//! declarations (Decision 0143), and version 3 the catalog host's route grant
+//! operation on wire 17 (Decision 0144); earlier versions stay as they were
+//! and read as unavailable.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -52,7 +53,7 @@ use crate::runtime_transport::{
 };
 
 const CONTRACT: &str = "agentmage-runtime-producer";
-const CONTRACT_VERSION: u16 = 2;
+const CONTRACT_VERSION: u16 = 3;
 /// The synthetic time every fixture record was made at.
 const MADE_AT_EPOCH_MS: u64 = 1_790_000_000_000;
 /// The scope a host derives for the client that sent the control request.
@@ -87,13 +88,14 @@ struct Manifest {
 }
 
 fn fixture_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/runtime-producer/v2")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/runtime-producer/v3")
 }
 
-/// The first contract version's fixtures, kept unchanged beside the current
+/// An earlier contract version's fixtures, kept unchanged beside the current
 /// ones.
-fn first_version_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/runtime-producer/v1")
+fn version_root(version: u16) -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join(format!("../../fixtures/runtime-producer/v{version}"))
 }
 
 fn sha256_hex(bytes: &[u8]) -> String {
@@ -490,7 +492,43 @@ fn the_committed_fixtures_are_the_records_the_runtime_builds() {
     let manifest: serde_json::Value = serde_json::from_slice(&committed["manifest.json"]).unwrap();
     assert_eq!(manifest["contract"], CONTRACT);
     assert_eq!(manifest["contract_version"], CONTRACT_VERSION);
+    assert_eq!(manifest["wire_version"], 17);
+}
+
+/// Every file of an earlier version, by name.
+fn version_files(version: u16) -> BTreeMap<String, Vec<u8>> {
+    let mut files = BTreeMap::new();
+    for entry in std::fs::read_dir(version_root(version)).unwrap() {
+        let path = entry.unwrap().path();
+        files.insert(
+            path.file_name().unwrap().to_str().unwrap().to_owned(),
+            std::fs::read(&path).unwrap(),
+        );
+    }
+    files
+}
+
+#[test]
+fn the_second_contract_version_stays_as_it_was_on_its_older_wire() {
+    // Decision 0144: version 3 changes only the wire, so version 2's records
+    // still decode and verify, but its manifest names wire 16, which this
+    // transport refuses, and every byte its manifest names is unchanged.
+    let files = version_files(2);
+    let manifest: serde_json::Value = serde_json::from_slice(&files["manifest.json"]).unwrap();
+    assert_eq!(manifest["contract_version"], 2);
     assert_eq!(manifest["wire_version"], 16);
+    assert_ne!(
+        manifest["wire_version"],
+        crate::runtime_ipc::RUNTIME_IPC_WIRE_VERSION
+    );
+    let listed = manifest["records"].as_array().unwrap();
+    assert_eq!(listed.len() + 1, files.len());
+    let built = fixture_files(&records());
+    for entry in listed {
+        let name = entry["file"].as_str().unwrap();
+        assert_eq!(entry["sha256"], sha256_hex(&files[name]), "{name}");
+        assert_eq!(files[name], built[name], "{name}");
+    }
 }
 
 #[test]
@@ -498,14 +536,7 @@ fn the_first_contract_version_stays_as_it_was_and_reads_as_unavailable() {
     // Decision 0143: a change of a record raises the contract's version
     // beside the first one, which keeps every byte its manifest names. Its
     // run declarations are not this version's and are dropped whole.
-    let mut files = BTreeMap::new();
-    for entry in std::fs::read_dir(first_version_root()).unwrap() {
-        let path = entry.unwrap().path();
-        files.insert(
-            path.file_name().unwrap().to_str().unwrap().to_owned(),
-            std::fs::read(&path).unwrap(),
-        );
-    }
+    let files = version_files(1);
     let manifest: serde_json::Value = serde_json::from_slice(&files["manifest.json"]).unwrap();
     assert_eq!(manifest["contract_version"], 1);
     assert_eq!(manifest["wire_version"], 15);

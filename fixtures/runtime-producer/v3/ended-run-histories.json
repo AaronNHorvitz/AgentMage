@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "run_id": "coding-run-0001",
+  "effects": {
+    "records": [
+      {
+        "state": "kept",
+        "schema_version": 1,
+        "sequence": 1,
+        "action_kind": "file_write",
+        "action_id": "operation-write-0001",
+        "authorization": {
+          "kind": "grant",
+          "grant_id": "grant-write-0001",
+          "grant_sha256": "c05d2465b585de012652e2196dcc5ef41a36c97e618bceda347e482874784351"
+        },
+        "effect_sha256": "a0b6dd31e38e6fe91e64136e8af2e35e92eb4361e0dcd2e4c6bea0fc725f1c7c",
+        "outcome": "succeeded",
+        "reason_code": "coding.approved.succeeded",
+        "evidence_sha256s": [
+          "45007613b7a6ebef4c403b02eafcbaaed754a4bc693b9bac4ddce15f301d9955",
+          "8300296b1d109cb80f60be9622e79bd2150b0d7c5ed5aca4583c3b46732ae0c4",
+          "c597ce25a3e616e5ab700a1146d766695c6336e9452aef6fed44081c82b14daf"
+        ],
+        "recorded_at_epoch_ms": 1790000000000,
+        "retain_until_epoch_ms": 1792592000000,
+        "redacted_fields": 0,
+        "previous_entry_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "entry_sha256": "5d45923394bf8e97978b788f6a60a174e76097443cfa0739533e9b1c6ba99280"
+      },
+      {
+        "state": "kept",
+        "schema_version": 1,
+        "sequence": 2,
+        "action_kind": "file_write",
+        "action_id": "operation-write-0002",
+        "authorization": {
+          "kind": "unauthorized"
+        },
+        "effect_sha256": "9e20bd2ede084897bf90cea86d774e8e06edcf17ba36205b15038f577b1462c7",
+        "outcome": "denied",
+        "reason_code": "recipe.out-of-scope",
+        "evidence_sha256s": [
+          "5ed9d04ae6cc543a84fc94997acd028cff04ed8f1236635291bab689388ffa7a",
+          "9cd5c65c8693bf5fcf8fd6c4a0b51154f9073f09127b69d446809fdf635c77c6"
+        ],
+        "recorded_at_epoch_ms": 1790000000001,
+        "retain_until_epoch_ms": 1792592000001,
+        "redacted_fields": 0,
+        "previous_entry_sha256": "5d45923394bf8e97978b788f6a60a174e76097443cfa0739533e9b1c6ba99280",
+        "entry_sha256": "9794a410d8732801a6617b3a81d881afa4ffdea4c2e72b206717bf7d454889c7"
+      }
+    ],
+    "head": {
+      "count": 2,
+      "head_sha256": "9794a410d8732801a6617b3a81d881afa4ffdea4c2e72b206717bf7d454889c7"
+    },
+    "complete": true,
+    "closed": true
+  },
+  "job_control": {
+    "records": [
+      {
+        "state": "kept",
+        "schema_version": 1,
+        "sequence": 1,
+        "action_kind": "job_control",
+        "action_id": "cancel-producer-fixture-0001",
+        "authorization": {
+          "kind": "person_decision",
+          "decision_sha256": "47be122f8086eb6287df836a933da50752658a83333c2edfa4f49ea303a0fdee"
+        },
+        "effect_sha256": "276b3a18d1807aba2ecafaf39ea9483c6f1e4ef6b491884284f7cb8d3235024a",
+        "outcome": "succeeded",
+        "reason_code": "job.control.cancel.applied",
+        "evidence_sha256s": [
+          "d9d5d8c6c0b3e94a497f11a6b5f63ca76cb8f0bd66bbe36f75259056fd42c76d"
+        ],
+        "recorded_at_epoch_ms": 1790000000002,
+        "retain_until_epoch_ms": 1792592000002,
+        "redacted_fields": 0,
+        "previous_entry_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "entry_sha256": "a784847af93b05eb6aec590a54ac2cd0b55515c0b7213315da814d0aae756341"
+      }
+    ],
+    "head": {
+      "count": 1,
+      "head_sha256": "a784847af93b05eb6aec590a54ac2cd0b55515c0b7213315da814d0aae756341"
+    },
+    "complete": true,
+    "closed": true
+  },
+  "routes": {
+    "records": [
+      {
+        "state": "kept",
+        "schema_version": 1,
+        "sequence": 1,
+        "action_kind": "model_route",
+        "action_id": "coding-run-0001",
+        "authorization": {
+          "kind": "person_decision",
+          "decision_sha256": "8b77279f058f9eb6ec8d6cbbdf6235d0c586aa6cdf36f6801c225189dd620ef1"
+        },
+        "effect_sha256": "f8341460b6ec610cac4d09932f6ad7cc7f456f594b1590f952e1baa53e39417d",
+        "outcome": "succeeded",
+        "reason_code": "model-gateway.route.qualified-selected",
+        "evidence_sha256s": [
+          "a5be002fc36080e5a1309a0d7b5d07495ce617c6d4bf6991406598e1f5eac933",
+          "d96f990dada25ee9d0514b1a18965dcee569254421987e7c68bbab34638ecb43"
+        ],
+        "recorded_at_epoch_ms": 1790000000000,
+        "retain_until_epoch_ms": 1792592000000,
+        "redacted_fields": 0,
+        "previous_entry_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "entry_sha256": "f2b66ca2bb329699521665e7cfd72ec93bc717c30f7c410cc89d6dc4b324a316"
+      }
+    ],
+    "head": {
+      "count": 1,
+      "head_sha256": "f2b66ca2bb329699521665e7cfd72ec93bc717c30f7c410cc89d6dc4b324a316"
+    },
+    "complete": true,
+    "closed": true
+  }
+}

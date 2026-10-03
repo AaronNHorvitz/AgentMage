@@ -1,14 +1,18 @@
-//! Local-only model routes of the development coding host (Decision 0128).
+//! Model routes of the development coding host (Decisions 0128 and 0144).
 //!
 //! Before a run's model is composed, the development host's runtime factory
-//! routes the run's model requests through the kernel router in local-only
-//! mode, over the one route of the selected source's exact profile. The host
-//! declares the router's receipt unchanged, in a type it can parse closed, and
-//! keeps a route history of one model route entry per composition. The client
-//! keeps a receipt only when it recomputes and describes a local-only
-//! selection of a strict-local route for this exact run. The development host
-//! offers no remote route and holds no hybrid grant, so nothing here can send
-//! a model request off the machine, and nothing here grants authority.
+//! routes the run's model requests through the kernel router over the one
+//! route of the selected source's exact profile. It routes in local-only
+//! mode, or in hybrid mode when the run's workspace holds a live route grant
+//! of the catalog host, carrying each grant with what its owner counted
+//! against it (Decision 0144). The host declares the router's receipt
+//! unchanged, in a type it can parse closed, and keeps a route history of one
+//! model route entry per composition. The client keeps a receipt only when it
+//! recomputes and describes either a selection of the run's own strict-local
+//! route, or a remote route under a named grant and provider, which it shows
+//! on a line of its own. The development host offers no remote route, so
+//! nothing here can send a model request off the machine, and nothing here
+//! grants authority.
 
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
@@ -37,6 +41,8 @@ const DEVELOPMENT_ROUTE_ROLE: &str = "coding-development-proposer";
 const DEVELOPMENT_ROUTE_PLATFORM: &str = "linux-coding-development";
 /// Identity of the development host's fixed routing policy.
 const DEVELOPMENT_ROUTE_POLICY_ID: &str = "coding-development-local-only-v1";
+/// Identity of the development host's hybrid routing policy (Decision 0144).
+const DEVELOPMENT_HYBRID_POLICY_ID: &str = "coding-development-hybrid-v1";
 /// Receipt schema the kernel router writes: the contract schema version.
 const ROUTE_RECEIPT_SCHEMA_VERSION: u16 = agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
@@ -76,7 +82,7 @@ pub enum RunRouteDataClass {
 }
 
 impl RunRouteDataClass {
-    const fn kernel(self) -> RoutedDataClass {
+    pub(crate) const fn kernel(self) -> RoutedDataClass {
         match self {
             Self::Conversation => RoutedDataClass::Conversation,
             Self::WorkspaceExcerpts => RoutedDataClass::WorkspaceExcerpts,
@@ -96,7 +102,7 @@ impl RunRouteDataClass {
         }
     }
 
-    const fn name(self) -> &'static str {
+    pub(crate) const fn name(self) -> &'static str {
         match self {
             Self::Conversation => "conversation",
             Self::WorkspaceExcerpts => "workspace_excerpts",
@@ -346,20 +352,41 @@ fn route_policy_sha256() -> Result<String, RunRouteError> {
     }))
 }
 
-/// The routing request of one run, always in local-only mode. `hybrid_routes`
-/// is empty in the development host, which holds no grant.
+/// Digest of the development host's hybrid routing policy (Decision 0144): a
+/// remote route only under its own live grant from the catalog host's route
+/// grant owner, nothing wider than remote managed, no fallback.
+fn hybrid_route_policy_sha256() -> Result<String, RunRouteError> {
+    json_sha256(&serde_json::json!({
+        "record_type": "agentmage-development-route-policy",
+        "policy_id": DEVELOPMENT_HYBRID_POLICY_ID,
+        "mode": "hybrid",
+        "maximum_endpoint_class": "remote_managed",
+        "hybrid_grants": "catalog-host-route-grant-owner",
+        "fallback": "none",
+    }))
+}
+
+/// The routing request of one run in `mode`. In hybrid mode the grants are
+/// the person's accepted disclosure (Decision 0144).
 fn development_request(
     request: &RuntimeRunRequest,
+    mode: GatewayRoutingMode,
     hybrid_routes: Vec<GrantedHybridRoute>,
     now_epoch_ms: u64,
 ) -> Result<GatewayRoutingRequest, RunRouteError> {
+    let hybrid = mode == GatewayRoutingMode::Hybrid;
     let transmitted_data = DEVELOPMENT_ROUTED_DATA
         .iter()
         .map(|class| class.kernel())
         .collect::<BTreeSet<_>>();
     Ok(GatewayRoutingRequest {
         request_id: request.run_id.as_str().to_owned(),
-        user_profile_id: DEVELOPMENT_ROUTE_POLICY_ID.to_owned(),
+        user_profile_id: if hybrid {
+            DEVELOPMENT_HYBRID_POLICY_ID
+        } else {
+            DEVELOPMENT_ROUTE_POLICY_ID
+        }
+        .to_owned(),
         classification_sha256: json_sha256(&serde_json::json!({
             "record_type": "agentmage-development-route-classification",
             "transmitted_data": DEVELOPMENT_ROUTED_DATA,
@@ -367,14 +394,22 @@ fn development_request(
         role_id: DEVELOPMENT_ROUTE_ROLE.to_owned(),
         capability_sha256: capability_sha256(&request.model_profile)?,
         platform_id: DEVELOPMENT_ROUTE_PLATFORM.to_owned(),
-        maximum_endpoint_class: CanonicalEndpointClass::StrictLocal,
-        disclosure_accepted: false,
+        maximum_endpoint_class: if hybrid {
+            CanonicalEndpointClass::RemoteManaged
+        } else {
+            CanonicalEndpointClass::StrictLocal
+        },
+        disclosure_accepted: hybrid,
         required_context_tokens: request.context_budget.max_context_tokens,
         current_concurrency: 0,
-        route_policy_sha256: route_policy_sha256()?,
+        route_policy_sha256: if hybrid {
+            hybrid_route_policy_sha256()?
+        } else {
+            route_policy_sha256()?
+        },
         prior_route_id: None,
         fallback_policy: None,
-        mode: GatewayRoutingMode::LocalOnly,
+        mode,
         transmitted_data,
         hybrid_routes,
         now_epoch_ms,
@@ -384,10 +419,11 @@ fn development_request(
 fn route(
     request: &RuntimeRunRequest,
     routes: &[QualifiedGatewayRoute],
+    mode: GatewayRoutingMode,
     hybrid_routes: Vec<GrantedHybridRoute>,
     now_epoch_ms: u64,
 ) -> Result<GatewayRouteReceipt, RunRouteError> {
-    let routing = development_request(request, hybrid_routes, now_epoch_ms)?;
+    let routing = development_request(request, mode, hybrid_routes, now_epoch_ms)?;
     route_gateway(&routing, routes).map_err(|error| match error {
         GatewayRoutingError::NoQualifiedRoute => RunRouteError::NoRoute,
         GatewayRoutingError::FallbackDenied => RunRouteError::Refused,
@@ -403,14 +439,57 @@ pub fn route_development_run(
     purpose: &str,
     now_epoch_ms: u64,
 ) -> Result<RunRouteDeclaration, RunRouteError> {
-    let routes = [development_route(&request.model_profile, purpose)?];
-    let receipt = RunRouteReceipt::of(&route(request, &routes, Vec::new(), now_epoch_ms)?);
+    route_development_run_with_grants(request, purpose, now_epoch_ms, &[])
+}
+
+/// Routes one run's model requests over the development route of its exact
+/// profile, in hybrid mode when `grants` holds a live grant of the run's
+/// workspace and in local-only mode otherwise (Decision 0144). The
+/// development host offers no remote route, so the run's own route is
+/// selected either way.
+pub fn route_development_run_with_grants(
+    request: &RuntimeRunRequest,
+    purpose: &str,
+    now_epoch_ms: u64,
+    grants: &[crate::coding_route_grants::GrantedRoute],
+) -> Result<RunRouteDeclaration, RunRouteError> {
+    route_development_offers(request, purpose, now_epoch_ms, grants, &[])
+}
+
+/// Routes over the run's profile route and `remote_routes`, which only host
+/// tests offer.
+fn route_development_offers(
+    request: &RuntimeRunRequest,
+    purpose: &str,
+    now_epoch_ms: u64,
+    grants: &[crate::coding_route_grants::GrantedRoute],
+    remote_routes: &[QualifiedGatewayRoute],
+) -> Result<RunRouteDeclaration, RunRouteError> {
+    let mut routes = vec![development_route(&request.model_profile, purpose)?];
+    routes.extend_from_slice(remote_routes);
+    let mode = if grants.is_empty() {
+        GatewayRoutingMode::LocalOnly
+    } else {
+        GatewayRoutingMode::Hybrid
+    };
+    let granted = grants
+        .iter()
+        .map(crate::coding_route_grants::GrantedRoute::kernel)
+        .collect();
+    let receipt = RunRouteReceipt::of(&route(request, &routes, mode, granted, now_epoch_ms)?);
     let mut history = RunActionRecorder::new();
     history.record(route_entry_draft(request, &receipt, now_epoch_ms));
     Ok(RunRouteDeclaration {
         receipt,
         history: history.declare(),
     })
+}
+
+/// Whether a receipt selected a route other than the run's own profile route,
+/// which the development host has no adapter to send a request to.
+#[must_use]
+pub fn selects_remote_route(receipt: &RunRouteReceipt, request: &RuntimeRunRequest) -> bool {
+    receipt.selected_route_id.as_deref() != Some(request.model_profile.profile_id.as_str())
 }
 
 /// Digest of the effect of one route selection: the run, the selected route
@@ -441,10 +520,12 @@ pub fn route_entry_draft(
     receipt: &RunRouteReceipt,
     now_epoch_ms: u64,
 ) -> Option<ActionRecordDraft> {
+    // A remote selection also names its grant (Decision 0144).
     let mut evidence = vec![
         receipt.receipt_sha256.clone(),
         receipt.route_policy_sha256.clone(),
     ];
+    evidence.extend(receipt.hybrid_grant_sha256.clone());
     evidence.sort();
     evidence.dedup();
     Some(ActionRecordDraft {
@@ -462,11 +543,15 @@ pub fn route_entry_draft(
     })
 }
 
-/// Keeps a declared receipt only when it recomputes, names this run, and
-/// describes a local-only selection of exactly one strict-local route for the
-/// declared data, with no grant, provider or fallback. The selected route
-/// must be the run's own profile, by identity and canonical digest, under the
-/// development host's fixed policy (Decision 0130).
+/// Keeps a declared receipt only when it recomputes, names this run,
+/// transmits exactly the declared data without any fallback, and describes
+/// one of three selections (Decisions 0130 and 0144):
+/// - in local-only mode under the development host's fixed policy, the run's
+///   own profile route, by identity and canonical digest, of class
+///   strict-local, with no grant or provider;
+/// - in hybrid mode under the hybrid policy, that same local selection;
+/// - in hybrid mode under the hybrid policy, one eligible remote route,
+///   named with the grant and the provider it was selected under.
 pub fn verify_run_route_receipt(
     receipt: &RunRouteReceipt,
     request: &RuntimeRunRequest,
@@ -475,34 +560,60 @@ pub fn verify_run_route_receipt(
     let profile_sha256 = to_canonical_json(&request.model_profile)
         .map(|bytes| sha256_hex(&bytes))
         .map_err(|_| RunRouteVerificationError::Receipt)?;
-    let policy_sha256 = route_policy_sha256().map_err(|_| RunRouteVerificationError::Receipt)?;
+    let policy_sha256 = match receipt.mode {
+        RunRouteMode::LocalOnly => route_policy_sha256(),
+        RunRouteMode::Hybrid => hybrid_route_policy_sha256(),
+    }
+    .map_err(|_| RunRouteVerificationError::Receipt)?;
     let selected = receipt.selected_route_id.as_deref();
     let selected_audits = receipt
         .considered_routes
         .iter()
         .filter(|audit| Some(audit.route_id.as_str()) == selected)
         .collect::<Vec<_>>();
-    let kept = receipt.schema_version == ROUTE_RECEIPT_SCHEMA_VERSION
-        && receipt.request_id == request.run_id.as_str()
-        && receipt.computed_sha256().as_deref() == Some(receipt.receipt_sha256.as_str())
-        && receipt.route_policy_sha256 == policy_sha256
-        && receipt.mode == RunRouteMode::LocalOnly
+    let local = selected == Some(profile_id)
         && receipt.disclosure_class == Some(CanonicalEndpointClass::StrictLocal)
-        && selected == Some(profile_id)
         && matches!(
             selected_audits.as_slice(),
             [audit] if audit.eligible && audit.candidate_sha256 == profile_sha256
         )
+        && receipt.hybrid_grant_sha256.is_none()
+        && receipt.provider_id.is_none();
+    let remote = receipt.mode == RunRouteMode::Hybrid
+        && selected.is_some_and(|route| route != profile_id)
+        && matches!(
+            receipt.disclosure_class,
+            Some(CanonicalEndpointClass::RemotePrivate | CanonicalEndpointClass::RemoteManaged)
+        )
+        && matches!(selected_audits.as_slice(), [audit] if audit.eligible)
+        && receipt
+            .hybrid_grant_sha256
+            .as_deref()
+            .is_some_and(lower_hex_sha256)
+        && receipt
+            .provider_id
+            .as_deref()
+            .is_some_and(crate::coding_route_grants::route_grant_identifier);
+    let kept = receipt.schema_version == ROUTE_RECEIPT_SCHEMA_VERSION
+        && receipt.request_id == request.run_id.as_str()
+        && receipt.computed_sha256().as_deref() == Some(receipt.receipt_sha256.as_str())
+        && receipt.route_policy_sha256 == policy_sha256
+        && (local || remote)
         && !receipt.fallback_used
         && receipt.fallback_policy_sha256.is_none()
-        && receipt.hybrid_grant_sha256.is_none()
-        && receipt.provider_id.is_none()
         && receipt.transmitted_data == DEVELOPMENT_ROUTED_DATA;
     if kept {
         Ok(())
     } else {
         Err(RunRouteVerificationError::Receipt)
     }
+}
+
+fn lower_hex_sha256(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
 /// Keeps a declared route history only when it replays to its head, holds
@@ -534,11 +645,13 @@ pub fn verify_run_route_history(
     }
 }
 
-/// One line for a kept receipt, or an unavailable line.
+/// One line for a kept receipt, or an unavailable line. A remote selection
+/// says so first, with its provider, grant and every data class it received,
+/// so a remote route is never used silently (Decision 0144).
 #[must_use]
 pub fn render_run_route_receipt(receipt: Option<&RunRouteReceipt>) -> String {
     let Some(receipt) = receipt else {
-        return "model route: unavailable; the host could not declare a verified local-only route\n"
+        return "model route: unavailable; the host could not declare a verified route\n"
             .to_owned();
     };
     let data = receipt
@@ -547,12 +660,27 @@ pub fn render_run_route_receipt(receipt: Option<&RunRouteReceipt>) -> String {
         .map(|class| class.name())
         .collect::<Vec<_>>()
         .join(", ");
+    let short = |digest: &str| digest.get(..12).unwrap_or(digest).to_owned();
+    let mode = match receipt.mode {
+        RunRouteMode::LocalOnly => "local-only",
+        RunRouteMode::Hybrid => "hybrid",
+    };
+    let selection = match (&receipt.hybrid_grant_sha256, &receipt.provider_id) {
+        (Some(grant), Some(provider)) => format!(
+            "REMOTE route {} of provider {provider} under grant {}; data {data} sent off this machine",
+            receipt.selected_route_id.as_deref().unwrap_or("none"),
+            short(grant)
+        ),
+        _ => format!(
+            "selected {} (strict_local); data {data}",
+            receipt.selected_route_id.as_deref().unwrap_or("none")
+        ),
+    };
     format!(
-        "model route: local-only; selected {} (strict_local); data {data}; {} considered; {}; receipt {}\n",
-        receipt.selected_route_id.as_deref().unwrap_or("none"),
+        "model route: {mode}; {selection}; {} considered; {}; receipt {}\n",
         receipt.considered_routes.len(),
         receipt.reason_code,
-        &receipt.receipt_sha256[..receipt.receipt_sha256.len().min(12)]
+        short(&receipt.receipt_sha256)
     )
 }
 
@@ -601,7 +729,14 @@ mod tests {
     fn a_run_is_routed_locally_and_its_receipt_keeps_the_kernel_digest() {
         let request = request();
         let route = development_route(&request.model_profile, "contract-test").unwrap();
-        let kernel = super::route(&request, &[route], Vec::new(), 5_000).unwrap();
+        let kernel = super::route(
+            &request,
+            &[route],
+            GatewayRoutingMode::LocalOnly,
+            Vec::new(),
+            5_000,
+        )
+        .unwrap();
         let receipt = RunRouteReceipt::of(&kernel);
         // The host type encodes exactly as the kernel receipt, so the kernel
         // digest recomputes over it.
@@ -660,6 +795,7 @@ mod tests {
             &super::route(
                 &request,
                 &[remote.clone(), local.clone()],
+                GatewayRoutingMode::LocalOnly,
                 vec![grant.clone()],
                 5_000,
             )
@@ -681,7 +817,9 @@ mod tests {
         assert_eq!(verify_run_route_receipt(&receipt, &request), Ok(()));
         // The request itself allows nothing wider than strict-local, accepts
         // no disclosure, and carries no fallback.
-        let routing = development_request(&request, Vec::new(), 5_000).unwrap();
+        let routing =
+            development_request(&request, GatewayRoutingMode::LocalOnly, Vec::new(), 5_000)
+                .unwrap();
         assert_eq!(routing.mode, GatewayRoutingMode::LocalOnly);
         assert_eq!(
             routing.maximum_endpoint_class,
@@ -692,7 +830,13 @@ mod tests {
         assert!(routing.hybrid_routes.is_empty());
         // The same remote route, admitted by class and disclosure, is still
         // refused by the local-only mode itself.
-        let mut routing = development_request(&request, vec![grant.clone()], 5_000).unwrap();
+        let mut routing = development_request(
+            &request,
+            GatewayRoutingMode::LocalOnly,
+            vec![grant.clone()],
+            5_000,
+        )
+        .unwrap();
         routing.maximum_endpoint_class = CanonicalEndpointClass::RemoteManaged;
         routing.disclosure_accepted = true;
         let receipt =
@@ -708,7 +852,13 @@ mod tests {
         );
         // Only a remote route: nothing is selected, so composition refuses.
         assert_eq!(
-            super::route(&request, &[remote], vec![grant], 5_000),
+            super::route(
+                &request,
+                &[remote],
+                GatewayRoutingMode::LocalOnly,
+                vec![grant],
+                5_000
+            ),
             Err(RunRouteError::NoRoute)
         );
     }
@@ -866,7 +1016,304 @@ mod tests {
         assert!(line.ends_with('\n') && line.lines().count() == 1);
         assert_eq!(
             render_run_route_receipt(None),
-            "model route: unavailable; the host could not declare a verified local-only route\n"
+            "model route: unavailable; the host could not declare a verified route\n"
         );
+    }
+    /// A live grant of the remote fixture route, from the catalog host's own
+    /// request type (Decision 0144).
+    fn route_grant(
+        remote: &QualifiedGatewayRoute,
+        data_classes: &[RunRouteDataClass],
+        fallback_allowed: bool,
+    ) -> crate::coding_route_grants::GrantedRoute {
+        let file = crate::coding_route_grants::RouteGrantFile {
+            schema_version: 1,
+            grant_id: "grant-remote".to_owned(),
+            route_id: remote.route_id.clone(),
+            candidate_sha256: remote.candidate_sha256.clone(),
+            provider_id: "provider-remote".to_owned(),
+            data_classes: data_classes.to_vec(),
+            max_requests: 2,
+            max_input_tokens: 10_000_000,
+            fallback_allowed,
+            valid_for_hours: 1,
+        };
+        crate::coding_route_grants::GrantedRoute {
+            grant: crate::coding_route_grants::RouteGrant::from_file(&file, 5_000).unwrap(),
+            used_requests: 0,
+            used_input_tokens: 0,
+        }
+    }
+
+    /// The run with a context budget its local route cannot serve, and a
+    /// remote fixture route that can.
+    fn beyond_local(request: &RuntimeRunRequest) -> (RuntimeRunRequest, QualifiedGatewayRoute) {
+        let mut wide = request.clone();
+        wide.context_budget.max_context_tokens =
+            request.model_profile.context.max_context_tokens + 1;
+        let mut remote = remote_route(request);
+        remote.max_context_tokens = wide.context_budget.max_context_tokens;
+        (wide, remote)
+    }
+
+    #[test]
+    fn a_workspace_with_live_grants_routes_in_hybrid_mode_and_still_selects_its_local_route() {
+        // Decision 0144: a live grant puts the run in hybrid mode under the
+        // hybrid policy; the host offers no remote route, so the run's own
+        // route is selected and the receipt names no grant or provider.
+        let request = request();
+        let remote = remote_route(&request);
+        let grant = route_grant(&remote, &DEVELOPMENT_ROUTED_DATA, false);
+        let declared = route_development_run_with_grants(
+            &request,
+            "contract-test",
+            5_000,
+            std::slice::from_ref(&grant),
+        )
+        .unwrap();
+        let receipt = &declared.receipt;
+        assert_eq!(receipt.mode, RunRouteMode::Hybrid);
+        assert_eq!(
+            receipt.route_policy_sha256,
+            hybrid_route_policy_sha256().unwrap()
+        );
+        assert_eq!(
+            receipt.selected_route_id.as_deref(),
+            Some(request.model_profile.profile_id.as_str())
+        );
+        assert_eq!(
+            (&receipt.hybrid_grant_sha256, &receipt.provider_id),
+            (&None, &None)
+        );
+        assert!(!selects_remote_route(receipt, &request));
+        assert_eq!(verify_run_route_receipt(receipt, &request), Ok(()));
+        let history = declared.history.as_ref().unwrap();
+        assert_eq!(
+            verify_run_route_history(history, &request, Some(receipt)),
+            Ok(())
+        );
+        assert!(
+            render_run_route_receipt(Some(receipt)).starts_with("model route: hybrid; selected ")
+        );
+        // Without a grant the same run is routed local-only, as before.
+        let local = route_development_run_with_grants(&request, "contract-test", 5_000, &[])
+            .unwrap()
+            .receipt;
+        assert_eq!(
+            local,
+            route_development_run(&request, "contract-test", 5_000)
+                .unwrap()
+                .receipt
+        );
+        assert_eq!(local.mode, RunRouteMode::LocalOnly);
+    }
+
+    #[test]
+    fn a_granted_remote_route_is_selected_only_within_its_grant_and_is_never_silent() {
+        // Decision 0144: host tests offer a remote fixture route; it is
+        // selected only when the local route cannot serve the run, and only
+        // under a live grant that covers the data and has budget left.
+        let request = request();
+        let (wide, remote) = beyond_local(&request);
+        let grant = route_grant(&remote, &DEVELOPMENT_ROUTED_DATA, false);
+        let offer = |grants: &[crate::coding_route_grants::GrantedRoute], now| {
+            route_development_offers(
+                &wide,
+                "contract-test",
+                now,
+                grants,
+                std::slice::from_ref(&remote),
+            )
+        };
+        let declared = offer(std::slice::from_ref(&grant), 5_000).unwrap();
+        let receipt = &declared.receipt;
+        assert_eq!(
+            receipt.selected_route_id.as_deref(),
+            Some(remote.route_id.as_str())
+        );
+        assert_eq!(
+            receipt.hybrid_grant_sha256.as_deref(),
+            Some(grant.grant.grant_sha256.as_str())
+        );
+        assert_eq!(receipt.provider_id.as_deref(), Some("provider-remote"));
+        assert_eq!(
+            receipt.disclosure_class,
+            Some(CanonicalEndpointClass::RemoteManaged)
+        );
+        assert!(selects_remote_route(receipt, &wide));
+        assert_eq!(verify_run_route_receipt(receipt, &wide), Ok(()));
+        let history = declared.history.as_ref().unwrap();
+        assert_eq!(
+            verify_run_route_history(history, &wide, Some(receipt)),
+            Ok(())
+        );
+        let ActionHistoryRecord::Kept(entry) = &history.records[0] else {
+            panic!("the route entry is kept");
+        };
+        assert!(entry.evidence_sha256s.contains(&grant.grant.grant_sha256));
+        let line = render_run_route_receipt(Some(receipt));
+        assert!(line.starts_with(&format!(
+            "model route: hybrid; REMOTE route {} of provider provider-remote under grant {}; data conversation, workspace_excerpts, tool_outputs sent off this machine; ",
+            remote.route_id,
+            &grant.grant.grant_sha256[..12]
+        )));
+
+        // Expiry, exhausted counters, data the grant does not cover, and a
+        // revoked grant (which the owner no longer offers) leave nothing.
+        let exhausted = crate::coding_route_grants::GrantedRoute {
+            used_requests: 2,
+            ..grant.clone()
+        };
+        let tokens_spent = crate::coding_route_grants::GrantedRoute {
+            used_input_tokens: 10_000_000,
+            ..grant.clone()
+        };
+        let narrow = route_grant(&remote, &[RunRouteDataClass::Conversation], false);
+        for (grants, now) in [
+            (vec![grant.clone()], grant.grant.expires_at_epoch_ms),
+            (vec![exhausted], 5_000),
+            (vec![tokens_spent], 5_000),
+            (vec![narrow], 5_000),
+            (Vec::new(), 5_000),
+        ] {
+            assert_eq!(offer(&grants, now), Err(RunRouteError::NoRoute));
+        }
+        // In local-only mode the granted route itself is refused, so a run
+        // its local route cannot serve gets no route at all.
+        assert_eq!(
+            super::route(
+                &wide,
+                &[
+                    development_route(&wide.model_profile, "contract-test").unwrap(),
+                    remote.clone(),
+                ],
+                GatewayRoutingMode::LocalOnly,
+                vec![grant.kernel()],
+                5_000,
+            ),
+            Err(RunRouteError::NoRoute)
+        );
+    }
+
+    #[test]
+    fn a_remote_fallback_is_refused_unless_its_grant_allows_one_and_the_client_keeps_none() {
+        // Decision 0144: the development host never falls back, but the
+        // router it uses refuses a fallback to a remote route whose grant
+        // does not allow one, and the client drops any fallback receipt.
+        let request = request();
+        let local = development_route(&request.model_profile, "contract-test").unwrap();
+        let remote = remote_route(&request);
+        for fallback_allowed in [false, true] {
+            let grant = route_grant(&remote, &DEVELOPMENT_ROUTED_DATA, fallback_allowed);
+            let mut routing = development_request(
+                &request,
+                GatewayRoutingMode::Hybrid,
+                vec![grant.kernel()],
+                5_000,
+            )
+            .unwrap();
+            routing.prior_route_id = Some(local.route_id.clone());
+            routing.fallback_policy = Some(
+                agentmage_kernel_engine::gateway_routing::ExplicitFallbackPolicy {
+                    policy_id: "fallback-fixture".to_owned(),
+                    policy_sha256: "f".repeat(64),
+                    ordered_route_ids: vec![local.route_id.clone(), remote.route_id.clone()],
+                    authorized_destination_route_id: remote.route_id.clone(),
+                    destination_disclosure_accepted: true,
+                    equivalent_controls_required: true,
+                },
+            );
+            let routed = route_gateway(&routing, &[local.clone(), remote.clone()]);
+            if fallback_allowed {
+                let receipt = RunRouteReceipt::of(&routed.unwrap());
+                assert!(receipt.fallback_used);
+                assert_eq!(
+                    verify_run_route_receipt(&receipt, &request),
+                    Err(RunRouteVerificationError::Receipt)
+                );
+            } else {
+                assert_eq!(routed, Err(GatewayRoutingError::FallbackDenied));
+            }
+        }
+    }
+
+    #[test]
+    fn a_hybrid_receipt_is_kept_only_for_a_local_or_named_remote_selection() {
+        let request = request();
+        let (wide, remote) = beyond_local(&request);
+        let grant = route_grant(&remote, &DEVELOPMENT_ROUTED_DATA, false);
+        let remote_receipt = route_development_offers(
+            &wide,
+            "contract-test",
+            5_000,
+            std::slice::from_ref(&grant),
+            std::slice::from_ref(&remote),
+        )
+        .unwrap()
+        .receipt;
+        let local_receipt = route_development_run_with_grants(
+            &request,
+            "contract-test",
+            5_000,
+            std::slice::from_ref(&grant),
+        )
+        .unwrap()
+        .receipt;
+        let resealed = |mut value: RunRouteReceipt| {
+            value.receipt_sha256 = value.computed_sha256().unwrap();
+            value
+        };
+        for changed in [
+            // A remote selection without its grant, its provider or a remote
+            // class, under the local-only policy, or in local-only mode.
+            resealed(RunRouteReceipt {
+                hybrid_grant_sha256: None,
+                ..remote_receipt.clone()
+            }),
+            resealed(RunRouteReceipt {
+                provider_id: None,
+                ..remote_receipt.clone()
+            }),
+            resealed(RunRouteReceipt {
+                hybrid_grant_sha256: Some("G".repeat(64)),
+                ..remote_receipt.clone()
+            }),
+            resealed(RunRouteReceipt {
+                disclosure_class: Some(CanonicalEndpointClass::StrictLocal),
+                ..remote_receipt.clone()
+            }),
+            resealed(RunRouteReceipt {
+                route_policy_sha256: route_policy_sha256().unwrap(),
+                ..remote_receipt.clone()
+            }),
+            resealed(RunRouteReceipt {
+                mode: RunRouteMode::LocalOnly,
+                route_policy_sha256: route_policy_sha256().unwrap(),
+                ..remote_receipt.clone()
+            }),
+            // The local selection naming a grant, or under the other policy.
+            resealed(RunRouteReceipt {
+                hybrid_grant_sha256: Some("e".repeat(64)),
+                provider_id: Some("provider-remote".to_owned()),
+                ..local_receipt.clone()
+            }),
+            resealed(RunRouteReceipt {
+                route_policy_sha256: route_policy_sha256().unwrap(),
+                ..local_receipt.clone()
+            }),
+        ] {
+            let request = if changed.selected_route_id == remote_receipt.selected_route_id {
+                &wide
+            } else {
+                &request
+            };
+            assert_eq!(
+                verify_run_route_receipt(&changed, request),
+                Err(RunRouteVerificationError::Receipt),
+                "{changed:?}"
+            );
+        }
+        assert_eq!(verify_run_route_receipt(&remote_receipt, &wide), Ok(()));
+        assert_eq!(verify_run_route_receipt(&local_receipt, &request), Ok(()));
     }
 }

@@ -683,6 +683,14 @@ pub trait RuntimeTransportPort {
         Err(RuntimeTransportError::RequestDenied)
     }
 
+    /// Answers one route grant request of the catalog host (Decision 0144).
+    fn route_grant(
+        &mut self,
+        _request: crate::coding_route_grants::RouteGrantRequest,
+    ) -> Result<crate::coding_route_grants::RouteGrantAnswer, RuntimeTransportError> {
+        Err(RuntimeTransportError::RequestDenied)
+    }
+
     /// Reads the reconciled control state of one held run's job from the
     /// durable job ledger (Decision 0120).
     fn job_status(

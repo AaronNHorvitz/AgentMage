@@ -1115,18 +1115,6 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 | CodingDevelopmentScenario::RestartProtocolCorrection
         ) && prepared.skip_scripted_steps == 0
             && request.event_cursor.is_none();
-        // Decision 0128: every model request of this composition is routed in
-        // local-only mode before any model is built; nothing selected refuses.
-        let routed_at = now_epoch_ms().map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
-        let mut route = crate::coding_route::route_development_run(
-            request,
-            self.model.admitted_purpose(),
-            routed_at,
-        )
-        .map_err(|error| {
-            eprintln!("coding.development.route.{}", error.code());
-            NativeChatRuntimeError::RuntimeFailed
-        })?;
         let mut key = CodingDevelopmentKeyProvider::open(&self.activation)
             .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
         let authority = open_linux_development_authority(
@@ -1136,6 +1124,35 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             now_epoch_ms().map_err(|_| NativeChatRuntimeError::RuntimeFailed)?,
         )
         .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+        // Decision 0128: every model request of this composition is routed
+        // before any model is built; nothing selected refuses. Decision 0144:
+        // the live route grants of the run's workspace, with their counters,
+        // put the routing in hybrid mode. The host offers no remote route and
+        // has no adapter for one, so a remote selection refuses as well.
+        let routed_at = now_epoch_ms().map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+        let grants = crate::coding_route_grants::live_route_grants(
+            &authority.authority().owner_states(),
+            request.workspace_id.as_str(),
+            routed_at,
+        )
+        .map_err(|refusal| {
+            eprintln!("coding.development.route.{}", refusal.code());
+            NativeChatRuntimeError::RuntimeFailed
+        })?;
+        let mut route = crate::coding_route::route_development_run_with_grants(
+            request,
+            self.model.admitted_purpose(),
+            routed_at,
+            &grants,
+        )
+        .map_err(|error| {
+            eprintln!("coding.development.route.{}", error.code());
+            NativeChatRuntimeError::RuntimeFailed
+        })?;
+        if crate::coding_route::selects_remote_route(&route.receipt, request) {
+            eprintln!("coding.development.route.remote-unavailable");
+            return Err(NativeChatRuntimeError::RuntimeFailed);
+        }
         let job_ledgers = authority.authority().job_ledgers();
         // Decision 0129: the run's effects and route chains are stored before
         // any model is built, and the route entry with them.

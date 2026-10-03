@@ -1,0 +1,391 @@
+{
+  "schema_version": 2,
+  "run_id": "coding-run-0001",
+  "session_id": "coding-session-0001",
+  "mode": "controlled_write",
+  "task": {
+    "schema_version": 2,
+    "task_id": "task-coding-0001",
+    "session_id": "coding-session-0001",
+    "objective": "Inspect and repair one bounded fixture",
+    "acceptance_criteria": [
+      "The focused fixture passes"
+    ],
+    "constraints": [
+      "No network and no unrelated changes",
+      "Recipe plan digest: 3e7a906efc78fbf913e7a03cbeaf19660d0c33d86e56e18000983c99b82b4a37",
+      "Recipe agentmage-sample-repair 1.0.0 (tests): change only files under src, at most 1 distinct files; a write outside this plan is refused, and each write inside it needs its own approval"
+    ],
+    "status": "ready"
+  },
+  "work_packet": {
+    "schema_version": 2,
+    "work_packet_id": "coding-packet-0001",
+    "task_id": "task-coding-0001",
+    "revision": 1,
+    "objective": "Inspect and repair one bounded fixture",
+    "reason": "Exercise the shared coding runtime",
+    "owner": "fixture-user",
+    "authoritative_evidence": [],
+    "mutable_files": [
+      "src/lib.rs"
+    ],
+    "protected_files": [
+      ".git"
+    ],
+    "expected_output": "One evidence-backed coding result",
+    "acceptance_checks": [
+      "The focused fixture passes"
+    ],
+    "required_evidence": [
+      "validation"
+    ],
+    "required_capability_class": "local-write",
+    "budgets": [
+      {
+        "resource": "plan_steps",
+        "limit": 16
+      },
+      {
+        "resource": "tool_call_depth",
+        "limit": 2
+      },
+      {
+        "resource": "model_calls",
+        "limit": 32
+      },
+      {
+        "resource": "tool_calls",
+        "limit": 32
+      },
+      {
+        "resource": "input_bytes",
+        "limit": 4194304
+      },
+      {
+        "resource": "output_bytes",
+        "limit": 4194304
+      },
+      {
+        "resource": "elapsed_milliseconds",
+        "limit": 600000
+      },
+      {
+        "resource": "memory_bytes",
+        "limit": 268435456
+      },
+      {
+        "resource": "disk_bytes",
+        "limit": 67108864
+      },
+      {
+        "resource": "process_count",
+        "limit": 32
+      }
+    ],
+    "stop_conditions": [
+      {
+        "kind": "acceptance_satisfied",
+        "description": "Stop for AcceptanceSatisfied"
+      },
+      {
+        "kind": "user_decision_required",
+        "description": "Stop for UserDecisionRequired"
+      },
+      {
+        "kind": "policy_denied",
+        "description": "Stop for PolicyDenied"
+      },
+      {
+        "kind": "error",
+        "description": "Stop for Error"
+      },
+      {
+        "kind": "cancelled",
+        "description": "Stop for Cancelled"
+      },
+      {
+        "kind": "budget_exhausted",
+        "description": "Stop for BudgetExhausted"
+      },
+      {
+        "kind": "uncertain_result",
+        "description": "Stop for UncertainResult"
+      }
+    ],
+    "rollback": {
+      "reversible": true,
+      "description": "Revert only exact approved bytes through a fresh request"
+    },
+    "sensitivity": "ephemeral",
+    "last_verification_date": "2026-08-17",
+    "next_action": null,
+    "next_review": null,
+    "status_reason": null,
+    "disposition": null,
+    "completion_evidence": [],
+    "superseding_work": null,
+    "validation_issues": [],
+    "plan_id": "coding-plan-0001",
+    "state": "active"
+  },
+  "workspace_id": "workspace-coding",
+  "workspace_snapshot_sha256": "a2b95b987bada2627b0010da052a5ab564bc0c785d67d353bb4d280b9e13190a",
+  "repository_snapshot_id": "repository-snapshot-0001",
+  "repository_snapshot_sha256": "0287c933bd7811595a32f3cb9cd3c2243bed1706a66c63d9dd0e560df6405bbd",
+  "model_profile": {
+    "schema_version": 2,
+    "profile_id": "fixture-coding-profile",
+    "manifest_id": "fixture-coding-manifest",
+    "manifest_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "display_name": "Fixture coding profile",
+    "family": "deterministic_fake_coding",
+    "publisher_control": "fixture",
+    "lineage": [
+      "fixture-source"
+    ],
+    "license_spdx": "Apache-2.0",
+    "license_terms_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "artifact": {
+      "artifact_id": "fixture-artifact",
+      "publisher": "fixture",
+      "source_revision": "fixture-revision",
+      "format": "fixture",
+      "bytes": 1,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "transformations": [],
+    "codec": {
+      "codec_id": "fixture-coding-codec",
+      "codec_version": "1.0.0",
+      "codec_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "tokenizer": "fixture-tokenizer",
+      "tokenizer_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "template": "fixture-template",
+      "template_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "tool_protocol_version": "closed-v1",
+      "end_tokens": [
+        1
+      ],
+      "reasoning_enabled": false
+    },
+    "runtime": {
+      "adapter_id": "fixture-coding-adapter",
+      "kind": "deterministic_fake",
+      "contract_version": 1,
+      "runtime_build": "fixture-runtime-v1",
+      "runtime_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "platform": "deterministic_fake",
+      "architecture": "x86_64"
+    },
+    "quantization": "none",
+    "modalities": [
+      "text"
+    ],
+    "context": {
+      "max_context_tokens": 65536,
+      "max_input_bytes": 262144,
+      "max_messages": 64,
+      "token_counter": "fixture-counter-v1",
+      "token_counter_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "decoding": {
+      "profile_id": "fixture-decoding",
+      "sampler_order": [
+        "exact"
+      ],
+      "temperature": 0.0,
+      "top_p": 1.0,
+      "top_k": 1,
+      "repeat_penalty": 1.0,
+      "seed": 1,
+      "max_output_tokens": 16
+    },
+    "hardware": [
+      {
+        "platform": "deterministic_fake",
+        "architecture": "x86_64",
+        "minimum_system_memory_bytes": 1,
+        "minimum_accelerator_memory_bytes": 0,
+        "accelerator": "none",
+        "driver_constraint": "none"
+      }
+    ],
+    "capabilities": [
+      {
+        "role": "coding_planner",
+        "state": "passed",
+        "evaluation_profile": "coding-eval-v1",
+        "result_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+        "limitations": [
+          "fixture-only"
+        ]
+      },
+      {
+        "role": "tool_selection",
+        "state": "passed",
+        "evaluation_profile": "tool-eval-v1",
+        "result_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+        "limitations": [
+          "fixture-only"
+        ]
+      }
+    ],
+    "policy_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "lifecycle": "candidate",
+    "enabled": false,
+    "automatic_fallback": false
+  },
+  "context_budget": {
+    "max_context_tokens": 65536,
+    "max_input_bytes": 262144,
+    "max_messages": 64,
+    "token_counter": "fixture-counter-v1",
+    "token_counter_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "tool_catalog_id": "coding-tools-0001",
+  "tool_catalog_sha256": "2a96c3b126eb2adc5a81515d5473493daa9223057469c66ebe1d2f3bf37aaee5",
+  "visible_tools": [
+    {
+      "tool_id": "agentmage.code.apply-hunk-selection",
+      "tool_version": "1.0.0",
+      "definition_sha256": "cc257ecfb2e85f0826e0bf917a27ae3eb12d7739c899cab5001d8fa3ee697f7b"
+    },
+    {
+      "tool_id": "agentmage.code.change-history",
+      "tool_version": "1.0.0",
+      "definition_sha256": "88faeec819bc4f157db429865d8a42ed4a97e69536aebf0640c69358516e4301"
+    },
+    {
+      "tool_id": "agentmage.code.create-file",
+      "tool_version": "1.0.0",
+      "definition_sha256": "3834ef3f2eefb7d03548e3d36637c69f404630c0d2d6b186fbcb566de9ba0516"
+    },
+    {
+      "tool_id": "agentmage.code.patch-file",
+      "tool_version": "1.0.0",
+      "definition_sha256": "1427c6ef1fd07e1e23b26dfe307050742aa0849b36c44ca8705c12caa9c1fcc4"
+    },
+    {
+      "tool_id": "agentmage.code.rollback",
+      "tool_version": "1.0.0",
+      "definition_sha256": "4b4b65dbec7499ef39f59ff11a2b91703e3d639aa59b36b53ff27a2de960e467"
+    },
+    {
+      "tool_id": "agentmage.command.run-template",
+      "tool_version": "1.0.0",
+      "definition_sha256": "d7f2b9834b8c912ee44ad12a816910889215b486ba0bdfc357a4c3c7747ea109"
+    },
+    {
+      "tool_id": "agentmage.git.inspect",
+      "tool_version": "1.0.0",
+      "definition_sha256": "ca5404741dd8ec6a57e1c472df21fea515655fc84ece3fa64f7cfb28e04e43ec"
+    },
+    {
+      "tool_id": "agentmage.validation.run-template",
+      "tool_version": "1.0.0",
+      "definition_sha256": "8864174c90db72d88e488e480acfc73ffadf96439282ae085d75ed7287ed7574"
+    },
+    {
+      "tool_id": "agentmage.workspace.binary-metadata",
+      "tool_version": "1.0.0",
+      "definition_sha256": "4831d7f61b208bdf8d2daee3eef3d30e58a780aa0cdaf18a76e702e192ab5bc2"
+    },
+    {
+      "tool_id": "agentmage.workspace.directory-tree",
+      "tool_version": "1.0.0",
+      "definition_sha256": "3eea63c347f184a2a8bc5c79c4abbc51c418cd0be38c46769e640e670ae9c6bf"
+    },
+    {
+      "tool_id": "agentmage.workspace.hash-file",
+      "tool_version": "1.0.0",
+      "definition_sha256": "6a6d40f54d0d99f74dc4cda8708735955786b054da2ca86cef572e6bb3cad13c"
+    },
+    {
+      "tool_id": "agentmage.workspace.hash-tree",
+      "tool_version": "1.0.0",
+      "definition_sha256": "e4f755d281491d14b358017da321667caa11cfaf49e453da11b9c8f542cebcb3"
+    },
+    {
+      "tool_id": "agentmage.workspace.list-directory",
+      "tool_version": "1.0.0",
+      "definition_sha256": "ada6621e90d13d4f986009299ffcbf2614de1a5e63cb496db4910807d0790395"
+    },
+    {
+      "tool_id": "agentmage.workspace.metadata",
+      "tool_version": "1.0.0",
+      "definition_sha256": "ab14d3c34c7fbe0201557d76a236b0b3c7ce4d83d4a5f34aaa68e2528bc74cad"
+    },
+    {
+      "tool_id": "agentmage.workspace.read-file",
+      "tool_version": "1.0.0",
+      "definition_sha256": "ba1ea80101cf0c26bea24ee1aaaf5f4b9952748af68c844daefcd417c011d3f2"
+    },
+    {
+      "tool_id": "agentmage.workspace.read-multiple",
+      "tool_version": "1.0.0",
+      "definition_sha256": "fe768bb8da99e61088f14201ea7daa74a65d38d4a5298440744d0ebd56999b2e"
+    },
+    {
+      "tool_id": "agentmage.workspace.search-filenames",
+      "tool_version": "1.0.0",
+      "definition_sha256": "d423e542a142ba65aca48a437337c6cdb1618f301cb0a9d9bff51e2372b2132b"
+    },
+    {
+      "tool_id": "agentmage.workspace.search-text",
+      "tool_version": "1.0.0",
+      "definition_sha256": "8ae888a365e812706232be96fa7b89c440581134ed8320765ecdf84348ae19d8"
+    },
+    {
+      "tool_id": "artifact.get_log_errors",
+      "tool_version": "1.0.0",
+      "definition_sha256": "0756a7b3fa354859fb79aa9fd15e69bfaa4927178b935d94b19fb7ebffb175c3"
+    },
+    {
+      "tool_id": "artifact.list",
+      "tool_version": "1.0.0",
+      "definition_sha256": "e02323f73a1baad00a4b649f4fc9e6c819dfdcfd089f6911484fc8f2c74fa96c"
+    },
+    {
+      "tool_id": "artifact.metadata",
+      "tool_version": "1.0.0",
+      "definition_sha256": "9356335d2f437c742e00f8ba1a365dda335c28021e2f9817cc054704a186e08f"
+    },
+    {
+      "tool_id": "artifact.range",
+      "tool_version": "1.0.0",
+      "definition_sha256": "34d4cd20dcaec3efaa96bc81213558244d11d87f8afe2874f3d28f9a12ec79c4"
+    },
+    {
+      "tool_id": "artifact.read",
+      "tool_version": "1.0.0",
+      "definition_sha256": "9f4f60cbb801896e707a2c9287980d63663b8b65cc84e6692e4136a117a6eb2a"
+    },
+    {
+      "tool_id": "artifact.search",
+      "tool_version": "1.0.0",
+      "definition_sha256": "225443b8d198207650e2c5bd05dec78bc9ac049f06436166c5e8fdbd5ee17014"
+    },
+    {
+      "tool_id": "artifact.sections",
+      "tool_version": "1.0.0",
+      "definition_sha256": "9288efffa7a7837146ae7a037cfa47ad3b8e24cc4555b1166c9d1b454f02e7b1"
+    }
+  ],
+  "policy_id": "coding-policy-0001",
+  "policy_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "limits": {
+    "max_turns": 16,
+    "max_model_calls": 32,
+    "max_tool_calls": 32,
+    "max_repeated_tool_calls": 4,
+    "max_tool_call_depth": 2,
+    "max_no_progress_turns": 4,
+    "max_context_refreshes": 16,
+    "max_events": 2048,
+    "max_elapsed_ms": 600000,
+    "max_output_bytes": 4194304
+  },
+  "event_cursor": null,
+  "request_sha256": "8b77279f058f9eb6ec8d6cbbdf6235d0c586aa6cdf36f6801c225189dd620ef1"
+}

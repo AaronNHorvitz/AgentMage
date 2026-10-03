@@ -1811,6 +1811,14 @@ pub enum ExtensionCommand {
     },
 }
 
+/// Reads one absolute regular file of at most `maximum` bytes without
+/// following a link at its last component, as extension files are read; for
+/// other catalog clients' small request files (Decision 0144).
+#[cfg(target_os = "linux")]
+pub(crate) fn read_bounded_file(path: &std::path::Path, maximum: u64) -> Option<Vec<u8>> {
+    source::read_file(path, maximum).ok()
+}
+
 /// The request of a command, reading its files without following links.
 #[cfg(target_os = "linux")]
 pub fn extension_request(command: &ExtensionCommand) -> Result<ExtensionRequest, ExtensionRefusal> {

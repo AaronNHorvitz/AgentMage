@@ -1086,6 +1086,31 @@ def extension_arguments(arguments: argparse.Namespace) -> list[str]:
     return ["--extension-uninstall", arguments.uninstall] + scope
 
 
+ROUTE_GRANT_IDENTIFIER = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}")
+
+
+def route_grant_arguments(arguments: argparse.Namespace) -> list[str]:
+    """The CLI arguments of one route grant operation (Decision 0144), in the
+    closed forms the CLI accepts. The grant request file is absolute; the CLI
+    shows the grant and reads the person's typed confirmation from standard
+    input before anything is sent."""
+    workspace = arguments.workspace
+    if workspace is not None and ROUTE_GRANT_IDENTIFIER.fullmatch(workspace) is None:
+        raise HarnessError("coding.harness.route-grant-workspace-denied")
+    if arguments.list:
+        return ["--route-grant-list"] + (["--route-grant-workspace", workspace] if workspace else [])
+    if workspace is None:
+        raise HarnessError("coding.harness.route-grant-arguments-denied")
+    scope = ["--route-grant-workspace", workspace]
+    if arguments.grant is not None:
+        if not arguments.grant.is_absolute():
+            raise HarnessError("coding.harness.route-grant-path-denied")
+        return ["--route-grant", str(arguments.grant)] + scope
+    if ROUTE_GRANT_IDENTIFIER.fullmatch(arguments.revoke or "") is None:
+        raise HarnessError("coding.harness.route-grant-id-denied")
+    return ["--route-grant-revoke", arguments.revoke] + scope
+
+
 def copy_private_sample(sample: Path, directory: Path, name: str) -> list[str]:
     """Copies one committed synthetic sample into a new private directory:
     0700 directories and 0600 files. An existing or linked target is refused."""
@@ -1367,6 +1392,13 @@ def parser() -> argparse.ArgumentParser:
     extension_operation.add_argument("--list", action="store_true")
     extension_command.add_argument("--workspace")
     extension_command.add_argument("--allow-license")
+    route_grant_command = commands.add_parser("route-grant")
+    route_grant_command.add_argument("--root", type=Path, required=True)
+    route_grant_operation = route_grant_command.add_mutually_exclusive_group(required=True)
+    route_grant_operation.add_argument("--grant", type=Path)
+    route_grant_operation.add_argument("--revoke")
+    route_grant_operation.add_argument("--list", action="store_true")
+    route_grant_command.add_argument("--workspace")
     extension_sample_command = commands.add_parser("extension-sample")
     extension_sample_command.add_argument("--directory", type=Path, required=True)
     recipe_sample_command = commands.add_parser("recipe-sample")
@@ -1440,6 +1472,8 @@ def main() -> int:
             return catalog(arguments.root, memory_arguments(arguments))
         if arguments.command == "extension":
             return catalog(arguments.root, extension_arguments(arguments))
+        if arguments.command == "route-grant":
+            return catalog(arguments.root, route_grant_arguments(arguments))
         if arguments.command == "extension-sample":
             print(json.dumps({
                 "directory": str(arguments.directory),

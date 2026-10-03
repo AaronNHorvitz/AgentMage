@@ -460,6 +460,47 @@ An installed extension provides nothing to a coding run, and nothing it declares
 granted or run. The host keeps no package source. It trusts the source digest your
 own authenticated CLI observed.
 
+### Hybrid route grants through the catalog host
+
+The catalog host also keeps one route grant catalog in the same encrypted store
+(Decision 0144). A grant lets one exact remote route of a named provider receive the
+listed data from the runs of one workspace, for at most a number of requests and input
+tokens, until an expiry. You write a grant request file and the CLI shows the grant and
+asks you to type `yes` before anything is sent:
+
+```sh
+cat > "$demo-grant.json" <<'JSON'
+{"schema_version": 1, "grant_id": "grant-example", "route_id": "example-remote-route",
+ "candidate_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+ "provider_id": "example-provider", "data_classes": ["conversation"],
+ "max_requests": 5, "max_input_tokens": 100000, "fallback_allowed": false,
+ "valid_for_hours": 24}
+JSON
+grant() { python3 -m scripts.coding_harness route-grant --root "$demo" "$@"; }
+grant --grant "$demo-grant.json" --workspace "$workspace"     # type yes when asked
+grant --list --workspace "$workspace"
+grant --revoke grant-example --workspace "$workspace"
+```
+
+`$workspace` is the run request's workspace identity, `coding-development-` followed
+by 24 hexadecimal characters of the activation marker; a grant for any other identity
+covers no run. The wrapper passes each operation to the CLI's `--route-grant FILE`,
+`--route-grant-list` or `--route-grant-revoke GRANT_ID`, with
+`--route-grant-workspace ID`, which is optional only for the list.
+
+- Any answer other than `yes`, end of input or a cancellation declines (exit 6), and
+  nothing is sent.
+- A second live grant for the same route is refused with
+  `route-grant.route-already-granted` (exit 4), and so is a second grant with the same
+  identity (`route-grant.duplicate`). Revoking twice is refused with
+  `route-grant.already-revoked`. A revoked or expired grant stays listed with what
+  was counted against it.
+- A run of a workspace holding a live grant is routed in hybrid mode, and its route
+  line says so. This development host offers no remote route, so every run still
+  selects its local route and nothing leaves the machine. A remote route is used only
+  by host tests with fixture routes; such a selection would be shown on its own line as
+  `REMOTE route ... of provider ... under grant ...`.
+
 Every frame between the CLI and either host is decoded exactly (Decisions 0135 and
 0136). A member the types do not name is refused at any position, and so is a member
 named twice in any object. Numbers must be written as the runtime writes them, so a

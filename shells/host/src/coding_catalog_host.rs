@@ -5,8 +5,8 @@
 //! IPC session of its parent like the development host, but it builds no
 //! repository composition, model, tool or runtime. It answers only catalog
 //! operations: documentation packs, the read of an ended run's stored action
-//! histories, memory (Decision 0131) and extensions (Decision 0132). Every
-//! run operation is refused. It
+//! histories, memory (Decision 0131), extensions (Decision 0132) and hybrid
+//! route grants (Decision 0144). Every run operation is refused. It
 //! opens the operational store for each operation and closes it afterwards,
 //! so nothing it holds outlives an answer except a staged documentation pack
 //! import.
@@ -29,6 +29,9 @@ use crate::coding_extensions::{
 };
 use crate::coding_memory::{
     MemoryAnswer, MemoryRefusal, MemoryRequest, MemoryStores, answer_memory,
+};
+use crate::coding_route_grants::{
+    RouteGrantAnswer, RouteGrantRefusal, RouteGrantRequest, answer_route_grant,
 };
 use crate::runtime_transport::{
     RuntimePrepareInput, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
@@ -217,6 +220,29 @@ impl<S: CatalogStore> RuntimeTransportPort for CodingCatalogService<S> {
                 let handles = store
                     .open()
                     .map_err(|_| ExtensionRefusal::StoreUnavailable)?;
+                let states = handles.owner_states.clone();
+                held = Some(handles);
+                Ok(states)
+            },
+            now,
+        );
+        drop(held);
+        Ok(answer)
+    }
+
+    fn route_grant(
+        &mut self,
+        request: RouteGrantRequest,
+    ) -> Result<RouteGrantAnswer, RuntimeTransportError> {
+        let now = self.store.now_epoch_ms();
+        let store = &mut self.store;
+        let mut held = None;
+        let answer = answer_route_grant(
+            &request,
+            &mut || {
+                let handles = store
+                    .open()
+                    .map_err(|_| RouteGrantRefusal::StoreUnavailable)?;
                 let states = handles.owner_states.clone();
                 held = Some(handles);
                 Ok(states)

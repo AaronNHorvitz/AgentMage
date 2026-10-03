@@ -1,4 +1,4 @@
-"""Checks of the runtime producer contract's fixtures and document (Decisions 0135 and 0143)."""
+"""Checks of the runtime producer contract's fixtures and document (Decisions 0135, 0143 and 0144)."""
 
 from __future__ import annotations
 
@@ -10,8 +10,10 @@ from pathlib import Path
 from scripts.runtime_producer_fixtures import printed_fixtures
 
 ROOT = Path(__file__).resolve().parents[1]
-FIXTURES = ROOT / "fixtures/runtime-producer/v2"
-DOCUMENT = ROOT / "docs/architecture/runtime-producer-contract-v2.md"
+FIXTURES = ROOT / "fixtures/runtime-producer/v3"
+DOCUMENT = ROOT / "docs/architecture/runtime-producer-contract-v3.md"
+SECOND_FIXTURES = ROOT / "fixtures/runtime-producer/v2"
+SECOND_DOCUMENT = ROOT / "docs/architecture/runtime-producer-contract-v2.md"
 FIRST_FIXTURES = ROOT / "fixtures/runtime-producer/v1"
 FIRST_DOCUMENT = ROOT / "docs/architecture/runtime-producer-contract-v1.md"
 RECORDS = {
@@ -43,8 +45,8 @@ class RuntimeProducerContractTests(unittest.TestCase):
     def test_the_manifest_names_every_fixture_with_its_digest(self) -> None:
         manifest = self.manifest()
         self.assertEqual(manifest["contract"], "agentmage-runtime-producer")
-        self.assertEqual(manifest["contract_version"], 2)
-        self.assertEqual(manifest["wire_version"], 16)
+        self.assertEqual(manifest["contract_version"], 3)
+        self.assertEqual(manifest["wire_version"], 17)
         listed = {entry["file"]: entry for entry in manifest["records"]}
         self.assertEqual(len(listed), len(manifest["records"]))
         self.assertEqual(set(listed), set(RECORDS))
@@ -84,11 +86,28 @@ class RuntimeProducerContractTests(unittest.TestCase):
         text = DOCUMENT.read_text(encoding="utf-8")
         for name in [*RECORDS, "manifest.json"]:
             self.assertIn(f"`{name}`", text)
-        self.assertIn("| This contract | 2 |", text)
-        self.assertIn("| Transport wire | 16 |", text)
+        self.assertIn("| This contract | 3 |", text)
+        self.assertIn("| Transport wire | 17 |", text)
         self.assertIn("| Run declarations | schema 5 |", text)
         self.assertIn("`session_recoverability`", text)
         self.assertIn("unexecuted producer specification", text)
+
+    def test_the_second_version_stays_as_it_was(self) -> None:
+        # Decision 0144: version 3 changes only the wire; version 2 keeps
+        # every byte its manifest names, its records equal version 3's, and its
+        # document points to version 3.
+        manifest = json.loads((SECOND_FIXTURES / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual((manifest["contract_version"], manifest["wire_version"]), (2, 16))
+        listed = {entry["file"]: entry for entry in manifest["records"]}
+        self.assertEqual({path.name for path in SECOND_FIXTURES.iterdir()},
+                         set(listed) | {"manifest.json"})
+        for name, entry in listed.items():
+            data = (SECOND_FIXTURES / name).read_bytes()
+            self.assertEqual(entry["sha256"], hashlib.sha256(data).hexdigest(), name)
+            self.assertEqual(data, (FIXTURES / name).read_bytes(), name)
+        text = SECOND_DOCUMENT.read_text(encoding="utf-8")
+        self.assertIn("| This contract | 2 |", text)
+        self.assertIn("runtime-producer-contract-v3.md", text)
 
     def test_the_first_version_stays_as_it_was(self) -> None:
         # Decision 0143: version 1 keeps every byte its manifest names, and its

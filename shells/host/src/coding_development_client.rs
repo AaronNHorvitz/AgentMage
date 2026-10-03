@@ -148,13 +148,14 @@ fn run_invocation(
         &options.workspace_root,
     )
     .map_err(|_| CodingDevelopmentClientError::Activation)?;
-    // Decisions 0130 to 0132: an ended run's histories, documentation packs,
-    // memory and extensions are served by the catalog host, which composes
-    // no run.
+    // Decisions 0130 to 0132 and 0144: an ended run's histories,
+    // documentation packs, memory, extensions and route grants are served by
+    // the catalog host, which composes no run.
     if options.ended_run.is_some()
         || options.doc_pack.is_some()
         || options.memory.is_some()
         || options.extension.is_some()
+        || options.route_grant.is_some()
     {
         return run_catalog_invocation(&activation, options, output, cancellation);
     }
@@ -926,6 +927,47 @@ fn run_catalog_invocation(
             return Ok(crate::coding_extensions::extension_refusal_exit(refusal));
         }
     };
+    // Decision 0144: a grant is read, shown and confirmed with a typed yes
+    // before any host is launched; anything else sends nothing.
+    let route_grant = match options
+        .route_grant
+        .as_deref()
+        .map(|command| {
+            current_epoch_ms()
+                .ok_or(crate::coding_route_grants::RouteGrantRefusal::ClockUnavailable)
+                .and_then(|now| crate::coding_route_grants::route_grant_request(command, now))
+        })
+        .transpose()
+    {
+        Ok(request) => request,
+        Err(refusal) => {
+            eprint!(
+                "{}",
+                crate::coding_route_grants::render_route_grant_refusal(refusal, json)
+            );
+            return Ok(crate::coding_route_grants::route_grant_refusal_exit(
+                refusal,
+            ));
+        }
+    };
+    if let Some(crate::coding_route_grants::RouteGrantRequest::Grant {
+        workspace_id,
+        grant,
+    }) = &route_grant
+    {
+        let mut stderr = std::io::stderr().lock();
+        let confirmed = confirm_route_grant(workspace_id, grant, &mut stderr, &mut || {
+            read_development_line(&cancellation.requested)
+        });
+        if !confirmed {
+            let _ = stderr.write_all(if json {
+                b"{\"type\":\"route_grant\",\"result\":\"declined\"}\n"
+            } else {
+                b"route grant declined; nothing was sent\n"
+            });
+            return Ok(ClientExitCode::Cancelled);
+        }
+    }
     cancellation.check_startup()?;
     let mut child = LinuxDevelopmentHostProcess::launch_catalog(
         activation.state_root(),
@@ -940,6 +982,7 @@ fn run_catalog_invocation(
         cancellation,
         doc_pack,
         extension,
+        route_grant,
     );
     if result.is_err() {
         child
@@ -966,6 +1009,7 @@ fn catalog_with_child(
         Vec<DocPackRequest>,
     )>,
     extension: Option<crate::coding_extensions::ExtensionRequest>,
+    route_grant: Option<crate::coding_route_grants::RouteGrantRequest>,
 ) -> Result<ClientExitCode, CodingDevelopmentClientError> {
     let envelope = child
         .read_launch_envelope_cancellable(&cancellation.requested)
@@ -980,19 +1024,27 @@ fn catalog_with_child(
         doc_pack,
         options.memory.as_deref(),
         extension,
+        route_grant,
     ) {
-        (Some(run_id), None, None, None) => {
+        (Some(run_id), None, None, None, None) => {
             show_ended_run(&mut runtime, run_id, options.action_history_export, output)
         }
-        (None, Some((sent, requests)), None, None) => run_doc_pack_requests(
+        (None, Some((sent, requests)), None, None, None) => run_doc_pack_requests(
             &mut runtime,
             sent.as_ref(),
             requests,
             output,
             &cancellation.requested,
         ),
-        (None, None, Some(request), None) => run_memory_request(&mut runtime, request, output),
-        (None, None, None, Some(request)) => run_extension_request(&mut runtime, &request, output),
+        (None, None, Some(request), None, None) => {
+            run_memory_request(&mut runtime, request, output)
+        }
+        (None, None, None, Some(request), None) => {
+            run_extension_request(&mut runtime, &request, output)
+        }
+        (None, None, None, None, Some(request)) => {
+            run_route_grant_request(&mut runtime, &request, output)
+        }
         _ => Err(CodingDevelopmentClientError::Activation),
     };
     runtime
@@ -1140,6 +1192,52 @@ fn run_extension_request(
         return Ok(extension_refusal_exit(refusal));
     }
     print!("{}", render_extension_answer(&answer, json));
+    Ok(ClientExitCode::Success)
+}
+
+/// Shows a grant before it is sent and asks for the exact word `yes`
+/// (Decision 0144). Every other line, end of input, a too-long line, a read
+/// failure and a cancellation decline.
+fn confirm_route_grant<E>(
+    workspace_id: &str,
+    grant: &crate::coding_route_grants::RouteGrant,
+    prompts: &mut dyn Write,
+    next_line: &mut dyn FnMut() -> Result<LinuxDevelopmentInputLine, E>,
+) -> bool {
+    let _ = prompts.write_all(
+        crate::coding_route_grants::render_route_grant_preview(workspace_id, grant).as_bytes(),
+    );
+    let _ = prompts.write_all(b"Type yes to keep this grant: ");
+    let _ = prompts.flush();
+    matches!(next_line(), Ok(LinuxDevelopmentInputLine::Line(line)) if line == "yes")
+}
+
+/// Sends one route grant request and writes its answer (Decision 0144). An
+/// answer that does not acknowledge exactly the sent request is refused; a
+/// refusal ends the operation with its exit class.
+fn run_route_grant_request(
+    runtime: &mut impl RuntimeTransportPort,
+    request: &crate::coding_route_grants::RouteGrantRequest,
+    output: CliOutputFormat,
+) -> Result<ClientExitCode, CodingDevelopmentClientError> {
+    use crate::coding_route_grants::{
+        RouteGrantAnswer, render_route_grant_answer, render_route_grant_refusal,
+        route_grant_answer_acknowledges, route_grant_refusal_exit,
+    };
+    let json = output == CliOutputFormat::Json;
+    let answer = runtime
+        .route_grant(request.clone())
+        .inspect_err(|error| eprintln!("{}", error.code()))
+        .map_err(|_| CodingDevelopmentClientError::Runtime)?;
+    if !route_grant_answer_acknowledges(request, &answer) {
+        eprintln!("coding.development.client.route-grant-answer-denied");
+        return Err(CodingDevelopmentClientError::Presentation);
+    }
+    if let RouteGrantAnswer::Refused { refusal } = answer {
+        eprint!("{}", render_route_grant_refusal(refusal, json));
+        return Ok(route_grant_refusal_exit(refusal));
+    }
+    print!("{}", render_route_grant_answer(&answer, json));
     Ok(ClientExitCode::Success)
 }
 
@@ -2085,7 +2183,7 @@ mod tests {
         ));
         // Decision 0128: an undeclared route says so, as does its history.
         assert!(human.ends_with(
-            "model route: unavailable; the host could not declare a verified local-only route\n\
+            "model route: unavailable; the host could not declare a verified route\n\
              action history of this run's model routes: unavailable; the host could not declare it completely\n"
         ));
         let json: serde_json::Value = serde_json::from_str(
@@ -2400,6 +2498,8 @@ mod tests {
         sent: Vec<DocPackRequest>,
         memory: Option<Result<crate::coding_memory::MemoryAnswer, RuntimeTransportError>>,
         extension: Option<Result<crate::coding_extensions::ExtensionAnswer, RuntimeTransportError>>,
+        route_grant:
+            Option<Result<crate::coding_route_grants::RouteGrantAnswer, RuntimeTransportError>>,
     }
 
     impl RuntimeTransportPort for ScriptedCatalog {
@@ -2462,6 +2562,14 @@ mod tests {
             _request: crate::coding_extensions::ExtensionRequest,
         ) -> Result<crate::coding_extensions::ExtensionAnswer, RuntimeTransportError> {
             self.extension
+                .take()
+                .unwrap_or(Err(RuntimeTransportError::RuntimeFailed))
+        }
+        fn route_grant(
+            &mut self,
+            _request: crate::coding_route_grants::RouteGrantRequest,
+        ) -> Result<crate::coding_route_grants::RouteGrantAnswer, RuntimeTransportError> {
+            self.route_grant
                 .take()
                 .unwrap_or(Err(RuntimeTransportError::RuntimeFailed))
         }
@@ -2547,6 +2655,7 @@ mod tests {
                 sent: Vec::new(),
                 memory: None,
                 extension: None,
+                route_grant: None,
             };
             let result = run_doc_pack_requests(
                 &mut catalog,
@@ -2636,6 +2745,7 @@ mod tests {
             sent: Vec::new(),
             memory: None,
             extension: None,
+            route_grant: None,
         };
         assert_eq!(
             run_doc_pack_requests(
@@ -2673,6 +2783,7 @@ mod tests {
                 sent: Vec::new(),
                 memory: Some(answer),
                 extension: None,
+                route_grant: None,
             };
             run_memory_request(&mut catalog, &request, CliOutputFormat::Json)
         };
@@ -2717,6 +2828,129 @@ mod tests {
     }
 
     #[test]
+    fn a_route_grant_is_sent_only_after_a_typed_yes_and_shown_only_when_acknowledged() {
+        // Decision 0144: the CLI shows the grant and keeps it only after the
+        // exact word yes; it shows an answer only for the request it sent,
+        // and a refusal exits with its class.
+        use crate::coding_route_grants::{
+            RouteGrant, RouteGrantAnswer, RouteGrantFile, RouteGrantReceipt, RouteGrantRefusal,
+            RouteGrantRequest, RouteGrantState, RouteGrantView, route_grant_decision_sha256,
+        };
+        let grant = RouteGrant::from_file(
+            &RouteGrantFile {
+                schema_version: 1,
+                grant_id: "grant-remote".to_owned(),
+                route_id: "remote-route".to_owned(),
+                candidate_sha256: "d".repeat(64),
+                provider_id: "provider-remote".to_owned(),
+                data_classes: vec![crate::coding_route::RunRouteDataClass::Conversation],
+                max_requests: 1,
+                max_input_tokens: 1_000,
+                fallback_allowed: false,
+                valid_for_hours: 1,
+            },
+            1_767_312_000_000,
+        )
+        .unwrap();
+        for (line, confirmed) in [
+            (Ok(LinuxDevelopmentInputLine::Line("yes".to_owned())), true),
+            (Ok(LinuxDevelopmentInputLine::Line("YES".to_owned())), false),
+            (
+                Ok(LinuxDevelopmentInputLine::Line("yes please".to_owned())),
+                false,
+            ),
+            (Ok(LinuxDevelopmentInputLine::Ended), false),
+            (Ok(LinuxDevelopmentInputLine::TooLong), false),
+            (Ok(LinuxDevelopmentInputLine::Cancelled), false),
+            (Err(()), false),
+        ] {
+            let mut prompts = Vec::new();
+            let mut answered = Some(line);
+            assert_eq!(
+                confirm_route_grant("workspace-a", &grant, &mut prompts, &mut || {
+                    answered.take().unwrap()
+                }),
+                confirmed
+            );
+            let shown = String::from_utf8(prompts).unwrap();
+            assert!(
+                shown.starts_with("route grant grant-remote would let remote route remote-route")
+            );
+            assert!(shown.ends_with("Type yes to keep this grant: "));
+        }
+        let request = RouteGrantRequest::Grant {
+            workspace_id: "workspace-a".to_owned(),
+            grant: grant.clone(),
+        };
+        let view = RouteGrantView {
+            workspace_id: "workspace-a".to_owned(),
+            grant: grant.clone(),
+            state: RouteGrantState::Live,
+            used_requests: 0,
+            used_input_tokens: 0,
+            granted_at_epoch_ms: 1_767_312_000_000,
+            revoked_at_epoch_ms: None,
+        };
+        let receipt = RouteGrantReceipt {
+            catalog_revision: 1,
+            catalog_sha256: "a".repeat(64),
+            decision_sha256: route_grant_decision_sha256(&request).unwrap(),
+        };
+        let run = |answer: Result<RouteGrantAnswer, RuntimeTransportError>| {
+            let mut catalog = ScriptedCatalog {
+                answers: std::collections::VecDeque::new(),
+                sent: Vec::new(),
+                memory: None,
+                extension: None,
+                route_grant: Some(answer),
+            };
+            run_route_grant_request(&mut catalog, &request, CliOutputFormat::Json)
+        };
+        assert_eq!(
+            run(Ok(RouteGrantAnswer::Granted {
+                grant: view.clone(),
+                receipt: receipt.clone()
+            })),
+            Ok(ClientExitCode::Success)
+        );
+        assert_eq!(
+            run(Ok(RouteGrantAnswer::Refused {
+                refusal: RouteGrantRefusal::RouteAlreadyGranted
+            })),
+            Ok(ClientExitCode::PolicyDenied)
+        );
+        for answer in [
+            RouteGrantAnswer::Granted {
+                grant: RouteGrantView {
+                    workspace_id: "workspace-b".to_owned(),
+                    ..view.clone()
+                },
+                receipt: receipt.clone(),
+            },
+            RouteGrantAnswer::Granted {
+                grant: view.clone(),
+                receipt: RouteGrantReceipt {
+                    decision_sha256: "b".repeat(64),
+                    ..receipt
+                },
+            },
+            RouteGrantAnswer::Listed {
+                grants: vec![view],
+                catalog_revision: 1,
+            },
+        ] {
+            assert_eq!(
+                run(Ok(answer)),
+                Err(CodingDevelopmentClientError::Presentation)
+            );
+        }
+        assert_eq!(
+            run(Err(RuntimeTransportError::RequestDenied)),
+            Err(CodingDevelopmentClientError::Runtime)
+        );
+    }
+
+    #[test]
     fn an_extension_answer_is_shown_only_when_it_acknowledges_the_sent_request() {
         // Decision 0132: the CLI shows an answer only for the request it
         // sent; a refusal exits with its class and a transport failure is a
@@ -2746,6 +2980,7 @@ mod tests {
                 sent: Vec::new(),
                 memory: None,
                 extension: Some(answer),
+                route_grant: None,
             };
             run_extension_request(&mut catalog, &request, CliOutputFormat::Json)
         };

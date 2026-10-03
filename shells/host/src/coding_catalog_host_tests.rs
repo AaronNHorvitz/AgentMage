@@ -422,3 +422,39 @@ fn each_extension_operation_opens_the_store_once_and_closes_it_again() {
     );
     assert_eq!(opened.get(), 2);
 }
+
+#[test]
+fn each_route_grant_operation_needs_the_clock_and_opens_the_store_once() {
+    // Decision 0144: the catalog host answers route grant requests over its
+    // own store, opened for the operation and closed afterwards; without a
+    // clock nothing is opened.
+    use crate::coding_route_grants::{RouteGrantAnswer, RouteGrantRefusal, RouteGrantRequest};
+    let (mut catalog, store, opened) = service("catalog-route-grant");
+    let list = RouteGrantRequest::List { workspace_id: None };
+    assert_eq!(
+        catalog.route_grant(list.clone()).unwrap(),
+        RouteGrantAnswer::Listed {
+            grants: Vec::new(),
+            catalog_revision: 0
+        }
+    );
+    assert_eq!(opened.get(), 1);
+    drop(store.try_runtime().expect("the service closed the store"));
+    catalog.store.now_epoch_ms = None;
+    assert_eq!(
+        catalog.route_grant(list.clone()).unwrap(),
+        RouteGrantAnswer::Refused {
+            refusal: RouteGrantRefusal::ClockUnavailable
+        }
+    );
+    assert_eq!(opened.get(), 1);
+    catalog.store.now_epoch_ms = Some(1_767_312_000_000);
+    catalog.store.refuse_open = true;
+    assert_eq!(
+        catalog.route_grant(list).unwrap(),
+        RouteGrantAnswer::Refused {
+            refusal: RouteGrantRefusal::StoreUnavailable
+        }
+    );
+    assert_eq!(opened.get(), 1);
+}

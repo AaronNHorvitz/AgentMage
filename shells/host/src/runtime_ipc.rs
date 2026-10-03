@@ -9,7 +9,9 @@
 //! requests (Decision 0132) over the same channel. Wire 15 carries a run's
 //! recipe, its declared plan and an extension list's issuer identity
 //! (Decision 0133). Every frame is decoded exactly, in both directions
-//! (Decision 0135).
+//! (Decision 0135). Wire 16 carries the session's recoverability in the run
+//! declarations (Decision 0143), and wire 17 the catalog host's route grant
+//! requests (Decision 0144).
 
 use agentmage_kernel_contracts::{
     CancellationId, RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEventCursor, RuntimeRunId,
@@ -25,13 +27,14 @@ use crate::coding_action_history::EndedRunActionHistories;
 use crate::coding_doc_packs::{DocPackAnswer, DocPackRequest};
 use crate::coding_extensions::{ExtensionAnswer, ExtensionRequest};
 use crate::coding_memory::{MemoryAnswer, MemoryRequest};
+use crate::coding_route_grants::{RouteGrantAnswer, RouteGrantRequest};
 use crate::runtime_transport::{
     RuntimeClientScope, RuntimeJobControl, RuntimeJobStatus, RuntimePrepareInput,
     RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
     decode_exact,
 };
 
-const WIRE_VERSION: u16 = 16;
+const WIRE_VERSION: u16 = 17;
 /// The wire version this build speaks, as named in a support bundle.
 pub const RUNTIME_IPC_WIRE_VERSION: u16 = WIRE_VERSION;
 const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
@@ -94,6 +97,9 @@ enum RuntimeIpcRequest {
     Extension {
         request: ExtensionRequest,
     },
+    RouteGrant {
+        request: RouteGrantRequest,
+    },
     RevokeSessionPreauthorization {
         session_id: SessionId,
         preauthorization_sha256: String,
@@ -137,6 +143,9 @@ enum RuntimeIpcResponse {
     },
     Extension {
         answer: ExtensionAnswer,
+    },
+    RouteGrant {
+        answer: RouteGrantAnswer,
     },
     JobStatus {
         status: RuntimeJobStatus,
@@ -482,6 +491,16 @@ impl RuntimeTransportPort for LinuxRuntimeIpcClient {
         }
     }
 
+    fn route_grant(
+        &mut self,
+        request: RouteGrantRequest,
+    ) -> Result<RouteGrantAnswer, RuntimeTransportError> {
+        match self.exchange(RuntimeIpcRequest::RouteGrant { request })? {
+            RuntimeIpcResponse::RouteGrant { answer } => Ok(answer),
+            _ => Err(RuntimeTransportError::RuntimeEvidenceDenied),
+        }
+    }
+
     fn revoke_session_preauthorization(
         &mut self,
         session_id: &SessionId,
@@ -691,6 +710,18 @@ fn answer<P: RuntimeTransportPort>(
             ),
             Err(error) => (RuntimeIpcResponse::Error { error }, false),
         },
+        Some(RuntimeIpcRequest::RouteGrant { request }) => match runtime.route_grant(request) {
+            Ok(answer) if answer_fits(&answer) => {
+                (RuntimeIpcResponse::RouteGrant { answer }, false)
+            }
+            Ok(_) => (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::CapacityExceeded,
+                },
+                false,
+            ),
+            Err(error) => (RuntimeIpcResponse::Error { error }, false),
+        },
         Some(RuntimeIpcRequest::RevokeSessionPreauthorization {
             session_id,
             preauthorization_sha256,
@@ -827,7 +858,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 16);
+        assert_eq!(decoded.version, 17);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::RunDeclarations {
             declarations: declarations.clone(),
@@ -899,7 +930,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 16);
+        assert_eq!(decoded.version, 17);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::EndedRunActionHistories {
             histories: histories.clone(),
@@ -1353,7 +1384,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 16);
+        assert_eq!(decoded.version, 17);
         assert_eq!(decoded.payload, request.payload);
         let text = String::from_utf8(bytes).unwrap();
         for nested in [
@@ -1544,7 +1575,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 16);
+        assert_eq!(decoded.version, 17);
         assert_eq!(decoded.payload, request.payload);
         let text = String::from_utf8(bytes).unwrap();
         for nested in [
@@ -1716,7 +1747,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 16);
+        assert_eq!(decoded.version, 17);
         assert_eq!(decoded.payload, request.payload);
         let text = String::from_utf8(bytes).unwrap();
         for nested in [
@@ -1856,6 +1887,177 @@ mod tests {
         };
         assert_eq!(
             answer(&mut ExtensionPort(oversized), &fixture_client(), list()),
+            (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::CapacityExceeded,
+                },
+                false
+            )
+        );
+    }
+
+    #[test]
+    fn a_route_grant_request_crosses_the_wire_closed() {
+        // Decision 0144: route grant requests and answers cross wire 17
+        // closed; a port that is not a catalog host refuses them, and an
+        // oversized listing is refused without ending the service.
+        use crate::coding_route_grants::{RouteGrantRefusal, RouteGrantState, RouteGrantView};
+        let request = RuntimeIpcEnvelope {
+            version: WIRE_VERSION,
+            payload: RuntimeIpcRequest::RouteGrant {
+                request: RouteGrantRequest::Revoke {
+                    workspace_id: "workspace-a".to_owned(),
+                    grant_id: "grant-remote".to_owned(),
+                },
+            },
+        };
+        let bytes = serde_json::to_vec(&request).unwrap();
+        let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
+            serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(decoded.version, 17);
+        assert_eq!(decoded.payload, request.payload);
+        let text = String::from_utf8(bytes).unwrap();
+        for nested in [
+            text.replacen(
+                "\"grant_id\":\"grant-remote\"",
+                "\"grant_id\":\"grant-remote\",\"x\":1",
+                1,
+            ),
+            text.replacen(",\"grant_id\":\"grant-remote\"", "", 1),
+            text.replacen("\"operation\":\"revoke\"", "\"operation\":\"extend\"", 1),
+        ] {
+            assert_ne!(nested, text);
+            assert!(
+                serde_json::from_str::<RuntimeIpcEnvelope<RuntimeIpcRequest>>(&nested).is_err()
+            );
+        }
+        let mut grant = crate::coding_route_grants::RouteGrant {
+            grant_id: "grant-remote".to_owned(),
+            route_id: "remote-route".to_owned(),
+            candidate_sha256: "d".repeat(64),
+            provider_id: "provider-remote".to_owned(),
+            data_classes: vec![crate::coding_route::RunRouteDataClass::Conversation],
+            max_requests: 1,
+            max_input_tokens: 1,
+            fallback_allowed: false,
+            expires_at_epoch_ms: 2,
+            grant_sha256: "0".repeat(64),
+        };
+        grant.grant_sha256 = grant.computed_sha256().unwrap();
+        let view = RouteGrantView {
+            workspace_id: "workspace-a".to_owned(),
+            grant,
+            state: RouteGrantState::Revoked,
+            used_requests: 0,
+            used_input_tokens: 0,
+            granted_at_epoch_ms: 1,
+            revoked_at_epoch_ms: Some(1),
+        };
+        let response = RuntimeIpcResponse::RouteGrant {
+            answer: RouteGrantAnswer::Listed {
+                grants: vec![view.clone()],
+                catalog_revision: 1,
+            },
+        };
+        let bytes = serde_json::to_vec(&response).unwrap();
+        assert_eq!(
+            serde_json::from_slice::<RuntimeIpcResponse>(&bytes).unwrap(),
+            response
+        );
+        let text = String::from_utf8(bytes).unwrap();
+        for nested in [
+            text.replacen("\"state\":\"revoked\"", "\"state\":\"revoked\",\"x\":1", 1),
+            text.replacen(",\"revoked_at_epoch_ms\":1", "", 1),
+            text.replacen("\"state\":\"revoked\"", "\"state\":\"paused\"", 1),
+            text.replacen("\"conversation\"", "\"secrets\"", 1),
+            text.replacen("\"answer\":\"listed\"", "\"answer\":\"extended\"", 1),
+        ] {
+            assert_ne!(nested, text);
+            assert!(serde_json::from_str::<RuntimeIpcResponse>(&nested).is_err());
+        }
+        let list = || {
+            Some(RuntimeIpcRequest::RouteGrant {
+                request: RouteGrantRequest::List { workspace_id: None },
+            })
+        };
+        let mut port = DeclaringPort {
+            session_id_bytes: 0,
+            released: 0,
+        };
+        assert_eq!(
+            answer(&mut port, &fixture_client(), list()),
+            (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::RequestDenied,
+                },
+                false
+            )
+        );
+        struct GrantPort(RouteGrantAnswer);
+        impl RuntimeTransportPort for GrantPort {
+            fn prepare(
+                &mut self,
+                _input: RuntimePrepareInput,
+            ) -> Result<RuntimeRunRequest, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn start(
+                &mut self,
+                _request: RuntimeRunRequest,
+            ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn advance(
+                &mut self,
+                _run_id: &RuntimeRunId,
+                _request_sha256: &str,
+                _after_event_cursor: Option<&RuntimeEventCursor>,
+                _response: Option<&RuntimeApprovalResponse>,
+            ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn cancel(
+                &mut self,
+                _run_id: &RuntimeRunId,
+                _request_sha256: &str,
+                _cancellation_id: CancellationId,
+                _after_event_cursor: Option<&RuntimeEventCursor>,
+            ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn release(
+                &mut self,
+                _run_id: &RuntimeRunId,
+                _request_sha256: &str,
+            ) -> Result<(), RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn route_grant(
+                &mut self,
+                _request: RouteGrantRequest,
+            ) -> Result<RouteGrantAnswer, RuntimeTransportError> {
+                Ok(self.0.clone())
+            }
+        }
+        let refused = RouteGrantAnswer::Refused {
+            refusal: RouteGrantRefusal::RouteAlreadyGranted,
+        };
+        assert_eq!(
+            answer(&mut GrantPort(refused.clone()), &fixture_client(), list()),
+            (RuntimeIpcResponse::RouteGrant { answer: refused }, false)
+        );
+        let oversized = RouteGrantAnswer::Listed {
+            grants: vec![
+                RouteGrantView {
+                    workspace_id: "x".repeat(MAX_WIRE_BYTES),
+                    ..view
+                };
+                1
+            ],
+            catalog_revision: 1,
+        };
+        assert_eq!(
+            answer(&mut GrantPort(oversized), &fixture_client(), list()),
             (
                 RuntimeIpcResponse::Error {
                     error: RuntimeTransportError::CapacityExceeded,
@@ -2080,7 +2282,7 @@ mod tests {
             .unwrap();
             let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
                 serde_json::from_slice(&bytes).unwrap();
-            assert_eq!(decoded.version, 16);
+            assert_eq!(decoded.version, 17);
             assert_eq!(decoded.payload, request);
         }
         let mut scoped = serde_json::to_value(RuntimeIpcRequest::ControlJob {
@@ -2310,7 +2512,7 @@ mod tests {
         .unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcResponse> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 16);
+        assert_eq!(decoded.version, 17);
         assert_eq!(decoded.payload, response);
         let mut extra = serde_json::to_value(&suspended).unwrap();
         extra["suspended"]["resumable"] = serde_json::Value::Bool(true);

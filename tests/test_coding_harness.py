@@ -567,6 +567,35 @@ class CodingHarnessTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             coding_harness.parser().parse_args(["extension", "--root", "/expected", "--list", "--uninstall", "x"])
 
+    def test_route_grant_operations_reach_the_catalog_host_in_their_closed_forms(self):
+        def route_grant(*arguments):
+            parsed = coding_harness.parser().parse_args(["route-grant", "--root", "/expected", *arguments])
+            return coding_harness.route_grant_arguments(parsed)
+
+        workspace = "coding-development-0123456789abcdef01234567"
+        scope = ["--route-grant-workspace", workspace]
+        self.assertEqual(
+            route_grant("--grant", "/s/grant.json", "--workspace", workspace),
+            ["--route-grant", "/s/grant.json"] + scope,
+        )
+        self.assertEqual(
+            route_grant("--revoke", "grant-remote", "--workspace", workspace),
+            ["--route-grant-revoke", "grant-remote"] + scope,
+        )
+        self.assertEqual(route_grant("--list"), ["--route-grant-list"])
+        self.assertEqual(route_grant("--list", "--workspace", workspace), ["--route-grant-list"] + scope)
+        for invalid in (
+            ("--grant", "/s/grant.json"),
+            ("--grant", "relative.json", "--workspace", workspace),
+            ("--revoke", "grant-remote"),
+            ("--revoke", "grant remote", "--workspace", workspace),
+            ("--list", "--workspace", "workspace with spaces"),
+        ):
+            with self.assertRaises(coding_harness.HarnessError, msg=invalid):
+                route_grant(*invalid)
+        with self.assertRaises(SystemExit):
+            coding_harness.parser().parse_args(["route-grant", "--root", "/expected", "--list", "--revoke", "x"])
+
     def test_the_extension_sample_is_copied_privately_and_only_once(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary) / "sample"

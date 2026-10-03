@@ -1,17 +1,16 @@
-# AgentMage runtime producer contract — version 2
+# AgentMage runtime producer contract — version 3
 
-Superseded by [version 3](runtime-producer-contract-v3.md) under
-[Decision 0144](../decisions/0144-hybrid-route-grants-through-the-catalog-host.md), which adds the
-catalog host's route grant operation on wire 17. This version and its fixtures are kept unchanged.
-
-Revision: 2026-10-02, version 2. Registered under AMR-06.1 in [TASKS.md](../../TASKS.md);
+Revision: 2026-10-02, version 3. Registered under AMR-06.1 in [TASKS.md](../../TASKS.md);
 design in [Decision 0135](../decisions/0135-review-fixes-exact-wire-decoding-and-the-runtime-producer-contract.md),
 row split in [Decision 0134](../decisions/0134-amr-06-decomposition.md), exact decoding corrected
 under [Decision 0136](../decisions/0136-review-fixes-for-exact-decoding-and-the-research-decomposition.md).
 Version 2, under [Decision 0143](../decisions/0143-review-fixes-restart-marking-and-durable-session-recoverability.md),
-adds the recoverability of the run's whole session to the run declarations (schema 5) and
-raises the transport wire to 16. Every other record, encoding and meaning is unchanged.
-[Version 1](runtime-producer-contract-v1.md) and its fixtures stay as they were.
+added the recoverability of the run's whole session to the run declarations (schema 5).
+Version 3, under [Decision 0144](../decisions/0144-hybrid-route-grants-through-the-catalog-host.md),
+adds the catalog host's route grant operation, raises the transport wire to 17, and lets a
+run's route receipt describe a hybrid selection. Every record file is unchanged from version 2.
+[Version 2](runtime-producer-contract-v2.md), [version 1](runtime-producer-contract-v1.md)
+and their fixtures stay as they were.
 
 This is an unexecuted producer specification. It states which records the AgentMage runtime
 produces for a consumer and how a consumer verifies them. It is not a consumer's contract, a
@@ -35,8 +34,8 @@ runtime's own approvals and kernel grants remain the only source of authority fo
 
 | Item | Version | Where it is defined |
 | --- | --- | --- |
-| This contract | 2 | `fixtures/runtime-producer/v2/manifest.json` |
-| Transport wire | 16 | `shells/host/src/runtime_ipc.rs` |
+| This contract | 3 | `fixtures/runtime-producer/v3/manifest.json` |
+| Transport wire | 17 | `shells/host/src/runtime_ipc.rs` |
 | Run request | schema 2 | `kernel/contracts/src/runtime_run.rs` (`RuntimeRunRequest`) |
 | Run recipe (sent by a client) | manifest schema 1 | `shells/host/src/coding_recipe.rs` (`RuntimeRecipeRequest`) |
 | Run declarations | schema 5 | `shells/host/src/runtime_transport.rs` (`RuntimeRunDeclarations`) |
@@ -56,7 +55,7 @@ version as an older one.
 
 - One authenticated local IPC channel per client process. The host authenticates the peer
   and derives the client's scope from it; a client never names its own scope.
-- Each frame is one JSON envelope, `{"version": 16, "payload": {...}}`, of at most 4 MiB.
+- Each frame is one JSON envelope, `{"version": 17, "payload": {...}}`, of at most 4 MiB.
   Run declarations are at most 4 MiB less 64 KiB.
 - Every frame is decoded exactly in both directions. The frame decodes into its types, and its
   re-encoding, read back as JSON, must equal the frame read as JSON. A member the types do not
@@ -78,11 +77,13 @@ version as an older one.
 The operations that carry these records are `prepare` (answer `prepared`, the run request),
 `run_declarations`, `job_status`, `control_job` (answer `job_control`) and
 `ended_run_action_histories`. The coding host answers the first four; the store-only catalog
-host answers the last.
+host answers the last. The catalog host's other operations, its documentation pack, memory,
+extension and route grant requests, carry no record of this contract; version 3 names them only
+because the route grant operation raised the wire.
 
 ## Records
 
-Each record has one fixture in `fixtures/runtime-producer/v2/`.
+Each record has one fixture in `fixtures/runtime-producer/v3/`.
 
 ### Run request
 
@@ -121,7 +122,7 @@ run. Each part is then verified alone, and a part that fails is dropped alone:
 | `context_inspections` | content-free views; shown, not recomputed | the host cannot show every composed context |
 | `effect_history` | `verify_run_action_history(history, Effects)` | the tool boundary could not keep every entry |
 | `job_control_history` | `verify_run_action_history(history, JobControl)` | the job service cannot declare every decided request |
-| `route_receipt` | `verify_run_route_receipt(receipt, request)` | the run's model requests were not routed by this host |
+| `route_receipt` | `verify_run_route_receipt(receipt, request)`: the run's own strict-local profile route in local-only or hybrid mode, or in hybrid mode one eligible remote route named with its grant digest and provider; never a fallback | the run's model requests were not routed by this host |
 | `route_history` | `verify_run_route_history(history, request, receipt)` | absent with the receipt, or its entry could not be kept |
 | `recipe_plan` | `verify_declared_recipe_plan(plan, request, sent)` | the run had no recipe, or the plan was not declared |
 
@@ -194,20 +195,21 @@ The host unit test module `runtime_producer_contract_tests` builds every fixture
 runtime's types and functions and compares it byte for byte, decodes each exactly, runs each
 verification, refuses an added member at every object position and shows that a changed record
 is refused or dropped. `tests/test_runtime_producer_contract.py` checks the manifest's digests
-and that this document names every fixture; it also checks that version 1's files still match
-their own manifest. After a deliberate change to a record within this version,
+and that this document names every fixture; it also checks that the earlier versions' files still
+match their own manifests. After a deliberate change to a record within this version,
 `python3 scripts/runtime_producer_fixtures.py --write` regenerates this version's files from the
-runtime's types; without `--write` it only compares. It never writes version 1.
+runtime's types; without `--write` it only compares. It never writes an earlier version.
 
 ## Change control
 
 A change to the encoding or meaning of any record raises that record's schema version and this
 contract's version, and adds a new fixture directory beside the earlier ones, which stay as they
 are. Version 2 added the session's recoverability to the run declarations; a consumer of version
-1 reads version 2's declarations as an unknown schema, and so as unavailable. The host unit test
-`the_first_contract_version_stays_as_it_was_and_reads_as_unavailable` shows that version 1's
-files still match their manifest and that its run declarations are dropped whole by the current
-client.
+1 reads version 2's declarations as an unknown schema, and so as unavailable. Version 3 changed
+only the wire, so a version 2 consumer is refused at the frame's version. The host unit tests
+`the_first_contract_version_stays_as_it_was_and_reads_as_unavailable` and
+`the_second_contract_version_stays_as_it_was_on_its_older_wire` show that each earlier
+version's files still match their manifest.
 
 ## Limits
 

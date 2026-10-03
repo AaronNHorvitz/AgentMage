@@ -120,6 +120,9 @@ pub struct CodingDevelopmentCliOptions {
     /// An extension operation of the catalog host instead of a run
     /// (Decision 0132).
     pub extension: Option<Box<crate::coding_extensions::ExtensionCommand>>,
+    /// A hybrid route grant operation of the catalog host instead of a run
+    /// (Decision 0144).
+    pub route_grant: Option<Box<crate::coding_route_grants::RouteGrantCommand>>,
     /// A recipe each run of this invocation is held to (Decision 0133).
     pub recipe: Option<Box<DevelopmentRecipeOption>>,
 }
@@ -135,6 +138,9 @@ pub struct DevelopmentRecipeOption {
 
 /// Parsed CLI action before any transport or authority boundary.
 #[derive(Clone, Debug, PartialEq, Eq)]
+// Parsed once per process and never stored in a collection, so the size of
+// the development options does not matter.
+#[allow(clippy::large_enum_variant)]
 pub enum CliInvocation {
     /// Render complete local help.
     Help,
@@ -311,6 +317,10 @@ fn parse_coding_development(
     let mut extension_revocations = None;
     let mut extension_list = false;
     let mut extension_workspace = None;
+    let mut route_grant = None;
+    let mut route_grant_list = false;
+    let mut route_grant_revoke = None;
+    let mut route_grant_workspace = None;
     let mut recipe = None;
     let mut recipe_parameters = Vec::new();
     let absolute_path =
@@ -698,6 +708,38 @@ fn parse_coding_development(
                 cursor += 1;
                 continue;
             }
+            "--route-grant" if route_grant.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(absolute_path)
+                    .ok_or(ThinClientError::InvalidValue)?;
+                route_grant = Some(PathBuf::from(value));
+                cursor += 2;
+                continue;
+            }
+            "--route-grant-list" if !route_grant_list => {
+                route_grant_list = true;
+                cursor += 1;
+                continue;
+            }
+            "--route-grant-revoke" if route_grant_revoke.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| crate::coding_route_grants::route_grant_identifier(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                route_grant_revoke = Some(value.clone());
+                cursor += 2;
+                continue;
+            }
+            "--route-grant-workspace" if route_grant_workspace.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| crate::coding_route_grants::route_grant_identifier(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                route_grant_workspace = Some(value.clone());
+                cursor += 2;
+                continue;
+            }
             "--recipe" if recipe.is_none() => {
                 let value = arguments
                     .get(cursor + 1)
@@ -752,9 +794,9 @@ fn parse_coding_development(
         *target = Some(value.clone());
         cursor += 2;
     }
-    // Decisions 0130 to 0132: a catalog operation (an ended run's histories,
-    // or one documentation pack, memory or extension operation) launches only
-    // the catalog host. It runs nothing, so it takes no scenario, model,
+    // Decisions 0130 to 0132 and 0144: a catalog operation (an ended run's
+    // histories, or one documentation pack, memory, extension or route grant
+    // operation) launches only the catalog host. It runs nothing, so it takes no scenario, model,
     // objective or run option, and its auxiliary options go only with their
     // own operation.
     let operations = usize::from(doc_pack_import.is_some())
@@ -773,6 +815,9 @@ fn parse_coding_development(
         + usize::from(extension_uninstall.is_some())
         + usize::from(extension_revocations.is_some())
         + usize::from(extension_list)
+        + usize::from(route_grant.is_some())
+        + usize::from(route_grant_list)
+        + usize::from(route_grant_revoke.is_some())
         + usize::from(ended_run.is_some());
     let extension_operation = extension_trust.is_some()
         || extension_distrust.is_some()
@@ -793,9 +838,33 @@ fn parse_coding_development(
         || extension_workspace.is_some() != extension_operation
             && !(extension_list && extension_workspace.is_some())
         || extension_license.is_some() != extension_install.is_some()
+        || route_grant_workspace.is_some()
+            != (route_grant.is_some() || route_grant_revoke.is_some())
+            && !(route_grant_list && route_grant_workspace.is_some())
     {
         return Err(ThinClientError::InvalidValue);
     }
+    let route_grant = if let Some(file) = route_grant {
+        Some(crate::coding_route_grants::RouteGrantCommand::Grant {
+            workspace_id: route_grant_workspace
+                .clone()
+                .ok_or(ThinClientError::InvalidValue)?,
+            file,
+        })
+    } else if let Some(grant_id) = route_grant_revoke {
+        Some(crate::coding_route_grants::RouteGrantCommand::Revoke {
+            workspace_id: route_grant_workspace
+                .clone()
+                .ok_or(ThinClientError::InvalidValue)?,
+            grant_id,
+        })
+    } else if route_grant_list {
+        Some(crate::coding_route_grants::RouteGrantCommand::List {
+            workspace_id: route_grant_workspace.clone(),
+        })
+    } else {
+        None
+    };
     let extension_scope = || {
         extension_workspace
             .clone()
@@ -940,6 +1009,7 @@ fn parse_coding_development(
             doc_pack: doc_pack.map(Box::new),
             memory: memory.map(Box::new),
             extension: extension.map(Box::new),
+            route_grant: route_grant.map(Box::new),
             recipe: None,
         });
     }
@@ -1050,6 +1120,7 @@ fn parse_coding_development(
         doc_pack: None,
         memory: None,
         extension: None,
+        route_grant: None,
         recipe: recipe.map(|manifest| {
             Box::new(DevelopmentRecipeOption {
                 manifest,
@@ -1654,6 +1725,9 @@ Commands:\n\
        | --extension-install ABSOLUTE_DIRECTORY --extension-allow-license LICENSE\n\
        | --extension-uninstall PACKAGE_ID | --extension-revocations ABSOLUTE_FILE\n\
        | --extension-list [--extension-workspace LABEL]\n\
+  code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
+       --route-grant-workspace WORKSPACE_ID --route-grant ABSOLUTE_FILE | --route-grant-revoke GRANT_ID\n\
+       | --route-grant-list [--route-grant-workspace WORKSPACE_ID]\n\
   chat MESSAGE\n\
   conversations list [--from YYYY-MM-DD] [--to YYYY-MM-DD]\n\
   conversations search QUERY\n\
@@ -2025,6 +2099,7 @@ mod tests {
                     doc_pack: None,
                     memory: None,
                     extension: None,
+                    route_grant: None,
                     ..
                 }),
                 ..
@@ -2919,6 +2994,129 @@ mod tests {
             "--extension-revocations",
             "--extension-list",
             "--extension-workspace",
+        ] {
+            assert!(command_help().contains(operation), "{operation}");
+        }
+    }
+
+    #[test]
+    fn route_grant_operations_parse_closed_and_alone() {
+        // Decision 0144: one route grant operation launches only the catalog
+        // host; a grant and a revocation name their workspace.
+        use crate::coding_route_grants::RouteGrantCommand;
+        let roots = [
+            "code",
+            "--development",
+            "--state-root",
+            "/tmp/state",
+            "--disposable-root",
+            "/tmp/disposable",
+            "--workspace-root",
+            "/tmp/disposable/worktree",
+        ];
+        let parse = |extra: &[&str]| {
+            let mut arguments = roots.to_vec();
+            arguments.extend(extra);
+            match parse_cli_arguments(&strings(&arguments)) {
+                Ok(CliInvocation::Code {
+                    development: Some(options),
+                    ..
+                }) => Ok(options),
+                Ok(_) => panic!("development options"),
+                Err(error) => Err(error),
+            }
+        };
+        let workspace = "coding-development-0123456789abcdef01234567";
+        for (extra, command) in [
+            (
+                vec![
+                    "--route-grant",
+                    "/tmp/grant.json",
+                    "--route-grant-workspace",
+                    workspace,
+                ],
+                RouteGrantCommand::Grant {
+                    workspace_id: workspace.to_owned(),
+                    file: PathBuf::from("/tmp/grant.json"),
+                },
+            ),
+            (
+                vec![
+                    "--route-grant-workspace",
+                    workspace,
+                    "--route-grant-revoke",
+                    "grant-remote",
+                ],
+                RouteGrantCommand::Revoke {
+                    workspace_id: workspace.to_owned(),
+                    grant_id: "grant-remote".to_owned(),
+                },
+            ),
+            (
+                vec!["--route-grant-list"],
+                RouteGrantCommand::List { workspace_id: None },
+            ),
+            (
+                vec!["--route-grant-list", "--route-grant-workspace", workspace],
+                RouteGrantCommand::List {
+                    workspace_id: Some(workspace.to_owned()),
+                },
+            ),
+        ] {
+            let options = parse(&extra).unwrap();
+            assert_eq!(options.route_grant, Some(Box::new(command)), "{extra:?}");
+            assert!(
+                options.doc_pack.is_none()
+                    && options.memory.is_none()
+                    && options.extension.is_none()
+                    && options.ended_run.is_none()
+                    && options.objective.is_empty()
+                    && options.support_bundle.is_none()
+            );
+        }
+        for refused in [
+            vec!["--route-grant", "/tmp/grant.json"],
+            vec!["--route-grant-revoke", "grant-remote"],
+            vec!["--route-grant-workspace", workspace],
+            vec![
+                "--route-grant",
+                "relative/grant.json",
+                "--route-grant-workspace",
+                workspace,
+            ],
+            vec![
+                "--route-grant-list",
+                "--route-grant-workspace",
+                "workspace with spaces",
+            ],
+            vec![
+                "--route-grant-workspace",
+                workspace,
+                "--route-grant-revoke",
+                "-grant",
+            ],
+            vec!["--route-grant-list", "--route-grant-list"],
+            vec!["--route-grant-list", "--memory-list"],
+            vec!["--route-grant-list", "--extension-list"],
+            vec!["--route-grant-list", "--scenario", "no-op"],
+            vec!["--route-grant-list", "--objective", "inspect"],
+            vec!["--memory-list", "--route-grant-workspace", workspace],
+            vec![
+                "--scenario",
+                "failed-test-repair",
+                "--objective",
+                "Repair the failing test",
+                "--route-grant-workspace",
+                workspace,
+            ],
+        ] {
+            assert!(parse(&refused).is_err(), "{refused:?}");
+        }
+        for operation in [
+            "--route-grant ",
+            "--route-grant-list",
+            "--route-grant-revoke",
+            "--route-grant-workspace",
         ] {
             assert!(command_help().contains(operation), "{operation}");
         }

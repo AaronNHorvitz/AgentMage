@@ -123,10 +123,11 @@ fn each_state_persists_and_reloads_after_reopening() {
 #[test]
 fn each_owner_keeps_its_own_state_and_revision() {
     // Decision 0132: a later owner adds a name, not a migration; owners never
-    // see or move each other's state, and both are checked at every open.
+    // see or move each other's state, and all are checked at every open. The
+    // route grant catalog is such a later owner (Decision 0144).
     assert_eq!(
         OwnerStateName::ALL.map(OwnerStateName::as_str),
-        ["memory-catalog", "extension-catalog"]
+        ["memory-catalog", "extension-catalog", "route-grant-catalog"]
     );
     for owner in OwnerStateName::ALL {
         assert_eq!(OwnerStateName::parse(owner.as_str()), Some(owner));
