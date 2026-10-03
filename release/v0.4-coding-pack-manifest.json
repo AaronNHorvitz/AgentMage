@@ -112,7 +112,7 @@
     },
     {
       "path": "shells/host/src/cli.rs",
-      "sha256": "298f7546abc7beb235f8b439abb314195514006fbe005ec2ee56d996d9b5ef63"
+      "sha256": "8fde77c8e1726d67276f532c776375ee57d211007bd964d61a11ec86c66bbdda"
     },
     {
       "path": "shells/host/src/coding_client.rs",

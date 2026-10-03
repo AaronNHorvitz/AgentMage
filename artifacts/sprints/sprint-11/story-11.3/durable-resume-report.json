@@ -106,9 +106,9 @@
       "sha256": "d40b61ead6245ee5f56adb61c22e2aef5c9ce696c538314350182e637938173f"
     },
     {
-      "byte_length": 8833,
+      "byte_length": 9045,
       "path": "kernel/engine/src/owner_state_store.rs",
-      "sha256": "f32aab1ee1bf8fe8589b308712c4425f92234c37f38fffc2e09b33e6b0b7d8c7"
+      "sha256": "a5f914207e0e7ab9be699d1b59d369c69a6ac76143c1ee1d37c5e2070f2b55b3"
     },
     {
       "byte_length": 5783,
@@ -153,7 +153,7 @@
     {
       "byte_length": 27013,
       "path": "artifacts/sprints/sprint-11/story-11.3/durable-resume-results.log",
-      "sha256": "4136891a374b0ebef909dd33a0779e31d8ddc78a2ce02037f3784e9f59641c11"
+      "sha256": "19600635c94109f0e8683e207d9010b1496e958b04e5e5d9cba65b8d8bdf295e"
     }
   ],
   "commands": [

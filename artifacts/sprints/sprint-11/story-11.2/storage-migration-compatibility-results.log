@@ -1,5 +1,5 @@
 $ cargo test -p agentmage-kernel-engine operational_store::tests::research_migration_tests --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 21 tests
@@ -25,7 +25,7 @@ test operational_store::tests::research_migration_tests::reader_compatibility::v
 test operational_store::tests::research_migration_tests::version_eighteen_upgrades_without_losing_existing_records ... ok
 test operational_store::tests::research_migration_tests::reader_compatibility::version_nineteen_corrupt_history_cannot_advance_reader_epoch ... ok
 
-test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 1460 filtered out; finished in 5.64s
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 1460 filtered out; finished in 5.49s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -141,7 +141,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::version_twenty
 running 1 test
 test operational_store::tests::version_twenty_five_schema_matches_fixture_snapshot_and_is_relational ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1480 filtered out; finished in 0.19s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1480 filtered out; finished in 0.18s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -257,7 +257,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::version_one_up
 running 1 test
 test operational_store::tests::version_one_upgrades_through_twenty_five_with_exact_history ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1480 filtered out; finished in 0.17s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1480 filtered out; finished in 0.15s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -490,7 +490,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::future_schema_
 running 1 test
 test operational_store::tests::future_schema_and_page_corruption_are_refused ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1480 filtered out; finished in 0.53s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1480 filtered out; finished in 0.48s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -606,7 +606,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::exclusive_writ
 running 1 test
 test operational_store::tests::exclusive_writer_and_encrypted_backup_are_verified ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1480 filtered out; finished in 0.28s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1480 filtered out; finished in 0.25s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -722,7 +722,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::encrypted_back
 running 1 test
 test operational_store::tests::encrypted_backup_restores_only_to_a_verified_fresh_candidate ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1480 filtered out; finished in 0.37s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1480 filtered out; finished in 0.33s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -838,7 +838,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_r
 running 1 test
 test operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1480 filtered out; finished in 54.85s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1480 filtered out; finished in 49.70s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
