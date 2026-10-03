@@ -8,7 +8,7 @@
     {
       "bytes": 7514,
       "path": "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
-      "sha256": "66d237db33132862bac2f148d0186f949fe068f9037e282bbef19e73c2b84040"
+      "sha256": "acc21cb2397a1551f09cb157ef1c6939f09a87171cdf44916d9eaabd9f015083"
     },
     {
       "bytes": 10743,
@@ -21,14 +21,14 @@
       "sha256": "7218eaa7997186e9ff4387f281c246d28c98c00d8b5b36b1b827d136bd8ff972"
     },
     {
-      "bytes": 22661,
+      "bytes": 22659,
       "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence-map.json",
-      "sha256": "66f830765d05f67d727f89d328e8d8310e8a1bfc7f83d614898bf2012d9b69d9"
+      "sha256": "bfcf87a46992db9b4bcb6c22e153817ebf67687f6db20934c11677edc584ead7"
     },
     {
-      "bytes": 4430,
+      "bytes": 4203,
       "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence.log",
-      "sha256": "37c24064204e6514922a6eec82d58ff60f933075aa78cea67dc7297cb941f604"
+      "sha256": "c4151096a5b42ef4fb101032cc0a8e72b8e39b9825f6b480d7123dfa04a0216e"
     },
     {
       "bytes": 9999,
@@ -202,7 +202,7 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "77cda35b8fc5ab543f27a45d2b62bbd6dfff982ddbea1e39c093069e735d52aa",
+  "index_sha256": "fafea621b4a6457cd3bd84090d6502a2436be77978158207ad18b590bfc88f98",
   "limitations": [
     "The installed host still lacks a production runtime factory and admitted local model.",
     "The source-level boundary-by-boundary failure matrix is complete; physical process faults remain outside this source campaign.",
@@ -506,7 +506,7 @@
   ],
   "record_type": "story_23_4_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "5e676f3fabae4f1e6b00cde495f98b9cd08d73f3",
+  "source_revision": "bbaaeade97a25a1759656a3ff77749a9cc266976",
   "story_id": "23.4",
   "summary": {
     "complete_count": 16,
