@@ -122,8 +122,8 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; fini
 
 
 $ node --test tests/test_model_orchestration_profile_schema.mjs
-✔ compiled orchestration profile schema accepts the closed record (1.538238ms)
-✔ schema rejects authority widening and stale qualification shapes (0.426128ms)
+✔ compiled orchestration profile schema accepts the closed record (1.516866ms)
+✔ schema rejects authority widening and stale qualification shapes (0.407515ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -131,7 +131,7 @@ $ node --test tests/test_model_orchestration_profile_schema.mjs
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 71.78222
+ℹ duration_ms 72.125738
 
 $ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s

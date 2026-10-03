@@ -43,7 +43,7 @@
       ],
       "exit_code": 0,
       "id": "muse-edge-codec",
-      "output_sha256": "c9dc68fb42b8bb5ca7d4b809d59f92a88774c15bc382785b9b4c8c43c4672a78"
+      "output_sha256": "371dadcdb95868c7428bc0207d232a75dd04e46bc5e0851b6426cb3002de094c"
     },
     {
       "argv": [
@@ -56,7 +56,7 @@
       ],
       "exit_code": 0,
       "id": "native-transport-diagnostics",
-      "output_sha256": "471a8f94f8e9008b38bf83af338c86ae9f7588c1ed8232093b3ba34d3d58e0f6"
+      "output_sha256": "e7055a104251ead9774d5c756e8484618f238be6592ab2020b6bda0f40b42c13"
     },
     {
       "argv": [
@@ -69,7 +69,7 @@
       ],
       "exit_code": 0,
       "id": "generic-codec",
-      "output_sha256": "63f9f62244ca3bbd805a15c7f48a4098ee998837f938e047563d3df99ee6b6a4"
+      "output_sha256": "c2ce0c511cce19f8614e9a789b00d042ba642bf761db46b6e8ba9c2ae1bec83e"
     },
     {
       "argv": [
@@ -82,7 +82,7 @@
       ],
       "exit_code": 0,
       "id": "bounded-response",
-      "output_sha256": "15fddf3d493cb66be97e4419f2b97e7c3f683872fe32059b35d9e9f9bcbcb839"
+      "output_sha256": "cfd771082425fb83722eaf4235b4a3c20950574ed7d97a653c73ff0db4ab249e"
     },
     {
       "argv": [
@@ -235,7 +235,7 @@
   "production_kernel_family_references": [],
   "record_type": "d027_s13_muse_codec_evidence",
   "schema_version": 3,
-  "source_revision": "a4384be8f0134e449a8b018241a53d23fc6ddce0",
+  "source_revision": "78c40469a0f39e4f91899f658ecb8bda3b41d717",
   "source_sha256": {
     "kernel/contracts/src/model.rs": "1a19f680cc1468be94930632e4a67ba50f0c16eaf47802ae7ecd65df2ca1695c",
     "kernel/engine/src/accounting_provider.rs": "f0292afed85e4dc1d617061de010622b913749caed5e4620503634c29ef485f4",
@@ -354,8 +354,8 @@
     "kernel/engine/src/multi_agent.rs": "f3f049344725e93a489deeae2af0f073b53f6b0798e4b7350b0cd44516b9b34b",
     "kernel/engine/src/operational_store.rs": "189fbfefd7ee050d38bd01b7d242ae1fb82b5ee6d08bd4f53ab6239f5ef41967",
     "kernel/engine/src/owner_state_migration_tests.rs": "90057cfd39877f2419c621d5d1334755750084236db8fde2ce2b2fd973e14eb8",
-    "kernel/engine/src/owner_state_store.rs": "f32aab1ee1bf8fe8589b308712c4425f92234c37f38fffc2e09b33e6b0b7d8c7",
-    "kernel/engine/src/owner_state_store_tests.rs": "00fe8f48aaf3aac1fd95af0a94aef766eb95c5b793c87d124831db2fa4e32330",
+    "kernel/engine/src/owner_state_store.rs": "a5f914207e0e7ab9be699d1b59d369c69a6ac76143c1ee1d37c5e2070f2b55b3",
+    "kernel/engine/src/owner_state_store_tests.rs": "272f9316cdc73b60abcf06dba669d4c611386e114f90e49532de74c346f75a6e",
     "kernel/engine/src/persistence.rs": "fb537c04df0d687af10e36eea98834910f8760877858266bb1f54cb1ca28d540",
     "kernel/engine/src/persistent_supervisor.rs": "2422bd86db4e9e6bd7d75c6bb8924235e93de8a4eced094df2f2cf3276cf3749",
     "kernel/engine/src/personal_information_management.rs": "3eed43e4d9ddff148eeb8ff91c76bfb0adb32a063025d5b1740d974d37546fe8",

@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "record_type": "sprint_79_local_evidence",
-  "source_revision": "a4384be8f0134e449a8b018241a53d23fc6ddce0",
+  "source_revision": "78c40469a0f39e4f91899f658ecb8bda3b41d717",
   "source_sha256": {
     "Cargo.toml": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc",
     "Cargo.lock": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd",
     "shells/host/Cargo.toml": "91da28076b9b935bbde267111d424c80cff334149ecfe67be2d5c8db32bd9a7d",
-    "shells/host/src/lib.rs": "6aac3a42fa1cc5ea242970347912e1075d20f0c14cb75ac19e77326e83f40e5f",
+    "shells/host/src/lib.rs": "c79ce66f8b365cac38ffa8e62ab7305ea37d393edff067ee9f44b9ad36e04db4",
     "shells/host/src/capability_package.rs": "5c961d976dd4866232893cd1fed36ba1857ce15bc94b033e41673047383bf6ac",
     "shells/host/src/capability_package_runtime.rs": "671db72fd5a107ed630f29e710da7ef26f7ff3ee9348d3eb0dd124960ab2ad4d",
     "docs/guides/capability-package-trust.md": "1552392fd3065ad629b87d0d9d93d585f3d4494c6f6238dfff6c47086cee4988",
@@ -16,9 +16,9 @@
     "artifacts/sprints/sprint-78/local-evidence-report.json": "fa890b49a3a42caf6ead9eb071b74f86e325ebc74d6e66d36c69c710751a5ebf",
     "scripts/capability_package_runtime_contract.py": "1eada96d44517051f66d7d6ead796088f340d0c580752057f6faff6e9b1e5d21",
     "tests/test_capability_package_runtime_contract.py": "f2a5ad3b1403241a7ae6b4ac3069033dab6a70e907142a6efa6a94346891db0b",
-    "supply-chain/dependency-hashes.sha256": "86ec2b7eba203eb83430d2fb2ca8d0c23cfd8ebee21d1aa4d15baa04cb46dd28",
-    "supply-chain/dependency-provenance.json": "dafc54346c5c58bb31e86c58ee0194c8552aeb1baa5ef5f80529bcba24ec63cd",
-    "supply-chain/sbom.cdx.json": "5d761394a081cb9c455c8e98b91ea184be04243f21940861be80477085ed4a6f",
+    "supply-chain/dependency-hashes.sha256": "df069bcbb17ad134a7b8803eabf8b5fd9ac33d228569b07567ec07d09d7885e1",
+    "supply-chain/dependency-provenance.json": "8061e2143a6983debf73540a389025d4eef64cc84a7d518876f80ed0cb7bb335",
+    "supply-chain/sbom.cdx.json": "a6d6785f883431de415da1145b61c85cce23d663107ba573f581c0ff73b5f860",
     "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
     "scripts/sprint_79_evidence.py": "747e4146d760edf9bc1a82b79a5b02f289d14d656ae3ae2e4f556667a8750320",
     "tests/test_sprint_79_evidence.py": "7f7aa394462a040f980723389e3a4384aa861a287639eb086aa1e49d42b83a3f"
@@ -45,7 +45,7 @@
         "--all-features"
       ],
       "exit_code": 0,
-      "output_sha256": "027835c14e8ed9be02a39f94efc4f69837427ac6444b05c2264aea32107f6cb4",
+      "output_sha256": "b46fd1c7778904e653bd551f28dde64a549097ba64b8e6c9a464aa3fc7d42dca",
       "blocking_skip_count": 0
     },
     {
@@ -69,7 +69,7 @@
         "schemas:test"
       ],
       "exit_code": 0,
-      "output_sha256": "e526b28b7ed2bc030ce26a72f645bce6f630a54501c3183318bc4c3fcc90bafd",
+      "output_sha256": "6a7440ccbe50b8b7981e964f85fc2754e0574de928f000a484e82a214c51f423",
       "blocking_skip_count": null
     },
     {

@@ -27,7 +27,7 @@
       ],
       "exit_code": 0,
       "id": "model-contracts",
-      "output_sha256": "cc9e3c41969acc4a677457e67a3e266750479eeaee4de1437456fa78a19cfba4",
+      "output_sha256": "f66b8bf72a98559f866a9c10c3703787bc4d564e1555a395d9f4c573dda8075c",
       "story_id": "13.1"
     },
     {
@@ -40,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "model-engine",
-      "output_sha256": "b43ebba3036db6e5a9499f6665d4d082106bf3fc8c2495e1fa66bd80bb176acc",
+      "output_sha256": "eda1660c22b007ae6ac4a316d5f73368247fc2ecb6fd3a8a49e9bed8eaaae7fb",
       "story_id": "13.1"
     },
     {
@@ -53,7 +53,7 @@
       ],
       "exit_code": 0,
       "id": "linux-native-adapter",
-      "output_sha256": "2a47229f4a500ac10e496198e9181fc11fbeafcd0b10ddcdef4dcfd2e5f57741",
+      "output_sha256": "4edacf467047066d12ffb91e1c3e56314dd5ce7c4061ae9be6507af465db3a29",
       "story_id": "13.1"
     },
     {
@@ -65,7 +65,7 @@
       ],
       "exit_code": 0,
       "id": "model-json-contracts",
-      "output_sha256": "37269c69748b70b63676b1aba00a91cd4b94376eebbf690a166533250a33860f",
+      "output_sha256": "d443ba7d4680802f6cb0517318d2b035149cd8007f421a8a3b846c955e7db479",
       "story_id": "13.1"
     },
     {
@@ -84,7 +84,7 @@
       ],
       "exit_code": 0,
       "id": "model-policy-evidence",
-      "output_sha256": "faaf9f823a0cc5b4dff266bd3110817621d3616027e714045a9632cebadc4407",
+      "output_sha256": "5feb7654375b29780e8ce40f02249edd624e843add7b80d789278ae13d25d0c9",
       "story_id": "13.2"
     }
   ],
@@ -92,14 +92,14 @@
     "artifacts/sprints/sprint-13/story-13.1/finish-usage-report.json": "f4902131f2ca3322bc424a9af280a795769d44be499345997b2929c56041bfa3",
     "artifacts/sprints/sprint-13/story-13.1/muse-native-adapter-contract-v2.json": "9c4980f2167f052c4da1a063f470bb1d5852b616247d3b6dc507910eddedaf19",
     "artifacts/sprints/sprint-13/story-13.2/linux-cross-adapter-parity.json": "6733691ce2a645dec00fc7dfec22403d82d1daf00bf1970d69b8ff3752ce1503",
-    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "a4a45a44de877af7bce75865c140d7a09330865f9da46313cd3f9d5bbc644b03",
+    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "4358d90d371b958f80e62f40c1b6a4e56ae9e17efd2969fb15a323d8bf3bf3af",
     "artifacts/sprints/sprint-13/story-13.3/muse-live-install.json": "91826d99f497a212ab32f87176a5b034a8b7e1fe510c9a12a05d95fc38a8dd18",
     "artifacts/sprints/sprint-13/story-13.3/muse-profile-evaluation.json": "88f560db0a1486f39a1004a0cd88e699948d194bf9221ee6e1a6d037c2e5b670",
     "artifacts/sprints/sprint-13/story-13.3/muse-sandbox-inference.json": "07260b4b60bc5d19d986fdea9bea807b3aa9e0cc543e0ce3a145a3c56a0bd547",
     "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-report.json": "c86c07f2d472ba81a710d6b803b9d285993ff74564f8c0799d3b11b507e6d3d1",
     "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json": "571913bbf14d520847118a6988edecef0950be0118ea8392dfca33718bf76a75",
     "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json": "1230b416221d7e28b3ff038a3b9bd8eca972220eb1549763b4b0d68b1416ed69",
-    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "2af396d41571afeab2460f9507ea8008d16e24e2d391f57b1e02ddfba3c42424"
+    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "2ca7ea9db7245846466a71f6a1dfb58747d8c93686cce1a9f9d6af9a276c942d"
   },
   "evidence_state": {
     "adapter_contract": "CONTRACT-PASS-LIVE-BLOCKED",
@@ -175,7 +175,7 @@
       "SR-MGM-004"
     ]
   },
-  "source_revision": "a4384be8f0134e449a8b018241a53d23fc6ddce0",
+  "source_revision": "78c40469a0f39e4f91899f658ecb8bda3b41d717",
   "source_sha256": {
     "kernel/contracts/src/agent.rs": "c8cc0af7aa697ba6fb0ef0be8bafc8c2100c910169ee6f9fa2a2807ba48243c5",
     "kernel/contracts/src/agent_proposal.rs": "cd77cca5b9a6c6fd64c54053e9bdae5233cf50942c111c52fefba0945998519f",
@@ -338,8 +338,8 @@
     "kernel/engine/src/multi_agent.rs": "f3f049344725e93a489deeae2af0f073b53f6b0798e4b7350b0cd44516b9b34b",
     "kernel/engine/src/operational_store.rs": "189fbfefd7ee050d38bd01b7d242ae1fb82b5ee6d08bd4f53ab6239f5ef41967",
     "kernel/engine/src/owner_state_migration_tests.rs": "90057cfd39877f2419c621d5d1334755750084236db8fde2ce2b2fd973e14eb8",
-    "kernel/engine/src/owner_state_store.rs": "f32aab1ee1bf8fe8589b308712c4425f92234c37f38fffc2e09b33e6b0b7d8c7",
-    "kernel/engine/src/owner_state_store_tests.rs": "00fe8f48aaf3aac1fd95af0a94aef766eb95c5b793c87d124831db2fa4e32330",
+    "kernel/engine/src/owner_state_store.rs": "a5f914207e0e7ab9be699d1b59d369c69a6ac76143c1ee1d37c5e2070f2b55b3",
+    "kernel/engine/src/owner_state_store_tests.rs": "272f9316cdc73b60abcf06dba669d4c611386e114f90e49532de74c346f75a6e",
     "kernel/engine/src/persistence.rs": "fb537c04df0d687af10e36eea98834910f8760877858266bb1f54cb1ca28d540",
     "kernel/engine/src/persistent_supervisor.rs": "2422bd86db4e9e6bd7d75c6bb8924235e93de8a4eced094df2f2cf3276cf3749",
     "kernel/engine/src/personal_information_management.rs": "3eed43e4d9ddff148eeb8ff91c76bfb0adb32a063025d5b1740d974d37546fe8",
