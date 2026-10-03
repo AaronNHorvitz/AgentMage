@@ -545,7 +545,7 @@ session from them, and show refusals and both CLI output formats:
 cargo test --locked --offline -p agentmage-kernel-engine --lib -- run_effect_record
 cargo test --locked --offline -p agentmage-host --lib -- \
   coding_session_recoverability cli_runtime::tests::run_declarations \
-  coding_development_client::tests::run_declarations
+  coding_development_client::tests::run_declarations runtime_start_tests
 ```
 
 In this lane, run them under the shared build reservation (`bash /tools/build-slot ...`).
@@ -556,7 +556,11 @@ composition run only on a native Linux host (AMR-04.7.2), which this lane does n
 provide. The
 [durable session recoverability verification](verification/review-fixes-and-durable-session-recoverability-2026-10-02.md)
 retains these checks, the mutation results and the actual catalog host's operations over
-wire 16.
+wire 16. Decision 0145 keeps a record that missed an entry open until the store holds its
+incomplete mark, also across an in-host continuation; the
+[review-fix verification](verification/review-fixes-session-effect-records-and-producer-privacy-2026-10-02.md)
+retains those tests (under `coding_session_recoverability` and `runtime_start_tests`) and
+their mutation results.
 
 ### Public research worker contract fixtures
 

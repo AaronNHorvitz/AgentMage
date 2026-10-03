@@ -1,0 +1,140 @@
+{
+  "schema_version": 2,
+  "stage": "batch30-boundary",
+  "source_revision": "c64abc5382741cb92ab369ddec69841e83f90e3d",
+  "scope": "batch 30 boundary: the Story 23.4 coordinator boundary review and the Sprint 50 runtime contract review at the commit holding the renewed runtime evidence",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/runtime_coordinator_boundary_review.py",
+      "--write",
+      "--source-revision",
+      "c64abc5382741cb92ab369ddec69841e83f90e3d"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_runtime_coordinator_boundary_review"
+    ],
+    [
+      "python3",
+      "scripts/sprint_50_runtime_contract_review.py",
+      "--write",
+      "--source-revision",
+      "c64abc5382741cb92ab369ddec69841e83f90e3d"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_sprint_50_runtime_contract_review"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/runtime_coordinator_boundary_review.py": "35307c651516a810453f58057fe56afeb09e46c4055d5f42483a25448c4e7011",
+    "scripts/sprint_50_runtime_contract_review.py": "e493ff6f99b2339075d01c9c3b227941e5ed67e377734c0c0656c5a8e34b4943",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_runtime_coordinator_boundary_review.py": "c924f773805ef17e90c73d621aa292cfffb8756d5f93556abcdcbb129e97224a",
+    "tests/test_sprint_50_runtime_contract_review.py": "92663dd3abb38619e76165fae9fc91e254cf46f3c6b6bad15e254292ca02c660"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/runtime_coordinator_boundary_review.py",
+        "--write",
+        "--source-revision",
+        "c64abc5382741cb92ab369ddec69841e83f90e3d"
+      ],
+      "exit_code": 0,
+      "seconds": 0.199,
+      "log": "01.log",
+      "log_sha256": "12e5f18700dcee14ba8872ea560140559231e000e4b25901ace92189f4c0e293",
+      "private_log_sha256": "12e5f18700dcee14ba8872ea560140559231e000e4b25901ace92189f4c0e293"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_runtime_coordinator_boundary_review"
+      ],
+      "exit_code": 0,
+      "seconds": 0.965,
+      "log": "02.log",
+      "log_sha256": "d9393d383ada531b0883286fb6af65e8330060ffc56abbbe58b9d70e53bfa9a5",
+      "private_log_sha256": "d9393d383ada531b0883286fb6af65e8330060ffc56abbbe58b9d70e53bfa9a5"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/sprint_50_runtime_contract_review.py",
+        "--write",
+        "--source-revision",
+        "c64abc5382741cb92ab369ddec69841e83f90e3d"
+      ],
+      "exit_code": 0,
+      "seconds": 0.065,
+      "log": "03.log",
+      "log_sha256": "50ac9a175df955646db88585265e7ed41867dfc299a79b4584f04b849ad0656c",
+      "private_log_sha256": "50ac9a175df955646db88585265e7ed41867dfc299a79b4584f04b849ad0656c"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_50_runtime_contract_review"
+      ],
+      "exit_code": 0,
+      "seconds": 0.078,
+      "log": "04.log",
+      "log_sha256": "24cefc2bc38a1c71e18591075993695fc72546b32ff6b5baab3d98032ce96fb5",
+      "private_log_sha256": "24cefc2bc38a1c71e18591075993695fc72546b32ff6b5baab3d98032ce96fb5"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.073,
+      "log": "05.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.004,
+      "log": "06.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

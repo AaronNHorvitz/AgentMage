@@ -1,0 +1,17 @@
+[
+ {
+  "id": "N7-duplicate-grant-identity-decodes",
+  "file": "shells/host/src/coding_route_grants.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route_grants"
+  ],
+  "expected": "coding_route_grants::tests::a_changed_catalog_is_refused_and_an_answer_must_name_what_was_sent",
+  "replace": [
+   [
+    "                    .all(|kept| kept.valid() && identities.insert(kept.grant.grant_id.as_str()))",
+    "                    .all(|kept| kept.valid() && (identities.insert(kept.grant.grant_id.as_str()) || true))"
+   ]
+  ]
+ }
+]

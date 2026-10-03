@@ -1,0 +1,387 @@
+{
+ "record_type": "agentmage-review-fixes-session-effect-records-verification",
+ "date": "2026-10-02",
+ "base_commit": "6c0f51fe291ee9437970928ab27e66c3eca7e94e",
+ "head_commit": "4398f2b7e1d18933d88c4272aabb4007c1808e64",
+ "source_commit": "c9179bdb4252dd5d9f34479857805ad5b2453d42",
+ "retained_logs": "artifacts/verification-logs/review-fixes-session-effect-records-and-producer-privacy-2026-10-02",
+ "stages": [
+  "batch30-source",
+  "batch30-core",
+  "batch30-rebind",
+  "batch30-gate",
+  "batch30-chain23",
+  "batch30-boundary",
+  "batch30-security-index",
+  "batch30-blocked-causes",
+  "batch30-extended-rest",
+  "batch30-observation"
+ ],
+ "inventory": "artifacts/verification-logs/review-fixes-session-effect-records-and-producer-privacy-2026-10-02/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch30-source/02.log",
+  "engine": "batch30-source/03.log",
+  "repository_map": "batch30-source/04.log",
+  "inference": "batch30-source/05.log",
+  "knowledge": "batch30-source/06.log",
+  "linux": "batch30-source/07.log",
+  "linux_research_feature_build": "batch30-source/08.log",
+  "linux_research_feature_tests": "batch30-source/09.log",
+  "linux_research_worker_binary_tests": "batch30-source/10.log",
+  "host": "batch30-source/11.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0145-review-fixes-for-session-effect-records-and-producer-privacy.md"
+  ],
+  "source_commits": [
+   {
+    "commit": "c9179bdb4252dd5d9f34479857805ad5b2453d42",
+    "scope": "Decision 0145: what the host knows about a run's effect record (a missed entry; the stored incomplete mark) is shared by every handle of the run, a refused mark stays pending and is retried at each later append, the service closes a chain only once the store holds the mark and otherwise leaves it open, an in-host continuation carries the knowledge across the reopened store, and the factory hands the service the run's persisted chain (F1); the three Sprint 11 store producers redact the checkout and refuse private paths (F2); the service's closing is tested on release and on drop (F3); a new run that cannot spawn or begin its job has its chains closed empty, a resumed run keeps them open (F5); LOCAL-TESTING names contract version 3 (F4); Decision 0144 states that an unreadable catalog fails composition (N2); a resumed chain is checked before it is marked (N4); a catalog holding one grant twice is refused (N7); Decision 0143's Limits sentence is corrected"
+   }
+  ],
+  "review_resolved": "6c0f51fe291e (PASS; findings F1 and F2 medium, F3 to F5 low; notes N2, N4, N5 and N7 acted on), by Decision 0145",
+  "mutation_checks": "run with private tooling that applies one exact replacement, runs the package's filtered library tests and restores the file: the first run on the uncommitted source tree, which differed from the source commit c9179bdb only in the catalog decode test and the decision text, and the rerun on the tree committed as c9179bdb; the specification, results and the runner are attached to the batch30-source stage. 10 single Rust mutations, 9 caught: closing without the pending mark, an append that does not retry it, a continuation that carries nothing, a miss not shared by the handles, a service that does not carry the miss across a continuation, a resumed chain marked before its session is checked, a service that never closes the effect record, a dropped ended run left open and an unstarted new run left open. The duplicate catalog identity mutation survived the first test, which the factory's own route check also refuses; the test was extended to the owner's listing and the mutation was rerun (1 of 1 caught). 6 Python mutations of the three producers (redaction removed, refusal removed), 6 caught. The tree was verified identical afterwards",
+  "failure_comparison": "linux 189 passed, 19 failed, 51 ignored, failure names identical to batch 29; with the public-research-worker feature the Linux crate's tests build, its research tests pass (13 passed, 6 ignored native) and the worker binary's tests pass (21 passed, 3 ignored); host 503 passed, 53 failed, 11 ignored, failure names identical to batch 29; the engine passes 1,553 tests with 8 ignored, knowledge 302",
+  "retained_failures": [
+   {
+    "stage": "batch30-source",
+    "indexes": [
+     7,
+     11
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, with failure names identical to batch 29"
+   },
+   {
+    "stage": "batch30-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "interrupted_stages": [],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch30-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the native-prerequisite host failures (batch30-source/11.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch30-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch30-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch30-blocked-causes/03.log) and the documentation gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+    "stale_since": "before batch 12 (four other inputs)",
+    "blocker": "its producer runs the full host suite (the native-prerequisite failures, batch30-source/11.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the product gate and the documentation gate; its check mode still validates it at its own revision (batch30-extended-rest/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the full host suite with all features; its check mode still validates it at its own revision (batch30-extended-rest/02.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
+    "stale_since": "before batch 18 (shells/host/src/headless.rs)",
+    "blocker": "already stale at the review base for an input this batch does not change; historical"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-host"
+  ],
+  "cascade": "the one SBOM write (agentmage-host) staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index, raw contract boundary log and security map, the Story 3.1 component inventory, configuration startup report and security map and the Sprint 27 to 34 knowledge boundary reviews (batch30-core) and the Sprint 79 and Sprint 108 reports (batch30-rebind); the three redacting Sprint 11 store producers and the corrected Decision 0143 text staled the content deduplication, source lifecycle, workflow attempt and storage migration compatibility reports (batch30-core) and through them the Story 11.1 security map, the Story 11.2 storage security, frozen-scope, AC1, AC2 and AC3 reports and the Story 12.1 map (batch30-rebind) and the Story 11.2 gate report, which followed its pin (batch30-gate); the native chat runtime factory's handover type staled the Story 23.4 runtime evidence, coordinator boundary review, security map and evidence index and the Sprint 50 runtime contract review (batch30-chain23, batch30-boundary, batch30-security-index). The engine, the operational store and its migrations, the CLI and the coding host's CLI runtime and Linux boundary did not change, so the Story 22.1 canary, the Story 13.4 dispatch preflight report, the Muse codec chain, the Sprint 13 report and the v0.4 coding pack manifest were not stale",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "ff2453e7730ac54d04fd742c5329132cbcababb7",
+    "to": "f8b05c6de940cba6926d0888abbad951bb06e6ec",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-report.json",
+      "reason": "regenerated by the batch 30 core stage; only the bound digests and sizes of its producer and test (review F2 of 6c0f51fe, Decision 0145: retained Cargo output names <repository-root>, and output naming a private path is refused) and of its results log, which no longer names the checkout, changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-report.json",
+      "reason": "regenerated by the batch 30 core stage; only the bound digests and sizes of its producer (Decision 0145: the same redaction and refusal) and its results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-report.json",
+      "reason": "regenerated by the batch 30 core stage; only the bound digests and sizes of its producer (Decision 0145: the same redaction and refusal) and its results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-report.json",
+      "reason": "regenerated by the batch 30 core stage; only the bound digests and sizes of Decision 0143 (its Limits sentence corrected by Decision 0145) and its results log changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 30 rebind stage; only the bound digests of the renewed storage migration compatibility report and log and the renewed Story 11.1 security map, and the retained evidence summary that holds them, changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 30 rebind stage; only the bound digest of the renewed storage security report, and the retained evidence summary that holds it, changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "reason": "regenerated by the batch 30 rebind stage; only the bound digests and sizes of its results log and the renewed source lifecycle and workflow attempt reports and logs, and the retained evidence summary that holds them, changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 30 rebind stage; only the bound digests and sizes of the renewed source lifecycle report and log and the renewed storage security report, and the retained evidence summary that holds them, changed"
+     }
+    ]
+   }
+  ],
+  "newly_stale_disposition": "only historical records: retained stage records of batches 28 and 29 that bind the three Sprint 11 store producers, their test or the Story 11.2 gate script as they were at their own revisions",
+  "runtime_campaign": "renewed in three stages because the coordinator boundary review and the security map read their inputs at their source revision: batch30-chain23 at 5e676f3f renewed the Story 23.4 runtime evidence (and wrote a boundary review, Sprint 50 review, map and index over the runtime evidence committed before it), batch30-boundary at c64abc53 renewed the boundary review and the Sprint 50 review over the renewed runtime evidence, and batch30-security-index at bbaaeade renewed the map and the index over both",
+  "cli_observation": {
+   "source_commit": "4398f2b7e1d18933d88c4272aabb4007c1808e64",
+   "binaries_sha256": {
+    "agentmage": "cd1f2827f64ac81c608323083876cffbcda3a6f840568e83194aab757f8d2efe",
+    "agentmage-host": "bfa235317a999c8538ddf5b56eb7549170da2ecf49f3814d758d2fb70f9ad8e0",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "catalog_host_operations": [
+    {
+     "name": "doc-pack-list-empty",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import-other-license",
+     "operation": "doc-pack",
+     "exit_code": 4
+    },
+    {
+     "name": "doc-pack-search",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-inspect",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember-credential",
+     "operation": "memory",
+     "exit_code": 4
+    },
+    {
+     "name": "memory-list",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-revoke",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-delete",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-signer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-issuer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-install",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-1",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-renamed",
+     "operation": "extension",
+     "exit_code": 3
+    },
+    {
+     "name": "extension-list",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-grant",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-same-route",
+     "operation": "route-grant",
+     "exit_code": 4
+    },
+    {
+     "name": "route-grant-list",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-revoke",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-revoke-again",
+     "operation": "route-grant",
+     "exit_code": 4
+    },
+    {
+     "name": "route-grant-list-all",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "ended-run-read",
+     "operation": "ended-run",
+     "exit_code": 0
+    }
+   ],
+   "catalog_host_wire_refusals_seen": false,
+   "catalog_workspace_preserved": true,
+   "route_grants": {
+    "runs": [
+     {
+      "name": "route-grant-declined",
+      "exit_code": 6
+     },
+     {
+      "name": "route-grant-grant",
+      "exit_code": 0
+     },
+     {
+      "name": "route-grant-same-route",
+      "exit_code": 4
+     },
+     {
+      "name": "route-grant-list",
+      "exit_code": 0
+     },
+     {
+      "name": "route-grant-revoke",
+      "exit_code": 0
+     },
+     {
+      "name": "route-grant-revoke-again",
+      "exit_code": 4
+     },
+     {
+      "name": "route-grant-list-all",
+      "exit_code": 0
+     }
+    ],
+    "declined_sent_nothing": true,
+    "remote_route_offered": false
+   },
+   "recipe_shown_before_launch": {
+    "exit_code": 5,
+    "then_refused_at": "linux.repository.git_artifact.invalid",
+    "preserved": true
+   },
+   "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+   },
+   "malformed_frame_injected": false,
+   "research_worker": {
+    "binary": {
+     "sha256": "6255bc24924a9c351dbb7ba6ec3ebcc4366dcd1fb034905a4478b2305d17cfac",
+     "bytes": 158345560
+    },
+    "runs": [
+     {
+      "name": "worker-ambient-environment",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     },
+     {
+      "name": "worker-extra-argument",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     },
+     {
+      "name": "worker-admitted-environment",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     }
+    ],
+    "sandboxed": false,
+    "network_attempted": false
+   },
+   "effect_record_stored_by_an_actual_process": false,
+   "qualification": "actual-binary-catalog-host-operations-under-exact-wire-decoding-plus-native-prerequisite-refusal"
+  },
+  "not_run": [
+   "any actual process storing, closing or declaring a run's effect record: the development host is refused at native Git trust in this sandbox",
+   "a store write failure inside SQLite: the host tests refuse writes at the chain's write seam",
+   "the native-only Linux boundary tests and the factory's composition glue",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested after this record; open"
+  }
+ }
+}

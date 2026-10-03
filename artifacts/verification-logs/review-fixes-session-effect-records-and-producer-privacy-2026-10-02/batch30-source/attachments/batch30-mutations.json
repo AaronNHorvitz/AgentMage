@@ -1,0 +1,152 @@
+[
+ {
+  "id": "F1a-close-without-pending-mark",
+  "file": "shells/host/src/coding_session_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_session_recoverability"
+  ],
+  "expected": "coding_session_recoverability::tests::persisted::a_miss_the_store_could_not_mark_keeps_the_chain_open_and_the_session_undeclared",
+  "replace": [
+   [
+    "        if !self.store_pending_mark() {\n            return Err(RunEffectRecordStoreError::Storage);\n        }\n        self.writes.close(&self.run_id)",
+    "        self.writes.close(&self.run_id)"
+   ]
+  ]
+ },
+ {
+  "id": "F1b-append-does-not-retry-mark",
+  "file": "shells/host/src/coding_session_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_session_recoverability"
+  ],
+  "expected": "coding_session_recoverability::tests::persisted::a_pending_mark_is_retried_at_the_next_record_and_carried_across_a_continuation",
+  "replace": [
+   [
+    "        self.store_pending_mark();\n        if self.writes.append(",
+    "        if self.writes.append("
+   ]
+  ]
+ },
+ {
+  "id": "F1c-continuation-carries-nothing",
+  "file": "shells/host/src/coding_session_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_session_recoverability"
+  ],
+  "expected": "coding_session_recoverability::tests::persisted::a_pending_mark_is_retried_at_the_next_record_and_carried_across_a_continuation",
+  "replace": [
+   [
+    "        if earlier.0.missed.load(Ordering::SeqCst) {",
+    "        if false && earlier.0.missed.load(Ordering::SeqCst) {"
+   ]
+  ]
+ },
+ {
+  "id": "F1d-miss-not-shared",
+  "file": "shells/host/src/coding_session_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_session_recoverability"
+  ],
+  "expected": "coding_session_recoverability::tests::persisted::a_miss_the_store_could_not_mark_keeps_the_chain_open_and_the_session_undeclared",
+  "replace": [
+   [
+    "        !self.knowledge.missed.load(Ordering::SeqCst)\n    }",
+    "        true\n    }"
+   ]
+  ]
+ },
+ {
+  "id": "F1e-service-does-not-carry",
+  "file": "shells/host/src/coding_live_runtime.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_start_tests"
+  ],
+  "expected": "runtime_start_tests::a_miss_the_store_could_not_mark_carries_across_an_in_host_continuation",
+  "replace": [
+   [
+    "            chain.continue_from(earlier);",
+    "            let _ = (chain, earlier);"
+   ]
+  ]
+ },
+ {
+  "id": "N4-marked-before-check",
+  "file": "shells/host/src/coding_session_recoverability.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_session_recoverability"
+  ],
+  "expected": "coding_session_recoverability::tests::persisted::a_resumed_chain_of_another_session_is_refused_before_it_is_marked",
+  "replace": [
+   [
+    "                match records.attach(run_id, RUN_EFFECT_RECORD_OWNER, false) {",
+    "                match records.attach(run_id, RUN_EFFECT_RECORD_OWNER, after_restart) {"
+   ]
+  ]
+ },
+ {
+  "id": "F3a-service-never-closes-effect-record",
+  "file": "shells/host/src/coding_live_runtime.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_start_tests"
+  ],
+  "expected": "runtime_start_tests::the_live_service_owns_each_run_job_and_decides_cancellation_through_the_ledger",
+  "replace": [
+   [
+    "        match chain.close_released() {",
+    "        match chain\n            .kept_every_entry()\n            .then_some(())\n            .ok_or(RunEffectRecordStoreError::NotFound)\n        {"
+   ]
+  ]
+ },
+ {
+  "id": "F3b-dropped-ended-run-not-closed",
+  "file": "shells/host/src/coding_live_runtime.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_start_tests"
+  ],
+  "expected": "runtime_start_tests::the_live_service_closes_the_effect_record_of_a_held_ended_run_and_of_a_new_run_it_cannot_start",
+  "replace": [
+   [
+    "        if self.is_terminal() {\n            self.close_run_histories();",
+    "        if false && self.is_terminal() {\n            self.close_run_histories();"
+   ]
+  ]
+ },
+ {
+  "id": "F5-unstarted-run-left-open",
+  "file": "shells/host/src/coding_live_runtime.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "runtime_start_tests"
+  ],
+  "expected": "runtime_start_tests::the_live_service_closes_the_effect_record_of_a_held_ended_run_and_of_a_new_run_it_cannot_start",
+  "replace": [
+   [
+    "            if start == StoredChainStart::New {\n                session.close_run_histories();\n            }\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "N7-duplicate-grant-identity-decodes",
+  "file": "shells/host/src/coding_route_grants.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "coding_route_grants"
+  ],
+  "expected": "coding_route_grants::tests::a_changed_catalog_is_refused_and_an_answer_must_name_what_was_sent",
+  "replace": [
+   [
+    "                    .all(|kept| kept.valid() && identities.insert(kept.grant.grant_id.as_str()))",
+    "                    .all(|kept| kept.valid() && (identities.insert(kept.grant.grant_id.as_str()) || true))"
+   ]
+  ]
+ }
+]

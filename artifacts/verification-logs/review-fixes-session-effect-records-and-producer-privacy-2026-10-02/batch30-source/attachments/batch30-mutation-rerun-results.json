@@ -1,0 +1,11 @@
+[
+  {
+    "id": "N7-duplicate-grant-identity-decodes",
+    "expected": "coding_route_grants::tests::a_changed_catalog_is_refused_and_an_answer_must_name_what_was_sent",
+    "caught": true,
+    "failed": [
+      "coding_route_grants::tests::a_changed_catalog_is_refused_and_an_answer_must_name_what_was_sent"
+    ],
+    "compile_error": false
+  }
+]

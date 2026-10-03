@@ -1,0 +1,76 @@
+...................................................................................inventory does not reproduce
+..........................................Initialized empty Git repository in <tmp>/tmpqiz14tsy/fixture/disposable/worktree/.git/
+[agentmage/tasks/coding-fixture (root-commit) 37bf4cc] test: initialize synthetic coding fixture
+ 3 files changed, 29 insertions(+)
+ create mode 100644 .agentmage-development-workspace
+ create mode 100644 src/calc.py
+ create mode 100644 tests/run_validation.py
+..usage: python3 -m unittest doc-pack [-h] --root ROOT
+                                    (--import IMPORT_DIRECTORY | --list |
+                                    --inspect INSPECT | --delete DELETE |
+                                    --search SEARCH)
+                                    [--allow-license ALLOW_LICENSE]
+                                    [--refresh-version REFRESH_VERSION]
+                                    [--pack PACK] [--include-history]
+python3 -m unittest doc-pack: error: argument --inspect: not allowed with argument --list
+....usage: python3 -m unittest extension [-h] --root ROOT (--trust TRUST |
+                                     --distrust DISTRUST | --install INSTALL |
+                                     --uninstall UNINSTALL |
+                                     --revocations REVOCATIONS | --list)
+                                     [--workspace WORKSPACE]
+                                     [--allow-license ALLOW_LICENSE]
+python3 -m unittest extension: error: argument --uninstall: not allowed with argument --list
+...usage: python3 -m unittest memory [-h] --root ROOT (--remember REMEMBER |
+                                  --list | --revoke REVOKE |
+                                  --revoke-source REVOKE_SOURCE |
+                                  --delete DELETE) [--workspace WORKSPACE]
+                                  [--cite CITE]
+                                  [--type {semantic,preference,procedural,episodic}]
+                                  [--object OBJECT]
+python3 -m unittest memory: error: argument --revoke: not allowed with argument --list
+usage: python3 -m unittest memory [-h] --root ROOT (--remember REMEMBER |
+                                  --list | --revoke REVOKE |
+                                  --revoke-source REVOKE_SOURCE |
+                                  --delete DELETE) [--workspace WORKSPACE]
+                                  [--cite CITE]
+                                  [--type {semantic,preference,procedural,episodic}]
+                                  [--object OBJECT]
+python3 -m unittest memory: error: argument --type: invalid choice: 'working' (choose from 'semantic', 'preference', 'procedural', 'episodic')
+......usage: python3 -m unittest route-grant [-h] --root ROOT (--grant GRANT |
+                                       --revoke REVOKE | --list)
+                                       [--workspace WORKSPACE]
+python3 -m unittest route-grant: error: argument --revoke: not allowed with argument --list
+.Initialized empty Git repository in <tmp>/tmpg54w13sa/new/disposable/worktree/.git/
+[agentmage/tasks/coding-fixture (root-commit) 45565aa] test: initialize synthetic coding fixture
+ 2 files changed, 27 insertions(+)
+ create mode 100644 .agentmage-development-workspace
+ create mode 100644 tests/run_validation.py
+Initialized empty Git repository in <tmp>/tmpg54w13sa/multi/disposable/worktree/.git/
+[agentmage/tasks/coding-fixture (root-commit) b9f7616] test: initialize synthetic coding fixture
+ 4 files changed, 35 insertions(+)
+ create mode 100644 .agentmage-development-workspace
+ create mode 100644 src/calc.py
+ create mode 100644 src/subtract.py
+ create mode 100644 tests/run_validation.py
+.Initialized empty Git repository in <tmp>/tmp3bhzio81/fixture/disposable/worktree/.git/
+[agentmage/tasks/coding-fixture (root-commit) f648710] test: initialize synthetic coding fixture
+ 3 files changed, 29 insertions(+)
+ create mode 100644 .agentmage-development-workspace
+ create mode 100644 src/calc.py
+ create mode 100644 tests/run_validation.py
+..............................................
+----------------------------------------------------------------------
+Ran 188 tests in 73.652s
+
+OK
+{"counts": {"current": 1, "newly-stale": 1, "previously-stale-or-historical": 1}, "newly_stale_artifacts": ["evidence/bound.json"]}
+{"counts": {"current": 1, "newly-stale": 1, "previously-stale-or-historical": 1}, "newly_stale_artifacts": ["evidence/bound.json"]}
+{"record": "fixture-verification", "stages": 1}
+{"record": "fixture-verification", "stages": 1}
+{"activation": true, "agentmage_binary": "/bin/true", "base": "<tmp>/tmpqiz14tsy/fixture", "confinement": false, "confinement_prerequisites": {"native_executables": {"bwrap": "untrusted-path", "git": "untrusted-path", "systemctl": "untrusted-path", "systemd-run": "untrusted-path"}, "ready": false, "scope": "prerequisites-only", "user_manager": "not-probed-untrusted-systemctl"}, "disposable_private": true, "fixture_profile_id": "scripted-executable-fixture-32k-v1", "git_branch": "refs/heads/agentmage/tasks/coding-fixture", "git_clean": true, "host_binary": "/bin/true", "lifecycle": "ready", "model_request": {"observation": "unavailable", "qualification": "not-assessed", "selection": null, "serving": "not-observed"}, "read_worker_binary": "/bin/true", "schema_version": 2, "scope": "development-diagnostics-only", "state_key": "not-created", "state_private": true, "transport_path": true, "workspace_private": true}
+coding.harness.cancellation-requested
+coding.harness.suspension-requested
+coding.harness.resumption-requested
+{"activation": true, "agentmage_binary": "/bin/true", "base": "<tmp>/tmpg54w13sa/new", "confinement": false, "confinement_prerequisites": {"native_executables": {"bwrap": "untrusted-path", "git": "untrusted-path", "systemctl": "untrusted-path", "systemd-run": "untrusted-path"}, "ready": false, "scope": "prerequisites-only", "user_manager": "not-probed-untrusted-systemctl"}, "disposable_private": true, "fixture_profile_id": "scripted-executable-fixture-32k-v1", "git_branch": "refs/heads/agentmage/tasks/coding-fixture", "git_clean": true, "host_binary": "/bin/true", "lifecycle": "ready", "model_request": {"observation": "unavailable", "qualification": "not-assessed", "selection": null, "serving": "not-observed"}, "read_worker_binary": "/bin/true", "schema_version": 2, "scope": "development-diagnostics-only", "state_key": "not-created", "state_private": true, "transport_path": true, "workspace_private": true}
+{"activation": true, "agentmage_binary": "/bin/true", "base": "<tmp>/tmpg54w13sa/multi", "confinement": false, "confinement_prerequisites": {"native_executables": {"bwrap": "untrusted-path", "git": "untrusted-path", "systemctl": "untrusted-path", "systemd-run": "untrusted-path"}, "ready": false, "scope": "prerequisites-only", "user_manager": "not-probed-untrusted-systemctl"}, "disposable_private": true, "fixture_profile_id": "scripted-executable-fixture-32k-v1", "git_branch": "refs/heads/agentmage/tasks/coding-fixture", "git_clean": true, "host_binary": "/bin/true", "lifecycle": "ready", "model_request": {"observation": "unavailable", "qualification": "not-assessed", "selection": null, "serving": "not-observed"}, "read_worker_binary": "/bin/true", "schema_version": 2, "scope": "development-diagnostics-only", "state_key": "not-created", "state_private": true, "transport_path": true, "workspace_private": true}
+{"activation": true, "agentmage_binary": "/bin/true", "base": "<tmp>/tmp3bhzio81/fixture", "confinement": false, "confinement_prerequisites": {"native_executables": {"bwrap": "untrusted-path", "git": "untrusted-path", "systemctl": "untrusted-path", "systemd-run": "untrusted-path"}, "ready": false, "scope": "prerequisites-only", "user_manager": "not-probed-untrusted-systemctl"}, "disposable_private": true, "fixture_profile_id": "scripted-executable-fixture-32k-v1", "git_branch": "refs/heads/agentmage/tasks/coding-fixture", "git_clean": true, "host_binary": "/bin/true", "lifecycle": "ready", "model_request": {"observation": "unavailable", "qualification": "not-assessed", "selection": null, "serving": "not-observed"}, "read_worker_binary": "/bin/true", "schema_version": 2, "scope": "development-diagnostics-only", "state_key": "not-created", "state_private": true, "transport_path": true, "workspace_private": true}

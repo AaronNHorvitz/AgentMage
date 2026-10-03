@@ -1,0 +1,575 @@
+{
+  "schema_version": 2,
+  "stage": "batch30-core",
+  "source_revision": "c9179bdb4252dd5d9f34479857805ad5b2453d42",
+  "scope": "batch 30 core: one SBOM write, the three redacting Sprint 11 store producers, the storage migration compatibility report (Decision 0143 text) and SBOM-bound Story 1.1, 1.2, 3.1 and knowledge boundary evidence",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/supply_chain.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_supply_chain"
+    ],
+    [
+      "python3",
+      "scripts/source_content_deduplication_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_source_content_deduplication_evidence"
+    ],
+    [
+      "python3",
+      "scripts/source_lifecycle_transactions_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_source_lifecycle_transactions_evidence"
+    ],
+    [
+      "python3",
+      "scripts/storage_migration_compatibility_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_storage_migration_compatibility_evidence"
+    ],
+    [
+      "python3",
+      "scripts/workflow_attempt_invariants_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_workflow_attempt_invariants_evidence"
+    ],
+    [
+      "python3",
+      "scripts/contract_boundary_gate.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_contract_boundary_gate"
+    ],
+    [
+      "python3",
+      "scripts/contract_evidence_index.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_contract_evidence_index"
+    ],
+    [
+      "python3",
+      "scripts/story_1_1_artifacts.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_1_1_artifacts"
+    ],
+    [
+      "python3",
+      "scripts/story_1_1_security_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_1_1_security_evidence"
+    ],
+    [
+      "python3",
+      "scripts/component_inventory.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_component_inventory"
+    ],
+    [
+      "python3",
+      "scripts/configuration_startup_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_configuration_startup_evidence"
+    ],
+    [
+      "python3",
+      "scripts/story_3_1_security_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_3_1_security_evidence"
+    ],
+    [
+      "python3",
+      "scripts/knowledge_sprint_boundary_review.py",
+      "--write",
+      "--source-revision",
+      "c9179bdb4252dd5d9f34479857805ad5b2453d42"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_knowledge_sprint_boundary_review"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/component_inventory.py": "108e6eda80fb6e8097c2db9e40b7c1201bbadefffc6d386efb72851a39575d74",
+    "scripts/configuration_startup_evidence.py": "100cb2aa68cd39b57ef5fb4666789f07a66c6c59309b66e27da873106b141da8",
+    "scripts/contract_boundary_gate.py": "468853a9ef2ec970a96dc6664b28f9b2f938de1b17e854104b618a8499db4b7d",
+    "scripts/contract_evidence_index.py": "0fdd6986a58bbed1fe8b554c6c15735b202be7750d7976dc2311795acc97b42c",
+    "scripts/knowledge_sprint_boundary_review.py": "a6dcf0958258b342a7d53feb34bdee2316504fee253f47cc5cddafe047d737cb",
+    "scripts/source_content_deduplication_evidence.py": "7deb1b6d86e3be99f532153021afdbfdfb63d71d076e5fafaf7587fca53716e8",
+    "scripts/source_lifecycle_transactions_evidence.py": "338641908c971ffbe4a6706003eadb61187699e2d172ea291103e6a9ceb57ee4",
+    "scripts/storage_migration_compatibility_evidence.py": "e23b0c53458bcd7d329d1b85f1c5002f3df39554cd8eef365e932d3061215e4b",
+    "scripts/story_1_1_artifacts.py": "724bc4d28adee71af08d3750e2653e2f77b7aab35ec33fc1657a1f4c31ae8b71",
+    "scripts/story_1_1_security_evidence.py": "f07d35e89dffb65931c19d85a9360b9b818e9eff767bff6b486f4f889c6c270a",
+    "scripts/story_3_1_security_evidence.py": "6d03fbe67e55c27c0aa2808b78bf26e1fcea6203fa0dc1e223e7c8ff22d2e056",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "scripts/workflow_attempt_invariants_evidence.py": "5030b23a5a329af38c121a145e500d62eb4546fa0dcef1bddb2cf4ca7cafedd5",
+    "tests/test_component_inventory.py": "12757ff847d9e6820d1d39c02c05f42819e0e718d7b54332affd6ccae3621844",
+    "tests/test_configuration_startup_evidence.py": "693dda9812499528ea0f8739bd93b2884bb5c5a51abe639bf0c58776ed85dc69",
+    "tests/test_contract_boundary_gate.py": "ac2f32c1503381e1f00c90035a9b718768e48a6b3250fa364b1a491d1702f53d",
+    "tests/test_contract_evidence_index.py": "198e4c3255c914d696fd7d2bdd0a8de55aa01bbec5eba83eb754e57754c22d75",
+    "tests/test_knowledge_sprint_boundary_review.py": "d29876f29ccd26daa17e96c992c68554279787a64e07803ba50c1de0f91c0ab6",
+    "tests/test_source_content_deduplication_evidence.py": "16742abb4d0282b3cae8fd0ef11fa6f28f15b6fe3312bbc38d1ae3c605fb9f78",
+    "tests/test_source_lifecycle_transactions_evidence.py": "e0d6adcdd0cb446614a5b7c58b1d5f969d8b6e0d94856265edcb4414b0b579d1",
+    "tests/test_storage_migration_compatibility_evidence.py": "00c3581b8386efd70f7f1d82a0f2a6602280e1c9c70a14c2add7417fdf2472fc",
+    "tests/test_story_1_1_artifacts.py": "19c6fe84d73abc27f443e8e31e6adbfce07f3f486e3b9b473c3e362b3c51b96e",
+    "tests/test_story_1_1_security_evidence.py": "20eb9f6dd06d06a75c72c2fa5fea7dd07e24f77842cd32af2e3f2c49231be6dc",
+    "tests/test_story_3_1_security_evidence.py": "f9d223878166c92dc21fc4e50e7cc1dfaa68bf3241db5a367e6cc8ea97f2ed19",
+    "tests/test_supply_chain.py": "29593e31bb43f33beb064efb5b7b366ae5a0f964c2544b4bfb5e5b365e9026ae",
+    "tests/test_workflow_attempt_invariants_evidence.py": "2f966a72cfcba38380280a8da8ea8c533d4ead99e136a3eeaae5d09dba5360a9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.111,
+      "log": "01.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_supply_chain"
+      ],
+      "exit_code": 0,
+      "seconds": 0.642,
+      "log": "02.log",
+      "log_sha256": "45e1269049494dc900472f462a6af6dd5c9fbcb2a9349b7d5e63d30ce4e4f071",
+      "private_log_sha256": "45e1269049494dc900472f462a6af6dd5c9fbcb2a9349b7d5e63d30ce4e4f071"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/source_content_deduplication_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 67.514,
+      "log": "03.log",
+      "log_sha256": "36da2ef8696a64294a98203dbcfe032d3f6cdc2a9531a1dbee9c2e03d0f87d1f",
+      "private_log_sha256": "36da2ef8696a64294a98203dbcfe032d3f6cdc2a9531a1dbee9c2e03d0f87d1f"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_source_content_deduplication_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.1,
+      "log": "04.log",
+      "log_sha256": "a9c199bb0815a7b52a3d2e9557612f346083a2ce10987206094238eea8e13936",
+      "private_log_sha256": "a9c199bb0815a7b52a3d2e9557612f346083a2ce10987206094238eea8e13936"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "python3",
+        "scripts/source_lifecycle_transactions_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 51.196,
+      "log": "05.log",
+      "log_sha256": "f4018c1bb094c44720589cf528f6d4c0c2da76ff164e45f213555844d8c52a1c",
+      "private_log_sha256": "f4018c1bb094c44720589cf528f6d4c0c2da76ff164e45f213555844d8c52a1c"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_source_lifecycle_transactions_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.063,
+      "log": "06.log",
+      "log_sha256": "3872f5a85da677f909ec5c55a5821758c34e2394460567a29f8043b480cc1105",
+      "private_log_sha256": "3872f5a85da677f909ec5c55a5821758c34e2394460567a29f8043b480cc1105"
+    },
+    {
+      "index": 7,
+      "argv": [
+        "python3",
+        "scripts/storage_migration_compatibility_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 56.774,
+      "log": "07.log",
+      "log_sha256": "927ff84db25219ba1744f33e2ea4c29a82b13964f29476573030fe18a1e0d83e",
+      "private_log_sha256": "927ff84db25219ba1744f33e2ea4c29a82b13964f29476573030fe18a1e0d83e"
+    },
+    {
+      "index": 8,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_storage_migration_compatibility_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.072,
+      "log": "08.log",
+      "log_sha256": "d26bdd8902cfd9615fdc56631c8cf5c6f50365669f489e98ad81e93f48fdb11a",
+      "private_log_sha256": "d26bdd8902cfd9615fdc56631c8cf5c6f50365669f489e98ad81e93f48fdb11a"
+    },
+    {
+      "index": 9,
+      "argv": [
+        "python3",
+        "scripts/workflow_attempt_invariants_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 50.085,
+      "log": "09.log",
+      "log_sha256": "0f5d7128897ca252b6f02df15a4f132881e8b7598613502a337356626d93bf7d",
+      "private_log_sha256": "0f5d7128897ca252b6f02df15a4f132881e8b7598613502a337356626d93bf7d"
+    },
+    {
+      "index": 10,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_workflow_attempt_invariants_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.059,
+      "log": "10.log",
+      "log_sha256": "1f11b6e880045ee35de832b81b45d06257342e13b5c79bbf0034379d4ca220b9",
+      "private_log_sha256": "1f11b6e880045ee35de832b81b45d06257342e13b5c79bbf0034379d4ca220b9"
+    },
+    {
+      "index": 11,
+      "argv": [
+        "python3",
+        "scripts/contract_boundary_gate.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.096,
+      "log": "11.log",
+      "log_sha256": "ffb0929bcd3e0c156f11d6ee3d4dcfdbdec2f9f41746916b7af56d3ea0c430a4",
+      "private_log_sha256": "ffb0929bcd3e0c156f11d6ee3d4dcfdbdec2f9f41746916b7af56d3ea0c430a4"
+    },
+    {
+      "index": 12,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_contract_boundary_gate"
+      ],
+      "exit_code": 0,
+      "seconds": 0.114,
+      "log": "12.log",
+      "log_sha256": "083942298db36f78deff965481032c1f6473e9820a9993bdcd4b58f3708b4fda",
+      "private_log_sha256": "083942298db36f78deff965481032c1f6473e9820a9993bdcd4b58f3708b4fda"
+    },
+    {
+      "index": 13,
+      "argv": [
+        "python3",
+        "scripts/contract_evidence_index.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 2.237,
+      "log": "13.log",
+      "log_sha256": "d64a13683ec5874fafecbdc8621edda9fcf5798c2b1b9fcb6b7e6535af020932",
+      "private_log_sha256": "d64a13683ec5874fafecbdc8621edda9fcf5798c2b1b9fcb6b7e6535af020932"
+    },
+    {
+      "index": 14,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_contract_evidence_index"
+      ],
+      "exit_code": 0,
+      "seconds": 0.079,
+      "log": "14.log",
+      "log_sha256": "0f0149f92c2183ef7246fcaec2decd1c651e8502ce280acaef0e7400e32feec8",
+      "private_log_sha256": "0f0149f92c2183ef7246fcaec2decd1c651e8502ce280acaef0e7400e32feec8"
+    },
+    {
+      "index": 15,
+      "argv": [
+        "python3",
+        "scripts/story_1_1_artifacts.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.031,
+      "log": "15.log",
+      "log_sha256": "6ddd04e6060dd8158475e3b5fdf90fe3c4b34164f84f00a1644878af50a98fea",
+      "private_log_sha256": "6ddd04e6060dd8158475e3b5fdf90fe3c4b34164f84f00a1644878af50a98fea"
+    },
+    {
+      "index": 16,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_1_1_artifacts"
+      ],
+      "exit_code": 0,
+      "seconds": 0.067,
+      "log": "16.log",
+      "log_sha256": "74202dc09a3347400de94f86db7081b0c92ff6270bca74570c143aa53888e576",
+      "private_log_sha256": "74202dc09a3347400de94f86db7081b0c92ff6270bca74570c143aa53888e576"
+    },
+    {
+      "index": 17,
+      "argv": [
+        "python3",
+        "scripts/story_1_1_security_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.041,
+      "log": "17.log",
+      "log_sha256": "04bdfd167bbbe669073900a46f4091d33d4d3a817a465699ea8502567598fb3c",
+      "private_log_sha256": "04bdfd167bbbe669073900a46f4091d33d4d3a817a465699ea8502567598fb3c"
+    },
+    {
+      "index": 18,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_1_1_security_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.092,
+      "log": "18.log",
+      "log_sha256": "0d628f37216e0a286bb4dc09c3961e6b1490ff1c53d56a39af806e9c2cc5da78",
+      "private_log_sha256": "0d628f37216e0a286bb4dc09c3961e6b1490ff1c53d56a39af806e9c2cc5da78"
+    },
+    {
+      "index": 19,
+      "argv": [
+        "python3",
+        "scripts/component_inventory.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 1.524,
+      "log": "19.log",
+      "log_sha256": "f253aac66972f434f7ae0f1c81879a85da4620a4f1c5cc7738a640e4b28492a8",
+      "private_log_sha256": "f253aac66972f434f7ae0f1c81879a85da4620a4f1c5cc7738a640e4b28492a8"
+    },
+    {
+      "index": 20,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_component_inventory"
+      ],
+      "exit_code": 0,
+      "seconds": 7.335,
+      "log": "20.log",
+      "log_sha256": "3bb9fe936133238510e1d40a2621aefb44588cb9b6c98c5e1e76c77c3f558b5a",
+      "private_log_sha256": "3bb9fe936133238510e1d40a2621aefb44588cb9b6c98c5e1e76c77c3f558b5a"
+    },
+    {
+      "index": 21,
+      "argv": [
+        "python3",
+        "scripts/configuration_startup_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.358,
+      "log": "21.log",
+      "log_sha256": "635a7a089caf4f25d2e772a819fb5d83c083bf266914373128419caea0dbe78f",
+      "private_log_sha256": "635a7a089caf4f25d2e772a819fb5d83c083bf266914373128419caea0dbe78f"
+    },
+    {
+      "index": 22,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_configuration_startup_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.071,
+      "log": "22.log",
+      "log_sha256": "bd8b6e98c3fde35b63ab6d268fdd3a11412f774f5efed5e707ad2bef28c91f16",
+      "private_log_sha256": "bd8b6e98c3fde35b63ab6d268fdd3a11412f774f5efed5e707ad2bef28c91f16"
+    },
+    {
+      "index": 23,
+      "argv": [
+        "python3",
+        "scripts/story_3_1_security_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 1.583,
+      "log": "23.log",
+      "log_sha256": "0cd2aa4156909f95f43fc90f612df6209e475456b9fc49a528576ae94ff610aa",
+      "private_log_sha256": "0cd2aa4156909f95f43fc90f612df6209e475456b9fc49a528576ae94ff610aa"
+    },
+    {
+      "index": 24,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_3_1_security_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 5.416,
+      "log": "24.log",
+      "log_sha256": "fe605cbe41f9995a70fee0f3951b2e4a4465c03d4e4a0dda171134a30e00e9a3",
+      "private_log_sha256": "fe605cbe41f9995a70fee0f3951b2e4a4465c03d4e4a0dda171134a30e00e9a3"
+    },
+    {
+      "index": 25,
+      "argv": [
+        "python3",
+        "scripts/knowledge_sprint_boundary_review.py",
+        "--write",
+        "--source-revision",
+        "c9179bdb4252dd5d9f34479857805ad5b2453d42"
+      ],
+      "exit_code": 0,
+      "seconds": 0.125,
+      "log": "25.log",
+      "log_sha256": "f08ed91b1a4dcf60f8b1db63e08cc009d1bee9a0866fa97ff1480b815c695f96",
+      "private_log_sha256": "f08ed91b1a4dcf60f8b1db63e08cc009d1bee9a0866fa97ff1480b815c695f96"
+    },
+    {
+      "index": 26,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_knowledge_sprint_boundary_review"
+      ],
+      "exit_code": 0,
+      "seconds": 0.075,
+      "log": "26.log",
+      "log_sha256": "fe008aab760eb03ccac7578e2b84665b1b50b0d7f855b17a0c7a8d039435b658",
+      "private_log_sha256": "fe008aab760eb03ccac7578e2b84665b1b50b0d7f855b17a0c7a8d039435b658"
+    },
+    {
+      "index": 27,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.077,
+      "log": "27.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 28,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.022,
+      "log": "28.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
