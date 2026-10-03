@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "record_type": "sprint_108_local_evidence",
-  "source_revision": "78c40469a0f39e4f91899f658ecb8bda3b41d717",
+  "source_revision": "441df99ab86a605623129fc111cdcd97039fc442",
   "source_sha256": {
     "Cargo.toml": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc",
     "Cargo.lock": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd",
@@ -12,9 +12,9 @@
     "artifacts/sprints/sprint-108/multi-provider-source-corpus.json": "b4b010308946e2613931917e41ad0f85efb790370c2296640e4b0ff9a210c9bc",
     "scripts/multi_provider_source_contract.py": "d49c33d960f19379f0ae0f6ea8fbbd9c89b8742b9bc9a03fbc29d9585f504bcd",
     "tests/test_multi_provider_source_contract.py": "9cceb31ddd9860399514223e7256e90116e3a7e4c8122c7b8909866d18bbb18c",
-    "supply-chain/dependency-hashes.sha256": "df069bcbb17ad134a7b8803eabf8b5fd9ac33d228569b07567ec07d09d7885e1",
-    "supply-chain/dependency-provenance.json": "8061e2143a6983debf73540a389025d4eef64cc84a7d518876f80ed0cb7bb335",
-    "supply-chain/sbom.cdx.json": "a6d6785f883431de415da1145b61c85cce23d663107ba573f581c0ff73b5f860",
+    "supply-chain/dependency-hashes.sha256": "732723a996f0b4f0bfcfaca4c872f9e4c2b054d6a81350306aaf547439c8e29f",
+    "supply-chain/dependency-provenance.json": "6e59b4f5e447a0e0d73015a85d210f6c359bc9baa62cab383b88cc0bd1e4dfcd",
+    "supply-chain/sbom.cdx.json": "d89f62832a00a60e7929703920d4440c3bcded63790b5b8d08177edb731f6c0d",
     "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
     "scripts/sprint_108_evidence.py": "baaf3a3b8e057bffaf2c1884feb0e1a124645d92639d58faac0c342428821a6c",
     "tests/test_sprint_108_evidence.py": "2f31f90abdaa08a1ded37973b82cc23e507bafe93941feb311d997b8a4215279"
@@ -41,7 +41,7 @@
         "--lib"
       ],
       "exit_code": 0,
-      "output_sha256": "f187c68b2a620ea2c3996cfd63758c6e156fb1adf9e274100cb0b0d465d214b3",
+      "output_sha256": "629a09840b9463d9db10cc5fb6308385a9298d9e6f3dcb94a0022a5ebf6e48fa",
       "blocking_skip_count": 0
     },
     {
