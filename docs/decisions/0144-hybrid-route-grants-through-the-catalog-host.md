@@ -207,6 +207,12 @@ The runtime producer contract moves to version 3:
 - The factory's grant lookup runs only in native composition, which this
   sandbox refuses. The grant owner, the CLI and the catalog host run as
   actual processes here.
+- A catalog the factory cannot read fails the run's composition instead of
+  routing local-only: an unavailable store, a catalog that fails its checks,
+  or a host clock earlier than a kept grant. Such a catalog blocks every run
+  of its state root until it is repaired or the clock is right, because no
+  run proceeds on grants it could not verify (review N2 of `6c0f51fe`,
+  Decision 0145).
 - Independent review remains open.
 
 ## Consequences

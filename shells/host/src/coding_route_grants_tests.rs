@@ -528,11 +528,26 @@ fn a_changed_catalog_is_refused_and_an_answer_must_name_what_was_sent() {
     let states = runtime.owner_states();
     let stored = states.load(OwnerStateName::RouteGrantCatalog).unwrap();
     let text = String::from_utf8(stored.state).unwrap();
+    // Review N7 of 6c0f51fe: one scope holding the same grant twice, in the
+    // catalog's own encoding, is refused as well. The factory's read would
+    // refuse it anyway as two live grants of one route; the listing shows
+    // the catalog's identity rule.
+    let scope_start = text.find(":[").unwrap() + 2;
+    let scope_end = text.rfind("]}").unwrap();
+    let kept = &text[scope_start..scope_end];
+    let duplicated = format!(
+        "{}{kept},{kept}{}",
+        &text[..scope_start],
+        &text[scope_end..]
+    );
+    let parsed: serde_json::Value = serde_json::from_str(&duplicated).unwrap();
+    assert_eq!(parsed["scopes"][WORKSPACE].as_array().unwrap().len(), 2);
     for changed in [
         text.replace("\"used_requests\":0", "\"used_requests\":9"),
         text.replace("\"max_requests\":3", "\"max_requests\":4"),
         text.replace("{\"schema_version\":1", "{\"schema_version\":2"),
         format!("{text} "),
+        duplicated,
     ] {
         let other = JobLedgerStore::new("route-grant-integrity-changed");
         let changed_runtime = other.try_runtime().unwrap();
@@ -543,6 +558,16 @@ fn a_changed_catalog_is_refused_and_an_answer_must_name_what_was_sent() {
         assert_eq!(
             live_route_grants(&changed_runtime.owner_states(), WORKSPACE, NOW),
             Err(RouteGrantRefusal::StoreIntegrity),
+            "{changed}"
+        );
+        // The owner's listing reads every grant, live or not, so only the
+        // catalog's own checks refuse it there.
+        drop(changed_runtime);
+        assert_eq!(
+            answer(&other, &RouteGrantRequest::List { workspace_id: None }, NOW),
+            RouteGrantAnswer::Refused {
+                refusal: RouteGrantRefusal::StoreIntegrity
+            },
             "{changed}"
         );
     }

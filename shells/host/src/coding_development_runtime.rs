@@ -48,7 +48,7 @@ use agentmage_kernel_engine::{
     },
     repository_safety::{OwnedWorktreeRecord, WorktreeDisposition},
     run_action_history_store::DurableRunActionHistories,
-    run_effect_record_store::{DurableRunEffectRecords, RunEffectRecordStoreError},
+    run_effect_record_store::RunEffectRecordStoreError,
     runtime_artifact::{
         MAX_RUNTIME_ARTIFACT_BYTES, RUNTIME_CONTINUATION_MEDIA_TYPE, RUNTIME_REQUEST_MEDIA_TYPE,
         RuntimeArtifactReadRequest, decode_runtime_continuation_state,
@@ -108,7 +108,7 @@ use crate::{
     coding_plan::build_coding_development_plan_binding,
     coding_run::{CodingRunRequestInput, build_ephemeral_coding_run_request},
     coding_session::{CodingSessionProfile, CodingSessionProfileInput},
-    coding_session_recoverability::{PersistedRunEffects, RUN_EFFECT_RECORD_OWNER},
+    coding_session_recoverability::PersistedRunEffects,
     coding_tools::{
         TARGETED_VALIDATION_TOOL_ID, TARGETED_VALIDATION_TOOL_VERSION, TargetedValidationRequest,
     },
@@ -404,7 +404,7 @@ pub struct CodingDevelopmentRuntimeFactory {
     composed_run_histories: Option<(RuntimeRunId, DurableRunActionHistories)>,
     /// The stored run effect records of the last composed run's store,
     /// until the host service takes them (Decision 0143).
-    composed_run_effect_records: Option<(RuntimeRunId, DurableRunEffectRecords)>,
+    composed_run_effect_records: Option<(RuntimeRunId, PersistedRunEffects)>,
     /// The recipe plan of the last composed run, until the host service
     /// takes it (Decision 0133).
     composed_recipe: Option<(RuntimeRunId, RecipePlan)>,
@@ -1276,9 +1276,11 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         // can run. A session holds at most its recorded runs, and a run whose
         // chain is not held runs without one; its session is never declared
         // again, because a declaration needs the declaring run's chain.
-        let effect_records = authority.authority().run_effect_records();
-        let effect_chain = match PersistedRunEffects::begin(effect_records.clone(), request, start)
-        {
+        let effect_chain = match PersistedRunEffects::begin(
+            authority.authority().run_effect_records(),
+            request,
+            start,
+        ) {
             Ok(chain) => Some(chain),
             Err(RunEffectRecordStoreError::Full | RunEffectRecordStoreError::NotFound) => {
                 eprintln!("coding.development.effect-record-unavailable");
@@ -1290,13 +1292,13 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             }
         };
         // A composition that fails from here on ran nothing, so a new run's
-        // chain is closed empty rather than left open in its session.
+        // chain is closed empty rather than left open in its session. A run
+        // resumed after a restart keeps its chain open, already marked
+        // incomplete, so a later host can still resume it (Decision 0145).
         let close_unused_chain = || {
-            if effect_chain.is_some()
+            if let Some(chain) = &effect_chain
                 && start == StoredChainStart::New
-                && effect_records
-                    .close(request.run_id.as_str(), RUN_EFFECT_RECORD_OWNER)
-                    .is_err()
+                && chain.close_released().is_err()
             {
                 eprintln!("coding.development.effect-record-close-failed");
             }
@@ -1342,7 +1344,8 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         self.composed_job_ledgers = Some((request.run_id.clone(), job_ledgers));
         self.composed_route = Some((request.run_id.clone(), route));
         self.composed_run_histories = Some((request.run_id.clone(), histories));
-        self.composed_run_effect_records = Some((request.run_id.clone(), effect_records));
+        self.composed_run_effect_records =
+            effect_chain.map(|chain| (request.run_id.clone(), chain));
         Ok(if stop_after_checkpoint {
             coordinator.with_development_checkpoint_stop_probe()
         } else {
@@ -1395,10 +1398,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         }
     }
 
-    fn take_run_effect_records(
-        &mut self,
-        run_id: &RuntimeRunId,
-    ) -> Option<DurableRunEffectRecords> {
+    fn take_run_effect_records(&mut self, run_id: &RuntimeRunId) -> Option<PersistedRunEffects> {
         match self.composed_run_effect_records.take() {
             Some((composed, records)) if &composed == run_id => Some(records),
             _ => None,

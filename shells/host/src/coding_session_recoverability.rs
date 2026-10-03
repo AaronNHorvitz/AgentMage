@@ -16,6 +16,9 @@
 //! Classification only, as for a run (Decision 0116): a declaration grants
 //! nothing and never reports an effect as undone.
 
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use agentmage_kernel_contracts::{RuntimeArtifactRef, RuntimeRunRequest};
 use agentmage_kernel_engine::run_effect_record_store::{
     DurableRunEffectRecords, RunEffectEntry, RunEffectKind, RunEffectRecordStoreError,
@@ -40,14 +43,102 @@ pub const MAX_CHANGE_RECORD_READ_BYTES: u64 = 4 * 1024 * 1024;
 /// Most change record bytes one session declaration reads in total.
 pub const MAX_SESSION_CHANGE_RECORD_BYTES: u64 = 32 * 1024 * 1024;
 
-/// The stored chain a run's effect recorder also appends to.
+/// What the host knows about one run's stored chain that the store may not
+/// hold yet (review F1 of `6c0f51fe`). Every handle of the run shares it: the
+/// recorder that appends, the service that closes and, across an in-host
+/// continuation, the run's next recorder.
+#[derive(Debug, Default)]
+struct ChainKnowledge {
+    /// An entry this host kept in memory did not reach the store.
+    missed: AtomicBool,
+    /// The store holds the chain's incomplete mark.
+    marked: AtomicBool,
+}
+
+/// The store writes one run's chain takes. The coding host writes through the
+/// operational store; a test refuses writes as a failing disk would.
+trait ChainWrites: std::fmt::Debug + Send + Sync {
+    fn append(&self, run_id: &str, entry: &RunEffectEntry)
+    -> Result<(), RunEffectRecordStoreError>;
+    fn mark_incomplete(&self, run_id: &str) -> Result<(), RunEffectRecordStoreError>;
+    fn close(&self, run_id: &str) -> Result<(), RunEffectRecordStoreError>;
+}
+
+impl ChainWrites for DurableRunEffectRecords {
+    fn append(
+        &self,
+        run_id: &str,
+        entry: &RunEffectEntry,
+    ) -> Result<(), RunEffectRecordStoreError> {
+        Self::append(self, run_id, RUN_EFFECT_RECORD_OWNER, entry).map(|_| ())
+    }
+
+    fn mark_incomplete(&self, run_id: &str) -> Result<(), RunEffectRecordStoreError> {
+        Self::mark_incomplete(self, run_id, RUN_EFFECT_RECORD_OWNER)
+    }
+
+    fn close(&self, run_id: &str) -> Result<(), RunEffectRecordStoreError> {
+        Self::close(self, run_id, RUN_EFFECT_RECORD_OWNER).map(|_| ())
+    }
+}
+
+/// Store writes refused while `refuse` is set, as a failing disk would refuse
+/// them, and otherwise the operational store's; for the host's tests.
+#[cfg(test)]
+#[derive(Debug)]
+struct RefusingWrites {
+    records: DurableRunEffectRecords,
+    refuse: Arc<AtomicBool>,
+}
+
+#[cfg(test)]
+impl RefusingWrites {
+    fn refused(&self) -> Result<(), RunEffectRecordStoreError> {
+        if self.refuse.load(Ordering::SeqCst) {
+            Err(RunEffectRecordStoreError::Storage)
+        } else {
+            Ok(())
+        }
+    }
+}
+
+#[cfg(test)]
+impl ChainWrites for RefusingWrites {
+    fn append(
+        &self,
+        run_id: &str,
+        entry: &RunEffectEntry,
+    ) -> Result<(), RunEffectRecordStoreError> {
+        self.refused()?;
+        ChainWrites::append(&self.records, run_id, entry)
+    }
+
+    fn mark_incomplete(&self, run_id: &str) -> Result<(), RunEffectRecordStoreError> {
+        self.refused()?;
+        ChainWrites::mark_incomplete(&self.records, run_id)
+    }
+
+    fn close(&self, run_id: &str) -> Result<(), RunEffectRecordStoreError> {
+        self.refused()?;
+        ChainWrites::close(&self.records, run_id)
+    }
+}
+
+/// The stored chain a run's effect recorder also appends to, and the handle
+/// the host service closes it with. Clones share what the host knows about
+/// the chain.
 #[derive(Clone, Debug)]
 pub struct PersistedRunEffects {
     records: DurableRunEffectRecords,
+    writes: Arc<dyn ChainWrites>,
     run_id: String,
-    /// Whether an entry this owner kept in memory did not reach the store.
-    missed: bool,
+    knowledge: Arc<ChainKnowledge>,
 }
+
+/// What the host knows about a run's stored chain, kept without the store
+/// while an in-host continuation reopens it (Decision 0145).
+#[derive(Clone, Debug)]
+pub struct RunEffectChainKnowledge(Arc<ChainKnowledge>);
 
 impl PersistedRunEffects {
     /// Creates or attaches to the chain of the request's run under the
@@ -55,7 +146,8 @@ impl PersistedRunEffects {
     /// incomplete, because the host that ended may have missed an entry
     /// between an effect and its record. A run recorded before schema 25 has
     /// no chain; it begins here, marked incomplete, so its session is never
-    /// declared from a part of its effects.
+    /// declared from a part of its effects. A chain naming another session or
+    /// task is refused before anything is marked.
     pub fn begin(
         records: DurableRunEffectRecords,
         request: &RuntimeRunRequest,
@@ -66,18 +158,21 @@ impl PersistedRunEffects {
             request.task.task_id.as_str(),
             request.run_id.as_str(),
         );
+        let after_restart = matches!(
+            start,
+            StoredChainStart::AfterRestart | StoredChainStart::AfterRestartStoredFirst
+        );
         let attached = match start {
             StoredChainStart::New => {
                 records.create(session_id, task_id, run_id, RUN_EFFECT_RECORD_OWNER)?;
                 None
             }
-            StoredChainStart::ContinueInHost => {
-                Some(records.attach(run_id, RUN_EFFECT_RECORD_OWNER, false)?)
-            }
-            StoredChainStart::AfterRestart | StoredChainStart::AfterRestartStoredFirst => {
-                match records.attach(run_id, RUN_EFFECT_RECORD_OWNER, true) {
+            StoredChainStart::ContinueInHost
+            | StoredChainStart::AfterRestart
+            | StoredChainStart::AfterRestartStoredFirst => {
+                match records.attach(run_id, RUN_EFFECT_RECORD_OWNER, false) {
                     Ok(stored) => Some(stored),
-                    Err(RunEffectRecordStoreError::NotFound) => {
+                    Err(RunEffectRecordStoreError::NotFound) if after_restart => {
                         records.create(session_id, task_id, run_id, RUN_EFFECT_RECORD_OWNER)?;
                         records.mark_incomplete(run_id, RUN_EFFECT_RECORD_OWNER)?;
                         None
@@ -87,47 +182,88 @@ impl PersistedRunEffects {
             }
         };
         // A run belongs to the one session and task its chain names.
-        if attached
-            .is_some_and(|stored| stored.session_id != session_id || stored.task_id != task_id)
-        {
-            return Err(RunEffectRecordStoreError::InvalidInput);
+        if let Some(stored) = attached {
+            if stored.session_id != session_id || stored.task_id != task_id {
+                return Err(RunEffectRecordStoreError::InvalidInput);
+            }
+            if after_restart {
+                records.mark_incomplete(run_id, RUN_EFFECT_RECORD_OWNER)?;
+            }
         }
         Ok(Self {
+            writes: Arc::new(records.clone()),
             records,
             run_id: run_id.to_owned(),
-            missed: false,
+            knowledge: Arc::default(),
         })
     }
 
     /// Appends one entry, or records that it was missed and marks the stored
-    /// chain incomplete.
-    pub(crate) fn append(&mut self, entry: &RunEffectEntry) {
-        if self
-            .records
-            .append(&self.run_id, RUN_EFFECT_RECORD_OWNER, entry)
-            .is_err()
-        {
-            self.missed = true;
+    /// chain incomplete. A mark the store refused earlier is retried first.
+    pub(crate) fn append(&self, entry: &RunEffectEntry) {
+        self.store_pending_mark();
+        if self.writes.append(&self.run_id, entry).is_err() {
             self.mark_incomplete();
         }
     }
 
-    /// Marks the stored chain incomplete, for an owner that knows it missed
-    /// an entry.
+    /// Records that this owner missed an entry and marks the stored chain
+    /// incomplete. A mark the store refuses stays pending: each later append
+    /// and the closing retry it, and the chain is never closed without it.
     pub(crate) fn mark_incomplete(&self) {
-        if self
-            .records
-            .mark_incomplete(&self.run_id, RUN_EFFECT_RECORD_OWNER)
-            .is_err()
+        self.knowledge.missed.store(true, Ordering::SeqCst);
+        self.store_pending_mark();
+    }
+
+    /// Stores a pending incomplete mark; true when none is pending.
+    fn store_pending_mark(&self) -> bool {
+        if !self.knowledge.missed.load(Ordering::SeqCst)
+            || self.knowledge.marked.load(Ordering::SeqCst)
         {
-            eprintln!("coding.recoverability.store-mark-failed");
+            return true;
         }
+        if self.writes.mark_incomplete(&self.run_id).is_err() {
+            eprintln!("coding.recoverability.store-mark-failed");
+            return false;
+        }
+        self.knowledge.marked.store(true, Ordering::SeqCst);
+        true
     }
 
     /// Whether every entry this owner kept reached the store.
     #[must_use]
-    pub const fn kept_every_entry(&self) -> bool {
-        !self.missed
+    pub fn kept_every_entry(&self) -> bool {
+        !self.knowledge.missed.load(Ordering::SeqCst)
+    }
+
+    /// Closes the chain because its ended run was released. A chain that
+    /// missed an entry closes only after the store holds its incomplete mark;
+    /// otherwise it stays open, and every later declaration of its session
+    /// is refused because an earlier run was never released (Decision 0145).
+    pub fn close_released(&self) -> Result<(), RunEffectRecordStoreError> {
+        if !self.store_pending_mark() {
+            return Err(RunEffectRecordStoreError::Storage);
+        }
+        self.writes.close(&self.run_id)
+    }
+
+    /// What the host knows about this chain, kept while the store is closed
+    /// for an in-host continuation of the run.
+    #[must_use]
+    pub fn knowledge(&self) -> RunEffectChainKnowledge {
+        RunEffectChainKnowledge(Arc::clone(&self.knowledge))
+    }
+
+    /// Continues what the host knew about the same run's chain before an
+    /// in-host continuation reopened the store: a miss carries over, and a
+    /// mark the store did not take is retried.
+    pub fn continue_from(&self, earlier: &RunEffectChainKnowledge) {
+        if earlier.0.missed.load(Ordering::SeqCst) {
+            if earlier.0.marked.load(Ordering::SeqCst) {
+                self.knowledge.marked.store(true, Ordering::SeqCst);
+            }
+            self.mark_incomplete();
+        }
     }
 
     /// Every stored run of one session, oldest first.
@@ -136,6 +272,21 @@ impl PersistedRunEffects {
         session_id: &str,
     ) -> Result<Vec<StoredRunEffects>, RunEffectRecordStoreError> {
         self.records.session(session_id)
+    }
+}
+
+#[cfg(test)]
+impl PersistedRunEffects {
+    /// This handle with its store writes refused while `refuse` is set, for
+    /// the host's tests (review F1 of `6c0f51fe`).
+    pub(crate) fn refusing_writes(self, refuse: &Arc<AtomicBool>) -> Self {
+        Self {
+            writes: Arc::new(RefusingWrites {
+                records: self.records.clone(),
+                refuse: Arc::clone(refuse),
+            }),
+            ..self
+        }
     }
 }
 

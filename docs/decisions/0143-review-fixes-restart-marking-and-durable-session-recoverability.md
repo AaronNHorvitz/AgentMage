@@ -209,10 +209,16 @@ moves to version 2:
   encrypted store, the session declaration, the service's declarations, the
   wire, the CLI and the contract fixtures are tested here.
 - The store might refuse both an append and the mark that follows it. The
-  chain then claims to be complete while it misses that entry. The recorder
-  remembers the miss, so the host that ran the run never declares the
-  session from that chain. A later host reaches the session only by resuming
-  it after a restart, and that marks the resumed run incomplete.
+  chain then claims to be complete while it misses that entry. As first
+  written, only the recorder remembered the miss, so a later run of the same
+  session in the same host could still declare from that chain (review F1 of
+  `6c0f51fe`). Decision 0145 corrects this: every handle of the run in the
+  host shares the miss, each later append retries the mark, an in-host
+  continuation carries the miss over, and the chain is closed only after the
+  store holds the mark. A chain whose mark never reaches the store stays
+  open, so no later run of its session declares it. A later host reaches the
+  session only by resuming it after a restart, and that marks the resumed run
+  incomplete.
 - A session is declared only at the end of one of its runs. A view of a
   session after its host ended, without a run, is later work.
 - A change record whose retention has expired makes its session's

@@ -110,13 +110,13 @@ pub trait NativeChatRuntimeFactory {
         None
     }
 
-    /// Hands over the stored run effect records of the store the factory
-    /// opened when it composed `run_id`, so the host service closes the run's
-    /// effect record when it releases the run (Decision 0143).
+    /// Hands over the stored effect record chain the factory began when it
+    /// composed `run_id`, so the host service closes it when it releases the
+    /// run (Decisions 0143 and 0145). A run without a chain has none.
     fn take_run_effect_records(
         &mut self,
         _run_id: &agentmage_kernel_contracts::RuntimeRunId,
-    ) -> Option<agentmage_kernel_engine::run_effect_record_store::DurableRunEffectRecords> {
+    ) -> Option<crate::coding_session_recoverability::PersistedRunEffects> {
         None
     }
 

@@ -64,7 +64,7 @@ use crate::coding_client::{CodingClientError, LiveCodingCoordinatorPort};
 use crate::coding_context::RunContextInspectionSource;
 use crate::coding_recoverability::{RecoverabilityReport, RunRecoverabilitySource};
 use crate::coding_route::{RunRouteDeclaration, RunRouteReceipt};
-use crate::coding_session_recoverability::RUN_EFFECT_RECORD_OWNER;
+use crate::coding_session_recoverability::PersistedRunEffects;
 use crate::native_chat_runtime::NativeChatRuntimeFactory;
 use crate::runtime_transport::{
     RUN_DECLARATIONS_SCHEMA_VERSION, RuntimeClientScope, RuntimeJobControl, RuntimeJobStatus,
@@ -74,9 +74,7 @@ use crate::runtime_transport::{
 use agentmage_kernel_engine::run_action_history_store::{
     DurableRunActionHistories, RunActionChainName, RunActionHistoryStoreError,
 };
-use agentmage_kernel_engine::run_effect_record_store::{
-    DurableRunEffectRecords, RunEffectRecordStoreError,
-};
+use agentmage_kernel_engine::run_effect_record_store::RunEffectRecordStoreError;
 
 /// Owner identity of the coding host in every job ledger it keeps. The store
 /// authenticates writers by its key, so every host over one store is the same
@@ -642,20 +640,35 @@ where
         } else {
             StoredChainStart::AfterRestart
         };
-        let mut session = LiveCodingSession::spawn(request, coordinator, slow_subscriber_probe)
-            .inspect_err(|_| {
-                eprintln!("coding.live.spawn-denied");
-            })?;
+        // A new run that fails before its session owns its stored chains ran
+        // nothing, so they close empty rather than stay open in its session.
+        // A run resumed after a restart keeps them open, already marked
+        // incomplete, so a later host can still resume it (Decision 0145).
+        let mut session =
+            match LiveCodingSession::spawn(request, coordinator, slow_subscriber_probe) {
+                Ok(session) => session,
+                Err(error) => {
+                    eprintln!("coding.live.spawn-denied");
+                    if start == StoredChainStart::New {
+                        close_stored_chains(&key, histories.as_ref(), effect_records.as_ref());
+                    }
+                    return Err(error);
+                }
+            };
         session.route = route;
         session.recipe_plan = recipe_plan;
         session.run_effect_records = effect_records;
         if let Some(histories) = histories {
             session.attach_run_histories(histories, start);
         }
-        if let Some(ledgers) = job_ledgers {
-            session.begin_job(ledgers).inspect_err(|_| {
-                eprintln!("coding.live.job-start-denied");
-            })?;
+        if let Some(ledgers) = job_ledgers
+            && let Err(error) = session.begin_job(ledgers)
+        {
+            eprintln!("coding.live.job-start-denied");
+            if start == StoredChainStart::New {
+                session.close_run_histories();
+            }
+            return Err(error);
         }
         let step = session.start().inspect_err(|_| {
             eprintln!("coding.live.start-denied");
@@ -836,6 +849,13 @@ where
         let mut job_actions = std::mem::take(&mut held.job_actions);
         let recorded_controls = std::mem::take(&mut held.recorded_controls);
         let job_history_from_start = held.job_history_from_start;
+        // What this host knows about the run's effect record outlives the
+        // store handle, so a miss the store has not marked carries over
+        // (Decision 0145).
+        let effect_knowledge = held
+            .run_effect_records
+            .as_ref()
+            .map(PersistedRunEffects::knowledge);
         // Every handle of the held run's store closes before it is opened
         // again for the continuation (Decision 0129).
         job_actions.detach_store();
@@ -856,6 +876,9 @@ where
         let recipe_plan = self.factory.take_recipe_plan(&resumed.run_id);
         let histories = self.factory.take_run_action_histories(&resumed.run_id);
         let effect_records = self.factory.take_run_effect_records(&resumed.run_id);
+        if let (Some(chain), Some(earlier)) = (&effect_records, &effect_knowledge) {
+            chain.continue_from(earlier);
+        }
         let mut session = LiveCodingSession::spawn(resumed, coordinator, false)?;
         session.route = route;
         session.recipe_plan = recipe_plan;
@@ -874,6 +897,30 @@ where
         session.continue_job(ledgers, cancellation)?;
         self.active.insert(key.to_owned(), session);
         Ok(())
+    }
+}
+
+/// Closes every stored chain of one run. A chain the store does not hold, or
+/// one already closed, needs nothing. An effect record that missed an entry
+/// stays open until the store holds its incomplete mark (Decision 0145).
+fn close_stored_chains(
+    run_id: &str,
+    histories: Option<&DurableRunActionHistories>,
+    effect_records: Option<&PersistedRunEffects>,
+) {
+    if let Some(histories) = histories {
+        for chain in RunActionChainName::ALL {
+            match histories.close(run_id, chain, RUN_ACTION_HISTORY_OWNER) {
+                Ok(_) | Err(RunActionHistoryStoreError::NotFound) => {}
+                Err(_) => eprintln!("coding.live.history-close-failed"),
+            }
+        }
+    }
+    if let Some(chain) = effect_records {
+        match chain.close_released() {
+            Ok(()) | Err(RunEffectRecordStoreError::NotFound) => {}
+            Err(_) => eprintln!("coding.live.effect-record-close-failed"),
+        }
     }
 }
 
@@ -931,8 +978,8 @@ struct LiveCodingSession {
     /// (Decision 0129).
     run_histories: Option<DurableRunActionHistories>,
     /// The run's stored effect record, closed with its action histories
-    /// (Decision 0143).
-    run_effect_records: Option<DurableRunEffectRecords>,
+    /// (Decisions 0143 and 0145).
+    run_effect_records: Option<PersistedRunEffects>,
 }
 
 /// The durable job of one live run, owned by this service (Decision 0120).
@@ -1084,27 +1131,13 @@ impl LiveCodingSession {
     }
 
     /// Closes every stored chain of this ended run, its effect record
-    /// included (Decision 0143). A chain the store does not hold, or one
-    /// already closed, needs nothing.
-    fn close_run_histories(&mut self) {
-        if let Some(histories) = &self.run_histories {
-            for chain in RunActionChainName::ALL {
-                match histories.close(
-                    self.request.run_id.as_str(),
-                    chain,
-                    RUN_ACTION_HISTORY_OWNER,
-                ) {
-                    Ok(_) | Err(RunActionHistoryStoreError::NotFound) => {}
-                    Err(_) => eprintln!("coding.live.history-close-failed"),
-                }
-            }
-        }
-        if let Some(records) = &self.run_effect_records {
-            match records.close(self.request.run_id.as_str(), RUN_EFFECT_RECORD_OWNER) {
-                Ok(_) | Err(RunEffectRecordStoreError::NotFound) => {}
-                Err(_) => eprintln!("coding.live.effect-record-close-failed"),
-            }
-        }
+    /// included (Decision 0143).
+    fn close_run_histories(&self) {
+        close_stored_chains(
+            self.request.run_id.as_str(),
+            self.run_histories.as_ref(),
+            self.run_effect_records.as_ref(),
+        );
     }
 
     /// Records this run's job as started, before any work is dispatched

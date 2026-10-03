@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import copy
 import io
+import subprocess
 import unittest
+from pathlib import Path
 from unittest import mock
 
 from scripts import source_content_deduplication_evidence as deduplication
@@ -73,6 +75,27 @@ class SourceContentDeduplicationEvidenceTests(unittest.TestCase):
                 self.assertIn("raw results missing marker", stderr.getvalue())
                 raw_path.write_text.assert_not_called()
                 report_path.write_text.assert_not_called()
+
+    def test_raw_results_never_name_the_checkout_or_home_directory(self) -> None:
+        # Review F2 of 6c0f51fe: Cargo's progress lines name the checkout.
+        for module in (deduplication, lifecycle, attempts):
+            with self.subTest(module=module.__name__):
+                complete = "".join(f"{marker}\n" for marker in module.MARKERS)
+                self.assertEqual(module.validate_raw(complete), [])
+                for private in (str(module.ROOT), str(Path.home())):
+                    leaked = f"{complete}   Compiling agentmage-kernel-engine v0.0.0 ({private}/kernel/engine)\n"
+                    self.assertIn(
+                        "raw results name a private checkout or home path",
+                        module.validate_raw(leaked),
+                    )
+                completed = subprocess.CompletedProcess(
+                    [], 0, stdout=f"   Compiling agentmage-kernel-engine v0.0.0 ({module.ROOT}/kernel/engine)\n"
+                )
+                with mock.patch.object(module.subprocess, "run", return_value=completed):
+                    raw, returncode = module.capture()
+                self.assertEqual(returncode, 0)
+                self.assertNotIn(str(module.ROOT), raw)
+                self.assertIn("(<repository-root>/kernel/engine)", raw)
 
     def test_current_migration_and_report_are_exact(self) -> None:
         self.assertEqual(validate_migration(MIGRATION_PATH.read_text()), [])

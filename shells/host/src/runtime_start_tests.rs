@@ -491,6 +491,7 @@ struct GatedFactory {
     run_histories:
         Option<agentmage_kernel_engine::run_action_history_store::DurableRunActionHistories>,
     recipe_plan: Option<agentmage_kernel_engine::engineering_recipe::RecipePlan>,
+    run_effects: Option<crate::coding_session_recoverability::PersistedRunEffects>,
 }
 
 impl NativeChatRuntimeFactory for GatedFactory {
@@ -551,6 +552,15 @@ impl NativeChatRuntimeFactory for GatedFactory {
             .take()
             .filter(|_| run_id == &self.request.run_id)
     }
+
+    fn take_run_effect_records(
+        &mut self,
+        run_id: &RuntimeRunId,
+    ) -> Option<crate::coding_session_recoverability::PersistedRunEffects> {
+        self.run_effects
+            .take()
+            .filter(|_| run_id == &self.request.run_id)
+    }
 }
 
 fn last_cursor(
@@ -597,6 +607,7 @@ fn the_live_service_declares_only_a_held_ended_run_that_is_not_busy() {
         route: Some(route.clone()),
         run_histories: None,
         recipe_plan: Some(plan.clone()),
+        run_effects: None,
     });
     let input = RuntimePrepareInput {
         resume: false,
@@ -807,6 +818,7 @@ fn gated_live_service(
     run_histories: Option<
         agentmage_kernel_engine::run_action_history_store::DurableRunActionHistories,
     >,
+    run_effects: Option<crate::coding_session_recoverability::PersistedRunEffects>,
 ) -> (
     LiveCodingRuntimeService<GatedFactory>,
     std::sync::mpsc::Sender<()>,
@@ -832,6 +844,7 @@ fn gated_live_service(
         route: None,
         run_histories,
         recipe_plan: None,
+        run_effects,
     });
     let input = RuntimePrepareInput {
         resume: request.event_cursor.is_some(),
@@ -870,13 +883,27 @@ fn the_live_service_owns_each_run_job_and_decides_cancellation_through_the_ledge
         crate::runtime_read_tests::completed_native_read_fixture();
     assert!(observed_result && events.len() > 1);
     let store = JobLedgerStore::new("owner");
-    let (ledgers, histories) = store.handles();
+    let runtime = store.try_runtime().unwrap();
+    let (ledgers, histories, effects) = (
+        runtime.job_ledgers(),
+        runtime.run_action_histories(),
+        runtime.run_effect_records(),
+    );
+    drop(runtime);
+    // Review F3 of 6c0f51fe: the factory hands over the run's effect record.
+    let chain = crate::coding_session_recoverability::PersistedRunEffects::begin(
+        effects.clone(),
+        &request,
+        crate::coding_action_history::StoredChainStart::New,
+    )
+    .unwrap();
     let (mut service, open_gate, input) = gated_live_service(
         &request,
         events,
         outcome.clone(),
         ledgers.clone(),
         Some(histories.clone()),
+        Some(chain),
     );
     service.prepare(input).unwrap();
     // A prepared run has no job yet.
@@ -1085,6 +1112,8 @@ fn the_live_service_owns_each_run_job_and_decides_cancellation_through_the_ledge
     assert_eq!(stored.records, history.records);
     assert_eq!(stored.head, history.head);
     assert!(stored.complete && !stored.closed);
+    let effect_record = effects.run(run.as_str()).unwrap();
+    assert!(effect_record.complete && !effect_record.closed);
     // The catalog host, not the development host, reads ended runs
     // (Decision 0130) and keeps route grants (Decision 0144).
     assert_eq!(
@@ -1106,8 +1135,11 @@ fn the_live_service_owns_each_run_job_and_decides_cancellation_through_the_ledge
         service.ended_run_action_histories(run),
         Err(RuntimeTransportError::RequestDenied)
     );
-    // Released: the chain is closed, and the ended run's stored histories
-    // are read back from the store as the catalog host reads them.
+    // Released: the chains are closed, the effect record with them, and the
+    // ended run's stored histories are read back from the store as the
+    // catalog host reads them.
+    let effect_record = effects.run(run.as_str()).unwrap();
+    assert!(effect_record.complete && effect_record.closed);
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|elapsed| u64::try_from(elapsed.as_millis()).unwrap())
@@ -1128,7 +1160,7 @@ fn the_live_service_owns_each_run_job_and_decides_cancellation_through_the_ledge
     );
     drop(service);
     // The durable record replays after the store is reopened.
-    drop((ledgers, histories));
+    drop((ledgers, histories, effects));
     let (ledgers, histories) = store.handles();
     let reopened = ledgers.observation(run.as_str()).unwrap();
     assert_eq!(reopened, terminal.status.job);
@@ -1137,6 +1169,95 @@ fn the_live_service_owns_each_run_job_and_decides_cancellation_through_the_ledge
         .unwrap();
     assert!(stored.closed);
     assert_eq!(stored.records, history.records);
+}
+
+#[test]
+fn the_live_service_closes_the_effect_record_of_a_held_ended_run_and_of_a_new_run_it_cannot_start()
+{
+    use crate::coding_action_history::StoredChainStart;
+    use crate::coding_session_recoverability::PersistedRunEffects;
+    use agentmage_kernel_engine::run_action_history_store::RunActionChainName;
+    let (request, events, outcome, _) = crate::runtime_read_tests::completed_native_read_fixture();
+    let run = &request.run_id;
+    let sha = request.request_sha256.as_str();
+
+    // Review F3 of 6c0f51fe: an ended run the service still holds when it is
+    // dropped has its effect record closed.
+    let store = JobLedgerStore::new("held-ended-effects");
+    let runtime = store.try_runtime().unwrap();
+    let (ledgers, histories, effects) = (
+        runtime.job_ledgers(),
+        runtime.run_action_histories(),
+        runtime.run_effect_records(),
+    );
+    drop(runtime);
+    let chain =
+        PersistedRunEffects::begin(effects.clone(), &request, StoredChainStart::New).unwrap();
+    let (mut service, open_gate, input) = gated_live_service(
+        &request,
+        events.clone(),
+        outcome.clone(),
+        ledgers,
+        Some(histories),
+        Some(chain),
+    );
+    service.prepare(input).unwrap();
+    let mut step = service.start(request.clone()).unwrap();
+    open_gate.send(()).unwrap();
+    for _ in 0..400 {
+        if step.outcome.is_some() {
+            break;
+        }
+        let cursor = last_cursor(&step);
+        let next = service.advance(run, sha, Some(&cursor), None).unwrap();
+        if !next.events.is_empty() || next.outcome.is_some() {
+            let mut events = step.events.clone();
+            events.extend(next.events.iter().cloned());
+            step = crate::runtime_transport::RuntimeTransportStep { events, ..next };
+        }
+    }
+    assert_eq!(step.outcome, Some(outcome.clone()));
+    assert!(!effects.run(run.as_str()).unwrap().closed);
+    drop(service);
+    let stored = effects.run(run.as_str()).unwrap();
+    assert!(stored.complete && stored.closed);
+    drop((effects, store));
+
+    // Review F5 of 6c0f51fe: a new run whose job cannot begin ran nothing,
+    // so its effect record and job control chain close empty.
+    let store = JobLedgerStore::new("unstarted-effects");
+    let runtime = store.try_runtime().unwrap();
+    let (ledgers, histories, effects) = (
+        runtime.job_ledgers(),
+        runtime.run_action_histories(),
+        runtime.run_effect_records(),
+    );
+    drop(runtime);
+    ledgers
+        .create(
+            run.as_str(),
+            crate::coding_live_runtime::CODING_HOST_JOB_OWNER,
+        )
+        .unwrap();
+    let chain =
+        PersistedRunEffects::begin(effects.clone(), &request, StoredChainStart::New).unwrap();
+    let (mut service, _open_gate, input) = gated_live_service(
+        &request,
+        events,
+        outcome,
+        ledgers,
+        Some(histories.clone()),
+        Some(chain),
+    );
+    service.prepare(input).unwrap();
+    assert!(service.start(request.clone()).is_err());
+    let stored = effects.run(run.as_str()).unwrap();
+    assert!(stored.complete && stored.closed && stored.entries.is_empty());
+    let job_control = histories
+        .history(run.as_str(), RunActionChainName::JobControl)
+        .unwrap();
+    assert!(job_control.closed && job_control.records.is_empty());
+    drop(service);
 }
 
 /// The completed native read fixture as a controlled-write run that committed
@@ -1582,6 +1703,11 @@ struct CheckpointingFactory {
     ledgers: Option<agentmage_kernel_engine::job_ledger_store::DurableJobLedgers>,
     run_histories:
         Option<agentmage_kernel_engine::run_action_history_store::DurableRunActionHistories>,
+    /// Begins each composition's effect record; the first composition's
+    /// store writes are refused while the flag is set, and it records one
+    /// entry (review F1 of `6c0f51fe`).
+    refusing_effects: Option<Arc<std::sync::atomic::AtomicBool>>,
+    effect_chain: Option<crate::coding_session_recoverability::PersistedRunEffects>,
 }
 
 impl CheckpointingFactory {
@@ -1608,6 +1734,8 @@ impl CheckpointingFactory {
             opened: 0,
             ledgers: None,
             run_histories: None,
+            refusing_effects: None,
+            effect_chain: None,
         }
     }
 }
@@ -1637,13 +1765,40 @@ impl NativeChatRuntimeFactory for CheckpointingFactory {
             return Err(RuntimeTransportError::RequestDenied);
         }
         self.composed.push(request.clone());
-        let (ledgers, histories) = self
+        let runtime = self
             .store
-            .try_handles()
+            .try_runtime()
             .ok_or(RuntimeTransportError::RuntimeFailed)?;
         self.opened += 1;
-        self.ledgers = Some(ledgers);
-        self.run_histories = Some(histories);
+        self.ledgers = Some(runtime.job_ledgers());
+        self.run_histories = Some(runtime.run_action_histories());
+        if let Some(refuse) = &self.refusing_effects {
+            use crate::coding_action_history::StoredChainStart;
+            let start = match (resumed, self.restarted) {
+                (false, _) => StoredChainStart::New,
+                (true, true) => StoredChainStart::AfterRestart,
+                (true, false) => StoredChainStart::ContinueInHost,
+            };
+            let chain = crate::coding_session_recoverability::PersistedRunEffects::begin(
+                runtime.run_effect_records(),
+                request,
+                start,
+            )
+            .map_err(|_| RuntimeTransportError::RuntimeFailed)?;
+            self.effect_chain = Some(if resumed {
+                chain
+            } else {
+                let chain = chain.refusing_writes(refuse);
+                chain.append(&crate::coding_session_recoverability::execution_entry(
+                    &crate::coding_recoverability::ExecutedEffect {
+                        operation_id: "refused-effect".to_owned(),
+                        kind: crate::coding_recoverability::ExecutedEffectKind::Command,
+                        outcome: crate::coding_recoverability::ExecutedEffectOutcome::Unknown,
+                    },
+                ));
+                chain
+            });
+        }
         // As the engine does when it restores a checkpoint, the history is
         // published before any subscriber attaches.
         let publisher = agentmage_kernel_engine::runtime_event::RuntimeEventPublisher::new();
@@ -1689,6 +1844,13 @@ impl NativeChatRuntimeFactory for CheckpointingFactory {
         _run_id: &RuntimeRunId,
     ) -> Option<agentmage_kernel_engine::run_action_history_store::DurableRunActionHistories> {
         self.run_histories.take()
+    }
+
+    fn take_run_effect_records(
+        &mut self,
+        _run_id: &RuntimeRunId,
+    ) -> Option<crate::coding_session_recoverability::PersistedRunEffects> {
+        self.effect_chain.take()
     }
 
     fn prepare_in_host_resume(
@@ -2012,6 +2174,47 @@ fn an_applied_suspension_stops_at_the_checkpoint_and_a_resumption_continues_it_i
     assert!(stored.complete && stored.closed);
     assert_eq!(stored.records.len(), 4);
     assert_eq!(stored.records[..3], history.records[..]);
+}
+
+#[test]
+fn a_miss_the_store_could_not_mark_carries_across_an_in_host_continuation() {
+    // Review F1 of 6c0f51fe (Decision 0145): the run's first composition
+    // misses an entry and the store refuses its mark. The continuation in
+    // this host reopens the store with a new handle, which continues from
+    // what the host knew and stores the mark, so the released chain closes
+    // as incomplete.
+    let refuse = Arc::new(std::sync::atomic::AtomicBool::new(true));
+    let mut harness = SuspensionHarness::start_with("suspend-effect-miss", |factory| {
+        factory.refusing_effects = Some(Arc::clone(&refuse));
+    });
+    let request = harness.fixture.request.clone();
+    let resumed = harness.fixture.resumed();
+    harness
+        .control(&request, "s1", JobControlAction::Suspend, 1)
+        .unwrap();
+    harness.open_gate.send(()).unwrap();
+    harness.advance_until_stopped(&request);
+    assert!(harness.step.suspended.is_some());
+    harness
+        .control(&request, "r1", JobControlAction::Resume, 3)
+        .unwrap();
+    harness.step.suspended = None;
+    harness.advance_until_stopped(&resumed);
+    assert!(harness.step.outcome.is_some());
+    harness
+        .service
+        .release(&request.run_id, &resumed.request_sha256)
+        .unwrap();
+    let store = Arc::clone(&harness.store);
+    drop(harness);
+    let stored = store
+        .try_runtime()
+        .unwrap()
+        .run_effect_records()
+        .run(request.run_id.as_str())
+        .unwrap();
+    assert!(!stored.complete && stored.closed);
+    assert!(stored.entries.is_empty());
 }
 
 #[test]

@@ -519,12 +519,13 @@ and the
 The records a separate consumer may read from the runtime (the sealed run request,
 run declarations, job status and control answers, and an ended run's stored histories)
 are specified in
-[version 2 of the runtime producer contract](architecture/runtime-producer-contract-v2.md),
-with one synthetic fixture each under `fixtures/runtime-producer/v2/`. Version 2
-(Decision 0143) adds the session's recoverability to the run declarations; version 1
-and its fixtures stay unchanged beside it. To check that the committed fixtures are
-exactly what the runtime's own types build, and that their manifests and documents
-agree:
+[version 3 of the runtime producer contract](architecture/runtime-producer-contract-v3.md),
+with one synthetic fixture each under `fixtures/runtime-producer/v3/`. Version 3
+(Decision 0144) adds the catalog host's route grant operation and wire 17; its record
+files are those of version 2 (Decision 0143), which added the session's recoverability
+to the run declarations. Versions 2 and 1 and their fixtures stay unchanged beside it.
+To check that the committed fixtures are exactly what the runtime's own types build,
+and that their manifests and documents agree:
 
 ```sh
 python3 scripts/runtime_producer_fixtures.py          # builds the host tests once

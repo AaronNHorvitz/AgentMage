@@ -3,6 +3,8 @@
 // store in a private temporary directory; no process, transport, model or
 // file effect.
 use std::collections::BTreeMap;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use agentmage_capability_repository_map::{StructuredArtifactClass, StructuredLanguage};
 use agentmage_kernel_contracts::{
@@ -785,5 +787,194 @@ mod persisted {
         assert!(recorder.stored_chain().is_none());
         let stored = records.run("run-memory-full").unwrap();
         assert!(!stored.complete && stored.entries.is_empty());
+    }
+
+    fn command(operation: &str) -> ExecutedEffect {
+        executed(
+            operation,
+            ExecutedEffectKind::Command,
+            OperationOutcome::Failed,
+        )
+    }
+
+    #[test]
+    fn a_miss_the_store_could_not_mark_keeps_the_chain_open_and_the_session_undeclared() {
+        // Review F1 of 6c0f51fe: one host runs two runs of one session. Run 1
+        // misses an entry and the store refuses its incomplete mark too; the
+        // store then writes again. Run 1's chain must never be closed as
+        // complete, so run 2 never declares the session.
+        let store = JobLedgerStore::new("session-effects-unmarked-miss");
+        let request = request();
+        let earlier = run_request(&request, "run-earlier");
+        let runtime = store.try_runtime().unwrap();
+        let records = runtime.run_effect_records();
+        let refuse = Arc::new(AtomicBool::new(false));
+        let chain = PersistedRunEffects::begin(records.clone(), &earlier, StoredChainStart::New)
+            .unwrap()
+            .refusing_writes(&refuse);
+        let mut recorder = RunEffectRecorder::persisted(chain.clone());
+        recorder.record_execution(command("t1"));
+        refuse.store(true, Ordering::SeqCst);
+        recorder.record_execution(command("t2"));
+        // The store holds neither the entry nor the mark; the host knows.
+        let stored = records.run("run-earlier").unwrap();
+        assert_eq!(stored.entries, [execution_entry(&command("t1"))]);
+        assert!(stored.complete && !stored.closed);
+        assert!(!chain.kept_every_entry() && recorder.stored_chain().is_none());
+        // Released while the store still refuses: the chain stays open.
+        assert_eq!(
+            chain.close_released(),
+            Err(RunEffectRecordStoreError::Storage)
+        );
+        assert!(!records.run("run-earlier").unwrap().closed);
+        drop(recorder);
+
+        // Run 2 of the same session in the same host.
+        let declaring = |records: &DurableRunEffectRecords| {
+            let mut recorder = RunEffectRecorder::persisted(
+                PersistedRunEffects::begin(records.clone(), &request, StoredChainStart::New)
+                    .unwrap(),
+            );
+            recorder.record_execution(command("t3"));
+            let runs = recorder
+                .stored_chain()
+                .unwrap()
+                .session(request.session_id.as_str())
+                .unwrap();
+            assert_eq!(runs.len(), 2);
+            declare(&runs, &request, &Payloads::default(), &BTreeMap::new())
+        };
+        // An earlier run never released refuses the declaration.
+        assert_eq!(
+            declaring(&records).err(),
+            Some(RecoverabilityError::Invalid)
+        );
+        // Once the store writes again, the release stores the mark first and
+        // then closes, so the closed chain says it is incomplete.
+        refuse.store(false, Ordering::SeqCst);
+        chain.close_released().unwrap();
+        let stored = records.run("run-earlier").unwrap();
+        assert!(!stored.complete && stored.closed);
+        assert_eq!(stored.entries, [execution_entry(&command("t1"))]);
+        let later = run_request(&request, "run-later");
+        let runs = PersistedRunEffects::begin(records.clone(), &later, StoredChainStart::New)
+            .unwrap()
+            .session(request.session_id.as_str())
+            .unwrap();
+        assert!(!runs[0].complete && runs[0].closed);
+        // Without the fix's mark the same chain would have declared: a
+        // complete, closed chain of run 1 and the open chain of run 2.
+        let mut unmarked = runs.clone();
+        unmarked[0].complete = true;
+        unmarked.truncate(2);
+        assert!(declare(&unmarked, &request, &Payloads::default(), &BTreeMap::new()).is_ok());
+        assert_eq!(
+            declare(&runs[..2], &request, &Payloads::default(), &BTreeMap::new()).err(),
+            Some(RecoverabilityError::Invalid)
+        );
+    }
+
+    #[test]
+    fn a_pending_mark_is_retried_at_the_next_record_and_carried_across_a_continuation() {
+        let store = JobLedgerStore::new("session-effects-pending-mark");
+        let request = request();
+        let runtime = store.try_runtime().unwrap();
+        let records = runtime.run_effect_records();
+        let run = request.run_id.as_str();
+
+        // The next record stores the pending mark before its own entry.
+        let refuse = Arc::new(AtomicBool::new(true));
+        let chain = PersistedRunEffects::begin(records.clone(), &request, StoredChainStart::New)
+            .unwrap()
+            .refusing_writes(&refuse);
+        let mut recorder = RunEffectRecorder::persisted(chain.clone());
+        recorder.record_execution(command("t1"));
+        assert!(records.run(run).unwrap().complete);
+        refuse.store(false, Ordering::SeqCst);
+        recorder.record_execution(command("t2"));
+        let stored = records.run(run).unwrap();
+        assert!(!stored.complete && !stored.closed);
+        assert_eq!(stored.entries, [execution_entry(&command("t2"))]);
+
+        // A miss whose mark the store refused carries over to the same run's
+        // next recorder in this host, which stores the mark.
+        let other = run_request(&request, "run-continued");
+        let refuse = Arc::new(AtomicBool::new(true));
+        let chain = PersistedRunEffects::begin(records.clone(), &other, StoredChainStart::New)
+            .unwrap()
+            .refusing_writes(&refuse);
+        chain.append(&execution_entry(&command("t3")));
+        let knowledge = chain.knowledge();
+        drop(chain);
+        assert!(records.run("run-continued").unwrap().complete);
+        let continued =
+            PersistedRunEffects::begin(records.clone(), &other, StoredChainStart::ContinueInHost)
+                .unwrap();
+        assert!(continued.kept_every_entry());
+        continued.continue_from(&knowledge);
+        assert!(!continued.kept_every_entry());
+        assert!(!records.run("run-continued").unwrap().complete);
+        let recorder = RunEffectRecorder::persisted(continued.clone());
+        assert!(recorder.stored_chain().is_none());
+        continued.close_released().unwrap();
+        assert!(records.run("run-continued").unwrap().closed);
+
+        // A carried miss the store already marked writes nothing more, and a
+        // run that missed nothing carries nothing.
+        let quiet = run_request(&request, "run-quiet");
+        let chain =
+            PersistedRunEffects::begin(records.clone(), &quiet, StoredChainStart::New).unwrap();
+        chain.append(&execution_entry(&command("t4")));
+        let knowledge = chain.knowledge();
+        drop(chain);
+        let continued =
+            PersistedRunEffects::begin(records.clone(), &quiet, StoredChainStart::ContinueInHost)
+                .unwrap();
+        continued.continue_from(&knowledge);
+        assert!(continued.kept_every_entry());
+        assert!(records.run("run-quiet").unwrap().complete);
+        let marked = run_request(&request, "run-marked");
+        let chain =
+            PersistedRunEffects::begin(records.clone(), &marked, StoredChainStart::New).unwrap();
+        chain.mark_incomplete();
+        let knowledge = chain.knowledge();
+        let refuse = Arc::new(AtomicBool::new(true));
+        let continued =
+            PersistedRunEffects::begin(records.clone(), &marked, StoredChainStart::ContinueInHost)
+                .unwrap()
+                .refusing_writes(&refuse);
+        continued.continue_from(&knowledge);
+        assert!(!continued.kept_every_entry());
+        refuse.store(false, Ordering::SeqCst);
+        continued.close_released().unwrap();
+        let stored = records.run("run-marked").unwrap();
+        assert!(!stored.complete && stored.closed);
+    }
+
+    #[test]
+    fn a_resumed_chain_of_another_session_is_refused_before_it_is_marked() {
+        // Review N4 of 6c0f51fe: the session and task are checked first.
+        let store = JobLedgerStore::new("session-effects-foreign-resume");
+        let request = request();
+        let runtime = store.try_runtime().unwrap();
+        let records = runtime.run_effect_records();
+        PersistedRunEffects::begin(records.clone(), &request, StoredChainStart::New).unwrap();
+        for start in [
+            StoredChainStart::AfterRestart,
+            StoredChainStart::AfterRestartStoredFirst,
+        ] {
+            let foreign = RuntimeRunRequest {
+                session_id: agentmage_kernel_contracts::SessionId::from_raw("session-other"),
+                ..request.clone()
+            };
+            assert_eq!(
+                PersistedRunEffects::begin(records.clone(), &foreign, start).err(),
+                Some(RunEffectRecordStoreError::InvalidInput)
+            );
+            assert!(records.run(request.run_id.as_str()).unwrap().complete);
+        }
+        PersistedRunEffects::begin(records.clone(), &request, StoredChainStart::AfterRestart)
+            .unwrap();
+        assert!(!records.run(request.run_id.as_str()).unwrap().complete);
     }
 }
