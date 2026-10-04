@@ -666,6 +666,122 @@ It runs 53 tests:
 This is a component check, not a research demonstration. No worker, provider or model
 runs; the fixture model takes the source references from the test glue.
 
+## Standalone evidence workflow (development)
+
+[Decision 0150](decisions/0150-standalone-evidence-development-host.md) adds the first
+increment of the standalone application (Story 76.2). The `agentmage-standalone` bridge
+launches its sibling `agentmage-host` under a separate development activation and
+authenticates it over the same private IPC as the coding host. The host admits one folder
+and answers questions over it with read-only runs. This works in this lane: the host reads
+no repository, runs no command, writes nothing, and needs no root-owned executable, user
+systemd manager, model or network.
+
+The model is the term-match fixture `standalone-evidence-fixture-v1`, not a language
+model. It searches each admitted file for the question's words of four or more
+characters, at most four of them, as written and without common words. It then quotes each
+line that contains the most of those words, provided it contains at least two, or one when
+the question has only one. The host's verifier admits an answer only when every statement
+cites search evidence from that run and every quote matches the cited line exactly. Every
+answer is labeled as the fixture's. The window, keyboard and screen-reader presentation is
+not built, because its webview dependency is not available to this build. Started without
+arguments, `agentmage-standalone` prints `standalone.presentation.unavailable` and exits
+with code 3. `--development-stdio` gives the bridge's message channel instead: one closed
+JSON request per input line, one closed JSON event per output line.
+
+Build both binaries (in this lane, under the shared build reservation):
+
+```sh
+bash /tools/build-slot cargo build --locked --offline -p agentmage-host --bins
+```
+
+Create two private roots and a folder beneath the disposable one. A Unix socket path is
+limited to 107 bytes, and the host's socket lives in the state root, so keep the roots
+short:
+
+```sh
+D=/lane/state/sd1    # any short private directory
+mkdir -m 700 $D $D/state $D/disposable $D/disposable/aurora $D/disposable/aurora/notes
+printf '# Aurora project\n\nAurora launches on 18 October 2026.\nProject lead: Mira Chen.\nThe Aurora budget is 42,000 credits.\n' \
+  > $D/disposable/aurora/project.md
+printf 'Rehearsal owner: Theo Park.\nThe Aurora rehearsal is on 15 October 2026 at 14:00.\n' \
+  > $D/disposable/aurora/notes/operations.txt
+printf '%%PDF-1.4 synthetic\n' > $D/disposable/aurora/unsupported.pdf
+```
+
+Run one session. Requests carry strictly increasing sequence numbers:
+
+```sh
+printf '%s\n' \
+  '{"type":"admit_folder","sequence":1,"folder":"/lane/state/sd1/disposable/aurora"}' \
+  '{"type":"ask","sequence":2,"question":"When does Aurora launch?"}' \
+  '{"type":"ask","sequence":3,"question":"When is the Aurora rehearsal?"}' \
+  '{"type":"ask","sequence":4,"question":"What is the favorite flavor?"}' \
+  '{"type":"shutdown","sequence":5}' \
+  | target/debug/agentmage-standalone --development-stdio $D/state $D/disposable
+```
+
+Run in this lane on 2026-10-04, the session printed `state` `starting`, then `ready`. The
+`folder` event accepted `notes/operations.txt` and `project.md` and skipped
+`unsupported.pdf` as `folder.entry.unsupported-format`. Question 2 was `verified` with the
+statement `Aurora launches on 18 October 2026.` and one evidence card for `project.md`,
+line 3. Question 3 was `verified` with `notes/operations.txt`, line 2. Question 4 was
+`unverified` with `no_matching_text: true` and no cards. The bridge then stopped and
+reaped the host and exited 0. Each question also prints `progress` events, one per runtime
+event, by kind only.
+
+Requests are `admit_folder`, `ask`, `cancel`, `restart` and `shutdown`. Events are
+`state` (`starting`, `ready`, `unavailable` or `safe_mode`, with a code), `folder`,
+`folder_refused`, `question_started`, `progress`, `answer` and `refused`. An answer's
+`state` is `verified`, `unverified`, `cancelled` or `failed`. Only a verified answer has
+statements and evidence cards; a card names the file, its first and last line, the exact
+quote and the admitted file's digest. A refused request names one stable code. A request
+that is malformed, has an unknown member, repeats a member or does not increase the
+sequence never reaches the host. End of input means no more requests: the question in
+progress ends, then the bridge stops the host and exits.
+
+The folder must be strictly beneath the disposable root, owned by you and not writable by
+group or others. It is read without following links, and at most 200 entries, 8 levels, 128 KiB
+per file and 1 MiB in total are read. Each entry is accepted, skipped (hidden, unsupported
+format, empty) or rejected (link, special file, too large, not UTF-8, control characters,
+a line over 4096 bytes), with a stable reason. Only `.txt`, `.md` and `.markdown` files
+are read. Asking again uses the same snapshot. Admitting the folder again takes a new
+snapshot, which the host refuses (`standalone.folder.busy`) while a question runs.
+
+To exercise cancellation between processes, start the bridge with
+`--fixture-step-delay-ms 2000`. The fixture then waits up to two seconds before each
+proposal and keeps watching for cancellation. Send `cancel` after `question_started`. Each
+question is one job in a development operational store in the state root, and the bridge
+cancels it through that job's ledger, as Decision 0120 requires over this channel. The
+store keeps job records only, never folder content. The answer is `cancelled`, with no
+statements or cards.
+
+If the host fails while in use, the bridge reports `safe_mode` with a code and refuses
+questions until `restart`. A restarted host has no snapshot, so admit the folder again.
+A host that cannot start is reported as `unavailable`, for example with
+`linux.development.launch-envelope.failed` when a root is not private. The host's standard
+error names the cause, such as `standalone.evidence.root-denied`.
+
+The checks:
+
+```sh
+cargo test --locked --offline -p agentmage-host --lib -- standalone_
+cargo test --locked --offline -p agentmage-host --test standalone_evidence_process
+```
+
+The first runs the host and bridge in one process over real temporary folders: folder
+admission and refusals, the fixture, the verifier's refusals of forged citations and quotes,
+runs through the live host service, binding to the admitted snapshot, cancellation through
+the job ledger, and the bridge's projection and request gate. The second starts the actual
+`agentmage-standalone` and host processes. It covers a verified answer, the unverified
+answer without matching text, refused requests, cancellation through the ledger, a killed
+host and restart, an unusable activation, and the windowless notice. Both are
+`executable-scripted` checks with the fixture.
+
+Limits: the window, packaged assets, keyboard and screen-reader use, hardware fit and
+model selection are not built. No language model answers here, and answer quality with one
+is unassessed. Runs are not durable sessions, and one question does not see an earlier
+one. This is a development activation, not the signed product.
+
 ## Separate document demonstration
 
 The following historical Fedora Kinoite document demo requires its recorded native host

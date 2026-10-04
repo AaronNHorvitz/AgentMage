@@ -3,9 +3,10 @@
 //! from the runtime's own types and functions and compared byte for byte;
 //! each decodes exactly and verifies as a client verifies it, and a changed
 //! record does not. Version 2 adds the session's recoverability to the run
-//! declarations (Decision 0143), and version 3 the catalog host's route grant
-//! operation on wire 17 (Decision 0144); earlier versions stay as they were
-//! and read as unavailable.
+//! declarations (Decision 0143), version 3 the catalog host's route grant
+//! operation on wire 17 (Decision 0144), and version 4 the standalone
+//! evidence host's folder operation on wire 18 (Decision 0150); earlier
+//! versions stay as they were and read as unavailable.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -53,7 +54,7 @@ use crate::runtime_transport::{
 };
 
 const CONTRACT: &str = "agentmage-runtime-producer";
-const CONTRACT_VERSION: u16 = 3;
+const CONTRACT_VERSION: u16 = 4;
 /// The synthetic time every fixture record was made at.
 const MADE_AT_EPOCH_MS: u64 = 1_790_000_000_000;
 /// The scope a host derives for the client that sent the control request.
@@ -88,7 +89,7 @@ struct Manifest {
 }
 
 fn fixture_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/runtime-producer/v3")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/runtime-producer/v4")
 }
 
 /// An earlier contract version's fixtures, kept unchanged beside the current
@@ -492,7 +493,7 @@ fn the_committed_fixtures_are_the_records_the_runtime_builds() {
     let manifest: serde_json::Value = serde_json::from_slice(&committed["manifest.json"]).unwrap();
     assert_eq!(manifest["contract"], CONTRACT);
     assert_eq!(manifest["contract_version"], CONTRACT_VERSION);
-    assert_eq!(manifest["wire_version"], 17);
+    assert_eq!(manifest["wire_version"], 18);
 }
 
 /// Every file of an earlier version, by name.
@@ -506,6 +507,29 @@ fn version_files(version: u16) -> BTreeMap<String, Vec<u8>> {
         );
     }
     files
+}
+
+#[test]
+fn the_third_contract_version_stays_as_it_was_on_its_older_wire() {
+    // Decision 0150: version 4 changes only the wire, so version 3's records
+    // still decode and verify, but its manifest names wire 17, which this
+    // transport refuses, and every byte its manifest names is unchanged.
+    let files = version_files(3);
+    let manifest: serde_json::Value = serde_json::from_slice(&files["manifest.json"]).unwrap();
+    assert_eq!(manifest["contract_version"], 3);
+    assert_eq!(manifest["wire_version"], 17);
+    assert_ne!(
+        manifest["wire_version"],
+        crate::runtime_ipc::RUNTIME_IPC_WIRE_VERSION
+    );
+    let listed = manifest["records"].as_array().unwrap();
+    assert_eq!(listed.len() + 1, files.len());
+    let built = fixture_files(&records());
+    for entry in listed {
+        let name = entry["file"].as_str().unwrap();
+        assert_eq!(entry["sha256"], sha256_hex(&files[name]), "{name}");
+        assert_eq!(files[name], built[name], "{name}");
+    }
 }
 
 #[test]

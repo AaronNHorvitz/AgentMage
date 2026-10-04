@@ -1,0 +1,55 @@
+{
+  "contract": "agentmage-runtime-producer",
+  "contract_version": 4,
+  "wire_version": 18,
+  "records": [
+    {
+      "file": "run-request.json",
+      "record": "run_request",
+      "schema_version": 2,
+      "sha256": "27b25811375114cf96154f8466f7e12db1ee17df261148db7609bd2ad8baa9d1"
+    },
+    {
+      "file": "run-recipe.json",
+      "record": "run_recipe",
+      "schema_version": 1,
+      "sha256": "885c5cad97a30f8f3b5e671fc86bfddd37901e319e281d6f595067092ac9155c"
+    },
+    {
+      "file": "run-declarations.json",
+      "record": "run_declarations",
+      "schema_version": 5,
+      "sha256": "166d0d5cd067fc0d0a61a5a8fa78ad4605313c2c5953286993bbe99416309cb6"
+    },
+    {
+      "file": "run-declarations-absent.json",
+      "record": "run_declarations",
+      "schema_version": 5,
+      "sha256": "db2659bc76bb3a330258ff48a054c162307ab9176fe76837d495890ab5549f33"
+    },
+    {
+      "file": "job-control-request.json",
+      "record": "job_control_request",
+      "schema_version": 1,
+      "sha256": "4e7939169463de7744f40a1cb6182391f4cc841fe7ba680d0341f71932bb333f"
+    },
+    {
+      "file": "job-control.json",
+      "record": "job_control",
+      "schema_version": 1,
+      "sha256": "26039e1d24cbfeee7e569cfcd852cca4a08ba7858397f7a86bb273708204f655"
+    },
+    {
+      "file": "job-status.json",
+      "record": "job_status",
+      "schema_version": 1,
+      "sha256": "1cec9d39534bee5d4ba4d43520cf2405a9349bdfc47f466e117db6330f0914ee"
+    },
+    {
+      "file": "ended-run-histories.json",
+      "record": "ended_run_histories",
+      "schema_version": 1,
+      "sha256": "95d07a24614d646138cbf50f4da7867902e24935ee407d957f5ee6cca0128b9d"
+    }
+  ]
+}

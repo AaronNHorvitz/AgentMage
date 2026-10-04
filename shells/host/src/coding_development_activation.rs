@@ -194,7 +194,14 @@ impl CodingDevelopmentKeyProvider {
         activation: &CodingDevelopmentActivation,
     ) -> Result<Self, CodingDevelopmentActivationError> {
         activation.revalidate()?;
-        let path = activation.state_root.join(DEVELOPMENT_KEY_NAME);
+        Self::open_in_state_root(&activation.state_root)
+    }
+
+    /// Opens or creates the development-only key file of another validated
+    /// development activation's private state root (Decision 0150). The caller
+    /// revalidates its activation first.
+    pub fn open_in_state_root(state_root: &Path) -> Result<Self, CodingDevelopmentActivationError> {
+        let path = state_root.join(DEVELOPMENT_KEY_NAME);
         let mut key = [0_u8; 32];
         match OpenOptions::new()
             .write(true)

@@ -1,0 +1,13 @@
+{
+  "schema_version": 5,
+  "run_id": "coding-run-0001",
+  "request_sha256": "8b77279f058f9eb6ec8d6cbbdf6235d0c586aa6cdf36f6801c225189dd620ef1",
+  "recoverability": null,
+  "session_recoverability": null,
+  "context_inspections": null,
+  "effect_history": null,
+  "job_control_history": null,
+  "route_receipt": null,
+  "route_history": null,
+  "recipe_plan": null
+}

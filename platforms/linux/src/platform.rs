@@ -117,14 +117,18 @@ impl fmt::Debug for LinuxDevelopmentPlatformAdapter {
 }
 
 impl LinuxDevelopmentPlatformAdapter {
-    /// Creates only the separate accepted disposable coding activation.
+    /// Creates only a separately accepted development activation: the
+    /// disposable coding activation (Decision 0063) or the standalone evidence
+    /// activation (Decision 0150).
     pub fn activate(
         activation: &str,
         activation_sha256: String,
         adapter_instance_id: AdapterInstanceId,
     ) -> Result<Self, agentmage_kernel_contracts::PathAdapterError> {
-        if activation != "coding-development-v1"
-            || activation_sha256.len() != 64
+        if !matches!(
+            activation,
+            "coding-development-v1" | "standalone-evidence-development-v1"
+        ) || activation_sha256.len() != 64
             || !activation_sha256
                 .bytes()
                 .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))

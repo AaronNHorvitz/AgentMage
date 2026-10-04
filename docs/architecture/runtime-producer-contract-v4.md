@@ -1,17 +1,19 @@
-# AgentMage runtime producer contract — version 3
+# AgentMage runtime producer contract — version 4
 
-Revision: 2026-10-02, version 3. Registered under AMR-06.1 in [TASKS.md](../../TASKS.md);
+Revision: 2026-10-04, version 4. Registered under AMR-06.1 in [TASKS.md](../../TASKS.md);
 design in [Decision 0135](../decisions/0135-review-fixes-exact-wire-decoding-and-the-runtime-producer-contract.md),
 row split in [Decision 0134](../decisions/0134-amr-06-decomposition.md), exact decoding corrected
 under [Decision 0136](../decisions/0136-review-fixes-for-exact-decoding-and-the-research-decomposition.md).
 Version 2, under [Decision 0143](../decisions/0143-review-fixes-restart-marking-and-durable-session-recoverability.md),
 added the recoverability of the run's whole session to the run declarations (schema 5).
 Version 3, under [Decision 0144](../decisions/0144-hybrid-route-grants-through-the-catalog-host.md),
-adds the catalog host's route grant operation, raises the transport wire to 17, and lets a
-run's route receipt describe a hybrid selection. Every record file is unchanged from version 2.
-[Version 2](runtime-producer-contract-v2.md), [version 1](runtime-producer-contract-v1.md)
-and their fixtures stay as they were. [Version 4](runtime-producer-contract-v4.md), under
-Decision 0150, keeps these records and raises the wire to 18.
+added the catalog host's route grant operation, raised the transport wire to 17, and let a
+run's route receipt describe a hybrid selection. Version 4, under
+[Decision 0150](../decisions/0150-standalone-evidence-development-host.md), adds the standalone
+evidence host's folder admission operation and raises the wire to 18. Every record file is
+unchanged from version 3. [Version 3](runtime-producer-contract-v3.md),
+[version 2](runtime-producer-contract-v2.md), [version 1](runtime-producer-contract-v1.md)
+and their fixtures stay as they were.
 
 This is an unexecuted producer specification. It states which records the AgentMage runtime
 produces for a consumer and how a consumer verifies them. It is not a consumer's contract, a
@@ -35,8 +37,8 @@ runtime's own approvals and kernel grants remain the only source of authority fo
 
 | Item | Version | Where it is defined |
 | --- | --- | --- |
-| This contract | 3 | `fixtures/runtime-producer/v3/manifest.json` |
-| Transport wire | 17 | `shells/host/src/runtime_ipc.rs` |
+| This contract | 4 | `fixtures/runtime-producer/v4/manifest.json` |
+| Transport wire | 18 | `shells/host/src/runtime_ipc.rs` |
 | Run request | schema 2 | `kernel/contracts/src/runtime_run.rs` (`RuntimeRunRequest`) |
 | Run recipe (sent by a client) | manifest schema 1 | `shells/host/src/coding_recipe.rs` (`RuntimeRecipeRequest`) |
 | Run declarations | schema 5 | `shells/host/src/runtime_transport.rs` (`RuntimeRunDeclarations`) |
@@ -56,7 +58,7 @@ version as an older one.
 
 - One authenticated local IPC channel per client process. The host authenticates the peer
   and derives the client's scope from it; a client never names its own scope.
-- Each frame is one JSON envelope, `{"version": 17, "payload": {...}}`, of at most 4 MiB.
+- Each frame is one JSON envelope, `{"version": 18, "payload": {...}}`, of at most 4 MiB.
   Run declarations are at most 4 MiB less 64 KiB.
 - Every frame is decoded exactly in both directions. The frame decodes into its types, and its
   re-encoding, read back as JSON, must equal the frame read as JSON. A member the types do not
@@ -79,12 +81,13 @@ The operations that carry these records are `prepare` (answer `prepared`, the ru
 `run_declarations`, `job_status`, `control_job` (answer `job_control`) and
 `ended_run_action_histories`. The coding host answers the first four; the store-only catalog
 host answers the last. The catalog host's other operations, its documentation pack, memory,
-extension and route grant requests, carry no record of this contract; version 3 names them only
-because the route grant operation raised the wire.
+extension and route grant requests, carry no record of this contract; version 3 named them only
+because the route grant operation raised the wire. The standalone evidence host's folder
+admission request carries none either; version 4 names it only because it raised the wire.
 
 ## Records
 
-Each record has one fixture in `fixtures/runtime-producer/v3/`.
+Each record has one fixture in `fixtures/runtime-producer/v4/`.
 
 ### Run request
 
@@ -206,10 +209,11 @@ runtime's types; without `--write` it only compares. It never writes an earlier 
 A change to the encoding or meaning of any record raises that record's schema version and this
 contract's version, and adds a new fixture directory beside the earlier ones, which stay as they
 are. Version 2 added the session's recoverability to the run declarations; a consumer of version
-1 reads version 2's declarations as an unknown schema, and so as unavailable. Version 3 changed
-only the wire, so a version 2 consumer is refused at the frame's version. The host unit tests
-`the_first_contract_version_stays_as_it_was_and_reads_as_unavailable` and
-`the_second_contract_version_stays_as_it_was_on_its_older_wire` show that each earlier
+1 reads version 2's declarations as an unknown schema, and so as unavailable. Versions 3 and 4
+changed only the wire, so a consumer of an earlier version is refused at the frame's version.
+The host unit tests `the_first_contract_version_stays_as_it_was_and_reads_as_unavailable`,
+`the_second_contract_version_stays_as_it_was_on_its_older_wire` and
+`the_third_contract_version_stays_as_it_was_on_its_older_wire` show that each earlier
 version's files still match their manifest.
 
 ## Limits

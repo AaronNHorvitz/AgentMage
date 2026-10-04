@@ -10,8 +10,9 @@
 //! recipe, its declared plan and an extension list's issuer identity
 //! (Decision 0133). Every frame is decoded exactly, in both directions
 //! (Decision 0135). Wire 16 carries the session's recoverability in the run
-//! declarations (Decision 0143), and wire 17 the catalog host's route grant
-//! requests (Decision 0144).
+//! declarations (Decision 0143), wire 17 the catalog host's route grant
+//! requests (Decision 0144), and wire 18 the standalone evidence host's
+//! folder admission requests (Decision 0150).
 
 use agentmage_kernel_contracts::{
     CancellationId, RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEventCursor, RuntimeRunId,
@@ -33,8 +34,9 @@ use crate::runtime_transport::{
     RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
     decode_exact,
 };
+use crate::standalone_folder::{FolderAnswer, FolderRequest};
 
-const WIRE_VERSION: u16 = 17;
+const WIRE_VERSION: u16 = 18;
 /// The wire version this build speaks, as named in a support bundle.
 pub const RUNTIME_IPC_WIRE_VERSION: u16 = WIRE_VERSION;
 const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
@@ -100,6 +102,9 @@ enum RuntimeIpcRequest {
     RouteGrant {
         request: RouteGrantRequest,
     },
+    Folder {
+        request: FolderRequest,
+    },
     RevokeSessionPreauthorization {
         session_id: SessionId,
         preauthorization_sha256: String,
@@ -146,6 +151,9 @@ enum RuntimeIpcResponse {
     },
     RouteGrant {
         answer: RouteGrantAnswer,
+    },
+    Folder {
+        answer: FolderAnswer,
     },
     JobStatus {
         status: RuntimeJobStatus,
@@ -543,6 +551,13 @@ impl<C: RuntimeFrameChannel> RuntimeTransportPort for LinuxRuntimeIpcClient<C> {
         }
     }
 
+    fn folder(&mut self, request: FolderRequest) -> Result<FolderAnswer, RuntimeTransportError> {
+        match self.exchange(RuntimeIpcRequest::Folder { request })? {
+            RuntimeIpcResponse::Folder { answer } => Ok(answer),
+            _ => Err(RuntimeTransportError::RuntimeEvidenceDenied),
+        }
+    }
+
     fn revoke_session_preauthorization(
         &mut self,
         session_id: &SessionId,
@@ -764,6 +779,18 @@ fn answer<P: RuntimeTransportPort>(
             ),
             Err(error) => (RuntimeIpcResponse::Error { error }, false),
         },
+        Some(RuntimeIpcRequest::Folder { request }) => match runtime.folder(request) {
+            // At most two hundred entries stay well inside the bound;
+            // anything larger is refused rather than ending the service.
+            Ok(answer) if answer_fits(&answer) => (RuntimeIpcResponse::Folder { answer }, false),
+            Ok(_) => (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::CapacityExceeded,
+                },
+                false,
+            ),
+            Err(error) => (RuntimeIpcResponse::Error { error }, false),
+        },
         Some(RuntimeIpcRequest::RevokeSessionPreauthorization {
             session_id,
             preauthorization_sha256,
@@ -900,7 +927,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 17);
+        assert_eq!(decoded.version, 18);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::RunDeclarations {
             declarations: declarations.clone(),
@@ -972,7 +999,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 17);
+        assert_eq!(decoded.version, 18);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::EndedRunActionHistories {
             histories: histories.clone(),
@@ -1426,7 +1453,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 17);
+        assert_eq!(decoded.version, 18);
         assert_eq!(decoded.payload, request.payload);
         let text = String::from_utf8(bytes).unwrap();
         for nested in [
@@ -1617,7 +1644,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 17);
+        assert_eq!(decoded.version, 18);
         assert_eq!(decoded.payload, request.payload);
         let text = String::from_utf8(bytes).unwrap();
         for nested in [
@@ -1789,7 +1816,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 17);
+        assert_eq!(decoded.version, 18);
         assert_eq!(decoded.payload, request.payload);
         let text = String::from_utf8(bytes).unwrap();
         for nested in [
@@ -1940,8 +1967,8 @@ mod tests {
 
     #[test]
     fn a_route_grant_request_crosses_the_wire_closed() {
-        // Decision 0144: route grant requests and answers cross wire 17
-        // closed; a port that is not a catalog host refuses them, and an
+        // Decision 0144: route grant requests and answers cross the wire
+        // (17 since that decision) closed; a port that is not a catalog host refuses them, and an
         // oversized listing is refused without ending the service.
         use crate::coding_route_grants::{RouteGrantRefusal, RouteGrantState, RouteGrantView};
         let request = RuntimeIpcEnvelope {
@@ -1956,7 +1983,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 17);
+        assert_eq!(decoded.version, 18);
         assert_eq!(decoded.payload, request.payload);
         let text = String::from_utf8(bytes).unwrap();
         for nested in [
@@ -2324,7 +2351,7 @@ mod tests {
             .unwrap();
             let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
                 serde_json::from_slice(&bytes).unwrap();
-            assert_eq!(decoded.version, 17);
+            assert_eq!(decoded.version, 18);
             assert_eq!(decoded.payload, request);
         }
         let mut scoped = serde_json::to_value(RuntimeIpcRequest::ControlJob {
@@ -2554,7 +2581,7 @@ mod tests {
         .unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcResponse> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 17);
+        assert_eq!(decoded.version, 18);
         assert_eq!(decoded.payload, response);
         let mut extra = serde_json::to_value(&suspended).unwrap();
         extra["suspended"]["resumable"] = serde_json::Value::Bool(true);
@@ -2834,6 +2861,112 @@ mod tests {
         assert_eq!(
             client.last_error(),
             Some(RuntimeTransportError::CapacityExceeded)
+        );
+    }
+
+    #[test]
+    fn a_folder_request_crosses_the_wire_closed() {
+        // Decision 0150: folder admission requests and answers cross wire 18
+        // closed; a port that is not the evidence host refuses them, and the
+        // host's answer passes through unchanged.
+        use crate::standalone_folder::FolderRefusal;
+        let request = RuntimeIpcEnvelope {
+            version: WIRE_VERSION,
+            payload: RuntimeIpcRequest::Folder {
+                request: FolderRequest::Admit {
+                    folder: "/private/disposable/aurora".to_owned(),
+                },
+            },
+        };
+        let bytes = serde_json::to_vec(&request).unwrap();
+        let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
+            serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(decoded.version, 18);
+        assert_eq!(decoded.payload, request.payload);
+        let text = String::from_utf8(bytes).unwrap();
+        for nested in [
+            text.replacen("\"request\":\"admit\"", "\"request\":\"admit\",\"x\":1", 1),
+            text.replacen("\"request\":\"admit\"", "\"request\":\"list\"", 1),
+            text.replacen(",\"folder\":\"/private/disposable/aurora\"", "", 1),
+        ] {
+            assert_ne!(nested, text);
+            assert!(
+                serde_json::from_str::<RuntimeIpcEnvelope<RuntimeIpcRequest>>(&nested).is_err()
+            );
+        }
+
+        struct FolderPort(Option<FolderAnswer>);
+        impl RuntimeTransportPort for FolderPort {
+            fn prepare(
+                &mut self,
+                _input: RuntimePrepareInput,
+            ) -> Result<RuntimeRunRequest, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn start(
+                &mut self,
+                _request: RuntimeRunRequest,
+            ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn advance(
+                &mut self,
+                _run_id: &RuntimeRunId,
+                _request_sha256: &str,
+                _after_event_cursor: Option<&RuntimeEventCursor>,
+                _response: Option<&RuntimeApprovalResponse>,
+            ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn cancel(
+                &mut self,
+                _run_id: &RuntimeRunId,
+                _request_sha256: &str,
+                _cancellation_id: CancellationId,
+                _after_event_cursor: Option<&RuntimeEventCursor>,
+            ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn folder(
+                &mut self,
+                _request: FolderRequest,
+            ) -> Result<FolderAnswer, RuntimeTransportError> {
+                self.0.clone().ok_or(RuntimeTransportError::RequestDenied)
+            }
+            fn release(
+                &mut self,
+                _run_id: &RuntimeRunId,
+                _request_sha256: &str,
+            ) -> Result<(), RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+        }
+        let admit = || {
+            Some(RuntimeIpcRequest::Folder {
+                request: FolderRequest::Admit {
+                    folder: "/private/disposable/aurora".to_owned(),
+                },
+            })
+        };
+        assert_eq!(
+            answer(&mut FolderPort(None), &fixture_client(), admit()),
+            (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::RequestDenied,
+                },
+                false
+            )
+        );
+        let refused = FolderAnswer::Refused {
+            refusal: FolderRefusal::Busy,
+        };
+        assert_eq!(
+            answer(
+                &mut FolderPort(Some(refused.clone())),
+                &fixture_client(),
+                admit()
+            ),
+            (RuntimeIpcResponse::Folder { answer: refused }, false)
         );
     }
 }

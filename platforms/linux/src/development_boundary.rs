@@ -307,6 +307,36 @@ impl LinuxDevelopmentHostProcess {
         })
     }
 
+    /// Launches the exact sibling host with the closed standalone evidence
+    /// operation (Decision 0150): its own development activation, folder
+    /// admission and read-only runs, and no repository, command or write.
+    /// The fixture waits `step_delay_ms`, at most two seconds, before each
+    /// proposal, so a cancellation can be exercised between processes.
+    pub fn launch_standalone_evidence(
+        state_root: &Path,
+        disposable_root: &Path,
+        step_delay_ms: u16,
+    ) -> Result<Self, LinuxDevelopmentBoundaryError> {
+        if [state_root, disposable_root]
+            .iter()
+            .any(|path| !path.is_absolute())
+            || step_delay_ms > 2_000
+        {
+            return Err(development_error(
+                LinuxDevelopmentBoundaryErrorKind::InvalidInput,
+            ));
+        }
+        Self::spawn_sibling(|host| {
+            let mut command = Command::new(host);
+            command
+                .arg("--standalone-evidence-development-host")
+                .arg(state_root)
+                .arg(disposable_root)
+                .arg(step_delay_ms.to_string());
+            command
+        })
+    }
+
     /// Reserves the one host slot, verifies the exact sibling host and spawns
     /// the command built for it, with standard input closed and its launch
     /// envelope on standard output.

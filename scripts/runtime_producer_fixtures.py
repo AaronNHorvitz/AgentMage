@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check or regenerate the runtime producer contract fixtures (Decision 0135).
 
-The fixtures of the current contract version (3, Decision 0144) are built by
+The fixtures of the current contract version (4, Decision 0150) are built by
 the host's own types in the ignored Rust test
 `print_runtime_producer_fixtures`, which prints them and writes nothing. In
 check mode this script compares the printed files with the committed ones;
@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-FIXTURES = ROOT / "fixtures/runtime-producer/v3"
+FIXTURES = ROOT / "fixtures/runtime-producer/v4"
 BEGIN = "BEGIN-RUNTIME-PRODUCER-FIXTURES"
 END = "END-RUNTIME-PRODUCER-FIXTURES"
 TEST = "runtime_producer_contract_tests::print_runtime_producer_fixtures"

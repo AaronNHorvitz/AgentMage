@@ -139,6 +139,27 @@ pub mod native_chat_runtime;
 /// Caller-neutral transport contract shared by authenticated local clients.
 pub mod runtime_transport;
 
+/// Closed folder admission messages of the standalone evidence host (Decision 0150).
+pub mod standalone_folder;
+
+#[cfg(all(
+    target_os = "linux",
+    feature = "native-chat",
+    feature = "source-artifacts"
+))]
+/// The standalone evidence development host: activation, folder admission and
+/// read-only runs (Decision 0150).
+pub mod standalone_evidence;
+
+#[cfg(all(
+    target_os = "linux",
+    feature = "interactive-cli",
+    feature = "native-chat",
+    feature = "source-artifacts"
+))]
+/// The standalone application's bridge to its evidence host (Decision 0150).
+pub mod standalone_shell;
+
 #[cfg(target_os = "linux")]
 /// Authenticated bounded Linux IPC projection of the shared runtime transport.
 pub mod runtime_ipc;

@@ -691,6 +691,15 @@ pub trait RuntimeTransportPort {
         Err(RuntimeTransportError::RequestDenied)
     }
 
+    /// Answers one folder admission request of the standalone evidence host
+    /// (Decision 0150).
+    fn folder(
+        &mut self,
+        _request: crate::standalone_folder::FolderRequest,
+    ) -> Result<crate::standalone_folder::FolderAnswer, RuntimeTransportError> {
+        Err(RuntimeTransportError::RequestDenied)
+    }
+
     /// Reads the reconciled control state of one held run's job from the
     /// durable job ledger (Decision 0120).
     fn job_status(

@@ -175,10 +175,32 @@ pub fn bootstrap_development_for_peer(
     activation
         .revalidate()
         .map_err(|_| LinuxBootstrapError::DevelopmentActivationDenied)?;
+    development_bootstrap(activation.state_root(), "coding-development", peer_pid)
+}
+
+/// Creates the standalone evidence host's bootstrap after its exact
+/// activation was validated (Decision 0150): the same peer binding, private
+/// socket and one-use envelope as the coding development host.
+#[cfg(all(feature = "native-chat", feature = "source-artifacts"))]
+pub fn bootstrap_standalone_evidence_for_peer(
+    activation: &agentmage_host::standalone_evidence::StandaloneEvidenceActivation,
+    peer_pid: i32,
+) -> Result<DevelopmentLinuxBootstrap, LinuxBootstrapError> {
+    activation
+        .revalidate()
+        .map_err(|_| LinuxBootstrapError::DevelopmentActivationDenied)?;
+    development_bootstrap(activation.state_root(), "standalone-evidence", peer_pid)
+}
+
+fn development_bootstrap(
+    state_root: &Path,
+    prefix: &str,
+    peer_pid: i32,
+) -> Result<DevelopmentLinuxBootstrap, LinuxBootstrapError> {
     let peer = observe_linux_development_process_identity(peer_pid)
         .map_err(|_| LinuxBootstrapError::ParentUntrusted)?;
-    let endpoint_path = activation.state_root().join(format!(
-        "coding-development-{}-{}.sock",
+    let endpoint_path = state_root.join(format!(
+        "{prefix}-{}-{}.sock",
         rustix::process::getpid().as_raw_pid(),
         peer.start_time_ticks()
     ));

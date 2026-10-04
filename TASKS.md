@@ -9553,6 +9553,9 @@ implementation; it blocks complete-continuity and installed-preview acceptance c
 **Current status:** `LOCAL_IMPLEMENTATION_PENDING`. The shell and deterministic-fake first-run
 slice are repository-local work. Native Windows package, accessibility, and clean-install results
 remain external verification prerequisites and are not substitutes for implementation.
+[Decision 0150](docs/decisions/0150-standalone-evidence-development-host.md) implements the host
+and bridge side under a development activation with a term-match fixture; the window waits on its
+webview dependency.
 
 **User-facing value:** As a nontechnical professional, I need a standalone application that starts
 without Visual Studio Code or a terminal, explains hardware fit, selects one local folder, and
@@ -9564,27 +9567,49 @@ shows the verified read-only workflow without moving authority or canonical stat
   - [ ] **Sub-task 76.2.1.1:** Add the standalone application process and authenticated local
     bridge over the Rust host, with bundled local assets and no UI-owned filesystem, model, grant,
     tool, policy, or completion authority. **Execution:** local; owner=standalone-shell;
-    venue=repository-local.
+    venue=repository-local. Local contribution (Decision 0150): `agentmage-standalone` launches
+    and authenticates its sibling host over the existing development IPC, and its bridge holds no
+    folder, model, grant, tool or completion authority. Its window and bundled local assets are not
+    built. `BLOCKED_EXTERNAL(platform=a build environment with crate registry access;
+    artifact=a selected, reviewed and lock-pinned secured-webview dependency set with its license
+    and supply-chain records; action=select and review the webview dependency, fetch it and commit
+    the lockfile and review; credential=none; payment=none)`; `substitution_set=empty`.
   - [ ] **Sub-task 76.2.1.2:** Implement startup verification, explicit safe/unavailable states,
     cancellation, reconnect, crash recovery, and durable-session projection through the same
     ordered host protocol. **Execution:** local; owner=standalone-shell; venue=repository-local.
+    Local contribution (Decision 0150): the bridge verifies its host through the authenticated
+    launch envelope and activation, reports `starting`, `ready`, `unavailable` and `safe_mode`,
+    cancels through the run's job ledger, and replaces a failed host on restart, tested through
+    the actual processes. Durable-session projection remains.
   - [ ] **Sub-task 76.2.1.3:** Keep unsupported actions absent and fail closed when host identity,
     profile qualification, IPC authentication, or required local assets are unavailable.
-    **Execution:** local; owner=standalone-shell; venue=repository-local.
+    **Execution:** local; owner=standalone-shell; venue=repository-local. Local contribution
+    (Decision 0150): the bridge accepts five closed requests and refuses every other line before
+    the host; a host it cannot authenticate is `unavailable`; only the fixture profile is
+    selectable. Required local assets come with the window. Depends on Sub-task 76.2.1.1.
 - [ ] **Task 76.2.2 - Implement accessible first run**
   - [ ] **Sub-task 76.2.2.1:** Detect and render bounded hardware-fit facts without making a model
     support claim; hand eligible catalog selection to Story 76.3. **Execution:** local;
     owner=standalone-first-run; venue=repository-local.
   - [ ] **Sub-task 76.2.2.2:** Add keyboard-accessible folder selection with Rust-owned
     local-only path validation, explicit source-format accounting, and no ambient enumeration.
-    **Execution:** local; owner=standalone-first-run; venue=repository-local.
+    **Execution:** local; owner=standalone-first-run; venue=repository-local. Local contribution
+    (Decision 0150): the host's Rust-owned folder admission reads one private folder without
+    links, within fixed limits, and accounts for every entry with a stable reason, with no other
+    enumeration. Keyboard-accessible selection comes with the window. Depends on Sub-task 76.2.1.1.
   - [ ] **Sub-task 76.2.2.3:** Render a single question composer, evidence cards, source omissions,
     inference labels, cancellation, recovery, and limitations using the Verified Chat protocol
-    concepts. **Execution:** local; owner=standalone-first-run; venue=repository-local.
+    concepts. **Execution:** local; owner=standalone-first-run; venue=repository-local. Local
+    contribution (Decision 0150): the bridge projects a verified run into statements with evidence
+    cards, the fixture's inference label and context omissions, and shows unverified and cancelled
+    answers without cards. Rendering comes with the window. Depends on Sub-task 76.2.1.1.
 - [ ] **Task 76.2.3 - Verify the standalone increment**
   - [ ] **Sub-task 76.2.3.1:** Run known-answer bridge, startup, folder, question, evidence-card,
     cancellation, crash, stale-view, and authority-absence tests with the deterministic fake model.
-    **Execution:** local; owner=standalone-verification; venue=repository-local.
+    **Execution:** local; owner=standalone-verification; venue=repository-local. Local
+    contribution (Decision 0150): these tests run against the bridge and host with the term-match
+    fixture, in one process and through the actual processes; the window's checks follow it.
+    Depends on Sub-task 76.2.1.1.
   - [ ] **Sub-task 76.2.3.2:** Run native keyboard, screen-reader, secured-webview, package,
     standard-user, offline, and clean-install tests on the exact Windows candidate.
     `BLOCKED_EXTERNAL(platform=licensed Windows 11 x64 KVM guest with accessibility tooling;

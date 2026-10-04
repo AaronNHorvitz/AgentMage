@@ -50,6 +50,20 @@ fn main() -> Result<(), HostExit> {
                     workspace_root,
                 );
             }
+            #[cfg(all(
+                target_os = "linux",
+                feature = "native-chat",
+                feature = "source-artifacts"
+            ))]
+            [command, state_root, disposable_root, step_delay_ms]
+                if command == "--standalone-evidence-development-host" =>
+            {
+                return standalone_evidence_development_host(
+                    state_root,
+                    disposable_root,
+                    step_delay_ms,
+                );
+            }
             [command, root] if command == "--verify-package-candidate-root" => {
                 package_verify::verify_package_candidate_root(root)
             }
@@ -177,6 +191,51 @@ fn coding_development_catalog_host(
         .map_err(|error| HostExit(error.kind().code()))?;
     let mut catalog = CodingCatalogService::new(store);
     serve_linux_runtime_ipc(&mut session, &mut catalog).map_err(|error| HostExit(error.code()))
+}
+
+/// The standalone evidence host (Decision 0150): its own development
+/// activation and the same authenticated session, serving folder admission
+/// and read-only runs over the term-match fixture only.
+#[cfg(all(
+    target_os = "linux",
+    feature = "native-chat",
+    feature = "source-artifacts"
+))]
+fn standalone_evidence_development_host(
+    state_root: &std::ffi::OsStr,
+    disposable_root: &std::ffi::OsStr,
+    step_delay_ms: &std::ffi::OsStr,
+) -> Result<(), HostExit> {
+    use agentmage_host::runtime_ipc::serve_linux_runtime_ipc;
+    use agentmage_host::standalone_evidence::{
+        StandaloneEvidenceActivation, StandaloneEvidenceService,
+    };
+
+    let activation = StandaloneEvidenceActivation::validate(
+        std::path::Path::new(state_root),
+        std::path::Path::new(disposable_root),
+    )
+    .map_err(|error| HostExit(error.code()))?;
+    // The fixture's development delay is decimal milliseconds, written
+    // canonically (Decision 0150).
+    let step_delay = step_delay_ms
+        .to_str()
+        .filter(|text| text == &"0" || !text.starts_with('0'))
+        .and_then(|text| text.parse::<u64>().ok())
+        .map(std::time::Duration::from_millis)
+        .ok_or(HostExit("standalone.evidence.delay-denied"))?;
+    let mut service = StandaloneEvidenceService::new(activation.clone(), step_delay)
+        .map_err(|error| HostExit(error.code()))?;
+    let parent = linux_bootstrap::parent_process_id().map_err(|error| HostExit(error.code()))?;
+    let bootstrap = linux_bootstrap::bootstrap_standalone_evidence_for_peer(&activation, parent)
+        .map_err(|error| HostExit(error.code()))?;
+    bootstrap
+        .write_launch_envelope(&mut std::io::stdout().lock())
+        .map_err(|error| HostExit(error.code()))?;
+    let mut session = bootstrap
+        .accept()
+        .map_err(|error| HostExit(error.kind().code()))?;
+    serve_linux_runtime_ipc(&mut session, &mut service).map_err(|error| HostExit(error.code()))
 }
 
 #[cfg(target_os = "linux")]
