@@ -1,14 +1,14 @@
 {
   "artifacts": [
     {
-      "bytes": 135048,
+      "bytes": 160606,
       "path": "SECURITY-REVIEW.md",
-      "sha256": "000627e0561aa688171c9aaa4c9af0a9ea9179e891a0d9af157dc42082d161bf"
+      "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
     },
     {
-      "bytes": 37719,
+      "bytes": 52995,
       "path": "RUNTIME-BOUNDARIES.md",
-      "sha256": "5cfc656282d85dbda58d16d2b170d6e0c1ce297af27f0d0aa588a63ec45fd6be"
+      "sha256": "45b897f25bf06765f07067de582d3157f05e659aa93c153284adfb6f3d839f22"
     },
     {
       "bytes": 2738,
@@ -16,9 +16,9 @@
       "sha256": "9bd78bceafa25966cc09389b94f1f2b12d32d1148b1f5dd54f51e430ab08db9b"
     },
     {
-      "bytes": 8093,
+      "bytes": 16738,
       "path": "docs/architecture/strict-local-boundary.md",
-      "sha256": "b06ca04f58f5fa5bf74c83ce85b513c73ca3c2958ee9424436b57d8bed21e902"
+      "sha256": "191d42622c4d9bc1b5fb8edffc793b8568ec728546d99d7366266eb25fc0cf0c"
     },
     {
       "bytes": 5428,
@@ -118,12 +118,12 @@
     {
       "bytes": 8161,
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-platform-parity.json",
-      "sha256": "0f70d7e35ea1561fbf1f273e9633dd87b9f152f3fc854c265db3ec6e8d521c13"
+      "sha256": "c2ec2f7f47632fd3f08b5c2acb3b4fb82ef380f96658dc758ddfe3b6dce2e927"
     },
     {
-      "bytes": 19749,
+      "bytes": 19750,
       "path": "artifacts/sprints/sprint-9/story-9.2/linux-native-runtime-package.json",
-      "sha256": "11fbe8bfd2d7e0791cb35389cebb462ce03fa77b56f5b2f66c52e36ba89e8cfb"
+      "sha256": "62bc14fe8c46352f91d2674609c59496765bf2953d83674e0fdeb591a66b68b8"
     },
     {
       "bytes": 10131,
@@ -141,9 +141,9 @@
       "sha256": "dc7e41c20947cb380e1f58740a9284eb665b640d93cacd30e9701a4663c34fec"
     },
     {
-      "bytes": 14808,
+      "bytes": 16195,
       "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-production-prerequisites.json",
-      "sha256": "6b925c29d2f08af9902b4d0ea6c88b29566d9b1b42ddad6c05dc26d26cb229e5"
+      "sha256": "a5d014a34bcb84cb54f1e55c99ca29400ce9f2821cf99c491fff824cdd5f13f1"
     },
     {
       "bytes": 34168,
@@ -207,10 +207,10 @@
   "input_evidence": [
     {
       "artifact_id": "linux-native-llama-runtime-package",
-      "evidence_revision": "b1bc089aa9418e99cfb542da651e048358f8e68a",
+      "evidence_revision": "f74feb4443e0be16156324a7a050f92cae7db6dd",
       "id": "native-runtime",
       "path": "artifacts/sprints/sprint-9/story-9.2/linux-native-runtime-package.json",
-      "sha256": "11fbe8bfd2d7e0791cb35389cebb462ce03fa77b56f5b2f66c52e36ba89e8cfb",
+      "sha256": "62bc14fe8c46352f91d2674609c59496765bf2953d83674e0fdeb591a66b68b8",
       "status": "pass-fedora-native-package-boundary"
     },
     {
@@ -239,10 +239,10 @@
     },
     {
       "artifact_id": "linux-docker-production-prerequisites",
-      "evidence_revision": "c14fc166fba896a0fb52636139f18d6b0c4ad0d0",
+      "evidence_revision": "a3266796d4efba7ce35c31f251359f7b5f147d03",
       "id": "docker-prerequisites",
       "path": "artifacts/sprints/sprint-9/story-9.2/linux-docker-production-prerequisites.json",
-      "sha256": "6b925c29d2f08af9902b4d0ea6c88b29566d9b1b42ddad6c05dc26d26cb229e5",
+      "sha256": "a5d014a34bcb84cb54f1e55c99ca29400ce9f2821cf99c491fff824cdd5f13f1",
       "status": "pass-packaged-prerequisites-no-live-docker"
     },
     {
@@ -271,10 +271,10 @@
     },
     {
       "artifact_id": "linux-fedora-ubuntu-adapter-parity",
-      "evidence_revision": "25a6fbfaaf29f7fd00bf4c9734fe8f42c6e9826f",
+      "evidence_revision": "1d59bed3e251528c4d461eb24f4d06caf5d9c14e",
       "id": "linux-parity",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-platform-parity.json",
-      "sha256": "0f70d7e35ea1561fbf1f273e9633dd87b9f152f3fc854c265db3ec6e8d521c13",
+      "sha256": "c2ec2f7f47632fd3f08b5c2acb3b4fb82ef380f96658dc758ddfe3b6dce2e927",
       "status": "pass-declared-fedora-ubuntu-parity"
     }
   ],
@@ -431,7 +431,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "28e620dcb297767689c221ed551dd5ab17192c61",
+  "source_revision": "aca9666264d07d567fd3ba9832ba8231a4cd8951",
   "status": "pass-linux-security-mapping-review-open",
   "story_id": "9.2",
   "summary": {
