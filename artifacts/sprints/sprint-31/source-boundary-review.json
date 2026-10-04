@@ -19,7 +19,7 @@
   "review_class": "gate-owned-automated-knowledge-boundary",
   "reviewer_identity": "scripts/knowledge_sprint_boundary_review.py",
   "schema_version": 1,
-  "source_revision": "74488c3bcb1a09a0f067012689b3fb6df02a6000",
+  "source_revision": "586576049749f7f979acf59bc67c99e2d4c3925a",
   "source_sha256": {
     "capabilities/knowledge/src/memory.rs": "df6205fb8b7dd2e4b90829a5671ac4e7c12f2b55d9fa511a8629b36a158fde74",
     "capabilities/knowledge/src/memory_lifecycle.rs": "a5a6a56f2bd43db28fd650219bb5376aee6dfe213ebb8e9a443bfdb87c2f64b4",
