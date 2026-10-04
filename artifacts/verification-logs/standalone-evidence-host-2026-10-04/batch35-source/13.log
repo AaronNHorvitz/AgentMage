@@ -1,0 +1,49 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-094cc34c77d48d9f)
+
+running 42 tests
+test runtime_ipc::tests::a_folder_request_crosses_the_wire_closed ... ok
+test runtime_ipc::tests::a_suspended_step_crosses_the_wire_and_names_only_its_boundary ... ok
+test runtime_ipc::tests::an_ended_run_answer_crosses_the_wire_closed_and_only_at_the_current_version ... ok
+test runtime_ipc::tests::a_memory_request_crosses_the_wire_closed ... ok
+test runtime_ipc::tests::a_route_grant_request_crosses_the_wire_closed ... ok
+test runtime_ipc::tests::each_authenticated_client_process_has_its_own_ledger_scope ... ok
+test runtime_ipc::tests::a_documentation_pack_request_crosses_the_wire_closed ... ok
+test runtime_ipc::tests::job_control_crosses_the_wire_without_a_client_scope_or_a_direct_cancel ... ok
+test runtime_ipc::tests::run_declarations_cross_the_wire_exactly_and_only_at_the_current_version ... ok
+test runtime_ipc::tests::an_extension_request_crosses_the_wire_closed ... ok
+test runtime_ipc::tests::the_host_decides_job_control_under_the_scope_it_derived ... ok
+test runtime_ipc::tests::the_client_keeps_the_first_refusal_of_a_run_until_the_next_prepare ... ok
+test runtime_ipc::tests::the_largest_chunk_of_documentation_text_fits_one_frame ... ok
+test runtime_producer_contract_tests::a_member_the_types_do_not_name_is_refused_in_every_fixture ... ok
+test runtime_producer_contract_tests::a_repeated_member_is_refused_in_every_fixture ... ok
+test runtime_ipc::tests::oversized_run_declarations_are_refused_and_the_service_keeps_answering ... ok
+test runtime_producer_contract_tests::a_changed_record_is_refused_or_dropped_by_the_client ... ok
+test runtime_producer_contract_tests::print_runtime_producer_fixtures ... ignored, run by scripts/runtime_producer_fixtures.py
+test runtime_ipc::tests::every_frame_is_decoded_exactly_in_both_directions ... ok
+test runtime_producer_contract_tests::the_first_contract_version_stays_as_it_was_and_reads_as_unavailable ... ok
+test runtime_producer_contract_tests::a_run_request_with_sampling_values_decodes_exactly_and_verifies ... ok
+test runtime_producer_contract_tests::each_fixture_decodes_exactly_and_verifies_as_a_client_verifies_it ... ok
+test runtime_producer_contract_tests::the_committed_fixtures_are_the_records_the_runtime_builds ... ok
+test runtime_producer_contract_tests::the_second_contract_version_stays_as_it_was_on_its_older_wire ... ok
+test runtime_producer_contract_tests::the_third_contract_version_stays_as_it_was_on_its_older_wire ... ok
+test standalone_evidence::tests::a_whole_folder_is_refused_for_each_unsafe_or_oversized_selection ... ok
+test standalone_evidence::tests::folder_admission_accounts_for_every_entry_and_admits_only_supported_text ... ok
+test standalone_evidence::tests::only_two_private_separate_roots_activate ... ok
+test standalone_evidence::tests::question_terms_are_the_first_four_uncommon_words_as_written ... ok
+test standalone_evidence::tests::runs_are_bound_to_the_admitted_snapshot_and_pin_it_until_released ... ok
+test standalone_evidence::tests::the_verifier_admits_only_observed_citations_with_exact_quotes ... ok
+test standalone_folder::tests::a_sealed_view_verifies_and_every_altered_field_does_not ... ok
+test standalone_folder::tests::requests_and_answers_are_closed ... ok
+test standalone_evidence::tests::a_cancelled_question_ends_cancelled_without_an_answer ... ok
+test standalone_shell::tests::a_refused_folder_keeps_the_earlier_snapshot ... ok
+test standalone_shell::tests::every_event_and_request_is_closed ... ok
+test standalone_evidence::tests::a_question_runs_through_the_live_service_to_a_verified_cited_answer ... ok
+test standalone_shell::tests::the_request_gate_admits_only_exact_requests_in_increasing_order ... ok
+test standalone_evidence::tests::a_question_without_matching_text_ends_unverified_and_says_so ... ok
+test standalone_shell::tests::only_a_verified_run_with_observed_citations_becomes_evidence_cards ... ok
+test standalone_shell::tests::a_question_ends_in_a_verified_answer_with_exact_evidence_cards ... ok
+test standalone_shell::tests::unanswerable_invalid_and_cancelled_questions_show_no_evidence ... ok
+
+test result: ok. 41 passed; 0 failed; 1 ignored; 0 measured; 532 filtered out; finished in 1.56s
+

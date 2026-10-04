@@ -783,6 +783,9 @@ model selection are not built. No language model answers here, and answer qualit
 is unassessed. Runs are not durable sessions, and one question does not see an earlier
 one. This is a development activation, not the signed product.
 
+The [standalone evidence host verification](verification/standalone-evidence-host-2026-10-04.md)
+retains these checks, their mutation results and an observation of the actual processes.
+
 ## Separate document demonstration
 
 The following historical Fedora Kinoite document demo requires its recorded native host

@@ -1,0 +1,13 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running tests/standalone_evidence_process.rs (target/debug/deps/standalone_evidence_process-e8f7f3fe098500ee)
+
+running 5 tests
+Error: standalone.evidence.root-denied
+test tests::an_unusable_activation_is_reported_as_unavailable ... ok
+test tests::without_a_window_the_application_says_so ... ok
+test tests::the_bridge_answers_from_an_admitted_folder_through_its_own_host ... ok
+test tests::a_cancelled_question_stops_through_its_job_ledger ... ok
+test tests::a_failed_host_puts_the_bridge_in_safe_mode_until_a_restart ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.71s
+

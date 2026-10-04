@@ -1,0 +1,141 @@
+[
+ {
+  "id": "M1-quote-unchecked",
+  "file": "shells/host/src/standalone_evidence.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "standalone_"
+  ],
+  "expected": "standalone_evidence::tests::the_verifier_admits_only_observed_citations_with_exact_quotes",
+  "replace": [
+   [
+    ".is_some_and(|quote| quote.is_empty() || !fragment.contains(quote))",
+    ".is_some_and(|quote| quote.is_empty())"
+   ]
+  ]
+ },
+ {
+  "id": "M2-folder-follows-links",
+  "file": "shells/host/src/standalone_evidence.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "standalone_"
+  ],
+  "expected": "standalone_evidence::tests::a_whole_folder_is_refused_for_each_unsafe_or_oversized_selection",
+  "replace": [
+   [
+    "        ResolveFlags::BENEATH | ResolveFlags::NO_SYMLINKS | ResolveFlags::NO_MAGICLINKS,",
+    "        ResolveFlags::BENEATH | ResolveFlags::NO_MAGICLINKS,"
+   ]
+  ]
+ },
+ {
+  "id": "M3-folder-privacy-unchecked",
+  "file": "shells/host/src/standalone_evidence.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "standalone_"
+  ],
+  "expected": "standalone_evidence::tests::a_whole_folder_is_refused_for_each_unsafe_or_oversized_selection",
+  "replace": [
+   [
+    "metadata.st_uid != rustix::process::getuid().as_raw() || metadata.st_mode & 0o022 != 0",
+    "metadata.st_uid != rustix::process::getuid().as_raw()"
+   ]
+  ]
+ },
+ {
+  "id": "M4-boundary-allows-any-tool",
+  "file": "shells/host/src/standalone_evidence.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "standalone_"
+  ],
+  "expected": "standalone_evidence::tests::the_verifier_admits_only_observed_citations_with_exact_quotes",
+  "replace": [
+   [
+    "        if Self::artifact_kind(definition, call).is_none()\n            || request.mode != RuntimeSessionMode::EphemeralReadOnly",
+    "        if request.mode != RuntimeSessionMode::EphemeralReadOnly"
+   ]
+  ]
+ },
+ {
+  "id": "M5-cards-for-unverified-runs",
+  "file": "shells/host/src/standalone_shell.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "standalone_"
+  ],
+  "expected": "standalone_shell::tests::only_a_verified_run_with_observed_citations_becomes_evidence_cards",
+  "replace": [
+   [
+    "    let (AnswerState::Verified, Some(answer)) = (view.state, answer) else {",
+    "    let (_, Some(answer)) = (view.state, answer) else {"
+   ]
+  ]
+ },
+ {
+  "id": "M6-gate-repeats-sequence",
+  "file": "shells/host/src/standalone_shell.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "standalone_"
+  ],
+  "expected": "standalone_shell::tests::the_request_gate_admits_only_exact_requests_in_increasing_order",
+  "replace": [
+   [
+    "        if sequence <= self.last_sequence {",
+    "        if sequence < self.last_sequence {"
+   ]
+  ]
+ },
+ {
+  "id": "M7-readmission-while-pinned",
+  "file": "shells/host/src/standalone_evidence.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "standalone_"
+  ],
+  "expected": "standalone_evidence::tests::runs_are_bound_to_the_admitted_snapshot_and_pin_it_until_released",
+  "replace": [
+   [
+    "        if !shared.in_flight.is_empty() {\n            return refused(FolderRefusal::Busy);\n        }\n        drop(shared);",
+    "        drop(shared);"
+   ],
+   [
+    "                if !shared.in_flight.is_empty() {\n                    return refused(FolderRefusal::Busy);\n                }\n",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "M8-statementless-answer-admitted",
+  "file": "shells/host/src/standalone_evidence.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "standalone_"
+  ],
+  "expected": "standalone_evidence::tests::the_verifier_admits_only_observed_citations_with_exact_quotes",
+  "replace": [
+   [
+    "    if answer.statements.is_empty() || answer.no_matching_text {",
+    "    if false {"
+   ]
+  ]
+ },
+ {
+  "id": "M9-admission-digest-unbound",
+  "file": "shells/host/src/standalone_evidence.rs",
+  "package": "agentmage-host",
+  "filters": [
+   "standalone_"
+  ],
+  "expected": "standalone_evidence::tests::runs_are_bound_to_the_admitted_snapshot_and_pin_it_until_released",
+  "replace": [
+   [
+    "            || input.expected_entry_sha256 != view.admission_sha256\n",
+    ""
+   ]
+  ]
+ }
+]

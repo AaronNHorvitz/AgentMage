@@ -1,0 +1,81 @@
+[
+  {
+    "id": "M1-quote-unchecked",
+    "expected": "standalone_evidence::tests::the_verifier_admits_only_observed_citations_with_exact_quotes",
+    "caught": true,
+    "failed": [
+      "standalone_evidence::tests::the_verifier_admits_only_observed_citations_with_exact_quotes"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "M2-folder-follows-links",
+    "expected": "standalone_evidence::tests::a_whole_folder_is_refused_for_each_unsafe_or_oversized_selection",
+    "caught": false,
+    "failed": [],
+    "compile_error": false
+  },
+  {
+    "id": "M3-folder-privacy-unchecked",
+    "expected": "standalone_evidence::tests::a_whole_folder_is_refused_for_each_unsafe_or_oversized_selection",
+    "caught": true,
+    "failed": [
+      "standalone_evidence::tests::a_whole_folder_is_refused_for_each_unsafe_or_oversized_selection"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "M4-boundary-allows-any-tool",
+    "expected": "standalone_evidence::tests::the_verifier_admits_only_observed_citations_with_exact_quotes",
+    "caught": true,
+    "failed": [
+      "standalone_evidence::tests::the_verifier_admits_only_observed_citations_with_exact_quotes"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "M5-cards-for-unverified-runs",
+    "expected": "standalone_shell::tests::only_a_verified_run_with_observed_citations_becomes_evidence_cards",
+    "caught": true,
+    "failed": [
+      "standalone_shell::tests::only_a_verified_run_with_observed_citations_becomes_evidence_cards"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "M6-gate-repeats-sequence",
+    "expected": "standalone_shell::tests::the_request_gate_admits_only_exact_requests_in_increasing_order",
+    "caught": true,
+    "failed": [
+      "standalone_shell::tests::the_request_gate_admits_only_exact_requests_in_increasing_order"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "M7-readmission-while-pinned",
+    "expected": "standalone_evidence::tests::runs_are_bound_to_the_admitted_snapshot_and_pin_it_until_released",
+    "caught": true,
+    "failed": [
+      "standalone_evidence::tests::runs_are_bound_to_the_admitted_snapshot_and_pin_it_until_released"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "M8-statementless-answer-admitted",
+    "expected": "standalone_evidence::tests::the_verifier_admits_only_observed_citations_with_exact_quotes",
+    "caught": true,
+    "failed": [
+      "standalone_evidence::tests::the_verifier_admits_only_observed_citations_with_exact_quotes"
+    ],
+    "compile_error": false
+  },
+  {
+    "id": "M9-admission-digest-unbound",
+    "expected": "standalone_evidence::tests::runs_are_bound_to_the_admitted_snapshot_and_pin_it_until_released",
+    "caught": true,
+    "failed": [
+      "standalone_evidence::tests::runs_are_bound_to_the_admitted_snapshot_and_pin_it_until_released"
+    ],
+    "compile_error": false
+  }
+]

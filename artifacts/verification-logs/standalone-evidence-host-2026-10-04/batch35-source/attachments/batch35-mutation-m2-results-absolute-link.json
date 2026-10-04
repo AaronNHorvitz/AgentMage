@@ -1,0 +1,9 @@
+[
+  {
+    "id": "M2-folder-follows-links",
+    "expected": "standalone_evidence::tests::a_whole_folder_is_refused_for_each_unsafe_or_oversized_selection",
+    "caught": false,
+    "failed": [],
+    "compile_error": false
+  }
+]

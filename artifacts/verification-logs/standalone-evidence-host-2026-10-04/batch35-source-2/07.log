@@ -1,0 +1,401 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_platform_linux-9b30e76e3c1d8eca)
+
+running 256 tests
+test command_runner::tests::internal_parent_crash_driver ... ignored, internal parent-crash driver spawned by the recovery fixture
+test command_runner::tests::live_borrowed_command_cancel_and_observer_failure_release_owned_slot ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::live_changed_held_worktree_identity_fails_before_launch ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::live_empty_scratch_retains_no_residue_between_attempts ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::live_exact_command_runs_offline_with_literal_output ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::live_guest_cannot_execute_any_second_program ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::live_guest_environment_holds_only_the_sealed_template_variables ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::live_guest_filesystem_root_exposes_only_declared_mounts ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::live_hostile_descendant_process_tree_is_bounded_and_removed ... ignored, requires a supported Linux user systemd session, Bubblewrap, and OpenSSL
+test command_runner::tests::live_inherited_descriptors_do_not_reach_the_command_guest ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::live_maximum_limit_boundary_runs_with_exact_identity ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::live_minimum_timeout_boundary_terminates_the_unit ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::live_output_beyond_the_declared_ceiling_is_truncated_and_still_hashed ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::live_owned_worktree_command_cannot_mutate_the_held_directory ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::live_owned_worktree_guest_sees_no_inherited_descriptors ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::live_owned_worktree_is_descriptor_bound_at_the_guest_working_directory ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::live_parent_crash_leaves_no_owned_unit_descendant_or_scratch ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::live_parent_crash_never_adopts_a_concurrent_unit ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::live_timeout_and_cancellation_terminate_the_process_unit ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test command_runner::tests::open_file_properties_number_guest_descriptors_in_declaration_order ... ok
+test command_runner::tests::manifest_rejects_executable_digest_drift ... ok
+test command_runner::tests::manifest_binds_every_registered_executable_digest ... FAILED
+test command_runner::tests::task_ceilings_below_the_linux_minimum_fail_before_launch ... FAILED
+test configuration_store::tests::interrupted_exchange_is_verified_and_completed_without_republication ... ok
+test configuration_store::tests::changed_preimage_is_preserved_and_never_overwritten ... ok
+test configuration_store::tests::strict_local_state_root_configuration_load_rejects_sync_before_read ... ok
+test configuration_store::tests::symlink_hard_link_and_public_mode_targets_fail_closed ... ok
+test development_boundary::confirmation::tests::a_line_is_returned_trimmed_and_an_unterminated_fragment_is_not ... ok
+test configuration_store::tests::apply_retains_immutable_backup_and_rollback_restores_it ... ok
+test development_boundary::confirmation::tests::closed_words_require_a_complete_line_and_preserve_whitespace_semantics ... ok
+test development_boundary::confirmation::tests::consecutive_prompts_consume_only_their_own_line_and_leave_flags_unchanged ... ok
+test configuration_store::tests::migration_and_repeatable_rollback_preserve_the_exact_legacy_preimage ... ok
+test development_boundary::confirmation::tests::eof_never_confirms_an_approving_fragment ... ok
+test development_boundary::confirmation::tests::invalid_utf8_is_a_content_free_failure ... ok
+test development_boundary::confirmation::tests::limit_requires_the_newline_and_never_accepts_an_overlong_approving_prefix ... ok
+test development_boundary::confirmation::tests::pending_cancellation_consumes_no_input_and_never_clears_the_flag ... ok
+test development_boundary::confirmation::tests::write_only_input_is_rejected_before_waiting_for_peer_cleanup ... ok
+test development_boundary::tests::admission_race_allows_one_owner_and_pre_spawn_drop_releases_it ... ok
+test development_boundary::tests::catalog_host_rejects_relative_roots_before_launch ... ok
+test development_boundary::tests::complete_pipe_uses_existing_parser_without_waiting_for_eof ... ok
+test development_boundary::tests::correction_scenarios_are_explicit_closed_development_operations ... ok
+test development_boundary::tests::destructor_reaps_the_owned_child_and_releases_its_slot ... ok
+test development_boundary::tests::development_host_rejects_open_ended_operation_before_launch ... ok
+test development_boundary::tests::direct_child_success_and_failure_are_reaped_before_admission_release ... ok
+test development_boundary::confirmation::tests::an_overlong_line_is_discarded_through_its_newline_and_the_next_line_is_read ... ok
+test configuration_store::tests::migration_interruptions_select_valid_state_and_rollback_is_repeatable ... ok
+test development_boundary::tests::eof_malformed_version_and_oversized_frames_remain_transfer_refusals ... ok
+test development_boundary::tests::expired_deadline_never_accepts_an_already_buffered_envelope ... ok
+test development_boundary::tests::drip_fed_progress_cannot_renew_the_startup_deadline ... ok
+test development_boundary::tests::graceful_timeout_kills_and_reaps_only_the_owned_child_and_stays_failed ... ok
+test development_boundary::tests::owned_lifecycle_child ... ignored, test-owned subprocess helper; parent lifecycle tests select it explicitly
+test development_boundary::tests::private_development_retention_is_new_owner_only_and_bounded ... ok
+test development_boundary::confirmation::tests::idle_and_partial_open_pipes_cancel_before_test_cleanup_closes_the_writer ... ok
+test development_boundary::tests::startup_cancellation_refuses_even_a_complete_buffered_frame_without_consuming_flag ... ok
+test development_boundary::tests::late_zero_exit_does_not_turn_a_repeated_timeout_wait_into_success ... ok
+test development_boundary::tests::synthetic_lost_handle_quarantines_without_signalling_an_unrelated_child ... ok
+test development_boundary::tests::startup_cancellation_interrupts_a_partial_open_pipe_before_its_deadline ... ok
+test filesystem_control::tests::native_collision_symlink_hardlink_and_limits_fail_without_effect ... ok
+test development_boundary::tests::empty_and_partial_open_pipes_expire_at_the_original_startup_deadline ... ok
+test filesystem_control::tests::s_030_rt01_filesystem_crash_boundary_child ... ok
+test filesystem_control::tests::native_later_staging_failure_restores_prior_create_exactly ... ok
+test filesystem_control::tests::native_create_patch_copy_move_and_trash_commit_exact_state ... ok
+test filesystem_control::tests::s_030_st01_move_parent_renames_at_every_boundary_preserve_both_owners ... ok
+test filesystem_control::tests::s_030_st01_socket_and_fifo_substitutions_are_refused_and_preserved ... ok
+test filesystem_control::tests::s_030_st01_copy_parent_rename_at_every_boundary_preserves_both_owners ... ok
+test instruction_discovery::tests::exact_candidates_and_nested_agents_are_metadata_only_and_invariant ... ok
+test instruction_discovery::tests::metadata_change_produces_new_freshness_without_reading_content ... ok
+test instruction_discovery::tests::traversal_and_record_limits_fail_closed ... ok
+test inventory::tests::descriptor_flags_are_parsed_as_octal_and_fail_closed ... ok
+test inventory::tests::duplicate_empty_and_impossible_target_sets_fail_before_collection ... ok
+test inventory::tests::live_self_inventory_attributes_executable_and_open_writable_descriptor ... ignored, requires a quiescent process descriptor table during the live /proc snapshot
+test inventory::tests::pidfd_fallback_is_limited_to_unsupported_kernel_errors ... ok
+test inventory::tests::proc_ip_encoding_maps_loopback_unspecified_and_external_addresses ... ok
+test inventory::tests::strict_local_listener_bound_and_indeterminate_states_fail_closed ... ok
+test inventory::tests::strict_local_listener_exact_loopback_and_unix_reconcile_once ... ok
+test inventory::tests::strict_local_listener_live_loopback_passes_and_wildcard_fails ... ignored, requires a quiescent process descriptor table during the live /proc snapshot
+test inventory::tests::strict_local_listener_malformed_duplicate_and_unapproved_declarations_fail_closed ... ok
+test inventory::tests::strict_local_listener_undeclared_missing_duplicate_and_unknown_fail_closed ... ok
+test inventory::tests::strict_local_listener_unsafe_destination_matrix_fails_before_manifest_matching ... ok
+test inventory::tests::strict_local_session_boundary_live_complete_cgroup_inventory ... ignored, requires a supported Linux systemd user session
+test inventory::tests::strict_local_session_boundary_manifest_is_bounded_unique_and_closed ... ok
+test inventory::tests::strict_local_session_boundary_reconciles_every_declared_inventory_family ... ok
+test inventory::tests::strict_local_session_boundary_rejects_each_observed_inventory_substitution ... ok
+test inventory::tests::strict_local_session_boundary_rejects_extra_and_unattributed_observations ... ok
+test inventory::tests::strict_local_session_boundary_unified_cgroup_parsers_are_closed ... ok
+test inventory::tests::synthetic_socket_tables_preserve_inode_port_state_and_only_endpoint_digest ... ok
+test filesystem_control::tests::s_030_rt01_copy_restore_parent_renames_leave_no_transaction_effect ... ok
+test filesystem_control::tests::s_030_ut01_missing_and_wrong_type_matrix_fails_before_effect ... ok
+test filesystem_control::tests::s_030_rt01_process_stops_leave_only_prestate_or_poststate_paths ... ok
+test ipc::tests::authenticated_endpoint_exposes_only_bounded_product_frames ... ok
+test ipc::tests::exact_peer_authenticates_once_and_replay_fails ... ok
+test ipc::tests::listener_drop_removes_only_its_unchanged_socket_identity ... ok
+test ipc::tests::direct_launch_envelope_connects_the_exact_current_process ... ok
+test ipc::tests::process_start_parser_handles_parentheses_and_rejects_malformed_records ... ok
+test ipc::tests::unsafe_parent_existing_socket_and_short_frame_fail_closed ... ok
+test lifecycle::tests::authority_database_presence_rejects_links_and_public_objects ... ok
+test lifecycle::tests::lifecycle_lock_is_private_single_link_and_exclusive ... ok
+test local_commit::tests::native_candidate_tree_uses_only_owned_index_and_preserves_user_state ... FAILED
+test local_commit::tests::native_signed_commit_verifies_exact_content_and_only_updates_task_branch ... FAILED
+test ipc::tests::private_socket_uses_kernel_peer_credentials_and_exact_frame ... ok
+test platform::tests::distribution_parser_is_closed ... ok
+test platform::tests::every_linux_control_disablement_maps_to_fail_closed_startup_capabilities ... ok
+test platform::tests::invalid_status_dominates_unavailable_and_verified ... ok
+test platform::tests::production_discovery_never_self_supplies_release_trust ... ignored, requires a supported Fedora or Ubuntu desktop with Visual Studio Code installed
+test platform::tests::strict_local_state_root_authority_open_rejects_sync_before_store_io ... ok
+test repository_inventory::tests::malformed_records_and_unsafe_paths_fail_closed ... ok
+test repository_inventory::tests::parsers_preserve_spaces_tabs_and_index_changes_without_path_ambiguity ... ok
+test repository_safety::tests::ambient_git_variables_harness_child ... ok
+test repository_safety::tests::ambient_git_variables_never_leak_into_launched_git_children ... ignored, requires re-invoking the test binary and a root-owned /usr/bin/git
+test repository_safety::tests::compare_and_swap_updates_only_one_unchecked_branch_and_stale_old_fails ... FAILED
+test platform::tests::aggregate_authority_composition_opens_through_held_private_root ... ok
+test repository_safety::tests::exact_worktree_lifecycle_preserves_active_checkout ... FAILED
+test repository_safety::tests::inspection_manifest_rejects_untrusted_executable_paths ... ok
+test repository_safety::tests::concurrent_user_changes_survive_worktree_removal_and_cleanup ... FAILED
+test repository_safety::tests::interrupted_worktree_create_preserves_every_user_artifact ... FAILED
+test repository_safety::tests::live_hostile_git_configuration_cannot_execute_or_contact_loopback ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test repository_safety::tests::live_read_only_git_inspection_runs_inside_the_offline_worker ... ignored, requires a supported Linux user systemd session and Bubblewrap
+test repository_safety::tests::interrupted_branch_fast_forward_preserves_every_user_artifact ... FAILED
+test repository_safety::tests::manifest_is_minimized_stable_and_detects_untracked_and_hazards ... FAILED
+test repository_safety::tests::network_clone_fetch_and_unmapped_tokens_never_launch_locally ... FAILED
+test repository_safety::tests::repository_inventory_cancellation_fails_before_git_launch ... FAILED
+test repository_safety::tests::repository_inventory_preserves_exact_git_states_and_nonregular_hints ... FAILED
+test repository_safety::tests::repository_inventory_timeout_kills_and_reaps_the_stalled_process ... ok
+test repository_safety::tests::worktree_lifecycle_preserves_a_detached_active_checkout ... FAILED
+test repository_safety::tests::worktree_removal_fails_closed_when_the_owned_directory_is_missing ... FAILED
+test repository_safety::tests::worktree_lifecycle_preserves_a_dirty_active_checkout ... FAILED
+test runtime_artifact_crypto::tests::ciphertext_hides_plaintext_and_randomizes_equal_payloads ... ok
+test runtime_artifact_crypto::tests::derivation_is_exact_domain_separated_and_secret_safe ... ok
+test runtime_artifact_crypto::tests::empty_and_over_limit_requests_are_rejected ... ok
+test repository_safety::tests::worktree_removal_fails_closed_when_the_owned_directory_is_renamed ... FAILED
+test runtime_artifact_crypto::tests::wrong_key_tamper_truncation_and_append_fail_closed ... ok
+test runtime_artifact_store::tests::concurrent_file_races_deduplicate_or_fail_closed_without_deletion_or_disclosure ... ok
+test runtime_artifact_store::tests::corruption_quarantine_and_verified_delete_leave_no_active_object ... ok
+test runtime_artifact_store::tests::fixed_namespace_substitution_fails_before_the_next_store_effect ... ok
+test runtime_artifact_store::tests::hard_links_and_open_handle_collection_do_not_disclose_plaintext ... ok
+test runtime_artifact_store::tests::invalid_names_symlinks_modes_and_root_drift_fail_closed ... ok
+test runtime_artifact_store::tests::repository_evidence_namespace_is_never_private_artifact_authority ... ok
+test runtime_artifact_crypto::tests::round_trip_and_range_reads_cross_chunk_boundaries ... ok
+test runtime_artifact_store::tests::staging_and_objects_are_encrypted_randomized_and_key_bound ... ok
+test runtime_artifact_store::tests::stage_place_read_inventory_and_dedup_are_content_addressed ... ok
+test runtime_artifact_store::tests::story_22_2_native_artifact_crash_boundary_child ... ignored, subprocess stop target; invoked only by the Story 22.2 artifact crash matrix
+test runtime_artifact_store::tests::story_22_2_native_artifact_pressure_reaches_declared_ceilings ... ignored, explicit Story 22.2 native maximum-payload and checkpoint-ceiling campaign
+test runtime_artifact_store::tests::staging_is_bounded_and_interrupted_objects_are_cleaned ... ok
+test sandbox::supervision::resource_usage::tests::accounting_uses_total_cpu_and_checked_units ... ok
+test sandbox::supervision::resource_usage::tests::held_directory_samples_are_bounded_and_missing_removed_or_symlinked_is_unavailable ... ok
+test sandbox::supervision::resource_usage::tests::missing_malformed_duplicate_and_partial_accounting_is_unavailable ... ok
+test sandbox::supervision::resource_usage::tests::unavailable_sample_never_invents_zero_or_erases_prior_observation ... ok
+test sandbox::supervision::tests::absent_with_job_process_or_cgroup_is_never_a_valid_observation ... ok
+test sandbox::supervision::tests::actual_manager_shapes_keep_pending_distinct_from_absent_or_terminal ... ok
+test sandbox::supervision::tests::admission_snapshot_is_nonblocking_read_only_and_refuses_retained_or_poisoned_state ... ok
+test sandbox::supervision::tests::cleanup_requires_complete_closed_cgroup_population_observation ... ok
+test sandbox::supervision::tests::closed_owners_reject_cross_variant_names_and_projection_cardinalities ... ignored, requires verified native Linux launcher artifacts; does not launch any process
+test sandbox::supervision::tests::complete_filter_is_withheld_then_atomically_retried_without_prefix_writes ... ok
+test sandbox::supervision::tests::continuous_output_or_interruptions_cannot_starve_other_supervisor_checks ... ok
+test sandbox::supervision::tests::exact_complete_closed_identity_is_required ... ok
+test sandbox::supervision::tests::fixed_offline_filter_fits_atomic_pipe_limit_without_changing_policy ... ok
+test sandbox::supervision::tests::generated_unit_names_match_the_closed_supervisor_identity_contract ... ok
+test sandbox::supervision::tests::group_pin_requires_same_running_generation_on_both_sides_of_open ... ok
+test sandbox::supervision::tests::main_exit_and_terminal_group_path_do_not_establish_start_or_cleanup ... ok
+test sandbox::supervision::tests::malformed_or_short_filter_never_retries_or_closes_partial_policy ... ok
+test sandbox::supervision::tests::malformed_process_generation_and_group_are_refused ... ok
+test sandbox::supervision::tests::output_empty_exact_limit_and_no_eof_are_distinct ... ok
+test sandbox::supervision::tests::output_over_limit_refuses_instead_of_returning_truncated_success ... ok
+test sandbox::supervision::tests::owned_control_exit_pressure_and_expired_deadline_are_bounded_and_reaped ... ok
+test sandbox::supervision::tests::pipe_failure_is_sticky_and_later_eof_cannot_prove_complete_output ... ok
+test sandbox::supervision::tests::post_termination_drain_without_eof_is_bounded_and_never_complete ... ok
+test sandbox::supervision::tests::research_unit_observation_requires_the_optional_closed_owner_and_exact_nonce ... ok
+test sandbox::supervision::tests::separate_filter_pipe_withholds_bytes_and_eof_until_atomic_release ... ok
+test sandbox::supervision::tests::stopped_output_drains_to_eof_without_relaxing_limit_or_hashing_only_prefix ... ok
+test sandbox::tests::abi_probe_fixture_changes_only_the_syscall_alias_bit ... ok
+test sandbox::tests::borrowed_control_native_cancel_and_observer_failure_clean_up_and_reuse ... ignored, requires native systemd-user, cgroup2 and Bubblewrap; exact owned units only
+test sandbox::tests::bounded_scratch_cannot_escape_into_the_held_object_or_host_workspace ... ignored, requires a supported Linux systemd user session and Bubblewrap runtime
+test sandbox::tests::bounded_supervisor_native_read_cancel_timeout_pressure_and_reuse ... ignored, requires native systemd-user, cgroup2 and Bubblewrap; exact owned units only
+test sandbox::tests::compiled_offline_policy_binds_native_alias_refusal_to_v2_identity ... ok
+test sandbox::tests::denylist_alias_gap_is_retained_as_a_regression_without_running_a_syscall ... ok
+test sandbox::tests::development_read_worker_is_sealed_without_weakening_production_trust ... ok
+test sandbox::tests::directory_projection_never_contains_excluded_or_nested_workspace_content ... ok
+test sandbox::tests::directory_worker_receives_only_the_bounded_exclusion_safe_projection ... ignored, requires a supported Linux systemd user session and Bubblewrap runtime
+test sandbox::tests::file_projection_is_the_approved_preimage_and_cannot_be_modified ... ok
+test sandbox::tests::foreign_workspace_identity_never_starts_a_worker ... ignored, requires a supported Linux systemd user session and Bubblewrap runtime
+test sandbox::tests::fresh_worker_reads_only_the_canonical_workspace_file ... ignored, requires a supported Linux systemd user session and Bubblewrap runtime
+test sandbox::tests::guard_rejects_empty_or_overlong_program_before_serialization ... ok
+test sandbox::tests::guarded_native_abi_attempt_returns_eperm_and_lane_is_reusable ... ignored, native isolation fixture; exact owned units and sealed test bytes only
+test sandbox::tests::lifecycle_matrix_cleans_descendants_scratch_and_never_accepts_interrupted_output ... ignored, requires root-owned lifecycle fixtures, a systemd user session, and Bubblewrap
+test sandbox::tests::limits_and_manifests_fail_closed ... ok
+test sandbox::tests::native_start_limits_use_supported_running_job_property_without_budget_growth ... ok
+test sandbox::tests::other_compiler_architectures_are_unchanged_not_newly_qualified ... ok
+test sandbox::tests::passive_read_cancellation_preserves_legacy_flag_without_a_new_owner ... ok
+test sandbox::tests::passive_read_cancellation_rechecks_scope_and_refuses_observer_failures ... ok
+test sandbox::tests::policy_compiles_to_nonempty_classic_bpf ... ok
+test sandbox::tests::policy_denies_every_worker_socket_and_connection_syscall ... ok
+test sandbox::tests::read_only_tool_input_rejects_duplicate_mixed_stale_and_oversized_inputs ... ok
+test sandbox::tests::read_only_tool_input_seals_exact_deterministic_snapshot_and_request ... ok
+test sandbox::tests::stale_held_directory_fails_projection_before_any_worker_process_can_start ... ok
+test sandbox::tests::stale_held_file_fails_before_any_worker_process_can_start ... ok
+test sandbox::tests::tool_worker_cannot_connect_to_raw_inference_loopback ... ignored, requires a supported Linux systemd user session and Bubblewrap runtime
+test sandbox::tests::transient_service_terminates_an_unbounded_worker ... ignored, requires a supported Linux systemd user session and Bubblewrap runtime
+test sandbox::tests::unknown_cleanup_is_an_uncertain_effect_not_an_ordinary_read_failure ... ok
+test sandbox::tests::worker_cannot_resolve_sibling_parent_or_hidden_descriptor_content ... ignored, requires a supported Linux systemd user session and Bubblewrap runtime
+test sandbox::tests::worker_cannot_write_the_read_only_workspace ... ignored, requires a supported Linux systemd user session and Bubblewrap runtime
+test sandbox::tests::worker_has_no_ambient_host_paths_devices_or_processes ... ignored, requires a supported Linux systemd user session and Bubblewrap runtime
+test sandbox::tests::worker_kernel_status_confirms_no_new_privileges_and_seccomp ... ignored, requires a supported Linux systemd user session and Bubblewrap runtime
+test sandbox::tests::worker_output_is_drained_but_never_retained_past_the_bound ... ignored, requires a supported Linux systemd user session and Bubblewrap runtime
+test sandbox::tests::worker_receives_only_the_fixed_environment_and_no_network ... ignored, requires a supported Linux systemd user session and Bubblewrap runtime
+test secret_service::tests::invalid_operational_store_key_never_invokes_database_callback ... ok
+test secret_service::tests::key_debug_and_errors_never_disclose_candidate_content ... ok
+test secret_service::tests::keys_values_and_manifests_are_bounded_and_redacted ... ok
+test secret_service::tests::live_operational_key_provisioning_is_exact_non_overwriting_and_cleaned ... ignored, requires an unlocked live Secret Service and provisions then clears a synthetic operational key
+test secret_service::tests::live_service_probe_returns_only_a_content_free_receipt ... ignored, requires a live Secret Service session bus
+test secret_service::tests::live_service_round_trip_is_exact_and_cleanup_is_verified ... ignored, requires an unlocked live Secret Service and writes then clears a synthetic item
+test secret_service::tests::operational_store_key_decode_is_exact_and_bounded ... ok
+test secret_service::tests::secret_bytes_never_enter_process_arguments_or_environment ... FAILED
+test secret_service::tests::sensitive_output_is_bounded_without_a_content_digest ... ok
+test secret_service::tests::substituted_secret_client_digest_fails_before_service_contact ... FAILED
+test security_controls::tests::control_identities_are_nonzero_distinct_and_status_independent ... ok
+test security_controls::tests::live_required_control_preflight_verifies_without_workspace_authority ... ignored, requires supported Fedora controls and an unlocked Secret Service session
+test strict_local::tests::inspection_holds_and_revalidates_a_local_directory_identity ... ok
+test strict_local::tests::public_mode_is_rejected_and_a_mode_change_invalidates_a_held_root ... ok
+test strict_local::tests::strict_local_state_root_adding_a_sync_sentinel_invalidates_the_held_root ... ok
+test strict_local::tests::strict_local_state_root_filesystem_magic_matrix_is_closed_and_conservative ... ok
+test strict_local::tests::strict_local_state_root_kernel_denials_map_to_exact_platform_refusals ... ok
+test strict_local::tests::strict_local_state_root_provider_names_and_sentinels_are_rejected ... ok
+test strict_local::tests::strict_local_storage_fixture_classifies_every_filesystem_magic ... ok
+test strict_local::tests::strict_local_storage_fixture_rejects_provider_and_sentinel_roots ... ok
+test strict_local::tests::symlink_and_non_utf8_components_fail_closed ... ok
+test tests::adapter_depends_inward_on_contracts_and_kernel_mediation ... ok
+test tests::affinity_precedes_observation_and_post_resolution_mutation_is_detected ... ok
+test tests::automatic_strategy_matches_strict_openat2_probe_and_mount_ids_cannot_drift ... ok
+test tests::concurrent_symlink_replacement_never_changes_held_file_authority ... ok
+test tests::descriptor_walk_holds_the_original_file_and_exact_preimage_across_replacement ... ok
+test tests::display_links_are_encoded_redacted_and_rejected_as_workspace_authority ... ok
+test tests::git_blob_identity_is_filter_free_and_object_format_exact ... ok
+test tests::held_directory_observation_rejects_post_resolution_mutation ... ok
+test tests::held_directory_observes_names_and_rejects_file_read_semantics ... ok
+test tests::held_file_reads_exact_bytes_and_rejects_post_resolution_mutation ... ok
+test tests::held_workspace_root_observes_sorted_bounded_child_names ... ok
+test tests::held_workspace_root_survives_child_changes_and_retains_exact_identity ... ok
+test tests::isolated_bind_mount_swap_is_rejected_as_mount_changed ... ignored, requires an isolated user and mount namespace
+test tests::logical_fixture_has_equivalent_linux_policy_semantics ... ok
+test tests::snapshot_comparison_includes_content_change_indicators ... ok
+test tests::symbolic_link_observation_never_follows_the_target ... ok
+test tests::symlink_hard_link_special_kind_and_resource_limit_fail_closed ... ok
+test tests::verified_mount_id_fallback_is_explicit_and_missing_mount_id_fails_closed ... ok
+test write_root_inventory::tests::s_032_it01_orphans_copies_links_mismatches_and_limits_fail_closed ... ok
+test write_root_inventory::tests::s_032_it01_scans_every_declared_root_and_retention_transition ... ok
+test write_transaction::tests::one_file_exchange_commits_exact_bytes_and_preserves_mode ... ok
+test write_transaction::tests::s_029_rt01_process_stops_leave_only_reviewed_target_bytes ... ok
+test write_transaction::tests::s_029_rt01_write_crash_boundary_child ... ok
+test write_transaction::tests::s_029_st01_native_descriptor_races_preserve_competing_state ... ok
+test write_transaction::tests::s_029_st01_parent_rename_at_every_boundary_restores_authorized_object ... ok
+test write_transaction::tests::second_file_collision_restores_first_and_preserves_unrelated_state ... ok
+test write_transaction::tests::stale_preimage_is_denied_before_consumption_and_change ... ok
+test write_transaction::tests::symlink_hardlink_and_tight_limits_fail_without_effect ... ok
+test runtime_artifact_store::tests::story_22_2_native_crash_matrix_reconciles_every_artifact_boundary ... ok
+test ipc::tests::generated_launch_material_is_fresh_and_redacted ... ok
+test ipc::tests::every_peer_and_frame_mutation_fails_without_consuming_valid_request ... ok
+
+failures:
+
+---- command_runner::tests::manifest_binds_every_registered_executable_digest stdout ----
+
+thread 'command_runner::tests::manifest_binds_every_registered_executable_digest' (43656) panicked at platforms/linux/src/command_runner.rs:1221:10:
+verified manifest: LinuxCommandRunnerError { kind: InvalidManifest }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- command_runner::tests::task_ceilings_below_the_linux_minimum_fail_before_launch stdout ----
+
+thread 'command_runner::tests::task_ceilings_below_the_linux_minimum_fail_before_launch' (43659) panicked at platforms/linux/src/command_runner.rs:1144:14:
+manifest: LinuxCommandRunnerError { kind: InvalidManifest }
+
+---- local_commit::tests::native_candidate_tree_uses_only_owned_index_and_preserves_user_state stdout ----
+
+thread 'local_commit::tests::native_candidate_tree_uses_only_owned_index_and_preserves_user_state' (43811) panicked at platforms/linux/src/local_commit.rs:1137:60:
+git artifact: LinuxRepositoryError { kind: InvalidGitArtifact }
+
+---- local_commit::tests::native_signed_commit_verifies_exact_content_and_only_updates_task_branch stdout ----
+
+thread 'local_commit::tests::native_signed_commit_verifies_exact_content_and_only_updates_task_branch' (43817) panicked at platforms/linux/src/local_commit.rs:1125:10:
+inspect fixture signer: LinuxLocalCommitError { kind: ArtifactDenied }
+
+---- repository_safety::tests::compare_and_swap_updates_only_one_unchecked_branch_and_stale_old_fails stdout ----
+
+thread 'repository_safety::tests::compare_and_swap_updates_only_one_unchecked_branch_and_stale_old_fails' (43851) panicked at platforms/linux/src/repository_safety.rs:1826:58:
+git artifact: LinuxRepositoryError { kind: InvalidGitArtifact }
+
+---- repository_safety::tests::exact_worktree_lifecycle_preserves_active_checkout stdout ----
+
+thread 'repository_safety::tests::exact_worktree_lifecycle_preserves_active_checkout' (43875) panicked at platforms/linux/src/repository_safety.rs:1826:58:
+git artifact: LinuxRepositoryError { kind: InvalidGitArtifact }
+
+---- repository_safety::tests::concurrent_user_changes_survive_worktree_removal_and_cleanup stdout ----
+
+thread 'repository_safety::tests::concurrent_user_changes_survive_worktree_removal_and_cleanup' (43864) panicked at platforms/linux/src/repository_safety.rs:1826:58:
+git artifact: LinuxRepositoryError { kind: InvalidGitArtifact }
+
+---- repository_safety::tests::interrupted_worktree_create_preserves_every_user_artifact stdout ----
+
+thread 'repository_safety::tests::interrupted_worktree_create_preserves_every_user_artifact' (43904) panicked at platforms/linux/src/repository_safety.rs:1826:58:
+git artifact: LinuxRepositoryError { kind: InvalidGitArtifact }
+
+---- repository_safety::tests::interrupted_branch_fast_forward_preserves_every_user_artifact stdout ----
+
+thread 'repository_safety::tests::interrupted_branch_fast_forward_preserves_every_user_artifact' (43900) panicked at platforms/linux/src/repository_safety.rs:1826:58:
+git artifact: LinuxRepositoryError { kind: InvalidGitArtifact }
+
+---- repository_safety::tests::manifest_is_minimized_stable_and_detects_untracked_and_hazards stdout ----
+
+thread 'repository_safety::tests::manifest_is_minimized_stable_and_detects_untracked_and_hazards' (43949) panicked at platforms/linux/src/repository_safety.rs:1826:58:
+git artifact: LinuxRepositoryError { kind: InvalidGitArtifact }
+
+---- repository_safety::tests::network_clone_fetch_and_unmapped_tokens_never_launch_locally stdout ----
+
+thread 'repository_safety::tests::network_clone_fetch_and_unmapped_tokens_never_launch_locally' (43956) panicked at platforms/linux/src/repository_safety.rs:1826:58:
+git artifact: LinuxRepositoryError { kind: InvalidGitArtifact }
+
+---- repository_safety::tests::repository_inventory_cancellation_fails_before_git_launch stdout ----
+
+thread 'repository_safety::tests::repository_inventory_cancellation_fails_before_git_launch' (43961) panicked at platforms/linux/src/repository_safety.rs:1826:58:
+git artifact: LinuxRepositoryError { kind: InvalidGitArtifact }
+
+---- repository_safety::tests::repository_inventory_preserves_exact_git_states_and_nonregular_hints stdout ----
+
+thread 'repository_safety::tests::repository_inventory_preserves_exact_git_states_and_nonregular_hints' (43969) panicked at platforms/linux/src/repository_safety.rs:1826:58:
+git artifact: LinuxRepositoryError { kind: InvalidGitArtifact }
+
+---- repository_safety::tests::worktree_lifecycle_preserves_a_detached_active_checkout stdout ----
+
+thread 'repository_safety::tests::worktree_lifecycle_preserves_a_detached_active_checkout' (43987) panicked at platforms/linux/src/repository_safety.rs:1826:58:
+git artifact: LinuxRepositoryError { kind: InvalidGitArtifact }
+
+---- repository_safety::tests::worktree_removal_fails_closed_when_the_owned_directory_is_missing stdout ----
+
+thread 'repository_safety::tests::worktree_removal_fails_closed_when_the_owned_directory_is_missing' (44001) panicked at platforms/linux/src/repository_safety.rs:1826:58:
+git artifact: LinuxRepositoryError { kind: InvalidGitArtifact }
+
+---- repository_safety::tests::worktree_lifecycle_preserves_a_dirty_active_checkout stdout ----
+
+thread 'repository_safety::tests::worktree_lifecycle_preserves_a_dirty_active_checkout' (43997) panicked at platforms/linux/src/repository_safety.rs:1826:58:
+git artifact: LinuxRepositoryError { kind: InvalidGitArtifact }
+
+---- repository_safety::tests::worktree_removal_fails_closed_when_the_owned_directory_is_renamed stdout ----
+
+thread 'repository_safety::tests::worktree_removal_fails_closed_when_the_owned_directory_is_renamed' (44014) panicked at platforms/linux/src/repository_safety.rs:1826:58:
+git artifact: LinuxRepositoryError { kind: InvalidGitArtifact }
+
+---- secret_service::tests::secret_bytes_never_enter_process_arguments_or_environment stdout ----
+
+thread 'secret_service::tests::secret_bytes_never_enter_process_arguments_or_environment' (44090) panicked at platforms/linux/src/secret_service.rs:1093:72:
+manifest: LinuxSecretServiceError { kind: InvalidManifest }
+
+---- secret_service::tests::substituted_secret_client_digest_fails_before_service_contact stdout ----
+
+thread 'secret_service::tests::substituted_secret_client_digest_fails_before_service_contact' (44092) panicked at platforms/linux/src/secret_service.rs:1133:72:
+manifest: LinuxSecretServiceError { kind: InvalidManifest }
+
+
+failures:
+    command_runner::tests::manifest_binds_every_registered_executable_digest
+    command_runner::tests::task_ceilings_below_the_linux_minimum_fail_before_launch
+    local_commit::tests::native_candidate_tree_uses_only_owned_index_and_preserves_user_state
+    local_commit::tests::native_signed_commit_verifies_exact_content_and_only_updates_task_branch
+    repository_safety::tests::compare_and_swap_updates_only_one_unchecked_branch_and_stale_old_fails
+    repository_safety::tests::concurrent_user_changes_survive_worktree_removal_and_cleanup
+    repository_safety::tests::exact_worktree_lifecycle_preserves_active_checkout
+    repository_safety::tests::interrupted_branch_fast_forward_preserves_every_user_artifact
+    repository_safety::tests::interrupted_worktree_create_preserves_every_user_artifact
+    repository_safety::tests::manifest_is_minimized_stable_and_detects_untracked_and_hazards
+    repository_safety::tests::network_clone_fetch_and_unmapped_tokens_never_launch_locally
+    repository_safety::tests::repository_inventory_cancellation_fails_before_git_launch
+    repository_safety::tests::repository_inventory_preserves_exact_git_states_and_nonregular_hints
+    repository_safety::tests::worktree_lifecycle_preserves_a_detached_active_checkout
+    repository_safety::tests::worktree_lifecycle_preserves_a_dirty_active_checkout
+    repository_safety::tests::worktree_removal_fails_closed_when_the_owned_directory_is_missing
+    repository_safety::tests::worktree_removal_fails_closed_when_the_owned_directory_is_renamed
+    secret_service::tests::secret_bytes_never_enter_process_arguments_or_environment
+    secret_service::tests::substituted_secret_client_digest_fails_before_service_contact
+
+test result: FAILED. 186 passed; 19 failed; 51 ignored; 0 measured; 0 filtered out; finished in 15.93s
+
+error: test failed, to rerun pass `-p agentmage-platform-linux --lib`
+     Running tests/strict_local_classification.rs (target/debug/deps/strict_local_classification-a11ee7cc52e47314)
+
+running 1 test
+test s_010_ut01_classifies_network_storage_and_sync_fixtures ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests agentmage_platform_linux
+
+running 2 tests
+test platforms/linux/src/secret_service.rs - secret_service::LinuxSecretEffectDriver (line 699) - compile fail ... ok
+test platforms/linux/src/sandbox.rs - sandbox::LinuxSandboxEffectDriver (line 979) - compile fail ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+error: 1 target failed:
+    `-p agentmage-platform-linux --lib`

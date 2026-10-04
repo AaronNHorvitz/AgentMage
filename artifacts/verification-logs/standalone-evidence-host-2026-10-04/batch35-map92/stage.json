@@ -1,0 +1,79 @@
+{
+  "schema_version": 2,
+  "stage": "batch35-map92",
+  "source_revision": "aca9666264d07d567fd3ba9832ba8231a4cd8951",
+  "scope": "Batch 35 Story 9.2 security map renewal attempt after the parity renewal",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/story_9_2_security_evidence.py",
+      "--write",
+      "--source-revision",
+      "aca9666264d07d567fd3ba9832ba8231a4cd8951"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_9_2_security_evidence"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/story_9_2_security_evidence.py": "c2b72df10942d1fa278af3f0fffee6a47244f2a0c0f3b2512cc248b0c30e44c5",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_story_9_2_security_evidence.py": "a63656575c4fa7bf760e7816dc00c459831a8f764144760b64a4a71a9f115022"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/story_9_2_security_evidence.py",
+        "--write",
+        "--source-revision",
+        "aca9666264d07d567fd3ba9832ba8231a4cd8951"
+      ],
+      "exit_code": 0,
+      "seconds": 0.059,
+      "log": "01.log",
+      "log_sha256": "8ee37c0986482c5ca206668fb1a5d797360d9a9d1e459e1e777c910ba551aebe",
+      "private_log_sha256": "8ee37c0986482c5ca206668fb1a5d797360d9a9d1e459e1e777c910ba551aebe"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_9_2_security_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.156,
+      "log": "02.log",
+      "log_sha256": "87578f2fe4d6902dff24988aed54087da09e87393d7135be492b1066cbaba89d",
+      "private_log_sha256": "87578f2fe4d6902dff24988aed54087da09e87393d7135be492b1066cbaba89d"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.004,
+      "log": "03.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

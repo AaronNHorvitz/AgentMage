@@ -1,0 +1,106 @@
+{
+  "schema_version": 2,
+  "stage": "batch35-observation-2",
+  "source_revision": "a5b8ed498df35af44b51af43ba2cbbb3c6411e90",
+  "scope": "Batch 35: actual binaries, catalog host operations and the standalone evidence workflow (observation rerun with corrected host check)",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux",
+      "--features",
+      "public-research-worker",
+      "--bin",
+      "agentmage-public-research-worker"
+    ],
+    [
+      "python3",
+      "<state>/batch35-observation-2.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "101a0961d9b8e89e91221d9c4d96f6417e0011b7c89e1bdc90849335ed65afc2",
+      "private_sha256": "101a0961d9b8e89e91221d9c4d96f6417e0011b7c89e1bdc90849335ed65afc2"
+    },
+    {
+      "name": "batch35-observation-2.py",
+      "sha256": "e3528e351180a5a974306cc791adfadc6aca61522eeddf61a4f8077f2c63aceb",
+      "private_sha256": "cf1c17aa2648dc9cb00a2120398ef5e9e1a28657d4bf8195494777f1d5c10076"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 0.066,
+      "log": "01.log",
+      "log_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
+      "private_log_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux",
+        "--features",
+        "public-research-worker",
+        "--bin",
+        "agentmage-public-research-worker"
+      ],
+      "exit_code": 0,
+      "seconds": 0.066,
+      "log": "02.log",
+      "log_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
+      "private_log_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "<state>/batch35-observation-2.py"
+      ],
+      "exit_code": 0,
+      "seconds": 270.581,
+      "log": "03.log",
+      "log_sha256": "a866067b6ce478f4173e9f5f41af96ce47c9b14df7cae8b4e9a4831ad91d280e",
+      "private_log_sha256": "a866067b6ce478f4173e9f5f41af96ce47c9b14df7cae8b4e9a4831ad91d280e"
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "schema_version": 2,
+  "stage": "batch35-gate",
+  "source_revision": "9eebfd4835212f3cec1fd5e1bf7cae2f337e1270",
+  "scope": "Batch 35 Story 11.2 gate report on the advanced routine pin",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/story_11_2_gate.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_11_2_gate"
+    ],
+    [
+      "python3",
+      "scripts/story_11_2_gate.py"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/story_11_2_gate.py": "9031f6e43359b799f0b8f61ce95f1a02916ee1cd0c5b61267538dcbfd0ad86e6",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_story_11_2_gate.py": "2295e32739e644c00f65f746c88214e7399e3f62208c89bbe2e4bdb9269a13bc"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/story_11_2_gate.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.229,
+      "log": "01.log",
+      "log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195",
+      "private_log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_11_2_gate"
+      ],
+      "exit_code": 0,
+      "seconds": 0.319,
+      "log": "02.log",
+      "log_sha256": "9bd4153f903a1b5634858a282bc1dbf19a51367e03bedfd365c5645e8fbf05b2",
+      "private_log_sha256": "9bd4153f903a1b5634858a282bc1dbf19a51367e03bedfd365c5645e8fbf05b2"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/story_11_2_gate.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.08,
+      "log": "03.log",
+      "log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195",
+      "private_log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.076,
+      "log": "04.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.009,
+      "log": "05.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

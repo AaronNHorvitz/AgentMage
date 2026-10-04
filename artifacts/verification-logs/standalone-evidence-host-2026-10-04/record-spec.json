@@ -1,0 +1,494 @@
+{
+ "record_type": "agentmage-standalone-evidence-host-verification",
+ "date": "2026-10-04",
+ "base_commit": "06a68260940df6fc25fd02e7d32ebff3bcfa1ac7",
+ "head_commit": "a5b8ed498df35af44b51af43ba2cbbb3c6411e90",
+ "source_commit": "586576049749f7f979acf59bc67c99e2d4c3925a",
+ "retained_logs": "artifacts/verification-logs/standalone-evidence-host-2026-10-04",
+ "stages": [
+  "batch35-source",
+  "batch35-source-2",
+  "batch35-core",
+  "batch35-inference",
+  "batch35-rebind",
+  "batch35-map92",
+  "batch35-gate",
+  "batch35-blocked-causes",
+  "batch35-extended-rest",
+  "batch35-observation",
+  "batch35-observation-2"
+ ],
+ "inventory": "artifacts/verification-logs/standalone-evidence-host-2026-10-04/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch35-source-2/02.log",
+  "engine": "batch35-source-2/03.log",
+  "repository_map": "batch35-source-2/04.log",
+  "inference": "batch35-source-2/05.log",
+  "knowledge": "batch35-source-2/06.log",
+  "linux": "batch35-source-2/07.log",
+  "linux_research_feature_build": "batch35-source-2/08.log",
+  "linux_research_feature_tests": "batch35-source-2/09.log",
+  "linux_research_worker_binary_tests": "batch35-source-2/10.log",
+  "host": "batch35-source-2/11.log",
+  "host_standalone_processes": "batch35-source-2/12.log",
+  "host_standalone_and_wire": "batch35-source-2/13.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0150-standalone-evidence-development-host.md"
+  ],
+  "work_selection": "docs/verification/work-selection-2026-10-04.md",
+  "source_commits": [
+   {
+    "commit": "cd5bd6cee9e5768ff5f1627b84340706f185c885",
+    "scope": "Decision 0150: the standalone-evidence-development-v1 activation and host operation; Rust-owned folder admission (canonical private folder beneath the disposable root, opened without following links, fixed depth, entry and byte limits, accounted entries, admission digest); one EphemeralReadOnly run per question with only the artifact tools over admitted sources, each a job in a development operational store; the standalone-evidence-fixture-v1 term-match fixture and the citation and exact-quote verifier; the IPC folder operation (wire 18) and runtime producer contract version 4; the standalone bridge and agentmage-standalone with its --development-stdio message channel; unit and actual-process tests; the work selection record, Decision 0150, TASKS.md notes and the LOCAL-TESTING section"
+   },
+   {
+    "commit": "5f955cad2deac54f7a2fd6eb1b9300bf5079833e",
+    "scope": "a folder entry name with a control character is rejected (folder.entry.name-invalid) and shown escaped, so a name cannot add a line to the folder inventory; a folder admitted after the activation's roots changed is refused as standalone.folder.activation-changed; both tested"
+   },
+   {
+    "commit": "586576049749f7f979acf59bc67c99e2d4c3925a",
+    "scope": "the folder refusal test also selects a folder through a relative link in an earlier path component, which only RESOLVE_NO_SYMLINKS refuses, and through an absolute one (the surviving mutation M2)"
+   }
+  ],
+  "review_resolved": "none: the previous review, of 06a68260 (batch 34), passed with no findings; this batch is new Story 76.2 work selected under Decision 0088",
+  "mutation_checks": "run with private tooling that applies one exact replacement, runs the host's filtered library tests and restores the file; the specifications, results and runners are attached to the batch35-source and batch35-source-2 stages. Nine single Rust mutations on the source tree of 5f955cad: eight were caught; M2, which drops RESOLVE_NO_SYMLINKS from the folder open, survived, because O_NOFOLLOW already refuses a link as the folder itself. A test through an absolute link in an earlier component did not catch it either (RESOLVE_BENEATH refuses absolute links); a test through a relative link in an earlier component did. With both tests, committed as 58657604, all nine were caught: an unchecked quote, links followed, folder privacy unchecked, a boundary that allows any tool, cards for an unverified run, a repeated request sequence, re-admission while a run is pinned, a statementless answer admitted and an admission digest that is not bound. The files were verified restored afterwards",
+  "failure_comparison": "linux 189 passed, 19 failed, 51 ignored, failure names identical to batch 34; with the public-research-worker feature the Linux crate's tests build, its research tests pass and the worker binary's tests pass; host 532 passed, 53 failed, 11 ignored, failure names identical to batch 34 (24 more passing tests: 17 standalone unit tests, 5 actual-process tests, one wire test and one contract test); the engine passes 1,553 tests with 8 ignored",
+  "retained_failures": [
+   {
+    "stage": "batch35-source",
+    "indexes": [
+     7,
+     11
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, with failure names identical to batch 34"
+   },
+   {
+    "stage": "batch35-source-2",
+    "indexes": [
+     7,
+     11
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, with failure names identical to batch 34"
+   },
+   {
+    "stage": "batch35-inference",
+    "indexes": [
+     5
+    ],
+    "cause": "the Story 9.1 security map producer refused: its package lifecycle, Fedora control and native Ubuntu closures need the native campaigns; the map stays a blocked refresh"
+   },
+   {
+    "stage": "batch35-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   },
+   {
+    "stage": "batch35-observation",
+    "indexes": [
+     3
+    ],
+    "cause": "the withdrawn observation script failed its own host check (withdrawn_stages)"
+   }
+  ],
+  "withdrawn_stages": [
+   {
+    "stage": "batch35-source",
+    "source_revision": "5f955cad2deac54f7a2fd6eb1b9300bf5079833e",
+    "superseded_by": "batch35-source-2",
+    "reason": "every command gave its expected result (only the known native failures at 7 and 11), but the mutation check of its source tree found M2 surviving; a test was added as 58657604 and the same commands ran again as batch35-source-2, the batch's check stage"
+   },
+   {
+    "stage": "batch35-observation",
+    "source_revision": "a5b8ed498df35af44b51af43ba2cbbb3c6411e90",
+    "superseded_by": "batch35-observation-2",
+    "reason": "the observation script found the standalone host by its socket, which the host removes on a clean shutdown, so its check that no host was left running failed on an empty list; the corrected script scans process command lines and also checks that no socket is left. Nothing was committed from it"
+   }
+  ],
+  "interrupted_stages": [],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch35-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the native-prerequisite host failures (batch35-source-2/11.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch35-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch35-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch35-blocked-causes/03.log) and the documentation gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+    "stale_since": "before batch 12 (four other inputs)",
+    "blocker": "its producer runs the full host suite (the native-prerequisite failures, batch35-source-2/11.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the product gate and the documentation gate; its check mode still validates it at its own revision (batch35-extended-rest/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+    "stale_since": "before batch 12",
+    "blocker": "its producer runs the full host suite with all features; its check mode still validates it at its own revision (batch35-extended-rest/02.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
+    "stale_since": "before batch 18 (shells/host/src/headless.rs)",
+    "blocker": "already stale at the review base for an input this batch does not change; historical"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-9/story-9.1/security-evidence-map.json",
+    "stale_since": "before batch 35 (21 of 44 bound inputs stale at the base)",
+    "blocker": "its producer refuses package lifecycle, Fedora control and native Ubuntu closures that need the native campaigns (batch35-inference/05.log); now also bound to the renewed platform parity report"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-host",
+   "agentmage-platform-linux"
+  ],
+  "cascade": "the one SBOM write (agentmage-host and agentmage-platform-linux) staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index, raw contract boundary log, report and security map, the Story 3.1 component inventory, configuration startup report and security map and the Sprint 27 to 34 knowledge boundary reviews (batch35-core); the Linux platform and bootstrap changes staled the Story 9.1 Linux native inference boundary report, renewed with the platform parity report, which was already stale at the base (batch35-inference); the Story 11.1 security map and the Sprint 79 and Sprint 108 reports, and through the Story 11.1 map the Story 11.2 storage security, frozen-scope, AC1 and AC3 reports and the Story 12.1 map (batch35-rebind); the Story 9.2 security map binds the renewed parity report (batch35-map92); the Story 11.2 gate report followed its pin (batch35-gate). The AC2 report binds nothing this batch changed and was not renewed. The engine, the operational store, the CLI and the coding host's CLI runtime did not change, so the storage migration compatibility report, the Story 22.1 canary, the Story 13.4 dispatch preflight report, the Muse codec chain, the Sprint 13 report and the v0.4 coding pack manifest were not stale; their check modes pass at the gate commit (batch35-extended-rest)",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "dcd1518716ca7c37dda80acd4f0977d428eb4d94",
+    "to": "472e66ef4633dec8e9434ca52ecb54a953e60a1b",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 35 rebind stage; only the bound digest of the renewed Story 11.1 security map changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 35 rebind stage; only the bound digest of the renewed storage security report changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 35 rebind stage; only the bound digest of the renewed storage security report changed"
+     }
+    ]
+   }
+  ],
+  "newly_stale_disposition": "the Story 9.1 security map stays a blocked refresh (blocked_refreshes); the rest are historical records: retained stage records of batches 29 to 31, 33 and 34 that bind the runtime producer contract script and test or the Story 11.2 gate script as they were at their own revisions, and eleven dated verification records of 2026-09-27 and 2026-09-28 that bind the coding development activation as it was at their revisions",
+  "runtime_campaign": "not run in this batch: the Story 23.4 runtime evidence, evidence index and security map and the Sprint 50 runtime contract review bind none of this batch's changed inputs, and each producer's check mode passes at a5b8ed49 (batch35-extended-rest/03.log to 06.log)",
+  "cli_observation": {
+   "source_commit": "a5b8ed498df35af44b51af43ba2cbbb3c6411e90",
+   "binaries_sha256": {
+    "agentmage": "84b4ea19355e7937f83a3f76d83d6a2d9d1a8ecc3675dda2e16f987309406a03",
+    "agentmage-host": "1ed4837a7ee39d1ca8ff37436497d23ec7ad1ec731d2dcf18f2289f543846a74",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf",
+    "agentmage-standalone": "60ba56283f8e70d239fac638cccf63887a0a510720cb48a079794f977ad0d6d9"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "catalog_host_operations": [
+    {
+     "name": "doc-pack-list-empty",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-import-other-license",
+     "operation": "doc-pack",
+     "exit_code": 4
+    },
+    {
+     "name": "doc-pack-search",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "doc-pack-inspect",
+     "operation": "doc-pack",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-remember-credential",
+     "operation": "memory",
+     "exit_code": 4
+    },
+    {
+     "name": "memory-list",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-revoke",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "memory-delete",
+     "operation": "memory",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-signer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-trust-issuer",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-install",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-1",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "extension-revocations-renamed",
+     "operation": "extension",
+     "exit_code": 3
+    },
+    {
+     "name": "extension-list",
+     "operation": "extension",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-grant",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-same-route",
+     "operation": "route-grant",
+     "exit_code": 4
+    },
+    {
+     "name": "route-grant-list",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-revoke",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "route-grant-revoke-again",
+     "operation": "route-grant",
+     "exit_code": 4
+    },
+    {
+     "name": "route-grant-list-all",
+     "operation": "route-grant",
+     "exit_code": 0
+    },
+    {
+     "name": "ended-run-read",
+     "operation": "ended-run",
+     "exit_code": 0
+    }
+   ],
+   "catalog_host_wire_refusals_seen": false,
+   "catalog_workspace_preserved": true,
+   "route_grants": {
+    "runs": [
+     {
+      "name": "route-grant-declined",
+      "exit_code": 6
+     },
+     {
+      "name": "route-grant-grant",
+      "exit_code": 0
+     },
+     {
+      "name": "route-grant-same-route",
+      "exit_code": 4
+     },
+     {
+      "name": "route-grant-list",
+      "exit_code": 0
+     },
+     {
+      "name": "route-grant-revoke",
+      "exit_code": 0
+     },
+     {
+      "name": "route-grant-revoke-again",
+      "exit_code": 4
+     },
+     {
+      "name": "route-grant-list-all",
+      "exit_code": 0
+     }
+    ],
+    "declined_sent_nothing": true,
+    "remote_route_offered": false
+   },
+   "recipe_shown_before_launch": {
+    "exit_code": 5,
+    "then_refused_at": "linux.repository.git_artifact.invalid",
+    "preserved": true
+   },
+   "dirty": {
+    "exit_code": 1,
+    "preserved": true,
+    "log_directory_created": false
+   },
+   "malformed_frame_injected": false,
+   "research_worker": {
+    "binary": {
+     "sha256": "6255bc24924a9c351dbb7ba6ec3ebcc4366dcd1fb034905a4478b2305d17cfac",
+     "bytes": 158345560
+    },
+    "runs": [
+     {
+      "name": "worker-ambient-environment",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     },
+     {
+      "name": "worker-extra-argument",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     },
+     {
+      "name": "worker-admitted-environment",
+      "exit_code": 5,
+      "stdout_bytes": 0,
+      "report": "research.worker.environment-denied",
+      "closed_report": true
+     }
+    ],
+    "sandboxed": false,
+    "network_attempted": false
+   },
+   "standalone_evidence": {
+    "session": {
+     "exit_code": 0,
+     "admission": {
+      "accepted": 2,
+      "skipped": 1,
+      "rejected": 0
+     },
+     "answers": {
+      "2": {
+       "state": "verified",
+       "no_matching_text": false,
+       "cards": [
+        [
+         "project.md",
+         3,
+         3
+        ]
+       ]
+      },
+      "3": {
+       "state": "verified",
+       "no_matching_text": false,
+       "cards": [
+        [
+         "notes/operations.txt",
+         2,
+         2
+        ]
+       ]
+      },
+      "4": {
+       "state": "unverified",
+       "no_matching_text": true,
+       "cards": []
+      }
+     },
+     "hosts_left_running": [],
+     "sockets_left": []
+    },
+    "cancel": {
+     "exit_code": 0,
+     "answer_state": "cancelled",
+     "cancellation_events": [
+      "cancellation_requested",
+      "cancellation_observed"
+     ],
+     "fixture_step_delay_ms": 2000,
+     "hosts_left_running": [],
+     "sockets_left": []
+    },
+    "unavailable": {
+     "exit_code": 0,
+     "state": {
+      "state": "unavailable",
+      "code": "linux.development.launch-envelope.failed"
+     },
+     "host_stderr_code": "standalone.evidence.root-denied"
+    },
+    "windowless": {
+     "exit_code": 3,
+     "code": "standalone.presentation.unavailable"
+    },
+    "folders_unchanged": true,
+    "model": "standalone-evidence-fixture-v1 (term match, not a language model)"
+   },
+   "binaries_identical_to_batch34": false,
+   "real_model_run": false,
+   "qualification": "actual-binary-catalog-host-operations-and-standalone-evidence-workflow-under-exact-wire-decoding-plus-native-prerequisite-refusal"
+  },
+  "not_run": [
+   "the standalone window, keyboard and screen-reader presentation and packaged local assets: blocked on the webview dependency (Sub-task 76.2.1.1, BLOCKED_EXTERNAL)",
+   "durable standalone sessions, conversation history and reconnect to a running run",
+   "any language model answering in the standalone workflow: the only selectable profile is the deterministic term-match fixture",
+   "the native-only Linux boundary tests and the Story 9.1 native Fedora and Ubuntu campaigns",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [],
+   "release_claim": "none",
+   "evidence_labels": [
+    "component",
+    "executable-scripted"
+   ],
+   "independent_review_of_this_batch": "requested after this record; open"
+  }
+ }
+}

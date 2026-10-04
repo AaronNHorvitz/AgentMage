@@ -1,0 +1,145 @@
+{
+  "schema_version": 2,
+  "stage": "batch35-inference",
+  "source_revision": "1d59bed3e251528c4d461eb24f4d06caf5d9c14e",
+  "scope": "Batch 35 Story 9.1 renewal attempt: the Linux native inference boundary and its dependents",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/linux_inference_boundary_evidence.py",
+      "--write",
+      "--source-revision",
+      "1d59bed3e251528c4d461eb24f4d06caf5d9c14e"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_linux_inference_boundary_evidence"
+    ],
+    [
+      "python3",
+      "scripts/linux_platform_parity_evidence.py",
+      "--write",
+      "--source-revision",
+      "1d59bed3e251528c4d461eb24f4d06caf5d9c14e"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_linux_platform_parity_evidence"
+    ],
+    [
+      "python3",
+      "scripts/story_9_1_security_evidence.py",
+      "--write",
+      "--source-revision",
+      "1d59bed3e251528c4d461eb24f4d06caf5d9c14e"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_9_1_security_evidence"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/linux_inference_boundary_evidence.py": "43b1051641451828ff2602d75c022313e42389e919456f1e22922048e4ecd8a1",
+    "scripts/linux_platform_parity_evidence.py": "c26df3c4e3fe3cf679d027c97ca25945f6b472c4a7c947641b6a2567e24c53d5",
+    "scripts/story_9_1_security_evidence.py": "f71ab8460b43def29a4702097101a5ab6c31040ffaed476e2f34f5cb608c3ca9",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_linux_inference_boundary_evidence.py": "9e94dc583e70fd73cabc79f3eec2a64ff911e28663ce349700e1dc94b57fab3c",
+    "tests/test_linux_platform_parity_evidence.py": "ac0bbcca1169767f33eb6339c404916eb65e211bf048be573ef29add3f53d4ae",
+    "tests/test_story_9_1_security_evidence.py": "12edff8f8e033f12b0d669c47df0f2916b4979bb88fee5834400492da0a654f3"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/linux_inference_boundary_evidence.py",
+        "--write",
+        "--source-revision",
+        "1d59bed3e251528c4d461eb24f4d06caf5d9c14e"
+      ],
+      "exit_code": 0,
+      "seconds": 252.72,
+      "log": "01.log",
+      "log_sha256": "b124541b0b98b800dc159af7a97f7f6484f0e6d19e5fe0ac8ddbd88a9350aa62",
+      "private_log_sha256": "b124541b0b98b800dc159af7a97f7f6484f0e6d19e5fe0ac8ddbd88a9350aa62"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_linux_inference_boundary_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.068,
+      "log": "02.log",
+      "log_sha256": "6273232de4d3ef7acd4ecafa5c86beeeb974f56586b21089a2990b3f72facbe6",
+      "private_log_sha256": "6273232de4d3ef7acd4ecafa5c86beeeb974f56586b21089a2990b3f72facbe6"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/linux_platform_parity_evidence.py",
+        "--write",
+        "--source-revision",
+        "1d59bed3e251528c4d461eb24f4d06caf5d9c14e"
+      ],
+      "exit_code": 0,
+      "seconds": 0.066,
+      "log": "03.log",
+      "log_sha256": "1e552c991fc4a6a57f9b77df732b808578fb6992b53a90da8872acad07f3d0e8",
+      "private_log_sha256": "1e552c991fc4a6a57f9b77df732b808578fb6992b53a90da8872acad07f3d0e8"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_linux_platform_parity_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.102,
+      "log": "04.log",
+      "log_sha256": "ff968f87efc3b09beddedfe406ea1fc646b8dc68e02bac73f3d6e40322a32574",
+      "private_log_sha256": "ff968f87efc3b09beddedfe406ea1fc646b8dc68e02bac73f3d6e40322a32574"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "python3",
+        "scripts/story_9_1_security_evidence.py",
+        "--write",
+        "--source-revision",
+        "1d59bed3e251528c4d461eb24f4d06caf5d9c14e"
+      ],
+      "exit_code": 1,
+      "seconds": 0.055,
+      "log": "05.log",
+      "log_sha256": "d8aab6a6b5a044cc004cc38c2c002d2b0315b5c060b8289c8ba199f8f03f2830",
+      "private_log_sha256": "d8aab6a6b5a044cc004cc38c2c002d2b0315b5c060b8289c8ba199f8f03f2830"
+    }
+  ]
+}

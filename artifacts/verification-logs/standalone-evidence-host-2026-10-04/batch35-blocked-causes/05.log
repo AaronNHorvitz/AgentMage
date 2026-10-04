@@ -1,0 +1,59 @@
+
+> agentmage-planning-docs@0.0.0 requirements:current-check
+> python3 scripts/requirement_registry.py --check && npm run additions:check && npm run planning-scope:check && npm run architecture:check && npm run vscode-api-surfaces:check && npm run runtime-ownership:check && npm run modules:check && npm run dependencies:check && npm run effect-boundary:check && npm run build-contract:check && npm run dependency-classes:check && npm run product-ci:check && npm run linux-vm-regression:check && npm run linux-vm-regression:phases:check && npm run linux-vm-regression:matrix:check && npm run requirements:coverage && npm run phase10:check && npm run evidence:sprint17:check && npm run evidence:story17.1-security:check
+
+
+> agentmage-planning-docs@0.0.0 additions:check
+> python3 scripts/additions_only.py
+
+Protected 294 requirement and 1407 checklist baseline entries.
+
+> agentmage-planning-docs@0.0.0 planning-scope:check
+> python3 scripts/planning_scope.py --check
+
+Planning scope validation passed: Decision 0027 baseline 241/30; current accepted chain 294/53 under Decision 0053; Decisions 0042-0045 add 4 foundational runtime epics, 53 stable requirements, and 0 release epics or sprints.
+
+> agentmage-planning-docs@0.0.0 architecture:check
+> python3 scripts/architecture_decision.py
+
+architecture decision validation passed
+
+> agentmage-planning-docs@0.0.0 vscode-api-surfaces:check
+> python3 scripts/vscode_api_surfaces.py && python3 -m unittest tests.test_vscode_api_surfaces
+
+vscode api surface validation passed
+.............
+----------------------------------------------------------------------
+Ran 13 tests in 0.001s
+
+OK
+
+> agentmage-planning-docs@0.0.0 runtime-ownership:check
+> python3 scripts/runtime_ownership.py && python3 -m unittest tests.test_runtime_ownership
+
+runtime ownership validation passed
+...............
+----------------------------------------------------------------------
+Ran 15 tests in 0.003s
+
+OK
+
+> agentmage-planning-docs@0.0.0 modules:check
+> python3 scripts/module_inventory.py
+
+module inventory validation passed
+
+> agentmage-planning-docs@0.0.0 dependencies:check
+> python3 scripts/dependency_rules.py
+
+dependency rule validation passed
+
+> agentmage-planning-docs@0.0.0 effect-boundary:check
+> python3 scripts/effect_boundary.py
+
+Structural effect mediation boundary validated.
+
+> agentmage-planning-docs@0.0.0 build-contract:check
+> python3 scripts/build_contract.py
+
+build contract validation failed: platforms/linux Cargo dependencies do not match the accepted graph
