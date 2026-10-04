@@ -67,9 +67,9 @@
       "sha256": "fb537c04df0d687af10e36eea98834910f8760877858266bb1f54cb1ca28d540"
     },
     {
-      "bytes": 43784,
+      "bytes": 43968,
       "path": "platforms/linux/src/platform.rs",
-      "sha256": "aa97c6861b44c35a2d8cc15a3d5d4310d07a070da99b153c989968ad5b317cb9"
+      "sha256": "0bf6202f7eb12ef884db38c81abcffce814bb0c0e103dc02315de451c890b6d7"
     },
     {
       "bytes": 44067,
@@ -149,7 +149,7 @@
     {
       "bytes": 17136,
       "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
-      "sha256": "da958ab5db8a9bd6893515b4fcde178dc72eb16dd9125fdbc57ad2c71208f3df"
+      "sha256": "64a4fc288f3000584758cb22cf61cb4532d91cd196d6b48c328c0629403d9932"
     },
     {
       "bytes": 51,
@@ -471,7 +471,7 @@
   "product_requirement_completion_claim": "none",
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "0d5c054c657111c7a31a287b7d3afe609a3302e6",
+  "source_revision": "f1d512efdf6f0c046ff832965a057d87738e6a58",
   "status": "pass-story-security-mapping-with-open-product-controls",
   "summary": {
     "demonstrated_story_scope_count": 7,
