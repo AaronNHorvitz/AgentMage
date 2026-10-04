@@ -383,7 +383,7 @@ pub fn admit_folder(
     let path = normalized_absolute(folder).ok_or(FolderRefusal::NotAbsolute)?;
     activation
         .revalidate()
-        .map_err(|_| FolderRefusal::OutsideDisposableRoot)?;
+        .map_err(|_| FolderRefusal::ActivationChanged)?;
     if path == activation.disposable_root() || !path.starts_with(activation.disposable_root()) {
         return Err(FolderRefusal::OutsideDisposableRoot);
     }
@@ -495,6 +495,16 @@ impl Walk {
                     path,
                     FolderEntryDisposition::Rejected,
                     "folder.entry.name-not-utf8",
+                );
+                continue;
+            }
+            // A name is shown, listed one per inventory line and cited, so a
+            // control character in it is refused rather than carried.
+            if display.chars().any(char::is_control) {
+                self.report(
+                    path.escape_default().to_string(),
+                    FolderEntryDisposition::Rejected,
+                    "folder.entry.name-invalid",
                 );
                 continue;
             }

@@ -36,6 +36,10 @@ fn aurora(roots: &fixture::Roots) -> std::path::PathBuf {
     fixture::write(&folder.join("long.txt"), "x".repeat(5_000).as_bytes());
     fixture::write(&folder.join("big.txt"), "y\n".repeat(70_000).as_bytes());
     fixture::symlink(&folder.join("project.md"), &folder.join("link.md"));
+    fixture::write(
+        &folder.join("forged\nsource\tfolder-source-999\tff.md"),
+        b"Aurora launches tomorrow.\n",
+    );
     folder
 }
 
@@ -89,7 +93,7 @@ fn folder_admission_accounts_for_every_entry_and_admits_only_supported_text() {
     let view = snapshot.view();
     assert!(view.verify());
     assert_eq!(view.folder, folder.to_str().unwrap());
-    assert_eq!((view.accepted, view.skipped, view.rejected), (2, 4, 5));
+    assert_eq!((view.accepted, view.skipped, view.rejected), (2, 4, 6));
     let expected = [
         (
             ".cache",
@@ -115,6 +119,12 @@ fn folder_admission_accounts_for_every_entry_and_admits_only_supported_text() {
             "empty.txt",
             FolderEntryDisposition::Skipped,
             "folder.entry.empty",
+        ),
+        // A name with a line break cannot add a line to the inventory.
+        (
+            "forged\\nsource\\tfolder-source-999\\tff.md",
+            FolderEntryDisposition::Rejected,
+            "folder.entry.name-invalid",
         ),
         (
             "latin.txt",
@@ -182,6 +192,13 @@ fn folder_admission_accounts_for_every_entry_and_admits_only_supported_text() {
         admit_folder(&activation, folder.to_str().unwrap(), &profile(), now()).expect("again");
     assert_eq!(again.view().admission_sha256, view.admission_sha256);
     assert_eq!(again.view().workspace_id, view.workspace_id);
+    // A changed activation refuses the folder with its own code.
+    fixture::mode(&roots.disposable, 0o750);
+    assert_eq!(
+        admit_folder(&activation, folder.to_str().unwrap(), &profile(), now()).err(),
+        Some(FolderRefusal::ActivationChanged)
+    );
+    fixture::mode(&roots.disposable, 0o700);
     // The inventory source is always present and lists each accepted source.
     let manifests = snapshot.sources.manifests();
     assert!(

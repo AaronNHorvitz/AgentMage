@@ -742,8 +742,9 @@ progress ends, then the bridge stops the host and exits.
 The folder must be strictly beneath the disposable root, owned by you and not writable by
 group or others. It is read without following links, and at most 200 entries, 8 levels, 128 KiB
 per file and 1 MiB in total are read. Each entry is accepted, skipped (hidden, unsupported
-format, empty) or rejected (link, special file, too large, not UTF-8, control characters,
-a line over 4096 bytes), with a stable reason. Only `.txt`, `.md` and `.markdown` files
+format, empty) or rejected (link, special file, a name that is not UTF-8 or has a control
+character, too large, not UTF-8, control characters, a line over 4096 bytes), with a stable
+reason. Only `.txt`, `.md` and `.markdown` files
 are read. Asking again uses the same snapshot. Admitting the folder again takes a new
 snapshot, which the host refuses (`standalone.folder.busy`) while a question runs.
 

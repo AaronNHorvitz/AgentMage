@@ -74,6 +74,8 @@ pub enum FolderRefusal {
     Busy,
     /// The host could not complete the read.
     Failed,
+    /// The development activation's roots changed since the host started.
+    ActivationChanged,
 }
 
 impl FolderRefusal {
@@ -91,6 +93,7 @@ impl FolderRefusal {
             Self::Changed => "standalone.folder.changed",
             Self::Busy => "standalone.folder.busy",
             Self::Failed => "standalone.folder.failed",
+            Self::ActivationChanged => "standalone.folder.activation-changed",
         }
     }
 }
