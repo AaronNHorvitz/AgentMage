@@ -101,26 +101,26 @@
   "input_evidence": [
     {
       "artifact_id": "clean-linux-source-build",
-      "evidence_revision": "36e2d4d29f88d31855013fa9cfddc3fae4d55b63",
+      "evidence_revision": "040898df4a65ee9d88e194b67f18f59eb246d8f5",
       "id": "clean-build",
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
-      "sha256": "631a332e980b2f595f1ef9d703b412500d904d39d06ffbbdf26d1fa7ec64cfbd",
+      "sha256": "bfbed835c85e2e621b9c7ce4532311c622ccc10af6f62faf3f210022c4c17bb7",
       "status": "pass-linux"
     },
     {
       "artifact_id": "shared-logical-path-platform-conformance",
-      "evidence_revision": "8a2a0430e39bbfb4657c260210ecdca518c7660c",
+      "evidence_revision": "f0c5ba524372ca8537640f5fd18aeaa0050cb783",
       "id": "path-conformance",
       "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
-      "sha256": "f922d89ae24715a19096b43b206e323646e90edb93b54c405d1477b4ce0ce583",
+      "sha256": "8a569e7f795f23a89c0e21f96c09de3ab4acd5277a7e9d07436423f5dc25ea45",
       "status": "pass-all-available-non-macos-platforms"
     },
     {
       "artifact_id": "platform-adapter-contract-and-manifest-evidence",
-      "evidence_revision": "82c190db8b504330c98ccb8e2d315b98e4307a54",
+      "evidence_revision": "be2f1a57d37d601f5beef0fdea044cd8cfa0692f",
       "id": "platform-contract",
       "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
-      "sha256": "72076838df07106dcc92ded34229b8d0bc2a4df25d8016c664640eeb5a6adc38",
+      "sha256": "a166f04b4d9e4709741e418f67000191c1af2aca98617b74361e102ad97182ad",
       "status": "pass-all-available-non-macos-contract-scope"
     },
     {
@@ -157,10 +157,10 @@
     },
     {
       "artifact_id": "linux-native-inference-package-boundary",
-      "evidence_revision": "5971b5cefd4992d03e66fc09ca2a9e75ad7b4779",
+      "evidence_revision": "1d59bed3e251528c4d461eb24f4d06caf5d9c14e",
       "id": "inactive-inference",
       "path": "artifacts/sprints/sprint-9/story-9.1/linux-native-inference-boundary.json",
-      "sha256": "f5c97f5aac5d3c2921b40aad76e0150080a3089d2a3512ea362568554123814d",
+      "sha256": "c113ff29c5e9ef2324df1474bfaefc20817be9828f069923ecce23f2deda85c8",
       "status": "pass-fedora-package-boundary"
     },
     {
@@ -188,11 +188,11 @@
   "private_values_present": false,
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "25a6fbfaaf29f7fd00bf4c9734fe8f42c6e9826f",
+  "source_revision": "1d59bed3e251528c4d461eb24f4d06caf5d9c14e",
   "sources": [
     {
       "path": "package.json",
-      "sha256": "0f37962a31780687c668b9c2181b7c2e18ba414b65ac34aca32de0b78d494dc1"
+      "sha256": "5c25127ac887fe48cbb8a87da6dac32d6c2e2c77efacf28ee02f0411c4f7a74c"
     },
     {
       "path": "scripts/linux_platform_parity_evidence.py",

@@ -3,7 +3,7 @@
     "bytes": 454496,
     "mode": 493,
     "path_class": "package-owned-libexec",
-    "sha256": "3d05d578f137dabffc13ee00f5e3ca7883133fe87123c0ed66f1f6854ebc6d3a"
+    "sha256": "9bba6b56d88aed9d47399bb1c4c71a46b71c147bc3bee664f651b88ed8d67822"
   },
   "artifact_id": "linux-native-inference-package-boundary",
   "compile_boundary": {
@@ -42,14 +42,14 @@
   },
   "packages": [
     {
-      "bytes": 6136656,
+      "bytes": 7478658,
       "format": "rpm",
-      "sha256": "3b6d99599715df6261ab3977b82cbf1e5ff84b5d44ccfb475803273831c7193a"
+      "sha256": "8c99f56b102ed4a2da3d2cee3ed49a2767af9956d8310d3ea18a7abcdfcd9790"
     },
     {
-      "bytes": 8846160,
+      "bytes": 10819670,
       "format": "deb",
-      "sha256": "80abab814fbad612c3930d0cf25ccdd82d466ee23a2403aab7783927532e98e9"
+      "sha256": "661e9b8bae408a4c0234c946053510e5fd13fb258f04dd144496234d04adcab1"
     },
     {
       "bytes": 62732,
@@ -83,12 +83,12 @@
   },
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "b1ab32328e8e2ded1c2b5d656242235139c1c2ab",
+  "source_revision": "1d59bed3e251528c4d461eb24f4d06caf5d9c14e",
   "sources": [
     {
-      "bytes": 29174,
+      "bytes": 41965,
       "path": "Cargo.lock",
-      "sha256": "7c2c11b7d4955e51f451979d05012ccec8859b82b8d87b3f9c224488e727b498"
+      "sha256": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd"
     },
     {
       "bytes": 2313,
@@ -156,9 +156,9 @@
       "sha256": "40eae8a59214b40e5adeca292a20ba4f73fabbd5e692f3fbaeec1be1234957e2"
     },
     {
-      "bytes": 126740,
+      "bytes": 127455,
       "path": "IMPLEMENTATION-PLAN.md",
-      "sha256": "636d456abe5f8f3e43d721b6c7a325d94ab7577a780f9f3212b313619b131109"
+      "sha256": "9fdd39df6c9ea2e0f9356a4d721c03d94db80c28ffe10a2f3c9c614dff9cadde"
     },
     {
       "bytes": 69246,
@@ -196,9 +196,9 @@
       "sha256": "86d5cd6860d7e1efe7e4630197912f2b2d40c7a8694f9032c6c67ab9e6ff4a82"
     },
     {
-      "bytes": 820,
+      "bytes": 848,
       "path": "platforms/linux-inference/Cargo.toml",
-      "sha256": "a4143fefbaa1ababfb26bc7701ef7c3fe9919a1122abbc98a0ae2841858d73b9"
+      "sha256": "553a09a02cc388188a2eece7ccb1b9001a25c1f36695e8311d8779036bb3a227"
     },
     {
       "bytes": 3690,
@@ -206,9 +206,9 @@
       "sha256": "74274927a4cf6f0a0c6a703a5ac4ba52368151d51c31a709010e88884b375369"
     },
     {
-      "bytes": 10220,
+      "bytes": 10364,
       "path": "platforms/linux-inference/src/lib.rs",
-      "sha256": "c4e5e8d38c6d3bde36c14ce4d5165c72c6296f1b695e0bafac414de8edeca94c"
+      "sha256": "555f58a30f6e59a68298330a134532322a7e3ff1995aaf8df6ed3940c30ed107"
     },
     {
       "bytes": 574,
@@ -246,9 +246,9 @@
       "sha256": "e54f7c2ecbb6b511e955bdd542e0ffa53eca3823e7ec679f7f934702139fc1ae"
     },
     {
-      "bytes": 43784,
+      "bytes": 43968,
       "path": "platforms/linux/src/platform.rs",
-      "sha256": "aa97c6861b44c35a2d8cc15a3d5d4310d07a070da99b153c989968ad5b317cb9"
+      "sha256": "0bf6202f7eb12ef884db38c81abcffce814bb0c0e103dc02315de451c890b6d7"
     },
     {
       "bytes": 1333,
@@ -261,9 +261,9 @@
       "sha256": "295acc7b5243b6595da7c1a418d83d87b9d436c5d12c3ca5239e818d561e3ffc"
     },
     {
-      "bytes": 10409,
+      "bytes": 11329,
       "path": "scripts/dependency_classes.py",
-      "sha256": "787dff4a16debfdd79a9ad06d7e295e8acf39e3ab422b379032d6f569c3e61d6"
+      "sha256": "ce901cf951ad3472fb1d568416aa4794a0ad13ccd961bd071e8e56f2e1e6bbca"
     },
     {
       "bytes": 10830,
@@ -296,9 +296,9 @@
       "sha256": "88962ea92149b1974eccb09b614f0d8c17f7ffed3eaa585e6a28a4c79c273328"
     },
     {
-      "bytes": 21820,
+      "bytes": 22717,
       "path": "shells/host/src/linux_bootstrap.rs",
-      "sha256": "1d19bc1ff1661922062918c2ec41cc167c4aad76476dc68ac4178f8541639a3b"
+      "sha256": "f5d556c4bd4d2bddb2a152d14b34e193d2a2eb4c270520fc98115343669f734a"
     },
     {
       "bytes": 29106,
@@ -308,17 +308,17 @@
     {
       "bytes": 997,
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "3a783232ea6efd52d66dd1eedba5de652ac94b1e0c80c813914da9ad99db4ff1"
+      "sha256": "00182b8d4765995e317680929fdb88ca44a605150e7c39528a24e22e3e583f8f"
     },
     {
-      "bytes": 447753,
+      "bytes": 489812,
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "14d894036af40f0682e69834886032152a102051346133f84af0157e43e5963c"
+      "sha256": "18bfe8c3c858073765156064faa1192abdb13730fe5665f2c39733b31dc1fd26"
     },
     {
-      "bytes": 467660,
+      "bytes": 512983,
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "1596e8333e24a764d11bf905ce686ab0407732d993cf0c2bf57bb7e1014b4e8f"
+      "sha256": "c7530403c0b956a4f46e9b1050858a4c889391c53b4679b96bb4ec2a9769d081"
     },
     {
       "bytes": 4437,
