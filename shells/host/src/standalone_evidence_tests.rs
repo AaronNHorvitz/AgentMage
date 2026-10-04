@@ -251,6 +251,27 @@ fn a_whole_folder_is_refused_for_each_unsafe_or_oversized_selection() {
         admit(linked.to_str().unwrap()),
         Some(FolderRefusal::Unavailable)
     );
+    // A link in an earlier component of the path is refused too, not only a
+    // link as the folder itself: a relative one, which stays beneath the
+    // root, as well as an absolute one.
+    let parent = roots.folder("parent");
+    let child = parent.join("child");
+    fixture::directory(&child);
+    fixture::write(&child.join("a.md"), b"Aurora\n");
+    fixture::symlink(Path::new("parent"), &roots.disposable.join("via"));
+    fixture::symlink(&parent, &roots.disposable.join("via-absolute"));
+    for through_link in ["via/child", "via-absolute/child"] {
+        let through_link = roots.disposable.join(through_link);
+        assert_eq!(
+            admit(through_link.to_str().unwrap()),
+            Some(FolderRefusal::Unavailable),
+            "{through_link:?}"
+        );
+    }
+    assert!(
+        admit(child.to_str().unwrap()).is_none(),
+        "the real path admits"
+    );
     let shared = roots.folder("shared");
     fixture::mode(&shared, 0o777);
     assert_eq!(
