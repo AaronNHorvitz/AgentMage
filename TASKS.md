@@ -1,5 +1,27 @@
 # AgentMage - Story-Based Sprint Plan
 
+## Active queue: local agent mission
+
+[Decision 0151](docs/decisions/0151-local-agent-mission.md) records the owner's
+2026-10-25 mission and supersedes older work selection for this lane. The old ledger
+below is preserved. No mission row is complete without an independent exact-commit
+PASS review committed under docs/reviews/; row evidence belongs in docs/evidence/.
+Core changes require a core-tier review. Measurements and legacy gates are background;
+the unchanged long documentation gate runs once at T-310. No public release is authorized.
+
+| Status | Task | Dependencies | Deliverable and acceptance |
+| --- | --- | --- | --- |
+| [ ] | T-301 | None | Reconcile and baseline what builds and runs; document and pass a minutes-scale gate for formatting, lint and touched-crate unit/integration tests. Keep the old long documentation gate for acceptance only; batch evidence regeneration. Short truthful baseline and independent PASS required. |
+| [ ] | T-302 | T-301 | Configurable local OpenAI-style endpoint and key; first-run detection/test, streaming chat and clear errors; stub contract tests and one recorded real chat through the reserved GPU slot. Versioned local API and UI. |
+| [ ] | T-303 | T-302 | Bounded plan/act/observe loop; workspace file tools and confined commands without network; existing permissions with visible confirmations; durable run records, interruption/resume and deterministic replay tests; run UI. Out-of-scope requests refused. |
+| [ ] | T-304 | T-303 | Import text, Markdown, PDF text and HTML into a built-in index; optional memory service through a versioned HTTP API and MCP; exact-passage answer citations; re-import/removal tests with synthetic documents and UI. Removed documents cannot be cited. |
+| [ ] | T-305 | T-303; after T-304 | User-configured search provider, bounded page retrieval and content sanitizing, retained sources/citations and offline default; fake-server tests for time/page/byte budgets, redirects, oversized and hostile content; UI. |
+| [ ] | T-306 | T-303; after T-304 and T-305 | Repository analysis and edit/test in an isolated worktree, diff UI and apply only on confirmation; synthetic-repository tests for edit, failed test then fix, and refusal outside the worktree. |
+| [ ] | T-307 | T-302 through T-306 | Home, Chat, Runs, Documents, Research, Code and Settings; endpoint/workspace/permissions; contextual detail in one interface, light/dark, keyboard and offline support, plain words. UI tests, both-theme screenshots when a headless browser is available, and design self-review evidence. |
+| [ ] | T-308 | T-307 | User-level Kinoite build/install, user service, launcher, uninstall and guide exercising chat, task, documents, research and code. Temporary-HOME verification and scripted end-to-end demonstration. |
+| [ ] | T-309 | T-301 through T-308 implementations | Revisit all three-strike findings; review permissions and sandbox across tools. Earlier rows must close or name an explicit owner-action blocker. |
+| [ ] | T-310 | T-309 | Full gate including the unchanged long documentation gate once, end-to-end demonstration and independent PASS. Then prepare OWNER-TEST-READY with exact build/install/start commands, guide and unexercised owner checks; no public release. |
+
 ## Current Delivery Amendment (2026-09-24)
 
 [The 48-capability roadmap](CAPABILITY-ROADMAP.md) and
