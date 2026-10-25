@@ -71,8 +71,8 @@ At T-310, run the full product checks and the unchanged long documentation gate
 once, through the shared build slot in the lane:
 
 ```sh
-bash /tools/build-slot npm run product:check
-bash /tools/build-slot npm run docs:check
+bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 npm run product:check
+bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 npm run docs:check
 ```
 
 Also run the mission's end-to-end demonstration, collect independent acceptance

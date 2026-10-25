@@ -11,7 +11,7 @@ the unchanged long documentation gate runs once at T-310. No public release is a
 
 | Status | Task | Dependencies | Deliverable and acceptance |
 | --- | --- | --- | --- |
-| [ ] | T-301 | None | Reconcile and baseline what builds and runs; document and pass a minutes-scale gate for formatting, lint and touched-crate unit/integration tests. Keep the old long documentation gate for acceptance only; batch evidence regeneration. Short truthful baseline and independent PASS required. |
+| [ ] | T-301 | None | Reconcile and baseline what builds and runs; document and pass a minutes-scale gate for formatting, lint and touched-crate unit/integration tests. Keep the old long documentation gate for acceptance only; batch evidence regeneration. Short truthful baseline and independent PASS required. [Builder baseline](docs/evidence/t301-baseline-2026-10-25.md) and [fast gate](docs/guides/local-agent-development.md) implemented; independent review pending. |
 | [ ] | T-302 | T-301 | Configurable local OpenAI-style endpoint and key; first-run detection/test, streaming chat and clear errors; stub contract tests and one recorded real chat through the reserved GPU slot. Versioned local API and UI. |
 | [ ] | T-303 | T-302 | Bounded plan/act/observe loop; workspace file tools and confined commands without network; existing permissions with visible confirmations; durable run records, interruption/resume and deterministic replay tests; run UI. Out-of-scope requests refused. |
 | [ ] | T-304 | T-303 | Import text, Markdown, PDF text and HTML into a built-in index; optional memory service through a versioned HTTP API and MCP; exact-passage answer citations; re-import/removal tests with synthetic documents and UI. Removed documents cannot be cited. |
