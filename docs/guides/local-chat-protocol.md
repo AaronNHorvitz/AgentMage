@@ -27,7 +27,11 @@ Returned bytes contain private conversation data and must not be logged.
 
 `ChatStream` consumes HTTP-decoded event-stream body fragments. LF and CRLF,
 comments, inert event metadata, multiline data and arbitrarily split UTF-8 are
-supported. Each JSON event must name the exact requested model. The codec admits
+supported. Exactly one UTF-8 byte-order mark at body offset zero is ignored,
+including when split across fragments. It counts toward the event and body
+budgets. Non-ASCII field names are refused, so a second or misplaced mark cannot
+silently hide a data field. Marks inside JSON text remain content.
+Each JSON event must name the exact requested model. The codec admits
 one choice at index zero, assistant-role text deltas and the `stop` or `length`
 finish reason. Usage-only events are permitted after the finish reason. Tool or
 function proposals, mismatched models and other finish reasons are refused.
@@ -37,13 +41,18 @@ The limits are 64 KiB per event (including comments and metadata), 4 MiB total
 body and 1 MiB decoded output text. These are byte limits, not token estimates.
 Text events become available before completion. A `Finished` event requires both
 a finish reason and `[DONE]`, after some text; `length` remains visibly distinct
-from a normal stop. Bytes after completion are refused. Call `end` at transport
+from a normal stop. `Finished` is provisional until `end() == Ok(())` at transport
+EOF. Every later byte, including a blank line or comment, is refused; consumers
+must revoke provisional completion on a later error. Call `end` at transport
 EOF; a missing marker, incomplete line or unfinished event fails. No closed
 connection or partial output can imply success. Any failure poisons the decoder.
 
 Consumers must treat every text event as untrusted plain text, render it without
 HTML interpretation and mark earlier output as partial if decoding or transport
-fails. The codec never executes a proposal. Its errors are fixed content-free
+fails. Neutralize terminal control sequences and make bidirectional overrides
+visible in terminal, log and UI views. Do not log model text through debug
+formatting: output is private conversation data, just like input.
+The codec never executes a proposal. Its errors are fixed content-free
 codes; upstream details, prompts, credentials and destination strings are absent.
 
 ## Transport and application obligations

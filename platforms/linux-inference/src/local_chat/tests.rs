@@ -210,6 +210,96 @@ fn every_two_way_split_and_single_byte_fragments_preserve_unicode_and_order() {
 }
 
 #[test]
+fn leading_bom_preserves_first_text_at_every_split_and_single_byte_delivery() {
+    let first = frame(chunk(json!({"content": "FIRST café 🐈 "}), Value::Null));
+    let expected = vec![
+        ChatEvent::Text("FIRST café 🐈 ".to_owned()),
+        ChatEvent::Text("A café 🐈".to_owned()),
+        ChatEvent::Finished(ChatFinish::Stop),
+    ];
+    for crlf in [false, true] {
+        let body = String::from_utf8([first.clone(), answer("stop")].concat()).unwrap();
+        let body = if crlf {
+            body.replace('\n', "\r\n")
+        } else {
+            body
+        };
+        let bytes = [b"\xef\xbb\xbf".as_slice(), body.as_bytes()].concat();
+        for split in 0..=bytes.len() {
+            let mut decoder = ChatStream::new("test-model").unwrap();
+            let mut events = decoder.feed(&bytes[..split]).unwrap();
+            events.extend(decoder.feed(&bytes[split..]).unwrap());
+            assert_eq!(events, expected, "split {split}, CRLF {crlf}");
+            assert_eq!(decoder.end(), Ok(()));
+        }
+        let mut decoder = ChatStream::new("test-model").unwrap();
+        let mut events = Vec::new();
+        for byte in &bytes {
+            events.extend(decoder.feed(&[*byte]).unwrap());
+        }
+        assert_eq!(events, expected);
+        assert_eq!(decoder.stream_bytes, bytes.len());
+        assert_eq!(decoder.end(), Ok(()));
+    }
+}
+
+#[test]
+fn duplicate_or_misplaced_bom_and_non_ascii_field_names_fail_closed() {
+    for prefix in [
+        "\u{feff}\u{feff}",
+        "\n\u{feff}",
+        ":comment\n\u{feff}",
+        "\u{200b}",
+    ] {
+        let bytes = [prefix.as_bytes(), &answer("stop")].concat();
+        for split in 0..=bytes.len() {
+            let mut decoder = ChatStream::new("test-model").unwrap();
+            let result = decoder
+                .feed(&bytes[..split])
+                .and_then(|_| decoder.feed(&bytes[split..]));
+            assert_eq!(result, Err(ChatError::Protocol), "split {split}");
+            assert_eq!(decoder.end(), Err(ChatError::Failed));
+        }
+    }
+    // A BOM inside JSON content is text, not stream framing.
+    let mut decoder = ChatStream::new("test-model").unwrap();
+    assert_eq!(
+        decoder
+            .feed(&frame(chunk(
+                json!({"content": "\u{feff}kept"}),
+                json!("stop")
+            )))
+            .unwrap(),
+        vec![ChatEvent::Text("\u{feff}kept".to_owned())]
+    );
+    assert_eq!(
+        decoder.feed(b"data: [DONE]\n\n").unwrap(),
+        vec![ChatEvent::Finished(ChatFinish::Stop)]
+    );
+    assert_eq!(decoder.end(), Ok(()));
+}
+
+#[test]
+fn bom_prefixes_cannot_complete_and_bom_bytes_count_toward_event_limit() {
+    for length in 0..=3 {
+        let mut decoder = ChatStream::new("test-model").unwrap();
+        assert!(decoder.feed(&b"\xef\xbb\xbf"[..length]).unwrap().is_empty());
+        assert_eq!(decoder.end(), Err(ChatError::Incomplete));
+        assert_eq!(decoder.feed(&answer("stop")), Err(ChatError::Failed));
+    }
+    let mut decoder = ChatStream::new("test-model").unwrap();
+    let bytes = [
+        b"\xef\xbb\xbf:".as_slice(),
+        &vec![b'x'; MAX_EVENT_BYTES - 4],
+    ]
+    .concat();
+    assert!(decoder.feed(&bytes).unwrap().is_empty());
+    assert_eq!(decoder.event_bytes, MAX_EVENT_BYTES);
+    assert_eq!(decoder.stream_bytes, MAX_EVENT_BYTES);
+    assert_eq!(decoder.feed(b"\n"), Err(ChatError::Limit));
+}
+
+#[test]
 fn text_is_available_before_completion_and_length_is_visible() {
     let mut decoder = ChatStream::new("test-model").unwrap();
     assert_eq!(

@@ -1,0 +1,241 @@
+Commit: f18838af658e232a2f2ed9564f1ad6c5d0731760
+Scope: local-agent-t302-1-protocol
+
+# Independent review: T-302.1 local chat protocol component
+
+Reviewer: Claude Opus 5.5, separate session, read-only repository access.
+Row: T-302.1 (tier core). Base: e88a9b42cd35821d81f6c8d706b65f151aadcbe2.
+Review attempt 1 for this row.
+
+## Methods
+
+1. Read `IP-POLICY.md`, Decision 0152, the `TASKS.md` diff, the protocol guide
+   `docs/guides/local-chat-protocol.md` and the evidence
+   `docs/evidence/t302-1-local-chat-protocol-2026-10-25.md`.
+2. Read all of `platforms/linux-inference/src/local_chat.rs` (405 lines) and
+   `platforms/linux-inference/src/local_chat/tests.rs` (412 lines), and the
+   `lib.rs` change (one `pub mod local_chat;` line). No other source changed.
+3. Ran every command in the request myself, using
+   `CARGO_TARGET_DIR=/lane/state/review-target` and the shared build slot.
+4. Ran my own adversarial probes against a byte-identical copy of `local_chat.rs`.
+   The only edit was removing the `#[cfg(test)] mod tests;` lines. The copy was
+   built in a scratch crate outside the repository
+   (`/lane/state/review-scratch/t302probe`), pinned to the workspace's exact
+   `serde =1.0.229` and `serde_json =1.0.151`, offline, through the build slot.
+   The repository was not modified; `git status --porcelain` is empty afterwards.
+5. Compared every failed test identity from the full gate with the host list in
+   `docs/evidence/t301-baseline-failures-2026-10-25.md`.
+
+No third-party product code or documentation was consulted. The only external
+reference is the published event-stream format standard, which defines the
+behaviour the decoder claims to implement. No patents were searched. No GPU or
+model process was started.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `node --version`; `sha256sum <home>/.local/share/agentmage-build-tools/node-v24.15.0/bin/node` | `v24.15.0`, `d1de76d8…bd932c` (matches the expected value) |
+| `git rev-parse HEAD` | `f18838af658e232a2f2ed9564f1ad6c5d0731760` |
+| `git status --porcelain` | empty (before and after the review) |
+| `git diff --check e88a9b42cd35821d81f6c8d706b65f151aadcbe2 HEAD` | exit 0 |
+| `git diff --exit-code e88a9b42 HEAD -- Cargo.toml Cargo.lock architecture/status-model.json supply-chain` | exit 0 (unchanged) |
+| `cmp docs/reviews/e88a9b42cd35-local-agent-t301-second-repair.txt /lane/reviews/e88a9b42cd35-local-agent-t301-second-repair.md` | exit 0 (byte-identical) |
+| `sha256sum docs/reviews/e88a9b42cd35-local-agent-t301-second-repair.txt` | `17ce746fa31baf621f1bffb9cd9f20a29e1410f48fa74740c7c4db80687a9ae1` (matches) |
+| `python3 scripts/validate_docs.py` (no concurrent Cargo in the repository tree) | exit 0, `Validated 681 Markdown file(s) and all policy invariants.`, 2m56s |
+| `bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo test --locked --offline -p agentmage-platform-linux-inference --all-targets` | exit 0; 180 passed, 0 failed, 8 ignored, 0 filtered; all 14 `local_chat::tests` pass |
+| `python3 scripts/local_agent_fast_gate.py --base e88a9b42…` (run 1, default 600 s per-command timeout) | FAIL, exit 1. `cargo fmt` hit exit 124 after 600.09 s **while still waiting for the shared reservation**, so formatting was not observed. Clippy exit 0. Tests exit 101: 712 passed / 53 failed / 19 ignored / 0 filtered |
+| Same, run 2 with `--timeout 3600` | FAIL, exit 1. Whitespace, untracked, review lint and Markdown (4 files) exit 0. `cargo fmt --check` exit 0 (50.35 s including wait). Warnings-denied all-target Clippy exit 0. Tests exit 101: 712 passed / 53 failed / 19 ignored / 0 filtered |
+
+Failure comparison (both gate runs): the sorted set of `... FAILED` identities
+has 53 entries and is `diff`-identical to the 53 host-library identities in the
+T-301 baseline appendix, with nothing added or removed. Panic sites are
+`linux_coding_runtime.rs:11190` (42, `test sandbox manifest: LinuxSandboxError
+{ kind: InvalidManifest }`), `linux_coding_runtime.rs:7221` (1),
+`linux_read.rs:2345` (10, `verified worker manifest: ... InvalidManifest`) and
+`linux_repository_map.rs:748` (1, `Git verifies: ... InvalidGitArtifact`). These
+match the root-ownership classification. I re-observed `/usr/bin/bwrap` and
+`/usr/bin/git` owned by UID 65534 in this lane. No inference-package test fails.
+The full gate remains **FAIL**; matching the baseline is not a pass. It is
+the inherited T-301.1 blocker, not a regression introduced by this change.
+
+Builder evidence cross-check: the reported totals (180/0/8; 712/53/19/0) and the
+identical failure set reproduce. Clippy and formatting pass. The evidence states
+honestly that the full gate is FAIL and that its fixtures are not model inference.
+
+## Adversarial probes (scratch copy, exact output)
+
+| Input | Result | Assessment |
+| --- | --- | --- |
+| `EF BB BF` + `data: {…"content":"FIRST "…}\n\n` + text `second` + finish `stop` + `[DONE]` | `Ok([Text("second"), Finished(Stop)])`, `end() = Ok(())` | **Defect M1**: silent loss of the first text, reported as complete |
+| Same field twice: `{"model":"other","model":"m",…}` | accepted, `Finished(Stop)` | L1 (last duplicate wins) |
+| `"delta":{"tool_calls":[{}],"tool_calls":null,"content":"x"}` | accepted, `Text("x")` | L1 (proposal dropped, not refused; never surfaced) |
+| `[DONE]` event followed by an extra `\n` in the same fragment | `Err(Protocol)`; the `Finished` event is discarded | L2 |
+| Extra `\n` in a later fragment, after `Finished` was returned | `Err(Protocol)`, then `end() = Err(Failed)` | L2 |
+| Text with ESC OSC-52 sequence, BEL, U+202E, NUL | passed through verbatim as `Text` | L3 (consumer obligation gap) |
+| Lone CR line terminator | `Err(Protocol)` | fail-closed; documented as LF/CRLF only |
+| 30,000-deep JSON array inside one event | `Err(Protocol)` (serde recursion limit, no stack overflow) | OK |
+| One 4 MiB + 1 byte fragment | `Err(Limit)` before any byte is processed | OK |
+| Usage-only event before a finish reason | `Err(Protocol)` | OK |
+| `data:[DONE]` (no space), `data: [DONE]\ndata:\n\n` | both accepted as completion | strict-enough; negligible deviation |
+
+Endpoint probes (all as documented): `LOCALHOST`, `localhost.`, `HTTP://`,
+`127.0.0.1:80@evil.example:80`, `[::1%25lo]`, `[::1]]`, `[[::1]`, `[::1]:80:81`,
+`127.0.0.1::80`, `:80`, `127.0.0.01`, `0x7f.0.0.1`, query or fragment before the
+path, and a tab in the authority are all refused with `Endpoint`.
+`[0:0:0:0:0:0:0:1]` canonicalizes to `[::1]`. Leading-zero ports canonicalize
+(`00000000000000000080` → 80). Any `127.0.0.0/8` address is accepted. A
+three-dot segment (`/v1/.../x`) is accepted; it is not a dot-segment, so no
+traversal results. A pasted full endpoint `http://127.0.0.1:80/v1/chat/completions`
+is accepted as an API base and yields `/v1/chat/completions/chat/completions` (L4).
+No resolver, environment or file access exists in the parser.
+
+## Review of claimed properties
+
+- Effect-free: confirmed. The module uses only `std::net` value types, `serde` and
+  `serde_json`. It has no I/O, sockets, files, environment, processes or
+  credentials. It is reachable only as a library module (`pub mod local_chat`).
+  The row claims no other surface, so that is honest.
+- Endpoint parsing: loopback-only, explicit nonzero port, IPv6 brackets enforced,
+  no userinfo/query/fragment/percent/backslash/non-ASCII, no `.`/`..` or empty
+  segments, `localhost` pinned to 127.0.0.1. Confirmed by the tests and my probes.
+- Request bounds: model ≤256 bytes, no control characters; 1–256 nonempty
+  messages; last message must be user; 1–32768 tokens; raw-sum and post-escape
+  256 KiB ceilings; fixed `stream`, `n: 1`; no tools or hidden prompt. Confirmed.
+- Incremental UTF-8 and split framing: lines are split on `0x0A` (never part of
+  a multibyte sequence) and validated per line. Every two-way split and
+  byte-at-a-time delivery is tested. Confirmed.
+- Completion semantics: `Finished` requires a stop/length finish reason, nonzero
+  text and `[DONE]`. Any later byte is refused, and `end()` requires completion
+  with empty buffers. Every EOF prefix is tested. This is confirmed **except M1**:
+  a spec-valid BOM makes a truncated answer complete.
+- Poison state: every `feed` error sets `failed`, and `end()` sets it on an
+  incomplete stream. Later `feed`/`end` return `Failed`. Confirmed.
+- Aggregate limits: per-event (including comments and metadata), whole-body
+  (checked before processing) and decoded-text limits are tested at the exact
+  boundary. Confirmed.
+- Tool rejection: non-null `tool_calls`/`function_call`, non-assistant roles and
+  other finish reasons are refused. The codec cannot surface a proposal at all.
+  The duplicate-key case is in L1.
+- Errors: fixed static codes with no upstream content. Confirmed.
+- Transport obligations in the guide are explicit and correctly exclude
+  time, framing, redirects, proxies, credentials and destination authorization.
+
+## Findings
+
+### M1 (medium): a leading byte-order mark silently drops the first event and still reports success
+
+Location: `platforms/linux-inference/src/local_chat.rs:297-327` (no BOM handling
+before line parsing; the unknown-field arm at line 327 swallows the line).
+
+The event-stream format says one leading U+FEFF is ignored, so a body that
+starts with `EF BB BF` is valid. Here the BOM stays in the first line, so the
+field name becomes `"\u{feff}data"`. That falls into `_ => {}` and the whole
+first event's data is discarded. If that event carried text, later events still
+supply text, a finish reason and `[DONE]`. Result: `Finished(Stop)` and
+`end() == Ok(())` for an answer that is missing its beginning. My probe got
+`Ok([Text("second"), Finished(Stop)])` and lost `"FIRST "`. This directly
+contradicts the guide's claim that "No closed connection or partial output can
+imply success". It is a silent correctness failure on valid upstream input in
+exactly the area this row is accepted for. The transport obligations do not
+assign BOM handling elsewhere, and the decoder claims to consume
+"HTTP-decoded response body bytes".
+
+Fix: track whether the stream start has been consumed. Strip exactly one leading
+`EF BB BF`, even when it is split across fragments of 1–3 bytes. Alternatively,
+refuse a leading BOM with `Protocol`; either is acceptable if documented. Add a
+test that puts a text-bearing first event after a BOM at every split point and
+asserts the full text or a failure, never a shortened `Finished`. Also consider
+making the decoder fail closed on any unknown field name that begins with a
+non-ASCII-letter byte, so similar framing corruption cannot silently drop data.
+
+### L1 (low): duplicate JSON keys select the last value, so model binding and tool refusal can be sidestepped textually
+
+Location: `local_chat.rs:344` (`serde_json::from_str::<Value>`) and lines 345-347
+and 374-377.
+
+`{"model":"other","model":"m",…}` passes the exact-model check, and
+`"tool_calls":[{…}],"tool_calls":null` passes tool refusal. Nothing is executed
+or surfaced, because the codec only emits `Text`/`Finished`, so there is no
+confinement impact today. The guide's "Tool or function proposals … are refused"
+is weaker than stated, though, and a future consumer that parses the same bytes
+with first-wins semantics would disagree. Fix: refuse events with duplicate keys
+at the top level, in `choices[0]` and in `delta` (for example, deserialize into a
+map visitor that errors on repeats), or state the last-wins semantics in the guide.
+Backlog for T-309.
+
+### L2 (low): `Finished` is not final, and the guide does not say so
+
+Location: `local_chat.rs:298-300`; guide lines 38-42.
+
+Any byte after `[DONE]`, even a blank line that the format treats as a no-op,
+turns the stream into `Protocol`. In the same fragment, the already-built
+`Finished` is discarded. In a later fragment, the caller has already seen
+`Finished` and then gets an error, with `end()` returning `Failed`. Fail-closed is
+fine, but the guide should state that only `end() == Ok(())` confirms completion,
+and the T-302.2 transport must not mark the answer complete on `Finished` alone.
+Optionally, tolerate trailing blank lines and comments after `[DONE]`. Backlog.
+
+### L3 (low): the consumer obligation covers HTML only, not terminal control or bidirectional text
+
+Location: guide lines 44-46; `ChatEvent::Text` at `local_chat.rs:221-224`.
+
+Model text may contain ESC/OSC sequences (for example, clipboard-setting OSC 52),
+BEL, NUL and bidirectional overrides; my probe passed them through unchanged.
+That is acceptable for a codec, but the obligation should also require control-
+and bidirectional-character neutralization for any terminal, log or UI consumer
+(T-302.3, T-307). Backlog.
+
+### L4 (low): a pasted full chat URL is accepted as an API base
+
+Location: `local_chat.rs:74-107`.
+
+`http://127.0.0.1:80/v1/chat/completions` yields the chat path
+`/v1/chat/completions/chat/completions`. There is no security impact; first-run
+testing in T-302.2 will surface it as an HTTP error. Consider refusing a base path
+that ends in `chat/completions` or `models` with a clear hint. Backlog.
+
+### L5 (low): `ChatEvent` derives `Debug`, which contradicts the stated no-logging intent for conversation content
+
+Location: `local_chat.rs:220`.
+
+`ChatMessage` deliberately lacks `Debug` "to avoid logs", but `ChatEvent::Text`
+(private model output) derives it, so `{:?}` can leak it into logs. Either drop
+`Debug` (tests can compare with `PartialEq` and a custom message), or document
+that the output must be treated like the input. Backlog.
+
+### Observation (pre-existing tooling, backlog for T-309)
+
+In `scripts/local_agent_fast_gate.py:257-266`, the per-command `--timeout` covers
+the time spent waiting in `/tools/build-slot`. Under slot contention, a gate can
+report exit 124 for a check that never ran. That happened to `cargo fmt` in my
+first run. It fails closed, but it blurs the cause; consider timing only after
+the reservation is acquired. This is not attributed to T-302.1.
+
+## Public hygiene and IP
+
+New non-review text contains no private host path, username, hostname, e-mail,
+credential or private project name. The only home-directory prefixes, lane paths
+and username-pattern strings are in the immutable retained T-301 review text,
+which uses a generic `$HOME` prefix and lane paths. The only third-party name in
+new text is the owner's pre-existing descriptive phrase "OpenAI-style" in the
+T-302 row; it is not branding. No dependency, lock or supply-chain change. The
+code reads as original; it contains no claim of certification or legal clearance.
+
+## Per-row result
+
+- **T-302.1: not accepted.** All required runs were completed and reproduce the
+  builder's figures. The component is honest about its scope, effect-free and
+  fail-closed in nearly all paths. Medium finding M1 (a truncated answer
+  reported as complete after a valid leading BOM) blocks closing this row. L1–L5
+  are backlog and do not block.
+- T-301, T-301.1 and T-302 parent: not in scope and not closed. The full
+  touched-crate fast gate remains FAIL (53 inherited host failures, identity-equal
+  to the T-301 baseline, T-301.1 owner-action blocker).
+- Not established by this review: native sandbox, transport, credential
+  ownership, provider or real-model behavior, agent loop, UI, install kit or
+  owner-test readiness. No GPU evidence was produced or required for this row.
+
+Verdict reason: medium M1 (a leading BOM silently drops the first event, yet the stream completes) blocks T-302.1; no high finding.
+
+Verdict: FINDINGS

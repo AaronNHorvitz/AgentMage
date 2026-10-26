@@ -216,19 +216,20 @@ pub enum ChatFinish {
     Length,
 }
 
-/// Incremental untrusted text, or verified stream termination.
+/// Incremental untrusted text, or a completion marker pending transport EOF.
 #[derive(Debug, PartialEq, Eq)]
 pub enum ChatEvent {
     /// Plain model text; never markup or an instruction to execute.
     Text(String),
-    /// Emitted only after a finish reason followed by the final completion marker.
+    /// A finish reason followed by the completion marker; `end` must still succeed.
     Finished(ChatFinish),
 }
 
 /// Incremental SSE decoder for HTTP-decoded response body bytes.
 ///
-/// Handles arbitrarily split UTF-8 and LF/CRLF lines, comments, multiline data and
-/// usage-only events. The transport must separately enforce status, media type,
+/// Handles arbitrarily split UTF-8, one leading UTF-8 byte-order mark, LF/CRLF
+/// lines, comments, multiline data and usage-only events. Non-ASCII field names
+/// are refused. The transport must separately enforce status, media type,
 /// HTTP framing, wire/header/time limits, cancellation and no redirects/proxies.
 /// Fixed ceilings: 64 KiB per event, 4 MiB total body, 1 MiB emitted text. Any
 /// decoding failure poisons the decoder; partial text is never a completed answer.
@@ -240,6 +241,7 @@ pub struct ChatStream {
     stream_bytes: usize,
     text_bytes: usize,
     finish_reason: Option<ChatFinish>,
+    first_line: bool,
     complete: bool,
     failed: bool,
 }
@@ -258,6 +260,7 @@ impl ChatStream {
             stream_bytes: 0,
             text_bytes: 0,
             finish_reason: None,
+            first_line: true,
             complete: false,
             failed: false,
         })
@@ -308,6 +311,14 @@ impl ChatStream {
             }
             let raw = std::mem::take(&mut self.line);
             let raw = raw.strip_suffix(b"\r").unwrap_or(&raw);
+            // The line buffer already spans fragments, including a split BOM.
+            // Strip it only at body offset zero; its bytes still count toward
+            // both budgets. A second or misplaced BOM cannot hide a data field.
+            let raw = if std::mem::replace(&mut self.first_line, false) {
+                raw.strip_prefix(b"\xef\xbb\xbf").unwrap_or(raw)
+            } else {
+                raw
+            };
             let line = std::str::from_utf8(raw).map_err(|_| ChatError::Protocol)?;
             if line.is_empty() {
                 if !self.data.is_empty() {
@@ -317,6 +328,9 @@ impl ChatStream {
                 self.event_bytes = 0;
             } else if !line.starts_with(':') {
                 let (field, value) = line.split_once(':').unwrap_or((line, ""));
+                if !field.is_ascii() {
+                    return Err(ChatError::Protocol);
+                }
                 let value = value.strip_prefix(' ').unwrap_or(value);
                 match field {
                     "data" => {
