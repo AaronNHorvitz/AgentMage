@@ -9,6 +9,7 @@ import io
 import json
 import os
 from pathlib import Path, PurePosixPath
+import select
 import shutil
 import signal
 import subprocess
@@ -19,6 +20,13 @@ import tokenize
 
 
 ROOT = Path(__file__).resolve().parents[1]
+CRATE_INPUT_SUFFIXES = {".rs", ".toml", ".json", ".sql", ".txt"}
+CRATE_EXTENSIONLESS_INPUTS = {
+    "kernel/contracts/LICENSE",
+    "shells/host/fixtures/extension-sample/packages/sample-report/source",
+    "shells/host/fixtures/extension-sample/packages/sample-linter/source",
+    "shells/host/fixtures/extension-sample/packages/sample-formatter/source",
+}
 
 
 def git(root: Path, *args: str) -> bytes:
@@ -69,6 +77,42 @@ def python_lint(root: Path, paths: list[str]) -> None:
             raise ValueError(f"{name}: missing final newline or trailing whitespace")
 
 
+def untracked_whitespace(root: Path) -> None:
+    """Apply Git's whitespace rules to new files, without staging them."""
+    names = git(root, "ls-files", "--others", "--exclude-standard", "-z")
+    for item in names.split(b"\0"):
+        if not item:
+            continue
+        name = os.fsdecode(item)
+        result = subprocess.run(
+            ["git", "diff", "--no-index", "--check", "--", "/dev/null", "./" + name],
+            cwd=root, capture_output=True,
+        )
+        # A binary addition can return 1 with no diagnostics. Whitespace and
+        # command errors have diagnostics or a different nonzero status.
+        if result.returncode not in (0, 1) or result.stdout or result.stderr:
+            raise ValueError(f"{name}: untracked whitespace check failed: "
+                             + os.fsdecode(result.stdout + result.stderr))
+
+
+def review_text_lint(root: Path, paths: list[str]) -> None:
+    """Validate retained text report format, not reviewer independence or truth."""
+    for name in paths:
+        source = (root / name).read_text(encoding="utf-8")
+        lines = source.splitlines()
+        if not source.endswith("\n") or any(line.rstrip() != line for line in lines):
+            raise ValueError(f"{name}: missing final newline or trailing whitespace")
+        if len(lines) < 3 or not lines[0].startswith("Commit: "):
+            raise ValueError(f"{name}: review must start with its exact commit")
+        commit = lines[0].removeprefix("Commit: ")
+        if len(commit) != 40 or any(c not in "0123456789abcdef" for c in commit):
+            raise ValueError(f"{name}: review commit must be a full lowercase SHA")
+        if not lines[1].startswith("Scope: ") or not lines[1].removeprefix("Scope: ").strip():
+            raise ValueError(f"{name}: review scope is missing")
+        if lines[-1] not in {"Verdict: PASS", "Verdict: FINDINGS", "Verdict: FAIL", "Verdict: BLOCKED"}:
+            raise ValueError(f"{name}: review must end with its explicit verdict")
+
+
 def plan(root: Path, paths: list[str], metadata: dict) -> list[list[str]]:
     packages = affected_packages(metadata, paths, root)
     package_roots = [
@@ -89,13 +133,21 @@ def plan(root: Path, paths: list[str], metadata: dict) -> list[list[str]]:
             raise ValueError(f"{name}: required test module {module} is missing")
         modules.add(module)
     known_global = {"Cargo.toml", "Cargo.lock", "rust-toolchain.toml", "rustfmt.toml"}
+    review_paths = [p for p in paths if PurePosixPath(p).parent == PurePosixPath("docs/reviews")
+                    and p.endswith(".txt")]
     for name in paths:
-        if name in known_global or name.endswith((".md", ".py")):
+        if name in known_global or name in review_paths or name.endswith((".md", ".py")):
             continue
-        if any(name.startswith(directory) for directory in package_roots):
+        if any(name.startswith(directory) for directory in package_roots) and (
+            PurePosixPath(name).suffix in CRATE_INPUT_SUFFIXES or name in CRATE_EXTENSIONLESS_INPUTS
+        ):
             continue
         raise ValueError(f"{name}: no fast check registered; add coverage before proceeding")
     commands = [["git", "diff", "--check", "--"]]
+    commands.append([sys.executable, "scripts/local_agent_fast_gate.py", "--lint-untracked"])
+    reviews = [p for p in review_paths if (root / p).is_file()]
+    if reviews:
+        commands.append([sys.executable, "scripts/local_agent_fast_gate.py", "--lint-reviews", *reviews])
     markdown = ["./" + p for p in paths if p.endswith(".md") and (root / p).is_file()]
     if markdown:
         commands.append(["node", "node_modules/.bin/markdownlint-cli2", *markdown])
@@ -114,37 +166,111 @@ def plan(root: Path, paths: list[str], metadata: dict) -> list[list[str]]:
     return commands
 
 
+def stop_check(process: subprocess.Popen) -> None:
+    """Clean the check's group even when its leader exited successfully."""
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        pass
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        pass
+    try:
+        os.killpg(process.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    process.wait()
+
+
+def supervise(lifeline: int, timeout: int, command: list[str]) -> int:
+    """A separate session watches EOF from the gate, including after SIGKILL.
+
+    Only the gate holds the pipe's write end. Checks get neither end. The
+    supervisor owns a separate check process group and always cleans that group.
+    """
+    stopping = False
+
+    def interrupted(_signum, _frame):
+        nonlocal stopping
+        stopping = True
+
+    for signum in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+        signal.signal(signum, interrupted)
+    process = None
+    try:
+        deadline = time.monotonic() + timeout
+        if stopping or select.select([lifeline], [], [], 0)[0]:
+            return 130
+        process = subprocess.Popen(command, process_group=0)
+        while True:
+            if stopping or select.select([lifeline], [], [], 0.05)[0]:
+                print("Check interrupted; this check did not pass", file=sys.stderr)
+                return 130
+            code = process.poll()
+            if code is not None:
+                return code if code >= 0 else 128 - code
+            if time.monotonic() >= deadline:
+                print("TIMEOUT; this check did not pass", file=sys.stderr)
+                return 124
+    except FileNotFoundError:
+        print(f"Missing executable: {command[0]}; no automatic download", file=sys.stderr)
+        return 127
+    finally:
+        if process is not None:
+            stop_check(process)
+        os.close(lifeline)
+
+
 def execute(root: Path, commands: list[list[str]], timeout: int) -> int:
+    stopping = False
+
+    def interrupted(_signum, _frame):
+        nonlocal stopping
+        stopping = True
+
+    previous = {s: signal.signal(s, interrupted) for s in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)}
+    try:
+        return execute_checks(root, commands, timeout, lambda: stopping)
+    finally:
+        for signum, handler in previous.items():
+            signal.signal(signum, handler)
+
+
+def execute_checks(root: Path, commands: list[list[str]], timeout: int, stopping) -> int:
     environment = os.environ.copy()
     environment.update(CARGO_BUILD_JOBS="2", RUST_TEST_THREADS="4")
     failures = 0
     for command in commands:
+        if stopping():
+            return 1
         actual = command
         if command[0] == "cargo" and Path("/tools/build-slot").is_file():
             actual = ["bash", "/tools/build-slot", *command]
         print("RUN " + json.dumps(command), flush=True)
         started = time.monotonic()
+        read_end, write_end = os.pipe()
+        process = None
         try:
-            with subprocess.Popen(actual, cwd=root, env=environment, start_new_session=True) as process:
-                try:
-                    code = process.wait(timeout=timeout)
-                except (subprocess.TimeoutExpired, KeyboardInterrupt):
-                    os.killpg(process.pid, signal.SIGTERM)
-                    try:
-                        process.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        os.killpg(process.pid, signal.SIGKILL)
-                        process.wait()
-                    # The leader may exit before descendants that ignore TERM.
-                    try:
-                        os.killpg(process.pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass
-                    print("TIMEOUT or interrupted; this check did not pass", file=sys.stderr)
-                    return 1
-        except FileNotFoundError:
-            print(f"Missing executable: {command[0]}; no automatic download", file=sys.stderr)
+            process = subprocess.Popen(
+                [sys.executable, str(Path(__file__).resolve()), "--supervise", str(read_end),
+                 str(timeout), *actual], cwd=root, env=environment, start_new_session=True,
+                pass_fds=(read_end,),
+            )
+            os.close(read_end)
+            read_end = None
+            while process.poll() is None and not stopping():
+                time.sleep(0.05)
+        finally:
+            if read_end is not None:
+                os.close(read_end)
+            os.close(write_end)
+            if process is not None:
+                process.wait()
+        if stopping():
+            print("Interrupted; this gate did not pass", file=sys.stderr)
             return 1
+        code = process.returncode
         print(f"RESULT exit={code} seconds={time.monotonic() - started:.2f}", flush=True)
         failures += code != 0
     print("FAST GATE: " + ("FAIL" if failures else "PASS"), flush=True)
@@ -152,15 +278,25 @@ def execute(root: Path, commands: list[list[str]], timeout: int) -> int:
 
 
 def main() -> int:
+    if len(sys.argv) > 1 and sys.argv[1] == "--supervise":
+        return supervise(int(sys.argv[2]), int(sys.argv[3]), sys.argv[4:])
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", default="HEAD", help="compare working tree to this commit, including untracked files")
     parser.add_argument("--plan", action="store_true", help="print checks without executing; not a passing gate")
     parser.add_argument("--timeout", type=int, default=600, help="per-command seconds; a timeout fails the gate")
     parser.add_argument("--lint-python", nargs="+", help=argparse.SUPPRESS)
+    parser.add_argument("--lint-untracked", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--lint-reviews", nargs="+", help=argparse.SUPPRESS)
     args = parser.parse_args()
     try:
         if args.lint_python:
             python_lint(ROOT, args.lint_python)
+            return 0
+        if args.lint_untracked:
+            untracked_whitespace(ROOT)
+            return 0
+        if args.lint_reviews:
+            review_text_lint(ROOT, args.lint_reviews)
             return 0
         if args.timeout <= 0:
             raise ValueError("timeout must be positive")

@@ -23,36 +23,69 @@ paths and commands, add `--plan`; this does not establish a passing gate.
 
 The checks are:
 
-- Whitespace errors across the selected Git diff, and the existing Markdown linter
-  for changed Markdown files.
+- Whitespace errors across the selected Git diff and all untracked additions,
+  using Git's whitespace rules without staging files; the existing Markdown
+  linter for changed Markdown files.
+- Unchanged reviewer reports retained as plain `.txt` files directly under
+  docs/reviews/ get UTF-8, whitespace, full commit, scope and final verdict checks.
+  This supports reports with metadata before their heading without editing them
+  or changing Markdown lint rules. The format check does not establish reviewer
+  independence or the correctness of a verdict. Other text files outside crates
+  still require their own registered coverage.
 - Python syntax, indentation and whitespace checks for changed Python files, plus
   their test modules. A script maps to `tests/test_<script>.py`; a changed test
   module also runs. A missing or unknown mapping fails. These checks do not claim
-  full Python style formatting or type checking.
+  full Python style formatting or type checking. Importing Python modules and
+  Rust callers of Python scripts are not automatically selected; add explicit
+  caller checks to the review request when changing shared helpers. Automatic
+  Python importer selection remains a low-priority backlog item for T-309.
 - Rust formatting, Clippy with warnings denied and full unit/integration/binary
   test targets for touched workspace crates and their transitive workspace
   dependents. Workspace manifest, lockfile, toolchain or formatter changes select
   the whole workspace. There are no test filters, failure allowlists or new skips.
   Cargo's existing explicitly ignored tests retain their existing status.
 
-An unrecognized file type outside a crate fails with a request to extend coverage.
+An unrecognized file type fails with a request to extend coverage, inside or
+outside crates. Crate inputs accepted by the Rust checks are `.rs`, `.toml`,
+`.json`, `.sql`, `.txt` and the four existing extensionless license/fixture files
+listed in the gate. Markdown and Python always get their respective checks.
 Add the relevant checks and tests when introducing UI assets or another language;
 do not simply mark them ignored. Deleted files still influence scope. Rust
 dependencies are locked and offline. The current plan uses default crate features;
 add explicit feature coverage when a batch changes an optional feature.
 
 Each command prints its elapsed time and exit code. Any nonzero exit fails the
-gate even if later checks pass. A command timeout fails and terminates its owned
-process group. `--timeout` defaults to 600 seconds per command, including any
+gate even if later checks pass. Each check has a supervisor in a separate session.
+A pipe held only by the gate signals its death, including SIGKILL of the gate's
+process group. The supervisor terminates the check's group, waits up to five
+seconds, and kills remaining group members after timeout, interruption or normal
+exit. SIGINT, SIGTERM and SIGHUP stop the gate without starting later checks.
+`--timeout` defaults to 600 seconds per command, including any
 reservation wait; a timeout is never a pass. The lane's Rust commands acquire the
 shared build slot when its wrapper is present. Builds use two jobs and tests four
 threads, within the four-CPU lane allocation. No GPU work belongs to this gate.
+This is development process cleanup, not a sandbox: it cannot contain a check
+that deliberately escapes its process group. SIGKILL directed at the supervisor
+itself, or killing both gate and supervisor, defeats its cleanup; the operator
+must then verify owned processes and reservation release. The ordinary gate and
+its process group can be killed without killing the supervisor.
 
 The target is minutes with the existing build cache, not a promise of cold-build
-latency. A native-platform test refusal keeps the Rust gate red; record the
-failure, fix it without weakening confinement, or split out independently useful
-work. The documentation/tooling batch's green gate says nothing about Rust tests
-that were outside that batch's scope.
+latency. The [baseline failure classification](../evidence/t301-baseline-failures-2026-10-25.md)
+records an environmental blocker: the lane maps only the working user, so trusted
+system executables appear owned by the overflow UID rather than root. Correct
+ownership checks refuse them. The inherited 53 host and 19 Linux test failures
+remain failures. A change in any crate except `agentmage-platform-windows` or
+`agentmage-xtask` selects one or both failing packages through reverse dependents;
+its Rust gate therefore remains red in this lane while the blocker persists.
+
+T-301.1 records the owner action: provide a lane where trusted system executables
+and their path ancestors retain root ownership, or run the unchanged checks on the
+native owner host. Do not copy/re-own executables, relax trust checks, filter tests
+or allowlist failures. Keep the full Rust result FAIL and report identities and
+any new failures in the request. No Rust acceptance can be claimed until this
+blocker is resolved. Independently useful changes can still be built and measured;
+the documentation/tooling batch's green gate establishes only its selected scope.
 
 ## Evidence and acceptance
 

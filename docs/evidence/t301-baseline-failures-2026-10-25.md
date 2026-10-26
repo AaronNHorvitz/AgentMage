@@ -12,6 +12,39 @@ comparison, not proof that every failure has one cause. No runtime or sandbox
 boundary was changed to obtain a passing result. The [baseline](t301-baseline-2026-10-25.md)
 records the command, counts, timing and limits. Private raw output is not copied.
 
+## Environmental classification and owner-action blocker
+
+The independent review of `4d7e84d669d7a8ce85926deee90336527cad5b05`
+reproduced the same failures. Inspection of the retained builder output groups
+all 72 failing-test blocks as follows:
+
+| Refusal found in failing-test output | Blocks |
+| --- | --- |
+| `InvalidManifest` (sandbox, command runner or secret service) | 56 |
+| `InvalidGitArtifact` | 15 |
+| `ArtifactDenied` (fixture signer) | 1 |
+
+The 56 manifest blocks include the parent exit assertion in
+`linux_coding_runtime.rs`: its spawned child reports `InvalidManifest`, then the
+parent observes exit 101 rather than 93. These are grouped diagnostics, not a
+new test run or a claim that each refusal was independently traced end to end.
+
+Re-observation during the review repair confirms that `/usr/bin/bwrap`,
+`/usr/bin/systemd-run`, `/usr/bin/git` and `/usr/bin/bash` all appear owned by
+UID 65534, the overflow UID. The lane maps a single working user and does not map
+the host root identity. The unchanged `observe_binary` in
+`platforms/linux/src/platform.rs` requires UID 0 for trusted executables;
+`verify_git_artifact` and `verify_root_owned_path` in
+`platforms/linux/src/repository_safety.rs` also require root ownership. The
+observed environment cannot satisfy these boundaries. The refusals are consistent
+with correct fail-closed behavior, not evidence of a product regression.
+
+**T-301.1 is blocked on an owner action:** provide a lane with root-mapped trusted
+system executables and ancestors, or execute the unchanged checks on the native
+owner host. Until then, affected Rust gates stay FAIL. Their inherited identities
+must not become an allowlist or skips; new failures require separate diagnosis.
+This classification changes no test, threshold, trust check or platform status.
+
 ## Host library (53)
 
 - `linux_coding_runtime::tests::a_write_outside_the_recipe_plan_is_refused_before_any_grant_or_approval`

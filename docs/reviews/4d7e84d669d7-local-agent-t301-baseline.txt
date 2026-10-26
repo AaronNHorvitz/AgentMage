@@ -1,0 +1,269 @@
+Commit: 4d7e84d669d7a8ce85926deee90336527cad5b05
+Scope: local-agent-t301-baseline
+
+# Independent review: T-301 local agent baseline and fast gate
+
+Reviewer: independent read-only session (same model family as the builder, separate
+session, no shared context). Row: T-301. Tier: core. Base:
+`ecf33af35782bf2f76fbfe7332f6348d31ba4277`. Date: 2026-10-25.
+
+## Summary
+
+Ledger preservation holds, the baseline figures reproduce exactly and the gate fails
+closed on most unsupported inputs. Two medium findings block closing T-301:
+
+- **M1:** a check started by the gate outlives the gate when the caller terminates
+  the gate. That orphaned check keeps holding the shared build reservation.
+- **M2:** the gate's Rust path is guaranteed to fail in this lane for 8 of 10 crates.
+  The baseline does not classify the 72 inherited failures as environmental, and it
+  gives later rows no route to an honest green gate.
+
+The gate's Markdown-lint step could not be reproduced because Node is missing in the
+review environment (see "Missing reviewer prerequisite"). No high or critical
+finding.
+
+## Method
+
+- I read `IP-POLICY.md`, Decision 0151, the new TASKS.md queue, the gate, its tests,
+  the development guide and both evidence files. I confirmed the commit with
+  `git rev-parse`.
+- I ran the requested commands from the repository. Rust ran offline and locked
+  through `bash /tools/build-slot`, with `CARGO_BUILD_JOBS=2`, `RUST_TEST_THREADS=4`
+  and `CARGO_TARGET_DIR` set to the lane's review cache. I set
+  `PYTHONDONTWRITEBYTECODE=1` so that no bytecode was written into the checkout.
+  `git status --porcelain` was empty before and after.
+- Probes ran either in-process against the gate module (via `plan()`,
+  `affected_packages()` and `execute()`) or in a throwaway clone outside the
+  repository.
+- No GPU, model, network provider or browser was used. This row has no UI, so no
+  screenshots apply.
+
+## Commands and observed results
+
+| Command | Result |
+| --- | --- |
+| `git rev-parse HEAD` | `4d7e84d669d7a8ce85926deee90336527cad5b05` |
+| `git diff --check <base> <commit>` | exit 0 |
+| `git diff --exit-code <base> <commit> -- Cargo.toml Cargo.lock capabilities kernel platforms shells architecture/status-model.json supply-chain` | exit 0 (unchanged) |
+| TASKS.md diff, removed lines | 0. Only the new queue section was added above the preserved ledger. |
+| `python3 scripts/local_agent_fast_gate.py --base <base>` | exit 1, `Missing executable: node; no automatic download`. The `git diff --check` step passed first. Not a product failure; see prerequisite. |
+| `python3 scripts/local_agent_fast_gate.py --lint-python scripts/local_agent_fast_gate.py tests/test_local_agent_fast_gate.py` | exit 0 |
+| `python3 -m unittest -v tests.test_local_agent_fast_gate` | 14 tests OK, 1.08 s |
+| `python3 scripts/local_agent_fast_gate.py --base <base> --plan` | exit 0. Selects git diff check, Markdown lint on 5 files, Python lint and the gate's own tests; no crate. |
+| `python3 scripts/validate_docs.py` (substitute check, not the gate's lint) | `Validated 676 Markdown file(s) and all policy invariants.` |
+| `cargo build --workspace --all-targets --locked --offline` | exit 0, 108.9 s |
+| `cargo test --workspace --all-targets --no-fail-fast --locked --offline` | **exit 101**, 834.4 s including reservation wait. 2929 passed / 72 failed / 78 ignored / 0 filtered. Failing targets: `-p agentmage-host --lib` and `-p agentmage-platform-linux --lib`. |
+| Failure identity comparison | My 72 `FAILED` names equal both the public appendix and the union of the retained `batch35-source-2/11.log` and `07.log` (byte-identical sorted lists). |
+| `cargo clippy --workspace --all-targets --locked --offline -- -D warnings` | exit 0 |
+| `cargo fmt --all -- --check` | exit 0 |
+| `standalone_evidence_process` target (inside the workspace run) | 5 passed, 0 failed |
+| `agentmage-standalone` with no arguments, clean env and temporary HOME | prints `standalone.presentation.unavailable`, exit 3 |
+| `agentmage --help` | exit 0 |
+| Gate Rust path in a throwaway clone (comment appended to `release/xtask/src/main.rs`, `--base HEAD`) | `FAST GATE: PASS`, 3 min 17 s total. The fmt step's 164 s was mostly reservation wait; clippy took 30 s and test 3 s. |
+
+The builder's statements about the workspace build, Clippy, formatting, the red test
+suite, the failure counts and identities, the standalone fixture tests, the
+standalone exit code and the absence of any model, provider, mission UI or install
+kit are accurate. The suite is red and is not labelled green anywhere in the batch.
+
+## Findings
+
+### M1 (medium): checks outlive a terminated gate and keep holding the shared build reservation
+
+Location: `scripts/local_agent_fast_gate.py:128-148`. The guide's claim at
+`docs/guides/local-agent-development.md:45-47` holds only for the gate's own timeout.
+
+Problem:
+
+- `execute()` starts every check with `start_new_session=True`. Cleanup happens only
+  when the gate itself observes `TimeoutExpired` or `KeyboardInterrupt`.
+- Nothing handles SIGTERM or SIGHUP, and nothing ties the child to the gate's
+  lifetime.
+- The new session takes the check out of the caller's process group. So the usual
+  way development tooling and harnesses stop a job — signalling or killing its
+  process group — no longer reaches the check.
+
+Reproduction (in-process `gate.execute()` running a 30-second sleeper):
+
+1. Send SIGTERM to the gate process. The gate dies. The check survives with PPID 1,
+   in its own session.
+2. Start the gate under `setsid`, then `kill -KILL -- -<gate pgid>`. The gate dies.
+   The check survives with PPID 1.
+
+Consequence:
+
+- Rust checks run under `/tools/build-slot`. That wrapper holds the shared
+  heavy-build lock on fd 9 and runs the command as a child, so the lock fd passes
+  down to cargo and every test process.
+- An orphaned `cargo test` therefore keeps the reservation shared by all lanes
+  until it finishes on its own. The gate's `--timeout` no longer applies, so a hung
+  test holds the reservation indefinitely.
+- Separately: when a check exits normally, leftover descendants in its process
+  group are never signalled.
+
+This is a resource-bound and descendant-cleanup defect in the T-301 deliverable.
+
+Fix:
+
+- Install SIGTERM and SIGHUP handlers that take the existing TERM→wait→KILL
+  process-group path.
+- Make the leader die with the gate: for example `PR_SET_PDEATHSIG` set in the
+  child before exec, or a subreaper that kills the group.
+- After every check, including normal exit, `killpg(SIGKILL)` the group, ignoring
+  `ProcessLookupError`.
+- Add behavioural tests showing that SIGTERM to a gate subprocess, and SIGKILL of
+  the gate's process group, leave no descendant running. If the gate cannot
+  guarantee cleanup for an uncatchable kill, document that residual limit.
+
+### M2 (medium): the Rust gate path is structurally red here, and the baseline does not classify why
+
+Locations:
+
+- `docs/evidence/t301-baseline-2026-10-25.md:22-24` and `:66-72`
+- `docs/evidence/t301-baseline-failures-2026-10-25.md:10-11`
+- `docs/guides/local-agent-development.md:51-55`
+
+**The gate cannot pass for most crates in this lane.** T-301 asks to "reconcile and
+baseline" and to "pass a minutes-scale gate for … touched-crate unit/integration
+tests". The batch's gate passed only because it selected no crate. Applying
+`affected_packages()` to the real workspace metadata, a change in any of 8 of the
+10 crates selects `agentmage-host` or `agentmage-platform-linux` through reverse
+dependencies:
+
+- knowledge, read-only, repository-map
+- contracts, engine
+- linux-inference, linux
+- host
+
+Those two packages contain all 72 inherited failures, so the gate is guaranteed red
+in this lane for essentially every Rust change T-302 onward will make. Only
+`agentmage-platform-windows` and `agentmage-xtask` can pass. I confirmed the xtask
+case end to end.
+
+**The 72 failures are environmental, but the baseline does not say so.** Decision
+0151 ("Consequences and truth") requires new evidence to distinguish environmental
+failures. The baseline says only that the comparison is "not proof that every
+failure has one cause", and mentions the lane's user mapping without connecting it
+to the failures. From my own run:
+
+- Every panic in the failing tests is a trust or manifest refusal:
+  - `LinuxSandboxError { kind: InvalidManifest }` (test sandbox and verified worker
+    manifests)
+  - `LinuxRepositoryError { kind: InvalidGitArtifact }`
+  - `LinuxSecretServiceError` and `LinuxCommandRunnerError { kind: InvalidManifest }`
+  - one `LinuxLocalCommitError { kind: ArtifactDenied }`
+- The one exception is a parent assertion (`linux_coding_runtime.rs:7221`, exit
+  101 ≠ 93). Its spawned child failed with `InvalidManifest`.
+- The refusals come from root-ownership checks such as
+  `platforms/linux/src/platform.rs:851` (`metadata.uid() == 0`) and
+  `platforms/linux/src/repository_safety.rs:1317` (`verify_root_owned_path`).
+- In this lane, the single-user ID mapping makes `/usr/bin/bwrap`,
+  `/usr/bin/systemd-run`, `/usr/bin/git` and `/usr/bin/bash` appear owned by the
+  overflow UID (65534). The checks are refusing correctly.
+
+This is evidence for environmental cause, not proof for every test. The boundaries
+are behaving as designed; there is no sign of a product regression.
+
+Fix:
+
+- Record this classification in the baseline, with the grouped refusal kinds and
+  the ownership mechanism.
+- State in the guide which crate selections are guaranteed red in this lane.
+- Record, as Decision 0151 item 9 provides, either:
+  - an explicit owner-action blocker (a lane where system executables are
+    root-mapped, or a native run), or
+  - a reviewed acceptance route that reports the exact inherited identity set and
+    any new failure, while keeping the gate's result FAIL. Never use an allowlist,
+    a skip or a weakened trust check.
+
+Without this, T-302 onward has no honest path to a passing touched-crate gate.
+
+### L1 (low): non-Rust files inside crate directories are accepted with Rust-only checks
+
+Location: `scripts/local_agent_fast_gate.py:92-96`. The guide
+(`docs/guides/local-agent-development.md:38`) correctly says "outside a crate". The
+request's wording ("refuses unknown types") is broader than the code.
+
+`plan()` treats any path under a crate root as covered. I confirmed that
+`shells/host/assets/app.js`, `shells/host/web/index.html` and
+`shells/host/web/style.css` plan only fmt, Clippy and test for `agentmage-host`.
+Decision 0151 item 2 puts the mission UI in packaged assets served by the Rust
+runtime, which is likely inside `shells/host`. No such files exist yet.
+
+Fix: inside crate roots, accept only an explicit set of file types (`.rs`, `.toml`,
+`.json`, `.sql`, `.txt`, `.md` and today's extensionless files). Refuse anything
+else until UI checks exist, with a test.
+
+### L2 (low): Python changes run only the same-named test module, not importers
+
+Location: `scripts/local_agent_fast_gate.py:80-90`.
+
+The Rust path includes reverse dependents; the Python path does not:
+
+- 168 modules under `scripts/` are imported by other test or script modules. For
+  example, `scripts/evidence_core.py` has 60 importers, but a change to it runs only
+  `tests/test_evidence_core.py`.
+- `shells/host/tests/native_read_cancellation.rs:160` executes
+  `scripts/coding_harness.py`. That test is currently ignored.
+- The guide (`:28-30`) describes the mapping but does not say that importers are not
+  run.
+
+Fix: compute importers with a static `ast` scan of `scripts/` and `tests/` and add
+their test modules, or state the omission in the guide.
+
+### L3 (low): whitespace check skips untracked files
+
+Location: `scripts/local_agent_fast_gate.py:178`.
+
+`git diff --check <base> --` does not see untracked files. In a clone, an untracked
+`release/xtask/notes.txt` with trailing spaces left `git diff --check` at exit 0.
+Markdown and Python files are covered by their own linters; other untracked files
+are not. The guide (`:26`) says "across the selected Git diff".
+
+Fix: run `git diff --no-index --check /dev/null <file>` for each untracked path (a
+nonzero exit is expected because the file differs; parse the output), or scan
+untracked text files in Python. Add a test.
+
+## Notes (not findings)
+
+- **Change discovery** covers committed, staged, unstaged, deleted and untracked
+  paths, including names with spaces and newlines. `--end-of-options` prevents
+  option injection through `--base`. An empty change fails, and `--plan` is not
+  reported as a pass.
+- **Fail-closed inputs.** Unknown top-level types are refused, for example
+  `.cargo/config.toml`, `package.json`, `fixtures/*.json` and the excluded
+  `experimental/model-lab`. So is Python outside `scripts/` and `tests/test_*`, and
+  a deleted or missing test module (deleting the gate's own test makes it refuse).
+  Several Rust crates `include_str!` repository-level `fixtures/`, `schemas/`,
+  `configuration/` and `docs/verification/*.json`. Because those types are refused,
+  this cannot become a silent miss. No crate includes a repository-level `.md` or
+  `.py` file.
+- **Timeouts, failures and bounds.** The gate's own timeout kills a descendant that
+  ignores TERM (test passes). A nonzero exit is retained after later passes. A
+  missing executable fails. Build jobs and test threads are pinned at 2 and 4.
+- **Privacy and trademarks.** The diff contains no private home path, username,
+  hostname, credential or personal data. "Muse" in a copied test name is a model
+  family used throughout the existing repository. "OpenAI-style" and "Fedora
+  Kinoite" are descriptive, not branding. `/tools/build-slot` already appears in
+  committed docs at the base commit.
+- **Ledger.** The ledger and `architecture/status-model.json` are unchanged. No
+  dependency, supply-chain or evidence output was regenerated.
+- **Carried backlog.** The four low findings from the `ecf33af35782` review remain
+  open as backlog, as stated.
+
+## Missing reviewer prerequisite
+
+The review environment has no Node runtime. The tooling path named in the request
+does not exist and `node` is not on `PATH`, so the gate's
+`node_modules/.bin/markdownlint-cli2` step did not run. The gate correctly refused
+to report a pass. I ran `scripts/validate_docs.py` as a partial substitute; it is
+not the same linter. A re-review should have Node available, or the builder's
+Markdown-lint output should be attached to the next request.
+
+## Per-row result
+
+T-301: **not closable.** M1 and M2 are open, and Markdown lint was not reproduced.
+The baseline figures and identities, ledger preservation, fail-closed discovery and
+the passing build, Clippy and format checks were verified. L1–L3 are backlog.
+
+Verdict: FINDINGS
