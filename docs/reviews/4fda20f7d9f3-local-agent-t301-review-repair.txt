@@ -1,0 +1,242 @@
+Commit: 4fda20f7d9f335cfe859cb3e01206573ea5e3e08
+Scope: local-agent-t301-review-repair
+
+# Independent re-review: T-301 first repair (M1, M2, L1, L3)
+
+Reviewer: independent read-only session (same model family as the builder, separate
+session, no shared context). Row: T-301 (and the new T-301.1 blocker). Tier: core.
+Previous reviewed commit: `4d7e84d669d7a8ce85926deee90336527cad5b05`. Mission base:
+`ecf33af35782bf2f76fbfe7332f6348d31ba4277`. Date: 2026-10-25. Review attempt 2.
+
+## Summary
+
+- **M1 is resolved.** I reproduced the claimed process-cleanup behaviour with my own
+  probes against the committed `execute()`, including a `build-slot`-shaped `flock`
+  wrapper. The only escape I found is a check that calls `setsid`, and the guide
+  documents that limit.
+- **M2 is resolved as an explicit blocker.** The 56/15/1 refusal grouping, the 65534
+  ownership, the 8-of-10 crate reach and the T-301.1 owner action all reproduce or
+  are accurate. Nothing was turned green, skipped or allowlisted.
+- **L1 and L3 are fixed, and L2 is documented as backlog.**
+- **I found no high or medium issue.** Two new low findings are listed below.
+- **Verdict: INCONCLUSIVE.** The review environment again has no Node runtime, so the
+  gate's Markdown-lint step could not run. The scoped gate therefore exits 1 here,
+  not PASS. The builder's own output shows that step passing, but I could not
+  reproduce it.
+
+## Method
+
+- I read `IP-POLICY.md`, Decision 0151 (rules 8–9 and "Consequences and truth") and
+  the active TASKS.md queue. I read the first review in full, the full repaired gate
+  and the full diff `4d7e84d669d7..4fda20f7d9f3` (8 files).
+- I confirmed the commit with `git rev-parse`. `git status --porcelain` was empty
+  before, during and after the review.
+- I ran every requested command from the repository with `PYTHONDONTWRITEBYTECODE=1`.
+- Independent probes ran in fresh `mktemp -d` directories under `/tmp`. Each probe
+  imported the committed gate module read-only. I used a local copy of the
+  `build-slot` locking pattern (`exec 9<>lock; flock 9; "$@"`) against a temporary
+  lock file. I did not take the shared reservation.
+- I did not rerun the full Rust suite. No Rust package changed, and the
+  `git diff --exit-code` check below confirms that. The first review reproduced the
+  2929/72/78 identities at the previous commit, and this repair claims no new Rust
+  result.
+- No GPU, model, provider, network or browser was used. The row has no UI.
+
+## Commands and observed results
+
+| Command | Result |
+| --- | --- |
+| `git rev-parse HEAD` | `4fda20f7d9f335cfe859cb3e01206573ea5e3e08` |
+| `git status --porcelain` (start and end) | empty |
+| `test -x /lane/state/tooling/node-v24.15.0-linux-x64/bin/node` | exit 1. `/lane/state/tooling/` does not exist in this mount. |
+| `node --version` | `node: command not found` (`which -a node nodejs` finds nothing) |
+| `python3 scripts/local_agent_fast_gate.py --base ecf33af3…` | **exit 1, `FAST GATE: FAIL`**, 3.0 s. Five of six commands exit 0: git diff check, untracked whitespace, review-text lint, Python lint and 21 tests OK in 2.29 s. Markdown lint: `Missing executable: node; no automatic download`, exit 127. |
+| `python3 scripts/validate_docs.py` | `Validated 677 Markdown file(s) and all policy invariants.` exit 0 |
+| `git diff --check 4d7e84d6… 4fda20f7…` | exit 0 |
+| `git diff --exit-code ecf33af3… 4fda20f7… -- Cargo.toml Cargo.lock capabilities kernel platforms shells architecture/status-model.json supply-chain` | exit 0 (unchanged) |
+| `cmp docs/reviews/4d7e84d669d7-local-agent-t301-baseline.txt /lane/reviews/4d7e84d669d7-local-agent-t301-baseline.md` | exit 0 (byte-identical) |
+| `sha256sum docs/reviews/4d7e84d669d7-local-agent-t301-baseline.txt` | `fa7d9d1cac743f5ab5a07d37f08b8276af225d5400710f893b5264b466f9727e` (matches request) |
+| `cat /proc/self/uid_map` | `1000 0 1` (single user, no root mapping) |
+| `stat -c '%n %u %a' /usr/bin/{bwrap,systemd-run,git,bash}` | all `65534 755` |
+| Builder output `/lane/state/tmp/t301/review-repair-fast-gate.txt` | Shows `markdownlint-cli2 v0.23.2 … Linting: 6 files … 0 issues`, the same 21 tests and `FAST GATE: PASS`. This is builder evidence only; I did not reproduce it. |
+
+## M1 verification: process lifetime and reservation release
+
+Design reviewed (`scripts/local_agent_fast_gate.py`):
+
+- **`execute_checks`.** Creates a fresh `os.pipe()` per check. Python pipes are
+  non-inheritable by default. Only the read end goes to the supervisor, via
+  `pass_fds`. The gate keeps the write end. The supervisor starts with
+  `start_new_session=True`.
+- **`supervise`.** Starts the check with `process_group=0` and the default
+  `close_fds=True`, so the check holds neither pipe end. It polls for EOF on the
+  lifeline, its own SIGINT/TERM/HUP flag and the deadline. Its `finally` always runs
+  `stop_check`.
+- **`stop_check`.** Sends `killpg(TERM)`, waits up to 5 s for the leader, then
+  `killpg(KILL)` and reaps. This also runs after a normal exit.
+- **Gate handlers.** The gate handles SIGINT, SIGTERM and SIGHUP, stops starting
+  checks, closes the write end and waits for the supervisor.
+
+Builder tests (21, all pass): SIGTERM, SIGHUP and SIGINT to the gate with no next
+check; SIGKILL of the gate's group; SIGTERM to the supervisor; normal exit with a
+TERM-ignoring child; and a real `flock` inherited by the child that becomes
+acquirable afterwards. The tests use pidfds for their own cleanup.
+
+My independent probes ran the gate in its own session. Each check was
+`bash slot.sh python3 -c …`, where `slot.sh` holds `flock` on fd 9. The check
+double-forks a TERM-ignoring grandchild that is reparented away from the check
+leader but stays in its group and inherits fd 9:
+
+| Probe | Gate exit | Survivors | Lock |
+| --- | --- | --- | --- |
+| SIGKILL to the gate PID only | -9 | none | released |
+| SIGTERM to the gate's process group | 1 | none | released |
+| SIGTERM, then SIGKILL 50 ms later, to the gate's group | -9 | none | released |
+| Check child calls `os.setsid()` (documented limit) | 1 | 1 | **held** |
+
+The last row confirms the limit documented at
+`docs/guides/local-agent-development.md:67-71`. Product code that starts new
+sessions does so through `bwrap --new-session --die-with-parent`:
+`platforms/linux/src/{sandbox,command_runner,repository_safety,research_sandbox,security_controls}.rs`
+and `platforms/linux-inference/src/llama_server_driver.rs`. Those processes die with
+their in-group `bwrap` parent, so this limit does not affect the product's own test
+processes. Supervisor SIGKILL is likewise documented as a residual limit. The
+reviewer brief accepts both as documented limits. The guide and the evidence say
+plainly that this is development cleanup, not a sandbox, and no product confinement
+code changed (diff exit 0 above).
+
+M1 is resolved.
+
+## M2 verification: environmental classification and owner action
+
+- **Grouping.** I parsed the builder's retained `/lane/state/tmp/t301/test.txt`. It
+  has 72 `---- … stdout ----` blocks. Each block contains exactly one of the three
+  refusal kinds: `InvalidManifest` 56, `InvalidGitArtifact` 15, `ArtifactDenied` 1.
+  No block has none or several. This matches
+  `docs/evidence/t301-baseline-failures-2026-10-25.md:21-26`.
+- **Ownership.** The four executables are owned by 65534, and the UID map is a
+  single mapping. This matches the appendix.
+- **Crate reach.** I ran the committed `affected_packages()` against live
+  `cargo metadata`. A change in each crate selects `agentmage-host` or
+  `agentmage-platform-linux` for every crate except `agentmage-platform-windows` and
+  `agentmage-xtask`. This matches `docs/guides/local-agent-development.md:73-80`.
+- **Wording.** The evidence calls these grouped diagnostics "consistent with correct
+  fail-closed behavior" and says they do not establish a passing native suite. That
+  wording does not overclaim.
+- **T-301.1.** TASKS.md adds an open row naming the owner action: a root-mapped lane
+  or a native owner-host run. It forbids re-owning or copying executables, relaxing
+  trust checks, filters and allowlists, and it keeps affected Rust gates FAIL.
+- **Decision 0151.** Rule 9's sub-row mechanism is formally for "after three non-PASS
+  reviews". This is an explicit owner-action blocker rather than a claim of closure,
+  and T-301 itself stays unchecked. I see no conflict with the decision's
+  truthfulness requirements.
+- **Assessment.** The blocker is legitimate and honestly labelled. T-301's
+  touched-crate Rust gate cannot be shown green in this lane, so T-301 cannot close
+  until T-301.1 is resolved or a passing native run is recorded. The builder's
+  records state exactly that.
+
+M2 is resolved as an explicit, correctly scoped blocker.
+
+## L1–L3 verification
+
+- **L1 (fixed).**
+  - `CRATE_INPUT_SUFFIXES` and `CRATE_EXTENSIONLESS_INPUTS` (`:23-29`) match the
+    tracked inventory inside all ten crate roots exactly: `.rs` 589, `.json` 27,
+    `.sql` 24, `.txt` 13, `.toml` 11, `.md` 10 and the same four extensionless files.
+  - JS, HTML, CSS and unknown extensionless paths inside a crate now raise, and the
+    tests cover them.
+  - `.md` inside a crate still selects that crate through `affected_packages` and
+    also gets Markdown lint.
+- **L2 (backlog, documented).** The guide (`:38-41`) states that importers and Rust
+  callers are not selected, and names T-309.
+- **L3 (fixed).** `untracked_whitespace` runs `git diff --no-index --check` per
+  untracked path. It refuses on any output or on an exit status other than 0/1, which
+  is correct for `--no-index` exit semantics. It stages nothing, and the tests cover
+  names containing spaces and newlines, and binary additions.
+
+## Other checks
+
+- **Privacy and branding.** The added lines contain no home path, username, hostname
+  (I checked the lane hostname: 0 hits), credential or personal data. The retained
+  first report contains only paths and terms already reviewed as public. No
+  trademark is used as branding.
+- **Ledger.** The TASKS.md diff changes only the T-301 cell and adds T-301.1 in the
+  active queue above the Current Delivery Amendment. Runtime, dependencies,
+  status model and supply chain are unchanged.
+- **Retained report.** The `.txt` is byte-identical to the source, and its SHA-256
+  matches. The new `--lint-reviews` check only validates format. The guide says
+  plainly that it does not establish independence or correctness.
+
+## Findings
+
+No critical, high or medium findings.
+
+### L4 (low): the review-text check rejects the `INCONCLUSIVE` format and accepts verdicts that do not exist
+
+Location: `scripts/local_agent_fast_gate.py:112`.
+
+The reviewer template ends an inconclusive report with `Verdict: INCONCLUSIVE`
+followed by a reason line. The check requires the last line to be one of PASS,
+FINDINGS, FAIL or BLOCKED. Reproduction in a temporary root:
+
+- A report ending `Verdict: INCONCLUSIVE` plus a reason line is refused with
+  `review must end with its explicit verdict`.
+- A report ending `Verdict: BLOCKED` is accepted.
+
+So this report, for example, cannot be retained byte-for-byte without changing the
+gate, while the gate accepts verdict strings that the review process never produces.
+The check fails closed, so this is not a security issue.
+
+Fix: accept exactly `{PASS, FINDINGS, INCONCLUSIVE}`. For INCONCLUSIVE, require the
+verdict on the penultimate line and a non-empty reason on the last line. Add tests
+for both, and a test that refuses FAIL and BLOCKED.
+
+### L5 (low): the check's group is signalled after its leader has been reaped
+
+Location: `scripts/local_agent_fast_gate.py:210` (`process.poll()` reaps) with `:172`
+(`killpg(process.pid, …)`).
+
+After a normal exit, the leader is reaped before `killpg` runs. If the group is
+already empty, its ID could be reused by an unrelated new group leader in the
+interval, and that group would receive TERM and KILL. The window is microseconds
+across a 4M PID space, so this is theoretical, but it is avoidable.
+
+Fix: observe exit with
+`os.waitid(os.P_PID, pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)`. The zombie leader
+then keeps the PGID reserved until `stop_check` has signalled the group; reap
+afterwards.
+
+### Carried backlog
+
+- L2 (importer selection, T-309).
+- The four low findings from the `ecf33af35782` review.
+
+## Missing reviewer prerequisite (reason for INCONCLUSIVE)
+
+The Node runtime named in the request (`/lane/state/tooling/node-v24.15.0-linux-x64/bin`)
+is not present in this review mount; the parent `/lane/state/tooling/` does not exist.
+No `node` is on `PATH`.
+
+- **Effect on the gate.** Its Markdown-lint command could not run. The gate correctly
+  refused to report a pass and exited 1.
+- **What I ran instead.** `scripts/validate_docs.py`, a partial substitute and not
+  the same linter. It passed.
+- **What I did not do.** I did not install or download any tool.
+
+This is the second consecutive review without Node. Fix: expose the pinned Node
+directory to the reviewer mount at the stated path, or at another stated path,
+before the next request.
+
+## Per-row result
+
+- **T-301: not closable.**
+  - M1 and M2 are resolved with no open high or medium finding, and L1 and L3 are
+    fixed.
+  - The touched-crate Rust gate cannot pass in this lane until T-301.1 is resolved,
+    and T-301 correctly remains unchecked.
+  - The scoped gate was not reproduced as PASS here, because Markdown lint could not
+    run.
+- **T-301.1: open owner-action blocker, accurately classified.**
+
+Verdict: INCONCLUSIVE
+Markdown lint, a required step of the scoped fast gate, could not run because Node is absent from the reviewer mount; every other requested command was reproduced and no high or medium finding remains.

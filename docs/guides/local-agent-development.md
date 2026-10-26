@@ -10,6 +10,9 @@ Use the existing pinned Rust toolchain and locked dependencies. Python 3 and the
 repository's pinned Node/npm tooling are needed. Use the already installed
 Markdown linter from node_modules; the gate never installs dependencies. Put the
 Node binary directory on PATH if the lane does not expose it by default.
+For separate review sessions, verify that this directory is in a mount shared
+with the reviewer; a builder-only tool directory is insufficient. Record the
+runtime version, binary checksum and exact PATH setup in the private request.
 
 ```sh
 python3 scripts/local_agent_fast_gate.py --base <commit-before-this-batch>
@@ -32,6 +35,9 @@ The checks are:
   or changing Markdown lint rules. The format check does not establish reviewer
   independence or the correctness of a verdict. Other text files outside crates
   still require their own registered coverage.
+  Accepted endings match the reviewer format: `Verdict: PASS` or
+  `Verdict: FINDINGS` as the last line, or `Verdict: INCONCLUSIVE` followed by
+  one non-empty reason line.
 - Python syntax, indentation and whitespace checks for changed Python files, plus
   their test modules. A script maps to `tests/test_<script>.py`; a changed test
   module also runs. A missing or unknown mapping fails. These checks do not claim
@@ -60,6 +66,8 @@ A pipe held only by the gate signals its death, including SIGKILL of the gate's
 process group. The supervisor terminates the check's group, waits up to five
 seconds, and kills remaining group members after timeout, interruption or normal
 exit. SIGINT, SIGTERM and SIGHUP stop the gate without starting later checks.
+The supervisor observes exit without reaping the check leader until both group
+signals have been sent; the leader reserves its process-group ID during cleanup.
 `--timeout` defaults to 600 seconds per command, including any
 reservation wait; a timeout is never a pass. The lane's Rust commands acquire the
 shared build slot when its wrapper is present. Builds use two jobs and tests four

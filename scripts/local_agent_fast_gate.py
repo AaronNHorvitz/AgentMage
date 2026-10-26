@@ -109,8 +109,10 @@ def review_text_lint(root: Path, paths: list[str]) -> None:
             raise ValueError(f"{name}: review commit must be a full lowercase SHA")
         if not lines[1].startswith("Scope: ") or not lines[1].removeprefix("Scope: ").strip():
             raise ValueError(f"{name}: review scope is missing")
-        if lines[-1] not in {"Verdict: PASS", "Verdict: FINDINGS", "Verdict: FAIL", "Verdict: BLOCKED"}:
-            raise ValueError(f"{name}: review must end with its explicit verdict")
+        final_verdict = lines[-1] in {"Verdict: PASS", "Verdict: FINDINGS"}
+        inconclusive = lines[-2] == "Verdict: INCONCLUSIVE" and bool(lines[-1].strip())
+        if not (final_verdict or inconclusive):
+            raise ValueError(f"{name}: review must end with PASS, FINDINGS, or INCONCLUSIVE and a reason")
 
 
 def plan(root: Path, paths: list[str], metadata: dict) -> list[list[str]]:
@@ -166,16 +168,23 @@ def plan(root: Path, paths: list[str], metadata: dict) -> list[list[str]]:
     return commands
 
 
+def observe_exit(process: subprocess.Popen) -> int | None:
+    """Read exit status without reaping: the leader must reserve its group ID."""
+    status = os.waitid(os.P_PID, process.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+    if status is None:
+        return None
+    return status.si_status if status.si_code == os.CLD_EXITED else -status.si_status
+
+
 def stop_check(process: subprocess.Popen) -> None:
     """Clean the check's group even when its leader exited successfully."""
     try:
         os.killpg(process.pid, signal.SIGTERM)
     except ProcessLookupError:
         pass
-    try:
-        process.wait(timeout=5)
-    except subprocess.TimeoutExpired:
-        pass
+    deadline = time.monotonic() + 5
+    while observe_exit(process) is None and time.monotonic() < deadline:
+        time.sleep(0.01)
     try:
         os.killpg(process.pid, signal.SIGKILL)
     except ProcessLookupError:
@@ -207,7 +216,7 @@ def supervise(lifeline: int, timeout: int, command: list[str]) -> int:
             if stopping or select.select([lifeline], [], [], 0.05)[0]:
                 print("Check interrupted; this check did not pass", file=sys.stderr)
                 return 130
-            code = process.poll()
+            code = observe_exit(process)
             if code is not None:
                 return code if code >= 0 else 128 - code
             if time.monotonic() >= deadline:

@@ -148,6 +148,46 @@ class FastGateTests(unittest.TestCase):
         commands = gate.plan(self.root, ["scripts/example.py", "tests/test_example.py"], self.metadata)
         self.assertEqual(commands[-1], [sys.executable, "-m", "unittest", "tests.test_example"])
 
+    def test_review_verdicts_match_independent_reviewer_format(self):
+        name = "docs/reviews/exact-review.txt"
+        header = "Commit: " + "a" * 40 + "\nScope: synthetic-review\n\n"
+        for ending in ("Verdict: PASS\n", "Verdict: FINDINGS\n",
+                       "Verdict: INCONCLUSIVE\nRequired runtime unavailable.\n"):
+            with self.subTest(ending=ending):
+                report = self.write(name, header + ending)
+                gate.review_text_lint(self.root, [name])
+                self.assertEqual(report.read_text(), header + ending)
+        for ending in ("Verdict: FAIL\n", "Verdict: BLOCKED\n", "Verdict: INCONCLUSIVE\n",
+                       "Verdict: INCONCLUSIVE\n\n", "Verdict: INCONCLUSIVE\nReason\nExtra\n"):
+            with self.subTest(ending=ending), self.assertRaises(ValueError):
+                self.write(name, header + ending)
+                gate.review_text_lint(self.root, [name])
+
+    def test_cleanup_keeps_exited_leader_until_all_group_signals_are_sent(self):
+        for script, expected in (("raise SystemExit(7)", 7),
+                                 ("import os,signal; os.kill(os.getpid(),signal.SIGTERM)", -signal.SIGTERM)):
+            with self.subTest(script=script):
+                process = subprocess.Popen([sys.executable, "-c", script], process_group=0)
+                self.addCleanup(process.wait)
+                os.waitid(os.P_PID, process.pid, os.WEXITED | os.WNOWAIT)
+                self.assertEqual(gate.observe_exit(process), expected)
+                original_killpg = os.killpg
+                observed = []
+
+                def check_reserved_group(pid, signum):
+                    self.assertEqual(pid, process.pid)
+                    # This raises if the leader has already been reaped.
+                    status = os.waitid(os.P_PID, pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+                    self.assertEqual(status.si_pid, pid)
+                    self.assertIsNone(process.returncode)
+                    observed.append(signum)
+                    original_killpg(pid, signum)
+
+                with patch.object(gate.os, "killpg", side_effect=check_reserved_group):
+                    gate.stop_check(process)
+                self.assertEqual(observed, [signal.SIGTERM, signal.SIGKILL])
+                self.assertEqual(process.returncode, expected)
+
     def test_python_lint_checks_syntax_indentation_and_whitespace(self):
         for source in ("x =\n", "x = 1 \n", "x = 1"):
             self.write("scripts/example.py", source)
