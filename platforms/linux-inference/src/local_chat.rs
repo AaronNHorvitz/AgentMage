@@ -229,8 +229,9 @@ pub enum ChatEvent {
 ///
 /// Handles arbitrarily split UTF-8, one leading UTF-8 byte-order mark, LF/CRLF
 /// lines, comments, multiline data and usage-only events. Non-ASCII field names
-/// are refused. The transport must separately enforce status, media type,
-/// HTTP framing, wire/header/time limits, cancellation and no redirects/proxies.
+/// and lone carriage returns are refused. The transport must separately enforce
+/// status, media type, HTTP framing, wire/header/time limits, cancellation and no
+/// redirects/proxies.
 /// Fixed ceilings: 64 KiB per event, 4 MiB total body, 1 MiB emitted text. Any
 /// decoding failure poisons the decoder; partial text is never a completed answer.
 pub struct ChatStream {
@@ -311,6 +312,11 @@ impl ChatStream {
             }
             let raw = std::mem::take(&mut self.line);
             let raw = raw.strip_suffix(b"\r").unwrap_or(&raw);
+            // Only CRLF is supported. A lone CR must not fold the next data
+            // field into a comment or ignored metadata and lose answer text.
+            if raw.contains(&b'\r') {
+                return Err(ChatError::Protocol);
+            }
             // The line buffer already spans fragments, including a split BOM.
             // Strip it only at body offset zero; its bytes still count toward
             // both budgets. A second or misplaced BOM cannot hide a data field.

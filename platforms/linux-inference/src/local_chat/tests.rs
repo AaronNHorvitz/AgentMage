@@ -337,6 +337,105 @@ fn crlf_comments_metadata_and_multiline_json_are_supported() {
 }
 
 #[test]
+fn lone_carriage_returns_cannot_hide_text_at_any_fragment_boundary() {
+    for prefix in [
+        "\r",
+        ": heartbeat\r",
+        "id: 7\r",
+        "retry: 5\r",
+        "unknown: inert\r",
+        "data: \r",
+        ": heartbeat\r\r\n",
+    ] {
+        for crlf in [false, true] {
+            for middle in [false, true] {
+                let first = frame(chunk(json!({"content": "first "}), Value::Null));
+                let hidden = frame(chunk(
+                    json!({"content": "must not disappear "}),
+                    Value::Null,
+                ));
+                let mut bytes = if middle { first } else { Vec::new() };
+                bytes.extend_from_slice(prefix.as_bytes());
+                bytes.extend(hidden);
+                bytes.extend(answer("stop"));
+                if crlf {
+                    // Preserve the malformed CRs while changing every LF to CRLF.
+                    bytes = String::from_utf8(bytes)
+                        .unwrap()
+                        .replace('\n', "\r\n")
+                        .into_bytes();
+                }
+                for split in 0..=bytes.len() {
+                    let mut decoder = ChatStream::new("test-model").unwrap();
+                    let mut events = Vec::new();
+                    let result =
+                        [&bytes[..split], &bytes[split..]]
+                            .into_iter()
+                            .try_for_each(|part| {
+                                events.extend(decoder.feed(part)?);
+                                Ok(())
+                            });
+                    assert_eq!(
+                        result,
+                        Err(ChatError::Protocol),
+                        "{prefix:?}, {crlf}, {middle}, {split}"
+                    );
+                    assert!(
+                        events
+                            .iter()
+                            .all(|event| matches!(event, ChatEvent::Text(_)))
+                    );
+                    assert_eq!(decoder.end(), Err(ChatError::Failed));
+                    assert_eq!(decoder.feed(&answer("stop")), Err(ChatError::Failed));
+                }
+                let mut decoder = ChatStream::new("test-model").unwrap();
+                let mut refused = false;
+                for byte in &bytes {
+                    match decoder.feed(&[*byte]) {
+                        Ok(events) => assert!(
+                            events
+                                .iter()
+                                .all(|event| matches!(event, ChatEvent::Text(_)))
+                        ),
+                        Err(error) => {
+                            assert_eq!(error, ChatError::Protocol);
+                            refused = true;
+                            break;
+                        }
+                    }
+                }
+                assert!(refused, "{prefix:?}, {crlf}, {middle}");
+                assert_eq!(decoder.end(), Err(ChatError::Failed));
+                assert_eq!(decoder.feed(&answer("stop")), Err(ChatError::Failed));
+            }
+        }
+    }
+}
+
+#[test]
+fn escaped_carriage_returns_remain_model_content() {
+    let text = "first\rsecond\r\nthird";
+    let bytes = [
+        frame(chunk(json!({"content": text}), json!("stop"))),
+        b"data: [DONE]\n\n".to_vec(),
+    ]
+    .concat();
+    for split in 0..=bytes.len() {
+        let mut decoder = ChatStream::new("test-model").unwrap();
+        let mut events = decoder.feed(&bytes[..split]).unwrap();
+        events.extend(decoder.feed(&bytes[split..]).unwrap());
+        assert_eq!(
+            events,
+            vec![
+                ChatEvent::Text(text.to_owned()),
+                ChatEvent::Finished(ChatFinish::Stop)
+            ]
+        );
+        assert_eq!(decoder.end(), Ok(()));
+    }
+}
+
+#[test]
 fn eof_never_promotes_partial_text_or_finish_reason_to_success() {
     let bytes = answer("stop");
     for length in 0..bytes.len() {

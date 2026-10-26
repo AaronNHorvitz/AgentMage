@@ -27,7 +27,9 @@ Returned bytes contain private conversation data and must not be logged.
 
 `ChatStream` consumes HTTP-decoded event-stream body fragments. LF and CRLF,
 comments, inert event metadata, multiline data and arbitrarily split UTF-8 are
-supported. Exactly one UTF-8 byte-order mark at body offset zero is ignored,
+supported. Lone carriage returns are refused rather than treated as line
+terminators or allowed to hide the next field in a comment or metadata value.
+Exactly one UTF-8 byte-order mark at body offset zero is ignored,
 including when split across fragments. It counts toward the event and body
 budgets. Non-ASCII field names are refused, so a second or misplaced mark cannot
 silently hide a data field. Marks inside JSON text remain content.
