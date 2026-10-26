@@ -1,0 +1,209 @@
+Commit: e88a9b42cd35821d81f6c8d706b65f151aadcbe2
+Scope: local-agent-t301-second-repair
+
+# Independent re-review: T-301 second repair (L4, L5, reviewer Node access)
+
+Reviewer: independent read-only session (same model family as the builder, separate
+session, no shared context). Rows: T-301 and T-301.1. Tier: core. Review attempt 3.
+Previous reviewed commit: `4fda20f7d9f335cfe859cb3e01206573ea5e3e08`. Mission base:
+`ecf33af35782bf2f76fbfe7332f6348d31ba4277`. Date: 2026-10-25.
+
+## Summary
+
+- **Node access is resolved.** I independently confirmed the runtime at the shared
+  private path, and both checksums match the request. Markdown lint ran, and the
+  scoped fast gate reproduced as **PASS** in this session. This removes the sole
+  reason for review 2's INCONCLUSIVE verdict.
+- **L5 is fixed.** `waitid(..., WNOWAIT)` is used in both `supervise` and
+  `stop_check`. With instrumentation, I traced the committed supervisor on six exit
+  paths. On every path, SIGTERM and SIGKILL reach the group while the leader is
+  still unreaped, and the reap comes last. Mutation testing shows that the tests
+  catch a regression in either place.
+- **L4 is fixed.** The lint accepts exactly PASS, FINDINGS, and INCONCLUSIVE plus a
+  reason, and it rejects FAIL, BLOCKED and a missing reason. Both retained reports
+  pass unchanged. I found one new low gap (L6, below).
+- **No high or medium finding is open** at this commit.
+- **T-301 is still not closable.** The row's "done when" requires a passing
+  touched-crate Rust gate. That gate cannot run green in this lane until T-301.1
+  is resolved. No Rust run was required of this review or claimed by the builder.
+  The parent row therefore has a required verification that is still missing.
+  This is the third non-PASS review, so the three-strike rule now applies. The
+  only remaining blocking scope is T-301.1 (see the per-row result).
+
+## Method
+
+- I read `IP-POLICY.md` and Decision 0151 (rules 8–10, "Consequences and truth").
+  I read the active TASKS.md queue, my previous report (attempt 2), the full
+  repaired gate script and the full diff `4fda20f7d9f3..e88a9b42cd35` (6 files).
+- I confirmed the commit with `git rev-parse`. `git status --porcelain` was empty
+  before and after the review. The ignored `__pycache__` directories predate this
+  session, and `PYTHONDONTWRITEBYTECODE=1` was set for every run.
+- Probes ran on copies of the committed gate and test module under `/tmp`. The
+  repository was not modified. No tool was installed or downloaded.
+- No GPU, model, provider, network, browser or build slot was used. The row has no
+  UI. No Rust package changed (diff exit 0 below), and I did not rerun Rust.
+
+## Commands and observed results
+
+All commands ran from the repository root after the request's PATH setup.
+
+| Command | Result |
+| --- | --- |
+| `test -x "$HOME/.local/share/agentmage-build-tools/node-v24.15.0/bin/node"` | exit 0 |
+| `node --version` | `v24.15.0` |
+| `sha256sum …/bin/node …/LICENSE` | `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c` and `4573185d56580da2b890ba34a85a409257640f1c5632eade4300137266194d18`, both as stated. The directories are mode 700 and owned by the session user. |
+| `git rev-parse HEAD` | `e88a9b42cd35821d81f6c8d706b65f151aadcbe2` |
+| `git status --porcelain` (start and end) | empty |
+| `python3 scripts/local_agent_fast_gate.py --base ecf33af3…` | **exit 0, `FAST GATE: PASS`**, 4.35 s wall. Six commands, all exit 0: range diff check; untracked whitespace; review-text lint (both retained `.txt` reports); `markdownlint-cli2 v0.23.2 (markdownlint v0.41.1)`, `Linting: 7 files`, `Summary: 0 issues in 0 files`; Python lint; `Ran 23 tests in 2.469s OK`. |
+| `python3 scripts/validate_docs.py` | `Validated 678 Markdown file(s) and all policy invariants.` exit 0, 2 m 27 s |
+| `git diff --check 4fda20f7… e88a9b42…` | exit 0 |
+| `git diff --exit-code ecf33af3… e88a9b42… -- Cargo.toml Cargo.lock capabilities kernel platforms shells architecture/status-model.json supply-chain` | exit 0 (unchanged) |
+| `cmp docs/reviews/4fda20f7d9f3-local-agent-t301-review-repair.txt /lane/reviews/4fda20f7d9f3-local-agent-t301-review-repair.md` | exit 0 (byte-identical) |
+| `sha256sum docs/reviews/4fda20f7d9f3-local-agent-t301-review-repair.txt` | `b889e731fdf921898501d29ad20a57e8983457f6dc2382ac6c39463a191c36bb` (matches the request and the evidence) |
+| `cmp` of the first retained report with its source | exit 0 (still byte-identical) |
+| `cat /proc/self/uid_map` | `1000 0 1` (no root mapping) |
+| `stat -c '%n %u %a' /usr/bin/{bwrap,systemd-run,git,bash}` | all `65534 755`. The T-301.1 condition persists. |
+| Builder raw output `/lane/state/tmp/t301/second-review-repair-fast-gate.txt` | Same six results, 7 files with 0 issues, `Ran 23 tests in 2.340s`, PASS. It agrees with my run. |
+
+Lint configuration and Markdown tooling manifests are unchanged since the mission
+base. `git diff --stat` shows no changes to `.markdownlint*`, `package.json` or
+`package-lock.json`. `node_modules/` is ignored and not committed.
+
+## L5 verification: the leader stays unreaped through both group signals
+
+Code reviewed: `scripts/local_agent_fast_gate.py:171-189` (`observe_exit`,
+`stop_check`) and `:219` (`supervise`).
+
+- `observe_exit` uses `os.waitid(P_PID, pid, WEXITED | WNOHANG | WNOWAIT)`.
+  `CLD_EXITED` maps to the exit status. Killed or dumped maps to the negated
+  signal, and `supervise` turns that into `128 + signal`.
+- `stop_check` sends TERM to the group. It then polls `observe_exit`, without
+  reaping, for up to 5 s, sends KILL to the group, and only then calls
+  `process.wait()`. Nothing else in the supervisor reaps. I checked that there is
+  no Popen context manager, `poll()` or `communicate()` and no SIGCHLD disposition
+  change.
+- **Timing, unchanged.** After a normal exit, KILL follows TERM immediately, as it
+  did before the repair. Members that ignore TERM therefore still get no grace
+  period after the leader has exited. That matches the documented behaviour.
+
+I wrote an independent in-process probe that wraps `os.killpg` and the reaping
+calls while the committed `supervise()` runs. At every group signal it checks with
+a separate `WNOWAIT` probe whether the leader is still waitable:
+
+| Scenario | Return | Observed sequence |
+| --- | --- | --- |
+| exit 0 | 0 | TERM (leader zombie), KILL (zombie), reap |
+| exit 7 | 7 | TERM (zombie), KILL (zombie), reap |
+| self-SIGTERM | 143 | TERM (zombie), KILL (zombie), reap |
+| timeout, leader responds to TERM | 124 | TERM (alive), KILL (zombie), reap |
+| timeout, leader ignores TERM | 124 | TERM (alive), KILL (alive, after 5 s), reap |
+| gate lifeline EOF | 130 | TERM (alive), KILL (zombie), then the reap |
+
+In every case the group ID stays reserved by the unreaped leader until both
+signals have been sent.
+
+Mutation testing on a temporary copy (23 tests each run):
+
+| Mutation | Tests failed |
+| --- | --- |
+| `supervise` reverted to `process.poll()` | 3 (existing cleanup and exit tests) |
+| `stop_check` reverted to `process.wait(timeout=5)` | 2 (new regression subtests) |
+| `WNOWAIT` removed from `observe_exit` | 5 |
+| Verdict set reverted to include FAIL and BLOCKED | 2 |
+| Sign of the signal status flipped | 1 |
+
+Every mutation fails the suite, so the regression checks have teeth. The test diff
+only adds tests. No existing assertion, timeout or threshold changed.
+
+L5 is fixed.
+
+## L4 verification: review-text format
+
+Code reviewed: `scripts/local_agent_fast_gate.py:112-115`.
+
+- Accepted: `Verdict: PASS` or `Verdict: FINDINGS` as the last line, or
+  `Verdict: INCONCLUSIVE` on the penultimate line followed by a non-blank reason.
+- Rejected: FAIL, BLOCKED, INCONCLUSIVE with no reason or a blank reason, an extra
+  line after the reason, FINDINGS followed by a line, and lower-case verdicts.
+- The INCONCLUSIVE attempt-2 report is accepted unchanged, and the guide text
+  (`docs/guides/local-agent-development.md:38-40`) describes the same rule.
+
+L4 is fixed. See L6 for a remaining low gap.
+
+## Other checks
+
+- **Privacy and branding.** I checked all 372 added lines for the session username,
+  the hostname, `/var/home`, `/home/`, the private tool path, e-mail patterns and
+  credential keywords: 0 hits. The shared private tool path appears only in the
+  private request, never in Git. The evidence describes it only as "shared home".
+  The only lane path added is inside the retained attempt-2 report, and it was
+  already reviewed. No trademark is used as branding.
+- **Ledger.** The TASKS.md diff changes only the T-301 cell. It records review 2 as
+  INCONCLUSIVE, says T-301.1 still blocks native verification, and keeps both rows
+  `[ ]`. T-302 is not started.
+- **Evidence claims.** The claims in `docs/evidence/t301-second-review-repair-2026-10-25.md`
+  are supported by my runs: six commands, seven files, 23 tests, 678 files, the
+  report hash, unchanged Rust/runtime/supply-chain, and no weakened tests. It
+  correctly says that a tooling-only pass does not make native Rust tests pass.
+- **Confinement.** No product sandbox, trust or permission code changed in this
+  batch (diff exit 0). The gate's process cleanup is development tooling, as the
+  guide states, and its documented limits (`setsid`, supervisor SIGKILL) are
+  unchanged from attempt 2.
+
+## Findings
+
+No critical, high or medium findings.
+
+### L6 (low): the review-text check accepts endings with two contradictory verdicts
+
+Location: `scripts/local_agent_fast_gate.py:112-114`.
+
+`final_verdict` only checks the last line. Reproduction in a temporary root:
+
+- A report ending `Verdict: INCONCLUSIVE` and then `Verdict: PASS` is accepted.
+- A report ending `Verdict: PASS` and then `Verdict: FINDINGS` is accepted.
+
+Both contradict the reviewer format, which ends with one verdict line. The check is
+documented as format-only and fails closed in every other case I tried, so this is
+not a security or closure issue.
+
+Fix: require exactly one line that equals `Verdict: PASS`, `Verdict: FINDINGS` or
+`Verdict: INCONCLUSIVE`. For INCONCLUSIVE, also refuse a reason line that starts
+with `Verdict:`. Add the two endings above as rejected cases. Both currently
+retained reports contain exactly one `Verdict: ` line, so they remain valid.
+
+### Carried backlog (unchanged)
+
+- L2: Python importer/caller selection, T-309.
+- The four low findings from the `ecf33af35782` review.
+
+## Per-row result
+
+- **Second-repair scope: complete.** L4 and L5 are fixed. Reviewer Node access is
+  established, and the full requested command set reproduces, including Markdown
+  lint and a scoped fast-gate PASS. No high or medium finding is open. L6 is new
+  low backlog.
+- **T-301: not closable at this commit. Third non-PASS review.**
+  - Everything in the row except its native Rust leg now has independent support.
+    That covers the truthful baseline (review 1), the documented minutes-scale gate,
+    and its format, lint and Python test legs passing as independently reproduced.
+  - The "touched-crate unit/integration tests" leg cannot be shown passing.
+    `agentmage-host` or `agentmage-platform-linux` is selected by a change in 8 of
+    the 10 crates, and their native tests fail here on the 65534 trusted-executable
+    ownership condition, which still holds.
+  - That verification is required and missing, so it is not a PASS.
+  - Under Decision 0151 rule 9, keep T-301 open. The only remaining blocking scope is
+    already in sub-row T-301.1. There are no remaining high or medium review
+    findings to carry into a sub-row. Low items (L2, L6 and the four `ecf33af35782`
+    lows) are backlog for T-309.
+  - Dependency-ready work may proceed as that rule allows. T-301 can close on a
+    later exact-commit review once T-301.1 produces a passing native run of the
+    affected full test targets, with no skips, filters, allowlists or relaxed
+    trust checks.
+- **T-301.1: open owner-action blocker, still accurately classified.** The UID map
+  is still `1000 0 1`, and the four executables are still owned by 65534. The
+  row's required action (a root-mapped lane or a native owner-host run) is
+  unchanged and has not been performed.
+
+Verdict: INCONCLUSIVE
+The second repair has no open high or medium finding and every requested command reproduced, including a scoped fast-gate PASS. T-301 still lacks its required passing touched-crate native Rust run, which is blocked by T-301.1 (overflow-UID trusted executables in this lane).

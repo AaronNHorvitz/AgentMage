@@ -31,6 +31,9 @@ mod native_model_adapter;
 mod native_resource_admission;
 mod native_runtime;
 
+/// Effect-free protocol components for the configurable local chat connection.
+pub mod local_chat;
+
 pub use native_resource_admission::NativeDevelopmentResourcePolicy;
 
 pub use docker_guard::{
