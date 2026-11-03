@@ -19,7 +19,7 @@ class OracleProtocolTests(unittest.TestCase):
     def test_argument_proxy_preserves_namespace_paths_and_order_without_object_deserialization(self):
         values = {'root': {'path': '/expected'}, 'grant': {'path': '/s/grant.json'},
                   'workspace': 'workspace-a', 'list': False, 'count': 3, 'unset': None}
-        replies = [{'namespace': values}, {'arguments': ['--route-grant', '/s/grant.json']},
+        replies = [{'namespace': values}, {'arguments': ['--route-grant', '/s/grant.json'], 'container': 'list'},
                    {'harness_error': True}, {'parser_exit': True}, {'missing_function': True}]
         raw = b''.join(worker.encode_message({'seq': index, 'result': reply})
                        for index, reply in enumerate(replies, 1))
@@ -58,10 +58,54 @@ class OracleProtocolTests(unittest.TestCase):
             with self.subTest(reply=reply), self.assertRaises(worker.ProtocolError):
                 remote(request)
             self.assertTrue(remote.failed)
-        for reply in ({'arguments': [1]}, {'namespace': {}}):
+        for reply in ({'arguments': [1], 'container': 'list'}, {'namespace': {}},
+                      {'arguments': [], 'container': '__reduce__'},
+                      {'arguments': [], 'container': ['list']}, {'arguments': []},
+                      {'arguments': [], 'container': 'tuple', 'message': 'payload'}):
             remote = self.remote(worker.encode_message({'seq': 1, 'result': reply}), 'argument-result')
             with self.assertRaises(worker.ProtocolError):
                 remote({'operation': 'arguments', 'namespace': {}})
+            self.assertTrue(remote.failed)
+
+    def test_fixed_policy_tag_is_sticky_and_never_a_successful_observation(self):
+        for kind in ('argument-result', 'verification-result', 'bool'):
+            remote = self.remote(b'{"seq":1,"result":{"adapter_policy":true}}\n', kind)
+            with self.subTest(kind=kind), self.assertRaises(worker.AdapterPolicyError):
+                remote({})
+            self.assertTrue(remote.policy_failed)
+            self.assertFalse(remote.failed)
+            remote.reader = io.BytesIO(b'{"seq":2,"result":true}\n')
+            with self.assertRaises(worker.AdapterPolicyError):
+                remote({})
+            self.assertEqual(remote.calls, 2)
+            self.assertEqual(remote.reader.tell(), 0)
+        for result in ({'adapter_policy': 1}, {'adapter_policy': 'payload'},
+                       {'adapter_policy': True, 'message': 'payload'}):
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': result}))
+            with self.assertRaises(worker.ProtocolError):
+                remote({})
+            self.assertTrue(remote.failed)
+            self.assertFalse(remote.policy_failed)
+
+    def test_argument_tuple_reconstruction_preserves_original_equality_failure(self):
+        remote = self.remote(b'{"seq":1,"result":{"arguments":["a"],"container":"tuple"}}\n',
+                             'argument-result')
+        _, arguments = worker.argument_proxies(remote, SimpleNamespace(HarnessError=ValueError))
+        self.assertEqual(arguments(argparse.Namespace()), ('a',))
+
+    def test_case_roots_are_only_bounded_string_observations(self):
+        roots = {'case-a': 'same', 'case-b': 'same'}
+        remote = self.remote(worker.encode_message({'seq': 1, 'result': {'case_roots': roots}}),
+                             'verification-result')
+        self.assertEqual(remote({'operation': 'case-roots'}), {'case_roots': roots})
+        # Duplicates are valid data: the original assertion must reject them.
+        for roots in ([], {'a': {'__reduce__': 'payload'}}, {'a': 1},
+                      {'a': 'x' * 257}, {'x' * 257: 'a'},
+                      {str(i): 'a' for i in range(129)}):
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': {'case_roots': roots}}),
+                                 'verification-result')
+            with self.subTest(roots=roots), self.assertRaises(worker.ProtocolError):
+                remote({'operation': 'case-roots'})
             self.assertTrue(remote.failed)
 
     def test_argument_candidate_runs_only_the_requested_parser_or_helper_and_fixed_exceptions(self):
@@ -79,7 +123,7 @@ class OracleProtocolTests(unittest.TestCase):
         parse.assert_called_once_with(['--list'])
         helper.assert_not_called()
         request = {'operation': 'arguments', 'namespace': worker.pack_namespace(parsed)}
-        self.assertEqual(worker.argument_result(module, 'helper', request), {'arguments': ['--list']})
+        self.assertEqual(worker.argument_result(module, 'helper', request), {'arguments': ['--list'], 'container': 'list'})
         helper.assert_called_once_with(parsed)
         helper.side_effect = HarnessError('untrusted payload')
         self.assertEqual(worker.argument_result(module, 'helper', request), {'harness_error': True})
@@ -89,8 +133,8 @@ class OracleProtocolTests(unittest.TestCase):
                          {'parser_exit': True})
         for code in (0, True, 'payload'):
             parse.side_effect = SystemExit(code)
-            with self.assertRaises(SystemExit):
-                worker.argument_result(module, 'helper', {'operation': 'parse', 'argv': []})
+            self.assertEqual(worker.argument_result(module, 'helper', {'operation': 'parse', 'argv': []}),
+                             {'adapter_policy': True})
         parse.side_effect = RuntimeError('not a registered exception')
         with self.assertRaises(RuntimeError):
             worker.argument_result(module, 'helper', {'operation': 'parse', 'argv': []})

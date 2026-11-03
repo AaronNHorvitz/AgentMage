@@ -26,6 +26,10 @@ class ProtocolError(ValueError):
     """Candidate data is never interpreted as code or a test result."""
 
 
+class AdapterPolicyError(ValueError):
+    """A candidate observation cannot be represented by this bounded adapter."""
+
+
 def unique_object(pairs):
     result = {}
     for key, value in pairs:
@@ -71,6 +75,7 @@ class RemoteFunction:
         self.calls = 0
         self.transcript_bytes = 0
         self.failed = False
+        self.policy_failed = False
         self.candidate_ready = False
         self.function_found = None
 
@@ -101,6 +106,8 @@ class RemoteFunction:
     def __call__(self, *args):
         try:
             self.calls += 1
+            if self.policy_failed:
+                raise AdapterPolicyError("oracle.adapter-policy")
             if self.failed or self.calls > MAX_CALLS:
                 raise ProtocolError("oracle.call-limit")
             request = encode_message({"seq": self.calls, "args": args})
@@ -114,6 +121,9 @@ class RemoteFunction:
                     or type(reply["seq"]) is not int or reply["seq"] != self.calls):
                 raise ProtocolError("oracle.invalid-reply")
             result = reply["result"]
+            if (isinstance(result, dict) and result.keys() == {"adapter_policy"}
+                    and result["adapter_policy"] is True):
+                raise AdapterPolicyError("oracle.adapter-policy")
             if self.result_type == "bool":
                 valid = type(result) is bool
             elif self.result_type == "path-result":
@@ -123,11 +133,15 @@ class RemoteFunction:
                         and all(type(path) is str and path in args[0] for path in result["paths"])
                         and len(result["paths"]) == len(set(result["paths"])))))
             elif self.result_type == "verification-result":
-                valid = (isinstance(result, dict) and (
-                    (result.keys() == {"missing_case"} and result["missing_case"] is True)
-                    or (result.keys() == {"passed", "checks"} and type(result["passed"]) is bool
-                        and isinstance(result["checks"], dict) and bool(result["checks"])
-                        and all(type(value) is bool for value in result["checks"].values()))))
+                if args[0] == {"operation": "case-roots"}:
+                    valid = (isinstance(result, dict) and result.keys() == {"case_roots"}
+                             and valid_case_roots(result["case_roots"]))
+                else:
+                    valid = (isinstance(result, dict) and (
+                        (result.keys() == {"missing_case"} and result["missing_case"] is True)
+                        or (result.keys() == {"passed", "checks"} and type(result["passed"]) is bool
+                            and isinstance(result["checks"], dict) and bool(result["checks"])
+                            and all(type(value) is bool for value in result["checks"].values()))))
             elif self.result_type == "argument-result":
                 valid = valid_argument_result(result, args[0])
             else:
@@ -136,6 +150,9 @@ class RemoteFunction:
             if not valid:
                 raise ProtocolError("oracle.invalid-result")
             return result
+        except AdapterPolicyError:
+            self.policy_failed = True
+            raise
         except (OSError, ValueError, RecursionError):
             self.failed = True
             raise ProtocolError("oracle.exchange-failed") from None
@@ -185,14 +202,15 @@ def pack_namespace(namespace):
 
 
 def valid_argument_result(result, request):
-    if not isinstance(result, dict) or len(result) != 1:
+    if not isinstance(result, dict):
         return False
     if result.keys() in ({"harness_error"}, {"parser_exit"}, {"missing_function"}):
         return next(iter(result.values())) is True
     if request.get("operation") == "parse" and result.keys() == {"namespace"}:
         namespace_values(result["namespace"])
         return True
-    return (request.get("operation") == "arguments" and result.keys() == {"arguments"}
+    return (request.get("operation") == "arguments" and result.keys() == {"arguments", "container"}
+            and type(result["container"]) is str and result["container"] in {"list", "tuple"}
             and isinstance(result["arguments"], list)
             and all(type(value) is str for value in result["arguments"]))
 
@@ -217,7 +235,8 @@ def argument_proxies(remote, module):
     def arguments(namespace):
         result = argument_value(remote({"operation": "arguments",
                                         "namespace": pack_namespace(namespace)}), module)
-        return result["arguments"]
+        return (result["arguments"] if result["container"] == "list"
+                else tuple(result["arguments"]))
     return Parser, arguments
 
 
@@ -230,19 +249,26 @@ def argument_result(module, name, request):
         if (operation == "parse" and request.keys() == {"operation", "argv"}
                 and isinstance(request["argv"], list)
                 and all(type(value) is str for value in request["argv"])):
-            return {"namespace": pack_namespace(module.parser().parse_args(request["argv"]))}
+            parsed = module.parser().parse_args(request["argv"])
+            try:
+                return {"namespace": pack_namespace(parsed)}
+            except (ProtocolError, TypeError):
+                return {"adapter_policy": True}
         if operation == "arguments" and request.keys() == {"operation", "namespace"}:
             values = namespace_values(request["namespace"])
             function = getattr(module, name, None)
             if not callable(function):
                 return {"missing_function": True}
-            return {"arguments": function(argparse.Namespace(**values))}
+            result = function(argparse.Namespace(**values))
+            if type(result) not in (list, tuple) or any(type(value) is not str for value in result):
+                return {"adapter_policy": True}
+            return {"arguments": list(result), "container": "list" if type(result) is list else "tuple"}
     except module.HarnessError:
         return {"harness_error": True}
     except SystemExit as error:
         if type(error.code) is int and error.code == 2:
             return {"parser_exit": True}
-        raise
+        return {"adapter_policy": True}
     raise ProtocolError("oracle.invalid-argument-request")
 
 
@@ -307,7 +333,19 @@ def verification_result(function, module, request):
             except KeyError:
                 # Only a literal tag crosses the boundary, never exception data.
                 return {"missing_case": True}
-        return {"passed": result["passed"], "checks": result["checks"]}
+        passed, checks = result["passed"], result["checks"]
+        if (type(passed) is not bool or type(checks) is not dict or not checks
+                or any(type(value) is not bool for value in checks.values())):
+            return {"adapter_policy": True}
+        return {"passed": passed, "checks": checks}
+
+
+def valid_case_roots(roots):
+    """Bounded strings for the frozen uniqueness assertion; never file access."""
+    return (type(roots) is dict and len(roots) <= 128
+            and all(type(key) is str and len(key) <= 256
+                    and type(value) is str and len(value) <= 256
+                    for key, value in roots.items()))
 
 
 def candidate(config):
@@ -335,7 +373,11 @@ def candidate(config):
             if config["result_type"] == "path-result":
                 result = path_result(function, module.AmbiguousReference, *request["args"])
             elif config["result_type"] == "verification-result":
-                result = verification_result(function, module, *request["args"])
+                if config.get("observe_case_roots") and request["args"] == [{"operation": "case-roots"}]:
+                    roots = getattr(module, "CASE_ROOTS", None)
+                    result = {"case_roots": roots} if valid_case_roots(roots) else {"adapter_policy": True}
+                else:
+                    result = verification_result(function, module, *request["args"])
             elif config["result_type"] == "argument-result":
                 result = argument_result(module, config["function"], *request["args"])
             else:
@@ -354,9 +396,11 @@ def oracle(config):
         result = unittest.TestResult()
         try:
             remote.start()
-        except ProtocolError:
-            # No assertion runs when the candidate did not reach its function
-            # lookup. Still retain a trusted diagnostic record, never a score.
+            if config.get("observe_case_roots"):
+                module.CASE_ROOTS = remote({"operation": "case-roots"})["case_roots"]
+        except (ProtocolError, AdapterPolicyError):
+            # Failed startup or a refused prerequisite observation runs no
+            # assertions. Retain the diagnostic and failed attempt, never a score.
             pass
         else:
             if config["result_type"] == "path-result":
@@ -382,9 +426,10 @@ def oracle(config):
                   "unexpected_successes": len(result.unexpectedSuccesses)}
         passed = (result.wasSuccessful() and result.testsRun == config["expected_tests"]
                   and not result.skipped and not result.expectedFailures
-                  and not remote.failed and remote.calls > 0)
+                  and not remote.failed and not remote.policy_failed and remote.calls > 0)
         Path("/output/tests.json").write_text(json.dumps({
             "tests": counts, "calls": remote.calls, "protocol_failed": remote.failed,
+            "adapter_policy_failed": remote.policy_failed,
             "candidate_ready": remote.candidate_ready, "function_found": remote.function_found,
         }, sort_keys=True) + "\n")
     return 0 if passed else 1

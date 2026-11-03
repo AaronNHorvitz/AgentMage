@@ -3,7 +3,9 @@
 T-311.7 separates candidate execution from frozen assertions; T-311.8 adds
 startup discrimination and source classification. T-311.9 adds two acceptance
 verification functions. T-311.10 adds three parser/argument tasks and a third
-acceptance predicate, for ten existing development tasks. This is a
+acceptance predicate, for ten existing development tasks. T-311.11 preserves
+argument list/tuple distinctions, observes candidate case roots and separates
+adapter policy from malformed wire data. This is a
 prerequisite for trustworthy scoring,
 not generated-candidate admission, a model baseline or a completed T-311.
 The original collection, hidden bytes, method selections and thresholds stay
@@ -27,7 +29,7 @@ Every selected original hidden method remains complete and unchanged.
 | dev-015 | `case_passed` | 1 | 1 / 0 | 3 | 4 |
 | dev-020 | `verify_case` | 1 | 1 / 0 | 2 | 3 |
 | dev-021 | `verify_case` | 1 | 0 / 1 | 1 | 6 |
-| dev-022 | `verify_case` | 1 | 0 / 1 | 1 | 3 |
+| dev-022 | `verify_case`, case roots | 1 | 0 / 1 | 2 | 4 |
 | dev-027 | `parser`, `extension_arguments` | 1 | 0 / 1 | 1 | 37 |
 | dev-029 | `suspend_resume_checks` | 1 | 0 / 1 | 1 | 6 |
 
@@ -40,6 +42,8 @@ arbitrary failure cannot validate a base. A missing function in dev-029 is the
 expected failed protocol control. Its oracle may exit 120 when flushing a broken
 pipe at shutdown, after retaining counts; exits 1 and 120 are both failures.
 Launch/import failure, timeout or missing counts cannot validate a control.
+The extra dev-022 call observes candidate case roots before its original
+uniqueness assertion; its hidden method and three predicate calls are unchanged.
 
 The functions use JSON values and lexical paths. Three verification tasks also
 use finite text fixtures and stub observations, described below. Other tasks,
@@ -127,15 +131,20 @@ message or exception class. This is the expected failing dev-021 base control.
 The dev-022 base likewise lacks the requested case. Its reference must reject
 both a failure artifact associated with the wrong command turn and a wrong
 payload digest.
-Its original preamble also checks the trusted base's `CASE_ROOTS` uniqueness.
-That assertion does not observe the candidate's constants; reports explicitly
-label `candidate-case-root-uniqueness` ungraded, with a duplicate-root probe.
+Before loading that method, one observation carries the candidate's `CASE_ROOTS`
+string mapping into the trusted module. The original preamble now checks
+uniqueness of those candidate values. Duplicate values are valid wire data and
+fail the original assertion. At most 128 entries and 256 characters per key/value
+are transported; these strings are never interpreted as file access. Unsupported
+values produce an adapter-policy failure; malformed wire data is a protocol
+failure. Either stops before assertions, retains zero tests and one observation
+call, and counts as a failed control. No hidden method or threshold is changed.
 
 The verification adapter requires actual Boolean result/check values. This is
 adapter policy, labelled `strict-boolean-result-type`, rather than a frozen
 assertion: the original truthiness assertions also accept integers. Such an
-integer-valued result fails the wire protocol even if the legacy grader accepts
-it. Only registered historical controls are admitted; no generated score uses
+integer-valued result produces an `adapter_policy` failure even if the legacy
+grader accepts it. Only registered historical controls are admitted; no generated score uses
 this policy. This explicitly records T-311.9 review low L1.
 
 These tasks grade the selected acceptance predicates on frozen synthetic rows
@@ -150,7 +159,9 @@ named argument helper. Original hidden methods pass their original argument
 lists to a parser proxy. The candidate runs its own parser and returns scalar
 namespace values, with an explicit lexical Path tag. The proxy rebuilds an
 ordinary namespace, which the original method passes to the helper proxy.
-The candidate then runs its own helper and returns its argument list. No
+The candidate then runs its own helper and returns string arguments with a fixed
+`list` or `tuple` container tag. The oracle reconstructs that exact built-in
+container, so the original equality assertion rejects a tuple. No
 parser action, callback, function, class or pickled object crosses the pipe.
 
 Namespace field names are bounded lowercase identifiers, at most 128 fields;
@@ -164,11 +175,17 @@ fail the candidate. No catalog, grant, memory or extension effect runs here.
 
 The frozen assertions check argument order/content and invalid combinations,
 including parser mutual exclusion. They cannot check exception messages, parser
-diagnostic output, the original parser object type or the helper's return
-container type through this adapter. In particular a tuple becomes a JSON list;
-the legacy direct assertion would reject that tuple. Reports label these
-clauses `not_graded`, and a real tuple-return probe records that limitation.
+diagnostic output or the original parser object type through this adapter.
+Reports label those clauses `not_graded`. Argument return container type is now
+graded; only the exact built-in list and tuple types are transported.
 The bounded namespace and fixed parser-exit rules are labelled adapter policy.
+A callable/list namespace default, unsupported helper result or parser exit code
+other than integer 2 produces a fixed `adapter_policy` tag. No exception payload
+is included. The trusted side treats that tag as sticky failure with cause
+`adapter_policy`, distinct from `protocol` for malformed fields or tags.
+A candidate can forge either tag only to fail its own attempt; neither is a
+passing observation. Such failures remain in the denominator. Raw hostile bytes
+remain confined to the private transcript and are never reconstructed as code.
 No claim of full statement coverage follows from these controls.
 
 ## Lifetime, records and remaining limits
@@ -193,7 +210,7 @@ Every case retains `candidate.log`, `oracle.log`, bounded raw `wire.log`, a
 parent-authored report and, when available after cleanup, oracle-owned counts.
 The raw wire log may contain invalid bytes from a refused reply. Reports bind
 task/source/hidden/adapter digests and retain exact counts, readiness, function
-presence, protocol status, covered observations and ungraded clauses,
+presence, protocol and adapter-policy status, covered observations and ungraded clauses,
 elapsed wall time, failure cause and log digests. All attempts in this verifier
 are controls: model attempts and GPU minutes are zero, tokens and model score
 are null. Keep logs private because they contain task data and diagnostics.

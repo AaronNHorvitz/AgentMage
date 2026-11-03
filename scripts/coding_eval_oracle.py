@@ -22,7 +22,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v4"
+VERSION = "coding-independent-oracle-v5"
 # Complete frozen methods for pure functions. Paths are lexical JSON values;
 # one fixed ambiguity tag is reconstructed as a trusted local exception.
 SUPPORTED = {
@@ -33,7 +33,7 @@ SUPPORTED = {
     "dev-015": {"function": "case_passed", "result_type": "bool"},
     "dev-020": {"function": "verify_case", "result_type": "verification-result"},
     "dev-021": {"function": "verify_case", "result_type": "verification-result"},
-    "dev-022": {"function": "verify_case", "result_type": "verification-result"},
+    "dev-022": {"function": "verify_case", "result_type": "verification-result", "observe_case_roots": True},
     "dev-027": {"function": "extension_arguments", "result_type": "argument-result"},
     "dev-029": {"function": "suspend_resume_checks", "result_type": "bool-map"},
 }
@@ -50,7 +50,7 @@ CONTROL_PROFILES = {
     "dev-015": {"failures": 1, "base_calls": 3, "reference_calls": 4},
     "dev-020": {"failures": 1, "base_calls": 2, "reference_calls": 3},
     "dev-021": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 6},
-    "dev-022": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 3},
+    "dev-022": {"failures": 0, "errors": 1, "base_calls": 2, "reference_calls": 4},
     "dev-027": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 37,
                 "function_found": False},
     "dev-029": {"failures": 0, "base_calls": 1, "reference_calls": 6},
@@ -66,17 +66,18 @@ def coverage(task):
                                "unselected-statement-clauses"]}
     if kind == "verification-result":
         return {"graded": ["passed-boolean", "selected-check-booleans",
-                           "frozen-fixture-variations"],
-                "adapter_policy": ["strict-boolean-result-type"],
+                           "frozen-fixture-variations",
+                           *(["candidate-case-root-uniqueness"] if task["id"] == "dev-022" else [])],
+                "adapter_policy": ["strict-boolean-result-type",
+                                   *(["bounded-case-root-strings"] if task["id"] == "dev-022" else [])],
                 "not_graded": ["run-case-integration", "other-report-fields",
-                               "unselected-cases", "unselected-statement-clauses",
-                               *(["candidate-case-root-uniqueness"] if task["id"] == "dev-022" else [])]}
+                               "unselected-cases", "unselected-statement-clauses"]}
     if kind == "argument-result":
         return {"graded": ["selected-parser-values", "argument-order-and-values",
-                           "selected-refusal-types"],
+                           "selected-refusal-types", "argument-return-container-type"],
                 "adapter_policy": ["bounded-namespace-values", "fixed-parser-exit-code"],
                 "not_graded": ["exception-messages", "parser-diagnostics", "catalog-effects",
-                               "argument-return-container-type", "parser-return-object-type",
+                               "parser-return-object-type",
                                "unselected-statement-clauses"]}
     return {"graded": ["selected-json-function-behavior"],
             "not_graded": ["unselected-statement-clauses"]}
@@ -177,19 +178,24 @@ def result_record(path, task):
     value = json.loads(evaluation.read_regular(path, 4096))
     fields = {"tests", "failures", "errors", "skipped", "expected_failures", "unexpected_successes"}
     if (not isinstance(value, dict) or value.keys() != {
-            "tests", "calls", "protocol_failed", "candidate_ready", "function_found"}
+            "tests", "calls", "protocol_failed", "adapter_policy_failed", "candidate_ready", "function_found"}
             or not isinstance(value["tests"], dict) or value["tests"].keys() != fields
             or any(type(v) is not int or v < 0 for v in value["tests"].values())
             or type(value["calls"]) is not int or not 0 <= value["calls"] <= worker.MAX_CALLS
             or type(value["protocol_failed"]) is not bool
+            or type(value["adapter_policy_failed"]) is not bool
             or type(value["candidate_ready"]) is not bool):
         raise evaluation.EvaluationError("oracle.invalid-result-record")
     if value["candidate_ready"]:
         valid = (type(value["function_found"]) is bool and value["calls"] > 0
-                 and value["tests"]["tests"] == task["expected_tests"])
+                 and (value["tests"]["tests"] == task["expected_tests"]
+                      or (SUPPORTED[task["id"]].get("observe_case_roots")
+                          and value["calls"] == 1 and not any(value["tests"].values())
+                          and (value["protocol_failed"] or value["adapter_policy_failed"]))))
     else:
         valid = (value["function_found"] is None and value["calls"] == 0
-                 and value["protocol_failed"] and not any(value["tests"].values()))
+                 and value["protocol_failed"] and not value["adapter_policy_failed"]
+                 and not any(value["tests"].values()))
     if not valid:
         raise evaluation.EvaluationError("oracle.invalid-result-record")
     return value
@@ -249,17 +255,20 @@ def grade(task, files, output):
     passed = (error is None and exit_code == 0 and candidate_exit == 0 and not timed_out and not output_limited
               and record is not None and record["candidate_ready"] and record["function_found"]
               and not record["protocol_failed"]
+              and not record["adapter_policy_failed"]
               and all(v == 0 for k, v in tests.items() if k != "tests"))
     cause = ("none" if passed else "input_integrity" if input_error
              else "timeout" if timed_out else "output_limit" if output_limited
              else "infrastructure" if error or record is None or not record["candidate_ready"]
-             else "protocol" if record["protocol_failed"] else "candidate_exit"
+             else "protocol" if record["protocol_failed"]
+             else "adapter_policy" if record["adapter_policy_failed"] else "candidate_exit"
              if candidate_exit != 0 else "test_failure")
     report = {
         "version": VERSION, "task": task["id"], "passed": passed, "cause": cause,
         "exit_code": exit_code, "candidate_exit_code": candidate_exit,
         "tests": tests, "calls": record["calls"] if record else None,
         "protocol_failed": record["protocol_failed"] if record else None,
+        "adapter_policy_failed": record["adapter_policy_failed"] if record else None,
         "candidate_ready": record["candidate_ready"] if record else None,
         "function_found": record["function_found"] if record else None,
         "error": error, "input_error": input_error,
@@ -300,6 +309,7 @@ def expected_base(task, report):
             and report["cause"] == ("protocol" if missing else "test_failure")
             and report["tests"] == tests and report["calls"] == profile["base_calls"]
             and report["protocol_failed"] is missing
+            and report["adapter_policy_failed"] is False
             and report["candidate_exit_code"] == (1 if missing else 0)
             and report["exit_code"] in ({1, 120} if missing else {1}))
 
