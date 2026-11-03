@@ -1,0 +1,206 @@
+Commit: af77a8a5279fdc75e0e4fd4796cf9c09b8cf3722
+Scope: local-coding-t311-2-evaluator-safety
+
+# Independent review: T-311.2 frozen-controls-only evaluator, input integrity, cleanup lifecycle
+
+Reviewer: separate read-only Claude Opus 5.5 session (same model family as the builder; a
+cross-model review is still required before any public release). Row: T-311.2, tier core,
+attempt 1, base `4517275f79c54fd6089a65fc35badc041b66f4df`. The repository was not modified. My
+only write outside private lane temp space is this file.
+
+## Methods
+
+1. Confirmed `git rev-parse HEAD` = `af77a8a5279fdc75e0e4fd4796cf9c09b8cf3722`, clean tree. Read
+   IP-POLICY.md, the newest decision index entry (0153), the T-311/T-311.1/T-311.2 rows and the
+   request. The diff from the base touches exactly the five declared paths: TASKS.md, the evidence
+   record, the guide, `scripts/coding_eval.py` and `tests/test_coding_eval.py`.
+2. Line-by-line review of the full `scripts/coding_eval.py` (not only the diff) and of the test
+   diff, focusing on: every route to `grade`/`grade_case`, the admission comparison, exception
+   classification, cleanup/count-promotion order, interruption handling and exit codes.
+3. Ran the requested repeat commands under the shared reservation with a fresh destination.
+4. Ran my own probes, written outside the repository
+   (`/lane/state/tmp/t311-2-probes.4rONsp/`), under `bash /tools/build-slot`: real CLI forgery and
+   bypass attempts, real input-integrity failures injected at the `git` layer, an interruption
+   combined with persistent cleanup failure inside the real `verify` loop, and SIGTERM sent to a
+   real `verify` process at two points.
+5. Traced every number in the evidence record to the builder's retained raw files.
+6. Checked public hygiene and frozen inputs: the diff, the task fingerprint and the commit metadata.
+
+No GPU, model, network, download or held-out material was used.
+
+## Commands and results
+
+Requested repeat (fresh root `/lane/state/tmp/t311-2-review.a2ONw7`):
+
+```text
+git rev-parse HEAD                     -> af77a8a5279fdc75e0e4fd4796cf9c09b8cf3722
+git status --porcelain                 -> (empty), before and after
+node --version                         -> v24.15.0
+sha256sum .../.agentmage-review-runtime/node -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c
+test -s .../LICENSE                    -> ok
+git diff --check 4517275f.. af77a8a5.. -> ok
+local_agent_fast_gate.py --plan        -> 5 paths, 5 commands (diff-check, untracked lint,
+                                          markdownlint on 3 docs, python lint on 2 files, unittest)
+bash /tools/build-slot bash -s <<CHECKS  (waited ~22 min for the shared lock; then rc=0)
+  unittest tests.test_coding_eval      -> Ran 32 tests in 2.955s, OK (wall 3.07 s)
+  coding_eval.py verify --output ...   -> rc 0, wall 6.51 s
+  local_agent_fast_gate.py --timeout 600 -> rc 0, wall 4.69 s; inner unittest 32 tests OK 2.975s
+  validate_docs.py                     -> "Validated 696 Markdown file(s) and all policy
+                                          invariants.", wall 144.7 s
+sha256sum scripts/coding_eval.py       -> ed52f907f0e631a2eca54d2f04f6f1ec2d3eaad2c50de4aaf9bef4dff377a1ef
+sha256sum tests/test_coding_eval.py    -> a36958b02955fb513e174eabb5282058bfd64531bcbc2b25d7effcff907cce79
+```
+
+My verifier summary: `passed: true`, `input_refused: false`, `model_score: null`. All six real
+frozen cases, scored separately:
+
+| Case | cause | candidate_kind | tests / failures / errors / skipped | exit |
+| --- | --- | --- | --- | --- |
+| dev-001 base | test_failure | frozen-base | 12 / 0 / 3 / 0 | 1 |
+| dev-001 reference | none (pass) | frozen-reference | 12 / 0 / 0 / 0 | 0 |
+| dev-002 base | test_failure | frozen-base | 3 / 0 / 19 / 0 | 1 |
+| dev-002 reference | none (pass) | frozen-reference | 3 / 0 / 0 / 0 | 0 |
+| dev-003 base | test_failure | frozen-base | 23 / 2 / 3 / 0 | 1 |
+| dev-003 reference | none (pass) | frozen-reference | 23 / 0 / 0 / 0 | 0 |
+
+Every case has `model_attempts: 0`, `score_scope: trusted-evaluator-validation-only` and
+`model_score: null`. Reference tests total 38, and 76 including the bases. This matches the
+evidence record.
+
+Independent probes, all through the real CLI (`/usr/bin/python3 scripts/coding_eval.py`) unless
+stated:
+
+```text
+prepare dev-001                                   rc 0
+score: base + "# generated" comment               rc 2 untrusted-candidate-disabled; no output dir
+score: forged /output/tests.json + os._exit(0)    rc 2 untrusted-candidate-disabled; no output dir
+score: base with CRLF line endings                rc 2 untrusted-candidate-disabled; no output dir
+score: extra symlink -> /etc/passwd               rc 2 candidate-directory-refused;   no output dir
+score: edit to a non-source frozen file           rc 2 out-of-scope-edit;             no output dir
+score: dev-001 reference tree offered as dev-002  rc 2 out-of-scope-edit;             no output dir
+score: unchanged base                             rc 1 test_failure, frozen-base, tests.json present
+score: exact historical reference                 rc 0 pass, frozen-reference, model_attempts 0
+new agentmage-eval-* temp trees after probes      0
+```
+
+Input integrity was tested in-process by making only the hidden-test `git show` return wrong bytes
+or exit 128. The real `pinned_blob` and the real projection and admission were kept. Workspace
+construction and the sandbox command were trapped to fail loudly if reached:
+
+```text
+score  tampered hidden -> rc 2; cause input_integrity; input_error input-hash-mismatch;
+                          infrastructure_error null; tests null; files: report/stdout/stderr only
+score  missing hidden  -> rc 2; cause input_integrity; input_error input-unavailable; tests null
+verify tampered/missing -> rc 2; passed false; input_refused true; all 6 cases input_integrity,
+                          every row valid=false (cannot satisfy the failing-base control)
+```
+
+Interruption:
+
+```text
+verify with KeyboardInterrupt in case 1 + rmtree failing persistently
+  -> KeyboardInterrupt propagated after exactly 3 rmtree attempts; only dev-001-base/ exists,
+     containing cleanup.json {removed:false, attempts:3, private_workspace: <existing tree>};
+     no report.json, no tests.json, no later case started
+real verify, SIGTERM at 1.0 s and 3.5 s
+  -> rc 130 both; no summary.json; in-progress case has only stdout/stderr logs (no report,
+     no counts); no later case directories; 0 new temp trees; no stray processes
+```
+
+Evidence tracing: the builder's `/lane/state/tmp/t311-safety-checks/` hashes reproduce the
+recorded digests exactly: summary `74c95e92…613f`, unit log `02471714…d62b`, fast-gate log
+`9c27c431…1824` and docs log `39d9056b…567e`. The summary's per-case causes, counts, wall
+seconds (for example 0.328481 / 0.319923 for dev-001) and evaluator hash `ed52f907f0e6` match the
+evidence tables. The unit log's "Ran 32 tests in 3.037s" matches. The reservation log records the
+four exit-0 checks with the stated wall times.
+
+Frozen inputs: `TASKS` is untouched by the diff. My recomputed canonical fingerprint is
+`d5f5e365924ffea8c6b46c50c28d00e116c01f69de57ac0a9672ffa50e05e3c5`, equal to v3, and the unit
+test asserts it. `VERSION` is unchanged. No hidden-test, pin, threshold, prompt, harness,
+dependency or licence change. There is no held-out set, so no held-out exposure is possible.
+
+Hygiene: a scan of the full diff for home paths, lane paths, the username, hostnames, e-mail,
+credentials and agent-product or benchmark names found nothing. Commit authorship is the owner's
+existing public identity.
+
+## Assessment against the requested focus
+
+1. **Admission on every production route.** The only production callers of `grade_case` and
+   `grade` are `grade` (from `score`) and `verify`. `grade` calls `require_historical_candidate`
+   first (`scripts/coding_eval.py:449`), before `new_directory` and before any worker. The check
+   requires exact task-dict identity with a registered task (`:247`). It also requires the
+   complete in-memory snapshot to be byte-equal to the full freshly recomputed base projection,
+   or to that projection with the pinned reference (`:250-256`). The worker writes exactly that
+   same in-memory snapshot, so there is no check-then-use gap. The CLI forgery test
+   (`tests/test_coding_eval.py:238`) runs a real subprocess with no mock, and my repeat
+   reproduces exit 2 with no destination. References are labelled `frozen-reference` with
+   `model_attempts: 0` and `model_score: null`. Satisfied.
+2. **Test-only bypass.** `grade_fixture` (`tests/test_coding_eval.py:26`) patches admission only
+   within the test process. The CLI exposes only `list/prepare/score/verify` with
+   `--task/--candidate/--output`. `coding_eval.py` reads no environment variable, and no other
+   module imports it. The real prepare/score test and all six real frozen cases were run
+   separately (above). Satisfied.
+3. **Input integrity.** `InputIntegrityError` subclasses `EvaluationError`. Inside a case it is
+   classified first (`cause: input_integrity`, `input_error`, `infrastructure_error: null`,
+   `tests: null`). `score` and `verify` exit 2 (`:526`, `:540`). The `verify` validity rule still
+   requires `cause == "test_failure"` for the base, so a refusal cannot pass. Pre-case projection
+   or reference refusals already exited 2. Reproduced with real `pinned_blob` code. Satisfied.
+4. **Cleanup before counts.** `tests.json` is written only after the `case_workspace` block
+   exits successfully (`:444`). Removal is tried three times, 50 ms apart. A persistent failure
+   writes the private `cleanup.json` and raises `cleanup-failed`, which leads to an
+   infrastructure report with no counts. `grade` also unlinks any partial counts. If the body
+   raised (including `KeyboardInterrupt`), a cleanup failure is suppressed and the original
+   exception propagates (`:268-278`). `grade` does not catch `BaseException`, so `verify` stops.
+   Reproduced end-to-end, including real SIGTERM. Satisfied.
+5. **Scope honesty.** The guide, evidence and TASKS row all state that L1 (result forgery) and
+   L2 (aggregate quotas) are not solved and that generated scoring is disabled. They make no
+   generated-score, baseline or T-311-completion claim. The guide's single-candidate example now
+   correctly says the base control must exit 1. Satisfied.
+
+Delivery: T-311.2 is one sub-row level under T-311. It ends in an enforced, tested refusal and a
+re-runnable measured verifier. It turns two documented review blockers into enforcement and fixes
+L4 and L5, which is substantive rather than plan-only or excessive splitting.
+
+## Findings
+
+No critical, high or medium finding.
+
+Low (backlog; does not block closing T-311.2):
+
+- **L1: a coincident cleanup failure is not reflected in `report.json`.** At
+  `scripts/coding_eval.py:268-278`, when the case body fails with an ordinary error and
+  removal also fails persistently, the original error is kept as `infrastructure_error`. That
+  is correct. However, the cleanup failure is visible only through the separate private
+  `cleanup.json`, and the report does not mention a leftover tree. The case still fails and has
+  no counts. Fix: add a `cleanup_retained: true` (or similar) field to the report when
+  `cleanup.json` exists, so a reader of the report alone sees the leftover.
+- **L2: interruption prints a raw Python traceback with absolute local paths.**
+  `cli()` (`scripts/coding_eval.py:547-553`) catches only `EvaluationError`, `OSError` and
+  `SubprocessError`. A SIGTERM or Ctrl-C therefore ends with a full traceback on stderr: 7 lines
+  with host paths in my SIGTERM probe. This is pre-existing at the base. It is terminal output
+  only, not committed or recorded in reports, and the exit code (130) and the absence of a
+  summary are correct. Fix: catch `KeyboardInterrupt` in `cli()`, print the fixed
+  `evaluation.interrupted` diagnostic and return 130.
+- **L3 (operator housekeeping, not a code defect):** four `agentmage-eval-*` trees from
+  04:15–04:41 remain in the lane temp directory. They predate the T-311.1 maintenance-race
+  repair (b1734b99, 05:01) and this commit. My runs created none. They should be removed by the
+  builder, and the remaining L5 backlog note can cite them as historical.
+
+Carried, still open by design: L1/L2 from T-311.1 review 3 (result forgery and aggregate worker
+quotas) remain prerequisites for generated scoring. This row enforces that blocker and correctly
+does not claim to remediate it. The parent T-311 row (30 tasks, held-out split, current-harness
+baseline) remains open.
+
+## Per-row result
+
+- **T-311.2: PASS** at exact commit `af77a8a5279fdc75e0e4fd4796cf9c09b8cf3722`. The "done when"
+  is met: generated snapshots are refused before output and execution; frozen-input refusal is
+  distinct from test failure (exit 2, no counts, cannot validate the base); counts are promoted
+  only after cleanup, with transient retry and private recovery on persistent failure;
+  interruption is preserved; CLI forgery/refusal and lifecycle tests pass; the full pinned
+  verifier passes (3 base failures, 3 reference passes, 38 reference tests, no skips); and the
+  guide and evidence are accurate. Only low findings remain.
+- **T-311 (parent): remains open.** Not in scope for closure.
+- L1/L2 capabilities (independent result checking, aggregate quotas): **not closed.**
+
+Verdict: PASS
