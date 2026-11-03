@@ -1,0 +1,162 @@
+Commit: 9665924d2880f5a07ed60040ae53ea7dca988aab
+Scope: local-coding-t311-9-verification-oracle
+
+# Independent core review: T-311.9 verification-predicate oracle (attempt 1)
+
+Reviewer: separate read-only Claude Opus 5.5 session, no shared context with the
+builder. I did not modify the repository. All runtime work used the shared build
+reservation. I used no GPU, model, network, held-out input or download.
+Private results: `/lane/state/tmp/review-t311-9-6HYfRS/`.
+
+## Methods
+
+- `git rev-parse 9665924d2880f5a07ed60040ae53ea7dca988aab` equals HEAD and the
+  tree is clean. `ee490972..9665924d` is one commit touching seven files.
+- Read IP-POLICY.md and the top of TASKS.md, including the T-311 parent and
+  T-311.1–T-311.9. Read the request, the full code/test/doc diff, both changed
+  scripts in full, the guide and the builder evidence. Also read the prior
+  T-311.8 review, which is byte-identical to the retained
+  `docs/reviews/f56dba24bf53-…txt`.
+- Integrity:
+  - `scripts/coding_eval.py`, `coding_eval_collection.py`, `coding_eval_rust.py`
+    and the three legacy test modules are byte-identical to the base
+    (`git diff --quiet`).
+  - The TASKS.md diff touches only the T-311.9 row.
+  - Hidden `tests/test_coding_harness.py` at the dev-020/dev-021 reference
+    commits hashes to the pinned `a64d73fc…9406` and `b046e2c8…27df`.
+  - The collection fingerprint reproduces as `0c2a0624…1570`.
+  - The four committed source digests in the evidence match the commit bytes.
+  - All 11 non-empty private artifact digests listed in the evidence match the
+    files in `/lane/state/tmp/t311-9-verification/`. The two control stdout logs
+    are 0 bytes, matching the stated empty-input hash.
+- Read both selected hidden methods and the reference `verify_case`. The trusted
+  proxy reads exactly what the reference reads for these cases: the three log
+  texts, `src/calc.py`, `rows`, `git_status` and the multi-file validation
+  return code. Both hidden methods patch `rows`/`git_status`, and dev-020 also
+  patches `subprocess.run`. So the oracle-side proxy executes only frozen base
+  code and hidden mocks, never real Git or validation, and never candidate code.
+  `case` and `exit_code` come from the hidden test, not the candidate.
+- The pinned profiles reproduce the frozen behaviour:
+  - dev-020 base: `assertTrue` passes, then `assertFalse` fails, giving 2 calls
+    and 1 failure.
+  - dev-021 base: the `EXPECTED[case]` KeyError becomes the fixed tag, giving
+    1 call and 1 error.
+  - References: 3 and 6 calls. All six references total 37 calls.
+- Public hygiene: the added text has no host path, username, hostname,
+  credential, product name or trademark. `/lane` appears only as a generic
+  sandbox mount in a negative test assertion and in "the lane's cgroup mount".
+
+## Commands and results
+
+| Command (all heavy steps via `bash /tools/build-slot`) | Result |
+| --- | --- |
+| `node --version`; `sha256sum target/local-agent-tools/node` | v24.15.0; `d1de76d8…d932c`, as expected |
+| `python3 scripts/local_agent_fast_gate.py --base ee490972… --timeout 600` | exit 0, `FAST GATE: PASS`, seven paths, `Ran 39 tests in 11.267s` OK |
+| `python3 -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | exit 0, `Ran 58 tests in 19.307s` OK |
+| `python3 scripts/coding_eval_oracle.py verify --output <review>/oracle` | exit 0. `passed: true`, v3, `generated_scoring: false`, `control_attempts` 12/6/6. Six valid rows. Bases: dev-020 test_failure 1F/2 calls; dev-021 test_failure 1E/1 call; the other four unchanged from T-311.8. References: 4/14/4/3/6/6 calls (37 total). Coverage labels present |
+| `python3 scripts/coding_eval.py verify --output <review>/full` | exit 0, 30 valid pairs, 89 reference tests, v9, fingerprint unchanged |
+| `python3 scripts/validate_docs.py` | exit 0, `Validated 706 Markdown file(s) and all policy invariants.` |
+
+## Reviewer probes (real bubblewrap, private script `probes.py`)
+
+All probes go through the host `grade`, with `require_historical_candidate`
+patched to admit synthetic sources. The unpatched path still refuses before
+creating output (`test_new_verification_controls_refuse_generated_snapshots…`).
+
+1. **Wire contents.** The dev-020/dev-021 base and reference `wire.log` files
+   (5/7 and 3/13 lines) contain no `/tmp`, fixture, `/workspace`, `/adapter` or
+   `/output` path. They contain only case, exit code, labelled file text, rows,
+   status and return code.
+2. **What the candidate can see.** A candidate check key listed `/` and
+   `os.environ` inside the candidate's namespace. It saw only `adapter, bin, dev,
+   lib, lib64, proc, tmp, usr, workspace` and `HOME, LANG, PATH, PWD`. Its own
+   fixture was under private `/tmp/oracle-fixture-*`. It had no `/output`, no
+   hidden test and no host path.
+3. **Forgeries.** Always-true results failed dev-021 and dev-020 (`test_failure`,
+   2 calls). A raw-frame forgery that wrote startup plus canned verdict replies
+   at import and then exited failed as `protocol`. A checks map over 64 KiB
+   failed as `protocol`.
+4. **Exception data.** `raise KeyError("SECRET-PAYLOAD-…")` on a registered case
+   produced 1 error with `protocol_failed: false`. The payload appears in neither
+   `wire.log` nor `oracle.log`. No selected method uses `assertRaises(KeyError)`,
+   so a KeyError tag can only fail a test.
+5. **Candidate-local patching.** A candidate that leaves its own `rows` patched
+   between calls affects only its own process. The reference logic still passes;
+   oracle mocks are untouched.
+6. **Startup.** A syntax error and an `os._exit(0)` at import both gave
+   `infrastructure`, 0 calls, 0 tests and `control_attempts` failed=1.
+7. **Fidelity of types.** This produced finding L1.
+8. **Cleanup.** After all runs, no oracle/candidate bubblewrap worker remained.
+   No new `agentmage-eval-*` tree was created: the four present date from
+   04:15–04:41 and are the ones already noted in the T-311.8 review.
+
+## Findings
+
+### L1 (low): the oracle rejects truthy non-Boolean results that the unchanged frozen assertions accept
+
+`scripts/coding_eval_oracle_worker.py:123-128` requires `type(passed) is bool`
+and Boolean check values. The selected hidden methods use only `assertTrue` and
+`assertFalse`, which accept any truthy or falsy value. Probe: I wrapped the
+dev-021 reference so `passed` and every check are cast to `int`. The **oracle
+reported `protocol`** (1 error). The unchanged legacy grader **passed** the same
+source (`cause: none`). The statement does not require a `bool` type. So for
+this clause the oracle is stricter than the "complete and unchanged" methods. A
+future generated candidate that builds checks with `and`/`or` chains could be
+failed by the adapter rather than by the tests.
+
+This affects no current number: only frozen controls are admitted, and both
+references return real Booleans. The guide does say "Boolean", but it does not
+call this a deviation. Fix before generated scoring, either way:
+
+- Add a coverage label such as `strict-boolean-result-type`, with one sentence in
+  the guide saying that this rejection is adapter policy, not a frozen assertion.
+- Or transport `bool(value)` together with a separate non-scoring type
+  observation.
+
+### L2 (low): malformed results table in the evidence
+
+`docs/evidence/t311-9-verification-oracle-2026-11-03.md:23-24`: the header row
+has 4 cells and the delimiter row has 5. GitHub-flavoured Markdown does not
+render it as a table. The validators pass. Fix: drop one `| --- |`.
+
+### Notes (no finding)
+
+- `docs/guides/coding-evaluation-oracle.md:138` still says the adapter does not
+  implement "covered-clause labels". That remains accurate: the new `coverage`
+  labels are per result type, and per-task statement clauses are listed as
+  `unselected-statement-clauses`, not graded. A future wording could name the
+  distinction.
+- `control_attempts` is one invocation per report, and verify sums 12. A
+  refusal raised by `grade` (for example an admission refusal) aborts `verify`
+  without a summary, rather than appearing as a counted failure. That is
+  acceptable for controls. The generated scorer must count it (T-311.8 L2,
+  still open and disclosed).
+- The T-311.8 L1 return-type erasure is now labelled `not_graded`, with a real
+  probe test (`test_path_return_types_are_explicitly_outside_oracle_coverage`).
+  That satisfies the disposition required before broadening.
+
+No critical, high or medium finding. Confinement is unchanged from the
+T-311.7/T-311.8-reviewed sandbox:
+- `--unshare-all` and `--clearenv`;
+- read-only workspace and adapter;
+- `/output` mounted only for the oracle;
+- per-process limits.
+
+The new candidate-side temporary files are written to the candidate's private
+tmpfs. Evaluation integrity holds:
+- no held-out inputs exist or were used;
+- hidden bytes, pins, selections, thresholds and the harness are unchanged;
+- failures are retained in the counts;
+- every evidence number traces to a run I reproduced or to a matching private
+  artifact.
+
+Delivery: T-311.9 is one sub-level under T-311 and ends in a runnable, measured
+verifier.
+
+## Per-row result
+
+| Row | Result |
+| --- | --- |
+| T-311.9 | PASS. dev-020/dev-021 `verify_case` run in a separate candidate namespace from bounded JSON fixture snapshots, with candidate-private temporary files. The original assertions and mocks stay on the trusted side and never execute candidate code. No fixture path, callable or exception data crosses the pipe. Always-true, frame-forgery, oversize and KeyError-payload probes fail closed, and exact base/reference profiles reproduce. Results: six valid pairs (nine methods, 37 reference calls); 30 legacy pairs and 89 reference tests unchanged; 39 + 58 unit tests and policy validator PASS. Low L1 and L2 are backlog before generated scoring. Parent T-311 and generated scoring stay open. |
+
+Verdict: PASS
