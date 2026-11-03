@@ -1,15 +1,26 @@
-# Coding evaluation development pilot
+# Coding evaluation development collection
 
 T-311 requires at least 30 real repository tasks, a fixed development/held-out
-split and a current-harness model baseline before tuning. This first executable
-portion has **three development tasks only**. It validates scoring machinery;
-it is not the complete suite, a model baseline or a scoreboard entry. No held-out
-task has been selected or inspected by this pilot. Keep agent tuning deferred
-until the complete suite and its baseline exist.
+split and a current-harness model baseline before tuning. This executable
+collection has **14 development tasks only**, with 70 reference regressions.
+It validates scoring machinery; it is not the complete suite, a model baseline
+or a scoreboard entry. No held-out task has been selected or inspected by it.
+Keep agent tuning deferred until the complete suite and its baseline exist.
 
 ## Frozen tasks
 
-The `coding-development-pilot-v3` revision corrects the residual statement defects
+The `coding-development-v4` revision appends 11 original-repository development
+tasks. It preserves every original pilot definition byte-for-byte as data,
+including statements, base/reference/input digests and the 38-test requirement.
+The full collection fingerprint is
+`4c4992a5c265aeebfe0f3bcbe81d65f293f7195dc3ec59d07ca5f9e9a8b6d311`.
+The first-three-task fingerprint remains
+`d5f5e365924ffea8c6b46c50c28d00e116c01f69de57ac0a9672ffa50e05e3c5`.
+No agent attempt informed the selection or statements. The
+[expansion record](../evidence/t311-3-development-collection-2026-11-03.md)
+records the new contracts, failed prospective tasks and actual verifier results.
+
+The prior `coding-development-pilot-v3` revision corrected residual statement defects
 from the [second independent review](../reviews/b1734b9957ce-local-coding-t311-1-evaluator-repair.txt).
 The earlier v2 revision added function names, return keys, error codes and
 encodings, but left a diagnosis-version contradiction and two omitted review
@@ -20,7 +31,7 @@ hidden tests and exact counts remain unchanged. See the
 [v3 correction and assertion audit](../evidence/t311-1-statement-contract-repair-2026-11-03.md).
 This is a recorded pre-measurement correction, not feedback from model attempts.
 
-All three tasks come from this repository's own development history. They use
+All tasks come from this repository's own development history. They use
 original repository code and tests under the existing repository licence; no
 external task dataset, model, dependency or comparison is introduced. This work
 does not relicense the historical inputs or certify import readiness.
@@ -30,13 +41,39 @@ does not relicense the historical inputs or certify import readiness.
 | dev-001 | Bind untracked source bytes in implementation identity | `aa3134b224e887fbf5962fbf724b8d3d54cbe8ec` | `14e33a4565e34663fd84fe0939b3ccc5bc2e633d` |
 | dev-002 | Separate a model request observation from serving/qualification | `6d1cb28424866cb95c1e5460427b4f0bbfe44384` | `0898b05a6c82bd531704e3f13db412f537ca4f75` |
 | dev-003 | Keep the check leader until process cleanup finishes; accept retained review formats | `4fda20f7d9f335cfe859cb3e01206573ea5e3e08` | `e88a9b42cd35821d81f6c8d706b65f151aadcbe2` |
+| dev-004 | Repair fast-gate coverage and supervised cleanup | `4d7e84d669d7a8ce85926deee90336527cad5b05` | `4fda20f7d9f335cfe859cb3e01206573ea5e3e08` |
+| dev-005 | Redact migration compatibility command output | `55bef249c7fe719cb53ced5be0b1f37471fd2dcd` | `d57374f43b66b6e070854e8e23ce71755e89a760` |
+| dev-006 | Validate route-grant argument forms | `a84646265bce483cee76aa3a51714389be2d1e05` | `d649b6e4d2320e8d3b2bd291ffe72077a06540fb` |
+| dev-007 | Validate memory catalog operations | `935cfdd8f92aafb2b54cc4a25d3317e21679efa1` | `025e3fd5cbb9cac0d4776d16e8cfffda959cfa8d` |
+| dev-008 | Route documentation catalogs and seal a synthetic pack | `bc1e2d3924990eab93be5657064b9a8f66b68079` | `0e818e86b037688864bc4d2cdfa4de17057dc0d9` |
+| dev-009 | Retain failing child-command diagnostics | `1458cef48d289ff735ae1f5b8364c6e260f54e49` | `3dcaabf3fc744daec71f6870c4be31f190841251` |
+| dev-010 | Resolve default mod.rs ownership | `1458cef48d289ff735ae1f5b8364c6e260f54e49` | `3dcaabf3fc744daec71f6870c4be31f190841251` |
+| dev-011 | Verify retained-stage sources, types and privacy | `1458cef48d289ff735ae1f5b8364c6e260f54e49` | `3dcaabf3fc744daec71f6870c4be31f190841251` |
+| dev-012 | Conservatively resolve raw, explicit and macro module references | `28dd0e4435214e5e6d488912792d5986e4b4b774` | `41e3f432df95b290e3a079193ee04fb3e942a7cf` |
+| dev-013 | Diagnose trusted native launch prerequisites | `eef257aadc077a259b676e0b24232013162ac997` | `50f0dbb9728a68657c404f0f00cd53feef5e192a` |
+| dev-014 | Bind complete committed worker source trees | `f38f9f85fdbc02c1f7d37b0b89e5fb2bef2ba491` | `c16884163206ebacfa8885d3f7416e684c44eb7c` |
 
 [`coding_eval.py`](../../scripts/coding_eval.py) pins the statements, editable
 path, base and reference file digests, hidden test digest, complete projection
-digest and exact test counts. Its task-definition fingerprint is checked by
+digest, optional original-method selection and exact test counts. Its complete
+and legacy task-definition fingerprints are checked by
 [`test_coding_eval.py`](../../tests/test_coding_eval.py). Expansion adds new tasks;
 it must not change these statements, hidden tests, pins or thresholds. The
 historical fixes validate the evaluator, never count as model attempts.
+
+New tasks pin an explicit, nonempty `test_names` list of complete regression
+methods from their original historical test module. Those selections were made
+from changed historical regressions before any model measurement; each task is a
+distinct historical source change, never one task per assertion from the same
+change. The full hidden module remains byte-identical to its Git pin, including
+helpers, imports, assertions and setup/cleanup. The grader invokes the selected
+original methods by name. It neither extracts nor rewrites test code. This makes
+a narrow scripts-only task possible without claiming unrelated integration tests
+whose source/fixtures are absent from the projection. There is no command-line or
+environment override. Duplicate/malformed names or count mismatch are input
+refusals; a missing method, selected failure, skip or expected failure cannot pass.
+Reports include the selection as well as its frozen task digest. The first three
+tasks still run their entire original modules, unchanged.
 
 The task workspace is a bounded projection of the base commit's tracked Python
 files under `scripts/`. It contains no `.git`, test files, reference patch,
@@ -171,7 +208,7 @@ adversarial model-generated candidates for a trusted scoreboard. The mandatory
 pre-launch guard restricts this interpreter to frozen controls; none of the
 observed base/reference validation is a generated candidate.
 
-The remaining T-311 work includes 30 or more suitable tasks beyond this narrow
+The remaining T-311 work includes reaching at least 30 suitable tasks beyond this narrow
 Python projection, varied fixes/features/refactors/test additions, sealed held-out
 inputs, a bounded/resumable current-harness adapter, actual model attempts and
 failure classification, retry/first-attempt accounting and scoreboard-only

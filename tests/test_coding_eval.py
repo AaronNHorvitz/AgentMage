@@ -40,10 +40,15 @@ class CodingEvaluationTests(unittest.TestCase):
 
     def test_task_definitions_are_frozen_before_any_agent_measurement(self):
         fingerprint = hashlib.sha256(json.dumps(
-            evaluation.TASKS, sort_keys=True, separators=(",", ":"),
+            evaluation.TASKS[:3], sort_keys=True, separators=(",", ":"),
         ).encode()).hexdigest()
         self.assertEqual(fingerprint, "d5f5e365924ffea8c6b46c50c28d00e116c01f69de57ac0a9672ffa50e05e3c5")
-        self.assertEqual(len(set(t["id"] for t in evaluation.TASKS)), 3)
+        self.assertEqual(len(set(t["id"] for t in evaluation.TASKS)), 14)
+        complete = evaluation.sha(json.dumps(evaluation.TASKS, sort_keys=True, separators=(",", ":")).encode())
+        self.assertEqual(complete, "4c4992a5c265aeebfe0f3bcbe81d65f293f7195dc3ec59d07ca5f9e9a8b6d311")
+        self.assertEqual(sum(t["expected_tests"] for t in evaluation.TASKS), 70)
+        # Each is a separate historical source change, not duplicated test weights.
+        self.assertEqual(len({(t["base"], t["source"]) for t in evaluation.TASKS}), 14)
 
     def test_statements_name_new_module_interfaces_required_by_frozen_tests(self):
         for task in evaluation.TASKS:
@@ -67,10 +72,23 @@ class CodingEvaluationTests(unittest.TestCase):
                                            if isinstance(child, ast.Name))
                 elif isinstance(node, (ast.Import, ast.ImportFrom)):
                     base_attributes.update(alias.asname or alias.name.split(".")[0] for alias in node.names)
-            required = {node.attr for node in ast.walk(hidden)
+            inspected = hidden
+            if "test_names" in task:
+                selected = set(task["test_names"])
+                inspected = ast.Module(body=[
+                    node for node in hidden.body if not isinstance(node, ast.ClassDef)
+                ] + [
+                    method for cls in hidden.body if isinstance(cls, ast.ClassDef)
+                    for method in cls.body if not isinstance(method, ast.FunctionDef)
+                    or not method.name.startswith("test_") or cls.name + "." + method.name in selected
+                ], type_ignores=[])
+            required = {node.attr for node in ast.walk(inspected)
                         if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name)
                         and node.value.id in aliases}
-            self.assertTrue(aliases, task["id"])
+            # Some historical modules import public functions directly instead.
+            self.assertTrue(aliases or any(
+                isinstance(node, ast.ImportFrom) and node.module == "scripts." + source_module
+                for node in hidden.body), task["id"])
             for attribute in required - base_attributes:
                 with self.subTest(task=task["id"], attribute=attribute):
                     self.assertIn(attribute, task["statement"])
@@ -81,14 +99,93 @@ class CodingEvaluationTests(unittest.TestCase):
         frozen = ast.literal_eval(next(
             node.value for node in previous.body if isinstance(node, ast.Assign)
             and any(isinstance(target, ast.Name) and target.id == "TASKS" for target in node.targets)))
-        self.assertEqual(len(frozen), len(evaluation.TASKS))
+        self.assertEqual(len(frozen), len(evaluation.TASKS[:3]))
         changed = []
-        for before, after in zip(frozen, evaluation.TASKS):
+        for before, after in zip(frozen, evaluation.TASKS[:3]):
             self.assertEqual({k: v for k, v in before.items() if k != "statement"},
                              {k: v for k, v in after.items() if k != "statement"})
             if before["statement"] != after["statement"]:
                 changed.append(after["id"])
         self.assertEqual(changed, ["dev-002", "dev-003"])
+
+    def test_new_task_selections_are_exact_original_methods_and_never_rewrite_hidden_tests(self):
+        for task in evaluation.TASKS[3:]:
+            hidden = evaluation.pinned_blob(task["reference"], task["hidden_test"], task["hidden_sha256"])
+            module = ast.parse(hidden)
+            methods = {cls.name + "." + method.name for cls in module.body if isinstance(cls, ast.ClassDef)
+                       for method in cls.body if isinstance(method, ast.FunctionDef)
+                       and method.name.startswith("test_")}
+            self.assertTrue(set(task["test_names"]).issubset(methods), task["id"])
+            self.assertEqual(len(task["test_names"]), task["expected_tests"])
+            self.assertTrue(task["test_names"])
+            self.assertNotEqual(evaluation.task_driver(task), evaluation.DRIVER)
+        for task in evaluation.TASKS[:3]:
+            self.assertNotIn("test_names", task)
+            self.assertEqual(evaluation.task_driver(task), evaluation.DRIVER)
+
+    def test_test_selection_cannot_inject_code_repeat_methods_or_change_counts(self):
+        for names, count in (([], 0), (["Case.test_ok"] * 2, 2), (["Case.test_ok"], 2),
+                             (["Case.test_ok"], True), ("Case.test_ok", 1), ([None], 1),
+                             (["Case"], 1), (["Case.setUp"], 1),
+                             (["Case.test_ok);raise SystemExit(0)#"], 1)):
+            with self.subTest(names=names), self.assertRaises(evaluation.InputIntegrityError):
+                evaluation.task_driver({"test_names": names, "expected_tests": count})
+
+    def test_selected_methods_run_in_actual_worker_and_keep_failure_skip_and_missing_errors(self):
+        hidden = (b"import unittest\nclass Selected(unittest.TestCase):\n"
+                  b" def test_pass(self): pass\n"
+                  b" def test_fail(self): self.fail('unselected-control')\n"
+                  b" @unittest.skip('synthetic selected skip')\n def test_skip(self): pass\n")
+        task = {**evaluation.TASKS[0], "source": "scripts/a.py", "expected_tests": 1}
+        with mock.patch.object(evaluation, "pinned_blob", return_value=hidden):
+            for name, field in (("pass", None), ("fail", "failures"), ("missing", "errors"), ("skip", "skipped")):
+                selected = {**task, "test_names": ["Selected.test_" + name]}
+                report = self.grade_fixture(selected, {"scripts/a.py": b"# fixture\n"},
+                                            self.root / ("selection-" + name))
+                self.assertEqual(report["test_names"], selected["test_names"])
+                self.assertEqual(report["tests"]["tests"], 1)
+                self.assertEqual(report["passed"], field is None, report)
+                self.assertIsNone(report["model_score"])
+                if field is not None:
+                    self.assertEqual(report["tests"][field], 1)
+            full = self.grade_fixture({**task, "expected_tests": 3}, {"scripts/a.py": b"# fixture\n"},
+                                      self.root / "selection-legacy")
+            self.assertFalse(full["passed"])
+            self.assertEqual(full["tests"]["tests"], 3)
+            self.assertEqual(full["tests"]["failures"], 1)
+            self.assertEqual(full["tests"]["skipped"], 1)
+
+    def test_additional_task_actual_cli_prepares_and_grades_frozen_base_and_reference(self):
+        task = evaluation.TASKS[5]  # Route-grant arguments: no fixture or model substitution.
+        script = str(evaluation.ROOT / "scripts/coding_eval.py")
+        candidate = self.root / "new-task-candidate"
+        result = subprocess.run(["/usr/bin/python3", script, "prepare", "--task", task["id"],
+                                 "--output", str(candidate)], capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for kind, expected_exit in (("base", 1), ("reference", 0)):
+            if kind == "reference":
+                (candidate / task["source"]).write_bytes(evaluation.pinned_blob(
+                    task["reference"], task["source"], task["reference_sha256"]))
+            output = self.root / ("new-task-" + kind)
+            result = subprocess.run(["/usr/bin/python3", script, "score", "--task", task["id"],
+                                     "--candidate", str(candidate), "--output", str(output)],
+                                    capture_output=True, timeout=30)
+            self.assertEqual(result.returncode, expected_exit, result.stderr)
+            report = json.loads((output / "report.json").read_text())
+            self.assertEqual(report["candidate_kind"], "frozen-" + kind)
+            self.assertEqual(report["test_names"], task["test_names"])
+            self.assertEqual(report["tests"]["tests"], task["expected_tests"])
+            self.assertEqual(report["model_attempts"], 0)
+            self.assertIsNone(report["model_score"])
+        with (candidate / task["source"]).open("ab") as source:
+            source.write(b"\n# generated candidate is still disabled\n")
+        output = self.root / "new-task-refused"
+        result = subprocess.run(["/usr/bin/python3", script, "score", "--task", task["id"],
+                                 "--candidate", str(candidate), "--output", str(output)],
+                                capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn(b"evaluation.untrusted-candidate-disabled", result.stderr)
+        self.assertFalse(output.exists())
 
     def test_refusal_diagnostics_include_fixed_code_and_type_without_private_messages(self):
         for error, detail in (
@@ -144,11 +241,11 @@ class CodingEvaluationTests(unittest.TestCase):
                 mock.patch.object(evaluation, "pinned_blob", return_value=b"reference"), \
                 mock.patch.object(evaluation, "require_historical_candidate", return_value="synthetic-control"):
             summary = evaluation.verify(self.root / "infrastructure-verify")
-        self.assertEqual(len(calls), 6)
+        self.assertEqual(len(calls), 28)
         self.assertFalse(summary["passed"])
         self.assertIsNone(summary["model_score"])
         self.assertEqual(summary["tasks"][0]["base"]["cause"], "infrastructure")
-        self.assertEqual([r["valid"] for r in summary["tasks"]], [False, True, True])
+        self.assertEqual([r["valid"] for r in summary["tasks"]], [False] + [True] * 13)
 
     def test_exact_snapshot_allows_only_the_declared_source_edit(self):
         root, original = self.candidate()
@@ -407,7 +504,7 @@ class CodingEvaluationTests(unittest.TestCase):
         with mock.patch("sys.argv", ["coding_eval.py", "list"]), mock.patch("sys.stdout", stream):
             self.assertEqual(evaluation.main(), 0)
         value = json.loads(stream.getvalue())
-        self.assertEqual(len(value["tasks"]), 3)
+        self.assertEqual(len(value["tasks"]), 14)
         for task in value["tasks"]:
             self.assertEqual(task["split"], "development")
             self.assertNotIn("reference", task)
