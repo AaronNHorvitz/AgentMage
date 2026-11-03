@@ -35,7 +35,7 @@ class CodingEvaluationTests(unittest.TestCase):
         fingerprint = hashlib.sha256(json.dumps(
             evaluation.TASKS, sort_keys=True, separators=(",", ":"),
         ).encode()).hexdigest()
-        self.assertEqual(fingerprint, "af789424236397cae91efc51653e0020e584dd625a87232374a8165df7fe2863")
+        self.assertEqual(fingerprint, "d5f5e365924ffea8c6b46c50c28d00e116c01f69de57ac0a9672ffa50e05e3c5")
         self.assertEqual(len(set(t["id"] for t in evaluation.TASKS)), 3)
 
     def test_statements_name_new_module_interfaces_required_by_frozen_tests(self):
@@ -67,6 +67,21 @@ class CodingEvaluationTests(unittest.TestCase):
             for attribute in required - base_attributes:
                 with self.subTest(task=task["id"], attribute=attribute):
                     self.assertIn(attribute, task["statement"])
+
+    def test_v3_statement_repair_preserves_every_other_frozen_input(self):
+        previous = ast.parse(evaluation.git(
+            "show", "b1734b9957cebfbfbe8a2ebefa33322f3f5982eb:scripts/coding_eval.py"))
+        frozen = ast.literal_eval(next(
+            node.value for node in previous.body if isinstance(node, ast.Assign)
+            and any(isinstance(target, ast.Name) and target.id == "TASKS" for target in node.targets)))
+        self.assertEqual(len(frozen), len(evaluation.TASKS))
+        changed = []
+        for before, after in zip(frozen, evaluation.TASKS):
+            self.assertEqual({k: v for k, v in before.items() if k != "statement"},
+                             {k: v for k, v in after.items() if k != "statement"})
+            if before["statement"] != after["statement"]:
+                changed.append(after["id"])
+        self.assertEqual(changed, ["dev-002", "dev-003"])
 
     def test_refusal_diagnostics_include_fixed_code_and_type_without_private_messages(self):
         for error, detail in (

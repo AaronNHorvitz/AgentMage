@@ -1,0 +1,251 @@
+Commit: b1734b9957cebfbfbe8a2ebefa33322f3f5982eb
+Scope: local-coding-t311-1-evaluator-repair
+
+# Independent core re-review — T-311.1 evaluator repair (attempt 2)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only repository access.
+Row: T-311.1, attempt 2. Base: dd7349366d0135e06e7be582756c09117ba87fc0.
+Prior review: /lane/reviews/dd7349366d01-local-coding-t311-1-evaluator.md (Verdict: FINDINGS, M1/M2).
+Parent T-311 is not in scope and is not closed by this review.
+
+## Methods
+
+- Confirmed the exact commit and a clean tree before and after the review.
+- Read the complete diff Base..Commit for all seven paths: evaluator, tests, TASKS.md row, guide,
+  both evidence files and the retained review copy.
+- Ran every requested command.
+- Compared the v1 (Base) and v2 (Commit) `TASKS` definitions field by field, loading both modules
+  from copies outside the repository.
+- Extracted each frozen hidden test, base source and reference source from Git with `git show`.
+  Checked every name, key and literal each hidden test needs against the v2 statement and the
+  base source.
+- Built statement-conformant candidates from the historical reference and scored them through the
+  real `prepare`/`score` CLI and bubblewrap worker.
+- Ran a negative control for the M1 regression test.
+- Repeated the documented verifier three times in total.
+- Cross-checked report counts against raw verbose logs and hashes, for my runs and for the
+  builder's retained records.
+
+No GPU was used and no repository file was modified. All scratch output is under
+`/lane/state/tmp/t311-review-b1734b99.cUpnQn` and `/lane/state/tmp/t311-review-repair.*`.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `git rev-parse b1734b99…` / `HEAD` | `b1734b9957cebfbfbe8a2ebefa33322f3f5982eb` (both) |
+| `export PATH=$PWD/node_modules/.agentmage-review-runtime:$PATH; node --version` | `v24.15.0` |
+| `sha256sum node_modules/.agentmage-review-runtime/node` | `d1de76d8…74bd932c` (matches). Path is git-ignored (`.gitignore:127`); LICENSE present |
+| `cmp docs/reviews/dd7349366d01-….txt /lane/reviews/dd7349366d01-….md` | exit 0. Both SHA-256 `b22a23ac…d767ed6a1` (matches expected) |
+| `git status --porcelain` (before/after) | empty / empty |
+| `git diff --check dd734936… HEAD --` | exit 0 |
+| `python3 scripts/local_agent_fast_gate.py --base dd734936… --plan` | 7 paths: diff-check, untracked lint, review lint, markdownlint (4 files), Python lint, `tests.test_coding_eval`; no Rust |
+| `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base dd734936… --timeout 600` | **FAST GATE: PASS**. All 6 steps exit 0 (markdownlint ran this time); `Ran 22 tests … OK` |
+| `bash /tools/build-slot python3 scripts/coding_eval.py verify --output $T311_REVIEW_ROOT/verify` (`…PNkku4`) | exit 0, `passed: true`, `evaluator-validation-only`, `model_score: null`, version v2 |
+| Same verifier, fresh destinations (`…my4ESD`, `…GswOWa`) | exit 0 and exit 0. All bases fail by `test_failure`, all references pass, `infrastructure_error: null` everywhere |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` | exit 0: `Validated 694 Markdown file(s) and all policy invariants.` |
+| `sha256sum scripts/coding_eval.py tests/test_coding_eval.py` | `ea48126d…6ca6c76a8c3c`, `d359ac0d…33644c43483`: match evidence. The evaluator hash matches every report's `evaluator_sha256` |
+
+Report contents against the raw logs, run `…PNkku4`:
+
+- Every case's `stdout.log` and `stderr.log` SHA-256 matches its report.
+- Every `report.json` file equals the corresponding summary row.
+- `Ran N` and the final `OK` / `FAILED (…)` line agree with the counts:
+
+| Task | Base | Reference |
+| --- | --- | --- |
+| dev-001 | 12 tests, 0/3 | 12 tests, OK |
+| dev-002 | 3 tests, 0/19 | 3 tests, OK |
+| dev-003 | 23 tests, 2/3 | 23 tests, OK |
+
+That gives 38 reference tests and 76 invocations, with zero skips.
+
+Builder records in `/lane/state/tmp/t311-repair/verify` (read only):
+
+- The summary SHA-256 is `64c23f67…a683f`, as the evidence states.
+- All six stderr hashes, counts and wall times match the evidence table.
+- Log hashes match the raw files.
+- The evaluator hash is `ea48126d…`.
+
+No new `agentmage-eval-*` temporary trees were left by any of my runs. The four that remain predate
+this commit (04:15–04:41).
+
+## M1 re-review: resolved
+
+- **Fix.** All three grading Git invocations now carry
+  `-c maintenance.auto=false -c gc.auto=0` (`scripts/coding_eval.py:299`). The other Git calls
+  (`show`, `ls-tree`, `archive` on the real repository) do not run auto-maintenance. Inside the
+  worker the snapshot is read-only.
+- **Negative control.** I ran the regression test's own procedure (800 blobs, 1.2 s wait, 3 trials
+  each) from a script outside the repository, with only the two `-c` options stripped:
+
+  | Variant | Trials | Object files before → after | Packs | Unchanged |
+  | --- | --- | --- | --- | --- |
+  | Options stripped | 3 | 804 → 5 | 4 | no |
+  | Unchanged code | 3 | 803 → 803 | 0 | yes |
+
+  The test `test_grading_git_objects_remain_unchanged_after_auto_maintenance_window` therefore
+  detects the regression on this host's Git 2.55.0.
+- **Repeatability.** The documented verifier passed in 3 of 3 runs. At attempt 1, 3 of 6 runs of the
+  unchanged code crashed.
+- **Diagnostics.** `cli()`/`refusal_detail()` print only a fixed code and the exception type.
+  Every `EvaluationError` in the file is constructed with a literal `evaluation.*` code, so
+  `str(error)` carries no task content.
+- **Infrastructure exceptions.**
+  - `grade()` reports them as `cause: infrastructure` with `tests: null` and
+    `exit_code: null`, and keeps logs.
+  - `passed` requires `infrastructure_error is None`.
+  - The worker never sees the `output` directory: `/output` is a separate temporary directory, so
+    the worker cannot plant aliases there.
+  - `verify()` continues to the remaining cases.
+  - Injected-failure tests cover both the infrastructure-failure and refusal paths.
+- **Documentation.** The guide and evidence corrections are accurate, including the withdrawn
+  read-only claim and the resolved verify2 cause.
+
+## M2 re-review: not resolved (residual, medium)
+
+Checks that passed:
+
+- All other task fields are identical to Base: base, reference, hidden-test path and hash, source,
+  base/reference/projection hashes and expected counts.
+- Each v1 statement is an exact prefix of its v2 statement.
+- The v1 and v2 fingerprints are `f950e413…` and `af789424…`, as recorded.
+- No hidden test, harness, prompt or threshold changed.
+- The `VERSION` bump and the comment record the correction as pre-measurement. No model attempt
+  exists, so this is not tuning.
+
+Accurate contracts:
+
+- **dev-001.** The new contract matches the hidden test and reference exactly: name, signature,
+  row keys, the `subprocess.run` enumeration that the test mocks, the three error codes and the
+  canonical digest. UTF-8 and ASCII encodings are identical under `ensure_ascii=True`.
+- **dev-003.** The `observe_exit` contract matches.
+- **AST check.** It passes and covers attributes such as `harness.MODEL_CHOICES` and
+  `gate.observe_exit`.
+
+Two behaviour changes are still missing. In each, the hidden test requires a change to base
+behaviour that the statement does not state; in the first, the statement says to do the opposite.
+Neither is a module attribute, so the new AST check cannot detect them.
+
+### M2-R (medium): dev-002 statement says to preserve a value the hidden test requires changing; dev-003 omits a required rejection
+
+**dev-002 (contradiction).**
+
+- Location: `scripts/coding_eval.py:86`: "Preserve schema_version=2 and do not add model fields to
+  the persisted run record."
+- At base, `diagnose()` emits `"schema_version": 1` (base `scripts/coding_harness.py:630`). Only
+  the run record is 2 (`RUN_RECORD_VERSION = 2`, base line 29).
+- The frozen hidden test asserts `starting["schema_version"] == 2` on the diagnosis output
+  (`tests/test_coding_harness_model_diagnostics.py:94` at reference 0898b05a). The reference
+  changes `diagnose()` to `DIAGNOSIS_VERSION = 2`.
+- Reproduction:
+  1. `prepare --task dev-002`.
+  2. Install the historical reference source, changing only `"schema_version": DIAGNOSIS_VERSION`
+     back to its base value `1`. This candidate implements every stated contract item and
+     "preserves" `schema_version`.
+  3. Run `score` through `/tools/build-slot`.
+
+  Result: exit 1, `test_failure`, 3 tests with 6 failures, all `AssertionError: 1 != 2` at that
+  line. The unmodified reference scores exit 0.
+
+**dev-003 (omission).**
+
+- Location: `scripts/coding_eval.py:102-104`. The statement says to accept PASS, FINDINGS or
+  INCONCLUSIVE with one reason and to reject *malformed* endings.
+- The base also accepts `Verdict: FAIL` and `Verdict: BLOCKED`. Those are well-formed under the
+  base rule, and the statement never says to stop accepting them.
+- The hidden test requires both to raise (`tests/test_local_agent_fast_gate.py:160` at reference
+  e88a9b42).
+- Reproduction: the reference source with FAIL and BLOCKED kept in the accepted set gives `score`
+  exit 1, 23 tests with 2 failures (`ValueError not raised` for `Verdict: FAIL` and for
+  `Verdict: BLOCKED`).
+
+**Impact.** dev-002 cannot be solved by following its statement: a faithful candidate fails every
+lifecycle subtest. dev-003 penalises the minimal reading. The evidence's M2 paragraph
+(`docs/evidence/t311-1-evaluator-review-repair-2026-11-03.md:31-35`) says the three statements
+were extended with the output keys, codes and encodings the hidden tests require. That is not true
+for dev-002. Any later model baseline would count these as coding failures when they are statement
+defects.
+
+The prior review missed both items. Its M2 list for dev-002 named the renamed and removed keys but
+not the version change.
+
+**Fix (before any model measurement, same pre-measurement correction class):**
+
+1. Replace the dev-002 sentence with, for example: "diagnose() output sets schema_version to 2
+   (was 1); the persisted run record keeps schema_version=2 and gains no model fields."
+2. Add to dev-003: "Stop accepting Verdict: FAIL and Verdict: BLOCKED."
+3. Re-pin the fingerprint, keep every other field identical, and correct the evidence paragraph.
+4. Extend the regression beyond module attributes. At minimum, run every v2 statement through a
+   "literal diff" check: each string or integer literal that the hidden test compares against and
+   that differs between base and reference behaviour must appear in the statement. Alternatively,
+   record a manual per-assertion audit in the evidence. Also cover `mock.patch("scripts.…")` string
+   targets and nested new attributes (`alias.Class.new_method`), which the current AST walk skips.
+
+## L3 re-review: resolved
+
+The worker test now asserts:
+
+- the repository root and the invoking home directory are not visible (values are substituted on
+  the host);
+- `/proc/self/environ` holds exactly `PATH`, `HOME`, `LANG` and `PWD`.
+
+It ran in the 22-test pass.
+
+## New low findings (backlog)
+
+### L4 (low): a hidden-test pin mismatch in `score` now reports as a case failure, exit 1
+
+Location: `scripts/coding_eval.py:306`, inside `grade_case`.
+
+`pinned_blob(...hidden...)` raises `EvaluationError("evaluation.input-hash-mismatch")`. That is an
+input-integrity refusal, but it is now caught by `grade()` (`scripts/coding_eval.py:388`) and
+becomes `cause: infrastructure`, exit 1. The guide (`docs/guides/coding-evaluation.md:99`) says
+input/operator errors exit 2. It fails closed: it is never a PASS.
+
+Fix: resolve and verify the hidden blob in `grade()` before `new_directory`, or re-raise
+`EvaluationError` codes in the `evaluation.input-*` family.
+
+### L5 (low): infrastructure exceptions after validation leave artefacts
+
+If `grade_case` raises after it wrote the validated `output/tests.json` (for example, during
+`TemporaryDirectory` cleanup):
+
+- The report says `tests: null`, but a counts file remains beside it.
+- The partial private temporary tree, holding the reference/hidden projection, is left behind.
+
+Fix: remove or rename a stale `tests.json` when recording an infrastructure error. Use
+`TemporaryDirectory(ignore_cleanup_errors=False)` with an explicit retry or report of the leftover
+path class.
+
+## Still open from attempt 1 (unchanged, backlog for this row)
+
+- **L1 forgery.** The guide now qualifies exit 0 (`docs/guides/coding-evaluation.md:96-98`).
+- **L2 aggregate resource limits.**
+
+Both are correctly recorded as blocking any generated-candidate score. Either becomes **high** if
+a model-generated score is reported before it is fixed.
+
+## Integrity and hygiene
+
+- No held-out task exists. No hidden test, harness or prompt changed.
+- Failures are counted. Scores are re-runnable with one command and match the raw logs.
+- References are not counted as model attempts (`model_attempts: 0`, `model_score: null`).
+- The diff contains no private home path, username, hostname, credential, product comparison or
+  trademark branding. `/lane/...` paths already appear in committed docs before Base.
+- One level of sub-row, which runs and is measured.
+
+## Per-row result
+
+**T-311.1: not closed.**
+
+- **Resolved:** M1 and L3. M1 is confirmed by the negative control and 3 of 3 verifier passes.
+- **Open medium:** M2-R. The dev-002 statement contradicts its frozen hidden test, and the dev-003
+  statement omits a required rejection; both are reproduced through the real `score` CLI.
+- **Low backlog:** L1, L2, L4 and L5. L1 and L2 block generated-candidate scoring.
+- **Confirmed by the reviewer:** fast gate PASS (including markdownlint), 22 unit tests, documented
+  verifier PASS three times, docs validator PASS, and evidence numbers traceable to raw records.
+
+Parent T-311 remains open.
+
+Verdict: FINDINGS

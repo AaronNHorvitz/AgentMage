@@ -23,12 +23,12 @@ import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "coding-development-pilot-v2"
+VERSION = "coding-development-pilot-v3"
 MAX_FILE = 1024 * 1024
 MAX_TREE = 16 * MAX_FILE
 TIMEOUT = 90
-# Pre-measurement v2 corrects statement interfaces under review M2. Test/input pins
-# remain unchanged. Future expansion adds tasks; never rewrite frozen tests/pins.
+# Pre-measurement v3 corrects residual statement contradictions under review M2-R.
+# Test/input pins remain unchanged. Future expansion adds tasks; never rewrite pins.
 TASKS = [{'id': 'dev-001',
   'split': 'development',
   'base': 'aa3134b224e887fbf5962fbf724b8d3d54cbe8ec',
@@ -83,8 +83,9 @@ TASKS = [{'id': 'dev-001',
                'not-observed and qualification to not-assessed. diagnose(base) adds '
                'model_request using owned arguments only (unavailable otherwise), adds '
                'scope=development-diagnostics-only, renames profile_id to fixture_profile_id '
-               'and removes the top-level qualification field. Preserve schema_version=2 '
-               'and do not add model fields to the persisted run record.',
+               'and removes the top-level qualification field. diagnose() output sets '
+               'schema_version to 2 (was 1); the persisted run record keeps '
+               'schema_version=2 and gains no model fields.',
   'expected_tests': 3},
  {'id': 'dev-003',
   'split': 'development',
@@ -101,7 +102,8 @@ TASKS = [{'id': 'dev-001',
                'group-ID reuse. Preserve the original exit or signal status, timeout and '
                'interruption behavior. Also accept the actual retained review endings PASS, '
                'FINDINGS, or INCONCLUSIVE followed by exactly one nonempty reason, while rejecting '
-               'malformed endings and preserving report bytes. Interface contract: add '
+               'malformed endings and preserving report bytes. Stop accepting Verdict: FAIL '
+               'and Verdict: BLOCKED. Interface contract: add '
                'observe_exit(process: subprocess.Popen) -> int | None. Observe with '
                'os.waitid using WEXITED | WNOHANG | WNOWAIT; return None while running, '
                'the nonnegative exit status on normal exit or negative signal number '

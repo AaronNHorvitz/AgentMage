@@ -1,6 +1,9 @@
 # T-311.1 evaluator review repair — 2026-11-03
 
-Status: builder repair; independent core re-review pending. T-311.1 and parent
+Status: historical v2 builder repair. The [second independent review](../reviews/b1734b9957ce-local-coding-t311-1-evaluator-repair.txt)
+confirmed M1 and L3 resolved but returned FINDINGS on residual medium M2-R.
+See the [v3 correction](t311-1-statement-contract-repair-2026-11-03.md).
+T-311.1 and parent
 T-311 remain open. No harness/prompt tuning, hidden-test change, model attempt,
 held-out task selection or coding-score claim is made by this batch.
 
@@ -31,7 +34,10 @@ private exception messages. Injected-failure regressions exercise both paths.
 **M2:** the three original task statements omitted function names, output keys,
 error codes or canonical encodings required by the frozen hidden tests. Before
 any model measurement, `coding-development-pilot-v2` extends each statement with
-these interface contracts. Every original statement remains as an exact prefix;
+these interface contracts. Review 2 found this correction incomplete: dev-002
+still said to preserve the diagnosis version, while its tests require changing
+it from 1 to 2; dev-003 still omitted rejection of FAIL and BLOCKED. The v3 record
+corrects both. Every original statement remains as an exact prefix in v2;
 all other task fields, bases, reference sources, projections, hidden-test hashes
 and counts remain unchanged. The new definition fingerprint is
 `af789424236397cae91efc51653e0020e584dd625a87232374a8165df7fe2863`.

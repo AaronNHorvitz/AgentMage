@@ -9,13 +9,16 @@ until the complete suite and its baseline exist.
 
 ## Frozen tasks
 
-The `coding-development-pilot-v2` revision corrects interface omissions found
-by the [first independent review](../reviews/dd7349366d01-local-coding-t311-1-evaluator.txt).
-Before any model measurement, the three statements were extended with required
-function names, return keys, error codes and encodings, and their fingerprint
-was renewed. Bases, references, projections, hidden tests and exact counts are
-unchanged. This is a recorded pre-measurement correction, not tuning feedback
-from model attempts. See the [repair evidence](../evidence/t311-1-evaluator-review-repair-2026-11-03.md).
+The `coding-development-pilot-v3` revision corrects the residual statement defects
+from the [second independent review](../reviews/b1734b9957ce-local-coding-t311-1-evaluator-repair.txt).
+The earlier v2 revision added function names, return keys, error codes and
+encodings, but left a diagnosis-version contradiction and two omitted review
+rejections. Before any model measurement, v3 specifies that diagnosis output
+changes from version 1 to 2 while persisted records stay version 2, and that
+FAIL and BLOCKED review verdicts must be rejected. Bases, references, projections,
+hidden tests and exact counts remain unchanged. See the
+[v3 correction and assertion audit](../evidence/t311-1-statement-contract-repair-2026-11-03.md).
+This is a recorded pre-measurement correction, not feedback from model attempts.
 
 All three tasks come from this repository's own development history. They use
 original repository code and tests under the existing repository licence; no
@@ -52,8 +55,11 @@ collection, preventing detached host maintenance from rewriting the snapshot
 or racing cleanup. Infrastructure exceptions produce a failed case report
 with a fixed error code and exception type, preserve available raw logs, and
 allow validation of the remaining cases. Partial test counts cannot pass.
-Input/operator refusals still exit 2 and print a fixed code and exception type;
-they never print exception text containing private paths or commands.
+Pre-case input/operator refusals exit 2 and print a fixed code and exception type;
+they never print exception text containing private paths or commands. A hidden-test
+pin failure inside a case currently becomes infrastructure failure/exit 1 (low
+finding L4); it still cannot pass. A late cleanup failure may leave a counts file
+or temporary tree (L5); the failed report is authoritative, never partial counts.
 
 Hidden means withheld from the editing workspace. These development regressions
 already exist in public Git history, and their locations/digests are available to
