@@ -1,0 +1,232 @@
+Commit: adf3364a9e8a6ac43895b13929eaf8d26121c69a
+Scope: local-coding-t311-10-argument-oracle
+
+# Independent core review: T-311.10 parser/argument oracle (attempt 1)
+
+Reviewer: separate read-only Claude Opus 5.5 session, no shared context with the
+builder. I did not modify the repository. All heavy runs used the shared build
+reservation. I used no GPU, model, network, held-out input or download.
+Private results are in a reviewer directory under the lane's private temporary
+area (`<review-root>` below), not in the repository.
+
+## Methods
+
+- `git rev-parse adf3364a9e8a6ac43895b13929eaf8d26121c69a` equals HEAD, and the
+  tree is clean. `b899d805..adf3364a` is one commit touching eight files.
+- Read IP-POLICY.md, Decision 0153, the T-311 rows in TASKS.md (including T-311.10),
+  the request, the full diff, both changed scripts in full, both changed test
+  modules, the guide and the builder evidence. Also read the T-311.9 review.
+- Integrity checks:
+  - `scripts/coding_eval.py`, `coding_eval_collection.py`, `coding_eval_rust.py`
+    and their three test modules are byte-identical to the base
+    (`git diff --quiet`).
+  - The TASKS.md diff adds only the T-311.10 row, still open.
+  - The T-311.9 evidence diff changes only the table delimiter, which repairs
+    T-311.9 low L2.
+  - The retained `docs/reviews/9665924d2880-…txt` is byte-identical to the T-311.9
+    review report.
+  - For dev-006/007/020/021/022/027, `git show <reference>:<hidden_test>` hashes
+    to the pinned `hidden_sha256`. The collection fingerprint reproduces as
+    `0c2a0624…1570`.
+  - The four committed source digests in the evidence match the commit bytes.
+  - All nine private artifact digests in the evidence match the files in the
+    builder's private record.
+  - The initial control summary is retained with `passed: false`, and only
+    dev-006 is invalid, with an observed 19 reference calls. I counted 19 from
+    the hidden method myself: four positive and five refused parser/helper pairs
+    (18 calls), plus one parser-only conflict. dev-007 gives 7+18 pairs plus 2
+    parser-only calls, which is 52. dev-027 gives 7+11 pairs plus 1, which is 37.
+    So the change from 20 to 19 corrects the expectation to match the frozen
+    behaviour. It does not weaken a threshold.
+- Read all four selected hidden methods. The argument methods use only
+  `parser().parse_args`, the named helper, `HarnessError` and
+  `assertRaises(SystemExit)`. They do not check messages, exit codes or
+  diagnostics, so the fixed tags lose nothing those methods assert.
+  - dev-022 has a preamble that asserts uniqueness of
+    `coding_harness_acceptance.CASE_ROOTS`. On the trusted side this reads the
+    frozen base's constant.
+  - The dev-020/021 methods reference no module constant.
+- Public hygiene: the added text has no host path, username, hostname,
+  credential, private project name, product comparison or trademark branding.
+
+## Commands and results
+
+| Command (heavy steps via `bash /tools/build-slot`) | Result |
+| --- | --- |
+| `node --version`; `sha256sum target/local-agent-tools/node` | v24.15.0; `d1de76d8…d932c`, as expected |
+| `python3 scripts/local_agent_fast_gate.py --base b899d805… --timeout 600` | exit 0, `FAST GATE: PASS`, eight paths, `Ran 48 tests in 19.875s` OK (30 + 18 test methods, no skips) |
+| `python3 -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | exit 0, `Ran 58 tests in 19.311s` OK |
+| `python3 scripts/coding_eval_oracle.py verify --output <review-root>/oracle` | exit 0. v4, `passed: true`, `generated_scoring: false`, `model_score: null`. `control_attempts` total 20 / passed 10 / failed 10. All ten rows are valid. Each base matches its profile: dev-006/007/027 have 1 error, 1 call, `function_found: false`, `cause: test_failure`, and the oracle log shows `SystemExit: 2` from the fixed tag. dev-022 has 1 error and 1 call from `KeyError: 'oracle.missing-case'`. Reference calls 19/52/4/14/4/3/6/3/37/6 total 148; selected methods total 13 |
+| `python3 scripts/coding_eval.py verify --output <review-root>/full` | exit 0, v9, 30/30 valid pairs, 89 reference tests, fingerprint unchanged |
+| `python3 scripts/validate_docs.py` | exit 0, `Validated 707 Markdown file(s) and all policy invariants.` |
+
+The control wire logs for the four new tasks (3/39/3/105/3/7/3/75 lines) contain
+no `/tmp`, `/lane`, `/home`, `/var`, `/workspace`, `/adapter`, `/output` or
+fixture path. They contain only the hidden-test argv, scalar namespace values,
+lexical `/expected` and `/s/…` paths, argument lists and fixed tags.
+
+## Reviewer probes (real bubblewrap, private `probes.py`, 27 invocations)
+
+All probes ran through the host `grade` with `require_historical_candidate`
+patched to admit synthetic sources. The unpatched path still refuses before
+output or launch (`test_argument_controls_refuse_generated_sources_before_output_or_launch`).
+Where useful, I also ran the unchanged legacy `evaluation.grade` on the same
+bytes for comparison.
+
+1. **Candidate view (dev-006).** Inside the candidate:
+   - `/` lists only `adapter, bin, dev, lib, lib64, proc, tmp, usr, workspace`.
+   - The environment has only `HOME, LANG, PATH, PWD`.
+   - `/adapter` holds only `config.json, run.py`: no hidden test and no
+     `/output`.
+   - Connecting to `1.1.1.1:53` raises `OSError`.
+   - A write to `/workspace` fails, and no home or lane directory is visible.
+
+   The reference logic still passed (19 calls).
+2. **Dispatcher takeover and forged replies.** The candidate replaced the
+   worker's `argument_result` from `__main__`.
+   - Always `harness_error` (dev-006) and always `parser_exit` (dev-007): each
+     gave `test_failure` with 1 error and 1 call.
+   - Tags carrying data (`{"harness_error": "…SECRET…"}`, dev-027): `protocol`.
+     The payload appears in the raw wire transcript, which records untrusted
+     frames verbatim. It never appears in `oracle.log` or in any reconstructed
+     exception.
+   - An `arguments` reply to a parse request, a Path tag with an extra key, and
+     an added float field: each `protocol` after 1 call.
+   - Canned startup plus reply frames written to raw stdout at import, followed
+     by `_exit(0)`: `protocol`.
+3. **Exception payloads.**
+   - A `HarnessError` subclass whose `__str__` returns a secret (dev-007)
+     passed. The secret appears in neither the wire log nor the oracle log.
+   - `ValueError("SECRET")` in place of the refusal (dev-027): `protocol`, and
+     the legacy grader fails it too. No payload reaches trusted logs.
+   - `SystemExit("SECRET")` (dev-006): `protocol`, with no payload on the
+     trusted side (see L2).
+   - `KeyError("SECRET")` from `verify_case` (dev-022): 1 error, with no payload
+     in the wire log or the oracle log.
+4. **Wrong order and values.**
+   - Workspace scope placed before the operation (dev-027): `test_failure`,
+     1 failure.
+   - Refusals replaced by `[]` (dev-006): `test_failure`.
+   - `Path` elements in the returned list: `protocol`, and legacy fails too.
+5. **Assertion patching.** Patching `assertTrue`, `assertFalse` and
+   `assertEqual` in the candidate, together with an always-true `verify_case`
+   (dev-022), still gave `test_failure` (2 calls). Always-true alone gave the
+   same result.
+6. **Startup and control profiles.**
+   - Syntax error (dev-006), `_exit(0)` at import (dev-007) and an import-time
+     raise (dev-022): each `infrastructure`, 0 calls, 0 tests,
+     `candidate_ready: false`.
+   - Exit after the ready frame (dev-027) and a candidate without `parser`
+     (dev-006): each `protocol`.
+
+   None of these can match `expected_base`, which also requires
+   `candidate_kind == "frozen-base"`, determined by host byte equality.
+7. **Disclosed coverage gaps, reproduced.** Each of the following has the
+   oracle and the legacy grader disagreeing:
+
+   | Probe | Oracle | Legacy |
+   | --- | --- | --- |
+   | Tuple return (dev-006) | PASS | `test_failure` |
+   | All-duplicate `CASE_ROOTS` (dev-022) | PASS | `test_failure` |
+   | Integer results (dev-022) | `protocol` | PASS |
+   | `parser.set_defaults(handler=print)` (dev-007) | `protocol` | PASS |
+   | `SystemExit(1)` on parser conflict (dev-027) | `protocol` | PASS |
+
+   The first two are the labelled `not_graded` omissions. The last three fall
+   under the labelled adapter policies. See L1 and L2.
+8. **Counting.** All 27 probe reports carry `control_attempts` with total 1.
+   The 23 unsuccessful ones, including every infrastructure and protocol case,
+   each count failed 1. Nothing aborted or was dropped.
+9. **Cleanup.** No oracle or candidate bubblewrap worker remained. No new
+   `agentmage-eval-*` tree was created; the four present date from 04:15–04:41,
+   as already noted.
+
+## Findings
+
+### L1 (low): two statement clauses graded by the frozen methods are lenient in the oracle
+
+`scripts/coding_eval_oracle_worker.py:217-220` reconstructs every helper result
+as a JSON list. `coding_eval_oracle_worker.py:372-378` runs the dev-022 preamble
+against the trusted base's `CASE_ROOTS`. As a result:
+
+- A tuple-returning helper passes the oracle, although the statement says
+  `-> list[str]` and the legacy grader fails it.
+- A candidate with duplicate case roots passes the oracle, although the
+  statement says "unique CASE_ROOTS c20" and the legacy grader fails it.
+
+Both gaps are disclosed accurately: labels `argument-return-container-type` and
+`candidate-case-root-uniqueness`, the guide, the evidence and real probes. Only
+frozen controls are admitted, so no current number is affected. Unlike the
+strict policies, these gaps would inflate a generated score.
+
+Fix before generated scoring:
+
+- Transport a fixed container tag (for example `"list": true` only when
+  `type(result) is list`) and rebuild a non-list value as a tuple, so the
+  original `assertEqual` decides.
+- For dev-022, add one startup observation of the candidate's `CASE_ROOTS`
+  string values, and install a dict rebuilt from them on the trusted module
+  before the hidden method runs.
+
+### L2 (low): adapter-policy refusals are reported as `cause: protocol`, the same cause as deliberate forgery
+
+The following candidates pass the frozen methods under the legacy grader but
+fail the oracle as `protocol`:
+
+- integer truthy verification results;
+- a callable or list in the parser namespace (the common `set_defaults(func=…)`
+  idiom);
+- a `SystemExit` code other than 2.
+
+The causes are `coding_eval_oracle_worker.py:164-184` and `:242-245`, and the
+classification at `coding_eval_oracle.py:255-256`. These behaviours are labelled
+`adapter_policy` in each report's coverage, so they are disclosed. However, the
+per-attempt `cause` cannot separate "adapter cannot transport this
+statement-legal value" from "candidate corrupted the protocol". Decision 0153
+requires failure causes in the recorded results.
+
+Fix before generated scoring: send a fixed `adapter_policy` tag from the
+candidate worker when a value is outside the bounded encoding, and report a
+distinct cause. Alternatively, count such attempts separately from candidate
+failures.
+
+### Notes (no finding)
+
+- The raw `wire.log` necessarily contains whatever bytes a hostile candidate
+  writes into its own frames (probe 2). The protection claims concern trusted
+  reconstruction and `oracle.log`, and those hold.
+- T-311.8 low L2 (startup failures counted in generated denominators) remains
+  an admission obligation. The control path counts them (probe 8).
+- Sub-row depth is one level, and this row ends in a measured, re-runnable
+  verifier. T-311 now has ten sub-rows. Each adds running coverage, so I do not
+  treat this as excessive splitting.
+
+## Per-row result
+
+**T-311.10: PASS.** The row's "done when" is met:
+
+- three parser/argument tasks and the dev-022 predicate are added through
+  bounded JSON observations;
+- hidden methods, pins, selections and thresholds are unchanged;
+- original assertions run only in the trusted process;
+- fixed tags carry no exception data;
+- exact base and reference profiles are enforced;
+- every stated number reproduces: 48 + 58 tests, 10 valid pairs, 13 methods,
+  148 reference calls, 20 attempts with 10 passed and 10 failed, 30 legacy pairs
+  with 89 reference tests, an unchanged fingerprint, and 707 Markdown files.
+
+Confinement is unchanged and holds under my probes:
+- no network, environment, hidden test, `/output` or host path is visible to the
+  candidate;
+- the workspace is read-only.
+
+Evaluation integrity holds:
+- no held-out input exists or was used;
+- no tuning took place;
+- failures are counted.
+
+No critical, high or medium finding. L1 and L2 are backlog, to be resolved
+before generated scoring. This review closes only T-311.10. It does not close
+parent T-311 and establishes no generated score or model baseline.
+
+Verdict: PASS
