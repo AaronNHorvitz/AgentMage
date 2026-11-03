@@ -1,0 +1,142 @@
+Commit: f56dba24bf5377388b56e8928babfa6325e8d718
+Scope: local-coding-t311-8-path-oracle
+
+# Independent core review: T-311.8 path-function oracle and startup controls
+
+Reviewer: separate read-only Claude Opus 5.5 session, no shared context with the
+builder. Repository not modified. All runtime work used the shared build
+reservation; no GPU, model, network, held-out input or download was used.
+Private results: `/lane/state/tmp/review-t311-8-HmwwlJ/`.
+
+## Methods
+
+- Confirmed `git rev-parse f56dba24bf5377388b56e8928babfa6325e8d718` equals HEAD;
+  clean tree. Read IP-POLICY.md, decision 0153, the top of TASKS.md, the request,
+  the full diff from base `3adb456e`, both changed scripts in full, the new tests,
+  the guide and the builder evidence. `ce4c2c13..f56dba24` changes only
+  TASKS.md and the evidence file.
+- Legacy evaluator sources/tests (`scripts/coding_eval*.py` other than the
+  oracle, `tests/test_coding_eval{,_collection,_rust}.py`) are byte-identical
+  to the base (`git diff --quiet`). Hidden files at the dev-010/dev-012 reference
+  commits hash to the pinned `3d05c65b…` and `b37e7574…`. Task definitions,
+  statements, selections and thresholds are unchanged; the collection fingerprint
+  is `0c2a0624…1570`.
+- The four committed source digests in the evidence match the commit bytes.
+  The committed T-311.7 review is byte-identical to the original review file.
+- Read the seven selected hidden methods (dev-010: 1; dev-012: 4). All go through
+  `owned()` or `assertRaises(AmbiguousReference)`. They import
+  `AmbiguousReference`/`test_only_files` from the trusted base module after the
+  proxy is installed, so assertions see only the proxy and the base's own class.
+- Cross-checked the pinned `CONTROL_PROFILES` failure counts against the unchanged
+  legacy grader's raw counts. They agree for all four tasks (1/10/1 failures,
+  dev-029 1 error).
+- Public-repository hygiene: the added text has no host path, username, hostname,
+  credential or product name. `/lane/...` appears only in the retained review as a
+  generic sandbox mount.
+
+## Commands and results
+
+| Command (all via `bash /tools/build-slot`, except node checks) | Result |
+| --- | --- |
+| `node --version`; `sha256sum target/local-agent-tools/node` | v24.15.0; `d1de76d8…d932c`, as expected |
+| `python3 scripts/local_agent_fast_gate.py --base 3adb456e… --timeout 600` | `FAST GATE: PASS`, nine paths, `Ran 31 tests` OK |
+| `python3 -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | `Ran 58 tests in 19.479s`, OK |
+| `python3 scripts/coding_eval_oracle.py verify --output <review>/oracle` | exit 0. `passed: true`, v2, `generated_scoring: false`. Four valid rows. Bases: dev-010 test_failure 1F/1 call; dev-012 10F/12 calls; dev-015 1F/3 calls; dev-029 protocol 1E/1 call, oracle exit 120. References pass with 4/14/4/6 calls (28 total) |
+| `python3 scripts/coding_eval.py verify --output <review>/full` | exit 0. 30 valid pairs, 89 reference tests |
+| `python3 scripts/validate_docs.py` | `Validated 705 Markdown file(s) and all policy invariants.` |
+
+## Reviewer probes (separate-process, real bubblewrap, private script)
+
+All probes run through the host entry `grade`, with `require_historical_candidate`
+patched to admit synthetic sources. The unpatched path still refuses generated
+sources (covered by `test_new_path_controls_still_refuse_generated_source_before_launch`).
+
+1. **Launch faults resolve T-311.7 L1.** `verify()` ran with only each frozen
+   base's candidate command replaced by `/usr/bin/false`, `/usr/bin/true`,
+   `/usr/bin/sleep 2` and a nonexistent launcher. All 16 base rows were
+   `infrastructure`. Every row was invalid and `summary.passed` was false. Each
+   real reference still passed. The executable cases recorded
+   `candidate_ready:false`, 0 calls and 0 tests. The missing launcher became an
+   `io-failed` error with no record.
+2. **Startup.** A candidate with a syntax error was `infrastructure`, with 0
+   assertions, 0 calls and `protocol_failed:true`. Hangs during import and after
+   startup (4 s deadline) were `timeout`, with no record.
+3. **Path values.** A `crate/src/../src/lib.rs` result failed as `protocol`: it
+   was not an input key, and the failure was sticky. So did an arbitrary
+   `KeyError` (not transported as ambiguity) and a raw frame forgery that wrote
+   startup plus canned replies from import and exited. None reached
+   `passed`/`test_failure`. The candidate's redefinition
+   `AmbiguousReference = BaseException` only changes what the candidate tags. The
+   oracle still raises the base class with the fixed message, and the reference
+   logic passes.
+4. **Ambiguity does not poison the exchange.** The dev-012 reference wire log has
+   29 frames, including 6 `{"ambiguous":true}` replies followed by normal calls.
+   The report has `protocol_failed:false` and passes.
+5. **Interruption.** SIGTERM hit an active `verify` twice: once during the
+   projection and once after `dev-012-base` was created. Both exits were 130. No
+   bubblewrap worker or new `agentmage-eval-*` temp tree remained, and no
+   `summary.json` was published. Four empty older temp directories were already
+   present from about 04:15–04:41, before this commit's runs; they are not
+   attributable to this change.
+6. **Fidelity probe.** This produced finding L1.
+
+## Findings
+
+### L1 (low): the path wire drops the return type, so the oracle accepts a result the original methods reject
+
+The candidate side serialises `sorted(str(path) for path in result)`
+(`scripts/coding_eval_oracle_worker.py:149`). The oracle rebuilds
+`frozenset(Path(...))` (`:140`) after checking only string membership
+(`:115-120`). The reference was wrapped to return `[str(p) for p in ...]`, which
+violates the statement's `Mapping[Path,str] -> frozenset[Path]` interface. On
+dev-010 it **passed the oracle** (`cause: none`, 4 calls). The unchanged legacy
+grader **failed** the same source (`AttributeError: 'str' object has no attribute
+'relative_to'` inside the hidden `owned()` helper). The guide says each original
+method is "complete and unchanged" (`docs/guides/coding-evaluation-oracle.md:17`),
+but the oracle's verdict is more lenient than those methods for this interface
+clause.
+
+This cannot be fixed by checks on the candidate side, since the candidate
+controls them. It affects no current number: only frozen controls are admitted
+and generated scoring is disabled. Fix before generated scoring:
+
+- State in the guide and in the planned covered-clause labels that path-task
+  return container and element types are not graded.
+- Alternatively, record a separate type-check label from the frozen-controls
+  path that never raises a score.
+
+### L2 (low): candidate import failure shares the `infrastructure` cause with launch failure
+
+`scripts/coding_eval_oracle.py:215` classifies every case without startup as
+`infrastructure`. That is correct for controls (L1 of T-311.7). For future
+generated attempts, though, a syntax-error edit (probe 2) is a candidate failure.
+Any candidate can also choose this label by exiting before startup. If a later
+scorer excluded or silently retried `infrastructure`, failures would be dropped.
+Fix before generated scoring:
+
+- Give a no-startup attempt with a launched candidate a distinct label (for
+  example `candidate_startup`).
+- Or specify and test that generated `infrastructure` outcomes count as failed
+  attempts in the denominator.
+
+### Note (no finding)
+
+The evidence lists `oracle-controls.log` and `full-controls.log` with
+`e3b0c442…b855`, the SHA-256 of empty input: these commands print nothing to
+stdout. The bound results are the summary digests, which agree with the builder's
+private `final-*-controls/summary.json` contents I inspected. Future evidence
+could say "empty stdout" to avoid implying content.
+
+No critical, high or medium finding. Confinement is unchanged from the
+T-311.7-reviewed sandbox and is exercised again by the passing suite.
+
+Delivery: T-311.8 is one sub-level under T-311 and ends in a runnable, measured
+verifier.
+
+## Per-row result
+
+| Row | Result |
+| --- | --- |
+| T-311.8 | PASS. dev-010/dev-012 run through bounded JSON path values and one fixed ambiguity tag. Startup discrimination holds: launch/import faults never validate a base and run zero assertions. Exact historical failure/call profiles match the legacy counts. Four valid pairs (seven methods, 28 reference calls); 30 legacy pairs and 89 reference tests unchanged. Hostile path, exception, forgery, timeout and interruption probes all fail closed. T-311.7 L1 is resolved. L1 and L2 are backlog before generated scoring. Parent T-311 and generated scoring stay open. |
+
+Verdict: PASS
