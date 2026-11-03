@@ -1,0 +1,276 @@
+Commit: c86571bb85c85a17d70a51f84a5da5222938f58a
+Scope: local-coding-t311-3-development-collection
+
+# Independent review: T-311.3 fourteen-task frozen development collection
+
+Reviewer: separate read-only Claude Opus 5.5 session (same model family as the builder; a
+cross-model review is still required before any public release). Row: T-311.3, tier core,
+attempt 1, base `455c0a7a67b3a3c8dfce1c456969c7520f26554e`. The repository was not modified
+(`git status --porcelain` empty before and after). Apart from this file, I wrote only to private
+lane temp space (`/lane/state/tmp/t311-3-review.B2Ve9E/`).
+
+## Methods
+
+1. Confirmed that `git rev-parse HEAD` and `git rev-parse c86571bb…` both give
+   `c86571bb85c85a17d70a51f84a5da5222938f58a`. Read IP-POLICY.md, decision index entries
+   0151–0153, the T-311 rows and the request. The diff from the base touches exactly the five
+   declared paths.
+2. Read the complete `scripts/coding_eval.py` and the test diff. Re-derived every pinned field
+   of the 11 new tasks from Git history with an independent script.
+3. For each new task, extracted the selected methods, their class helpers and module-level
+   fixtures from the pinned hidden blob. I compared every assertion with the task statement and
+   the base source's existing interfaces.
+4. Built statement-faithful variants of the dev-014 reference and ran the frozen selected tests
+   against them with the real task driver, in a private temp copy outside the sandbox. Generated
+   candidates cannot be scored through `score`, by design.
+5. Ran the requested repeat under the shared reservation, then CLI admission probes on the new
+   tasks, also under the reservation.
+6. Traced the builder's numbers and digests to the retained raw files and curation logs.
+   Checked public hygiene.
+
+No GPU, model, network, download or held-out material was used.
+
+## Commands and results
+
+```text
+node --version                                -> v24.15.0
+sha256sum .../.agentmage-review-runtime/node  -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c
+test -s .../LICENSE                           -> ok
+git rev-parse HEAD                            -> c86571bb85c85a17d70a51f84a5da5222938f58a
+git status --porcelain                        -> (empty)
+git diff --check 455c0a7a… HEAD               -> ok
+local_agent_fast_gate.py --base 455c0a7a… --plan -> 5 paths, 5 commands
+bash /tools/build-slot bash -s -- /lane/state/tmp/t311-3-review.B2Ve9E <<CHECKS   (outer rc 0)
+  python3 -m unittest tests.test_coding_eval  -> Ran 36 tests in 6.810s, OK (wall 6.96 s)
+  coding_eval.py verify --output …/verify     -> rc 0, wall 30.23 s
+  local_agent_fast_gate.py --timeout 600      -> FAST GATE: PASS, wall 8.61 s (inner 36 tests OK, 6.770s)
+  validate_docs.py                            -> "Validated 697 Markdown file(s) and all policy
+                                                 invariants.", wall 143.0 s
+sha256 scripts/coding_eval.py   -> ef99021773901aa098f5630e97e65829956b57d64c4d8d622b1fac6576939ac4
+sha256 tests/test_coding_eval.py -> cf06bfdff5c09d5112c4cffa76b933ee2c5de6a0384e11a8c52505b3e4cbac86
+sha256 my verify/summary.json   -> 5cacf632dca1ee16bccd453321631581d3600a01df33260bed9f6a0a2ab5b4e5
+```
+
+My verifier summary: `passed: true`, `input_refused: false`, `model_score: null`, version
+`coding-development-v4`. Counts are tests / failures / errors / skipped / expected failures /
+unexpected successes:
+
+| Task | Base (cause test_failure, exit 1) | Reference (pass, exit 0) |
+| --- | --- | --- |
+| dev-001 | 12/0/3/0/0/0 | 12/0/0/0/0/0 |
+| dev-002 | 3/0/19/0/0/0 | 3/0/0/0/0/0 |
+| dev-003 | 23/2/3/0/0/0 | 23/0/0/0/0/0 |
+| dev-004 | 9/11/2/0/0/0 | 9/0/0/0/0/0 |
+| dev-005 | 1/3/0/0/0/0 | 1/0/0/0/0/0 |
+| dev-006 | 1/0/1/0/0/0 | 1/0/0/0/0/0 |
+| dev-007 | 1/0/1/0/0/0 | 1/0/0/0/0/0 |
+| dev-008 | 2/0/2/0/0/0 | 2/0/0/0/0/0 |
+| dev-009 | 1/1/0/0/0/0 | 1/0/0/0/0/0 |
+| dev-010 | 1/1/0/0/0/0 | 1/0/0/0/0/0 |
+| dev-011 | 2/0/2/0/0/0 | 2/0/0/0/0/0 |
+| dev-012 | 4/10/0/0/0/0 | 4/0/0/0/0/0 |
+| dev-013 | 3/0/8/0/0/0 | 3/0/0/0/0/0 |
+| dev-014 | 7/2/25/0/0/0 | 7/0/0/0/0/0 |
+
+There are 70 reference tests, 140 test executions with the bases and 28 graded cases. Every
+case has `model_attempts: 0` and a `frozen-base` or `frozen-reference` label. Every count and
+cause equals the builder's retained `t311-expansion-audited-checks/verify/summary.json`, and
+every `task_sha256` matches. The evaluator hash is `ef99021773…` in both runs.
+
+Per-method base outcomes: every selected method fails at its base except one.
+`FastGateTests.test_crate_data_inputs_keep_full_rust_coverage` (dev-004) passes at base; it
+was changed in the same historical commit and acts as a regression guard. This is
+informational, not a defect.
+
+Independent data audit (`probes/audit.py`):
+
+```text
+TASKS[:3] == TASKS literal at af77a8a5 and at 455c0a7a      True
+fingerprint TASKS[:3]   d5f5e365924ffea8c6b46c50c28d00e116c01f69de57ac0a9672ffa50e05e3c5
+fingerprint all 14      4c4992a5c265aeebfe0f3bcbe81d65f293f7195dc3ec59d07ca5f9e9a8b6d311
+DRIVER bytes == af77a8a5 DRIVER                              True
+sum expected_tests 70 (first three 38)
+every new task: reference's sole parent == base; base/reference/hidden digests match Git;
+  projection() accepts the pinned projection digest; source differs base→reference
+every new task: selected names == exactly the set of test methods changed or added in
+  base→reference of the hidden module (no unselected changed method, none extra)
+no new hidden module defines load_tests, setUpModule or tearDownModule
+```
+
+CLI probes on new tasks (`probes/cli.sh`, under the reservation):
+
+```text
+prepare dev-014                                           rc 0
+score unchanged base                                      rc 1 test_failure frozen-base, 7 tests, test_names recorded
+score exact reference                                     rc 0 frozen-reference, model_attempts 0, model_score null
+score reference + one-word diagnostic change              rc 2 untrusted-candidate-disabled; no output dir
+dev-012 candidate = dev-010 base bytes (== dev-012 ref)   rc 0 frozen-reference (correct: exact pinned bytes)
+dev-010 prepared tree offered as dev-012 candidate        rc 2 out-of-scope-edit; no output dir
+agentmage-eval-* temp trees before/after                  0 / 0
+```
+
+dev-014 statement probes (`probes/variant.py`). Each variant changes only the reference source,
+and the frozen 7-method selection runs with the real driver:
+
+```text
+reference (control)                                       exit 0, 7/0/0/0
+wrap-unavailable: cat-file CalledProcessError ->
+  WorkerEvidenceError("…revision unavailable")            exit 1, 1 error:
+  test_real_git_closure_covers_child_modules_modes_and_docs (expects subprocess.CalledProcessError)
+verify-commit: type check via `git rev-parse --verify
+  REV^{commit}` compared with REV                         exit 1, 1 failure:
+  test_batch_integrity_refuses_truncation_identity_and_trailing_bytes
+  ("inventory invalid" does not match "installed worker source is not a commit")
+```
+
+## Findings
+
+### M1 (medium): dev-014's statement contradicts or omits interfaces that its frozen selected tests require
+
+Location: `scripts/coding_eval.py:416-445` (dev-014 statement). The selected methods are in
+pinned `tests/test_sprint_16_linux_worker_evidence.py` at `c16884163206`.
+
+The request asks that every statement be checked against the selected assertions, including
+exact errors and refusal cases. For dev-014, three requirements of the frozen tests are absent
+from the statement, and one of them contradicts it:
+
+1. **Unavailable commit: exception type contradicts the statement.**
+   `test_real_git_closure_covers_child_modules_modes_and_docs` ends with
+   `assertRaises(subprocess.CalledProcessError)` for `complete_source_closure("0" * 40)`. The
+   statement instead says "Diagnostic contract: use ValueError (or the existing
+   WorkerEvidenceError subclass)" and "Refuse … invalid object identities/types". The selected
+   `test_changed_or_unavailable_committed_source_fails` also models an unavailable commit as
+   `ValueError("missing commit")`. A candidate that follows the statement and refuses the missing
+   commit with `WorkerEvidenceError` fails the frozen task. Reproduced by the `wrap-unavailable`
+   variant above, a one-line change to the reference.
+2. **Undisclosed subprocess call sequence.**
+   `test_batch_integrity_refuses_truncation_identity_and_trailing_bytes` patches
+   `evidence.subprocess.run` with a fixed side-effect sequence:
+   - a type probe whose stdout must be accepted when it is `b"commit\n"`;
+   - a long-format inventory with object sizes (`100644 blob <oid>       3\tfile.rs\0`);
+   - a `--batch` content call.
+
+   The duplicate-inventory case also requires the message to contain `inventory invalid`.
+   The statement never mentions a type probe, the `-l` inventory format or the use of
+   `subprocess.run` (as opposed to `check_output`). It also does not limit the number or order
+   of calls. A correct implementation that checks the commit with
+   `git rev-parse --verify REV^{commit}` fails. Reproduced by the `verify-commit` variant.
+   Using `check_output`, or adding any extra call, would also fail: an exhausted mock raises
+   `StopIteration`, which is not a `ValueError`.
+3. **Call order and first-failure position.**
+   `validate_current` and `test_changed_or_unavailable…` use `side_effect=[expected, changed]`
+   and then assert on `[0]` of the returned failures. This requires `complete_source_closure` to
+   be called exactly twice, for the report's `source_revision` before the local revision. It
+   also requires the "historical" and "not equivalent" diagnostics to be the *first* failure.
+   The statement says only that the rejection "includes" these substrings.
+
+Impact: dev-014 would score correct, statement-following candidates as failures. This
+under-measures model results on a frozen task. The defect is the same class as T-311.1's M2/M2-R,
+and the statements must be correct before any model measurement because they cannot change
+afterwards. The evidence record's claim that "The statement interface audit covers selected
+methods and their helpers" is not supported for dev-014. The automated audit
+(`tests/test_coding_eval.py:56-94`) checks only attribute names reached through module aliases.
+It cannot see exception types, mock targets or call protocols.
+
+Fix: before any model run, publish a recorded pre-measurement correction of the dev-014
+statement only, with no test, selection, pin or threshold change, as v3 did. It should state:
+
+- `complete_source_closure` lets Git's `subprocess.CalledProcessError` propagate for an
+  unavailable revision; only `validate_current_source` turns it into a failure.
+- It makes exactly three `subprocess.run` calls in order: `git cat-file -t REV`, which must
+  return `commit\n`; `git ls-tree -r -l -z --full-tree REV`, the long format with sizes; and
+  one `git cat-file --batch`. It reads `.stdout` bytes.
+- `validate_current_source` computes the `source_revision` closure before the local one.
+- The named diagnostic is the first returned failure.
+
+Alternatively, drop dev-014 in full; do not narrow its selection. In either case, run a
+statement-only variant check for each new task, as review 3 of T-311.1 did, and record it.
+
+### L1 (low): minor statement inferences elsewhere
+
+- dev-011 requires `TOOL` to be a `str`; the tests use it as a JSON object key. The statement
+  writes `TOOL = scripts/verification_batch.py` without stating the type.
+- dev-004 requires `ValueError` from `untracked_whitespace`, `review_text_lint` and the new
+  `plan` refusals; the statement says only "reject". Both can be inferred from the base's
+  conventions: `python_lint` and `plan` already raise `ValueError`, and `--lint-python` shows the
+  command shape. Clarify them in the same pre-measurement correction if convenient. Not blocking.
+
+### Informational (no finding)
+
+- Some tasks share code lineage:
+  - dev-008's reference `coding_harness.py` equals dev-007's base bytes.
+  - dev-012's reference equals dev-010's base.
+  - dev-009, dev-010 and dev-011 share one commit pair, with different sources and tests.
+
+  Each task still has a distinct base and source and an independent workspace. This is
+  acceptable for development tasks. Keep it in mind when the separately sealed held-out set is
+  selected.
+- The builder's whole-file privacy hit in TASKS.md is the generic phrase
+  `absolute/home/traversal/unrelated-path` (line 1565, from `bd172a43`). It is not a private
+  path. My scan of all added lines and the commit metadata found no private path, username,
+  hostname, credential, agent-product or benchmark name.
+
+## Assessment against the requested focus
+
+1. **Original three tasks.** The data equal the `af77a8a5` literal exactly, the legacy
+   fingerprint is unchanged, they have no `test_names`, and `task_driver` returns the
+   unchanged `DRIVER` bytes, so the whole module loads. The 38-test threshold is unchanged.
+   Satisfied.
+2. **Additions against history.** All pins, digests and projections are correct. Each base is
+   the reference's parent, and each selection is exactly the set of changed historical test
+   methods, by name, from the unmodified blob. The fingerprint matches. Statement audit:
+   dev-004 to dev-013 match their selected assertions, with L1 nits. **dev-014 does not (M1).**
+   Not satisfied for dev-014.
+3. **Controls.** All 14 bases fail by `test_failure` and none by refusal. All 14 references
+   pass: 70 tests with zero skips, expected failures or unexpected successes, 140 executions.
+   Reproduced. Satisfied.
+4. **Selection driver.**
+   - Selections come only from registered task dictionaries, and `grade` enforces exact
+     equality with a registered task before any worker starts.
+   - The regex, distinctness, exact-integer and count checks reject malformed selections.
+     JSON-encoding the restricted names makes code injection impossible.
+   - There is no CLI or environment override; the evaluator reads no environment variable.
+   - A missing, failing, erroring or skipped selected method cannot pass; the actual-worker
+     unit test covers this.
+   - Original helpers and `setUp`/`addCleanup` run from the pinned bytes. No new module
+     defines module fixtures or `load_tests`.
+
+   Satisfied.
+5. **Historical-only guard.** In the real CLI, dev-014 base and reference are scored correctly.
+   A one-word generated change is refused with rc 2 before any output exists. A cross-task tree
+   is refused with `out-of-scope-edit`. The builder's dev-006 unit round trip also passes.
+   Forgery and quotas are still unsolved, and no claim of generated scoring is made. Satisfied.
+6. **Curation.**
+   - `t311-curation/results.json` shows 8 accepted and 3 rejected (9, 10, 25), each with a
+     failing reference. The reservation log ends at the `CalledProcessError` on a missing
+     `verification_batch.py` blob at `41e3f432`.
+   - `t311-curation-more` shows 3 accepted and 1 rejected (38, whose base cause is
+     `infrastructure`).
+   - That totals 11 accepted. Rejected prospects were excluded in full, with no narrowed
+     retries.
+   - There was no held-out material, model or GPU use.
+
+   Satisfied.
+7. **Hygiene and limitations.** The added lines are clean. The row, guide and evidence state
+   plainly that this is 14 development tasks with no held-out set, no 30-task completion, no
+   baseline and no score. Satisfied.
+
+Evidence tracing: the builder's private digests reproduce exactly:
+
+- summary `d555643b…b6b4`
+- unit log `bf46204d…6513`
+- fast-gate log `87330…beea`
+- docs log `d52905e4…fc8d`
+- evaluator `ef990217…9ac4`
+- tests `cf06bfdf…ac86`
+
+Their per-case counts equal mine.
+
+## Per-row result
+
+- **T-311.3: not closable.** The medium finding M1 (the dev-014 statement/assertion
+  contract) is open. Every other requested check passed on my fresh runs.
+- Parent T-311, T-303/T-306, generated scoring, held-out collection and any model baseline
+  remain open; I did not review them.
+
+Verdict: FINDINGS

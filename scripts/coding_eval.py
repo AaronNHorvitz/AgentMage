@@ -26,7 +26,7 @@ import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "coding-development-v4"
+VERSION = "coding-development-v5"
 MAX_FILE = 1024 * 1024
 MAX_TREE = 16 * MAX_FILE
 TIMEOUT = 90
@@ -115,7 +115,8 @@ TASKS = [{'id': 'dev-001',
   'expected_tests': 23}]
 
 
-# Append-only development tasks; no pilot statement, hidden test or pin changes.
+# Append-only development tasks; v5 corrects three new statements before measurement.
+# No pilot statement, hidden test, selection, count or pin changes.
 # Selections name complete original historical methods, chosen before any model run.
 ADDITIONAL_TASKS = [{'base': '4d7e84d669d7a8ce85926deee90336527cad5b05',
   'reference': '4fda20f7d9f335cfe859cb3e01206573ea5e3e08',
@@ -145,7 +146,8 @@ ADDITIONAL_TASKS = [{'base': '4d7e84d669d7a8ce85926deee90336527cad5b05',
                'termination, SIGKILL of the gate group, or supervisor termination. '
                'SIGINT/SIGTERM/SIGHUP stop the gate with failure and never start a later check. '
                'Preserve the execute(root, commands, timeout) interface and existing check '
-               'failure/timeout results.',
+               'failure/timeout results. untracked_whitespace, review_text_lint and plan '
+               'raise ValueError on the refusals described above.',
   'test_names': ['FastGateTests.test_document_only_change_has_no_build_or_evidence_generator',
                  'FastGateTests.test_unknown_change_and_missing_tests_fail_closed',
                  'FastGateTests.test_crate_data_inputs_keep_full_rust_coverage',
@@ -323,7 +325,7 @@ ADDITIONAL_TASKS = [{'base': '4d7e84d669d7a8ce85926deee90336527cad5b05',
   'id': 'dev-011',
   'split': 'development',
   'statement': 'Strengthen verification_batch.retain and load_stage without weakening historical '
-               'evidence bindings. Introduce TOOL = scripts/verification_batch.py. New schema-2 '
+               'evidence bindings. Introduce the string TOOL = "scripts/verification_batch.py". New schema-2 '
                'stages must bind TOOL and every source path/digest to the exact source_revision. '
                'Add retain(..., changed=tuple[(relative_path, later_commit)]) as a '
                'keyword-compatible final argument: a differing source may be declared only once, '
@@ -433,11 +435,22 @@ ADDITIONAL_TASKS = [{'base': '4d7e84d669d7a8ce85926deee90336527cad5b05',
                'build_report emits schema_version=2 and the closure. Changed guest results, '
                'duplicate/missing sources, malformed digests/closures and changed source must '
                'fail. These tests use synthetic Git histories only; no installed worker or other '
-               'platform qualification is established. Diagnostic contract: use ValueError (or the '
-               'existing WorkerEvidenceError subclass); closure-limit errors include exceeds '
-               'bound, duplicate/invalid inventories include inventory invalid, legacy-current '
-               'rejection includes historical and non-equivalent source rejection includes not '
-               'equivalent.',
+               'platform qualification is established. Git call contract for complete_source_closure: '
+               'on valid input make exactly three subprocess.run calls in order, reading each '
+               '.stdout as bytes: [git, cat-file, -t, REV] must return b"commit\\n"; '
+               '[git, ls-tree, -r, -l, -z, --full-tree, REV] returns long-format inventory '
+               'records with object sizes; [git, cat-file, --batch] receives newline-delimited '
+               'object IDs on input. Use cwd=ROOT, check=True, capture_output=True and timeouts '
+               '30, 30 and 60 seconds respectively. Refuse invalid input or inventory before '
+               'making subsequent calls. Let subprocess.CalledProcessError propagate for an '
+               'unavailable revision; validate_current_source catches it and returns failures. '
+               'That validator checks the report source_revision closure before the local '
+               'revision closure (exactly two closure calls on the equivalence path). '
+               'Diagnostic contract for other closure refusals: ValueError (or the existing '
+               'WorkerEvidenceError subclass); closure-limit errors include exceeds bound and '
+               'duplicate/invalid inventories include inventory invalid. For current validation, '
+               'legacy rejection has historical in the first returned failure, and non-equivalent '
+               'source rejection has not equivalent in the first returned failure.',
   'test_names': ['Sprint16LinuxWorkerEvidenceTests.test_identical_complete_source_at_different_commits_is_eligible',
                  'Sprint16LinuxWorkerEvidenceTests.test_legacy_matrix_is_historical_not_current',
                  'Sprint16LinuxWorkerEvidenceTests.test_schema_versions_require_integer_not_python_equal_boolean_or_float',

@@ -9,16 +9,23 @@ Keep agent tuning deferred until the complete suite and its baseline exist.
 
 ## Frozen tasks
 
-The `coding-development-v4` revision appends 11 original-repository development
-tasks. It preserves every original pilot definition byte-for-byte as data,
+The `coding-development-v4` revision appended 11 original-repository development
+tasks. The current `coding-development-v5` corrects their statements before any
+model run after [independent review](../reviews/c86571bb85c8-local-coding-t311-3-development-collection.txt)
+found a Git error/call protocol missing from dev-014. It also clarifies dev-004's
+ValueError refusals and dev-011's string constant. No hidden test, selection,
+threshold or source pin changes. It preserves every original pilot definition byte-for-byte as data,
 including statements, base/reference/input digests and the 38-test requirement.
 The full collection fingerprint is
-`4c4992a5c265aeebfe0f3bcbe81d65f293f7195dc3ec59d07ca5f9e9a8b6d311`.
+`72442a4cf406abd83dc7684a5ef225474b55ee2cbc4cb6e5d34e6a840f0da618`.
 The first-three-task fingerprint remains
 `d5f5e365924ffea8c6b46c50c28d00e116c01f69de57ac0a9672ffa50e05e3c5`.
 No agent attempt informed the selection or statements. The
 [expansion record](../evidence/t311-3-development-collection-2026-11-03.md)
 records the new contracts, failed prospective tasks and actual verifier results.
+The [v5 correction record](../evidence/t311-3-statement-contract-repair-2026-11-03.md)
+records the assertion audit and builder-authored alternative controls; these
+are diagnostic probes, not blind implementations or model scores.
 
 The prior `coding-development-pilot-v3` revision corrected residual statement defects
 from the [second independent review](../reviews/b1734b9957ce-local-coding-t311-1-evaluator-repair.txt).

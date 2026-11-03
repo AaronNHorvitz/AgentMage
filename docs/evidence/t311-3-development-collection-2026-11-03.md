@@ -4,6 +4,12 @@ Date: 2026-11-03. Tier: core. Builder evidence; independent review remains open.
 Base: `455c0a7a`, which retains the exact-commit independent PASS for T-311.2.
 Parent T-311 remains open. These are evaluator controls, never model scores.
 
+Historical v4 record: the [independent review](../reviews/c86571bb85c8-local-coding-t311-3-development-collection.txt)
+reproduced the measurements below but found the dev-014 statement audit
+incomplete (medium M1). The [pre-measurement v5 repair](t311-3-statement-contract-repair-2026-11-03.md)
+supersedes the statement-contract claim and collection fingerprint, without
+changing any hidden test or source pin. This row remains open for re-review.
+
 ## Running scope
 
 `python3 scripts/coding_eval.py verify --output <new-private-results>` now

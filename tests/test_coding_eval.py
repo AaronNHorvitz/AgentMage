@@ -45,7 +45,7 @@ class CodingEvaluationTests(unittest.TestCase):
         self.assertEqual(fingerprint, "d5f5e365924ffea8c6b46c50c28d00e116c01f69de57ac0a9672ffa50e05e3c5")
         self.assertEqual(len(set(t["id"] for t in evaluation.TASKS)), 14)
         complete = evaluation.sha(json.dumps(evaluation.TASKS, sort_keys=True, separators=(",", ":")).encode())
-        self.assertEqual(complete, "4c4992a5c265aeebfe0f3bcbe81d65f293f7195dc3ec59d07ca5f9e9a8b6d311")
+        self.assertEqual(complete, "72442a4cf406abd83dc7684a5ef225474b55ee2cbc4cb6e5d34e6a840f0da618")
         self.assertEqual(sum(t["expected_tests"] for t in evaluation.TASKS), 70)
         # Each is a separate historical source change, not duplicated test weights.
         self.assertEqual(len({(t["base"], t["source"]) for t in evaluation.TASKS}), 14)
@@ -122,6 +122,23 @@ class CodingEvaluationTests(unittest.TestCase):
         for task in evaluation.TASKS[:3]:
             self.assertNotIn("test_names", task)
             self.assertEqual(evaluation.task_driver(task), evaluation.DRIVER)
+
+    def test_v5_statement_correction_preserves_all_frozen_test_and_source_inputs(self):
+        previous = ast.parse(evaluation.git(
+            "show", "c86571bb85c85a17d70a51f84a5da5222938f58a:scripts/coding_eval.py"))
+        definitions = {target.id: ast.literal_eval(node.value)
+                       for node in previous.body if isinstance(node, ast.Assign)
+                       for target in node.targets if isinstance(target, ast.Name)
+                       and target.id in {"TASKS", "ADDITIONAL_TASKS"}}
+        before = definitions["TASKS"] + definitions["ADDITIONAL_TASKS"]
+        self.assertEqual(len(before), len(evaluation.TASKS))
+        changed = []
+        for frozen, current in zip(before, evaluation.TASKS):
+            self.assertEqual({k: v for k, v in frozen.items() if k != "statement"},
+                             {k: v for k, v in current.items() if k != "statement"})
+            if frozen["statement"] != current["statement"]:
+                changed.append(current["id"])
+        self.assertEqual(changed, ["dev-004", "dev-011", "dev-014"])
 
     def test_test_selection_cannot_inject_code_repeat_methods_or_change_counts(self):
         for names, count in (([], 0), (["Case.test_ok"] * 2, 2), (["Case.test_ok"], 2),
