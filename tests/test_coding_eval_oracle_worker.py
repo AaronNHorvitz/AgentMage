@@ -2,6 +2,9 @@
 import io
 import json
 from pathlib import Path
+import subprocess
+import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest import mock
 
@@ -88,6 +91,100 @@ class OracleProtocolTests(unittest.TestCase):
         self.assertEqual(worker.path_result(uncertain, Ambiguous, {}), {"ambiguous": True})
         with self.assertRaises(RuntimeError):
             worker.path_result(failed, Ambiguous, {})
+
+    def verification_request(self):
+        return {"case": "read-arguments-correction", "exit_code": 0,
+                "files": {"result.json": '{"scenario":"read-arguments-correction"}',
+                          "stdout.jsonl": "", "stderr.log": "", "calc.py": "fixture text\n"},
+                "rows": [{"state": "SUCCESS"}], "status": [" M src/calc.py"],
+                "validation_returncode": None}
+
+    def test_verification_fixture_is_rebuilt_locally_and_removed_after_success_or_error(self):
+        request = self.verification_request()
+        module = SimpleNamespace(rows=lambda *a: None, git_status=lambda *a: None, subprocess=subprocess)
+        original_rows, original_status, original_run = module.rows, module.git_status, subprocess.run
+        roots = []
+
+        def check(case, base, logs, code):
+            roots.append(base.parent)
+            self.assertEqual((base / 'disposable/worktree/src/calc.py').read_text(), 'fixture text\n')
+            self.assertEqual((logs / 'result.json').read_text(), request['files']['result.json'])
+            self.assertEqual(module.rows(logs), request['rows'])
+            self.assertEqual(module.git_status(base), request['status'])
+            self.assertIsNone(module.subprocess.run(['not-executed']).returncode)
+            self.assertEqual((case, code), (request['case'], 0))
+            return {'passed': True, 'checks': {'fixture': True}, 'other': 'not graded'}
+
+        self.assertEqual(worker.verification_result(check, module, request),
+                         {'passed': True, 'checks': {'fixture': True}})
+
+        def fail(*args):
+            check(*args)
+            raise RuntimeError('fixture failure')
+
+        with self.assertRaises(RuntimeError):
+            worker.verification_result(fail, module, request)
+        self.assertEqual(len(roots), 2)
+        self.assertTrue(all(not root.exists() for root in roots))
+        self.assertIs(module.rows, original_rows)
+        self.assertIs(module.git_status, original_status)
+        self.assertIs(subprocess.run, original_run)
+
+    def test_verification_fixture_rejects_arbitrary_paths_and_nondata_values(self):
+        request = self.verification_request()
+        for update in ({'files': {**request['files'], '../escape': 'text'}},
+                       {'files': {**request['files'], '/output/tests.json': 'text'}},
+                       {'files': {'result.json': 'missing files'}},
+                       {'files': {**request['files'], 'calc.py': 1}},
+                       {'case': 'unregistered'}, {'case': []}, {'exit_code': True}, {'rows': {}},
+                       {'status': [1]}, {'validation_returncode': True}, {'extra': 'data'}):
+            with self.subTest(update=update), mock.patch.object(worker.tempfile, 'TemporaryDirectory') as create:
+                with self.assertRaises(worker.ProtocolError):
+                    worker.verification_result(None, None, {**request, **update})
+                create.assert_not_called()
+
+    def test_verification_proxy_sends_fixture_data_without_paths_or_assertions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            logs = root / 'logs'
+            logs.mkdir()
+            for name in ('result.json', 'stdout.jsonl', 'stderr.log'):
+                (logs / name).write_text('fixture')
+            workspace = root / 'worktree'
+            (workspace / 'src').mkdir(parents=True)
+            (workspace / 'src/calc.py').write_text('code')
+            run = mock.Mock(return_value=subprocess.CompletedProcess([], 7))
+            module = SimpleNamespace(
+                coding_harness=SimpleNamespace(paths=lambda base: (None, None, workspace)),
+                rows=lambda logs: [{'type': 'record'}], git_status=lambda workspace: [' M src/calc.py'],
+                subprocess=SimpleNamespace(run=run, PIPE=subprocess.PIPE))
+            remote = mock.Mock(return_value={'passed': False, 'checks': {'validation': False}})
+            proxy = worker.verification_proxy(remote, module)
+            result = proxy('multi-file', root, logs, 0)
+            self.assertFalse(result['passed'])
+            payload = remote.call_args.args[0]
+            self.assertNotIn(directory, json.dumps(payload))
+            self.assertEqual(payload['validation_returncode'], 7)
+            self.assertEqual(payload['files']['calc.py'], 'code')
+            run.assert_called_once()
+            remote.return_value = {'missing_case': True}
+            with self.assertRaisesRegex(KeyError, 'oracle.missing-case'):
+                proxy('read-arguments-denied', root, logs, 8)
+            run.assert_called_once()
+
+    def test_verification_replies_accept_only_check_booleans_or_a_fixed_missing_case_tag(self):
+        for result in ({'passed': True, 'checks': {'exact': False}}, {'missing_case': True}):
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), 'verification-result')
+            self.assertEqual(remote({}), result)
+        for result in ({'passed': 1, 'checks': {'x': True}}, {'passed': True, 'checks': {}},
+                       {'passed': True, 'checks': {'x': 'true'}},
+                       {'passed': True, 'checks': {'x': True}, 'tests': {'failures': 0}},
+                       {'missing_case': False}, {'missing_case': True, 'message': 'payload'},
+                       {'exception': 'KeyError'}, [], True):
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), 'verification-result')
+            with self.subTest(result=result), self.assertRaises(worker.ProtocolError):
+                remote({})
+            self.assertTrue(remote.failed)
 
     def test_json_call_preserves_arguments_and_requires_exact_sequence_and_type(self):
         remote = self.remote(b'{"seq":1,"result":false}\n')

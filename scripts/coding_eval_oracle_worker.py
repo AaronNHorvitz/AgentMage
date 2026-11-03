@@ -11,7 +11,9 @@ import importlib.util
 import json
 from pathlib import Path
 import sys
+import tempfile
 import unittest
+from unittest import mock
 
 MAX_MESSAGE = 64 * 1024
 MAX_TRANSCRIPT = 2 * 1024 * 1024
@@ -118,6 +120,12 @@ class RemoteFunction:
                     or (result.keys() == {"paths"} and isinstance(result["paths"], list)
                         and all(type(path) is str and path in args[0] for path in result["paths"])
                         and len(result["paths"]) == len(set(result["paths"])))))
+            elif self.result_type == "verification-result":
+                valid = (isinstance(result, dict) and (
+                    (result.keys() == {"missing_case"} and result["missing_case"] is True)
+                    or (result.keys() == {"passed", "checks"} and type(result["passed"]) is bool
+                        and isinstance(result["checks"], dict) and bool(result["checks"])
+                        and all(type(value) is bool for value in result["checks"].values()))))
             else:
                 valid = (isinstance(result, dict) and bool(result)
                          and all(type(value) is bool for value in result.values()))
@@ -149,6 +157,69 @@ def path_result(function, ambiguity, sources):
     return {"paths": sorted(str(path) for path in result)}
 
 
+def verification_proxy(remote, module):
+    """Snapshot trusted fixture inputs, never test code, mocks or shared paths."""
+    def call(case, base, log_dir, exit_code):
+        workspace = module.coding_harness.paths(base)[2]
+        files = {name: (log_dir / name).read_text()
+                 for name in ("result.json", "stdout.jsonl", "stderr.log")}
+        calc = workspace / "src/calc.py"
+        if calc.exists():
+            files["calc.py"] = calc.read_text()
+        # Only the multi-file frozen method stubs a validation subprocess. The
+        # other selected methods have no command, and never start one here.
+        validation = None
+        if case == "multi-file":
+            validation = module.subprocess.run(
+                [sys.executable, "tests/run_validation.py"], cwd=workspace, check=False,
+                stdout=module.subprocess.PIPE, stderr=module.subprocess.PIPE, text=True,
+            ).returncode
+        result = remote({"case": case, "exit_code": exit_code, "files": files,
+                         "rows": module.rows(log_dir), "status": module.git_status(workspace),
+                         "validation_returncode": validation})
+        if "missing_case" in result:
+            raise KeyError("oracle.missing-case")
+        return result
+    return call
+
+
+def verification_result(function, module, request):
+    """Rebuild finite fixture text in the candidate's own temporary filesystem."""
+    if (not isinstance(request, dict) or request.keys() != {
+            "case", "exit_code", "files", "rows", "status", "validation_returncode"}
+            or type(request["case"]) is not str
+            or request["case"] not in {"multi-file", "read-arguments-correction", "read-arguments-denied"}
+            or type(request["exit_code"]) is not int or not isinstance(request["files"], dict)
+            or set(request["files"]) not in (
+                {"result.json", "stdout.jsonl", "stderr.log"},
+                {"result.json", "stdout.jsonl", "stderr.log", "calc.py"})
+            or any(type(text) is not str for text in request["files"].values())
+            or not isinstance(request["rows"], list)
+            or not isinstance(request["status"], list)
+            or any(type(row) is not str for row in request["status"])
+            or (request["validation_returncode"] is not None
+                and type(request["validation_returncode"]) is not int)):
+        raise ProtocolError("oracle.invalid-verification-input")
+    with tempfile.TemporaryDirectory(prefix="oracle-fixture-") as directory:
+        root = Path(directory)
+        base, logs = root / "fixture", root / "logs"
+        logs.mkdir()
+        for name, text in request["files"].items():
+            path = base / "disposable/worktree/src/calc.py" if name == "calc.py" else logs / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text)
+        completed = module.subprocess.CompletedProcess([], request["validation_returncode"])
+        with (mock.patch.object(module, "rows", return_value=request["rows"]),
+              mock.patch.object(module, "git_status", return_value=request["status"]),
+              mock.patch.object(module.subprocess, "run", return_value=completed)):
+            try:
+                result = function(request["case"], base, logs, request["exit_code"])
+            except KeyError:
+                # Only a literal tag crosses the boundary, never exception data.
+                return {"missing_case": True}
+        return {"passed": result["passed"], "checks": result["checks"]}
+
+
 def candidate(config):
     reader, writer = sys.stdin.buffer, sys.stdout.buffer
     # Ordinary candidate prints are diagnostics. Deliberate protocol corruption
@@ -172,6 +243,8 @@ def candidate(config):
                 raise ProtocolError("oracle.invalid-request")
             if config["result_type"] == "path-result":
                 result = path_result(function, module.AmbiguousReference, *request["args"])
+            elif config["result_type"] == "verification-result":
+                result = verification_result(function, module, *request["args"])
             else:
                 result = function(*request["args"])
             writer.write(encode_message({"seq": request["seq"], "result": result}))
@@ -193,8 +266,12 @@ def oracle(config):
             # lookup. Still retain a trusted diagnostic record, never a score.
             pass
         else:
-            proxy = (path_proxy(remote, module.AmbiguousReference)
-                     if config["result_type"] == "path-result" else remote)
+            if config["result_type"] == "path-result":
+                proxy = path_proxy(remote, module.AmbiguousReference)
+            elif config["result_type"] == "verification-result":
+                proxy = verification_proxy(remote, module)
+            else:
+                proxy = remote
             setattr(module, config["function"], proxy)
             spec = importlib.util.spec_from_file_location("hidden_eval", "/adapter/test.py")
             hidden = importlib.util.module_from_spec(spec)

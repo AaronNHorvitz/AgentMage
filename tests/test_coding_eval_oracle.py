@@ -38,7 +38,8 @@ class IndependentOracleTests(unittest.TestCase):
     def test_real_two_sandbox_controls_keep_original_hidden_tests_and_counts(self):
         summary = oracle.verify(self.root / "controls")
         self.assertTrue(summary["passed"], summary)
-        self.assertEqual(len(summary["tasks"]), 4)
+        self.assertEqual(len(summary["tasks"]), 6)
+        self.assertEqual(summary["control_attempts"], {"total": 12, "passed": 6, "failed": 6})
         self.assertFalse(summary["generated_scoring"])
         self.assertIsNone(summary["model_score"])
         self.assertEqual(summary["collection_sha256"],
@@ -83,6 +84,7 @@ class IndependentOracleTests(unittest.TestCase):
             self.assertEqual(base["calls"], 0)
             self.assertEqual(base["tests"]["tests"], 0)
             self.assertEqual(base["logs"]["wire.log"], evaluation.sha(b""))
+            self.assertEqual(base["control_attempts"], {"total": 1, "passed": 0, "failed": 1})
 
     def test_import_failure_and_false_startup_do_not_run_hidden_assertions(self):
         for name, code in (
@@ -95,6 +97,65 @@ class IndependentOracleTests(unittest.TestCase):
                 self.assertFalse(report["candidate_ready"])
                 self.assertEqual(report["calls"], 0)
                 self.assertEqual(report["tests"]["tests"], 0)
+                self.assertEqual(report["control_attempts"], {"total": 1, "passed": 0, "failed": 1})
+
+    def test_verification_fixtures_cannot_patch_or_write_trusted_assertions(self):
+        for ident in ("dev-020", "dev-021"):
+            task = next(t for t in evaluation.collection() if t["id"] == ident)
+            files = self.files(task)
+            files[task["source"]] += b'''
+import unittest
+from pathlib import Path
+unittest.TestCase.assertFalse = lambda *a, **kw: None
+assert not Path('/adapter/test.py').exists()
+assert not Path('/output').exists()
+assert not Path('/lane').exists()
+def verify_case(*args):
+ return {'passed': True, 'checks': {'retained-muse-read-arguments': True,
+  'no-rejection-authority-or-effects': True, 'bounded-tools': True,
+  'terminal-rejection-code': True}, 'tests': {'failures': 0}}
+'''
+            with self.subTest(task=ident), mock.patch.object(
+                    evaluation, "require_historical_candidate", return_value="synthetic-probe"):
+                report = oracle.grade(task, files, self.root / ident)
+            self.assertFalse(report["passed"], report)
+            self.assertEqual(report["cause"], "test_failure")
+            self.assertTrue(report["candidate_ready"])
+            self.assertEqual(report["tests"]["tests"], 1)
+            self.assertEqual(report["control_attempts"], {"total": 1, "passed": 0, "failed": 1})
+            self.assertIn("other-report-fields", report["coverage"]["not_graded"])
+
+    def test_new_verification_controls_refuse_generated_snapshots_and_hide_exception_data(self):
+        for ident in ("dev-020", "dev-021"):
+            task = next(t for t in evaluation.collection() if t["id"] == ident)
+            files = self.files(task)
+            files[task["source"]] += b"\ndef verify_case(*args): raise KeyError('untrusted exception payload')\n"
+            output = self.root / ident
+            with self.subTest(task=ident), self.assertRaisesRegex(
+                    evaluation.EvaluationError, "untrusted-candidate-disabled"):
+                oracle.grade(task, files, output)
+            self.assertFalse(output.exists())
+            with mock.patch.object(evaluation, "require_historical_candidate", return_value="synthetic-probe"):
+                report = oracle.grade(task, files, output)
+            self.assertFalse(report["passed"])
+            self.assertEqual(report["tests"]["errors"], 1)
+            self.assertFalse(report["protocol_failed"])
+            self.assertNotIn("untrusted exception payload", (output / "wire.log").read_text())
+            self.assertNotIn("untrusted exception payload", (output / "oracle.log").read_text())
+
+    def test_path_return_types_are_explicitly_outside_oracle_coverage(self):
+        task = next(t for t in evaluation.collection() if t["id"] == "dev-010")
+        files = self.files(task)
+        files[task["source"]] += b'''
+original_test_only_files = test_only_files
+def test_only_files(sources):
+ return [str(path) for path in original_test_only_files(sources)]
+'''
+        with mock.patch.object(evaluation, "require_historical_candidate", return_value="synthetic-probe"):
+            report = oracle.grade(task, files, self.root / "ungraded-return-types")
+        self.assertTrue(report["passed"], report)
+        self.assertEqual(report["coverage"]["not_graded"], [
+            "return-container-type", "return-element-type", "unselected-statement-clauses"])
 
     def test_only_the_expected_regression_outcome_validates_a_base(self):
         for task in (t for t in evaluation.collection() if t["id"] in oracle.SUPPORTED):
@@ -377,6 +438,36 @@ def case_passed(case):
             path.write_text(json.dumps({**valid, **update}))
             with self.subTest(update=update), self.assertRaises(evaluation.EvaluationError):
                 oracle.result_record(path, self.task)
+
+    def test_every_reported_failure_stays_in_control_attempt_counts(self):
+        counts = {name: 0 for name in ("failures", "errors", "skipped",
+                                       "expected_failures", "unexpected_successes")}
+        ready = {"tests": {**counts, "tests": 1}, "calls": 4, "protocol_failed": False,
+                 "candidate_ready": True, "function_found": True}
+        not_ready = {"tests": {**counts, "tests": 0}, "calls": 0, "protocol_failed": True,
+                     "candidate_ready": False, "function_found": None}
+        for cause, result in (
+                ("none", (0, 0, False, False, ready)),
+                ("infrastructure", (1, 1, False, False, not_ready)),
+                ("infrastructure", (1, 1, False, False, None)),
+                ("timeout", (None, None, True, False, None)),
+                ("output_limit", (None, None, False, True, None)),
+                ("protocol", (1, 1, False, False, {**ready, "protocol_failed": True})),
+                ("candidate_exit", (0, 7, False, False, ready)),
+                ("test_failure", (1, 0, False, False, {
+                    **ready, "tests": {**ready["tests"], "failures": 1}})),
+                ("input_integrity", evaluation.InputIntegrityError("evaluation.input-hash-mismatch")),
+                ("infrastructure", OSError("synthetic launch failure"))):
+            path = self.root / str(len(list(self.root.iterdir())))
+            with self.subTest(cause=cause), mock.patch.object(oracle, "grade_case") as grade_case:
+                if isinstance(result, Exception):
+                    grade_case.side_effect = result
+                else:
+                    grade_case.return_value = result
+                report = oracle.grade(self.task, self.files(), path)
+            self.assertEqual(report["cause"], cause)
+            self.assertEqual(report["control_attempts"], {
+                "total": 1, "passed": int(cause == "none"), "failed": int(cause != "none")})
 
 
 if __name__ == "__main__":

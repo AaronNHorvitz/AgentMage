@@ -22,13 +22,15 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v2"
+VERSION = "coding-independent-oracle-v3"
 # Complete frozen methods for pure functions. Paths are lexical JSON values;
 # one fixed ambiguity tag is reconstructed as a trusted local exception.
 SUPPORTED = {
     "dev-010": {"function": "test_only_files", "result_type": "path-result"},
     "dev-012": {"function": "test_only_files", "result_type": "path-result"},
     "dev-015": {"function": "case_passed", "result_type": "bool"},
+    "dev-020": {"function": "verify_case", "result_type": "verification-result"},
+    "dev-021": {"function": "verify_case", "result_type": "verification-result"},
     "dev-029": {"function": "suspend_resume_checks", "result_type": "bool-map"},
 }
 LOG_LIMIT = 2 * evaluation.MAX_FILE
@@ -38,8 +40,26 @@ CONTROL_PROFILES = {
     "dev-010": {"failures": 1, "base_calls": 1, "reference_calls": 4},
     "dev-012": {"failures": 10, "base_calls": 12, "reference_calls": 14},
     "dev-015": {"failures": 1, "base_calls": 3, "reference_calls": 4},
+    "dev-020": {"failures": 1, "base_calls": 2, "reference_calls": 3},
+    "dev-021": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 6},
     "dev-029": {"failures": 0, "base_calls": 1, "reference_calls": 6},
 }
+
+
+def coverage(task):
+    """State what transported observations can and cannot establish."""
+    kind = SUPPORTED[task["id"]]["result_type"]
+    if kind == "path-result":
+        return {"graded": ["path-membership", "ambiguity-behavior"],
+                "not_graded": ["return-container-type", "return-element-type",
+                               "unselected-statement-clauses"]}
+    if kind == "verification-result":
+        return {"graded": ["passed-boolean", "selected-check-booleans",
+                           "frozen-fixture-variations"],
+                "not_graded": ["run-case-integration", "other-report-fields",
+                               "unselected-cases", "unselected-statement-clauses"]}
+    return {"graded": ["selected-json-function-behavior"],
+            "not_graded": ["unselected-statement-clauses"]}
 
 
 def supported_task(task):
@@ -232,6 +252,11 @@ def grade(task, files, output):
         "wall_seconds": round(time.monotonic() - started, 6),
         "model_attempts": 0, "model_score": None, "gpu_minutes": 0, "tokens": None,
         "score_scope": "independent-oracle-controls-only",
+        # All launched diagnostic controls remain in the denominator, including
+        # missing startup, infrastructure errors, timeout and protocol failure.
+        # These counts are not model attempts or a generated-candidate score.
+        "control_attempts": {"total": 1, "passed": int(passed), "failed": int(not passed)},
+        "coverage": coverage(task),
         "aggregate_worker_quotas": False,
         "logs": {name: evaluation.sha(evaluation.read_regular(output / name, LOG_LIMIT))
                  for name in ("candidate.log", "oracle.log", "wire.log") if (output / name).exists()},
@@ -246,7 +271,8 @@ def expected_base(task, report):
     if profile is None:
         return False
     missing = task["id"] == "dev-029"
-    tests = {"tests": task["expected_tests"], "failures": profile["failures"], "errors": 1 if missing else 0,
+    tests = {"tests": task["expected_tests"], "failures": profile["failures"],
+             "errors": profile.get("errors", 1 if missing else 0),
              "skipped": 0, "expected_failures": 0, "unexpected_successes": 0}
     return (not report["passed"] and report["candidate_kind"] == "frozen-base"
             and report["candidate_ready"] is True and report["function_found"] is (not missing)
@@ -278,6 +304,9 @@ def verify(output):
         "collection_sha256": evaluation.sha(json.dumps(
             evaluation.collection(), sort_keys=True, separators=(",", ":")).encode()),
         "generated_scoring": False, "aggregate_worker_quotas": False, "model_score": None,
+        "control_attempts": {
+            key: sum(row[k]["control_attempts"][key] for row in rows for k in ("base", "reference"))
+            for key in ("total", "passed", "failed")},
         "input_refused": any(row[k]["cause"] == "input_integrity" for row in rows
                              for k in ("base", "reference")),
     }
