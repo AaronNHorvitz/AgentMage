@@ -1,0 +1,186 @@
+Commit: 39a1fd2fdb76e0f34afae583a468a5621d8d2c9c
+Scope: local-engine-t301-2-inventory
+
+# Independent review: T-301.2 engine inventory
+
+Reviewer: Claude Opus 5.5, separate read-only session, extra-high effort.
+Row: T-301.2 (core tier). Base: `8bbe1ca858719c671b2a6ade15db04c98e7f7b34`.
+Commits in scope: `381fd1ee` (Decision 0153, queue reconciliation, retained
+T-302.1 review) and `39a1fd2f` (inventory evidence, guide).
+Date: 2026-11-02/03. The repository was not modified.
+
+## Methods
+
+- Read IP-POLICY.md, Decision 0153, the active queue in TASKS.md, the full diff
+  from base, the inventory evidence and the development guide. Traced Decision
+  0153's authority to the owner's 2026-10-25 engine decision and 2026-11-02
+  coding directive in the lane brief; the UI deferral, engine-only direction,
+  T-311 placement, T-306 reordering and `MIT OR Apache-2.0` import direction
+  match those owner instructions.
+- Recomputed crate/binary coverage independently from `cargo metadata` and
+  `git ls-files`, and read every one of the fifteen binary entry sources to check
+  each state label and limitation.
+- Ran the full workspace baseline independently with my own target directory
+  (`CARGO_TARGET_DIR=/lane/state/review-target`) through the shared slot, parsed
+  my own raw log for totals, per-crate counts and failed identities, and compared
+  them with the evidence and the retained failure appendix.
+- Reproduced the thirteen entry probes against my own build with my own script.
+- Inspected the builder's private helpers before running them; checked the
+  builder's raw logs and hashes for consistency with published figures.
+- Verified licence/notice facts, the historical campaign hash, the root-trust
+  ownership claim, and scanned all added text for private data, product names
+  and trademarks.
+
+No GPU, network, downloads, long documentation gate, supply-chain regeneration
+or host-escape attempt. No UI screens are in scope for this row.
+
+## Commands and results
+
+Environment: `PATH=<home>/.local/share/agentmage-build-tools/node-v24.15.0/bin:$PATH`,
+`PYTHONPATH=.`; `node --version` = `v24.15.0`; node SHA-256
+`d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c` (matches).
+
+| Step | Command | Result |
+| --- | --- | --- |
+| 1 | `git rev-parse HEAD`; `git rev-parse 39a1fd2f…`; `git status --porcelain` | both `39a1fd2fdb76e0f34afae583a468a5621d8d2c9c`; clean |
+| 2 | `git diff --check 8bbe1ca8… HEAD` | exit 0 |
+| 3 | `git diff --exit-code 8bbe1ca8… HEAD -- Cargo.toml Cargo.lock architecture/status-model.json supply-chain kernel capabilities platforms shells release experimental scripts tests package.json` | exit 0; only TASKS.md, Decision 0153, inventory evidence, guide and the retained review changed |
+| 4 | `cmp docs/reviews/8bbe1ca85871-…-carriage-return-repair.txt /lane/reviews/8bbe1ca85871-…-carriage-return-repair.md`; `sha256sum` | exit 0; `226231790105c13896ce562357884e7a01b43bb0bc9b088bcf90d5754367b482` (matches) |
+| 5 | `python3 scripts/local_agent_fast_gate.py --base 8bbe1ca8… --plan`, then `--timeout 3600` | plan selects whitespace, untracked lint, review-format lint, Markdown lint (no Rust crate for doc-only change); execution `FAST GATE: PASS`, four checks, 0 Markdown issues |
+| 6 | `cargo metadata --locked --offline --no-deps --format-version 1` (workspace and `experimental/model-lab/Cargo.toml`); `git ls-files -- Cargo.toml '**/Cargo.toml'` | exit 0; 10 workspace members + 1 excluded package; 14 `bin` targets + 1 excluded `bin`; 11 tracked member manifests plus root. Names, manifest links and entry links equal the tables exactly; no missing or duplicate row. All 36 relative links in the changed documents resolve |
+| 7 | `PYTHONPATH=. python3 /lane/state/tmp/t301-inventory/check-inventory.py` | Inspected first: read-only metadata/link/claim/sensitive/privacy checks. `PASS` printed. Independently reproduced its structural and privacy checks above and below |
+| 8a | `bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo build --workspace --all-targets --locked --offline` | exit 0, 58.4 s, no warnings |
+| 8b | `… cargo fmt --all -- --check` | exit 0, empty output |
+| 8c | `… cargo clippy --workspace --all-targets --locked --offline -- -D warnings` | exit 0, no warnings |
+| 8d | `… cargo test --workspace --all-targets --no-fail-fast --locked --offline` | exit 101, 214.0 s; 63 result summaries; **2948 passed / 72 failed / 78 ignored / 0 filtered**; failing targets `agentmage-host --lib` and `agentmage-platform-linux --lib` |
+| 8e | `… cargo build --manifest-path experimental/model-lab/Cargo.toml --all-targets --locked --offline` | exit 0 (elapsed 2056 s is almost entirely waiting for a slot held outside this namespace; compile 0.12 s) |
+| 8f | `… cargo test --manifest-path experimental/model-lab/Cargo.toml --all-targets --locked --offline` | exit 0; 6 passed |
+| 8g | `… python3 -m unittest tests.test_local_agent_fast_gate` | exit 0; 23 tests OK |
+| 9 | Own probe script, `bash /tools/build-slot python3 <review-scratch>/probe.py` against my build | all 13 exit codes match the evidence: help 0/0; host invalid operation 1 (`agentmage.package.arguments_invalid`); standalone 3 (`standalone.presentation.unavailable`); document demo 0 with `{"error":"unknown operation","ok":false}`; worker 1; four `--self-check` 0 with JSON objects; `native_evidence` 2 (`requires_windows`); xtask 1 (usage); lab 0 (placeholder) |
+
+Failure identity comparison: the 72 distinct failed test identities from my raw
+log are exactly equal to the 72 identities in
+`docs/evidence/t301-baseline-failures-2026-10-25.md` (`comm -3` empty).
+
+Per-crate counts from my log (passed/failed/ignored), integration tests mapped to
+their owning package: contracts 86/0/0, engine 1540/0/8, read-only 27/0/0,
+repository-map 73/0/0, knowledge 302/0/0, linux-inference 185/0/8, linux
+187/19/51, host 532/53/11, windows 12/0/0, xtask 4/0/0. These equal every count in
+the inventory table and the earlier baseline (inference 166 + 19 protocol tests =
+185). Standalone process tests: 5 passed.
+
+Builder raw evidence: `baseline-3.log` SHA-256 is
+`f633a32b8642f0aab5ded04c3056074e37e354c126bcd061637a2ca83dd1d021` as published;
+`test-summary.json` reports no new or missing identities; the supervision log
+shows the published per-command exits/seconds and an overall FAIL; the interrupted
+attempt is logged separately and stopped during the first build. Consistent with
+the evidence.
+
+Other checks:
+
+- Historical campaign summary
+  `artifacts/coding-harness/2026-09-27/muse-campaign16-summary.json` SHA-256
+  `659c47a9…a962` recomputed; the campaign record shows six mutation `SUCCESS`
+  runs and two stable `NO_OP` runs at `b232aa2b`. The inventory states it as
+  historical only and claims no fresh real-model run, score, tokens or GPU time.
+- `/usr/bin/git`, `/usr/bin/bwrap`, `/usr/bin`, `/usr` are owned by UID 65534
+  here, as stated. No native-host pass is claimed.
+- Licence facts verified: root LICENSE is BSL 1.1; NOTICE records the interim
+  Apache-2.0 metadata discrepancy; all workspace manifests inherit `Apache-2.0`;
+  the lab declares `Apache-2.0`; `kernel/contracts/LICENSE` is Apache-2.0 text.
+  Rust dependency licences in `cargo metadata` are all permissive or offer a
+  permissive alternative.
+- Import-boundary claim verified: `agentmage-host` depends directly on knowledge,
+  read-only, repository-map, contracts, engine, linux and linux-inference.
+- Each binary row matches its entry source (for example `agentmage-native-inference`
+  accepts only `--self-check`; `agent`/`agentmage` differ only in the version
+  string and route coding only through the explicit development path; the lab
+  `main` is a one-line placeholder; `native_evidence` exits 2 off Windows).
+- Privacy/branding: added lines contain no personal host path, username,
+  hostname, e-mail, credential or private project name; lane paths
+  (`/tools/build-slot`, `/lane/…`) already appear in committed documents.
+  Only "OpenAI-style" (descriptive compatibility, pre-existing) and existing
+  binary names appear as third-party names; no comparison with other agent
+  products.
+- Evaluation integrity: no T-311 suite, tasks or held-out content exist yet;
+  nothing to tune on. The directive's ordering and integrity rules are recorded.
+- Delivery: T-301.2 is a single-level sub-row, owner-requested, and ends in a run
+  and measured baseline; not a plans-only row.
+
+## Findings
+
+### M1 (medium): eight auto-discovered example executables are absent from the inventory
+
+Location: `docs/evidence/t301-2-engine-inventory-2026-11-02.md:17-20` and the
+Binaries table (`:38-61`); method in `docs/guides/local-agent-development.md:108`.
+
+The owner requirement (Decision 0153 item 2, row T-301.2) is to account for every
+crate and binary, including what is "evidence only", so the table decides what is
+carried forward. The inventory filters Cargo targets to `kind == bin` and says
+auto-discovered binaries are covered, but `cargo metadata` also lists eight
+auto-discovered `example` targets that `--all-targets` compiles into executables
+and the fresh `cargo test` run executed (each with 0 tests):
+
+- `agentmage-capability-knowledge`: `coding_skill_pack`,
+  `document_control_skill_pack`, `executive_skill_pack`,
+  `markdown_artifact_skill_pack`, `meeting_skill_pack`
+- `agentmage-capability-repository-map`: `grammar_bom`
+- `agentmage-kernel-engine`: `story_22_4_evidence`
+- `agentmage-host`: `story_22_3_evidence`
+
+They are live entry points: `scripts/*_skill_contract.py`,
+`scripts/sprint_18_evidence.py`, `scripts/sprint_19_evidence.py` and
+`scripts/story_22_3_source_preparation_evidence.py` invoke them with
+`cargo run … --example`. They ship inside crates proposed for reuse
+(engine, repository-map, host, knowledge), so their carry-forward disposition is
+undecided, and the document's own method note ("hand-written manifest entries
+alone miss auto-discovered binaries") is incomplete. Reproduce:
+`cargo metadata --locked --offline --no-deps --format-version 1 | python3 -c "import json,sys;[print(p['name'],t['name']) for p in json.load(sys.stdin)['packages'] for t in p['targets'] if 'example' in t['kind']]"`;
+`grep -n example docs/evidence/t301-2-engine-inventory-2026-11-02.md` returns nothing.
+
+Fix: add an "Example executables" table (or rows) with source link, state
+(these appear to be evidence/contract generators, likely scaffold or
+evidence-only), evidence, and carry-forward disposition for all eight; state the
+exact target kinds counted (bin, example; lib/test targets accounted by crate
+counts; no bench or build-script targets exist); extend the guide's inventory
+instruction and the structural comparison to include `example` targets.
+
+### L1 (low): default and non-binary optional features are not recorded
+
+Location: `docs/evidence/t301-2-engine-inventory-2026-11-02.md:14`;
+`docs/guides/local-agent-development.md:119` ("Record default/optional features").
+
+Only the two optional binary features (`lifecycle-fixture`,
+`public-research-worker`) are named. Not recorded: `agentmage-host` default set
+(`interactive-cli`, `native-chat`, `workflow-caller`, `source-artifacts`,
+`workflow-supervisor`), `agentmage-kernel-engine` defaults
+(`runtime-projections`, `source-preparation`, `verified-workflow-supervisor`,
+which the host disables and partly re-enables), and `agentmage-platform-linux`
+`test-support` (enabled by the host's dev-dependency). Relevant to the stated
+goal of feature-bounding the import. Fix: add a per-crate feature column or note.
+
+### L2 (low): licence reconciliation list omits concrete header/dependency facts
+
+Location: `docs/evidence/t301-2-engine-inventory-2026-11-02.md:89-104`.
+
+The section correctly identifies the BSL/Apache metadata discrepancy and the
+contracts licence text, but does not record that none of the 595 tracked `.rs`
+files carries a licence/SPDX or copyright header (relevant to Decision 0153
+item 9 "accurate headers"), nor summarise the Rust dependency licence set.
+Not blocking because the row only requires identification and the section
+explicitly leaves reconciliation open without any clearance claim. Fix: add
+those two facts to the reconciliation list.
+
+## Per-row result
+
+- **T-301.2: not closable at this commit.** Baseline, counts, failure identities,
+  probes, structural links, state labels for the fifteen listed binaries,
+  real-model boundary, licence facts and privacy all reproduce and are honestly
+  labelled; no security boundary is changed or claimed. Medium M1 (incomplete
+  executable inventory against the row's completeness requirement) is open and
+  blocks closure. L1 and L2 are backlog.
+- T-301, T-301.1, T-302 parent: out of scope; this review does not affect them.
+- T-302.1: out of scope; the retained PASS bytes are byte-identical to the issued
+  review (step 4). This review is not a substitute for it.
+
+Verdict: FINDINGS

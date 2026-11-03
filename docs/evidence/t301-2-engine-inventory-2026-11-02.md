@@ -14,10 +14,13 @@ required integration, native execution or real-model check is missing or fails.
 Build/test results below use default features on Linux unless explicitly stated.
 Optional targets are listed even when that build does not select them.
 
-The tables cover all ten Cargo workspace packages and their fourteen binaries,
-plus the excluded experimental crate and its binary. Cargo metadata, checked
-against every tracked Cargo manifest, determines coverage; hand-written manifest
-entries alone miss auto-discovered binaries. Each binary gets its own row below.
+The tables cover all ten Cargo workspace packages, their fourteen `bin` targets
+and eight executable `example` targets, plus the excluded experimental crate and
+its `bin` target. Cargo metadata, checked against every tracked Cargo manifest,
+determines coverage; hand-written manifest entries alone miss auto-discovered
+executables. Every `bin` and `example` gets a row below. Library and test targets
+are accounted for by their owning crate's baseline counts. Neither metadata set
+contains a bench or build-script target.
 
 ## Crates
 
@@ -34,6 +37,18 @@ entries alone miss auto-discovered binaries. Each binary gets its own row below.
 | `agentmage-platform-windows` | [manifest](../../platforms/windows/Cargo.toml) | partial | Twelve baseline contract tests passed on Linux; native identity code is conditional. Linux tests do not demonstrate Windows operation. | Preserve source; exclude from Linux engine dependency requirements. Other-platform work is deferred. |
 | `agentmage-xtask` | [manifest](../../release/xtask/Cargo.toml) | partial | Candidate packaging/signing command orchestration; four baseline tests passed. No new release/package was generated or qualified. | Preserve development tooling outside the engine runtime dependency graph. |
 | `agentmage-experimental-model-lab` | [manifest](../../experimental/model-lab/Cargo.toml) | partial | Excluded from the workspace; library validates experimental authority/artifacts and promotion records, while its binary only prints a placeholder. No real model execution or agent integration. | Preserve, unused by the engine. |
+
+### Feature boundaries
+
+These are workspace package features, separate from dependency features. The
+other seven packages, including the excluded experiment, declare no features.
+
+| Crate | Declared defaults | Other declared features and activation |
+| --- | --- | --- |
+| `agentmage-host` | `interactive-cli`, `native-chat`, `workflow-caller`, `source-artifacts`, `workflow-supervisor` | No nondefault feature. `interactive-cli` gates the two CLI binaries; `source-artifacts` enables engine `source-preparation`; `workflow-supervisor` enables engine `verified-workflow-supervisor`. Its engine dependency disables defaults and explicitly enables `runtime-projections`, then the host defaults re-enable the other two engine features. |
+| `agentmage-kernel-engine` | `runtime-projections`, `source-preparation`, `verified-workflow-supervisor` | No nondefault feature. Workspace dependency defaults are disabled, but the workspace baseline selects this crate's defaults. The Linux adapter explicitly requests all three; disabling host defaults alone therefore does not isolate the engine. |
+| `agentmage-platform-linux` | None | `test-support` is enabled by the host dev-dependency in workspace tests; `public-research-worker` enables its binary plus optional `ureq` and `url` dependencies, and is absent from the baseline. |
+| `agentmage-capability-read-only` | None | `lifecycle-fixture` enables its synthetic lifecycle binary; absent from the baseline. |
 
 ## Binaries
 
@@ -58,6 +73,26 @@ never a coding run. Source links allow inspection of each scope.
 | `native_evidence` | [entry](../../platforms/windows/src/bin/native_evidence.rs) | partial | Native Windows identity observer; Linux entry only refuses with exit 2. | Preserve, unused by Linux engine. |
 | `agentmage-xtask` | [entry](../../release/xtask/src/main.rs) | partial | Packaging/signing orchestration; argument/unit tests do not demonstrate a release kit. | Development tool only. No release authorized. |
 | `agentmage-experimental-model-lab` | [entry](../../experimental/model-lab/src/main.rs) | scaffold | Prints a placeholder; separate excluded crate. | Preserve, unused. |
+
+## Example executables
+
+All eight are automatically discovered Cargo `example` targets with no
+required-feature declaration. They are development generators, not engine
+services. Their default-feature `--all-targets` build and zero-test harnesses
+were included in the baseline. The repair run below additionally executes each
+actual `main` and checks for a JSON object; that does not validate every output
+claim or establish a real workflow. **works** retains its bounded definition.
+
+| Example | Source | State | Evidence and limitation | Carry forward |
+| --- | --- | --- | --- | --- |
+| `coding_skill_pack` | [entry](../../capabilities/knowledge/examples/coding_skill_pack.rs) | works | Emits built-in coding definitions, assessments and manifests as JSON; registration and authority are disabled. It performs no coding task. | Preserve as a development contract generator; no runtime dependency on this executable. |
+| `document_control_skill_pack` | [entry](../../capabilities/knowledge/examples/document_control_skill_pack.rs) | works | Emits document-control skill manifests with denied authority; no document/inbox access, sending or disposition. | Preserve as development evidence for later document work; not an engine entry point. |
+| `executive_skill_pack` | [entry](../../capabilities/knowledge/examples/executive_skill_pack.rs) | works | Emits executive skill manifests with denied authority; no inbox, network, sending or scheduling workflow. | Preserve unused background contract generator. |
+| `markdown_artifact_skill_pack` | [entry](../../capabilities/knowledge/examples/markdown_artifact_skill_pack.rs) | works | Emits Markdown artifact manifests with denied authority; no file access, rendering, execution or remote fetching. | Preserve development contract generator; reuse library components only when needed. |
+| `meeting_skill_pack` | [entry](../../capabilities/knowledge/examples/meeting_skill_pack.rs) | works | Emits meeting skill manifests with denied authority; no calendar, recipient, sending or scheduling effects. | Preserve unused background contract generator. |
+| `grammar_bom` | [entry](../../capabilities/repository-map/examples/grammar_bom.rs) | works | Emits compiled grammar descriptors and their set digest; this is an inventory, not model-directed retrieval. | Retain development provenance tool for reused repository-map grammars; no service dependency. |
+| `story_22_4_evidence` | [entry](../../kernel/engine/examples/story_22_4_evidence.rs) | works | Emits deterministic synthetic checkpoint/recovery decisions and traces. Crash/concurrency counters are constructed fixture data, not observed process crashes or concurrent clients. | Preserve development evidence generator only; reuse recovery library separately. |
+| `story_22_3_evidence` | [entry](../../shells/host/examples/story_22_3_evidence.rs) | works | Exercises in-memory synthetic log admission, context compilation, source-artifact dispatch, refresh/release/delete and a 25 MiB fixture; emits JSON with timings and declared ceilings. Whitespace token counter, no real model or confined worker; printed ceilings/canary counters alone prove no acceptance threshold or sandbox. | Preserve development evidence generator outside engine runtime dependencies; reuse bounded source handling when needed. |
 
 ## Real-model boundary
 
@@ -93,6 +128,22 @@ an interim discrepancy. The contracts directory additionally has its own Apache
 licence text. [Decision 0051](../decisions/0051-business-source-license.md)
 records the existing interim state; Decision 0153 records the new import direction. These facts do not establish `MIT OR Apache-2.0` import readiness.
 No licence, copyright or source header was rewritten by this inventory.
+
+The repair scan examined the first twenty lines of all 595 tracked `.rs` files:
+none has an SPDX/licence or copyright header there. Accurate carried-forward
+source headers are therefore unfinished work, alongside the notice/metadata
+reconciliation; this is not an ownership finding. Locked offline Cargo metadata
+for the workspace and excluded experiment lists 117 distinct registry packages
+with default features, or 170 with all workspace features selected.
+All declare permissive licences or offer a permissive alternative. Declarations
+include MIT, Apache-2.0, BSD-3-Clause, Zlib and alternatives including 0BSD,
+BSD-1-Clause and Unlicense; compound declarations also require BSD-3-Clause or
+Unicode-3.0 notices. All-feature metadata additionally includes ISC,
+Apache-2.0 AND ISC, Unicode-3.0 and CDLA-Permissive-2.0 declarations.
+One offers an LGPL alternative alongside MIT/Apache-2.0;
+another offers an LLVM-exception alternative. Legacy slash-separated MIT/Apache
+declarations also occur. This is a metadata inventory, not source provenance or
+complete notice verification; target-specific and optional packages are included.
 
 Decision 0153 requires accurate dual-licence notices for carried-forward original
 code at import. Before import, reconcile the authoritative notices and metadata,
@@ -160,10 +211,11 @@ The fresh binaries were probed only within these narrow scopes:
 | Experimental lab binary | Exit 0, prints its placeholder message. |
 
 The structural metadata queries took 0.022 seconds for the workspace and 0.021
-seconds for the excluded crate. An exact-set comparison against every tracked
-Cargo manifest and both tables passed: eleven packages, fifteen binary targets,
-matching manifest/source links, no missing or duplicate entry. Metadata is a
-structural check and does not compile or run a backend.
+seconds for the excluded crate. The original exact-set comparison checked eleven
+packages and fifteen `bin` targets with matching manifest/source links, but
+omitted executable `example` targets. Independent review M1 identified that
+coverage error. The repair below expands the comparison; metadata itself remains
+a structural check and does not compile or run a backend.
 
 The scoped fast gate for the full documentation/review-retention batch is **PASS**:
 whitespace, immutable review format and Markdown lint. It correctly selects no
@@ -187,3 +239,54 @@ native-host gate PASS or working native sandbox is claimed. T-301.1 remains
 deferred and blocks no new work under Decision 0153. No model/GPU process,
 download, supply-chain regeneration, long documentation gate or release ran.
 T-301.2 awaits its own independent review; this record closes no row.
+
+## Inventory review repair, 2026-11-03
+
+The independent [first review](../reviews/39a1fd2fdb76-local-engine-t301-2-inventory.txt)
+of exact commit `39a1fd2fdb76e0f34afae583a468a5621d8d2c9c` has
+**Verdict: FINDINGS**. Medium M1 is addressed by the eight example rows above,
+their source links, bounded state/evidence and carry-forward decisions. The guide
+and structural comparison now include both executable target kinds. Low L1 is
+addressed by the feature table; low L2 by the header/dependency inventory.
+These are builder repairs awaiting separate re-review, not accepted closures.
+The retained report is byte-identical to the issued report, SHA-256
+`50a35af0dfc66e019b34c27881aba8d8cedd91048991f44d9d6523436b9f20e2`.
+
+Fresh locked offline metadata and the expanded exact-set comparison pass for
+eleven packages, fifteen `bin` targets and eight `example` targets, with no missing
+or duplicate row and exact source links. All tracked manifests are covered.
+The metadata kinds are exactly `lib`, `bin`, `example` and `test`. Scoped link,
+sensitive-text and claim checks, historical-ledger/runtime/global-output
+preservation, both retained reviews' unchanged bytes and changed-text privacy
+checks pass. No source, manifest, dependency, lockfile or test was changed.
+
+Each example's actual entry point was run with
+`cargo run --locked --offline -p <owning-package> --example <name>`, sequentially
+through one supervised shared build reservation, two build jobs and four test
+threads. Every command exited 0 and emitted a JSON object. Times include any
+needed compilation after acquiring the reservation:
+
+| Example | Exit | Seconds | JSON bytes |
+| --- | --- | --- | --- |
+| `coding_skill_pack` | 0 | 13.532 | 30803 |
+| `document_control_skill_pack` | 0 | 0.295 | 15841 |
+| `executive_skill_pack` | 0 | 0.319 | 16120 |
+| `markdown_artifact_skill_pack` | 0 | 0.308 | 13452 |
+| `meeting_skill_pack` | 0 | 0.326 | 11994 |
+| `grammar_bom` | 0 | 8.037 | 2327 |
+| `story_22_4_evidence` | 0 | 31.986 | 25938 |
+| `story_22_3_evidence` | 0 | 11.884 | 27291 |
+
+The supervised run completed in 66.81 seconds including reservation and cleanup.
+Private stdout/stderr, per-output hashes and timings are retained; the result
+manifest SHA-256 is
+`08d848cd3635caae226e2d21ba237915388fad60c7d40bc1d24fb8b10ccac9f6`.
+Outputs went only to private scratch; no evidence cascade or supply-chain output
+was regenerated. No GPU, model, network or native sandbox run is claimed.
+Printed synthetic counters and declared thresholds were not promoted to measured
+acceptance results. These probes establish only the generator duties above.
+
+The repair's documentation/review fast gate passes with zero Markdown issues.
+The existing full baseline, including its 72 failures, remains as recorded above;
+it was not rerun for this documentation-only repair. Independent review is still
+required before ticking T-301.2. T-301.1 remains deferred and blocks no mission row.

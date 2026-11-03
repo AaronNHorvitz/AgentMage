@@ -105,18 +105,24 @@ the documentation/tooling batch's green gate establishes only its selected scope
 
 ## Inventory and host verification
 
-Inventory both declared and auto-discovered Cargo binaries, including optional
-feature targets. Compare metadata with all tracked Cargo manifests to account for
-excluded experiments as well as workspace packages:
+Inventory both declared and auto-discovered Cargo executables: every `bin` and
+`example` target, including optional feature targets. Compare metadata with all
+tracked Cargo manifests to account for excluded experiments as well as workspace
+packages:
 
 ```sh
 cargo metadata --locked --offline --no-deps --format-version 1
 git ls-files -- Cargo.toml '**/Cargo.toml'
 ```
 
-These commands describe structure; they do not prove execution. Classify each
-crate and binary with a bounded duty, actual evidence and carry-forward choice.
-Record default/optional features, source pins, failures and fixture backends.
+These commands describe structure; they do not prove execution. Compare exact
+sets of package/target kind/name/source against the tables, including examples
+invoked by evidence scripts. Classify each crate and executable with a bounded
+duty, actual evidence and carry-forward choice. Account for library/test targets
+in their crate counts and explicitly report any bench/build-script targets.
+Record default/optional features and dependency feature activation, source pins,
+failures and fixture backends. A zero-test example harness does not run its `main`;
+an evidence generator's printed counters do not prove actual process behavior.
 A historical real-model campaign stays evidence of its frozen source; it is not
 a fresh coding score for the current tree. Establish T-311's frozen development
 and held-out split and current-harness baseline before tuning anything.
