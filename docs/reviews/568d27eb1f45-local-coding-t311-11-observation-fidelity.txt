@@ -1,0 +1,195 @@
+Commit: 568d27eb1f45c381147b70bc3c85d40eedffe5a6
+Scope: local-coding-t311-11-observation-fidelity
+
+Reviewer: independent Claude Opus 5.5 session with read-only access to the repository.
+This is a same-model review. Every run below was my own. Private outputs are under
+`/lane/state/tmp/t311-11-review-EK8pK79p/` (`<review-root>` below), not in the repository.
+
+## Methods
+
+- `git rev-parse 568d27eb1f45c381147b70bc3c85d40eedffe5a6` equals HEAD, and the
+  tree is clean. `d446a0c6..568d27eb` is one commit touching seven files: TASKS.md,
+  the new evidence file, the guide, `scripts/coding_eval_oracle.py`,
+  `scripts/coding_eval_oracle_worker.py` and their two test modules.
+- Read IP-POLICY.md, the T-311.10/T-311.11 rows of TASKS.md, the request, the T-311.10
+  review (its L1/L2), the full diff, the whole worker and oracle scripts, the guide
+  diff and the evidence file.
+- Integrity checks:
+  - The six legacy evaluator sources and tests are byte-identical to the base
+    (`git diff --quiet`).
+  - `docs/reviews/` is unchanged. The retained T-311.10 review `.txt` is
+    byte-identical (`cmp`) to `/lane/reviews/adf3364a9e8a-…md`.
+  - The four source digests in the evidence match the commit bytes.
+  - All ten private artifact digests in the evidence match the builder's record
+    in `/lane/state/tmp/t311-11-observations/`.
+  - The builder's `probes.py` patches only `require_historical_candidate`.
+  - The dev-022 hidden blob at the reference revision hashes to the pinned
+    `7e44a1c7…2939`.
+  - The TASKS diff adds only the T-311.11 row, still open.
+  - The diff contains no held-out task content. It also contains no host path,
+    username, credential, product comparison or trademark branding.
+- Semantics checked against frozen sources:
+  - The dev-022 hidden method reads
+    `coding_harness_acceptance.CASE_ROOTS` only in its uniqueness preamble. It
+    imports `from scripts import coding_harness_acceptance`, which is the same
+    `sys.modules` entry the oracle patches at `worker.py:400`, before the hidden
+    module is executed.
+  - In the frozen base, `CASE_ROOTS` is used only by `run_*` helpers
+    (`work_root / CASE_ROOTS[case]`). None of them runs on the trusted side:
+    `verify_case` is proxied, and `rows`/`git_status` are mocked. Candidate
+    strings therefore reach no trusted filesystem call.
+  - The `{"adapter_policy": true}` tag sets a sticky `policy_failed`
+    (`worker.py:124-126,153-155`).
+  - Oracle exit 0 and the parent `passed` value both require
+    `adapter_policy_failed` to be false (`oracle.py:258`). A forged tag can
+    therefore only fail its own attempt.
+  - `expected_base` requires `adapter_policy_failed is False`, so a policy
+    refusal cannot validate a base control.
+  - The relaxed zero-test record (`oracle.py:190-194`) is limited to the
+    `observe_case_roots` task with exactly one call and a protocol or policy
+    flag. Startup-failure records must have no policy flag.
+
+## Commands and results
+
+```
+export PATH="$PWD/target/local-agent-tools:$PATH"
+node --version                                  -> v24.15.0
+sha256sum target/local-agent-tools/node         -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c
+git status --short                              -> (empty)
+git diff d446a0c6… -- <six legacy files>        -> (empty)
+bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base d446a0c6db794dfb7b49a6e25ade830e4a2f0f22 --timeout 600
+    -> FAST GATE: PASS; seven paths; lint exit 0; Ran 54 tests in 21.501s OK (exit 0)
+bash /tools/build-slot python3 -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v
+    -> Ran 58 tests in 19.409s OK (exit 0)
+bash /tools/build-slot python3 scripts/coding_eval_oracle.py verify --output <review-root>/oracle
+    -> exit 0; coding-independent-oracle-v5, passed true, ten valid pairs, 13 reference methods,
+       149 reference calls (19/52/4/14/4/3/6/4/37/6), control_attempts 20 total / 10 passed / 10 failed,
+       generated_scoring false, collection 0c2a0624…1570; dev-022 base 2 calls, reference 4;
+       all bases adapter_policy_failed false
+bash /tools/build-slot python3 scripts/coding_eval.py verify --output <review-root>/full
+    -> exit 0; coding-development-v9, passed true, 30 valid pairs, 89 reference tests, 0 skipped
+bash /tools/build-slot python3 scripts/validate_docs.py
+    -> Validated 708 Markdown file(s) and all policy invariants (exit 0)
+bash /tools/build-slot python3 <review-root>/probes.py <review-root>/probes/run   (reviewer probes, 5m07s incl. wait)
+```
+
+For the oracle run and my probe reports, I checked all 130 log bindings in the
+reports against the log files: no mismatch. Each oracle `tests.json` equals its
+report counts.
+
+Cleanup:
+
+- The set of `agentmage-eval-*` trees is unchanged. The same four historical
+  trees were present before and after.
+- No `adapter/run.py` or bubblewrap worker remains.
+- No oracle test temporary directory remains.
+- The repository is unmodified.
+
+## Reviewer probes
+
+These are private synthetic sources. My process patches only the host admission
+guard. Each probe is also graded by the legacy grader for contrast.
+
+| Probe | Oracle | Calls / tests | Legacy |
+| --- | --- | --- | --- |
+| tuple helper dev-007 | test_failure | 2 / 1 fail | fail |
+| tuple helper dev-027 | test_failure | 2 / 1 fail | fail |
+| list-subclass helper dev-006 | adapter_policy | 2 / 1 err | pass (labelled policy) |
+| helper raises RuntimeError dev-006 | protocol, candidate exit 1 | 2 / 1 err | fail |
+| duplicate CASE_ROOTS dev-022 | test_failure | 1 / 1 fail | fail |
+| unique traversal-like roots (`../../../../etc/…`) | pass | 4 / 1 | pass |
+| `del CASE_ROOTS` | adapter_policy | 1 / 0 tests | fail |
+| dict-subclass CASE_ROOTS | adapter_policy | 1 / 0 tests | pass (labelled policy) |
+| 129 roots | adapter_policy | 1 / 0 tests | pass (labelled bound) |
+| integer `passed` dev-020 | adapter_policy | 1 / 1 err | pass (labelled policy) |
+| report without `checks` dev-022 | protocol, candidate exit 1 | 2 / 1 err | pass |
+| `SystemExit(0)` inside function dev-015 | protocol | 1 / 1 err | fail |
+| exact forged policy tag, bool task dev-015 | adapter_policy | 1 / 1 err | fail |
+| confinement snoop via CASE_ROOTS dev-022 | test_failure (duplicate error strings) | 1 / 1 fail | fail |
+
+Every probe report has `control_attempts` total 1. Every failure counts failed 1;
+none aborted or disappeared. The one pass is a correct candidate with unusual but
+unique strings. It shows that candidate root strings are used only by the
+uniqueness assertion.
+
+The snoop wire log shows what the candidate saw:
+
+- `/adapter` contains only `config.json` and `run.py`; no hidden test.
+- The root contains only `adapter bin dev lib lib64 proc tmp usr workspace`.
+- The environment holds only `HOME LANG PATH PWD`.
+- `/output` and the host home are absent.
+- A TCP connect and a write to `/workspace` both fail with `OSError`.
+
+The RuntimeError payload appears only in the candidate's own `candidate.log`. It
+does not appear in `wire.log` or `oracle.log`.
+
+Real admission stays closed. Unpatched `oracle.grade` on a modified dev-022
+snapshot raised `evaluation.untrusted-candidate-disabled`. The CLI offers only
+`verify`.
+
+## Findings
+
+No critical, high or medium findings.
+
+### L1 (low): the failure-cause split is still partly candidate-selected and coarse
+
+The pass/fail result and the denominator are unaffected. Only the recorded
+`cause` is imprecise, in three ways:
+
+1. The fixed tag is accepted for every result type at
+   `scripts/coding_eval_oracle_worker.py:124-126`. This includes bool, path and
+   bool-map tasks, whose coverage declares no adapter policy. In my probe
+   `forge-tag-bool-015`, dev-015 is reported as `cause: adapter_policy` with no
+   `adapter_policy` coverage entry. The guide and evidence do say that a candidate
+   can forge either tag, and only to fail itself.
+2. Some plain wrong answers are reported as adapter policy, not test failure. At
+   `worker.py:263`, any non-list/tuple helper result gets the policy tag,
+   including `None` or a string. At `worker.py:336-339`, so does a `None` or
+   string `passed` value. These are not "statement-legal values the adapter
+   cannot carry".
+3. Candidate-side exceptions and missing report fields still crash the candidate
+   and appear as `protocol`. Examples are a helper raising `RuntimeError` and a
+   report without `checks` (`worker.py:336`), which the legacy grader passes but
+   the statement forbids. So `protocol` still covers both candidate defects and
+   wire corruption.
+
+Fix before generated scoring, because failure causes feed published results:
+
+- Accept the policy tag only for result types that list `adapter_policy`
+  coverage, and treat it as `protocol` elsewhere.
+- Transport JSON-representable wrong values (`None`, `str`, `int`) as data so the
+  original assertion decides.
+- Add one fixed `candidate_exception` tag with its own cause for candidate-side
+  exceptions in the worker loop.
+
+## Per-row result
+
+T-311.11: PASS. Its "done when" is met at this exact commit:
+
+- **L1 (container).** Tuple helpers now fail the original equality assertions for
+  dev-006, dev-007 and dev-027. The builder's probes and mine agree with the
+  legacy grader.
+- **L1 (case roots).** Candidate `CASE_ROOTS` strings, bounded to 128 entries and
+  256 characters, are observed before the original uniqueness assertion.
+  Duplicates fail. Unsupported values stop before assertions as `adapter_policy`,
+  with one call and zero tests, and still count as failed. Malformed frames are
+  `protocol`.
+- **L2.** Integer predicates, callable namespace defaults and nonstandard parser
+  exits are a sticky, separately recorded `adapter_policy`. Malformed tags,
+  payloads and containers remain `protocol`. Neither can pass or leave the
+  denominator.
+- **Frozen inputs.** Hidden bytes, pins, selections, thresholds and collection v9
+  `0c2a0624…1570` are unchanged.
+- **Measurements.** The only profile change is dev-022 (base 2, reference 4
+  calls), which is exactly the added observation.
+- **Evidence.** All required runs reproduce the evidence numbers. The 54 and 58
+  test counts, ten valid pairs with 13 methods and 149 reference calls, 20
+  control attempts, 30 legacy pairs with 89 tests and 708 Markdown files all
+  match. Measured timings are within normal variance.
+- **Disclosed blockers.** The path return-type omission, aggregate quotas,
+  held-out inputs, current-harness baseline, generated scoring and parent T-311
+  remain disclosed and open.
+
+L1 above is backlog before generated scoring. Parent T-311 stays open.
+
+Verdict: PASS
