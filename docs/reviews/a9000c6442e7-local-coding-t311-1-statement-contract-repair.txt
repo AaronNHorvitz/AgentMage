@@ -1,0 +1,218 @@
+Commit: a9000c6442e7dd35579fef3af8d5dd2748af84ca
+Scope: local-coding-t311-1-statement-contract-repair
+
+# Independent core review: T-311.1 statement contract repair (attempt 3)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only repository access.
+Row: T-311.1, attempt 3, tier core. Base: b1734b9957cebfbfbe8a2ebefa33322f3f5982eb.
+Prior review: docs/reviews/b1734b9957ce-local-coding-t311-1-evaluator-repair.txt (Verdict: FINDINGS,
+residual medium M2-R). Parent T-311 is out of scope and is not closed by this review.
+
+## Methods
+
+- Confirmed the exact commit and a clean tree before and after the review.
+- Read the full Base..Commit diff (7 paths) and the v3 evidence, including its manual assertion audit.
+- Ran every requested command, including both counterexamples in fresh review scratch.
+- Compared the v2 (Base) and v3 (Commit) `TASKS` literals field by field from `git show`, outside the
+  repository, and recomputed both fingerprints.
+- Extracted each frozen hidden test, pinned base source and reference source from Git. I audited
+  each test method against the v3 statement and base behaviour myself:
+  - AST-mapped every module attribute, `patch.object` target and `mock.patch` string target in the
+    hidden modules to base or reference definitions, including class methods;
+  - diffed each hidden module against the base commit's version of the same test file;
+  - listed the failing methods at each base from the raw logs.
+- **Strongest check.** For all three tasks I wrote my own candidates from the pinned base source and
+  the v3 statement text only. I did not start from the reference: the code was written
+  independently, for example a separate `/proc` cmdline read in dev-002 and an `lstat`-first
+  inventory in dev-001. I scored them through the real `prepare`/`score` CLI and confined worker.
+- Traced every number and hash in the evidence to the builder's retained raw records.
+- Scanned the diff for private paths, usernames, hostname, credentials and product names.
+
+No GPU, model or network was used. No repository file was modified. Scratch output is under
+`/lane/state/tmp/t311-contract-review.0hBHhy` (`verify/`, `counterexamples/`, `audit/`, `independent/`).
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `git rev-parse HEAD` / `git rev-parse a9000c64…` | both `a9000c6442e7dd35579fef3af8d5dd2748af84ca` |
+| `git status --porcelain` (before, after counterexamples, at end) | empty each time |
+| `node --version` with review runtime on PATH | `v24.15.0` |
+| `sha256sum node_modules/.agentmage-review-runtime/node` | `d1de76d8…74bd932c`: matches. Git-ignored (`.gitignore:127`); LICENSE present |
+| `cmp docs/reviews/b1734b9957ce-….txt /lane/reviews/b1734b9957ce-….md` | exit 0; SHA-256 `4a823c7f…57e524de` matches the request |
+| `git diff --check b1734b99… a9000c64… --` | exit 0 |
+| `python3 scripts/local_agent_fast_gate.py --base b1734b99… --plan` | 7 paths; diff-check, untracked lint, review lint, markdownlint (4 files), Python lint, `tests.test_coding_eval`; no Rust |
+| `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base b1734b99… --timeout 600` | **FAST GATE: PASS**: all 6 steps exit 0; markdownlint 0 issues; `Ran 23 tests in 1.635s OK` |
+| `bash /tools/build-slot python3 scripts/coding_eval.py verify --output $T311_REVIEW_ROOT/verify` | exit 0. Summary: `passed: true`, `kind: evaluator-validation-only`, `model_score: null`, version `coding-development-pilot-v3`. All bases fail by `test_failure`; all references pass; `infrastructure_error: null` throughout |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` | exit 0: `Validated 695 Markdown file(s) and all policy invariants.` |
+| `sha256sum scripts/coding_eval.py tests/test_coding_eval.py` | `b1fbab86…d071d1`, `c49524b8…df99a9`: match the evidence. The evaluator hash equals every report's `evaluator_sha256` |
+| Counterexample driver rewrite (request's heredoc) | driver SHA-256 `d3c2c605…a27b5e` asserted. `diff` against the original shows only line 7 (`root = …`) changed |
+| `bash /tools/build-slot python3 "$T311_REVIEW_ROOT/counterexamples.py"` | exit 0, `{"counterexamples_rejected": 2, "model_score": null}` |
+
+Verifier run, my scratch: every case's log hashes match its report, and every `report.json` equals its
+summary entry. `Ran N` and the final unittest line match the counts:
+
+| Task | Base | Reference |
+| --- | --- | --- |
+| dev-001 | 12 tests, `FAILED (errors=3)` | 12 tests, `OK` |
+| dev-002 | 3 tests, `FAILED (errors=19)` | 3 tests, `OK` |
+| dev-003 | 23 tests, `FAILED (failures=2, errors=3)` | 23 tests, `OK` |
+
+That is 38 reference tests and 76 invocations, zero skips or expected failures.
+
+Base failures are confined to newly added methods:
+
+- **dev-001:** the two inventory methods and `implementation_identity`.
+- **dev-002:** the whole new module (19 subtest errors).
+- **dev-003:** the review-verdict method (FAIL/BLOCKED failures plus the INCONCLUSIVE-accept error)
+  and the two `observe_exit` subtests.
+
+All inherited methods pass at their bases.
+
+Counterexamples (review scratch):
+
+| Counterexample | Exit | Cause | Tests | Failures / errors | Raw assertions |
+| --- | --- | --- | --- | --- | --- |
+| dev-002, diagnosis `schema_version` left at 1 | 1 | test_failure | 3 | 6 / 0 | 6 × `AssertionError: 1 != 2`, one per lifecycle subtest |
+| dev-003, FAIL/BLOCKED still accepted | 1 | test_failure | 23 | 2 / 0 | 2 × `ValueError not raised` (`Verdict: FAIL`, `Verdict: BLOCKED`) |
+
+## M2-R re-review: resolved
+
+**Exact change.** The v2→v3 field diff shows only:
+
+- **dev-002 statement:** "Preserve schema_version=2 and do not add model fields to the persisted run
+  record." becomes "diagnose() output sets schema_version to 2 (was 1); the persisted run record keeps
+  schema_version=2 and gains no model fields."
+- **dev-003 statement:** inserts "Stop accepting Verdict: FAIL and Verdict: BLOCKED."
+
+Every other field of all three tasks is identical: base, reference, hidden path and hash, source,
+base/reference/projection hashes and expected counts. The recomputed fingerprints are v2
+`af789424…2fe2863` and v3 `d5f5e365…5e3c5`, as recorded. `VERSION` is `coding-development-pilot-v3`.
+No hidden test file changed in the diff: the three hidden paths show an empty diffstat.
+
+**Statement sufficiency, tested independently.** I wrote statement-only candidates without
+consulting the reference implementation:
+
+- **dev-001:** `lstat`-first inventory with plain `git ls-files --others --exclude-standard -z`; aggregate
+  encoded with `.encode("utf-8")`.
+- **dev-002:** reads `/proc/<pid>/cmdline` only after `exact_running_process` and re-checks afterwards;
+  separate `_model_request_diagnosis`.
+- **dev-003:** own `observe_exit`, a `stop_check` polling loop, and the `supervise` poll replaced.
+
+All three score exit 0, `cause: none`, `passed: true` (12/12, 3/3 and 23/23, no failures or errors)
+through `prepare`/`score`. The v3 statements are sufficient for a faithful, independently written
+solution. The two removed defects are the only gaps the counterexamples isolate.
+
+**Manual assertion audit, assessed independently.** It is accurate and complete as far as I can verify:
+
+- **Line numbers and counts.** All 38 method names and frozen-module line numbers in the three tables
+  match the hidden modules exactly (12, 3 and 23 methods).
+- **Inherited claims.** "Inherited" is correct for every method so marked. For dev-001 and dev-003,
+  the hidden module differs from the base commit's test file only by the added methods and
+  assertions, and every inherited method passes at base.
+- **Module attributes.** Every attribute the hidden modules use exists in base, except
+  `untracked_file_identities` (dev-001), `MODEL_CHOICES` and `_model_request_diagnosis` (dev-002) and
+  `observe_exit` (dev-003). All four are named in the statements.
+- **Nested methods.** `CandidateResourceGuard.acquire` and `RunRecordReservation.identify/close` exist
+  in the base classes, as the audit says.
+- **Mock targets.** The only string `mock.patch` target is `sys.stdout`. The `patch.object` targets are
+  `binary`, `gpu_memory`, `subprocess.run`, `confinement_diagnosis`, `linux_process_identity`,
+  `CandidateResourceGuard.acquire`, `changed_paths`, `os.killpg` and `sys.argv`, plus
+  `coding_harness_acceptance` members in its own unedited module. All exist in base or the standard
+  library.
+- **Hidden literals.** Each literal that differs between base and reference behaviour appears in its
+  statement:
+  - dev-002: version 1→2, `scope` value, `fixture_profile_id`, removed `profile_id` and
+    `qualification`, the four `model_request` literals;
+  - dev-003: FAIL/BLOCKED rejection, INCONCLUSIVE plus one nonempty reason, `observe_exit` return
+    convention;
+  - dev-001: three error codes, row keys, canonical digest.
+- **dev-003 `returncode` assertion.** The final `assertEqual(process.returncode, expected)` follows from
+  the base's trailing `process.wait()`, which the candidate preserves, plus the stated "preserve the
+  original exit or signal status".
+- **Not caught by the audit's prose, but covered by the statement.** dev-003's `supervise` loop must
+  also stop reaping with `poll()`. Otherwise `stop_check`'s `waitid` sees an already-reaped leader. The
+  statement's first sentence ("an exited check leader must remain unreaped while both process-group
+  cleanup signals are sent") covers this, and my independent candidate followed it.
+
+**New regression.** `test_v3_statement_repair_preserves_every_other_frozen_input`:
+
+- loads the v2 `TASKS` literal from `git show b1734b99…:scripts/coding_eval.py`;
+- asserts that all non-statement fields are equal;
+- asserts that the changed set is exactly `["dev-002", "dev-003"]`.
+
+It ran in the 23-test pass. It needs full Git history, like the evaluator itself; it is not a finding.
+
+**Documentation.** The guide, the v2 evidence status note and the TASKS.md row accurately describe:
+
+- the v3 correction;
+- L4/L5 as backlog;
+- the three-strike note;
+- the absence of any model attempt.
+
+The v2 evidence now says its prefix claim was incomplete. The v3 evidence correctly withdraws the
+exact-prefix claim for v3.
+
+## Evaluation integrity and honest claims
+
+- **Pre-measurement correction.** There is no model attempt, generated candidate or score
+  (`model_attempts: 0`, `model_score: null`). This is a correction made before measurement, not
+  tuning.
+- **No held-out exposure.** No held-out task exists. The evidence correctly says these public
+  development tests are unsuitable as held-out tasks.
+- **Frozen inputs.** Hidden tests, bases, projections and expected counts are frozen.
+- **Scoring.** Failures are counted, not dropped. Partial counts cannot pass.
+- **Re-runnable.** Scores re-run with one command, and my run matches the raw logs.
+- **Builder evidence traced** to `/lane/state/tmp/t311-contract-repair/` (read only):
+  - verifier summary `7e74fbe2…`;
+  - all six case stderr hashes;
+  - per-case counts and wall times;
+  - controls summary `74cc09ca…` and both counterexample stderr hashes `1c74fa2f…` and `4eba79ad…`;
+  - counterexample counts and wall times;
+  - fast-gate log `1f4d6836…` (`Ran 23 tests in 1.627s`, `FAST GATE: PASS`);
+  - `unit.log` (23 tests, 1.639 s);
+  - `docs.log` (695 files).
+
+  All equal the evidence. Every builder report carries evaluator hash `b1fbab86…`.
+- **Leftovers.** My 12 scored cases left no new `agentmage-eval-*` temporary trees. The four present
+  predate this commit (04:15–04:41).
+- **Public-repository hygiene.**
+  - The diff has no private home path, username, hostname, credential, personal data, other
+    agent-product name or comparison, or trademark branding.
+  - `/lane/...` paths already appear in committed docs before Base.
+  - Model names in statements are the repository's existing closed choices.
+- **Row structure.** This is one sub-row level that runs and is measured; the repair was not split.
+
+## Findings
+
+No critical, high or medium finding.
+
+Carried low backlog, unchanged and correctly recorded:
+
+- **L1 (forged candidate results) and L2 (aggregate process-tree resource bounds).** Both must be
+  resolved before any generated-candidate score. Either becomes **high** if a model-generated score
+  is reported first.
+- **L4 (hidden-pin integrity refusal classified as infrastructure/exit 1).**
+  `scripts/coding_eval.py` `grade_case`. Fails closed.
+- **L5 (stale counts file and temporary tree after a late infrastructure failure).** The failed
+  report is authoritative.
+
+Observation (not a finding): the TASKS.md row still opens with "17-test fast gate". That is accurate
+for the original implementation, and later clauses describe the repairs; the current suite has 23
+tests.
+
+## Per-row result
+
+**T-311.1: PASS at exact commit `a9000c6442e7dd35579fef3af8d5dd2748af84ca`.**
+
+- **Resolved:** M2-R. Both counterexamples were reproduced and fail, the references pass, and
+  independently written statement-only candidates pass all three tasks.
+- **Previously resolved, unchanged:** M1 and L3.
+- **Audit:** the manual assertion audit is accurate.
+- **Integrity:** evaluation integrity holds.
+- **No open high or medium finding.**
+- **Low backlog:** L1 and L2, which block generated-candidate scoring, plus L4 and L5.
+
+Parent T-311 (30-task suite, held-out split, baseline) remains open and is not assessed here.
+
+Verdict: PASS
