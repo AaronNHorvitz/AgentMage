@@ -2,8 +2,8 @@
 
 T-302.2 provides `local_chat_transport` in the Linux inference crate. It calls
 real loopback HTTP sockets; its contract tests use synthetic servers, not a model.
-It is a library surface. The versioned local HTTP service and its clients remain
-T-302.3; a real local-model conversation remains T-302.4. It does not activate the
+It is a library surface. The [versioned local HTTP service](local-chat-api.md)
+is T-302.3; a real local-model conversation remains T-302.4. It does not activate the
 older qualification-bound gateway, start a server, run a tool or qualify a model.
 
 ## Configuration and authority
