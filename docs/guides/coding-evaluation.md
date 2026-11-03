@@ -2,7 +2,9 @@
 
 T-311 requires at least 30 real repository tasks, a fixed development/held-out
 split and a current-harness model baseline before tuning. This executable
-collection has **14 development tasks only**, with 70 reference regressions.
+collection has **15 development tasks only**, with 71 reference regressions: 14
+Python tooling tasks and one Rust contract bug fix (a regression exercising 640
+path cases).
 It validates scoring machinery; it is not the complete suite, a model baseline
 or a scoreboard entry. No held-out task has been selected or inspected by it.
 Keep agent tuning deferred until the complete suite and its baseline exist.
@@ -10,14 +12,18 @@ Keep agent tuning deferred until the complete suite and its baseline exist.
 ## Frozen tasks
 
 The `coding-development-v4` revision appended 11 original-repository development
-tasks. The current `coding-development-v5` corrects their statements before any
+tasks. The `coding-development-v5` revision corrects their statements before any
 model run after [independent review](../reviews/c86571bb85c8-local-coding-t311-3-development-collection.txt)
 found a Git error/call protocol missing from dev-014. It also clarifies dev-004's
 ValueError refusals and dev-011's string constant. No hidden test, selection,
 threshold or source pin changes. It preserves every original pilot definition byte-for-byte as data,
 including statements, base/reference/input digests and the 38-test requirement.
-The full collection fingerprint is
+Its Python collection fingerprint remains
 `72442a4cf406abd83dc7684a5ef225474b55ee2cbc4cb6e5d34e6a840f0da618`.
+The current `coding-development-v6` appends one Rust task without changing any
+Python task dictionary, hidden input, selection or threshold. The combined
+fingerprint is
+`3d2b07a1336133a62b49c07522d1786017e241d46f497285d18c8e391c73f88a`.
 The first-three-task fingerprint remains
 `d5f5e365924ffea8c6b46c50c28d00e116c01f69de57ac0a9672ffa50e05e3c5`.
 No agent attempt informed the selection or statements. The
@@ -82,7 +88,7 @@ refusals; a missing method, selected failure, skip or expected failure cannot pa
 Reports include the selection as well as its frozen task digest. The first three
 tasks still run their entire original modules, unchanged.
 
-The task workspace is a bounded projection of the base commit's tracked Python
+For Python tasks, the workspace is a bounded projection of the base commit's tracked Python
 files under `scripts/`. It contains no `.git`, test files, reference patch,
 evidence or credentials. This is enough for these tooling tasks, not a complete
 checkout or a general repository adapter. Only the declared source file may
@@ -120,6 +126,46 @@ the evaluator operator. They are unsuitable as unseen held-out tasks. The eventu
 held-out collection must have separate access and never supply tuning feedback.
 Do not call this public development pilot a blind evaluation.
 
+## Rust control
+
+`dev-rust-001` repairs ambiguous workspace path components in the original
+contracts crate. Its frozen base and historical fix predate this evaluation.
+The complete original integration regression and its 640-case corpus come from
+a later pinned repository commit; neither is extracted, rewritten or exposed by
+`prepare`. One integration test means one test, not 640 independent tasks. The
+statement specifies the public error variants, codes, validation order, Unicode
+classes, encoded syntax and shared construction/deserialization behavior.
+
+The editing projection contains 34 original Cargo manifest, lock and Rust source
+files (501,816 bytes), without Git history, scripts, tests or corpus. The original
+workspace manifests and lockfile stay byte-identical: retaining all members'
+source/manifest context lets locked resolution work without updating dependency
+versions. Only `kernel/contracts/src/path.rs` may change. Other crates are not
+compiled or executed. The grader mounts the original regression and corpus only
+after parent-side control admission; the editing workspace never receives them.
+
+Rust grading uses the already installed pinned 1.95.0 toolchain and dependency
+registry through read-only mounts at generic paths. No host home, credentials,
+Cargo configuration, original repository or GPU is mounted. It creates a fresh
+private target directory for each case; there is no candidate-supplied build cache.
+Cargo compiles only the hidden integration target with `--locked --offline
+--jobs 2`, one code-generation unit and two linker threads, then that executable runs with two test threads. All tests run, with
+no filters. Missing/ambiguous compiler artifacts, compilation failure, malformed
+counts, skips or unexpected counts cannot validate a control. The parent keeps
+bounded logs, deadline, cleanup and input-refusal behavior shared with Python.
+Reports include language, corpus digest and adapter digest.
+
+The worker inherits an affinity of at most four available CPUs. Compiler
+children have a 2 GiB per-process address-space limit, 128 MiB
+per-file limit and 60-second per-process CPU limit; the parent keeps the
+90-second case deadline and 2 MiB stdout/stderr budgets. These are **not**
+aggregate process-tree quotas. Rust code can forge a textual test result or exit
+early; this parser is not an independent result oracle. Generated Rust remains
+disabled by the unchanged parent-side frozen-control requirement. This adds an
+executable language adapter, not safe generated scoring, a model baseline or
+held-out qualification. The [Rust control record](../evidence/t311-4-rust-control-2026-11-03.md)
+retains measurements and setup failures.
+
 ## Run the scorer
 
 Use the existing Python 3, Git and bubblewrap installation on Linux. No download
@@ -146,14 +192,15 @@ Until independent result checking and separate aggregate worker quotas exist,
 **generated-candidate scoring is disabled**. Both `score` and the internal `grade`
 entry check the complete snapshot against this task's frozen base or historical
 reference. The task definition itself must match the registered task exactly.
-Other bytes, even a comment-only edit or a plausible solution, are refused before
-output creation or worker launch with `evaluation.untrusted-candidate-disabled`
+Other Python or Rust bytes, even a comment-only edit or a plausible solution,
+are refused before output creation or worker launch with `evaluation.untrusted-candidate-disabled`
 and exit 2. This is a temporary restriction, not a generated-candidate sandbox or
 an independent score verifier. An exact historical reference is always a control,
 never a model attempt.
 
 The guard is outside the candidate process and mounts. Candidate code cannot
-remove it by monkeypatching the test framework or writing forged passing counts.
+remove it by monkeypatching the test framework, printing a forged Rust test
+summary, exiting successfully early or writing forged passing counts.
 The command-line regression tests include that forgery attempt and verify that
 no result directory is created. Low findings L1 (result forgery) and L2 (aggregate
 quotas) still block enabling generated scoring; the guard enforces that blocker.
@@ -182,7 +229,7 @@ Existing output/candidate destinations are never overwritten.
 Keep output private: test diagnostics may contain task content and temporary
 paths. Only sanitized measurements and raw-log digests belong in public evidence.
 
-The scorer launches a separate worker with PID, network and other namespaces,
+The Python scorer launches a separate worker with PID, network and other namespaces,
 cleared environment, read-only system runtime, read-only candidate and hidden
 tests, a temporary home/scratch and one writable result directory. It mounts no
 host home, live repository, model files or credentials. It enforces a 90-second
@@ -206,8 +253,8 @@ cause. A startup refusal is an unavailable baseline, not a solved task or a
 zero-quality model score. GPU work always uses the existing queued reservation;
 never attach a substitute direct-model edit loop to manufacture a baseline.
 
-The grader imports candidate Python into the test interpreter in its confined
-worker, as the original regression tests do. It withholds tests during editing,
+For Python tasks, the grader imports candidate Python into the test interpreter
+in its confined worker, as the original regression tests do. It withholds tests during editing,
 checks their frozen bytes and requires the full expected counts. It is not an
 independent proof against a candidate deliberately tampering with Python's test
 framework or forging its result. Add independent result checking before using
@@ -215,9 +262,9 @@ adversarial model-generated candidates for a trusted scoreboard. The mandatory
 pre-launch guard restricts this interpreter to frozen controls; none of the
 observed base/reference validation is a generated candidate.
 
-The remaining T-311 work includes reaching at least 30 suitable tasks beyond this narrow
-Python projection, varied fixes/features/refactors/test additions, sealed held-out
-inputs, a bounded/resumable current-harness adapter, actual model attempts and
+The remaining T-311 work includes reaching at least 30 suitable tasks beyond this
+narrow Python projection and single Rust contract task, varied fixes/features/
+refactors/test additions, sealed held-out inputs, a bounded/resumable current-harness adapter, actual model attempts and
 failure classification, retry/first-attempt accounting and scoreboard-only
 held-out execution. No existing product harness, prompt, hidden test or score
 threshold is tuned by this pilot.

@@ -25,8 +25,13 @@ import tarfile
 import tempfile
 import time
 
+if __package__:
+    from . import coding_eval_rust
+else:
+    import coding_eval_rust
+
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "coding-development-v5"
+VERSION = "coding-development-v6"
 MAX_FILE = 1024 * 1024
 MAX_TREE = 16 * MAX_FILE
 TIMEOUT = 90
@@ -496,7 +501,9 @@ def pinned_blob(revision: str, name: str, expected: str) -> bytes:
 
 
 def projection(task: dict) -> dict[str, bytes]:
-    """Only tracked Python scripts; no Git history, hidden tests or reference code."""
+    """Frozen editing inputs; no Git history, hidden regressions or reference fix."""
+    if task.get("language") == "rust":
+        return coding_eval_rust.projection(task, sys.modules[__name__])
     entries = [line for line in git("ls-tree", "-r", task["base"], "--", "scripts").splitlines()
                if line.endswith(b".py")]
     if sha(b"\n".join(entries) + b"\n") != task["projection_sha256"]:
@@ -589,14 +596,14 @@ def read_candidate(candidate: Path, original: dict[str, bytes], allowed: str) ->
 
 
 def require_historical_candidate(task: dict, files: dict[str, bytes]) -> str:
-    """Only frozen controls may run in the same interpreter as the hidden tests.
+    """Only frozen controls may run with hidden tests in a candidate process.
 
-    Candidate Python can forge unittest's result. Until independently controlled
+    Candidate Python or Rust can forge its test result. Until independently controlled
     scoring and separate aggregate quotas exist, refuse all generated candidates
     before creating output or launching a worker. Host callers are trusted; this
     check is outside every candidate mount and process.
     """
-    registered = next((value for value in TASKS if value == task), None)
+    registered = next((value for value in collection() if value == task), None)
     if registered is None:
         raise EvaluationError("evaluation.task-definition-refused")
     expected = projection(registered)
@@ -673,6 +680,8 @@ def task_driver(task: dict) -> bytes:
     original test methods and include that list in their frozen task identity.
     There is no CLI/environment override and no score-dependent selection.
     """
+    if task.get("language") == "rust":
+        return coding_eval_rust.DRIVER
     if "test_names" not in task:
         return DRIVER
     names = task["test_names"]
@@ -745,7 +754,7 @@ def initialize_grading_repository(workspace: Path) -> None:
 
 def grade_case(task: dict, files: dict[str, bytes], output: Path) -> tuple:
     driver = task_driver(task)
-    hidden = pinned_blob(task["reference"], task["hidden_test"], task["hidden_sha256"])
+    hidden = pinned_blob(task.get("hidden_revision", task["reference"]), task["hidden_test"], task["hidden_sha256"])
     data = None
     with case_workspace(output) as root:
         workspace, grader, result_dir = root / "workspace", root / "grader", root / "results"
@@ -754,17 +763,23 @@ def grade_case(task: dict, files: dict[str, bytes], output: Path) -> tuple:
         result_dir.mkdir(mode=0o700)
         for name, content in files.items():
             write_file(workspace / name, content)
-        initialize_grading_repository(workspace)
+        rust = task.get("language") == "rust"
+        if rust:
+            coding_eval_rust.materialize(workspace, task, sys.modules[__name__])
+        else:
+            initialize_grading_repository(workspace)
         write_file(grader / "test.py", hidden)
         write_file(grader / "run.py", driver)
-        command = sandbox_command(workspace, grader, result_dir)
+        command = (coding_eval_rust.sandbox_command(workspace, grader, result_dir, sys.modules[__name__])
+                   if rust else sandbox_command(workspace, grader, result_dir))
         timed_out = False
         output_limited = False
         process = None
         try:
             with (output / "stdout.log").open("xb") as stdout, (output / "stderr.log").open("xb") as stderr:
                 process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                                           stderr=subprocess.PIPE, start_new_session=True, preexec_fn=limits)
+                                           stderr=subprocess.PIPE, start_new_session=True,
+                                           preexec_fn=coding_eval_rust.limits if rust else limits)
                 deadline = time.monotonic() + TIMEOUT
                 exit_code = None
                 totals = {stdout: 0, stderr: 0}
@@ -848,8 +863,11 @@ def grade(task: dict, files: dict[str, bytes], output: Path) -> dict:
              if tests is None else "test_failure")
     report = {"version": VERSION, "task": task["id"], "split": task["split"],
               "base": task["base"], "hidden_sha256": task["hidden_sha256"],
+              "language": task.get("language", "python"),
+              "fixture_sha256": task.get("fixture_sha256"),
               "test_names": task.get("test_names"),
               "evaluator_sha256": sha(Path(__file__).read_bytes()),
+              "rust_adapter_sha256": sha(Path(coding_eval_rust.__file__).read_bytes()),
               "task_sha256": sha(json.dumps(task, sort_keys=True, separators=(",", ":")).encode()),
               "candidate_sha256": sha(files[task["source"]]), "passed": passed,
               "cause": cause, "exit_code": exit_code, "tests": tests, "output_truncated": output_limited,
@@ -863,11 +881,16 @@ def grade(task: dict, files: dict[str, bytes], output: Path) -> dict:
     return report
 
 
+def collection() -> list[dict]:
+    """Keep the accepted Python task dictionaries intact when adding languages."""
+    return TASKS + coding_eval_rust.TASKS
+
+
 def verify(output: Path) -> dict:
     """Validate evaluator discrimination, never count reference patches as agent attempts."""
     new_directory(output)
     rows = []
-    for task in TASKS:
+    for task in collection():
         original = projection(task)
         base = grade(task, original, output / (task["id"] + "-base"))
         fixed = dict(original)
@@ -886,13 +909,13 @@ def verify(output: Path) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("operation", choices=("list", "prepare", "score", "verify"))
-    parser.add_argument("--task", choices=[t["id"] for t in TASKS])
+    parser.add_argument("--task", choices=[t["id"] for t in collection()])
     parser.add_argument("--candidate", type=Path)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if args.operation == "list":
         print(json.dumps({"version": VERSION, "tasks": [
-            {k: task[k] for k in ("id", "split", "base", "source", "statement")} for task in TASKS
+            {k: task[k] for k in ("id", "split", "base", "source", "statement")} for task in collection()
         ]}, indent=2))
         return 0
     if args.output is None:
@@ -902,7 +925,7 @@ def main() -> int:
         return 0 if report["passed"] else 2 if report["input_refused"] else 1
     if args.task is None:
         parser.error("--task is required")
-    task = next(t for t in TASKS if t["id"] == args.task)
+    task = next(t for t in collection() if t["id"] == args.task)
     files = projection(task)
     if args.operation == "prepare":
         new_directory(args.output)
