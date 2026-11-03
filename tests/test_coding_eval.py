@@ -23,6 +23,13 @@ class CodingEvaluationTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
 
+    def grade_fixture(self, task, files, output):
+        # Deliberately synthetic worker controls, never exposed through the CLI.
+        # Production grade() refuses these before a worker can run. The bypass
+        # here lets lifecycle tests exercise failure paths with tiny fixtures.
+        with mock.patch.object(evaluation, "require_historical_candidate", return_value="synthetic-control"):
+            return evaluation.grade(task, files, output)
+
     def candidate(self):
         original = {"scripts/a.py": b"original\n", "scripts/b.py": b"frozen\n"}
         root = self.root / "candidate"
@@ -107,12 +114,13 @@ class CodingEvaluationTests(unittest.TestCase):
             raise OSError("private cleanup path")
 
         with mock.patch.object(evaluation, "grade_case", side_effect=partial_case):
-            report = evaluation.grade(evaluation.TASKS[0], {evaluation.TASKS[0]["source"]: b"fixture"}, output)
+            report = self.grade_fixture(evaluation.TASKS[0], {evaluation.TASKS[0]["source"]: b"fixture"}, output)
         self.assertFalse(report["passed"])
         self.assertEqual(report["cause"], "infrastructure")
         self.assertIsNone(report["tests"])
         self.assertIsNone(report["exit_code"])
         self.assertEqual(report["infrastructure_error"], "code=evaluation.io-failed type=OSError")
+        self.assertFalse((output / "tests.json").exists())
         self.assertEqual((output / "stderr.log").read_bytes(), b"partial case log\n")
         self.assertEqual(report["logs"]["stderr.log"], evaluation.sha(b"partial case log\n"))
         self.assertEqual(json.loads((output / "report.json").read_text()), report)
@@ -133,7 +141,8 @@ class CodingEvaluationTests(unittest.TestCase):
 
         with mock.patch.object(evaluation, "grade_case", side_effect=run_case), \
                 mock.patch.object(evaluation, "projection", side_effect=lambda t: {t["source"]: b"base"}), \
-                mock.patch.object(evaluation, "pinned_blob", return_value=b"reference"):
+                mock.patch.object(evaluation, "pinned_blob", return_value=b"reference"), \
+                mock.patch.object(evaluation, "require_historical_candidate", return_value="synthetic-control"):
             summary = evaluation.verify(self.root / "infrastructure-verify")
         self.assertEqual(len(calls), 6)
         self.assertFalse(summary["passed"])
@@ -208,6 +217,185 @@ class CodingEvaluationTests(unittest.TestCase):
             evaluation.write_file(output / "original", b"overwritten")
         self.assertEqual((output / "original").read_bytes(), b"unchanged")
 
+    def test_only_exact_registered_base_and_reference_snapshots_can_be_graded(self):
+        task = evaluation.TASKS[0]
+        files = evaluation.projection(task)
+        self.assertEqual(evaluation.require_historical_candidate(task, files), "frozen-base")
+        files[task["source"]] = evaluation.pinned_blob(
+            task["reference"], task["source"], task["reference_sha256"])
+        self.assertEqual(evaluation.require_historical_candidate(task, files), "frozen-reference")
+        for snapshot in ({**files, task["source"]: files[task["source"]] + b"\n# generated\n"},
+                         {**files, "scripts/foreign.py": b"outside scope"}):
+            with self.subTest(keys=len(snapshot)), \
+                    mock.patch.object(evaluation, "grade_case") as worker, \
+                    self.assertRaisesRegex(evaluation.EvaluationError, "untrusted-candidate-disabled"):
+                evaluation.grade(task, snapshot, self.root / "refused")
+            worker.assert_not_called()
+            self.assertFalse((self.root / "refused").exists())
+        with self.assertRaisesRegex(evaluation.EvaluationError, "task-definition-refused"):
+            evaluation.grade({**task, "expected_tests": 1}, files, self.root / "refused")
+
+    def test_actual_cli_refuses_a_forged_success_before_candidate_execution(self):
+        task = evaluation.TASKS[0]
+        candidate = self.root / "forged-candidate"
+        prepared = subprocess.run(["/usr/bin/python3", str(evaluation.ROOT / "scripts/coding_eval.py"),
+                                   "prepare", "--task", task["id"], "--output", str(candidate)],
+                                  capture_output=True, timeout=30)
+        self.assertEqual(prepared.returncode, 0, prepared.stderr)
+        source = candidate / task["source"]
+        clean = {"tests": task["expected_tests"], "failures": 0, "errors": 0, "skipped": 0,
+                 "expected_failures": 0, "unexpected_successes": 0}
+        # This is the previously admitted result-forgery vector: candidate code
+        # writes full passing counts, then exits without running the regressions.
+        with source.open("ab") as stream:
+            stream.write(("\nimport os,json\nwith open('/output/tests.json','w') as forged:\n"
+                          f" json.dump({clean!r},forged)\nos._exit(0)\n").encode())
+        output = self.root / "forged-result"
+        scored = subprocess.run(["/usr/bin/python3", str(evaluation.ROOT / "scripts/coding_eval.py"),
+                                 "score", "--task", task["id"], "--candidate", str(candidate),
+                                 "--output", str(output)], capture_output=True, timeout=30)
+        self.assertEqual(scored.returncode, 2)
+        self.assertIn(b"evaluation.untrusted-candidate-disabled", scored.stderr)
+        self.assertFalse(output.exists())
+        self.assertNotIn(str(self.root).encode(), scored.stderr)
+        self.assertEqual(scored.stdout, b"")
+
+    def test_hidden_input_integrity_failure_never_launches_and_returns_exit_two(self):
+        task = evaluation.TASKS[0]
+        files = evaluation.projection(task)
+        real_pinned_blob = evaluation.pinned_blob
+
+        def corrupted_hidden(revision, name, expected):
+            if name == task["hidden_test"]:
+                raise evaluation.InputIntegrityError("evaluation.input-hash-mismatch")
+            return real_pinned_blob(revision, name, expected)
+
+        candidate = self.root / "base"
+        for name, content in files.items():
+            evaluation.write_file(candidate / name, content)
+        output = self.root / "integrity-result"
+        with mock.patch.object(evaluation, "pinned_blob", side_effect=corrupted_hidden), \
+                mock.patch.object(evaluation.subprocess, "Popen") as worker, \
+                mock.patch("sys.argv", ["coding_eval.py", "score", "--task", task["id"],
+                                        "--candidate", str(candidate), "--output", str(output)]):
+            # Projection Git runs must remain real; grade_case's Popen must not.
+            with mock.patch.object(evaluation, "projection", return_value=files):
+                self.assertEqual(evaluation.main(), 2)
+            worker.assert_not_called()
+        report = json.loads((output / "report.json").read_text())
+        self.assertFalse(report["passed"])
+        self.assertEqual(report["cause"], "input_integrity")
+        self.assertIn("evaluation.input-hash-mismatch", report["input_error"])
+        self.assertIsNone(report["infrastructure_error"])
+        self.assertIsNone(report["tests"])
+        self.assertIsNone(report["model_score"])
+        self.assertEqual(report["candidate_kind"], "frozen-base")
+        self.assertFalse((output / "tests.json").exists())
+
+    def test_verifier_integrity_refusal_is_not_a_base_test_failure(self):
+        with mock.patch.object(evaluation, "grade_case", side_effect=evaluation.InputIntegrityError(
+                "evaluation.input-hash-mismatch")):
+            summary = evaluation.verify(self.root / "verify-integrity")
+        self.assertFalse(summary["passed"])
+        self.assertTrue(summary["input_refused"])
+        self.assertTrue(all(not row["valid"] for row in summary["tasks"]))
+        self.assertTrue(all(case["cause"] == "input_integrity" for row in summary["tasks"]
+                            for case in (row["base"], row["reference"])))
+        with mock.patch.object(evaluation, "verify", return_value=summary), \
+                mock.patch("sys.argv", ["coding_eval.py", "verify", "--output", "unused"]):
+            self.assertEqual(evaluation.main(), 2)
+
+    def test_workspace_retries_transient_cleanup_before_counts_are_published(self):
+        task = {**evaluation.TASKS[0], "expected_tests": 1, "source": "scripts/a.py"}
+        hidden = b"import unittest\nclass Control(unittest.TestCase):\n def test_control(self): pass\n"
+        output = self.root / "retry"
+        real_rmtree = evaluation.shutil.rmtree
+        attempts = []
+
+        def retry(path):
+            attempts.append(path)
+            self.assertFalse((output / "tests.json").exists())
+            if len(attempts) == 1:
+                raise OSError("synthetic transient failure")
+            real_rmtree(path)
+
+        with mock.patch.object(evaluation, "pinned_blob", return_value=hidden), \
+                mock.patch.object(evaluation.shutil, "rmtree", side_effect=retry):
+            report = self.grade_fixture(task, {"scripts/a.py": b"# fixture"}, output)
+        self.assertTrue(report["passed"], report)
+        self.assertEqual(json.loads((output / "tests.json").read_text())["tests"], 1)
+        self.assertEqual(len(attempts), 2)
+        self.assertFalse(attempts[-1].exists())
+        self.assertFalse((output / "cleanup.json").exists())
+
+    def test_missing_frozen_blob_is_an_input_refusal_without_private_exception_text(self):
+        error = subprocess.CalledProcessError(1, ["private command with path"])
+        with mock.patch.object(evaluation, "git", side_effect=error), \
+                self.assertRaises(evaluation.InputIntegrityError) as raised:
+            evaluation.pinned_blob("unavailable", "input", "0" * 64)
+        self.assertEqual(str(raised.exception), "evaluation.input-unavailable")
+
+    def test_workspace_is_removed_on_interruption_without_publishing_counts(self):
+        output = self.root / "interrupted"
+        output.mkdir()
+        with self.assertRaises(KeyboardInterrupt):
+            with evaluation.case_workspace(output) as workspace:
+                evaluation.write_file(workspace / "partial", b"interrupted")
+                raise KeyboardInterrupt
+        self.assertFalse(workspace.exists())
+        self.assertEqual(list(output.iterdir()), [])
+
+    def test_persistent_cleanup_failure_cannot_mask_interruption_and_continue_verification(self):
+        output = self.root / "interrupted-cleanup"
+        output.mkdir()
+        workspace = None
+        try:
+            with mock.patch.object(evaluation.shutil, "rmtree", side_effect=OSError("cleanup")) as cleanup, \
+                    self.assertRaises(KeyboardInterrupt):
+                with evaluation.case_workspace(output) as workspace:
+                    evaluation.write_file(workspace / "partial", b"interrupted")
+                    raise KeyboardInterrupt
+            self.assertEqual(cleanup.call_count, 3)
+            recovery = json.loads((output / "cleanup.json").read_text())
+            self.assertEqual(Path(recovery["private_workspace"]), workspace)
+            self.assertFalse(recovery["removed"])
+            self.assertFalse((output / "tests.json").exists())
+        finally:
+            if workspace is not None:
+                evaluation.shutil.rmtree(workspace, ignore_errors=True)
+
+    def test_late_persistent_cleanup_failure_keeps_recovery_record_and_no_counts(self):
+        task = {**evaluation.TASKS[0], "expected_tests": 1, "source": "scripts/a.py"}
+        hidden = b"import unittest\nclass Control(unittest.TestCase):\n def test_control(self): pass\n"
+        output = self.root / "cleanup-failed"
+        real_rmtree = evaluation.shutil.rmtree
+        attempts = []
+
+        def fail_cleanup(path):
+            attempts.append(path)
+            self.assertFalse((output / "tests.json").exists())
+            raise OSError("synthetic persistent cleanup failure")
+
+        try:
+            with mock.patch.object(evaluation, "pinned_blob", return_value=hidden), \
+                    mock.patch.object(evaluation.shutil, "rmtree", side_effect=fail_cleanup):
+                report = self.grade_fixture(task, {"scripts/a.py": b"# fixture"}, output)
+            self.assertEqual(len(attempts), 3)
+            self.assertFalse(report["passed"])
+            self.assertEqual(report["cause"], "infrastructure")
+            self.assertIn("evaluation.cleanup-failed", report["infrastructure_error"])
+            self.assertIsNone(report["tests"])
+            self.assertFalse((output / "tests.json").exists())
+            recovery = json.loads((output / "cleanup.json").read_text())
+            self.assertFalse(recovery["removed"])
+            self.assertEqual(recovery["attempts"], 3)
+            self.assertEqual(Path(recovery["private_workspace"]), attempts[-1])
+            self.assertTrue(attempts[-1].exists())
+            self.assertIn(b"OK", (output / "stderr.log").read_bytes())
+        finally:
+            for path in set(attempts):
+                real_rmtree(path, ignore_errors=True)
+
     def test_task_id_rejects_ambiguous_or_unknown_selection(self):
         with mock.patch("sys.argv", ["coding_eval.py", "prepare", "--task", "held-out", "--output", "unused"]):
             with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as raised:
@@ -280,7 +468,7 @@ class CodingEvaluationTests(unittest.TestCase):
             with mock.patch.object(evaluation, "pinned_blob", return_value=b"unexecuted fixture"), \
                     mock.patch.object(evaluation.subprocess, "Popen", side_effect=launch), \
                     mock.patch.object(evaluation, "initialize_grading_repository"):
-                report = evaluation.grade({**task, "expected_tests": 1}, {task["source"]: b"synthetic"}, output)
+                report = self.grade_fixture({**task, "expected_tests": 1}, {task["source"]: b"synthetic"}, output)
             self.assertEqual(report["passed"], index == 4)
             self.assertEqual(report["model_attempts"], 0)
             self.assertIsNone(report["tokens"])
@@ -310,7 +498,7 @@ class CodingEvaluationTests(unittest.TestCase):
         with mock.patch.object(evaluation, "pinned_blob", return_value=b"fixture"), \
                 mock.patch.object(evaluation, "sandbox_command", return_value=command), \
                 mock.patch.object(evaluation, "TIMEOUT", 0.03):
-            report = evaluation.grade(task, {task["source"]: b"fixture"}, output)
+            report = self.grade_fixture(task, {task["source"]: b"fixture"}, output)
         self.assertFalse(report["passed"])
         self.assertEqual(report["cause"], "timeout")
         self.assertIsNone(report["exit_code"])
@@ -356,7 +544,7 @@ class CodingEvaluationTests(unittest.TestCase):
         command = ["/usr/bin/python3", "-c", "import os; os.write(1, b'x' * (3 * 1024 * 1024))"]
         with mock.patch.object(evaluation, "pinned_blob", return_value=b"fixture"), \
                 mock.patch.object(evaluation, "sandbox_command", return_value=command):
-            report = evaluation.grade(task, {task["source"]: b"fixture"}, output)
+            report = self.grade_fixture(task, {task["source"]: b"fixture"}, output)
         self.assertFalse(report["passed"])
         self.assertTrue(report["output_truncated"])
         self.assertEqual(report["cause"], "output_limit")
@@ -383,7 +571,7 @@ class CodingEvaluationTests(unittest.TestCase):
                   f"   self.assertNotEqual(client.connect_ex(('127.0.0.1',{port})),0)\n").encode()
         task = {**evaluation.TASKS[0], "source": "scripts/a.py", "expected_tests": 1}
         with mock.patch.object(evaluation, "pinned_blob", return_value=hidden):
-            report = evaluation.grade(task, {"scripts/a.py": b"# synthetic boundary fixture\n"},
+            report = self.grade_fixture(task, {"scripts/a.py": b"# synthetic boundary fixture\n"},
                                       self.root / "boundary")
         self.assertTrue(report["passed"], report)
         self.assertEqual(report["tests"]["tests"], 1)

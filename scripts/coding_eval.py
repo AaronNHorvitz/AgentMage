@@ -7,6 +7,7 @@ This three-task development pilot is not the complete T-311 suite or a model sco
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 import hashlib
 import io
 import json
@@ -14,6 +15,7 @@ import os
 from pathlib import Path
 import resource
 import selectors
+import shutil
 import signal
 import stat
 import subprocess
@@ -116,6 +118,10 @@ class EvaluationError(ValueError):
     """A fixed diagnostic; task/candidate contents stay in private output."""
 
 
+class InputIntegrityError(EvaluationError):
+    """Frozen evaluator inputs are unavailable or changed; this is not a test failure."""
+
+
 def sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -128,9 +134,12 @@ def git(*args: str) -> bytes:
 
 
 def pinned_blob(revision: str, name: str, expected: str) -> bytes:
-    data = git("show", revision + ":" + name)
+    try:
+        data = git("show", revision + ":" + name)
+    except subprocess.CalledProcessError:
+        raise InputIntegrityError("evaluation.input-unavailable") from None
     if sha(data) != expected:
-        raise EvaluationError("evaluation.input-hash-mismatch")
+        raise InputIntegrityError("evaluation.input-hash-mismatch")
     return data
 
 
@@ -139,7 +148,7 @@ def projection(task: dict) -> dict[str, bytes]:
     entries = [line for line in git("ls-tree", "-r", task["base"], "--", "scripts").splitlines()
                if line.endswith(b".py")]
     if sha(b"\n".join(entries) + b"\n") != task["projection_sha256"]:
-        raise EvaluationError("evaluation.projection-hash-mismatch")
+        raise InputIntegrityError("evaluation.projection-hash-mismatch")
     archive = git("archive", "--format=tar", task["base"], "scripts")
     if len(archive) > 32 * MAX_FILE:
         raise EvaluationError("evaluation.archive-too-large")
@@ -156,7 +165,7 @@ def projection(task: dict) -> dict[str, bytes]:
     if sum(map(len, result.values())) > MAX_TREE:
         raise EvaluationError("evaluation.projection-too-large")
     if sha(result[task["source"]]) != task["base_sha256"]:
-        raise EvaluationError("evaluation.base-hash-mismatch")
+        raise InputIntegrityError("evaluation.base-hash-mismatch")
     return result
 
 
@@ -225,6 +234,62 @@ def read_candidate(candidate: Path, original: dict[str, bytes], allowed: str) ->
     if result.keys() != original.keys():
         raise EvaluationError("evaluation.candidate-file-missing")
     return result
+
+
+def require_historical_candidate(task: dict, files: dict[str, bytes]) -> str:
+    """Only frozen controls may run in the same interpreter as the hidden tests.
+
+    Candidate Python can forge unittest's result. Until independently controlled
+    scoring and separate aggregate quotas exist, refuse all generated candidates
+    before creating output or launching a worker. Host callers are trusted; this
+    check is outside every candidate mount and process.
+    """
+    registered = next((value for value in TASKS if value == task), None)
+    if registered is None:
+        raise EvaluationError("evaluation.task-definition-refused")
+    expected = projection(registered)
+    source = registered["source"]
+    if files == expected:
+        return "frozen-base"
+    expected[source] = pinned_blob(registered["reference"], source, registered["reference_sha256"])
+    if files == expected:
+        return "frozen-reference"
+    raise EvaluationError("evaluation.untrusted-candidate-disabled")
+
+
+@contextmanager
+def case_workspace(output: Path):
+    """Retry transient cleanup failures; retain a private recovery record otherwise."""
+    root = Path(tempfile.mkdtemp(prefix="agentmage-eval-"))
+    failed = False
+    try:
+        yield root
+    except BaseException:
+        failed = True
+        raise
+    finally:
+        try:
+            remove_case_workspace(root, output)
+        except (EvaluationError, OSError):
+            # Preserve the original exception, especially interruption: cleanup
+            # must not turn a stop request into a case failure and continue verify.
+            if not failed:
+                raise
+
+
+def remove_case_workspace(root: Path, output: Path) -> None:
+    for attempt in range(3):
+        try:
+            shutil.rmtree(root)
+            return
+        except OSError as error:
+            if isinstance(error, FileNotFoundError) and not root.exists():
+                return
+            if attempt == 2:
+                publish(output / "cleanup.json", {"removed": False, "attempts": 3,
+                                                  "private_workspace": str(root)})
+                raise EvaluationError("evaluation.cleanup-failed") from None
+        time.sleep(0.05)
 
 
 DRIVER = b'''import importlib.util
@@ -306,8 +371,8 @@ def initialize_grading_repository(workspace: Path) -> None:
 
 def grade_case(task: dict, files: dict[str, bytes], output: Path) -> tuple:
     hidden = pinned_blob(task["reference"], task["hidden_test"], task["hidden_sha256"])
-    with tempfile.TemporaryDirectory(prefix="agentmage-eval-") as temporary:
-        root = Path(temporary)
+    data = None
+    with case_workspace(output) as root:
         workspace, grader, result_dir = root / "workspace", root / "grader", root / "results"
         workspace.mkdir(mode=0o700)
         grader.mkdir(mode=0o700)
@@ -372,30 +437,39 @@ def grade_case(task: dict, files: dict[str, bytes], output: Path) -> tuple:
                     or any(type(v) is not int or v < 0 for v in tests.values())
                     or tests["tests"] != task["expected_tests"]):
                 raise ValueError
-            write_file(output / "tests.json", data)
         except (OSError, ValueError):
             tests = None
+    # Counts are promoted only after process and temporary-tree cleanup succeeds.
+    if tests is not None:
+        write_file(output / "tests.json", data)
     return exit_code, timed_out, output_limited, tests
 
 
 def grade(task: dict, files: dict[str, bytes], output: Path) -> dict:
+    candidate_kind = require_historical_candidate(task, files)
     # Operator errors (including an existing destination) still fail before adoption.
     new_directory(output)
     started = time.monotonic()
     infrastructure_error = None
+    input_error = None
     try:
         exit_code, timed_out, output_limited, tests = grade_case(task, files, output)
     except (EvaluationError, OSError, subprocess.SubprocessError) as error:
         # Keep a failed case and continue validation; never turn partial counts into PASS.
-        infrastructure_error = refusal_detail(error)
+        if isinstance(error, InputIntegrityError):
+            input_error = refusal_detail(error)
+        else:
+            infrastructure_error = refusal_detail(error)
         exit_code, timed_out, output_limited, tests = None, False, False, None
+        (output / "tests.json").unlink(missing_ok=True)
         for name in ("stdout.log", "stderr.log"):
             if not (output / name).exists():
                 write_file(output / name, b"")
-    passed = (infrastructure_error is None and exit_code == 0 and not timed_out
+    passed = (infrastructure_error is None and input_error is None and exit_code == 0 and not timed_out
               and not output_limited and tests is not None
               and all(tests[k] == 0 for k in tests if k != "tests"))
-    cause = ("none" if passed else "output_limit" if output_limited else "timeout" if timed_out else "infrastructure"
+    cause = ("none" if passed else "input_integrity" if input_error else "output_limit" if output_limited
+             else "timeout" if timed_out else "infrastructure"
              if tests is None else "test_failure")
     report = {"version": VERSION, "task": task["id"], "split": task["split"],
               "base": task["base"], "hidden_sha256": task["hidden_sha256"],
@@ -403,7 +477,9 @@ def grade(task: dict, files: dict[str, bytes], output: Path) -> dict:
               "task_sha256": sha(json.dumps(task, sort_keys=True, separators=(",", ":")).encode()),
               "candidate_sha256": sha(files[task["source"]]), "passed": passed,
               "cause": cause, "exit_code": exit_code, "tests": tests, "output_truncated": output_limited,
-              "infrastructure_error": infrastructure_error,
+              "infrastructure_error": infrastructure_error, "input_error": input_error,
+              "candidate_kind": candidate_kind, "score_scope": "trusted-evaluator-validation-only",
+              "model_score": None,
               "wall_seconds": round(time.monotonic() - started, 6),
               "gpu_minutes": 0, "tokens": None, "model_attempts": 0,
               "logs": {name: sha(read_regular(output / name, 2 * MAX_FILE)) for name in ("stdout.log", "stderr.log")}}
@@ -424,7 +500,9 @@ def verify(output: Path) -> dict:
         rows.append({"task": task["id"], "base": base, "reference": reference,
                      "valid": not base["passed"] and base["cause"] == "test_failure" and reference["passed"]})
     summary = {"version": VERSION, "kind": "evaluator-validation-only", "tasks": rows,
-               "passed": all(row["valid"] for row in rows), "model_score": None}
+               "passed": all(row["valid"] for row in rows), "model_score": None,
+               "input_refused": any(case["cause"] == "input_integrity" for row in rows
+                                    for case in (row["base"], row["reference"]))}
     publish(output / "summary.json", summary)
     return summary
 
@@ -444,7 +522,8 @@ def main() -> int:
     if args.output is None:
         parser.error("--output is required")
     if args.operation == "verify":
-        return 0 if verify(args.output)["passed"] else 1
+        report = verify(args.output)
+        return 0 if report["passed"] else 2 if report["input_refused"] else 1
     if args.task is None:
         parser.error("--task is required")
     task = next(t for t in TASKS if t["id"] == args.task)
@@ -457,7 +536,8 @@ def main() -> int:
     if args.candidate is None:
         parser.error("--candidate is required")
     files = read_candidate(args.candidate, files, task["source"])
-    return 0 if grade(task, files, args.output)["passed"] else 1
+    report = grade(task, files, args.output)
+    return 0 if report["passed"] else 2 if report["cause"] == "input_integrity" else 1
 
 
 def interrupted(signum: int, frame: object) -> None:

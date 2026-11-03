@@ -56,10 +56,19 @@ or racing cleanup. Infrastructure exceptions produce a failed case report
 with a fixed error code and exception type, preserve available raw logs, and
 allow validation of the remaining cases. Partial test counts cannot pass.
 Pre-case input/operator refusals exit 2 and print a fixed code and exception type;
-they never print exception text containing private paths or commands. A hidden-test
-pin failure inside a case currently becomes infrastructure failure/exit 1 (low
-finding L4); it still cannot pass. A late cleanup failure may leave a counts file
-or temporary tree (L5); the failed report is authoritative, never partial counts.
+they never print exception text containing private paths or commands. Missing or
+changed frozen blobs are input-integrity refusals. If encountered inside a case,
+the report has `cause: input_integrity`, a fixed `input_error`, no test counts and
+no infrastructure error. Both `score` and `verify` exit 2 for that refusal. An
+input refusal never satisfies the required base test failure.
+
+Counts are copied to the result only after worker and temporary-tree cleanup
+succeeds. Transient tree-removal errors are retried, at most three attempts with
+50 milliseconds between them. A persistent error produces a failed infrastructure
+report, preserves raw logs, removes partial published counts and retains a private
+`cleanup.json` naming the exact leftover workspace for operator recovery. It cannot
+report PASS or silently claim that the workspace was removed. Interruption also
+runs cleanup before propagating; it cannot publish a successful result.
 
 Hidden means withheld from the editing workspace. These development regressions
 already exist in public Git history, and their locations/digests are available to
@@ -87,23 +96,45 @@ report labels itself `evaluator-validation-only` and has `model_score: null`.
 No GPU or model runs as part of this command; its token count is unavailable and
 its model-attempt count is zero.
 
-For a single candidate:
+## Historical controls only
+
+Until independent result checking and separate aggregate worker quotas exist,
+**generated-candidate scoring is disabled**. Both `score` and the internal `grade`
+entry check the complete snapshot against this task's frozen base or historical
+reference. The task definition itself must match the registered task exactly.
+Other bytes, even a comment-only edit or a plausible solution, are refused before
+output creation or worker launch with `evaluation.untrusted-candidate-disabled`
+and exit 2. This is a temporary restriction, not a generated-candidate sandbox or
+an independent score verifier. An exact historical reference is always a control,
+never a model attempt.
+
+The guard is outside the candidate process and mounts. Candidate code cannot
+remove it by monkeypatching the test framework or writing forged passing counts.
+The command-line regression tests include that forgery attempt and verify that
+no result directory is created. Low findings L1 (result forgery) and L2 (aggregate
+quotas) still block enabling generated scoring; the guard enforces that blocker.
+The current lane exposes read-only cgroup controls, so this work does not claim
+a separately delegated worker memory, process or CPU quota.
+
+For a single frozen control:
 
 ```sh
 python3 scripts/coding_eval.py list
 python3 scripts/coding_eval.py prepare --task dev-001 --output <new-candidate-directory>
-# Edit only the source file identified by list, using the task statement.
+# This unchanged base is a regression control; score must fail with exit 1.
 bash /tools/build-slot python3 scripts/coding_eval.py score --task dev-001 --candidate <candidate-directory> --output <new-private-result>
 ```
 
 `list` prints statements and bases without hidden-test/reference metadata.
 `prepare` materializes the base projection without tests or answers. `score`
-refuses anything outside that task's one-file scope, snapshots the candidate,
-and runs the pinned hidden test module. Exit 0 means the worker reported all
-pinned tests passed; this pilot trusts historical candidates and does not
-authenticate results against deliberately malicious candidate code.
+first checks file scope and snapshots the candidate, then requires an exact frozen
+control before running the pinned hidden test module. Exit 0 means that trusted
+control passed all pinned tests. Its report records `candidate_kind` as
+`frozen-base` or `frozen-reference`, `score_scope` as
+`trusted-evaluator-validation-only` and `model_score: null`.
 Exit 1 means failed tests, timeout or worker failure; exit 2 is an input or
-operator error. Existing output/candidate destinations are never overwritten.
+operator refusal, including disabled generated scoring and input-integrity errors.
+Existing output/candidate destinations are never overwritten.
 Keep output private: test diagnostics may contain task content and temporary
 paths. Only sanitized measurements and raw-log digests belong in public evidence.
 
@@ -136,8 +167,9 @@ worker, as the original regression tests do. It withholds tests during editing,
 checks their frozen bytes and requires the full expected counts. It is not an
 independent proof against a candidate deliberately tampering with Python's test
 framework or forging its result. Add independent result checking before using
-adversarial model-generated candidates for a trusted scoreboard. This pilot's
-observed base/reference validation has no generated candidate.
+adversarial model-generated candidates for a trusted scoreboard. The mandatory
+pre-launch guard restricts this interpreter to frozen controls; none of the
+observed base/reference validation is a generated candidate.
 
 The remaining T-311 work includes 30 or more suitable tasks beyond this narrow
 Python projection, varied fixes/features/refactors/test additions, sealed held-out
