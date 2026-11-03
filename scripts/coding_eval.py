@@ -256,6 +256,23 @@ def read_regular(path: Path, maximum: int) -> bytes:
     return data
 
 
+def initialize_grading_repository(workspace: Path) -> None:
+    """One candidate-only commit for Git-dependent diagnostics, without source history."""
+    env = {"PATH": "/usr/bin", "LANG": "C.UTF-8", "HOME": str(workspace),
+           "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": "/dev/null",
+           "GIT_TERMINAL_PROMPT": "0", "GIT_AUTHOR_DATE": "2000-01-01T00:00:00+00:00",
+           "GIT_COMMITTER_DATE": "2000-01-01T00:00:00+00:00"}
+    for arguments in (
+        ["init", "--quiet", "--template=", "--initial-branch=evaluation-candidate"],
+        ["add", "--", "scripts"],
+        ["-c", "user.name=Synthetic", "-c", "user.email=synthetic@example.invalid",
+         "-c", "core.hooksPath=/dev/null", "commit", "--quiet", "-m", "Candidate snapshot"],
+    ):
+        subprocess.run(["/usr/bin/git", *arguments], cwd=workspace, env=env, check=True,
+                       stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL, timeout=30)
+
+
 def grade(task: dict, files: dict[str, bytes], output: Path) -> dict:
     new_directory(output)
     hidden = pinned_blob(task["reference"], task["hidden_test"], task["hidden_sha256"])
@@ -268,6 +285,7 @@ def grade(task: dict, files: dict[str, bytes], output: Path) -> dict:
         result_dir.mkdir(mode=0o700)
         for name, content in files.items():
             write_file(workspace / name, content)
+        initialize_grading_repository(workspace)
         write_file(grader / "test.py", hidden)
         write_file(grader / "run.py", DRIVER)
         command = sandbox_command(workspace, grader, result_dir)

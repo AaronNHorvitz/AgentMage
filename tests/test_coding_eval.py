@@ -173,7 +173,8 @@ class CodingEvaluationTests(unittest.TestCase):
                                   stderr=kwargs["stderr"], start_new_session=True)
             real_popen = subprocess.Popen
             with mock.patch.object(evaluation, "pinned_blob", return_value=b"unexecuted fixture"), \
-                    mock.patch.object(evaluation.subprocess, "Popen", side_effect=launch):
+                    mock.patch.object(evaluation.subprocess, "Popen", side_effect=launch), \
+                    mock.patch.object(evaluation, "initialize_grading_repository"):
                 report = evaluation.grade({**task, "expected_tests": 1}, {task["source"]: b"synthetic"}, output)
             self.assertEqual(report["passed"], index == 4)
             self.assertEqual(report["model_attempts"], 0)
@@ -209,6 +210,21 @@ class CodingEvaluationTests(unittest.TestCase):
         self.assertEqual(report["cause"], "timeout")
         self.assertIsNone(report["exit_code"])
         self.assertFalse(late.exists())
+
+    def test_grading_git_metadata_contains_one_candidate_commit_and_no_answers(self):
+        workspace = self.root / "grading"
+        workspace.mkdir()
+        evaluation.write_file(workspace / "scripts/a.py", b"candidate source\n")
+        evaluation.initialize_grading_repository(workspace)
+        def git(*args):
+            return subprocess.run(["/usr/bin/git", *args], cwd=workspace, capture_output=True, check=True).stdout
+        self.assertEqual(git("rev-list", "--count", "HEAD"), b"1\n")
+        self.assertEqual(git("show", "HEAD:scripts/a.py"), b"candidate source\n")
+        self.assertEqual(git("status", "--porcelain"), b"")
+        self.assertEqual(git("remote"), b"")
+        self.assertEqual(git("tag"), b"")
+        with self.assertRaises(subprocess.CalledProcessError):
+            git("cat-file", "-e", evaluation.TASKS[0]["reference"])
 
     def test_output_limit_retains_a_bounded_log_and_fails(self):
         task = evaluation.TASKS[0]

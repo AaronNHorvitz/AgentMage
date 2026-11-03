@@ -34,7 +34,10 @@ checkout or a general repository adapter. Only the declared source file may
 change. All other files must stay byte-identical; additions, deletions, aliases,
 hard links, special files, extra directories and oversize input are refused.
 Candidate bytes are copied through held directory/file descriptors before tests
-run. The agent never executes inside the grader's process or mounts.
+run. The grader then initializes a fresh, read-only Git repository with exactly
+one candidate-only commit for diagnostics that inspect Git. It contains no
+original history, reference objects, tests, remotes or hooks. The editing agent
+has no access to these grading mounts.
 
 Hidden means withheld from the editing workspace. These development regressions
 already exist in public Git history, and their locations/digests are available to
