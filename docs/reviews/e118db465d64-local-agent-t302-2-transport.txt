@@ -1,0 +1,182 @@
+Commit: e118db465d648e3349926045b2e2ee890ad49d48
+Scope: local-agent-t302-2-transport
+
+# Independent review: T-302.2 approved local chat transport
+
+Reviewer: Claude Opus 5.5, separate session, read-only repository access.
+Row: T-302.2 (tier core). Base: 8e931557af05261085821581b82b44d8e594c3e6.
+Review attempt 1 for this row.
+
+## Methods
+
+1. Read `IP-POLICY.md`, Decision 0153, the active queue at the top of `TASKS.md`
+   (including the T-302.2 diff), `docs/evidence/t302-2-local-chat-transport-2026-11-03.md`,
+   `docs/guides/local-chat-transport.md` and the two-line change to
+   `docs/guides/local-chat-protocol.md`.
+2. Read the new code line by line: `platforms/linux-inference/src/local_chat_transport.rs`
+   (755 lines), `platforms/linux-inference/tests/local_chat_transport.rs` (704 lines) and
+   the `lib.rs` change (one `pub mod`). Also read the endpoint parser and the
+   `ChatStream::feed`/`end`/`[DONE]` paths in `local_chat.rs`. These were reviewed
+   under T-302.1 and are unchanged here.
+3. Ran every command in the request myself, with `CARGO_TARGET_DIR=/lane/state/review-target`
+   and the shared build slot.
+4. Wrote eight adversarial probes of my own (R1 to R8 below). They ran against a
+   `git archive` copy of this exact commit extracted to
+   `/lane/state/tmp/review-t302-2/src`, with one extra reviewer-only test file. They were
+   built offline through the build slot in a separate scratch target subdirectory. The
+   repository was not modified: `git status --porcelain` is empty before and after.
+5. Compared every failed test identity from my fast-gate run with the host appendix
+   in `docs/evidence/t301-baseline-failures-2026-10-25.md`.
+
+No third-party product code or documentation was consulted. No GPU, model or
+network service was used.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `git rev-parse e118db46…` / `HEAD` | both `e118db465d648e3349926045b2e2ee890ad49d48` |
+| `git status --porcelain` | empty |
+| `node --version`; `sha256sum` of the shared node | `v24.15.0`; `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c` (matches) |
+| `git diff --check 8e931557… HEAD --` | exit 0 |
+| `git diff --exit-code 8e931557… HEAD -- Cargo.toml Cargo.lock architecture/status-model.json supply-chain` | exit 0 (unchanged) |
+| `sha256sum` of the three Rust files | `3d746ba5…af1`, `8b56eab5…6be`, `e598a098…86a`: all equal the builder's stated tested values |
+| `bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo test --locked --offline -p agentmage-platform-linux-inference --test local_chat_transport` | exit 0; **17 passed, 0 failed, 0 ignored, 0 filtered** (0.44 s) |
+| Proxy child sanity: test binary run with `AGENTMAGE_PROXY_TEST_CHILD=1 HTTP_PROXY=… --exact ambient_proxy_configuration_is_ignored` | 1 passed, 16 filtered. The child test is not vacuous. |
+| `python3 scripts/local_agent_fast_gate.py --base 8e931557… --timeout 600` | **FAIL, exit 1**, 1554 s wall. See below. |
+| `cargo fmt -p agentmage-host -p agentmage-platform-linux-inference -- --check` (direct, lightweight) | exit 0 |
+| `bash /tools/build-slot env CARGO_BUILD_JOBS=2 cargo clippy --locked --offline -p agentmage-host -p agentmage-platform-linux-inference --all-targets -- -D warnings` | exit 0 (312 s including the wait) |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` | exit 0, "Validated 687 Markdown file(s) and all policy invariants." (170 s including the wait) |
+| Reviewer probes R1 to R8 (`cargo test … --test reviewer_adversarial`, scratch copy, build slot) | 8 passed. Observations below. |
+
+Fast-gate detail. The gate selected the seven committed paths. Range whitespace,
+untracked whitespace and Markdown lint (TASKS, evidence and both guides) all exited 0.
+Another lane held the shared reservation, so the gate's `cargo fmt` and `cargo clippy`
+steps each hit the gate's 600 s supervision timeout while waiting (exit 124). Neither
+ran. I therefore ran both separately, above; both exit 0. The gate's test step ran and
+exited 101:
+
+| Package, all targets | Passed | Failed | Ignored | Filtered |
+| --- | --- | --- | --- | --- |
+| Inference (175 lib + 17 transport + 1 + 9) | 202 | 0 | 8 | 0 |
+| Host (512 lib + 15 main + 5 process) | 532 | 53 | 11 | 0 |
+
+The 53 sorted failed identities are byte-identical to the 53 in the host appendix
+(`diff` empty). There is no new or missing failure. All 17 transport tests passed again
+inside the gate. This matches the builder's figures. It is a comparison with a known
+environmental baseline (T-301.1), not a pass.
+
+## Review against the brief
+
+- **Authority refusals.** `chat` and `models` call `authorized()` before any other
+  work (`local_chat_transport.rs:225-230,240,296`). It compares the whole
+  `LocalChatEndpoint` (numeric `SocketAddr` plus API path; derived `PartialEq`). The
+  endpoint is immutable per transport and has no setter. The approval-refusal test
+  and my R4 confirm that no connection reaches either listener on a wrong path, wrong
+  address or pre-cancel.
+- **Key routing and erasure.** `BearerKey` admits only `[A-Za-z0-9-._~+/=]`, 1 to
+  4096 bytes, so header injection is impossible (`:122-133`). It has no Debug,
+  Clone, accessor or serialization. `Zeroizing<String>` erases the full capacity on
+  drop, including on rejection. The header buffer reserves `key + 128` before the key
+  is copied. I recounted the appended bytes: at most key + 82 for a POST with a
+  6-digit Content-Length, so no reallocation can leave a stray copy (`:353-364`).
+  The probe path builds its transports with `None` (`:412-419`). R4 shows a probe
+  request has no `Authorization` header, and a keyed transport's key is never sent
+  under another endpoint's approval.
+- **Discovery.** `LocalProbeApproval` accepts 1 to 8 explicit candidates. Results carry
+  only the endpoint and the listing result. Probes use one shared total budget.
+  Cancellation aborts discovery.
+- **Bounded parsing.** The header is limited to 16 KiB of status line plus headers.
+  Each header line must be visible ASCII or tab, ended by CRLF. Header names must be
+  tokens, so whitespace before the colon or folded lines are refused.
+  Duplicate framing/media headers, Content-Length together with chunked, non-identity
+  encodings and the wrong media type are refused. The total wire is capped at 5 MiB,
+  counted in `fill` before each read. Bodies have per-operation ceilings. Chunk sizes
+  use checked arithmetic, with no extensions and no trailers. The model list allows at
+  most 256 unique IDs of at most 256 bytes without Cc controls. Everything is checked
+  before allocation of any declared size.
+- **Physical-EOF completion.** `body()` requires `fill()` to return EOF after every
+  framing (`:748-753`). `chat` succeeds only after `codec.end()`, then `wire.check()`,
+  then a recorded finish (`:319-321`). R6 (`[DONE]` text inside content, then a finish
+  with no marker) returns `Chat(Incomplete)`. R8 (one byte arriving 50 ms after a
+  complete Content-Length body) returns `Http`.
+- **Timeouts and cancellation.** Every read and write timeout is
+  min(total remaining, idle remaining, 50 ms). Zero timeouts are excluded. Interrupted,
+  WouldBlock and TimedOut loop back to the deadline and cancellation check. Writes
+  refresh idle progress. R2: a server that never reads a 200 KiB request gives
+  `Timeout` at 311 ms with idle 300 ms. R3: a slow drip every 20 ms with idle 200 ms
+  and total 700 ms gives `Timeout` at 702 ms, so total time is bounded independently of
+  progress. The callback limitation is stated plainly in the guide and the doc comments.
+- **Proxies and redirects.** `std::net::TcpStream::connect_timeout` connects to a numeric
+  address. There are no environment reads (no `std::env` in the module), no DNS, no
+  cookie handling and no retry. A 3xx status maps to `Redirect`, and `Location` is never
+  parsed. The test asserts the redirect target listener got no connection.
+- **Untrusted output and errors.** The callback gets `&str` only. Error codes and
+  messages are fixed `&'static str`s, and the redirect/status tests check that no
+  upstream content appears. R5: an early 401, sent before the request is read, still
+  reports `Authentication`.
+- **Evidence honesty.** The evidence and guide label the servers as synthetic, make no
+  model or inference claim and keep T-302.2 open. The test totals, failure comparison,
+  validator count and source hashes all reproduced. No private path, username,
+  hostname, credential or product branding was added. The diff mentions "OpenAI-style"
+  only in an unchanged, pre-existing T-302 row, as a descriptive compatibility term.
+  No dependency was added. The Apache-2.0 SPDX header matches the current package
+  metadata, and import-wide licence work remains with the inventory.
+- **Delivery.** There is one level of sub-row. T-302.2 ends in a running library with
+  measured actual-socket contract tests. It is not a plans-only row.
+
+## Findings
+
+No critical, high or medium finding.
+
+**L1 (low): model IDs may contain bidirectional-override and zero-width characters.**
+`platforms/linux-inference/src/local_chat_transport.rs:270-273` rejects only
+`char::is_control` (category Cc). Reproduction R1: a listing of `"\u202Egnp.exe"` and
+`"a\u200Bb"` is returned as `Ok([...])`. (An ESC control is correctly refused with
+`Http`.) An endpoint can therefore supply model names that display differently from
+their bytes in a model picker or CLI. The guide states a neutralization obligation for
+streamed text only. Fix: also reject Unicode format characters (Cf, including
+U+202A to U+202E, U+2066 to U+2069 and U+200B to U+200F), or extend the guide's
+terminal-neutralization obligation explicitly to model IDs, with a test.
+
+**L2 (low): approval is a freely mintable marker; the boundary between discovery and
+conversation is a convention.** `LocalChatApproval::for_endpoint` is public and `Clone`
+(`:139-148`). Any in-process code holding an `EndpointProbe.endpoint` can mint
+conversation approval for it. This is disclosed: the guide and evidence call these
+in-process contracts, not authentication, and assign enforcement to T-302.3. Carry
+this into T-302.3 as an acceptance check. Approval should be minted only by the
+authenticated settings path, and that API should have a test proving a probe result
+cannot become chat permission without an explicit authenticated choice.
+
+**L3 (low): residual loopback-port trust is undocumented.** The key goes to whatever
+process currently holds the approved loopback port (`:334-336`). If the intended
+server is stopped, another local account can bind that port and receive the bearer key
+on the next call. This is inherent to plain loopback HTTP and within the accepted scope.
+Fix: add one sentence on this residual risk to the guide's "Configuration and
+authority" section, and recheck it when T-302.3 or T-308 choose the service setup.
+
+**L4 (low): an exhausted probe budget discards earlier candidates' results.**
+`:407-411` returns `Err(Timeout)` for the whole discovery once the shared budget is gone
+before a later candidate. Results already gathered, including successes, are dropped.
+Yet when the final candidate itself runs out of time, its timeout is kept as a
+per-candidate result. Fix: push a `Timeout` result for each remaining candidate and
+return the partial list, or document the all-or-nothing behaviour.
+
+Observations for T-302.4, not findings: the 50 ms connect attempt has no retry, so an
+overloaded server whose accept backlog drops the SYN produces `Timeout`. Success also
+requires the server to honour `Connection: close` and echo the exact model string. The
+real-server run should confirm both. HTTP/1.0 with chunked framing is accepted (R7);
+this is harmless.
+
+## Per-row result
+
+T-302.2: **PASS** for exact commit `e118db465d648e3349926045b2e2ee890ad49d48`. The
+"done when" is met: credential-owning transport, first-run detection with test and
+model listing, strict time and byte limits, cancellation, no redirects or proxies,
+fake-server contract tests and clear content-free errors. There is no open high or
+medium finding. L1 to L4 are backlog (L2 is a T-302.3 acceptance input). This verdict
+covers the library component only. It establishes no authenticated API, real model
+conversation, agent loop or coding admission, and it does not close parent T-302.
+No certification, compliance or legal clearance is claimed.
+
+Verdict: PASS
