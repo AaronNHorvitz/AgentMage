@@ -1,0 +1,171 @@
+Commit: 15cfd9c02b1da63e2d088cbf2a0c00d2bd908083
+Scope: local-agent-t302-4-real-chat
+
+# Independent core review: T-302.4 real local chat and parent T-302
+
+Reviewer: Claude Opus 5.5, separate read-only session. Base `dc27bad3b019a89fedb82b413411b392ddf87fcb`.
+Review attempt 1 for T-302.4 and parent T-302. I did not read the builder's private
+`review-draft.md` in lane state. I did not substitute any builder verdict for my own.
+
+## Methods
+
+- Read IP-POLICY.md, Decision 0153, the top of TASKS.md (rows T-302, T-302.1 to T-302.4) and the request.
+- Read the full diff: `scripts/local_chat_smoke.py`, `tests/test_local_chat_smoke.py`,
+  `docs/guides/local-chat-measurement.md`, `docs/evidence/t302-4-real-local-chat-2026-11-03.md`, and the TASKS.md line.
+- Read the private launcher `/lane/state/tmp/t302-real/run.py` and the helpers it calls
+  (`scripts/coding_model_lab.py` `verify_file` and `verify_runtime`). Read the Rust delta decoder
+  (`platforms/linux-inference/src/local_chat.rs:370-420`) to see how real server deltas map to API events.
+- Inspected both original run directories (`20261103T090635Z` success, `20261103T090543Z` failure):
+  summary, report, events, client/model command, model/API/client logs, props. Recomputed hashes.
+- Ran adversarial parser probes against the client in a temporary directory outside the repository
+  (removed afterwards; `-B` so no bytecode was written).
+- **No real-model replay.** My assignment forbids reviewer GPU use and says to read the builder's GPU
+  evidence; the request offers the replay only as optional. The verdict rests on the retained original artifacts.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `node --version`; `sha256sum` of the lane node binary | v24.15.0; `d1de76d8…bd932c` (matches) |
+| `git rev-parse HEAD` / `git rev-parse 15cfd9c0…` | `15cfd9c02b1da63e2d088cbf2a0c00d2bd908083` both |
+| `git status --porcelain` (start and end) | empty |
+| `git diff --check dc27bad3… HEAD --` | exit 0 |
+| `git diff --stat dc27bad3… HEAD --` | 5 files, +733/−1: TASKS.md, evidence, guide, script, test |
+| `git diff --exit-code dc27bad3… HEAD -- Cargo.toml Cargo.lock platforms shells kernel architecture/status-model.json supply-chain` | exit 0 |
+| `git diff --stat 1e73f76d 15cfd9c0 -- '*.rs' Cargo.toml Cargo.lock` | empty (no Rust change since the reviewed API commit) |
+| `sha256sum scripts/local_chat_smoke.py tests/test_local_chat_smoke.py` | `da8d84a1…a4458` / `5075bc4e…0ea0d` (match the request and evidence) |
+| `python3 scripts/local_agent_fast_gate.py --base dc27bad3… --timeout 600` | FAST GATE: PASS; markdownlint 3 files, 0 issues; Python lint PASS; 13 tests OK in 0.514 s |
+| `CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo test --locked --offline -p agentmage-platform-linux-inference --test local_chat_api` | 15 passed, 0 failed, 0 ignored, 0 measured, 0 filtered, 4.15 s |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` | "Validated 691 Markdown file(s) and all policy invariants." exit 0 |
+| `sha256sum` of success `record/events.ndjson`, `record/report.json`, `summary.json`, `model.log`, `props.json` | `fb88eb37…`, `2d3635c8…`, `10ec9087…`, `c4465fc4…`, `458433b8…`; all match the evidence table |
+| `sha256sum /lane/state/tmp/t302-real/run.py` | `e292dac1…2d5d2a684` (matches) |
+| `sha256sum target/debug/agentmage-local-api` | `21ba7c5f…30257`, mtime 03:08:05; **differs** from the recorded `dcf66344…` (see L1) |
+| Scan of all retained logs/JSON/records for 48–64-character hex values | none found |
+| `pgrep` for model server, API or launcher processes | none left running; key, token and socket files absent from both run directories |
+
+Client-script mtime is 03:04:59 local time, which is earlier than both reservations (03:05:43 and 03:06:35).
+That is consistent with the committed bytes having been the measured client.
+
+### Artifact cross-checks
+
+- The success summary records model `4cc57c0f…`, runtime server `f7c93f0d…`, ready 30.014 s, GPU sample 17416 MiB,
+  client exit 0, elapsed 36.864 s and `owned_children_reaped: true`. All of these match the evidence.
+  36.864/60 = 0.614 and (36.864+13.407)/60 = 0.838 GPU-reservation minutes, as claimed.
+- `model-command.json`: bubblewrap `--unshare-all --disable-userns --clearenv --cap-drop ALL`. Model, runtime and
+  driver inputs are read-only; no repository or home directory is mounted; `--offline`; the API listens on a unix socket
+  with an API-key file. Settings: ctx 8192, parallel 1, threads 4/4, http threads 2, batch 256/128, q8_0 K/V,
+  flash-attn on, temp 0, seed 42, reasoning_strength medium. This matches the evidence. The props file reports
+  n_ctx 8192, temperature 0.0, seed 42, alias `muse` and build b10423.
+- Events: one text event followed by `complete/stop` per turn, matching the published JSONL byte for byte.
+  The report has two turns, `settings_revoked: true` and `tokens: null`.
+- Failed attempt: the model log stops during tensor load, the client exits 1, the report is FAIL with zero turns
+  and `settings_revoked: true`, and children were reaped. The failure is retained and honestly described.
+  The model command is identical apart from the run directory. The current launcher waits for `/health` 200 + `status: ok`.
+
+### Client controls (reviewed against the request's list)
+
+- **Explicit approval:** `--approve-conversations` is required. Status must be version 1 and neither configured
+  nor busy before any settings change. A test covers refusal of a preconfigured instance.
+- **Token separation:** the control token is used only for PUT/DELETE `/v1/settings`; the client token for
+  status, models, chat and cancel. The real-socket fixture test checks this per request header.
+- **Credential handling:** only key-file paths appear in arguments; `client-command.json` shows paths, not values.
+  Credential files must be `O_NOFOLLOW`, regular, owned, `nlink==1`, mode `&077==0` and size-bounded.
+  Tokens must match `[0-9a-f]{64}` exactly.
+- **Outputs:** a new directory with mode 0700 (refuses existing), files created `O_EXCL|O_NOFOLLOW` with mode 0600.
+  `json.dumps` escapes control characters in the events file, which I verified with an OSC escape probe.
+- **Stream success rule:** success requires an exact `{"type":"complete","finish":"stop"}`, then EOF.
+  Partial, error, length, trailing, truncated, non-string or blank text, oversize and deadline all fail.
+  My probes confirmed refusal of a mixed text/complete duplicate-key object, NaN and deep nesting
+  (nesting raises RecursionError; see L4).
+- **History:** the second request carries the first actual answer as an assistant message. The real-socket test
+  asserts message counts [1, 3] and the assistant content. The model log shows a second prompt of 88 tokens
+  against 63 for the first, which is consistent with history being included.
+- **Diagnostics:** `main` prints only fixed strings, and `report.error` is fixed. Model text appears only in the
+  private events file.
+- **Cleanup:** cancel, wait for idle and DELETE run in `finally` once a choice is attempted. A revocation failure
+  forces FAIL (tested). Disclosures are present: a forced kill leaves settings until the API is stopped, and
+  Python credential erasure is not guaranteed.
+
+### Public hygiene and claims
+
+The committed diff has no private host path, username, hostname or credential. `/tools/build-slot` and
+`/tools/gpu-slot` already appear in committed docs. The guide uses placeholders. No other agent product is named
+and nothing is used as branding. "Azure" is literal model output, shown as data. The evidence labels fixture tests
+as fixtures. It disclaims coding quality, determinism, peak GPU memory and active GPU time. It does not claim the
+32K profile and makes no release or owner claim. There is no T-311 or evaluation content. The commit contains no
+held-out tasks, hidden tests or prompt tuning.
+
+## Findings
+
+No critical, high or medium findings. All of the following are low and go to the backlog.
+
+**L1 (low, evidence provenance): the measured API binary cannot be re-identified.**
+Location: `docs/evidence/t302-4-real-local-chat-2026-11-03.md:118`; private `run.py` (`binary = Path('target/debug/agentmage-local-api')`).
+
+- The run recorded API executable `dcf66344…`. At 03:08 the builder's later `cargo test` (`api-contracts.log`:
+  "Compiling agentmage-platform-linux-inference") relinked `target/debug/agentmage-local-api`, which now hashes to
+  `21ba7c5f…`. The measured bytes are gone.
+- The launcher records `source_commit` (`dc27bad3`, which does not contain the measured client). It records neither
+  tree cleanliness, the build command nor the client hash. "Unchanged already reviewed API binary" therefore rests on
+  the empty Rust diff since `1e73f76d`, not on the artifact.
+- The request's replay precondition ("inspect its hash against the public evidence") would now fail.
+- No correctness effect, because the Rust source is unchanged.
+- Fix: build the API from the recorded commit into a dedicated target directory, after an empty
+  `git status --porcelain`. Copy the binary into the run directory, or record its build command and hash. Add the
+  client script hash and tree state to `summary.json`.
+
+**L2 (low, measurement honesty): the first-text time hides reasoning generation.**
+Location: `docs/evidence/t302-4-real-local-chat-2026-11-03.md:69` and `:75`; `platforms/linux-inference/src/local_chat.rs:403`.
+
+- The model log shows turn 1 at 63 prompt tokens and 155 generated tokens (about 4.0 s of eval). The visible answer
+  is 5 bytes. The decoder forwards only `delta.content`, so reasoning deltas are dropped silently.
+- The 5.902 s first-text time is therefore mostly hidden reasoning, during which the API emitted nothing.
+  "Upstream token usage: Unavailable" is true for the API, but server-reported counts exist in the private log.
+- Fix: in the next evidence update, state the server-diagnostic token counts (63/155, 88/5) and that first-text
+  latency includes undelivered reasoning. At T-303/T-309, decide whether reasoning progress or keepalive events are
+  needed so long reasoning does not trip client idle timeouts.
+
+**L3 (low, coverage): incremental visible streaming was not observed on the real model.**
+
+- Each real turn produced exactly one text fragment. Incremental delivery rests on the synthetic socket contracts.
+  The evidence discloses this (line 55 onward).
+- The real run does show that the decoder tolerates real server streaming framing, including the many reasoning
+  deltas it ignored.
+- Fix: use a prompt with a multi-token visible answer in a later measurement, for example the T-311 baseline.
+
+**L4 (low, client hardening; not reachable through the reviewed API serializer).**
+Location: `scripts/local_chat_smoke.py:115`, `:188`, `:202`, `:63`.
+
+- `json.loads` accepts duplicate keys, last one wins: `{"type":"complete","finish":"length","finish":"stop"}` was
+  accepted as a normal stop in my probe. Non-`ValueError` failures (RecursionError from deep nesting, AttributeError
+  from a non-object status) escape the handled set. They still save a FAIL report when raised in the main body,
+  but they print a traceback (no secrets). An AttributeError inside the cleanup block would skip writing the report.
+- The 130 s per-read socket timeout plus a between-lines deadline check lets a slow-drip single line overrun the
+  130 s deadline. The API's own bounds limit this.
+- Fix: use `object_pairs_hook` to reject duplicate keys, check `isinstance(..., dict)` on JSON replies, catch
+  `Exception` in the measurement and cleanup paths, and compute the socket timeout from the remaining deadline.
+
+**L5 (low, private measurement infrastructure): the model sandbox can see API tokens and records.**
+Location: private `run.py` / `model-command.json` `--bind <run-dir> /run/agentmage`.
+
+- The whole run directory is bound read-write into the model sandbox. That directory later receives
+  `auth/control.token`, `auth/client.token` and `record/`. A compromised runtime could read the API tokens or alter
+  records while it runs. Its network namespace is unshared, so it has no path to the API.
+- This is uncommitted measurement infrastructure with a hash-verified runtime, so it is not a product boundary.
+- Fix: bind only a dedicated subdirectory holding the model key and socket.
+
+Earlier component lows (T-302.1 L1/L4–L8, T-302.2 L1/L3/L4, T-302.3 L1–L4) remain at T-309 as recorded.
+
+## Per-row result
+
+- **T-302.4: PASS.** One real streaming two-turn conversation went through the actual `agentmage-local-api`
+  process, using the existing hash-verified local model under the GPU reservation. It is recorded with raw events,
+  timings, settings revocation and process cleanup. The initial failure is retained. Measurements match the retained
+  artifacts; labelling is honest; no model was downloaded; no high or medium finding is open. L1–L5 go to the backlog.
+- **Parent T-302 (minimum engine connection only): PASS.** The configurable endpoint/key and protocol (T-302.1 PASS),
+  the credential-owning transport with model listing and streaming (T-302.2 PASS), the versioned authenticated local
+  HTTP API (T-302.3 PASS, Rust unchanged since, 15/0 rerun here) and this real recorded GPU-slot run (T-302.4) cover
+  the row's "done when". UI is deferred under Decision 0153. One level of sub-rows, each running and measured.
+  This verdict makes no claim about coding quality, model admission, task CLI/MCP, durable runs or release.
+
+Verdict: PASS
