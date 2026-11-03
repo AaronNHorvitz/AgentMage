@@ -2,7 +2,7 @@
 
 T-311 requires at least 30 real repository tasks, a fixed development/held-out
 split and a current-harness model baseline before tuning. This executable
-collection has **15 development tasks only**, with 71 reference regressions: 14
+collection has **20 development tasks only**, with 77 reference regressions: 19
 Python tooling tasks and one Rust contract bug fix (a regression exercising 640
 path cases).
 It validates scoring machinery; it is not the complete suite, a model baseline
@@ -20,10 +20,15 @@ threshold or source pin changes. It preserves every original pilot definition by
 including statements, base/reference/input digests and the 38-test requirement.
 Its Python collection fingerprint remains
 `72442a4cf406abd83dc7684a5ef225474b55ee2cbc4cb6e5d34e6a840f0da618`.
-The current `coding-development-v6` appends one Rust task without changing any
-Python task dictionary, hidden input, selection or threshold. The combined
+The `coding-development-v6` revision appends one Rust task without changing any
+Python task dictionary, hidden input, selection or threshold. Its combined
 fingerprint is
 `3d2b07a1336133a62b49c07522d1786017e241d46f497285d18c8e391c73f88a`.
+The current `coding-development-v7` appends five original Python fixes, preserving
+all 15 accepted definitions (including the Rust task) unchanged. It has fingerprint
+`cd5fc51018e53364df2f26eaf91ea29a46805e19a6e7e069370372bd98cb8e46`.
+The [v7 record](../evidence/t311-5-development-collection-2026-11-03.md)
+records scope and the real control measurements.
 The first-three-task fingerprint remains
 `d5f5e365924ffea8c6b46c50c28d00e116c01f69de57ac0a9672ffa50e05e3c5`.
 No agent attempt informed the selection or statements. The
@@ -65,12 +70,22 @@ does not relicense the historical inputs or certify import readiness.
 | dev-012 | Conservatively resolve raw, explicit and macro module references | `28dd0e4435214e5e6d488912792d5986e4b4b774` | `41e3f432df95b290e3a079193ee04fb3e942a7cf` |
 | dev-013 | Diagnose trusted native launch prerequisites | `eef257aadc077a259b676e0b24232013162ac997` | `50f0dbb9728a68657c404f0f00cd53feef5e192a` |
 | dev-014 | Bind complete committed worker source trees | `f38f9f85fdbc02c1f7d37b0b89e5fb2bef2ba491` | `c16884163206ebacfa8885d3f7416e684c44eb7c` |
+| dev-015 | Require resource/network trial outcomes | `ac6985c0877e8e5921bf592ded56595199e0e146` | `a89cc70e18043e88f1eb8fcc978d87cf70cd0093` |
+| dev-016 | Count uncached usage probes, including context errors | `dcb2c824e93ac10e0732653c0369b1e1ca072a42` | `0d132ecd6cdd6ffae37e956d5e5d1cf925b579bb` |
+| dev-017 | Restore archive modes independently of umask | `360d814bbb19ff3114cf514cba0a7c326888e0bc` | `f0c5ba524372ca8537640f5fd18aeaa0050cb783` |
+| dev-018 | Redact checkout logs and refuse other private paths | `e41056d023c81aff372f5acd17cffd84eb9ed30a` | `cff66354016e5d2bb058a277d1150c2033c73eb3` |
+| dev-019 | Preserve package permissions without archive ownership | `c666a1da7fac9250f1abc4389bf741ecaf1fdf9e` | `dc99587fa1940516aaf32de88ac4373df9cb47bc` |
 
-[`coding_eval.py`](../../scripts/coding_eval.py) pins the statements, editable
+[`coding_eval.py`](../../scripts/coding_eval.py) and the append-only
+[`coding_eval_collection.py`](../../scripts/coding_eval_collection.py) pin the statements, editable
 path, base and reference file digests, hidden test digest, complete projection
 digest, optional original-method selection and exact test counts. Its complete
 and legacy task-definition fingerprints are checked by
-[`test_coding_eval.py`](../../tests/test_coding_eval.py). Expansion adds new tasks;
+[`test_coding_eval.py`](../../tests/test_coding_eval.py),
+[`test_coding_eval_rust.py`](../../tests/test_coding_eval_rust.py) and
+[`test_coding_eval_collection.py`](../../tests/test_coding_eval_collection.py).
+Reports bind the append-only module digest and verification summaries bind the
+complete collection fingerprint. Expansion adds new tasks;
 it must not change these statements, hidden tests, pins or thresholds. The
 historical fixes validate the evaluator, never count as model attempts.
 
@@ -135,6 +150,13 @@ a later pinned repository commit; neither is extracted, rewritten or exposed by
 `prepare`. One integration test means one test, not 640 independent tasks. The
 statement specifies the public error variants, codes, validation order, Unicode
 classes, encoded syntax and shared construction/deserialization behavior.
+
+The frozen corpus does **not** grade every statement clause: it has no trailing
+dot/space, invisible-format, `%2f`/`%5c` or uppercase-encoding cases, and its
+serialized-input cases cover invalid UTF-8 rather than revalidation of the new
+rules. A passing control proves only those historical regressions. Independent
+review T-311.4 L1 requires any future generated report to label this scope before
+scoring is enabled. Do not change these hidden inputs to fill the coverage gaps.
 
 The editing projection contains 34 original Cargo manifest, lock and Rust source
 files (501,816 bytes), without Git history, scripts, tests or corpus. The original

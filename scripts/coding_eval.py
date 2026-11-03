@@ -26,12 +26,13 @@ import tempfile
 import time
 
 if __package__:
-    from . import coding_eval_rust
+    from . import coding_eval_collection, coding_eval_rust
 else:
+    import coding_eval_collection
     import coding_eval_rust
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "coding-development-v6"
+VERSION = "coding-development-v7"
 MAX_FILE = 1024 * 1024
 MAX_TREE = 16 * MAX_FILE
 TIMEOUT = 90
@@ -867,6 +868,7 @@ def grade(task: dict, files: dict[str, bytes], output: Path) -> dict:
               "fixture_sha256": task.get("fixture_sha256"),
               "test_names": task.get("test_names"),
               "evaluator_sha256": sha(Path(__file__).read_bytes()),
+              "collection_module_sha256": sha(Path(coding_eval_collection.__file__).read_bytes()),
               "rust_adapter_sha256": sha(Path(coding_eval_rust.__file__).read_bytes()),
               "task_sha256": sha(json.dumps(task, sort_keys=True, separators=(",", ":")).encode()),
               "candidate_sha256": sha(files[task["source"]]), "passed": passed,
@@ -883,7 +885,7 @@ def grade(task: dict, files: dict[str, bytes], output: Path) -> dict:
 
 def collection() -> list[dict]:
     """Keep the accepted Python task dictionaries intact when adding languages."""
-    return TASKS + coding_eval_rust.TASKS
+    return TASKS + coding_eval_collection.TASKS + coding_eval_rust.TASKS
 
 
 def verify(output: Path) -> dict:
@@ -899,6 +901,7 @@ def verify(output: Path) -> dict:
         rows.append({"task": task["id"], "base": base, "reference": reference,
                      "valid": not base["passed"] and base["cause"] == "test_failure" and reference["passed"]})
     summary = {"version": VERSION, "kind": "evaluator-validation-only", "tasks": rows,
+               "collection_sha256": sha(json.dumps(collection(), sort_keys=True, separators=(",", ":")).encode()),
                "passed": all(row["valid"] for row in rows), "model_score": None,
                "input_refused": any(case["cause"] == "input_integrity" for row in rows
                                     for case in (row["base"], row["reference"]))}
