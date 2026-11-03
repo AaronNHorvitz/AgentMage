@@ -34,6 +34,9 @@ mod native_runtime;
 /// Effect-free protocol components for the configurable local chat connection.
 pub mod local_chat;
 
+/// Explicitly approved, credential-owning loopback chat transport.
+pub mod local_chat_transport;
+
 pub use native_resource_admission::NativeDevelopmentResourcePolicy;
 
 pub use docker_guard::{

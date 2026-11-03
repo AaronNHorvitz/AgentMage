@@ -2,8 +2,8 @@
 
 T-302.1 supplies an effect-free codec in
 `platforms/linux-inference/src/local_chat.rs`. It is a building block, not a
-running chat application. T-302.2 supplies authorized transport; T-302.3 supplies
-the versioned local API and UI; T-302.4 records a real model conversation.
+running chat application. T-302.2 supplies [authorized transport](local-chat-transport.md); T-302.3 supplies
+the versioned local API (desktop UI is deferred under Decision 0153); T-302.4 records a real model conversation.
 
 ## Configuration and requests
 
