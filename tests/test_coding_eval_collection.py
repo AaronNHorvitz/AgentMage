@@ -41,6 +41,28 @@ class CodingCollectionTests(unittest.TestCase):
                         for item in ast.literal_eval(node.value)]
             self.assertEqual(current, previous)
 
+    def test_v9_statement_repair_preserves_all_other_frozen_inputs(self):
+        tree = ast.parse(evaluation.git(
+            "show", "57ea7ee64ec6ef218e411945e390734f494f9bf9:scripts/coding_eval_collection.py"))
+        previous = [item for node in tree.body if isinstance(node, ast.Assign)
+                    for target in node.targets if isinstance(target, ast.Name)
+                    and target.id in {"TASKS", "ADDITIONAL_TASKS"}
+                    for item in ast.literal_eval(node.value)]
+        self.assertEqual(len(previous), len(collection.TASKS))
+        changed = []
+        for before, after in zip(previous, collection.TASKS):
+            with self.subTest(task=before["id"]):
+                self.assertEqual({k: v for k, v in before.items() if k != "statement"},
+                                 {k: v for k, v in after.items() if k != "statement"})
+                if before["statement"] != after["statement"]:
+                    changed.append(before["id"])
+        self.assertEqual(changed, ["dev-021", "dev-022", "dev-029"])
+        # Only the three pre-measurement statements change the complete identity.
+        old_tasks = evaluation.TASKS + previous + rust.TASKS
+        self.assertEqual(evaluation.sha(json.dumps(
+            old_tasks, sort_keys=True, separators=(",", ":")).encode()),
+            "91f1eecfa91129f2f8392363aaff0e8f49243aa761947e69d5ec1452d7b4b04d")
+
     def test_new_selections_pin_complete_original_methods_and_all_inputs(self):
         self.assertEqual([t["id"] for t in collection.TASKS], [f"dev-{n:03}" for n in range(15, 30)])
         self.assertEqual(sum(t["expected_tests"] for t in collection.TASKS), 18)
@@ -74,7 +96,7 @@ class CodingCollectionTests(unittest.TestCase):
         self.assertEqual(len({(t["base"], t["source"]) for t in tasks}), 30)
         self.assertEqual(len({t["reference"] for t in collection.ADDITIONAL_TASKS}), 10)
         fingerprint = evaluation.sha(json.dumps(tasks, sort_keys=True, separators=(",", ":")).encode())
-        self.assertEqual(fingerprint, "91f1eecfa91129f2f8392363aaff0e8f49243aa761947e69d5ec1452d7b4b04d")
+        self.assertEqual(fingerprint, "0c2a0624df93085540f61c4677260490a9810a0325efd6bcb75db0dce1461570")
 
     def test_new_generated_candidate_and_task_mutation_never_reach_worker(self):
         task = collection.TASKS[0]
@@ -170,7 +192,7 @@ class CodingCollectionTests(unittest.TestCase):
         result = subprocess.run(["/usr/bin/python3", str(evaluation.ROOT / "scripts/coding_eval.py"), "list"],
                                 capture_output=True, timeout=30, check=True)
         public = json.loads(result.stdout)
-        self.assertEqual(public["version"], "coding-development-v8")
+        self.assertEqual(public["version"], "coding-development-v9")
         self.assertEqual(len(public["tasks"]), 30)
         for task in public["tasks"]:
             self.assertEqual(set(task), {"id", "split", "base", "source", "statement"})

@@ -32,7 +32,7 @@ class RustCodingEvaluationTests(unittest.TestCase):
         self.assertEqual(sum(t["expected_tests"] for t in evaluation.collection()), 89)
         self.assertEqual({t["split"] for t in evaluation.collection()}, {"development"})
         digest = evaluation.sha(json.dumps(evaluation.collection(), sort_keys=True, separators=(",", ":")).encode())
-        self.assertEqual(digest, "91f1eecfa91129f2f8392363aaff0e8f49243aa761947e69d5ec1452d7b4b04d")
+        self.assertEqual(digest, "0c2a0624df93085540f61c4677260490a9810a0325efd6bcb75db0dce1461570")
 
     def test_prepare_withholds_hidden_regression_corpus_and_git_history(self):
         files = evaluation.projection(self.task)

@@ -1,0 +1,245 @@
+Commit: 57ea7ee64ec6ef218e411945e390734f494f9bf9
+Scope: local-coding-t311-6-development-collection
+
+# Independent review: T-311.6 thirty-task frozen development collection
+
+Tier: core. Row: T-311.6, attempt 1. Base: `a5b0a4eba4960e004841b5bbaeeb016163ac2218`.
+Reviewer: separate read-only Claude Opus 5.5 session; no shared context with the builder.
+The repository was not modified (`git status --porcelain` empty before and after all runs).
+Review-owned outputs were written only under `/lane/state/tmp/t311-6-review-Otauxn/`.
+The checkout root is written `<repo>` below.
+
+## Inputs read
+
+- IP-POLICY.md; Decision 0153; TASKS.md rows T-311 and T-311.1 to T-311.6; the T-311.5
+  review (its L1 to L3 low findings).
+- The full eight-path diff `a5b0a4eb..57ea7ee6`: TASKS.md, the new evidence record, the guide,
+  `scripts/coding_eval.py` (VERSION only), `scripts/coding_eval_collection.py` (append-only
+  `ADDITIONAL_TASKS`, then `TASKS += ADDITIONAL_TASKS`) and three test modules.
+- For each of the ten new tasks, I read the base/reference history and the selected hidden methods
+  at the reference revision, but only after the blind statement attempts described below.
+- The builder's private raw material in `/lane/state/tmp/t311-6-collection/`.
+
+No other product's code or documentation was read; no patent was searched or cited.
+
+## Methods and exact commands
+
+All commands were run from `<repo>`.
+
+```sh
+export PATH="$PWD/target/local-agent-tools:$PATH"
+node --version                       # v24.15.0
+sha256sum target/local-agent-tools/node
+# d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches request)
+git rev-parse HEAD                   # 57ea7ee64ec6ef218e411945e390734f494f9bf9
+git status --porcelain               # empty
+git diff --stat a5b0a4eb... 57ea7ee6...   # 8 files, 599 insertions, 17 deletions
+review_root=/lane/state/tmp/t311-6-review-Otauxn
+export CARGO_TARGET_DIR=/lane/state/review-target
+bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base a5b0a4eba4960e004841b5bbaeeb016163ac2218 --timeout 600 > "$review_root/fast-gate.log" 2>&1   # exit 0
+bash /tools/build-slot python3 scripts/coding_eval.py verify --output "$review_root/verify" > "$review_root/verify.log" 2>&1   # exit 0
+bash /tools/build-slot python3 scripts/validate_docs.py > "$review_root/documentation.log" 2>&1   # exit 0
+python3 scripts/coding_eval.py list > "$review_root/list.json"   # exit 0
+git status --porcelain               # empty
+```
+
+The private original Node path `/lane/state/tooling/node-v24.15.0-linux-x64/bin/node` is still
+absent in this lane. The checkout copy under the ignored `target/local-agent-tools/` is present,
+byte-identical to the stated checksum, and ran markdownlint. The previous lane gap is resolved.
+
+### Results of the required runs
+
+- **Fast gate: PASS.** Eight paths and five commands: `git diff --check`, untracked lint,
+  markdownlint-cli2 0.23.2 ("Linting: 3 files", "Summary: 0 issues"), Python lint, and
+  `Ran 57 tests ... OK`. The unit command timer was 19.94 s.
+- **Verifier: exit 0.** Summary values:
+  - `version=coding-development-v8`, `passed=true`, `input_refused=false`, `model_score=null`.
+  - `collection_sha256` is `91f1eecfa91129f2f8392363aaff0e8f49243aa761947e69d5ec1452d7b4b04d`.
+  - 30 rows, all valid. Every base has cause `test_failure`; every reference has cause `none`.
+  - 89 reference tests and 89 base tests, 178 invocations in total.
+  - No skip, expected failure, unexpected success, truncation, infrastructure or input error.
+  - Every case has `model_attempts=0` and `gpu_minutes=0`, with null tokens and null model score.
+  - All 60 cases bind evaluator `b4898338d065…` and task module `ec29234fe7e8…`.
+  - The summed case timers are 39.954 s. The dev-003 race did not occur.
+
+  New-task base failures/errors match the evidence table. They are dev-020 1/0, dev-021 to dev-025
+  errors, dev-026 1/0 and dev-027 to dev-029 errors, with reference counts 1,1,1,1,2,1,2,1,1,1.
+- **Policy validator: PASS.** "Validated 701 Markdown file(s) and all policy invariants."
+- **list:** v8, 30 tasks. Each has exactly `id`, `split`, `base`, `source` and `statement`, with no
+  hidden test, reference or digest.
+- **Leftovers:** only the four pre-existing `agentmage-eval-*` trees named in the request remain.
+  My runs, including the statement-only gradings, left none.
+
+### Pins, identity and history (own checks)
+
+- Committed hashes of all six tested sources match the evidence table. All nine private artifact
+  hashes listed in the evidence (`probe/summary.json`, `unit.log`, `verify/summary.json`,
+  `verification-audit.json`, `fast-gate.log`, both source snapshots, `definition-check.json`,
+  `documentation.log`) match the files in the builder directory.
+- For every new task, `reference^ == base`; each reference is a single historical commit that
+  changes the declared source and adds the selected method(s). There are ten distinct references.
+  None reuses a base, reference or selected method of the 20 accepted tasks. Sums: 12 new methods,
+  89 total.
+- Several references also touch other scripts:
+  - `coding_harness.py` (dev-021, dev-022, dev-029);
+  - `coding_harness_acceptance.py` (dev-025);
+  - `remaining_plan_blocker_audit.py` (dev-028);
+  - `sprint_50_evidence.py` (dev-026).
+
+  The reference control replaces only the declared source and still passes, so the selected
+  methods do not depend on those companion changes.
+- Unit tests assert value equality of `collection.TASKS[:5]` with `10ad0232` and of the 15 older
+  definitions with `8505c0bd`. They also recompute the previous fingerprint `cd5fc510…` from the
+  old definitions. All passed in my gate. The diff confirms that the production evaluator changes
+  only `VERSION`. The driver, sandbox, limits, admission guard and cleanup are unchanged, and no
+  dependency, prompt, model or harness file changed.
+- Admission: `require_historical_candidate` is unchanged. The new unit tests show that every new
+  task refuses appended bytes (`untrusted-candidate-disabled`) and a mutated `expected_tests`
+  (`task-definition-refused`) before any worker call or output creation. The actual-CLI test
+  exercises prepare/score base (exit 1), reference (exit 0) and generated (exit 2, no output)
+  for dev-026.
+- Privacy: the diff adds no host path, username, hostname, credential or private project name. The
+  only matches in changed files predate this commit: TASKS.md project-boundary authorship, and an
+  accepted dev-018 statement that names a generic home-directory alias rule, not a real host path.
+- Held-out integrity: no held-out task exists or is claimed. Nothing in the diff tunes any prompt
+  or harness code. Generated scoring remains refused.
+
+### Statement sufficiency (own blind runs)
+
+Five separate helper sessions, each given only the protocol in
+`/lane/state/tmp/t311-6-review-Otauxn/stmt/PROTOCOL.md`, wrote candidates for two tasks each.
+For the first attempt they could see only the frozen statement and the base-commit `scripts/*.py`
+projection. Reference commits, hidden tests, docs and the builder's scratch were forbidden. Each
+candidate was graded on the frozen hidden bytes and selected names under the evaluator's own
+bubblewrap sandbox. The runner, `stmt/run_candidate.py` (sha256 `f206dc82…`), calls
+`coding_eval.grade_case` directly; only the controls-only admission is bypassed, and that happens
+in the reviewer's scratch, never through the CLI. As a sanity check, dev-020 base failed and its
+reference passed under this runner. After grading, each helper read the hidden methods and the
+reference diff to classify failures. I personally re-read every failure against the hidden bytes.
+
+| Task | First statement-only attempt | Notes |
+| --- | --- | --- |
+| dev-020 | PASS | Sufficient. |
+| dev-021 | **FAIL** (1 failure) | See M1. A one-line scoping change passes. |
+| dev-022 | PASS | Row key `artifact_id` is unstated but follows base row conventions; see L1. |
+| dev-023 | PASS | `worktree_status` shape is unstated and ungraded. |
+| dev-024 | PASS | Error codes and argv are not graded. `coding_model_lab.py` at base already contains a near-identical `gpu_memory()`; see L2. |
+| dev-025 | PASS, but not blind | The helper read a later commit containing the answer, so I judged this from the hidden bytes. The test checks only presence/absence of `src/calc.py`/`src/subtract.py` and a nonzero exit from the existing `tests/run_validation.py`, all stated. Sufficient. |
+| dev-026 | PASS | The second selected method already passes at base; the first discriminates. |
+| dev-027 | PASS | Refusals are graded only as `HarnessError`; the six codes are ungraded (disclosed as "refusals"). |
+| dev-028 | PASS | Sufficient. |
+| dev-029 | **FAIL** (1 failure) | See M2. A one-line shape change passes. |
+
+## Findings
+
+### M1 (medium): dev-021 statement does not scope the retained-digest check to the correction case
+
+Location: `scripts/coding_eval_collection.py:156-172` (dev-021 `statement`; the "Add" sentence is at :165).
+
+The statement says: "Correction requires the existing six-tool repair sequence, 8 turns, a verified
+artifact and the exact repaired add function … Add "retained-muse-read-arguments": some
+tool_requested row must name scripted-invalid-read-paths and arguments_sha256 aa960a42… Denial
+requires no completed tools, 1 turn and "terminal-rejection-code" … these checks all affect
+passed."
+
+"Add …" is its own sentence, and the denial scenario also issues the invalid read request.
+Applying the check to both new cases is therefore a natural reading. The frozen method
+`test_read_rejection_requires_exact_bytes_no_authority_and_terminal_denial` (hidden module at
+`ad28b5ca`) contradicts that reading:
+
+1. It sets `requested["kind"]["arguments_sha256"] = "0" * 64` during the correction phase.
+2. It reuses the same mutated row in the denial fixture.
+3. It then asserts `self.assertTrue(verify()["passed"])` for `read-arguments-denied`.
+
+The reference scopes the check with `if case == "read-arguments-correction":`.
+
+Reproduction: `stmt/dev-021/candidate1.py` applies the check to both cases. Graded output in
+`stmt/dev-021/out1/tests.json` is `failures=1`, failing at the denial `assertTrue(... passed)`.
+`candidate2.py` differs by one line (`if case == "read-arguments-correction":`) and passes
+(`out2`).
+
+A statement-faithful candidate fails, so a model result on this task would measure guessing. This
+is the same class as T-311.1 M2 and T-311.3 M1, and contradicts the evidence's claim that
+statements give exact check keys "where a historical assertion requires them".
+
+Fix, before any model measurement: amend the statement to say "Only the correction case adds
+"retained-muse-read-arguments" …; the denial case does not check the request digest". Keep the
+hidden bytes, selection, source pins and counts unchanged. Re-pin the collection fingerprint
+under a new version, re-run the controls, and retain this failed probe.
+
+### M2 (medium): dev-029 statement omits the `job_state.controls` shape and the notice discriminator key
+
+Location: `scripts/coding_eval_collection.py:382-397` (dev-029 `statement`; the controls clause is at :391).
+
+The statement requires "job.phase completed and controls actions exactly ["suspend","resume"]".
+It also refers to notices by name (`run_suspended`, `job_state`, …) without saying which key holds
+the notice name.
+
+The frozen method `test_the_suspend_resume_case_requires_one_suspension_and_one_continuation`
+(hidden module at `3709eabe`) builds notices keyed by `"type"` and supplies
+`"controls": [{"action": "suspend"}, {"action": "resume"}]`. The reference computes
+`[control.get("action") for control in states[0].get("controls", [])]`.
+
+No `scripts/*.py` at base `8a3a341e` defines the `job_state` notice or its `controls` shape. I
+grepped the projection for `job_state`, `job_control_answer`, `run_suspended`, `run_continued` and
+`"controls"`; none occurs in a related form. The parallel clause in the same statement uses dotted
+notation for nesting ("decision.decision"), which supports reading "controls actions" as a mapping
+`controls["actions"]`.
+
+Reproduction: `stmt/dev-029/candidate1.py` reads `controls["actions"]` and fails with
+`'job-completed': False` (`out1/tests.json` `failures=1`). The one-line change in `candidate2.py`
+to a list of `{"action"}` objects passes (`out2`). The `"type"` key was guessed correctly from base
+convention, but it is not stated.
+
+Fix, before any model measurement: state that each observed notice is a dict whose `"type"` names
+it. Also state that `job_state.controls` is a list of objects whose `"action"` values, in order,
+are exactly `["suspend","resume"]`. Otherwise keep the same constraints as M1.
+
+### L1 (low): dev-022 relies on unstated row field names
+
+Location: `scripts/coding_eval_collection.py:185-201` (clause at :192).
+
+The test places `artifact_id` at `kind.artifact_id` on `artifact_created` rows and at top level on
+`runtime_artifact_verified` rows. The statement says only "artifact_created IDs" and "a
+runtime_artifact_verified row with such an ID". Base conventions (`kind.event` rows; top-level
+`type` rows) lead a reader there, and the blind attempt passed, so this is not blocking.
+
+Fix, optional and pre-measurement only, together with M1/M2: name the `artifact_id` field and its
+location.
+
+### L2 (low, observation): partial answer present in a dev-024 base projection file
+
+`scripts/coding_model_lab.py` at `fe898a96` already contains a `gpu_memory()` with the same argv,
+keyword arguments and line check; only the exception type differs. This is acceptable for public
+development tasks and does not change grading. Record it in the coverage disclosure so a dev-024
+pass is not read as unaided implementation.
+
+### Carried backlog (unchanged status)
+
+- T-311.5 L1 (per-task covered-clause labels) and L2 (dev-003 race) remain obligations before
+  generated scoring. The new guide section fixes a once-per-attempt counting policy for dev-003 and
+  correctly says that reporting integration does not exist yet. This is a declared policy, not an
+  implementation, and the guide claims nothing more.
+- T-311.5 L3 remains optional.
+- T-311.4 L1 and the earlier evaluator low findings are unchanged.
+- The new unit audit (`test_new_task_statements_name_required_new_module_attributes`) checks only
+  module attribute names. It cannot detect omissions of the M1/M2 kind (data shapes and
+  check scoping), so a passing audit is not evidence of statement sufficiency.
+
+## Evidence assessment
+
+The builder's numbers trace exactly to my runs and to their retained raw files: 57 tests, 30/30
+controls, 89/178 invocations, both fingerprints, 701 Markdown files and source hashes. The
+retained audit-repair failure and the scratch helper error are honestly disclosed. The coverage
+table discloses ungraded clauses accurately for every task except M1/M2: those are not ungraded
+clauses but enforced requirements missing from the statement. There is no model, GPU or
+generated-score claim, no product comparison and no trademark branding. Parent T-311 stays open.
+
+## Per-row result
+
+| Row | Result |
+| --- | --- |
+| T-311.6 | **Not closed.** The mechanical done-when items are met at `57ea7ee64ec6ef218e411945e390734f494f9bf9`: 30 tasks, ten distinct historical changes, 20 accepted definitions preserved, 12 complete methods pinned, actual CLI prepare/score/refusal tested, and all 30 base/reference pairs valid under the unchanged guard (89 reference tests, no skips). Gate (57 tests) and policy validator pass. Open medium M1 (dev-021) and M2 (dev-029) mean two frozen statements do not specify behavior their hidden tests enforce, so statement-faithful candidates fail. Repair both statements before any model measurement without touching hidden bytes or thresholds, then request re-review. |
+| T-311 (parent) | Not reviewed for closure; remains open (held-out set, generated scoring, baseline). |
+
+Verdict: FINDINGS

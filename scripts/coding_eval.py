@@ -32,7 +32,7 @@ else:
     import coding_eval_rust
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "coding-development-v8"
+VERSION = "coding-development-v9"
 MAX_FILE = 1024 * 1024
 MAX_TREE = 16 * MAX_FILE
 TIMEOUT = 90

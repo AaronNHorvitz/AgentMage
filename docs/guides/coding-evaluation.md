@@ -29,12 +29,25 @@ all 15 accepted definitions (including the Rust task) unchanged. It has fingerpr
 `cd5fc51018e53364df2f26eaf91ea29a46805e19a6e7e069370372bd98cb8e46`.
 The [v7 record](../evidence/t311-5-development-collection-2026-11-03.md)
 records scope and the real control measurements.
-The current `coding-development-v8` appends ten distinct historical source
+The `coding-development-v8` appends ten distinct historical source
 changes (12 complete regression methods) without changing any of the 20 accepted
 definitions. Its complete fingerprint is
 `91f1eecfa91129f2f8392363aaff0e8f49243aa761947e69d5ec1452d7b4b04d`.
 The [v8 record](../evidence/t311-6-development-collection-2026-11-03.md)
 describes the statements, limited covered clauses and control measurements.
+The current `coding-development-v9` corrects dev-021's digest-check scope,
+dev-029's notice discriminator and top-level controls shape, and dev-022's
+artifact ID field locations before any model measurement. The
+[independent findings](../reviews/57ea7ee64ec6-local-coding-t311-6-development-collection.txt)
+and [repair record](../evidence/t311-6-statement-contract-repair-2026-11-03.md)
+explain these changes. All hidden bytes, source/input pins, method selections,
+counts and the 20 previously accepted task definitions stay unchanged. Its
+complete fingerprint is
+`0c2a0624df93085540f61c4677260490a9810a0325efd6bcb75db0dce1461570`.
+The automatic interface-name audit checks names only; it does not establish
+statement sufficiency for data shapes or conditional requirements. dev-024's
+base projection already contains a similar GPU observation helper in another
+script; success there includes finding and adapting existing repository code.
 Reaching 30 development tasks meets the count for this collection, not the
 complete T-311 requirement: language/work coverage remains narrow, held-out inputs
 are absent, generated scoring is disabled and the real-model baseline is open.
