@@ -21,7 +21,7 @@ A fixed missing-case tag reconstructs a local KeyError without transporting
 candidate exception data.
 
 | Task | Base methods / failures / errors | Base calls | Reference methods / calls |
-| --- | --- | --- | --- | --- |
+| --- | --- | --- | --- |
 | dev-010 | 1 / 1 / 0 | 1 | 1 / 4 |
 | dev-012 | 4 / 10 / 0 | 12 | 4 / 14 |
 | dev-015 | 1 / 1 / 0 | 3 | 1 / 4 |

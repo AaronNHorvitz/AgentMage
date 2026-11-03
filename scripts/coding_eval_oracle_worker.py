@@ -5,11 +5,13 @@ Only the oracle has hidden tests and a writable result directory.
 """
 from __future__ import annotations
 
+import argparse
 import contextlib
 import importlib
 import importlib.util
 import json
 from pathlib import Path
+import re
 import sys
 import tempfile
 import unittest
@@ -126,6 +128,8 @@ class RemoteFunction:
                     or (result.keys() == {"passed", "checks"} and type(result["passed"]) is bool
                         and isinstance(result["checks"], dict) and bool(result["checks"])
                         and all(type(value) is bool for value in result["checks"].values()))))
+            elif self.result_type == "argument-result":
+                valid = valid_argument_result(result, args[0])
             else:
                 valid = (isinstance(result, dict) and bool(result)
                          and all(type(value) is bool for value in result.values()))
@@ -155,6 +159,91 @@ def path_result(function, ambiguity, sources):
     except ambiguity:
         return {"ambiguous": True}
     return {"paths": sorted(str(path) for path in result)}
+
+
+def namespace_values(values):
+    """Only scalar parser values and lexical Paths, never arbitrary objects."""
+    if (not isinstance(values, dict) or len(values) > 128
+            or any(not re.fullmatch(r"[a-z][a-z0-9_]{0,63}", key) for key in values)):
+        raise ProtocolError("oracle.invalid-namespace")
+    result = {}
+    for key, value in values.items():
+        if value is None or type(value) in (str, bool, int):
+            result[key] = value
+        elif isinstance(value, dict) and value.keys() == {"path"} and type(value["path"]) is str:
+            result[key] = Path(value["path"])
+        else:
+            raise ProtocolError("oracle.invalid-namespace")
+    return result
+
+
+def pack_namespace(namespace):
+    values = {key: {"path": str(value)} if isinstance(value, Path) else value
+              for key, value in vars(namespace).items()}
+    namespace_values(values)
+    return values
+
+
+def valid_argument_result(result, request):
+    if not isinstance(result, dict) or len(result) != 1:
+        return False
+    if result.keys() in ({"harness_error"}, {"parser_exit"}, {"missing_function"}):
+        return next(iter(result.values())) is True
+    if request.get("operation") == "parse" and result.keys() == {"namespace"}:
+        namespace_values(result["namespace"])
+        return True
+    return (request.get("operation") == "arguments" and result.keys() == {"arguments"}
+            and isinstance(result["arguments"], list)
+            and all(type(value) is str for value in result["arguments"]))
+
+
+def argument_value(result, module):
+    # No supplied exception class, message, traceback or exit status is used.
+    if "harness_error" in result:
+        raise module.HarnessError("oracle.argument-refused")
+    if "parser_exit" in result:
+        raise SystemExit(2)
+    if "missing_function" in result:
+        raise AttributeError("oracle.missing-function")
+    return result
+
+
+def argument_proxies(remote, module):
+    class Parser:
+        def parse_args(self, arguments):
+            result = argument_value(remote({"operation": "parse", "argv": arguments}), module)
+            return argparse.Namespace(**namespace_values(result["namespace"]))
+
+    def arguments(namespace):
+        result = argument_value(remote({"operation": "arguments",
+                                        "namespace": pack_namespace(namespace)}), module)
+        return result["arguments"]
+    return Parser, arguments
+
+
+def argument_result(module, name, request):
+    """Run the candidate's parser and helper; all returned observations are data."""
+    if not isinstance(request, dict):
+        raise ProtocolError("oracle.invalid-argument-request")
+    operation = request.get("operation")
+    try:
+        if (operation == "parse" and request.keys() == {"operation", "argv"}
+                and isinstance(request["argv"], list)
+                and all(type(value) is str for value in request["argv"])):
+            return {"namespace": pack_namespace(module.parser().parse_args(request["argv"]))}
+        if operation == "arguments" and request.keys() == {"operation", "namespace"}:
+            values = namespace_values(request["namespace"])
+            function = getattr(module, name, None)
+            if not callable(function):
+                return {"missing_function": True}
+            return {"arguments": function(argparse.Namespace(**values))}
+    except module.HarnessError:
+        return {"harness_error": True}
+    except SystemExit as error:
+        if type(error.code) is int and error.code == 2:
+            return {"parser_exit": True}
+        raise
+    raise ProtocolError("oracle.invalid-argument-request")
 
 
 def verification_proxy(remote, module):
@@ -188,7 +277,8 @@ def verification_result(function, module, request):
     if (not isinstance(request, dict) or request.keys() != {
             "case", "exit_code", "files", "rows", "status", "validation_returncode"}
             or type(request["case"]) is not str
-            or request["case"] not in {"multi-file", "read-arguments-correction", "read-arguments-denied"}
+            or request["case"] not in {"multi-file", "read-arguments-correction", "read-arguments-denied",
+                                       "native-command-repair"}
             or type(request["exit_code"]) is not int or not isinstance(request["files"], dict)
             or set(request["files"]) not in (
                 {"result.json", "stdout.jsonl", "stderr.log"},
@@ -232,7 +322,8 @@ def candidate(config):
         writer.write(encode_message({"ready": True, "function_found":
                                      callable(getattr(module, config["function"], None))}))
         writer.flush()
-        function = getattr(module, config["function"])
+        function = (None if config["result_type"] == "argument-result"
+                    else getattr(module, config["function"]))
         while True:
             # EOF after the oracle exits is normal; truncated messages are not.
             if not reader.peek(1):
@@ -245,6 +336,8 @@ def candidate(config):
                 result = path_result(function, module.AmbiguousReference, *request["args"])
             elif config["result_type"] == "verification-result":
                 result = verification_result(function, module, *request["args"])
+            elif config["result_type"] == "argument-result":
+                result = argument_result(module, config["function"], *request["args"])
             else:
                 result = function(*request["args"])
             writer.write(encode_message({"seq": request["seq"], "result": result}))
@@ -270,6 +363,9 @@ def oracle(config):
                 proxy = path_proxy(remote, module.AmbiguousReference)
             elif config["result_type"] == "verification-result":
                 proxy = verification_proxy(remote, module)
+            elif config["result_type"] == "argument-result":
+                parser, proxy = argument_proxies(remote, module)
+                module.parser = parser
             else:
                 proxy = remote
             setattr(module, config["function"], proxy)

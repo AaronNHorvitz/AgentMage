@@ -22,26 +22,37 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v3"
+VERSION = "coding-independent-oracle-v4"
 # Complete frozen methods for pure functions. Paths are lexical JSON values;
 # one fixed ambiguity tag is reconstructed as a trusted local exception.
 SUPPORTED = {
+    "dev-006": {"function": "route_grant_arguments", "result_type": "argument-result"},
+    "dev-007": {"function": "memory_arguments", "result_type": "argument-result"},
     "dev-010": {"function": "test_only_files", "result_type": "path-result"},
     "dev-012": {"function": "test_only_files", "result_type": "path-result"},
     "dev-015": {"function": "case_passed", "result_type": "bool"},
     "dev-020": {"function": "verify_case", "result_type": "verification-result"},
     "dev-021": {"function": "verify_case", "result_type": "verification-result"},
+    "dev-022": {"function": "verify_case", "result_type": "verification-result"},
+    "dev-027": {"function": "extension_arguments", "result_type": "argument-result"},
     "dev-029": {"function": "suspend_resume_checks", "result_type": "bool-map"},
 }
 LOG_LIMIT = 2 * evaluation.MAX_FILE
 # Measured historical outcomes, not model scores or altered hidden assertions.
 # Subtests can report more failures than the number of selected methods.
 CONTROL_PROFILES = {
+    "dev-006": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 19,
+                "function_found": False},
+    "dev-007": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 52,
+                "function_found": False},
     "dev-010": {"failures": 1, "base_calls": 1, "reference_calls": 4},
     "dev-012": {"failures": 10, "base_calls": 12, "reference_calls": 14},
     "dev-015": {"failures": 1, "base_calls": 3, "reference_calls": 4},
     "dev-020": {"failures": 1, "base_calls": 2, "reference_calls": 3},
     "dev-021": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 6},
+    "dev-022": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 3},
+    "dev-027": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 37,
+                "function_found": False},
     "dev-029": {"failures": 0, "base_calls": 1, "reference_calls": 6},
 }
 
@@ -56,8 +67,17 @@ def coverage(task):
     if kind == "verification-result":
         return {"graded": ["passed-boolean", "selected-check-booleans",
                            "frozen-fixture-variations"],
+                "adapter_policy": ["strict-boolean-result-type"],
                 "not_graded": ["run-case-integration", "other-report-fields",
-                               "unselected-cases", "unselected-statement-clauses"]}
+                               "unselected-cases", "unselected-statement-clauses",
+                               *(["candidate-case-root-uniqueness"] if task["id"] == "dev-022" else [])]}
+    if kind == "argument-result":
+        return {"graded": ["selected-parser-values", "argument-order-and-values",
+                           "selected-refusal-types"],
+                "adapter_policy": ["bounded-namespace-values", "fixed-parser-exit-code"],
+                "not_graded": ["exception-messages", "parser-diagnostics", "catalog-effects",
+                               "argument-return-container-type", "parser-return-object-type",
+                               "unselected-statement-clauses"]}
     return {"graded": ["selected-json-function-behavior"],
             "not_graded": ["unselected-statement-clauses"]}
 
@@ -275,7 +295,8 @@ def expected_base(task, report):
              "errors": profile.get("errors", 1 if missing else 0),
              "skipped": 0, "expected_failures": 0, "unexpected_successes": 0}
     return (not report["passed"] and report["candidate_kind"] == "frozen-base"
-            and report["candidate_ready"] is True and report["function_found"] is (not missing)
+            and report["candidate_ready"] is True
+            and report["function_found"] is profile.get("function_found", not missing)
             and report["cause"] == ("protocol" if missing else "test_failure")
             and report["tests"] == tests and report["calls"] == profile["base_calls"]
             and report["protocol_failed"] is missing

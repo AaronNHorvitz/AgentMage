@@ -1,4 +1,5 @@
 """Hostile wire data must remain data, never test results or executable objects."""
+import argparse
 import io
 import json
 from pathlib import Path
@@ -14,6 +15,91 @@ from scripts import coding_eval_oracle_worker as worker
 class OracleProtocolTests(unittest.TestCase):
     def remote(self, raw, result_type="bool"):
         return worker.RemoteFunction(io.BytesIO(raw), io.BytesIO(), io.BytesIO(), result_type)
+
+    def test_argument_proxy_preserves_namespace_paths_and_order_without_object_deserialization(self):
+        values = {'root': {'path': '/expected'}, 'grant': {'path': '/s/grant.json'},
+                  'workspace': 'workspace-a', 'list': False, 'count': 3, 'unset': None}
+        replies = [{'namespace': values}, {'arguments': ['--route-grant', '/s/grant.json']},
+                   {'harness_error': True}, {'parser_exit': True}, {'missing_function': True}]
+        raw = b''.join(worker.encode_message({'seq': index, 'result': reply})
+                       for index, reply in enumerate(replies, 1))
+        remote = self.remote(raw, 'argument-result')
+        module = SimpleNamespace(HarnessError=ValueError)
+        parser, arguments = worker.argument_proxies(remote, module)
+        parsed = parser().parse_args(['route-grant', '--root', '/expected'])
+        self.assertEqual(parsed.root, Path('/expected'))
+        self.assertEqual(worker.pack_namespace(parsed), values)
+        self.assertEqual(arguments(parsed), ['--route-grant', '/s/grant.json'])
+        with self.assertRaisesRegex(ValueError, 'oracle.argument-refused'):
+            arguments(parsed)
+        with self.assertRaises(SystemExit) as exit_error:
+            parser().parse_args([])
+        self.assertEqual(exit_error.exception.code, 2)
+        with self.assertRaisesRegex(AttributeError, 'oracle.missing-function'):
+            arguments(parsed)
+        self.assertFalse(remote.failed)
+        self.assertNotIn(b'__reduce__', remote.writer.getvalue())
+        self.assertEqual(remote.calls, 5)
+
+    def test_argument_tags_namespaces_and_replies_fail_closed(self):
+        request = {'operation': 'parse', 'argv': []}
+        for reply in ({'parser_exit': 2}, {'harness_error': 'ValueError'},
+                      {'missing_function': True, 'message': 'payload'}, {'exception': 'SystemExit'},
+                      {'namespace': {'__class__': 'payload'}},
+                      {'namespace': {'root': {'path': '/tmp', 'execute': 'payload'}}},
+                      {'namespace': {'root': {'__reduce__': 'payload'}}},
+                      {'namespace': {'root': []}}, {'namespace': {'root': 1.5}},
+                      {'namespace': {'x' * 65: None}},
+                      {'namespace': {f'key{i}': i for i in range(129)}},
+                      {'namespace': {'root': {'path': 1}}},
+                      {'arguments': ['should-be-namespace']}, {'tests': {'failures': 0}},
+                      {'namespace': {}, 'passed': True}, [], True):
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': reply}), 'argument-result')
+            with self.subTest(reply=reply), self.assertRaises(worker.ProtocolError):
+                remote(request)
+            self.assertTrue(remote.failed)
+        for reply in ({'arguments': [1]}, {'namespace': {}}):
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': reply}), 'argument-result')
+            with self.assertRaises(worker.ProtocolError):
+                remote({'operation': 'arguments', 'namespace': {}})
+            self.assertTrue(remote.failed)
+
+    def test_argument_candidate_runs_only_the_requested_parser_or_helper_and_fixed_exceptions(self):
+        parsed = argparse.Namespace(root=Path('/expected'), list=True)
+        parse = mock.Mock(return_value=parsed)
+        helper = mock.Mock(return_value=['--list'])
+        class HarnessError(RuntimeError):
+            pass
+
+        module = SimpleNamespace(HarnessError=HarnessError, parser=lambda: SimpleNamespace(parse_args=parse),
+                                 helper=helper)
+        request = {'operation': 'parse', 'argv': ['--list']}
+        self.assertEqual(worker.argument_result(module, 'helper', request),
+                         {'namespace': {'root': {'path': '/expected'}, 'list': True}})
+        parse.assert_called_once_with(['--list'])
+        helper.assert_not_called()
+        request = {'operation': 'arguments', 'namespace': worker.pack_namespace(parsed)}
+        self.assertEqual(worker.argument_result(module, 'helper', request), {'arguments': ['--list']})
+        helper.assert_called_once_with(parsed)
+        helper.side_effect = HarnessError('untrusted payload')
+        self.assertEqual(worker.argument_result(module, 'helper', request), {'harness_error': True})
+        self.assertEqual(worker.argument_result(module, 'absent', request), {'missing_function': True})
+        parse.side_effect = SystemExit(2)
+        self.assertEqual(worker.argument_result(module, 'helper', {'operation': 'parse', 'argv': []}),
+                         {'parser_exit': True})
+        for code in (0, True, 'payload'):
+            parse.side_effect = SystemExit(code)
+            with self.assertRaises(SystemExit):
+                worker.argument_result(module, 'helper', {'operation': 'parse', 'argv': []})
+        parse.side_effect = RuntimeError('not a registered exception')
+        with self.assertRaises(RuntimeError):
+            worker.argument_result(module, 'helper', {'operation': 'parse', 'argv': []})
+        for invalid in ({'operation': '__reduce__', 'argv': []},
+                        {'operation': 'parse', 'argv': [], 'code': 'payload'},
+                        {'operation': 'parse', 'argv': [1]}, {'operation': 'parse', 'argv': 'text'},
+                        {'operation': 'arguments', 'namespace': {'root': object()}}, []):
+            with self.subTest(request=invalid), self.assertRaises(worker.ProtocolError):
+                worker.argument_result(module, 'helper', invalid)
 
     def test_startup_requires_one_exact_frame_before_assertions(self):
         for found in (True, False):

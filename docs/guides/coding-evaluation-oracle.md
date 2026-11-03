@@ -2,7 +2,8 @@
 
 T-311.7 separates candidate execution from frozen assertions; T-311.8 adds
 startup discrimination and source classification. T-311.9 adds two acceptance
-verification functions, for six existing development tasks. This is a
+verification functions. T-311.10 adds three parser/argument tasks and a third
+acceptance predicate, for ten existing development tasks. This is a
 prerequisite for trustworthy scoring,
 not generated-candidate admission, a model baseline or a completed T-311.
 The original collection, hidden bytes, method selections and thresholds stay
@@ -19,22 +20,28 @@ Every selected original hidden method remains complete and unchanged.
 
 | Task | Function | Methods | Base failures/errors | Base calls | Reference calls |
 | --- | --- | --- | --- | --- | --- |
+| dev-006 | `parser`, `route_grant_arguments` | 1 | 0 / 1 | 1 | 19 |
+| dev-007 | `parser`, `memory_arguments` | 1 | 0 / 1 | 1 | 52 |
 | dev-010 | `test_only_files` | 1 | 1 / 0 | 1 | 4 |
 | dev-012 | `test_only_files` | 4 | 10 / 0 | 12 | 14 |
 | dev-015 | `case_passed` | 1 | 1 / 0 | 3 | 4 |
 | dev-020 | `verify_case` | 1 | 1 / 0 | 2 | 3 |
 | dev-021 | `verify_case` | 1 | 0 / 1 | 1 | 6 |
+| dev-022 | `verify_case` | 1 | 0 / 1 | 1 | 3 |
+| dev-027 | `parser`, `extension_arguments` | 1 | 0 / 1 | 1 | 37 |
 | dev-029 | `suspend_resume_checks` | 1 | 0 / 1 | 1 | 6 |
 
 Subtests explain the ten failures across four methods in dev-012. The verifier
 requires these exact failure/count/call profiles, successful startup and expected
-function presence, plus a passing reference with its exact call count. An
+function presence, plus a passing reference with its exact call count. The three
+argument-task bases lack their requested helper and reject the first parser
+call with `SystemExit(2)`; those are explicit failed controls. An
 arbitrary failure cannot validate a base. A missing function in dev-029 is the
 expected failed protocol control. Its oracle may exit 120 when flushing a broken
 pipe at shutdown, after retaining counts; exits 1 and 120 are both failures.
 Launch/import failure, timeout or missing counts cannot validate a control.
 
-The functions use JSON values and lexical paths. Two verification tasks also
+The functions use JSON values and lexical paths. Three verification tasks also
 use finite text fixtures and stub observations, described below. Other tasks,
 general filesystem mocks, general exception transport and Rust execution are
 unsupported. The two path
@@ -67,8 +74,9 @@ behavior; it does not prove the absence of overfitting to public development
 cases or test every clause in a statement.
 
 Requests and replies use sequence numbers and bounded newline-delimited JSON.
-Replies must have exactly the expected fields and a Boolean or nonempty map of
-Booleans, as selected by the task. Duplicate keys, invalid UTF-8, truncated or
+Replies must have exactly the expected fields and values for the selected task:
+Boolean results, lexical paths, verification checks or argument observations.
+Duplicate keys, invalid UTF-8, truncated or
 oversize frames, nonfinite constants, wrong sequence/type and extra result fields
 fail the exchange. A protocol failure remains sticky even if a test catches its
 exception. Limits are 64 KiB per frame, 128 calls and 2 MiB retained wire data.
@@ -98,7 +106,7 @@ clauses `not_graded`; no full-interface or generated score follows from a contro
 
 ## Verification fixtures
 
-For dev-020 and dev-021, the trusted proxy snapshots the existing frozen method's
+For dev-020, dev-021 and dev-022, the trusted proxy snapshots the existing frozen method's
 three log texts, optional `src/calc.py` text, observed rows, Git status and the
 stubbed validation return code. Only fixed file labels cross the pipe. It sends
 no host fixture path, test source, mock object, assertion, callable or executable
@@ -116,11 +124,52 @@ they remain observations under test, never the oracle's verdict or counts.
 An always-true result fails the original negative assertions. A literal
 `missing_case` tag reconstructs one fixed local KeyError, with no candidate
 message or exception class. This is the expected failing dev-021 base control.
+The dev-022 base likewise lacks the requested case. Its reference must reject
+both a failure artifact associated with the wrong command turn and a wrong
+payload digest.
+Its original preamble also checks the trusted base's `CASE_ROOTS` uniqueness.
+That assertion does not observe the candidate's constants; reports explicitly
+label `candidate-case-root-uniqueness` ungraded, with a duplicate-root probe.
+
+The verification adapter requires actual Boolean result/check values. This is
+adapter policy, labelled `strict-boolean-result-type`, rather than a frozen
+assertion: the original truthiness assertions also accept integers. Such an
+integer-valued result fails the wire protocol even if the legacy grader accepts
+it. Only registered historical controls are admitted; no generated score uses
+this policy. This explicitly records T-311.9 review low L1.
 
 These tasks grade the selected acceptance predicates on frozen synthetic rows
 and fixture variations. They do not run a model, runtime, tool or validation
 command; grade `run_case` integration; or check other report metadata fields,
 unselected cases or statement clauses. Reports label those omissions explicitly.
+
+## Parser and argument observations
+
+For dev-006, dev-007 and dev-027 the oracle replaces only `parser()` and the
+named argument helper. Original hidden methods pass their original argument
+lists to a parser proxy. The candidate runs its own parser and returns scalar
+namespace values, with an explicit lexical Path tag. The proxy rebuilds an
+ordinary namespace, which the original method passes to the helper proxy.
+The candidate then runs its own helper and returns its argument list. No
+parser action, callback, function, class or pickled object crosses the pipe.
+
+Namespace field names are bounded lowercase identifiers, at most 128 fields;
+values are only strings, integers, Booleans, nulls or a single string Path tag.
+Paths are lexical values: these methods do not open files or start the catalog.
+The existing frame, transcript and call limits cover both parser and helper
+calls. Fixed literal tags reconstruct only the trusted module's `HarnessError`,
+`SystemExit(2)` or a fixed local `AttributeError` for an absent helper. Candidate
+exception messages and exit statuses are never reconstructed. Other exceptions
+fail the candidate. No catalog, grant, memory or extension effect runs here.
+
+The frozen assertions check argument order/content and invalid combinations,
+including parser mutual exclusion. They cannot check exception messages, parser
+diagnostic output, the original parser object type or the helper's return
+container type through this adapter. In particular a tuple becomes a JSON list;
+the legacy direct assertion would reject that tuple. Reports label these
+clauses `not_graded`, and a real tuple-return probe records that limitation.
+The bounded namespace and fixed parser-exit rules are labelled adapter policy.
+No claim of full statement coverage follows from these controls.
 
 ## Lifetime, records and remaining limits
 
@@ -133,7 +182,7 @@ removal retries come from the accepted evaluator.
 
 Both processes retain the evaluator's per-process 512 MiB address-space,
 60-second CPU, 32 MiB file and zero core-file limits. These are **not aggregate
-worker quotas**. Generated scoring remains disabled: this adapter covers six of
+worker quotas**. Generated scoring remains disabled: this adapter covers ten of
 30 tasks and does not implement separately delegated memory/process/CPU quotas,
 protected held-out inputs, covered-clause labels or a current-harness baseline.
 The legacy grader continues to import candidate code with tests and has its

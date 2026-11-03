@@ -38,8 +38,8 @@ class IndependentOracleTests(unittest.TestCase):
     def test_real_two_sandbox_controls_keep_original_hidden_tests_and_counts(self):
         summary = oracle.verify(self.root / "controls")
         self.assertTrue(summary["passed"], summary)
-        self.assertEqual(len(summary["tasks"]), 6)
-        self.assertEqual(summary["control_attempts"], {"total": 12, "passed": 6, "failed": 6})
+        self.assertEqual(len(summary["tasks"]), 10)
+        self.assertEqual(summary["control_attempts"], {"total": 20, "passed": 10, "failed": 10})
         self.assertFalse(summary["generated_scoring"])
         self.assertIsNone(summary["model_score"])
         self.assertEqual(summary["collection_sha256"],
@@ -100,7 +100,7 @@ class IndependentOracleTests(unittest.TestCase):
                 self.assertEqual(report["control_attempts"], {"total": 1, "passed": 0, "failed": 1})
 
     def test_verification_fixtures_cannot_patch_or_write_trusted_assertions(self):
-        for ident in ("dev-020", "dev-021"):
+        for ident in ("dev-020", "dev-021", "dev-022"):
             task = next(t for t in evaluation.collection() if t["id"] == ident)
             files = self.files(task)
             files[task["source"]] += b'''
@@ -126,7 +126,7 @@ def verify_case(*args):
             self.assertIn("other-report-fields", report["coverage"]["not_graded"])
 
     def test_new_verification_controls_refuse_generated_snapshots_and_hide_exception_data(self):
-        for ident in ("dev-020", "dev-021"):
+        for ident in ("dev-020", "dev-021", "dev-022"):
             task = next(t for t in evaluation.collection() if t["id"] == ident)
             files = self.files(task)
             files[task["source"]] += b"\ndef verify_case(*args): raise KeyError('untrusted exception payload')\n"
@@ -142,6 +142,107 @@ def verify_case(*args):
             self.assertFalse(report["protocol_failed"])
             self.assertNotIn("untrusted exception payload", (output / "wire.log").read_text())
             self.assertNotIn("untrusted exception payload", (output / "oracle.log").read_text())
+
+    def test_argument_controls_refuse_generated_sources_before_output_or_launch(self):
+        for task in (t for t in evaluation.collection() if t["id"] in {"dev-006", "dev-007", "dev-027"}):
+            files = self.files(task)
+            files[task["source"]] += b"\n# synthetic candidate\n"
+            output = self.root / task["id"]
+            with self.subTest(task=task["id"]), mock.patch.object(oracle, "exchange") as launch:
+                with self.assertRaisesRegex(evaluation.EvaluationError, "untrusted-candidate-disabled"):
+                    oracle.grade(task, files, output)
+                launch.assert_not_called()
+                self.assertFalse(output.exists())
+
+    def test_argument_assertions_survive_candidate_patching_and_wrong_order(self):
+        for task in (t for t in evaluation.collection() if t["id"] in {"dev-006", "dev-007", "dev-027"}):
+            name = oracle.SUPPORTED[task["id"]]["function"]
+            files = self.files(task)
+            files[task["source"]] += ('''
+import unittest
+unittest.TestCase.assertEqual = lambda *args, **kwargs: None
+unittest.TestCase.assertRaises = lambda *args, **kwargs: None
+assert not Path('/adapter/test.py').exists()
+assert not Path('/output').exists()
+original_arguments = %s
+def %s(arguments):
+ return list(reversed(original_arguments(arguments)))
+''' % (name, name)).encode()
+            with self.subTest(task=task["id"]), mock.patch.object(
+                    evaluation, "require_historical_candidate", return_value="synthetic-probe"):
+                report = oracle.grade(task, files, self.root / task["id"])
+            self.assertFalse(report["passed"], report)
+            self.assertEqual(report["cause"], "test_failure")
+            self.assertEqual(report["tests"]["failures"], 1)
+            self.assertFalse(report["protocol_failed"])
+
+    def test_argument_exception_messages_stay_out_of_trusted_logs(self):
+        task = next(t for t in evaluation.collection() if t["id"] == "dev-006")
+        files = self.files(task)
+        files[task["source"]] += b'''
+original_arguments = route_grant_arguments
+def route_grant_arguments(arguments):
+ try:
+  return original_arguments(arguments)
+ except HarnessError:
+  raise HarnessError('synthetic-private-exception')
+'''
+        output = self.root / "exception-tag"
+        with mock.patch.object(evaluation, "require_historical_candidate", return_value="synthetic-probe"):
+            report = oracle.grade(task, files, output)
+        self.assertTrue(report["passed"], report)
+        for name in ("wire.log", "oracle.log"):
+            self.assertNotIn("synthetic-private-exception", (output / name).read_text())
+
+    def test_argument_type_erasure_and_boolean_policy_are_explicit(self):
+        task = next(t for t in evaluation.collection() if t["id"] == "dev-006")
+        files = self.files(task)
+        files[task["source"]] += b'''
+original_arguments = route_grant_arguments
+def route_grant_arguments(arguments):
+ return tuple(original_arguments(arguments))
+'''
+        with mock.patch.object(evaluation, "require_historical_candidate", return_value="synthetic-probe"):
+            report = oracle.grade(task, files, self.root / "container-erasure")
+        self.assertTrue(report["passed"], report)
+        self.assertIn("argument-return-container-type", report["coverage"]["not_graded"])
+        task = next(t for t in evaluation.collection() if t["id"] == "dev-022")
+        files = self.files(task)
+        files[task["source"]] += b'''
+original_verify_case = verify_case
+def verify_case(*args):
+ result = original_verify_case(*args)
+ return {'passed': int(result['passed']), 'checks': {key: int(value) for key, value in result['checks'].items()}}
+'''
+        with mock.patch.object(evaluation, "require_historical_candidate", return_value="synthetic-probe"):
+            report = oracle.grade(task, files, self.root / "strict-policy")
+        self.assertFalse(report["passed"])
+        self.assertEqual(report["cause"], "protocol")
+        self.assertEqual(report["coverage"]["adapter_policy"], ["strict-boolean-result-type"])
+
+    def test_malformed_parser_namespace_cannot_reconstruct_objects_or_forge_results(self):
+        task = next(t for t in evaluation.collection() if t["id"] == "dev-006")
+        files = self.files(task)
+        files[task["source"]] += b'''
+class HostileParser:
+ def parse_args(self, arguments):
+  return argparse.Namespace(root={'__reduce__': 'payload'})
+def parser(): return HostileParser()
+'''
+        with mock.patch.object(evaluation, "require_historical_candidate", return_value="synthetic-probe"):
+            report = oracle.grade(task, files, self.root / "hostile-namespace")
+        self.assertFalse(report["passed"])
+        self.assertEqual(report["cause"], "protocol")
+        self.assertEqual(report["tests"]["errors"], 1)
+
+    def test_verification_preamble_on_trusted_constants_is_explicitly_ungraded(self):
+        task = next(t for t in evaluation.collection() if t["id"] == "dev-022")
+        files = self.files(task)
+        files[task["source"]] += b"\nCASE_ROOTS = {name: 'duplicate' for name in CASE_ROOTS}\n"
+        with mock.patch.object(evaluation, "require_historical_candidate", return_value="synthetic-probe"):
+            report = oracle.grade(task, files, self.root / "ungraded-case-roots")
+        self.assertTrue(report["passed"], report)
+        self.assertIn("candidate-case-root-uniqueness", report["coverage"]["not_graded"])
 
     def test_path_return_types_are_explicitly_outside_oracle_coverage(self):
         task = next(t for t in evaluation.collection() if t["id"] == "dev-010")
