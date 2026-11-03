@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from contextlib import redirect_stderr
+import ast
 import hashlib
 import io
 import json
@@ -9,6 +10,7 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import time
 import unittest
 from unittest import mock
 
@@ -33,8 +35,96 @@ class CodingEvaluationTests(unittest.TestCase):
         fingerprint = hashlib.sha256(json.dumps(
             evaluation.TASKS, sort_keys=True, separators=(",", ":"),
         ).encode()).hexdigest()
-        self.assertEqual(fingerprint, "f950e413f8dc4bf7ff64e323a5b78c2ba018091b2429e8999eb5850de6b1c00a")
+        self.assertEqual(fingerprint, "af789424236397cae91efc51653e0020e584dd625a87232374a8165df7fe2863")
         self.assertEqual(len(set(t["id"] for t in evaluation.TASKS)), 3)
+
+    def test_statements_name_new_module_interfaces_required_by_frozen_tests(self):
+        for task in evaluation.TASKS:
+            hidden = ast.parse(evaluation.pinned_blob(
+                task["reference"], task["hidden_test"], task["hidden_sha256"]))
+            base = ast.parse(evaluation.pinned_blob(
+                task["base"], task["source"], task["base_sha256"]))
+            source_module = Path(task["source"]).stem
+            aliases = {alias.asname or alias.name for node in ast.walk(hidden)
+                       if isinstance(node, ast.ImportFrom) and node.module == "scripts"
+                       for alias in node.names if alias.name == source_module}
+            base_attributes = {node.name for node in base.body
+                               if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))}
+            # Supplied by Python's module loader, rather than a task implementation.
+            base_attributes.update({"__file__", "__name__", "__package__", "__doc__",
+                                    "__spec__", "__loader__", "__builtins__", "__cached__"})
+            for node in base.body:
+                if isinstance(node, (ast.Assign, ast.AnnAssign)):
+                    targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+                    base_attributes.update(child.id for target in targets for child in ast.walk(target)
+                                           if isinstance(child, ast.Name))
+                elif isinstance(node, (ast.Import, ast.ImportFrom)):
+                    base_attributes.update(alias.asname or alias.name.split(".")[0] for alias in node.names)
+            required = {node.attr for node in ast.walk(hidden)
+                        if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name)
+                        and node.value.id in aliases}
+            self.assertTrue(aliases, task["id"])
+            for attribute in required - base_attributes:
+                with self.subTest(task=task["id"], attribute=attribute):
+                    self.assertIn(attribute, task["statement"])
+
+    def test_refusal_diagnostics_include_fixed_code_and_type_without_private_messages(self):
+        for error, detail in (
+            (evaluation.EvaluationError("evaluation.input-hash-mismatch"),
+             "code=evaluation.input-hash-mismatch type=EvaluationError"),
+            (FileNotFoundError("private input path"), "code=evaluation.io-failed type=FileNotFoundError"),
+            (subprocess.CalledProcessError(1, ["private command"]),
+             "code=evaluation.process-failed type=CalledProcessError"),
+        ):
+            stream = io.StringIO()
+            with mock.patch.object(evaluation, "main", side_effect=error), redirect_stderr(stream):
+                self.assertEqual(evaluation.cli(), 2)
+            self.assertIn(detail, stream.getvalue())
+            self.assertNotIn("private input path", stream.getvalue())
+            self.assertNotIn("private command", stream.getvalue())
+
+    def test_infrastructure_exception_preserves_logs_and_cannot_pass_partial_counts(self):
+        output = self.root / "infrastructure"
+
+        def partial_case(*_):
+            evaluation.write_file(output / "stderr.log", b"partial case log\n")
+            evaluation.publish(output / "tests.json", {"tests": 12, "failures": 0})
+            raise OSError("private cleanup path")
+
+        with mock.patch.object(evaluation, "grade_case", side_effect=partial_case):
+            report = evaluation.grade(evaluation.TASKS[0], {evaluation.TASKS[0]["source"]: b"fixture"}, output)
+        self.assertFalse(report["passed"])
+        self.assertEqual(report["cause"], "infrastructure")
+        self.assertIsNone(report["tests"])
+        self.assertIsNone(report["exit_code"])
+        self.assertEqual(report["infrastructure_error"], "code=evaluation.io-failed type=OSError")
+        self.assertEqual((output / "stderr.log").read_bytes(), b"partial case log\n")
+        self.assertEqual(report["logs"]["stderr.log"], evaluation.sha(b"partial case log\n"))
+        self.assertEqual(json.loads((output / "report.json").read_text()), report)
+
+    def test_verifier_retains_infrastructure_failure_and_checks_remaining_cases(self):
+        clean = {"tests": 12, "failures": 0, "errors": 0, "skipped": 0,
+                 "expected_failures": 0, "unexpected_successes": 0}
+        calls = []
+
+        def run_case(task, files, output):
+            calls.append(task["id"])
+            if len(calls) == 1:
+                raise OSError("private initialization failure")
+            evaluation.write_file(output / "stdout.log", b"")
+            evaluation.write_file(output / "stderr.log", b"fixture log\n")
+            counts = {**clean, "tests": task["expected_tests"], "failures": len(calls) % 2}
+            return len(calls) % 2, False, False, counts
+
+        with mock.patch.object(evaluation, "grade_case", side_effect=run_case), \
+                mock.patch.object(evaluation, "projection", side_effect=lambda t: {t["source"]: b"base"}), \
+                mock.patch.object(evaluation, "pinned_blob", return_value=b"reference"):
+            summary = evaluation.verify(self.root / "infrastructure-verify")
+        self.assertEqual(len(calls), 6)
+        self.assertFalse(summary["passed"])
+        self.assertIsNone(summary["model_score"])
+        self.assertEqual(summary["tasks"][0]["base"]["cause"], "infrastructure")
+        self.assertEqual([r["valid"] for r in summary["tasks"]], [False, True, True])
 
     def test_exact_snapshot_allows_only_the_declared_source_edit(self):
         root, original = self.candidate()
@@ -226,6 +316,25 @@ class CodingEvaluationTests(unittest.TestCase):
         with self.assertRaises(subprocess.CalledProcessError):
             git("cat-file", "-e", evaluation.TASKS[0]["reference"])
 
+    def test_grading_git_objects_remain_unchanged_after_auto_maintenance_window(self):
+        workspace = self.root / "many-objects"
+        workspace.mkdir()
+        # More loose objects than the real projection that triggered detached packing.
+        for index in range(800):
+            evaluation.write_file(workspace / f"scripts/module_{index}.py", f"value = {index}\n".encode())
+        evaluation.initialize_grading_repository(workspace)
+        objects = workspace / ".git/objects"
+
+        def snapshot():
+            return {str(p.relative_to(objects)): evaluation.sha(p.read_bytes())
+                    for p in objects.rglob("*") if p.is_file()}
+
+        before = snapshot()
+        self.assertGreaterEqual(len(before), 803)
+        time.sleep(1.2)
+        self.assertEqual(snapshot(), before)
+        self.assertEqual(list((objects / "pack").iterdir()), [])
+
     def test_output_limit_retains_a_bounded_log_and_fails(self):
         task = evaluation.TASKS[0]
         output = self.root / "oversize-output"
@@ -250,7 +359,10 @@ class CodingEvaluationTests(unittest.TestCase):
                   " def test_boundary(self):\n"
                   "  with self.assertRaises(OSError): pathlib.Path('/workspace/scripts/a.py').write_text('changed')\n"
                   "  with self.assertRaises(OSError): pathlib.Path('/grader/test.py').write_text('changed')\n"
-                  "  self.assertFalse(pathlib.Path('/lane').exists())\n"
+                  f"  self.assertFalse(pathlib.Path({str(evaluation.ROOT)!r}).exists())\n"
+                  f"  self.assertFalse(pathlib.Path({str(Path.home())!r}).exists())\n"
+                  "  keys={p.split(b'=',1)[0] for p in pathlib.Path('/proc/self/environ').read_bytes().split(b'\\0') if p}\n"
+                  "  self.assertEqual(keys,{b'PATH',b'HOME',b'LANG',b'PWD'})\n"
                   "  with socket.socket() as client:\n"
                   "   client.settimeout(0.5)\n"
                   f"   self.assertNotEqual(client.connect_ex(('127.0.0.1',{port})),0)\n").encode()

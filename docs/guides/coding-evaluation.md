@@ -9,6 +9,14 @@ until the complete suite and its baseline exist.
 
 ## Frozen tasks
 
+The `coding-development-pilot-v2` revision corrects interface omissions found
+by the [first independent review](../reviews/dd7349366d01-local-coding-t311-1-evaluator.txt).
+Before any model measurement, the three statements were extended with required
+function names, return keys, error codes and encodings, and their fingerprint
+was renewed. Bases, references, projections, hidden tests and exact counts are
+unchanged. This is a recorded pre-measurement correction, not tuning feedback
+from model attempts. See the [repair evidence](../evidence/t311-1-evaluator-review-repair-2026-11-03.md).
+
 All three tasks come from this repository's own development history. They use
 original repository code and tests under the existing repository licence; no
 external task dataset, model, dependency or comparison is introduced. This work
@@ -38,6 +46,14 @@ run. The grader then initializes a fresh, read-only Git repository with exactly
 one candidate-only commit for diagnostics that inspect Git. It contains no
 original history, reference objects, tests, remotes or hooks. The editing agent
 has no access to these grading mounts.
+
+Every grading Git invocation disables automatic maintenance and garbage
+collection, preventing detached host maintenance from rewriting the snapshot
+or racing cleanup. Infrastructure exceptions produce a failed case report
+with a fixed error code and exception type, preserve available raw logs, and
+allow validation of the remaining cases. Partial test counts cannot pass.
+Input/operator refusals still exit 2 and print a fixed code and exception type;
+they never print exception text containing private paths or commands.
 
 Hidden means withheld from the editing workspace. These development regressions
 already exist in public Git history, and their locations/digests are available to
@@ -77,8 +93,10 @@ bash /tools/build-slot python3 scripts/coding_eval.py score --task dev-001 --can
 `list` prints statements and bases without hidden-test/reference metadata.
 `prepare` materializes the base projection without tests or answers. `score`
 refuses anything outside that task's one-file scope, snapshots the candidate,
-and runs the pinned hidden test module. Exit 0 means all pinned tests passed;
-exit 1 means failed tests, timeout or worker failure; exit 2 is an input or
+and runs the pinned hidden test module. Exit 0 means the worker reported all
+pinned tests passed; this pilot trusts historical candidates and does not
+authenticate results against deliberately malicious candidate code.
+Exit 1 means failed tests, timeout or worker failure; exit 2 is an input or
 operator error. Existing output/candidate destinations are never overwritten.
 Keep output private: test diagnostics may contain task content and temporary
 paths. Only sanitized measurements and raw-log digests belong in public evidence.

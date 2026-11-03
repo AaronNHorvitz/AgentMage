@@ -1,7 +1,8 @@
 # T-311.1 development evaluator pilot — 2026-11-03
 
-Status: builder implementation; independent core review pending. T-311.1 and
-parent T-311 remain open. This is an executable evaluator pilot, not the complete
+Status: historical v1 builder record. The [first independent review](../reviews/dd7349366d01-local-coding-t311-1-evaluator.txt)
+returned FINDINGS (medium M1 and M2). See the [v2 repair record](t311-1-evaluator-review-repair-2026-11-03.md).
+T-311.1 and parent T-311 remain open. This is an executable evaluator pilot, not the complete
 30-task suite, a local-model coding baseline or a scoreboard entry.
 
 ## Scope and frozen inputs
@@ -18,7 +19,9 @@ changes outside one source file, additions/deletions, aliases, hard links, speci
 files, extra directories and oversize inputs. Held directory/file descriptors
 bind a copied candidate before grading. A fresh candidate-only repository in the
 grader supports diagnostics that read Git; it contains one commit and no original
-history, answers, remotes or hooks. It is read-only during testing.
+history, answers, remotes or hooks. It is mounted read-only in the worker, but
+review M1 found host-side detached maintenance could mutate it. The v2 repair
+disables that maintenance; the original v1 read-only claim was too broad.
 
 The worker has isolated network/PID namespaces, read-only runtime/code/tests,
 temporary scratch and a temporary writable result directory. The parent keeps
@@ -70,9 +73,12 @@ dev-002 test counts were recorded, before dev-002's final report. Its generic
 operator diagnostic did not retain an exception traceback. The targeted dev-002
 base repeat finalized normally without changing the evaluator. A fresh full
 rerun with private traceback capture passed, followed by another complete PASS
-through the documented CLI. The incomplete run remains a failure; its cause is
-unresolved for independent review. No result from it is counted as an aggregate
-PASS. Both successful full runs and incomplete artifacts remain retained.
+through the documented CLI. The incomplete run remains a failure. Independent
+review subsequently reproduced the crash and traced it to detached Git
+auto-maintenance racing temporary-directory removal (M1). This resolves the
+previously unexplained cause; the v2 repair is recorded separately. No result
+from the incomplete run is counted as an aggregate PASS. Both successful full
+runs and incomplete artifacts remain retained.
 
 An earlier actual boundary fixture also failed because bubblewrap requires an
 explicit user-namespace flag before nested user namespaces are disabled. Adding

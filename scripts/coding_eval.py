@@ -23,11 +23,12 @@ import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "coding-development-pilot-v1"
+VERSION = "coding-development-pilot-v2"
 MAX_FILE = 1024 * 1024
 MAX_TREE = 16 * MAX_FILE
 TIMEOUT = 90
-# Freeze these inputs. Expansion must add tasks; never rewrite these tests or pins.
+# Pre-measurement v2 corrects statement interfaces under review M2. Test/input pins
+# remain unchanged. Future expansion adds tasks; never rewrite frozen tests/pins.
 TASKS = [{'id': 'dev-001',
   'split': 'development',
   'base': 'aa3134b224e887fbf5962fbf724b8d3d54cbe8ec',
@@ -44,7 +45,17 @@ TASKS = [{'id': 'dev-001',
                'in sorted order. Refuse aliases, non-regular files, over 4096 paths, files over 16 '
                'MiB or aggregate content over 64 MiB, and concurrent changes. Include the '
                'identities and their canonical aggregate digest alongside the existing '
-               'tracked-diff, HEAD and binary identities. Preserve existing authority checks.',
+               'tracked-diff, HEAD and binary identities. Preserve existing authority checks. '
+               'Interface contract: add untracked_file_identities(root: Path) -> list[dict], '
+               'returning rows with path (relative string), bytes (integer) and sha256 (hex). '
+               'Enumerate once through subprocess.run with Git ls-files --others '
+               '--exclude-standard -z and consume its NUL-separated byte stdout. Raise '
+               'HarnessError with coding.harness.source-inventory-alias for symlinks, '
+               'coding.harness.identity-not-regular for non-regular files and '
+               'coding.harness.source-inventory-limit for size/count limits. '
+               'implementation_identity() adds untracked_files (the rows) and '
+               'untracked_files_sha256: SHA-256 of the UTF-8 encoding of '
+               'json.dumps(rows, sort_keys=True, separators=(",", ":"), ensure_ascii=True).',
   'expected_tests': 12},
  {'id': 'dev-002',
   'split': 'development',
@@ -61,7 +72,19 @@ TASKS = [{'id': 'dev-001',
                'argument and a closed supported value, never from an unowned process, missing or '
                'conflicting arguments. Do not echo unknown/private values, change the run-record '
                'schema or claim that a requested model is running or qualified. Preserve '
-               'reservation, startup, running and stale-record lifecycle behavior.',
+               'reservation, startup, running and stale-record lifecycle behavior. '
+               'Interface contract: add MODEL_CHOICES containing scripted, muse and gpt-oss, '
+               'and _model_request_diagnosis(arguments: list[bytes] | None) -> dict. '
+               'Always return selection, observation, serving and qualification. '
+               'For one exact --model followed by a supported ASCII value, selection is '
+               'that string and observation is owned-process-arguments. Otherwise selection '
+               'is None and observation is unavailable, including any --model= argument, '
+               'duplicates, missing values or unknown bytes. Always set serving to '
+               'not-observed and qualification to not-assessed. diagnose(base) adds '
+               'model_request using owned arguments only (unavailable otherwise), adds '
+               'scope=development-diagnostics-only, renames profile_id to fixture_profile_id '
+               'and removes the top-level qualification field. Preserve schema_version=2 '
+               'and do not add model fields to the persisted run record.',
   'expected_tests': 3},
  {'id': 'dev-003',
   'split': 'development',
@@ -78,7 +101,12 @@ TASKS = [{'id': 'dev-001',
                'group-ID reuse. Preserve the original exit or signal status, timeout and '
                'interruption behavior. Also accept the actual retained review endings PASS, '
                'FINDINGS, or INCONCLUSIVE followed by exactly one nonempty reason, while rejecting '
-               'malformed endings and preserving report bytes.',
+               'malformed endings and preserving report bytes. Interface contract: add '
+               'observe_exit(process: subprocess.Popen) -> int | None. Observe with '
+               'os.waitid using WEXITED | WNOHANG | WNOWAIT; return None while running, '
+               'the nonnegative exit status on normal exit or negative signal number '
+               'on signal exit. stop_check must use observe_exit while keeping the '
+               'leader unreaped until both group cleanup signals have been sent.',
   'expected_tests': 23}]
 
 
@@ -268,15 +296,14 @@ def initialize_grading_repository(workspace: Path) -> None:
         ["-c", "user.name=Synthetic", "-c", "user.email=synthetic@example.invalid",
          "-c", "core.hooksPath=/dev/null", "commit", "--quiet", "-m", "Candidate snapshot"],
     ):
-        subprocess.run(["/usr/bin/git", *arguments], cwd=workspace, env=env, check=True,
+        subprocess.run(["/usr/bin/git", "-c", "maintenance.auto=false", "-c", "gc.auto=0",
+                        *arguments], cwd=workspace, env=env, check=True,
                        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                        stderr=subprocess.DEVNULL, timeout=30)
 
 
-def grade(task: dict, files: dict[str, bytes], output: Path) -> dict:
-    new_directory(output)
+def grade_case(task: dict, files: dict[str, bytes], output: Path) -> tuple:
     hidden = pinned_blob(task["reference"], task["hidden_test"], task["hidden_sha256"])
-    started = time.monotonic()
     with tempfile.TemporaryDirectory(prefix="agentmage-eval-") as temporary:
         root = Path(temporary)
         workspace, grader, result_dir = root / "workspace", root / "grader", root / "results"
@@ -346,7 +373,25 @@ def grade(task: dict, files: dict[str, bytes], output: Path) -> dict:
             write_file(output / "tests.json", data)
         except (OSError, ValueError):
             tests = None
-    passed = (exit_code == 0 and not timed_out and not output_limited and tests is not None
+    return exit_code, timed_out, output_limited, tests
+
+
+def grade(task: dict, files: dict[str, bytes], output: Path) -> dict:
+    # Operator errors (including an existing destination) still fail before adoption.
+    new_directory(output)
+    started = time.monotonic()
+    infrastructure_error = None
+    try:
+        exit_code, timed_out, output_limited, tests = grade_case(task, files, output)
+    except (EvaluationError, OSError, subprocess.SubprocessError) as error:
+        # Keep a failed case and continue validation; never turn partial counts into PASS.
+        infrastructure_error = refusal_detail(error)
+        exit_code, timed_out, output_limited, tests = None, False, False, None
+        for name in ("stdout.log", "stderr.log"):
+            if not (output / name).exists():
+                write_file(output / name, b"")
+    passed = (infrastructure_error is None and exit_code == 0 and not timed_out
+              and not output_limited and tests is not None
               and all(tests[k] == 0 for k in tests if k != "tests"))
     cause = ("none" if passed else "output_limit" if output_limited else "timeout" if timed_out else "infrastructure"
              if tests is None else "test_failure")
@@ -356,6 +401,7 @@ def grade(task: dict, files: dict[str, bytes], output: Path) -> dict:
               "task_sha256": sha(json.dumps(task, sort_keys=True, separators=(",", ":")).encode()),
               "candidate_sha256": sha(files[task["source"]]), "passed": passed,
               "cause": cause, "exit_code": exit_code, "tests": tests, "output_truncated": output_limited,
+              "infrastructure_error": infrastructure_error,
               "wall_seconds": round(time.monotonic() - started, 6),
               "gpu_minutes": 0, "tokens": None, "model_attempts": 0,
               "logs": {name: sha(read_regular(output / name, 2 * MAX_FILE)) for name in ("stdout.log", "stderr.log")}}
@@ -416,11 +462,22 @@ def interrupted(signum: int, frame: object) -> None:
     raise KeyboardInterrupt
 
 
+def cli() -> int:
+    """Expose fixed diagnostics without exception messages containing private paths."""
+    try:
+        return main()
+    except (EvaluationError, OSError, subprocess.SubprocessError) as error:
+        print("evaluation.refused " + refusal_detail(error) + "; inspect private output", file=sys.stderr)
+        return 2
+
+
+def refusal_detail(error: Exception) -> str:
+    code = (str(error) if isinstance(error, EvaluationError) else
+            "evaluation.io-failed" if isinstance(error, OSError) else "evaluation.process-failed")
+    return f"code={code} type={type(error).__name__}"
+
+
 if __name__ == "__main__":
     for termination_signal in (signal.SIGTERM, signal.SIGHUP):
         signal.signal(termination_signal, interrupted)
-    try:
-        raise SystemExit(main())
-    except (EvaluationError, OSError, subprocess.SubprocessError):
-        print("evaluation.refused; inspect private output", file=sys.stderr)
-        raise SystemExit(2)
+    raise SystemExit(cli())

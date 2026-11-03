@@ -1,0 +1,297 @@
+Commit: dd7349366d0135e06e7be582756c09117ba87fc0
+Scope: local-coding-t311-1-evaluator
+
+# Independent core review — T-311.1 development evaluator pilot
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only repository access.
+Row: T-311.1 (attempt 1). Base: 25c580f871653171543932ca1aa14dae384dc138.
+Parent T-311 is not in scope and is not closed by this review.
+
+## Methods
+
+- Confirmed the exact commit and a clean tree before and after the review.
+- Read IP-POLICY.md, Decision 0153, the top of TASKS.md, the guide
+  `docs/guides/coding-evaluation.md`, the evidence
+  `docs/evidence/t311-1-development-evaluator-2026-11-03.md`, and the complete diff
+  Base..Commit for all five paths, including source increment 4e886ebb.
+- Ran the requested gates, the documented one-command verifier (twice) and the docs validator.
+- Reproduced the unresolved verify2 crash and identified its root cause with a traceback-capturing
+  wrapper kept outside the repository. Then ran the same evaluator code with one variable changed.
+- Confirmed that each frozen statement is enough to pass its hidden tests: compared the names and
+  literals each hidden test uses against the statement and the base source.
+- Ran escape and tamper attempts against the actual bubblewrap worker and the `prepare`/`score` CLI.
+- Read the retained native readiness record and runner and checked its hashes against the evidence.
+  No GPU was used, there was no model replay and no repository file was modified. All scratch output
+  is under `/lane/state/tmp/t311-review-dd734936*`.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `git rev-parse HEAD` | `dd7349366d0135e06e7be582756c09117ba87fc0` |
+| `git status --porcelain` (before/after) | empty / empty |
+| `git diff --check 25c580f8… HEAD --` | exit 0 |
+| `export PATH=/lane/state/tooling/node-v24.15.0-linux-x64/bin:$PATH; node --version` | **`node: command not found`**: `/lane/state/tooling` does not exist in the reviewer lane |
+| `sha256sum …/bin/node` | **No such file**: the required hash d1de76d8… could not be observed |
+| `python3 scripts/local_agent_fast_gate.py --base 25c580f8… --plan` | 5 paths; diff-check, untracked lint, markdownlint, Python lint, `tests.test_coding_eval`; no Rust |
+| `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base 25c580f8… --timeout 600` | **FAST GATE: FAIL**, only because markdownlint exited 127 (`Missing executable: node`). All other steps exit 0; `Ran 17 tests … OK` |
+| `bash /tools/build-slot python3 scripts/coding_eval.py verify --output $T311_REVIEW_ROOT/verify` (run 1, `…fKpD7e`) | **exit 2**, `evaluation.refused; inspect private output`. dev-001 base complete; dev-001 reference has `tests.json` (12/0/0) but no `report.json`; no summary. Left `/lane/state/tmp/agentmage-eval-tir_t1t7` with 708 projected scripts |
+| Same command, fresh destination (run 2, `…LaTZro`) | exit 0, `passed: true`, `evaluator-validation-only`, `model_score: null`. Bases fail by `test_failure`; references pass 12/3/23 |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` | exit 0: `Validated 693 Markdown file(s) and all policy invariants.` |
+| `sha256sum scripts/coding_eval.py tests/test_coding_eval.py` | `6663c462…6afd6901`, `6769d7b4…573c1d8`: match evidence |
+| `git show 4e886ebb:scripts/coding_eval.py \| sha256sum` | `ada16320…db36f66`: matches the evaluator hash in all verify1 reports, as claimed |
+
+Builder retained records (read only):
+
+- `verify-cli-final` and `verify3`: summary hashes `e3f7da48…` and `0a4ad07a…` match the evidence.
+- In every case the report counts agree with the raw `stderr.log` (`Ran N tests`, `OK` or `FAILED (…)`),
+  and the log SHA-256 matches the report.
+- The published wall times match `verify-cli-final`.
+- The 38 reference tests (76 cases in total) and zero skips are confirmed.
+
+## Root cause of the incomplete verify2 run (limitation 2): resolved by this review
+
+Git 2.55.0 on this host starts detached auto-maintenance after `git commit` in
+`initialize_grading_repository`. That maintenance packs ~713 loose objects and removes them. It runs
+on the host, outside the sandbox and outside the evaluator's process group, while the worker runs
+and while `TemporaryDirectory` removes the tree.
+
+Polling after the function returned showed pack activity at 0.051–0.059 s and all loose objects
+removed by 0.176–0.191 s, in 3 of 3 trials. With `-c maintenance.auto=false -c gc.auto=0` there
+were no packs and 713 loose objects remained after 3 s.
+
+When grading ends inside that window, `shutil.rmtree` fails. The captured traceback was:
+
+```text
+OSError: [Errno 39] Directory not empty: '/lane/state/tmp/agentmage-eval-…/workspace'
+```
+
+`main()` turns this into the generic exit 2 and loses the traceback. The builder's leftover
+`agentmage-eval-xg109p4j` contains only `.git/objects/pack/tmp_rev_bfBOiG`, written at
+04:15:21.809. That is the verify2 timestamp and a maintenance artefact.
+
+| Runs | Evaluator code | Outcome |
+| --- | --- | --- |
+| 6 runs (2 documented CLI, 4 wrapper) | Unchanged | 3 crashed with exit 2 / ENOTEMPTY, 3 passed |
+| 4 runs, same wrapper | Only the grading Git invocations given the two `-c` options | 4 of 4 passed |
+
+## Escape and tamper attempts (actual worker and CLI)
+
+Worker probes ran as a hidden test inside the real `grade()` worker, alongside a host loopback TCP
+listener and a host abstract Unix socket:
+
+| Probe | Result |
+| --- | --- |
+| Environment | Only `PATH`, `HOME=/tmp`, `LANG`, `PWD` |
+| Processes | Private PID namespace (pids 1, 2) |
+| Host listener and abstract socket | Both refused |
+| External connection | Network unreachable; only `lo` exists |
+| Writes to `/workspace`, `/grader`, `/usr` | EROFS |
+| Write to `/proc/sys` | EACCES |
+| Repository path and home | Not visible; no `/etc` or `/run` |
+| Nested `unshare -U` | Refused |
+| Git inside the worker | Sees one `Candidate snapshot` commit and no other history |
+| Symlink planted in `/output` | Not followed by the parent: `read_regular` uses `O_NOFOLLOW`; `rmtree` is fd-based |
+
+`/proc/self/mountinfo` shows host bind sources, including the private temp path. That reaches only
+private raw logs.
+
+CLI results:
+
+| Candidate | Result |
+| --- | --- |
+| `prepare` dev-003, then unedited `score` | exit 1 (23 tests, 2 failures / 3 errors) |
+| Historical reference source | exit 0 (23/23) |
+| Out-of-scope file swapped for a symlink | exit 2, no output written |
+| Source file as a symlink to outside bytes | exit 2, no output written |
+| Candidate root as a symlink | exit 2, no output written |
+| `__pycache__` directory | exit 2, no output written |
+| Existing output destination | exit 2, existing output preserved |
+| `list` | Contains no reference, hidden-test or digest fields |
+
+Forgery (limitation 3) reproduced: appending five lines to the unedited dev-003 base forges a PASS.
+The lines write `/output/tests.json` with the public count of 23 and call `os._exit(0)`. Result:
+`score` exit 0, report `passed: true`, 23/0/0, empty `stderr.log`, so no test ran.
+
+## Native readiness record
+
+`/lane/state/tmp/e311a/attempt.json` (SHA-256 `ea8f03aa…`) and `logs/stderr.log` (`5579101c…`)
+match the evidence:
+
+| Field | Observed |
+| --- | --- |
+| CLI exit | 5, after 0.020586 s |
+| stdout | Empty |
+| stderr | `linux.repository.git_artifact.invalid`, then `linux.development.launch-envelope.failed` |
+| Native executables | All four report `untrusted-path` |
+| Workspace | Unchanged; no inference |
+| `model_score` / `tokens` / `gpu_minutes` | All null |
+| Source | 25c580f8 with the evaluator files uncommitted, as disclosed |
+
+The runner `attempt.py` matches the description: closed stdin, `--model` from the existing closed
+set, no approval grant, owned process-group cleanup. The record is honestly labelled. It is not a
+clean-source or reproducible-binary baseline, and the evidence does not claim one. Attributing the
+refusal to T-301.1 is stated as "consistent with", which the diagnostic supports.
+
+## Findings
+
+### M1 (medium): grading Git repository is mutated by an unowned detached host process; nondeterministic crash
+
+Locations:
+
+- `scripts/coding_eval.py:259-273`: grading repository initialisation.
+- `scripts/coding_eval.py:280`: temporary-directory cleanup.
+- `scripts/coding_eval.py:424-425`: generic exit-2 handler that discards the cause.
+
+Claims contradicted:
+
+- `docs/guides/coding-evaluation.md:37`: "fresh, read-only Git repository".
+- `docs/evidence/t311-1-development-evaluator-2026-11-03.md:21`: "It is read-only during testing".
+
+Reproduction: as above. 3 of 6 unchanged runs crashed (including 1 of 2 documented one-command runs
+by this reviewer); 4 of 4 passed with maintenance disabled.
+
+Impact:
+
+- The documented one-command verifier fails at a high rate, so it is not reliably re-runnable.
+  At 30 tasks × 2 cases it would almost never finish.
+- A host-side Git process outlives the grade and rewrites `.git/objects` while Git-dependent
+  hidden tests (dev-001) run. That makes grading input nondeterministic and breaks the stated
+  read-only property.
+- Crashes leave partial private temp trees containing the projection and reference source; four
+  remain in `/lane/state/tmp`.
+- One case's infrastructure exception aborts the whole run instead of being recorded as that case's
+  `infrastructure` failure.
+
+It fails closed (no aggregate PASS is produced), so it is not high.
+
+Fix:
+
+1. Pass `-c maintenance.auto=false -c gc.auto=0` (or the equivalent `GIT_CONFIG_COUNT` environment)
+   to every grading Git invocation.
+2. Add a regression test showing the object store is unchanged ≥1 s after
+   `initialize_grading_repository` returns.
+3. Print the fixed `EvaluationError` code and exception type in the refusal message. The codes
+   carry no task content.
+4. Correct the evidence's "unresolved" note.
+
+### M2 (medium): all three frozen statements omit interface facts their hidden tests require; tasks are not solvable from the statement
+
+Location: `scripts/coding_eval.py:41-47, 59-64, 76-81` (statements), frozen by the fingerprint test.
+
+Each hidden test needs names or literals that appear in neither the statement nor the base source.
+Checked with `git show <base|reference>:<source> | grep -c` and `git grep` over each base projection:
+
+- **dev-001:** `coding_harness.untracked_file_identities(root)` returning rows with keys
+  `path`/`bytes`/`sha256`.
+  - Error codes `source-inventory-alias` and `source-inventory-limit`.
+  - Identity keys `untracked_files` and `untracked_files_sha256`, defined as SHA-256 of
+    `json.dumps(sort_keys=True, separators=(",", ":"), ensure_ascii=True)`.
+  - Enumeration through a single NUL-separated `subprocess.run`, which the test mocks.
+- **dev-002:** `harness.MODEL_CHOICES` and `harness._model_request_diagnosis(arguments)` returning
+  the exact dict `{"selection", "observation": "owned-process-arguments", "serving": "not-observed",
+  "qualification": "not-assessed"}`.
+  - `diagnose()` output must carry `model_request` and `scope: "development-diagnostics-only"`.
+  - It must rename `profile_id` to `fixture_profile_id` and drop top-level `qualification`.
+- **dev-003:** a new `gate.observe_exit(process)`, called directly and patched by the cleanup test.
+
+A candidate that implements each statement correctly would still fail these tests. Base-fail and
+reference-pass discrimination does not detect this. The bad statements are protected against
+correction by the frozen fingerprint and the comment "never rewrite these tests or pins". As a
+result, the advertised `prepare` → edit-from-statement → `score` flow and any later model baseline
+would measure identifier guessing rather than coding.
+
+No model measurement has used these tasks yet, so correcting them now is not tuning and weakens no
+threshold.
+
+Fix:
+
+1. Before any model attempt, extend each statement with an explicit interface contract (names,
+   signatures, return keys, error codes and canonical encodings the hidden test checks). Hidden
+   tests stay unchanged. Re-pin the fingerprint with a recorded pre-measurement correction, or add
+   corrected task IDs and retire these.
+2. Add an automated check: every module attribute referenced by a hidden test that is absent from
+   the base source must be named in the statement.
+
+### L1 (low): candidate can forge a passing result (limitation 3, confirmed)
+
+Location: `scripts/coding_eval.py:200-218` (driver in the candidate's interpreter);
+`docs/guides/coding-evaluation.md:80` ("Exit 0 means all pinned tests passed").
+
+Reproduction: the five-line append above gives exit 0 with an empty log.
+
+This is documented (guide lines 111-115; evidence "Remaining work"), and this row scores only
+trusted historical bytes, so it is backlog for this row. It becomes **high** if any model-generated
+candidate score is reported or entered on a scoreboard before it is fixed.
+
+Fix:
+
+1. Qualify the "Exit 0" sentence.
+2. Cross-check `tests.json` against the raw verbose log (expected test IDs and `Ran N` / `OK`).
+3. Move result production out of the candidate's interpreter, for example per-test subprocesses
+   with results returned over a parent-owned descriptor, before T-311 baseline scoring.
+
+### L2 (low): resource bounds are per process only
+
+Locations: `scripts/coding_eval.py:221-225`; `--tmpfs /tmp` and the writable `/output` in
+`sandbox_command`.
+
+There is no `RLIMIT_NPROC`, no total-memory or tmpfs cap, and no output-directory size cap. Within
+the 90-second deadline, a hostile candidate can fork many 512 MiB processes or fill host disk (many
+32 MiB files) or RAM (tmpfs). The address-space limitation is partly documented. Inputs are trusted
+in this row.
+
+Fix: add a cgroup or `systemd-run --user --scope` memory/pids limit, or at least
+`RLIMIT_NPROC` and `--size` on the tmpfs and a quota on results, before generated candidates.
+
+### L3 (low): environment-specific boundary assertion
+
+Location: `tests/test_coding_eval.py:253` asserts `/lane` is absent. That is trivially true on any
+host without that lane path, and the test does not check the repository or home.
+
+Fix: assert that `str(evaluation.ROOT)` and the invoking user's home directory are not visible, and
+that `/proc/self/environ` holds only the allowed keys.
+
+## Triage of the builder's listed limitations
+
+1. **Initial verify1 failure (grading Git metadata).** Accepted as fixed. The candidate-only
+   repository has one commit, no remotes or tags, no reference objects (tested, and confirmed
+   inside the worker). Hidden bytes, pins and counts are unchanged; verify1 hash lineage confirmed.
+   The fix introduced M1.
+2. **verify2 exit 2, cause unresolved.** Root cause found and reproduced; recorded as **M1
+   (medium)**. Not waived.
+3. **Forgery and tampering.** Confirmed by a working forgery; **L1**, backlog for this row and a
+   blocking prerequisite for any generated-candidate score.
+4. **Public development tasks, not blind held-out.** Accepted. Labelling is honest in the guide,
+   the evidence and TASKS.md. No held-out material exists in the diff or the history I inspected.
+   The evaluator does not touch any harness or prompt file.
+
+Integrity checks that passed:
+
+- Hidden-test, base, reference and projection pins verify against Git.
+- Projections contain no `.git`, tests or reference symbols.
+- `list` hides reference and hidden-test fields.
+- References are never counted as model attempts.
+- Reported counts are consistent with the raw logs.
+- No public-repository hygiene problem in the diff: no private host path, username, hostname,
+  credential or product or trademark name; `/tools/build-slot` already appears in committed docs.
+- One level of sub-row, which runs and is measured.
+
+## Per-row result
+
+**T-311.1: not closed.**
+
+- **Open medium findings:** M1 (nondeterministic grading Git mutation and crash in the documented
+  one-command verifier) and M2 (statements insufficient for their hidden tests).
+- **Not reproduced by the reviewer:** the required Node runtime is absent from the reviewer lane
+  (`/lane/state/tooling` does not exist). The markdownlint step did not run here and the fast gate
+  exited FAIL for that reason alone. Scoped Markdown lint therefore remains unverified by this
+  reviewer; `validate_docs.py` passed.
+- **Confirmed by the reviewer:** confinement (no network, read-only inputs, cleared environment,
+  PID isolation, no nested user namespaces, refusal of aliases and out-of-scope candidates),
+  base-fail/reference-pass discrimination when the run completes, and honest labelling of the
+  readiness refusal.
+
+Parent T-311 remains open.
+
+Verdict: FINDINGS
