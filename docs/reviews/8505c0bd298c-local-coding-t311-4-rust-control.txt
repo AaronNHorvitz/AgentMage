@@ -1,0 +1,246 @@
+Commit: 8505c0bd298cea2ec2c5e706955b3456be3f6d13
+Scope: local-coding-t311-4-rust-control
+
+# Independent review: T-311.4 frozen Rust control and confined Cargo adapter
+
+Reviewer: separate read-only Claude Opus 5.5 session. Row: T-311.4 (core, attempt 1).
+Base for the diff: `16e684b39944b7bb2d177374a137d4daae4a4186`. I did not modify the checkout,
+the hidden tests or any threshold. I read IP-POLICY.md, decision 0153 by title, the T-311 rows of
+TASKS.md, and all seven changed files. I consulted no other product's code or documentation and
+did no patent search.
+
+## Commit and tree
+
+- `git rev-parse 8505c0bd298cea2ec2c5e706955b3456be3f6d13 HEAD`: both are `8505c0bd298cea2ec2c5e706955b3456be3f6d13`.
+- `git status --porcelain`: empty before, during and after every run.
+- `git diff --stat 16e684b3 8505c0bd`: exactly the seven files named in the request (664+/29-).
+- `git diff --check 16e684b3 8505c0bd298cea2ec2c5e706955b3456be3f6d13`: exit 0.
+- Node runtime: `v24.15.0`, SHA-256 `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c`, LICENSE present.
+- Committed source bytes match the evidence bindings: `scripts/coding_eval.py` `49e32eb4…4209`,
+  `scripts/coding_eval_rust.py` `735390c9…9fda`, `tests/test_coding_eval.py` `6bf6a40d…e80a`,
+  `tests/test_coding_eval_rust.py` `c21ff2b8…688b`.
+
+## Repeat commands (as requested) and results
+
+`python3 scripts/local_agent_fast_gate.py --base 16e684b3 --plan` lists the seven paths and five
+commands (diff check, untracked lint, markdownlint on the three Markdown files, Python lint on the
+four Python files, the two unittest modules). Then one build-slot reservation (wall time 194.7 s
+including the wait) ran:
+
+| Command | Result |
+| --- | --- |
+| `python3 -m unittest tests.test_coding_eval tests.test_coding_eval_rust` | exit 0, `Ran 47 tests in 13.814s`, `OK` |
+| `python3 scripts/coding_eval.py verify --output <private>/verify` | exit 0, `passed: true`, `model_score: null`, `input_refused: false` |
+| `python3 scripts/local_agent_fast_gate.py --base 16e684b3 --timeout 600` | five `RESULT exit=0`, `FAST GATE: PASS` |
+| `python3 scripts/validate_docs.py` | `Validated 699 Markdown file(s) and all policy invariants.` |
+
+Verifier detail, from my own `summary.json`: all 15 rows `valid: true`. Every base has cause
+`test_failure` and every reference cause `none`; reference tests sum to 71 and base+reference test
+invocations to 142. There are no skips, expected failures, unexpected successes, truncation,
+infrastructure or input errors, and every report has `model_attempts` 0, `model_score` null and
+candidate kinds `frozen-base`/`frozen-reference`. dev-rust-001 base: 1 test / 1 failure, 3.04 s.
+Reference: 1 test / 0 failures, 3.11 s.
+
+My Rust stdout logs show 22 `compiler-artifact` messages, all `fresh: false` (empty target
+directory, no reused cache). The only workspace crate built is `agentmage_kernel_contracts` (lib) plus
+the `eval_hidden` test; other workspace members are not compiled. Both stderr logs begin with
+`rust-worker-cpus=4`. The base panics at `eval_hidden.rs:83` with
+`left: Some("path.component.separator") right: Some("path.component.rooted")`. That is a real
+contract assertion in the unchanged regression, not a compile or input refusal. Reference output:
+`test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out`.
+
+No new `agentmage-eval-*` tree remains after my runs. The only four in `/lane/state/tmp` are dated
+04:15–04:41, which is before this work. No evaluator, cargo or rustc process remains apart from my
+own reviewer session.
+
+## Builder evidence traced
+
+All 13 private artifact digests in the evidence file match the files under
+`/lane/state/tmp/t311-4-rust/`. The retained `verify/summary.json` gives Rust base 3.366298 s and
+reference 3.305468 s, and both bind evaluator `49e32eb4…` and adapter `735390c9…` (the committed
+bytes). `check-results.json` matches the timing table (36.918068 / 16.410351 / 154.754825 s). The
+retained failures are real and match their descriptions:
+
+- `units-first.log`: 46 tests, one stale `15 != 14` listing assertion and one `tests` None.
+- `base-first-adapter`: cause `infrastructure`, `tests` null and exit 2, because `linking with cc
+  failed` while building the proc-macro2/quote build scripts. Its adapter digest `d6fec66f…`
+  differs from the committed one.
+- The bwrap `--disable-userns requires --unshare-user` refusal.
+- Cargo's `cannot update the lock file … --locked` refusal for the narrowed manifest.
+
+I could not compare the uncommitted first adapter's rlimits with the committed ones (that source
+is not retained). This does not matter here: the committed limits are fixed in code, asserted by a
+unit test and documented.
+
+## Focus 1: frozen definitions, statement and pins
+
+- Python tasks: I loaded `054d87c7:scripts/coding_eval.py` separately. `old.TASKS == new.TASKS` is
+  True, and the Python `DRIVER` and `sandbox_command` bytecode are identical. The Python fingerprint
+  `72442a4c…a618` and the first-three fingerprint `d5f5e365…e3c5` recompute exactly, as does the
+  combined fingerprint `3d2b07a1…f88a`. No Python task carries `hidden_revision` or `language`, so
+  the new `task.get("hidden_revision", task["reference"])` default leaves Python grading unchanged.
+- Revisions: base `b22a2c46` → reference `72d9448a` (one commit, "Reject ambiguous workspace
+  paths"; source change limited to `path.rs` plus supply-chain metadata) → hidden `1ff13fe5` (14
+  commits later, "Add canonical path security corpus"). `git log` on `path_corpus.rs` and
+  `corpus.json` shows only `1ff13fe5`, so neither file has been edited since it was created.
+- Digests recomputed: hidden `11e4ef39…cbca`, corpus `75fb2f2b…69ea` (209,469 bytes), reference
+  source `1534abe4…41a9`, base source `ce942f5e…edab` and projection map `a3fa4c18…6b92`. All match.
+- Regression shape: one `#[test]` function iterating 640 cases (10 classes × 64), asserting 512
+  rejected escape attempts and 64 distinct case-sensitive controls. The labels "one test, not 640
+  tests/tasks" are accurate, and `expected_tests` is 1.
+- Statement audit: the statement matches the reference diff clause for clause: variant names and
+  codes, the order rooted → colon → separator set → `%2e/%2f/%5c` → NUL → control → size → trailing
+  dot/space → invisible ranges → NFC/NFKC. As an independent check I wrote a statement-only
+  emulator of those rules in Python (not derived from the reference code). It was run against all
+  576 component-mode corpus cases, including the expected code and component index, and gave 0
+  mismatches. The 64 serialized cases (invalid UTF-8) are rejected by the base already. So the
+  graded behaviour is fully determined by the statement. Nothing in the statement is contradicted
+  by the frozen source, regression or corpus. A Low coverage gap is listed below.
+- No task selection depends on model attempts: there are no model runs, and the task constants are
+  static data.
+
+## Focus 2: projection and scope
+
+- `projection()` returns 34 files / 501,816 bytes: root and member `Cargo.toml`, `Cargo.lock` and
+  `*/src/*.rs`. That means no `tests/`, `fixtures/`, `.git`, scripts, `.cargo/config.toml` or
+  `rust-toolchain.toml`. The two toolchain files only pin 1.95.0, and the config file only defines
+  an alias, so leaving them out changes nothing.
+- No projected file contains `path_corpus`, the corpus id, `RootedComponent` or
+  `is_invisible_format`, so the reference fix and hidden inputs do not leak.
+- Only blobs with mode 100644 are admitted. `Cargo.lock` is byte-identical to the base.
+- `materialize` adds only the pinned regression (as `tests/eval_hidden.rs`, bytes unchanged) and the
+  corpus, using `O_EXCL|O_NOFOLLOW`. A unit test confirms that every manifest and lock byte is
+  preserved and that no `.git` exists.
+- The target directory is `/tmp/target` on the worker's fresh tmpfs, and the workspace is mounted
+  read-only. A `target/` directory in a candidate is refused as an unknown directory, so a candidate
+  cannot supply a build cache.
+
+CLI escape and scope attempts, run from a `prepare`d candidate in a private temp directory. All
+exit 2 and none creates an output directory:
+
+| Attempt | Refusal code |
+| --- | --- |
+| `.cargo/config.toml` setting a rustc wrapper | `candidate-directory-refused` |
+| `kernel/contracts/build.rs` | `candidate-file-refused` |
+| `path.rs` symlinked to the reference fix | `candidate-directory-refused` |
+| hard-linked reference `path.rs` | `candidate-file-refused` |
+| reference plus one comment line | `untrusted-candidate-disabled` |
+| `Cargo.lock` edit | `out-of-scope-edit` |
+| shadow `tests/eval_hidden.rs` | `candidate-directory-refused` |
+| shadow corpus | `candidate-directory-refused` |
+| deleted member source | `candidate-file-missing` |
+| `lib.rs` edit | `out-of-scope-edit` |
+
+The exact reference snapshot scores exit 0, `frozen-reference`, 1/0.
+
+## Focus 3: admission
+
+`require_historical_candidate` resolves the task against `collection()` and needs the dictionary
+to match exactly. It requires byte equality with the full 34-file base projection, or with that
+projection plus the pinned reference source. It runs in `grade()` before `new_directory(output)`
+and before `grade_case`. The unit test covers a source that prints a forged `test result: ok` line
+and calls `exit(0)`, plus an altered `expected_tests`. It shows both are refused, the worker is
+never launched and no output is created. I reproduced the plausible-solution refusal through the
+CLI. The adapter and the guide state plainly that the driver/parser is not an independent oracle
+and that aggregate quotas are absent. No generated-scoring API or flag was added.
+
+## Focus 4: mounts, Cargo, limits, parsing, lifecycle
+
+I ran a probe of my own inside the committed `coding_eval_rust.sandbox_command(...)` with
+`preexec_fn=coding_eval_rust.limits`:
+
+- **Environment:** exactly `PATH=/toolchain/bin:/usr/bin`, `HOME=/tmp`, `LANG`, `CARGO_HOME=/cargo`,
+  `CARGO_NET_OFFLINE=true`, `RUSTFLAGS=-Ccodegen-units=1 -Clink-arg=-Wl,--threads=2` and `PWD`.
+  No host variables leak.
+- **Root contents:** bin, cargo, dev, grader, lib, lib64, output, proc, tmp, toolchain, usr and
+  workspace. No `/home` or `/var/home`. `/cargo` holds only `registry` (no credentials or config).
+- **Writes:** `/workspace`, `/toolchain`, `/cargo/registry`, `/usr` and `/grader` all give
+  `Read-only file system`. Only `/tmp`, `/cargo` (fresh tmpfs) and `/output` are writable.
+- **Network:** connect gives `Network is unreachable`, and there is no `/sys/class/net`.
+- **Processes and privileges:** PIDs inside are only 1 and 2. All capability sets are zero, and
+  `unshare -U` fails because nested user namespaces are disabled.
+- **Limits:** AS 2 GiB, CPU 60 s, FSIZE 128 MiB, CORE 0, affinity 4 CPUs.
+
+Cargo is run with `--locked --offline --jobs 2` on the pinned 1.95.0 toolchain (`cargo 1.95.0
+(f2d3ce0bd 2026-03-21)`). It builds only the existing lockfile dependencies, all under permissive
+licences; I spot-checked zmij MIT, tinyvec Zlib/Apache/MIT, memchr Unlicense/MIT, unicode-ident
+MIT/Apache + Unicode-3.0, syn and serde_core MIT/Apache.
+
+The driver checks compiler and test output as follows:
+
+- A compile failure, more than 2 MiB of compiler or test output, a count other than one
+  `eval_hidden` executable, or an executable outside `/tmp/target/` all give exit 2 with no counts.
+- It needs exactly one libtest summary line, and refuses any measured or filtered tests or a
+  status/exit-code mismatch.
+- Ignored tests count as skipped, and a pass needs `passed > 0` with nothing ignored.
+- The parent still needs `tests == expected_tests` (1), the 90 s deadline and 2 MiB log budgets.
+  It promotes counts only after cleanup.
+
+Host-side `rustup which` failures surface as OSError or SubprocessError, so they are reported as
+infrastructure and not as a test failure. Lifecycle (process-group kill, `--die-with-parent`, PID
+namespace) and cleanup are inherited unchanged. Python tasks keep their 512 MiB `limits` and their
+driver.
+
+Observation, not a finding: CPU affinity is inherited and a worker process could widen it again.
+The adapter and guide say "inherit" and "not aggregate quotas", which is accurate. This is covered
+by the existing aggregate-quota blocker on generated scoring.
+
+## Focus 5: controls and refusals
+
+I reproduced the real controls through both `verify` and `score`. The unit suite covers the
+projection-hash refusal and the corpus-corruption refusal: cause `input_integrity`, no counts, no
+bwrap launch. `verify` treats a row as valid only when the base cause is `test_failure`, so a
+compiler, infrastructure or input refusal cannot validate a base. The reference runs the unchanged
+whole regression without filters (`0 filtered out`, `0 ignored`).
+
+## Focus 6: evidence, hygiene, scope
+
+- The added lines contain no host path, username, hostname, credential or private project name.
+  "Rust" and "Cargo" appear only as technology names.
+- No other agent product is named or compared.
+- No model, GPU, held-out material or tuning is involved, and no held-out set exists.
+- The TASKS row leaves parent T-311, the 30-task collection, held-out inputs, generated scoring and
+  the model baseline open. Every number in TASKS, the guide and the evidence matches my runs or the
+  retained raw artifacts.
+- The evidence says plainly that "hidden" means withheld from editing, not unpublished.
+- Delivery: this is a single sub-row level that ends in a runnable, measured control.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (Low, evaluation coverage disclosure) — `scripts/coding_eval_rust.py:31-47` against
+  `fixtures/paths/v1/corpus.json@1ff13fe5`.** The statement requires behaviour that the frozen
+  corpus never exercises:
+  - trailing dot or space (`AmbiguousSuffix`);
+  - the invisible-format ranges (`InvisibleFormat`);
+  - `%2f`, `%5c` and upper-case percent encodings (the corpus has only lower-case `%2e%2e`);
+  - serde revalidation of the new rules (the serialized cases are only invalid UTF-8).
+
+  The hidden test compares code strings and never names variants. So a future candidate that leaves
+  out those clauses, even the two new variants entirely, would pass dev-rust-001. Today this cannot
+  inflate a score because generated scoring is disabled. Fix: before any generated score, say in
+  the guide/evidence which statement clauses the frozen regression grades, and label a
+  dev-rust-001 pass in reports to match. If wider coverage is wanted, add a separately pinned
+  original regression from history. Do not edit the existing hidden files or the statement.
+  Backlog.
+
+## Per-row result
+
+- **T-311.4: PASS.** The "done when" is met at this exact commit:
+  - one frozen Rust contract fix in the same command;
+  - all 14 Python definitions preserved byte-for-byte;
+  - regression and corpus withheld from the projection, with only the declared source edit
+    admissible;
+  - frozen-controls-only admission retained;
+  - 47 unit tests and the scoped fast gate pass;
+  - mixed-language verifier: 15 failing bases and 15 passing references, 71 reference tests, no
+    skips;
+  - fixed memory/CPU/file limits with bounded compiler parallelism;
+  - setup and compiler failures retained.
+
+  L1 is backlog.
+- Parent T-311 remains open. This review does not cover generated scoring, held-out acceptance, a
+  model baseline, coding-engine qualification or release.
+
+Verdict: PASS
