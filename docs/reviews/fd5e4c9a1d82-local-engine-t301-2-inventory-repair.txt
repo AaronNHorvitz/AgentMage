@@ -1,0 +1,174 @@
+Commit: fd5e4c9a1d8263f6af25b3d2dc803a229c2704d4
+Scope: local-engine-t301-2-inventory-repair
+
+# Independent re-review: T-301.2 engine inventory repair
+
+Reviewer: Claude Opus 5.5, separate read-only session, extra-high effort.
+Row: T-301.2 (core tier). Base: `39a1fd2fdb76e0f34afae583a468a5621d8d2c9c`.
+Commit in scope: `fd5e4c9a` (inventory evidence, guide, TASKS.md row note,
+retained first review). Date: 2026-11-03. The repository was not modified.
+
+## Methods
+
+- Read IP-POLICY.md, the active queue in TASKS.md (Decision 0153 header and
+  rows T-301, T-301.1, T-301.2), the retained first review and the full diff
+  from base.
+- Regenerated all cargo metadata myself (no-deps, default-feature resolve,
+  all-feature resolve, excluded experiment) and compared it with the builder's
+  stored copies by package ID and licence, then recomputed target kinds,
+  bin/example names and sources, features, dependency counts and licence sets
+  independently of the builder's helper.
+- Read both builder helpers (`check-inventory.py`, `run-examples.py`) before
+  running anything. The inventory checker is read-only; I ran it as well.
+- Read all eight example sources and both relevant feature manifests (host,
+  engine, Linux adapter, read-only) and compared each row's state, limitation
+  and carry-forward wording with the code and with my own run output.
+- Ran all eight example entry points myself with the exact requested commands
+  and my own target directory, then compared outputs with the builder's
+  per-output hashes.
+- Ran my own first-twenty-line Rust header scan over all tracked `.rs` files.
+- Scanned all added lines for private paths, usernames, hostnames, e-mail,
+  credentials, private project names, trademarks and agent-product names.
+
+No GPU, model, network, downloads, long documentation gate, supply-chain
+regeneration, full workspace rerun or host-escape attempt. This is a
+documentation-only repair: no runtime, permission or confinement boundary is
+changed or claimed, so there was nothing to escape-test here. There are no UI
+screens in scope.
+
+## Commands and results
+
+Environment: `PATH=<home>/.local/share/agentmage-build-tools/node-v24.15.0/bin:$PATH`,
+`PYTHONPATH=.`, `CARGO_TARGET_DIR=/lane/state/review-target` for builds;
+`node --version` = `v24.15.0`; node SHA-256
+`d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c` (matches).
+
+| Step | Command | Result |
+| --- | --- | --- |
+| 1 | `git rev-parse HEAD`; `git status --porcelain`; `git diff --check 39a1fd2f… HEAD` | `fd5e4c9a1d8263f6af25b3d2dc803a229c2704d4`; clean; exit 0. One commit since base; four files changed (TASKS.md, evidence, guide, retained review) |
+| 2 | `git diff --exit-code 39a1fd2f… HEAD -- Cargo.toml Cargo.lock architecture/status-model.json supply-chain kernel capabilities platforms shells release experimental scripts tests package.json` | exit 0 |
+| 3 | `cmp docs/reviews/39a1fd2fdb76-…-inventory.txt /lane/reviews/39a1fd2fdb76-…-inventory.md`; `sha256sum` | exit 0; `50a35af0dfc66e019b34c27881aba8d8cedd91048991f44d9d6523436b9f20e2` (matches) |
+| 4 | `python3 scripts/local_agent_fast_gate.py --base 39a1fd2f… --plan`, then `--timeout 600` | plan: whitespace, untracked lint, review-format lint on the retained review, Markdown lint on the three changed documents; no Rust crate selected. Execution `FAST GATE: PASS`, 0 Markdown issues, 1.5 s |
+| 5 | `cargo metadata --locked --offline --no-deps --format-version 1` (workspace and `experimental/model-lab/Cargo.toml`); `git ls-files -- Cargo.toml '**/Cargo.toml'` | 11 packages = 11 tracked member manifests (plus root). Target kinds exactly `lib` 10 (all but xtask), `bin` 15, `example` 8, `test` 34; no `bench` or `custom-build`; no tracked `build.rs` or `benches/`. All eight examples lack `required-features`. Bin/example names and sources match the tables exactly |
+| 6 | `PYTHONPATH=. python3 /lane/state/tmp/t301-inventory-repair/check-inventory.py` | `PASS`. Its inputs (builder metadata JSON) equal my fresh metadata by package ID and licence for all five metadata sets |
+| 7 | the eight `bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo run --locked --offline -p <pkg> --example <name>` commands, sequentially | all exit 0, each stdout a JSON object (see table below) |
+| 8 | `cargo metadata --locked --offline --format-version 1`, the same with `--all-features`, and the lab manifest | union of registry package IDs: **117** default, **170** all-feature (the lab adds none); every package declares a licence |
+| 8b | `git ls-files -- '*.rs'` plus own `head -n 20` scan for SPDX/copyright/"licensed under"/"(c) YEAR" | 595 files; one regex hit (`Spdx,` enum variant in `kernel/engine/src/supply_chain_evidence.rs:7`), not a header. Claim holds |
+
+Example runs (my build, timings include compilation):
+
+| Example | Exit | Seconds | Bytes | Comparison with builder output |
+| --- | --- | --- | --- | --- |
+| `coding_skill_pack` | 0 | 10.14 | 30803 | byte-identical |
+| `document_control_skill_pack` | 0 | 0.22 | 15841 | byte-identical |
+| `executive_skill_pack` | 0 | 0.21 | 16120 | byte-identical |
+| `markdown_artifact_skill_pack` | 0 | 0.23 | 13452 | byte-identical |
+| `meeting_skill_pack` | 0 | 0.23 | 11994 | byte-identical |
+| `grammar_bom` | 0 | 4.57 | 2327 | byte-identical |
+| `story_22_4_evidence` | 0 | 23.40 | 25938 | byte-identical |
+| `story_22_3_evidence` | 0 | 5.30 | 27290 | differs only in five `performance` timing fields (`elapsed_ms`, `ingest_bytes_per_second`, `initial_ingest_latency_us`, `time_to_first_useful_section_us`, `cleanup_latency_us`) |
+
+Builder raw evidence: `example-results.json` SHA-256 is
+`08d848cd3635caae226e2d21ba237915388fad60c7d40bc1d24fb8b10ccac9f6` as published;
+the supervision log ends `RESULT exit=0 seconds=66.81` and `FAST GATE: PASS`;
+per-example seconds and bytes match the evidence table. The run helper uses one
+reservation, a 120 s per-command timeout, writes only to private scratch and
+asserts exit 0, a JSON object and eight results.
+
+Independent source checks:
+
+- Feature table (`docs/evidence/t301-2-engine-inventory-2026-11-02.md:41-51`):
+  host defaults, `source-artifacts` → engine `source-preparation`,
+  `workflow-supervisor` → engine `verified-workflow-supervisor`, host engine
+  dependency `default-features = false, features = ["runtime-projections"]`
+  (`shells/host/Cargo.toml:26-38`); workspace dependency disables engine defaults
+  (`Cargo.toml:30`); the Linux adapter requests all three engine features
+  (`platforms/linux/Cargo.toml:22`); `public-research-worker` = `dep:ureq`,
+  `dep:url`; `test-support` enabled by the host dev-dependency
+  (`shells/host/Cargo.toml:51`); `lifecycle-fixture` gates its binary; the other
+  seven packages declare no features. `interactive-cli` is the required feature of
+  `agent` and `agentmage`. All correct.
+- Five skill-pack rows: each `main` serialises the library's built-in
+  definitions/manifests and fixed `false` flags. The manifests' `requested_scope`
+  holds only knowledge record kinds, a context byte ceiling and a workflow ID, so
+  "denied authority / no access" is consistent with the data. They perform no
+  task, as stated.
+- `grammar_bom`: prints `supported_grammars()` and the grammar set digest; row
+  correct.
+- `story_22_4_evidence`: deterministic recovery decisions over a fixture
+  checkpoint and 100 seeded synthetic crash traces; `concurrent_client_count: 32`,
+  `replay_count: 0` and the cleanup counters are literals. The row correctly calls
+  them constructed fixture data.
+- `story_22_3_evidence`: in-memory admission with a whitespace token counter,
+  in-process artifact dispatch, refresh/release/delete, a 25 MiB synthetic log,
+  literal ceilings and a literal all-zero `canary_scan`. The row's caveats (no
+  real model, no confined worker, ceilings/canaries prove no threshold or
+  sandbox) are accurate. The evidence does not promote these to measured
+  acceptance.
+- The "invoked by evidence scripts" guide claim holds: nine `scripts/*.py` files
+  call `cargo run … --example`.
+- Licence prose (`:132-146`): default set adds MIT, Apache-2.0, BSD-3-Clause,
+  Zlib, 0BSD/BSD-1-Clause/Unlicense alternatives, compound BSD-3-Clause and
+  Unicode-3.0 terms, one `MIT OR Apache-2.0 OR LGPL-2.1-or-later`, slash forms;
+  all-feature adds ISC, `Apache-2.0 AND ISC`, Unicode-3.0 and CDLA-Permissive-2.0.
+  All are permissive or offer a permissive alternative. The section explicitly
+  disclaims provenance and notice clearance; no clearance is claimed here either.
+- TASKS.md: T-301.2 stays `[ ]` with an "awaiting independent re-review" note;
+  the preserved ledger from "Current Delivery Amendment" onward is unchanged
+  (helper assertion, reproduced by diff scope).
+- Privacy/branding: no added line contains a private host path, username,
+  hostname, e-mail, credential, private project name, trademark branding or
+  other agent-product name; the retained review uses `<home>`.
+- Evaluation integrity and loop safety: not engaged (no T-311 content, no
+  tuning, no runtime change).
+- Delivery: a single-level sub-row; the repair ends in executed and measured
+  entry points, not plans.
+
+## Prior findings
+
+- M1 (medium, eight example executables omitted): **fixed.** All eight are in
+  the table with correct source links, bounded state, limitation and
+  carry-forward. The guide (`docs/guides/local-agent-development.md:108-125`) and
+  exact-set comparison now include `example`, and lib/test/bench/build-script
+  are accounted for.
+- L1 (low, features): fixed, verified above.
+- L2 (low, headers/dependency licences): fixed, verified above, apart from L3.
+
+## Findings
+
+### L3 (low): LLVM-exception count understated
+
+Location: `docs/evidence/t301-2-engine-inventory-2026-11-02.md:144`.
+"another offers an LLVM-exception alternative" implies one package. The default
+resolve has two (`rustix` 1.1.4, `linux-raw-sys` 0.12.1) and all-feature metadata
+has three (adds `wasi`). Reproduce: filter `cargo metadata --locked --offline
+--format-version 1` packages with a registry source whose `license` contains
+`LLVM`. Fix: say "two (three with all features) offer an
+`Apache-2.0 WITH LLVM-exception` alternative". It does not affect the
+permissive-only conclusion.
+
+### L4 (low): printed authority flags are literals, not derived properties
+
+Location: `docs/evidence/t301-2-engine-inventory-2026-11-02.md:88-92`.
+"registration and authority are disabled" and "with denied authority" describe
+values the examples hard-code (`"authority_enabled": false`,
+`SkillAuthorityCeiling::denied()`), not values computed from the manifests. The
+manifests' requested scopes agree, so the claim is not false, and the section
+already says the run "does not validate every output claim". Fix (backlog): say
+"prints fixed denied-authority flags" so later readers do not treat them as a
+checked boundary.
+
+## Per-row result
+
+- **T-301.2: PASS at exact commit `fd5e4c9a1d8263f6af25b3d2dc803a229c2704d4`.**
+  Every crate, `bin` and `example` target is accounted for and matches fresh
+  metadata. Features, dependency activation, header and dependency-licence facts
+  reproduce. All eight example entry points run and reproduce the builder's
+  outputs. The fast gate passes. Labels honestly separate fixture and synthetic
+  output from real backends. The prior full baseline (2948 passed / 72 failed /
+  78 ignored, reproduced in review 1) stands because no source changed. No high
+  or medium finding is open; L3 and L4 are backlog for T-309.
+- T-301, T-301.1, T-302 and its other sub-rows: out of scope and unaffected.
+  This review claims no native-host pass.
+
+Verdict: PASS
