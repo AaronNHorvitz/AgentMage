@@ -1,0 +1,177 @@
+Commit: e38ea2ed2dc68abda486b531f9732dc5cd900e97
+Scope: local-coding-t311-6-statement-contract-repair
+
+# Independent re-review: T-311.6 statement-contract repair (v9)
+
+Tier: core. Row: T-311.6, attempt 2. Base: `57ea7ee64ec6ef218e411945e390734f494f9bf9`.
+Reviewer: separate read-only Claude Opus 5.5 session with no shared context with the builder.
+The repository was not modified: `git status --porcelain` was empty before and after every run.
+Review-owned outputs were written only under `/lane/state/tmp/t311-6-repair-review-Frn0Ar/`.
+The checkout root is written `<repo>` below. No GPU, model or held-out work was done.
+
+## Inputs read
+
+- IP-POLICY.md, Decision 0153 and TASKS.md rows T-311.x.
+- The full eight-path diff `57ea7ee6..e38ea2ed`. It is a single commit.
+- The repair evidence record and the guide paragraph.
+- The retained review-1 text. It is byte-identical (`cmp`) to the original lane review, with SHA-256
+  `e11ef7af…09bb98f` as stated in the evidence.
+- The three changed statements, checked against the frozen hidden methods and reference diffs:
+  - dev-021 at `ad28b5ca`;
+  - dev-022 at `7b1953d5`;
+  - dev-029 at `3709eabe`.
+- The builder's private material in `/lane/state/tmp/t311-6-repair/`.
+
+No other product's code or documentation was read, and no patent was searched or cited.
+
+## Methods, exact commands and results
+
+All commands were run from `<repo>`.
+
+```sh
+export PATH="$PWD/target/local-agent-tools:$PATH"
+node --version                     # v24.15.0
+sha256sum target/local-agent-tools/node   # d1de76d8…bd932c (matches)
+git rev-parse HEAD                 # e38ea2ed2dc68abda486b531f9732dc5cd900e97
+git status --porcelain             # empty
+review_root=/lane/state/tmp/t311-6-repair-review-Frn0Ar   # from mktemp
+export CARGO_TARGET_DIR=/lane/state/review-target
+bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base 57ea7ee64ec6ef218e411945e390734f494f9bf9 --timeout 600 > "$review_root/fast-gate.log" 2>&1   # exit 0
+bash /tools/build-slot python3 scripts/coding_eval.py verify --output "$review_root/verify" > "$review_root/verify.log" 2>&1   # exit 0
+bash /tools/build-slot python3 scripts/validate_docs.py > "$review_root/documentation.log" 2>&1   # exit 0
+python3 scripts/coding_eval.py list > "$review_root/list.json"   # exit 0
+git status --porcelain             # empty
+```
+
+- **Fast gate: PASS.** It covered eight paths, the exact diff set, and six commands. markdownlint
+  reported "Linting: 3 files" and "Summary: 0 issues". The unit command reported
+  `Ran 58 tests in 19.376s`, `OK`, `FAST GATE: PASS`.
+- **Verifier: exit 0.** From `verify/summary.json`:
+  - `version=coding-development-v9`, `passed=true`, `input_refused=false`, `model_score=null`.
+  - `collection_sha256=0c2a0624df93085540f61c4677260490a9810a0325efd6bcb75db0dce1461570`.
+  - 30 rows, all valid. All 30 bases have cause `test_failure` and all 30 references have cause
+    `none`.
+  - 89 reference tests and 178 invocations in total.
+  - No skip, expected failure, unexpected success, truncation, infrastructure or input error.
+  - Every case has `model_attempts=0` and `gpu_minutes=0`.
+  - All cases bind evaluator `f4a8a26672a7…` and collection module `2fd431dc75f7…`.
+  - Summed case timers are 39.959 s, against the builder's 39.833 s. The dev-003 race did not occur.
+- **Policy validator: PASS.** "Validated 702 Markdown file(s) and all policy invariants."
+- **list:** v9 with 30 tasks. Each task has exactly the fields `id`, `split`, `base`, `source` and
+  `statement`, with no hidden test, reference or digest.
+- **Leftovers:** only the four historical `agentmage-eval-*` trees remain. My runs left none.
+- **Wall times** include waiting for a busy shared reservation, so they are not comparable to the
+  builder's slot-excluded timings: gate 6m52s, verify 44s, validator 4m19s.
+
+### Own preservation and fingerprint check
+
+I extracted `scripts/` at `57ea7ee6` with `git archive` into review scratch. I then loaded both
+evaluators and compared `collection()` field by field for all 30 tasks:
+
+- Only the `statement` fields of dev-021, dev-022 and dev-029 differ. Every other field of all 30
+  tasks is identical. That includes hidden, base, reference and projection hashes, test names,
+  expected counts, base/reference commits, sources and splits.
+- All uppercase scalar constants of `coding_eval.py` are equal except `VERSION` (v8 to v9). These
+  include `MAX_FILE`, `MAX_TREE` and `TIMEOUT`. The diff confirms the evaluator changes only
+  `VERSION`; `coding_eval_rust.py` is untouched.
+- Recomputed fingerprints: old `91f1eecf…b04d`, new `0c2a0624…1461570`. Both match the request.
+  Counts are 89 expected tests and split `{development}`.
+- The new regression `test_v9_statement_repair_preserves_all_other_frozen_inputs` checks the 15
+  expansion dictionaries field by field. It also recomputes the v8 fingerprint from the current
+  `evaluation.TASKS` and `rust.TASKS`, which ties the 20 previously accepted definitions to v8 as
+  well. It passed in my gate.
+- The evidence lists SHA-256 values for six tested sources and ten private artifacts. All of them
+  match the files. `source-before.json` and `source-after.json` are identical.
+
+### Statement repairs against the frozen hidden bytes
+
+- **M1 / dev-021: resolved.** The statement now says "Only the correction case adds
+  "retained-muse-read-arguments" … The denial case does not check the request digest." This
+  matches the reference, where the check sits under `if case == "read-arguments-correction":`. It
+  also matches the hidden method, which reuses the zero-digest `requested` row in the denial
+  fixture and asserts `passed`.
+- **M2 / dev-029: resolved.** The statement now says each notice is a dict whose `"type"` names
+  it. It says `job_state` has `available=True` and `job.phase` completed, and that its top-level
+  `controls` is a list of objects whose `"action"` values in order are `["suspend","resume"]`. This
+  matches the hidden fixture (`"controls": [{"action": …}, …]` alongside nested
+  `"job": {"phase": …}`) and the reference expression.
+- **L1 / dev-022: resolved.** The statement now names `kind.artifact_id` on `artifact_created` rows
+  and top-level `artifact_id` on `runtime_artifact_verified`. Both match the hidden fixture and
+  the reference.
+- **L2 / dev-024: disclosed** in the guide ("success there includes finding and adapting existing
+  repository code") and in the evidence.
+- **Remaining clauses:** no other part of these three statements changed. The new wording
+  introduces no contradiction with the hidden methods that I could find. Each changed clause is
+  satisfied by the reference implementation.
+
+### Probe replays (diagnostic, not blind and not model scoring)
+
+I read `stmt/run_candidate.py` before running it. Its SHA-256 `f206dc82…` is unchanged from
+review 1. It calls `grade_case` directly in reviewer scratch. The candidate hashes match the
+builder's `probe-summary.json`. I ran the request's exact loop:
+
+| Task | candidate1 (review-1 reading) | candidate2 (one-line corrected) |
+| --- | --- | --- |
+| dev-021 | exit 1, failures 1, errors 0 (denial `assertTrue(passed)`) | exit 0, 1 test PASS |
+| dev-029 | exit 1, failures 1, errors 0 (`job-completed: False`) | exit 0, 1 test PASS |
+
+Under the repaired statements, candidate1's behavior is now explicitly excluded: the denial case
+must not check the digest, and `controls` is a list of `{"action"}` objects. Candidate2 is the
+statement-faithful reading.
+
+### Generated scoring still refused (actual CLI)
+
+For dev-021 and dev-029 I ran:
+
+```sh
+coding_eval.py --task T --output DIR prepare
+```
+
+I then overwrote the source with the passing candidate2 and ran:
+
+```sh
+bash /tools/build-slot python3 scripts/coding_eval.py --task T --candidate DIR --output OUT score
+```
+
+Both runs exited 2 with `evaluation.untrusted-candidate-disabled`, and no output directory was
+created. A first attempt that passed a file instead of a prepared directory was refused earlier with
+`io-failed`. That is my usage error, not a defect.
+
+## Integrity, hygiene and claims
+
+- **Evaluation integrity:** no held-out task exists, and none is selected, read or claimed. No
+  prompt, harness or model file changed. Hidden bytes, base commits, selections and thresholds are
+  unchanged, as verified above. The statement edits happen before any model measurement, follow
+  the accepted T-311.3 v5 precedent, and are re-pinned under a new version and fingerprint.
+- **Privacy:** the added lines contain no username, hostname, home path, credential or private
+  project name. The retained review-1 text contains generic `/lane/state/...` sandbox paths and
+  `/tools/build-slot`. These are not host identities, and 19 of 26 retained reviews already carry
+  them. I make no finding here.
+- **Claims:** every number in the evidence and the TASKS row traces to my runs or to the hashed
+  builder files: 58 tests, 30/30 controls, 89/178 invocations, both fingerprints, 702 Markdown
+  files and the probe outcomes. There is no model, GPU or score claim, no product comparison and no
+  trademark branding. The row stays open pending this review, and the parent stays open.
+- **Delivery:** this is the same row's second attempt, not a split.
+
+## Findings
+
+No critical, high or medium findings.
+
+Observation, not a finding: in dev-029 the controls requirement is now a separate sentence ("Its
+top-level controls is …") inside the `"job-completed"` clause list, so its check key is implicit.
+The hidden method never mutates `controls`, so grading is unaffected. Leave the statement frozen.
+
+Carried backlog, unchanged:
+- T-311.5 L1 (per-task covered-clause labels) and L2 (dev-003 race policy) remain obligations
+  before generated scoring.
+- T-311.5 L3 remains optional.
+- T-311.4 L1 and the earlier evaluator low findings are unchanged.
+
+## Per-row result
+
+| Row | Result |
+| --- | --- |
+| T-311.6 | **PASS** at `e38ea2ed2dc68abda486b531f9732dc5cd900e97`. Review-1 M1 and M2 are resolved, L1 is resolved and L2 is disclosed. Only three statements and `VERSION` changed. All hidden fields, pins, selections, counts and thresholds are unchanged, and the v9 fingerprint `0c2a0624…1461570` is verified. Gate (58 tests), full verifier (30 valid pairs, 89/178, no skips) and validator (702) pass, and the CLI still refuses generated candidates. No open high or medium finding. |
+| T-311 (parent) | Not reviewed for closure; remains open (held-out set, generated scoring, baseline). |
+
+Verdict: PASS
