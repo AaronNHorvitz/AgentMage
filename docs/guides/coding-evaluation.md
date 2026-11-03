@@ -259,6 +259,12 @@ its model-attempt count is zero.
 
 ## Historical controls only
 
+The separate [independent function oracle](coding-evaluation-oracle.md) runs two
+existing frozen controls with candidate execution and hidden assertions in
+different processes. It is an executable prerequisite experiment, not a change
+to this scorer's admission. Its narrow JSON adapter and missing aggregate quotas
+do not enable generated scoring for either command.
+
 Until independent result checking and separate aggregate worker quotas exist,
 **generated-candidate scoring is disabled**. Both `score` and the internal `grade`
 entry check the complete snapshot against this task's frozen base or historical
