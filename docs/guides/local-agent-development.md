@@ -1,6 +1,10 @@
 # Local agent development
 
-Decision 0151 and the active queue at the top of TASKS.md define this workstream.
+Decisions 0151 and 0153 and the active queue at the top of TASKS.md define this
+workstream: importable engine crates, a local API/MCP/CLI and measured coding on
+local models. Desktop UI work is deferred. The
+[crate and binary inventory](../evidence/t301-2-engine-inventory-2026-11-02.md)
+distinguishes tested components, development fixtures and real-model evidence.
 The preserved ledger describes earlier work; a checked component row does not
 establish that the local application is ready for everyday use.
 
@@ -91,9 +95,48 @@ T-301.1 records the owner action: provide a lane where trusted system executable
 and their path ancestors retain root ownership, or run the unchanged checks on the
 native owner host. Do not copy/re-own executables, relax trust checks, filter tests
 or allowlist failures. Keep the full Rust result FAIL and report identities and
-any new failures in the request. No Rust acceptance can be claimed until this
-blocker is resolved. Independently useful changes can still be built and measured;
+any new failures in the request. Native sandbox acceptance remains unestablished until this
+blocker is resolved. Decision 0153 defers T-301.1 and makes it a blocker for no
+mission row: advance builder-owned work with honest results, without requiring
+root mapping to start the next task. Independent component acceptance must name
+its exact tested scope and cannot imply a green native suite. Useful changes
+can still be built and measured;
 the documentation/tooling batch's green gate establishes only its selected scope.
+
+## Inventory and host verification
+
+Inventory both declared and auto-discovered Cargo binaries, including optional
+feature targets. Compare metadata with all tracked Cargo manifests to account for
+excluded experiments as well as workspace packages:
+
+```sh
+cargo metadata --locked --offline --no-deps --format-version 1
+git ls-files -- Cargo.toml '**/Cargo.toml'
+```
+
+These commands describe structure; they do not prove execution. Classify each
+crate and binary with a bounded duty, actual evidence and carry-forward choice.
+Record default/optional features, source pins, failures and fixture backends.
+A historical real-model campaign stays evidence of its frozen source; it is not
+a fresh coding score for the current tree. Establish T-311's frozen development
+and held-out split and current-harness baseline before tuning anything.
+
+When the native owner host is available, use the same pinned offline commands
+there through its shared build reservation, with no root-trust exception:
+
+```sh
+bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo build --workspace --all-targets --locked --offline
+bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo test --workspace --all-targets --no-fail-fast --locked --offline
+bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo clippy --workspace --all-targets --locked --offline -- -D warnings
+bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo fmt --all -- --check
+```
+
+These workspace commands are a baseline/host check, not the per-change gate.
+The build wrapper reserves capacity; it does not move execution out of a lane's
+namespace. If no host execution facility is exposed, record that and keep going
+with lane measurements and the scoped fast gate. Never label a lane run a native
+host pass. The owner-action blocker remains deferred, with no workaround that
+changes executable ownership, root checks, thresholds or test selection.
 
 ## Evidence and acceptance
 
