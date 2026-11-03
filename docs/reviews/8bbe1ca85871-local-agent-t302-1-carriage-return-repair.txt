@@ -1,0 +1,197 @@
+Commit: 8bbe1ca858719c671b2a6ade15db04c98e7f7b34
+Scope: local-agent-t302-1-carriage-return-repair
+
+# Independent re-review: T-302.1 carriage-return repair (M2)
+
+Reviewer: Claude Opus 5.5, separate session, read-only repository access.
+Row: T-302.1 (tier core). Base: 23b3fe8ee67dc0f27190fa813e7ebae10e46cb49.
+Review attempt 3 for this row.
+
+## Methods
+
+1. Read `IP-POLICY.md`, Decisions 0151 and 0152, the top of `TASKS.md`, the
+   retained review 2 (`docs/reviews/23b3fe8ee67d-local-agent-t302-1-protocol-repair.txt`),
+   the new evidence `docs/evidence/t302-1-carriage-return-repair-2026-10-25.md`
+   and the guide diff.
+2. Read the full diff `23b3fe8ee67d..8bbe1ca85871`: one commit, six files. The only
+   code change is `platforms/linux-inference/src/local_chat.rs` (+8/-2): a
+   refusal of any CR left after the single CRLF CR is removed, plus a doc
+   comment. There are two new tests in `local_chat/tests.rs`. I re-read
+   `ChatStream::feed`, `end`, `consume` and `decode_event` in full at HEAD.
+3. Ran every command in the request myself, in order, using the shared build
+   slot. `CARGO_TARGET_DIR=/lane/state/review-target` is set by the lane.
+4. Ran adversarial probes and mutation tests in a scratch crate outside the
+   repository (`/lane/state/tmp/review-t302cr/crate`). It holds byte-identical
+   copies of HEAD `local_chat.rs` (blob `b9cfcb8e`, verified with
+   `git hash-object`) and `local_chat/tests.rs`, plus a probe module. It is
+   pinned to `serde =1.0.229` and `serde_json =1.0.151` (the workspace pins) and
+   was built offline through the build slot. I restored the original file after
+   each mutant and confirmed the restore with `cmp`. The repository was not
+   modified, and `git status --porcelain` is empty.
+5. Compared the 53 failed test identities from my gate run with the host-library
+   appendix in `docs/evidence/t301-baseline-failures-2026-10-25.md`.
+
+I consulted no third-party product code or documentation. I searched no
+patents and started no GPU or model process.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `node --version`; `sha256sum <home>/.local/share/agentmage-build-tools/node-v24.15.0/bin/node` | `v24.15.0`; `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c` (matches) |
+| `git rev-parse HEAD` | `8bbe1ca858719c671b2a6ade15db04c98e7f7b34` |
+| `git status --porcelain` | empty |
+| `git diff --check 23b3fe8e… HEAD` | exit 0 |
+| `git diff --exit-code 23b3fe8e… HEAD -- Cargo.toml Cargo.lock architecture/status-model.json supply-chain` | exit 0 (unchanged) |
+| `cmp docs/reviews/23b3fe8ee67d-…-protocol-repair.txt /lane/reviews/23b3fe8ee67d-…-protocol-repair.md` | exit 0 (byte-identical) |
+| `sha256sum docs/reviews/23b3fe8ee67d-local-agent-t302-1-protocol-repair.txt` | `5dd4f9edfa9bda83554be9c8f4a3f955b3f877d21ba8325f1c8e0623e83a478e` (matches) |
+| `python3 scripts/local_agent_fast_gate.py --base 23b3fe8e… --timeout 3600` | **FAIL**, exit 1, `FAST GATE: FAIL` |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` (Cargo idle) | exit 0, `Validated 683 Markdown file(s) and all policy invariants.`, 291 s including the reservation wait |
+
+Fast-gate steps, each with exit code and seconds including reservation waits:
+
+- Range whitespace: 0, 0.10 s.
+- Untracked whitespace: 0, 0.10 s.
+- Immutable-review lint of the retained review 2: 0, 0.10 s.
+- Markdown lint (`TASKS.md`, the evidence file, the guide; 0 issues): 0, 1.10 s.
+- `cargo fmt --check` on both packages: 0, 1092.78 s. Almost all of this was
+  waiting for the reservation.
+- Warnings-denied all-target Clippy: 0, 203.67 s.
+- All-target tests with no fail-fast: 101, 94.88 s.
+
+Test totals, summed from every `test result` line: 717 passed / 53 failed /
+19 ignored / 0 filtered. By package, inference is 185/0/8/0 and host is
+532/53/11/0. All 19 `local_chat::tests` pass, including
+`lone_carriage_returns_cannot_hide_text_at_any_fragment_boundary` and
+`escaped_carriage_returns_remain_model_content`.
+
+The 53 sorted, de-duplicated `FAILED` identities are `diff`-identical to the 53
+entries under "Host library (53)" in the T-301 baseline appendix, with none added
+or missing. Panic sites are `linux_coding_runtime.rs:11190` (42), `:7221` (1),
+`linux_read.rs:2345` (10) and `linux_repository_map.rs:748` (1).
+`stat` shows `/usr/bin/git` and `/usr/bin/bwrap` owned by UID 65534 in this
+lane. The gate is FAIL because of the inherited T-301.1 owner-action blocker.
+This change did not introduce it, and matching the baseline is not a pass.
+Every builder figure reproduces exactly. Only the wall-clock times differ, and
+they are dominated by reservation waits.
+
+## M2 repair: verification
+
+Code at `local_chat.rs:313-319`. After one trailing CR is removed (line 314),
+any remaining `b'\r'` in the line returns `ChatError::Protocol`. This happens
+before BOM handling, UTF-8 decoding and field dispatch, so neither the comment
+branch nor the `_ => {}` metadata arm can see a line that has a CR in it. `feed`
+poisons the decoder on any error.
+
+Probe results on the scratch copy of HEAD. Each body was run whole, at every
+two-way split and byte-at-a-time:
+
+| Body (`A`, `B`, `C` are text events; tail is stop + `[DONE]`) | Every split and bytewise |
+| --- | --- |
+| The four review-2 M2 bodies: `A` + `"\r"`, `":hb\r"`, `"id: 7\r"` or `"retry: 5\r"` + `B` + `C` + tail | `Protocol`, `end = Failed`, no `Finished` |
+| Unknown field `foo\r`, `event: message\r`, CR at body offset 0 | same |
+| BOM + `\r` + body; `\r` + BOM + LF + body | same |
+| `A` + `\r\r\n` (CR CR LF as the blank line) | same |
+| Lone CR at a JSON-whitespace position inside a `data:` value | same |
+| `data: {…B…}\r\r\n\n`; `data: [DONE]\r\r\n\n` | same; no stop is reported |
+| Raw CR inside a JSON string | same |
+| BOM + CRLF + body; the whole answer re-framed with CRLF | `Ok`, all text in order, `Finished(Stop)`, `end = Ok` |
+| Escaped `\u000d` in content | `Text("x\ry")`, `end = Ok` |
+| `\r` or `\r\n` after `[DONE]` | `Protocol` and `end = Failed`; any `Finished` already shown stays provisional, as documented |
+| The whole answer re-framed with CR only | `feed` returns `Ok` with no events; `end = Incomplete` (see L7) |
+
+No probe found text dropped from a stream that still reported success.
+
+Mutation tests. Each mutant was applied alone, then the full `local_chat::tests`
+module was run:
+
+| Mutant | Result |
+| --- | --- |
+| A: remove the CR refusal | killed (`lone_carriage_returns…` fails) |
+| B: strip all trailing CRs instead of one | killed |
+| C: refuse only a CR at the start of a line | killed |
+| D: refuse CR only on comment lines | killed |
+| E: exempt lines starting with `data` from the refusal | **survives** (see L8) |
+
+**M2 as reported is fixed.** The new regression test kills every mutant that
+could re-open the silent-drop path. The positive test confirms that
+JSON-escaped CR and CRLF content survive at every split.
+
+The guide sentence ("Lone carriage returns are refused rather than treated as
+line terminators or allowed to hide the next field") and the updated
+`ChatStream` doc comment match the code. The only caveat is the error timing
+for CR-only framing in L7.
+
+## Findings
+
+No critical, high or medium finding.
+
+### L7 (low): CR-only framing fails late and is reported as Incomplete or Limit, not Protocol
+
+Location: `local_chat.rs:309-311`. A non-LF byte is appended to `self.line` even
+when the previous byte was a CR. A stream framed entirely with CR terminators
+(valid in the event-stream format) is never accepted, but it is not refused at
+the first lone CR either. Probe: the full answer re-framed with CR returns `Ok`
+with no events from `feed`, then `Incomplete` from `end`. A 218,000-byte
+CR-only stream was buffered for 65,536 bytes before `Limit`. This fails closed,
+so there is no false success and no lost text that could be shown as complete.
+However, a user pointing at such a server would see a silent stall and then a
+misleading error class, and the guide implies refusal at the CR itself. Fix at
+T-309, or with T-302.2's clear-errors work: when pushing a non-LF byte, return
+`Protocol` if `self.line.last() == Some(&b'\r')`. Add a CR-only regression test
+that asserts `Protocol` before the first LF.
+
+### L8 (low): the regression test does not pin CR refusal on `data` lines
+
+Mutant E survives: exempting `data…` lines from the CR refusal passes all 19
+tests. The test's `"data: \r"` case is refused only because the JSON parser
+rejects the `"\rdata: …"` it produces. At HEAD, a lone CR at a JSON-whitespace
+position (`data: {"model":"m",\r"choices":[]}`) is correctly refused, but no
+test asserts that. No text-loss path exists under mutant E, because everything
+after the CR stays in the JSON value, so this is a test-strength gap only. Fix:
+add that body to `lone_carriage_returns_cannot_hide_text_at_any_fragment_boundary`.
+
+### Carried backlog (not re-rated)
+
+L1 (duplicate JSON keys, last wins), L4 (pasted full route accepted as the API
+base), L5 (`ChatEvent` derives `Debug`), L6 (other malformed ASCII field names
+silently ignored) and the shared-slot wait observation remain T-309 backlog, as
+`TASKS.md` and the evidence record. In this run the reservation waits
+(about 1,090 s before `cargo fmt`) again dominated wall-clock time but stayed
+inside the 3,600 s timeout. L2 and L3 remain documented consumer obligations.
+
+## Scope, labelling and hygiene
+
+- The scope matches the request. There is no transport, credential, UI,
+  process, permission-boundary, dependency, lockfile, status-model,
+  supply-chain or GPU change. The module is still effect-free: no I/O, sockets,
+  files, environment or processes.
+- The evidence labels its tests as codec tests, not transport, model, sandbox or
+  application observations. It reports the full gate as FAIL with the exact
+  inherited identities, keeps T-301.1 open and claims no row closure. Its
+  description of the test matrix matches the test code. The core tier is
+  appropriate.
+- `TASKS.md` records review 2 as FINDINGS (M2) and keeps T-302.1 open pending
+  this review.
+- In added text outside the retained review, a `grep` for home or user paths,
+  username, hostname, e-mail, credentials and private project names found none.
+  The retained review also contains none. No trademark is used as branding, and
+  nothing claims certification, compliance or legal clearance.
+
+## Per-row result
+
+- **T-302.1: PASS at `8bbe1ca858719c671b2a6ade15db04c98e7f7b34`.** I completed
+  all required runs, and they reproduce the builder's figures. M1 (review 2) and
+  M2 (this repair) are fixed and tested by regressions that kill mutants. No high
+  or medium finding is open. L7 and L8 are new low findings for the T-309
+  backlog, with L1, L4, L5, L6 and the slot-wait observation.
+- This PASS covers only the effect-free protocol component's done-when:
+  configuration, bounded encoder, incremental decoder and synthetic tests. It
+  does not establish transport, credential ownership, real-model or provider
+  behaviour, UI, native sandbox behaviour or owner-test readiness.
+- T-301, T-301.1 and the T-302 parent are out of scope and stay open. The
+  touched-crate fast gate is still FAIL with 53 inherited host failures, which
+  match the T-301 baseline identities exactly, under the T-301.1 owner-action
+  blocker. No GPU evidence was required or produced.
+
+Verdict: PASS
