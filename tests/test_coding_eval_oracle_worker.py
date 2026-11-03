@@ -1,6 +1,7 @@
 """Hostile wire data must remain data, never test results or executable objects."""
 import io
 import json
+from pathlib import Path
 import unittest
 from unittest import mock
 
@@ -10,6 +11,83 @@ from scripts import coding_eval_oracle_worker as worker
 class OracleProtocolTests(unittest.TestCase):
     def remote(self, raw, result_type="bool"):
         return worker.RemoteFunction(io.BytesIO(raw), io.BytesIO(), io.BytesIO(), result_type)
+
+    def test_startup_requires_one_exact_frame_before_assertions(self):
+        for found in (True, False):
+            raw = worker.encode_message({"ready": True, "function_found": found})
+            remote = self.remote(raw)
+            remote.start()
+            self.assertTrue(remote.candidate_ready)
+            self.assertIs(remote.function_found, found)
+            self.assertEqual(remote.calls, 0)
+            self.assertEqual(remote.writer.getvalue(), b'')
+            self.assertEqual(remote.transcript.getvalue(), raw)
+            with self.assertRaises(worker.ProtocolError):
+                remote.start()
+            self.assertTrue(remote.failed)
+
+    def test_missing_malformed_or_forged_startup_is_sticky_failure(self):
+        for raw in (b'', b'{"ready":true}\n', b'{"ready":1,"function_found":true}\n',
+                    b'{"ready":true,"function_found":1}\n',
+                    b'{"ready":true,"function_found":true,"tests":1}\n',
+                    b'{"ready":true,"ready":true,"function_found":true}\n',
+                    b'{"seq":1,"result":true}\n', b'x' * (worker.MAX_MESSAGE + 2)):
+            remote = self.remote(raw)
+            with self.subTest(raw=raw[:80]), self.assertRaises(worker.ProtocolError):
+                remote.start()
+            self.assertFalse(remote.candidate_ready)
+            self.assertIsNone(remote.function_found)
+            self.assertTrue(remote.failed)
+            self.assertEqual(remote.calls, 0)
+            remote.reader = io.BytesIO(b'{"ready":true,"function_found":true}\n')
+            with self.assertRaises(worker.ProtocolError):
+                remote.start()
+            self.assertFalse(remote.candidate_ready)
+
+    def test_path_calls_rebuild_values_and_only_the_fixed_trusted_exception(self):
+        class Ambiguous(ValueError):
+            pass
+
+        raw = (b'{"seq":1,"result":{"ambiguous":true}}\n'
+               b'{"seq":2,"result":{"paths":["crate/src/test.rs"]}}\n')
+        remote = self.remote(raw, "path-result")
+        call = worker.path_proxy(remote, Ambiguous)
+        sources = {Path("crate/src/test.rs"): "fn test() {}"}
+        with self.assertRaisesRegex(Ambiguous, "oracle.remote-ambiguity"):
+            call(sources)
+        self.assertFalse(remote.failed)
+        self.assertEqual(call(sources), frozenset(sources))
+        self.assertEqual(remote.calls, 2)
+        requests = [json.loads(line) for line in remote.writer.getvalue().splitlines()]
+        self.assertEqual(requests[0]["args"], [{"crate/src/test.rs": "fn test() {}"}])
+        self.assertEqual(requests[1]["args"], requests[0]["args"])
+
+    def test_path_results_refuse_foreign_paths_duplicates_and_exception_payloads(self):
+        for result in ({"paths": ["../outside.rs"]}, {"paths": ["/output/tests.json"]},
+                       {"paths": ["x.rs", "x.rs"]}, {"paths": [1]}, {"paths": {}},
+                       {"ambiguous": False}, {"ambiguous": "ValueError"},
+                       {"ambiguous": True, "message": "executable expression"},
+                       {"exception": "AmbiguousReference", "args": []}, {"__reduce__": []}):
+            remote = self.remote(worker.encode_message({"seq": 1, "result": result}), "path-result")
+            with self.subTest(result=result), self.assertRaises(worker.ProtocolError):
+                remote({"x.rs": "source"})
+            self.assertTrue(remote.failed)
+
+    def test_candidate_path_adapter_transports_no_other_exception_or_message(self):
+        class Ambiguous(ValueError):
+            pass
+
+        def uncertain(sources):
+            raise Ambiguous("candidate-selected payload")
+
+        def failed(sources):
+            raise RuntimeError("candidate-selected payload")
+
+        self.assertEqual(worker.path_result(lambda sources: frozenset(sources), Ambiguous,
+                                            {"a.rs": "text"}), {"paths": ["a.rs"]})
+        self.assertEqual(worker.path_result(uncertain, Ambiguous, {}), {"ambiguous": True})
+        with self.assertRaises(RuntimeError):
+            worker.path_result(failed, Ambiguous, {})
 
     def test_json_call_preserves_arguments_and_requires_exact_sequence_and_type(self):
         remote = self.remote(b'{"seq":1,"result":false}\n')

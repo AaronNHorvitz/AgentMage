@@ -1,0 +1,191 @@
+Commit: 3adb456e2407c9eda3a6b3074679291e786951d4
+Scope: local-coding-t311-7-independent-oracle
+
+# Independent review: T-311.7 independent function oracle
+
+Reviewer: separate read-only Claude Opus 5.5 session. No shared context with the
+builder; all runs below are the reviewer's own, in a fresh private directory
+`/lane/state/tmp/t311-7-review-e1TYAK`. No GPU, model, held-out input or
+dependency install was used. The repository was not modified (tracked tree clean
+before and after; only pre-existing ignored caches are present).
+
+## Scope and acceptance target
+
+Row T-311.7 "done when": independent function oracle for two existing frozen
+development tasks; candidate functions and unchanged hidden assertions run in
+separate confined processes connected only by bounded JSON calls; demonstrate
+base/reference discrimination and refusal of forged results, assertion patches
+and out-of-boundary access. Not reviewed for closure: all-task independent
+scoring, generated admission, aggregate quotas, held-out inputs, model baseline,
+parent T-311.
+
+## Methods
+
+1. Confirmed `git rev-parse 3adb456e…` equals HEAD; read IP-POLICY.md, Decision
+   0153, the top of TASKS.md, the full `803f1b0d..3adb456e` diff (8 files, +983:
+   two new scripts, two new test modules, a new guide, evidence, one TASKS row,
+   a six-line guide note), the oracle guide and the builder evidence.
+2. Read `scripts/coding_eval_oracle.py`, `scripts/coding_eval_oracle_worker.py`,
+   both test modules and the reused helpers in `scripts/coding_eval.py`
+   (`projection`, `require_historical_candidate`, `case_workspace`, `limits`,
+   `read_regular`, `write_file`). Confirmed no existing evaluator source, test or
+   collection file is in the diff.
+3. Independently extracted both hidden modules with `git show` at their reference
+   commits and hashed them: `3ca3adf2…` (dev-015) and `87eb84b0…` (dev-029), equal
+   to the pinned `hidden_sha256`. Read the two selected methods: dev-015 has four
+   `case_passed` call sites via `from scripts.model_feasibility import case_passed`;
+   dev-029 has six call sites via `coding_harness_acceptance.suspend_resume_checks`.
+   Both bind through the module attribute that the oracle replaces before
+   executing the hidden module, and the observed call counts (4 and 6) equal the
+   call sites, so no assertion evaluates trusted base code in place of the
+   candidate function.
+4. Ran the requested command set, then reviewer-authored hostile probes through
+   the real two-sandbox path, an active SIGTERM probe and a launch-fault probe.
+5. Verified all 13 private-artifact digests published in the builder evidence and
+   the four new-source digests; compared the builder's final oracle summary with
+   mine.
+
+## Requested commands and results
+
+All from `<repo>` with `PATH=<repo>/target/local-agent-tools:$PATH`.
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `node --version`; `sha256sum target/local-agent-tools/node` | 0 | v24.15.0, `d1de76d8…932c` (matches) |
+| `git status --porcelain` (before/after) | 0 | empty both times |
+| `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base 803f1b0d… --timeout 600` | 0 | `FAST GATE: PASS`; 5 commands; markdownlint 0 issues in 4 files; `Ran 20 tests … OK` |
+| `bash /tools/build-slot python3 -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | 0 | `Ran 58 tests … OK` |
+| `bash /tools/build-slot python3 scripts/coding_eval_oracle.py verify --output <review>/oracle` | 0 | `passed: true`, two valid pairs, collection `0c2a0624…1461570`, `generated_scoring: false`, `aggregate_worker_quotas: false`, `model_score: null` |
+| `bash /tools/build-slot python3 scripts/coding_eval.py verify --output <review>/full` | 0 | `passed: true`, v9, 30/30 valid pairs, 89 reference tests, 0 skips (base and reference), same fingerprint |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` | 0 | `Validated 704 Markdown file(s) and all policy invariants.` (140 s incl. slot wait) |
+
+Independent controls (reviewer run):
+
+| Case | Cause | Oracle exit | Candidate exit | Tests/fail/err | Calls | Protocol failed |
+| --- | --- | --- | --- | --- | --- | --- |
+| dev-015 base | test_failure | 1 | 0 | 1/1/0 | 3 | false |
+| dev-015 reference | none (PASS) | 0 | 0 | 1/0/0 | 4 | false |
+| dev-029 base | protocol | 120 | 1 | 1/0/1 | 1 | true |
+| dev-029 reference | none (PASS) | 0 | 0 | 1/0/0 | 6 | false |
+
+Raw logs inspected: dev-015 base wire log shows the third reply `true` for the
+mutated MEM-001 trial and the oracle log `AssertionError: True is not false` at
+hidden line 178; dev-029 base candidate log shows
+`AttributeError: … has no attribute 'suspend_resume_checks'` and the oracle log
+`ProtocolError: oracle.exchange-failed` (oracle exit 120 is Python's broken-pipe
+flush at shutdown after the counts were written; it cannot pass). Both reference
+wire logs contain exactly the expected request/reply sequence with matching
+`seq`, and both candidate logs are empty. Report log digests match the files;
+report source digests equal the evidence (`32ad8e8f…`, `15ff3300…`). Every case
+field and wire-log digest is identical to the builder's
+`final-oracle-controls/summary.json` (deterministic).
+
+## Reviewer hostile probes (real bwrap sandboxes)
+
+Probes call `oracle.grade` with `require_historical_candidate` mocked only in the
+probe harness, as the builder's tests do; real admission was separately checked
+unmocked.
+
+| Probe | Outcome |
+| --- | --- |
+| Candidate view: env | only `HOME, LANG, PATH, PWD` |
+| Candidate view: PIDs / signalable PIDs | `/proc` shows `[1, 2]`; only own init signalable — oracle invisible |
+| Candidate view: root / adapter | `adapter bin dev lib lib64 proc tmp usr workspace`; adapter has only `config.json, run.py` |
+| Network: 1.1.1.1:53, 10.0.2.2:80, 127.0.0.1:22 | ENETUNREACH, ENETUNREACH, ECONNREFUSED (private loopback) |
+| Writes to /workspace, /adapter, /output | refused / absent; only private /tmp writable |
+| Traversal/symlink: `/workspace/../etc/passwd`, `/etc/passwd`, `/proc/1/root/...`, `/proc/1/cwd/../adapter/test.py`, `/var/home`, `/home`, `/root`, `/lane`, `/run/user`; symlink to `/proc/1/root` | all absent; symlink resolves to the sandbox's own root |
+| Pre-sent forged replies at import (before any request) | test_failure (cannot exceed hard-coding) |
+| Base + always-True | test_failure |
+| Candidate raises | protocol (no exception transport) |
+| 60 000-digit integer; 30 000-deep nesting; int instead of bool; `{'exit': 1}` map | protocol each |
+| dev-029 `{'x': True}` | test_failure |
+| Close stdout, exit 0 at import | protocol |
+| Hang (deadline shortened to 3 s) | timeout, no counts |
+| Double-forked `setsid` grandchild sleeping 600 s | reference still passes; no surviving process afterwards |
+| 4 MiB stderr flood | output_limit, no pass |
+| Unmocked admission, dev-029 reference plus one newline | `evaluation.untrusted-candidate-disabled`, output dir not created |
+| Altered task dictionary (`expected_tests: 0`) even with guard mocked | `oracle.task-refused`, output dir not created |
+| SIGTERM to host mid-exchange (candidate forks a `setsid` child) | KeyboardInterrupt (rc 130); both bwrap trees, both workers and the separate-group child gone; temp tree removed; only `candidate.log`/`oracle.log` remain, no `tests.json`, `wire.log` or `report.json` |
+
+After all runs: no `/adapter/run.py` or evaluator bwrap process remained; the
+only `agentmage-eval-*` trees under the lane temp directory are the four
+historical leftovers the builder disclosed.
+
+## Analysis of key checks
+
+- Separation: `sandbox()` gives each role `--unshare-all --unshare-user
+  --disable-userns --clearenv --cap-drop ALL`, separate read-only workspace and
+  adapter, private tmpfs; only the oracle gets `--bind <results> /output`
+  (`scripts/coding_eval_oracle.py:41-56`). The candidate workspace receives the
+  submitted files; the oracle workspace receives `evaluation.projection(task)`
+  (frozen base) and the hidden module is written only into the oracle adapter
+  (`:142-160`). Host closes its copies of the cross pipes (`:88-89`).
+- Trust of results: the host reads counts only from the oracle's result mount via
+  `read_regular`, validates exact fields, non-negative ints, `tests ==
+  expected_tests`, `0 < calls <= 128` (`:126-136`), and passes only with both exits
+  0, no timeout/limit, no protocol failure and zero failures/errors/skips/expected
+  failures/unexpected successes (`:190-192`).
+- Wire parsing: duplicate keys, nonfinite constants, invalid UTF-8, unterminated
+  or oversize frames, recursion and big-int conversion errors all map to sticky
+  `ProtocolError`; replies must be exactly `{seq, result}` with the expected `seq`
+  and a `bool` (not int) or non-empty map of bools
+  (`scripts/coding_eval_oracle_worker.py:38-103`). Fresh JSON values cannot alias
+  or mutate trusted test objects; arguments are re-serialized per call, so the
+  hidden test's in-place mutations are reflected faithfully (seen in wire logs).
+- Lifetime: leaders are observed with `WNOWAIT` and reaped only after `killpg`;
+  descendants are bounded by bwrap `--die-with-parent` plus PID-namespace teardown
+  (demonstrated above). Counts and wire log are published only after
+  `case_workspace` cleanup; the cleanup-failure unit test confirms no promotion.
+- Admission: `grade` runs `supported_task` (exact registered dict) and
+  `require_historical_candidate` before `new_directory`; the CLI accepts only
+  `verify`.
+- Evaluation integrity: no task, hidden module, selection, threshold or collection
+  file changed; fingerprint unchanged; no held-out content exists or is referenced;
+  failures are counted, not dropped. Numbers in the evidence trace to runs I
+  reproduced (20/58 units, 2 + 30 pairs, 89 tests, 4 and 6 calls, 704 files).
+- Public hygiene: the diff contains no private host path, username, hostname,
+  credential or sibling-project name, and no third-party product comparison or
+  branding. Test literals `/var/home` and `/lane` are generic mount names asserted
+  absent.
+- Delivery: one sub-row level; the row runs end to end and is measured.
+- Disclosure: missing aggregate process-tree quotas (e.g. no process-count limit),
+  28 unadapted tasks and the unchanged legacy grader are stated plainly; generated
+  scoring remains disabled, so these are not open boundaries for this row.
+
+## Findings
+
+No critical, high or medium findings.
+
+### L1 (low): candidate-side infrastructure failure is accepted as a valid failing base
+
+`scripts/coding_eval_oracle.py:193-197` ranks `protocol` before
+`candidate_exit`/infrastructure, and `verify` accepts a base with cause
+`protocol` for either task (`:233`). If only the candidate sandbox fails to start,
+the oracle sees EOF and records a protocol failure. Reproduced by substituting
+`/usr/bin/false` for the candidate command on the frozen dev-015 base:
+`{"candidate_kind": "frozen-base", "cause": "protocol", "exit_code": 120,
+"candidate_exit_code": 1}`, which `verify` would count as a valid base. The guide
+states that "an infrastructure failure … cannot validate either control"; for the
+base half this is overstated. Impact is limited because the same run must also
+pass the reference, and both frozen bases fail deterministically for the
+documented reasons (logs above). Fix before broadening the adapter: pin the
+expected base outcome per task (dev-015 `test_failure` with one failure; dev-029
+`protocol` with one call), or have the candidate emit a ready frame after the
+sandbox starts and before function lookup so launch failure is classified as
+`infrastructure`.
+
+### Informational
+
+- dev-029 base oracle exit 120 comes from a broken-pipe flush at interpreter exit
+  after counts were written; harmless, could be noted in the guide.
+- Candidate `/proc/self/mountinfo` exposes host mount metadata (overlay/ostree
+  sources, temp-tree names) to candidate logs only; logs are private and no
+  credential or home path is reachable.
+
+## Per-row result
+
+| Row | Result |
+| --- | --- |
+| T-311.7 | PASS: separate confined processes connected only by bounded JSON, frozen-base-only trusted imports, base/reference discrimination for dev-015 and dev-029, and refusal of forged results, assertion patches, malformed replies and out-of-boundary access reproduced independently; no open high/medium finding. L1 is backlog. Parent T-311 remains open. |
+
+Verdict: PASS

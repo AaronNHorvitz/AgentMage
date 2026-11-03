@@ -1,4 +1,4 @@
-"""Validate an independent function oracle on two frozen development controls.
+"""Validate an independent function oracle on frozen development controls.
 
 Candidate source and hidden assertions run in separate networkless namespaces.
 Generated scoring stays disabled until all remaining admission requirements hold.
@@ -22,14 +22,24 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v1"
-# These complete frozen methods need only JSON arguments/results for one pure
-# function. No candidate mocks, filesystem views or exceptions are transported.
+VERSION = "coding-independent-oracle-v2"
+# Complete frozen methods for pure functions. Paths are lexical JSON values;
+# one fixed ambiguity tag is reconstructed as a trusted local exception.
 SUPPORTED = {
+    "dev-010": {"function": "test_only_files", "result_type": "path-result"},
+    "dev-012": {"function": "test_only_files", "result_type": "path-result"},
     "dev-015": {"function": "case_passed", "result_type": "bool"},
     "dev-029": {"function": "suspend_resume_checks", "result_type": "bool-map"},
 }
 LOG_LIMIT = 2 * evaluation.MAX_FILE
+# Measured historical outcomes, not model scores or altered hidden assertions.
+# Subtests can report more failures than the number of selected methods.
+CONTROL_PROFILES = {
+    "dev-010": {"failures": 1, "base_calls": 1, "reference_calls": 4},
+    "dev-012": {"failures": 10, "base_calls": 12, "reference_calls": 14},
+    "dev-015": {"failures": 1, "base_calls": 3, "reference_calls": 4},
+    "dev-029": {"failures": 0, "base_calls": 1, "reference_calls": 6},
+}
 
 
 def supported_task(task):
@@ -126,12 +136,21 @@ def exchange(candidate_command, oracle_command, output, timeout):
 def result_record(path, task):
     value = json.loads(evaluation.read_regular(path, 4096))
     fields = {"tests", "failures", "errors", "skipped", "expected_failures", "unexpected_successes"}
-    if (not isinstance(value, dict) or value.keys() != {"tests", "calls", "protocol_failed"}
+    if (not isinstance(value, dict) or value.keys() != {
+            "tests", "calls", "protocol_failed", "candidate_ready", "function_found"}
             or not isinstance(value["tests"], dict) or value["tests"].keys() != fields
             or any(type(v) is not int or v < 0 for v in value["tests"].values())
-            or value["tests"]["tests"] != task["expected_tests"]
-            or type(value["calls"]) is not int or not 0 < value["calls"] <= worker.MAX_CALLS
-            or type(value["protocol_failed"]) is not bool):
+            or type(value["calls"]) is not int or not 0 <= value["calls"] <= worker.MAX_CALLS
+            or type(value["protocol_failed"]) is not bool
+            or type(value["candidate_ready"]) is not bool):
+        raise evaluation.EvaluationError("oracle.invalid-result-record")
+    if value["candidate_ready"]:
+        valid = (type(value["function_found"]) is bool and value["calls"] > 0
+                 and value["tests"]["tests"] == task["expected_tests"])
+    else:
+        valid = (value["function_found"] is None and value["calls"] == 0
+                 and value["protocol_failed"] and not any(value["tests"].values()))
+    if not valid:
         raise evaluation.EvaluationError("oracle.invalid-result-record")
     return value
 
@@ -188,11 +207,12 @@ def grade(task, files, output):
         exit_code, candidate_exit, timed_out, output_limited, record = None, None, False, False, None
     tests = record["tests"] if record else None
     passed = (error is None and exit_code == 0 and candidate_exit == 0 and not timed_out and not output_limited
-              and record is not None and not record["protocol_failed"]
+              and record is not None and record["candidate_ready"] and record["function_found"]
+              and not record["protocol_failed"]
               and all(v == 0 for k, v in tests.items() if k != "tests"))
     cause = ("none" if passed else "input_integrity" if input_error
              else "timeout" if timed_out else "output_limit" if output_limited
-             else "infrastructure" if error or record is None
+             else "infrastructure" if error or record is None or not record["candidate_ready"]
              else "protocol" if record["protocol_failed"] else "candidate_exit"
              if candidate_exit != 0 else "test_failure")
     report = {
@@ -200,6 +220,8 @@ def grade(task, files, output):
         "exit_code": exit_code, "candidate_exit_code": candidate_exit,
         "tests": tests, "calls": record["calls"] if record else None,
         "protocol_failed": record["protocol_failed"] if record else None,
+        "candidate_ready": record["candidate_ready"] if record else None,
+        "function_found": record["function_found"] if record else None,
         "error": error, "input_error": input_error,
         "output_truncated": output_limited, "candidate_kind": kind,
         "hidden_sha256": task["hidden_sha256"], "test_names": task["test_names"],
@@ -218,6 +240,23 @@ def grade(task, files, output):
     return report
 
 
+def expected_base(task, report):
+    """An arbitrary failure is not evidence that a frozen regression works."""
+    profile = CONTROL_PROFILES.get(task["id"])
+    if profile is None:
+        return False
+    missing = task["id"] == "dev-029"
+    tests = {"tests": task["expected_tests"], "failures": profile["failures"], "errors": 1 if missing else 0,
+             "skipped": 0, "expected_failures": 0, "unexpected_successes": 0}
+    return (not report["passed"] and report["candidate_kind"] == "frozen-base"
+            and report["candidate_ready"] is True and report["function_found"] is (not missing)
+            and report["cause"] == ("protocol" if missing else "test_failure")
+            and report["tests"] == tests and report["calls"] == profile["base_calls"]
+            and report["protocol_failed"] is missing
+            and report["candidate_exit_code"] == (1 if missing else 0)
+            and report["exit_code"] in ({1, 120} if missing else {1}))
+
+
 def verify(output):
     evaluation.new_directory(output)
     rows = []
@@ -230,7 +269,9 @@ def verify(output):
             task["reference"], task["source"], task["reference_sha256"])}
         reference = grade(task, fixed, output / (task["id"] + "-reference"))
         rows.append({"task": task["id"], "base": base, "reference": reference,
-                     "valid": base["cause"] in {"test_failure", "protocol"} and reference["passed"]})
+                     "valid": (expected_base(task, base) and reference["passed"]
+                               and reference["candidate_kind"] == "frozen-reference"
+                               and reference["calls"] == CONTROL_PROFILES[task["id"]]["reference_calls"])})
     summary = {
         "version": VERSION, "kind": "independent-oracle-validation-only", "tasks": rows,
         "passed": len(rows) == len(SUPPORTED) and all(row["valid"] for row in rows),

@@ -67,6 +67,24 @@ class RemoteFunction:
         self.calls = 0
         self.transcript_bytes = 0
         self.failed = False
+        self.candidate_ready = False
+        self.function_found = None
+
+    def start(self):
+        """Require the worker to import its candidate before running assertions."""
+        try:
+            raw = self.reader.readline(MAX_MESSAGE + 1)
+            self.record(raw)
+            frame, _ = decode_message(raw)
+            if (self.failed or self.candidate_ready or not isinstance(frame, dict)
+                    or frame.keys() != {"ready", "function_found"}
+                    or frame["ready"] is not True or type(frame["function_found"]) is not bool):
+                raise ProtocolError("oracle.invalid-startup")
+            self.candidate_ready = True
+            self.function_found = frame["function_found"]
+        except (OSError, ValueError, RecursionError):
+            self.failed = True
+            raise ProtocolError("oracle.startup-failed") from None
 
     def record(self, data):
         remaining = MAX_TRANSCRIPT - self.transcript_bytes
@@ -92,15 +110,43 @@ class RemoteFunction:
                     or type(reply["seq"]) is not int or reply["seq"] != self.calls):
                 raise ProtocolError("oracle.invalid-reply")
             result = reply["result"]
-            valid = (type(result) is bool if self.result_type == "bool" else
-                     isinstance(result, dict) and bool(result)
-                     and all(type(value) is bool for value in result.values()))
+            if self.result_type == "bool":
+                valid = type(result) is bool
+            elif self.result_type == "path-result":
+                valid = (isinstance(result, dict) and (
+                    (result.keys() == {"ambiguous"} and result["ambiguous"] is True)
+                    or (result.keys() == {"paths"} and isinstance(result["paths"], list)
+                        and all(type(path) is str and path in args[0] for path in result["paths"])
+                        and len(result["paths"]) == len(set(result["paths"])))))
+            else:
+                valid = (isinstance(result, dict) and bool(result)
+                         and all(type(value) is bool for value in result.values()))
             if not valid:
                 raise ProtocolError("oracle.invalid-result")
             return result
         except (OSError, ValueError, RecursionError):
             self.failed = True
             raise ProtocolError("oracle.exchange-failed") from None
+
+
+def path_proxy(remote, ambiguity):
+    """Rebuild only original Path values and one fixed trusted exception type."""
+    def call(sources):
+        result = remote({str(path): text for path, text in sources.items()})
+        if "ambiguous" in result:
+            # Exception names, arguments, classes and tracebacks never cross the
+            # pipe. This local class is supplied by the frozen base module.
+            raise ambiguity("oracle.remote-ambiguity")
+        return frozenset(Path(path) for path in result["paths"])
+    return call
+
+
+def path_result(function, ambiguity, sources):
+    try:
+        result = function({Path(path): text for path, text in sources.items()})
+    except ambiguity:
+        return {"ambiguous": True}
+    return {"paths": sorted(str(path) for path in result)}
 
 
 def candidate(config):
@@ -110,6 +156,11 @@ def candidate(config):
     with contextlib.redirect_stdout(sys.stderr):
         sys.path.insert(0, "/workspace")
         module = importlib.import_module(config["module"])
+        # An absent function is a frozen task outcome; a failed import or
+        # namespace launch is not. Send startup only after the import succeeds.
+        writer.write(encode_message({"ready": True, "function_found":
+                                     callable(getattr(module, config["function"], None))}))
+        writer.flush()
         function = getattr(module, config["function"])
         while True:
             # EOF after the oracle exits is normal; truncated messages are not.
@@ -119,7 +170,10 @@ def candidate(config):
             if (not isinstance(request, dict) or request.keys() != {"seq", "args"}
                     or type(request["seq"]) is not int or not isinstance(request["args"], list)):
                 raise ProtocolError("oracle.invalid-request")
-            result = function(*request["args"])
+            if config["result_type"] == "path-result":
+                result = path_result(function, module.AmbiguousReference, *request["args"])
+            else:
+                result = function(*request["args"])
             writer.write(encode_message({"seq": request["seq"], "result": result}))
             writer.flush()
 
@@ -131,14 +185,24 @@ def oracle(config):
     module = importlib.import_module(config["module"])
     with Path("/output/wire.log").open("xb") as transcript:
         remote = RemoteFunction(sys.stdin.buffer, sys.stdout.buffer, transcript, config["result_type"])
-        setattr(module, config["function"], remote)
-        spec = importlib.util.spec_from_file_location("hidden_eval", "/adapter/test.py")
-        hidden = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(hidden)
-        # Select complete original methods; hidden source is never rewritten.
-        suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromName(name, hidden)
-                                   for name in config["test_names"])
-        result = unittest.TextTestRunner(stream=sys.stderr, verbosity=2).run(suite)
+        result = unittest.TestResult()
+        try:
+            remote.start()
+        except ProtocolError:
+            # No assertion runs when the candidate did not reach its function
+            # lookup. Still retain a trusted diagnostic record, never a score.
+            pass
+        else:
+            proxy = (path_proxy(remote, module.AmbiguousReference)
+                     if config["result_type"] == "path-result" else remote)
+            setattr(module, config["function"], proxy)
+            spec = importlib.util.spec_from_file_location("hidden_eval", "/adapter/test.py")
+            hidden = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(hidden)
+            # Select complete original methods; hidden source is never rewritten.
+            suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromName(name, hidden)
+                                       for name in config["test_names"])
+            result = unittest.TextTestRunner(stream=sys.stderr, verbosity=2).run(suite)
         counts = {"tests": result.testsRun, "failures": len(result.failures),
                   "errors": len(result.errors), "skipped": len(result.skipped),
                   "expected_failures": len(result.expectedFailures),
@@ -148,6 +212,7 @@ def oracle(config):
                   and not remote.failed and remote.calls > 0)
         Path("/output/tests.json").write_text(json.dumps({
             "tests": counts, "calls": remote.calls, "protocol_failed": remote.failed,
+            "candidate_ready": remote.candidate_ready, "function_found": remote.function_found,
         }, sort_keys=True) + "\n")
     return 0 if passed else 1
 
