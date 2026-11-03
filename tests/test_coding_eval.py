@@ -258,11 +258,11 @@ class CodingEvaluationTests(unittest.TestCase):
                 mock.patch.object(evaluation, "pinned_blob", return_value=b"reference"), \
                 mock.patch.object(evaluation, "require_historical_candidate", return_value="synthetic-control"):
             summary = evaluation.verify(self.root / "infrastructure-verify")
-        self.assertEqual(len(calls), 40)
+        self.assertEqual(len(calls), 60)
         self.assertFalse(summary["passed"])
         self.assertIsNone(summary["model_score"])
         self.assertEqual(summary["tasks"][0]["base"]["cause"], "infrastructure")
-        self.assertEqual([r["valid"] for r in summary["tasks"]], [False] + [True] * 19)
+        self.assertEqual([r["valid"] for r in summary["tasks"]], [False] + [True] * 29)
 
     def test_exact_snapshot_allows_only_the_declared_source_edit(self):
         root, original = self.candidate()
@@ -521,7 +521,7 @@ class CodingEvaluationTests(unittest.TestCase):
         with mock.patch("sys.argv", ["coding_eval.py", "list"]), mock.patch("sys.stdout", stream):
             self.assertEqual(evaluation.main(), 0)
         value = json.loads(stream.getvalue())
-        self.assertEqual(len(value["tasks"]), 20)
+        self.assertEqual(len(value["tasks"]), 30)
         for task in value["tasks"]:
             self.assertEqual(task["split"], "development")
             self.assertNotIn("reference", task)

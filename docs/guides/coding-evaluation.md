@@ -2,7 +2,7 @@
 
 T-311 requires at least 30 real repository tasks, a fixed development/held-out
 split and a current-harness model baseline before tuning. This executable
-collection has **20 development tasks only**, with 77 reference regressions: 19
+collection has **30 development tasks only**, with 89 reference regressions: 29
 Python tooling tasks and one Rust contract bug fix (a regression exercising 640
 path cases).
 It validates scoring machinery; it is not the complete suite, a model baseline
@@ -24,11 +24,20 @@ The `coding-development-v6` revision appends one Rust task without changing any
 Python task dictionary, hidden input, selection or threshold. Its combined
 fingerprint is
 `3d2b07a1336133a62b49c07522d1786017e241d46f497285d18c8e391c73f88a`.
-The current `coding-development-v7` appends five original Python fixes, preserving
+The `coding-development-v7` appends five original Python fixes, preserving
 all 15 accepted definitions (including the Rust task) unchanged. It has fingerprint
 `cd5fc51018e53364df2f26eaf91ea29a46805e19a6e7e069370372bd98cb8e46`.
 The [v7 record](../evidence/t311-5-development-collection-2026-11-03.md)
 records scope and the real control measurements.
+The current `coding-development-v8` appends ten distinct historical source
+changes (12 complete regression methods) without changing any of the 20 accepted
+definitions. Its complete fingerprint is
+`91f1eecfa91129f2f8392363aaff0e8f49243aa761947e69d5ec1452d7b4b04d`.
+The [v8 record](../evidence/t311-6-development-collection-2026-11-03.md)
+describes the statements, limited covered clauses and control measurements.
+Reaching 30 development tasks meets the count for this collection, not the
+complete T-311 requirement: language/work coverage remains narrow, held-out inputs
+are absent, generated scoring is disabled and the real-model baseline is open.
 The first-three-task fingerprint remains
 `d5f5e365924ffea8c6b46c50c28d00e116c01f69de57ac0a9672ffa50e05e3c5`.
 No agent attempt informed the selection or statements. The
@@ -75,6 +84,16 @@ does not relicense the historical inputs or certify import readiness.
 | dev-017 | Restore archive modes independently of umask | `360d814bbb19ff3114cf514cba0a7c326888e0bc` | `f0c5ba524372ca8537640f5fd18aeaa0050cb783` |
 | dev-018 | Redact checkout logs and refuse other private paths | `e41056d023c81aff372f5acd17cffd84eb9ed30a` | `cff66354016e5d2bb058a277d1150c2033c73eb3` |
 | dev-019 | Preserve package permissions without archive ownership | `c666a1da7fac9250f1abc4389bf741ecaf1fdf9e` | `dc99587fa1940516aaf32de88ac4373df9cb47bc` |
+| dev-020 | Require nine tools and mandatory records for multi-file acceptance | `99cc4e1630ea1e658a815e82893f650fe736c884` | `d8557c993838ba54a85dba7a364a9495b6d92496` |
+| dev-021 | Verify read-argument correction and terminal denial | `d8557c993838ba54a85dba7a364a9495b6d92496` | `ad28b5ca7862a483bb4b9bf74c199d5f994ae43f` |
+| dev-022 | Bind command failure artifacts to their creating turn | `ef4a05d823ea0987229e2ab389867b15bb4f8282` | `7b1953d544c6f37cd11bb2c809db8b0aaa8564b7` |
+| dev-023 | Measure stable source and executable identities | `a13fd15e22ad659a6a3e60692caa4b7dea6a7a3e` | `eca3f405ceb198d2e01e2764703a554b44f0b381` |
+| dev-024 | Parse GPU observations and retain sampled pressure | `fe898a96bbea44d025b986997bd030136e178d1e` | `0dcd13d04c61d2325504b344a13d493788ea2c26` |
+| dev-025 | Create new-file and multi-file synthetic repositories | `ea16322f4cc232ababdaa1c839aceeef6bd0a2d8` | `868234916b99f2491b0d9249a2e9366f1736962e` |
+| dev-026 | Keep full-documentation collection deadlines finite | `b7964ea2e8afceb32039c27aa3ce3f0b14d2c59f` | `be002e26b79ef68a2b6cbf1897d9abd9a733fbc3` |
+| dev-027 | Validate closed extension argument forms | `025e3fd5cbb9cac0d4776d16e8cfffda959cfa8d` | `709f8d7a13bcd467317c0598fc5ba939c4e78892` |
+| dev-028 | Add route exports and support-directory options | `e5f3491047fde65c665329696bc011c34e786e54` | `69c99f66a110496c7599111b03b6c45e0fab00fc` |
+| dev-029 | Check suspension and continuation observations | `8a3a341ea45eedcc5d2ef3cd66ee514fab3bb3db` | `3709eabe0ddc4ed04027e982dee9f9e204a53790` |
 
 [`coding_eval.py`](../../scripts/coding_eval.py) and the append-only
 [`coding_eval_collection.py`](../../scripts/coding_eval_collection.py) pin the statements, editable
@@ -140,6 +159,23 @@ already exist in public Git history, and their locations/digests are available t
 the evaluator operator. They are unsuitable as unseen held-out tasks. The eventual
 held-out collection must have separate access and never supply tuning feedback.
 Do not call this public development pilot a blind evaluation.
+
+## Known frozen-test race and scoring policy
+
+The dev-003 historical process-stop helper can raise `ProcessLookupError` while
+reading a disappearing `/proc` entry. A reference control exhibited this race in
+T-311.5 and passed a separate complete verifier run. Its hidden bytes remain
+unchanged. The evaluator does not retry individual cases or discard their results.
+
+Before any generated measurement, fix the following policy: every attempt runs
+once; this exception remains a test failure and counts as a failed attempt, with
+the raw log retained and a visible known-race note. It is never reclassified as a
+pass or removed from the denominator. A diagnostic rerun gets a separate output
+and never replaces a score. A failed verifier is an invalid control run; repeat
+the entire verifier into a new output if diagnosing it and retain both results.
+No generated scoring is currently admitted. Future reports must implement this
+label and the per-task covered-clause labels before enabling it; this guide does
+not claim the reporting integration already exists.
 
 ## Rust control
 

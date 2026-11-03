@@ -28,11 +28,11 @@ class RustCodingEvaluationTests(unittest.TestCase):
                        for target in node.targets if isinstance(target, ast.Name)
                        and target.id in {"TASKS", "ADDITIONAL_TASKS"}}
         self.assertEqual(evaluation.TASKS, definitions["TASKS"] + definitions["ADDITIONAL_TASKS"])
-        self.assertEqual(len(evaluation.collection()), 20)
-        self.assertEqual(sum(t["expected_tests"] for t in evaluation.collection()), 77)
+        self.assertEqual(len(evaluation.collection()), 30)
+        self.assertEqual(sum(t["expected_tests"] for t in evaluation.collection()), 89)
         self.assertEqual({t["split"] for t in evaluation.collection()}, {"development"})
         digest = evaluation.sha(json.dumps(evaluation.collection(), sort_keys=True, separators=(",", ":")).encode())
-        self.assertEqual(digest, "cd5fc51018e53364df2f26eaf91ea29a46805e19a6e7e069370372bd98cb8e46")
+        self.assertEqual(digest, "91f1eecfa91129f2f8392363aaff0e8f49243aa761947e69d5ec1452d7b4b04d")
 
     def test_prepare_withholds_hidden_regression_corpus_and_git_history(self):
         files = evaluation.projection(self.task)
