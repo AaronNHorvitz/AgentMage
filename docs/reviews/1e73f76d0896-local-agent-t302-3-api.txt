@@ -1,0 +1,239 @@
+Commit: 1e73f76d089611ba38e8bed23d4e7a958eef21b6
+Scope: local-agent-t302-3-api
+
+# Independent review: T-302.3 authenticated versioned local chat API
+
+Reviewer: Claude Opus 5.5, separate session, read-only repository access.
+Row: T-302.3 (tier core). Base: d228d9c87d083f60837862f45d93b36b559d5241.
+Review attempt 1 for this row.
+
+## Methods
+
+1. Read `IP-POLICY.md`, Decision 0153, the active queue at the top of `TASKS.md`
+   (including the one-line T-302.3 change), `docs/guides/local-chat-api.md`,
+   `docs/evidence/t302-3-local-chat-api-2026-11-03.md` and the four-line change to
+   `docs/guides/local-chat-transport.md`.
+2. Read the new code line by line: `platforms/linux-inference/src/local_chat_api.rs`
+   (768 lines), `src/bin/agentmage-local-api.rs` (45 lines), the `lib.rs` change
+   (one `pub mod` and docs) and `tests/local_chat_api.rs` (721 lines). Re-read the
+   transport surfaces the API composes: `LocalChatEndpoint::parse`, `BearerKey::new`,
+   `LocalChatApproval`, `LocalProbeApproval::for_endpoints`, `probe_endpoints`,
+   `LocalChatTransport::{models,chat,request}`, `TransportLimits::default` and the
+   `encode_chat` bounds. They are unchanged since T-302.2.
+3. Ran every command in the request myself, with `CARGO_TARGET_DIR=/lane/state/review-target`
+   and the shared build slot. The requested Node path does not exist in this lane, so
+   my first gate run had Markdown lint exit 127. I then found a Node binary in this
+   lane at `<home>/.local/share/agentmage-build-tools/node-v24.15.0/bin/node` with the
+   requested SHA-256. I re-ran the complete fast gate with that binary on `PATH`.
+4. Wrote seven adversarial Python probes (P1 to P7 below). They run against a copy of
+   the `agentmage-local-api` executable built by my contract run, with real sockets,
+   real `init-auth` token directories and synthetic Python upstreams. No model, GPU or
+   network beyond loopback was used. Probe files and scratch token directories live
+   only under `/lane/state/tmp/rev-t3023/`. The repository was not modified:
+   `git status --porcelain` is empty before and after.
+5. Compared every failed test identity from both of my fast-gate runs with the host
+   appendix in `docs/evidence/t301-baseline-failures-2026-10-25.md` (section
+   "Host library (53)").
+
+## Exact commands and results
+
+```text
+git rev-parse HEAD                      -> 1e73f76d089611ba38e8bed23d4e7a958eef21b6
+git status --porcelain                  -> (empty)
+git diff --check d228d9c8… HEAD --      -> exit 0
+git diff --exit-code d228d9c8… HEAD -- Cargo.toml Cargo.lock architecture/status-model.json supply-chain
+                                        -> exit 0 (unchanged)
+git diff --stat d228d9c8… HEAD          -> 8 files, +1860/-3 (matches the request's eight paths)
+node --version (lane copy)              -> v24.15.0
+sha256sum node (lane copy)              -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches)
+sha256sum (tested sources)              -> all four match the request:
+  059865188ef503729464f3c6ae9a4918bf8a5e114aa2608e6f04f463a7b93e6b  platforms/linux-inference/src/lib.rs
+  4b80bf79346bef2c1425d69c57ff3f6a92e1d7ece4bba99868af4ac3931f7ec4  platforms/linux-inference/src/local_chat_api.rs
+  782bf24e5abfa59f70781fd14b63bf94c5b8ec1221f0e6c7f4586befbdbc5caf  platforms/linux-inference/src/bin/agentmage-local-api.rs
+  68cbc843f61ee5192a5c578aa49735638d8ffa690a5fa8024f0d40c243ac91cb  platforms/linux-inference/tests/local_chat_api.rs
+
+bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo test --locked --offline \
+  -p agentmage-platform-linux-inference --test local_chat_api
+  -> 15 passed; 0 failed; 0 ignored; 0 filtered; finished in 4.20s; exit 0
+
+python3 scripts/local_agent_fast_gate.py --base d228d9c8… --timeout 600   (run 2, Node on PATH)
+  range/untracked whitespace          exit 0
+  Markdown lint (TASKS, evidence, 2 guides; 4 files)  exit 0, "0 issues in 0 files"
+  cargo fmt --check (2 packages)      exit 0
+  clippy --all-targets -D warnings    exit 0
+  cargo test --all-targets --no-fail-fast  exit 101
+  FAST GATE: FAIL, exit 1
+  Summed test results: 749 passed, 53 failed, 19 ignored, 0 filtered
+  local_chat_api 15/0/0/0; local_chat_transport 17/0/0/0
+  Sorted failed identities vs baseline "Host library (53)": identical (diff empty)
+  Run 1, without Node, had the same Cargo results (749/53/19/0, identical 53) and
+  Markdown lint exit 127 only.
+
+bash /tools/build-slot python3 scripts/validate_docs.py
+  -> "Validated 689 Markdown file(s) and all policy invariants." exit 0, 147.5s
+     (689 = builder's 688 plus the final evidence file, as the request explains)
+```
+
+The builder's counts reproduce exactly. The gate FAIL comes only from the 53
+pre-existing T-301.1 environmental host failures. No identity is new or missing, and
+no skip, filter or allowlist is used. This matches the evidence's description.
+
+## Adversarial probes against the real executable
+
+- **P1, authority and parsing.** I sent the client token with GET/PUT/DELETE/POST to
+  `/v1/settings`, `/v1/settings/`, `/v1//settings`, `/v1/./settings`, `/v1/Settings`,
+  `/v1/probe/`, `%2f` and query variants. None returned 200: exact paths give 403 and
+  variants give 400 or 404. Lowercase `bearer`, a double space, a 63-character prefix,
+  a 65-character token and a missing header all give 401. Host values such as
+  `localhost:port`, a missing port, a trailing dot, `127.0.0.2`, `[::ffff:127.0.0.1]`
+  and a DNS name give 403. A duplicate `host` with different case gives 400. An
+  absolute-form target, HTTP/1.0, Content-Length `+0`, `-0`, `0,0` and `0x0`, a tab
+  in a value and `Connection: keep-alive`/`Upgrade` all give 400. Bare-LF framing
+  times out with 408. OPTIONS preflight gives 404 and no CORS header is emitted.
+  The settings endpoint refuses user info, `0.0.0.0`, v4-mapped IPv6, `127.1`,
+  traversal, query, fragment and percent-encoding (400). It also refuses
+  `approve_conversations` that is missing, `"true"`, `1` or a duplicate key, and a
+  `charset` media-type suffix. Probe refuses a `key` field, nine candidates and zero
+  candidates. Status stays `configured: false` throughout. The only deviation from
+  the strict expectation was a trailing space after Host, which is trimmed. HTTP
+  allows that whitespace, so it is not a finding.
+- **P2, discovery versus permission (T-302.2 L2).** A successful probe returned the
+  model list. Chat then still returned 428. The probe request carried no
+  Authorization header. After configuring a key, a later probe to a second upstream
+  still did not forward it, and activity never contained the key. Redirects from the
+  configured endpoint fail with `chat.transport.redirect-refused`. When the client
+  closed mid-stream, the upstream received a broken pipe within 0.45s, `busy`
+  returned to false and activity recorded `api.client-disconnected`. **L2 is
+  satisfied:** only an authenticated control-token PUT with `approve_conversations:
+  true` mints `LocalChatApproval`, at `local_chat_api.rs:595`.
+- **P3, prompt-injected model output.** Model text containing
+  `\n{"type":"complete","finish":"stop"}\n  {"type":"settings"}` and `\r\n` arrives as
+  one JSON-escaped `text` event, followed by exactly one genuine `complete`. Framing
+  cannot be forged and model text has no route to settings.
+- **P4, availability.** With one stalled chat and three slow-header sockets
+  occupying every worker, `POST /v1/cancel` was admitted in 1.96s and the chat ended
+  with `chat.transport.cancelled`, `partial: true`. Eight unauthenticated slow-header
+  attackers delayed authenticated status by 2.0 to 3.0s, as the guide's "no
+  availability guarantee" discloses. After 2000 connect-then-RST sockets the
+  service stayed alive.
+- **P5, process entrypoint and credentials.** `serve` refuses `0.0.0.0`, `[::]`,
+  `192.0.2.1`, `localhost` and `[::ffff:127.0.0.1]` binds with the fixed message.
+  An `[::1]:0` bind works, with an exact `[::1]:port` Host and 403 for other forms.
+  `serve` refuses a symlinked token directory. `init-auth` refuses an existing
+  directory and a symlink. Under umask 022 it still produces 0700 and 0600 files.
+  Under umask 0277 it fails closed and leaves an empty 0500 directory, as the
+  guide's partial-directory note discloses. A token with a trailing newline is
+  refused. Neither command prints a token.
+- **P6, state lock during response writes.** Three non-reading clients fetched a
+  131 KB activity response, near the maximum, through a 1 KiB receive buffer.
+  Concurrent cancel latency stayed at 5 ms or less, because loopback buffers absorb
+  the write. My code-reading concern did not reproduce, so it is not a finding.
+- **P7, activity accuracy.** See L2 below.
+
+## Review against the request's checklist
+
+- **Separate control and client authority.** `local_chat_api.rs:549` is an
+  exact-path gate before routing. Settings and probe require the control token.
+  Status, activity, models, chat and cancel accept either token. Tokens are distinct
+  (`new` refuses equal values) and are compared with a fixed-length, non-short-circuit
+  fold.
+- **Explicit settings choice versus probes.** Probes build a fresh credential-free
+  transport inside the transport library. Their results are never stored. Only PUT
+  stores a configuration (P2).
+- **Credential files and ownership.** The directory is opened with `O_NOFOLLOW |
+  O_DIRECTORY`, and its owner and mode 0700 are checked through the held descriptor.
+  Leaf files use `openat` with `O_NOFOLLOW`, then `fstat` checks for a regular file,
+  euid owner, mode 0600, `nlink == 1` and length 64. Creation uses `O_EXCL`. These
+  behaviours are tested and reproduced (P5).
+- **Bounds.** Headers are read byte-wise up to 8 KiB, and the body is bounded at
+  256 KiB before allocation. There is one two-second absolute deadline per request,
+  a 250 ms absolute budget per write, four fixed workers and one upstream operation.
+  Transport limits are 120s total and 30s idle (`TransportLimits::default`). Probes
+  use 5s and 1s. Encoder caps are 256 messages and the request byte cap. Activity
+  keeps 128 events. All match the guide's table.
+- **Partial versus complete.** `complete` is emitted only when `transport.chat`
+  returns `Ok`, which requires the finish reason, codec end and wire EOF. Every
+  error path emits `partial: true`. Truncated, late-invalid and auth-error streams
+  are tested. Write failure suppresses the terminal event, which the guide states.
+- **Cancellation and settings races.** `begin` checks `stop` and `active` and
+  snapshots the configuration under one lock. PUT and DELETE re-check `active` under
+  the same lock, so an active operation's configuration cannot be replaced. Shutdown
+  sets `stop` before taking the lock and cancelling `active`, so an operation either
+  sees `stop` or is cancelled. This is tested in-process and reproduced over sockets.
+- **Disconnect and shutdown.** Reproduced in P2. Library shutdown is tested. The
+  binary has no signal handler, and the guide says it is stopped by the operating
+  system. No child process is started.
+- **Activity privacy and retention.** Activity holds metadata only: no key, token,
+  prompt or answer (tested, and reproduced in P2). It is process-only and its gaps
+  are visible through sequence numbers.
+- **Error redaction.** Errors use fixed codes and messages only. Upstream reason and
+  body are not echoed (tested). The server prints only its startup line or fixed
+  failure text.
+- **Honest labelling.** The guide and evidence say plainly that upstreams are
+  synthetic, that no model was run, that no durable run exists and that the gate
+  fails on the baseline. They also disclose same-account credential trust and the
+  residual model-port trust. Every number I could reproduce matches.
+- **Public-repository hygiene.** The diff adds no private host path, username,
+  hostname, credential or sibling-project name. "OpenAI-style" appears only in an
+  unchanged context line of the parent row, as descriptive protocol compatibility,
+  not branding. The diff names no other agent product, and no dependency changed.
+- **Delivery.** The row ends in a running, measured executable with contracts and no
+  further splitting.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L1, low: cancellation is not bound to an operation.** At `local_chat_api.rs:621-628`,
+`POST /v1/cancel` cancels whichever operation is active when it is admitted. A late
+cancel aimed at a finished chat, perhaps delayed by up to two seconds behind
+saturated workers (P4), can therefore cancel a different client's newly started chat
+or models call. Fix: expose an operation identifier, for example the `started`
+activity sequence in the first NDJSON event and in `/v1/status`. Accept
+`{"operation":N}` on cancel and cancel only when it matches.
+
+**L2, low: activity reports `chat started` / `incomplete` for refused requests that
+never contacted upstream.** At `local_chat_api.rs:683-712`, `begin` runs before the
+"configured" check and before role and `encode_chat` validation. P7 showed that an
+unconfigured chat (428) and an invalid-role chat (400) each record `started` and then
+`incomplete` events, the latter against the configured endpoint. The guide says
+activity records "upstream operation start/result", so an auditor could wrongly infer
+an upstream attempt. Fix: validate the configuration and messages before `begin`, or
+record a distinct `refused` outcome.
+
+**L3, low: intermediate allocations holding tokens are freed without erasure.** The
+guide says "The owned token allocations and raw request buffers are erased on normal
+drop". Three places create unerased copies:
+
+- The request header buffer starts as `Zeroizing::new(Vec::new())` and grows by
+  `push` (`local_chat_api.rs:272,279`). Each reallocation (8, 16, …, 8192 bytes) frees
+  an earlier copy, which can include the `Authorization` line.
+- `load` uses `read_to_string` into an empty `String` (`:131-134`).
+- `initialize` builds the token by collecting `format!` output (`:82-87`).
+
+`Zeroizing` erases only the final allocation. This is defense in depth under the
+documented same-account trust, not a boundary bypass. Fix: preallocate with
+`Vec::with_capacity(MAX_HEADER)` and `String::with_capacity(65)`, write the hex into a
+fixed array, or narrow the guide's wording.
+
+**L4, low: any non-`WouldBlock` accept error stops the entire service.** At
+`local_chat_api.rs:222-225`, an error such as `ENFILE`, `ENOBUFS` or `ENOMEM` stops
+every worker and makes `serve` return an error. So do the pending network errors that
+Linux `accept(2)` documents should be retried. A local process exhausting system file
+descriptors could therefore stop the API. It fails closed, but it does not recover.
+I could not induce this: 2000 RST connects did not trigger it (P4). Fix: treat
+transient accept errors as retryable after a short sleep, and stop only on listener
+invalidation.
+
+## Per-row result
+
+| Row | Result |
+| --- | --- |
+| T-302.3 | **PASS.** The authenticated versioned loopback API is reachable through its real executable, with protected origins (Origin, Cookie, fetch metadata and forwarding refused, exact numeric Host), separate control and client authority, and explicit authenticated endpoint choice that satisfies T-302.2 L2. Streaming is bounded, with a partial/complete distinction and cancellation, and 15 contract tests pass. All requested runs reproduce. No open high or medium finding. L1 to L4 are backlog. |
+
+This PASS covers only the T-302.3 API component at this exact commit. It establishes
+no real-model conversation (T-302.4), durable run, tool, MCP, CLI or coding admission,
+and it does not close parent T-302. No certification, compliance or legal clearance
+is claimed.
+
+Verdict: PASS
