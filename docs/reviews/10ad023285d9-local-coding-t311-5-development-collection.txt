@@ -1,0 +1,163 @@
+Commit: 10ad023285d96d36a601844e546cddcc03711f46
+Scope: local-coding-t311-5-development-collection
+
+# Independent review: T-311.5 twenty-task frozen development collection
+
+Tier: core. Row: T-311.5, attempt 1. Base: `4c0460f603f1aa9bd48703d309280ce932052a59`.
+Reviewer: separate read-only Claude Opus 5.5 session; no shared context with the builder.
+The repository was not modified (`git status --porcelain` empty before and after).
+Review-owned outputs were written only under `/lane/state/tmp/t311-5-review-dnqNji/`.
+
+## Inputs read
+
+- IP-POLICY.md, Decision 0153 (`docs/decisions/0153-engine-and-local-coding-priority.md`
+  located), the T-311 rows at the top of TASKS.md.
+- The complete diff `4c0460f6..10ad0232` (8 files): `scripts/coding_eval.py`,
+  `scripts/coding_eval_collection.py`, three test modules, guide, evidence, TASKS row.
+- Evaluator functions that the change touches or relies on: `pinned_blob`, `projection`,
+  `read_candidate`, `require_historical_candidate`, `task_driver`, `sandbox_command`,
+  `grade_case`, `grade`, `collection`, `verify`, `main`.
+- For each new task: the historical fix diff `base..reference`, the base source around the
+  changed function, and the selected hidden methods in the reference test module.
+- Builder raw data under `/lane/state/tmp/t311-5-collection/`.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `git rev-parse HEAD` | `10ad023285d96d36a601844e546cddcc03711f46` (matches request) |
+| `git status --porcelain` | empty |
+| `git diff --stat 4c0460f6 HEAD` | 8 files, 435 insertions, 15 deletions; `coding_eval_rust.py` unchanged |
+| `export PATH=/lane/state/tooling/node-v24.15.0-linux-x64/bin:$PATH; node --version` | **not available**: `/lane/state/tooling/` does not exist in this reviewer environment; no `node` anywhere on the filesystem (bounded `find`) |
+| `python3 scripts/local_agent_fast_gate.py --base 4c0460f6 --plan` | 8 paths, 5 commands, as in the request |
+| `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base 4c0460f6 --timeout 600` | `git diff --check` exit 0; `--lint-untracked` exit 0; markdownlint exit 127 (`Missing executable: node`); `--lint-python` exit 0; unit tests **Ran 53 tests in 14.753s, OK**. Gate prints FAIL only because of the missing tool (see "Environment gap") |
+| `bash /tools/build-slot python3 scripts/coding_eval.py verify --output "$review_root/verify"` | exit 0, 38.21 s. `passed=true`, `input_refused=false`, `model_score=null`, `collection_sha256=cd5fc510…8cb8e46`. 20/20 rows valid; every base cause `test_failure`, every reference cause `none`; reference tests sum to 77; zero skips, expected failures, unexpected successes or truncation; `model_attempts=0`, `candidate_kind=frozen-reference` for all references |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` | exit 0, "Validated 700 Markdown file(s) and all policy invariants." (1659 s wall, mostly a shared reservation wait) |
+
+Per-report bindings in my verifier run: `evaluator_sha256=b0944e1f65b6…` and
+`collection_module_sha256=ef1938220354…`; these equal `sha256sum` of the committed
+`scripts/coding_eval.py` (`b0944e1f…7cc8`) and `scripts/coding_eval_collection.py`
+(`ef193822…c82c`).
+
+### Additional independent probes
+
+1. **Fingerprints.** Recomputed in Python: `TASKS + coding_eval_rust.TASKS` (15 accepted
+   definitions in v6 order) hashes to `3d2b07a1…c73f88a` (v6 preserved); `collection()` hashes
+   to `cd5fc510…8cb8e46` (v7). The new unit test compares the 14 Python and one Rust
+   definitions by value against `8505c0bd`, the last independently accepted evaluator commit.
+   `4c0460f6` did not touch either evaluator file.
+2. **Historical identities.** For dev-015..019 `git rev-parse <reference>^` equals the pinned
+   base (also asserted by the new test). The source/reference/hidden digests are enforced by
+   `pinned_blob`, and the projection digest by `projection()`, during the passing verifier run.
+   Every task is a distinct commit and change; none duplicates an accepted task's commit.
+3. **Base failure reasons** (my verifier `stderr.log`): dev-015 `AssertionError: True is not
+   false`; dev-016 two `KeyError: 'cache_prompt'` errors; dev-017 `AttributeError … no attribute
+   'make_container_readable'`; dev-018 diagnostic `not found in []`; dev-019 `call_args_list`
+   mismatch. All are semantic failures of the selected methods, not import or harness failures.
+4. **Statement sufficiency by independent alternate fixes.** I extracted each base `scripts/`
+   tree and the reference hidden test module to a scratch directory. From the statement text
+   alone I wrote deliberately different implementations: dev-015 as explicit loops without the
+   predicate table; dev-016 with chained comparison, `bool` rejection and a non-dict guard;
+   dev-017 using `os.lstat`/`os.walk`; dev-018 with list-to-set prefixes; dev-019 with a
+   pre-built argv. Then I ran exactly the selected methods (`python3 -B -m unittest <names>`,
+   `env -i`, dev-017 under `umask 077`) with `HOME=/tmp` (as in the sandbox) and with a real
+   home directory. **All 5 tasks / 6 methods pass in both environments.** dev-016's contract is
+   sufficient: the statement fixes the positional order, so the hidden `call_args.args[3]`
+   payload lookup is specified. Keyword `timeout`/`allowed_statuses` are specified, and the cache
+   requirement matches `assert_called_once`. dev-019's argv, list type (not a tuple or shell
+   string), order and keyword `cwd=root` exactly match the hidden `mock.call` equality.
+5. **Guard (CLI, real process).** `prepare --task dev-016` then `score` with my statement-derived
+   source: exit 2, `code=evaluation.untrusted-candidate-disabled`, output directory **not
+   created**. The same candidate with the reference bytes: exit 0, `frozen-reference`, 2/2 tests,
+   `model_attempts=0`, report binds the module digest. Adding a symlink `scripts/extra.py`
+   pointing outside: exit 2, `candidate-directory-refused`, no output directory. The unit test
+   `test_new_generated_candidate_and_task_mutation_never_reach_worker` also proves that a mutated
+   task dictionary is refused before `grade_case` and before output creation.
+6. **Projection and listing leakage.** `list` returns 20 tasks with only
+   `{id, split, base, source, statement}`. `prepare --task dev-018` contains only `scripts/`;
+   no file contains the hidden method name or the fix symbol `ROOT_PLACEHOLDER`.
+7. **Unchanged confinement and lifecycle code.** The `coding_eval.py` diff is limited to the
+   import, `VERSION`, one report key, `collection()` and one summary key. `sandbox_command`,
+   `read_candidate`, `task_driver`, `grade_case`, limits and cleanup are byte-unchanged;
+   `coding_eval_rust.py` is unchanged.
+8. **Builder raw data.** All 12 private artifact SHA-256 values listed in the evidence match the
+   files on disk. `verify/summary.json` (first run) is `passed=false` with only dev-003 invalid:
+   the reference had cause `test_failure`, with 23 tests and 1 error.
+   `verify/dev-003-reference/stderr.log` shows the error in hidden `assert_process_stopped`
+   (`stat.read_text()` on a disappearing `/proc` entry). It is retained, not relabelled.
+   `verify-final/summary.json` is `passed=true` with the same evaluator/module digests as my run.
+   `fast-gate.log` shows the original `AssertionError: 40 != 30`. The source records differ only
+   in `tests/test_coding_eval.py`, which is the disclosed count correction. Final
+   `markdownlint-cli2` logs report 0 issues on the three Markdown files.
+9. **Rejected prospects.** The five commits named as rejected exist. The rejection reasons
+   (unchanged base cannot import or reach the test, input outside the projection, base already
+   passes) are validity criteria, not score-driven selection. No model attempt exists.
+10. **Public hygiene.** Added lines contain no username, host path, hostname, credential, e-mail
+    or sibling-project name. `OpenAIAdapter` appears only as the existing historical class
+    identifier to be repaired. It is not branding, and no agent product is compared or named.
+    The builder's staged-hygiene record also passes. No held-out material exists or is
+    referenced.
+11. **Leftovers.** After my runs, the temporary directory contains only the four pre-existing
+    `agentmage-eval-*` trees named in the request; my runs left none.
+
+### Environment gap (not a repository defect)
+
+The request states that a pinned Node runtime is installed at `/lane/state/tooling/…`. In this
+reviewer sandbox that directory does not exist and no `node` binary is present, so the
+markdownlint step of the fast gate could not execute (exit 127). Every other gate command
+passed, including all 53 unit tests. I substituted a scripted check of the enabled rules most
+likely to be affected (MD009, MD010, MD012, MD018, MD047, MD056 column counts, MD058 blank lines
+around tables; MD013/MD022/MD024/MD060 are disabled in `.markdownlint-cli2.jsonc`). It found no
+issue in the three changed Markdown files. The builder's retained `final-markdown.log` shows
+markdownlint-cli2 0.23.2 with 0 issues. A Markdown style violation in these three files could
+only be a low finding and cannot change this verdict, so I do not treat the gap as making the
+review inconclusive. It is recorded here so the reviewer environment can be repaired.
+
+## Findings
+
+No critical, high or medium finding.
+
+**L1 (low): the selected historical regressions grade only part of each new statement.**
+Locations: `scripts/coding_eval_collection.py:13-20` (dev-015), `:33-50` (dev-016), `:64-73`
+(dev-017), `:86-97` (dev-018). Reasoning from the hidden bytes:
+
+- dev-015 flips only `swap_growth_bytes` and `dns_queries`. A candidate that checks only
+  those two fields, and not the trial-count rule, `unload_returns_to_bounded_baseline` or the
+  other three network counters, still passes.
+- dev-016 does not exercise malformed JSON, other HTTP 400s, the absent socket or the transport
+  helper's status policy.
+- dev-017 does not exercise symlink or special-file refusal or the `git_archive` call.
+- dev-018 does not exercise `private_prefixes()` ordering or the `/var` alias inside the sandbox
+  (`HOME=/tmp`).
+
+The builder's evidence table discloses this explicitly. That is acceptable for development
+controls, but a pass on these tasks does not mean statement conformance.
+Fix (before generated scoring, alongside T-311.4 L1): generated-result reports carry a per-task
+covered-clause label. Do not edit the hidden modules.
+
+**L2 (low, pre-existing task, backlog): historical dev-003 hidden test is nondeterministic.**
+`verify/dev-003-reference/stderr.log` in the builder data shows `ProcessLookupError` from
+hidden `assert_process_stopped` (reference module line 243 catches `FileNotFoundError` but not
+the `ProcessLookupError` raised for a vanishing `/proc` entry) on a frozen reference that passes
+on repeat. With generated scoring, the same race can fail a correct candidate. It is disclosed
+in the evidence and the TASKS row, but not in `docs/guides/coding-evaluation.md`, where scoring
+rules live. Fix: before generated scoring, record a fixed, pre-declared policy in the guide (for
+example a visible flake label for this task), never an unlimited retry-until-pass, and keep the
+hidden module unchanged.
+
+**L3 (low): exact literals in dev-018/dev-019 statements are not delimited.**
+`scripts/coding_eval_collection.py:91-92` ("returns the exact diagnostic dispatch-preflight
+results contain a private host path if …") and `:112-114` (argv given as `[ar, x, …]`). This
+matches the accepted statements' unquoted style, and my statement-only alternates parsed both
+correctly. Still, the diagnostic's end boundary depends on reading the existing base message
+pattern. Fix (optional, only before any model measurement on these tasks): quote the literals;
+otherwise leave the statements frozen.
+
+## Per-row result
+
+| Row | Result |
+| --- | --- |
+| T-311.5 | **PASS** at `10ad023285d96d36a601844e546cddcc03711f46`. Done-when met: the collection has 20 tasks with five distinct historical Python fixes. All 15 accepted dictionaries are unchanged (v6 fingerprint reproduced, value comparison against `8505c0bd`). Complete original modules are used with six complete selected methods, and all 20 base/reference pairs pass the unchanged controls-only guard (my run: 20 failing bases / 20 passing references, 77 reference tests, no skips). The unit suite (53) and policy validator pass. Failures are retained honestly. There is no model-quality claim, the parent stays open, and no open high/medium finding remains. Low L1–L3 are backlog. |
+| T-311 (parent) | Not reviewed for closure; remains open (30 tasks, held-out set, generated scoring, baseline). |
+
+Verdict: PASS
