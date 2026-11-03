@@ -1,0 +1,291 @@
+Commit: 054d87c75904294b4496b57d15e9271e285082ca
+Scope: local-coding-t311-3-statement-contract-repair
+
+# Independent re-review: T-311.3 v5 statement-contract repair
+
+Reviewer: a separate, read-only Claude Opus 5.5 session at extra-high effort. It shares the
+builder's model family, so a cross-model review is still required before any public release.
+
+- Row: T-311.3, tier core, attempt 2.
+- Base: `c86571bb85c85a17d70a51f84a5da5222938f58a`.
+- The repository was not modified: `git status --porcelain` was empty before and after.
+- Apart from this file, I wrote only to private lane temp space:
+  `/lane/state/tmp/t311-3-rereview.C3Zr6Q/` and `/lane/state/tmp/t311-3-rereview-run.CLJrt6/`.
+- No GPU, model, network, download or held-out material was used.
+
+## Methods
+
+1. **Commit and scope.**
+   - `git rev-parse 054d87c7…` and `git rev-parse HEAD` both give
+     `054d87c75904294b4496b57d15e9271e285082ca`.
+   - `git diff --stat Base..Commit` touches exactly the seven declared paths.
+2. **Retained review.** The retained review
+   `docs/reviews/c86571bb85c8-local-coding-t311-3-development-collection.txt` is
+   byte-identical (`cmp`) to `/lane/reviews/c86571bb85c8-…-development-collection.md`.
+   Both have SHA-256 `7007321000bd5588196620442a1c1fbaa055898a59f27fc7a917c53fd9bb0c62`.
+3. **Independent data audit.** I wrote my own script; I did not reuse the builder's new
+   preservation test. It parses the `TASKS`/`ADDITIONAL_TASKS` literals at Base and at Commit
+   with `ast.literal_eval` and compares them:
+   - The `TASKS` literal (the original three tasks) is equal.
+   - `DRIVER`, `TIMEOUT`, `MAX_FILE` and `MAX_TREE` are equal.
+   - Of the 11 additions, the only differing fields are `dev-004.statement`,
+     `dev-011.statement` and `dev-014.statement`.
+   - The runtime `TASKS` equals the concatenated literals.
+   - The full fingerprint is `72442a4c…0da618`; the first three tasks keep `d5f5e365…e05e3c5`.
+   - `expected_tests` still sums to 70.
+   - The 31 changed lines in `scripts/coding_eval.py` are only: `VERSION` (v4→v5), the
+     append-only comment, and those three statement strings. Admission, driver, sandbox,
+     resource limits, thresholds and `grade`/`score` are unchanged.
+4. **Contract audit of dev-014.** I extracted the pinned hidden test (`fd51481a…`), the
+   reference (`1e934618…`) and the base (`7cdb6409…`) from Git and read all seven selected
+   methods, their helpers (`current_report`, `validate_current`, `report`, `target`,
+   `command`) and every mock. I compared each assertion with the v5 statement:
+   - `validate_current` patches `source_records` and `complete_source_closure` with a fixed
+     return value. `source_records` is an existing base interface.
+   - `test_changed_or_unavailable…` uses `side_effect=[expected, changed]` and checks `[0]`.
+     The statement now fixes both the order (report `source_revision` first, then local) and
+     the first-failure position.
+   - In the same test, `side_effect=ValueError("missing commit")` must yield returned
+     failures (see L1).
+   - `test_real_git…` patches `ROOT` and `MAX_SOURCE_BYTES`, expects "exceeds bound" as a
+     ValueError, and expects `CalledProcessError` to propagate for `"0"*40`. The statement now
+     says `cwd=ROOT`, names the bound wording and requires CalledProcessError propagation.
+   - `test_batch_integrity…` patches `subprocess.run` with three `CompletedProcess` results:
+     `b"commit\n"`, a padded long-format inventory record, and a batch payload. The duplicate
+     inventory case supplies only two results. The statement now specifies the exact three
+     calls, their order, byte stdout, the long format, refusal before later calls and the
+     "inventory invalid" wording.
+   - Exact-int typing: the mutations `bytes: True`, outer schema versions `True`/`1.0`/`2.0`
+     and closure version `True` all depend on Python's `True == 1`. The statement's "exact
+     integer types, not booleans/floats" covers them.
+
+   Every M1 sub-item from review 1 is now explicit. Nothing in v5 contradicts the tests: the
+   ValueError wording now applies only to "other closure refusals".
+5. **Reviewer-authored statement-only dev-014 implementation.** I started from the base
+   module, not the reference, and added only what the statement asks for, written
+   independently. It differs from the reference in several ways:
+   - one regex parse of each long-format record;
+   - the file-count bound checked before parsing, and the byte bound after the whole inventory;
+   - an extra SHA-1 check of each blob's content against its object ID;
+   - a JSON-line digest encoding;
+   - a separate `closure_failures` helper called from `validate_report` for schema 2;
+   - a validator that runs `validate_report` outside its `try`.
+
+   I also built two deliberately divergent designs to probe how complete the statement is
+   (results below). All three were run through the unchanged confined worker
+   (`coding_eval.grade_case`) with the frozen seven-method selection, under the shared
+   reservation. They are private diagnostics, never candidates or scores. Caveat: I had
+   already read the reference and tests, so A is statement-derived but not blind.
+6. **Requested repeat.** I ran the requested command block verbatim under
+   `bash /tools/build-slot`, adding wall-clock timing. The output went to a fresh private
+   directory holding unchanged copies of the builder's probe drivers, whose hashes match the
+   evidence.
+7. **Evidence tracing and hygiene.**
+   - Traced the builder's private artifact hashes and compared my verifier summary with
+     theirs, case by case.
+   - Scanned all 473 added lines and the commit metadata for private names, paths,
+     credentials, product and benchmark names.
+
+## Commands and results
+
+```text
+export PATH="$PWD/node_modules/.agentmage-review-runtime:$PATH"
+node --version                                   -> v24.15.0
+sha256sum node_modules/.agentmage-review-runtime/node
+                                                 -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c
+test -s node_modules/.agentmage-review-runtime/LICENSE -> ok
+git diff --check c86571bb… HEAD                  -> ok (no output)
+git status --porcelain                           -> (empty)
+local_agent_fast_gate.py --base c86571bb… --plan -> 7 paths, 6 commands (incl. --lint-reviews on the retained review)
+sha256 variants.py          80210d3887b531e0c3f0177be97ced8880279f33a5342d21ddb02665ccfba6a3 (= evidence)
+sha256 negative-controls.py a5ad5aa24f0a4c2dd8f6b23f157921e911ee51e0cf3594da44c130b2984053fa (= evidence)
+sha256 scripts/coding_eval.py   2131f2565df4100945b96129141cb2f1ce4b98c49bbd08db8a74fe0b48bb161c (= evidence)
+sha256 tests/test_coding_eval.py 7d0cdeb1be167e3daf512714af5fc48a1579c9a1dcdf2584a1debe46ff300290 (= evidence)
+
+bash /tools/build-slot bash -s -- /lane/state/tmp/t311-3-rereview-run.CLJrt6 <<CHECKS  (outer rc 0)
+  python3 -m unittest tests.test_coding_eval           -> Ran 37 tests in 6.625s, OK (wall 6.73 s)
+  python3 scripts/coding_eval.py verify --output …     -> rc 0, wall 30.08 s
+  python3 …/variants.py                                -> 11/11 pass, rc 0, wall 3.96 s
+  python3 …/negative-controls.py                       -> 4/4 exit 1 as intended, rc 0, wall 1.41 s
+  local_agent_fast_gate.py --base c86571bb… --timeout 600 -> FAST GATE: PASS (inner 37 tests OK), wall 8.44 s
+  python3 scripts/validate_docs.py                     -> "Validated 698 Markdown file(s) and all
+                                                          policy invariants.", wall 146.0 s
+```
+
+My verifier summary (`passed: true`, `input_refused: false`, `model_score: null`, version
+`coding-development-v5`) is below. Counts are tests / failures / errors / skipped / expected
+failures / unexpected successes. Every case has `model_attempts: 0`.
+
+| Task | Base (test_failure, exit 1) | Reference (pass, exit 0) |
+| --- | --- | --- |
+| dev-001 | 12/0/3/0/0/0 | 12/0/0/0/0/0 |
+| dev-002 | 3/0/19/0/0/0 | 3/0/0/0/0/0 |
+| dev-003 | 23/2/3/0/0/0 | 23/0/0/0/0/0 |
+| dev-004 | 9/11/2/0/0/0 | 9/0/0/0/0/0 |
+| dev-005 | 1/3/0/0/0/0 | 1/0/0/0/0/0 |
+| dev-006 | 1/0/1/0/0/0 | 1/0/0/0/0/0 |
+| dev-007 | 1/0/1/0/0/0 | 1/0/0/0/0/0 |
+| dev-008 | 2/0/2/0/0/0 | 2/0/0/0/0/0 |
+| dev-009 | 1/1/0/0/0/0 | 1/0/0/0/0/0 |
+| dev-010 | 1/1/0/0/0/0 | 1/0/0/0/0/0 |
+| dev-011 | 2/0/2/0/0/0 | 2/0/0/0/0/0 |
+| dev-012 | 4/10/0/0/0/0 | 4/0/0/0/0/0 |
+| dev-013 | 3/0/8/0/0/0 | 3/0/0/0/0/0 |
+| dev-014 | 7/2/25/0/0/0 | 7/0/0/0/0/0 |
+
+- The reference runs total 70 tests, and 140 test executions in all.
+- The per-case task, kind, cause, exit, pass flag, counts, model attempts, model score,
+  version and `task_sha256` equal the builder's
+  `checks/verify/summary.json` (`f12c9fef…41e7`) in every case.
+- These counts are identical to review 1's v4 run. That is expected, because only statement
+  text changed.
+
+The builder's alternative probes, re-run (exit / tests / failures / errors):
+
+```text
+dev-004 0/9/0/0  dev-005 0/1/0/0  dev-006 0/1/0/0  dev-007 0/1/0/0  dev-008 0/2/0/0
+dev-009 0/1/0/0  dev-010 0/1/0/0  dev-011 0/2/0/0  dev-012 0/4/0/0  dev-013 0/3/0/0
+dev-014 0/7/0/0  (closure and validator both replaced)
+```
+
+The negative dev-014 controls, re-run (exit / tests / failures / errors; none timed out or hit
+the output limit):
+
+```text
+wrap-unavailable       1 / 7 / 0 / 1
+alternate-type-probe   1 / 7 / 1 / 0
+local-closure-first    1 / 7 / 1 / 0
+diagnostic-second      1 / 7 / 1 / 0
+```
+
+I checked how these controls are driven. They call `grade_case` directly from a private
+script, inside the unchanged confined worker. Nothing patches `grade`/`score` admission or
+adds a CLI path; the frozen-controls-only guard is unchanged code.
+
+My dev-014 variants, run through
+`bash /tools/build-slot python3 …/mine/run_variants.py` (exit / tests / failures / errors):
+
+```text
+A-statement (base + statement-derived additions)          0 / 7 / 0 / 0   sha256 49b754a1…0140
+B validate_report accepts schema 2 but checks closure only
+  inside validate_current_source                           1 / 7 / 4 / 0   (closure version True/1.0/"1"/None
+                                                                             accepted by validate_report)
+C validate_current_source catches only CalledProcessError
+  and WorkerEvidenceError                                  1 / 7 / 0 / 1   (ValueError: missing commit escapes)
+```
+
+Interpretation:
+
+- **A** shows that a statement-following implementation that differs materially from the
+  reference passes all seven frozen tests. It was written from the base, not the reference.
+- **B** is not statement-following. Its `validate_report` accepts a schema-2 report whose
+  closure has a boolean or absent schema version. That violates the statement's unscoped rule
+  "Schema versions … require exact integer types … closure keys are exact". No finding.
+- **C** is discussed under L1.
+
+Builder artifact hashes I recomputed, all equal to the evidence table:
+
+- unit log `d1738b25…7689`
+- fast-gate log `4aa0e18a…0950`
+- documentation log `f9c9929f…6a`
+- variant summary `9e43fd30…e4b`
+- negative-control summary `ad9c1f22…e5`
+- verifier summary `f12c9fef…41e7`
+
+## Findings
+
+No critical, high or medium findings.
+
+### L1 (low): dev-014 makes the validator's ValueError conversion implicit
+
+Location: `scripts/coding_eval.py:438-453` (dev-014 statement), together with the pinned
+`tests/test_sprint_16_linux_worker_evidence.py`, method
+`test_changed_or_unavailable_committed_source_fails`.
+
+The test patches `complete_source_closure` with `side_effect=ValueError("missing commit")` and
+requires `validate_current_source` to *return* failures. The v5 statement makes conversion
+explicit only for CalledProcessError ("validate_current_source catches it and returns
+failures"). Conversion of the closure's ValueError-family refusals is only implied, by three
+parts of the statement:
+
+- the `-> list[str]` return type;
+- "refuse unavailable commits and malformed inputs as failures";
+- the stated closure diagnostic contract, "ValueError (or the existing WorkerEvidenceError
+  subclass)", which permits plain ValueError.
+
+A validator that catches only CalledProcessError and the subclass fails with 1 error (my
+variant C). I rate this low, not medium. A validator that lets the closure's own permitted
+plain-ValueError refusals escape breaks the statement's list-returning, refuse-as-failure
+contract, so a statement-following candidate converts them. Unlike review 1's M1, nothing is
+contradicted and no protocol is undisclosed.
+
+Fix (optional, non-blocking): any later pre-measurement revision could add the sentence
+"validate_current_source converts any CalledProcessError or ValueError raised while computing
+either closure into a returned failure." Once a model has been measured, leave the statement
+frozen.
+
+### Informational (no finding)
+
+- The evidence says the batch call receives *sorted* object IDs. The statement requires only
+  newline-delimited IDs. That is not required by the tests either, so the statement is the
+  correct contract, and the evidence merely describes the reference.
+- The statement's timeouts (30/30/60 s) are not tested. They over-specify harmlessly.
+- The added text contains `/lane/state/tmp/…` and `/tools/build-slot`. Both come from the
+  retained review. They are generic lane mounts already used by earlier retained reviews, not
+  private host paths.
+- The reviewer model name appears as reviewer identification, not as branding or a product
+  comparison.
+- No added line or commit metadata contains a private host path, username, hostname,
+  credential, private sibling-project name, agent-product name or benchmark name. The commit
+  author is the repository's normal Git identity.
+
+## Assessment against the requested focus
+
+1. **M1 resolved.** Each previously omitted or contradicted dev-014 requirement is now
+   explicit and consistent with the seven unchanged selected methods and their helpers:
+   - the three `subprocess.run` calls, their order, byte stdout, the `b"commit\n"` probe, the
+     long inventory with sizes and the `--batch` input;
+   - early refusal, `cwd=ROOT`, check and capture;
+   - CalledProcessError propagation and validator conversion;
+   - report-before-local closure order with exactly two calls;
+   - "historical" and "not equivalent" in the first returned failure.
+
+   My statement-derived variant A passes, and each negative control fails as intended.
+2. **Review 1's L1 resolved.** dev-004 now names ValueError for the stated refusals, and
+   dev-011 declares `TOOL` as a string. These and dev-014 are the only changed fields. Every
+   other field matches Base, by my independent comparison: ids, splits, base/reference/source
+   pins, digests, projections, hidden blobs, `test_names` and `expected_tests`. The original
+   three task dictionaries are identical. The v5 fingerprint matches.
+3. **Preservation test.** `test_v5_statement_correction_preserves_all_frozen_test_and_source_inputs`
+   parses the Base literals from Git history and compares every non-statement field. It
+   requires the changed set to be exactly `["dev-004", "dev-011", "dev-014"]` and passes in the
+   37-test suite. Driver, admission, resource, sandbox, harness, prompt and threshold code are
+   unchanged.
+4. **Builder audit and alternatives.** All 32 selected tests pass under the 11 alternatives.
+   The evidence correctly labels them as reference-based and neither blind nor independent.
+   My own assessment of completeness is above: variant A passes; B and C fail, but neither
+   follows the statement (L1 low for C).
+5. **Negative controls.** All four exit 1 with the expected failure or error and run all 7
+   tests. They run through `grade_case` directly, with no production patch or generated-score
+   CLI.
+6. **Full verifier.** All 14 bases fail by test_failure, and all 14 references pass. There are
+   70 reference tests and 140 invocations, with no skips, expected failures or unexpected
+   successes. `model_score` is null and model attempts are zero. The unit suite has 37 tests,
+   and the scoped gate and policy validator pass.
+7. **Hygiene.** The retained review is byte-identical. The added text is clean. No ledger,
+   status, binding or licence content outside the T-311.3 row changed; the TASKS.md diff is
+   that single row.
+
+Evaluation integrity: the statement changes come from independent-review feedback before any
+model measurement, not from model attempts. Hidden tests, base commits and selections are
+untouched, no held-out material exists or was used, and failures are counted. The row is a
+repair of the same row, not an additional split.
+
+## Per-row result
+
+- **T-311.3: PASS** for exact commit `054d87c75904294b4496b57d15e9271e285082ca`. No high or
+  medium finding is open. L1 is backlog.
+- Parent T-311, generated scoring, the held-out collection and the coding baseline remain
+  open; they were not reviewed here.
+
+Verdict: PASS
