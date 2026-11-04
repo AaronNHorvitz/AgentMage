@@ -189,6 +189,46 @@ assert not Path('/proc/1/fd/' + cmd[2].decode()).exists()
 ''', 'private-launch-arguments')
         self.assertTrue(report['passed'], report)
 
+    def test_launcher_and_workers_do_not_inherit_host_environment(self):
+        # Synthetic-only parent environment keeps a failing regression from
+        # printing real host data. Test both namespace roles, including PID 1;
+        # --clearenv alone only clears the executed worker's environment.
+        source = '''import os
+from pathlib import Path
+assert Path('/proc/1/environ').read_bytes() == b'', 'launcher environment not empty'
+assert dict(os.environ) == {
+ 'PATH': '/usr/bin', 'HOME': '/tmp', 'LANG': 'C.UTF-8', 'PWD': '/workspace'
+}, 'unexpected worker environment'
+for entry in Path('/proc').glob('[0-9]*/environ'):
+ try:
+  data = entry.read_bytes()
+ except FileNotFoundError:
+  continue
+ assert b'AGENTMAGE_TEST_SECRET' not in data, 'host sentinel inherited'
+ assert b'/synthetic-host-home' not in data, 'host home inherited'
+ assert b'synthetic-host-user' not in data, 'host user inherited'
+print('environment-isolated')
+'''
+        host_environment = {'AGENTMAGE_TEST_SECRET': 'synthetic-credential',
+                            'HOME': '/synthetic-host-home', 'USER': 'synthetic-host-user'}
+        for role in ('candidate', 'oracle'):
+            with self.subTest(role=role):
+                command = oracle.sandbox(self.root, self.root, self.root, role)
+                command[command.index('--') + 1:] = ['/usr/bin/python3', '-I', '-B', '-c', source]
+                with mock.patch.dict(os.environ, host_environment, clear=True):
+                    process = oracle.launch(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                            start_new_session=True, preexec_fn=evaluation.limits)
+                    try:
+                        stdout, stderr = process.communicate(timeout=10)
+                    finally:
+                        # communicate reaps on success. Never signal a group
+                        # after its leader's PID can have been reused.
+                        if process.returncode is None:
+                            oracle.terminate(process)
+                self.assertEqual(process.returncode, 0, stderr.decode(errors='replace'))
+                self.assertEqual(stdout, b'environment-isolated\n')
+                self.assertEqual(stderr, b'')
+
     def test_candidate_that_holds_eof_open_hits_host_deadline_and_counts_failure(self):
         task = next(t for t in evaluation.collection() if t['id'] == 'dev-009')
         files = self.files(task)
@@ -1350,6 +1390,7 @@ def case_passed(case):
             def popen(command, **options):
                 descriptor, = options['pass_fds']
                 captured.append(descriptor)
+                self.assertEqual(options['env'], {})
                 self.assertEqual(command, ['/usr/bin/bwrap', '--args', str(descriptor), '--', '/usr/bin/true'])
                 self.assertEqual(os.read(descriptor, 4096),
                                  b'--ro-bind\0private source with spaces\0/workspace\0')

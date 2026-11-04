@@ -1,0 +1,126 @@
+Commit: d49f3b0eb55e9d0f0615b5f4f3a422f1ce2f5833
+Scope: local-coding-t311-18-protocol-lifecycle
+
+# Independent review: T-311.18 protocol lifecycle and launcher arguments (review 1)
+
+Reviewer: separate read-only session, same model family (accepted for now). The repository was
+not modified. All outputs are in a fresh private directory, `/lane/state/tmp/t311-18-review-yeQMgq`.
+
+## Methods
+
+- Confirmed `git rev-parse d49f3b0eb55e9d0f0615b5f4f3a422f1ce2f5833` equals HEAD, with a clean
+  tree. Base `9a21c0d57bd7111c2d65a7a8ae749128457cc802`; one commit in range.
+- Read the full diff (oracle host, worker, both test files, guide, evidence, TASKS row). Read
+  `candidate()`, `oracle()`, `RemoteFunction.start/finish/__call__`, `launch()`, `exchange()`,
+  `grade_case()`, `grade()`, `result_record()` and `expected_base()` in full.
+- Read the builder's private evidence: logs, result records, `source-digests.json`,
+  `audit.py`/`audit.json`, `probes.py`/`probes.json`, the retained initial fast-gate failure and
+  the launch-probe failure. Did not rerun `run.py`, `probes.py` or `audit.py`.
+- Ran every required command, plus my own real-namespace probes (below) through the build
+  reservation. These probes are a reviewer-only script that imports the repository modules and
+  writes only to my private directory.
+
+## Required commands and results
+
+| Command | Result |
+| --- | --- |
+| `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base 9a21c0d5… --timeout 600` | exit 0; `Ran 115 tests … OK`; `FAST GATE: PASS` (72.2 s) |
+| `bash /tools/build-slot python3 -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | exit 0; 58 tests OK |
+| `bash /tools/build-slot python3 scripts/coding_eval_oracle.py verify --output $review_results/independent` | exit 0; `passed` true; 15 pairs all `valid`; control attempts 30/15/15; 160 reference calls; 18 methods; `generated_scoring` false; collection `0c2a0624…1570` |
+| `bash /tools/build-slot python3 scripts/coding_eval.py verify --output $review_results/legacy` | exit 0; 30 pairs all valid; 89 reference tests; 0 skipped |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` | exit 0; `Validated 718 Markdown file(s) and all policy invariants.` |
+| `git diff --exit-code 9a21c0d5… HEAD -- <six legacy files>` | exit 0 (unchanged) |
+| `cmp docs/reviews/e23932272e55-…txt /lane/reviews/e23932272e55-…md` | exit 0 |
+| `git diff --check 9a21c0d5… HEAD` | exit 0 |
+
+No `cleanup.json` or `cleanup-recovery.json` exists under my output directory. The builder's
+artifact digests (fast log/result, both summaries, probes, audit, source digests, targeted,
+launch-probe, initial-fast and policy logs) match the evidence table. The initial fast gate (two
+fixture failures) and the launch-probe failure (`evaluation.io-failed`, no worker started) are
+retained separately from the final reports, as the evidence describes.
+
+## Focus checks
+
+- **Raw fd 1 / original stdout / exec children cannot substitute replies.** The worker uses
+  `os.dup(1)` (non-inheritable under PEP 446), then `os.dup2(2, 1)`, before the candidate import
+  (`scripts/coding_eval_oracle_worker.py:740-745`). The builder's `fd1-forgery`,
+  `original-stdout-forgery` and `inherited-child-output` variants end as `candidate_exception`,
+  and the forged bytes stay in `candidate.log`. `private-fd-not-inherited` runs a
+  `close_fds=False` child and passes. Confirmed by the fast gate and the builder's probes.
+- **Descriptor discovery plus extra responses fails even when assertions pass.** I reproduced
+  this on a multi-call task (dev-015). Duplicating every reply through the discovered private fd
+  gives `protocol`, `protocol_failed` true and 2 calls. A single `\n` written after the end marker
+  through a saved duplicate gives `protocol` with 0 failures, 1 test and assertions passing. The
+  builder's `private-fd-forgery` and `exit-tail` give the same result.
+- **Held EOF / nonzero exit.** The builder's held-EOF probe times out (`timeout`, counted failed).
+  My `atexit` `os._exit(3)` after a clean end marker gives `candidate_exit`, exit 3, counted
+  failed. A forked (no-exec) child holding the writer after the worker exits does not hang: the
+  PID namespace ends it, and the case passes in 0.13 s. With `/proc/<pid>/fd` reopened after
+  `candidate()` returns, the descriptor is already closed (`FileNotFoundError`), as expected.
+- **No end-marker deadlock.** 30 real control cases finish in 26.5 s against a 90 s per-case
+  deadline. In `finish()`, BrokenPipe on the write or close still requires EOF. Read and close
+  failures are sticky (worker unit tests).
+- **Arguments descriptor.** Inside the candidate namespace, PID 1's cmdline is
+  `/usr/bin/bwrap --args 5 -- /usr/bin/python3 -I -B /adapter/run.py candidate`. PID 1's fds are
+  {0,1,2,4(eventfd)}, so fd 5 is closed. On the host, both bwrap processes' fd sets omit fd 5.
+  The evaluator's own fd set is identical before and after the probe runs, so nothing leaks on
+  normal launch. The exception path is covered by the mocked `Popen` test plus the
+  `TemporaryFile` context manager (`scripts/coding_eval_oracle.py:177-186`). The reasoning is
+  sound.
+- **Integrity.** `SUPPORTED`, `CONTROL_PROFILES`, `result_record`, `expected_base`, thresholds
+  and `require_historical_candidate` are unchanged. The only change to the pass predicate is
+  that `finish()` can additionally set `remote.failed`. The six legacy files are unchanged. No
+  held-out content, model, GPU or tuning appears in the diff. The edited builder probes now
+  target the private descriptor and still exercise the malformed-frame paths. The new
+  `false-startup` probe patches `__main__.encode_message` and still produces a false ready
+  frame. The replaced fd-1 form is covered as harmless by `startup-output`.
+- **Claims.** The guide and evidence qualify same-interpreter control and say metadata hiding
+  is limited to argv. Diagnostic-bound wording now says encoded bytes (L3 resolved).
+
+## Findings
+
+- **M1 (medium; security, environment leak) — namespace PID 1 still exposes the evaluator's full
+  host environment.** Location: `scripts/coding_eval_oracle.py:171-186` (`launch`) and `:197-204`
+  (`exchange`). `Popen` is called without `env`, so both bwrap processes inherit the evaluator's
+  environment. `--clearenv` clears only the worker's environment, not bwrap's own. Inside the
+  candidate namespace, `/proc/1/environ` is readable by candidate code.
+  Reproduction: candidate code appended to the dev-015 reference read `/proc/1/environ` and
+  logged it while the case still passed. The log showed the whole launching environment:
+  home path, user name, working directories, temp directory and an agent-session credential
+  variable. The worker's own environ showed only `PATH/HOME/LANG/PWD`. A standalone check gives
+  the same result: `FAKE_SECRET=s3cret bwrap … --clearenv -- cat /proc/1/environ` contains the
+  variable, and `env -i bwrap …` yields 0 bytes.
+  This contradicts the guide (`docs/guides/coding-evaluation-oracle.md:90-94`: "cleared
+  environments … It has no … host home, credentials"). It also defeats this row's purpose for
+  L2: PID 1 still reveals host layout and, unlike the old argv, also the username. On an owner
+  host, the same path would expose any endpoint API key in the evaluator's environment. It is
+  not exploitable today, because only frozen historical controls are admitted and the
+  namespace has no network. It is a confinement gap in the exact launcher this row changed, and
+  it must not reach generated scoring.
+  Fix: pass a fixed empty environment to the bwrap `Popen` in `launch()`
+  (e.g. `env={}`; bwrap needs none). Add a real-namespace test that sets a sentinel variable in
+  the host process and asserts `/proc/1/environ` holds no sentinel, home or user value. Correct
+  the guide sentence if anything remains. The legacy grader (`scripts/coding_eval.py` around
+  line 781) launches bwrap the same way. Its files are frozen for this row, so track that
+  separately before generated scoring.
+- **L1 (low; disclosed) — `/proc/self/mountinfo` shows host bind-mount roots, including the
+  user's home path and case directory name.** The guide explicitly disclaims hiding all
+  filesystem metadata, so this is not a false claim. Before generated scoring, consider staging
+  case directories under a neutral path, or accept and document this explicitly.
+
+No critical or high finding. M1 is pre-existing in origin, but it is in scope here because this
+row's deliverable is hiding host information from the candidate-visible PID 1.
+
+## Per-row result
+
+- **T-311.18: FINDINGS — do not close.** Standard-output separation, end-of-requests/clean EOF,
+  trailing-byte rejection, held-EOF deadline, nonzero-exit preservation, argument-descriptor
+  closure and the encoded-byte clarification all work as claimed. All required runs reproduce
+  the builder's numbers. Medium M1 (PID 1 environment leak, contradicting the guide's
+  cleared-environment/no-credentials claim) blocks closing the row.
+- T-311.15/T-311.16, generated scoring, quotas, held-out inputs, model baseline and parent T-311
+  are not reviewed here and remain open.
+
+Summary: medium M1, the candidate namespace's PID 1 exposes the evaluator's full host environment (home, user, credential variables) via /proc/1/environ; the row stays open.
+
+Verdict: FINDINGS

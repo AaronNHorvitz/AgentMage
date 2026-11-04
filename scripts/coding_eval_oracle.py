@@ -24,7 +24,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v15"
+VERSION = "coding-independent-oracle-v16"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
@@ -169,7 +169,7 @@ def terminate(process):
 
 
 def launch(command, **options):
-    """Keep host mount sources out of the namespace's PID 1 command line."""
+    """Keep host arguments and inherited environment out of namespace PID 1."""
     if command[0] != "/usr/bin/bwrap":
         # Non-bwrap commands are used only for host lifecycle fault tests.
         return subprocess.Popen(command, **options)
@@ -182,8 +182,10 @@ def launch(command, **options):
         # launch outcome. Only this fd crosses exec alongside standard streams.
         # --args supplies options only; the fixed namespace-local executable
         # and its arguments must remain in argv after the option delimiter.
+        # --clearenv only clears the worker; PID 1 can still expose bwrap's
+        # initial environment through procfs. Neither launcher needs host vars.
         return subprocess.Popen([command[0], "--args", str(arguments.fileno()), *command[boundary:]],
-                                pass_fds=(arguments.fileno(),), **options)
+                                env={}, pass_fds=(arguments.fileno(),), **options)
 
 
 def exchange(candidate_command, oracle_command, output, timeout):

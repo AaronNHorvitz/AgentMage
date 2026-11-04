@@ -88,10 +88,10 @@ this does not authorize a generated model attempt.
 ## Assertion boundary
 
 Two separate bubblewrap processes have separate PID, network, user and filesystem
-namespaces, cleared environments, read-only runtime/source mounts and temporary
+namespaces, empty launcher environments, read-only runtime/source mounts and temporary
 scratch. The candidate has its proposed source projection and a small function
 configuration. It has no hidden tests, original Git history, result directory,
-host home, credentials, model or live repository. The oracle has only the frozen
+host-home mount, inherited credentials, model or live repository. The oracle has only the frozen
 base projection, hidden method and writable results; no candidate source is
 imported into its interpreter.
 
@@ -136,8 +136,20 @@ descriptor number, plus the fixed namespace-local worker command. The launcher c
 the worker. No mount-source path appears in that command line and no named
 argument file is created. This is not a claim that all host filesystem metadata
 is hidden by the namespace.
-The host closes its descriptor after launch, including failed exec. All namespace,
-mount, environment, permission and resource options remain unchanged.
+The host closes its descriptor after launch, including failed exec. Oracle v16
+also starts each launcher with an explicitly empty environment. `--clearenv`
+alone clears the executed worker, while namespace PID 1 retains the launcher's
+original environment in `/proc/1/environ`. Both roles now inherit no host
+environment; their workers receive only the fixed PATH, HOME, LANG and PWD.
+Real-namespace regressions check PID 1 and worker environments with synthetic
+host credential, home and user sentinels. Mount, permission and resource options
+remain unchanged. `/proc/self/mountinfo` can still disclose host bind-mount roots;
+no claim of complete host-path anonymity follows. This known metadata exposure
+requires an explicit disposition before generated scoring.
+
+T-311.18 review 1 medium M1 identified this inherited-environment gap. Its repair
+does not change the frozen legacy grader, whose launcher has the same gap;
+that separate environment repair remains required before generated scoring.
 
 Before assertions run, the oracle consumes one exact startup frame sent after
 the candidate module imports. It records readiness and whether the function is
