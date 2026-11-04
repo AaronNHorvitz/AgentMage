@@ -1,0 +1,163 @@
+Commit: e23932272e5526c6c123217f65c0149855b4097b
+Scope: local-coding-t311-17-diagnostic-oracle
+
+# Independent core review 1 — T-311.17 (dev-009 failed-command diagnostic oracle)
+
+Reviewer: separate read-only session (Claude Opus 5.5, extra-high effort). Same-model review;
+no shared context with the builder. Repository not modified. No GPU, model, held-out input,
+download or tuning action was taken.
+
+## Methods
+
+1. Confirmed `git rev-parse e23932272e5526c6c123217f65c0149855b4097b` equals HEAD on a clean
+   `main`; base `67358640bfbdcb3280ebf5fc6a47686510e95f22`. Read IP-POLICY.md, decisions
+   0151-0153, the T-311.14..T-311.17 rows of TASKS.md, the full base..HEAD diff (9 files),
+   the new evidence file and the guide changes.
+2. Read the frozen dev-009 task (`scripts/coding_eval.py` collection entry), the hidden method
+   `test_a_failed_child_command_leaves_its_output_in_the_log` at the pinned reference commit,
+   and the base/reference `subprocess_runner`, to check observation fidelity against the
+   original assertions (`assertRaises(RuntimeError)`, `assertIn` on captured stderr and on
+   `str(exception)`).
+3. Read the oracle sandbox/launch code (`scripts/coding_eval_oracle.py` `sandbox`, `exchange`,
+   `grade_case`, `grade`, `verify`, `expected_base`) and the worker codec, `RemoteFunction`,
+   new `valid_diagnostic_result` / `diagnostic_proxy` / `diagnostic_result`, `candidate` and
+   `oracle` entry points.
+4. Ran every required command myself into a fresh private directory (outputs not shared with
+   builder artifacts).
+5. Wrote and ran 14 private adversarial probes (candidate suffixes appended to the pinned
+   reference source, graded by both the independent oracle and the legacy grader, with only a
+   synthetic-only mock of `require_historical_candidate`; no repository change, no new
+   admission route).
+6. Read the builder's private artifacts (validate.py, audit.json, source-digests.json, all
+   `*-result.json`, targeted/targeted-repeat logs, probes-initial and probes logs, probes.json,
+   independent/ and legacy/ summaries) without rerunning `validate.py` or `audit.py`.
+
+## Exact commands and results
+
+Environment: `PATH=$PWD/target/local-agent-tools:$PATH`, `CARGO_TARGET_DIR=/lane/state/review-target`,
+`PYTHONDONTWRITEBYTECODE=1`. `node --version` = v24.15.0; `sha256sum target/local-agent-tools/node`
+= `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c` (matches).
+Private output: `review_results=/lane/state/tmp/t311-17-review-jaOwW3`.
+
+| Command | Result | Seconds (incl. reservation wait) |
+| --- | --- | --- |
+| `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base 67358640… --timeout 600` | rc 0; `Ran 109 tests`, OK | 95.68 |
+| `bash /tools/build-slot python3 -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | rc 0; `Ran 58 tests`, OK | 20.32 |
+| `bash /tools/build-slot python3 scripts/coding_eval_oracle.py verify --output "$review_results/independent"` | rc 0; see below | 9.64 |
+| `bash /tools/build-slot python3 scripts/coding_eval.py verify --output "$review_results/legacy"` | rc 0; 30 valid pairs, 89 reference tests, 0 skipped | 46.21 |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` | rc 0; "Validated 717 Markdown file(s) and all policy invariants." | 165.97 |
+| `git diff --exit-code 67358640… HEAD -- scripts/coding_eval.py scripts/coding_eval_collection.py scripts/coding_eval_rust.py tests/test_coding_eval.py tests/test_coding_eval_collection.py tests/test_coding_eval_rust.py` | rc 0 (no change) | — |
+| `cmp docs/reviews/69e083f8f0c7-local-coding-t311-15-descriptor-repair.txt /lane/reviews/69e083f8f0c7-local-coding-t311-15-descriptor-repair.md` | rc 0 (identical) | — |
+| `git diff --check 67358640… HEAD` | rc 0 | — |
+
+Independent verifier summary (my run): 15 tasks, all `valid`, `passed: true`; 18 reference
+methods; 160 reference calls; `control_attempts` total 30 / passed 15 / failed 15;
+`collection_sha256` `0c2a0624df93085540f61c4677260490a9810a0325efd6bcb75db0dce1461570`
+(unchanged); `generated_scoring` false; `aggregate_worker_quotas` false; `model_score` null. All
+30 reports: model_attempts 0, gpu_minutes 0, tokens null, model_score null. dev-009 base:
+cause `test_failure`, 1 test / 1 failure, 1 call ("'catalog drift: fixture' not found in ''");
+dev-009 reference: pass, 1 call. Reference wire transcript contains only
+`{"stderr":"catalog drift: fixture\n","outcome":{"kind":"runtime-error","message":"configuration result evidence command failed: /usr/bin/python3 exited 3"}}`.
+The legacy summary has the same collection digest. The frozen dev-003 ProcessLookupError did not
+recur in my runs, so no repeat was needed.
+
+Builder artifact cross-check: committed source/test SHA-256 values equal
+`source-digests.json` and the evidence table; builder `independent/summary.json`
+(`31137171…`), `legacy/summary.json` (`4aea6b11…`), `probes.json` (`a7f28557…`), `audit.json`
+(`63292d3f…`) and `fast.log` (`9aa74dd7…`) match the published digests. Builder dev-009
+base/reference profiles and control counts match mine. `targeted.log` retains the initial
+`real-child` legacy-contrast failure, and `targeted-repeat.log` passes. `probes-initial-result.json`
+records the missing output parent with zero worker launches. `validate.py` derives its probe
+variants by AST `literal_eval` from the committed unit test, as stated.
+
+## Adversarial probes (private, synthetic only)
+
+| Probe | Oracle | Legacy | Assessment |
+| --- | --- | --- | --- |
+| confinement (env/mount/network/PID/child introspection, then reference behaviour) | pass | fail | Candidate and its real child see env {HOME, LANG, PATH, PWD} only; interfaces `lo` only; TCP connect fails; `/` = adapter, bin, dev, lib, lib64, proc, tmp, usr, workspace; no `/adapter/test.py`, `/output`, `/candidate-tmp`, `/etc/passwd`, home or lane paths; `/workspace` write refused; PID namespace {1,2}; child cwd `/workspace`. Confinement holds. |
+| recursion-subclass (RecursionError ⊂ RuntimeError) | pass | pass | Matches original `assertRaises` subclass semantics. |
+| stderr-then-valueerror | fail, candidate_exception | fail | Sticky fixed tag holds even though the trusted `CandidateExecutionError` is a RuntimeError subclass that the original `assertRaises` catches. |
+| systemexit | fail, candidate_exception | fail | Consistent. |
+| str-raises (`__str__` raises) | fail, candidate_exception | fail | Consistent. |
+| stdout-only / cached-stderr | fail, test_failure | fail | Capture semantics match the original (only live `sys.stderr` is captured). |
+| child-on-protocol-fd (child inherits fd 1) | fail, protocol | fail | Verdict matches; cause differs (see L1). |
+| forged-frame (`os.write(1, valid frame)` then ValueError) | **pass** | fail | See L1. |
+| oversize-message (70 kB RuntimeError text) | fail, adapter_policy | pass | Declared, counted `bounded-encoded-response` policy. |
+| inert-code (code-like text in stderr/message) | pass | pass | Nothing executed; no extra file in the output dir. |
+| lingering-child (detached `sleep 1000`) | pass | pass | No leftover process on the host after grading. |
+| builtins-patch (`builtins.RuntimeError = Exception` + ValueError) | pass | pass | Equivalent to the original in-process behaviour; no oracle-side effect. |
+| surrogate (lone surrogate in stderr) | pass | pass | `ensure_ascii` codec carries it; consistent. |
+
+## Review against focus areas
+
+- **Fidelity of observation.** The candidate receives the exact command strings and lexical
+  `/workspace` root and rebuilds `tuple`/`Path`. The trusted proxy writes the text into the
+  original method's capture and raises a built-in RuntimeError with the transported
+  `str(error)`. `assertRaises(RuntimeError)` accepts subclasses, so collapsing the type loses
+  nothing that the method grades. The ungraded items (success value, invocation arguments,
+  tail/newline, exact type, unselected clauses) are listed in `coverage()` and the guide.
+- **Untrusted input parsing.** `valid_diagnostic_result` accepts exactly
+  `{"stderr": str, "outcome": {"kind":"return"} | {"kind":"runtime-error","message": str}}`.
+  The unit tests and my reading confirm that extra keys, classes, tracebacks and non-strings
+  are refused before replay. Requests are validated candidate-side (1–128 string args, str root).
+  Nothing from the candidate is imported, evaluated or used as a class.
+- **Confinement.** Unchanged `bwrap --unshare-all --clearenv --cap-drop ALL --die-with-parent`.
+  The workspace is read-only, the hidden test is only in the oracle adapter, and `/output` is
+  only in the oracle. The real child runs inside the candidate namespace. I reproduced all of
+  this (table above).
+- **Evaluation integrity.** Hidden bytes are pinned by SHA-256. The six legacy files, the
+  collection digest, selections, thresholds and the controls-only guard are unchanged. A new
+  unit test proves that a generated dev-009 snapshot is refused before launch, with no output
+  directory. dev-009 is development split. I found no held-out content in the diff. Failures
+  are counted: every refusal path is in `control_attempts`.
+- **Three-strike handling.** The T-311.15 review bytes are retained (`cmp` identical). The diff
+  does not touch `repair_fixture_permissions` / `remove_fixture_tree` / mode functions. T-311.15
+  and T-311.16 stay open; this row does not restart their cycle.
+- **Privacy / IP / claims.** The diff adds no private host path, username, credential or
+  product/trademark name; "fedora" occurs only as the OS name. Evidence numbers match my runs.
+- **Delivery.** A single sub-row that ends in a measured, runnable verifier extension.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, pre-existing, all adapters) — out-of-band writes to the protocol fd can substitute
+  the observation.** Location: `scripts/coding_eval_oracle_worker.py:706-760`. `candidate()`
+  keeps fd 1 as the protocol pipe while running candidate code and its children, and
+  `RemoteFunction.__call__` (around line 160) takes the first well-formed line. Reproduction:
+  the `forged-frame` probe writes a valid dev-009 frame with `os.write(1, …)` and then raises
+  ValueError. The oracle passes, and the real `candidate_exception` reply is left unread. The
+  candidate gains no scoring advantage over hard-coding the fixed expected behaviour, because
+  the inputs are frozen and the candidate controls its own observations. However, the report
+  then reflects behaviour the function did not exhibit. Separately, a child that inherits fd 1
+  is labelled `protocol` rather than `test_failure`.
+  Fix before generated scoring: in the candidate worker, `os.dup` the protocol fd to a private
+  descriptor and `os.dup2(2, 1)` before importing candidate code, so children and
+  `print`/`os.write(1)` cannot reach the pipe. In the oracle, after the last call, treat any
+  unconsumed bytes from the candidate at EOF as a protocol failure.
+- **L2 (low, pre-existing) — host scratch path visible to candidate code.** Location:
+  `scripts/coding_eval_oracle.py:131-151`. The candidate can read the bwrap argv from
+  `/proc/1/cmdline`, which includes the host case path
+  (`<state>/tmp/agentmage-eval-XXXX/candidate`). It contains no username, nothing is
+  committed, and logs are private. Before generated scoring, avoid exposing host layout to
+  candidates: pass bwrap arguments through `--args FD`, or launch through a fixed-path
+  re-exec so PID 1's argv holds no host paths.
+- **L3 (low, documentation) — the frame bound in characters is undocumented.** The guide says an
+  "oversized but frame-bounded diagnostic" passes. Because the codec escapes non-ASCII
+  (`ensure_ascii`), a statement-conforming 16,384-character non-ASCII tail could exceed the
+  64 KiB frame and become an adapter-policy refusal. The frozen method's ASCII child cannot
+  trigger this. Fix: state the effective bound (bytes after JSON escaping) in the guide's
+  diagnostic section.
+
+## Per-row result
+
+- **T-311.17: PASS** for exact commit `e23932272e5526c6c123217f65c0149855b4097b`. All required
+  runs reproduce the claimed results. The confinement boundary holds under my escape attempts,
+  observation fidelity matches the original method, and integrity constraints are preserved.
+  There is no open high or medium finding. L1–L3 are backlog, to return before generated
+  scoring.
+- T-311.15 is not reviewed and not closed here; it stays open under the three-strike rule, with
+  its repair tracked at T-311.16. Parent T-311, generated scoring, aggregate quotas, held-out
+  inputs and the model baseline stay open.
+
+Verdict: PASS
