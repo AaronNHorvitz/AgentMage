@@ -1,0 +1,218 @@
+Commit: 69e083f8f0c7e83ccec16311fc41dadacaa84b51
+Scope: local-coding-t311-15-descriptor-repair
+
+# Independent core re-review 3: T-311.15 descriptor repair
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate read-only session. This is the third review of
+T-311.15. Base: 7544b49c12d1c8c284cf8e20d32fbf6fb946fd40. Only T-311.15 is reviewed. Parent T-311 and
+generated scoring are out of scope.
+
+## Method
+
+- **Commit.** `git rev-parse 69e083f8f0c7e83ccec16311fc41dadacaa84b51 HEAD` printed the same sha twice.
+  The working tree was clean before and after the review.
+- **Diff.** There is one commit in base..HEAD. It changes 7 files:
+  - scripts/coding_eval_oracle.py: +118/-25 (net, including docstrings);
+  - tests/test_coding_eval_oracle.py: +147;
+  - the guide, two evidence files and TASKS.md;
+  - the retained review 2.
+- **Reading.** I read IP-POLICY.md, decision 0153, the top of TASKS.md and the T-311.15 row, and
+  retained review 2. I read the full code and test diff, the surrounding code (`sandbox`, `terminate`,
+  `exchange`, `candidate_temporary`, `grade_case`, `grade`), and `case_workspace`,
+  `remove_case_workspace` and `limits` in scripts/coding_eval.py. I also read the new and corrected
+  evidence, the guide diff, and the builder's audit.py and retained failure logs.
+- **Runs.** I reran every required command into a fresh directory,
+  `/lane/state/tmp/t311-15-descriptor-review-IvnnxZ` (`review_results`), through `bash /tools/build-slot`.
+  The exit codes and in-tool times are retained in `exit-codes.txt`.
+- **Probes.** I wrote my own probes under `review_results/probes`, outside the repository. They import
+  the commit's code with bytecode writing disabled. Some run through real bwrap sandboxes with
+  `oracle.grade`, patching `require_historical_candidate` in the same way as the earlier diagnostics.
+  Others call `repair_fixture_permissions`/`remove_fixture_tree` directly.
+- **Builder artifacts.** They were read but not changed. audit.py was read, not run.
+
+## Required commands and results
+
+Setup: `node --version` printed v24.15.0. `sha256sum target/local-agent-tools/node` printed
+d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c. extra.py SHA-256 is
+75b61520fe94ac1ef01c22a9392c75b7ab5f3bb1b18f8f876cb335519b234323, which matches the request.
+`CARGO_TARGET_DIR=/lane/state/review-target`.
+
+| Command | Result |
+| --- | --- |
+| `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base 7544b49c… --timeout 600` | rc 0. "Ran 63 tests in 60.974s", OK. FAST GATE: PASS. The whole tests.test_coding_eval_oracle module ran, including the 5 new regressions and the existing cleanup-refusal and interruption tests |
+| `bash /tools/build-slot python3 -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | rc 0; "Ran 58 tests in 20.220s", OK |
+| `bash /tools/build-slot python3 scripts/coding_eval_oracle.py verify --output $review_results/independent` | rc 0. passed true; v13; 14 valid pairs; control_attempts 28/14/14; 159 reference calls; generated_scoring false; aggregate_worker_quotas false; model_score null; collection 0c2a0624…1570. dev-017 base: candidate_exception (1 error, 1 call). dev-019 base: test_failure (1 failure, 1 call). Both references pass. Identical to the builder's independent/summary.json except wall times and log digests |
+| `bash /tools/build-slot python3 scripts/coding_eval.py verify --output $review_results/legacy` | rc 0. passed true; 30 valid pairs; coding-development-v9; same collection digest. The dev-003 race did not occur in this run, so no repeat was needed |
+| `bash /tools/build-slot env TMPDIR=$review_results/scratch python3 …/extra.py $review_results/reviewer-probes` | rc 0. deep-correct: pass/none. deep-wrong: test_failure (1 failure). locked-links-special: pass/none. locked-output-limit: output_limit. base-locked: infrastructure. None of the five has a cleanup.json or residue, and `scratch` is empty. This is identical to the builder's reviewer-probes.json |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` | rc 0; "Validated 716 Markdown file(s) and all policy invariants." |
+| `git diff --exit-code 7544b49c… HEAD -- <8 legacy/worker source and test files>` | rc 0, empty |
+| `cmp docs/reviews/7544b49c12d1-…txt /lane/reviews/7544b49c12d1-….md` | rc 0 |
+| `git diff --check 7544b49c… HEAD` | rc 0, empty |
+
+Further checks:
+
+- **Published digests.** All 22 match: 4 sources at HEAD and 18 artifacts in
+  /lane/state/tmp/t311-15-fd-repair.
+- **Builder bindings.** My own count over the builder's artifacts found 153 report.json files, 339
+  log bindings, 0 mismatches and no cleanup.json. The independent summary is v13, 14 pairs, 28/14/14,
+  159 calls.
+- **Fresh bindings.** My fresh outputs have 0 mismatches:
+  - independent: 28 reports, 84 bindings, with tests.json tests/calls equal to the report in all 28;
+  - legacy: 60 reports, 120 bindings;
+  - reviewer-probes: 5 reports, 15 bindings.
+- **Retained failures.** They are present and match the request:
+  - targeted.log: generic-rmtree residue on the 2500-level case;
+  - targeted-retry.log: the parent-move test raised `FileNotFoundError` before the identity check;
+  - legacy/summary.json: only dev-003 is invalid;
+  - owned-recovery.json: the two test-owned trees were removed.
+- **audit.py.** I inspected it. It checks:
+  - the frozen pins of all 30 tasks, the 8 unchanged files and the ledger suffix;
+  - the source digests and the retained review bytes;
+  - all report/log bindings, oracle/worker hashes and tests.json counts;
+  - the expected initial dev-003 failure and the repeat pass.
+
+  Its logic is sound for what it claims.
+- **Privacy, held-out data and integrity.** The added text has no private host path, username,
+  hostname, credential, product name or held-out content. No collection, hidden-test, pin, threshold,
+  selection or worker file changed. Model attempts and GPU minutes are 0; score and tokens are null.
+
+## Own adversarial probes
+
+### Status of review 2's findings
+
+- **Review 2 M2 (race and path safety) is resolved.**
+  - Every repair and removal operation is relative to a descriptor. Every open uses
+    `O_NOFOLLOW|O_DIRECTORY`.
+  - chmod goes only through the host's own `/proc/self/fd/N`.
+  - Removal checks the parent and child inode on each ascent.
+  - A symlink at a child position yields ENOTDIR for both the O_PATH and O_RDONLY opens; I confirmed
+    the errno. Repair therefore skips that branch and removal refuses.
+  - The candidate cannot rename across its bind mount (EXDEV) or hard-link across mounts, so every
+    pinned inode stays inside the scratch tree.
+  - The false quiescence claim is corrected in the docstring, the guide and the historical evidence.
+- **Review 2 M1 (depth beyond PATH_MAX) is resolved for single chains and for descriptor limits.**
+
+### Probe results
+
+All probes are dev-017 with the frozen reference plus a suffix, through real sandboxes unless marked
+"host". The host sentinel is a 0o500 directory with a 0o500 child.
+
+| Probe | Result |
+| --- | --- |
+| host: 30 000-level 0o000 chain, branches every 1000 levels, soft `RLIMIT_NOFILE` 10 | repair and removal succeed (4.9 s), nothing remains |
+| host: file 0o400 outside the fixture, hard-linked and symlinked from a 0o000 fixture directory, plus a directory symlink to the sentinel | the file stays 0o400 with its content after repair and removal (nlink back to 1); the sentinel is unchanged |
+| 64 forked processes swap `/tmp/w/parent` with a symlink to the host sentinel, plus stderr past LOG_LIMIT (kill path, so the swappers are live at `terminate`) | output_limit; sentinel unchanged; no cleanup.json; no residue |
+| 0o000 file, hard link, `/workspace` symlink, loop symlink, 0o000/0o100 directories | pass/none; no residue |
+| `KeyboardInterrupt` injected at the 50th repair chmod | KeyboardInterrupt propagates; no cleanup.json; no residue |
+| `os.rmdir` fails once inside `remove_fixture_tree` | infrastructure, `evaluation.io-failed type=OSError`, counts null; the generic cleanup then removes the tree; no residue |
+| host: 25 000 / 50 000 sibling 0o000 directories | repair 0.17 / 0.34 s; removal 3.55 / 7.69 s (linear) |
+| Correct effect plus a **branching** chain built in-sandbox (`mkdir d; mkdir s; descend d`), 3000 / 6000 / 12 000 levels | pass/none and no residue each time, but host **repair takes 2.24 / 9.09 / 36.75 s**; removal takes 0.10 / 0.28 / 1.32 s |
+| Same branching shape with every directory 0o000, 20 000 levels, host process run under `prlimit --as=1200000000` | **`MemoryError` after 0.41 s of repair escapes `grade`. No report.json. cleanup.json is 0 bytes. `agentmage-eval-*/candidate-tmp` is left in scratch** |
+
+The last probe ran outside the build slot. Another lane held the reservation for more than 20 minutes,
+and this is a single case capped at 1.2 GB. Its outputs are in `review_results/sbx-oom` and
+`review_results/probescratch`.
+
+### Host-only measurements of the same branching shape
+
+Here the first child is the descended directory:
+
+| Levels | Repair | Max RSS |
+| --- | --- | --- |
+| 2000 | 1.00 s | 49 MB |
+| 4000 | 3.97 s | 117 MB |
+| 8000 | 16.89 s | 393 MB |
+
+Building the 8000-level tree took 0.11 s.
+
+## Findings
+
+### M1 (medium): permission repair is quadratic in time and memory on candidate-built deep branching trees; this is unbounded host-side work that can crash the case and leave residue
+
+Location: scripts/coding_eval_oracle.py:281-296.
+
+- Line 281: every deferred sibling is stored as a fresh tuple holding its full component path,
+  `components + (name,)`.
+- Lines 289-296: each deferred branch is reopened from the root, one component at a time.
+
+For a chain of depth d with one sibling directory per level:
+
+- **Memory:** the pending list holds d tuples of length 1..d, so the memory is Θ(d²).
+- **Time:** reopening costs Θ(d²) opens.
+
+The test at tests/test_coding_eval_oracle.py:322-355 uses only 2500 levels with a 60 s timeout, so
+it cannot detect this growth.
+
+Reproduction: see the table above. The time quadruples per doubling, both through real `grade` and on
+the host, and the memory grows quadratically.
+
+Building the tree costs the candidate about 0.1 s per 8000 levels. The candidate's 90 s timeout and
+60 s `RLIMIT_CPU` do not apply to host cleanup. Extrapolating my measurements:
+
+- about 96 000 levels (around 1.5 s to build) would need about 40 minutes and about 55 GB;
+- that is beyond the memory available on this 62 GB host.
+
+This is extrapolated, not run. The capped run shows what happens when memory runs out:
+
+- `MemoryError` is not an `OSError`, so `candidate_temporary` (line 371) and `grade` let it escape.
+  No report is written and an unchanged `verify` would abort.
+- The traceback keeps the repair frame and its pending list alive during the cleanup that follows.
+  `remove_case_workspace` therefore writes a **0-byte cleanup.json**, so the private recovery record
+  has no workspace path.
+- The candidate scratch tree is left behind.
+
+A real kernel OOM kill would skip cleanup entirely. It would also put pressure on everything else on
+the shared workstation.
+
+Why medium and not low:
+
+- These are the consequences that review 1 M1 and review 2 M1 were rated medium for: a lost outcome,
+  retained residue, and a candidate effect presented as a harness fault. Here they arrive at greater
+  depth or under a memory cap.
+- This repair introduced the problem. The removal walk it replaces and the walk it adds are linear.
+- The evidence (lines 28-31) discloses only "quadratic work". It names candidate quotas as the
+  remaining requirement. Neither a candidate disk/memory/time quota nor the L1 scratch quota bounds
+  host-side cleanup memory. A modest metadata quota still allows tens of thousands of levels.
+
+It is not high: no confinement escape was found. Generated scoring is disabled. Only frozen controls
+and synthetic probes run today, and failed attempts stay counted.
+
+Fix:
+
+1. Make repair linear and bounded. Either:
+   - fold repair into `remove_fixture_tree`'s postorder walk: before scanning a directory, chmod it
+     through the O_PATH pin and `/proc/self/fd`, then open it for reading; or
+   - keep a separate repair walk but ascend through `..` with the same recorded (name, st_dev, st_ino)
+     identity checks, instead of reopening from the root.
+
+   Either keeps O(depth) small records and O(1) descriptors.
+2. If any non-OSError escapes, drop large structures before outer cleanup runs.
+3. Add a regression that checks scaling, not just completion. For example, time repair plus removal on
+   branching trees of 10 000 and 20 000 levels, and require a ratio well below 4 together with bounded
+   peak memory. Also run one in-sandbox branching case.
+4. Correct the evidence's statement about cost and mitigation.
+
+### L1 (low, backlog; carried): the host-backed candidate `/tmp` still has no disk quota
+
+This is unchanged. It is required before generated scoring, as the row says. It does not, on its own,
+resolve M1.
+
+## Per-row result
+
+- **T-311.15: FINDINGS.**
+  - Every required run passes and reproduces the builder's numbers. All published digests and 339
+    bindings check out.
+  - Frozen inputs, pins, thresholds, the legacy evaluator, the worker and controls-only admission are
+    unchanged.
+  - Review 2's M1 (path depth) and M2 (path-based race safety and the false quiescence claim) are
+    resolved. Live symlink swapping after the kill, moved parents, descriptor exhaustion, file and
+    hard-link modes, interruption and injected removal failure all behave correctly, with no residue
+    and no change outside scratch.
+- **The new descriptor walk has one open medium finding (M1).** A candidate-built branching deep tree
+  makes host repair quadratic in time and memory. It is reproduced through real `grade` up to
+  36.7 s for 12 000 levels. Under a memory cap it crashes the case with no report, an empty recovery
+  record and retained scratch.
+- **The row cannot close.** Parent T-311 and generated scoring stay open. Nothing in the repository
+  was approved or modified.
+
+Verdict: FINDINGS
