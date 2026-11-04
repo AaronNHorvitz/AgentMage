@@ -1,0 +1,159 @@
+Commit: 9563c0a80d5599ac0b8959558664f314f91b31b9
+Scope: local-coding-t311-12-failure-causes
+
+# Independent review: T-311.12 failure-cause fidelity (attempt 1)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate read-only session. Same-model review.
+Base `9d662b5fe3b5342400a02335113b4a3fb5f93d68`. Row T-311.12 only; parent T-311 stays open.
+
+## Methods
+
+- Confirmed the commit: `git rev-parse 9563c0a8...` equals HEAD, and the tree is clean. Read IP-POLICY.md,
+  the queue header, the T-311.11/.12 rows, my retained T-311.11 review (low L1) and the full diff (7 files).
+  The diff touches only `scripts/coding_eval_oracle{,_worker}.py`, their tests, the oracle guide, the new
+  evidence and TASKS.md. `scripts/coding_eval*.py` (legacy, collection, Rust) and their tests are
+  byte-identical to the base. The `git diff` in the request returns empty for them.
+- Read the full worker and the oracle grade/record/verify paths. Read the frozen hidden methods for
+  dev-015 (`test_resource_and_network_cases_require_measured_outcomes`) and dev-029
+  (`test_the_suspend_resume_case_requires_one_suspension_and_one_continuation`) at their pinned
+  revisions, to see which assertions grade truthiness and which grade exact values.
+- Ran every required command, then my own probes in a private process. The probes patch
+  `coding_eval.require_historical_candidate` only inside that process. Real CLI/grade admission was not
+  modified. Thirty-three probes ran in real confined bwrap processes, each with a legacy-grader
+  contrast, and one in-process `RemoteFunction` test covered tags and stickiness across all five result
+  types. No GPU, model, download or repository write.
+
+## Commands and results
+
+Node v24.15.0, SHA-256 `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c` (matches).
+`CARGO_TARGET_DIR=/lane/state/review-target`; heavy runs went through `bash /tools/build-slot`. The times
+below are outer times and include the reservation wait.
+
+| Command | Result | Seconds |
+| --- | --- | --- |
+| `local_agent_fast_gate.py --base 9d662b5f... --timeout 600` | PASS; `Ran 64 tests`, OK, inner 26.86 s | 33.77 |
+| `unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | OK; `Ran 58 tests` | 19.54 |
+| `coding_eval_oracle.py verify` | exit 0; 10/10 valid pairs, 13 reference methods, 149 reference calls, 20 attempts (10 failed bases / 10 passing references), `generated_scoring: false`, collection `0c2a0624…1570` | 5.10 |
+| `coding_eval.py verify` | exit 0; 30/30 valid pairs, 89 reference tests, 0 skips, `coding-development-v9` | 43.93 |
+| `validate_docs.py` | "Validated 709 Markdown file(s) and all policy invariants." | 125.77 |
+| reviewer probes (`probes.py`, 33 cases + legacy contrasts) | completed, results below | 44.59 |
+
+Independent control profiles match `CONTROL_PROFILES` exactly. The only behaviour change is the dev-029
+base: cause `candidate_exception`, 1 call, 1 error, oracle exit 1, candidate exit 0. `expected_base` is
+now stricter (exit exactly 1, candidate exit exactly 0, `protocol_failed` False), not weaker.
+
+The builder's private probe summary, `probes.py` and the controls summary match the published digests
+(`97c3f1a4…`, `3a6f1771…`, `70557734…`).
+
+### Reviewer probe results (oracle cause / legacy grader)
+
+- **Wrong helper values (arguments).** Tuple, `None`, string, mapping and mixed scalar list all give
+  `test_failure`; legacy fails. A list containing a tuple gives `adapter_policy`. `SystemExit(3)` gives
+  `adapter_policy`. A raised helper or parser gives `candidate_exception`. All are counted failures.
+- **Verification.** Integer-truthiness copies of the dev-020 and dev-022 references pass in both graders.
+  - A tuple `checks`, 17-level nesting or a NaN `passed` gives `adapter_policy`.
+  - Missing `checks` gives `candidate_exception`; legacy passes, because the adapter requirement is
+    disclosed.
+  - Returning a bare int gives `candidate_exception`.
+  - An inner `KeyError` keeps the fixed missing-case tag (`test_failure`).
+- **Case roots.** A `CASE_ROOTS` module `__getattr__` that raises gives `candidate_exception`, with 1
+  call and zero tests. It is accepted by `result_record` and counted as failed.
+- **Exceptions on Boolean, path and map tasks.** `RuntimeError` or `SystemExit(0)` gives
+  `candidate_exception`, with candidate exit 0. `os._exit(0)` gives `protocol`.
+- **Tags on Boolean and map tasks.** A policy tag gives `protocol`. An exact forged exception tag gives
+  `candidate_exception`. An exception tag with a payload gives `protocol`.
+- **Payload leaks.** The marker `SECRETPAYLOAD` appears in no report, `oracle.log` or `candidate.log`. It
+  appears only in the private raw `wire.log`, and only where the candidate wrote it into the frame.
+- **In-process tags (all five result types).**
+  - `{"candidate_exception":true}` is sticky. A second call raises without any read or write, even after
+    the first error is caught.
+  - Variants with `1`, `false` or an extra field, and every policy tag on bool, bool-map or path, give a
+    sticky `ProtocolError`.
+  - A policy tag gives a sticky `AdapterPolicyError` only for argument and verification tasks.
+  - A combined policy+exception tag gives `ProtocolError`.
+- **Divergent probes (see M1 and L1).**
+  - dev-015 `case_passed` returning `int(reference)`: oracle `protocol`, legacy **PASS**.
+  - dev-015 returning `reference or None`: oracle `protocol`, legacy **PASS**.
+  - dev-029 checks map with `int` values: oracle `protocol`, legacy **PASS**.
+  - dev-006 helper returning `10**5000`, or a 70 000-character string: oracle `protocol` with candidate
+    exit 1.
+
+## Findings
+
+### M1 (medium): Boolean and Boolean-map predicates still refuse representable wrong values as malformed protocol
+
+- **Location:** `scripts/coding_eval_oracle_worker.py:159-160` (`bool`: `type(result) is bool`) and
+  `:178-180` (`bool-map`: every value `type(...) is bool`), raising `ProtocolError` at `:181-182`. Also
+  `scripts/coding_eval_oracle.py:80-81`: coverage for these kinds declares neither an exact-Boolean policy
+  nor an ungraded exact-Boolean type.
+- **Why this misses the row:** T-311.12 is "done when" it carries "representable wrong helper/predicate
+  values to unchanged original assertions" and separates candidate failures "from malformed wire data".
+  - That is done for argument and verification tasks, but not for the two Boolean predicate tasks.
+  - dev-015's frozen method grades `case_passed` only through `assertTrue`/`assertFalse`. dev-029's
+    method grades through `all(checks.values())` and `assertFalse(...["answers"])`. Both are truthiness
+    assertions.
+- **Reproduction:**
+  - Append `_orig = case_passed` and `def case_passed(*a): return int(_orig(*a))` to the dev-015
+    reference. The legacy grader passes. The independent oracle reports `passed: false`,
+    `cause: protocol`, `protocol_failed: true`.
+  - `return _orig(*a) or None` behaves the same.
+  - For dev-029, `{k: int(v) for k, v in _orig(*a).items()}` behaves the same.
+- **Impact:** a well-framed, valid JSON reply is labelled malformed wire data. A candidate that the
+  unchanged original assertions accept is failed by the scorer. That is wrong cause data and a wrong
+  verdict on 2 of the 10 independent tasks. Both would reach published results once generated scoring
+  opens.
+- **Claims:** the request states without qualification that "Integer predicate observations now follow
+  original truthiness assertions". The builder's integer-truthiness probe covers only dev-022, and the
+  dev-015 and dev-029 cases are not tested. With policy tags now forbidden on these result types, the
+  strictness cannot even be labelled policy.
+- **Fix:**
+  - For `bool`, accept any `scalar_value(result)` (finite JSON scalar) as data. For `bool-map`, accept a
+    `str`-keyed dict whose values satisfy `observation_value`. Return them unchanged so the original
+    assertions decide.
+  - Add `exact-boolean-result-type` to `not_graded` for dev-015 and dev-029.
+  - Add confined probes with legacy contrasts: integer and `None` truthiness for both tasks, plus one
+    wrong value that fails the original assertion.
+  - Keep the policy-tag-is-protocol rule for these types.
+
+### L1 (low): JSON-valid observations over the frame or integer-digit limit crash the candidate and record `protocol`
+
+- **Location:** `scripts/coding_eval_oracle_worker.py:429`. `encode_message(...)` runs outside the
+  per-call `try`. `observation_value` (`:44-53`) accepts any `int`, but Python's `json.dumps` refuses
+  integers over 4300 digits. Results over 64 KiB also raise `ProtocolError`.
+- **Reproduction:** a dev-006 helper returning `10**5000`, or `['x'*70000]`, gives cause `protocol` with
+  candidate exit 1. The failure is still counted and nothing passes.
+- **Impact:** an oversize candidate value is labelled as wire corruption. The guide names the frame
+  bound but not the resulting cause.
+- **Fix:** encode the result inside the call handling. On a frame/encoding refusal, reply with
+  `{"adapter_policy":true}` for policy-declared types, or with a fixed tag for the others. Alternatively,
+  document oversize as `protocol` explicitly.
+- Backlog; does not block the row.
+
+No other finding. I checked the following and found them correct at this commit:
+
+- tag exactness and sticky refusal (including caught exceptions)
+- policy restricted to declared result types
+- tuple/list fidelity
+- the 16-level finite JSON bound
+- cause precedence (protocol > policy > candidate_exception > candidate_exit > test_failure)
+- the zero-test case-root record rule
+- the stricter dev-029 base profile
+- no exception class, message or traceback in reports or trusted logs
+- unchanged hidden bytes, pins, selections, thresholds, profiles and collection v9
+- legacy evaluator and generated-refusal guard byte-identical
+- all 30 tasks are `development` (no held-out input)
+- no tuning content, new dependency, private host data, product naming or trademark in added text
+- one sub-row, run end to end and measured
+
+## Per-row result
+
+T-311.12: FINDINGS. All required runs reproduce the evidence numbers: 64 oracle tests, 58 legacy tests,
+ten pairs with 13 methods and 149 reference calls, 20 control attempts, 30 legacy pairs with 89 tests
+and no skips, and 709 Markdown files. Timings are within normal variance.
+
+Medium M1 blocks closing: the row's "carry representable wrong predicate values to unchanged original
+assertions / separate from malformed wire data" is not met for dev-015 and dev-029, and the
+integer-truthiness claim is overbroad. L1 is backlog. Parent T-311, aggregate quotas, held-out inputs,
+the current-harness baseline and generated scoring remain open.
+
+Verdict: FINDINGS
