@@ -1,6 +1,6 @@
 # T-311.15 cleanup review repair
 
-Status: builder verification passed; second independent core review required.
+Status: historical builder verification; second independent review has FINDINGS.
 Implementation base: `36ba8bd3`. T-311.15 and parent T-311 remain open.
 
 ## Review and repair
@@ -13,8 +13,12 @@ and leave candidate data and hidden-test copies in a retained workspace.
 Oracle v12 restores owner read/write/search permissions on real directories in
 that scratch mount before the existing case cleanup runs. It visits parents
 before children and does not follow symlinks or change file modes or hard-link
-targets. Both workers have terminated and been reaped before this traversal;
-candidate code cannot race it. Repair never changes the observations already
+targets in static-tree probes. The builder's original claim that both namespaces
+had been synchronously reaped and could not race this traversal was false:
+[review 2](../reviews/7544b49c12d1-local-coding-t311-15-cleanup-repair.txt)
+observed descendant filesystem changes after leader reaping. Its medium M1 also
+reproduced depth-related cleanup failure; medium M2 rejects the path-based safety
+assumption. The third-review repair is recorded separately. Repair never changes the observations already
 recorded by the oracle. Reports and counts publish only after cleanup succeeds.
 Interruption and failed result reading also unwind through the repair; genuine
 repair/removal failures retain failure semantics and private recovery behavior.
@@ -102,8 +106,9 @@ controls-only admission, legacy evaluator implementation or model harness change
 
 ## Remaining scope
 
-T-311.15 requires a second independent exact-commit core review. Medium M1 is
-builder-repaired, never self-approved; low L2 is documented and low L1 remains
+T-311.15's second independent exact-commit review returned FINDINGS. The original
+M1's natural-mode cases were repaired, but depth and race findings remain for a
+third review; low L2 is documented and low L1 remains
 open before generated scoring. Parent T-311 remains open: sixteen other adapters,
 aggregate worker quotas, protected held-out inputs, covered-clause admission,
 the dev-003 flake policy and a real current-harness baseline remain outstanding.

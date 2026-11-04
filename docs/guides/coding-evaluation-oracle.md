@@ -285,14 +285,31 @@ ancestors, without following candidate aliases into trusted files. Missing,
 uninspectable or non-regular entries fail as sticky adapter policy and count as
 failed attempts. Only the initial trusted names are inspected or changed; reply
 paths are never opened. The writable mount contains only disposable candidate
-data. After both workers have stopped, the host restores owner read/write/search
-permissions on its real directories, top-down without following symlinks or
-changing file modes. The existing case cleanup then removes the backing tree
-before reports publish. This also runs on interruption or failed result reading;
+data. After signalling and reaping the two worker leaders, the host restores
+owner read/write/search permissions on disposable real directories. Descendant
+teardown is asynchronous; repair must remain safe during concurrent mutation.
+Linux no-follow directory descriptors pin each inode, including mode-0000
+directories; chmod resolves only the host's own `/proc/self/fd` descriptor.
+Candidate names never enter a chmod path. Scanning and opening children are
+descriptor-relative; deferred branches reopen from the pinned root one component
+at a time without following symlinks. Deep chains use bounded descriptors and
+never construct full host paths. Directory renames cannot redirect chmod to a
+symlink target. File modes and hard-link targets are never changed. Concurrent
+replacement can omit a branch; repair does not claim a complete stable snapshot.
+Descriptor-relative postorder removal then deletes scratch with constant open
+descriptors, rather than retaining one descriptor per ancestor as the generic
+remover does. Each ascent must match the recorded parent inode before inspecting
+or removing its child; a concurrent move refuses cleanup. Unlink and rmdir never
+follow the removed name. The root's parent is private host-owned case storage.
+Existing case cleanup removes the remaining case tree before reports publish.
+This also runs on interruption or failed result reading;
 permission repair preserves the already observed oracle result and cause. Actual
 cleanup failures still refuse count publication and keep a private recovery
 record. The initial T-311.15 implementation lacked this permission repair;
 independent review M1 exposed leftover trees from natural wrong mode answers.
+The first repair still used paths and wrongly claimed synchronous descendant
+shutdown. Its second review exposed depth failures and that false timing
+assumption; v13 uses descriptor-based repair and makes no quiescence claim.
 The candidate mount is host-disk-backed, without an aggregate disk quota. A
 size-limited or quota-backed mount is required before generated scoring.
 Content preservation, changed tree shape and special-file refusal behavior are

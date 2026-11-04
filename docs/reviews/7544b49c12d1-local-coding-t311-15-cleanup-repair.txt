@@ -1,0 +1,207 @@
+Commit: 7544b49c12d1c8c284cf8e20d32fbf6fb946fd40
+Scope: local-coding-t311-15-cleanup-repair
+
+# Independent core re-review: T-311.15 cleanup repair (review 1 M1)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate read-only session. This is the second review of
+T-311.15. Base: 36ba8bd3afaa282f2005c7dcdd29142e2eadb8f3. Only T-311.15 is reviewed; parent T-311 is
+out of scope.
+
+## Method
+
+- Confirmed the commit: `git rev-parse HEAD` = 7544b49c12d1c8c284cf8e20d32fbf6fb946fd40 = the requested
+  sha. The base resolves. The working tree was clean. There is one commit in 36ba8bd3..7544b49c. It
+  changes 6 files: scripts/coding_eval_oracle.py (+47/-7), tests/test_coding_eval_oracle.py (+136),
+  the guide, two evidence files and TASKS.md.
+- Read IP-POLICY.md, the T-311.15 row, the first review (unchanged), the full code and test diff, the
+  surrounding `sandbox`/`terminate`/`exchange`/`grade_case`/`grade` code, `case_workspace` and
+  `remove_case_workspace` in scripts/coding_eval.py, the new evidence file and the guide changes.
+- Reran every required command into a fresh directory, `/lane/state/tmp/t311-15-cleanup-review-ZiZOBN`
+  (`review_results`), through `bash /tools/build-slot`.
+- Wrote and ran my own probes (outside the repository, under `review_results/probes`). Some run through
+  real bwrap sandboxes with `oracle.grade`, patching `require_historical_candidate` in the same way as
+  the earlier diagnostics. Others drive `oracle.sandbox`/`oracle.terminate`/
+  `oracle.repair_fixture_permissions` directly.
+- The builder's private artifacts were read but not changed. audit.py was read, not run.
+
+## Required commands and results
+
+Setup: `node --version` printed v24.15.0. `sha256sum target/local-agent-tools/node` printed
+d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c. The probe.py and probe2.py SHA-256
+values match the request (2aab17c7…2b18 and 479a1e54…abe9). `CARGO_TARGET_DIR=/lane/state/review-target`.
+Wall times include long shared-reservation waits, so the in-tool times are quoted.
+
+| Command | Result |
+| --- | --- |
+| `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base 36ba8bd3… --timeout 600` | rc 0. Markdown lint: 4 files, 0 issues. Python lint OK. "Ran 58 tests in 57.860s", OK, FAST GATE: PASS |
+| `bash /tools/build-slot python3 -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | rc 0; "Ran 58 tests in 20.144s", OK |
+| `bash /tools/build-slot python3 scripts/coding_eval_oracle.py verify --output $review_results/independent` | rc 0. passed true; 14 pairs, all valid; control_attempts 28/14/14; 17 reference test names; 159 reference calls. generated_scoring false; aggregate_worker_quotas false; model_score null; version v12. dev-017 base: candidate_exception (1 error, 1 call). dev-019 base: test_failure (1 failure, 1 call). Both references pass. Identical to the builder's independent/summary.json except timings and log digests |
+| `bash /tools/build-slot python3 scripts/coding_eval.py verify --output $review_results/legacy` | rc 0. passed true; 30 pairs; 89 reference tests; 0 skips; collection 0c2a0624…1570. Identical to the builder's legacy/summary.json except timings |
+| `bash /tools/build-slot env TMPDIR=$review_results/scratch python3 …/probe.py $review_results/review-probe` | rc 0. 20 diagnostics. cleanup-lock and cleanup-lock-inside now pass (cause none); mode-zero is adapter_policy. All other outcomes match review 1 |
+| `bash /tools/build-slot env TMPDIR=$review_results/scratch python3 …/probe2.py $review_results/review-probe2` | rc 0. wrong-dirs-0555 is test_failure; wrong-all-0644 is adapter_policy |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` | rc 0; "Validated 715 Markdown file(s) and all policy invariants." |
+| `git diff --exit-code 36ba8bd3… HEAD -- <8 legacy/worker source and test files>` | rc 0, empty |
+| `cmp docs/reviews/1839b2d5b408-…txt /lane/reviews/1839b2d5b408-….md` | rc 0 |
+| `git diff --check 36ba8bd3… HEAD` | rc 0, empty |
+
+Further checks:
+
+- **Reviewer probes.** All 22 sorted reviewer-probe result lines are byte-identical to the builder's
+  review-probe logs.
+- **Residue.** There is no `cleanup.json` anywhere in either probe output, and `scratch` was empty
+  afterwards.
+- **Digests.** All 22 published digests match: 4 sources and 18 artifacts in
+  /lane/state/tmp/t311-15-cleanup-repair.
+- **Bindings in fresh outputs.** My own check of every fresh `report.json` found 388 log-digest
+  bindings and 0 mismatches. tests.json counts and calls equal the report values.
+- **audit.py.** I inspected it. It checks the frozen pins of all 30 tasks, the 6 unchanged legacy
+  files, the unchanged worker, the ledger suffix, the retained review bytes, the 110 report/log
+  bindings and the expected repair outcomes. Its logic is sound for what it claims.
+- **Privacy and held-out data.** The added text has no private path, username, hostname, credential,
+  product name or held-out content. No collection, hidden-test, pin, threshold or selection file changed.
+
+## Own adversarial probes
+
+Extra cleanup probes ran through real sandboxes with dev-017 and the frozen reference plus a suffix,
+using a dedicated TMPDIR.
+
+| Probe | Report | Cleanup |
+| --- | --- | --- |
+| Locked 0o000 tree in `/tmp` holding a symlink to `/proc/self/cwd`, a symlink to `..`, a FIFO and a bound UNIX socket | passed, none | clean; the symlinks were not followed (repository modes unchanged) |
+| Locked 0o000 tree plus stderr past LOG_LIMIT (kill path) | output_limit, counted | clean |
+| Correct effect plus a 2500-level relative directory chain in `/tmp` | **infrastructure, `evaluation.io-failed type=OSError`, tests/calls null** | no residue |
+| Wrong answer (`nested` 0o555, normally test_failure) plus the same chain | **infrastructure, cleanup-failed** | **`cleanup.json` written; `agentmage-eval-*` left with candidate-tmp and the 0o555 fixture** |
+
+On the host, `oracle.repair_fixture_permissions` on a 2500-level chain raises `OSError` errno 36
+(File name too long). `shutil.rmtree` removes the same tree without error.
+
+Interruption and failure paths (code reading, plus the builder's tests rerun inside the fast gate):
+
+- `candidate_temporary` sits inside `case_workspace`, so repair runs before rmtree.
+- An OSError from repair is swallowed only when the body already raised, so a KeyboardInterrupt is
+  preserved.
+- When cleanup fails, publication of tests.json/report counts is skipped and grade reports
+  infrastructure with counts null.
+- File modes and hard-link targets are never chmodded: only entries whose `is_dir(follow_symlinks=False)`
+  is true are queued, and the chmod is `follow_symlinks=False`.
+
+Two probes tested the claim that the workers are quiescent before repair:
+
+1. `liveness.py`: N candidate processes loop on `mkdir` in the writable bind, then the probe calls
+   `oracle.terminate(p)` exactly as `exchange` does. Directories kept appearing **after**
+   `terminate()` returned in 10 of 12 trials: +3 to +15 with 1 to 32 processes, and +261 in 2 of 3
+   trials with 256 processes.
+2. `swap.py` and `race_direct.py`: up to 256 processes swap `/tmp/p` between a real directory and a
+   symlink to a host sentinel tree (mode 0o500).
+   - Run through `oracle.grade` with the output-limit kill path: 30 attempts.
+   - Run as `terminate()` followed immediately by `repair_fixture_permissions`: 40 attempts.
+   - No sentinel mode changed and no repair exception occurred in these 70 attempts.
+   - In real `grade` runs, repair starts 162 to 177 µs after the last `terminate()` returns.
+
+So the invariant is false, but I could not turn it into an escape.
+
+## Findings
+
+### M1 (medium): permission repair is path-based; candidate-controlled depth still defeats cleanup and hides outcomes
+
+Location: scripts/coding_eval_oracle.py:248-263 (`repair_fixture_permissions` builds full host paths
+`root/…/entry` and calls `lstat`/`chmod`/`scandir` on them). Called at scripts/coding_eval_oracle.py:282.
+
+Reproduction (see the table above): a dev-017 candidate builds a directory chain whose host path is
+longer than PATH_MAX. In the sandbox this is easy with relative `mkdir`/`chdir`.
+
+- Repair raises ENAMETOOLONG. `candidate_temporary` re-raises it, and grade drops the observed oracle
+  record: infrastructure, tests/calls null.
+- A correct answer, which passed before this repair because rmtree handles any depth, becomes an
+  infrastructure failure.
+- A natural wrong mode answer combined with the chain becomes infrastructure plus cleanup-failed. A
+  `cleanup.json` recovery record is written and the case workspace is left on disk with candidate data.
+  In this run rmtree had already removed `oracle-adapter/test.py`; whether the hidden copy survives
+  depends on removal order.
+
+These are the same consequences that review 1 M1 found and this row was reopened to fix: an obscured
+cause, retained residue and a candidate failure indistinguishable from a harness fault. The trigger is
+now deliberate rather than natural. Attempts stay counted as failed, so this is not high.
+
+Fix: walk with directory file descriptors instead of paths.
+
+1. Open the root with `os.open(root, O_RDONLY | O_DIRECTORY | O_NOFOLLOW)`.
+2. For each directory entry named `name` under `parent_fd`:
+   - check `os.lstat(name, dir_fd=parent_fd)` is a directory;
+   - call `os.chmod(name, 0o700, dir_fd=parent_fd, follow_symlinks=False)`;
+   - open the child with `os.open(name, O_RDONLY | O_DIRECTORY | O_NOFOLLOW, dir_fd=parent_fd)`;
+   - check that its `st_dev`/`st_ino` match the lstat;
+   - list it with `os.scandir(fd)`.
+3. Keep an explicit stack of fds, or close and reopen them by (parent fd, name), so open-fd limits are
+   not exceeded.
+
+Path length then never grows. Add a sandbox regression for a chain deeper than PATH_MAX, with both a
+correct and a 0o555 wrong answer, asserting the observed cause, no `cleanup.json` and no residue.
+
+### M2 (medium): the repair's safety rests on a "workers are reaped, no race" guarantee that does not hold, and the evidence states it as fact
+
+Locations:
+
+- scripts/coding_eval_oracle.py:249-253, the docstring: "exchange has terminated and reaped both
+  namespaces … no candidate can rename an ancestor".
+- docs/evidence/t311-15-cleanup-review-repair-2026-11-03.md:16-17: "Both workers have terminated and
+  been reaped before this traversal; candidate code cannot race it."
+- The guide, docs/guides/coding-evaluation-oracle.md:288.
+
+`terminate` (line 150-157) sends SIGKILL to the outer bwrap's process group and reaps only the outer
+bwrap. The sandboxed processes die later and asynchronously, through `--die-with-parent` and teardown
+of the PID namespace. The liveness probe shows candidate filesystem changes landing in the writable bind
+after `terminate()` returned (up to 261 new entries).
+
+The path-based walk resolves every intermediate component at use time. A rename or symlink swap of an
+already-scanned ancestor in that window would make `lstat`/`chmod 0o700`/`scandir` act on host
+directories outside candidate-tmp. Examples are any host-user-owned tree reachable by an absolute or
+`/proc/self/cwd` symlink, such as the repository.
+
+`shutil.rmtree`, which this walk now precedes, is fd-based precisely to resist this. Of the builder's
+tests, the symlink test only covers a static tree, and the interruption test does not run concurrent
+mutation. I did not achieve an escape in 70 attempts, and the window I measured is short. That is why
+this is medium and not high.
+
+The repair still:
+
+- weakens a host-side confinement property from structural to timing-dependent;
+- publishes an untrue security claim;
+- is unacceptable once generated (untrusted) candidates are admitted.
+
+Fix:
+
+- Use the fd-relative walk from M1, which makes ancestor renames irrelevant. Alternatively, perform the
+  permission repair inside a fresh bwrap that binds only candidate-tmp, so any symlink resolves inside
+  that sandbox.
+- Correct the docstring, evidence and guide to state the actual guarantee.
+- Add a regression that runs repair while a live process keeps swapping a scanned ancestor for a
+  symlink to a sentinel. A direct `sandbox` + `terminate` harness like my `race_direct.py` is enough.
+  Assert that the sentinel is never changed.
+
+### L1 (low, backlog; carried): host-backed candidate `/tmp` has no disk quota
+
+This is unchanged from review 1. It also makes M1's chain and an unbounded number of directories
+cheap, and the time the repair walk takes is unbounded until the timeout. It is required before
+generated scoring, as the row says.
+
+### L2 (low): review 1 L2 is resolved
+
+The guide states that dev-019 inputs are normalised to Path and that reuse with str inputs requires
+preserving those types. This is adequate.
+
+## Per-row result
+
+- T-311.15: FINDINGS. Every required run reproduces the builder's numbers. The original review 1
+  probes and the natural locked-directory and wrong-mode cases now keep their observed results and
+  clean up, so review 1 M1 is fixed for the cases it named. Frozen inputs, pins, thresholds, the
+  legacy evaluator, the worker and controls-only admission are unchanged, and nothing is scored for
+  generated candidates.
+- The new repair still has two open medium findings. M1: a candidate-built deep tree turns observed
+  outcomes into infrastructure and can leave residue, reproduced. M2: the path-based walk depends on a
+  quiescence guarantee that is false, and the evidence claims otherwise. Both have the same small fix
+  (an fd-relative, no-follow walk), plus corrected claims and concurrent-mutation and deep-tree
+  regressions.
+- The row cannot close. Parent T-311 stays open. Nothing in the repository was approved or modified.
+
+Verdict: FINDINGS

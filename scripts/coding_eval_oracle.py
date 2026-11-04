@@ -12,7 +12,6 @@ import os
 from pathlib import Path
 import selectors
 import signal
-import stat
 import subprocess
 import sys
 import time
@@ -24,7 +23,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v12"
+VERSION = "coding-independent-oracle-v13"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
@@ -246,21 +245,109 @@ def result_record(path, task):
 
 
 def repair_fixture_permissions(root):
-    """Make stopped workers' disposable directories removable; never follow links.
+    """Repair disposable directories through pinned Linux directory descriptors.
 
-    exchange has terminated and reaped both namespaces before this runs, so no
-    candidate can rename an ancestor between inspection and chmod/scandir.
-    Files (including hard links) and symlink targets must never be chmodded.
+    Killing/reaping bwrap does not synchronously reap all namespace descendants.
+    O_PATH|O_DIRECTORY|O_NOFOLLOW pins only real directories, even mode 0000;
+    chmod through our own proc descriptor addresses that inode despite renames.
+    No candidate-controlled path is resolved by chmod. Reopen deferred branches
+    component by component from the pinned root, never across symlinks. A single
+    child is visited directly, so deep chains need neither long paths nor a
+    descriptor per ancestor. Concurrent removal/replacement may omit a branch;
+    the existing cleanup still refuses publication if removal fails.
     """
-    pending = [root]
-    while pending:
-        directory = pending.pop()
-        if not stat.S_ISDIR(directory.lstat().st_mode):
-            continue
-        directory.chmod(0o700, follow_symlinks=False)
-        with os.scandir(directory) as entries:
-            pending.extend(Path(entry.path) for entry in entries
-                           if entry.is_dir(follow_symlinks=False))
+    flags = os.O_PATH | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
+
+    def open_child(parent, name):
+        try:
+            return os.open(name, flags, dir_fd=parent)
+        except (FileNotFoundError, NotADirectoryError):
+            return None
+
+    root_fd = os.open(root, flags)
+    current = None
+    try:
+        current = os.dup(root_fd)
+        components, pending = (), []
+        while current is not None:
+            os.chmod(f'/proc/self/fd/{current}', 0o700)
+            # O_PATH cannot be scanned; open the same pinned inode for reading.
+            readable = os.open('.', os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC, dir_fd=current)
+            try:
+                with os.scandir(readable) as entries:
+                    children = [entry.name for entry in entries if entry.is_dir(follow_symlinks=False)]
+            finally:
+                os.close(readable)
+            pending.extend(components + (name,) for name in children[1:])
+            child = open_child(current, children[0]) if children else None
+            os.close(current)
+            current = child
+            if current is not None:
+                components += (children[0],)
+                continue
+            while pending and current is None:
+                components = pending.pop()
+                current = os.dup(root_fd)
+                for name in components:
+                    child = open_child(current, name)
+                    os.close(current)
+                    current = child
+                    if current is None:
+                        break
+    finally:
+        if current is not None:
+            os.close(current)
+        os.close(root_fd)
+
+
+def remove_fixture_tree(root):
+    """Remove repaired scratch with constant fds, even beyond rmtree's fd limit.
+
+    Pin each child without following links. Ascend only to a parent whose inode
+    matches the recorded pinned parent; a concurrent rename refuses cleanup.
+    Unlink/rmdir are relative to that parent and never follow the removed name.
+    The final root's parent is private host-owned case storage, not a worker bind.
+    """
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
+    current = os.open(root, flags)
+    parents = []
+    try:
+        while True:
+            descend = None
+            with os.scandir(current) as entries:
+                for entry in entries:
+                    if entry.is_dir(follow_symlinks=False):
+                        descend = entry.name
+                        break
+                    os.unlink(entry.name, dir_fd=current)
+            if descend is not None:
+                child = os.open(descend, flags, dir_fd=current)
+                parent = os.fstat(current)
+                parents.append((descend, parent.st_dev, parent.st_ino))
+                os.close(current)
+                current = child
+                continue
+            if not parents:
+                break
+            name, device, inode = parents.pop()
+            parent = os.open('..', flags, dir_fd=current)
+            try:
+                observed = os.fstat(parent)
+                if (observed.st_dev, observed.st_ino) != (device, inode):
+                    raise OSError('oracle.fixture-moved-during-cleanup')
+                child = os.fstat(current)
+                named = os.stat(name, dir_fd=parent, follow_symlinks=False)
+                if (named.st_dev, named.st_ino) != (child.st_dev, child.st_ino):
+                    raise OSError('oracle.fixture-moved-during-cleanup')
+                os.rmdir(name, dir_fd=parent)
+            except BaseException:
+                os.close(parent)
+                raise
+            os.close(current)
+            current = parent
+    finally:
+        os.close(current)
+    root.rmdir()
 
 
 @contextmanager
@@ -280,6 +367,7 @@ def candidate_temporary(root, enabled):
     finally:
         try:
             repair_fixture_permissions(directory)
+            remove_fixture_tree(directory)
         except OSError:
             # Preserve interruption/setup errors. The enclosing case_workspace
             # still attempts removal and retains its recovery record on failure.

@@ -289,8 +289,155 @@ def make_container_readable(root):
         self.assertEqual(outside.stat().st_mode & 0o777, 0o500)
         self.assertEqual(data.stat().st_mode & 0o777, 0o400)
         self.assertEqual(data.read_text(), 'unchanged')
+        oracle.remove_fixture_tree(fixture)
+        self.assertFalse(fixture.exists())
+        self.assertEqual(outside.stat().st_mode & 0o777, 0o500)
+        self.assertEqual(data.stat().st_mode & 0o777, 0o400)
         # Do not let this test's intentionally locked sentinel obstruct its own cleanup.
         outside.chmod(0o700)
+
+    def test_deep_candidate_trees_preserve_pass_and_failure_without_residue(self):
+        for wrong in (False, True):
+            suffix = f'''import os as _os
+original_mode = make_container_readable
+def make_container_readable(root):
+ original_mode(root)
+ if {wrong!r}: (root / 'nested').chmod(0o555)
+ _os.mkdir('/tmp/deep')
+ _os.chdir('/tmp/deep')
+ for _ in range(2500):
+  _os.mkdir('a')
+  child = _os.open('a', _os.O_RDONLY | _os.O_DIRECTORY)
+  _os.chmod('.', 0)
+  _os.fchdir(child)
+  _os.close(child)
+ _os.chmod('.', 0)
+ _os.chdir('/workspace')
+'''
+            with self.subTest(wrong=wrong):
+                report = self.mode_cleanup_probe(suffix, 'deep-' + str(wrong))
+                self.assertEqual(report['passed'], not wrong, report)
+                self.assertEqual(report['cause'], 'test_failure' if wrong else 'none', report)
+
+    def test_deep_branched_repair_uses_bounded_descriptors(self):
+        # A subprocess avoids changing the test runner's descriptor limit.
+        source = '''import os, resource, sys
+from pathlib import Path
+from scripts.coding_eval_oracle import repair_fixture_permissions, remove_fixture_tree
+root = Path(sys.argv[1])
+root.mkdir()
+resource.setrlimit(resource.RLIMIT_NOFILE, (32, 32))
+fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY)
+try:
+ for _ in range(2500):
+  os.mkdir('a', dir_fd=fd)
+  os.mkdir('b', dir_fd=fd)
+  child = os.open('a', os.O_RDONLY | os.O_DIRECTORY, dir_fd=fd)
+  os.fchmod(fd, 0)
+  os.close(fd)
+  fd = child
+ os.fchmod(fd, 0)
+finally: os.close(fd)
+repair_fixture_permissions(root)
+fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY)
+try:
+ for _ in range(2500):
+  assert os.stat('b', dir_fd=fd).st_mode & 0o777 == 0o700
+  child = os.open('a', os.O_RDONLY | os.O_DIRECTORY, dir_fd=fd)
+  os.close(fd)
+  fd = child
+ assert os.fstat(fd).st_mode & 0o777 == 0o700
+finally: os.close(fd)
+remove_fixture_tree(root)
+assert not root.exists()
+'''
+        result = subprocess.run([sys.executable, '-B', '-c', source, str(self.root / 'deep-branched')],
+                                capture_output=True, timeout=60)
+        self.assertEqual(result.returncode, 0, result.stderr.decode(errors='replace'))
+
+    def test_permission_repair_pins_inode_across_ancestor_symlink_replacement(self):
+        fixture, outside = self.root / 'fixture', self.root / 'sentinel'
+        (fixture / 'parent/child').mkdir(parents=True)
+        (outside / 'child').mkdir(parents=True, mode=0o500)
+        outside.chmod(0o500)
+        chmod = os.chmod
+        replaced = False
+
+        def replace_then_chmod(path, mode, **kwargs):
+            nonlocal replaced
+            if not replaced and os.readlink(path).endswith('/parent/child'):
+                (fixture / 'parent').rename(fixture / 'retired')
+                (fixture / 'parent').symlink_to(outside, target_is_directory=True)
+                replaced = True
+            return chmod(path, mode, **kwargs)
+
+        try:
+            with mock.patch.object(oracle.os, 'chmod', side_effect=replace_then_chmod):
+                oracle.repair_fixture_permissions(fixture)
+            self.assertTrue(replaced)
+            self.assertEqual(outside.stat().st_mode & 0o777, 0o500)
+            self.assertEqual((outside / 'child').stat().st_mode & 0o777, 0o500)
+            self.assertEqual((fixture / 'retired/child').stat().st_mode & 0o777, 0o700)
+        finally:
+            chmod(outside, 0o700)
+            chmod(outside / 'child', 0o700)
+
+    def test_permission_repair_resists_live_ancestor_symlink_swapping(self):
+        fixture, outside = self.root / 'fixture', self.root / 'sentinel'
+        (fixture / 'parent/child').mkdir(parents=True)
+        (outside / 'child').mkdir(parents=True)
+        outside.chmod(0o500)
+        (outside / 'child').chmod(0o500)
+        source = '''import os, sys
+root, sentinel = sys.argv[1:]
+os.chdir(root)
+os.rename('parent', 'retired')
+os.symlink(sentinel, 'parent')
+os.unlink('parent')
+os.rename('retired', 'parent')
+print('swapped', flush=True)
+while True:
+ os.rename('parent', 'retired')
+ os.symlink(sentinel, 'parent')
+ os.unlink('parent')
+ os.rename('retired', 'parent')
+'''
+        process = subprocess.Popen([sys.executable, '-B', '-c', source, str(fixture), str(outside)],
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            self.assertEqual(process.stdout.readline(), b'swapped\n')
+            for _ in range(100):
+                oracle.repair_fixture_permissions(fixture)
+            self.assertIsNone(process.poll(), 'swapper must be live during repair')
+            self.assertEqual(outside.stat().st_mode & 0o777, 0o500)
+            self.assertEqual((outside / 'child').stat().st_mode & 0o777, 0o500)
+        finally:
+            process.kill()
+            process.communicate(timeout=5)
+            outside.chmod(0o700)
+            (outside / 'child').chmod(0o700)
+
+    def test_fixture_removal_refuses_changed_parent_identity(self):
+        fixture, outside = self.root / 'fixture', self.root / 'sentinel'
+        (fixture / 'parent/child').mkdir(parents=True)
+        (outside / 'child').mkdir(parents=True)
+        (outside / 'child/payload').write_text('sentinel')
+        real_open = os.open
+        moved = False
+
+        def move_parent(path, flags, **kwargs):
+            nonlocal moved
+            if path == '..' and not moved:
+                (fixture / 'parent').rename(self.root / 'retired')
+                (fixture / 'parent').symlink_to(outside, target_is_directory=True)
+                moved = True
+            return real_open(path, flags, **kwargs)
+
+        with mock.patch.object(oracle.os, 'open', side_effect=move_parent):
+            with self.assertRaisesRegex(OSError, 'fixture-moved-during-cleanup'):
+                oracle.remove_fixture_tree(fixture)
+        self.assertTrue(moved)
+        self.assertEqual((outside / 'child/payload').read_text(), 'sentinel')
 
     def test_mode_fixture_repairs_after_exchange_interruption(self):
         task = next(t for t in evaluation.collection() if t['id'] == 'dev-017')
