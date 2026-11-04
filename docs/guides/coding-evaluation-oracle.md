@@ -6,7 +6,9 @@ verification functions. T-311.10 adds three parser/argument tasks and a third
 acceptance predicate, for ten existing development tasks. T-311.11 preserves
 argument list/tuple distinctions, observes candidate case roots and separates
 adapter policy from malformed wire data. T-311.12 carries wrong JSON values
-to the original assertions and records candidate exceptions separately. This is a
+to the original assertions and records candidate exceptions separately. T-311.13
+wraps predicate observations separately from control tags and classifies bounded
+serialization refusals as adapter policy. This is a
 prerequisite for trustworthy scoring,
 not generated-candidate admission, a model baseline or a completed T-311.
 The original collection, hidden bytes, method selections and thresholds stay
@@ -110,15 +112,19 @@ original hidden helper would reject strings. The original methods are unchanged,
 but their inputs are adapted. Reports explicitly label these two interface
 clauses `not_graded`; no full-interface or generated score follows from a control.
 
-For dev-015, predicate results cross as finite JSON scalars (including nulls,
-integers and strings). For dev-029, results cross as string-keyed maps whose
-values are finite built-in JSON data, bounded to 16 container levels. Empty maps
-are data too. The unchanged original assertions judge truthiness, selected keys
+For dev-015, predicate results cross as finite built-in JSON data, including
+nulls, integers, strings, lists and maps, bounded to 16 container levels. For
+dev-029, results cross as string-keyed maps whose values have that same bound.
+Empty maps are data too. Both use a single `value` envelope, so observation keys
+such as `adapter_policy`, `candidate_exception`, `value`, `tests` and `passed`
+remain data and cannot collide with the adapter's control tags. The unchanged original assertions judge truthiness, selected keys
 and other observed behavior; no exact Boolean type check is added by the adapter.
 Both tasks explicitly label `exact-boolean-result-type` as `not_graded`. Integer
-and null truthiness variants are checked against the original legacy grader,
-alongside wrong values that fail those assertions. Reserved policy/exception tags
-retain their fixed semantics; an undeclared policy tag still fails as protocol.
+and null truthiness variants, container truthiness and reserved map keys are
+checked against the original legacy grader, alongside wrong values that fail
+those assertions. Unsupported types, nonfinite values and over-deep containers
+produce an explicit adapter-policy refusal; raw frames with invalid shapes
+remain protocol failures. No candidate observation supplies the oracle verdict.
 
 ## Verification fixtures
 
@@ -205,9 +211,9 @@ A callable/list namespace default, unsupported helper object or parser exit code
 other than integer 2 produces a fixed `adapter_policy` tag. No exception payload
 is included. The trusted side treats that tag as sticky failure with cause
 `adapter_policy`, distinct from `protocol` for malformed fields or tags.
-The policy tag is accepted only for argument and verification tasks, whose
-coverage declares adapter policy. It is malformed protocol for Boolean, Boolean
-map or path tasks. No candidate can add a policy to its coverage. A policy tag
+Every supported task declares `bounded-encoded-response` adapter policy; predicate,
+argument and verification tasks declare their additional observation bounds.
+Unknown task types cannot use a policy tag. No candidate can add a policy to its coverage. A policy tag
 with an extra field, wrong value or payload is always malformed protocol. Such failures remain in the denominator. Raw hostile bytes
 remain confined to the private transcript and are never reconstructed as code.
 No claim of full statement coverage follows from these controls.
@@ -232,10 +238,16 @@ failed. These labels distinguish ordinary adapter-observed failures, not a
 forensic determination. A candidate that deliberately exits, corrupts its wire
 or writes stderr retains the corresponding exit/protocol/output-limit cause.
 Policy and exception failures count in the same failed-attempt denominator.
-Candidate values exceeding the frame or JSON integer-digit encoding limit currently
-fail as `protocol`, with candidate exit 1: encoding happens outside call exception
-handling. This cause-label limitation is T-311.12 review low L1, retained for
-backlog; these attempts still fail and remain counted.
+After a candidate call, response encoding is also bounded adapter work. A
+response exceeding 64 KiB or refusing JSON encoding (including the interpreter's
+integer-digit bound) becomes the fixed `adapter_policy` tag with normal candidate
+pipe cleanup, instead of crashing that worker. This applies to every supported
+result type and changes no budget. The oracle independently validates each raw
+frame: forged, truncated, nonfinite, over-deep or otherwise invalid wire data
+still fails as protocol. A policy tag never excuses or drops an attempt.
+Predicate container/depth scope and serialization limits are explicit adapter
+policy, not proof that the candidate violated a frozen assertion. These repairs
+address T-311.12 review lows L1, L2 and L3; independent review is required.
 A failed case-root prerequisite observation may retain zero original tests only
 with exactly one call and a sticky protocol, policy or exception flag. All other
 counts and the requirement that no failed control passes stay unchanged.

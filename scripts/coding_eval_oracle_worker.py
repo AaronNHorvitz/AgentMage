@@ -21,7 +21,7 @@ from unittest import mock
 MAX_MESSAGE = 64 * 1024
 MAX_TRANSCRIPT = 2 * 1024 * 1024
 MAX_CALLS = 128
-POLICY_RESULT_TYPES = frozenset({"argument-result", "verification-result"})
+POLICY_RESULT_TYPES = frozenset({"argument-result", "verification-result", "bool", "bool-map", "path-result"})
 
 
 class ProtocolError(ValueError):
@@ -91,6 +91,22 @@ def encode_message(value):
     return data
 
 
+def predicate_result(value, result_type):
+    """Keep candidate keys in data, outside the adapter's fixed tag namespace."""
+    valid = (observation_value(value) if result_type == "bool" else
+             result_type == "bool-map" and type(value) is dict
+             and all(type(key) is str and observation_value(item) for key, item in value.items()))
+    return {"value": value} if valid else {"adapter_policy": True}
+
+
+def response_message(sequence, result):
+    """A bounded adapter refusal is distinct from a malformed wire frame."""
+    try:
+        return encode_message({"seq": sequence, "result": result})
+    except ProtocolError:
+        return encode_message({"seq": sequence, "result": {"adapter_policy": True}})
+
+
 class RemoteFunction:
     def __init__(self, reader, writer, transcript, result_type):
         self.reader, self.writer, self.transcript = reader, writer, transcript
@@ -158,7 +174,8 @@ class RemoteFunction:
                 raise CandidateExecutionError("oracle.candidate-exception")
             if self.result_type == "bool":
                 # Frozen predicates assert truthiness, not exact Boolean type.
-                valid = scalar_value(result)
+                valid = (isinstance(result, dict) and result.keys() == {"value"}
+                         and observation_value(result["value"]))
             elif self.result_type == "path-result":
                 valid = (isinstance(result, dict) and (
                     (result.keys() == {"ambiguous"} and result["ambiguous"] is True)
@@ -177,14 +194,15 @@ class RemoteFunction:
             elif self.result_type == "argument-result":
                 valid = valid_argument_result(result, args[0])
             elif self.result_type == "bool-map":
-                valid = (isinstance(result, dict)
+                valid = (isinstance(result, dict) and result.keys() == {"value"}
+                         and type(result["value"]) is dict
                          and all(type(key) is str and observation_value(value)
-                                 for key, value in result.items()))
+                                 for key, value in result["value"].items()))
             else:
                 valid = False
             if not valid:
                 raise ProtocolError("oracle.invalid-result")
-            return result
+            return result["value"] if self.result_type in {"bool", "bool-map"} else result
         except CandidateExecutionError:
             self.exception_failed = True
             raise
@@ -424,13 +442,15 @@ def candidate(config):
                         result = verification_result(function, module, *request["args"])
                 elif config["result_type"] == "argument-result":
                     result = argument_result(module, config["function"], *request["args"])
+                elif config["result_type"] in {"bool", "bool-map"}:
+                    result = predicate_result(function(*request["args"]), config["result_type"])
                 else:
-                    result = function(*request["args"])
+                    raise ProtocolError("oracle.unknown-result-type")
             except BaseException:
                 # This tag carries no candidate-selected class, status or text.
                 # A candidate can forge it only to fail its own attempt.
                 result = {"candidate_exception": True}
-            writer.write(encode_message({"seq": request["seq"], "result": result}))
+            writer.write(response_message(request["seq"], result))
             writer.flush()
 
 

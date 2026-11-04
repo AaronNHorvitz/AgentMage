@@ -348,6 +348,9 @@ os._exit(0)
             with self.subTest(transform=name):
                 self.predicate_contrast('dev-015', transform, name, True)
         self.predicate_contrast('dev-029', '[1] if value else []', 'map-containers', True)
+        for name, transform in (('list', '[1] if value else []'),
+                                ('dict', "{'ok': 1} if value else {}")):
+            self.predicate_contrast('dev-015', transform, 'predicate-' + name, True)
 
     def test_wrong_boolean_predicate_values_fail_original_assertions_and_legacy(self):
         for ident in ('dev-015', 'dev-029'):
@@ -422,18 +425,66 @@ os._exit(0)
             for log in ('wire.log', 'oracle.log'):
                 self.assertNotIn('private-payload', (output / log).read_text())
 
-    def test_forged_tags_cannot_change_assertions_or_discard_failed_attempts(self):
-        for name, source, cause in (
-                ('undeclared-policy', b'\ndef case_passed(case): return {"adapter_policy": True}\n', 'protocol'),
-                ('fixed-exception', b'\ndef case_passed(case): return {"candidate_exception": True}\n',
-                 'candidate_exception'),
-                ('exception-payload', b'\ndef case_passed(case): return {"candidate_exception": True, "message": "private-payload"}\n',
-                 'protocol')):
+    def test_predicate_data_keys_cannot_forge_control_tags_or_verdicts(self):
+        for name, value in (('policy-data', '{"adapter_policy": True}'),
+                            ('exception-data', '{"candidate_exception": True}'),
+                            ('fake-verdict-data', '{"tests": 1, "passed": True}')):
+            report = self.probe(('\ndef case_passed(case): return ' + value + '\n').encode(), name)
+            self.assertEqual(report['cause'], 'test_failure', report)
+            self.assertFalse(report['candidate_exception_failed'] or report['adapter_policy_failed']
+                             or report['protocol_failed'])
+            self.assertEqual(report['control_attempts'], {'total': 1, 'passed': 0, 'failed': 1})
+
+    def test_raw_forged_control_tags_still_only_fail_and_are_counted(self):
+        for name, result, cause in (('raw-policy', {'adapter_policy': True}, 'adapter_policy'),
+                                   ('raw-exception', {'candidate_exception': True}, 'candidate_exception'),
+                                   ('raw-payload', {'candidate_exception': True, 'message': 'untrusted'}, 'protocol')):
+            frame = oracle.worker.encode_message({'seq': 1, 'result': result})
+            source = ('\nimport os\ndef case_passed(case):\n os.write(1, ' + repr(frame)
+                      + ')\n os._exit(0)\n').encode()
             report = self.probe(source, name)
             self.assertEqual(report['cause'], cause, report)
-            self.assertEqual(report['candidate_exception_failed'], cause == 'candidate_exception')
             self.assertEqual(report['control_attempts'], {'total': 1, 'passed': 0, 'failed': 1})
-            self.assertNotIn('private-payload', (self.root / name / 'oracle.log').read_text())
+
+    def test_reserved_map_keys_reach_unchanged_assertions_and_agree_with_legacy(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-029')
+        for key in ('adapter_policy', 'candidate_exception', 'value', 'tests', 'passed'):
+            files = self.files(task)
+            files[task['source']] += ('\noriginal = suspend_resume_checks\n'
+                'def suspend_resume_checks(*args):\n result = original(*args)\n'
+                ' result[' + repr(key) + '] = True\n return result\n').encode()
+            with mock.patch.object(evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / ('key-' + key))
+                legacy = evaluation.grade(task, files, self.root / ('legacy-key-' + key))
+            self.assertTrue(report['passed'], report)
+            self.assertTrue(legacy['passed'], legacy)
+            self.assertEqual(report['cause'], 'none')
+
+    def test_unrepresentable_observations_have_policy_cause_and_clean_candidate_exit(self):
+        cases = [('scalar-oversize', 'dev-015', "def case_passed(*a): return 'x' * 70000"),
+                 ('scalar-bigint', 'dev-015', 'def case_passed(*a): return 10**5000'),
+                 ('scalar-nonfinite', 'dev-015', 'def case_passed(*a): return float("nan")'),
+                 ('scalar-object', 'dev-015', 'def case_passed(*a): return object()'),
+                 ('scalar-deep', 'dev-015', 'def case_passed(*a):\n v = []\n for _ in range(17): v = [v]\n return v'),
+                 ('map-bigint', 'dev-029', 'def suspend_resume_checks(*a): return {"x": 10**5000}'),
+                 ('map-oversize', 'dev-029', 'def suspend_resume_checks(*a): return {"x": "a" * 70000}'),
+                 ('map-deep', 'dev-029', 'def suspend_resume_checks(*a):\n v = []\n for _ in range(17): v = [v]\n return {"x": v}'),
+                 ('argument-bigint', 'dev-006', 'def route_grant_arguments(*a): return [10**5000]'),
+                 ('argument-oversize', 'dev-007', 'def memory_arguments(*a): return ["x" * 70000]'),
+                 ('verification-oversize', 'dev-020', 'def verify_case(*a): return {"passed": "x" * 70000, "checks": {}}')]
+        for name, ident, source in cases:
+            task = next(t for t in evaluation.collection() if t['id'] == ident)
+            files = self.files(task)
+            files[task['source']] += ('\n' + source + '\n').encode()
+            with self.subTest(name=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / name)
+            self.assertEqual(report['cause'], 'adapter_policy', report)
+            self.assertTrue(report['adapter_policy_failed'])
+            self.assertFalse(report['protocol_failed'] or report['candidate_exception_failed'])
+            self.assertEqual(report['candidate_exit_code'], 0)
+            self.assertEqual(report['control_attempts'], {'total': 1, 'passed': 0, 'failed': 1})
+            self.assertLess((self.root / name / 'wire.log').stat().st_size, oracle.worker.MAX_TRANSCRIPT)
 
     def test_path_return_types_are_explicitly_outside_oracle_coverage(self):
         task = next(t for t in evaluation.collection() if t["id"] == "dev-010")
@@ -569,7 +620,7 @@ def case_passed(case):
  calls += 1
  result = original_case_passed(case)
  if calls == 4:
-  os.write(1, (json.dumps({'seq':calls,'result':result})+'\\n').encode())
+  os.write(1, (json.dumps({'seq':calls,'result':{'value':result}})+'\\n').encode())
   os._exit(7)
  return result
 ''', "late-failure")

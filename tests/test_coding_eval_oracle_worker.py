@@ -68,7 +68,7 @@ class OracleProtocolTests(unittest.TestCase):
             self.assertTrue(remote.failed)
 
     def test_fixed_policy_tag_is_sticky_and_never_a_successful_observation(self):
-        for kind in ('argument-result', 'verification-result'):
+        for kind in sorted(worker.POLICY_RESULT_TYPES):
             remote = self.remote(b'{"seq":1,"result":{"adapter_policy":true}}\n', kind)
             with self.subTest(kind=kind), self.assertRaises(worker.AdapterPolicyError):
                 remote({})
@@ -87,8 +87,8 @@ class OracleProtocolTests(unittest.TestCase):
             self.assertTrue(remote.failed)
             self.assertFalse(remote.policy_failed)
 
-    def test_policy_tags_are_refused_without_declared_adapter_policy(self):
-        for kind in ('bool', 'bool-map', 'path-result'):
+    def test_policy_tags_are_refused_for_unknown_result_types(self):
+        for kind in ('unknown', '', '__reduce__'):
             remote = self.remote(b'{"seq":1,"result":{"adapter_policy":true}}\n', kind)
             with self.subTest(kind=kind), self.assertRaises(worker.ProtocolError):
                 remote({})
@@ -379,15 +379,16 @@ class OracleProtocolTests(unittest.TestCase):
             self.assertTrue(remote.failed)
 
     def test_json_call_preserves_arguments_and_requires_exact_sequence_and_type(self):
-        remote = self.remote(b'{"seq":1,"result":false}\n')
+        remote = self.remote(b'{"seq":1,"result":{"value":false}}\n')
         self.assertIs(remote({"measured": [0, True, "text"]}), False)
         self.assertEqual(json.loads(remote.writer.getvalue()),
                          {"seq": 1, "args": [{"measured": [0, True, "text"]}]})
         self.assertEqual(remote.calls, 1)
         self.assertFalse(remote.failed)
-        self.assertIn(b'"result":false', remote.transcript.getvalue())
+        self.assertIn(b'"result":{"value":false}', remote.transcript.getvalue())
         for reply in ({"seq": True, "result": True}, {"seq": 2, "result": True},
                       {"seq": 1, "result": {}}, {"seq": 1, "result": []},
+                      {"seq": 1, "result": {"value": True, "tests": 1}},
                       {"seq": 1, "result": True, "tests": {"failures": 0}},
                       {"seq": 1, "error": "forged"}):
             with self.subTest(reply=reply), self.assertRaises(worker.ProtocolError):
@@ -414,9 +415,10 @@ class OracleProtocolTests(unittest.TestCase):
         self.assertIn(b'x' * 100, remote.transcript.getvalue())
         self.assertEqual(remote.reader.tell(), worker.MAX_MESSAGE + 1)
 
-    def test_predicate_scalars_preserve_data_and_type_for_original_assertions(self):
-        for value in (None, False, True, 0, 1, -2, 0.5, '', 'wrong'):
-            remote = self.remote(worker.encode_message({'seq': 1, 'result': value}))
+    def test_predicate_observations_preserve_json_data_and_types_for_original_assertions(self):
+        for value in (None, False, True, 0, 1, -2, 0.5, '', 'wrong', [], [1], {},
+                      {'adapter_policy': True}, {'candidate_exception': True}):
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': {'value': value}}))
             with self.subTest(value=value):
                 result = remote({})
                 self.assertEqual(result, value)
@@ -425,8 +427,10 @@ class OracleProtocolTests(unittest.TestCase):
 
     def test_bool_map_preserves_bounded_json_values_for_original_assertions(self):
         for value in ({}, {'answers': True, 'filesystem': False}, {'answer': 1},
-                      {'answer': None}, {'answer': [1, {'nested': False}]}, {'answer': {}}):
-            remote = self.remote(worker.encode_message({'seq': 1, 'result': value}), 'bool-map')
+                      {'answer': None}, {'answer': [1, {'nested': False}]}, {'answer': {}},
+                      {'adapter_policy': True}, {'candidate_exception': True},
+                      {'value': {'tests': 3, 'passed': True}}):
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': {'value': value}}), 'bool-map')
             with self.subTest(value=value):
                 self.assertEqual(remote(0, [], []), value)
                 self.assertFalse(remote.failed or remote.policy_failed or remote.exception_failed)
@@ -435,10 +439,43 @@ class OracleProtocolTests(unittest.TestCase):
             nested = [nested]
         for result in ([], True, None, {'answer': nested}, {'answer': float('inf')}):
             # Write a valid JSON exponent that decodes to infinity for that case.
-            raw = (b'{"seq":1,"result":{"answer":1e999}}\n' if result == {'answer': float('inf')}
-                   else worker.encode_message({'seq': 1, 'result': result}))
+            raw = (b'{"seq":1,"result":{"value":{"answer":1e999}}}\n' if result == {'answer': float('inf')}
+                   else worker.encode_message({'seq': 1, 'result': {'value': result}}))
             with self.subTest(result=result), self.assertRaises(worker.ProtocolError):
                 self.remote(raw, 'bool-map')()
+
+    def test_candidate_predicates_wrap_keys_and_classify_unrepresentable_values(self):
+        for kind in ('bool', 'bool-map'):
+            for value in ({'adapter_policy': True}, {'candidate_exception': True}, {},
+                          {'value': [None, True]}):
+                self.assertEqual(worker.predicate_result(value, kind), {'value': value})
+            cyclic = []
+            cyclic.append(cyclic)
+            for value in (object(), float('nan'), 1j, {1: True}, {'x': cyclic}):
+                self.assertEqual(worker.predicate_result(value, kind), {'adapter_policy': True})
+        for value in (None, [], True):
+            self.assertEqual(worker.predicate_result(value, 'bool-map'), {'adapter_policy': True})
+        self.assertEqual(worker.predicate_result({}, 'unknown'), {'adapter_policy': True})
+        self.assertEqual(worker.predicate_result([1], 'bool'), {'value': [1]})
+
+    def test_response_encoding_refusal_is_bounded_policy_not_a_crashed_worker(self):
+        for value in ('x' * worker.MAX_MESSAGE, 10 ** 5000, float('nan'), object()):
+            frame = worker.response_message(1, {'value': value})
+            self.assertLessEqual(len(frame), worker.MAX_MESSAGE)
+            for kind in sorted(worker.POLICY_RESULT_TYPES):
+                remote = self.remote(frame, kind)
+                with self.subTest(kind=kind, value=type(value).__name__), self.assertRaises(worker.AdapterPolicyError):
+                    remote({})
+                self.assertTrue(remote.policy_failed)
+                self.assertFalse(remote.failed or remote.exception_failed)
+        overhead = len(worker.response_message(1, {'value': ''}))
+        exact = {'value': 'x' * (worker.MAX_MESSAGE - overhead)}
+        self.assertEqual(len(worker.response_message(1, exact)), worker.MAX_MESSAGE)
+        exact['value'] += 'x'
+        self.assertEqual(json.loads(worker.response_message(1, exact)),
+                         {'seq': 1, 'result': {'adapter_policy': True}})
+        self.assertEqual(worker.response_message(1, {'value': True}),
+                         b'{"seq":1,"result":{"value":true}}\n')
 
     def test_call_and_transcript_budgets_fail_sticky_without_unbounded_logs(self):
         remote = self.remote(b'{"seq":1,"result":true}\n')

@@ -22,7 +22,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v7"
+VERSION = "coding-independent-oracle-v8"
 # Complete frozen methods for pure functions. Paths are lexical JSON values;
 # one fixed ambiguity tag is reconstructed as a trusted local exception.
 SUPPORTED = {
@@ -62,24 +62,27 @@ def coverage(task):
     kind = SUPPORTED[task["id"]]["result_type"]
     if kind == "path-result":
         return {"graded": ["path-membership", "ambiguity-behavior"],
+                "adapter_policy": ["bounded-encoded-response"],
                 "not_graded": ["return-container-type", "return-element-type",
                                "unselected-statement-clauses"]}
     if kind == "verification-result":
         return {"graded": ["passed-truthiness", "selected-check-truthiness",
                            "frozen-fixture-variations",
                            *(["candidate-case-root-uniqueness"] if task["id"] == "dev-022" else [])],
-                "adapter_policy": ["bounded-json-observations",
+                "adapter_policy": ["bounded-encoded-response", "bounded-json-observations",
                                    *(["bounded-case-root-strings"] if task["id"] == "dev-022" else [])],
                 "not_graded": ["exact-boolean-result-type", "run-case-integration", "other-report-fields",
                                "unselected-cases", "unselected-statement-clauses"]}
     if kind == "argument-result":
         return {"graded": ["selected-parser-values", "argument-order-and-values",
                            "selected-refusal-types", "argument-return-container-type"],
-                "adapter_policy": ["bounded-namespace-values", "bounded-helper-values", "fixed-parser-exit-code"],
+                "adapter_policy": ["bounded-encoded-response", "bounded-namespace-values",
+                                   "bounded-helper-values", "fixed-parser-exit-code"],
                 "not_graded": ["exception-messages", "parser-diagnostics", "catalog-effects",
                                "parser-return-object-type",
                                "unselected-statement-clauses"]}
     return {"graded": ["selected-predicate-truthiness"],
+            "adapter_policy": ["bounded-encoded-response", "bounded-json-observations"],
             "not_graded": ["exact-boolean-result-type", "unselected-statement-clauses"]}
 
 
