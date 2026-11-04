@@ -50,8 +50,8 @@ class IndependentOracleTests(unittest.TestCase):
     def test_real_two_sandbox_controls_keep_original_hidden_tests_and_counts(self):
         summary = oracle.verify(self.root / "controls")
         self.assertTrue(summary["passed"], summary)
-        self.assertEqual(len(summary["tasks"]), 15)
-        self.assertEqual(summary["control_attempts"], {"total": 30, "passed": 15, "failed": 15})
+        self.assertEqual(len(summary["tasks"]), 16)
+        self.assertEqual(summary["control_attempts"], {"total": 32, "passed": 16, "failed": 16})
         self.assertFalse(summary["generated_scoring"])
         self.assertIsNone(summary["model_score"])
         self.assertEqual(summary["collection_sha256"],
@@ -67,6 +67,95 @@ class IndependentOracleTests(unittest.TestCase):
             self.assertTrue(oracle.expected_base(
                 next(t for t in evaluation.collection() if t["id"] == row["task"]), row["base"]))
             self.assertFalse(row["reference"]["aggregate_worker_quotas"])
+
+    def test_resource_controls_and_wrong_observations_keep_original_assertions(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-024')
+        variants = [
+            ('gpu-always-valid', 'def gpu_memory(): return (1234, 23000)', False, 'test_failure'),
+            ('gpu-wrong-container', '''original_gpu = gpu_memory
+def gpu_memory(): return list(original_gpu())''', False, 'test_failure'),
+            ('gpu-wrong-value', '''original_gpu = gpu_memory
+def gpu_memory():
+ used, free = original_gpu()
+ return (used + 1, free)''', False, 'test_failure'),
+            ('guard-wrong-return', '''original_sample = CandidateResourceGuard.sample
+def sample(self):
+ original_sample(self)
+ return True
+CandidateResourceGuard.sample = sample''', False, 'test_failure'),
+            ('guard-wrong-error', '''original_sample = CandidateResourceGuard.sample
+def sample(self):
+ value = original_sample(self)
+ self.error = 'wrong'
+ return value
+CandidateResourceGuard.sample = sample''', False, 'test_failure'),
+            ('guard-wrong-peak', '''original_sample = CandidateResourceGuard.sample
+def sample(self):
+ value = original_sample(self)
+ self.peak_total_gpu_used_mib_sampled = 0
+ return value
+CandidateResourceGuard.sample = sample''', False, 'test_failure'),
+            ('guard-falsey-value', '''original_sample = CandidateResourceGuard.sample
+def sample(self):
+ original_sample(self)
+ return []
+CandidateResourceGuard.sample = sample''', True, 'none'),
+            ('guard-reserved-data', '''original_sample = CandidateResourceGuard.sample
+def sample(self):
+ original_sample(self)
+ self.error = {'harness_error': True, 'candidate_exception': True, 'passed': True}
+ return False
+CandidateResourceGuard.sample = sample''', False, 'test_failure'),
+            ('guard-object', '''original_sample = CandidateResourceGuard.sample
+def sample(self):
+ original_sample(self)
+ return object()
+CandidateResourceGuard.sample = sample''', False, 'adapter_policy'),
+            ('guard-exception', '''def sample(self): raise ValueError('synthetic-private-payload')
+CandidateResourceGuard.sample = sample''', False, 'candidate_exception'),
+        ]
+        for name, source, passed, cause in variants:
+            files = self.files(task)
+            files[task['source']] += ('\n' + source + '\n').encode()
+            with self.subTest(variant=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / name)
+                self.assertEqual((report['passed'], report['cause']), (passed, cause), report)
+                self.assertEqual(report['tests']['tests'], 2)
+                self.assertEqual(report['control_attempts'],
+                                 {'total': 1, 'passed': int(passed), 'failed': int(not passed)})
+                self.assertIn('real-gpu-observation', report['coverage']['not_graded'])
+                if cause == 'candidate_exception':
+                    self.assertNotIn(b'synthetic-private-payload', (self.root / name / 'wire.log').read_bytes())
+                if cause not in {'adapter_policy', 'candidate_exception'}:
+                    legacy = evaluation.grade(task, files, self.root / (name + '-legacy'))
+                    self.assertEqual(legacy['passed'], passed, legacy)
+
+    def test_resource_adapter_preserves_historical_admission_and_has_no_hidden_mount(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-024')
+        files = self.files(task)
+        files[task['source']] += b'\n# generated candidate refused\n'
+        output = self.root / 'refused-resource'
+        with self.assertRaises(evaluation.EvaluationError):
+            oracle.grade(task, files, output)
+        self.assertFalse(output.exists())
+        files = self.files(task)
+        files[task['source']] += b'''
+from pathlib import Path
+import socket
+assert not Path('/adapter/test.py').exists()
+assert not Path('/output').exists()
+assert not Path('/dev/nvidia0').exists()
+try:
+ socket.create_connection(('127.0.0.1', 9), timeout=0.1)
+except OSError:
+ pass
+else:
+ raise AssertionError('network reachable')
+'''
+        with mock.patch.object(evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+            report = oracle.grade(task, files, self.root / 'confined-resource')
+        self.assertTrue(report['passed'], report)
 
     def test_candidate_launch_failure_cannot_validate_either_failing_base(self):
         real_sandbox, real_grade = oracle.sandbox, oracle.grade

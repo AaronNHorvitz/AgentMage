@@ -48,6 +48,7 @@ Every selected original hidden method remains complete and unchanged.
 | dev-020 | `verify_case` | 1 | 1 / 0 | 2 | 3 |
 | dev-021 | `verify_case` | 1 | 0 / 1 | 1 | 6 |
 | dev-022 | `verify_case`, case roots | 1 | 0 / 1 | 2 | 4 |
+| dev-024 | `gpu_memory`, `CandidateResourceGuard` | 2 | 0 / 2 | 2 | 6 |
 | dev-027 | `parser`, `extension_arguments` | 1 | 0 / 1 | 1 | 37 |
 | dev-029 | `suspend_resume_checks` | 1 | 0 / 1 | 1 | 6 |
 
@@ -282,6 +283,37 @@ Unknown task types cannot use a policy tag. No candidate can add a policy to its
 with an extra field, wrong value or payload is always malformed protocol. Such failures remain in the denominator. Raw hostile bytes
 remain confined to the private transcript and are never reconstructed as code.
 No claim of full statement coverage follows from these controls.
+
+## Synthetic GPU observations
+
+T-311.20 (oracle v17) transports dev-024's two complete frozen methods. The
+trusted side snapshots the original completed-process stub's stdout, stderr and
+return code. The candidate invokes its own `gpu_memory` with that same stub.
+Tagged observations preserve scalar, list, tuple, map and lexical Path values,
+so a returned list fails the original tuple equality assertion. Only the fixed
+trusted `HarnessError` category is reconstructed, with a local message. Other
+exceptions use the existing payload-free candidate-exception failure tag.
+
+The guard proxy sends its original constructor arguments to the candidate and
+keeps only an opaque bounded instance number. Only descriptor `-1`, the finite
+profile/resource fields and integer baselines are admitted by this adapter.
+A sample sends the original GPU mock's tuple, invokes the same candidate-owned
+guard instance and returns its result plus observed error and peak fields.
+The original assertions judge those values. Falsey containers remain values;
+map keys matching control tags remain data inside the tagged envelope. Objects,
+unsupported containers, excessive depth or encoded size are adapter policy.
+Duplicate instances, invalid operations, unexpected fields and live descriptors
+are protocol refusals. No Python object, class or callback crosses the pipe.
+
+These are synthetic GPU observations: no GPU device, model, real observation,
+lock acquisition, process cancellation or complete resource admission is tested.
+Subprocess invocation arguments, exception messages, unselected guard state and
+transitions and unselected statement clauses are explicitly ungraded. The
+candidate can inspect and alter its own adapter; passing these finite assertions
+establishes only the declared observation behavior, never live device safety.
+Both missing base helpers produce two original test errors and two failed calls;
+the reference runs both methods with six calls. Controls-only admission stays
+in force. No generated score follows from these measurements.
 
 ## Failed-command diagnostic observations
 

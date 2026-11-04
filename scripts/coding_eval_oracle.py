@@ -24,7 +24,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v16"
+VERSION = "coding-independent-oracle-v17"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
@@ -41,6 +41,7 @@ SUPPORTED = {
     "dev-020": {"function": "verify_case", "result_type": "verification-result"},
     "dev-021": {"function": "verify_case", "result_type": "verification-result"},
     "dev-022": {"function": "verify_case", "result_type": "verification-result", "observe_case_roots": True},
+    "dev-024": {"function": "gpu_memory", "result_type": "resource-result"},
     "dev-027": {"function": "extension_arguments", "result_type": "argument-result"},
     "dev-029": {"function": "suspend_resume_checks", "result_type": "bool-map"},
 }
@@ -64,6 +65,8 @@ CONTROL_PROFILES = {
     "dev-020": {"failures": 1, "base_calls": 2, "reference_calls": 3},
     "dev-021": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 6},
     "dev-022": {"failures": 0, "errors": 1, "base_calls": 2, "reference_calls": 4},
+    "dev-024": {"failures": 0, "errors": 2, "base_calls": 2, "reference_calls": 6,
+                "function_found": False, "candidate_exception": True},
     "dev-027": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 37,
                 "function_found": False},
     "dev-029": {"failures": 0, "base_calls": 1, "reference_calls": 6,
@@ -74,6 +77,14 @@ CONTROL_PROFILES = {
 def coverage(task):
     """State what transported observations can and cannot establish."""
     kind = SUPPORTED[task["id"]]["result_type"]
+    if kind == "resource-result":
+        return {"graded": ["selected-gpu-output-values-and-refusals", "gpu-return-container-type",
+                           "sampled-pressure-return-truthiness", "sampled-error-and-peak-values"],
+                "adapter_policy": ["bounded-encoded-response", "finite-resource-stubs",
+                                   "bounded-tagged-observations"],
+                "not_graded": ["real-gpu-observation", "subprocess-invocation-arguments",
+                               "exception-messages", "guard-acquisition-and-cancellation",
+                               "unselected-guard-state-and-transitions", "unselected-statement-clauses"]}
     if kind == "diagnostic-result":
         return {"graded": ["failed-child-diagnostic-text", "runtime-error-message-substring"],
                 "adapter_policy": ["bounded-encoded-response", "closed-diagnostic-observation"],

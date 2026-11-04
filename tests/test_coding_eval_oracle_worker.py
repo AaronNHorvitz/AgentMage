@@ -17,6 +17,94 @@ class OracleProtocolTests(unittest.TestCase):
     def remote(self, raw, result_type="bool"):
         return worker.RemoteFunction(io.BytesIO(raw), io.BytesIO(), io.BytesIO(), result_type)
 
+    def test_resource_gpu_observations_use_only_the_exact_finite_stub(self):
+        class Refused(ValueError):
+            pass
+
+        def gpu():
+            completed = subprocess.run(['synthetic-device-observation'], check=True)
+            self.assertEqual(completed.stdout, '12, 34\n')
+            self.assertEqual((completed.returncode, completed.stderr), (0, ''))
+            return (12, 34)
+
+        module = SimpleNamespace(subprocess=subprocess, gpu_memory=gpu, HarnessError=Refused)
+        request = {'operation': 'gpu', 'stdout': '12, 34\n', 'stderr': '', 'returncode': 0}
+        result = worker.resource_result(module, {}, request)
+        self.assertEqual(worker.unpack_call_value(result['value']), (12, 34))
+        with mock.patch.object(module, 'gpu_memory', side_effect=Refused('never-transfer-this')):
+            self.assertEqual(worker.resource_result(module, {}, request), {'harness_error': True})
+        with mock.patch.object(module, 'gpu_memory', return_value=object()):
+            self.assertEqual(worker.resource_result(module, {}, request), {'adapter_policy': True})
+
+    def test_resource_guard_instances_keep_separate_state_and_typed_observations(self):
+        class Guard:
+            def __init__(self, descriptor, profile, resources, used, free):
+                self.error, self.peak_total_gpu_used_mib_sampled = None, used
+                self.initial = (descriptor, profile, resources, free)
+
+            def sample(self):
+                used, _ = module.gpu_memory()
+                self.peak_total_gpu_used_mib_sampled = max(self.peak_total_gpu_used_mib_sampled, used)
+                self.error = {'harness_error': True, 'value': 'data'}
+                return []
+
+        module = SimpleNamespace(CandidateResourceGuard=Guard, gpu_memory=lambda: None, HarnessError=ValueError)
+        guards = {}
+        arguments = (-1, {'maximum_total_vram_used_mib': 20}, {'memory.peak': '0'}, 12, 34)
+        for number in (1, 2):
+            result = worker.resource_result(module, guards, {
+                'operation': 'guard-init', 'instance': number, 'arguments': worker.pack_call_value(arguments)})
+            self.assertIsNone(worker.unpack_call_value(result['value']))
+            self.assertEqual(guards[number].initial, (-1, arguments[1], arguments[2], 34))
+        result = worker.resource_result(module, guards, {
+            'operation': 'guard-sample', 'instance': 1, 'observation': worker.pack_call_value((25, 4))})
+        self.assertEqual(worker.unpack_call_value(result['value']), {
+            'returned': [], 'error': {'harness_error': True, 'value': 'data'}, 'peak': 25})
+        self.assertEqual(guards[2].peak_total_gpu_used_mib_sampled, 12)
+        self.assertIsNone(module.gpu_memory())
+
+    def test_resource_requests_refuse_invalid_operations_instances_and_live_descriptors(self):
+        module = SimpleNamespace(HarnessError=ValueError, CandidateResourceGuard=mock.Mock(), gpu_memory=mock.Mock())
+        arguments = (-1, {'maximum_total_vram_used_mib': 20}, {'memory.peak': '0'}, 12, 34)
+        request = {'operation': 'guard-init', 'instance': 1, 'arguments': worker.pack_call_value(arguments)}
+        invalid = [None, {}, {'operation': []}, {**request, 'instance': True}, {**request, 'instance': 129},
+                   {**request, 'extra': 'payload'}, {**request, 'operation': 'acquire'},
+                   {'operation': 'guard-sample', 'instance': 1, 'observation': worker.pack_call_value((1, 2))},
+                   {'operation': 'gpu', 'stdout': [], 'stderr': '', 'returncode': 0}]
+        for index, value in ((0, 3), (1, {}), (2, {'memory.peak': object()}), (3, True)):
+            values = list(arguments)
+            values[index] = value
+            if index == 2:
+                # Unsupported objects never enter an encoded request.
+                with self.assertRaises(worker.AdapterPolicyError):
+                    worker.pack_call_value(tuple(values))
+                continue
+            invalid.append({**request, 'arguments': worker.pack_call_value(tuple(values))})
+        for value in invalid:
+            with self.subTest(value=value), self.assertRaises(worker.ProtocolError):
+                worker.resource_result(module, {}, value)
+        module.CandidateResourceGuard.assert_not_called()
+        module.gpu_memory.assert_not_called()
+
+    def test_resource_wire_accepts_only_closed_data_or_fixed_local_refusal(self):
+        result = {'value': worker.pack_call_value((1, 2))}
+        remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), 'resource-result')
+        self.assertEqual(remote({'operation': 'gpu'}), result)
+        module = SimpleNamespace(HarnessError=LookupError, subprocess=subprocess)
+        remote = self.remote(worker.encode_message({'seq': 1, 'result': {'harness_error': True}}), 'resource-result')
+        gpu, _ = worker.resource_proxies(remote, module)
+        with mock.patch.object(subprocess, 'run') as run, self.assertRaises(LookupError) as caught:
+            run.return_value = subprocess.CompletedProcess([], 0, stdout='', stderr='')
+            gpu()
+        self.assertEqual(str(caught.exception), 'oracle.resource-refused')
+        invalid = [{'harness_error': 'payload'}, {'harness_error': True, 'extra': 'payload'},
+                   {'value': {'kind': 'class', 'value': 'payload'}}, {'value': {'kind': 'tuple', 'value': []}, 'passed': True}]
+        for value in invalid:
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': value}), 'resource-result')
+            with self.subTest(value=value), self.assertRaises(worker.ProtocolError):
+                remote({'operation': 'gpu'})
+            self.assertTrue(remote.failed)
+
     def test_finish_closes_requests_and_requires_exact_eof(self):
         remote = self.remote(b"")
         remote.finish()

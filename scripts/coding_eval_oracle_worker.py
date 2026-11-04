@@ -27,7 +27,7 @@ MAX_TRANSCRIPT = 2 * 1024 * 1024
 MAX_CALLS = 128
 POLICY_RESULT_TYPES = frozenset({"argument-result", "verification-result", "capture-result",
                                 "bool", "bool-map", "path-result", "mode-result", "command-result",
-                                "diagnostic-result"})
+                                "diagnostic-result", "resource-result"})
 
 
 class ProtocolError(ValueError):
@@ -241,6 +241,11 @@ class RemoteFunction:
                 valid = True
             elif self.result_type == "diagnostic-result":
                 valid = valid_diagnostic_result(result)
+            elif self.result_type == "resource-result":
+                valid = type(result) is dict and result.keys() == {"harness_error"} and result["harness_error"] is True
+                if type(result) is dict and result.keys() == {"value"}:
+                    unpack_call_value(result["value"])
+                    valid = True
             elif self.result_type == "bool-map":
                 valid = (isinstance(result, dict) and result.keys() == {"value"}
                          and type(result["value"]) is dict
@@ -731,6 +736,101 @@ def diagnostic_result(function, request):
     return {"stderr": stderr.getvalue(), "outcome": outcome}
 
 
+def resource_proxies(remote, module):
+    """Transport finite mock observations; the original tests keep assertions."""
+    instances = 0
+
+    def observe(request):
+        result = remote(request)
+        if "harness_error" in result:
+            raise module.HarnessError("oracle.resource-refused")
+        return unpack_call_value(result["value"])
+
+    def gpu_memory():
+        stub = module.subprocess.run
+        if not isinstance(stub, mock.MagicMock) or type(stub.return_value) is not subprocess.CompletedProcess:
+            remote.failed = True
+            raise ProtocolError("oracle.resource-fixture-not-mocked")
+        completed = stub.return_value
+        return observe({"operation": "gpu", "stdout": completed.stdout,
+                        "stderr": completed.stderr, "returncode": completed.returncode})
+
+    class Guard:
+        def __init__(self, descriptor, profile, resources, used, free):
+            nonlocal instances
+            instances += 1
+            self.instance = instances
+            observe({"operation": "guard-init", "instance": self.instance,
+                     "arguments": pack_call_value((descriptor, profile, resources, used, free))})
+
+        def sample(self):
+            if not isinstance(module.gpu_memory, mock.MagicMock):
+                remote.failed = True
+                raise ProtocolError("oracle.resource-fixture-not-mocked")
+            result = observe({"operation": "guard-sample", "instance": self.instance,
+                              "observation": pack_call_value(module.gpu_memory())})
+            if type(result) is not dict or result.keys() != {"returned", "error", "peak"}:
+                remote.failed = True
+                raise ProtocolError("oracle.invalid-resource-state")
+            self.error, self.peak_total_gpu_used_mib_sampled = result["error"], result["peak"]
+            return result["returned"]
+    return gpu_memory, Guard
+
+
+def resource_result(module, guards, request):
+    """No device, lock, cancellation or host resource is accessed by the adapter."""
+    if type(request) is not dict or type(request.get("operation")) is not str:
+        raise ProtocolError("oracle.invalid-resource-request")
+    operation = request["operation"]
+    try:
+        if (operation == "gpu" and request.keys() == {"operation", "stdout", "stderr", "returncode"}
+                and type(request["stdout"]) is str and type(request["stderr"]) is str
+                and type(request["returncode"]) is int):
+            completed = subprocess.CompletedProcess([], request["returncode"],
+                                                    stdout=request["stdout"], stderr=request["stderr"])
+            with mock.patch.object(module.subprocess, "run", return_value=completed):
+                value = module.gpu_memory()
+        elif (operation in {"guard-init", "guard-sample"}
+              and type(request.get("instance")) is int and 1 <= request["instance"] <= 128):
+            instance = request["instance"]
+            if operation == "guard-init" and request.keys() == {"operation", "instance", "arguments"}:
+                arguments = unpack_call_value(request["arguments"])
+                if (type(arguments) is not tuple or len(arguments) != 5
+                        or type(arguments[0]) is not int or arguments[0] != -1
+                        or type(arguments[1]) is not dict
+                        or arguments[1].keys() != {"maximum_total_vram_used_mib"}
+                        or type(arguments[1]["maximum_total_vram_used_mib"]) is not int
+                        or type(arguments[2]) is not dict or arguments[2].keys() != {"memory.peak"}
+                        or type(arguments[2]["memory.peak"]) is not str
+                        or any(type(v) is not int for v in arguments[3:]) or instance in guards):
+                    raise ProtocolError("oracle.invalid-resource-request")
+                guards[instance] = module.CandidateResourceGuard(*arguments)
+                value = None
+            elif (operation == "guard-sample" and instance in guards
+                  and request.keys() == {"operation", "instance", "observation"}):
+                observation = unpack_call_value(request["observation"])
+                if type(observation) is not tuple or len(observation) != 2 or any(type(v) is not int for v in observation):
+                    raise ProtocolError("oracle.invalid-resource-request")
+                guard = guards[instance]
+                with mock.patch.object(module, "gpu_memory", return_value=observation):
+                    returned = guard.sample()
+                value = {"returned": returned, "error": guard.error,
+                         "peak": guard.peak_total_gpu_used_mib_sampled}
+            else:
+                raise ProtocolError("oracle.invalid-resource-request")
+        else:
+            raise ProtocolError("oracle.invalid-resource-request")
+    except ProtocolError:
+        raise
+    except module.HarnessError:
+        # Reconstruct one fixed trusted category; never transfer exception data.
+        return {"harness_error": True}
+    try:
+        return {"value": pack_call_value(value)}
+    except AdapterPolicyError:
+        return {"adapter_policy": True}
+
+
 def candidate(config):
     reader = sys.stdin.buffer
     # Keep the wire off standard output before importing any candidate module.
@@ -747,6 +847,7 @@ def candidate(config):
         writer.write(encode_message({"ready": True, "function_found":
                                      callable(getattr(module, config["function"], None))}))
         writer.flush()
+        guards = {}
         while True:
             # EOF after the oracle exits is normal; truncated messages are not.
             if not reader.peek(1):
@@ -758,7 +859,7 @@ def candidate(config):
                     or type(request["seq"]) is not int or not isinstance(request["args"], list)):
                 raise ProtocolError("oracle.invalid-request")
             try:
-                function = (None if config["result_type"] == "argument-result"
+                function = (None if config["result_type"] in {"argument-result", "resource-result"}
                             else getattr(module, config["function"]))
                 if config["result_type"] == "path-result":
                     result = path_result(function, module.AmbiguousReference, *request["args"])
@@ -778,6 +879,8 @@ def candidate(config):
                     result = command_result(function, module, *request["args"])
                 elif config["result_type"] == "diagnostic-result":
                     result = diagnostic_result(function, *request["args"])
+                elif config["result_type"] == "resource-result":
+                    result = resource_result(module, guards, *request["args"])
                 elif config["result_type"] in {"bool", "bool-map"}:
                     result = predicate_result(function(*request["args"]), config["result_type"])
                 else:
@@ -825,6 +928,8 @@ def oracle(config):
                 proxy = command_proxy(remote, module)
             elif config["result_type"] == "diagnostic-result":
                 proxy = diagnostic_proxy(remote)
+            elif config["result_type"] == "resource-result":
+                proxy, module.CandidateResourceGuard = resource_proxies(remote, module)
             else:
                 proxy = remote
             setattr(module, config["function"], proxy)
