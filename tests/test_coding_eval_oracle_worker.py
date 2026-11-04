@@ -4,6 +4,7 @@ import io
 import json
 from pathlib import Path
 import shutil
+import signal
 import subprocess
 import tempfile
 from types import SimpleNamespace
@@ -16,6 +17,124 @@ from scripts import coding_eval_oracle_worker as worker
 class OracleProtocolTests(unittest.TestCase):
     def remote(self, raw, result_type="bool"):
         return worker.RemoteFunction(io.BytesIO(raw), io.BytesIO(), io.BytesIO(), result_type)
+
+    def test_job_signal_observation_and_typed_refusals(self):
+        class HarnessError(RuntimeError):
+            pass
+        module = SimpleNamespace(HarnessError=HarnessError, signal_running_cli=lambda *a: None)
+
+        def control(base, command):
+            number = {'pause': signal.SIGUSR1, 'resume': signal.SIGUSR2}[command]
+            return module.signal_running_cli(base, number)
+        module.control = control
+        request = {'operation': 'control', 'value': worker.pack_call_value((Path('/expected'), 'pause')), 'record': True}
+        result = worker.job_result(module, request)
+        self.assertTrue(worker.valid_job_result(result))
+        self.assertEqual(worker.unpack_calls({'calls': result['calls']}), [((Path('/expected'), int(signal.SIGUSR1)), {})])
+        self.assertEqual(result['exception'], 'none')
+        result = worker.job_result(module, {**request, 'record': False})
+        self.assertEqual(result['exception'], 'harness')
+        result = worker.job_result(module, {**request, 'value': worker.pack_call_value((Path('/expected'), 'unknown'))})
+        self.assertEqual(result['exception'], 'key')
+        self.assertEqual(result['calls'], [])
+
+    def test_job_proxy_replays_only_original_mock_and_fixed_local_exceptions(self):
+        class HarnessError(RuntimeError):
+            pass
+        calls = [{'args': worker.pack_call_value((Path('/expected'), int(signal.SIGUSR1))),
+                  'kwargs': worker.pack_call_value({})}]
+        result = {'value': worker.pack_call_value(None), 'calls': calls, 'exception': 'none'}
+        remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), 'job-result')
+        module = SimpleNamespace(HarnessError=HarnessError, signal_running_cli=mock.Mock())
+        _, _, control, _, _ = worker.job_proxies(remote, module)
+        control(Path('/expected'), 'pause')
+        module.signal_running_cli.assert_called_once_with(Path('/expected'), int(signal.SIGUSR1))
+        for tag, error in (('harness', HarnessError), ('key', KeyError), ('argument-type', argparse.ArgumentTypeError)):
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': {**result, 'calls': [], 'exception': tag}}), 'job-result')
+            with self.subTest(tag=tag), self.assertRaises(error) as caught:
+                worker.job_proxies(remote, module)[3]('inert')
+            self.assertIn('oracle.job-refused', str(caught.exception))
+            self.assertFalse(remote.exception_failed)
+
+    def test_job_wire_is_fully_validated_before_replay(self):
+        result = {'value': worker.pack_call_value(None), 'calls': [], 'exception': 'none'}
+        valid_call = {'args': worker.pack_call_value((Path('/expected'), 2)), 'kwargs': worker.pack_call_value({})}
+        invalid = [None, {}, {**result, 'passed': True}, {**result, 'exception': 'RuntimeError'},
+                   {**result, 'exception': True}, {**result, 'calls': [valid_call, {}]},
+                   {**result, 'calls': [valid_call] * 129},
+                   {**result, 'value': {'kind': 'executable', 'value': 'payload'}},
+                   {**result, 'value': worker.pack_call_value(1), 'exception': 'key'}]
+        for value in invalid:
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': value}), 'job-result')
+            observed = mock.Mock()
+            module = SimpleNamespace(signal_running_cli=observed)
+            with self.subTest(value=value), self.assertRaises(worker.ProtocolError):
+                worker.job_proxies(remote, module)[2](Path('/expected'), 'pause')
+            observed.assert_not_called()
+            self.assertTrue(remote.failed)
+        remote = self.remote(worker.encode_message({'seq': 1, 'result': {**result, 'calls': [valid_call]}}), 'job-result')
+        live = mock.Mock(side_effect=AssertionError('must not signal'))
+        # A plain function is not an accepted replay target, even for a valid reply.
+        module = SimpleNamespace(signal_running_cli=lambda *a: live(*a))
+        with self.assertRaises(worker.ProtocolError):
+            worker.job_proxies(remote, module)[3]('inert')
+        live.assert_not_called()
+
+    def test_job_bundle_fixture_preserves_path_and_rejects_other_existing_roots(self):
+        class HarnessError(RuntimeError):
+            pass
+        module = SimpleNamespace(HarnessError=HarnessError, signal_running_cli=lambda *a: None,
+                                 support_bundle_directory=lambda path: path)
+        with tempfile.TemporaryDirectory(dir='/tmp') as directory:
+            path = Path(directory)
+            request = {'operation': 'bundle', 'value': worker.pack_call_value(path), 'directory': True}
+            result = worker.job_result(module, request)
+            self.assertEqual(worker.unpack_call_value(result['value']), path)
+            self.assertEqual(worker.job_result(module, {**request, 'directory': False}), {'adapter_policy': True})
+        self.assertEqual(worker.job_result(module, {'operation': 'bundle', 'value': worker.pack_call_value(Path('/usr')),
+                                                   'directory': True}), {'adapter_policy': True})
+
+    def test_job_requests_refuse_extra_fields_bad_values_and_unbounded_calls(self):
+        module = SimpleNamespace(signal_running_cli=lambda *a: None, HarnessError=RuntimeError)
+        invalid = [None, {}, {'operation': []}, {'operation': 'execute'},
+                   {'operation': 'export', 'value': worker.pack_call_value(12)},
+                   {'operation': 'export', 'value': worker.pack_call_value('routes:1:1'), 'extra': True},
+                   {'operation': 'control', 'value': worker.pack_call_value([Path('/expected'), 'pause']), 'record': True},
+                   {'operation': 'stop', 'value': worker.pack_call_value(Path('/expected')), 'record': 1},
+                   {'operation': 'bundle', 'value': worker.pack_call_value('/tmp/fixture'), 'directory': True}]
+        for request in invalid:
+            with self.subTest(request=request), self.assertRaises(worker.ProtocolError):
+                worker.job_result(module, request)
+        def stop(base):
+            for _ in range(129): module.signal_running_cli(base, signal.SIGINT)
+        module.stop = stop
+        self.assertEqual(worker.job_result(module, {'operation': 'stop', 'value': worker.pack_call_value(Path('/expected')),
+                                                  'record': True}), {'adapter_policy': True})
+
+    def test_job_parser_codec_keeps_list_defaults_paths_and_closed_exit_refusals(self):
+        class HarnessError(RuntimeError):
+            pass
+        values = {'root': Path('/expected'), 'follow_up': [], 'switch': False, 'budget': None}
+        module = SimpleNamespace(HarnessError=HarnessError,
+                                 parser=lambda: SimpleNamespace(parse_args=lambda argv: argparse.Namespace(**values)))
+        result = worker.job_result(module, {'operation': 'parse', 'argv': ['start']})
+        remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), 'job-result')
+        parsed = worker.job_proxies(remote, module)[0]().parse_args(['start'])
+        self.assertEqual(vars(parsed), values)
+        for status, expected in ((2, {'parser_exit': True}), (0, {'adapter_policy': True}),
+                                 (True, {'adapter_policy': True}), ('private', {'adapter_policy': True})):
+            module.parser = lambda: SimpleNamespace(parse_args=mock.Mock(side_effect=SystemExit(status)))
+            with self.subTest(status=status):
+                self.assertEqual(worker.job_result(module, {'operation': 'parse', 'argv': []}), expected)
+        invalid = [{'job_namespace': worker.pack_call_value([])},
+                   {'job_namespace': worker.pack_call_value({'wrong-key': 1})},
+                   {'job_namespace': {'kind': 'callable', 'value': 'private'}},
+                   {'namespace': {'command': 'pause'}}, {'parser_exit': 2}]
+        for value in invalid:
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': value}), 'job-result')
+            with self.subTest(value=value), self.assertRaises(worker.ProtocolError):
+                worker.job_proxies(remote, module)[0]().parse_args([])
+            self.assertTrue(remote.failed)
 
     def deadline_run_request(self):
         return {'operation': 'run', 'stub': {'args': worker.pack_call_value(['fixture']), 'returncode': 0,

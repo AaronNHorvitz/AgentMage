@@ -24,7 +24,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v19"
+VERSION = "coding-independent-oracle-v20"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
@@ -44,6 +44,7 @@ SUPPORTED = {
     "dev-024": {"function": "gpu_memory", "result_type": "resource-result"},
     "dev-026": {"function": "run_commands", "result_type": "deadline-result", "observe_commands": True},
     "dev-027": {"function": "extension_arguments", "result_type": "argument-result"},
+    "dev-028": {"function": "control", "result_type": "job-result"},
     "dev-029": {"function": "suspend_resume_checks", "result_type": "bool-map"},
 }
 LOG_LIMIT = 2 * evaluation.MAX_FILE
@@ -71,6 +72,7 @@ CONTROL_PROFILES = {
     "dev-026": {"failures": 1, "base_calls": 3, "reference_calls": 3},
     "dev-027": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 37,
                 "function_found": False},
+    "dev-028": {"failures": 0, "errors": 1, "base_calls": 13, "reference_calls": 18},
     "dev-029": {"failures": 0, "base_calls": 1, "reference_calls": 6,
                 "candidate_exception": True},
 }
@@ -79,6 +81,16 @@ CONTROL_PROFILES = {
 def coverage(task):
     """State what transported observations can and cannot establish."""
     kind = SUPPORTED[task["id"]]["result_type"]
+    if kind == "job-result":
+        return {"graded": ["selected-parser-values", "export-selection-values-and-refusals",
+                           "support-directory-values-and-refusals", "mocked-job-signal-order-and-values",
+                           "unknown-control-and-no-live-refusals"],
+                "adapter_policy": ["bounded-encoded-response", "finite-job-stubs",
+                                   "bounded-tagged-observations", "single-temporary-directory-fixture"],
+                "not_graded": ["real-signal-delivery", "process-identity-and-liveness",
+                               "signal-enum-type", "support-bundle-start-propagation-and-approval",
+                               "support-bundle-privacy-and-ownership", "exception-messages",
+                               "unselected-statement-clauses"]}
     if kind == "deadline-result":
         return {"graded": ["collector-record-and-call-counts", "collector-call-order-and-arguments",
                            "collector-deadlines-and-capture-truthiness", "main-timeout-propagation",

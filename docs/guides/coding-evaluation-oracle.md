@@ -51,6 +51,7 @@ Every selected original hidden method remains complete and unchanged.
 | dev-024 | `gpu_memory`, `CandidateResourceGuard` | 2 | 0 / 2 | 2 | 6 |
 | dev-026 | `run_commands`, `main`, command declarations | 2 | 1 / 0 | 3 | 3 |
 | dev-027 | `parser`, `extension_arguments` | 1 | 0 / 1 | 1 | 37 |
+| dev-028 | `stop`, `control`, `parser`, export and directory helpers | 1 | 0 / 1 | 13 | 18 |
 | dev-029 | `suspend_resume_checks` | 1 | 0 / 1 | 1 | 6 |
 
 Subtests explain the ten failures across four methods in dev-012. The verifier
@@ -74,6 +75,10 @@ original assertions, as described below.
 T-311.18 uses oracle v15 to separate standard output from the protocol, require
 EOF after the final response and hide host mount sources from launcher arguments.
 It addresses T-311.17 review lows L1/L2/L3; generated scoring remains disabled.
+
+T-311.22 adds dev-028 with oracle v20. Its complete original method checks
+job-control dispatch, parser options, export selection and support-directory
+validation through finite observations, described below.
 
 The functions use JSON values and lexical paths. Three verification tasks also
 use finite text fixtures and stub observations, described below. Other tasks,
@@ -512,6 +517,40 @@ exercise forgery, wrong observations and confinement. Monkeypatching unittest
 can still forge the legacy grader; the same diagnostics fail this independent
 oracle and remain in its failed-attempt denominator.
 
+## Job-control observations
+
+Dev-028's original test and assertions remain in the trusted namespace. Its
+candidate parser returns bounded tagged values, preserving Paths and list-valued
+defaults; only data is reconstructed into a local argument namespace. Export
+selection and support-directory helpers return the same tagged values or closed
+HarnessError, KeyError and argument-type refusal tags. No exception class,
+message or traceback supplied by the candidate crosses into trusted execution.
+The one existing temporary-directory fixture is rebuilt at its exact lexical
+path under the candidate's private `/tmp`; relative and missing paths stay
+absent. An existing directory outside that finite fixture is adapter policy.
+No shared writable host scratch mount or permission-repair traversal is added.
+
+Candidate `stop` and `control` calls use a finite signal-helper stub. Successful
+dispatch observations replay only into the original frozen test's signal mock,
+after the entire reply and all calls have been validated. No replay invokes a
+live signal helper. The final no-live-run case uses a fixed HarnessError stub
+instead of inspecting or signalling a real process. Signal enum values are
+normalized to integers because the original assertions compare their values;
+enum identity is ungraded. Order, missing calls, wrong values, unknown-control
+refusal and no-live refusal still reach the original assertions. Ordinary integer
+values that compare equal retain the original assertion behavior.
+The frozen mock records signal numbers only: its base argument, keyword forms
+and the wrappers' return values are not asserted. Transporting these values
+does not add coverage beyond the unchanged assertions.
+
+The frozen base reaches its original unsupported-route export error after
+13 calls; the reference passes the single complete method with 18 calls. Exact
+counts and profiles remain required. Real process identity, liveness and signal
+delivery, support-bundle launch propagation, privacy, ownership and export
+approval are ungraded. No support bundle or live process is produced. Wrong
+observations and candidate assertion patching fail the independent oracle;
+synthetic diagnostics do not authorize generated admission.
+
 ## Candidate exceptions and cause limits
 
 Unexpected exceptions during a candidate call, including missing report fields,
@@ -567,7 +606,7 @@ removal retries come from the accepted evaluator.
 
 Both processes retain the evaluator's per-process 512 MiB address-space,
 60-second CPU, 32 MiB file and zero core-file limits. These are **not aggregate
-worker quotas**. Generated scoring remains disabled: this adapter covers fifteen of
+worker quotas**. Generated scoring remains disabled: this adapter covers eighteen of
 30 tasks and does not implement separately delegated memory/process/CPU quotas,
 protected held-out inputs, covered-clause labels or a current-harness baseline.
 The legacy grader continues to import candidate code with tests and has its

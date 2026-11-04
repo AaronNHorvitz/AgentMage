@@ -15,6 +15,7 @@ import math
 import os
 from pathlib import Path
 import re
+import signal
 import subprocess
 import stat
 import sys
@@ -28,7 +29,7 @@ MAX_TRANSCRIPT = 2 * 1024 * 1024
 MAX_CALLS = 128
 POLICY_RESULT_TYPES = frozenset({"argument-result", "verification-result", "capture-result",
                                 "bool", "bool-map", "path-result", "mode-result", "command-result",
-                                "diagnostic-result", "resource-result", "deadline-result"})
+                                "diagnostic-result", "resource-result", "deadline-result", "job-result"})
 
 
 class ProtocolError(ValueError):
@@ -253,6 +254,16 @@ class RemoteFunction:
                              and valid_collector_commands(unpack_call_value(result["commands"])))
                 else:
                     valid = valid_deadline_result(result)
+            elif self.result_type == "job-result":
+                if args[0].get("operation") == "parse":
+                    if type(result) is dict and result.keys() == {"job_namespace"}:
+                        values = unpack_call_value(result["job_namespace"])
+                        valid = (type(values) is dict and len(values) <= 128
+                                 and all(re.fullmatch(r"[a-z][a-z0-9_]{0,63}", key) for key in values))
+                    else:
+                        valid = valid_argument_result(result, args[0]) and "namespace" not in result
+                else:
+                    valid = valid_job_result(result)
             elif self.result_type == "bool-map":
                 valid = (isinstance(result, dict) and result.keys() == {"value"}
                          and type(result["value"]) is dict
@@ -392,6 +403,139 @@ def argument_result(module, name, request):
             return {"parser_exit": True}
         return {"adapter_policy": True}
     raise ProtocolError("oracle.invalid-argument-request")
+
+
+def valid_job_result(result):
+    if (type(result) is not dict or result.keys() != {"value", "calls", "exception"}
+            or type(result["exception"]) is not str
+            or result["exception"] not in {"none", "harness", "key", "argument-type"}):
+        return False
+    unpack_calls({"calls": result["calls"]})
+    value = unpack_call_value(result["value"])
+    return result["exception"] == "none" or value is None
+
+
+def job_proxies(remote, module):
+    class Parser:
+        def parse_args(self, arguments):
+            result = argument_value(remote({"operation": "parse", "argv": arguments}), module)
+            return argparse.Namespace(**unpack_call_value(result["job_namespace"]))
+
+    def call(operation, value, **options):
+        result = remote({"operation": operation, "value": pack_call_value(value), **options})
+        # Validate the entire response before replay. Only the original test's
+        # mock is a replay target; no candidate data can invoke a live signal.
+        calls = unpack_calls({"calls": result["calls"]})
+        if operation in {"stop", "control"} and options["record"]:
+            if not isinstance(module.signal_running_cli, mock.Mock):
+                remote.failed = True
+                raise ProtocolError("oracle.unsupported-signal-fixture")
+            for args, kwargs in calls:
+                module.signal_running_cli(*args, **kwargs)
+        elif calls and operation not in {"stop", "control"}:
+            remote.failed = True
+            raise ProtocolError("oracle.unexpected-job-calls")
+        if result["exception"] == "harness":
+            raise module.HarnessError("oracle.job-refused")
+        if result["exception"] == "key":
+            raise KeyError("oracle.job-refused")
+        if result["exception"] == "argument-type":
+            raise argparse.ArgumentTypeError("oracle.job-refused")
+        return unpack_call_value(result["value"])
+
+    def stop(base):
+        return call("stop", base, record=isinstance(module.signal_running_cli, mock.Mock))
+
+    def control(base, command):
+        return call("control", (base, command), record=isinstance(module.signal_running_cli, mock.Mock))
+
+    def export(value):
+        return call("export", value)
+
+    def bundle(path):
+        return call("bundle", path, directory=path.is_dir())
+    return Parser, stop, control, export, bundle
+
+
+def job_result(module, request):
+    """Finite directory and signal stubs; no actual CLI process or export."""
+    if type(request) is not dict or type(request.get("operation")) is not str:
+        raise ProtocolError("oracle.invalid-job-request")
+    operation = request["operation"]
+    if operation == "parse":
+        if (request.keys() != {"operation", "argv"} or type(request["argv"]) is not list
+                or any(type(value) is not str for value in request["argv"])):
+            raise ProtocolError("oracle.invalid-job-request")
+        try:
+            parsed = module.parser().parse_args(request["argv"])
+            return {"job_namespace": pack_call_value(vars(parsed))}
+        except AdapterPolicyError:
+            return {"adapter_policy": True}
+        except module.HarnessError:
+            return {"harness_error": True}
+        except SystemExit as error:
+            return {"parser_exit": True} if type(error.code) is int and error.code == 2 else {"adapter_policy": True}
+    fields = {"operation", "value"}
+    if operation in {"stop", "control"}:
+        fields.add("record")
+    elif operation == "bundle":
+        fields.add("directory")
+    elif operation != "export":
+        raise ProtocolError("oracle.invalid-job-request")
+    if request.keys() != fields:
+        raise ProtocolError("oracle.invalid-job-request")
+    value = unpack_call_value(request["value"])
+    path_type = type(Path())
+    if operation in {"stop", "control"}:
+        if (type(request["record"]) is not bool
+                or (operation == "stop" and type(value) is not path_type)
+                or (operation == "control" and not (
+                    type(value) is tuple and len(value) == 2
+                    and type(value[0]) is path_type and type(value[1]) is str))):
+            raise ProtocolError("oracle.invalid-job-request")
+    elif operation == "bundle":
+        if type(request["directory"]) is not bool or type(value) is not path_type:
+            raise ProtocolError("oracle.invalid-job-request")
+        if request["directory"]:
+            # Preserve the fixture's exact lexical path in the private tmpfs.
+            # The frozen method supplies one ordinary immediate /tmp child.
+            if re.fullmatch(r"/tmp/[A-Za-z0-9_-]+", str(value)) is None:
+                return {"adapter_policy": True}
+            value.mkdir(mode=0o700, exist_ok=True)
+        elif value.is_dir():
+            return {"adapter_policy": True}
+    elif type(value) is not str:
+        raise ProtocolError("oracle.invalid-job-request")
+    observed = mock.Mock(return_value=None)
+    if operation in {"stop", "control"} and not request["record"]:
+        observed.side_effect = module.HarnessError("oracle.no-live-cli")
+    exception, returned = "none", None
+    with mock.patch.object(module, "signal_running_cli", observed):
+        try:
+            if operation == "control":
+                returned = module.control(*value)
+            else:
+                name = {"stop": "stop", "export": "export_selection", "bundle": "support_bundle_directory"}[operation]
+                returned = getattr(module, name)(value)
+        except module.HarnessError:
+            exception = "harness"
+        except KeyError:
+            exception = "key"
+        except argparse.ArgumentTypeError:
+            exception = "argument-type"
+    try:
+        calls = []
+        for call in observed.call_args_list:
+            # Frozen assertions compare signal values, not enum identity. Only
+            # this finite enum is normalized; arbitrary subclasses are refused.
+            args = tuple(int(v) if type(v) is signal.Signals else v for v in call.args)
+            kwargs = {k: int(v) if type(v) is signal.Signals else v for k, v in call.kwargs.items()}
+            calls.append({"args": pack_call_value(args), "kwargs": pack_call_value(kwargs)})
+            if len(calls) > 128:
+                raise AdapterPolicyError("oracle.job-call-limit")
+        return {"value": pack_call_value(returned), "calls": calls, "exception": exception}
+    except AdapterPolicyError:
+        return {"adapter_policy": True}
 
 
 def verification_proxy(remote, module):
@@ -999,7 +1143,7 @@ def candidate(config):
                     or type(request["seq"]) is not int or not isinstance(request["args"], list)):
                 raise ProtocolError("oracle.invalid-request")
             try:
-                function = (None if config["result_type"] in {"argument-result", "resource-result", "deadline-result"}
+                function = (None if config["result_type"] in {"argument-result", "resource-result", "deadline-result", "job-result"}
                             else getattr(module, config["function"]))
                 if config["result_type"] == "path-result":
                     result = path_result(function, module.AmbiguousReference, *request["args"])
@@ -1023,6 +1167,8 @@ def candidate(config):
                     result = resource_result(module, guards, *request["args"])
                 elif config["result_type"] == "deadline-result":
                     result = deadline_result(module, *request["args"])
+                elif config["result_type"] == "job-result":
+                    result = job_result(module, *request["args"])
                 elif config["result_type"] in {"bool", "bool-map"}:
                     result = predicate_result(function(*request["args"]), config["result_type"])
                 else:
@@ -1076,6 +1222,8 @@ def oracle(config):
                 proxy, module.CandidateResourceGuard = resource_proxies(remote, module)
             elif config["result_type"] == "deadline-result":
                 proxy, module.main = deadline_proxies(remote, module)
+            elif config["result_type"] == "job-result":
+                module.parser, module.stop, proxy, module.export_selection, module.support_bundle_directory = job_proxies(remote, module)
             else:
                 proxy = remote
             setattr(module, config["function"], proxy)

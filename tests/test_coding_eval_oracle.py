@@ -50,8 +50,8 @@ class IndependentOracleTests(unittest.TestCase):
     def test_real_two_sandbox_controls_keep_original_hidden_tests_and_counts(self):
         summary = oracle.verify(self.root / "controls")
         self.assertTrue(summary["passed"], summary)
-        self.assertEqual(len(summary["tasks"]), 17)
-        self.assertEqual(summary["control_attempts"], {"total": 34, "passed": 17, "failed": 17})
+        self.assertEqual(len(summary["tasks"]), 18)
+        self.assertEqual(summary["control_attempts"], {"total": 36, "passed": 18, "failed": 18})
         self.assertFalse(summary["generated_scoring"])
         self.assertIsNone(summary["model_score"])
         self.assertEqual(summary["collection_sha256"],
@@ -67,6 +67,109 @@ class IndependentOracleTests(unittest.TestCase):
             self.assertTrue(oracle.expected_base(
                 next(t for t in evaluation.collection() if t["id"] == row["task"]), row["base"]))
             self.assertFalse(row["reference"]["aggregate_worker_quotas"])
+
+    def test_job_controls_preserve_complete_frozen_method_and_refuse_generated_admission(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-028')
+        for fixed in (False, True):
+            with self.subTest(fixed=fixed):
+                report = oracle.grade(task, self.files(task, fixed), self.root / str(fixed))
+                self.assertEqual(report['passed'], fixed, report)
+                self.assertEqual(report['tests']['tests'], 1)
+                self.assertEqual(report['calls'], 18 if fixed else 13)
+                self.assertEqual(report['cause'], 'none' if fixed else 'test_failure')
+                self.assertEqual(report['tests']['errors'], 0 if fixed else 1)
+                self.assertFalse(report['protocol_failed'])
+                self.assertFalse(report['candidate_exception_failed'])
+                self.assertEqual(report['control_attempts'], {'total': 1, 'passed': int(fixed), 'failed': int(not fixed)})
+                self.assertIn('real-signal-delivery', report['coverage']['not_graded'])
+        files = self.files(task)
+        files[task['source']] += b'\n# synthetic admission refusal\n'
+        with mock.patch.object(oracle, 'exchange') as launch:
+            with self.assertRaisesRegex(evaluation.EvaluationError, 'untrusted-candidate-disabled'):
+                oracle.grade(task, files, self.root / 'refused')
+            launch.assert_not_called()
+            self.assertFalse((self.root / 'refused').exists())
+
+    def test_job_assertions_refusals_and_call_observations_survive_candidate_forgery(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-028')
+        variants = (
+            ('wrong-signal', '''original_control = control
+def control(base, command):
+ if command == 'pause': return signal_running_cli(base, signal.SIGINT)
+ return original_control(base, command)
+''', 'test_failure'),
+            ('missing-dispatch', 'def stop(base): pass', 'test_failure'),
+            ('unknown-accepted', '''original_control = control
+def control(base, command):
+ if command != 'suspend-everything': return original_control(base, command)
+''', 'test_failure'),
+            ('accept-export', 'def export_selection(value): return value', 'test_failure'),
+            ('wrong-bundle', 'def support_bundle_directory(value): return Path("/wrong")', 'test_failure'),
+            ('no-bundle-refusal', 'def support_bundle_directory(value): return value', 'test_failure'),
+            ('no-live-accepted', '''original_control = control
+def control(base, command):
+ try: return original_control(base, command)
+ except HarnessError: return None
+''', 'test_failure'),
+            ('unexpected-exception', 'def control(*args): raise RuntimeError("private-job-payload")', 'candidate_exception'),
+            ('unsupported-return', 'def stop(base): return {1,2}', 'adapter_policy'),
+        )
+        for name, source, cause in variants:
+            files = self.files(task)
+            files[task['source']] += ('''
+import unittest
+unittest.TestCase.assertEqual = lambda *a, **k: None
+''' + source + '\n').encode()
+            with self.subTest(name=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / name)
+                self.assertFalse(report['passed'], report)
+                self.assertEqual(report['cause'], cause, report)
+                self.assertEqual(report['tests']['tests'], 1)
+                self.assertEqual(report['control_attempts'], {'total': 1, 'passed': 0, 'failed': 1})
+                for file in (self.root / name).iterdir():
+                    self.assertNotIn(b'private-job-payload', file.read_bytes())
+                if name == 'wrong-signal':
+                    legacy = evaluation.grade(task, files, self.root / (name + '-legacy'))
+                    self.assertTrue(legacy['passed'], legacy)
+
+    def test_job_namespace_confinement_policy_and_malformed_wire_remain_failed_controls(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-028')
+        variants = (
+            ('confined', b'''
+assert not Path('/output').exists()
+assert not Path('/adapter/test.py').exists()
+assert not Path('/lane').exists()
+assert Path('/proc/1/environ').read_bytes() == b''
+assert not os.access('/workspace', os.W_OK)
+assert not os.access('/adapter', os.W_OK)
+import socket
+try: socket.create_connection(('127.0.0.1', 9), timeout=0.05)
+except OSError: pass
+else: raise AssertionError('network unexpectedly available')
+''', True, 'none'),
+            ('parser-policy', b'''
+original_parser = parser
+def parser():
+ result = original_parser()
+ result.set_defaults(unrepresentable=print)
+ return result
+''', False, 'adapter_policy'),
+            ('malformed-job-wire', WIRE_DESCRIPTOR_PROBE + b'''
+def stop(base):
+ os.write(protocol_fd(), b'{"seq":1,"result":{"passed":true}}\\n')
+''', False, 'protocol'),
+        )
+        for name, source, passed, cause in variants:
+            files = self.files(task)
+            files[task['source']] += source
+            with self.subTest(name=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / name)
+                self.assertEqual((report['passed'], report['cause']), (passed, cause), report)
+                self.assertEqual(report['tests']['tests'], 1)
+                self.assertEqual(report['control_attempts'], {'total': 1, 'passed': int(passed), 'failed': int(not passed)})
+                self.assertEqual(json.loads((self.root / name / 'tests.json').read_text())['tests'], report['tests'])
 
     def test_deadline_controls_preserve_mock_calls_and_timeout_without_writes(self):
         task = next(t for t in evaluation.collection() if t['id'] == 'dev-026')
