@@ -1,0 +1,156 @@
+Commit: dfb751e41a447d5b434d2f26b29a423bdfdd0a1b
+Scope: local-coding-t311-14-capture-oracle
+
+# Independent core review: T-311.14 captured-output oracle (attempt 1)
+
+Reviewer: Claude Opus 5.5, separate read-only session. Row in scope: T-311.14 only.
+Base: `4e00c4b3ef3972b8cfd4d647c4471b1c7a7db7a7`. No repository file was modified.
+
+## Methods
+
+- Confirmed `git rev-parse dfb751e41a447d5b434d2f26b29a423bdfdd0a1b` equals HEAD; clean tree.
+- Read the full diff (`TASKS.md`, evidence, guide, `scripts/coding_eval_oracle.py`,
+  `scripts/coding_eval_oracle_worker.py`, both oracle test modules), the complete worker and oracle
+  modules, the dev-005/dev-018 task records, both pinned hidden tests (`git show` at the reference
+  revisions; SHA-256 `a463c2ac…62b4` and `419045284a…3bb7` match the collection), and the
+  base/reference `capture`/`validate_raw`/`COMMANDS` source.
+- Ran every command in the request through `/tools/build-slot` into a new private directory
+  `/lane/state/tmp/t311-14-review-Pp9le0`, plus the two oracle test modules on their own.
+- Wrote and ran my own diagnostic probe script (outside the repository,
+  `/lane/state/tmp/t311-14-review-Pp9le0/myprobes.py`, SHA-256
+  `263b4483cdf9677c0849b1c241e98940cb97ff6c9dc9dfaf4726ed6e8df70024`). It covers how faithful the stub
+  shape is against the legacy grader, and attempts to escape confinement from inside candidate `capture`.
+  Like the builder probes, it patches historical admission only inside the diagnostic process.
+- Re-hashed every committed source and artifact digest in the evidence against the shared-mount files.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `node --version`; `sha256sum target/local-agent-tools/node` | v24.15.0; `d1de76d8…d932c` (matches) |
+| `sha256sum /lane/state/tmp/t311-14-capture-oracle/probes.py` | `50ee2aab…1818` (matches) |
+| `build-slot python3 scripts/local_agent_fast_gate.py --base 4e00c4b3… --timeout 600` | FAST GATE: PASS; 5 steps; 79 oracle tests OK in 40.62 s (440 s wall incl. reservation wait) |
+| `build-slot python3 -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | 58 tests OK (19.25 s) |
+| `build-slot python3 scripts/coding_eval_oracle.py verify --output $rr/oracle` | rc 0; passed; 12 pairs valid; control attempts 24/12/12; generated_scoring false; model_score null; collection `0c2a0624…1570` |
+| `build-slot python3 scripts/coding_eval.py verify --output $rr/legacy` | rc 0; passed; legacy dev-005 base 3 failures, dev-018 base 1 failure (same as oracle profiles) |
+| `build-slot python3 …/probes.py $rr/probes` | `{"passed": true, "probes": 23, "legacy_contrasts": 17}`; all 23 rows reproduce the expected causes |
+| `build-slot python3 scripts/validate_docs.py` | Validated 712 Markdown file(s) and all policy invariants |
+| `git diff --exit-code 4e00c4b3… HEAD -- <six legacy files>` | rc 0 (byte-identical) |
+| `cmp docs/reviews/85d96fd27bee-…txt /lane/reviews/85d96fd27bee-…md` | rc 0 |
+| `build-slot python3 -m unittest tests.test_coding_eval_oracle tests.test_coding_eval_oracle_worker -v` | 79 tests OK (40.77 s) |
+| Evidence digest table (4 sources, 18 artifacts) | all 22 SHA-256 values match the shared-mount files |
+
+Oracle verify, dev-005: base `test_failure` with 3 failures / 3 calls; reference passes with 3 calls.
+Oracle verify, dev-018: base 1 failure / 1 call; reference passes with 5 calls.
+These match `CONTROL_PROFILES` and the legacy grader's original-method counts.
+
+Reviewer probes (`$rr/myprobes/summary.json`); each is a passing reference with a suffix appended:
+
+| Probe | Oracle | Legacy |
+| --- | --- | --- |
+| dev-005 `capture` uses `result.stdout + (result.stderr or "")` | PASS | PASS |
+| dev-018 same source | **PASS** | **FAIL** (1 failure) |
+| dev-005 `capture` reads `result.stderr.replace(...)` | FAIL `candidate_exception` | FAIL (error) |
+| dev-018 same source | **FAIL** `candidate_exception` | **PASS** |
+| dev-018 `isinstance(subprocess.run([]), CompletedProcess)` | PASS | FAIL |
+| dev-018 confinement attempt inside candidate `capture` | `/adapter/test.py` absent, `/output` absent, `/workspace` write `OSError`, network `OSError`, environment only `HOME,LANG,PATH,PWD` (`HOME=/tmp`), a saved real `subprocess.run` stays in the candidate namespace (uid 1000, no host mounts); verdict comes only from trusted assertions | n/a |
+
+## Review notes (no finding)
+
+- Trust boundary: the trusted process imports only the frozen base, sets `module.validate_raw` and
+  `module.capture` proxies before `exec_module` of the hidden file. The hidden `from … import
+  validate_raw` binds the proxy. `ROOT`, `MARKERS`, `COMMANDS`, `Path.home()` and every assertion stay
+  trusted. Only the request dicts cross the pipe: `str` text, `str` stdout, `int` return code and a list
+  of `str` lists. Patching `unittest` assertions in the candidate ("forgery" test) has no effect on the
+  trusted verdict.
+- Tuple tag: only a top-level built-in `tuple` with a finite JSON list becomes `container: "tuple"`.
+  The trusted side rebuilds `tuple(...)`, so dev-018's `assertEqual(validate_raw(...), [])` rejects a
+  tuple, as the legacy grader does (builder probe `dev-018-tuple-validation`). Envelope keys must be
+  exactly `{value, container}`; `adapter_policy`/`candidate_exception` keys inside `value` are data.
+  Extra or malformed fields count as protocol failures (worker tests, builder probe `raw-fields`).
+- Stickiness and counting: exception, then policy, then protocol flags are checked before each later
+  call. `passed` requires all three flags clear and `tests == expected_tests`. Each failure stays in
+  `control_attempts` with `total: 1`. `result_record` still rejects inconsistent records.
+- MemoryError: `encode_message` now maps `MemoryError` to `ProtocolError`. `response_message` turns that
+  into the fixed `{"adapter_policy":true}` tag. In the 150 MiB probe the candidate exits 0 and the
+  attempt is counted as failed. This closes T-311.13 low L1 for the encoding path only, as claimed.
+- Admission: `require_historical_candidate` is unchanged. The new test proves dev-005/dev-018 refuse
+  generated snapshots before `exchange` is called or output is created.
+- Public-repository scan of the diff: no private host path, username, hostname, credential, personal
+  data, sibling-project or trademark branding. Only development-split tasks are touched. Held-out
+  tasks, model, GPU and tuning are not involved.
+- Delivery: one sub-row level. The row ends in running, measured controls.
+
+## Findings
+
+### M1 (medium): dev-018's capture stub has a different shape from the original fixture, so oracle and frozen-method verdicts diverge both ways
+
+- Location: `scripts/coding_eval_oracle_worker.py:448-451` (candidate stub is always
+  `subprocess.CompletedProcess([], returncode, stdout=…)`) and `:427-432` (the trusted proxy snapshots
+  only `stdout`/`returncode` of whatever `subprocess.run.return_value` is). Coverage at
+  `scripts/coding_eval_oracle.py:67-73` and the guide at `docs/guides/coding-evaluation-oracle.md:232-234`
+  do not declare the difference.
+- Reasoning: dev-005's hidden method stubs `run` with a real `CompletedProcess([], 0, stdout=…)`, so the
+  recreated stub matches it exactly. dev-018's hidden method uses `patch.object(evidence.subprocess,
+  "run") as run` with `run.return_value.stdout`/`.returncode` assigned. That completed process is a
+  `MagicMock`: `.stderr`, `.args` and other attributes are mocks, `isinstance(…, CompletedProcess)` is
+  false, and `str + mock` yields a mock. The oracle gives the candidate a `CompletedProcess` with
+  `stderr=None`.
+- Reproduction (reviewer probes above, reference source plus one suffix):
+  - `text = (result.stdout + (result.stderr or "")).replace(...)`: independent oracle **PASS**, while
+    the frozen original method under the legacy grader **FAILS** (1 failure).
+  - `str(result.stderr.replace("x", "y"))`: oracle FAILS as `candidate_exception`, legacy PASSES.
+  - For dev-005 both graders agree on both sources.
+- Impact: the row requires the complete original methods to judge the candidate on the original
+  fixture. For dev-018 the oracle can grant a pass the frozen hidden method would deny, and the reverse
+  is labelled as a candidate exception. The report's `coverage` gives no sign of this. Under the
+  evaluation-integrity directive, an undeclared lenient divergence in a grader meant to precede
+  generated scoring blocks closing the row. It is not high because generated scoring is disabled and no
+  score exists.
+- Fix (either):
+  - (a) Preferred: transport a closed stub kind from the trusted proxy. Use `"completed-process"` when
+    `type(run.return_value) is subprocess.CompletedProcess`, also carrying `args == []` and
+    `stderr is None` or refusing. Use `"mock"` when `run` is a `unittest.mock` mock. In the candidate,
+    rebuild the matching stub, e.g. `with mock.patch.object(module.subprocess, "run") as run:
+    run.return_value.stdout = …; run.return_value.returncode = …`. Refuse any other shape as trusted
+    protocol.
+  - (b) Otherwise, declare `completed-process-attributes-beyond-stdout-returncode` as `not_graded` and
+    `mock-stub-semantics` as adapter policy for dev-018, and stop describing it as the test's stub.
+  - Either way, add regression controls equivalent to the two dev-018 probes above, with the expected
+    legacy contrast.
+
+### L1 (low): the evidence verification table does not render as a table
+
+- Location: `docs/evidence/t311-14-capture-oracle-2026-11-03.md:49-51`.
+- A blank line separates the delimiter row from the data rows. The header becomes an empty table and
+  the six result rows become a plain paragraph. markdownlint did not flag it.
+- Fix: delete line 50.
+
+### L2 (low, backlog): dev-018's `/var/home` home-alias clause cannot be exercised under either grader
+
+- Location: `scripts/coding_eval_oracle.py:67-73` (claims `selected-private-path-refusals` graded) and
+  the hidden method's `home.startswith("/var/home/")` branch.
+- Both sandboxes set `HOME=/tmp` (oracle `scripts/coding_eval_oracle.py` `sandbox`, legacy
+  `scripts/coding_eval.py:717`). The third leak case collapses to `/tmp`, so a candidate that omits the
+  statement's `/var`-stripped alias passes both graders. This is not a regression in this row.
+- Fix: list `home-alias-variant` under `not_graded` for dev-018, or run that task with a
+  `/var/home/<synthetic>` home in both namespaces.
+
+### L3 (low, backlog): malformed capture requests from the trusted side are labelled as candidate exceptions
+
+- Location: `scripts/coding_eval_oracle_worker.py:435-456` raises `ProtocolError` inside the
+  candidate's `try … except BaseException` at `:495-503`.
+- An invalid request, e.g. a future fixture passing `bytes` to `validate_raw`, therefore becomes
+  `{"candidate_exception":true}`, blaming the candidate. The guide says malformed requests fail as
+  protocol. The unit test checks `capture_result` directly, not this path. Candidate code cannot cause
+  it, and argument requests already follow the same pattern.
+- Fix: validate the request shape before entering the candidate-exception `try`, or re-raise
+  `ProtocolError` from it.
+
+## Per-row result
+
+- T-311.14: **not closed**. All requested runs reproduce and pass, the confinement and trust boundary
+  hold in my own escape attempts, and evidence digests and counts match. Medium M1 (undeclared,
+  two-directional verdict divergence for dev-018) is open. L1–L3 are low/backlog.
+
+Verdict: FINDINGS
