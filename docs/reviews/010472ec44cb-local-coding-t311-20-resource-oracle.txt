@@ -1,0 +1,140 @@
+Commit: 010472ec44cb4080790e09e1ba38d6930cae12c2
+Scope: local-coding-t311-20-resource-oracle
+
+# Independent review — T-311.20 synthetic GPU observation oracle (oracle v17)
+
+Reviewer: Claude Opus 5.5, separate read-only session. Tier: core. Review 1.
+Base: ab6508903c66e0b6d820640ac08cc188ec96cf22. Row reviewed: T-311.20 only.
+
+## Methods
+
+- Confirmed `git rev-parse 010472ec44cb4080790e09e1ba38d6930cae12c2` = HEAD; working tree clean before and after
+  every run (`git status --porcelain` empty).
+- Read the full 7-file diff (oracle, worker, both oracle test modules, TASKS row, guide section, evidence).
+- Read the frozen dev-024 task definition (`scripts/coding_eval_collection.py:238-268`) and the two selected hidden
+  methods from the reference-commit blob (sha256 `4bd15783…a96`, matches the pin) to judge mock fidelity
+  line by line against `resource_proxies` / `resource_result`.
+- Read the surrounding unchanged machinery: `RemoteFunction.__call__`, `pack_call_value`/`unpack_call_value`,
+  `candidate()`/`oracle()` loops, `grade`, `expected_base`, `verify`, `require_historical_candidate`.
+- Read the builder's `probes.py` before executing it (benign: re-runs the two new test methods with retained output).
+- Ran every required command in a new private directory `/lane/state/tmp/t311-20-review-gXzK1u` through
+  `/tools/build-slot`; wrote and ran my own fidelity and confinement probes (below). No GPU used.
+- Verified all 20 evidence digests against the builder artifacts and the committed blobs; read audit.json,
+  final-checks.json, both verifier summaries and the per-command result files.
+
+## Required reproduction (exact commands, results)
+
+Node: `v24.15.0`, `sha256(target/local-agent-tools/node)` =
+`d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c` (matches).
+
+| Command | Result | Seconds (incl. reservation wait where noted) |
+| --- | --- | --- |
+| `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base ab6508903c66… --timeout 600` | exit 0, `Ran 122 tests`, OK, `FAST GATE: PASS` (internal 76.22 s) | 261.9 incl. wait |
+| `bash /tools/build-slot python3 -B -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | exit 0, `Ran 59 tests`, OK, no skips | 24.0 |
+| `bash /tools/build-slot python3 scripts/coding_eval_oracle.py verify --output $R/independent` | exit 0; passed; 16 tasks all valid; 20 reference methods; 166 reference calls; control_attempts total 32 / passed 16 / failed 16; generated_scoring false; model_score null | 8.35 |
+| `bash /tools/build-slot python3 scripts/coding_eval.py verify --output $R/legacy` | exit 0; passed; 30 valid pairs; 89 reference tests | 44.4 |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` | exit 0; "Validated 721 Markdown file(s) and all policy invariants." | 158.6 incl. wait |
+| `bash /tools/build-slot python3 -B $R/probes.py` (copied builder probe) | exit 0; 2 methods OK; 19 reports; model_attempts 0; gpu_minutes 0 | 6.2 |
+| `git diff --check ab650890… 010472ec…` | exit 0 | — |
+| `git diff --exit-code ab650890… 010472ec… -- <six legacy source/test files>` | exit 0 (unchanged) | — |
+
+dev-024 rows from my independent summary: base `passed=false`, cause `candidate_exception`, tests
+`{tests 2, failures 0, errors 2, skipped 0}`, calls 2, function_found false, candidate_exit 0; reference
+`passed=true`, tests 2 / 0 / 0, calls 6, function_found true. model_attempts 0, gpu_minutes 0, tokens null.
+All numbers match the evidence, TASKS row and guide table.
+
+Builder artifacts: all 20 evidence digests match (4 committed blobs at the exact commit, 16 private artifacts).
+audit.json: passed, 111 reports, 265 log bindings, 30 frozen tasks, six preserved legacy files, old ledger,
+prior review and deferred cleanup unchanged. final-checks.json: 20 bindings, tested sources stable, public
+hygiene true, exactly the seven committed paths.
+
+## Reviewer probes (own; `$R/own_probes.py`, results `$R/own.json`)
+
+Synthetic snapshots of the frozen reference with appended code, graded by both the independent oracle and the
+unchanged legacy verifier, with admission mocked only inside the probe script (as in the builder tests).
+
+| Variant | Oracle (passed, cause, errors, calls) | Legacy | Agreement |
+| --- | --- | --- | --- |
+| `gpu_memory` returns a namedtuple of the right values | false, adapter_policy, 2, 2 | pass | diverges (see L1) |
+| `sample()` returns `frozenset()` (falsey) | false, adapter_policy, 1, 6 | pass | diverges (see L1) |
+| `sample()` returns `None` | pass, 0, 6 | pass | yes |
+| peak stored as float `22529.0` | pass, 0, 6 | pass | yes |
+| `error` attribute deleted after sample | false, candidate_exception, 1, 6 | fail | yes |
+| `ValueError` (not HarnessError) on malformed output | false, candidate_exception, 2, 5 | fail | verdict yes; counts differ (L2) |
+| HarnessError subclass used for refusals | pass, 0, 6 | pass | yes |
+| Confinement probe (below) on top of reference | pass | pass | yes |
+
+Confinement probe, executed as candidate import-time code on the dev-024 path (results from candidate.log):
+environment cleared to `PATH=/usr/bin, HOME=/tmp, LANG, PWD`; `/var/home`, `/home`, `/lane`, `/tools`,
+`/root`, `/run/user`, `/output`, `/candidate-tmp` absent; `/adapter/test.py` absent (hidden test not mounted
+for the candidate); no `/dev/nvidia*`, `/dev/dri`, `/dev/kfd`, `/sys/class/drm`; `/usr/bin/nvidia-smi` is visible
+via the read-only `/usr` bind but exits 9 (no device); writes to `/workspace` and `/adapter` refused, writes to
+`/tmp`, `/` and `/dev/shm` land in sandbox-private tmpfs and none reached the host (checked); TCP to
+`127.0.0.1:9`/`::1:9` refused, `1.1.1.1:53` unreachable, session D-Bus socket absent. No probe text appeared in
+oracle.log or wire.log. Repository status remained clean.
+
+## Analysis against the inspection list
+
+- **Mock fidelity.** The trusted proxy only forwards when `module.subprocess.run` is a `MagicMock` whose
+  `return_value` is exactly `subprocess.CompletedProcess`; the candidate rebuilds `CompletedProcess([], rc,
+  stdout, stderr)` — identical to the hidden test's `CompletedProcess([], 0, stdout=…, stderr="")` — and patches
+  its own `module.subprocess.run` for the same scope. Guard construction forwards the exact positional tuple;
+  sample forwards the trusted MagicMock's tuple and patches `module.gpu_memory` on the candidate side for the
+  same scope as the original. Guard instances persist in a per-process dict; duplicate IDs refused. Tuple vs list
+  preserved by the codec (builder variant `gpu-wrong-container` fails as the original would).
+- **Assertion authority.** Hidden methods run unmodified in the trusted namespace; candidate replies are typed
+  data only (`unpack_call_value` yields only None/str/bool/int/finite float/Path/list/tuple/str-keyed dict).
+  Wrong value/return/error/peak variants fail; falsey `[]`/`None` pass as in the original; reserved tag keys
+  inside an `error` map stay data (builder `guard-reserved-data`).
+- **Closed schemas / fixed failures.** Trusted side accepts only `{"harness_error": true}` or `{"value": <codec>}`
+  (`coding_eval_oracle_worker.py:244-248`) and then requires exactly `returned/error/peak` for samples
+  (`:772-774`). HarnessError is reconstructed as the trusted base class with a fixed message; any other
+  candidate exception is the existing payload-free tag (builder test confirms the private text is absent from
+  wire.log). Candidate side refuses unknown operations/fields, bool instance numbers, out-of-range instances,
+  descriptor ≠ -1 and mistyped profile/resource fields as ProtocolError.
+- **Base profile.** Base module (frozen `fe898a96`) defines `HarnessError` and imports `subprocess` but neither
+  helper; first call becomes a candidate exception, the second call fails on the sticky tag; 2 errors / 2 calls,
+  `expected_base` additionally requires `candidate_ready`, `candidate_exit_code == 0` and `exit_code == 1`, so an
+  import or launch failure cannot validate it (existing launch-failure test still passes in the fast gate).
+- **Admission.** `grade` still calls `require_historical_candidate` before `new_directory`; builder test asserts
+  the refused output directory is never created; CLI `main` is unchanged. Probe snapshots use mocks only in tests.
+- **Integrity.** Collection fingerprint unchanged and asserted; six legacy files byte-identical; no hidden test,
+  pin, selection or threshold change; dev-024 is a development-split task; the diff contains no held-out task
+  content and no prompt/model change. No score, model attempt or GPU minute is claimed.
+- **Honest claims / hygiene.** Coverage block and guide explicitly list real GPU observation, invocation
+  arguments, exception messages, acquisition/cancellation and unselected guard state as ungraded. No private
+  path, username, hostname, credential, private sibling project, other-product comparison or trademark branding
+  in the committed diff.
+- **Delivery.** One sub-row level; this row ships a running, measured adapter.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L1 (low, backlog before generated scoring) — equality-passing subclass/unsupported values are refused.**
+`scripts/coding_eval_oracle_worker.py:521-536` (`pack_call_value`, exact `type(...)` checks) via
+`resource_result` `:829`. A candidate whose `gpu_memory` returns a `namedtuple` with the correct values, or whose
+`sample()` returns a falsey `frozenset()`, passes the original assertions under the legacy verifier but is
+graded `adapter_policy` failure by the oracle (reproduced above). The guide (`docs/guides/coding-evaluation-oracle.md:304`)
+discloses "unsupported containers … are adapter policy", and the cause is labelled distinctly, so this is not a
+hidden claim; but it is a false-negative path for plausible correct implementations ("returns (used_mib,
+free_mib)"). Fix before generated scoring: either encode tuple/int/str subclasses as their base type when the
+original assertion is equality/truthiness only, or name the subclass divergence explicitly in coverage and keep a
+contrast probe for it.
+
+**L2 (low, pre-existing pattern, backlog) — sticky candidate-exception inflates later method errors.**
+`RemoteFunction.__call__` `:183-184` makes every call after one candidate exception fail. In the
+`ValueError`-on-malformed probe the oracle reports 2 errors where the original suite would report 1 (test 2 would
+pass). The pass/fail verdict is identical and failures are counted, not dropped; per-method counts should not be
+published as original-suite counts without saying so. Fix: document in the guide that post-exception methods
+are counted as errors, or reset the sticky flag per hidden method.
+
+## Per-row result
+
+- **T-311.20: PASS** at exact commit `010472ec44cb4080790e09e1ba38d6930cae12c2`. All required runs reproduced
+  with the stated counts; confinement held under my escape attempts; mock fidelity and assertion authority
+  verified; no open high or medium finding. L1 and L2 are backlog.
+- Not reviewed/closed here: parent T-311, T-311.15/.16, generated scoring and the other open items listed in the
+  evidence. This review is not a certification or a legal clearance.
+
+Verdict: PASS
