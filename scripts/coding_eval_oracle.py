@@ -23,13 +23,14 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v13"
+VERSION = "coding-independent-oracle-v14"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
     "dev-005": {"function": "capture", "result_type": "capture-result"},
     "dev-006": {"function": "route_grant_arguments", "result_type": "argument-result"},
     "dev-007": {"function": "memory_arguments", "result_type": "argument-result"},
+    "dev-009": {"function": "subprocess_runner", "result_type": "diagnostic-result"},
     "dev-010": {"function": "test_only_files", "result_type": "path-result"},
     "dev-012": {"function": "test_only_files", "result_type": "path-result"},
     "dev-015": {"function": "case_passed", "result_type": "bool"},
@@ -51,6 +52,7 @@ CONTROL_PROFILES = {
                 "function_found": False},
     "dev-007": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 52,
                 "function_found": False},
+    "dev-009": {"failures": 1, "base_calls": 1, "reference_calls": 1},
     "dev-010": {"failures": 1, "base_calls": 1, "reference_calls": 4},
     "dev-012": {"failures": 10, "base_calls": 12, "reference_calls": 14},
     "dev-015": {"failures": 1, "base_calls": 3, "reference_calls": 4},
@@ -71,6 +73,12 @@ CONTROL_PROFILES = {
 def coverage(task):
     """State what transported observations can and cannot establish."""
     kind = SUPPORTED[task["id"]]["result_type"]
+    if kind == "diagnostic-result":
+        return {"graded": ["failed-child-diagnostic-text", "runtime-error-message-substring"],
+                "adapter_policy": ["bounded-encoded-response", "closed-diagnostic-observation"],
+                "not_graded": ["subprocess-invocation-arguments", "successful-return-value",
+                               "output-tail-bound-and-newline", "exact-exception-type",
+                               "unselected-statement-clauses"]}
     if kind == "mode-result":
         return {"graded": ["frozen-tree-permission-bits"],
                 "adapter_policy": ["bounded-encoded-response", "finite-text-tree-fixture",

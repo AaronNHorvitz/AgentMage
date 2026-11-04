@@ -259,11 +259,12 @@ its model-attempt count is zero.
 
 ## Historical controls only
 
-The separate [independent function oracle](coding-evaluation-oracle.md) runs four
-existing frozen controls with candidate execution and hidden assertions in
+The separate [independent function oracle](coding-evaluation-oracle.md) runs fifteen
+existing frozen tasks as base/reference controls with candidate execution and hidden assertions in
 different processes. It is an executable prerequisite experiment, not a change
-to this scorer's admission. Its narrow JSON adapter and missing aggregate quotas
-do not enable generated scoring for either command.
+to this scorer's admission. Its narrow JSON adapters, missing aggregate quotas and open host cleanup
+finding do not enable generated scoring for either command. T-311.15 remains
+open after three reviews; T-311.16 records the required bounded cleanup repair.
 
 Until independent result checking and separate aggregate worker quotas exist,
 **generated-candidate scoring is disabled**. Both `score` and the internal `grade`

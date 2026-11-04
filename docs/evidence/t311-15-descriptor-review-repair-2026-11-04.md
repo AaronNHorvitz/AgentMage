@@ -1,6 +1,7 @@
 # T-311.15 descriptor repair for third review
 
-Status: builder verification passed; third independent core review required.
+Status: third independent core review has FINDINGS; T-311.15 remains open.
+The measurements below record the original repair, not acceptance.
 Implementation base: `7544b49c`. T-311.15 and parent T-311 remain open.
 
 ## Review and repair
@@ -41,6 +42,17 @@ case removal/retry logic must still succeed before counts and reports publish.
 Original interruption,
 cleanup-failure recovery, observed test outcomes and failed-attempt counts retain
 their existing behavior. Generated scoring stays disabled.
+
+## Third-review correction
+
+[Independent review 3](../reviews/69e083f8f0c7-local-coding-t311-15-descriptor-repair.txt)
+found medium M1: both memory and time are quadratic on deep branching trees.
+A bounded-memory reproduction raised MemoryError with no case report, an empty
+recovery record and retained scratch. The cost disclosure above was incomplete:
+candidate quotas and a scratch-disk quota do not themselves bound host cleanup.
+T-311.15 stays open after three non-PASS reviews; T-311.16 records linear,
+bounded traversal, exceptional-state release and scaling regressions before
+admission. No fourth same-row review is requested in this batch.
 
 ## Verification
 
@@ -131,8 +143,9 @@ relative to the private batch directory named in the review request.
 
 ## Remaining scope
 
-Both medium findings require the separate reviewer's third exact-commit verdict;
-this evidence is no self-approval. Low L1 (host-backed scratch disk quota) remains
+Review 2's medium findings were resolved by the third exact-commit review;
+its new medium finding remains open as described above.
+Low L1 (host-backed scratch disk quota) remains
 required before generated scoring. Low L2 (Path-only helper inputs) was resolved
 by review 2. Frozen source/test bytes, selected methods, collection definitions,
 thresholds, controls-only admission, the legacy evaluator and worker stay

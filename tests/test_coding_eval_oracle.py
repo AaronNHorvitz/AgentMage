@@ -38,8 +38,8 @@ class IndependentOracleTests(unittest.TestCase):
     def test_real_two_sandbox_controls_keep_original_hidden_tests_and_counts(self):
         summary = oracle.verify(self.root / "controls")
         self.assertTrue(summary["passed"], summary)
-        self.assertEqual(len(summary["tasks"]), 14)
-        self.assertEqual(summary["control_attempts"], {"total": 28, "passed": 14, "failed": 14})
+        self.assertEqual(len(summary["tasks"]), 15)
+        self.assertEqual(summary["control_attempts"], {"total": 30, "passed": 15, "failed": 15})
         self.assertFalse(summary["generated_scoring"])
         self.assertIsNone(summary["model_score"])
         self.assertEqual(summary["collection_sha256"],
@@ -85,6 +85,76 @@ class IndependentOracleTests(unittest.TestCase):
             self.assertEqual(base["tests"]["tests"], 0)
             self.assertEqual(base["logs"]["wire.log"], evaluation.sha(b""))
             self.assertEqual(base["control_attempts"], {"total": 1, "passed": 0, "failed": 1})
+
+    def test_diagnostic_controls_refuse_generated_inputs_before_launch(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-009')
+        files = self.files(task)
+        files[task['source']] += b'\n# generated snapshot\n'
+        with mock.patch.object(oracle, 'exchange') as launch:
+            with self.assertRaisesRegex(evaluation.EvaluationError, 'untrusted-candidate-disabled'):
+                oracle.grade(task, files, self.root / 'refused')
+            launch.assert_not_called()
+            self.assertFalse((self.root / 'refused').exists())
+
+    def test_diagnostic_assertions_and_exception_data_stay_independent(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-009')
+        variants = [
+            ('no-stderr', '''def subprocess_runner(command, root):
+ raise RuntimeError('exited 3')
+''', False, 'test_failure'),
+            ('wrong-message', '''def subprocess_runner(command, root):
+ print('catalog drift: fixture', file=sys.stderr)
+ raise RuntimeError('wrong error')
+''', False, 'test_failure'),
+            ('no-error', '''def subprocess_runner(command, root):
+ print('catalog drift: fixture', file=sys.stderr)
+ return 'exited 3'
+''', False, 'test_failure'),
+            ('unexpected-error', '''def subprocess_runner(command, root):
+ raise ValueError('unexpected-private-payload')
+''', False, 'candidate_exception'),
+            ('forgery', '''import unittest
+unittest.TestCase.assertIn = lambda *args: None
+def subprocess_runner(command, root): raise RuntimeError('wrong error')
+''', False, 'test_failure'),
+            ('real-child', '''original_runner = subprocess_runner
+def subprocess_runner(command, root): return original_runner(command, root)
+''', True, 'none'),
+            ('separate-mounts', '''original_runner = subprocess_runner
+def subprocess_runner(command, root):
+ assert not Path('/adapter/test.py').exists()
+ assert not Path('/output').exists()
+ return original_runner(command, root)
+''', True, 'none'),
+            ('exception-subclass', '''class DiagnosticError(RuntimeError): pass
+def subprocess_runner(command, root):
+ print('catalog drift: fixture', file=sys.stderr)
+ raise DiagnosticError('exited 3')
+''', True, 'none'),
+            ('tail-ungraded', '''def subprocess_runner(command, root):
+ print('x' * 17000 + 'catalog drift: fixture', file=sys.stderr)
+ raise RuntimeError('exited 3')
+''', True, 'none'),
+        ]
+        for name, suffix, passed, cause in variants:
+            files = self.files(task)
+            files[task['source']] += ('\n' + suffix).encode()
+            output = self.root / name
+            with self.subTest(variant=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, output)
+                legacy = evaluation.grade(task, files, self.root / (name + '-legacy'))
+                self.assertEqual((report['passed'], report['cause']), (passed, cause), report)
+                legacy_passed = True if name == 'forgery' else False if name == 'separate-mounts' else passed
+                self.assertEqual(legacy['passed'], legacy_passed, legacy)
+                self.assertEqual(report['tests']['tests'], 1)
+                self.assertEqual(report['calls'], 1)
+                self.assertEqual(report['control_attempts'],
+                                 {'total': 1, 'passed': int(passed), 'failed': int(not passed)})
+                for log in ('wire.log', 'oracle.log'):
+                    self.assertNotIn(b'unexpected-private-payload', (output / log).read_bytes())
+                self.assertIn('output-tail-bound-and-newline', report['coverage']['not_graded'])
+                self.assertIn('exact-exception-type', report['coverage']['not_graded'])
 
     def test_capture_controls_refuse_generated_inputs_before_launch(self):
         for task in (t for t in evaluation.collection() if t["id"] in {"dev-005", "dev-018"}):

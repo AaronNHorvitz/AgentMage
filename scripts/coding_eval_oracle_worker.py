@@ -9,6 +9,7 @@ import argparse
 import contextlib
 import importlib
 import importlib.util
+import io
 import json
 import math
 import os
@@ -25,7 +26,8 @@ MAX_MESSAGE = 64 * 1024
 MAX_TRANSCRIPT = 2 * 1024 * 1024
 MAX_CALLS = 128
 POLICY_RESULT_TYPES = frozenset({"argument-result", "verification-result", "capture-result",
-                                "bool", "bool-map", "path-result", "mode-result", "command-result"})
+                                "bool", "bool-map", "path-result", "mode-result", "command-result",
+                                "diagnostic-result"})
 
 
 class ProtocolError(ValueError):
@@ -209,6 +211,8 @@ class RemoteFunction:
             elif self.result_type == "command-result":
                 unpack_calls(result)
                 valid = True
+            elif self.result_type == "diagnostic-result":
+                valid = valid_diagnostic_result(result)
             elif self.result_type == "bool-map":
                 valid = (isinstance(result, dict) and result.keys() == {"value"}
                          and type(result["value"]) is dict
@@ -659,6 +663,46 @@ def mode_result(function, request):
     return {"observed": True}
 
 
+def valid_diagnostic_result(result):
+    """Only text observations and one fixed exception category, never a class."""
+    return (type(result) is dict and result.keys() == {"stderr", "outcome"}
+            and type(result["stderr"]) is str and type(result["outcome"]) is dict
+            and (result["outcome"] == {"kind": "return"}
+                 or (result["outcome"].keys() == {"kind", "message"}
+                     and result["outcome"]["kind"] == "runtime-error"
+                     and type(result["outcome"]["message"]) is str)))
+
+
+def diagnostic_proxy(remote):
+    def call(command, root):
+        result = remote({"command": list(command), "root": str(root)})
+        # The original test captures this text locally. It remains inert data;
+        # no candidate-supplied exception name, object or traceback is loaded.
+        sys.stderr.write(result["stderr"])
+        if result["outcome"]["kind"] == "runtime-error":
+            raise RuntimeError(result["outcome"]["message"])
+        # The frozen method only asserts the failure path. Successful return
+        # values are intentionally ungraded, rather than fabricated by a codec.
+    return call
+
+
+def diagnostic_result(function, request):
+    if (type(request) is not dict or request.keys() != {"command", "root"}
+            or type(request["root"]) is not str or type(request["command"]) is not list
+            or not 1 <= len(request["command"]) <= 128
+            or any(type(arg) is not str for arg in request["command"])):
+        raise ProtocolError("oracle.invalid-diagnostic-request")
+    stderr = io.StringIO()
+    with contextlib.redirect_stderr(stderr):
+        try:
+            function(tuple(request["command"]), Path(request["root"]))
+        except RuntimeError as error:
+            outcome = {"kind": "runtime-error", "message": str(error)}
+        else:
+            outcome = {"kind": "return"}
+    return {"stderr": stderr.getvalue(), "outcome": outcome}
+
+
 def candidate(config):
     reader, writer = sys.stdin.buffer, sys.stdout.buffer
     # Ordinary candidate prints are diagnostics. Deliberate protocol corruption
@@ -698,6 +742,8 @@ def candidate(config):
                     result = mode_result(function, *request["args"])
                 elif config["result_type"] == "command-result":
                     result = command_result(function, module, *request["args"])
+                elif config["result_type"] == "diagnostic-result":
+                    result = diagnostic_result(function, *request["args"])
                 elif config["result_type"] in {"bool", "bool-map"}:
                     result = predicate_result(function(*request["args"]), config["result_type"])
                 else:
@@ -743,6 +789,8 @@ def oracle(config):
                 proxy = mode_proxy(remote)
             elif config["result_type"] == "command-result":
                 proxy = command_proxy(remote, module)
+            elif config["result_type"] == "diagnostic-result":
+                proxy = diagnostic_proxy(remote)
             else:
                 proxy = remote
             setattr(module, config["function"], proxy)

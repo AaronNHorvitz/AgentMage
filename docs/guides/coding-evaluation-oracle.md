@@ -38,6 +38,7 @@ Every selected original hidden method remains complete and unchanged.
 | dev-005 | `validate_raw`, `capture` | 1 | 3 / 0 | 3 | 3 |
 | dev-006 | `parser`, `route_grant_arguments` | 1 | 0 / 1 | 1 | 19 |
 | dev-007 | `parser`, `memory_arguments` | 1 | 0 / 1 | 1 | 52 |
+| dev-009 | `subprocess_runner` | 1 | 1 / 0 | 1 | 1 |
 | dev-010 | `test_only_files` | 1 | 1 / 0 | 1 | 4 |
 | dev-012 | `test_only_files` | 4 | 10 / 0 | 12 | 14 |
 | dev-015 | `case_passed` | 1 | 1 / 0 | 3 | 4 |
@@ -63,6 +64,10 @@ The absent helper in dev-017 has the same explicit missing-function profile.
 Launch/import failure, timeout or missing counts cannot validate a control.
 The extra dev-022 call observes candidate case roots before its original
 uniqueness assertion; its hidden method and three predicate calls are unchanged.
+
+T-311.17 adds dev-009 through oracle v14. Its real child runs inside the
+candidate namespace; diagnostic text and one closed error category reach the
+original assertions, as described below.
 
 The functions use JSON values and lexical paths. Three verification tasks also
 use finite text fixtures and stub observations, described below. Other tasks,
@@ -233,6 +238,45 @@ with an extra field, wrong value or payload is always malformed protocol. Such f
 remain confined to the private transcript and are never reconstructed as code.
 No claim of full statement coverage follows from these controls.
 
+## Failed-command diagnostic observations
+
+For dev-009, the proxy replaces only `subprocess_runner` before the complete
+original method imports it. The request contains that method's command strings
+and lexical working directory. The candidate reconstructs a tuple and Path and
+calls its own function. The frozen reference actually runs the small synthetic
+Python child in the same confined, networkless namespace; this is no model run.
+The child produces one diagnostic and exits 3. No additional host command
+permission or shared writable scratch is introduced.
+
+A candidate-local StringIO captures the function's stderr. A normal return
+produces the closed `return` category, without a return value. A RuntimeError
+(including subclasses, as the original assertRaises accepts) produces the closed
+`runtime-error` category and its string message. The bounded reply contains only
+`stderr` and `outcome`. The trusted proxy writes the text into the original
+method's capture and raises its own built-in RuntimeError with that message.
+Messages are plain data, never evaluated, imported or interpreted as a class,
+traceback, callback or executable expression. This narrow observation preserves
+the frozen assertions on diagnostic and exception-message substrings. It is
+separate from the generic fixed candidate-exception failure tag. Other unexpected
+exceptions retain that sticky failure; their messages never cross the pipe.
+
+Unknown categories, extra fields, non-string text or malformed frames fail as
+protocol before text is replayed. A response too large for the existing frame
+bound fails as adapter policy. Every refusal remains counted. The original
+assertions judge the observed text; a candidate cannot replace those assertions
+or publish the oracle's counts. Candidate-side unittest patches that fool the
+legacy grader fail here. RuntimeError strings containing code-like text remain
+inert in codec tests. General exception transport is unsupported.
+
+The method does not assert the 16,384-character tail, terminating newline,
+successful return value, subprocess invocation arguments or exact exception
+class. Reports declare those omissions explicitly. A subclass and an oversized
+but frame-bounded diagnostic can pass both original and independent assertions;
+those controls establish no full-statement coverage. The namespace diagnostic
+also proves the candidate lacks the hidden-test and output mounts. It fails the
+legacy contrast because the legacy candidate has an output mount; that is an
+intentional boundary contrast, not a different claim about function behavior.
+
 ## Captured output and private-path checks
 
 For dev-005 and dev-018, proxies replace `validate_raw` and `capture` before the
@@ -310,6 +354,13 @@ independent review M1 exposed leftover trees from natural wrong mode answers.
 The first repair still used paths and wrongly claimed synchronous descendant
 shutdown. Its second review exposed depth failures and that false timing
 assumption; v13 uses descriptor-based repair and makes no quiescence claim.
+Third review of T-311.15 found a remaining medium issue: the deferred full-path
+records and branch reopening use quadratic host memory and time on deep
+branching trees. A capped reproduction raised MemoryError without a case report,
+left an empty recovery record and retained scratch. Candidate quotas alone do
+not bound this host-side repair. T-311.15 remains open under the three-strike
+rule; T-311.16 records the required linear, bounded repair and scaling tests.
+Do not infer safe generated scoring from the passing frozen controls.
 The candidate mount is host-disk-backed, without an aggregate disk quota. A
 size-limited or quota-backed mount is required before generated scoring.
 Content preservation, changed tree shape and special-file refusal behavior are
@@ -340,8 +391,9 @@ oracle and remain in its failed-attempt denominator.
 
 Unexpected exceptions during a candidate call, including missing report fields,
 an absent function after startup and unhandled `SystemExit`, produce exactly
-`{"candidate_exception":true}`. No exception class, message, exit status or
-traceback crosses the pipe. The trusted process raises one fixed local error,
+`{"candidate_exception":true}`. This tag carries no exception class, message,
+exit status or traceback. The dev-009 expected RuntimeError text observation is
+a separate, closed result category described above. The trusted process raises one fixed local error,
 sets a sticky `candidate_exception_failed` flag and records cause
 `candidate_exception`. Even an original test that catches that error cannot turn
 the attempt into a pass. The candidate worker remains alive to finish its normal
@@ -385,7 +437,7 @@ removal retries come from the accepted evaluator.
 
 Both processes retain the evaluator's per-process 512 MiB address-space,
 60-second CPU, 32 MiB file and zero core-file limits. These are **not aggregate
-worker quotas**. Generated scoring remains disabled: this adapter covers fourteen of
+worker quotas**. Generated scoring remains disabled: this adapter covers fifteen of
 30 tasks and does not implement separately delegated memory/process/CPU quotas,
 protected held-out inputs, covered-clause labels or a current-harness baseline.
 The legacy grader continues to import candidate code with tests and has its

@@ -17,6 +17,77 @@ class OracleProtocolTests(unittest.TestCase):
     def remote(self, raw, result_type="bool"):
         return worker.RemoteFunction(io.BytesIO(raw), io.BytesIO(), io.BytesIO(), result_type)
 
+    def test_diagnostic_observations_preserve_text_as_inert_data_and_fixed_runtime_error(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        sentinel = Path(temporary.name) / 'must-not-exist'
+        marker = f"__import__('pathlib').Path({str(sentinel)!r}).touch()"
+        stderr = io.StringIO()
+
+        def failing(command, root):
+            self.assertIs(type(command), tuple)
+            self.assertEqual(command, ('synthetic', 'argument'))
+            self.assertIs(type(root), type(Path()))
+            self.assertEqual(root, Path('/workspace'))
+            print(marker, file=worker.sys.stderr)
+            raise RuntimeError(marker)
+
+        result = worker.diagnostic_result(failing, {'command': ['synthetic', 'argument'],
+                                                   'root': '/workspace'})
+        self.assertEqual(result, {'stderr': marker + '\n',
+                                  'outcome': {'kind': 'runtime-error', 'message': marker}})
+        remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), 'diagnostic-result')
+        with worker.contextlib.redirect_stderr(stderr), self.assertRaises(RuntimeError) as caught:
+            worker.diagnostic_proxy(remote)(('synthetic', 'argument'), Path('/workspace'))
+        self.assertIs(type(caught.exception), RuntimeError)
+        self.assertEqual(str(caught.exception), marker)
+        self.assertEqual(stderr.getvalue(), marker + '\n')
+        self.assertFalse(sentinel.exists())
+        self.assertFalse(remote.failed)
+        self.assertFalse(remote.exception_failed)
+        # A successful value is not transported: only this failure path is graded.
+        result = worker.diagnostic_result(lambda *a: object(), {'command': ['synthetic'], 'root': '/'})
+        self.assertEqual(result, {'stderr': '', 'outcome': {'kind': 'return'}})
+        remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), 'diagnostic-result')
+        self.assertIsNone(worker.diagnostic_proxy(remote)(('synthetic',), Path('/')))
+
+    def test_diagnostic_wire_refuses_classes_tracebacks_objects_and_malformed_fields(self):
+        valid = {'stderr': 'text', 'outcome': {'kind': 'runtime-error', 'message': 'message'}}
+        invalid = [
+            {**valid, 'class': 'RuntimeError'}, {**valid, 'stderr': []},
+            {**valid, 'outcome': {'kind': 'runtime-error', 'message': {}}},
+            {**valid, 'outcome': {'kind': 'ValueError', 'message': 'payload'}},
+            {**valid, 'outcome': {'kind': 'runtime-error', 'message': 'x', 'traceback': 'code'}},
+            {**valid, 'outcome': {'kind': 'return', 'value': 'ungraded'}},
+            {**valid, 'outcome': {'kind': 'runtime-error'}},
+            {**valid, 'outcome': None},
+        ]
+        for result in invalid:
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), 'diagnostic-result')
+            stderr = io.StringIO()
+            with self.subTest(result=result), worker.contextlib.redirect_stderr(stderr):
+                with self.assertRaises(worker.ProtocolError):
+                    worker.diagnostic_proxy(remote)(('synthetic',), Path('/'))
+            self.assertTrue(remote.failed)
+            self.assertEqual(stderr.getvalue(), '')
+        function = mock.Mock()
+        for request in ({'command': [], 'root': '/'}, {'command': ['x'], 'root': []},
+                        {'command': ['x'] * 129, 'root': '/'}, {'command': [1], 'root': '/'},
+                        {'command': ('x',), 'root': '/'}, {'command': ['x'], 'root': '/', 'code': 'x'}):
+            with self.subTest(request=request), self.assertRaises(worker.ProtocolError):
+                worker.diagnostic_result(function, request)
+        function.assert_not_called()
+
+    def test_diagnostic_response_bound_is_a_counted_sticky_policy_refusal(self):
+        result = {'stderr': 'x' * worker.MAX_MESSAGE, 'outcome': {'kind': 'return'}}
+        remote = self.remote(worker.response_message(1, result), 'diagnostic-result')
+        with self.assertRaises(worker.AdapterPolicyError):
+            worker.diagnostic_proxy(remote)(('synthetic',), Path('/'))
+        self.assertTrue(remote.policy_failed)
+        with self.assertRaises(worker.AdapterPolicyError):
+            worker.diagnostic_proxy(remote)(('synthetic',), Path('/'))
+        self.assertEqual(remote.calls, 2)
+
     def test_command_observations_preserve_builtin_types_and_only_replay_into_a_mock(self):
         original = mock.Mock(side_effect=AssertionError('real helper must not run'))
         module = SimpleNamespace(command=original)
