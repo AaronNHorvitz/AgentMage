@@ -5,7 +5,8 @@ startup discrimination and source classification. T-311.9 adds two acceptance
 verification functions. T-311.10 adds three parser/argument tasks and a third
 acceptance predicate, for ten existing development tasks. T-311.11 preserves
 argument list/tuple distinctions, observes candidate case roots and separates
-adapter policy from malformed wire data. This is a
+adapter policy from malformed wire data. T-311.12 carries wrong JSON values
+to the original assertions and records candidate exceptions separately. This is a
 prerequisite for trustworthy scoring,
 not generated-candidate admission, a model baseline or a completed T-311.
 The original collection, hidden bytes, method selections and thresholds stay
@@ -39,8 +40,9 @@ function presence, plus a passing reference with its exact call count. The three
 argument-task bases lack their requested helper and reject the first parser
 call with `SystemExit(2)`; those are explicit failed controls. An
 arbitrary failure cannot validate a base. A missing function in dev-029 is the
-expected failed protocol control. Its oracle may exit 120 when flushing a broken
-pipe at shutdown, after retaining counts; exits 1 and 120 are both failures.
+expected failed candidate-exception control: one call, one original test error,
+candidate exit 0 and oracle exit 1. The candidate now reports the fixed exception
+tag instead of crashing and leaving a broken pipe. No assertion or count changes.
 Launch/import failure, timeout or missing counts cannot validate a control.
 The extra dev-022 call observes candidate case roots before its original
 uniqueness assertion; its hidden method and three predicate calls are unchanged.
@@ -122,8 +124,13 @@ next call without sharing files or Python objects across namespaces.
 The candidate adapter constructs its own temporary fixture from those labels,
 stubs only `rows`, `git_status` and the validation subprocess, and invokes the
 candidate's `verify_case`. Cleanup removes this fixture even after an exception.
-The reply contains only the returned `passed` Boolean and nonempty `checks` map
-of Booleans. The oracle runs the original assertions on these returned values;
+The reply contains the returned `passed` and `checks` values as finite built-in
+JSON data, bounded to 16 container levels and the existing 64 KiB frame limit.
+Objects, nonfinite floats, tuples and deeper containers are adapter policy.
+Nulls, strings, integers, empty maps and other representable wrong values remain
+data for the unchanged assertions. Missing required fields raise a candidate
+exception in the adapter instead of being labelled malformed wire data.
+The oracle runs the original assertions on these returned values;
 they remain observations under test, never the oracle's verdict or counts.
 An always-true result fails the original negative assertions. A literal
 `missing_case` tag reconstructs one fixed local KeyError, with no candidate
@@ -140,12 +147,12 @@ values produce an adapter-policy failure; malformed wire data is a protocol
 failure. Either stops before assertions, retains zero tests and one observation
 call, and counts as a failed control. No hidden method or threshold is changed.
 
-The verification adapter requires actual Boolean result/check values. This is
-adapter policy, labelled `strict-boolean-result-type`, rather than a frozen
-assertion: the original truthiness assertions also accept integers. Such an
-integer-valued result produces an `adapter_policy` failure even if the legacy
-grader accepts it. Only registered historical controls are admitted; no generated score uses
-this policy. This explicitly records T-311.9 review low L1.
+The original verification assertions grade truthiness, not exact Boolean types.
+The adapter now preserves that behavior: reference results converted to 0/1 can
+pass those same assertions. Reports label exact Boolean result types `not_graded`
+and label bounded JSON observation types as adapter policy. This replaces the
+older strict Boolean adapter policy without changing any hidden test, task pin,
+selection or threshold. It does not establish full interface compliance.
 
 These tasks grade the selected acceptance predicates on frozen synthetic rows
 and fixture variations. They do not run a model, runtime, tool or validation
@@ -159,9 +166,13 @@ named argument helper. Original hidden methods pass their original argument
 lists to a parser proxy. The candidate runs its own parser and returns scalar
 namespace values, with an explicit lexical Path tag. The proxy rebuilds an
 ordinary namespace, which the original method passes to the helper proxy.
-The candidate then runs its own helper and returns string arguments with a fixed
+The candidate then runs its own helper and returns JSON argument values with a fixed
 `list` or `tuple` container tag. The oracle reconstructs that exact built-in
-container, so the original equality assertion rejects a tuple. No
+container, so the original equality assertion rejects a tuple. Other bounded
+built-in JSON helper results cross as a fixed `value` field and return as data;
+the original equality assertions decide. Wrong scalar, mapping or nested list
+entries likewise remain data. Objects and unsupported container types are
+adapter policy; these helpers use the same 16-level JSON and frame bounds. No
 parser action, callback, function, class or pickled object crosses the pipe.
 
 Namespace field names are bounded lowercase identifiers, at most 128 fields;
@@ -170,8 +181,9 @@ Paths are lexical values: these methods do not open files or start the catalog.
 The existing frame, transcript and call limits cover both parser and helper
 calls. Fixed literal tags reconstruct only the trusted module's `HarnessError`,
 `SystemExit(2)` or a fixed local `AttributeError` for an absent helper. Candidate
-exception messages and exit statuses are never reconstructed. Other exceptions
-fail the candidate. No catalog, grant, memory or extension effect runs here.
+exception messages and exit statuses are never reconstructed. Unexpected exceptions
+produce the fixed candidate-exception tag described below. No catalog, grant,
+memory or extension effect runs here.
 
 The frozen assertions check argument order/content and invalid combinations,
 including parser mutual exclusion. They cannot check exception messages, parser
@@ -179,14 +191,40 @@ diagnostic output or the original parser object type through this adapter.
 Reports label those clauses `not_graded`. Argument return container type is now
 graded; only the exact built-in list and tuple types are transported.
 The bounded namespace and fixed parser-exit rules are labelled adapter policy.
-A callable/list namespace default, unsupported helper result or parser exit code
+A callable/list namespace default, unsupported helper object or parser exit code
 other than integer 2 produces a fixed `adapter_policy` tag. No exception payload
 is included. The trusted side treats that tag as sticky failure with cause
 `adapter_policy`, distinct from `protocol` for malformed fields or tags.
-A candidate can forge either tag only to fail its own attempt; neither is a
-passing observation. Such failures remain in the denominator. Raw hostile bytes
+The policy tag is accepted only for argument and verification tasks, whose
+coverage declares adapter policy. It is malformed protocol for Boolean, Boolean
+map or path tasks. No candidate can add a policy to its coverage. A policy tag
+with an extra field, wrong value or payload is always malformed protocol. Such failures remain in the denominator. Raw hostile bytes
 remain confined to the private transcript and are never reconstructed as code.
 No claim of full statement coverage follows from these controls.
+
+## Candidate exceptions and cause limits
+
+Unexpected exceptions during a candidate call, including missing report fields,
+an absent function after startup and unhandled `SystemExit`, produce exactly
+`{"candidate_exception":true}`. No exception class, message, exit status or
+traceback crosses the pipe. The trusted process raises one fixed local error,
+sets a sticky `candidate_exception_failed` flag and records cause
+`candidate_exception`. Even an original test that catches that error cannot turn
+the attempt into a pass. The candidate worker remains alive to finish its normal
+pipe lifecycle; malformed requests or frames still fail as protocol. Import or
+launch errors before readiness remain infrastructure failures. Expected ambiguity,
+missing-case, helper and parser refusals retain their existing fixed tags.
+
+The exception tag is available for every task type. Invalid or extra fields
+make it malformed protocol. A candidate may forge a valid exception or an allowed
+policy tag only to fail its own attempt; neither tag proves why adversarial code
+failed. These labels distinguish ordinary adapter-observed failures, not a
+forensic determination. A candidate that deliberately exits, corrupts its wire
+or writes stderr retains the corresponding exit/protocol/output-limit cause.
+Policy and exception failures count in the same failed-attempt denominator.
+A failed case-root prerequisite observation may retain zero original tests only
+with exactly one call and a sticky protocol, policy or exception flag. All other
+counts and the requirement that no failed control passes stay unchanged.
 
 ## Lifetime, records and remaining limits
 
@@ -210,7 +248,8 @@ Every case retains `candidate.log`, `oracle.log`, bounded raw `wire.log`, a
 parent-authored report and, when available after cleanup, oracle-owned counts.
 The raw wire log may contain invalid bytes from a refused reply. Reports bind
 task/source/hidden/adapter digests and retain exact counts, readiness, function
-presence, protocol and adapter-policy status, covered observations and ungraded clauses,
+presence, protocol, adapter-policy and candidate-exception status, covered
+observations and ungraded clauses,
 elapsed wall time, failure cause and log digests. All attempts in this verifier
 are controls: model attempts and GPU minutes are zero, tokens and model score
 are null. Keep logs private because they contain task data and diagnostics.

@@ -58,7 +58,7 @@ class OracleProtocolTests(unittest.TestCase):
             with self.subTest(reply=reply), self.assertRaises(worker.ProtocolError):
                 remote(request)
             self.assertTrue(remote.failed)
-        for reply in ({'arguments': [1], 'container': 'list'}, {'namespace': {}},
+        for reply in ({'arguments': [1], 'container': 'invalid'}, {'namespace': {}},
                       {'arguments': [], 'container': '__reduce__'},
                       {'arguments': [], 'container': ['list']}, {'arguments': []},
                       {'arguments': [], 'container': 'tuple', 'message': 'payload'}):
@@ -68,7 +68,7 @@ class OracleProtocolTests(unittest.TestCase):
             self.assertTrue(remote.failed)
 
     def test_fixed_policy_tag_is_sticky_and_never_a_successful_observation(self):
-        for kind in ('argument-result', 'verification-result', 'bool'):
+        for kind in ('argument-result', 'verification-result'):
             remote = self.remote(b'{"seq":1,"result":{"adapter_policy":true}}\n', kind)
             with self.subTest(kind=kind), self.assertRaises(worker.AdapterPolicyError):
                 remote({})
@@ -86,6 +86,66 @@ class OracleProtocolTests(unittest.TestCase):
                 remote({})
             self.assertTrue(remote.failed)
             self.assertFalse(remote.policy_failed)
+
+    def test_policy_tags_are_refused_without_declared_adapter_policy(self):
+        for kind in ('bool', 'bool-map', 'path-result'):
+            remote = self.remote(b'{"seq":1,"result":{"adapter_policy":true}}\n', kind)
+            with self.subTest(kind=kind), self.assertRaises(worker.ProtocolError):
+                remote({})
+            self.assertTrue(remote.failed)
+            self.assertFalse(remote.policy_failed)
+
+    def test_candidate_exception_tag_is_fixed_sticky_and_never_reconstructed(self):
+        for kind in ('bool', 'bool-map', 'path-result', 'verification-result', 'argument-result'):
+            remote = self.remote(b'{"seq":1,"result":{"candidate_exception":true}}\n', kind)
+            with self.subTest(kind=kind), self.assertRaisesRegex(
+                    worker.CandidateExecutionError, '^oracle.candidate-exception$'):
+                remote({})
+            self.assertTrue(remote.exception_failed)
+            self.assertFalse(remote.failed)
+            self.assertFalse(remote.policy_failed)
+            remote.reader = io.BytesIO(b'{"seq":2,"result":true}\n')
+            with self.assertRaises(worker.CandidateExecutionError):
+                remote({})
+            self.assertEqual(remote.reader.tell(), 0)
+        for result in ({'candidate_exception': 1}, {'candidate_exception': False},
+                       {'candidate_exception': 'payload'},
+                       {'candidate_exception': True, 'message': 'payload'}):
+            for kind in ('bool', 'bool-map', 'path-result', 'verification-result', 'argument-result'):
+                remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), kind)
+                with self.subTest(kind=kind, result=result), self.assertRaises(worker.ProtocolError):
+                    remote({})
+                self.assertFalse(remote.exception_failed)
+                self.assertTrue(remote.failed)
+
+    def test_wrong_json_arguments_are_data_for_original_assertions(self):
+        helper = mock.Mock()
+        module = SimpleNamespace(HarnessError=ValueError, helper=helper)
+        request = {'operation': 'arguments', 'namespace': {}}
+        for value in (None, False, 1, 1.5, 'wrong', {'wrong': 'shape'}):
+            helper.return_value = value
+            packed = worker.argument_result(module, 'helper', request)
+            self.assertEqual(packed, {'value': value})
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': packed}), 'argument-result')
+            _, arguments = worker.argument_proxies(remote, module)
+            self.assertEqual(arguments(argparse.Namespace()), value)
+            self.assertFalse(remote.failed or remote.policy_failed or remote.exception_failed)
+        helper.return_value = [None, 1, False, 'wrong']
+        packed = worker.argument_result(module, 'helper', request)
+        self.assertEqual(packed, {'arguments': helper.return_value, 'container': 'list'})
+        for value in (object(), [object()], float('nan')):
+            helper.return_value = value
+            self.assertEqual(worker.argument_result(module, 'helper', request), {'adapter_policy': True})
+
+    def test_verification_observations_reject_objects_and_bound_nesting(self):
+        for value in (None, 'text', 0, 1, True, 0.5, [], {}, {'x': [None, False]}):
+            self.assertTrue(worker.observation_value(value))
+        for value in (object(), print, float('nan'), float('inf'), {1: True}, (1,)):
+            self.assertFalse(worker.observation_value(value))
+        nested = []
+        nested.append(nested)
+        self.assertFalse(worker.observation_value(nested))
+        self.assertFalse(worker.observation_value([[[None]]], depth=16))
 
     def test_argument_tuple_reconstruction_preserves_original_equality_failure(self):
         remote = self.remote(b'{"seq":1,"result":{"arguments":["a"],"container":"tuple"}}\n',
@@ -303,11 +363,13 @@ class OracleProtocolTests(unittest.TestCase):
             run.assert_called_once()
 
     def test_verification_replies_accept_only_check_booleans_or_a_fixed_missing_case_tag(self):
-        for result in ({'passed': True, 'checks': {'exact': False}}, {'missing_case': True}):
+        for result in ({'passed': True, 'checks': {'exact': False}}, {'missing_case': True},
+                       {'passed': 1, 'checks': {'x': 0}}, {'passed': None, 'checks': {}},
+                       {'passed': 'wrong', 'checks': {'x': 'true'}},
+                       {'passed': [], 'checks': None}):
             remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), 'verification-result')
             self.assertEqual(remote({}), result)
-        for result in ({'passed': 1, 'checks': {'x': True}}, {'passed': True, 'checks': {}},
-                       {'passed': True, 'checks': {'x': 'true'}},
+        for result in ({'passed': True},
                        {'passed': True, 'checks': {'x': True}, 'tests': {'failures': 0}},
                        {'missing_case': False}, {'missing_case': True, 'message': 'payload'},
                        {'exception': 'KeyError'}, [], True):

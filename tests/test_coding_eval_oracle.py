@@ -194,7 +194,7 @@ def route_grant_arguments(arguments):
         for name in ("wire.log", "oracle.log"):
             self.assertNotIn("synthetic-private-exception", (output / name).read_text())
 
-    def test_argument_containers_are_graded_and_boolean_policy_is_distinct(self):
+    def test_argument_containers_are_graded_and_integer_truthiness_reaches_assertions(self):
         task = next(t for t in evaluation.collection() if t["id"] == "dev-006")
         files = self.files(task)
         files[task["source"]] += b'''
@@ -216,12 +216,12 @@ def verify_case(*args):
  return {'passed': int(result['passed']), 'checks': {key: int(value) for key, value in result['checks'].items()}}
 '''
         with mock.patch.object(evaluation, "require_historical_candidate", return_value="synthetic-probe"):
-            report = oracle.grade(task, files, self.root / "strict-policy")
-        self.assertFalse(report["passed"])
-        self.assertEqual(report["cause"], "adapter_policy")
-        self.assertTrue(report["adapter_policy_failed"])
+            report = oracle.grade(task, files, self.root / "integer-observation")
+        self.assertTrue(report["passed"], report)
+        self.assertFalse(report["adapter_policy_failed"])
         self.assertFalse(report["protocol_failed"])
-        self.assertIn("strict-boolean-result-type", report["coverage"]["adapter_policy"])
+        self.assertIn("exact-boolean-result-type", report["coverage"]["not_graded"])
+        self.assertIn("passed-truthiness", report["coverage"]["graded"])
 
     def test_unsupported_parser_namespace_is_a_policy_failure_without_reconstruction(self):
         task = next(t for t in evaluation.collection() if t["id"] == "dev-006")
@@ -308,6 +308,93 @@ os._exit(0)
             self.assertEqual(report['tests']['tests'], 0)
             self.assertEqual(report['control_attempts'], {'total': 1, 'passed': 0, 'failed': 1})
 
+    def test_declared_coverage_matches_allowed_policy_types(self):
+        for task in (t for t in evaluation.collection() if t['id'] in oracle.SUPPORTED):
+            kind = oracle.SUPPORTED[task['id']]['result_type']
+            self.assertEqual(bool(oracle.coverage(task).get('adapter_policy')),
+                             kind in oracle.worker.POLICY_RESULT_TYPES)
+
+    def test_case_root_exception_records_no_assertions_but_one_failed_attempt(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-022')
+        files = self.files(task)
+        files[task['source']] += b'\ndel CASE_ROOTS\ndef __getattr__(name): raise RuntimeError("private-payload")\n'
+        output = self.root / 'case-root-exception'
+        with mock.patch.object(evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+            report = oracle.grade(task, files, output)
+        self.assertEqual(report['cause'], 'candidate_exception', report)
+        self.assertEqual(report['calls'], 1)
+        self.assertEqual(report['tests']['tests'], 0)
+        self.assertEqual(report['control_attempts'], {'total': 1, 'passed': 0, 'failed': 1})
+        self.assertNotIn('private-payload', (output / 'wire.log').read_text())
+
+    def test_wrong_json_helper_values_fail_original_assertions_without_policy_or_protocol(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-006')
+        for index, value in enumerate(('None', '"wrong"', '1', 'False', '[1]', '[None]', '{}', '[{}]')):
+            files = self.files(task)
+            files[task['source']] += ('\ndef route_grant_arguments(args): return ' + value + '\n').encode()
+            with self.subTest(value=value), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / ('wrong-helper-' + str(index)))
+            self.assertEqual(report['cause'], 'test_failure', report)
+            self.assertEqual(report['tests']['failures'], 1)
+            self.assertFalse(report['protocol_failed'] or report['adapter_policy_failed']
+                             or report['candidate_exception_failed'])
+
+    def test_wrong_verification_values_reach_original_truthiness_assertions(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-020')
+        for index, value in enumerate(('None', '"wrong"', '1', '0')):
+            files = self.files(task)
+            files[task['source']] += ("\ndef verify_case(*args): return {'passed': " + value
+                                      + ", 'checks': {'validation': True}}\n").encode()
+            with self.subTest(value=value), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / ('wrong-predicate-' + str(index)))
+            self.assertEqual(report['cause'], 'test_failure', report)
+            self.assertGreater(report['tests']['failures'], 0)
+            self.assertFalse(report['protocol_failed'] or report['adapter_policy_failed']
+                             or report['candidate_exception_failed'])
+
+    def test_candidate_exceptions_have_one_fixed_cause_without_payloads_and_still_count(self):
+        probes = [
+            ('helper-raises', 'dev-006', 'def route_grant_arguments(args): raise RuntimeError("private-payload")'),
+            ('parser-raises', 'dev-007', 'def parser(): raise RuntimeError("private-payload")'),
+            ('predicate-raises', 'dev-020', 'def verify_case(*args): raise RuntimeError("private-payload")'),
+            ('missing-checks', 'dev-022', 'def verify_case(*args): return {"passed": True}'),
+            ('bool-raises', 'dev-015', 'def case_passed(*args): raise RuntimeError("private-payload")'),
+            ('path-raises', 'dev-010', 'def test_only_files(*args): raise RuntimeError("private-payload")'),
+            ('map-raises', 'dev-029', 'def suspend_resume_checks(*args): raise RuntimeError("private-payload")'),
+            ('bool-systemexit', 'dev-015', 'def case_passed(*args): raise SystemExit("private-payload")'),
+        ]
+        for name, ident, source in probes:
+            task = next(t for t in evaluation.collection() if t['id'] == ident)
+            files = self.files(task)
+            files[task['source']] += ('\n' + source + '\n').encode()
+            output = self.root / name
+            with self.subTest(name=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, output)
+            self.assertEqual(report['cause'], 'candidate_exception', report)
+            self.assertTrue(report['candidate_exception_failed'])
+            self.assertFalse(report['protocol_failed'] or report['adapter_policy_failed'])
+            self.assertEqual(report['candidate_exit_code'], 0)
+            self.assertEqual(report['tests']['tests'], task['expected_tests'])
+            self.assertEqual(report['control_attempts'], {'total': 1, 'passed': 0, 'failed': 1})
+            for log in ('wire.log', 'oracle.log'):
+                self.assertNotIn('private-payload', (output / log).read_text())
+
+    def test_forged_tags_cannot_change_assertions_or_discard_failed_attempts(self):
+        for name, source, cause in (
+                ('undeclared-policy', b'\ndef case_passed(case): return {"adapter_policy": True}\n', 'protocol'),
+                ('fixed-exception', b'\ndef case_passed(case): return {"candidate_exception": True}\n',
+                 'candidate_exception'),
+                ('exception-payload', b'\ndef case_passed(case): return {"candidate_exception": True, "message": "private-payload"}\n',
+                 'protocol')):
+            report = self.probe(source, name)
+            self.assertEqual(report['cause'], cause, report)
+            self.assertEqual(report['candidate_exception_failed'], cause == 'candidate_exception')
+            self.assertEqual(report['control_attempts'], {'total': 1, 'passed': 0, 'failed': 1})
+            self.assertNotIn('private-payload', (self.root / name / 'oracle.log').read_text())
+
     def test_path_return_types_are_explicitly_outside_oracle_coverage(self):
         task = next(t for t in evaluation.collection() if t["id"] == "dev-010")
         files = self.files(task)
@@ -328,6 +415,7 @@ def test_only_files(sources):
             self.assertTrue(oracle.expected_base(task, base), base)
             for update in ({"cause": "infrastructure"}, {"cause": "candidate_exit"},
                            {"candidate_ready": False}, {"function_found": None},
+                           {"candidate_exception_failed": not base["candidate_exception_failed"]},
                            {"calls": base["calls"] + 1}, {"exit_code": -9},
                            {"candidate_exit_code": -9}, {"candidate_kind": "frozen-reference"},
                            {"tests": {**base["tests"], "errors": 5}}, {"passed": True}):
@@ -575,8 +663,9 @@ def case_passed(case):
         valid = {"tests": {"tests": 1, "failures": 0, "errors": 0, "skipped": 0,
                            "expected_failures": 0, "unexpected_successes": 0},
                  "calls": 4, "protocol_failed": False, "adapter_policy_failed": False,
+                 "candidate_exception_failed": False,
                  "candidate_ready": True, "function_found": True}
-        for update in ({"adapter_policy_failed": 1}, {"tests": {}}, {"calls": True}, {"calls": 0},
+        for update in ({"candidate_exception_failed": 1}, {"adapter_policy_failed": 1}, {"tests": {}}, {"calls": True}, {"calls": 0},
                        {"protocol_failed": "false"}, {"tests": {**valid["tests"], "tests": 0}},
                        {"tests": {**valid["tests"], "failures": False}},
                        {"candidate_ready": 1}, {"function_found": 1},
@@ -594,11 +683,13 @@ def case_passed(case):
         counts = {name: 0 for name in ("tests", "failures", "errors", "skipped",
                                        "expected_failures", "unexpected_successes")}
         valid = {"tests": counts, "calls": 0, "protocol_failed": True, "adapter_policy_failed": False,
+                 "candidate_exception_failed": False,
                  "candidate_ready": False, "function_found": None}
         path = self.root / "startup.json"
         path.write_text(json.dumps(valid))
         self.assertEqual(oracle.result_record(path, self.task), valid)
         for update in ({"calls": 1}, {"protocol_failed": False}, {"function_found": False},
+                       {"candidate_exception_failed": True},
                        {"tests": {**counts, "tests": 1}}, {"tests": {**counts, "errors": 1}}):
             path.write_text(json.dumps({**valid, **update}))
             with self.subTest(update=update), self.assertRaises(evaluation.EvaluationError):
@@ -609,10 +700,12 @@ def case_passed(case):
         counts = {name: 0 for name in ('tests', 'failures', 'errors', 'skipped',
                                       'expected_failures', 'unexpected_successes')}
         valid = {'tests': counts, 'calls': 1, 'protocol_failed': False,
-                 'adapter_policy_failed': True, 'candidate_ready': True, 'function_found': True}
+                 'adapter_policy_failed': True, 'candidate_exception_failed': False,
+                 'candidate_ready': True, 'function_found': True}
         path = self.root / 'observation.json'
-        for field in ('protocol_failed', 'adapter_policy_failed'):
-            value = {**valid, 'protocol_failed': False, 'adapter_policy_failed': False, field: True}
+        for field in ('protocol_failed', 'adapter_policy_failed', 'candidate_exception_failed'):
+            value = {**valid, 'protocol_failed': False, 'adapter_policy_failed': False,
+                     'candidate_exception_failed': False, field: True}
             path.write_text(json.dumps(value))
             self.assertEqual(oracle.result_record(path, task), value)
             with self.assertRaises(evaluation.EvaluationError):
@@ -627,8 +720,10 @@ def case_passed(case):
         counts = {name: 0 for name in ("failures", "errors", "skipped",
                                        "expected_failures", "unexpected_successes")}
         ready = {"tests": {**counts, "tests": 1}, "calls": 4, "protocol_failed": False, "adapter_policy_failed": False,
+                 "candidate_exception_failed": False,
                  "candidate_ready": True, "function_found": True}
         not_ready = {"tests": {**counts, "tests": 0}, "calls": 0, "protocol_failed": True, "adapter_policy_failed": False,
+                 "candidate_exception_failed": False,
                      "candidate_ready": False, "function_found": None}
         for cause, result in (
                 ("none", (0, 0, False, False, ready)),
@@ -638,6 +733,7 @@ def case_passed(case):
                 ("output_limit", (None, None, False, True, None)),
                 ("protocol", (1, 1, False, False, {**ready, "protocol_failed": True})),
                 ("adapter_policy", (1, 0, False, False, {**ready, "adapter_policy_failed": True})),
+                ("candidate_exception", (1, 0, False, False, {**ready, "candidate_exception_failed": True})),
                 ("candidate_exit", (0, 7, False, False, ready)),
                 ("test_failure", (1, 0, False, False, {
                     **ready, "tests": {**ready["tests"], "failures": 1}})),
