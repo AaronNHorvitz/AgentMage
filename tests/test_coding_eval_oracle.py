@@ -137,6 +137,52 @@ def run_commands():
                     legacy = evaluation.grade(task, files, self.root / (name + '-legacy'))
                     self.assertEqual(legacy['passed'], passed, legacy)
 
+    def test_refused_command_prerequisites_retain_causes_counts_and_records(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-026')
+        variants = (
+            ('missing-commands', b'\ndel COMMANDS\n', 'adapter_policy'),
+            ('unsupported-commands', b"\nCOMMANDS = [{'id': 'case', 'argv': ['python3']}]\n", 'adapter_policy'),
+            ('empty-argv', b"\nCOMMANDS = (*COMMANDS, ('empty', ()))\n", 'adapter_policy'),
+            ('raising-access', b'''
+del COMMANDS
+def __getattr__(name): raise RuntimeError('private-command-prerequisite-payload')
+''', 'candidate_exception'),
+            ('malformed-commands', WIRE_DESCRIPTOR_PROBE + b'''
+os.write(protocol_fd(), b'{"ready":true,"function_found":true}\\n{"seq":1,"result":{"commands":42}}\\n')
+os._exit(0)
+''', 'protocol'),
+        )
+        counts = {name: 0 for name in ('tests', 'failures', 'errors', 'skipped',
+                                      'expected_failures', 'unexpected_successes')}
+        for name, source, cause in variants:
+            files = self.files(task)
+            files[task['source']] += source
+            output = self.root / name
+            with self.subTest(variant=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, output)
+                self.assertFalse(report['passed'], report)
+                self.assertEqual(report['cause'], cause, report)
+                self.assertEqual(report['tests'], counts)
+                self.assertEqual(report['calls'], 1)
+                self.assertTrue(report['candidate_ready'])
+                self.assertTrue(report['function_found'])
+                self.assertEqual(report['control_attempts'], {'total': 1, 'passed': 0, 'failed': 1})
+                record = oracle.result_record(output / 'tests.json', task)
+                for field in ('tests', 'calls', 'candidate_ready', 'function_found', 'protocol_failed',
+                              'adapter_policy_failed', 'candidate_exception_failed'):
+                    self.assertEqual(record[field], report[field], field)
+                for field, category in (('protocol_failed', 'protocol'),
+                                        ('adapter_policy_failed', 'adapter_policy'),
+                                        ('candidate_exception_failed', 'candidate_exception')):
+                    self.assertEqual(report[field], cause == category, field)
+                self.assertIsNone(report['error'])
+                self.assertIsNone(report['model_score'])
+                self.assertEqual(report['model_attempts'], 0)
+                self.assertEqual(report['gpu_minutes'], 0)
+                for filename in ('wire.log', 'candidate.log', 'oracle.log', 'report.json', 'tests.json'):
+                    self.assertNotIn(b'private-command-prerequisite-payload', (output / filename).read_bytes())
+
     def test_deadline_adapter_refuses_generated_source_and_has_no_hidden_mount(self):
         task = next(t for t in evaluation.collection() if t['id'] == 'dev-026')
         files = self.files(task)
@@ -1763,6 +1809,33 @@ def case_passed(case):
             path.write_text(json.dumps({**valid, **update}))
             with self.subTest(update=update), self.assertRaises(evaluation.EvaluationError):
                 oracle.result_record(path, task)
+
+    def test_command_prerequisite_zero_counts_require_one_call_and_a_sticky_failure(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-026')
+        counts = {name: 0 for name in ('tests', 'failures', 'errors', 'skipped',
+                                      'expected_failures', 'unexpected_successes')}
+        valid = {'tests': counts, 'calls': 1, 'protocol_failed': False,
+                 'adapter_policy_failed': False, 'candidate_exception_failed': False,
+                 'candidate_ready': True, 'function_found': True}
+        path = self.root / 'command-prerequisite.json'
+        for field in ('protocol_failed', 'adapter_policy_failed', 'candidate_exception_failed'):
+            record = {**valid, field: True}
+            path.write_text(json.dumps(record))
+            with self.subTest(flag=field):
+                self.assertEqual(oracle.result_record(path, task), record)
+                for other in evaluation.collection():
+                    if other['id'] in oracle.SUPPORTED and not any(
+                            oracle.SUPPORTED[other['id']].get(key)
+                            for key in ('observe_case_roots', 'observe_commands')):
+                        with self.assertRaises(evaluation.EvaluationError):
+                            oracle.result_record(path, other)
+            updates = [{'calls': 0}, {'calls': 2}, {'calls': True}, {field: False},
+                       {'candidate_ready': False}, {'function_found': None},
+                       *({'tests': {**counts, name: 1}} for name in counts)]
+            for update in updates:
+                path.write_text(json.dumps({**record, **update}))
+                with self.subTest(flag=field, update=update), self.assertRaises(evaluation.EvaluationError):
+                    oracle.result_record(path, task)
 
     def test_every_reported_failure_stays_in_control_attempt_counts(self):
         counts = {name: 0 for name in ("failures", "errors", "skipped",

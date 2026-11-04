@@ -40,8 +40,8 @@ The checks are:
   independence or the correctness of a verdict. Other text files outside crates
   still require their own registered coverage.
   Accepted endings match the reviewer format: `Verdict: PASS` or
-  `Verdict: FINDINGS` as the last line, or `Verdict: INCONCLUSIVE` followed by
-  one non-empty reason line.
+  `Verdict: FINDINGS` as the last line, or `Verdict: FINDINGS` or
+  `Verdict: INCONCLUSIVE` followed by one non-empty reason line.
 - Python syntax, indentation and whitespace checks for changed Python files, plus
   their test modules. A script maps to `tests/test_<script>.py`; a changed test
   module also runs. A missing or unknown mapping fails. These checks do not claim

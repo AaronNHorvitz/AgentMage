@@ -24,7 +24,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v18"
+VERSION = "coding-independent-oracle-v19"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
@@ -282,7 +282,8 @@ def result_record(path, task):
     if value["candidate_ready"]:
         valid = (type(value["function_found"]) is bool and value["calls"] > 0
                  and (value["tests"]["tests"] == task["expected_tests"]
-                      or (SUPPORTED[task["id"]].get("observe_case_roots")
+                      or ((SUPPORTED[task["id"]].get("observe_case_roots")
+                           or SUPPORTED[task["id"]].get("observe_commands"))
                           and value["calls"] == 1 and not any(value["tests"].values())
                           and (value["protocol_failed"] or value["adapter_policy_failed"]
                                or value["candidate_exception_failed"]))))

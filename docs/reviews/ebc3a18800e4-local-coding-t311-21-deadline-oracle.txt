@@ -1,0 +1,187 @@
+Commit: ebc3a18800e4ee2acd8b8d2daa19c7799274b077
+Scope: local-coding-t311-21-deadline-oracle
+
+# Independent core review 1: T-311.21 collector deadline oracle (oracle v18, dev-026)
+
+Reviewer: separate read-only Claude Opus 5.5 session. Row reviewed: T-311.21 only. Parent T-311 and
+deferred T-311.15/.16 are not reviewed and not closed. No GPU, model, held-out, tuning or download work.
+
+## Identity
+
+- `git rev-parse ebc3a18800e4ee2acd8b8d2daa19c7799274b077` and `HEAD` are both
+  `ebc3a18800e4ee2acd8b8d2daa19c7799274b077`. The worktree is clean. The only commit in
+  `e7548fb7..ebc3a188` is the row commit.
+- Diff against the base touches 7 files: TASKS.md, the new evidence file, the guide,
+  `scripts/coding_eval_oracle.py`, `scripts/coding_eval_oracle_worker.py` and the two oracle test files.
+- Node is `v24.15.0` with SHA-256 `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c`,
+  as stated.
+- I checked the hidden dev-026 test at reference `be002e26`. Its SHA-256 is
+  `e946c10fa78d1d869325497670f7181bc5fb914f461929189acafdb872851382`, matching the pin.
+- Base source `68b9543f…` and reference source `621d28f0…` match their pins. The base-to-reference diff
+  is the single `timeout=` line.
+
+## Methods
+
+1. I read the full worker/oracle diff and the unchanged parts it depends on: `RemoteFunction`, the
+   pack/unpack codec, `candidate()`, `oracle()`, `result_record`, `grade`, `expected_base` and `sandbox`.
+   I compared them line by line against both complete original dev-026 methods.
+2. I ran every requested command in a new private directory under `/lane/state/tmp/`, all through
+   `/tools/build-slot`, with no nested wrappers.
+3. I checked all 21 published evidence digests against the builder's private artifacts and committed
+   sources. I also read `audit.json`, `final-checks.json`, every `*-result.json`, the dev-026 control
+   reports, `oracle.log` and `wire.log`.
+4. Reviewer-authored probes, written and kept only in my private directory:
+   - Oracle-side replay unit probe, run in-process with no sandbox.
+   - `my-probes.py`: 12 synthetic dev-026 candidates, each run in real namespaces. Eleven have a
+     legacy-grader contrast; one is an escape probe.
+   - `prereq-probes.py`: 4 dev-026 prerequisite refusals, plus one dev-022 comparison.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base e7548fb7… --timeout 600` | FAST GATE: PASS. 130 tests in 81.987 s; diff-check, untracked, Markdown and Python lint all exit 0 |
+| `bash /tools/build-slot python3 -B -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | 59 tests OK, no skips |
+| `bash /tools/build-slot python3 scripts/coding_eval_oracle.py verify --output "$R/independent"` | exit 0. passed true, 17/17 pairs valid, control_attempts 34/17/17, generated_scoring false, model_score null, 22 reference methods / 169 reference calls |
+| dev-026 base (same run) | ready true, function_found true, cause test_failure, tests 2, failures 1, errors 0, calls 3, candidate exit 0, oracle exit 1. `oracle.log` shows the original `AssertionError: 1800 != 2700`; the timeout method passes |
+| dev-026 reference (same run) | tests 2, 0 failures/errors, calls 3, both exits 0, PASS |
+| `bash /tools/build-slot python3 scripts/coding_eval.py verify --output "$R/legacy"` | exit 0. passed true, 30/30 pairs valid, 89 reference tests, 0 skips |
+| `bash /tools/build-slot python3 -B "$R/probes.py"` (copied builder probe) | 2 methods OK; 19 reports |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` | "Validated 722 Markdown file(s) and all policy invariants." exit 0 |
+| `git diff --check e7548fb7… ebc3a188…` | exit 0 |
+| `git diff --exit-code … -- <six legacy source/test files>` | exit 0 (unchanged) |
+| `cmp docs/reviews/010472ec44cb-…-t311-20-resource-oracle.txt /lane/reviews/010472ec44cb-…md` | identical |
+| Evidence digests | All 21 published SHA-256 values match: the 4 committed sources and the 17 private artifacts |
+| Builder `audit.json` / `final-checks.json` | passed. 113 reports, 271 log bindings, 30 frozen tasks; legacy files, old ledger, prior review and deferred cleanup unchanged; 21 artifact bindings; tested sources stable; public hygiene true |
+
+## Fidelity and confinement checks (passed)
+
+- **Original authority retained.** Both hidden methods load unmodified from `/adapter/test.py` in the
+  oracle namespace. The following run against trusted MagicMocks fed with replayed inert data:
+  - `len(records)`, `run.call_count`
+  - the strict `zip` over `evidence.COMMANDS`
+  - tuple equality of `call.args[0]`
+  - the `timeout` value, `assertTrue(capture_output)`
+  - `assertRaises(TimeoutExpired)`, `output.write_text.assert_not_called()`
+
+  The oracle module is the frozen base; every base attribute the two methods touch is patched or
+  proxied, so no base logic decides the result.
+- **Replay safety.**
+  - Replay targets are checked with `isinstance(..., MagicMock)` before any remote call. A real
+    `subprocess.run` is refused with zero calls.
+  - The whole reply is validated twice: in `RemoteFunction` and again in `replay` before any
+    `stub(*args, **kwargs)`.
+  - Candidate kwargs named `side_effect`, `return_value` or `spec` are only recorded; the mock is not
+    reconfigured.
+  - These replies are refused with `failed=True` and no replay: a 5000-digit integer, a timeout with a
+    non-null value, a top-level `candidate_exception` key, and a forged `adapter_policy` plus extra key.
+- **Fixed exception.** Only `subprocess.TimeoutExpired(("oracle", "collection"), 2700)` is raised. No
+  candidate exception text crosses: `private-*` payloads in my RuntimeError and SystemExit probes are
+  absent from `wire.log` and `candidate.log`.
+- **Reviewer fidelity probes** (oracle result / legacy result):
+
+  | Probe | Oracle | Legacy |
+  | --- | --- | --- |
+  | Float `2700.0` deadline | PASS | PASS |
+  | String-truthy capture | PASS | PASS |
+  | TimeoutExpired subclass | PASS | PASS |
+  | Write in `finally` after timeout | test_failure | fail |
+  | `main` skips collection | test_failure | fail |
+  | Extra run call | test_failure | fail |
+  | Single-command COMMANDS (declared limit) | PASS | PASS |
+  | List-of-lists COMMANDS | PASS | PASS |
+  | Wrong exception class | candidate_exception | fail |
+  | SystemExit | candidate_exception | fail |
+  | Undeclared `shutil.which('git')` (declared limit) | adapter_policy | PASS |
+
+  The undeclared-lookup divergence is a refusal, not a false pass, and matches the declared limit.
+- **Confinement probe**, run inside the candidate's `run_commands` in the real namespace:
+  - Environment is exactly PATH/HOME/LANG/PWD; `/proc/1/environ` is empty.
+  - PID 1 cmdline is the fixed `bwrap --args 5 -- … candidate`.
+  - Absent: `/output`, `/lane`, `/shared`, `/tools`, `/var/home`, `/home`, `/candidate-tmp`,
+    `/dev/nvidia0`, `/dev/dri`, `/workspace/.git` and the hidden test.
+  - `/workspace` and `/usr` are not writable. Writes to `/` land only in bwrap's private root tmpfs.
+  - Loopback is refused (private network namespace); external connects fail; DNS fails.
+  - CapEff is 0.
+  - `/proc/self/mountinfo` still shows host bind source paths. This is the existing, already-recorded
+    host-path-metadata open item, not new in this row.
+- **Public hygiene.** The diff has no private paths, usernames, hostnames, credentials or product
+  names. `/lane` appears only in an absence assertion that already existed in this test file.
+
+## Findings
+
+### M1 (medium): a refused dev-026 `COMMANDS` prerequisite is misreported as `infrastructure`, and its counts and flags are discarded
+
+- **Location:**
+  - `scripts/coding_eval_oracle.py:285`: the `result_record` zero-test exemption covers only
+    `observe_case_roots`.
+  - `scripts/coding_eval_oracle_worker.py:1053-1054` adds the new `observe_commands` prerequisite.
+  - `scripts/coding_eval_oracle.py:45` defines `SUPPORTED["dev-026"]`.
+- **Mechanism:**
+  1. The candidate refuses the prerequisite. Its `COMMANDS` is missing, has an unsupported shape (for
+     example dict records, or an empty argv), or raises on access.
+  2. The worker writes a valid `tests.json` with `tests: 0`, `calls: 1` and the sticky
+     `adapter_policy_failed` or `candidate_exception_failed` flag.
+  3. `result_record` accepts a zero-test record only for `observe_case_roots` tasks. For dev-026 it
+     raises `oracle.invalid-result-record`.
+  4. `grade_case` catches this and sets `record = None`. `grade` then reports `cause: "infrastructure"`
+     with `tests`, `calls` and all flags `null`, and publishes no `tests.json`.
+- **Reproduction:** `$R/prereq-probes.py`, run through build-slot with the same synthetic-probe admission
+  patch the builder's tests use.
+
+  | Candidate change | Wire result | Report |
+  | --- | --- | --- |
+  | `COMMANDS = [{'id': …, 'argv': …}]` | `{"adapter_policy":true}` | cause infrastructure, tests/calls null, no tests.json |
+  | `del COMMANDS` | `{"adapter_policy":true}` | same |
+  | `del COMMANDS` plus a raising module `__getattr__` | `{"candidate_exception":true}` | same |
+  | appended `('x', ())` | `{"adapter_policy":true}` | same |
+  | Control: dev-022 `CASE_ROOTS = {'case': print}` | — | cause adapter_policy, tests 0, calls 1, flag true, tests.json published |
+
+- **Impact:**
+  - Candidate-caused refusals are labelled as harness faults, and the raw counts for those attempts are
+    lost.
+  - This contradicts the row's own claims that unsupported containers are adapter policy (guide line
+    358; evidence line 29: "Unsupported values are adapter policy").
+  - It breaks the cause/count rule already established for prerequisite observations (guide lines
+    550-552).
+  - A future scorer that retries or excludes `infrastructure` attempts would let a candidate turn its
+    own failure into an excluded attempt.
+  - No test covers a refused `COMMANDS` prerequisite.
+  - The attempt is still counted as failed and cannot pass, so this is not high.
+- **Fix:**
+  1. Generalise the exemption at `scripts/coding_eval_oracle.py:285` to any declared prerequisite, for
+     example `SUPPORTED[task["id"]].get("observe_case_roots") or SUPPORTED[task["id"]].get("observe_commands")`,
+     with the same `calls == 1`, zero-count and sticky-flag conditions.
+  2. Update guide lines 550-552 to name the command-declaration prerequisite.
+  3. Add a real-namespace test asserting `adapter_policy` for deleted and unsupported `COMMANDS`, and
+     `candidate_exception` for a raising access. Each case should have tests 0, calls 1, a published
+     `tests.json` and `control_attempts` 1/0/1, with no private payload in the wire log.
+
+### Observations (not findings)
+
+- Before the candidate runs, the oracle calls the trusted `shutil.which` mock once per declared command
+  to build the resolution map. Its `call_count` therefore reflects adapter lookups, not candidate
+  lookups. The original methods never assert on `which`, so grading is unaffected. A future adapter
+  that grades `which` would need a separate mock.
+- The explicit limits in the request reproduce as declared and are labelled `not_graded` in `coverage()`:
+  - candidate-controlled observations
+  - no minimum command count
+  - truthy capture
+  - undeclared-resolution refusal
+  - sticky-exception error inflation (the undeclared-which probe shows errors 2)
+
+## Per-row result
+
+- **T-311.21: not closed.**
+  - All required runs reproduce the expected observations exactly.
+  - Evidence digests, audit and integrity bindings verify.
+  - Hidden inputs and pins are unchanged; legacy files are unchanged.
+  - Both original methods keep their assertion authority; replay and exception handling are sound.
+  - Namespace confinement holds under my probes.
+  - Medium M1 is open: a refused new `COMMANDS` prerequisite is misclassified as infrastructure, its
+    counts are dropped, and the path is untested. It blocks closing the row. A same-row repair and
+    exact-commit re-review are required.
+- T-311 (parent), T-311.15 and T-311.16: not reviewed; stay open.
+
+Verdict: FINDINGS
+Medium M1 (refused dev-026 command-declaration prerequisite reported as infrastructure with counts discarded) blocks closing T-311.21.

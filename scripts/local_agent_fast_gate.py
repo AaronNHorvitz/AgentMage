@@ -110,9 +110,10 @@ def review_text_lint(root: Path, paths: list[str]) -> None:
         if not lines[1].startswith("Scope: ") or not lines[1].removeprefix("Scope: ").strip():
             raise ValueError(f"{name}: review scope is missing")
         final_verdict = lines[-1] in {"Verdict: PASS", "Verdict: FINDINGS"}
-        inconclusive = lines[-2] == "Verdict: INCONCLUSIVE" and bool(lines[-1].strip())
-        if not (final_verdict or inconclusive):
-            raise ValueError(f"{name}: review must end with PASS, FINDINGS, or INCONCLUSIVE and a reason")
+        reasoned_verdict = (lines[-2] in {"Verdict: FINDINGS", "Verdict: INCONCLUSIVE"}
+                           and bool(lines[-1].strip()))
+        if not (final_verdict or reasoned_verdict):
+            raise ValueError(f"{name}: review must end with PASS, FINDINGS, or a reasoned FINDINGS/INCONCLUSIVE")
 
 
 def plan(root: Path, paths: list[str], metadata: dict) -> list[list[str]]:

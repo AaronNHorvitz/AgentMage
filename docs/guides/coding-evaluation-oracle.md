@@ -323,7 +323,7 @@ in force. No generated score follows from these measurements.
 
 ## Collector deadline observations
 
-T-311.21 uses oracle v18 for dev-026. Both complete original methods stay in
+T-311.21 uses oracle v19 for dev-026. Both complete original methods stay in
 the assertion namespace. A prerequisite call carries the candidate's command
 declarations as bounded list/tuple/string data, so the original count and order
 assertions use that candidate global. The first method's finite completed-process
@@ -547,9 +547,14 @@ still fails as protocol. A policy tag never excuses or drops an attempt.
 Predicate container/depth scope and serialization limits are explicit adapter
 policy, not proof that the candidate violated a frozen assertion. These repairs
 address T-311.12 review lows L1, L2 and L3; independent review is required.
-A failed case-root prerequisite observation may retain zero original tests only
-with exactly one call and a sticky protocol, policy or exception flag. All other
-counts and the requirement that no failed control passes stay unchanged.
+A failed case-root or command-declaration prerequisite observation may retain
+zero original tests only with exactly one call, all six test counts zero, and
+a sticky protocol, policy or exception flag. Its cause, flags, failed-attempt
+count and published `tests.json` remain available after cleanup. No other task
+may retain a ready zero-test record. All other counts and the requirement that
+no failed control passes stay unchanged. Oracle v19 repairs T-311.21 review M1;
+the previous host validator accepted only case-root prerequisite refusals and
+misclassified command-declaration refusals as infrastructure with lost counts.
 
 ## Lifetime, records and remaining limits
 

@@ -163,6 +163,20 @@ class FastGateTests(unittest.TestCase):
                 self.write(name, header + ending)
                 gate.review_text_lint(self.root, [name])
 
+    def test_findings_review_keeps_one_reason_line_without_changing_the_report(self):
+        name = 'docs/reviews/exact-review.txt'
+        header = 'Commit: ' + 'a' * 40 + '\nScope: synthetic-review\n\n'
+        source = header + 'Verdict: FINDINGS\nMedium M1 blocks closing the row.\n'
+        report = self.write(name, source)
+        gate.review_text_lint(self.root, [name])
+        self.assertEqual(report.read_text(), source)
+        for ending in ('Verdict: FINDINGS\n\n', 'Verdict: FINDINGS\nReason\nExtra\n',
+                       'Verdict: PASS\nReason\n', 'Verdict: unknown\nReason\n',
+                       'Verdict: FINDINGS\nReason \n'):
+            with self.subTest(ending=ending), self.assertRaises(ValueError):
+                self.write(name, header + ending)
+                gate.review_text_lint(self.root, [name])
+
     def test_cleanup_keeps_exited_leader_until_all_group_signals_are_sent(self):
         for script, expected in (("raise SystemExit(7)", 7),
                                  ("import os,signal; os.kill(os.getpid(),signal.SIGTERM)", -signal.SIGTERM)):
