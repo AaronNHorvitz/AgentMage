@@ -1,0 +1,172 @@
+Commit: 22e06fce66e65db9a75b2fa0054d64397469b297
+Scope: local-coding-t311-14-stub-repair
+
+# Independent core re-review: T-311.14 capture-stub repair (attempt 2)
+
+Reviewer: Claude Opus 5.5, separate read-only session. Row in scope: T-311.14 only.
+Base: `0d0395bd1130350972b304c7238767449b3b272a`. I did not modify any repository file.
+
+## Methods
+
+- Confirmed that `git rev-parse 22e06fce66e65db9a75b2fa0054d64397469b297` equals HEAD and the tree is clean.
+- Read IP-POLICY.md, the T-311.14 ledger row, the prior review (`dfb751e41a44…`) and the full
+  base→HEAD diff (8 files). I read every changed region of `scripts/coding_eval_oracle_worker.py`
+  and `scripts/coding_eval_oracle.py` in context: `RemoteFunction`, `capture_proxies`,
+  `capture_result`, the `candidate` dispatch loop, `grade`, `result_record` and `expected_base`.
+- Read both pinned hidden methods with `git show` at the reference revisions. The SHA-256 values
+  `a463c2ac…62b4` and `41904528…3bb7` match the collection. I also read both reference `capture` routines.
+  - dev-005's method stubs `run` with `return_value=subprocess.CompletedProcess([], 0, stdout=…)`.
+  - dev-018's method uses `patch.object(evidence.subprocess, "run") as run` and assigns only
+    `run.return_value.stdout` and `.returncode`.
+  - The repaired trusted proxy accepts exactly these two shapes and rebuilds the same kind in the
+    candidate.
+- Ran every command in the request through `/tools/build-slot`, writing to the new private directory
+  `/lane/state/tmp/t311-14-stub-review-r2AVXO` with `CARGO_TARGET_DIR=/lane/state/review-target`.
+  Then wrote and ran my own probe script outside the repository: `myprobes.py`, SHA-256
+  `43af02783b828328e6ab3a428f9fb39bdfd3e6282919dd6dd26d54e789468f69`. Like the builder probes, it
+  patches historical admission only inside the diagnostic process.
+- Re-hashed all 4 committed source digests and all 21 artifact digests in the repair evidence against
+  the shared-mount files.
+- Scanned the diff for private paths, user or host names, credentials, held-out task content and
+  trademark use.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `node --version`; `sha256sum target/local-agent-tools/node` | v24.15.0; `d1de76d8…d932c` (matches) |
+| `sha256sum` of builder `probes.py` / `stub-contrasts.py` | `50ee2aab…1818` / `6ebe5812…64e2` (match the evidence) |
+| `build-slot python3 scripts/local_agent_fast_gate.py --base 0d0395bd… --timeout 600` | FAST GATE: PASS; markdownlint 0 issues; 83 oracle tests OK in 42.916 s |
+| `build-slot python3 -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | 58 tests OK (19.176 s) |
+| `build-slot python3 scripts/coding_eval_oracle.py verify --output $rr/oracle` | rc 0; passed; 12 pairs valid; control_attempts 24/12/12; 157 reference calls; generated_scoring false; model_score null; collection `0c2a0624…1570` |
+| `build-slot python3 scripts/coding_eval.py verify --output $rr/legacy` | rc 0; passed; 30 pairs, 89 reference tests, 0 skipped. No dev-003 flake on my single run, and there was no repeat. |
+| `build-slot python3 …/t311-14-stub-repair/probes.py $rr/probes` | `{"passed": true, "probes": 23, "legacy_contrasts": 17}` |
+| `build-slot python3 …/t311-14-stub-repair/stub-contrasts.py $rr/stub-contrasts` | `{"passed": true, "probes": 6, "legacy_contrasts": 6}` |
+| `build-slot python3 scripts/validate_docs.py` | Validated 713 Markdown file(s) and all policy invariants |
+| `git diff --exit-code 0d0395bd… HEAD -- <six legacy files>` | rc 0, empty |
+| `cmp docs/reviews/dfb751e41a44-…txt /lane/reviews/dfb751e41a44-…md` | rc 0 |
+| `git diff --check 0d0395bd… HEAD` | rc 0, empty |
+| Evidence digest tables (4 sources at HEAD, 21 artifacts) | all 25 match |
+
+Oracle verify results:
+
+- dev-005 base: `test_failure`, 3 failures, 3 calls. Reference: pass, 3 calls.
+- dev-018 base: 1 failure, 1 call. Reference: pass, 5 calls.
+- Coverage lists `home-alias-variant` under `not_graded` for dev-018 only.
+
+These match `CONTROL_PROFILES` and the attempt-1 counts.
+
+The retained builder evidence matches the claims. The first full legacy `summary.json` has `passed: false`
+with only dev-003 invalid, and `verification.json` records exit 1. The failed run was kept, not
+replaced.
+
+### Reviewer probes (`$rr/myprobes/summary.json`; 25 probes, 24 legacy contrasts, 0 disagreements)
+
+Each probe is the pinned reference source with one suffix appended. Probes 1–10 gate on a property of
+`r = subprocess.run([])` and return unredacted output if the property fails. The oracle and the
+legacy grader agree on pass/fail in every case.
+
+| # | Property / action | dev-005 (oracle = legacy) | dev-018 (oracle = legacy) |
+| --- | --- | --- | --- |
+| 1 | `isinstance(r.args, list)` | PASS | FAIL |
+| 2 | `not r.stderr` | PASS | FAIL |
+| 3 | `s.run([]) is r` (stub identity) | PASS | PASS |
+| 4 | `type(s.run).__name__ == "MagicMock"` | PASS | PASS |
+| 5 | `r.check_returncode()` | PASS | PASS |
+| 6 | `type(r.stdout) is str` | PASS | PASS |
+| 7 | `type(r.returncode) is int` | PASS | PASS |
+| 8 | `"CompletedProcess" in repr(r)` | PASS | FAIL |
+| 9 | `r.stderr.decode` chain | PASS | PASS |
+| 10 | `hasattr(r, "nonexistent_attribute")` | FAIL | PASS |
+| 11 | mutate the stub stdout before calling the original routine | PASS | PASS |
+| 12 | candidate raises a forged `__main__.ProtocolError` | FAIL `protocol`, counted | FAIL `protocol`, counted |
+| 13 | confinement inside `capture` (dev-018, mock kind) | n/a | see below |
+
+Probe 13 found:
+
+- `/adapter/test.py` and `/output` are absent.
+- Writing to `/workspace` raises `OSError`, and so does a network connection.
+- The environment holds only `HOME,LANG,PATH,PWD`, with `HOME=/tmp`.
+- A symlink to `/output` does not resolve to the oracle results.
+- The reference still passes. The verdict comes only from the trusted assertions.
+
+Every failing probe has `control_attempts` failed 1 of 1. None was dropped.
+
+## Review notes (no finding)
+
+- **M1 repaired.**
+  - **Trusted side** (`coding_eval_oracle_worker.py:428-441`):
+    - It selects `completed-process` only for an exact `subprocess.CompletedProcess` whose `args` is
+      `[]` (exact `list` type) and whose `stderr is None`. It selects `mock` for a `MagicMock`.
+    - Any other shape sets `remote.failed` and raises `ProtocolError` before a request is written. The
+      unit test checks that `writer` is empty and `calls == 0`.
+  - **Candidate side** (`:452-466`): it accepts only those two string values and the exact key set.
+    It rebuilds the stub inside a local `mock.patch.object(module.subprocess, "run")`, the same
+    construction the frozen methods use. Only the string tag crosses the pipe, never a mock or
+    callback.
+  - **Coverage:** the six original counterexamples, the three committed two-grader regressions and
+    my ten further stub-shape probes all agree with the frozen originals under the legacy grader.
+- **L1 repaired.** The blank line inside the table of the attempt-1 evidence is removed. The fast
+  gate's markdownlint reports 0 issues.
+- **L2 repaired.** `home-alias-variant` is `not_graded` for dev-018 only, and is asserted in the
+  integration test. The guide states the reason (same `/tmp` home).
+- **L3 repaired.** Malformed capture, argument and verification requests now propagate as
+  `ProtocolError`. The new worker test drives `candidate()` end to end and asserts that no candidate
+  function is called.
+- **Integrity.**
+  - Unchanged: hidden bytes, pins, selections, thresholds, `CONTROL_PROFILES`, admission
+    (`require_historical_candidate`), the sandbox command line and the failed-attempt accounting.
+  - Only dev-005 and dev-018 (development split) are touched. The diff contains no held-out content,
+    model, GPU or tuning change.
+  - Version bumped to v10, and the reports bind the worker and oracle hashes.
+- **Public-repository scan.** The diff contains no private host path, user or host name, credential,
+  personal data, sibling-project name or trademark branding.
+- **Delivery.** This is a same-row repair with no new sub-rows. The row still ends in running,
+  measured controls.
+
+## Findings
+
+No critical, high or medium findings.
+
+### L1 (low, backlog): a candidate can choose the `protocol` cause by raising the adapter's own exception class
+
+- Location: `scripts/coding_eval_oracle_worker.py:515-517` re-raises any `ProtocolError`, including one
+  raised by candidate code inside `capture`, `verify_case`, a helper or a predicate.
+  `docs/guides/coding-evaluation-oracle.md`, "Candidate exceptions and cause limits", still says
+  unexpected exceptions during a candidate call produce exactly `{"candidate_exception":true}`.
+- Reproduction: reviewer probe 12 (`import __main__; raise __main__.ProtocolError(…)`) on both tasks.
+  The worker exits 1 and the report shows cause `protocol` with the failure counted. Before this repair
+  the cause was `candidate_exception`.
+- Impact: this affects the cause label only. The attempt still fails and is counted. A candidate could
+  already obtain `protocol` by corrupting fd 1, and the guide discloses that. It does not affect
+  integrity, but the repair widened the re-raise beyond adapter-originated requests.
+- Fix:
+  - Validate request shape before entering the candidate `try`, for example with a
+    `validate_*_request` step outside it. Keep `except BaseException` around only the candidate call.
+  - Alternatively, raise a private sentinel subclass that is not reachable from `__main__`.
+  - Or document that a candidate-raised adapter exception yields `protocol`.
+
+### L2 (low, backlog): `mock` stub kind does not check for configuration beyond stdout/returncode
+
+- Location: `scripts/coding_eval_oracle_worker.py:433-434` accepts any `MagicMock` `return_value`. A
+  fixture that also set `stderr`, `args` or `side_effect` would be sent as a plain mock, and that
+  configuration would be silently lost.
+- This cannot happen with the two pinned hidden methods: dev-018 sets only stdout and returncode, and
+  `SUPPORTED` is closed. The guide's statement that other stub shapes are refused is therefore narrower
+  in practice than the code enforces.
+- Fix: for `mock`, also require that `fixture.side_effect is None` and that the only configured
+  children are `stdout` and `returncode`, otherwise refuse as protocol. Or state the limit in the
+  guide before more capture tasks are added.
+
+## Per-row result
+
+- **T-311.14: PASS for exact commit `22e06fce66e65db9a75b2fa0054d64397469b297`.**
+  - Attempt-1 M1 is repaired and verified two-directionally against the frozen original methods.
+    L1–L3 are repaired.
+  - Every required command reproduces and passes. Evidence digests and counts match, and confinement
+    holds in my escape attempts.
+  - No high or medium finding is open. New L1 and L2 are backlog before generated scoring.
+- Parent T-311, generated scoring, the remaining eighteen adapters, aggregate quotas, held-out inputs
+  and the dev-003 flake policy (T-311.5) stay open. This review closes no other row.
+
+Verdict: PASS
