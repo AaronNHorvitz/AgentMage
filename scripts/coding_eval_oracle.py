@@ -22,7 +22,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v9"
+VERSION = "coding-independent-oracle-v10"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
@@ -70,6 +70,7 @@ def coverage(task):
                 "adapter_policy": ["bounded-encoded-response", "bounded-json-observations",
                                    "finite-capture-stub"],
                 "not_graded": ["real-command-execution", "subprocess-invocation-arguments",
+                               *(["home-alias-variant"] if task["id"] == "dev-018" else []),
                                "other-module-globals", "unselected-statement-clauses"]}
     if kind == "path-result":
         return {"graded": ["path-membership", "ambiguity-behavior"],

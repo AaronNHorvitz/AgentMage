@@ -2,6 +2,9 @@
 
 Status: builder verification passed; independent core review required.
 Implementation base: `4e00c4b3`. T-311.14 and parent T-311 stay open.
+The subsequent independent review has FINDINGS; the
+[same-row repair record](t311-14-stub-review-repair-2026-11-03.md) records the
+stub mismatch and its repair. Measurements below describe the original batch.
 
 ## Behavior
 
@@ -47,7 +50,6 @@ No source changed after the final runtime checks.
 
 | Check | Result | Seconds |
 | --- | --- | --- |
-
 | fast-gate | PASS; 79 oracle unit/integration tests | 42.155531 |
 | legacy-unit | PASS; 58 tests | 19.445316 |
 | independent-verify | PASS; twelve pairs, 15 methods, 157 reference calls | 6.037808 |

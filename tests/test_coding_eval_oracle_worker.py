@@ -145,7 +145,7 @@ class OracleProtocolTests(unittest.TestCase):
         module.capture = capture
         module.validate_raw = lambda text: [text]
         request = {'operation': 'capture', 'commands': [['fake', 'arg']],
-                   'stdout': 'fixture output', 'returncode': 3}
+                   'stdout': 'fixture output', 'returncode': 3, 'stub_kind': 'completed-process'}
         original_run = subprocess.run
         result = worker.capture_result(module, request)
         self.assertIs(subprocess.run, original_run)
@@ -153,7 +153,7 @@ class OracleProtocolTests(unittest.TestCase):
         self.assertEqual(result, {'value': ['fixture output', 3], 'container': 'tuple'})
         raw = worker.encode_message({'seq': 1, 'result': result})
         remote = self.remote(raw, 'capture-result')
-        fixture = SimpleNamespace(stdout='fixture output', returncode=3)
+        fixture = subprocess.CompletedProcess([], 3, stdout='fixture output')
         trusted = SimpleNamespace(subprocess=SimpleNamespace(run=SimpleNamespace(return_value=fixture)),
                                   COMMANDS=(("fake", "arg"),))
         _, proxy = worker.capture_proxies(remote, trusted)
@@ -161,6 +161,48 @@ class OracleProtocolTests(unittest.TestCase):
         self.assertEqual(json.loads(remote.writer.getvalue())['args'], [request])
         self.assertEqual(worker.capture_result(module, {'operation': 'validate', 'text': 'text'}),
                          {'value': ['text'], 'container': 'value'})
+
+    def test_capture_stub_kinds_preserve_original_mock_and_completed_process_observations(self):
+        module = SimpleNamespace(subprocess=subprocess, COMMANDS=(("fake",),))
+        def capture():
+            result = module.subprocess.run(["must-never-execute"])
+            return (isinstance(result, subprocess.CompletedProcess), result.stdout,
+                    result.returncode, result.stderr is None, isinstance(result.args, list),
+                    isinstance(result.stderr.replace("x", "y"), mock.MagicMock)
+                    if result.stderr is not None else False)
+        module.capture = capture
+        for kind, expected in (("completed-process", [True, "output", 2, True, True, False]),
+                               ("mock", [False, "output", 2, False, False, True])):
+            request = {'operation': 'capture', 'commands': [['fake']], 'stdout': 'output',
+                       'returncode': 2, 'stub_kind': kind}
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': {
+                'value': expected, 'container': 'tuple'}}), 'capture-result')
+            trusted = SimpleNamespace(subprocess=subprocess, COMMANDS=(("fake",),))
+            _, proxy = worker.capture_proxies(remote, trusted)
+            with mock.patch.object(subprocess, 'run') as run:
+                if kind == 'completed-process':
+                    run.return_value = subprocess.CompletedProcess([], 2, stdout='output')
+                else:
+                    run.return_value.stdout = 'output'
+                    run.return_value.returncode = 2
+                self.assertEqual(proxy(), tuple(expected))
+                run.assert_not_called()
+            self.assertEqual(json.loads(remote.writer.getvalue())['args'], [request])
+            self.assertEqual(worker.capture_result(module, request), {'value': expected, 'container': 'tuple'})
+
+    def test_capture_trusted_stub_refuses_unknown_shapes_before_sending(self):
+        fixtures = [object(), SimpleNamespace(stdout='output', returncode=0),
+                    subprocess.CompletedProcess(['unrepresented'], 0, stdout='output'),
+                    subprocess.CompletedProcess([], 0, stdout='output', stderr='unrepresented')]
+        for fixture in fixtures:
+            remote = self.remote(b'', 'capture-result')
+            module = SimpleNamespace(subprocess=SimpleNamespace(run=SimpleNamespace(return_value=fixture)))
+            _, proxy = worker.capture_proxies(remote, module)
+            with self.subTest(fixture=type(fixture).__name__), self.assertRaises(worker.ProtocolError):
+                proxy()
+            self.assertTrue(remote.failed)
+            self.assertEqual(remote.writer.getvalue(), b'')
+            self.assertEqual(remote.calls, 0)
 
     def test_capture_observation_keys_are_data_and_malformed_tags_fail(self):
         for value in (None, False, 1, 'wrong', [], {'adapter_policy': True, 'candidate_exception': True}):
@@ -179,16 +221,43 @@ class OracleProtocolTests(unittest.TestCase):
 
     def test_capture_requests_cannot_supply_callbacks_or_arbitrary_attributes(self):
         module = SimpleNamespace(capture=mock.Mock(), validate_raw=mock.Mock())
+        valid = {'operation': 'capture', 'commands': [['fake']], 'stdout': 'x',
+                 'returncode': 0, 'stub_kind': 'mock'}
         for request in ({'operation': 'other'}, {'operation': 'validate', 'text': 1},
                         {'operation': 'validate', 'text': 'x', 'callback': 'run'},
-                        {'operation': 'capture', 'commands': [['fake']], 'stdout': 'x', 'returncode': True},
-                        {'operation': 'capture', 'commands': ['fake'], 'stdout': 'x', 'returncode': 0},
-                        {'operation': 'capture', 'commands': [[]], 'stdout': 'x', 'returncode': 0},
-                        {'operation': 'capture', 'commands': [['fake']] * 129, 'stdout': 'x', 'returncode': 0}):
+                        {k: v for k, v in valid.items() if k != 'stub_kind'},
+                        {**valid, 'returncode': True}, {**valid, 'commands': ['fake']},
+                        {**valid, 'commands': [[]]}, {**valid, 'commands': [['fake']] * 129},
+                        {**valid, 'stub_kind': '__reduce__'}, {**valid, 'stub_kind': []},
+                        {**valid, 'stub_kind': {'mock': True}}, {**valid, 'stderr': 'payload'}):
             with self.subTest(request=request), self.assertRaises(worker.ProtocolError):
                 worker.capture_result(module, request)
         module.capture.assert_not_called()
         module.validate_raw.assert_not_called()
+
+    def test_malformed_adapter_requests_do_not_become_candidate_exceptions_in_worker(self):
+        module = SimpleNamespace(capture=mock.Mock(), validate_raw=mock.Mock(),
+                                 verify_case=mock.Mock(), helper=mock.Mock(), HarnessError=ValueError)
+        requests = [('capture-result', 'capture', {'operation': 'validate', 'text': 1}),
+                    ('capture-result', 'capture', {'operation': 'capture', 'stdout': 'x', 'returncode': 0,
+                                                  'commands': [['fake']], 'stub_kind': 'unknown'}),
+                    ('argument-result', 'helper', {'operation': 'other'}),
+                    ('verification-result', 'verify_case', {'case': 'unsupported'})]
+        for kind, function, request in requests:
+            config = {'module': 'synthetic', 'function': function, 'result_type': kind}
+            reader = io.BufferedReader(io.BytesIO(worker.encode_message({'seq': 1, 'args': [request]})))
+            writer = io.BytesIO()
+            with (mock.patch.object(worker.sys, 'stdin', SimpleNamespace(buffer=reader)),
+                  mock.patch.object(worker.sys, 'stdout', SimpleNamespace(buffer=writer)),
+                  mock.patch.object(worker.sys, 'path', list(worker.sys.path)),
+                  mock.patch.object(worker.importlib, 'import_module', return_value=module),
+                  self.subTest(request=request), self.assertRaises(worker.ProtocolError)):
+                worker.candidate(config)
+            self.assertEqual(writer.getvalue(), b'{"ready":true,"function_found":true}\n')
+        module.capture.assert_not_called()
+        module.validate_raw.assert_not_called()
+        module.verify_case.assert_not_called()
+        module.helper.assert_not_called()
 
     def test_response_encoding_memory_refusal_uses_fixed_policy_tag(self):
         original = worker.json.dumps

@@ -139,6 +139,51 @@ def validate_raw(text): return []
         self.assertEqual(report["candidate_exit_code"], 0)
         self.assertEqual(report["control_attempts"], {"total": 1, "passed": 0, "failed": 1})
 
+    def test_capture_stub_semantics_agree_with_complete_frozen_methods(self):
+        variants = [
+            ('stderr-merge', '''
+original_capture = capture
+def capture():
+ result = subprocess.run([])
+ text = result.stdout + (result.stderr or "")
+ if not isinstance(text, str): return ("unredacted output", 0)
+ return original_capture()
+''', {'dev-005': (True, 'none'), 'dev-018': (False, 'test_failure')}),
+            ('stderr-method', '''
+original_capture = capture
+def capture():
+ result = subprocess.run([])
+ str(result.stderr.replace("x", "y"))
+ return original_capture()
+''', {'dev-005': (False, 'candidate_exception'), 'dev-018': (True, 'none')}),
+            ('completed-type', '''
+original_capture = capture
+def capture():
+ if not isinstance(subprocess.run([]), subprocess.CompletedProcess):
+  return ("unredacted output", 0)
+ return original_capture()
+''', {'dev-005': (True, 'none'), 'dev-018': (False, 'test_failure')}),
+        ]
+        for task in (t for t in evaluation.collection() if t['id'] in {'dev-005', 'dev-018'}):
+            for name, suffix, outcomes in variants:
+                expected = outcomes[task['id']]
+                files = self.files(task)
+                files[task['source']] += suffix.encode()
+                output = self.root / (task['id'] + '-' + name)
+                with self.subTest(task=task['id'], variant=name), mock.patch.object(
+                        evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                    report = oracle.grade(task, files, output)
+                    legacy = evaluation.grade(task, files, self.root / (task['id'] + '-' + name + '-legacy'))
+                self.assertEqual((report['passed'], report['cause']), expected, report)
+                self.assertEqual(legacy['passed'], expected[0], legacy)
+                self.assertEqual(report['control_attempts'], {'total': 1, 'passed': int(expected[0]),
+                                                              'failed': int(not expected[0])})
+                self.assertEqual(report['tests']['tests'], task['expected_tests'])
+                if task['id'] == 'dev-018':
+                    self.assertIn('home-alias-variant', report['coverage']['not_graded'])
+                else:
+                    self.assertNotIn('home-alias-variant', report['coverage']['not_graded'])
+
     def test_import_failure_and_false_startup_do_not_run_hidden_assertions(self):
         for name, code in (
                 ("import-failure", b'\nraise RuntimeError("synthetic import failure")\n'),

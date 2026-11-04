@@ -13,6 +13,7 @@ import json
 import math
 from pathlib import Path
 import re
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -426,8 +427,17 @@ def capture_proxies(remote, module):
 
     def capture():
         fixture = module.subprocess.run.return_value
+        if (type(fixture) is subprocess.CompletedProcess
+                and type(fixture.args) is list and fixture.args == [] and fixture.stderr is None):
+            stub_kind = "completed-process"
+        elif isinstance(fixture, mock.MagicMock):
+            stub_kind = "mock"
+        else:
+            remote.failed = True
+            raise ProtocolError("oracle.unsupported-capture-stub")
         return unpack(remote({"operation": "capture", "stdout": fixture.stdout,
                               "returncode": fixture.returncode,
+                              "stub_kind": stub_kind,
                               "commands": [list(command) for command in module.COMMANDS]}))
     return validate_raw, capture
 
@@ -439,15 +449,20 @@ def capture_result(module, request):
     if (request.keys() == {"operation", "text"} and request["operation"] == "validate"
             and type(request["text"]) is str):
         value = module.validate_raw(request["text"])
-    elif (request.keys() == {"operation", "stdout", "returncode", "commands"}
+    elif (request.keys() == {"operation", "stdout", "returncode", "commands", "stub_kind"}
           and request["operation"] == "capture" and type(request["stdout"]) is str
           and type(request["returncode"]) is int and type(request["commands"]) is list
+          and type(request["stub_kind"]) is str and request["stub_kind"] in {"completed-process", "mock"}
           and len(request["commands"]) <= 128
           and all(type(command) is list and 0 < len(command) <= 128
                   and all(type(arg) is str for arg in command) for command in request["commands"])):
-        completed = module.subprocess.CompletedProcess([], request["returncode"], stdout=request["stdout"])
         with (mock.patch.object(module, "COMMANDS", tuple(tuple(c) for c in request["commands"])),
-              mock.patch.object(module.subprocess, "run", return_value=completed)):
+              mock.patch.object(module.subprocess, "run") as run):
+            if request["stub_kind"] == "completed-process":
+                run.return_value = subprocess.CompletedProcess([], request["returncode"], stdout=request["stdout"])
+            else:
+                run.return_value.stdout = request["stdout"]
+                run.return_value.returncode = request["returncode"]
             value = module.capture()
     else:
         raise ProtocolError("oracle.invalid-capture-request")
@@ -497,6 +512,9 @@ def candidate(config):
                     result = predicate_result(function(*request["args"]), config["result_type"])
                 else:
                     raise ProtocolError("oracle.unknown-result-type")
+            except ProtocolError:
+                # Malformed adapter requests are not candidate exceptions.
+                raise
             except BaseException:
                 # This tag carries no candidate-selected class, status or text.
                 # A candidate can forge it only to fail its own attempt.

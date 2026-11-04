@@ -18,6 +18,8 @@ T-311.14 adds the two existing output-redaction tasks. Their original assertions
 remain in the trusted process; only fixture text, closed command lists and
 bounded return observations reach the candidate. It also catches memory
 exhaustion during response encoding as an adapter-policy refusal.
+The T-311.14 review repair uses oracle v10 and preserves the original fixture's
+completed-process or mock stub kind, rather than replacing both with one kind.
 
 ## Run
 
@@ -230,8 +232,13 @@ No claim of full statement coverage follows from these controls.
 For dev-005 and dev-018, proxies replace `validate_raw` and `capture` before the
 unchanged original test module imports them. `validate_raw` receives the exact
 synthetic text assembled by the trusted test. For `capture`, the proxy snapshots
-the test's stub stdout, return code and current command list. The candidate
-recreates a local subprocess stub and command list, then calls its own `capture`.
+the test's stub stdout, return code, closed stub kind and current command list.
+For dev-005, it accepts the exact completed-process type only with empty list
+arguments and null stderr, recreating those fixed attributes. For dev-018, it
+recreates a local mock with stdout and return code set, preserving the original
+mock's default attribute behavior. Other stub types, nonempty completed-process
+arguments or non-null stderr are refused as trusted protocol; no mock object crosses the pipe.
+The candidate uses that local subprocess stub and command list to call its own `capture`.
 No fixture command runs. Both namespaces use the same lexical workspace and
 home paths, so fixture path text is preserved without rewriting assertions.
 
@@ -247,6 +254,10 @@ values. They do not check subprocess invocation arguments, real command
 execution, other module globals or all statement clauses. Those omissions and
 the finite-stub policy are explicit in report coverage. These are controls of
 evidence functions, not actual command collection or a real-model run.
+The dev-018 home-alias variant is also explicitly ungraded: both sandboxes use
+the same `/tmp` home, so that branch of the unchanged fixture does not execute.
+Malformed adapter requests remain protocol failures instead of being labelled
+candidate exceptions; this also applies to argument and verification requests.
 
 ## Candidate exceptions and cause limits
 
