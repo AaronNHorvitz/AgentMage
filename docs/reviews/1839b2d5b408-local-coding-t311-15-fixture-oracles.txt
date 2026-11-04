@@ -1,0 +1,150 @@
+Commit: 1839b2d5b4080a31bf710086bb8d2824c8e125d6
+Scope: local-coding-t311-15-fixture-oracles
+
+# Independent core review: T-311.15 (frozen dev-017 file modes / dev-019 helper calls)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate read-only session. First review of T-311.15.
+Base: ae45ccfe582e0defa836f18ae74b8cd70708f88c. Only T-311.15 is reviewed.
+
+## Method
+
+- Confirmed the commit: `git rev-parse 1839b2d5b4080a31bf710086bb8d2824c8e125d6` = HEAD; working tree clean
+  before and after. One commit in ae45ccfe..1839b2d5 changes 7 files: oracle, worker, the two oracle test
+  modules, guide, evidence, TASKS.md. No collection, hidden-test, legacy evaluator or threshold file changed.
+- Read IP-POLICY.md, the T-311.15 row, the full oracle/worker diff, the surrounding RemoteFunction, exchange,
+  grade_case/grade/verify code, the case_workspace cleanup in scripts/coding_eval.py, the new tests and the
+  guide and evidence text.
+- Read the frozen dev-017 and dev-019 hidden methods and reference functions from their pinned reference
+  commits (f0c5ba52, dc99587f) to check that the adapters reproduce the original fixture semantics.
+- Reran every required command into a fresh directory (below).
+- Ran 22 extra real-namespace adversarial probes through `oracle.grade` (bwrap candidate and oracle
+  sandboxes), with `require_historical_candidate` patched in the same way as the builder's diagnostics.
+  The probe scripts and outputs are outside the repository.
+- Verified all 19 published digests (4 source and 15 artifact) without writing to the builder directory.
+
+## Commands and results
+
+Node: `node --version` printed v24.15.0, and `sha256sum target/local-agent-tools/node` printed
+d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (as expected).
+`review_results=/lane/state/tmp/t311-15-review-exK3zA`, `CARGO_TARGET_DIR=/lane/state/review-target`.
+
+| Command | Result |
+| --- | --- |
+| `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base ae45ccfe --timeout 600` | rc 0; "Ran 94 tests", OK, FAST GATE: PASS (54.35 s inside the gate) |
+| `bash /tools/build-slot python3 -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | rc 0; 58 tests OK |
+| `bash /tools/build-slot python3 scripts/coding_eval_oracle.py verify --output "$review_results/independent"` | rc 0; passed true; 14 pairs all valid; control_attempts 28/14/14; 17 reference test names; 159 reference calls; collection 0c2a0624…1570; generated_scoring false; aggregate_worker_quotas false; model_score null. dev-017 base: candidate_exception (0 failures / 1 error, 1 call), reference passes with 1 call; dev-019 base: test_failure (1/0), reference passes with 1 call |
+| `bash /tools/build-slot python3 scripts/coding_eval.py verify --output "$review_results/legacy"` | rc 0; passed true; 30 pairs valid; 89 reference tests; 0 skips; collection 0c2a0624…1570 |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` | rc 0; "Validated 714 Markdown file(s) and all policy invariants." |
+| `git diff --exit-code ae45ccfe HEAD -- <six legacy evaluator source/test files>` | rc 0, empty |
+| `git diff --check ae45ccfe HEAD` | rc 0, empty |
+| `sha256sum` of the 4 sources and the 15 artifacts in /lane/state/tmp/t311-15-fixture-oracles | all 19 match the evidence table |
+
+## Adversarial probes (real sandboxes)
+
+dev-017 (`make_container_readable`):
+
+| Probe | Report |
+| --- | --- |
+| Ancestor swap: `nested` renamed, relative symlink put in its place | adapter_policy, failed, counted |
+| Root replaced by a symlink to a correct copy | adapter_policy, failed, counted |
+| `nested` replaced by a symlink to `/workspace/scripts` | adapter_policy, failed, counted |
+| Hard link from `/workspace` into the fixture | link fails (EXDEV across binds), candidate_exception |
+| FIFO in place of a file; directory in place of a file | adapter_policy |
+| Setuid bit added to an otherwise correct tree | passes; the original assertions mask 0o777 |
+| Environment check: only PATH/HOME/LANG/PWD set; no `/candidate-tmp`, `/output` or `/adapter/test.py` | as expected |
+| Correct tree plus an extra 0o500 directory in `/tmp` or inside the root | **infrastructure failure, cleanup-failed, residue left (M1)** |
+| Plausible wrong answers: all directories 0o555; everything 0o644; `nested` mode 0 | **infrastructure failure, cleanup-failed, residue left (M1)** |
+
+dev-019 (`extract_deb`):
+
+| Probe | Report |
+| --- | --- |
+| `cwd` passed positionally instead of as a keyword | test_failure (keyword/positional distinction kept) |
+| `str` subclass with `__eq__` always True | adapter_policy (`type() is` checks refuse subclasses) |
+| `PosixPath` subclass with `__eq__` always True | adapter_policy |
+| `mock.ANY` arguments | adapter_policy |
+| Real `subprocess.run` instead of the helper | test_failure; the call is not observed |
+| Adapter replaced to return 129 forged records | protocol, failed, counted |
+| Reference passed through a wrapper | passes |
+
+Every failing probe stayed in the denominator (`control_attempts` 1/0/1).
+
+Review-focus conclusions:
+- Mode claims cannot replace filesystem observations. The reply must be exactly `{"observed": true}`; any
+  other reply is protocol. Bits come only from the trusted no-follow `stat` through a read-only mount.
+- The candidate mount is `--bind` at `/tmp` in the candidate sandbox only. The oracle gets it as
+  `--ro-bind` at `/candidate-tmp`. The candidate sees neither `/candidate-tmp` nor `/output`.
+- Inspection and replay use only the oracle's original fixture names; no path from a reply is opened.
+- Command records are fully unpacked and validated before any replay. Replay targets only
+  `module.command` and only while it is a MagicMock. Lists and tuples, Path and str, and keyword and
+  positional arguments stay distinct.
+- The twelve committed contrasts and the deliberate legacy forgery distinction are accurately described.
+- No held-out content, hidden-test change, generated score, model or GPU use, competitor naming, private
+  path or credential appears in the diff.
+
+## Findings
+
+### M1 (medium): a candidate-controlled directory mode defeats cleanup of the new writable mount
+
+Location: scripts/coding_eval_oracle.py:258-262 and 141-142 (new host-backed `candidate-tmp` bound
+writable at candidate `/tmp`), cleaned only by `shutil.rmtree` in scripts/coding_eval.py:640-652.
+The claims are in docs/guides/coding-evaluation-oracle.md (the "File modes and extraction helper calls"
+section: "is removed through the existing cleanup before reports publish"; "uninspectable … entries fail as
+sticky adapter policy") and docs/evidence/t311-15-fixture-oracles-2026-11-03.md ("The existing cleanup
+removes that mount's backing tree before counts publish").
+
+Before this row, the independent oracle's candidate had no writable host-backed mount: `/tmp` was a
+private tmpfs. dev-017 now gives it a host directory. dev-017 is a task about directory permission bits,
+so a candidate that leaves any directory without owner write or search permission breaks the host
+`rmtree`. Then `case_workspace` raises `evaluation.cleanup-failed`, `grade` drops the oracle record
+(`tests`/`calls` null) and reports `cause: infrastructure`. The private workspace stays on disk,
+including candidate-written content, the trusted projection and the hidden test copy in
+`oracle-adapter/test.py`.
+
+Reproduced on this commit:
+- Adversarial case: the reference implementation plus an extra 0o500 directory either in `/tmp` or
+  inside the fixture root. The oracle's own record showed the hidden test passing. The published report
+  was infrastructure; `cleanup.json` named a leftover `agentmage-eval-*` workspace.
+- Honest wrong answers: directories set to 0o555, everything set to 0o644, or `nested` set to 0. Each
+  was reported as infrastructure/cleanup-failed instead of test_failure or adapter_policy, and each
+  left residue.
+
+Attempts are still counted as failed, so this is not a high denominator-integrity break. It does
+contradict the row's published cleanup and cause claims. A natural model output becomes indistinguishable
+from a harness fault, which a later scorer or rerun policy might exclude. Candidate-controlled data
+persists outside the case lifetime, and for future protected inputs hidden-test bytes would persist too.
+
+Fix:
+1. Before `rmtree` (or in a dedicated `remove_candidate_tmp` step inside `grade_case`, while the
+   workspace still exists), walk `candidate-tmp` from the trusted host side without following symlinks
+   (`os.walk(..., followlinks=False)` top-down or fd-relative traversal). Apply `os.chmod(path, 0o700)`
+   to every real directory before descending, then remove the tree.
+2. Keep the oracle record and cause when only the candidate mount needed permission repair.
+3. Add real-sandbox tests: 0o500/0o000 directories in `/tmp` and in the fixture root, and all-0o555 /
+   all-0o644 wrong answers. These must yield test_failure or adapter_policy, no `cleanup.json`, and no
+   leftover `agentmage-eval-*` directory.
+4. Correct the guide and evidence sentences.
+
+### L1 (low, backlog): the candidate `/tmp` for dev-017 is now host-disk-backed
+
+Same location. The candidate can write an unbounded number of files of up to 32 MiB each to the host
+filesystem until the timeout, where earlier it wrote to a RAM tmpfs. The evidence already states that
+aggregate disk quotas are unavailable and that generated scoring stays disabled. Before generated
+scoring, use a size-limited tmpfs or a quota-backed directory for this mount.
+
+### L2 (low, backlog): dev-019 input types are normalised to Path
+
+scripts/coding_eval_oracle_worker.py `command_proxy` and `command_result` send `str(package)` and
+`str(root)`, and the candidate always receives `Path` objects. This matches the frozen dev-019 method,
+which passes Paths, so grading is faithful today. The guide does not say so, and reuse for a fixture that
+passes str would silently change candidate inputs. State this in the coverage text, or carry the input
+through the same tagged codec.
+
+## Per-row result
+
+- T-311.15: FINDINGS. All required runs reproduce the builder's claims exactly. Mode/command forgery,
+  symlink and alias, malformed-record and confinement probes behave as claimed. M1 (medium) blocks
+  closing the row. L1 and L2 are backlog.
+- Parent T-311 remains open; this review does not approve anything in the repository.
+
+Verdict: FINDINGS
