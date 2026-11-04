@@ -50,8 +50,8 @@ class IndependentOracleTests(unittest.TestCase):
     def test_real_two_sandbox_controls_keep_original_hidden_tests_and_counts(self):
         summary = oracle.verify(self.root / "controls")
         self.assertTrue(summary["passed"], summary)
-        self.assertEqual(len(summary["tasks"]), 16)
-        self.assertEqual(summary["control_attempts"], {"total": 32, "passed": 16, "failed": 16})
+        self.assertEqual(len(summary["tasks"]), 17)
+        self.assertEqual(summary["control_attempts"], {"total": 34, "passed": 17, "failed": 17})
         self.assertFalse(summary["generated_scoring"])
         self.assertIsNone(summary["model_score"])
         self.assertEqual(summary["collection_sha256"],
@@ -67,6 +67,99 @@ class IndependentOracleTests(unittest.TestCase):
             self.assertTrue(oracle.expected_base(
                 next(t for t in evaluation.collection() if t["id"] == row["task"]), row["base"]))
             self.assertFalse(row["reference"]["aggregate_worker_quotas"])
+
+    def test_deadline_controls_preserve_mock_calls_and_timeout_without_writes(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-026')
+        variants = [
+            ('short-deadline', '''original_run = run_commands
+def run_commands():
+ real_run = subprocess.run
+ def wrong(*args, **kwargs):
+  kwargs['timeout'] = 1800
+  return real_run(*args, **kwargs)
+ with __import__('unittest.mock', fromlist=['patch']).patch.object(subprocess, 'run', side_effect=wrong):
+  return original_run()''', False, 'test_failure'),
+            ('wrong-container', '''original_run = run_commands
+def run_commands():
+ real_run = subprocess.run
+ def wrong(command, **kwargs): return real_run(list(command), **kwargs)
+ with __import__('unittest.mock', fromlist=['patch']).patch.object(subprocess, 'run', side_effect=wrong):
+  return original_run()''', False, 'test_failure'),
+            ('wrong-capture', '''original_run = run_commands
+def run_commands():
+ real_run = subprocess.run
+ def wrong(*args, **kwargs):
+  kwargs['capture_output'] = False
+  return real_run(*args, **kwargs)
+ with __import__('unittest.mock', fromlist=['patch']).patch.object(subprocess, 'run', side_effect=wrong):
+  return original_run()''', False, 'test_failure'),
+            ('wrong-count', '''def run_commands(): return []''', False, 'test_failure'),
+            ('swallowed-timeout', '''def main():
+ try: run_commands()
+ except subprocess.TimeoutExpired: return 0''', False, 'test_failure'),
+            ('write-before-timeout', '''def main():
+ OUTPUT.write_text('candidate-result')
+ run_commands()''', False, 'test_failure'),
+            ('truthy-capture', '''original_run = run_commands
+def run_commands():
+ real_run = subprocess.run
+ def changed(*args, **kwargs):
+  kwargs['capture_output'] = 1
+  return real_run(*args, **kwargs)
+ with __import__('unittest.mock', fromlist=['patch']).patch.object(subprocess, 'run', side_effect=changed):
+  return original_run()''', True, 'none'),
+            ('inert-records', '''original_run = run_commands
+def run_commands():
+ records = original_run()
+ return [{'passed': True, 'timeout': True, 'candidate_exception': True, 'calls': []} for _ in records]
+''', True, 'none'),
+            ('private-exception', '''def run_commands(): raise ValueError('private-collector-payload')''',
+             False, 'candidate_exception'),
+            ('unsupported-return', '''original_run = run_commands
+def run_commands():
+ original_run()
+ return {1, 2}''', False, 'adapter_policy'),
+        ]
+        for name, source, passed, cause in variants:
+            files = self.files(task)
+            files[task['source']] += ('\n' + source + '\n').encode()
+            with self.subTest(variant=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / name)
+                self.assertEqual((report['passed'], report['cause']), (passed, cause), report)
+                self.assertEqual(report['tests']['tests'], 2)
+                self.assertEqual(report['control_attempts'],
+                                 {'total': 1, 'passed': int(passed), 'failed': int(not passed)})
+                self.assertIn('real-command-execution', report['coverage']['not_graded'])
+                if cause == 'candidate_exception':
+                    self.assertNotIn(b'private-collector-payload', (self.root / name / 'wire.log').read_bytes())
+                if cause not in {'adapter_policy', 'candidate_exception'}:
+                    legacy = evaluation.grade(task, files, self.root / (name + '-legacy'))
+                    self.assertEqual(legacy['passed'], passed, legacy)
+
+    def test_deadline_adapter_refuses_generated_source_and_has_no_hidden_mount(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-026')
+        files = self.files(task)
+        files[task['source']] += b'\n# generated collector refused\n'
+        output = self.root / 'refused-deadline'
+        with self.assertRaises(evaluation.EvaluationError):
+            oracle.grade(task, files, output)
+        self.assertFalse(output.exists())
+        files = self.files(task)
+        files[task['source']] += b'''
+assert not Path('/adapter/test.py').exists()
+assert not Path('/output').exists()
+assert not Path('/lane').exists()
+assert not Path('/dev/nvidia0').exists()
+import socket
+try:
+ socket.create_connection(('127.0.0.1', 9), timeout=0.1)
+except OSError: pass
+else: raise AssertionError('network reachable')
+'''
+        with mock.patch.object(evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+            report = oracle.grade(task, files, self.root / 'confined-deadline')
+        self.assertTrue(report['passed'], report)
 
     def test_resource_controls_and_wrong_observations_keep_original_assertions(self):
         task = next(t for t in evaluation.collection() if t['id'] == 'dev-024')

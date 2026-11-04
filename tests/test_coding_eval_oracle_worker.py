@@ -17,6 +17,104 @@ class OracleProtocolTests(unittest.TestCase):
     def remote(self, raw, result_type="bool"):
         return worker.RemoteFunction(io.BytesIO(raw), io.BytesIO(), io.BytesIO(), result_type)
 
+    def deadline_run_request(self):
+        return {'operation': 'run', 'stub': {'args': worker.pack_call_value(['fixture']), 'returncode': 0,
+                                           'stdout_hex': b'finite-output'.hex(), 'stderr_hex': ''},
+                'resolved': {'synthetic': '/fixture/synthetic'}}
+
+    def test_deadline_stub_preserves_completed_process_bytes_and_call_types(self):
+        def run_commands():
+            executable = module.shutil.which('synthetic')
+            result = module.subprocess.run((executable, 'argument'), cwd=Path('/workspace'),
+                                           check=False, capture_output=True, timeout=2700)
+            self.assertEqual(result.args, ['fixture'])
+            self.assertEqual((result.stdout, result.stderr, result.returncode), (b'finite-output', b'', 0))
+            return [{'calls': [], 'timeout': True, 'passed': True}]
+        module = SimpleNamespace(subprocess=subprocess, shutil=shutil, run_commands=run_commands)
+        result = worker.deadline_result(module, self.deadline_run_request())
+        self.assertTrue(worker.valid_deadline_result(result))
+        self.assertEqual(worker.unpack_call_value(result['value']), [{'calls': [], 'timeout': True, 'passed': True}])
+        self.assertEqual(worker.unpack_calls({'calls': result['calls']}),
+                         [((('/fixture/synthetic', 'argument'),),
+                           {'cwd': Path('/workspace'), 'check': False, 'capture_output': True, 'timeout': 2700})])
+
+    def test_deadline_main_retains_writes_even_when_timeout_propagates(self):
+        def main():
+            self.assertIs(type(module.parse_args()), SimpleNamespace)
+            module.OUTPUT.write_text('inert report text', encoding='utf-8')
+            module.run_commands()
+        module = SimpleNamespace(main=main, parse_args=lambda: None, run_commands=lambda: None, OUTPUT=Path('/unused'))
+        request = {'operation': 'main', 'arguments': worker.pack_call_value({'write': True, 'source_revision': 'c' * 40}),
+                   'timeout_command': worker.pack_call_value(('synthetic', 'command')), 'timeout_seconds': 2700}
+        result = worker.deadline_result(module, request)
+        self.assertTrue(result['timeout'])
+        self.assertIsNone(worker.unpack_call_value(result['value']))
+        self.assertEqual(worker.unpack_calls({'calls': result['calls']}),
+                         [(('inert report text',), {'encoding': 'utf-8'})])
+
+    def test_deadline_replay_targets_only_original_mock_and_uses_fixed_exception(self):
+        calls = [{'args': worker.pack_call_value(('inert text',)), 'kwargs': worker.pack_call_value({})}]
+        result = {'value': worker.pack_call_value(None), 'calls': calls, 'timeout': True}
+        remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), 'deadline-result')
+        exception = subprocess.TimeoutExpired(('synthetic',), 2700)
+        module = SimpleNamespace(parse_args=mock.MagicMock(return_value=SimpleNamespace(write=True, source_revision='c' * 40)),
+                                 run_commands=mock.MagicMock(side_effect=exception), OUTPUT=mock.MagicMock())
+        _, main = worker.deadline_proxies(remote, module)
+        with self.assertRaises(subprocess.TimeoutExpired) as caught:
+            main()
+        self.assertIs(type(caught.exception), subprocess.TimeoutExpired)
+        self.assertEqual(caught.exception.cmd, ('oracle', 'collection'))
+        module.OUTPUT.write_text.assert_called_once_with('inert text')
+        self.assertFalse(remote.exception_failed)
+        module.OUTPUT = Path('/must-not-be-touched')
+        with self.assertRaises(worker.ProtocolError):
+            main()
+        self.assertTrue(remote.failed)
+
+    def test_deadline_wire_validates_all_calls_before_replaying_any(self):
+        valid = {'value': worker.pack_call_value([]), 'calls': [], 'timeout': False}
+        invalid = [{**valid, 'timeout': 1}, {**valid, 'passed': True}, {**valid, 'calls': [{}]},
+                   {**valid, 'calls': [{'args': worker.pack_call_value(('inert',)),
+                                       'kwargs': worker.pack_call_value({})}, {}]},
+                   {**valid, 'calls': [{'args': worker.pack_call_value([]), 'kwargs': worker.pack_call_value({})}]},
+                   {**valid, 'value': {'kind': 'callable', 'value': 'untrusted'}},
+                   {**valid, 'timeout': True}, {**valid, 'calls': []} | {'exception': 'TimeoutExpired'}]
+        for value in invalid:
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': value}), 'deadline-result')
+            run = mock.MagicMock(return_value=subprocess.CompletedProcess(['fixture'], 0, stdout=b'x', stderr=b''))
+            module = SimpleNamespace(subprocess=SimpleNamespace(run=run), shutil=SimpleNamespace(which=mock.MagicMock()),
+                                     COMMANDS=())
+            proxy, _ = worker.deadline_proxies(remote, module)
+            with self.subTest(value=value), self.assertRaises(worker.ProtocolError):
+                proxy()
+            run.assert_not_called()
+            self.assertTrue(remote.failed)
+
+    def test_deadline_requests_refuse_nonfinite_stubs_and_executable_payloads(self):
+        request = self.deadline_run_request()
+        invalid = [None, {}, {'operation': []}, {**request, 'extra': True},
+                   {**request, 'stub': {**request['stub'], 'stdout_hex': 'xx'}},
+                   {**request, 'stub': {**request['stub'], 'returncode': True}},
+                   {**request, 'resolved': {'synthetic': {'callable': 'untrusted'}}},
+                   {'operation': 'main', 'arguments': worker.pack_call_value({'write': False, 'source_revision': 'c' * 40}),
+                    'timeout_command': worker.pack_call_value(('synthetic',)), 'timeout_seconds': 2700}]
+        module = SimpleNamespace(subprocess=subprocess, shutil=shutil, run_commands=mock.Mock(), main=mock.Mock())
+        for value in invalid:
+            with self.subTest(value=value), self.assertRaises(worker.ProtocolError):
+                worker.deadline_result(module, value)
+        module.run_commands.assert_not_called()
+        module.main.assert_not_called()
+
+    def test_deadline_commands_preserve_candidate_global_container_and_refuse_objects(self):
+        commands = [('synthetic', ('synthetic', 'argument'))]
+        module = SimpleNamespace(COMMANDS=commands)
+        result = worker.deadline_result(module, {'operation': 'commands'})
+        remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), 'deadline-result')
+        self.assertEqual(worker.unpack_call_value(remote({'operation': 'commands'})['commands']), commands)
+        for invalid in (object(), [('synthetic', ())], [('synthetic', (object(),))]):
+            module.COMMANDS = invalid
+            self.assertEqual(worker.deadline_result(module, {'operation': 'commands'}), {'adapter_policy': True})
+
     def test_resource_gpu_observations_use_only_the_exact_finite_stub(self):
         class Refused(ValueError):
             pass

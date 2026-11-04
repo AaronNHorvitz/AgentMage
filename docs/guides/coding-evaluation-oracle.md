@@ -49,6 +49,7 @@ Every selected original hidden method remains complete and unchanged.
 | dev-021 | `verify_case` | 1 | 0 / 1 | 1 | 6 |
 | dev-022 | `verify_case`, case roots | 1 | 0 / 1 | 2 | 4 |
 | dev-024 | `gpu_memory`, `CandidateResourceGuard` | 2 | 0 / 2 | 2 | 6 |
+| dev-026 | `run_commands`, `main`, command declarations | 2 | 1 / 0 | 3 | 3 |
 | dev-027 | `parser`, `extension_arguments` | 1 | 0 / 1 | 1 | 37 |
 | dev-029 | `suspend_resume_checks` | 1 | 0 / 1 | 1 | 6 |
 
@@ -113,6 +114,11 @@ Duplicate keys, invalid UTF-8, truncated or
 oversize frames, nonfinite constants, wrong sequence/type and extra result fields
 fail the exchange. A protocol failure remains sticky even if a test catches its
 exception. Limits are 64 KiB per frame, 128 calls and 2 MiB retained wire data.
+Candidate exceptions are also sticky: later calls fail and later methods can
+therefore report errors that would not occur in the original single-process
+suite. Alternate-candidate error counts are adapter counts; only the explicitly
+measured frozen control profiles are asserted here. Pass/fail still requires
+every selected original method to succeed.
 
 Before candidate imports, the worker duplicates its protocol writer to a
 non-inheritable descriptor and redirects fd 1 to diagnostics. Ordinary prints,
@@ -314,6 +320,45 @@ establishes only the declared observation behavior, never live device safety.
 Both missing base helpers produce two original test errors and two failed calls;
 the reference runs both methods with six calls. Controls-only admission stays
 in force. No generated score follows from these measurements.
+
+## Collector deadline observations
+
+T-311.21 uses oracle v18 for dev-026. Both complete original methods stay in
+the assertion namespace. A prerequisite call carries the candidate's command
+declarations as bounded list/tuple/string data, so the original count and order
+assertions use that candidate global. The first method's finite completed-process
+stub crosses as typed arguments, return code and hexadecimal stdout/stderr bytes.
+Only declared executable names have a finite resolution mapping; an undeclared
+lookup is adapter policy. No callable, mock, expression or original test crosses.
+
+The candidate runs its own `run_commands` with reconstructed local mocks and
+returns its value and observed subprocess calls. A closed codec preserves tuple,
+list, Path and finite built-in value distinctions. The trusted side validates the
+entire reply before replaying any call into the original MagicMock; it refuses
+a real function as a replay target. The unchanged original assertions check
+record/call counts, tuple argument order, each timeout and capture truthiness.
+They do not inspect record contents or require an exact Boolean capture flag.
+Wrong deadline/container/count/capture probes fail; integer truthy capture and
+inert record maps pass both the independent and original verifier.
+
+For `main`, the trusted test's SimpleNamespace arguments and fixed TimeoutExpired
+stub become finite data. The candidate reconstructs those stubs and a local output
+mock, calls its own `main`, and returns its value, timeout category and write calls.
+Writes are replayed into the trusted output mock even when a timeout occurs, so
+writing before re-raising fails the original `assert_not_called`. A swallowed
+timeout fails the original `assertRaises`. Only the standard-library TimeoutExpired
+class with fixed local fields is reconstructed. Exception text, classes and
+tracebacks from the candidate never execute in the trusted process.
+
+The base fails one deadline assertion; its timeout method passes. Both controls
+run two original methods and three protocol calls, including the prerequisite.
+These fixtures run no collector commands, compiler, documentation gate or GPU
+work. Report contents/digests, missing-executable handling, a minimum command
+count, timeout fields, unselected main paths and other statement clauses remain
+ungraded. Unsupported containers/subclasses and undeclared resolutions are adapter
+policy, even where an original assertion might accept them. Candidate-controlled
+call observations establish only the reported behavior, not actual command effects.
+Generated scoring stays disabled and all earlier admission blockers remain.
 
 ## Failed-command diagnostic observations
 

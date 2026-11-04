@@ -19,6 +19,7 @@ import subprocess
 import stat
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest import mock
 
@@ -27,7 +28,7 @@ MAX_TRANSCRIPT = 2 * 1024 * 1024
 MAX_CALLS = 128
 POLICY_RESULT_TYPES = frozenset({"argument-result", "verification-result", "capture-result",
                                 "bool", "bool-map", "path-result", "mode-result", "command-result",
-                                "diagnostic-result", "resource-result"})
+                                "diagnostic-result", "resource-result", "deadline-result"})
 
 
 class ProtocolError(ValueError):
@@ -246,6 +247,12 @@ class RemoteFunction:
                 if type(result) is dict and result.keys() == {"value"}:
                     unpack_call_value(result["value"])
                     valid = True
+            elif self.result_type == "deadline-result":
+                if args[0] == {"operation": "commands"}:
+                    valid = (type(result) is dict and result.keys() == {"commands"}
+                             and valid_collector_commands(unpack_call_value(result["commands"])))
+                else:
+                    valid = valid_deadline_result(result)
             elif self.result_type == "bool-map":
                 valid = (isinstance(result, dict) and result.keys() == {"value"}
                          and type(result["value"]) is dict
@@ -831,6 +838,139 @@ def resource_result(module, guards, request):
         return {"adapter_policy": True}
 
 
+def valid_collector_commands(commands):
+    return (type(commands) in (list, tuple) and len(commands) <= 128
+            and all(type(item) in (list, tuple) and len(item) == 2
+                    and type(item[0]) is str and type(item[1]) in (list, tuple)
+                    and 1 <= len(item[1]) <= 128 and all(type(v) is str for v in item[1])
+                    for item in commands))
+
+
+def valid_deadline_result(result):
+    if (type(result) is not dict or result.keys() != {"value", "calls", "timeout"}
+            or type(result["timeout"]) is not bool):
+        return False
+    value = unpack_call_value(result["value"])
+    unpack_calls({"calls": result["calls"]})
+    return not result["timeout"] or value is None
+
+
+def deadline_proxies(remote, module):
+    """Replay data only into original mocks, never into a real host function."""
+    def replay(request, stub):
+        if not isinstance(stub, mock.MagicMock):
+            remote.failed = True
+            raise ProtocolError("oracle.collector-fixture-not-mocked")
+        result = remote(request)
+        calls = unpack_calls({"calls": result["calls"]})
+        # Validate every observation before replay, including the return value.
+        value = unpack_call_value(result["value"])
+        for args, kwargs in calls:
+            stub(*args, **kwargs)
+        if result["timeout"]:
+            # Only this trusted standard-library class; no remote exception text.
+            raise subprocess.TimeoutExpired(("oracle", "collection"), 2700)
+        return value
+
+    def run_commands():
+        run, which = module.subprocess.run, module.shutil.which
+        if (not isinstance(run, mock.MagicMock) or not isinstance(which, mock.MagicMock)
+                or type(run.return_value) is not subprocess.CompletedProcess):
+            remote.failed = True
+            raise ProtocolError("oracle.collector-fixture-not-mocked")
+        stub = run.return_value
+        if type(stub.stdout) is not bytes or type(stub.stderr) is not bytes:
+            remote.failed = True
+            raise ProtocolError("oracle.collector-fixture-not-bytes")
+        return replay({"operation": "run", "stub": {
+            "args": pack_call_value(stub.args), "returncode": stub.returncode,
+            "stdout_hex": stub.stdout.hex(), "stderr_hex": stub.stderr.hex()},
+            "resolved": {argv[0]: which(argv[0]) for _, argv in module.COMMANDS}}, run)
+
+    def main():
+        parse, run, output = module.parse_args, module.run_commands, module.OUTPUT
+        if (not isinstance(parse, mock.MagicMock) or not isinstance(run, mock.MagicMock)
+                or not isinstance(output, mock.MagicMock)
+                or type(parse.return_value) is not SimpleNamespace
+                or type(run.side_effect) is not subprocess.TimeoutExpired
+                or run.side_effect.output is not None or run.side_effect.stderr is not None):
+            remote.failed = True
+            raise ProtocolError("oracle.collector-fixture-not-mocked")
+        return replay({"operation": "main", "arguments": pack_call_value(vars(parse.return_value)),
+                       "timeout_command": pack_call_value(run.side_effect.cmd),
+                       "timeout_seconds": run.side_effect.timeout}, output.write_text)
+    return run_commands, main
+
+
+def deadline_result(module, request):
+    """Run the two finite collector fixtures; no compiler or documentation gate."""
+    if type(request) is not dict or type(request.get("operation")) is not str:
+        raise ProtocolError("oracle.invalid-collector-request")
+    operation = request["operation"]
+    if operation == "commands" and request.keys() == {"operation"}:
+        commands = getattr(module, "COMMANDS", None)
+        if not valid_collector_commands(commands):
+            return {"adapter_policy": True}
+        return {"commands": pack_call_value(commands)}
+    if (operation == "run" and request.keys() == {"operation", "stub", "resolved"}
+            and type(request["stub"]) is dict
+            and request["stub"].keys() == {"args", "returncode", "stdout_hex", "stderr_hex"}
+            and type(request["stub"]["returncode"]) is int
+            and all(type(request["stub"][k]) is str
+                    and re.fullmatch(r"(?:[0-9a-f]{2})*", request["stub"][k]) is not None
+                    for k in ("stdout_hex", "stderr_hex"))
+            and type(request["resolved"]) is dict and len(request["resolved"]) <= 128
+            and all(type(k) is str and (v is None or type(v) is str)
+                    for k, v in request["resolved"].items())):
+        stub = request["stub"]
+        completed = subprocess.CompletedProcess(unpack_call_value(stub["args"]), stub["returncode"],
+                                               stdout=bytes.fromhex(stub["stdout_hex"]),
+                                               stderr=bytes.fromhex(stub["stderr_hex"]))
+
+        def resolve(name):
+            if type(name) is not str or name not in request["resolved"]:
+                raise AdapterPolicyError("oracle.collector-resolution-outside-fixture")
+            return request["resolved"][name]
+
+        stack = contextlib.ExitStack()
+        with stack:
+            stack.enter_context(mock.patch.object(module.shutil, "which", side_effect=resolve))
+            observed = stack.enter_context(mock.patch.object(module.subprocess, "run", return_value=completed))
+            function = module.run_commands
+            return deadline_observation(function, observed)
+    if operation == "main" and request.keys() == {"operation", "arguments", "timeout_command", "timeout_seconds"}:
+        arguments = unpack_call_value(request["arguments"])
+        command = unpack_call_value(request["timeout_command"])
+        if (type(arguments) is not dict or arguments.keys() != {"write", "source_revision"}
+                or type(arguments["write"]) is not bool or arguments["write"] is not True
+                or type(arguments["source_revision"]) is not str
+                or re.fullmatch(r"[0-9a-f]{40}", arguments["source_revision"]) is None
+                or type(command) is not tuple or not command or any(type(v) is not str for v in command)
+                or type(request["timeout_seconds"]) is not int or request["timeout_seconds"] <= 0):
+            raise ProtocolError("oracle.invalid-collector-request")
+        with (mock.patch.object(module, "parse_args", return_value=SimpleNamespace(**arguments)),
+              mock.patch.object(module, "run_commands", side_effect=subprocess.TimeoutExpired(
+                  command, request["timeout_seconds"])), mock.patch.object(module, "OUTPUT") as output):
+            return deadline_observation(module.main, output.write_text)
+    raise ProtocolError("oracle.invalid-collector-request")
+
+
+def deadline_observation(function, observed):
+    timed_out, value = False, None
+    try:
+        try:
+            value = function()
+        except subprocess.TimeoutExpired:
+            timed_out = True
+        calls = [{"args": pack_call_value(call.args), "kwargs": pack_call_value(call.kwargs)}
+                 for call in observed.call_args_list]
+        if len(calls) > 128:
+            raise AdapterPolicyError("oracle.collector-call-limit")
+        return {"value": pack_call_value(value), "calls": calls, "timeout": timed_out}
+    except AdapterPolicyError:
+        return {"adapter_policy": True}
+
+
 def candidate(config):
     reader = sys.stdin.buffer
     # Keep the wire off standard output before importing any candidate module.
@@ -859,7 +999,7 @@ def candidate(config):
                     or type(request["seq"]) is not int or not isinstance(request["args"], list)):
                 raise ProtocolError("oracle.invalid-request")
             try:
-                function = (None if config["result_type"] in {"argument-result", "resource-result"}
+                function = (None if config["result_type"] in {"argument-result", "resource-result", "deadline-result"}
                             else getattr(module, config["function"]))
                 if config["result_type"] == "path-result":
                     result = path_result(function, module.AmbiguousReference, *request["args"])
@@ -881,6 +1021,8 @@ def candidate(config):
                     result = diagnostic_result(function, *request["args"])
                 elif config["result_type"] == "resource-result":
                     result = resource_result(module, guards, *request["args"])
+                elif config["result_type"] == "deadline-result":
+                    result = deadline_result(module, *request["args"])
                 elif config["result_type"] in {"bool", "bool-map"}:
                     result = predicate_result(function(*request["args"]), config["result_type"])
                 else:
@@ -908,6 +1050,8 @@ def oracle(config):
             remote.start()
             if config.get("observe_case_roots"):
                 module.CASE_ROOTS = remote({"operation": "case-roots"})["case_roots"]
+            if config.get("observe_commands"):
+                module.COMMANDS = unpack_call_value(remote({"operation": "commands"})["commands"])
         except (ProtocolError, AdapterPolicyError, CandidateExecutionError):
             # Failed startup or a refused prerequisite observation runs no
             # assertions. Retain the diagnostic and failed attempt, never a score.
@@ -930,6 +1074,8 @@ def oracle(config):
                 proxy = diagnostic_proxy(remote)
             elif config["result_type"] == "resource-result":
                 proxy, module.CandidateResourceGuard = resource_proxies(remote, module)
+            elif config["result_type"] == "deadline-result":
+                proxy, module.main = deadline_proxies(remote, module)
             else:
                 proxy = remote
             setattr(module, config["function"], proxy)
