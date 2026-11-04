@@ -1,0 +1,118 @@
+Commit: 8aac044ec2076b1a95de5bfef481f1af88342d18
+Scope: local-coding-t311-18-environment-repair
+
+# Independent review: T-311.18 environment repair (review 2, same row)
+
+Reviewer: separate read-only session, same model family (accepted for now). The repository was
+not modified. All outputs are in a fresh private directory,
+`/lane/state/tmp/t311-18-environment-review-pwI53J`.
+
+## Methods
+
+- Confirmed `git rev-parse 8aac044ec2076b1a95de5bfef481f1af88342d18` equals HEAD, with a clean
+  tree. Base `d49f3b0eb55e9d0f0615b5f4f3a422f1ce2f5833`; one commit in range, touching six files
+  (oracle host, oracle tests, guide, TASKS row, new evidence, retained review 1).
+- Read the full diff, and read `sandbox()`, `terminate()`, `launch()` and `exchange()` in full.
+  `launch()` is the only `Popen` site that starts bwrap. `sandbox()` always yields
+  `/usr/bin/bwrap`, so the non-bwrap branch, which still inherits the environment, is reachable
+  only from the host lifecycle fault tests.
+- Read the builder's private artifacts (not rerun): `before-launch.py`, `before-fix.log/result`,
+  `targeted`, `fast`, `final-fast`, `worker-unit`, `legacy-unit`, both summaries,
+  `source-digests.json`, `audit.json`, `policy.log` and `final-checks.json`. All 15 SHA-256
+  values in the evidence table match the bytes on disk. `scripts/coding_eval_oracle.py`
+  (`5fd46a6e…0bc37`), `tests/test_coding_eval_oracle.py` (`57659fe6…5fb7`) and the retained
+  review (`164d34c5…ddf7`) match at HEAD. `before-launch.py` is the base commit's `launch()`,
+  differing only by one trailing blank line. Under that launcher, the new regression fails in
+  both roles at the `/proc/1/environ` assertion.
+- Ran every required command, plus my own real-pipeline probes through the build reservation.
+
+## Required commands and results
+
+| Command | Result |
+| --- | --- |
+| `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base d49f3b0e… --timeout 600` | exit 0; `Ran 70 tests in 68.618s OK`; `FAST GATE: PASS` |
+| `bash /tools/build-slot python3 -B -m unittest tests.test_coding_eval_oracle_worker -v` | exit 0; 46 tests OK |
+| `bash /tools/build-slot python3 -B -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | exit 0; 58 tests OK |
+| `bash /tools/build-slot python3 scripts/coding_eval_oracle.py verify --output $review_results/independent` | exit 0; version `coding-independent-oracle-v16`; `passed` true; 15 pairs all valid (references pass, bases fail); 18 methods; 160 reference calls; controls 30/15/15; `generated_scoring` false; `model_score` null; model attempts and GPU minutes 0; collection `0c2a0624…1570` |
+| `bash /tools/build-slot python3 scripts/coding_eval.py verify --output $review_results/legacy` | exit 0; 30 pairs all valid; 89 reference tests; 0 skipped |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` | exit 0; `Validated 719 Markdown file(s) and all policy invariants.` |
+| `git diff --exit-code d49f3b0e… HEAD -- <eight frozen legacy/worker files>` | exit 0 (unchanged) |
+| `cmp docs/reviews/d49f3b0eb55e-…txt /lane/reviews/d49f3b0eb55e-…md` | exit 0 |
+| `git diff --check d49f3b0e… HEAD` | exit 0 |
+
+Node `v24.15.0`; SHA-256 `d1de76d8…932c` as expected. My output directory has no
+`cleanup.json` or `cleanup-recovery.json`. The fast gate ran the full
+`tests.test_coding_eval_oracle` module, which includes the new regression.
+
+## M1 assessment (review 1)
+
+- **Repair.** `launch()` now passes `env={}` to `Popen` for both roles
+  (`scripts/coding_eval_oracle.py:187-188`). There is no `env` argument at either `exchange()`
+  call, so the keyword cannot collide. bwrap uses absolute paths and needs no environment.
+- **Real-pipeline reproduction (repaired).** I reran review 1's attack. In a private interpreter,
+  candidate code appended to the dev-015 reference read `/proc/*/environ`, `cmdline`, `cwd` and
+  `root` for every visible process and logged them while the case was graded. The evaluator's
+  real environment was left in place, plus the synthetic `REVIEW_FAKE_API_KEY` sentinel. Result:
+  passed (1 test, 4 calls). The visible PIDs were 1 and 2, and `/proc/1/environ` was 0 bytes. The
+  worker environment was exactly `{PATH: /usr/bin, HOME: /tmp, LANG: C.UTF-8, PWD: /workspace}`.
+  The sentinel value, sentinel name, real home path and real user name occur in none of
+  `candidate.log`, `oracle.log` or `wire.log`.
+- **Positive control.** The same probe, with the base commit's `launch()` loaded into the module,
+  logged a 1339-byte PID 1 environment. The sentinel value, sentinel name, home path and user name
+  all appear in `candidate.log`. The probe detects the leak, and the repair removes it.
+- **Regression quality.** `test_launcher_and_workers_do_not_inherit_host_environment`
+  (`tests/test_coding_eval_oracle.py:192-230`) uses real namespaces for both roles. It sets only
+  synthetic sentinels through `mock.patch.dict(os.environ, …, clear=True)`, which calls
+  `putenv`, so the base launcher really inherits them. It asserts that PID 1's environment is
+  empty, that the worker environment is exactly the four values, and that no visible environ
+  contains a sentinel. It prints no environment values. Cleanup signals the group only if
+  `communicate` did not reap the leader. The mocked launch test now requires `env == {}` on both
+  the exec-success and exec-failure paths (line 1393).
+- **Claims.** The guide (`docs/guides/coding-evaluation-oracle.md:90-94`, `:139-152`) now says
+  "empty launcher environments", "host-home mount" and "inherited credentials". It also states
+  that mountinfo can still reveal bind roots and that the legacy grader keeps the gap. These
+  statements match what I observed. The evidence numbers match my runs and the builder's
+  artifacts. The retained review is byte-identical.
+
+M1 is resolved.
+
+## Integrity and scope
+
+The diff contains no held-out content, hidden-test, task-pin, threshold, `SUPPORTED`, control,
+`result_record` or worker change. Apart from `launch()` and the version string, oracle code is
+unchanged. The six legacy files and the worker files are unchanged. No model, GPU, tuning or
+download is involved. Public hygiene: the committed diff contains no host home path, username,
+hostname or credential. The retained review cites only lane paths and synthetic examples. The
+row is a single same-row repair under T-311 (one sub-row level) and ends in running, measured
+code.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low; carried from review 1, disclosed, deferred)** —
+  `/proc/self/mountinfo` in both namespaces still shows host bind-mount roots, which include the
+  home path and user name. The guide explicitly disclaims hiding all filesystem metadata and
+  requires a disposition before generated scoring (`docs/guides/coding-evaluation-oracle.md:146-148`).
+  This is accurate, but it is not yet resolved. Before generated scoring, stage case, adapter and
+  output directories under a neutral path (for example, one root under the lane state directory
+  with opaque names), or record an explicit acceptance.
+- **L2 (low; backlog, pre-admission)** — the frozen legacy grader still starts bwrap with an
+  inherited environment (`scripts/coding_eval.py:781`, `Popen` without `env`), so its namespace
+  PID 1 exposes the evaluator environment just as review 1 showed for the oracle. Admission is
+  controls-only today and the namespace has no network, so this is not exploitable now. The
+  obligation is recorded only in the T-311.18 row prose and the guide (`:150-152`). Before any
+  generated candidate is scored through either grader, add a tracked row (or gate check) that
+  applies the same `env={}` repair and the same real-namespace regression to the legacy launcher.
+
+## Per-row result
+
+- **T-311.18: PASS.** Review 1 medium M1 is resolved and independently reproduced in both
+  directions (base leaks, repair does not). All required runs match the builder's numbers, and no
+  high or medium finding remains open. L1 and L2 are low, return before generated scoring and
+  are backlog for this row.
+- Not reviewed here, and remaining open: T-311.15 (three reviews, FINDINGS), T-311.16, parent
+  T-311, generated scoring, aggregate/scratch quotas, held-out inputs, coverage admission, the
+  dev-003 race policy and the model baseline. No generated scoring is admitted.
+
+Verdict: PASS
