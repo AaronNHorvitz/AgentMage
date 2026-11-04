@@ -14,6 +14,7 @@ import selectors
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 
 if __package__:
@@ -23,7 +24,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v14"
+VERSION = "coding-independent-oracle-v15"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
@@ -151,7 +152,7 @@ def sandbox(workspace, adapter, output, role, candidate_tmp=None):
         command.extend(["--bind", str(output), "/output"])
     elif role != "candidate":
         raise evaluation.EvaluationError("oracle.role-refused")
-    return [*command, "/usr/bin/python3", "-I", "-B", "/adapter/run.py", role]
+    return [*command, "--", "/usr/bin/python3", "-I", "-B", "/adapter/run.py", role]
 
 
 def terminate(process):
@@ -167,6 +168,24 @@ def terminate(process):
             stream.close()
 
 
+def launch(command, **options):
+    """Keep host mount sources out of the namespace's PID 1 command line."""
+    if command[0] != "/usr/bin/bwrap":
+        # Non-bwrap commands are used only for host lifecycle fault tests.
+        return subprocess.Popen(command, **options)
+    boundary = command.index("--")
+    with tempfile.TemporaryFile() as arguments:
+        arguments.write(b"\0".join(os.fsencode(arg) for arg in command[1:boundary]) + b"\0")
+        arguments.seek(0)
+        # bwrap reads and closes this descriptor before starting the worker.
+        # The temporary file has no directory entry; it closes here on every
+        # launch outcome. Only this fd crosses exec alongside standard streams.
+        # --args supplies options only; the fixed namespace-local executable
+        # and its arguments must remain in argv after the option delimiter.
+        return subprocess.Popen([command[0], "--args", str(arguments.fileno()), *command[boundary:]],
+                                pass_fds=(arguments.fileno(),), **options)
+
+
 def exchange(candidate_command, oracle_command, output, timeout):
     """Connect pipes directly; the host accepts results only from the oracle mount."""
     processes = []
@@ -175,11 +194,11 @@ def exchange(candidate_command, oracle_command, output, timeout):
     try:
         with ((output / "candidate.log").open("xb") as candidate_log,
               (output / "oracle.log").open("xb") as oracle_log):
-            candidate_process = subprocess.Popen(
+            candidate_process = launch(
                 candidate_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE, start_new_session=True, preexec_fn=evaluation.limits)
             processes.append(candidate_process)
-            oracle_process = subprocess.Popen(
+            oracle_process = launch(
                 oracle_command, stdin=candidate_process.stdout, stdout=candidate_process.stdin,
                 stderr=subprocess.PIPE, start_new_session=True, preexec_fn=evaluation.limits)
             processes.append(oracle_process)

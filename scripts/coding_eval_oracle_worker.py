@@ -149,6 +149,34 @@ class RemoteFunction:
         if len(data) > remaining:
             raise ProtocolError("oracle.transcript-limit")
 
+    def finish(self):
+        """End requests, then require EOF with no unsolicited candidate bytes.
+
+        A closed end marker lets the candidate exit even if its namespace init
+        still holds the request pipe. The host deadline bounds held-open pipes.
+        """
+        try:
+            end = encode_message({"done": True})
+            self.record(end)
+            try:
+                self.writer.write(end)
+                self.writer.flush()
+            except BrokenPipeError:
+                # A worker may have exited after its last reply. Still require
+                # clean EOF; the host separately checks its actual exit code.
+                pass
+            try:
+                self.writer.close()
+            except BrokenPipeError:
+                pass
+            trailing = self.reader.read(1)
+            if trailing:
+                self.record(trailing)
+                raise ProtocolError("oracle.trailing-data")
+        except (OSError, ValueError):
+            self.failed = True
+            raise ProtocolError("oracle.finish-failed") from None
+
     def __call__(self, *args):
         try:
             self.calls += 1
@@ -704,10 +732,14 @@ def diagnostic_result(function, request):
 
 
 def candidate(config):
-    reader, writer = sys.stdin.buffer, sys.stdout.buffer
-    # Ordinary candidate prints are diagnostics. Deliberate protocol corruption
-    # through original stdout is still untrusted input to the other process.
-    with contextlib.redirect_stdout(sys.stderr):
+    reader = sys.stdin.buffer
+    # Keep the wire off standard output before importing any candidate module.
+    # os.dup creates a non-inheritable fd; exec children inherit diagnostics on
+    # fd 1, never this writer. This is output hygiene, not isolation from hostile
+    # Python in the same interpreter: it can still discover our descriptors.
+    descriptor = os.dup(1)
+    with os.fdopen(descriptor, "wb") as writer, contextlib.redirect_stdout(sys.stderr):
+        os.dup2(2, 1)
         sys.path.insert(0, "/workspace")
         module = importlib.import_module(config["module"])
         # An absent function is a frozen task outcome; a failed import or
@@ -720,6 +752,8 @@ def candidate(config):
             if not reader.peek(1):
                 return
             request, _ = read_message(reader)
+            if type(request) is dict and request.keys() == {"done"} and request["done"] is True:
+                return
             if (not isinstance(request, dict) or request.keys() != {"seq", "args"}
                     or type(request["seq"]) is not int or not isinstance(request["args"], list)):
                 raise ProtocolError("oracle.invalid-request")
@@ -801,6 +835,12 @@ def oracle(config):
             suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromName(name, hidden)
                                        for name in config["test_names"])
             result = unittest.TextTestRunner(stream=sys.stderr, verbosity=2).run(suite)
+        try:
+            remote.finish()
+        except ProtocolError:
+            # Even passing assertions cannot hide extra frames, including a
+            # forged first reply followed by the actual function observation.
+            pass
         counts = {"tests": result.testsRun, "failures": len(result.failures),
                   "errors": len(result.errors), "skipped": len(result.skipped),
                   "expected_failures": len(result.expectedFailures),

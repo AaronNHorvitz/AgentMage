@@ -69,6 +69,10 @@ T-311.17 adds dev-009 through oracle v14. Its real child runs inside the
 candidate namespace; diagnostic text and one closed error category reach the
 original assertions, as described below.
 
+T-311.18 uses oracle v15 to separate standard output from the protocol, require
+EOF after the final response and hide host mount sources from launcher arguments.
+It addresses T-311.17 review lows L1/L2/L3; generated scoring remains disabled.
+
 The functions use JSON values and lexical paths. Three verification tasks also
 use finite text fixtures and stub observations, described below. Other tasks,
 general filesystem mocks, general exception transport and Rust execution are
@@ -108,6 +112,32 @@ Duplicate keys, invalid UTF-8, truncated or
 oversize frames, nonfinite constants, wrong sequence/type and extra result fields
 fail the exchange. A protocol failure remains sticky even if a test catches its
 exception. Limits are 64 KiB per frame, 128 calls and 2 MiB retained wire data.
+
+Before candidate imports, the worker duplicates its protocol writer to a
+non-inheritable descriptor and redirects fd 1 to diagnostics. Ordinary prints,
+`sys.__stdout__`, raw fd 1 writes and exec children therefore write to the
+bounded candidate log. After assertions, the oracle sends the exact closed
+`{"done":true}` frame, closes its request writer and requires candidate EOF.
+The end frame lets the worker return even while namespace init holds the request
+pipe open. Any trailing byte is a sticky protocol failure,
+even if all original assertions passed. One byte is retained within the existing
+transcript bound; a worker that holds the pipe open still hits the host deadline.
+The handshake also runs after startup or prerequisite-observation failure.
+
+This descriptor separation is output hygiene, not isolation from candidate
+Python inside its own interpreter. Deliberate descriptor discovery or worker
+patching remains possible; the candidate controls its observations. A forged
+first reply followed by the real reply is rejected at EOF. The original
+assertions, counts and result mount remain in the separate trusted namespace.
+
+The host passes bubblewrap's NUL-separated arguments through an anonymous file
+descriptor with `--args`. PID 1's command line contains the launcher, the flag and
+descriptor number, plus the fixed namespace-local worker command. The launcher closes that descriptor before starting
+the worker. No mount-source path appears in that command line and no named
+argument file is created. This is not a claim that all host filesystem metadata
+is hidden by the namespace.
+The host closes its descriptor after launch, including failed exec. All namespace,
+mount, environment, permission and resource options remain unchanged.
 
 Before assertions run, the oracle consumes one exact startup frame sent after
 the candidate module imports. It records readiness and whether the function is
@@ -262,7 +292,10 @@ exceptions retain that sticky failure; their messages never cross the pipe.
 
 Unknown categories, extra fields, non-string text or malformed frames fail as
 protocol before text is replayed. A response too large for the existing frame
-bound fails as adapter policy. Every refusal remains counted. The original
+bound fails as adapter policy. The 64 KiB bound includes the complete JSON frame,
+newline and escaping: non-ASCII characters are escaped, so a 16,384-character
+tail can exceed it. A frame-bounded diagnostic means encoded bytes, not characters.
+Every refusal remains counted. The original
 assertions judge the observed text; a candidate cannot replace those assertions
 or publish the oracle's counts. Candidate-side unittest patches that fool the
 legacy grader fail here. RuntimeError strings containing code-like text remain

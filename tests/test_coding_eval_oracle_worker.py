@@ -17,6 +17,30 @@ class OracleProtocolTests(unittest.TestCase):
     def remote(self, raw, result_type="bool"):
         return worker.RemoteFunction(io.BytesIO(raw), io.BytesIO(), io.BytesIO(), result_type)
 
+    def test_finish_closes_requests_and_requires_exact_eof(self):
+        remote = self.remote(b"")
+        remote.finish()
+        self.assertTrue(remote.writer.closed)
+        self.assertFalse(remote.failed)
+        for tail in (b"x", worker.encode_message({"seq": 2, "result": {"value": True}}),
+                     b"x" * (worker.MAX_TRANSCRIPT + 1)):
+            with self.subTest(tail_length=len(tail)):
+                remote = self.remote(tail)
+                with self.assertRaises(worker.ProtocolError):
+                    remote.finish()
+                self.assertTrue(remote.failed)
+                self.assertTrue(remote.writer.closed)
+                self.assertEqual(remote.transcript.getvalue(), worker.encode_message({"done": True}) + tail[:1])
+
+    def test_finish_read_or_close_failure_is_sticky(self):
+        for stream, operation in (("reader", "read"), ("writer", "close")):
+            remote = self.remote(b"")
+            with self.subTest(stream=stream), mock.patch.object(
+                    getattr(remote, stream), operation, side_effect=OSError("synthetic failure")):
+                with self.assertRaises(worker.ProtocolError):
+                    remote.finish()
+            self.assertTrue(remote.failed)
+
     def test_diagnostic_observations_preserve_text_as_inert_data_and_fixed_runtime_error(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
@@ -473,9 +497,14 @@ class OracleProtocolTests(unittest.TestCase):
             with (mock.patch.object(worker.sys, 'stdin', SimpleNamespace(buffer=reader)),
                   mock.patch.object(worker.sys, 'stdout', SimpleNamespace(buffer=writer)),
                   mock.patch.object(worker.sys, 'path', list(worker.sys.path)),
+                  mock.patch.object(worker.os, 'dup', return_value=17) as duplicate,
+                  mock.patch.object(worker.os, 'fdopen', return_value=worker.contextlib.nullcontext(writer)),
+                  mock.patch.object(worker.os, 'dup2') as redirect,
                   mock.patch.object(worker.importlib, 'import_module', return_value=module),
                   self.subTest(request=request), self.assertRaises(worker.ProtocolError)):
                 worker.candidate(config)
+            duplicate.assert_called_once_with(1)
+            redirect.assert_called_once_with(2, 1)
             self.assertEqual(writer.getvalue(), b'{"ready":true,"function_found":true}\n')
         module.capture.assert_not_called()
         module.validate_raw.assert_not_called()

@@ -12,6 +12,18 @@ from scripts import coding_eval as evaluation
 from scripts import coding_eval_oracle as oracle
 
 
+WIRE_DESCRIPTOR_PROBE = b'''
+import os, fcntl, stat
+def protocol_fd():
+ for fd in range(3, 64):
+  try:
+   if stat.S_ISFIFO(os.fstat(fd).st_mode) and fcntl.fcntl(fd, fcntl.F_GETFL) & os.O_ACCMODE == os.O_WRONLY:
+    return fd
+  except OSError: pass
+ raise AssertionError('missing protocol descriptor')
+'''
+
+
 class IndependentOracleTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix="agentmage-oracle-test-")
@@ -83,7 +95,8 @@ class IndependentOracleTests(unittest.TestCase):
             self.assertIsNone(base["function_found"])
             self.assertEqual(base["calls"], 0)
             self.assertEqual(base["tests"]["tests"], 0)
-            self.assertEqual(base["logs"]["wire.log"], evaluation.sha(b""))
+            self.assertEqual(base["logs"]["wire.log"],
+                             evaluation.sha(oracle.worker.encode_message({"done": True})))
             self.assertEqual(base["control_attempts"], {"total": 1, "passed": 0, "failed": 1})
 
     def test_diagnostic_controls_refuse_generated_inputs_before_launch(self):
@@ -95,6 +108,112 @@ class IndependentOracleTests(unittest.TestCase):
                 oracle.grade(task, files, self.root / 'refused')
             launch.assert_not_called()
             self.assertFalse((self.root / 'refused').exists())
+
+    def test_protocol_is_separate_from_standard_output_and_checks_trailing_bytes(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-009')
+        frame = b'{"seq":1,"result":{"stderr":"catalog drift: fixture","outcome":{"kind":"runtime-error","message":"exited 3"}}}\n'
+        # Deliberate same-interpreter descriptor discovery is still possible;
+        # the EOF check must reject the real reply left after a forged one.
+        discover = WIRE_DESCRIPTOR_PROBE.decode()
+        variants = [
+            ('fd1-forgery', f'''def subprocess_runner(command, root):
+ os.write(1, {frame!r})
+ raise ValueError('fixed failure')
+''', False, 'candidate_exception'),
+            ('original-stdout-forgery', f'''def subprocess_runner(command, root):
+ sys.__stdout__.buffer.write({frame!r}); sys.__stdout__.buffer.flush()
+ raise ValueError('fixed failure')
+''', False, 'candidate_exception'),
+            ('inherited-child-output', f'''def subprocess_runner(command, root):
+ subprocess.run([sys.executable, '-c', {('import os; os.write(1, ' + repr(frame) + ')')!r}], check=True)
+ raise ValueError('fixed failure')
+''', False, 'candidate_exception'),
+            ('private-fd-forgery', f'''def subprocess_runner(command, root):
+ os.write(protocol_fd(), {frame!r})
+ raise ValueError('fixed failure')
+''', False, 'protocol'),
+            ('exit-tail', '''import atexit
+saved_writer = os.dup(protocol_fd())
+atexit.register(lambda: os.write(saved_writer, b'unsolicited-tail'))
+''', False, 'protocol'),
+            ('ordinary-output', '''original_runner = subprocess_runner
+def subprocess_runner(command, root):
+ print('ordinary-print')
+ os.write(1, b'ordinary-fd1-output\\n')
+ sys.__stdout__.write('original-stdout-output\\n'); sys.__stdout__.flush()
+ return original_runner(command, root)
+''', True, 'none'),
+            ('startup-output', '''os.write(1, b'{"ready":false,"function_found":true}\\n')
+''', True, 'none'),
+            ('private-fd-not-inherited', '''original_runner = subprocess_runner
+def subprocess_runner(command, root):
+ fd = protocol_fd()
+ assert not os.get_inheritable(fd)
+ child = 'import os\\ntry: os.fstat(' + str(fd) + ')\\nexcept OSError: pass\\nelse: raise AssertionError("protocol inherited")'
+ subprocess.run([sys.executable, '-I', '-c', child], close_fds=False, check=True)
+ return original_runner(command, root)
+''', True, 'none'),
+        ]
+        for name, suffix, passed, cause in variants:
+            files = self.files(task)
+            files[task['source']] += ('\n' + discover + suffix).encode()
+            with self.subTest(variant=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                output = self.root / name
+                report = oracle.grade(task, files, output)
+                self.assertEqual((report['passed'], report['cause']), (passed, cause), report)
+                self.assertEqual(report['tests']['tests'], 1)
+                self.assertEqual(report['control_attempts'],
+                                 {'total': 1, 'passed': int(passed), 'failed': int(not passed)})
+                if name in {'private-fd-forgery', 'exit-tail'}:
+                    self.assertTrue(report['protocol_failed'])
+                    self.assertEqual(report['tests']['failures'], 0)
+                if name == 'ordinary-output':
+                    for marker in (b'ordinary-print', b'ordinary-fd1-output', b'original-stdout-output'):
+                        self.assertIn(marker, (output / 'candidate.log').read_bytes())
+                        self.assertNotIn(marker, (output / 'wire.log').read_bytes())
+
+    def test_launcher_arguments_and_descriptor_are_absent_inside_real_namespace(self):
+        report = self.probe(b'''
+import os
+from pathlib import Path
+cmd = Path('/proc/1/cmdline').read_bytes().split(b'\\0')
+assert cmd[0] == b'/usr/bin/bwrap', cmd
+assert cmd[1] == b'--args', cmd
+assert cmd[3:] == [b'--', b'/usr/bin/python3', b'-I', b'-B', b'/adapter/run.py', b'candidate', b''], cmd
+for path in Path('/proc').glob('[0-9]*/cmdline'):
+ data = path.read_bytes()
+ assert b'agentmage-eval-' not in data and b'candidate-adapter' not in data, data
+assert not Path('/proc/self/fd/' + cmd[2].decode()).exists()
+assert not Path('/proc/1/fd/' + cmd[2].decode()).exists()
+''', 'private-launch-arguments')
+        self.assertTrue(report['passed'], report)
+
+    def test_candidate_that_holds_eof_open_hits_host_deadline_and_counts_failure(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-009')
+        files = self.files(task)
+        files[task['source']] += b'''
+import atexit, fcntl, os, stat, time
+for fd in range(3, 64):
+ try:
+  if stat.S_ISFIFO(os.fstat(fd).st_mode) and fcntl.fcntl(fd, fcntl.F_GETFL) & os.O_ACCMODE == os.O_WRONLY:
+   saved_writer = os.dup(fd)
+   break
+ except OSError: pass
+atexit.register(lambda: time.sleep(20))
+'''
+        real_case = oracle.grade_case
+
+        def bounded_case(task, files, output):
+            return real_case(task, files, output, timeout=2)
+
+        with mock.patch.object(evaluation, 'require_historical_candidate', return_value='synthetic-probe'), \
+                mock.patch.object(oracle, 'grade_case', side_effect=bounded_case):
+            report = oracle.grade(task, files, self.root / 'held-eof')
+        self.assertFalse(report['passed'])
+        self.assertEqual(report['cause'], 'timeout')
+        self.assertEqual(report['control_attempts'], {'total': 1, 'passed': 0, 'failed': 1})
+        self.assertFalse(list(self.root.rglob('cleanup-recovery.json')))
 
     def test_diagnostic_assertions_and_exception_data_stay_independent(self):
         task = next(t for t in evaluation.collection() if t['id'] == 'dev-009')
@@ -663,7 +782,9 @@ def capture():
     def test_import_failure_and_false_startup_do_not_run_hidden_assertions(self):
         for name, code in (
                 ("import-failure", b'\nraise RuntimeError("synthetic import failure")\n'),
-                ("false-startup", b'\nimport os\nos.write(1, b\'{"ready":false,"function_found":true}\\n\')\n')):
+                ("false-startup", b'\nimport __main__\noriginal_encode = __main__.encode_message\n'
+                 b'__main__.encode_message = lambda value: original_encode(\n'
+                 b' {"ready": False, "function_found": True} if "ready" in value else value)\n')):
             with self.subTest(name=name):
                 report = self.probe(code, name)
                 self.assertFalse(report["passed"])
@@ -866,9 +987,9 @@ __main__.argument_result = lambda *a: {'arguments': [], 'container': '__reduce__
         task = next(t for t in evaluation.collection() if t['id'] == 'dev-022')
         for name, source, cause in (
                 ('unsupported-roots', b"\nCASE_ROOTS = {'case': print}\n", 'adapter_policy'),
-                ('malformed-roots', b'''
+                ('malformed-roots', WIRE_DESCRIPTOR_PROBE + b'''
 import os
-os.write(1, b'{"ready":true,"function_found":true}\\n{"seq":1,"result":{"case_roots":{"a":1}}}\\n')
+os.write(protocol_fd(), b'{"ready":true,"function_found":true}\\n{"seq":1,"result":{"case_roots":{"a":1}}}\\n')
 os._exit(0)
 ''', 'protocol')):
             files = self.files(task)
@@ -1014,7 +1135,7 @@ os._exit(0)
                                    ('raw-exception', {'candidate_exception': True}, 'candidate_exception'),
                                    ('raw-payload', {'candidate_exception': True, 'message': 'untrusted'}, 'protocol')):
             frame = oracle.worker.encode_message({'seq': 1, 'result': result})
-            source = ('\nimport os\ndef case_passed(case):\n os.write(1, ' + repr(frame)
+            source = WIRE_DESCRIPTOR_PROBE + ('\nimport os\ndef case_passed(case):\n os.write(protocol_fd(), ' + repr(frame)
                       + ')\n os._exit(0)\n').encode()
             report = self.probe(source, name)
             self.assertEqual(report['cause'], cause, report)
@@ -1159,10 +1280,10 @@ def case_passed(case):
             ("early-exit", b"\nimport os\nos._exit(0)\n"),
             ("forged-counts", b"\ndef case_passed(case): return {'tests':1,'failures':0}\n"),
             ("oversize", b"\ndef case_passed(case): return 'x' * (128 * 1024)\n"),
-            ("duplicate-key", b'''
+            ("duplicate-key", WIRE_DESCRIPTOR_PROBE + b'''
 import os
 def case_passed(case):
- os.write(1, b'{"seq":1,"seq":1,"result":true}\\n')
+ os.write(protocol_fd(), b'{"seq":1,"seq":1,"result":true}\\n')
  return True
 '''),
         ):
@@ -1184,7 +1305,7 @@ def case_passed(case):
         self.assertFalse((self.root / "unsupported").exists())
 
     def test_correct_replies_followed_by_candidate_failure_cannot_pass(self):
-        report = self.probe(b'''
+        report = self.probe(WIRE_DESCRIPTOR_PROBE + b'''
 import json
 import os
 original_case_passed = case_passed
@@ -1194,7 +1315,7 @@ def case_passed(case):
  calls += 1
  result = original_case_passed(case)
  if calls == 4:
-  os.write(1, (json.dumps({'seq':calls,'result':{'value':result}})+'\\n').encode())
+  os.write(protocol_fd(), (json.dumps({'seq':calls,'result':{'value':result}})+'\\n').encode())
   os._exit(7)
  return result
 ''', "late-failure")
@@ -1221,6 +1342,31 @@ def case_passed(case):
             self.assertIn("--clearenv", command)
         self.assertNotIn("oracle-adapter", candidate)
         self.assertNotIn("candidate", trusted)
+
+    def test_launch_uses_anonymous_arguments_and_closes_descriptor_on_success_and_failure(self):
+        for fails in (False, True):
+            captured = []
+
+            def popen(command, **options):
+                descriptor, = options['pass_fds']
+                captured.append(descriptor)
+                self.assertEqual(command, ['/usr/bin/bwrap', '--args', str(descriptor), '--', '/usr/bin/true'])
+                self.assertEqual(os.read(descriptor, 4096),
+                                 b'--ro-bind\0private source with spaces\0/workspace\0')
+                if fails:
+                    raise OSError('synthetic exec failure')
+                return 'process'
+
+            with self.subTest(failure=fails), mock.patch.object(oracle.subprocess, 'Popen', side_effect=popen):
+                command = ['/usr/bin/bwrap', '--ro-bind', 'private source with spaces', '/workspace', '--', '/usr/bin/true']
+                if fails:
+                    with self.assertRaises(OSError):
+                        oracle.launch(command)
+                else:
+                    self.assertEqual(oracle.launch(command), 'process')
+            self.assertEqual(len(captured), 1)
+            with self.assertRaises(OSError):
+                os.fstat(captured[0])
 
     def test_mode_fixture_is_writable_only_to_candidate_and_read_only_to_oracle(self):
         fixture = Path('disposable-candidate-tmp')
