@@ -1,0 +1,224 @@
+Commit: 85d96fd27beec994032bc43a9012782c2a0cae41
+Scope: local-coding-t311-13-observation-envelope
+
+# Independent review: T-311.13 bounded predicate observations
+
+Reviewer: Claude Opus 5.5, separate session, read-only to the repository.
+Row: T-311.13 only (core, attempt 1). Base: `be8f70d4f532c2eb881aa37ce253ba5548771b24`.
+Parent T-311, generated scoring and model or GPU runs are out of scope and were not touched.
+
+## Methods
+
+- Confirmed the commit and a clean tree.
+- Read the full base..commit diff (7 files, +309/-47) and the complete post-change
+  `scripts/coding_eval_oracle_worker.py`.
+- Read the oracle host paths: `supported_task`, `sandbox`, `exchange`, `result_record`, `grade_case`
+  and `grade`.
+- Read the evidence file, the guide diff and lows L1/L2/L3 from the retained T-311.12 review.
+- Ran every command in the request into new private outputs under
+  `/lane/state/tmp/t311-13-review-0nxvkf/`. Heavy runs went through `/tools/build-slot`.
+- Wrote and ran 45 reviewer-private adversarial probes through the real two-sandbox `oracle.grade`.
+  - Like the builder's helpers, they patch `require_historical_candidate` only inside the private
+    diagnostic process.
+  - 23 of them also ran the legacy grader on identical bytes.
+  - Script SHA-256: `0f9342e6fd23261b9b6b5f36adfa3aaa4350db2cbc02cf37c2bbf3247f219fa6`.
+  - Summary SHA-256: `e48fc57cfdaf0727077fc0e3b92e359cc637d7e3317a56814a6980785570dbd5`.
+- No GPU, model, download or repository write.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `git rev-parse 85d96fd2…` | `85d96fd27beec994032bc43a9012782c2a0cae41`; HEAD equal; `git status --short` empty |
+| `git diff --stat be8f70d4 85d96fd2` | 7 files: TASKS.md, evidence, guide, oracle, worker, two oracle test files |
+| `git diff --exit-code … -- scripts/coding_eval.py scripts/coding_eval_collection.py scripts/coding_eval_rust.py tests/test_coding_eval*.py` (6 files) | exit 0 (legacy evaluator byte-identical) |
+| `cmp docs/reviews/3a545e857648-…-truthiness-repair.txt /lane/reviews/3a545e857648-…-truthiness-repair.md` | identical |
+| `node --version`; `sha256sum target/local-agent-tools/node` | v24.15.0; `d1de76d8…d932c` (matches) |
+| `sha256sum …/probes.py` (builder) | `7d429f5d…4eea4649` (matches) |
+| build-slot `local_agent_fast_gate.py --base be8f70d4 --timeout 600` | rc 0; `Ran 72 tests`, OK; `FAST GATE: PASS`; 36.27 s including reservation |
+| build-slot `unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | rc 0; `Ran 58 tests`, OK |
+| build-slot `coding_eval_oracle.py verify --output $rr/oracle` | rc 0; `passed: true`; version `coding-independent-oracle-v8`; 10 tasks; 13 methods; 149 reference calls; `control_attempts` 20/10/10; `generated_scoring: false`; `model_score: null`; collection `0c2a0624…1570` |
+| build-slot `coding_eval.py verify --output $rr/full` | rc 0; `passed: true`; `coding-development-v9`; 30 pairs; 89 reference tests; 0 skips; same collection fingerprint |
+| build-slot builder `probes.py $rr/probes` | rc 0; `{"passed": true, "probes": 36, "legacy_contrasts": 20}` |
+| build-slot `validate_docs.py` | rc 0; `Validated 711 Markdown file(s) and all policy invariants.` |
+
+Reference call counts per task:
+
+| Task | Calls |
+| --- | --- |
+| dev-006 | 19 |
+| dev-007 | 52 |
+| dev-010 | 4 |
+| dev-012 | 14 |
+| dev-015 | 4 |
+| dev-020 | 3 |
+| dev-021 | 6 |
+| dev-022 | 4 |
+| dev-027 | 37 |
+| dev-029 | 6 |
+
+Every base control fails as `test_failure`, except dev-029 base, which fails as `candidate_exception`
+(the unchanged profile). Every reference passes, and `candidate_exit_code` is 0 throughout.
+
+All five supported types declare `bounded-encoded-response` in report coverage:
+
+| Task | Result type | Other adapter policies |
+| --- | --- | --- |
+| dev-010 | path | none |
+| dev-015 | predicate | `bounded-json-observations` |
+| dev-029 | predicate map | `bounded-json-observations` |
+| dev-006 | argument | namespace, helper and parser-exit bounds |
+| dev-020 | verification | `bounded-json-observations` |
+
+## Reviewer probes (45 launched, all counted)
+
+Each launched probe produced exactly one report with `control_attempts` total 1, and every failure has
+`failed: 1`. None was dropped.
+
+Predicate truthiness and reserved keys agree with legacy on identical bytes:
+
+| Probe | Oracle | Legacy |
+| --- | --- | --- |
+| dev-015 `[1] if v else []` | pass | pass |
+| dev-015 `{'adapter_policy': True} if v else {}` | pass | pass |
+| dev-015 `{'candidate_exception': True, 'value': 1} if v else {}` | pass | pass |
+| dev-029 extra key `adapter_policy`/`candidate_exception`/`seq` = True, or `value` = `{'adapter_policy': True}` (4 probes) | pass | pass |
+| dev-029 extra key `adapter_policy` = False | `test_failure` (assertion, no flags) | fail |
+
+Bounds and the exact frame boundary:
+
+- **Depth:** 16 containers pass for both predicates. At 17, the oracle reports `adapter_policy` with
+  candidate exit 0, while legacy passes; this is the stated bounded scope.
+- **Integers:** a 4300-digit integer passes, and so does its negative. A 4301-digit integer gives
+  `adapter_policy` with exit 0, while legacy passes.
+- **Frame size:**
+  - A reply frame of exactly 65536 bytes passes, with all 4 calls succeeding.
+  - At 65537 bytes, the oracle reports `adapter_policy` with exit 0.
+  - Directly, `decode_message` accepts a 65536-byte line and refuses 65537.
+- **Unsupported values:** the following all give `adapter_policy` with candidate exit 0:
+  - tuple, `Decimal`, `str` subclass, cyclic list, nested NaN and nested inf in a map;
+  - a list of 2,000,000 ints, which is too large to encode within the frame;
+  - a non-string map key, a top-level list for a map predicate and a map with a 70000-byte value.
+  - Legacy passes the tuple, nested NaN, non-string-key and oversize cases, as disclosed.
+- **Sticky failure:** a policy refusal on the first call ends the attempt after 1 call as
+  `adapter_policy`.
+- **Print noise:** a `print` of a forged policy frame goes to stderr, and the attempt passes.
+
+Raw hostile frames written directly to stdout:
+
+| Frame | Result |
+| --- | --- |
+| `{"value":true,"adapter_policy":true}` | protocol |
+| `{"adapter_policy":1}` | protocol |
+| Unwrapped `true`; unwrapped map | protocol |
+| 17-deep value | protocol |
+| `NaN` | protocol |
+| `[1e999]` | protocol |
+| 4301-digit literal | protocol |
+| Duplicate `value` key | protocol |
+| 65537+ byte frame | protocol |
+| Exception tag with message payload | protocol; payload absent from `oracle.log` |
+| Extra top-level reply field | protocol |
+| Exact `{"adapter_policy":true}` on dev-015, dev-029 and dev-010 | `adapter_policy` (fails only its own attempt) |
+
+Cleanup:
+
+- Each case tree retains only `candidate.log`, `oracle.log`, `report.json`, `tests.json` and
+  `wire.log`.
+- No worker processes remained.
+- The four `agentmage-eval-*` scratch trees under `/lane/state/tmp` predate my runs. The builder
+  discloses them.
+
+## Code review notes
+
+- **L3 resolved:**
+  - Predicates now return `{"value": …}`, built at `scripts/coding_eval_oracle_worker.py:94-99`.
+  - The trusted side requires `result.keys() == {"value"}` (`:177-178`, `:197-200`), so candidate map
+    keys can never reach tag interception at `:166-174`.
+  - Raw tags are still intercepted on the outer envelope only.
+- **L2 resolved:**
+  - `bool` now accepts `observation_value` (16 levels, finite built-ins).
+  - Depth limits match on both sides: both call `observation_value` at depth 0 on the same object.
+- **L1 mostly resolved:**
+  - `response_message` (`:102-107`) falls back to the fixed policy tag when `encode_message` raises
+    `ProtocolError`. That covers size, `ValueError` (including the integer-digit limit), `TypeError`
+    and `RecursionError`.
+  - Exception: the memory-exhaustion residual, recorded as L1 below.
+- **Trusted-side validation is unchanged in strength:**
+  - The decoder still rejects nonfinite constants, duplicate keys and oversized lines.
+  - `observation_value` still bounds depth.
+  - Candidate data never supplies counts, verdicts or cause; `tests.json` is still oracle-written.
+  - Cause precedence in `grade` is unchanged.
+- **Policy tags:** adding `bool`, `bool-map` and `path-result` to `POLICY_RESULT_TYPES` only lets a
+  candidate fail its own attempt with a different label. Each type now declares that policy in
+  coverage, so this is honest labelling, not a bypass.
+- **Confinement unchanged:** `sandbox()`, `exchange()`, limits and the bwrap arguments are untouched by
+  this diff.
+  - bwrap still runs with `--unshare-all`, `--clearenv` and a read-only candidate workspace.
+  - The output mount is oracle-only.
+- **Integrity:**
+  - No hidden test, task pin, selection, threshold, collection or control profile changed.
+  - The diff adds no task or held-out content: all probes use development tasks.
+  - Production `grade`/CLI admission is unchanged. Only test and probe processes patch admission.
+- **Public repository and IP:**
+  - The added lines contain no private path, username, hostname, credential or product name.
+  - The private paths appear only in the request and in this lane-local review.
+- **Delivery:** one sub-row, ending in a measured, running verifier. No plan-only work.
+
+## Findings
+
+No critical, high or medium finding.
+
+### L1 (low; backlog): memory exhaustion during response encoding still crashes the worker as `protocol`
+
+- **Location:** `scripts/coding_eval_oracle_worker.py:84-91` (`encode_message` catches only
+  `ValueError`, `TypeError` and `RecursionError`), reached from `response_message` at `:102-107`.
+  That call is outside the per-call `try` at `:432-452`.
+- **Reproduction:**
+  1. Take the dev-015 reference source.
+  2. Append a wrapper that returns `'x' * (150 * 1024 * 1024) if v else ''`.
+  3. Grade it. The oracle reports `cause: protocol` with `candidate_exit_code: 1`.
+  - `candidate.log` ends in `MemoryError … when serializing dict item 'value'`.
+  - Cause: `json.dumps` materializes the full value under the 512 MiB address-space limit before
+    the 64 KiB check.
+  - The legacy grader passes the same bytes (a truthy string).
+- **Why low:**
+  - The attempt still fails and is counted.
+  - It needs a reply about 2,400 times the frame bound.
+  - A candidate in control of its own process can always crash it.
+  - Only the cause label is affected, as in the original L1.
+- **Claim impact:** the guide and evidence say oversized responses no longer crash the worker. That is
+  true for ordinary oversize values (70000 bytes and 2,000,000-element lists both reproduce
+  `adapter_policy`), but not for values that exhaust memory while being encoded.
+- **Fix:** bound encoding incrementally so it stops early, without materializing the value. For
+  example, iterate `json.JSONEncoder(allow_nan=False, separators=(",", ":")).iterencode(...)` with a
+  running byte total that stops above `MAX_MESSAGE`. Alternatively, also catch `MemoryError` in
+  `encode_message`. Add a probe for this case, or state the residual in the guide.
+
+### Note (informational, unreachable)
+
+- **Location:** `scripts/coding_eval_oracle_worker.py:447-448`.
+- **Behavior:** `raise ProtocolError("oracle.unknown-result-type")` sits inside `except BaseException`,
+  so it is converted to the `candidate_exception` tag, not to a protocol failure.
+- **Why unreachable:** `supported_task` restricts `result_type` to the five SUPPORTED types for both
+  configs.
+- **Fix if desired:** move the type dispatch check before the `try`.
+
+## Per-row result
+
+T-311.13: PASS at `85d96fd27beec994032bc43a9012782c2a0cae41`.
+
+- **Evidence reproduced:**
+  - Fast gate with 72 oracle tests; 58 legacy tests.
+  - v8 independent verifier: 10 pairs, 13 methods, 149 reference calls, 20 controls (10/10).
+  - Legacy verifier: 30 pairs, 89 reference tests, 0 skips.
+  - Builder probes: 36, with 20 legacy contrasts.
+  - 711 Markdown files and policy invariants.
+  - Collection v9 fingerprint unchanged; the six legacy files are byte-identical.
+- **T-311.12 lows:** L3 and L2 are resolved. L1 is resolved except for the memory-exhaustion residual
+  above, which is low and backlog before generated scoring.
+- **Not closed or claimed:** parent T-311, generated scoring, the other 20 independent adapters,
+  aggregate worker quotas, protected held-out inputs, covered-clause admission, path return types and
+  the real current-harness baseline remain open. No model score is claimed.
+
+Verdict: PASS
