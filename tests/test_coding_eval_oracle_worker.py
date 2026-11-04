@@ -33,7 +33,8 @@ class OracleProtocolTests(unittest.TestCase):
         self.assertEqual(worker.unpack_calls({'calls': result['calls']}), [((Path('/expected'), int(signal.SIGUSR1)), {})])
         self.assertEqual(result['exception'], 'none')
         result = worker.job_result(module, {**request, 'record': False})
-        self.assertEqual(result['exception'], 'harness')
+        self.assertEqual(result['exception'], 'none')
+        self.assertEqual(result['calls'], [])
         result = worker.job_result(module, {**request, 'value': worker.pack_call_value((Path('/expected'), 'unknown'))})
         self.assertEqual(result['exception'], 'key')
         self.assertEqual(result['calls'], [])
@@ -74,7 +75,7 @@ class OracleProtocolTests(unittest.TestCase):
             self.assertTrue(remote.failed)
         remote = self.remote(worker.encode_message({'seq': 1, 'result': {**result, 'calls': [valid_call]}}), 'job-result')
         live = mock.Mock(side_effect=AssertionError('must not signal'))
-        # A plain function is not an accepted replay target, even for a valid reply.
+        # Export operations cannot replay signal calls, even for a valid reply.
         module = SimpleNamespace(signal_running_cli=lambda *a: live(*a))
         with self.assertRaises(worker.ProtocolError):
             worker.job_proxies(remote, module)[3]('inert')
@@ -110,6 +111,73 @@ class OracleProtocolTests(unittest.TestCase):
         module.stop = stop
         self.assertEqual(worker.job_result(module, {'operation': 'stop', 'value': worker.pack_call_value(Path('/expected')),
                                                   'record': True}), {'adapter_policy': True})
+
+    def test_job_no_live_request_preserves_real_helper_and_finite_empty_directory(self):
+        class HarnessError(RuntimeError):
+            pass
+
+        def helper(base, number):
+            self.assertTrue(base.is_dir())
+            self.assertEqual(list(base.iterdir()), [])
+            self.assertEqual(number, signal.SIGUSR1)
+            raise HarnessError('private-no-live-payload')
+
+        module = SimpleNamespace(HarnessError=HarnessError, signal_running_cli=helper)
+        module.control = lambda base, command: module.signal_running_cli(base, signal.SIGUSR1)
+        with tempfile.TemporaryDirectory(dir='/tmp') as temporary:
+            path = Path(temporary)
+            path.rmdir()  # Only the adapter recreates this lexical fixture.
+            request = {'operation': 'control', 'value': worker.pack_call_value((path, 'pause')), 'record': False}
+            result = worker.job_result(module, request)
+            self.assertIs(module.signal_running_cli, helper)
+            self.assertEqual(result, {'value': worker.pack_call_value(None), 'calls': [], 'exception': 'harness'})
+            self.assertNotIn('private-no-live-payload', str(result))
+            module.signal_running_cli = lambda *a: None
+            result = worker.job_result(module, request)
+            self.assertEqual(result['exception'], 'none')
+            module.signal_running_cli = mock.Mock(side_effect=ValueError('private-no-live-payload'))
+            with self.assertRaises(ValueError):
+                worker.job_result(module, request)
+            module.signal_running_cli.assert_called_once_with(path, signal.SIGUSR1)
+
+    def test_job_valid_signal_calls_never_replay_into_a_plain_helper(self):
+        result = {'value': worker.pack_call_value(None), 'exception': 'none',
+                  'calls': [{'args': worker.pack_call_value((Path('/expected'), 10)),
+                             'kwargs': worker.pack_call_value({})}]}
+        live = mock.Mock(side_effect=AssertionError('must not signal'))
+        module = SimpleNamespace(signal_running_cli=lambda *a: live(*a))
+        remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), 'job-result')
+        worker.job_proxies(remote, module)[2](Path('/expected'), 'pause')
+        live.assert_not_called()
+        self.assertFalse(remote.failed)
+
+        # If the target changes after choosing record=True, replay must refuse.
+        module.signal_running_cli = mock.Mock()
+        def receive(request):
+            self.assertTrue(request['record'])
+            module.signal_running_cli = lambda *a: live(*a)
+            return result
+        remote = mock.Mock(side_effect=receive)
+        with self.assertRaisesRegex(worker.ProtocolError, 'unsupported-signal-fixture'):
+            worker.job_proxies(remote, module)[2](Path('/expected'), 'pause')
+        live.assert_not_called()
+        self.assertTrue(remote.failed)
+
+    def test_job_signal_stub_preserves_arity_without_grading_wrapper_returns(self):
+        module = SimpleNamespace(HarnessError=RuntimeError, signal_running_cli=lambda *a: None)
+        def stop(base):
+            try:
+                module.signal_running_cli(base)
+            except TypeError:
+                pass
+            module.signal_running_cli(base=base, number=signal.SIGINT)
+            return object()
+        module.stop = stop
+        request = {'operation': 'stop', 'value': worker.pack_call_value(Path('/expected')), 'record': True}
+        result = worker.job_result(module, request)
+        self.assertTrue(worker.valid_job_result(result))
+        self.assertEqual(worker.unpack_calls({'calls': result['calls']}), [((Path('/expected'), 2), {})])
+        self.assertIsNone(worker.unpack_call_value(result['value']))
 
     def test_job_parser_codec_keeps_list_defaults_paths_and_closed_exit_refusals(self):
         class HarnessError(RuntimeError):

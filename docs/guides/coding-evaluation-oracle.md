@@ -525,7 +525,7 @@ defaults; only data is reconstructed into a local argument namespace. Export
 selection and support-directory helpers return the same tagged values or closed
 HarnessError, KeyError and argument-type refusal tags. No exception class,
 message or traceback supplied by the candidate crosses into trusted execution.
-The one existing temporary-directory fixture is rebuilt at its exact lexical
+The support-directory fixture is rebuilt at its exact lexical
 path under the candidate's private `/tmp`; relative and missing paths stay
 absent. An existing directory outside that finite fixture is adapter policy.
 No shared writable host scratch mount or permission-repair traversal is added.
@@ -533,21 +533,31 @@ No shared writable host scratch mount or permission-repair traversal is added.
 Candidate `stop` and `control` calls use a finite signal-helper stub. Successful
 dispatch observations replay only into the original frozen test's signal mock,
 after the entire reply and all calls have been validated. No replay invokes a
-live signal helper. The final no-live-run case uses a fixed HarnessError stub
-instead of inspecting or signalling a real process. Signal enum values are
-normalized to integers because the original assertions compare their values;
+live signal helper. For the final no-live-run case, the trusted temporary
+directory is recreated at the same lexical path in the candidate's private `/tmp`. The candidate's own
+`signal_running_cli` runs without a replacement helper. The reference refuses
+its empty directory before looking up or signalling any process. A candidate
+that returns normally fails the original refusal assertion; an unexpected
+exception is a sticky candidate-exception failure, without its private message.
+Signal enum values are normalized to integers because the original assertions compare their values;
 enum identity is ungraded. Order, missing calls, wrong values, unknown-control
 refusal and no-live refusal still reach the original assertions. Ordinary integer
 values that compare equal retain the original assertion behavior.
 The frozen mock records signal numbers only: its base argument, keyword forms
-and the wrappers' return values are not asserted. Transporting these values
-does not add coverage beyond the unchanged assertions.
+and the wrappers' return values are not asserted. The finite helper has the
+original `(base, number)` signature, recording only calls that reach its body;
+a wrong-arity call caught by the candidate contributes no signal observation.
+Wrapper return values are discarded because no frozen assertion reads them.
+PurePath and other subclasses outside the tagged codec remain adapter policy,
+even when they compare equal to a Path in the original test. This is stricter
+than those original assertions, as is the resource adapter's recorded subclass
+policy; it does not establish a frozen-task failure.
 
 The frozen base reaches its original unsupported-route export error after
 13 calls; the reference passes the single complete method with 18 calls. Exact
 counts and profiles remain required. Real process identity, liveness and signal
 delivery, support-bundle launch propagation, privacy, ownership and export
-approval are ungraded. No support bundle or live process is produced. Wrong
+approval are ungraded. No support bundle or live CLI process is produced. Wrong
 observations and candidate assertion patching fail the independent oracle;
 synthetic diagnostics do not authorize generated admission.
 
@@ -631,3 +641,15 @@ controls, not model-attempt scores. Future generated scoring must likewise count
 every unsuccessful admitted attempt in its denominator; an infrastructure label
 must never silently discard or retry a candidate's syntax error or early exit.
 T-311.8 review L2 remains an admission obligation until that scorer exists.
+
+## T-311.22 same-row review repair
+
+Review 1 found medium M1: oracle v20 substituted a fixed no-live helper, so
+candidates that returned normally or raised an unrelated exception could pass
+a refusal assertion the legacy grader failed. Oracle v21 runs that helper from
+the candidate against the finite private empty directory. It preserves the
+original method, all pins, thresholds and control profiles. Diagnostic variants
+compare both graders; none is admitted for generated scoring. Low L1's unasserted
+return and mock-arity mismatches and low L2's wrong-branch unit test are repaired;
+L1's PurePath restriction remains an explicit adapter-policy limit. The row stays
+open pending independent re-review.

@@ -112,7 +112,7 @@ def control(base, command):
  except HarnessError: return None
 ''', 'test_failure'),
             ('unexpected-exception', 'def control(*args): raise RuntimeError("private-job-payload")', 'candidate_exception'),
-            ('unsupported-return', 'def stop(base): return {1,2}', 'adapter_policy'),
+            ('unsupported-return', 'def export_selection(value): return {1,2}', 'adapter_policy'),
         )
         for name, source, cause in variants:
             files = self.files(task)
@@ -170,6 +170,65 @@ def stop(base):
                 self.assertEqual(report['tests']['tests'], 1)
                 self.assertEqual(report['control_attempts'], {'total': 1, 'passed': int(passed), 'failed': int(not passed)})
                 self.assertEqual(json.loads((self.root / name / 'tests.json').read_text())['tests'], report['tests'])
+
+    def test_job_no_live_helper_is_candidate_owned_and_matches_original_assertions(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-028')
+        variants = (
+            ('liveness-deleted', 'def signal_running_cli(base, number): return None', 'test_failure'),
+            ('liveness-crashes', 'def signal_running_cli(base, number): raise ValueError("private-no-live-payload")',
+             'candidate_exception'),
+            ('liveness-subclass', 'class Refusal(HarnessError): pass\ndef signal_running_cli(base, number): raise Refusal()',
+             'none'),
+        )
+        for name, source, cause in variants:
+            files = self.files(task)
+            files[task['source']] += ('\n' + source + '\n').encode()
+            with self.subTest(name=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / name)
+                legacy = evaluation.grade(task, files, self.root / (name + '-legacy'))
+                self.assertEqual(report['passed'], cause == 'none', report)
+                self.assertEqual(report['cause'], cause, report)
+                self.assertEqual(legacy['passed'], report['passed'], legacy)
+                self.assertEqual(report['calls'], 18)
+                self.assertEqual(report['tests']['tests'], 1)
+                self.assertEqual(report['candidate_exception_failed'], cause == 'candidate_exception')
+                self.assertEqual(report['control_attempts'],
+                                 {'total': 1, 'passed': int(report['passed']), 'failed': int(not report['passed'])})
+                for path in (self.root / name).iterdir():
+                    self.assertNotIn(b'private-no-live-payload', path.read_bytes())
+
+    def test_job_unasserted_returns_and_swallowed_mock_arity_match_original_assertions(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-028')
+        variants = (
+            ('control-returns-enum', '''original_control = control
+def control(base, command):
+ original_control(base, command)
+ return signal.SIGUSR1
+'''),
+            ('stop-returns-object', '''original_stop = stop
+def stop(base):
+ original_stop(base)
+ return object()
+'''),
+            ('swallow-mock-typeerror', '''original_stop = stop
+def stop(base):
+ try: signal_running_cli(base)
+ except TypeError: pass
+ return original_stop(base)
+'''),
+        )
+        for name, source in variants:
+            files = self.files(task)
+            files[task['source']] += ('\n' + source + '\n').encode()
+            with self.subTest(name=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / name)
+                legacy = evaluation.grade(task, files, self.root / (name + '-legacy'))
+                self.assertTrue(report['passed'], report)
+                self.assertTrue(legacy['passed'], legacy)
+                self.assertEqual(report['calls'], 18)
+                self.assertEqual(report['control_attempts'], {'total': 1, 'passed': 1, 'failed': 0})
 
     def test_deadline_controls_preserve_mock_calls_and_timeout_without_writes(self):
         task = next(t for t in evaluation.collection() if t['id'] == 'dev-026')

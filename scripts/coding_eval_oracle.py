@@ -24,7 +24,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v20"
+VERSION = "coding-independent-oracle-v21"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
@@ -86,7 +86,7 @@ def coverage(task):
                            "support-directory-values-and-refusals", "mocked-job-signal-order-and-values",
                            "unknown-control-and-no-live-refusals"],
                 "adapter_policy": ["bounded-encoded-response", "finite-job-stubs",
-                                   "bounded-tagged-observations", "single-temporary-directory-fixture"],
+                                   "bounded-tagged-observations", "finite-immediate-temporary-directory-fixtures"],
                 "not_graded": ["real-signal-delivery", "process-identity-and-liveness",
                                "signal-enum-type", "support-bundle-start-propagation-and-approval",
                                "support-bundle-privacy-and-ownership", "exception-messages",

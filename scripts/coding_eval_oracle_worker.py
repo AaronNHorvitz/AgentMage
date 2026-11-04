@@ -458,7 +458,7 @@ def job_proxies(remote, module):
 
 
 def job_result(module, request):
-    """Finite directory and signal stubs; no actual CLI process or export."""
+    """Finite mocked dispatch and candidate-owned empty-directory refusal."""
     if type(request) is not dict or type(request.get("operation")) is not str:
         raise ProtocolError("oracle.invalid-job-request")
     operation = request["operation"]
@@ -506,11 +506,25 @@ def job_result(module, request):
             return {"adapter_policy": True}
     elif type(value) is not str:
         raise ProtocolError("oracle.invalid-job-request")
+    recording = operation in {"stop", "control"} and request["record"]
+    if operation in {"stop", "control"} and not recording:
+        base = value if operation == "stop" else value[0]
+        # Recreate only the frozen empty-directory fixture in private tmpfs.
+        # Leave the candidate's helper intact: its refusal is under test.
+        # Other lexical paths (the unknown-control case) stay unmodified.
+        if re.fullmatch(r"/tmp/[A-Za-z0-9_-]+", str(base)) is not None:
+            base.mkdir(mode=0o700, exist_ok=True)
     observed = mock.Mock(return_value=None)
-    if operation in {"stop", "control"} and not request["record"]:
-        observed.side_effect = module.HarnessError("oracle.no-live-cli")
+
+    def record_signal(base, number):
+        # Match the original side-effect signature. A swallowed wrong-arity
+        # call never reached its body and contributes no signal observation.
+        observed(base, number)
+
     exception, returned = "none", None
-    with mock.patch.object(module, "signal_running_cli", observed):
+    replacement = (mock.patch.object(module, "signal_running_cli", side_effect=record_signal)
+                   if recording else contextlib.nullcontext())
+    with replacement:
         try:
             if operation == "control":
                 returned = module.control(*value)
@@ -533,7 +547,9 @@ def job_result(module, request):
             calls.append({"args": pack_call_value(args), "kwargs": pack_call_value(kwargs)})
             if len(calls) > 128:
                 raise AdapterPolicyError("oracle.job-call-limit")
-        return {"value": pack_call_value(returned), "calls": calls, "exception": exception}
+        # The frozen method never asserts wrapper return values.
+        value = None if operation in {"stop", "control"} else returned
+        return {"value": pack_call_value(value), "calls": calls, "exception": exception}
     except AdapterPolicyError:
         return {"adapter_policy": True}
 

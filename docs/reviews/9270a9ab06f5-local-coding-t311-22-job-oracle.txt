@@ -1,0 +1,193 @@
+Commit: 9270a9ab06f57fe99469be7d010ee465cc93e30a
+Scope: local-coding-t311-22-job-oracle
+
+# Independent review — T-311.22 frozen dev-028 job-control oracle (oracle v20)
+
+Reviewer: Claude Opus 5.5, separate read-only session. Tier: core. Review 1.
+Base: e37c0c63470e10d9bc6f5c2810be8cdfe3541c2c. Row reviewed: T-311.22 only.
+
+## Methods
+
+- `git rev-parse 9270a9ab06f57fe99469be7d010ee465cc93e30a` = HEAD. `git status --porcelain` was empty before and
+  after every run.
+- Read IP-POLICY.md, the T-311.19–T-311.22 rows of TASKS.md and the whole 8-file diff (oracle, worker, both oracle
+  test modules, TASKS row, both guides, evidence). Read the unchanged machinery it relies on: `RemoteFunction.__call__`,
+  `valid_argument_result`/`argument_value`, `pack_call_value`/`unpack_call_value`/`unpack_calls`, `candidate()`,
+  `oracle()` and `expected_base`.
+- Extracted the frozen dev-028 base (`e5f34910…`, sha256 `a93c667a…668c`) and reference (`69c99f66…`, sha256
+  `1c29f82e…3988`) sources and the hidden test (sha256 `1eeefff2…97b7`). All three match the collection pins. Read the
+  selected method `test_each_job_control_sends_its_own_signal_to_the_exact_cli` (hidden lines 324-371) and the
+  reference `stop`/`control`/`signal_running_cli`/`export_selection`/`support_bundle_directory`/`parser` line by line
+  against `job_proxies`/`job_result`.
+- Ran every required command in a new private directory `/lane/state/tmp/review-t311-22-S9NuKDlX` through
+  `/tools/build-slot`. Before running the builder's `probes.py` I read it (it only re-runs three new test methods
+  with retained output). I wrote and ran 13 probes of my own (below). No GPU or model was used.
+- Checked all 25 evidence SHA-256 rows against the builder artifacts and the committed blobs at the exact commit.
+  Read source-digests.json, audit.json, every `*-result.json`, the final-integrity/docs logs and the two retained
+  failed focused logs.
+
+## Required reproduction (exact commands, results)
+
+Node: `v24.15.0`; `sha256sum target/local-agent-tools/node` =
+`d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c` (matches).
+
+| Command | Result | Wall seconds (incl. reservation wait) |
+| --- | --- | --- |
+| `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base e37c0c63… --timeout 600` | exit 0; `Ran 141 tests`, OK; `FAST GATE: PASS` | 205.1 |
+| `bash /tools/build-slot python3 -B -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | exit 0; `Ran 59 tests`, OK, no skips | 36.9 |
+| `bash /tools/build-slot python3 scripts/coding_eval_oracle.py verify --output $R/independent` | exit 0; passed; 18 tasks, all valid; 23 reference methods; 187 reference calls; control_attempts 36 / 18 passed / 18 failed; generated_scoring false; model_score null | 760.6 (mostly waiting) |
+| `bash /tools/build-slot python3 scripts/coding_eval.py verify --output $R/legacy` | exit 0; passed; 30 valid pairs; 89 reference tests; 0 skipped | 47.5 |
+| `bash /tools/build-slot python3 -B $R/probes.py` (copied builder probe) | exit 0; 3 tests; 15 reports; causes match the builder's probes.json exactly; 3 successful reports | 22.3 |
+| `bash /tools/build-slot python3 scripts/validate_docs.py` | exit 0; "Validated 724 Markdown file(s) and all policy invariants." | 149.3 |
+| `git diff --check e37c0c63… HEAD` | exit 0 | — |
+| `git diff --exit-code e37c0c63… HEAD -- <8 legacy/fast-gate files>` | exit 0 (unchanged) | — |
+
+dev-028 rows in my independent summary: base `passed=false`, cause `test_failure`, tests 1 / failures 0 / errors 1,
+calls 13, function_found true, candidate_exit 0, exit 1. Reference `passed=true`, 1 / 0 / 0, calls 18. Model
+attempts 0, GPU minutes 0, tokens null. I counted 18 reference calls by hand from the hidden method: stop 1,
+control 2, unknown control 1, parse 3, invalid exports 5, routes export 1, parse 1, bundle 3, no-live control 1. The
+base fails at call 13 (`export_selection("routes:1:1")` raises ArgumentTypeError inside assertEqual, so it counts
+as an error). The guide table sums to 23 methods and 187 reference calls. All numbers match the evidence, the
+TASKS row and the guide.
+
+Builder artifacts: all 25 evidence digests match. The four committed source/test blobs at the exact commit equal
+source-digests.json and audit `stable_sources`. audit.json: passed; 111 reports; 272 log bindings; 30 frozen tasks;
+collection `0c2a0624…1570` (unchanged and asserted); 8 unchanged files. final-integrity: 25 bindings, 8 changed
+paths, public hygiene true. Both failed focused runs are retained, and their failures match the evidence narrative
+(list-valued defaults became adapter_policy; the legacy contrast fixture failed as infrastructure).
+
+## Reviewer probes (own; `$R/own_probes.py`, results `$R/own.json`, reports under `$R/own/`)
+
+Each probe is a synthetic snapshot of the frozen reference with appended code. Both the independent oracle and the
+unchanged legacy verifier graded it. Admission is mocked only inside the probe script, as in the builder's tests.
+
+| Variant | Oracle (passed, cause, f/e, calls) | Legacy | Agreement |
+| --- | --- | --- | --- |
+| `liveness-deleted`: `signal_running_cli` returns None | **pass**, none, 0/0, 18 | fail (hidden line 370 "HarnessError not raised") | **oracle too lenient (M1)** |
+| `liveness-crashes`: `signal_running_cli` raises ValueError | **pass**, none, 0/0, 18 | fail (error at hidden line 371) | **oracle too lenient (M1)** |
+| `control-returns-enum`: control returns its `signal.Signals` | fail, adapter_policy, 0/1, 2 | pass | oracle stricter (L1) |
+| `pure-path-parser`: `--support-bundle` type PurePosixPath | fail, adapter_policy, 0/1, 14 | pass | oracle stricter (L1) |
+| `swallow-mock-typeerror`: wrong-arity call caught, then correct call | fail, test_failure, 0/1, 1 | pass | oracle stricter (L1) |
+| `keyword-signal-call`: keyword arguments `base=`, `number=` | pass | pass | yes |
+| `plain-int-signals`: 2/10/12 instead of enum members | pass | pass | yes |
+| `harness-subclass-refusal` | pass | pass | yes |
+| `duplicate-stop-signal` | fail, test_failure | fail | yes |
+| `bool-signal` (True as the number) | fail, test_failure | fail | yes |
+| `export-valueerror` (private payload in message) | fail, candidate_exception, 0/1, 13 | fail | verdict yes; payload absent from every output file |
+| `forge-replay-into-live` | fail, test_failure ("HarnessError not raised") | fail | yes; see below |
+| `escape-and-env` on top of the reference | pass | pass | yes; see below |
+
+The forge probe sits on the no-live call (seq 18, outside the test's mock). It writes its own valid reply directly
+on the protocol descriptor, carrying a `(Path(temporary), 10)` signal call with exception `none`, and then exits.
+The trusted side ignored the calls, because `record` was false and no mock was installed. It returned None, and the
+original `assertRaises(HarnessError)` failed. If the trusted base's real `signal_running_cli` had been invoked, it
+would have raised `coding.harness.not-running` and the assertion would have passed. The failure therefore shows the
+live helper was not called. Candidate data cannot reach a live helper.
+
+The escape probe ran as candidate import-time code in the namespace. Results from candidate.log:
+
+- Environment and process isolation: environment `HOME, LANG, PATH, PWD` only; `/proc/1/environ` empty; only PIDs
+  1-2 visible (private PID namespace).
+- Host paths: `/var/home`, `/home`, `/lane`, `/tools`, `/root`, `/run/user`, `/output`, `/adapter/test.py`,
+  `/candidate-tmp` and `/etc/hostname` all absent.
+- Write access: `/workspace`, `/adapter` and `/usr` not writable. `/tmp` and `/` are private tmpfs; the sentinel
+  written to `/tmp` did not reach the host `/tmp`.
+- Network: TCP to `127.0.0.1:9` and `::1:9` refused; `1.1.1.1:53` unreachable.
+- No probe text appeared in wire.log or oracle.log.
+
+## Analysis against the inspection list
+
+- **Full-response validation before replay.** `RemoteFunction.__call__` validates the complete job reply before it
+  returns (`coding_eval_oracle_worker.py:257-266`, `valid_job_result` at `:408-415`): exact keys, a closed tag set,
+  the codec for value and calls, ≤128 calls, and value None when a refusal tag is set. Only then does
+  `job_proxies.call` (`:422-442`) replay. The builder test `test_job_wire_is_fully_validated_before_replay` shows the
+  mock is untouched for nine malformed replies; I re-checked by reading the code.
+- **No live replay target.** Replay requires `isinstance(module.signal_running_cli, mock.Mock)`. That check is made
+  both when choosing `record` and again before the replay. Outside the test's patch, calls are discarded. My forge
+  probe confirms this end to end.
+- **Parser fidelity.** `job_namespace` keeps tagged Path, list and tuple values. Keys are restricted to
+  `[a-z][a-z0-9_]{0,63}`. Unrepresentable defaults (for example `set_defaults(x=print)`) become adapter_policy.
+  `parser_exit` maps only exit status 2 to SystemExit(2). Reference defaults (`follow_up=[]` and similar) pass.
+- **Fixed refusal tags.** `harness`, `key` and `argument-type` become trusted local classes with the fixed message
+  `oracle.job-refused` (`:435-441`). Any other candidate exception becomes the payload-free sticky
+  candidate-exception flag (`export-valueerror` probe; builder `unexpected-exception`).
+- **Finite directory.** `/tmp/[A-Za-z0-9_-]+` is recreated only in the candidate's private tmpfs (`:490-498`). An
+  existing directory outside that rule is adapter policy. No host scratch bind was added.
+- **Counts and profiles.** `CONTROL_PROFILES["dev-028"]` (failures 0, errors 1, 13/18 calls) is enforced by the
+  unchanged `expected_base`. Only the aggregate pair assertions moved from 17 to 18.
+- **Admission and integrity.** Generated snapshots are refused before any output directory exists or any worker is
+  launched (builder test and unchanged `grade`). The collection fingerprint, hidden bytes, pins, selections,
+  thresholds and the legacy evaluator are unchanged. dev-028 is a development-split task. The diff has no held-out
+  content and no prompt, model or harness tuning.
+- **Hygiene.** The committed diff contains no private host path, username, hostname, credential, private sibling
+  project, other-product comparison or trademark branding. The `/lane` literal in a confinement assertion is an
+  existing generic test pattern.
+- **Delivery.** One sub-row level; the row ships a running, measured adapter.
+
+## Findings
+
+**M1 (medium) — the oracle never runs the candidate's no-live refusal, so a candidate that breaks it passes; the
+coverage says it is graded.**
+
+- Code: `scripts/coding_eval_oracle_worker.py:509-511` replaces the candidate's own `signal_running_cli` with a
+  fixed `HarnessError("oracle.no-live-cli")` stub whenever the test's mock is absent.
+- What the frozen method checks: hidden lines 369-371 do not stub that helper. They run the candidate's real
+  `signal_running_cli` against an empty temporary directory and require HarnessError. The task statement also
+  requires "no live run raises HarnessError". In the reference, that empty directory refuses at `read_run_record`
+  before any process is looked up, so this check needs no process identity or signal delivery.
+- Reproduction: `liveness-deleted` (helper returns None) and `liveness-crashes` (helper raises ValueError) both
+  **PASS the independent oracle** (0 failures, 0 errors, 18 calls). The unchanged frozen method fails them in the
+  legacy verifier, at line 370 ("HarnessError not raised") and line 371 (ValueError) respectively.
+- Labelling: `coverage()` lists `unknown-control-and-no-live-refusals` under `graded`
+  (`scripts/coding_eval_oracle.py:87`). The guide says "no-live refusal still reach[es] the original assertions"
+  (`docs/guides/coding-evaluation-oracle.md:540`). Only the stub's refusal reaches them.
+- Why medium: the oracle is meant to admit generated attempts later. As written, it passes candidates the frozen
+  hidden method fails. This is undisclosed lenience on a clause the original asserts, not one of the stated
+  ungraded limits (enum identity, base/keyword arguments, return values, process identity, delivery, bundle
+  propagation and privacy). No score is produced today, so it is not high, but it blocks closing T-311.22.
+- Concrete fix:
+  1. For `record=False` calls, recreate the trusted temporary directory in the candidate's private `/tmp` with the
+     existing `/tmp/[A-Za-z0-9_-]+` rule. Run the candidate's own `signal_running_cli` there, unstubbed. It runs in
+     the same networkless, private-PID sandbox that already executes arbitrary candidate code, so the risk does
+     not change.
+  2. Use the existing closed tag for HarnessError and the sticky candidate-exception flag for anything else.
+  3. Add `liveness-deleted` and `liveness-crashes` as variants that must fail with `test_failure` and
+     `candidate_exception`.
+  4. If the stub is kept instead, move no-live refusal to `not_graded` and state this false-pass path in the guide
+     and evidence. That alone still leaves the oracle more lenient than the frozen method, so the repair is
+     preferred.
+
+**L1 (low, backlog before generated scoring) — correct candidates the original passes are refused.**
+
+- Observed: `control-returns-enum` (an unasserted return value of type `signal.Signals`) and `pure-path-parser`
+  (a PurePosixPath equal to the expected Path) are graded adapter_policy. `swallow-mock-typeerror` is graded
+  test_failure. The legacy verifier passes all three.
+- Causes:
+  - Return values are transported and must be codec-representable (`coding_eval_oracle_worker.py:536`), although
+    the guide says they are not asserted.
+  - The candidate-side stub accepts calls with any signature (`:509`), whereas the original mock raises TypeError
+    on a wrong arity.
+- Fix: drop return values of `stop`/`control` from the reply, since they are unasserted. Run the stub with the
+  original mock's `(base, number)` signature. Name the subclass/PurePath refusal next to the existing T-311.20 L1.
+
+**L2 (low, test coverage) — one unit test checks a different branch from the one it names.**
+
+- At `tests/test_coding_eval_oracle_worker.py:77-81`, the test is commented "A plain function is not an accepted
+  replay target". It calls index `[3]` (export), which fails through the `oracle.unexpected-job-calls` branch.
+- The `stop`/`control` path with a non-mock helper and a reply that carries calls has no unit test. My end-to-end
+  forge probe shows that path behaves correctly.
+- Fix: call `[2]` (control) with a plain-function helper, assert the call is not replayed, and keep the export case
+  as its own check.
+
+## Per-row result
+
+- **T-311.22: FINDINGS — do not close.**
+  - All required runs reproduced at exact commit `9270a9ab06f57fe99469be7d010ee465cc93e30a` with the stated
+    counts. The evidence digests match. Confinement held under my escape attempts. Replay into a live helper is
+    impossible.
+  - Medium M1 is open: the oracle passes candidates that break the no-live refusal the frozen method asserts, and
+    the coverage labels that refusal as graded. L1 and L2 are backlog.
+- Not reviewed or closed here: parent T-311, T-311.15/.16, generated scoring and the other open items listed in the
+  evidence. This review is not a certification or a legal clearance.
+
+Verdict: FINDINGS
