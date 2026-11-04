@@ -1,0 +1,208 @@
+Commit: 3a545e857648a38b9bed55aaeac5146e7980b17c
+Scope: local-coding-t311-12-truthiness-repair
+
+# Independent review: T-311.12 predicate truthiness repair (attempt 2)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate read-only session. Same-model review.
+Base `694808d7845b6f9bf154fa457af90801e0bcf705`. Row T-311.12 only; parent T-311 stays open.
+
+## Methods
+
+- **Commit and tree.** `git rev-parse 3a545e85...` equals HEAD, and `git status --short` is empty.
+- **Diff scope.** The diff from the base touches 8 files: `scripts/coding_eval_oracle{,_worker}.py`, their two
+  test modules, the oracle guide, TASKS.md, the new evidence file and a forward-pointer note in the
+  first-attempt evidence.
+- **Legacy files.** The legacy evaluator, collection and Rust modules and their tests are byte-identical to
+  the base. The requested `git diff` is empty.
+- **Prior review.** The retained first review `docs/reviews/9563c0a80d55-...txt` is byte-identical to
+  `/lane/reviews/9563c0a80d55-...md`.
+- **Frozen methods.** I re-read both at their pinned reference revisions:
+  - dev-015 (`test_resource_and_network_cases_require_measured_outcomes`) grades `case_passed` only via
+    `assertTrue`/`assertFalse`.
+  - dev-029 (`test_the_suspend_resume_case_requires_one_suspension_and_one_continuation`) grades
+    `suspend_resume_checks` via `all(checks.values())` and `assertFalse(...[key])` for `answers`,
+    `one-start` and `filesystem`.
+  - Both are truthiness-only, so dropping the exact-Boolean adapter check is faithful to the frozen
+    assertions.
+- **Code reviewed.**
+  - The full worker: `RemoteFunction.__call__`, tag handling, candidate loop and oracle accounting.
+  - The oracle `coverage`/`grade` cause logic and log bounds. LOG_LIMIT is 2 MiB, and the verdict comes
+    only from the oracle-mounted `tests.json`.
+  - Candidate values now reach assertion messages in `oracle.log`. That costs at most one ~64 KiB repr
+    and cannot change counts or cause.
+- **Source digests.** The four source SHA-256 values in the evidence match the commit.
+- **Added-text hygiene.** Grepping added text for host paths, usernames, email and credentials finds
+  nothing. No product names or trademarks appear.
+- **Required runs.** I ran every command in the request, via `bash /tools/build-slot`, with
+  `CARGO_TARGET_DIR=/lane/state/review-target`.
+- **My own probes.** I wrote 32 probes in a private process
+  (`/lane/state/tmp/t311-12-truthiness-review-SV9LjxmF/myprobes.py`).
+  - Each probe appends a wrapper to the pinned reference source and runs `oracle.grade` and legacy
+    `evaluation.grade` on identical bytes.
+  - `require_historical_candidate` is patched only inside that process.
+  - All runs used real confined bwrap processes. No GPU, model, download or repository write.
+
+## Commands and results
+
+Node `v24.15.0`, SHA-256 `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c` (matches).
+Seconds are outer wall time including reservation wait.
+
+| Command | Result | Seconds |
+| --- | --- | --- |
+| `git diff 694808d7... -- <six legacy files>` | empty | n/a |
+| `python3 scripts/local_agent_fast_gate.py --base 694808d7... --timeout 600` | FAST GATE: PASS; 67 oracle tests OK (inner 29.76) | 113.86 |
+| `python3 -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | 58 tests OK | 19.72 |
+| `python3 scripts/coding_eval_oracle.py verify --output $rr/oracle` | PASS, v7; 10 pairs, 13 reference methods, 149 reference calls; 20 controls (10 failed bases / 10 passing references); `generated_scoring: false`, `model_score: null` | 5.04 |
+| `python3 scripts/coding_eval.py verify --output $rr/full` | PASS, v9; 30 pairs, 89 reference tests, 0 skips; collection `0c2a0624...1570` | 43.93 |
+| builder `probes.py` (SHA-256 `4415dd23...bb`, matches evidence) | `{"passed": true, "probes": 14, "legacy_contrasts": 9}` | 4.03 |
+| `python3 scripts/validate_docs.py` | 710 Markdown files and all policy invariants | 131.42 |
+| reviewer `myprobes.py` (32 probes, each with a legacy contrast) | rc 0; all assertions hold | 10.84 |
+
+**Control profiles.**
+
+- Base calls and failures/errors per task match `CONTROL_PROFILES`. dev-015 base: 3 calls, 1 failure.
+  dev-029 base: 1 call, 1 error, cause `candidate_exception`.
+- dev-015 and dev-029 reference reports carry `graded: [selected-predicate-truthiness]` and
+  `not_graded: [exact-boolean-result-type, unselected-statement-clauses]`.
+
+### Reviewer probe results (independent vs legacy, identical bytes)
+
+**Agree, pass: oracle PASS / legacy PASS, cause `none`.**
+
+- dev-015: `int(v)`, `v or None`, `-5/0`, `1.5/-0.0`.
+- dev-029 map values: `int(v)`, `v or None`, nested `{'x':[v]}`/`{}`, tuples `(1,)`/`()`, text.
+- dev-029 extra keys `tests`/`passed`/`seq` inside the map: treated as data only, with no effect on
+  counts or authority.
+- dev-029 values nested 15 deep.
+- dev-029 an extra integer key.
+
+**Agree, fail: both FAIL, cause `test_failure`.**
+
+- Inverted int (dev-015), inverted text (dev-015), constant `1` (dev-015).
+- Inverted map, empty map `{}`, all-true map (dev-029).
+
+**Fixed semantics, all failing and counted.**
+
+| Probe | Cause |
+| --- | --- |
+| exact `{"candidate_exception": true}` | `candidate_exception` |
+| exception tag with payload | `protocol` |
+| undeclared policy tag on dev-015 | `protocol` |
+| a raise carrying a message | `candidate_exception`; no message in the report |
+| dev-015 dict carrying fake `tests`/`passed` | `protocol` |
+| dev-029 list instead of map | `protocol` |
+| NaN / `10**5000` | `protocol`, candidate exit 1 (L1, reproduced) |
+
+**Divergent: oracle FAIL, legacy PASS.** These are false failures only, labelled `protocol` and counted.
+They are findings L2 and L3 below.
+
+- dev-015 returning `[1]`/`[]` or `{'ok':1}`/`{}`.
+- dev-029 map with an extra key named `adapter_policy` or `candidate_exception`.
+- dev-029 values nested 17 deep.
+- dev-029 values containing NaN.
+
+**Across all 32 probes:**
+
+- no case where the oracle passes and legacy fails
+- `control_attempts` is always total 1 with passed equal to verdict
+
+## Findings
+
+M1 from the first review is resolved. The adapter now hands the frozen truthiness assertions:
+
+- every finite JSON scalar for dev-015
+- every string-keyed map of bounded JSON values for dev-029
+
+The int/None reproductions from review 1 now pass, as in legacy. Inverted values fail the original
+assertions in both graders, with cause `test_failure`.
+
+Exact Boolean result type is explicitly `not_graded` for both tasks, and the claims in the guide,
+evidence and TASKS.md are accurate as scoped. The old worker tests that asserted exact-Boolean rejection
+were changed:
+
+- `1` was replaced by `{}` as a rejected scalar reply.
+- `{}`, `{"answer": 1}` and `{"answer": null}` are now accepted map data.
+
+That matches the frozen assertions: the empty map still fails the hidden method in both graders. No
+hidden test, pin, selection, profile or threshold changed.
+
+No high or medium finding.
+
+### L1 (low, carried; backlog): oversize/unencodable observations crash the candidate and record `protocol`
+
+- **Location:** unchanged from review 1, `scripts/coding_eval_oracle_worker.py:433`. `encode_message`
+  runs outside the per-call `try`.
+- **Reproduction:**
+  - `10**5000` on dev-015 or dev-006, and `'x'*70000`, give `protocol` with candidate exit 1.
+  - The same holds for NaN in a dev-029 map value, which legacy passes because NaN is truthy.
+- **Status:** now disclosed in `docs/guides/coding-evaluation-oracle.md`. Every such attempt still fails
+  and is counted.
+
+### L2 (low; backlog): dev-015 container returns and over-deep dev-029 values are labelled `protocol`, though the frozen assertion accepts them
+
+- **Location:** `scripts/coding_eval_oracle_worker.py:159-161`. `bool` accepts only `scalar_value`.
+  `:179-182` caps map values at 16 levels via `observation_value`.
+- **Reproduction:**
+  - A dev-015 wrapper `return [1] if _orig(*a) else []` or `{'ok':1} if ... else {}` gives oracle
+    `passed: false, cause: protocol`. Legacy passes.
+  - A dev-029 map whose values are nested 17 deep behaves the same.
+- **Why low, not medium:**
+  - The guide states the transport scope exactly ("finite JSON scalars" for dev-015; "bounded to 16
+    container levels" for dev-029).
+  - The base `case_passed` ends in `return all(...)`, so container returns are not a natural edit of this
+    predicate.
+  - The result is only ever a false failure, still counted.
+  - This review-1 fix recommendation was itself "finite JSON scalar".
+- **Concern:** it is still a valid frame classified as malformed wire data, the same cause-label class as
+  M1.
+- **Fix:** accept `observation_value(result)` for `bool` (tags are already intercepted first). Or classify
+  shape/depth refusals on non-policy types as a distinct fixed adapter-scope cause, and add the
+  container contrast as a probe.
+
+### L3 (low; backlog): dev-029 map keys that collide with reserved tag names are intercepted as tags
+
+- **Location:** `scripts/coding_eval_oracle_worker.py:150-158`. Any dict result containing
+  `adapter_policy` or `candidate_exception` is treated as a tag before type validation. For `bool-map`,
+  the candidate's map is the top-level result, so its own keys can collide.
+- **Reproduction:**
+  1. Take the reference `suspend_resume_checks` result.
+  2. Add `r['adapter_policy'] = True`, or `r['candidate_exception'] = True`.
+  3. The oracle reports `protocol`; legacy passes.
+- **Scope:** this predates this commit (the same interception existed for Boolean maps at `694808d7`). It
+  needs a candidate to name a check after a reserved tag, and it can only fail the candidate.
+- **Fix:** wrap `bool-map` replies (for example `{"map": {...}}`) so candidate keys never share the tag
+  namespace, or disclose the reserved key names in the guide.
+
+## Checks with no finding
+
+- **Evaluation integrity:**
+  - All 30 tasks are `development`, collection v9 is unchanged, and no held-out input is used.
+  - Hidden bytes, task base/reference pins and selections are verified by the passing full verifier.
+  - Scores re-run with one command each and match the evidence counts.
+  - Failures are counted, never dropped.
+- **Authority:** candidate data never supplies test counts, verdicts or cause.
+  - `tests.json` is oracle-written in its own bwrap mount.
+  - Fake `tests`/`passed`/`seq` keys inside a map are inert data.
+- **Exception handling:** the exception tag carries no class, message or traceback.
+- **Sticky flags and precedence:** protocol, policy and exception flags are sticky. Cause precedence is
+  unchanged.
+- **Unknown result types:** they now fail closed (`else: valid = False`).
+- **Production admission:** the probes patch admission only in a private process. Production
+  `grade`/CLI admission is unchanged, and the legacy evaluator is byte-identical.
+- **Delivery:** one sub-row, ending in running, measured verification. No new dependency, download, GPU
+  use, model score, product naming or private host data.
+
+## Per-row result
+
+T-311.12: PASS at `3a545e857648a38b9bed55aaeac5146e7980b17c`.
+
+- Every required run reproduces the evidence: 67 oracle tests, 58 legacy tests, 10 pairs / 13 methods /
+  149 reference calls, 20 controls (10/10), 30 legacy pairs / 89 tests / 0 skips, 14 probes with 9
+  legacy contrasts, and 710 Markdown files.
+- Medium M1 is fixed and its reproductions now agree with legacy.
+- No open high or medium finding. Lows L1 (carried, disclosed), L2 and L3 are backlog to resolve before
+  generated scoring.
+- Parent T-311, generated scoring, aggregate quotas, protected held-out inputs, covered-clause admission
+  and the current-harness baseline remain open.
+
+Verdict: PASS
