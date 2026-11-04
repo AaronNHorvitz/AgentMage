@@ -3,6 +3,7 @@ import argparse
 import io
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 from types import SimpleNamespace
@@ -15,6 +16,155 @@ from scripts import coding_eval_oracle_worker as worker
 class OracleProtocolTests(unittest.TestCase):
     def remote(self, raw, result_type="bool"):
         return worker.RemoteFunction(io.BytesIO(raw), io.BytesIO(), io.BytesIO(), result_type)
+
+    def test_command_observations_preserve_builtin_types_and_only_replay_into_a_mock(self):
+        original = mock.Mock(side_effect=AssertionError('real helper must not run'))
+        module = SimpleNamespace(command=original)
+        def extract(package, root):
+            module.command(['ar', 'x', str(package)], cwd=root)
+            module.command(('wrong-container',), cwd=str(root), other={'nested': [None, True, 2, 1.5]})
+        result = worker.command_result(extract, module, {'package': '/tmp/p.deb', 'root': '/tmp/root'})
+        original.assert_not_called()
+        self.assertIs(module.command, original)
+        raw = worker.encode_message({'seq': 1, 'result': result})
+        remote = self.remote(raw, 'command-result')
+        with mock.patch.object(module, 'command') as stub:
+            worker.command_proxy(remote, module)(Path('/tmp/p.deb'), Path('/tmp/root'))
+        self.assertEqual(stub.call_args_list, [
+            mock.call(['ar', 'x', '/tmp/p.deb'], cwd=Path('/tmp/root')),
+            mock.call(('wrong-container',), cwd='/tmp/root', other={'nested': [None, True, 2, 1.5]}),
+        ])
+        self.assertIs(type(stub.call_args_list[0].kwargs['cwd']), type(Path()))
+        self.assertIs(type(stub.call_args_list[1].args[0]), tuple)
+        remote = self.remote(b'', 'command-result')
+        module.command = lambda *a: self.fail('real helper invoked')
+        with self.assertRaises(worker.ProtocolError):
+            worker.command_proxy(remote, module)(Path('/tmp/p'), Path('/tmp/r'))
+        self.assertTrue(remote.failed)
+        self.assertEqual(remote.writer.getvalue(), b'')
+
+    def test_helper_call_codec_refuses_objects_depth_unknown_tags_and_malformed_calls(self):
+        for value in (object(), {1: 'wrong'}, float('nan')):
+            with self.subTest(value=type(value).__name__), self.assertRaises(worker.AdapterPolicyError):
+                worker.pack_call_value(value)
+        nested = []
+        for _ in range(17):
+            nested = [nested]
+        with self.assertRaises(worker.AdapterPolicyError):
+            worker.pack_call_value(nested)
+        valid = {'args': worker.pack_call_value((['arg'],)), 'kwargs': worker.pack_call_value({})}
+        invalid = [
+            {'calls': [valid] * 129}, {'calls': [], 'execute': 'payload'}, {'calls': [None]},
+            {'calls': [{**valid, 'kwargs': worker.pack_call_value([])}]},
+            {'calls': [{**valid, 'args': worker.pack_call_value(['arg'])}]},
+            {'calls': [{**valid, 'args': {'kind': '__reduce__', 'value': 'payload'}}]},
+            {'calls': [{**valid, 'kwargs': {'kind': 'dict', 'value': {'x': {
+                'kind': 'scalar', 'value': []}}}}]},
+            {'calls': [{**valid, 'args': {'kind': 'tuple', 'value': [
+                {'kind': 'path', 'value': 1}]}}]},
+        ]
+        for result in invalid:
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), 'command-result')
+            module = SimpleNamespace(command=mock.MagicMock())
+            with self.subTest(result=result), self.assertRaises(worker.ProtocolError):
+                worker.command_proxy(remote, module)(Path('/tmp/p'), Path('/tmp/r'))
+            self.assertTrue(remote.failed)
+            module.command.assert_not_called()
+        module = SimpleNamespace(command=lambda: None)
+        for function in (lambda p, r: module.command(object()),
+                         lambda p, r: [module.command([]) for _ in range(129)]):
+            self.assertEqual(worker.command_result(function, module, {'package': 'p', 'root': 'r'}),
+                             {'adapter_policy': True})
+
+    def test_mode_fixture_preserves_text_paths_and_modes_and_only_returns_permission_bits(self):
+        with tempfile.TemporaryDirectory(dir='/tmp') as directory:
+            root = Path(directory)
+            root.rmdir()
+            request = {'root': directory, 'entries': {
+                '.': {'kind': 'directory', 'mode': 0o700},
+                'nested': {'kind': 'directory', 'mode': 0o700},
+                'nested/file.txt': {'kind': 'file', 'mode': 0o600, 'text': 'fixture text'},
+            }}
+            def change(path):
+                self.assertEqual(path, root)
+                self.assertEqual((path / 'nested/file.txt').read_text(), 'fixture text')
+                self.assertEqual(path.stat().st_mode & 0o777, 0o700)
+                for item in (path, *path.rglob('*')):
+                    item.chmod(0o755 if item.is_dir() else 0o644)
+            result = worker.mode_result(change, request)
+            self.assertEqual(result, {'observed': True})
+            self.assertEqual(worker.fixture_modes(root.parent, root.name, request['entries']),
+                             {'.': 0o755, 'nested': 0o755, 'nested/file.txt': 0o644})
+            with tempfile.TemporaryDirectory(dir='/tmp') as observed:
+                shutil.copytree(root, Path(observed) / root.name)
+                # Recreate initial trusted bits; inspect the distinct effect tree.
+                for name, entry in request['entries'].items():
+                    (root / name).chmod(entry['mode'])
+                remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), 'mode-result')
+                worker.mode_proxy(remote, Path(observed))(root)
+            self.assertEqual(json.loads(remote.writer.getvalue())['args'], [request])
+            self.assertEqual((root / 'nested/file.txt').stat().st_mode & 0o777, 0o644)
+            self.assertEqual((root / 'nested/file.txt').read_text(), 'fixture text')
+
+    def test_mode_requests_refuse_aliases_parent_traversal_and_special_entries_before_invocation(self):
+        valid = {'root': '/tmp/oracle-fixture', 'entries': {'.': {'kind': 'directory', 'mode': 0o700}}}
+        variants = [{**valid, 'root': '/workspace'}, {**valid, 'root': '/tmp/a/../b'},
+                    {**valid, 'root': '/tmp/..'}, {**valid, 'extra': True},
+                    {**valid, 'entries': {'.': {'kind': 'directory', 'mode': True}}},
+                    {**valid, 'entries': {'.': {'kind': 'directory', 'mode': 0o1777}}}]
+        for name, entry in (
+                ('../escape', {'kind': 'directory', 'mode': 0o700}),
+                ('/output', {'kind': 'directory', 'mode': 0o700}),
+                ('a/b', {'kind': 'directory', 'mode': 0o700}),
+                ('a', {'kind': 'symlink', 'mode': 0o700}), ('a', [])):
+            variants.append({**valid, 'entries': {**valid['entries'], name: entry}})
+        for request in variants:
+            called = mock.Mock()
+            with self.subTest(request=request), self.assertRaises(worker.ProtocolError):
+                worker.mode_result(called, request)
+            called.assert_not_called()
+        with tempfile.TemporaryDirectory(dir='/tmp') as directory:
+            root = Path(directory)
+            (root / 'alias').symlink_to('/etc')
+            remote = self.remote(b'', 'mode-result')
+            with self.assertRaises(worker.ProtocolError):
+                worker.mode_proxy(remote)(root)
+            self.assertTrue(remote.failed)
+            self.assertEqual(remote.writer.getvalue(), b'')
+
+    def test_malformed_mode_replies_do_not_change_any_trusted_file(self):
+        with tempfile.TemporaryDirectory(dir='/tmp') as directory:
+            root = Path(directory)
+            initial = root.stat().st_mode & 0o777
+            for result in ({'modes': {'.': 0o755, '../escape': 0o777}}, {'modes': {}},
+                           {'modes': {'.': True}}, {'modes': {'.': 0o1777}},
+                           {'modes': {'.': '0755'}}, {'modes': {'.': 0o755}, 'execute': 'payload'},
+                           {'observed': 1}, {'observed': True, 'modes': {'.': 0o755}}):
+                remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), 'mode-result')
+                with self.subTest(result=result), self.assertRaises(worker.ProtocolError):
+                    worker.mode_proxy(remote)(root)
+                self.assertTrue(remote.failed)
+                self.assertEqual(root.stat().st_mode & 0o777, initial)
+
+    def test_actual_mode_inspection_refuses_symlink_leaf_and_ancestor_without_following(self):
+        entries = {'.': {'kind': 'directory', 'mode': 0o700},
+                   'nested': {'kind': 'directory', 'mode': 0o700},
+                   'nested/file': {'kind': 'file', 'mode': 0o600, 'text': 'fixture'}}
+        with tempfile.TemporaryDirectory(dir='/tmp') as directory:
+            mount = Path(directory)
+            root = mount / 'fixture'
+            root.mkdir()
+            (root / 'nested').symlink_to('/tmp', target_is_directory=True)
+            with self.assertRaises(worker.AdapterPolicyError):
+                worker.fixture_modes(mount, 'fixture', entries)
+            # Opening an aliased ancestor directly is refused by O_NOFOLLOW.
+            with self.assertRaises(OSError):
+                worker.fixture_modes(mount, 'fixture', {'nested/file': entries['nested/file']})
+            (root / 'nested').unlink()
+            (root / 'nested').mkdir()
+            (root / 'nested/file').symlink_to('/etc/passwd')
+            with self.assertRaises(worker.AdapterPolicyError):
+                worker.fixture_modes(mount, 'fixture', entries)
 
     def test_argument_proxy_preserves_namespace_paths_and_order_without_object_deserialization(self):
         values = {'root': {'path': '/expected'}, 'grant': {'path': '/s/grant.json'},
@@ -242,7 +392,9 @@ class OracleProtocolTests(unittest.TestCase):
                     ('capture-result', 'capture', {'operation': 'capture', 'stdout': 'x', 'returncode': 0,
                                                   'commands': [['fake']], 'stub_kind': 'unknown'}),
                     ('argument-result', 'helper', {'operation': 'other'}),
-                    ('verification-result', 'verify_case', {'case': 'unsupported'})]
+                    ('verification-result', 'verify_case', {'case': 'unsupported'}),
+                    ('mode-result', 'helper', {'root': '/workspace', 'entries': {}}),
+                    ('command-result', 'helper', {'package': 1, 'root': '/tmp/root'})]
         for kind, function, request in requests:
             config = {'module': 'synthetic', 'function': function, 'result_type': kind}
             reader = io.BufferedReader(io.BytesIO(worker.encode_message({'seq': 1, 'args': [request]})))

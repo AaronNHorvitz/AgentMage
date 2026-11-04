@@ -11,9 +11,11 @@ import importlib
 import importlib.util
 import json
 import math
+import os
 from pathlib import Path
 import re
 import subprocess
+import stat
 import sys
 import tempfile
 import unittest
@@ -23,7 +25,7 @@ MAX_MESSAGE = 64 * 1024
 MAX_TRANSCRIPT = 2 * 1024 * 1024
 MAX_CALLS = 128
 POLICY_RESULT_TYPES = frozenset({"argument-result", "verification-result", "capture-result",
-                                "bool", "bool-map", "path-result"})
+                                "bool", "bool-map", "path-result", "mode-result", "command-result"})
 
 
 class ProtocolError(ValueError):
@@ -201,6 +203,12 @@ class RemoteFunction:
                          and result["container"] in {"value", "tuple"}
                          and observation_value(result["value"])
                          and (result["container"] != "tuple" or type(result["value"]) is list))
+            elif self.result_type == "mode-result":
+                valid = (type(result) is dict and result.keys() == {"observed"}
+                         and result["observed"] is True)
+            elif self.result_type == "command-result":
+                unpack_calls(result)
+                valid = True
             elif self.result_type == "bool-map":
                 valid = (isinstance(result, dict) and result.keys() == {"value"}
                          and type(result["value"]) is dict
@@ -473,6 +481,184 @@ def capture_result(module, request):
     return {"adapter_policy": True}
 
 
+def pack_call_value(value, depth=0):
+    """A closed data codec preserves list/tuple/Path equality in mock calls."""
+    if depth >= 16:
+        raise AdapterPolicyError("oracle.call-depth")
+    if scalar_value(value):
+        return {"kind": "scalar", "value": value}
+    if type(value) is type(Path()):
+        return {"kind": "path", "value": str(value)}
+    if type(value) in (list, tuple):
+        return {"kind": "list" if type(value) is list else "tuple",
+                "value": [pack_call_value(item, depth + 1) for item in value]}
+    if type(value) is dict and all(type(key) is str for key in value):
+        return {"kind": "dict", "value": {key: pack_call_value(item, depth + 1)
+                                          for key, item in value.items()}}
+    raise AdapterPolicyError("oracle.call-value")
+
+
+def unpack_call_value(value, depth=0):
+    if (depth >= 16 or type(value) is not dict or value.keys() != {"kind", "value"}
+            or type(value["kind"]) is not str):
+        raise ProtocolError("oracle.invalid-call-value")
+    kind, data = value["kind"], value["value"]
+    if kind == "scalar" and scalar_value(data):
+        return data
+    if kind == "path" and type(data) is str:
+        return Path(data)
+    if kind in {"list", "tuple"} and type(data) is list:
+        items = [unpack_call_value(item, depth + 1) for item in data]
+        return items if kind == "list" else tuple(items)
+    if kind == "dict" and type(data) is dict and all(type(key) is str for key in data):
+        return {key: unpack_call_value(item, depth + 1) for key, item in data.items()}
+    raise ProtocolError("oracle.invalid-call-value")
+
+
+def unpack_calls(result):
+    if (type(result) is not dict or result.keys() != {"calls"}
+            or type(result["calls"]) is not list or len(result["calls"]) > 128):
+        raise ProtocolError("oracle.invalid-calls")
+    calls = []
+    for call in result["calls"]:
+        if type(call) is not dict or call.keys() != {"args", "kwargs"}:
+            raise ProtocolError("oracle.invalid-call")
+        args, kwargs = unpack_call_value(call["args"]), unpack_call_value(call["kwargs"])
+        if type(args) is not tuple or type(kwargs) is not dict:
+            raise ProtocolError("oracle.invalid-call-arguments")
+        calls.append((args, kwargs))
+    return calls
+
+
+def command_proxy(remote, module):
+    def call(package, root):
+        # The complete original test installs this mock. Never replay into the
+        # real helper, and validate every call before touching even that mock.
+        if not isinstance(module.command, mock.MagicMock):
+            remote.failed = True
+            raise ProtocolError("oracle.command-fixture-not-mocked")
+        calls = unpack_calls(remote({"package": str(package), "root": str(root)}))
+        for args, kwargs in calls:
+            module.command(*args, **kwargs)
+    return call
+
+
+def command_result(function, module, request):
+    if (type(request) is not dict or request.keys() != {"package", "root"}
+            or any(type(value) is not str for value in request.values())):
+        raise ProtocolError("oracle.invalid-command-request")
+    with mock.patch.object(module, "command") as stub:
+        function(Path(request["package"]), Path(request["root"]))
+    try:
+        if len(stub.call_args_list) > 128:
+            raise AdapterPolicyError("oracle.call-count")
+        return {"calls": [{"args": pack_call_value(call.args), "kwargs": pack_call_value(call.kwargs)}
+                          for call in stub.call_args_list]}
+    except AdapterPolicyError:
+        return {"adapter_policy": True}
+
+
+def valid_mode_request(request):
+    """Only the closed regular-text fixture can be rebuilt in candidate /tmp."""
+    if (type(request) is not dict or request.keys() != {"root", "entries"}
+            or type(request["root"]) is not str
+            or not re.fullmatch(r"/tmp/[A-Za-z0-9_-]{1,128}", request["root"])
+            or type(request["entries"]) is not dict or not 1 <= len(request["entries"]) <= 128
+            or any(type(entry) is not dict for entry in request["entries"].values())):
+        return False
+    entries = request["entries"]
+    for name, entry in entries.items():
+        if (type(name) is not str or (name != "." and not re.fullmatch(
+                r"[A-Za-z0-9_-]+(?:[.][A-Za-z0-9_-]+)*(?:/[A-Za-z0-9_-]+(?:[.][A-Za-z0-9_-]+)*)*", name))
+                or type(entry) is not dict or type(entry.get("mode")) is not int
+                or not 0 <= entry["mode"] <= 0o777):
+            return False
+        if entry.keys() == {"kind", "mode"} and entry["kind"] == "directory":
+            pass
+        elif (entry.keys() == {"kind", "mode", "text"} and entry["kind"] == "file"
+              and type(entry["text"]) is str):
+            pass
+        else:
+            return False
+        if name != "." and entries.get(str(Path(name).parent), {}).get("kind") != "directory":
+            return False
+    return entries.get(".", {}).get("kind") == "directory"
+
+
+def fixture_modes(mount, root_name, entries):
+    """Inspect actual effects from the trusted side, never candidate mode claims.
+
+    Descriptor-relative traversal refuses every symlink, including ancestors;
+    candidate renames cannot redirect inspection outside its disposable mount.
+    """
+    modes = {}
+    for name, entry in entries.items():
+        parts = (root_name, *Path(name).parts)
+        descriptor = os.open(mount, os.O_PATH | os.O_DIRECTORY | os.O_NOFOLLOW)
+        try:
+            for part in parts[:-1]:
+                child = os.open(part, os.O_PATH | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=descriptor)
+                os.close(descriptor)
+                descriptor = child
+            observed = os.stat(parts[-1], dir_fd=descriptor, follow_symlinks=False)
+            if not (stat.S_ISDIR(observed.st_mode) if entry["kind"] == "directory"
+                    else stat.S_ISREG(observed.st_mode)):
+                raise AdapterPolicyError("oracle.unsupported-mode-observation")
+            modes[name] = observed.st_mode & 0o777
+        finally:
+            os.close(descriptor)
+    return modes
+
+
+def mode_proxy(remote, observation_root=Path("/candidate-tmp")):
+    def call(root):
+        entries = {}
+        for path in (root, *sorted(root.rglob("*"))):
+            if path.is_symlink() or not (path.is_dir() or path.is_file()):
+                remote.failed = True
+                raise ProtocolError("oracle.unsupported-mode-fixture")
+            entry = {"kind": "directory" if path.is_dir() else "file",
+                     "mode": path.stat().st_mode & 0o777}
+            if entry["kind"] == "file":
+                entry["text"] = path.read_text(encoding="utf-8")
+            entries[str(path.relative_to(root))] = entry
+        request = {"root": str(root), "entries": entries}
+        if not valid_mode_request(request):
+            remote.failed = True
+            raise ProtocolError("oracle.unsupported-mode-fixture")
+        remote(request)
+        try:
+            modes = fixture_modes(observation_root, root.name, entries)
+        except (OSError, AdapterPolicyError):
+            remote.policy_failed = True
+            raise AdapterPolicyError("oracle.unsupported-mode-observation") from None
+        # Children first: a deliberately wrong parent mode must reach the
+        # original assertions without preventing replay of the other bits.
+        for name in sorted(modes, key=lambda name: len(Path(name).parts), reverse=True):
+            (root / name).chmod(modes[name])
+    return call
+
+
+def mode_result(function, request):
+    if not valid_mode_request(request):
+        raise ProtocolError("oracle.invalid-mode-request")
+    root, entries = Path(request["root"]), request["entries"]
+    # The oracle and candidate have private /tmp mounts. Preserve lexical paths
+    # while rebuilding bytes; no path from a candidate response is ever opened.
+    for name in sorted(entries, key=lambda name: len(Path(name).parts)):
+        path, entry = root / name, entries[name]
+        if entry["kind"] == "directory":
+            path.mkdir()
+        else:
+            path.write_text(entry["text"], encoding="utf-8")
+    for name in sorted(entries, key=lambda name: len(Path(name).parts), reverse=True):
+        (root / name).chmod(entries[name]["mode"])
+    function(root)
+    # Only acknowledge completion. The trusted role independently stats the
+    # shared disposable /tmp through its read-only mount before replaying bits.
+    return {"observed": True}
+
+
 def candidate(config):
     reader, writer = sys.stdin.buffer, sys.stdout.buffer
     # Ordinary candidate prints are diagnostics. Deliberate protocol corruption
@@ -508,6 +694,10 @@ def candidate(config):
                     result = argument_result(module, config["function"], *request["args"])
                 elif config["result_type"] == "capture-result":
                     result = capture_result(module, *request["args"])
+                elif config["result_type"] == "mode-result":
+                    result = mode_result(function, *request["args"])
+                elif config["result_type"] == "command-result":
+                    result = command_result(function, module, *request["args"])
                 elif config["result_type"] in {"bool", "bool-map"}:
                     result = predicate_result(function(*request["args"]), config["result_type"])
                 else:
@@ -549,6 +739,10 @@ def oracle(config):
                 module.parser = parser
             elif config["result_type"] == "capture-result":
                 module.validate_raw, proxy = capture_proxies(remote, module)
+            elif config["result_type"] == "mode-result":
+                proxy = mode_proxy(remote)
+            elif config["result_type"] == "command-result":
+                proxy = command_proxy(remote, module)
             else:
                 proxy = remote
             setattr(module, config["function"], proxy)

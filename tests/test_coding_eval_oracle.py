@@ -38,8 +38,8 @@ class IndependentOracleTests(unittest.TestCase):
     def test_real_two_sandbox_controls_keep_original_hidden_tests_and_counts(self):
         summary = oracle.verify(self.root / "controls")
         self.assertTrue(summary["passed"], summary)
-        self.assertEqual(len(summary["tasks"]), 12)
-        self.assertEqual(summary["control_attempts"], {"total": 24, "passed": 12, "failed": 12})
+        self.assertEqual(len(summary["tasks"]), 14)
+        self.assertEqual(summary["control_attempts"], {"total": 28, "passed": 14, "failed": 14})
         self.assertFalse(summary["generated_scoring"])
         self.assertIsNone(summary["model_score"])
         self.assertEqual(summary["collection_sha256"],
@@ -59,10 +59,10 @@ class IndependentOracleTests(unittest.TestCase):
     def test_candidate_launch_failure_cannot_validate_either_failing_base(self):
         real_sandbox, real_grade = oracle.sandbox, oracle.grade
 
-        def fail_candidate(workspace, adapter, output, role):
+        def fail_candidate(workspace, adapter, output, role, **options):
             if role == "candidate":
                 return ["/usr/bin/false"]
-            return real_sandbox(workspace, adapter, output, role)
+            return real_sandbox(workspace, adapter, output, role, **options)
 
         def fail_base(task, files, output):
             if evaluation.require_historical_candidate(task, files) == "frozen-base":
@@ -96,6 +96,129 @@ class IndependentOracleTests(unittest.TestCase):
                     oracle.grade(task, files, output)
                 launch.assert_not_called()
                 self.assertFalse(output.exists())
+
+    def test_mode_and_command_controls_keep_admission_closed(self):
+        for task in (t for t in evaluation.collection() if t['id'] in {'dev-017', 'dev-019'}):
+            files = self.files(task)
+            files[task['source']] += b'\n# generated source stays refused\n'
+            with self.subTest(task=task['id']), mock.patch.object(oracle, 'exchange') as launch:
+                with self.assertRaisesRegex(evaluation.EvaluationError, 'untrusted-candidate-disabled'):
+                    oracle.grade(task, files, self.root / task['id'])
+                launch.assert_not_called()
+                self.assertFalse((self.root / task['id']).exists())
+
+    def test_mode_and_command_observations_match_frozen_assertions(self):
+        variants = {
+            'dev-017': [
+                ('noop', 'def make_container_readable(root): pass', False, 'test_failure'),
+                ('all-executable', '''def make_container_readable(root):
+ for path in (root, *root.rglob('*')): path.chmod(0o755)
+''', False, 'test_failure'),
+                ('deleted', '''def make_container_readable(root):
+ (root / 'nested/source.rs').unlink()
+''', False, 'adapter_policy'),
+                ('forgery', '''import unittest
+unittest.TestCase.assertEqual = lambda *args: None
+def make_container_readable(root): pass
+''', False, 'test_failure'),
+                ('content-ungraded', '''original_mode = make_container_readable
+def make_container_readable(root):
+ (root / 'nested/source.rs').write_text('different bytes')
+ return original_mode(root)
+''', True, 'none'),
+            ],
+            'dev-019': [
+                ('noop', 'def extract_deb(package, root): pass', False, 'test_failure'),
+                ('tuple', '''def extract_deb(package, root):
+ command(('ar', 'x', str(package)), cwd=root)
+ command(['tar', '--extract', '--gzip', '--file', 'data.tar.gz', '--no-same-owner', '--same-permissions'], cwd=root)
+''', False, 'test_failure'),
+                ('string-path', '''original_extract = extract_deb
+def extract_deb(package, root): return original_extract(package, str(root))
+''', False, 'test_failure'),
+                ('extra-call', '''original_extract = extract_deb
+def extract_deb(package, root):
+ original_extract(package, root)
+ command(['extra'], cwd=root)
+''', False, 'test_failure'),
+                ('forgery', '''import unittest
+unittest.TestCase.assertEqual = lambda *args: None
+def extract_deb(package, root): command(['wrong'], cwd=root)
+''', False, 'test_failure'),
+                ('object', 'def extract_deb(package, root): command(object())', False, 'adapter_policy'),
+                ('exception', 'def extract_deb(package, root): raise ValueError("private-payload")',
+                 False, 'candidate_exception'),
+            ],
+        }
+        for task in (t for t in evaluation.collection() if t['id'] in variants):
+            for name, suffix, passed, cause in variants[task['id']]:
+                files = self.files(task)
+                files[task['source']] += ('\n' + suffix + '\n').encode()
+                output = self.root / (task['id'] + '-' + name)
+                with self.subTest(task=task['id'], variant=name), mock.patch.object(
+                        evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                    report = oracle.grade(task, files, output)
+                    legacy = evaluation.grade(task, files, self.root / (task['id'] + '-' + name + '-legacy'))
+                    self.assertEqual((report['passed'], report['cause']), (passed, cause), report)
+                    # The legacy grader shares its assertions with candidate
+                    # imports: these deliberate unittest patches can forge it.
+                    self.assertEqual(legacy['passed'], True if name == 'forgery' else passed, legacy)
+                    self.assertEqual(report['tests']['tests'], task['expected_tests'])
+                    self.assertEqual(report['control_attempts'],
+                                     {'total': 1, 'passed': int(passed), 'failed': int(not passed)})
+                    for log in ('wire.log', 'oracle.log'):
+                        self.assertNotIn(b'private-payload', (output / log).read_bytes())
+
+    def test_mode_claims_cannot_replace_actual_confined_filesystem_observations(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-017')
+        variants = [
+            ('false-ack', '''import __main__
+__main__.mode_result = lambda *args: {'observed': True}
+''', 'adapter_policy'),
+            ('forged-modes', '''import __main__
+__main__.mode_result = lambda *args: {'modes': {'.': 493}}
+''', 'protocol'),
+            ('symlink', '''def make_container_readable(root):
+ (root / 'nested/source.rs').unlink()
+ (root / 'nested/source.rs').symlink_to('/workspace/scripts/path_platform_conformance.py')
+''', 'adapter_policy'),
+            ('forged-stat', '''from types import SimpleNamespace
+def make_container_readable(root):
+ Path.stat = lambda *a, **kw: SimpleNamespace(st_mode=0o755)
+''', 'test_failure'),
+        ]
+        for name, suffix, cause in variants:
+            files = self.files(task)
+            files[task['source']] += ('\n' + suffix + '\n').encode()
+            with self.subTest(variant=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / name)
+                self.assertEqual(report['cause'], cause, report)
+                self.assertFalse(report['passed'])
+                self.assertEqual(report['control_attempts'], {'total': 1, 'passed': 0, 'failed': 1})
+
+    def test_new_observation_workers_keep_files_network_and_assertions_confined(self):
+        suffix = '''
+from pathlib import Path
+import socket
+assert not Path('/adapter/test.py').exists()
+assert not Path('/output').exists()
+try:
+ Path('/workspace/escape').write_text('escape')
+except OSError: pass
+else: raise AssertionError('workspace writable')
+try:
+ socket.create_connection(('127.0.0.1', 9), timeout=0.1)
+except OSError: pass
+else: raise AssertionError('network accessible')
+'''
+        for task in (t for t in evaluation.collection() if t['id'] in {'dev-017', 'dev-019'}):
+            files = self.files(task)
+            files[task['source']] += suffix.encode()
+            with self.subTest(task=task['id']), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / task['id'])
+                self.assertTrue(report['passed'], report)
 
     def test_capture_assertions_stay_trusted_and_wrong_values_fail(self):
         variants = (
@@ -745,6 +868,20 @@ def case_passed(case):
             self.assertIn("--clearenv", command)
         self.assertNotIn("oracle-adapter", candidate)
         self.assertNotIn("candidate", trusted)
+
+    def test_mode_fixture_is_writable_only_to_candidate_and_read_only_to_oracle(self):
+        fixture = Path('disposable-candidate-tmp')
+        candidate = oracle.sandbox(Path('candidate'), Path('candidate-adapter'), Path('result'),
+                                   'candidate', candidate_tmp=fixture)
+        trusted = oracle.sandbox(Path('trusted'), Path('oracle-adapter'), Path('result'),
+                                 'oracle', candidate_tmp=fixture)
+        index = candidate.index(str(fixture))
+        self.assertEqual(candidate[index-1:index+2], ['--bind', str(fixture), '/tmp'])
+        index = trusted.index(str(fixture))
+        self.assertEqual(trusted[index-1:index+2], ['--ro-bind', str(fixture), '/candidate-tmp'])
+        self.assertNotIn('/candidate-tmp', candidate)
+        self.assertNotIn('/output', candidate)
+        self.assertNotIn('oracle-adapter', candidate)
 
     def test_timeout_and_log_budget_stop_both_owned_process_groups(self):
         for name, code, timeout in (

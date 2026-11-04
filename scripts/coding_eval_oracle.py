@@ -22,7 +22,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v10"
+VERSION = "coding-independent-oracle-v11"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
@@ -32,7 +32,9 @@ SUPPORTED = {
     "dev-010": {"function": "test_only_files", "result_type": "path-result"},
     "dev-012": {"function": "test_only_files", "result_type": "path-result"},
     "dev-015": {"function": "case_passed", "result_type": "bool"},
+    "dev-017": {"function": "make_container_readable", "result_type": "mode-result"},
     "dev-018": {"function": "capture", "result_type": "capture-result"},
+    "dev-019": {"function": "extract_deb", "result_type": "command-result"},
     "dev-020": {"function": "verify_case", "result_type": "verification-result"},
     "dev-021": {"function": "verify_case", "result_type": "verification-result"},
     "dev-022": {"function": "verify_case", "result_type": "verification-result", "observe_case_roots": True},
@@ -51,19 +53,34 @@ CONTROL_PROFILES = {
     "dev-010": {"failures": 1, "base_calls": 1, "reference_calls": 4},
     "dev-012": {"failures": 10, "base_calls": 12, "reference_calls": 14},
     "dev-015": {"failures": 1, "base_calls": 3, "reference_calls": 4},
+    "dev-017": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 1,
+                "function_found": False, "candidate_exception": True},
     "dev-018": {"failures": 1, "base_calls": 1, "reference_calls": 5},
+    "dev-019": {"failures": 1, "base_calls": 1, "reference_calls": 1},
     "dev-020": {"failures": 1, "base_calls": 2, "reference_calls": 3},
     "dev-021": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 6},
     "dev-022": {"failures": 0, "errors": 1, "base_calls": 2, "reference_calls": 4},
     "dev-027": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 37,
                 "function_found": False},
-    "dev-029": {"failures": 0, "base_calls": 1, "reference_calls": 6},
+    "dev-029": {"failures": 0, "base_calls": 1, "reference_calls": 6,
+                "candidate_exception": True},
 }
 
 
 def coverage(task):
     """State what transported observations can and cannot establish."""
     kind = SUPPORTED[task["id"]]["result_type"]
+    if kind == "mode-result":
+        return {"graded": ["frozen-tree-permission-bits"],
+                "adapter_policy": ["bounded-encoded-response", "finite-text-tree-fixture",
+                                   "regular-inspectable-mode-observations"],
+                "not_graded": ["file-content-and-tree-shape", "archive-integration",
+                               "special-file-refusals", "unselected-statement-clauses"]}
+    if kind == "command-result":
+        return {"graded": ["helper-call-order-and-values", "helper-argument-container-types"],
+                "adapter_policy": ["bounded-encoded-response", "bounded-helper-call-observations"],
+                "not_graded": ["real-command-execution", "helper-error-propagation",
+                               "unselected-statement-clauses"]}
     if kind == "capture-result":
         return {"graded": ["selected-private-path-refusals", "captured-output-redaction",
                            "selected-return-values"],
@@ -104,17 +121,23 @@ def supported_task(task):
     return {**SUPPORTED[task["id"]], "module": task["source"][:-3].replace("/", ".")}
 
 
-def sandbox(workspace, adapter, output, role):
+def sandbox(workspace, adapter, output, role, candidate_tmp=None):
     command = [
         "/usr/bin/bwrap", "--unshare-all", "--unshare-user", "--die-with-parent", "--new-session",
         "--disable-userns", "--clearenv", "--cap-drop", "ALL",
         "--ro-bind", "/usr", "/usr", "--symlink", "usr/bin", "/bin",
         "--symlink", "usr/lib", "/lib", "--symlink", "usr/lib64", "/lib64",
-        "--proc", "/proc", "--dev", "/dev", "--tmpfs", "/tmp",
+        "--proc", "/proc", "--dev", "/dev",
         "--ro-bind", str(workspace), "/workspace", "--ro-bind", str(adapter), "/adapter",
         "--setenv", "PATH", "/usr/bin", "--setenv", "HOME", "/tmp",
         "--setenv", "LANG", "C.UTF-8", "--chdir", "/workspace",
     ]
+    if candidate_tmp is not None and role == "candidate":
+        command.extend(["--bind", str(candidate_tmp), "/tmp"])
+    else:
+        command.extend(["--tmpfs", "/tmp"])
+    if candidate_tmp is not None and role == "oracle":
+        command.extend(["--ro-bind", str(candidate_tmp), "/candidate-tmp"])
     if role == "oracle":
         command.extend(["--bind", str(output), "/output"])
     elif role != "candidate":
@@ -232,6 +255,11 @@ def grade_case(task, files, output, timeout=evaluation.TIMEOUT):
         results = root / "results"
         for directory in (trusted, candidate, oracle_adapter, candidate_adapter, results):
             directory.mkdir(mode=0o700)
+        fixture_options = {}
+        if config["result_type"] == "mode-result":
+            candidate_tmp = root / "candidate-tmp"
+            candidate_tmp.mkdir(mode=0o700)
+            fixture_options["candidate_tmp"] = candidate_tmp
         for workspace, content in ((trusted, trusted_files), (candidate, files)):
             for name, data in content.items():
                 evaluation.write_file(workspace / name, data)
@@ -242,8 +270,8 @@ def grade_case(task, files, output, timeout=evaluation.TIMEOUT):
             **config, "test_names": task["test_names"], "expected_tests": task["expected_tests"],
         })
         evaluation.write_file(oracle_adapter / "test.py", hidden)
-        outcome = exchange(sandbox(candidate, candidate_adapter, results, "candidate"),
-                           sandbox(trusted, oracle_adapter, results, "oracle"), output, timeout)
+        outcome = exchange(sandbox(candidate, candidate_adapter, results, "candidate", **fixture_options),
+                           sandbox(trusted, oracle_adapter, results, "oracle", **fixture_options), output, timeout)
         try:
             record = result_record(results / "tests.json", task)
         except (OSError, ValueError):
@@ -320,7 +348,7 @@ def expected_base(task, report):
     profile = CONTROL_PROFILES.get(task["id"])
     if profile is None:
         return False
-    missing = task["id"] == "dev-029"
+    missing = profile.get("candidate_exception", False)
     tests = {"tests": task["expected_tests"], "failures": profile["failures"],
              "errors": profile.get("errors", 1 if missing else 0),
              "skipped": 0, "expected_failures": 0, "unexpected_successes": 0}

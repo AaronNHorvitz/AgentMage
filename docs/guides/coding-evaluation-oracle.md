@@ -20,6 +20,9 @@ bounded return observations reach the candidate. It also catches memory
 exhaustion during response encoding as an adapter-policy refusal.
 The T-311.14 review repair uses oracle v10 and preserves the original fixture's
 completed-process or mock stub kind, rather than replacing both with one kind.
+T-311.15 uses oracle v11 to add file-mode and helper-call observations for
+dev-017 and dev-019. Mode assertions inspect actual disposable files from the
+trusted process; a candidate cannot replace those observations with mode claims.
 
 ## Run
 
@@ -38,7 +41,9 @@ Every selected original hidden method remains complete and unchanged.
 | dev-010 | `test_only_files` | 1 | 1 / 0 | 1 | 4 |
 | dev-012 | `test_only_files` | 4 | 10 / 0 | 12 | 14 |
 | dev-015 | `case_passed` | 1 | 1 / 0 | 3 | 4 |
+| dev-017 | `make_container_readable` | 1 | 0 / 1 | 1 | 1 |
 | dev-018 | `validate_raw`, `capture` | 1 | 1 / 0 | 1 | 5 |
+| dev-019 | `extract_deb` | 1 | 1 / 0 | 1 | 1 |
 | dev-020 | `verify_case` | 1 | 1 / 0 | 2 | 3 |
 | dev-021 | `verify_case` | 1 | 0 / 1 | 1 | 6 |
 | dev-022 | `verify_case`, case roots | 1 | 0 / 1 | 2 | 4 |
@@ -54,6 +59,7 @@ arbitrary failure cannot validate a base. A missing function in dev-029 is the
 expected failed candidate-exception control: one call, one original test error,
 candidate exit 0 and oracle exit 1. The candidate now reports the fixed exception
 tag instead of crashing and leaving a broken pipe. No assertion or count changes.
+The absent helper in dev-017 has the same explicit missing-function profile.
 Launch/import failure, timeout or missing counts cannot validate a control.
 The extra dev-022 call observes candidate case roots before its original
 uniqueness assertion; its hidden method and three predicate calls are unchanged.
@@ -258,6 +264,48 @@ The dev-018 home-alias variant is also explicitly ungraded: both sandboxes use
 the same `/tmp` home, so that branch of the unchanged fixture does not execute.
 Malformed adapter requests remain protocol failures instead of being labelled
 candidate exceptions; this also applies to argument and verification requests.
+The mock-kind transport supports only the pinned fixture's stdout and return-code
+configuration. Additional mock configuration is ungraded; it is not validated by
+the kind check. Adding another capture task requires checking that fixture first.
+
+## File modes and extraction helper calls
+
+The complete dev-017 method creates a four-entry text tree and asserts its four
+permission modes. Its trusted proxy snapshots the original paths, file text and
+bits, with at most 128 regular file/directory entries. The candidate recreates
+that input at the same lexical path in its own disposable `/tmp`. Only a fixed
+completion acknowledgement crosses back. The oracle has a read-only view of
+that disposable filesystem at `/candidate-tmp`; it independently stats the known
+entries and replays those observed bits onto its original fixture before the
+unchanged assertions run. Returned mode maps are malformed protocol, never data
+used for chmod. A forged completion without a tree fails inspection.
+
+Descriptor-relative inspection refuses symlinks at every component, including
+ancestors, without following candidate aliases into trusted files. Missing,
+uninspectable or non-regular entries fail as sticky adapter policy and count as
+failed attempts. Only the initial trusted names are inspected or changed; reply
+paths are never opened. The writable mount contains only disposable candidate
+data, and is removed through the existing cleanup before reports publish.
+Content preservation, changed tree shape and special-file refusal behavior are
+ungraded by the original method; regular inspectable observations are explicit
+adapter policy. This does not test archive extraction or container integration.
+
+The complete dev-019 method installs a default command-helper mock, calls
+`extract_deb` and compares its exact two calls. The candidate runs that function
+with an equivalent local mock. At most 128 call records carry bounded values;
+closed tags preserve built-in list/tuple distinctions, dictionaries, finite JSON
+scalars and lexical local Paths. Unknown tags, malformed frames or extra fields
+fail as protocol. Unsupported objects and excessive nesting/counts fail as
+adapter policy. Every record validates before replay, and the trusted proxy
+refuses replay unless its original helper is still a mock. No recorded command
+executes. This grades helper-call order and values; real package extraction,
+helper error propagation and other statement clauses remain ungraded.
+
+Both tasks keep separate code, assertions and output mounts, plus the existing
+networkless boundary and controls-only admission. Their real namespace tests
+exercise forgery, wrong observations and confinement. Monkeypatching unittest
+can still forge the legacy grader; the same diagnostics fail this independent
+oracle and remain in its failed-attempt denominator.
 
 ## Candidate exceptions and cause limits
 
@@ -278,6 +326,9 @@ policy tag only to fail its own attempt; neither tag proves why adversarial code
 failed. These labels distinguish ordinary adapter-observed failures, not a
 forensic determination. A candidate that deliberately exits, corrupts its wire
 or writes stderr retains the corresponding exit/protocol/output-limit cause.
+A candidate that raises the worker's own reachable `ProtocolError` also gets
+the protocol cause, rather than the candidate-exception tag. That label is not
+proof of an adapter-originated error; the attempt still fails and is counted.
 Policy and exception failures count in the same failed-attempt denominator.
 After a candidate call, response encoding is also bounded adapter work. A
 response exceeding 64 KiB or refusing JSON encoding (including the interpreter's
@@ -305,7 +356,7 @@ removal retries come from the accepted evaluator.
 
 Both processes retain the evaluator's per-process 512 MiB address-space,
 60-second CPU, 32 MiB file and zero core-file limits. These are **not aggregate
-worker quotas**. Generated scoring remains disabled: this adapter covers twelve of
+worker quotas**. Generated scoring remains disabled: this adapter covers fourteen of
 30 tasks and does not implement separately delegated memory/process/CPU quotas,
 protected held-out inputs, covered-clause labels or a current-harness baseline.
 The legacy grader continues to import candidate code with tests and has its
