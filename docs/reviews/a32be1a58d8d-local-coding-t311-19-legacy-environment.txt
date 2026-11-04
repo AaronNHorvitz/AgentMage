@@ -1,0 +1,152 @@
+Commit: a32be1a58d8d7d435979010d592f03d5276d1d25
+Scope: local-coding-t311-19-legacy-environment
+
+# Independent core review: T-311.19 legacy evaluator environment isolation (review 1)
+
+Reviewer: Claude Opus 5.5, extra-high effort, in a separate read-only session. Base:
+`8f046d4e862a0baa0bb79f8d283ef823b6a20859`. Row: T-311.19. The repository was not modified. My
+own runs used `/lane/state/tmp/t311-19-review-kKzHae`, and the base-launcher negative control ran
+in a throwaway clone inside that directory. I used no GPU, model, held-out input or tuning.
+
+## Methods
+
+1. I confirmed the commit (`git rev-parse a32be1a5…` resolves to HEAD, and the tree is clean).
+   I then read IP-POLICY.md, the T-311.18 re-review I am following up (low L2), and the full
+   base-to-head diff: TASKS.md, two guides, the evidence file, `scripts/coding_eval.py` and
+   `tests/test_coding_eval.py`.
+2. I read `grade_case`, `sandbox_command` (`scripts/coding_eval.py:707-784`) and the Rust adapter's
+   `runtime_paths`/`sandbox_command` (`scripts/coding_eval_rust.py:87-113`). This confirmed that both
+   language branches build their command and then reach the single `subprocess.Popen` at
+   `scripts/coding_eval.py:781-783`. That call is the only place the legacy grader starts bwrap.
+   The other subprocesses (`git init/add/commit` and `rustup which`) run on the host side with an
+   explicit environment or before the sandbox starts.
+3. I ran every required reproduction command (results below).
+4. Negative control: in a clone at HEAD, I replaced only `scripts/coding_eval.py` with the base
+   version (a 1-line diff) and ran the new regression.
+5. Real-host-environment probe: from a clone at HEAD, I graded the frozen dev-001 and dev-rust-001
+   references with a probe preamble. The probe ran with the reviewer's **real** environment rather
+   than synthetic sentinels. It checked 24 distinct host environment values (including HOME and
+   USER) against every visible `/proc/*/environ`, `/proc/1/cmdline` and `/proc/self/mountinfo`, and
+   printed only counts.
+6. Evidence: I hashed every private artifact listed in the public evidence. I also read
+   `negative-dev-*.log`, `negative-observations.json` and `audit.json`, and checked the audit's
+   source digests against the files at HEAD.
+7. Hygiene: I searched the diff for host paths, usernames, hostnames and credentials, and swept the
+   other bwrap launchers in `scripts/`.
+
+## Commands and results
+
+```
+export PATH="$PWD/target/local-agent-tools:$PATH"; node --version         -> v24.15.0
+sha256sum target/local-agent-tools/node -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches)
+bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base 8f046d4e… --timeout 600
+    -> FAST GATE: PASS (lint of both changed Python files; "Ran 38 tests ... OK")
+bash /tools/build-slot python3 -B -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v
+    -> Ran 59 tests, OK; no skipped tests; new test_legacy_launcher_and_workers_do_not_inherit_host_environment ... ok
+bash /tools/build-slot python3 -B -m unittest tests.test_coding_eval_oracle tests.test_coding_eval_oracle_worker -v
+    -> Ran 116 tests, OK; no skipped tests
+bash /tools/build-slot python3 scripts/coding_eval.py verify --output $R/legacy        -> exit 0
+    summary: passed=true, version coding-development-v9, model_score null; 30 tasks, 30 base
+    failures, 30 references pass, 89 reference tests, 0 skipped, gpu_minutes 0, 1 Rust task;
+    evaluator_sha256 6101e2ac…be751 in every report (same as the tested digest in the evidence)
+bash /tools/build-slot python3 scripts/coding_eval_oracle.py verify --output $R/independent -> exit 0
+    summary: passed=true, generated_scoring=false, aggregate_worker_quotas=false, model_score null;
+    15 pairs (15 base fail, 15 reference pass), 18 methods, 160 reference calls,
+    control_attempts {total 30, passed 15, failed 15}, model_attempts 0, gpu_minutes 0
+bash /tools/build-slot python3 scripts/validate_docs.py
+    -> Validated 720 Markdown file(s) and all policy invariants.
+git diff --exit-code 8f046d4e… HEAD -- <8 collection/rust/oracle/worker sources and tests>  -> exit 0
+cmp docs/reviews/8aac044ec207-local-coding-t311-18-environment-repair.txt /lane/reviews/8aac044ec207-…md -> identical
+git diff --check 8f046d4e… HEAD                                                       -> exit 0
+```
+
+My summary JSON digests differ from the builder's because they contain timing fields. Every count,
+pass flag and evaluator digest matches.
+
+**Negative control (base launcher, new regression).** Both subtests (python and rust) FAIL with
+`cause: infrastructure` and exit 1. The stderr digest for both is
+`c5d93f626c699a6527dfe3679916bb0fffe9fc14422d642c1b8a5bbc41766997`. That is byte-identical to the
+builder's retained `negative-dev-001.log`/`negative-dev-rust-001.log`, whose content is the probe's
+first assertion: `AssertionError: launcher environment not empty`. The regression therefore catches
+the original leak through the real namespace. The test's separate `Popen` kwarg assertion
+(`workers[0].kwargs.get("env") == {}`) would also fail on the base code (None).
+
+**Real-environment probe at HEAD.**
+
+- dev-001: PASS, 12 tests. `/proc/1/environ` is 0 bytes with 0 host values; `/proc/2/environ` is
+  52 bytes with 0 host values. The keys are exactly HOME, LANG, PATH and PWD.
+- dev-rust-001: PASS, 1 test. Its Rust target really compiled and ran. `/proc/1/environ` is
+  0 bytes; `/proc/2/environ` is 163 bytes with 0 host values. The keys are CARGO_HOME,
+  CARGO_NET_OFFLINE, HOME, LANG, PATH, PWD and RUSTFLAGS.
+- Host values still appear in `/proc/1/cmdline` (2 for Python, 8 for Rust) and in mountinfo (3).
+  The guide (`docs/guides/coding-evaluation.md:320-321`) and the evidence state this explicitly and
+  make no anonymity claim. It is the carried T-311.18 L1, not a regression.
+
+## Assessment
+
+- **The production diff reaches both branches.** It is exactly one argument: `env={}` at
+  `scripts/coding_eval.py:782`. Python and Rust share this `Popen` (`rust` only selects the command
+  and `preexec_fn`). The regression drives the real `grade()` → `grade_case()` path for each
+  language and asserts that exactly one `/usr/bin/bwrap` launch occurred, with `env == {}`.
+- **The frozen regressions still run after the probe.** The driver is `probe + task_driver(task)`.
+  The report must be `passed`, with `tests == expected_tests` and `candidate_kind ==
+  "frozen-reference"`, and stdout must contain the probe marker. A probe that failed or
+  short-circuited could not pass. In the Rust case the original driver compiles and executes the
+  hidden test target; I observed this in my own probe run.
+- **Test construction.** Patching `os.environ` with `clear=True` calls `putenv`/`unsetenv`, so the
+  base launcher really inherits the synthetic sentinels; my negative control confirms this. If the
+  test fails, it prints only assertion labels, not environment data. `runtime_paths` is resolved
+  before the environment substitution and then mocked with the real resolved paths, so production
+  toolchain resolution is unaffected. Patching `subprocess.Popen` affects the module globally, but
+  the test filters on `/usr/bin/bwrap`, so git/rustup calls are excluded.
+- **Exact inputs and unchanged tests.** The test diff only adds one method; no existing method
+  changes. The eight related files are byte-identical to the base. `audit.json` source digests for
+  `scripts/coding_eval.py` (6101e2ac…) and `tests/test_coding_eval.py` (5550578b…), and for the
+  oracle and Rust files, match `sha256sum` at HEAD. No hidden test, task pin, threshold, resource or
+  mount option, statement, `SUPPORTED` or historical-controls-only guard changed. The collection
+  version stays v9.
+- **Evaluation integrity.** The diff contains no held-out content, tuning, model run or GPU use.
+  Base failures and reference passes are both counted (30/30 and 15/15), and no failure is dropped.
+  The builder retained the failed pre-fix run and the failed first docs lint.
+- **Evidence bindings.** All 13 private artifact digests in the public evidence match `sha256sum`
+  of the retained files. The public evidence numbers (38, 59, 116, 30/89, 15/18/160, 30/15/15,
+  720 Markdown files) match my runs.
+- **Claims.** The guide's statements match my observations: `--clearenv` alone leaves
+  `/proc/1/environ` readable, both branches pass `env={}`, the worker environments are explicit,
+  and mount metadata and arguments are not hidden. The oracle guide's update is accurate. The TASKS
+  row is unchecked and correctly states that it awaits this review.
+- **Public hygiene.** The committed diff contains no host home path, username, hostname or
+  credential; the only "secret" strings are synthetic sentinels. It names no third-party product or
+  trademark.
+- **Delivery.** T-311.19 is one sub-row level under T-311 and ends in running, measured code. It is
+  not a plan-only row.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low; carried from T-311.18, disclosed, deferred).** In both legacy branches, host
+  bind-mount sources (home path and user name) remain visible inside the namespace through
+  `/proc/1/cmdline` (bwrap arguments) and `/proc/self/mountinfo`. I reproduced this above. The
+  documentation states it accurately (`docs/guides/coding-evaluation.md:320-321`). It still needs
+  the recorded disposition before generated scoring: stage the case, toolchain and registry roots
+  under a neutral path with opaque names, or pass the binds as descriptors, or record explicit
+  acceptance.
+- **L2 (low; out of scope, backlog for T-312).** `scripts/coding_model_lab.py:270` starts the
+  model-server bwrap sandbox (`sandbox_command`, `:170-197`, which uses `--clearenv`) through
+  `subprocess.Popen(command, …)` without `env={}`. The server's namespace PID 1 therefore exposes
+  the operator's environment, the same gap this row fixes in the grader. That process is a trusted
+  llama-server binary, not a candidate, so this does not affect T-311.19. Apply the same `env={}`
+  and a PID 1 environment check before T-312 runs model-produced content near that process.
+
+## Per-row result
+
+- **T-311.19: PASS.** T-311.18 review low L2 is resolved for both legacy grading branches and
+  independently reproduced in both directions: the base launcher leaks and is caught; the repair
+  does not leak, even with the real host environment. All required runs match the builder's
+  numbers, and no high or medium finding is open. L1 and L2 above are low backlog.
+- Not reviewed here, and still open: parent T-311, T-311.15 and T-311.16, generated scoring,
+  aggregate/scratch quotas, remaining adapters, held-out inputs, coverage labels, the dev-003
+  policy and the model baseline. No generated scoring is admitted.
+
+Verdict: PASS
