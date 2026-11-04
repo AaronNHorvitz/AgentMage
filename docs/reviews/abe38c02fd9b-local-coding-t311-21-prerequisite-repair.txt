@@ -1,0 +1,219 @@
+Commit: abe38c02fd9bfc92342c1e2aa5745fcf757ad0df
+Scope: local-coding-t311-21-prerequisite-repair
+
+# Independent core review 2: T-311.21 command-prerequisite repair (oracle v19, dev-026)
+
+Reviewer: a separate, read-only Claude Opus 5.5 session. This review covers only the same-row repair
+of review 1 medium M1 on T-311.21. Parent T-311 and the deferred T-311.15/.16 were not reviewed and
+not reopened. I did no GPU, model, held-out, tuning, download or release work.
+
+## Identity
+
+- `git rev-parse abe38c02fd9bfc92342c1e2aa5745fcf757ad0df` and `HEAD` both return
+  `abe38c02fd9bfc92342c1e2aa5745fcf757ad0df`. The worktree is clean, and the only commit after base
+  `ebc3a188…` is this one.
+- The diff touches nine files:
+  - `TASKS.md`
+  - the new evidence file
+  - two guides
+  - the retained review 1
+  - `scripts/coding_eval_oracle.py`, where only `VERSION` and `result_record` change
+  - `scripts/local_agent_fast_gate.py`, where only the review ending rule changes
+  - two test files, with additions only
+- No existing test method, task definition, hidden test, pin, selection or threshold changed. The
+  worker and all six legacy files are byte-identical to the base (command 9).
+- Node from `target/local-agent-tools` is `v24.15.0`, SHA-256
+  `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c`, as stated.
+
+## Methods
+
+1. I read the full diff. I also read the unchanged code it depends on:
+   - the worker's `oracle()` prerequisite block
+   - `RemoteFunction.__call__` validation and its sticky flags
+   - the `deadline-result` commands validation
+   - `valid_collector_commands` and `unpack_call_value`
+   - the candidate-side `commands` handler
+   - `grade_case`, `grade`, `expected_base` and `verify`
+
+   I then traced every way a dev-026 prerequisite refusal can produce a record, and checked that none
+   of them can raise `KeyError` or any other uncaught error. This matters because an uncaught error
+   would again yield `infrastructure` with lost counts.
+2. I ran every requested command once, in the new private root
+   `/lane/state/tmp/review-t311-21-prerequisite-<id>`. All heavy runs went through `/tools/build-slot`,
+   with no nesting.
+3. I checked all 29 published SHA-256 bindings in the evidence file. The six source and test files
+   were checked against `git show abe38c02:<path>`; the other 23 against the builder's private
+   artifacts. I also read:
+   - `audit.json`, `final-checks.json`, `source-digests.json` and every `*-result.json`
+   - the red and green logs, the cancellation note and the copied probe script
+4. Reviewer-authored probes, kept only in my private root:
+   - `my-probes.py`: 18 synthetic candidates, each graded in real namespaces through `oracle.grade`.
+     They use the same test-only historical-admission patch as the builder's tests.
+   - `pure-probe.py`: an exhaustive in-process sweep of the record validator. It covers every
+     combination of all-zero counts, calls 0/1/2, the three sticky flags, readiness and
+     `function_found`, for all 17 supported tasks.
+
+## Commands and results
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base ebc3a188… --timeout 600` | FAST GATE: PASS. Ran 100 tests in 86.931 s, OK. Diff-check, untracked, review-format, Markdown and Python lint all exit 0; the retained review 1 passes `--lint-reviews` |
+| 2 | `bash /tools/build-slot python3 -B -m unittest tests.test_coding_eval_oracle_worker -v` | Ran 56 tests, OK |
+| 3 | `bash /tools/build-slot python3 -B -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | Ran 59 tests, OK, no skips |
+| 4 | `bash /tools/build-slot python3 scripts/coding_eval_oracle.py verify --output "$R/independent"` | Exit 0. Details below the table |
+| 5 | `bash /tools/build-slot python3 scripts/coding_eval.py verify --output "$R/legacy"` | Exit 0. passed true, 30/30 pairs valid, 89 reference tests, 0 skipped |
+| 6 | `cp …/probes.py "$R/probes.py"; bash /tools/build-slot python3 -B "$R/probes.py"` | 3 methods OK, 24 reports. My `probes.json` is byte-identical to the builder's (`55c6b368…`) |
+| 7 | `bash /tools/build-slot python3 scripts/validate_docs.py` | "Validated 723 Markdown file(s) and all policy invariants." Exit 0 |
+| 8 | `git diff --check ebc3a188… abe38c02…` | Exit 0 |
+| 9 | `git diff --exit-code ebc3a188… abe38c02… -- <worker + six legacy files + worker test>` | Exit 0 (unchanged) |
+| 10 | `cmp docs/reviews/ebc3a18800e4-…-deadline-oracle.txt /lane/reviews/ebc3a18800e4-…-deadline-oracle.md` | Identical |
+| — | `bash /tools/build-slot python3 -B "$R/my-probes.py"` | Exit 0. 18/18 probes meet every check (table below) |
+| — | `python3 -B "$R/pure-probe.py"` (in-process, no namespace) | Exit 0. Ready zero-test records are accepted only for dev-022 and dev-026, all with calls 1 and a sticky flag. No accepted zero-test record satisfies the pass predicate |
+
+Command 4 details:
+
+- passed true; 17/17 pairs valid; `control_attempts` total 34 / passed 17 / failed 17.
+- Reference totals: 22 original methods and 169 calls.
+- generated_scoring false; model_score null; input_refused false.
+- Every report has version `coding-independent-oracle-v19`.
+- dev-026 base: cause test_failure, tests 2, failures 1, calls 3, exits 1 (oracle) / 0 (candidate).
+  `oracle.log` shows the original `AssertionError: 1800 != 2700`, and the timeout method passes.
+- dev-026 reference: PASS, tests 2, calls 3.
+
+Builder's five prerequisite variants (from command 6):
+
+| Variant | passed | cause | tests (all six counts) | calls | flags (protocol/policy/exception) | `control_attempts` | `tests.json` equals report |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| missing-commands | false | adapter_policy | 0 | 1 | F/T/F | 1/0/1 | yes |
+| unsupported-commands | false | adapter_policy | 0 | 1 | F/T/F | 1/0/1 | yes |
+| empty-argv | false | adapter_policy | 0 | 1 | F/T/F | 1/0/1 | yes |
+| raising-access | false | candidate_exception | 0 | 1 | F/F/T | 1/0/1 | yes |
+| malformed-commands | false | protocol | 0 | 1 | T/F/F | 1/0/1 | yes |
+
+`grep -rl private-command-prerequisite-payload "$R/probes"` finds nothing (exit 1).
+
+## Reviewer probes (real namespaces)
+
+Every probe asserts the following:
+
+- the expected cause, and `passed` false unless the cause is `none`
+- the expected call count and the exact test counts
+- a published `tests.json` whose fields equal the report
+- `control_attempts` 1/0/1 for failures and 1/1/0 for passes
+- the matching sticky flag, and `error` null
+- no reviewer payload in any output file
+- model attempts 0, model score null and GPU minutes 0
+
+| Probe (dev-026 unless noted) | Cause | tests / calls |
+| --- | --- | --- |
+| `del COMMANDS` | adapter_policy | 0 / 1 |
+| dict records | adapter_policy | 0 / 1 |
+| appended empty argv | adapter_policy | 0 / 1 |
+| `COMMANDS = 42` | adapter_policy | 0 / 1 |
+| 129 commands (over the 128 limit) | adapter_policy | 0 / 1 |
+| bytes argv | adapter_policy | 0 / 1 |
+| `str` subclass id | adapter_policy | 0 / 1 |
+| module `__getattr__` raising AttributeError | adapter_policy | 0 / 1 |
+| module `__getattr__` raising RuntimeError(payload) | candidate_exception | 0 / 1 |
+| module `__getattr__` raising SystemExit(payload) | candidate_exception | 0 / 1 |
+| forged `{"adapter_policy":true,"x":1}` reply | protocol | 0 / 1 |
+| deadline-shaped reply to the commands request | protocol | 0 / 1 |
+| wrong `seq` | protocol | 0 / 1 |
+| exit after the ready frame | protocol | 0 / 1 |
+| commands nested 20 levels deep | protocol | 0 / 1 |
+| valid prerequisite, then exit at the first method call | protocol | 2 tests (2 errors) / 3; full count, not the exemption |
+| dev-022 `CASE_ROOTS = {'case': print}` (existing exemption) | adapter_policy | 0 / 1 |
+| confinement: reference plus import-time checks (below) | none (PASS) | 2 / 3 |
+
+The confinement probe would fail at import, and so not pass, if any of these held:
+
+- `/output`, `/adapter/test.py`, `/lane`, `/var/home` or `/home` exists
+- `/proc/1/environ` is non-empty
+- the environment has keys outside PATH/HOME/LANG/PWD
+- `/workspace`, `/usr` or `/adapter` is writable
+- a results `tests.json` can be written
+- loopback connects
+
+None held, so the candidate cannot forge or pre-create the oracle's record.
+
+## Assessment of the repair
+
+- **M1 resolved.** `scripts/coding_eval_oracle.py:285-289` extends the ready zero-test exemption
+  from `observe_case_roots` to `observe_commands`. Its conditions are unchanged:
+  - `calls == 1`
+  - all six counts zero
+  - at least one sticky protocol, policy or candidate-exception flag
+
+  Every refusal path of the dev-026 prerequisite now goes through the existing classifier to a
+  candidate-attributed cause, and the counts, flags and `tests.json` are retained. I found no
+  remaining candidate-caused `infrastructure` path in the prerequisite:
+  - The reply is validated inside `RemoteFunction.__call__` (worker 251-253) before the oracle
+    reads `["commands"]`.
+  - `ProtocolError` subclasses `ValueError`, so a validation failure sets `failed`.
+  - The worker's handler at 1055 catches all three typed errors.
+- **Zero-test records cannot pass.**
+  - An exempt record must carry a sticky flag, and `grade` requires all three flags false to pass.
+  - A non-exempt ready record must have `tests == expected_tests`.
+  - `pure-probe.py` confirms this exhaustively: no accepted zero-test record is passable.
+  - The exemption is confined to the two declared-prerequisite tasks. The builder's pure test and my
+    sweep both show the other 15 supported tasks refuse such records.
+- **Controls unchanged.** `expected_base` and `CONTROL_PROFILES` are untouched, and dev-026 still
+  requires base tests 2 / calls 3 / one failure and reference calls 3.
+- **Evaluation integrity.** The diff contains no held-out content and changes no hidden test, base
+  commit, selection or threshold. Failures are counted, and every new refusal sits in the denominator
+  as failed 1. Scores come from one command (`coding_eval_oracle.py verify`) and agree with the raw
+  reports and logs.
+- **Fast-gate format change** (`scripts/local_agent_fast_gate.py:113-116`). The gate now also accepts
+  `Verdict: FINDINGS` followed by exactly one non-empty reason line, so review 1 can be retained
+  byte-identically. It still refuses:
+  - an empty reason or extra lines
+  - a reasoned PASS
+  - unknown verdicts
+  - trailing whitespace
+
+  The builder's red log shows the pre-fix refusal. This is format validation only; it grants no
+  approval.
+- **Evidence.**
+  - All 29 bindings match, and `audit.json` and `final-checks.json` report passed, with 118 reports,
+    286 log bindings, 30 frozen tasks, 29 artifact bindings, stable sources and public hygiene.
+  - The red logs show 3 expected `oracle.invalid-result-record` errors (pure record test) and 1
+    expected ValueError (review format).
+  - Every number in the TASKS.md row and the evidence file traces to these artifacts or to my runs.
+- **Public hygiene.** The diff has no username, hostname, credential, home path or product name.
+  Review 1 contains the generic `/lane/...` and `/tools/build-slot` mount names, which already appear
+  in 39 committed reviews. The commit author line is ordinary Git metadata.
+- **Delivery.** This is a single same-row repair that runs and is measured; there is no new sub-row
+  and no plan-only content.
+
+## Findings
+
+No critical, high or medium findings.
+
+### L1 (low, backlog, pre-existing): the review-format check does not reject a second verdict line
+
+- **Location:** `scripts/local_agent_fast_gate.py:112`.
+- **Problem:** `lines[-1] in {"Verdict: PASS", …}` accepts a report ending
+  `Verdict: FINDINGS\nVerdict: PASS`. A last-line reader would then see PASS. The same was true before
+  this commit (for example `Verdict: INCONCLUSIVE\nVerdict: PASS`), and the function documents that it
+  checks format, not truth, so this does not block.
+- **Fix:** require exactly one line beginning `Verdict: ` in the report. Also refuse a reason line
+  that itself begins `Verdict:`.
+
+### Observation (not a finding)
+
+- A candidate whose import fails still has `candidate_ready` false and is labelled `infrastructure`.
+  That is the existing reviewed startup policy, outside this repair.
+
+## Per-row result
+
+- **T-311.21: PASS at exact commit `abe38c02fd9bfc92342c1e2aa5745fcf757ad0df`.**
+  - Review 1 M1 is resolved, with real-namespace regressions and my 18 independent probes.
+  - All ten requested commands reproduce the expected results.
+  - Zero-test records cannot pass, and controls, pins, worker and legacy files are unchanged.
+  - No high or medium finding is open; L1 is backlog.
+- T-311 (parent), T-311.15 and T-311.16 were not reviewed and stay open. The listed open items also
+  remain open: generated scoring, other adapters, coverage admission, quotas, host bind-root
+  metadata, protected held-out inputs, dev-003 policy, real model baseline, the T-311.20 lows and the
+  model-lab environment before T-312.
+
+Verdict: PASS
