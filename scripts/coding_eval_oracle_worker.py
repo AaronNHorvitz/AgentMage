@@ -157,7 +157,8 @@ class RemoteFunction:
                     raise ProtocolError("oracle.invalid-candidate-exception")
                 raise CandidateExecutionError("oracle.candidate-exception")
             if self.result_type == "bool":
-                valid = type(result) is bool
+                # Frozen predicates assert truthiness, not exact Boolean type.
+                valid = scalar_value(result)
             elif self.result_type == "path-result":
                 valid = (isinstance(result, dict) and (
                     (result.keys() == {"ambiguous"} and result["ambiguous"] is True)
@@ -175,9 +176,12 @@ class RemoteFunction:
                             and observation_value(result["passed"]) and observation_value(result["checks"]))))
             elif self.result_type == "argument-result":
                 valid = valid_argument_result(result, args[0])
+            elif self.result_type == "bool-map":
+                valid = (isinstance(result, dict)
+                         and all(type(key) is str and observation_value(value)
+                                 for key, value in result.items()))
             else:
-                valid = (isinstance(result, dict) and bool(result)
-                         and all(type(value) is bool for value in result.values()))
+                valid = False
             if not valid:
                 raise ProtocolError("oracle.invalid-result")
             return result

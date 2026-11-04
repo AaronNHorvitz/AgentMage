@@ -22,7 +22,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v6"
+VERSION = "coding-independent-oracle-v7"
 # Complete frozen methods for pure functions. Paths are lexical JSON values;
 # one fixed ambiguity tag is reconstructed as a trusted local exception.
 SUPPORTED = {
@@ -79,8 +79,8 @@ def coverage(task):
                 "not_graded": ["exception-messages", "parser-diagnostics", "catalog-effects",
                                "parser-return-object-type",
                                "unselected-statement-clauses"]}
-    return {"graded": ["selected-json-function-behavior"],
-            "not_graded": ["unselected-statement-clauses"]}
+    return {"graded": ["selected-predicate-truthiness"],
+            "not_graded": ["exact-boolean-result-type", "unselected-statement-clauses"]}
 
 
 def supported_task(task):

@@ -81,7 +81,7 @@ cases or test every clause in a statement.
 
 Requests and replies use sequence numbers and bounded newline-delimited JSON.
 Replies must have exactly the expected fields and values for the selected task:
-Boolean results, lexical paths, verification checks or argument observations.
+Predicate scalars or maps, lexical paths, verification checks or argument observations.
 Duplicate keys, invalid UTF-8, truncated or
 oversize frames, nonfinite constants, wrong sequence/type and extra result fields
 fail the exchange. A protocol failure remains sticky even if a test catches its
@@ -109,6 +109,16 @@ For example, a list of path strings can satisfy this adapter even though the
 original hidden helper would reject strings. The original methods are unchanged,
 but their inputs are adapted. Reports explicitly label these two interface
 clauses `not_graded`; no full-interface or generated score follows from a control.
+
+For dev-015, predicate results cross as finite JSON scalars (including nulls,
+integers and strings). For dev-029, results cross as string-keyed maps whose
+values are finite built-in JSON data, bounded to 16 container levels. Empty maps
+are data too. The unchanged original assertions judge truthiness, selected keys
+and other observed behavior; no exact Boolean type check is added by the adapter.
+Both tasks explicitly label `exact-boolean-result-type` as `not_graded`. Integer
+and null truthiness variants are checked against the original legacy grader,
+alongside wrong values that fail those assertions. Reserved policy/exception tags
+retain their fixed semantics; an undeclared policy tag still fails as protocol.
 
 ## Verification fixtures
 
@@ -222,6 +232,10 @@ failed. These labels distinguish ordinary adapter-observed failures, not a
 forensic determination. A candidate that deliberately exits, corrupts its wire
 or writes stderr retains the corresponding exit/protocol/output-limit cause.
 Policy and exception failures count in the same failed-attempt denominator.
+Candidate values exceeding the frame or JSON integer-digit encoding limit currently
+fail as `protocol`, with candidate exit 1: encoding happens outside call exception
+handling. This cause-label limitation is T-311.12 review low L1, retained for
+backlog; these attempts still fail and remain counted.
 A failed case-root prerequisite observation may retain zero original tests only
 with exactly one call and a sticky protocol, policy or exception flag. All other
 counts and the requirement that no failed control passes stay unchanged.

@@ -387,7 +387,7 @@ class OracleProtocolTests(unittest.TestCase):
         self.assertFalse(remote.failed)
         self.assertIn(b'"result":false', remote.transcript.getvalue())
         for reply in ({"seq": True, "result": True}, {"seq": 2, "result": True},
-                      {"seq": 1, "result": 1}, {"seq": 1, "result": []},
+                      {"seq": 1, "result": {}}, {"seq": 1, "result": []},
                       {"seq": 1, "result": True, "tests": {"failures": 0}},
                       {"seq": 1, "error": "forged"}):
             with self.subTest(reply=reply), self.assertRaises(worker.ProtocolError):
@@ -396,6 +396,7 @@ class OracleProtocolTests(unittest.TestCase):
     def test_rejects_duplicate_keys_nonfinite_deep_truncated_and_non_json_frames(self):
         for raw in (b'{"seq":1,"seq":1,"result":true}\n',
                     b'{"seq":1,"result":NaN}\n', b'{"seq":1,"result":Infinity}\n',
+                    b'{"seq":1,"result":1e999}\n',
                     b'\xff\n', b'{"seq":1,"result":true}', b'', b'Ran 1 test: OK\n',
                     b'[' * 2000 + b']' * 2000 + b'\n', b'{}\n' * 2):
             remote = self.remote(raw)
@@ -413,12 +414,31 @@ class OracleProtocolTests(unittest.TestCase):
         self.assertIn(b'x' * 100, remote.transcript.getvalue())
         self.assertEqual(remote.reader.tell(), worker.MAX_MESSAGE + 1)
 
-    def test_bool_map_is_nonempty_with_only_boolean_values(self):
-        remote = self.remote(b'{"seq":1,"result":{"answers":true,"filesystem":false}}\n', "bool-map")
-        self.assertEqual(remote(0, [], []), {"answers": True, "filesystem": False})
-        for result in ({}, {"answer": 1}, {"answer": None}, [], True):
+    def test_predicate_scalars_preserve_data_and_type_for_original_assertions(self):
+        for value in (None, False, True, 0, 1, -2, 0.5, '', 'wrong'):
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': value}))
+            with self.subTest(value=value):
+                result = remote({})
+                self.assertEqual(result, value)
+                self.assertIs(type(result), type(value))
+                self.assertFalse(remote.failed or remote.policy_failed or remote.exception_failed)
+
+    def test_bool_map_preserves_bounded_json_values_for_original_assertions(self):
+        for value in ({}, {'answers': True, 'filesystem': False}, {'answer': 1},
+                      {'answer': None}, {'answer': [1, {'nested': False}]}, {'answer': {}}):
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': value}), 'bool-map')
+            with self.subTest(value=value):
+                self.assertEqual(remote(0, [], []), value)
+                self.assertFalse(remote.failed or remote.policy_failed or remote.exception_failed)
+        nested = []
+        for _ in range(17):
+            nested = [nested]
+        for result in ([], True, None, {'answer': nested}, {'answer': float('inf')}):
+            # Write a valid JSON exponent that decodes to infinity for that case.
+            raw = (b'{"seq":1,"result":{"answer":1e999}}\n' if result == {'answer': float('inf')}
+                   else worker.encode_message({'seq': 1, 'result': result}))
             with self.subTest(result=result), self.assertRaises(worker.ProtocolError):
-                self.remote(worker.encode_message({"seq": 1, "result": result}), "bool-map")()
+                self.remote(raw, 'bool-map')()
 
     def test_call_and_transcript_budgets_fail_sticky_without_unbounded_logs(self):
         remote = self.remote(b'{"seq":1,"result":true}\n')

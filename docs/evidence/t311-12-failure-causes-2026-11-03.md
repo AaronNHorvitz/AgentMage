@@ -3,6 +3,12 @@
 Status: builder implementation verified; independent core review required.
 T-311.12 and parent T-311 remain open. Implementation base: `9d662b5f`.
 
+The [independent first review](../reviews/9563c0a80d55-local-coding-t311-12-failure-causes.txt)
+returned FINDINGS: integer truthiness below was verified only for verification
+report predicates; Boolean/map tasks still rejected it. The
+[review repair](t311-12-truthiness-review-repair-2026-11-03.md) corrects that
+coverage gap. Measurements below remain the original v6 observations.
+
 This batch resolves low L1 from the retained
 [independent T-311.11 review](../reviews/568d27eb1f45-local-coding-t311-11-observation-fidelity.txt).
 The [running verifier](../guides/coding-evaluation-oracle.md) still admits only

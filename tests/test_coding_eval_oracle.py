@@ -314,6 +314,46 @@ os._exit(0)
             self.assertEqual(bool(oracle.coverage(task).get('adapter_policy')),
                              kind in oracle.worker.POLICY_RESULT_TYPES)
 
+    def predicate_contrast(self, ident, transform, name, expected):
+        task = next(t for t in evaluation.collection() if t['id'] == ident)
+        function = oracle.SUPPORTED[ident]['function']
+        files = self.files(task)
+        result = (transform if ident == 'dev-015' else
+                  '{key: ' + transform + ' for key, value in original(*args).items()}')
+        files[task['source']] += ('\noriginal = ' + function + '\ndef ' + function + '(*args):\n'
+                                  + (' value = original(*args)\n' if ident == 'dev-015' else '')
+                                  + ' return ' + result + '\n').encode()
+        # Independent and legacy diagnostics use the same candidate projection.
+        # The production admission guard and every hidden assertion stay unchanged.
+        with mock.patch.object(evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+            report = oracle.grade(task, files, self.root / name)
+            legacy = evaluation.grade(task, files, self.root / (name + '-legacy'))
+        self.assertEqual(report['passed'], expected, report)
+        self.assertEqual(legacy['passed'], expected, legacy)
+        self.assertEqual(report['cause'], 'none' if expected else 'test_failure', report)
+        self.assertEqual(report['tests']['tests'], task['expected_tests'])
+        self.assertFalse(report['protocol_failed'] or report['adapter_policy_failed']
+                         or report['candidate_exception_failed'])
+        self.assertEqual(report['control_attempts'], {'total': 1, 'passed': int(expected),
+                                                    'failed': int(not expected)})
+        self.assertIn('exact-boolean-result-type', report['coverage']['not_graded'])
+        self.assertIn('selected-predicate-truthiness', report['coverage']['graded'])
+
+    def test_boolean_predicate_truthiness_matches_frozen_assertions_and_legacy(self):
+        for ident in ('dev-015', 'dev-029'):
+            for name, transform in (('integer', 'int(value)'), ('null', 'value or None')):
+                with self.subTest(task=ident, transform=name):
+                    self.predicate_contrast(ident, transform, ident + '-' + name, True)
+        for name, transform in (('text', "'yes' if value else ''"), ('float', 'float(value)')):
+            with self.subTest(transform=name):
+                self.predicate_contrast('dev-015', transform, name, True)
+        self.predicate_contrast('dev-029', '[1] if value else []', 'map-containers', True)
+
+    def test_wrong_boolean_predicate_values_fail_original_assertions_and_legacy(self):
+        for ident in ('dev-015', 'dev-029'):
+            with self.subTest(task=ident):
+                self.predicate_contrast(ident, 'not value', ident + '-inverted', False)
+
     def test_case_root_exception_records_no_assertions_but_one_failed_attempt(self):
         task = next(t for t in evaluation.collection() if t['id'] == 'dev-022')
         files = self.files(task)
