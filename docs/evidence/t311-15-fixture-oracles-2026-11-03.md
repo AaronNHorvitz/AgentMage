@@ -2,6 +2,11 @@
 
 Status: builder source verification passed; independent core review required.
 Implementation base: `ae45ccfe`. T-311.15 and parent T-311 stay open.
+The [first independent review](../reviews/1839b2d5b408-local-coding-t311-15-fixture-oracles.txt)
+reproduced these controls but found medium M1: candidate directory permissions
+can prevent cleanup, leaving residue and obscuring the oracle outcome. The
+cleanup sentence below described the intended boundary, not verified behavior
+for locked directories. See the [same-row repair](t311-15-cleanup-review-repair-2026-11-03.md).
 
 ## Delivered behavior
 
@@ -29,8 +34,9 @@ as adapter policy. All failures remain in the attempt denominator.
 
 Only the mode task gets the new writable disposable mount. Candidate code stays
 separate from assertions and result mounts; no network, host home, credentials
-or publication authority is added. The existing cleanup removes that mount's
-backing tree before counts publish. Aggregate memory/process/CPU/disk quotas
+or publication authority is added. Cleanup removed that mount's backing tree in
+these controls; it failed on the locked-directory cases later found in M1.
+Aggregate memory/process/CPU/disk quotas
 remain unavailable, so generated scoring remains disabled.
 
 The [guide](../guides/coding-evaluation-oracle.md) also clarifies the preceding

@@ -197,6 +197,142 @@ def make_container_readable(root):
                 self.assertFalse(report['passed'])
                 self.assertEqual(report['control_attempts'], {'total': 1, 'passed': 0, 'failed': 1})
 
+    def mode_cleanup_probe(self, suffix, name):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-017')
+        files = self.files(task)
+        files[task['source']] += ('\n' + suffix + '\n').encode()
+        output = self.root / name
+        scratch = self.root / (name + '-scratch')
+        scratch.mkdir()
+        make_temporary = evaluation.tempfile.mkdtemp
+
+        def make_case(*args, **kwargs):
+            return make_temporary(*args, **kwargs, dir=scratch)
+
+        with mock.patch.object(evaluation.tempfile, 'mkdtemp', side_effect=make_case), mock.patch.object(
+                evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+            report = oracle.grade(task, files, output)
+        self.assertEqual(list(scratch.iterdir()), [], 'candidate workspace residue')
+        self.assertFalse((output / 'cleanup.json').exists())
+        self.assertIsNone(report['error'], report)
+        self.assertIsNotNone(report['tests'], report)
+        self.assertEqual(report['calls'], 1, report)
+        passed = report['passed']
+        self.assertEqual(report['control_attempts'],
+                         {'total': 1, 'passed': int(passed), 'failed': int(not passed)})
+        self.assertEqual(json.loads((output / 'tests.json').read_text())['tests'], report['tests'])
+        return report
+
+    def test_mode_cleanup_repairs_extra_locked_directories_without_changing_verdict(self):
+        for parent in ('root', "Path('/tmp')"):
+            for mode in (0o500, 0o000):
+                suffix = f'''original_mode = make_container_readable
+def make_container_readable(root):
+ original_mode(root)
+ extra = {parent} / 'extra'
+ (extra / 'child').mkdir(parents=True)
+ (extra / 'child/payload').write_text('candidate-only payload')
+ (extra / 'child').chmod({mode})
+ extra.chmod({mode})
+'''
+                name = 'locked-' + ('root' if parent == 'root' else 'tmp') + '-' + str(mode)
+                with self.subTest(parent=parent, mode=mode):
+                    report = self.mode_cleanup_probe(suffix, name)
+                    self.assertTrue(report['passed'], report)
+                    self.assertEqual(report['cause'], 'none', report)
+
+    def test_mode_cleanup_preserves_wrong_answer_and_policy_failures(self):
+        variants = [
+            ('all-555', '''def make_container_readable(root):
+ for path in reversed([root, *root.rglob('*')]):
+  path.chmod(0o555 if path.is_dir() else 0o644)
+''', 'test_failure'),
+            ('all-644', '''def make_container_readable(root):
+ for path in reversed([root, *root.rglob('*')]): path.chmod(0o644)
+''', 'adapter_policy'),
+            ('nested-000', "def make_container_readable(root): (root / 'nested').chmod(0)", 'adapter_policy'),
+            ('root-000', 'def make_container_readable(root): root.chmod(0)', 'adapter_policy'),
+            ('tmp-000', "def make_container_readable(root): Path('/tmp').chmod(0)", 'adapter_policy'),
+            ('exception', '''def make_container_readable(root):
+ extra = Path('/tmp/extra')
+ extra.mkdir()
+ extra.chmod(0)
+ raise ValueError('candidate-only payload')
+''', 'candidate_exception'),
+        ]
+        for name, suffix, cause in variants:
+            with self.subTest(variant=name):
+                report = self.mode_cleanup_probe(suffix, name)
+                self.assertFalse(report['passed'], report)
+                self.assertEqual(report['cause'], cause, report)
+
+    def test_fixture_permission_repair_never_chmods_symlink_targets_or_files(self):
+        fixture, outside = self.root / 'fixture', self.root / 'outside'
+        fixture.mkdir()
+        outside.mkdir(mode=0o700)
+        child = fixture / 'child'
+        child.mkdir()
+        data = outside / 'data'
+        data.write_text('unchanged')
+        data.chmod(0o400)
+        outside.chmod(0o500)
+        (child / 'file-link').hardlink_to(data)
+        (child / 'dir-alias').symlink_to(outside, target_is_directory=True)
+        (child / 'file-alias').symlink_to(data)
+        (child / 'dangling').symlink_to(self.root / 'absent')
+        (child / 'cycle').symlink_to(fixture, target_is_directory=True)
+        child.chmod(0)
+        fixture.chmod(0)
+        oracle.repair_fixture_permissions(fixture)
+        self.assertEqual(fixture.stat().st_mode & 0o777, 0o700)
+        self.assertEqual(child.stat().st_mode & 0o777, 0o700)
+        self.assertEqual(outside.stat().st_mode & 0o777, 0o500)
+        self.assertEqual(data.stat().st_mode & 0o777, 0o400)
+        self.assertEqual(data.read_text(), 'unchanged')
+        # Do not let this test's intentionally locked sentinel obstruct its own cleanup.
+        outside.chmod(0o700)
+
+    def test_mode_fixture_repairs_after_exchange_interruption(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-017')
+        files = self.files(task)
+        files[task['source']] += b'''\noriginal_mode = make_container_readable
+def make_container_readable(root):
+ original_mode(root)
+ extra = Path('/tmp/extra')
+ extra.mkdir()
+ extra.chmod(0)
+'''
+        scratch = self.root / 'interrupted-scratch'
+        scratch.mkdir()
+        make_temporary, real_exchange = evaluation.tempfile.mkdtemp, oracle.exchange
+
+        def stopped_then_interrupt(*args, **kwargs):
+            real_exchange(*args, **kwargs)
+            raise KeyboardInterrupt()
+
+        output = self.root / 'interrupted-fixture'
+        with mock.patch.object(evaluation.tempfile, 'mkdtemp', side_effect=lambda **kw:
+                               make_temporary(**kw, dir=scratch)), mock.patch.object(
+                evaluation, 'require_historical_candidate', return_value='synthetic-probe'), mock.patch.object(
+                oracle, 'exchange', side_effect=stopped_then_interrupt):
+            with self.assertRaises(KeyboardInterrupt):
+                oracle.grade(task, files, output)
+        self.assertEqual(list(scratch.iterdir()), [])
+        self.assertFalse((output / 'cleanup.json').exists())
+        self.assertFalse((output / 'tests.json').exists())
+
+    def test_fixture_repair_error_preserves_original_interruption(self):
+        root = self.root / 'case'
+        root.mkdir()
+        with mock.patch.object(oracle, 'repair_fixture_permissions', side_effect=OSError('repair refused')):
+            with self.assertRaises(KeyboardInterrupt):
+                with oracle.candidate_temporary(root, True):
+                    raise KeyboardInterrupt()
+            (root / 'candidate-tmp').rmdir()
+            with self.assertRaisesRegex(OSError, 'repair refused'):
+                with oracle.candidate_temporary(root, True):
+                    pass
+
     def test_new_observation_workers_keep_files_network_and_assertions_confined(self):
         suffix = '''
 from pathlib import Path

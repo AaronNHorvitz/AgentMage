@@ -285,7 +285,16 @@ ancestors, without following candidate aliases into trusted files. Missing,
 uninspectable or non-regular entries fail as sticky adapter policy and count as
 failed attempts. Only the initial trusted names are inspected or changed; reply
 paths are never opened. The writable mount contains only disposable candidate
-data, and is removed through the existing cleanup before reports publish.
+data. After both workers have stopped, the host restores owner read/write/search
+permissions on its real directories, top-down without following symlinks or
+changing file modes. The existing case cleanup then removes the backing tree
+before reports publish. This also runs on interruption or failed result reading;
+permission repair preserves the already observed oracle result and cause. Actual
+cleanup failures still refuse count publication and keep a private recovery
+record. The initial T-311.15 implementation lacked this permission repair;
+independent review M1 exposed leftover trees from natural wrong mode answers.
+The candidate mount is host-disk-backed, without an aggregate disk quota. A
+size-limited or quota-backed mount is required before generated scoring.
 Content preservation, changed tree shape and special-file refusal behavior are
 ungraded by the original method; regular inspectable observations are explicit
 adapter policy. This does not test archive extraction or container integration.
@@ -300,6 +309,9 @@ adapter policy. Every record validates before replay, and the trusted proxy
 refuses replay unless its original helper is still a mock. No recorded command
 executes. This grades helper-call order and values; real package extraction,
 helper error propagation and other statement clauses remain ungraded.
+Both input arguments are normalized to Path, matching the frozen method's Path
+inputs. This adapter does not establish behavior for callers passing strings;
+such reuse requires preserving those input types explicitly.
 
 Both tasks keep separate code, assertions and output mounts, plus the existing
 networkless boundary and controls-only admission. Their real namespace tests

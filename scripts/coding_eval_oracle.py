@@ -6,11 +6,13 @@ Generated scoring stays disabled until all remaining admission requirements hold
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 import json
 import os
 from pathlib import Path
 import selectors
 import signal
+import stat
 import subprocess
 import sys
 import time
@@ -22,7 +24,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v11"
+VERSION = "coding-independent-oracle-v12"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
@@ -243,23 +245,61 @@ def result_record(path, task):
     return value
 
 
+def repair_fixture_permissions(root):
+    """Make stopped workers' disposable directories removable; never follow links.
+
+    exchange has terminated and reaped both namespaces before this runs, so no
+    candidate can rename an ancestor between inspection and chmod/scandir.
+    Files (including hard links) and symlink targets must never be chmodded.
+    """
+    pending = [root]
+    while pending:
+        directory = pending.pop()
+        if not stat.S_ISDIR(directory.lstat().st_mode):
+            continue
+        directory.chmod(0o700, follow_symlinks=False)
+        with os.scandir(directory) as entries:
+            pending.extend(Path(entry.path) for entry in entries
+                           if entry.is_dir(follow_symlinks=False))
+
+
+@contextmanager
+def candidate_temporary(root, enabled):
+    """Repair writable-fixture modes before the enclosing case cleanup."""
+    if not enabled:
+        yield {}
+        return
+    directory = root / "candidate-tmp"
+    directory.mkdir(mode=0o700)
+    failed = False
+    try:
+        yield {"candidate_tmp": directory}
+    except BaseException:
+        failed = True
+        raise
+    finally:
+        try:
+            repair_fixture_permissions(directory)
+        except OSError:
+            # Preserve interruption/setup errors. The enclosing case_workspace
+            # still attempts removal and retains its recovery record on failure.
+            if not failed:
+                raise
+
+
 def grade_case(task, files, output, timeout=evaluation.TIMEOUT):
     """Host-owned diagnostic entry; the public verifier admits frozen controls only."""
     config = supported_task(task)
     trusted_files = evaluation.projection(task)
     hidden = evaluation.pinned_blob(task["reference"], task["hidden_test"], task["hidden_sha256"])
     record = None
-    with evaluation.case_workspace(output) as root:
+    with evaluation.case_workspace(output) as root, candidate_temporary(
+            root, config["result_type"] == "mode-result") as fixture_options:
         trusted, candidate = root / "trusted", root / "candidate"
         oracle_adapter, candidate_adapter = root / "oracle-adapter", root / "candidate-adapter"
         results = root / "results"
         for directory in (trusted, candidate, oracle_adapter, candidate_adapter, results):
             directory.mkdir(mode=0o700)
-        fixture_options = {}
-        if config["result_type"] == "mode-result":
-            candidate_tmp = root / "candidate-tmp"
-            candidate_tmp.mkdir(mode=0o700)
-            fixture_options["candidate_tmp"] = candidate_tmp
         for workspace, content in ((trusted, trusted_files), (candidate, files)):
             for name, data in content.items():
                 evaluation.write_file(workspace / name, data)
