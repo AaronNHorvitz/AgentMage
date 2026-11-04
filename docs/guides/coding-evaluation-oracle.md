@@ -148,8 +148,11 @@ no claim of complete host-path anonymity follows. This known metadata exposure
 requires an explicit disposition before generated scoring.
 
 T-311.18 review 1 medium M1 identified this inherited-environment gap. Its repair
-does not change the frozen legacy grader, whose launcher has the same gap;
-that separate environment repair remains required before generated scoring.
+left the legacy grader unchanged. T-311.19 applies the same empty-launcher
+environment protection to both legacy grading branches, with a real-namespace
+regression followed by their frozen tests. This resolves only inherited
+environments; host-path metadata and the other generated-scoring prerequisites
+remain open.
 
 Before assertions run, the oracle consumes one exact startup frame sent after
 the candidate module imports. It records readiness and whether the function is

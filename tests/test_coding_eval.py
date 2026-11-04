@@ -563,6 +563,56 @@ class CodingEvaluationTests(unittest.TestCase):
         self.assertNotIn(str(evaluation.ROOT), command)
         self.assertNotIn("--share-net", command)
 
+    def test_legacy_launcher_and_workers_do_not_inherit_host_environment(self):
+        rust = evaluation.coding_eval_rust
+        # Resolve installed build inputs before replacing the host environment.
+        # Both branches retain their real driver and complete frozen regressions.
+        runtime = rust.runtime_paths(evaluation)
+        tasks = (evaluation.TASKS[0], rust.TASKS[0])
+        real_popen = subprocess.Popen
+        for task in tasks:
+            with self.subTest(language=task.get("language", "python")):
+                files = evaluation.projection(task)
+                files[task["source"]] = evaluation.pinned_blob(
+                    task["reference"], task["source"], task["reference_sha256"])
+                expected = {"PATH": "/usr/bin", "HOME": "/tmp",
+                            "LANG": "C.UTF-8", "PWD": "/workspace"}
+                if task.get("language") == "rust":
+                    expected.update(PATH="/toolchain/bin:/usr/bin", CARGO_HOME="/cargo",
+                                    CARGO_NET_OFFLINE="true",
+                                    RUSTFLAGS="-Ccodegen-units=1 -Clink-arg=-Wl,--threads=2")
+                probe = ("import os\nfrom pathlib import Path\n"
+                         "assert Path('/proc/1/environ').read_bytes() == b'', "
+                         "'launcher environment not empty'\n"
+                         f"assert dict(os.environ) == {expected!r}, 'unexpected worker environment'\n"
+                         "for entry in Path('/proc').glob('[0-9]*/environ'):\n"
+                         " try:\n"
+                         "  data = entry.read_bytes()\n"
+                         " except FileNotFoundError:\n"
+                         "  continue\n"
+                         " assert b'AGENTMAGE_TEST_SECRET' not in data, 'host sentinel inherited'\n"
+                         " assert b'synthetic-credential' not in data, 'host credential inherited'\n"
+                         " assert b'/synthetic-host-home' not in data, 'host home inherited'\n"
+                         " assert b'synthetic-host-user' not in data, 'host user inherited'\n"
+                         "print('environment-isolated', flush=True)\n").encode()
+                driver = probe + evaluation.task_driver(task)
+                output = self.root / task["id"]
+                synthetic_environment = {"AGENTMAGE_TEST_SECRET": "synthetic-credential",
+                                         "HOME": "/synthetic-host-home", "USER": "synthetic-host-user"}
+                with mock.patch.dict(os.environ, synthetic_environment, clear=True), \
+                        mock.patch.object(rust, "runtime_paths", return_value=runtime), \
+                        mock.patch.object(evaluation, "task_driver", return_value=driver), \
+                        mock.patch.object(evaluation.subprocess, "Popen", wraps=real_popen) as launch:
+                    report = evaluation.grade(task, files, output)
+                self.assertTrue(report["passed"], report)
+                self.assertEqual(report["tests"]["tests"], task["expected_tests"])
+                self.assertEqual(report["candidate_kind"], "frozen-reference")
+                self.assertIn(b"environment-isolated\n", (output / "stdout.log").read_bytes())
+                workers = [call for call in launch.call_args_list
+                           if call.args[0][0] == "/usr/bin/bwrap"]
+                self.assertEqual(len(workers), 1)
+                self.assertEqual(workers[0].kwargs.get("env"), {})
+
     def test_grade_missing_counts_or_skipped_tests_cannot_pass(self):
         task = evaluation.TASKS[0]
         for index, counts in enumerate((None, {}, {"tests": 0},

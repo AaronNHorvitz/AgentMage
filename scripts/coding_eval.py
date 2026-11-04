@@ -779,7 +779,7 @@ def grade_case(task: dict, files: dict[str, bytes], output: Path) -> tuple:
         try:
             with (output / "stdout.log").open("xb") as stdout, (output / "stderr.log").open("xb") as stderr:
                 process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                                           stderr=subprocess.PIPE, start_new_session=True,
+                                           stderr=subprocess.PIPE, start_new_session=True, env={},
                                            preexec_fn=coding_eval_rust.limits if rust else limits)
                 deadline = time.monotonic() + TIMEOUT
                 exit_code = None

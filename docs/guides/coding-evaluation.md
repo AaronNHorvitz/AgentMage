@@ -308,10 +308,18 @@ Keep output private: test diagnostics may contain task content and temporary
 paths. Only sanitized measurements and raw-log digests belong in public evidence.
 
 The Python scorer launches a separate worker with PID, network and other namespaces,
-cleared environment, read-only system runtime, read-only candidate and hidden
+an empty launcher environment, read-only system runtime, read-only candidate and hidden
 tests, a temporary home/scratch and one writable result directory. It mounts no
-host home, live repository, model files or credentials. It enforces a 90-second
-case deadline, 60-second CPU limit, 512 MiB per-process address-space limit and
+host home, live repository, model files or credentials. Both Python and Rust
+grading branches pass `env={}` when starting bubblewrap: `--clearenv` alone
+clears the worker but leaves the launcher's inherited environment readable at
+`/proc/1/environ`. The workers receive only their explicit namespace-local
+settings (PATH, HOME, LANG, PWD, plus Rust build settings for Rust). The real
+grading regression checks every visible process environment using synthetic
+host sentinels, then runs the unchanged frozen Python and Rust regressions.
+This environment protection does not hide host bind-mount paths in process
+arguments or mount metadata; that exposure remains a pre-admission obligation.
+Python grading enforces a 90-second case deadline, 60-second CPU limit, 512 MiB per-process address-space limit and
 32 MiB worker-file limit, allowing the unchanged 16 MiB oversize-input
 regression. The parent retains at most 2 MiB each of stdout/stderr and stops a
 worker exceeding either output budget. Raw logs are outside the worker mount;
