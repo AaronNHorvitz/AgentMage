@@ -22,15 +22,17 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v8"
-# Complete frozen methods for pure functions. Paths are lexical JSON values;
-# one fixed ambiguity tag is reconstructed as a trusted local exception.
+VERSION = "coding-independent-oracle-v9"
+# Complete frozen methods for finite function and fixture observations. Paths
+# are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
+    "dev-005": {"function": "capture", "result_type": "capture-result"},
     "dev-006": {"function": "route_grant_arguments", "result_type": "argument-result"},
     "dev-007": {"function": "memory_arguments", "result_type": "argument-result"},
     "dev-010": {"function": "test_only_files", "result_type": "path-result"},
     "dev-012": {"function": "test_only_files", "result_type": "path-result"},
     "dev-015": {"function": "case_passed", "result_type": "bool"},
+    "dev-018": {"function": "capture", "result_type": "capture-result"},
     "dev-020": {"function": "verify_case", "result_type": "verification-result"},
     "dev-021": {"function": "verify_case", "result_type": "verification-result"},
     "dev-022": {"function": "verify_case", "result_type": "verification-result", "observe_case_roots": True},
@@ -41,6 +43,7 @@ LOG_LIMIT = 2 * evaluation.MAX_FILE
 # Measured historical outcomes, not model scores or altered hidden assertions.
 # Subtests can report more failures than the number of selected methods.
 CONTROL_PROFILES = {
+    "dev-005": {"failures": 3, "base_calls": 3, "reference_calls": 3},
     "dev-006": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 19,
                 "function_found": False},
     "dev-007": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 52,
@@ -48,6 +51,7 @@ CONTROL_PROFILES = {
     "dev-010": {"failures": 1, "base_calls": 1, "reference_calls": 4},
     "dev-012": {"failures": 10, "base_calls": 12, "reference_calls": 14},
     "dev-015": {"failures": 1, "base_calls": 3, "reference_calls": 4},
+    "dev-018": {"failures": 1, "base_calls": 1, "reference_calls": 5},
     "dev-020": {"failures": 1, "base_calls": 2, "reference_calls": 3},
     "dev-021": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 6},
     "dev-022": {"failures": 0, "errors": 1, "base_calls": 2, "reference_calls": 4},
@@ -60,6 +64,13 @@ CONTROL_PROFILES = {
 def coverage(task):
     """State what transported observations can and cannot establish."""
     kind = SUPPORTED[task["id"]]["result_type"]
+    if kind == "capture-result":
+        return {"graded": ["selected-private-path-refusals", "captured-output-redaction",
+                           "selected-return-values"],
+                "adapter_policy": ["bounded-encoded-response", "bounded-json-observations",
+                                   "finite-capture-stub"],
+                "not_graded": ["real-command-execution", "subprocess-invocation-arguments",
+                               "other-module-globals", "unselected-statement-clauses"]}
     if kind == "path-result":
         return {"graded": ["path-membership", "ambiguity-behavior"],
                 "adapter_policy": ["bounded-encoded-response"],

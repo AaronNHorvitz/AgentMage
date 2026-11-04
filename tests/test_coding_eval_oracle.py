@@ -38,8 +38,8 @@ class IndependentOracleTests(unittest.TestCase):
     def test_real_two_sandbox_controls_keep_original_hidden_tests_and_counts(self):
         summary = oracle.verify(self.root / "controls")
         self.assertTrue(summary["passed"], summary)
-        self.assertEqual(len(summary["tasks"]), 10)
-        self.assertEqual(summary["control_attempts"], {"total": 20, "passed": 10, "failed": 10})
+        self.assertEqual(len(summary["tasks"]), 12)
+        self.assertEqual(summary["control_attempts"], {"total": 24, "passed": 12, "failed": 12})
         self.assertFalse(summary["generated_scoring"])
         self.assertIsNone(summary["model_score"])
         self.assertEqual(summary["collection_sha256"],
@@ -85,6 +85,59 @@ class IndependentOracleTests(unittest.TestCase):
             self.assertEqual(base["tests"]["tests"], 0)
             self.assertEqual(base["logs"]["wire.log"], evaluation.sha(b""))
             self.assertEqual(base["control_attempts"], {"total": 1, "passed": 0, "failed": 1})
+
+    def test_capture_controls_refuse_generated_inputs_before_launch(self):
+        for task in (t for t in evaluation.collection() if t["id"] in {"dev-005", "dev-018"}):
+            files = self.files(task)
+            files[task["source"]] += b"\n# synthetic candidate\n"
+            output = self.root / task["id"]
+            with self.subTest(task=task["id"]), mock.patch.object(oracle, "exchange") as launch:
+                with self.assertRaisesRegex(evaluation.EvaluationError, "untrusted-candidate-disabled"):
+                    oracle.grade(task, files, output)
+                launch.assert_not_called()
+                self.assertFalse(output.exists())
+
+    def test_capture_assertions_stay_trusted_and_wrong_values_fail(self):
+        variants = (
+            ("redaction", b"\ndef capture(): return ('unredacted output', 0)\n", "test_failure"),
+            ("validation", b"\ndef validate_raw(text): return []\n", "test_failure"),
+            ("forgery", b'''
+import unittest
+from pathlib import Path
+assert not Path('/adapter/test.py').exists()
+assert not Path('/output').exists()
+unittest.TestCase.assertIn = lambda *a, **kw: None
+unittest.TestCase.assertNotIn = lambda *a, **kw: None
+def capture(): return ('unredacted output', 0)
+def validate_raw(text): return []
+''', "test_failure"),
+            ("object", b"\ndef validate_raw(text): return object()\n", "adapter_policy"),
+            ("exception", b"\ndef validate_raw(text): raise ValueError('private-candidate-payload')\n",
+             "candidate_exception"),
+        )
+        for task in (t for t in evaluation.collection() if t["id"] in {"dev-005", "dev-018"}):
+            for name, suffix, cause in variants:
+                files = self.files(task)
+                files[task["source"]] += suffix
+                output = self.root / (task["id"] + "-" + name)
+                with self.subTest(task=task["id"], variant=name), mock.patch.object(
+                        evaluation, "require_historical_candidate", return_value="synthetic-probe"):
+                    report = oracle.grade(task, files, output)
+                self.assertFalse(report["passed"], report)
+                self.assertEqual(report["cause"], cause, report)
+                self.assertEqual(report["tests"]["tests"], 1)
+                self.assertEqual(report["control_attempts"], {"total": 1, "passed": 0, "failed": 1})
+                self.assertIn("real-command-execution", report["coverage"]["not_graded"])
+                self.assertNotIn(b"private-candidate-payload", (output / "wire.log").read_bytes())
+                self.assertNotIn(b"private-candidate-payload", (output / "oracle.log").read_bytes())
+
+    def test_response_memory_exhaustion_is_counted_adapter_policy(self):
+        report = self.probe(b"\ndef case_passed(v): return 'x' * (150 * 1024 * 1024) if v else ''\n",
+                            "memory-exhaustion")
+        self.assertFalse(report["passed"])
+        self.assertEqual(report["cause"], "adapter_policy", report)
+        self.assertEqual(report["candidate_exit_code"], 0)
+        self.assertEqual(report["control_attempts"], {"total": 1, "passed": 0, "failed": 1})
 
     def test_import_failure_and_false_startup_do_not_run_hidden_assertions(self):
         for name, code in (

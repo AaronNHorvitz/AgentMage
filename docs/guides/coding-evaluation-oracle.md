@@ -14,6 +14,11 @@ not generated-candidate admission, a model baseline or a completed T-311.
 The original collection, hidden bytes, method selections and thresholds stay
 unchanged. No model, harness or prompt is tuned by this adapter.
 
+T-311.14 adds the two existing output-redaction tasks. Their original assertions
+remain in the trusted process; only fixture text, closed command lists and
+bounded return observations reach the candidate. It also catches memory
+exhaustion during response encoding as an adapter-policy refusal.
+
 ## Run
 
 ```sh
@@ -25,11 +30,13 @@ Every selected original hidden method remains complete and unchanged.
 
 | Task | Function | Methods | Base failures/errors | Base calls | Reference calls |
 | --- | --- | --- | --- | --- | --- |
+| dev-005 | `validate_raw`, `capture` | 1 | 3 / 0 | 3 | 3 |
 | dev-006 | `parser`, `route_grant_arguments` | 1 | 0 / 1 | 1 | 19 |
 | dev-007 | `parser`, `memory_arguments` | 1 | 0 / 1 | 1 | 52 |
 | dev-010 | `test_only_files` | 1 | 1 / 0 | 1 | 4 |
 | dev-012 | `test_only_files` | 4 | 10 / 0 | 12 | 14 |
 | dev-015 | `case_passed` | 1 | 1 / 0 | 3 | 4 |
+| dev-018 | `validate_raw`, `capture` | 1 | 1 / 0 | 1 | 5 |
 | dev-020 | `verify_case` | 1 | 1 / 0 | 2 | 3 |
 | dev-021 | `verify_case` | 1 | 0 / 1 | 1 | 6 |
 | dev-022 | `verify_case`, case roots | 1 | 0 / 1 | 2 | 4 |
@@ -218,6 +225,29 @@ with an extra field, wrong value or payload is always malformed protocol. Such f
 remain confined to the private transcript and are never reconstructed as code.
 No claim of full statement coverage follows from these controls.
 
+## Captured output and private-path checks
+
+For dev-005 and dev-018, proxies replace `validate_raw` and `capture` before the
+unchanged original test module imports them. `validate_raw` receives the exact
+synthetic text assembled by the trusted test. For `capture`, the proxy snapshots
+the test's stub stdout, return code and current command list. The candidate
+recreates a local subprocess stub and command list, then calls its own `capture`.
+No fixture command runs. Both namespaces use the same lexical workspace and
+home paths, so fixture path text is preserved without rewriting assertions.
+
+Results carry bounded finite built-in JSON observations, with a fixed tag for
+a top-level tuple. The trusted side reconstructs only that built-in tuple; all
+other supported results remain data for the original assertions. Reserved map
+keys stay inside the value envelope. Objects, nonfinite values and unsupported
+containers fail as adapter policy; malformed envelopes fail as protocol. No
+mock, callback, exception payload or executable source crosses the pipe.
+
+The original methods check selected private-path refusals, redaction and return
+values. They do not check subprocess invocation arguments, real command
+execution, other module globals or all statement clauses. Those omissions and
+the finite-stub policy are explicit in report coverage. These are controls of
+evidence functions, not actual command collection or a real-model run.
+
 ## Candidate exceptions and cause limits
 
 Unexpected exceptions during a candidate call, including missing report fields,
@@ -241,7 +271,8 @@ Policy and exception failures count in the same failed-attempt denominator.
 After a candidate call, response encoding is also bounded adapter work. A
 response exceeding 64 KiB or refusing JSON encoding (including the interpreter's
 integer-digit bound) becomes the fixed `adapter_policy` tag with normal candidate
-pipe cleanup, instead of crashing that worker. This applies to every supported
+pipe cleanup, instead of crashing that worker. Memory exhaustion during encoding also uses
+that fixed refusal; no allocation-failure message crosses the pipe. This applies to every supported
 result type and changes no budget. The oracle independently validates each raw
 frame: forged, truncated, nonfinite, over-deep or otherwise invalid wire data
 still fails as protocol. A policy tag never excuses or drops an attempt.
@@ -263,7 +294,7 @@ removal retries come from the accepted evaluator.
 
 Both processes retain the evaluator's per-process 512 MiB address-space,
 60-second CPU, 32 MiB file and zero core-file limits. These are **not aggregate
-worker quotas**. Generated scoring remains disabled: this adapter covers ten of
+worker quotas**. Generated scoring remains disabled: this adapter covers twelve of
 30 tasks and does not implement separately delegated memory/process/CPU quotas,
 protected held-out inputs, covered-clause labels or a current-harness baseline.
 The legacy grader continues to import candidate code with tests and has its

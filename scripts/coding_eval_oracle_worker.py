@@ -21,7 +21,8 @@ from unittest import mock
 MAX_MESSAGE = 64 * 1024
 MAX_TRANSCRIPT = 2 * 1024 * 1024
 MAX_CALLS = 128
-POLICY_RESULT_TYPES = frozenset({"argument-result", "verification-result", "bool", "bool-map", "path-result"})
+POLICY_RESULT_TYPES = frozenset({"argument-result", "verification-result", "capture-result",
+                                "bool", "bool-map", "path-result"})
 
 
 class ProtocolError(ValueError):
@@ -84,7 +85,7 @@ def read_message(stream):
 def encode_message(value):
     try:
         data = (json.dumps(value, allow_nan=False, separators=(",", ":")) + "\n").encode()
-    except (ValueError, TypeError, RecursionError):
+    except (ValueError, TypeError, RecursionError, MemoryError):
         raise ProtocolError("oracle.invalid-json") from None
     if len(data) > MAX_MESSAGE:
         raise ProtocolError("oracle.invalid-frame")
@@ -193,6 +194,12 @@ class RemoteFunction:
                             and observation_value(result["passed"]) and observation_value(result["checks"]))))
             elif self.result_type == "argument-result":
                 valid = valid_argument_result(result, args[0])
+            elif self.result_type == "capture-result":
+                valid = (type(result) is dict and result.keys() == {"value", "container"}
+                         and type(result["container"]) is str
+                         and result["container"] in {"value", "tuple"}
+                         and observation_value(result["value"])
+                         and (result["container"] != "tuple" or type(result["value"]) is list))
             elif self.result_type == "bool-map":
                 valid = (isinstance(result, dict) and result.keys() == {"value"}
                          and type(result["value"]) is dict
@@ -409,6 +416,48 @@ def valid_case_roots(roots):
                     for key, value in roots.items()))
 
 
+def capture_proxies(remote, module):
+    """Transfer only fixture text and closed command lists, never mock objects."""
+    def unpack(result):
+        return tuple(result["value"]) if result["container"] == "tuple" else result["value"]
+
+    def validate_raw(text):
+        return unpack(remote({"operation": "validate", "text": text}))
+
+    def capture():
+        fixture = module.subprocess.run.return_value
+        return unpack(remote({"operation": "capture", "stdout": fixture.stdout,
+                              "returncode": fixture.returncode,
+                              "commands": [list(command) for command in module.COMMANDS]}))
+    return validate_raw, capture
+
+
+def capture_result(module, request):
+    """Recreate the original finite stub in the candidate; no command runs."""
+    if type(request) is not dict:
+        raise ProtocolError("oracle.invalid-capture-request")
+    if (request.keys() == {"operation", "text"} and request["operation"] == "validate"
+            and type(request["text"]) is str):
+        value = module.validate_raw(request["text"])
+    elif (request.keys() == {"operation", "stdout", "returncode", "commands"}
+          and request["operation"] == "capture" and type(request["stdout"]) is str
+          and type(request["returncode"]) is int and type(request["commands"]) is list
+          and len(request["commands"]) <= 128
+          and all(type(command) is list and 0 < len(command) <= 128
+                  and all(type(arg) is str for arg in command) for command in request["commands"])):
+        completed = module.subprocess.CompletedProcess([], request["returncode"], stdout=request["stdout"])
+        with (mock.patch.object(module, "COMMANDS", tuple(tuple(c) for c in request["commands"])),
+              mock.patch.object(module.subprocess, "run", return_value=completed)):
+            value = module.capture()
+    else:
+        raise ProtocolError("oracle.invalid-capture-request")
+    if type(value) is tuple and observation_value(list(value)):
+        return {"value": list(value), "container": "tuple"}
+    if observation_value(value):
+        return {"value": value, "container": "value"}
+    return {"adapter_policy": True}
+
+
 def candidate(config):
     reader, writer = sys.stdin.buffer, sys.stdout.buffer
     # Ordinary candidate prints are diagnostics. Deliberate protocol corruption
@@ -442,6 +491,8 @@ def candidate(config):
                         result = verification_result(function, module, *request["args"])
                 elif config["result_type"] == "argument-result":
                     result = argument_result(module, config["function"], *request["args"])
+                elif config["result_type"] == "capture-result":
+                    result = capture_result(module, *request["args"])
                 elif config["result_type"] in {"bool", "bool-map"}:
                     result = predicate_result(function(*request["args"]), config["result_type"])
                 else:
@@ -478,6 +529,8 @@ def oracle(config):
             elif config["result_type"] == "argument-result":
                 parser, proxy = argument_proxies(remote, module)
                 module.parser = parser
+            elif config["result_type"] == "capture-result":
+                module.validate_raw, proxy = capture_proxies(remote, module)
             else:
                 proxy = remote
             setattr(module, config["function"], proxy)

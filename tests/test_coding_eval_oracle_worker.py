@@ -96,7 +96,7 @@ class OracleProtocolTests(unittest.TestCase):
             self.assertFalse(remote.policy_failed)
 
     def test_candidate_exception_tag_is_fixed_sticky_and_never_reconstructed(self):
-        for kind in ('bool', 'bool-map', 'path-result', 'verification-result', 'argument-result'):
+        for kind in sorted(worker.POLICY_RESULT_TYPES):
             remote = self.remote(b'{"seq":1,"result":{"candidate_exception":true}}\n', kind)
             with self.subTest(kind=kind), self.assertRaisesRegex(
                     worker.CandidateExecutionError, '^oracle.candidate-exception$'):
@@ -111,7 +111,7 @@ class OracleProtocolTests(unittest.TestCase):
         for result in ({'candidate_exception': 1}, {'candidate_exception': False},
                        {'candidate_exception': 'payload'},
                        {'candidate_exception': True, 'message': 'payload'}):
-            for kind in ('bool', 'bool-map', 'path-result', 'verification-result', 'argument-result'):
+            for kind in sorted(worker.POLICY_RESULT_TYPES):
                 remote = self.remote(worker.encode_message({'seq': 1, 'result': result}), kind)
                 with self.subTest(kind=kind, result=result), self.assertRaises(worker.ProtocolError):
                     remote({})
@@ -136,6 +136,69 @@ class OracleProtocolTests(unittest.TestCase):
         for value in (object(), [object()], float('nan')):
             helper.return_value = value
             self.assertEqual(worker.argument_result(module, 'helper', request), {'adapter_policy': True})
+
+    def test_capture_fixture_transports_data_and_preserves_tuple_results(self):
+        module = SimpleNamespace(subprocess=subprocess, COMMANDS=(("fake", "arg"),))
+        def capture():
+            completed = module.subprocess.run(["must-never-execute"], check=False)
+            return completed.stdout, completed.returncode
+        module.capture = capture
+        module.validate_raw = lambda text: [text]
+        request = {'operation': 'capture', 'commands': [['fake', 'arg']],
+                   'stdout': 'fixture output', 'returncode': 3}
+        original_run = subprocess.run
+        result = worker.capture_result(module, request)
+        self.assertIs(subprocess.run, original_run)
+        self.assertEqual(module.COMMANDS, (("fake", "arg"),))
+        self.assertEqual(result, {'value': ['fixture output', 3], 'container': 'tuple'})
+        raw = worker.encode_message({'seq': 1, 'result': result})
+        remote = self.remote(raw, 'capture-result')
+        fixture = SimpleNamespace(stdout='fixture output', returncode=3)
+        trusted = SimpleNamespace(subprocess=SimpleNamespace(run=SimpleNamespace(return_value=fixture)),
+                                  COMMANDS=(("fake", "arg"),))
+        _, proxy = worker.capture_proxies(remote, trusted)
+        self.assertEqual(proxy(), ('fixture output', 3))
+        self.assertEqual(json.loads(remote.writer.getvalue())['args'], [request])
+        self.assertEqual(worker.capture_result(module, {'operation': 'validate', 'text': 'text'}),
+                         {'value': ['text'], 'container': 'value'})
+
+    def test_capture_observation_keys_are_data_and_malformed_tags_fail(self):
+        for value in (None, False, 1, 'wrong', [], {'adapter_policy': True, 'candidate_exception': True}):
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': {
+                'value': value, 'container': 'value'}}), 'capture-result')
+            validate, _ = worker.capture_proxies(remote, SimpleNamespace())
+            self.assertEqual(validate('input'), value)
+            self.assertFalse(remote.failed or remote.policy_failed or remote.exception_failed)
+        for value in ({'value': True, 'container': 'tuple'}, {'value': [], 'container': ['tuple']},
+                      {'value': [], 'container': '__reduce__'}, {'value': [], 'container': 'list'},
+                      {'value': [], 'container': 'value', 'tests': 0}, {'value': []}):
+            remote = self.remote(worker.encode_message({'seq': 1, 'result': value}), 'capture-result')
+            with self.subTest(value=value), self.assertRaises(worker.ProtocolError):
+                remote({'operation': 'validate', 'text': 'input'})
+            self.assertTrue(remote.failed)
+
+    def test_capture_requests_cannot_supply_callbacks_or_arbitrary_attributes(self):
+        module = SimpleNamespace(capture=mock.Mock(), validate_raw=mock.Mock())
+        for request in ({'operation': 'other'}, {'operation': 'validate', 'text': 1},
+                        {'operation': 'validate', 'text': 'x', 'callback': 'run'},
+                        {'operation': 'capture', 'commands': [['fake']], 'stdout': 'x', 'returncode': True},
+                        {'operation': 'capture', 'commands': ['fake'], 'stdout': 'x', 'returncode': 0},
+                        {'operation': 'capture', 'commands': [[]], 'stdout': 'x', 'returncode': 0},
+                        {'operation': 'capture', 'commands': [['fake']] * 129, 'stdout': 'x', 'returncode': 0}):
+            with self.subTest(request=request), self.assertRaises(worker.ProtocolError):
+                worker.capture_result(module, request)
+        module.capture.assert_not_called()
+        module.validate_raw.assert_not_called()
+
+    def test_response_encoding_memory_refusal_uses_fixed_policy_tag(self):
+        original = worker.json.dumps
+        def bounded(value, **kwargs):
+            if value.get('result') == {'value': 'large'}:
+                raise MemoryError('untrusted memory payload')
+            return original(value, **kwargs)
+        with mock.patch.object(worker.json, 'dumps', side_effect=bounded):
+            result = worker.response_message(7, {'value': 'large'})
+        self.assertEqual(result, b'{"seq":7,"result":{"adapter_policy":true}}\n')
 
     def test_verification_observations_reject_objects_and_bound_nesting(self):
         for value in (None, 'text', 0, 1, True, 0.5, [], {}, {'x': [None, False]}):
