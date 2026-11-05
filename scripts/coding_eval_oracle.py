@@ -30,10 +30,11 @@ else:
     import coding_eval_oracle_worker as worker
     import coding_eval_scratch as scratch
 
-VERSION = "coding-independent-oracle-v30"
+VERSION = "coding-independent-oracle-v31"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
+    "dev-rust-001": {"function": "WorkspacePath::new", "result_type": "bool-map"},
     "dev-001": {"function": "untracked_file_identities", "result_type": "source-result", "source_fixture": "identity"},
     "dev-002": {"function": "_model_request_diagnosis", "result_type": "source-result", "source_fixture": "diagnostics"},
     "dev-005": {"function": "capture", "result_type": "capture-result"},
@@ -77,6 +78,7 @@ CLEANUP_ADDRESS_BYTES = 256 * evaluation.MAX_FILE
 # Measured historical outcomes, not model scores or altered hidden assertions.
 # Subtests can report more failures than the number of selected methods.
 CONTROL_PROFILES = {
+    "dev-rust-001": {"failures": 1, "base_calls": 1, "reference_calls": 576},
     "dev-001": {"failures": 0, "errors": 3, "base_calls": 4, "reference_calls": 7,
                 "function_found": False, "candidate_exception": True},
     "dev-002": {"failures": 0, "errors": 14, "base_calls": 14, "reference_calls": 53,
@@ -124,6 +126,13 @@ CONTROL_PROFILES = {
 def coverage(task):
     """State what transported observations can and cannot establish."""
     kind = SUPPORTED[task["id"]]["result_type"]
+    if task.get("language") == "rust":
+        return {"graded": ["original-constructor-corpus", "error-code-and-component-index",
+                           "accepted-case-sensitive-spellings"],
+                "adapter_policy": ["separate-rust-assertion-namespace", "bounded-constructor-observations",
+                                   "unchanged-original-corpus-and-test", "offline-single-job-build"],
+                "not_graded": ["candidate-deserialization-implementation", "workspace-identity-on-success",
+                               "unasserted-statement-clauses", "candidate-component-method-effects"]}
     if kind == "source-result":
         return {"graded": (["selected-untracked-identities-and-refusals", "implementation-identity-fields",
                             "changed-untracked-content-and-ignored-output"] if task["id"] == "dev-001" else
@@ -344,7 +353,7 @@ def launch(command, **options):
                                 env={}, pass_fds=(arguments.fileno(),), **options)
 
 
-def exchange(candidate_command, oracle_command, output, timeout, *, mount=None, identity=False):
+def exchange(candidate_command, oracle_command, output, timeout, *, mount=None, identity=False, rust=False):
     """Connect pipes directly; the host accepts results only from the oracle mount."""
     if mount is not None:
         return mount.exchange(candidate_command, oracle_command, timeout, identity=identity)
@@ -356,11 +365,13 @@ def exchange(candidate_command, oracle_command, output, timeout, *, mount=None, 
               (output / "oracle.log").open("xb") as oracle_log):
             candidate_process = launch(
                 candidate_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, start_new_session=True, preexec_fn=evaluation.limits)
+                stderr=subprocess.PIPE, start_new_session=True,
+                preexec_fn=evaluation.coding_eval_rust.limits if rust else evaluation.limits)
             processes.append(candidate_process)
             oracle_process = launch(
                 oracle_command, stdin=candidate_process.stdout, stdout=candidate_process.stdin,
-                stderr=subprocess.PIPE, start_new_session=True, preexec_fn=evaluation.limits)
+                stderr=subprocess.PIPE, start_new_session=True,
+                preexec_fn=evaluation.coding_eval_rust.limits if rust else evaluation.limits)
             processes.append(oracle_process)
             candidate_process.stdin.close()
             candidate_process.stdout.close()
@@ -408,7 +419,8 @@ def result_record(path, task):
             "candidate_ready", "function_found"}
             or not isinstance(value["tests"], dict) or value["tests"].keys() != fields
             or any(type(v) is not int or v < 0 for v in value["tests"].values())
-            or type(value["calls"]) is not int or not 0 <= value["calls"] <= worker.MAX_CALLS
+            or type(value["calls"]) is not int or not 0 <= value["calls"] <= (
+                640 if task.get("language") == "rust" else worker.MAX_CALLS)
             or type(value["protocol_failed"]) is not bool
             or type(value["adapter_policy_failed"]) is not bool
             or type(value["candidate_exception_failed"]) is not bool
@@ -808,6 +820,12 @@ def candidate_temporary(root, enabled):
 def grade_case(task, files, output, timeout=evaluation.TIMEOUT):
     """Host-owned diagnostic entry; the public verifier admits frozen controls only."""
     config = supported_task(task)
+    if task.get("language") == "rust":
+        if __package__:
+            from . import coding_eval_rust_oracle
+        else:
+            import coding_eval_rust_oracle
+        return coding_eval_rust_oracle.grade_case(task, files, output, timeout)
     trusted_files = evaluation.projection(task)
     hidden = evaluation.pinned_blob(task["reference"], task["hidden_test"], task["hidden_sha256"])
     record = None
@@ -918,7 +936,10 @@ def grade(task, files, output):
         "oracle_sha256": evaluation.sha(Path(__file__).read_bytes()),
         "worker_sha256": evaluation.sha(Path(worker.__file__).read_bytes()),
         "source_adapter_sha256": evaluation.sha(Path(__file__).with_name("coding_eval_source_oracle.py").read_bytes()),
-        "materialized_worker_sha256": evaluation.sha(limited_source(Path(worker.__file__).read_bytes())),
+        "rust_oracle_sha256": evaluation.sha(Path(__file__).with_name("coding_eval_rust_oracle.py").read_bytes()),
+        "materialized_worker_sha256": evaluation.sha(
+            Path(__file__).with_name("coding_eval_rust_oracle.py").read_bytes() if task.get("language") == "rust"
+            else limited_source(Path(worker.__file__).read_bytes())),
         "scratch_sha256": evaluation.sha(Path(scratch.__file__).read_bytes()),
         "evaluator_sha256": evaluation.sha(Path(evaluation.__file__).read_bytes()),
         "resource_adapter_sha256": evaluation.sha(Path(evaluation.coding_eval_resources.__file__).read_bytes()),
@@ -932,18 +953,21 @@ def grade(task, files, output):
         "control_attempts": {"total": 1, "passed": int(passed), "failed": int(not passed)},
         "coverage": coverage(task),
         "aggregate_worker_quotas": False,
-        "worker_limits": {"processes_per_namespace": WORKER_PROCESSES,
-                          "address_bytes_per_process": 512 * evaluation.MAX_FILE,
-                          "derived_address_bytes_per_namespace": WORKER_PROCESSES * 512 * evaluation.MAX_FILE,
+        "worker_limits": {"processes_per_namespace": 16 if task.get("language") == "rust" else WORKER_PROCESSES,
+                          "address_bytes_per_process": (768 if task.get("language") == "rust" else 512) * evaluation.MAX_FILE,
+                          "derived_address_bytes_per_namespace": (16 * 768 if task.get("language") == "rust"
+                                                                  else WORKER_PROCESSES * 512) * evaluation.MAX_FILE,
                           "cpu_seconds_per_process": 60,
                           "wall_seconds_per_exchange": evaluation.TIMEOUT,
-                          "scope": "independent-python-workers-only"},
+                          "scope": "independent-rust-workers-only" if task.get("language") == "rust" else "independent-python-workers-only"},
         "cleanup_limits": {"wall_seconds_per_tree": CLEANUP_SECONDS,
                            "address_bytes": CLEANUP_ADDRESS_BYTES,
                            "cpu_seconds_per_tree": CLEANUP_SECONDS,
                            "open_files": 64},
-        "scratch_limits": {"private_tmp_bytes_per_worker": PRIVATE_TMP_BYTES,
-                           "private_tmp_inodes_per_worker": scratch.PRIVATE_INODES,
+        "scratch_limits": {"private_tmp_bytes_per_worker": 768 * evaluation.MAX_FILE if task.get("language") == "rust" else PRIVATE_TMP_BYTES,
+                           "private_tmp_inodes_per_worker": 32768 if task.get("language") == "rust" else scratch.PRIVATE_INODES,
+                           "runtime_snapshot_bytes": 1536 * evaluation.MAX_FILE if task.get("language") == "rust" else 0,
+                           "runtime_snapshot_inodes": 32768 if task.get("language") == "rust" else 0,
                            "shared_mode_fixture_quota": True,
                            "case_mount_bytes": scratch.SCRATCH_BYTES,
                            "case_mount_inodes": scratch.SCRATCH_INODES,

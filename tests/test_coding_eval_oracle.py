@@ -50,8 +50,8 @@ class IndependentOracleTests(unittest.TestCase):
     def test_real_two_sandbox_controls_keep_original_hidden_tests_and_counts(self):
         summary = oracle.verify(self.root / "controls")
         self.assertTrue(summary["passed"], summary)
-        self.assertEqual(len(summary["tasks"]), 27)
-        self.assertEqual(summary["control_attempts"], {"total": 54, "passed": 27, "failed": 27})
+        self.assertEqual(len(summary["tasks"]), 28)
+        self.assertEqual(summary["control_attempts"], {"total": 56, "passed": 28, "failed": 28})
         self.assertFalse(summary["generated_scoring"])
         self.assertIsNone(summary["model_score"])
         self.assertEqual(summary["collection_sha256"],

@@ -876,3 +876,43 @@ stay open. The original frozen inputs, generated-admission guard, inherited
 resource limits, whole-suite accounting flag and held-out execution rule remain
 unchanged. Preliminary checks use separate development adapter modules; the
 ordinary worker test module is deferred intact to row closing.
+
+## Independent Rust path corpus
+
+Oracle v31 adds dev-rust-001 within the same expanded T-311.17 batch. The
+original one-method Rust test and 640-case corpus remain byte-identical. They
+compile and execute in a trusted namespace containing the frozen baseline and
+an original constructor transport shim. The candidate compiles in a separate
+namespace, with no hidden test, corpus or result directory. Neither candidate
+code nor candidate-authored test output executes in the assertion process.
+
+The trusted shim transports workspace identity and component strings to a
+candidate-only executable. Responses carry either component strings or an error
+code and optional component index. The adapter validates exact field sets,
+types, Unicode encoding and bounds before returning data to the original Rust
+assertions. It does not validate returned components against the baseline rules,
+which would conceal defects. The reference makes 576 constructor calls; the
+remaining 64 cases reject invalid UTF-8 in the trusted JSON parser before a
+constructor can run. The Rust-specific call cap is 640; Python's cap stays 128.
+
+Only the trusted test binary supplies assertion results and counts. Candidate
+exit, forged test-summary text, malformed observations and unsolicited trailing
+bytes cannot establish success. Reports bind the Rust adapter and actual worker
+copy as well as the unchanged frozen inputs. Every failed diagnostic remains a
+failed attempt. Public generated-candidate admission stays disabled.
+
+Builds use the existing read-only runtime snapshot and installed dependencies,
+offline with one compiler job per namespace, four-CPU affinity, 16 processes and
+768 MiB address space per process. Each worker has anonymous scratch capped at
+768 MiB and 32,768 inodes. The shared runtime snapshot is capped at 1,536 MiB and
+32,768 inodes. The exchange has a 90-second deadline; namespace teardown ends
+owned descendants and anonymous-mount release avoids candidate-tree traversal.
+Inherited counters cover the entire lane; they do not establish candidate-only
+resident-memory peaks or whole-suite resource admission.
+
+This grades constructor decisions, error codes/indices and case-sensitive control
+spellings asserted by the original corpus. Candidate deserialization, successful
+workspace identity, other component methods and unasserted statement clauses
+remain ungraded. Two development adapters, held-out independent grading and final
+admission work remain open. No held-out assertion or model run follows from this
+increment.

@@ -60,6 +60,12 @@ with socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET) as control:
     sys.path.insert(0, "/runner")
     import coding_eval_oracle as oracle
     request = json.loads(control.recv(65537))
+    if type(request) is dict and request.get("mode") == "independent-rust":
+        import coding_eval_rust_oracle
+        result = coding_eval_rust_oracle.run_request(request)
+        control.send(json.dumps(result, allow_nan=False).encode("ascii"))
+        control.recv(1)
+        raise SystemExit(0)
     if type(request) is dict and request.get("mode") == "historical-control":
         import coding_eval_control
         result = coding_eval_control.run_request(request)
