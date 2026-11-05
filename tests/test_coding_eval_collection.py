@@ -192,7 +192,7 @@ class CodingCollectionTests(unittest.TestCase):
         result = subprocess.run(["/usr/bin/python3", str(evaluation.ROOT / "scripts/coding_eval.py"), "list"],
                                 capture_output=True, timeout=30, check=True)
         public = json.loads(result.stdout)
-        self.assertEqual(public["version"], "coding-development-v9")
+        self.assertEqual(public["version"], "coding-development-v10")
         self.assertEqual(len(public["tasks"]), 30)
         for task in public["tasks"]:
             self.assertEqual(set(task), {"id", "split", "base", "source", "statement"})

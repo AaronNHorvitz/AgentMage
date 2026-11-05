@@ -97,12 +97,16 @@ Every selected original hidden method remains complete and unchanged.
 
 | Task | Function | Methods | Base failures/errors | Base calls | Reference calls |
 | --- | --- | --- | --- | --- | --- |
+| dev-001 | `untracked_file_identities`, `implementation_identity` | 12 | 0 / 3 | 4 | 7 |
+| dev-002 | `_model_request_diagnosis`, `diagnose` | 3 | 0 / 14 | 14 | 53 |
 | dev-005 | `validate_raw`, `capture` | 1 | 3 / 0 | 3 | 3 |
 | dev-006 | `parser`, `route_grant_arguments` | 1 | 0 / 1 | 1 | 19 |
 | dev-007 | `parser`, `memory_arguments` | 1 | 0 / 1 | 1 | 52 |
 | dev-009 | `subprocess_runner` | 1 | 1 / 0 | 1 | 1 |
 | dev-010 | `test_only_files` | 1 | 1 / 0 | 1 | 4 |
+| dev-011 | `retain`, `load_stage` | 2 | 0 / 2 | 1 | 18 |
 | dev-012 | `test_only_files` | 4 | 10 / 0 | 12 | 14 |
+| dev-014 | `complete_source_closure`, report/source validation | 7 | 0 / 27 | 28 | 46 |
 | dev-015 | `case_passed` | 1 | 1 / 0 | 3 | 4 |
 | dev-016 | `OpenAIAdapter`, `tokenize_messages` | 2 | 0 / 2 | 5 | 5 |
 | dev-017 | `make_container_readable` | 1 | 0 / 1 | 1 | 1 |
@@ -118,7 +122,9 @@ Every selected original hidden method remains complete and unchanged.
 | dev-028 | `stop`, `control`, `parser`, export and directory helpers | 1 | 0 / 1 | 13 | 18 |
 | dev-029 | `suspend_resume_checks` | 1 | 0 / 1 | 1 | 6 |
 
-Subtests explain the ten failures across four methods in dev-012. The verifier
+Subtests explain the ten failures across four methods in dev-012 and fourteen
+errors across three methods in dev-002. New source-task profiles are measured
+from their frozen controls; existing profiles are unchanged. The verifier
 requires these exact failure/count/call profiles, successful startup and expected
 function presence, plus a passing reference with its exact call count. The three
 argument-task bases lack their requested helper and reject the first parser
@@ -809,3 +815,64 @@ cover the entire lane, not candidate-only usage. Lifetime memory peak is not a
 task peak. Generated scoring and whole-suite aggregate admission stay disabled.
 The remaining adapters, clause coverage and admission requirements remain in
 T-311.17; no new row or model baseline follows from this increment.
+
+## Source records and model-request diagnostics
+
+Oracle v30 adds dev-001, dev-002, dev-011 and dev-014 within the same expanded T-311.17
+batch. The complete original twelve-method source identity and three-method
+diagnosis modules, plus the existing two-method retention and seven-method source-closure selections run in the
+trusted namespace. Candidate code executes only in its separate namespace.
+Assertions, helper fixtures and test selections are unchanged.
+
+A separate source adapter transports finite typed values, including binary Git
+observations, closed error categories and bounded inert mock sequences. It
+checks mock identity and history before replaying observed calls into the
+original mocks. Callable side effects, wrapped targets and unknown exception objects are refused;
+candidate-selected callables and classes never cross into the trusted worker.
+Tool-path metadata must equal the trusted fixture constant before any fixture
+builder uses it; a candidate cannot redirect those trusted writes.
+Protocol and adapter-policy failures remain sticky even if a frozen refusal
+assertion catches their ValueError superclass.
+
+The identity adapter observes real untracked file bytes, Git ignore behavior,
+symlink and special-file refusals, and implementation identity fields. Its FIFO
+fixture is recreated as an inert node, never opened during copying. Other harness
+functions and acceptance helpers in that original module remain trusted baseline
+helpers; their candidate implementations are not graded.
+
+Synthetic Git histories and source files are copied from a read-only view of
+the trusted temporary fixture into candidate-private scratch. Candidate writes
+cannot change that input view. For retention, a bounded data observation mirrors
+only stage directories, stage JSON and numbered text logs into the disposable
+trusted target originally supplied by the test. Those bytes come from an actual
+read-only scratch view, not candidate claims in the response. It admits at most
+128 entries and 16 KiB of content, checks paths with no-follow descriptors, and
+never executes those files.
+Attachments and effects outside that target are ungraded.
+
+The diagnosis adapter receives process-argument observations from the trusted
+fixture's existing ownership check. It tests requested-model values, diagnosis
+fields and lifecycle labels; it does not establish the candidate's process
+ownership, setup or reservation implementation. The candidate's actual run-record
+bytes are inspected through a read-only scratch view with no-follow descriptors
+and a 16 KiB read bound. A net mutation refuses grading; unchanged trusted input
+bytes alone cannot establish this property.
+
+Source-closure tests exercise real synthetic Git child modules, modes and
+documents as well as mocked malformed batches. Some closure return fields are
+not directly asserted by those methods; report-schema checks do not fill that
+coverage gap. Closed ValueError and Git-error observations preserve the selected
+refusal checks, not arbitrary exception subclass identity. Full integrations,
+unselected clauses and concurrent fixture mutations remain unestablished.
+
+Both workers keep protocol output on non-inheritable descriptors, separate from
+standard output. Child processes launched by trusted fixture helpers therefore
+write diagnostics to the bounded log rather than the request pipe.
+No candidate executable or generated validation script runs in the oracle.
+
+Reports bind the separate source adapter as well as the worker. Development
+coverage rises to 27 tasks; remaining independent adapters and admission work
+stay open. The original frozen inputs, generated-admission guard, inherited
+resource limits, whole-suite accounting flag and held-out execution rule remain
+unchanged. Preliminary checks use separate development adapter modules; the
+ordinary worker test module is deferred intact to row closing.

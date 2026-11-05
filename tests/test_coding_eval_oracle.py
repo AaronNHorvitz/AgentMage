@@ -50,8 +50,8 @@ class IndependentOracleTests(unittest.TestCase):
     def test_real_two_sandbox_controls_keep_original_hidden_tests_and_counts(self):
         summary = oracle.verify(self.root / "controls")
         self.assertTrue(summary["passed"], summary)
-        self.assertEqual(len(summary["tasks"]), 23)
-        self.assertEqual(summary["control_attempts"], {"total": 46, "passed": 23, "failed": 23})
+        self.assertEqual(len(summary["tasks"]), 27)
+        self.assertEqual(summary["control_attempts"], {"total": 54, "passed": 27, "failed": 27})
         self.assertFalse(summary["generated_scoring"])
         self.assertIsNone(summary["model_score"])
         self.assertEqual(summary["collection_sha256"],
@@ -2209,7 +2209,7 @@ def case_passed(case):
         with self.assertRaisesRegex(evaluation.EvaluationError, "untrusted-candidate-disabled"):
             oracle.grade(self.task, files, self.root / "generated")
         self.assertFalse((self.root / "generated").exists())
-        other = next(t for t in evaluation.collection() if t["id"] == "dev-001")
+        other = next(t for t in evaluation.collection() if t["id"] == "dev-003")
         with self.assertRaisesRegex(evaluation.EvaluationError, "oracle.task-refused"):
             oracle.grade(other, {}, self.root / "unsupported")
         self.assertFalse((self.root / "unsupported").exists())

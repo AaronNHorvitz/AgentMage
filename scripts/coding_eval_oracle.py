@@ -30,18 +30,22 @@ else:
     import coding_eval_oracle_worker as worker
     import coding_eval_scratch as scratch
 
-VERSION = "coding-independent-oracle-v29"
+VERSION = "coding-independent-oracle-v30"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
+    "dev-001": {"function": "untracked_file_identities", "result_type": "source-result", "source_fixture": "identity"},
+    "dev-002": {"function": "_model_request_diagnosis", "result_type": "source-result", "source_fixture": "diagnostics"},
     "dev-005": {"function": "capture", "result_type": "capture-result"},
     "dev-006": {"function": "route_grant_arguments", "result_type": "argument-result"},
     "dev-007": {"function": "memory_arguments", "result_type": "argument-result"},
     "dev-008": {"function": "doc_pack_arguments", "result_type": "fixture-result"},
     "dev-009": {"function": "subprocess_runner", "result_type": "diagnostic-result"},
     "dev-010": {"function": "test_only_files", "result_type": "path-result"},
+    "dev-011": {"function": "retain", "result_type": "source-result", "source_fixture": "retention"},
     "dev-012": {"function": "test_only_files", "result_type": "path-result"},
     "dev-013": {"function": "confinement_diagnosis", "result_type": "native-result"},
+    "dev-014": {"function": "complete_source_closure", "result_type": "source-result", "source_fixture": "closure"},
     "dev-015": {"function": "case_passed", "result_type": "bool"},
     "dev-016": {"function": "OpenAIAdapter", "result_type": "usage-result"},
     "dev-017": {"function": "make_container_readable", "result_type": "mode-result"},
@@ -73,6 +77,13 @@ CLEANUP_ADDRESS_BYTES = 256 * evaluation.MAX_FILE
 # Measured historical outcomes, not model scores or altered hidden assertions.
 # Subtests can report more failures than the number of selected methods.
 CONTROL_PROFILES = {
+    "dev-001": {"failures": 0, "errors": 3, "base_calls": 4, "reference_calls": 7,
+                "function_found": False, "candidate_exception": True},
+    "dev-002": {"failures": 0, "errors": 14, "base_calls": 14, "reference_calls": 53,
+                "function_found": False, "candidate_exception": True},
+    "dev-011": {"failures": 0, "errors": 2, "base_calls": 1, "reference_calls": 18},
+    "dev-014": {"failures": 0, "errors": 27, "base_calls": 28, "reference_calls": 46,
+                "function_found": False, "candidate_exception": True},
     "dev-005": {"failures": 3, "base_calls": 3, "reference_calls": 3},
     "dev-006": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 19,
                 "function_found": False},
@@ -113,6 +124,29 @@ CONTROL_PROFILES = {
 def coverage(task):
     """State what transported observations can and cannot establish."""
     kind = SUPPORTED[task["id"]]["result_type"]
+    if kind == "source-result":
+        return {"graded": (["selected-untracked-identities-and-refusals", "implementation-identity-fields",
+                            "changed-untracked-content-and-ignored-output"] if task["id"] == "dev-001" else
+                           ["requested-model-values-and-refusals", "diagnosis-schema-and-fixture-lifecycle",
+                            "run-record-invariance"] if task["id"] == "dev-002" else
+                           ["selected-retain-and-load-refusals", "retained-stage-fields-and-files",
+                            "changed-source-and-private-field-checks"] if task["id"] == "dev-011" else
+                           ["selected-source-closure-values-and-refusals", "schema-and-report-validation",
+                            "synthetic-git-child-mode-and-document-closure"]),
+                "adapter_policy": ["finite-typed-observations", "closed-exception-categories",
+                                   "inert-mock-only-call-replay", "read-only-trusted-temporary-fixtures",
+                                   "read-only-candidate-output-observations",
+                                   "bounded-data-only-output-replay"],
+                "not_graded": ["unselected-statement-clauses", "real-installed-worker",
+                               "exception-subclass-identity", "effects-outside-declared-retain-target",
+                               "concurrent-fixture-mutations",
+                               *(["candidate-process-ownership-implementation", "candidate-setup-and-reservation-implementation",
+                                  "model-choice-constant-membership-and-order"]
+                                 if task["id"] == "dev-002" else
+                                 ["unselected-harness-functions", "atomic-source-snapshot",
+                                  "candidate-gpu-and-acceptance-helper-implementations"] if task["id"] == "dev-001" else
+                                 ["unasserted-closure-return-fields"] if task["id"] == "dev-014" else
+                                 ["attachments-and-effects-outside-retain-target"])]}
     if kind == "native-result":
         return {"graded": ["selected-native-path-metadata-refusals", "manager-observation-values",
                            "manager-call-timeout-output-and-environment", "no-probe-on-untrusted-systemctl"],
@@ -245,7 +279,7 @@ def limited_source(source):
     return WORKER_LIMIT_PREFIX + source
 
 
-def sandbox(workspace, adapter, output, role, candidate_tmp=None, private_tmp=None):
+def sandbox(workspace, adapter, output, role, candidate_tmp=None, private_tmp=None, trusted_tmp=None):
     command = [
         "/usr/bin/bwrap", "--unshare-all", "--unshare-user", "--die-with-parent", "--new-session",
         "--disable-userns", "--clearenv", "--cap-drop", "ALL",
@@ -264,6 +298,8 @@ def sandbox(workspace, adapter, output, role, candidate_tmp=None, private_tmp=No
         command.extend(["--size", str(PRIVATE_TMP_BYTES), "--tmpfs", "/tmp"])
     if candidate_tmp is not None and role == "oracle":
         command.extend(["--ro-bind", str(candidate_tmp), "/candidate-tmp"])
+    if trusted_tmp is not None and role == "candidate":
+        command.extend(["--ro-bind", str(trusted_tmp), "/trusted-tmp"])
     if role == "oracle":
         command.extend(["--bind", str(output), "/output"])
     elif role != "candidate":
@@ -781,7 +817,9 @@ def grade_case(task, files, output, timeout=evaluation.TIMEOUT):
     with case_workspace(output), scratch.scratch_mount(output) as mount:
         root = mount.root
         fixture_options = {}
-        if config["result_type"] in {"mode-result", "fixture-result"}:
+        if config.get("source_fixture"):
+            fixture_options["trusted_tmp"] = root / "private-oracle"
+        if config["result_type"] in {"mode-result", "fixture-result"} or config.get("source_fixture") in {"identity", "diagnostics", "retention"}:
             directory = root / "candidate-tmp"
             directory.mkdir(mode=0o700)
             fixture_options["candidate_tmp"] = directory
@@ -808,18 +846,21 @@ if callable(getattr(subject, "implementation_identity", None)):
 ''')
         for directory in (oracle_adapter, candidate_adapter):
             evaluation.write_file(directory / "run.py", limited_source(Path(worker.__file__).read_bytes()))
+            evaluation.write_file(directory / "source_adapter.py",
+                                  Path(__file__).with_name("coding_eval_source_oracle.py").read_bytes())
         evaluation.publish(candidate_adapter / "config.json", {
             **config, **({"module": "identity_entry"} if config.get("identity_fixture") else {}),
         })
         evaluation.publish(oracle_adapter / "config.json", {
-            **config, "test_names": task["test_names"], "expected_tests": task["expected_tests"],
+            **config, "test_names": task.get("test_names"), "expected_tests": task["expected_tests"],
         })
         evaluation.write_file(oracle_adapter / "test.py", hidden)
         outcome = exchange(sandbox(candidate, candidate_adapter, results, "candidate",
                                    private_tmp=root / "private-candidate", **fixture_options),
                            sandbox(trusted, oracle_adapter, results, "oracle",
                                    private_tmp=root / "private-oracle", **fixture_options), output, timeout,
-                           mount=mount, identity=bool(config.get("identity_fixture")))
+                           mount=mount, identity=bool(config.get("identity_fixture")
+                                                    or config.get("source_fixture") == "identity"))
         try:
             record = result_record(results / "tests.json", task)
         except (OSError, ValueError):
@@ -871,11 +912,12 @@ def grade(task, files, output):
         "function_found": record["function_found"] if record else None,
         "error": error, "input_error": input_error,
         "output_truncated": output_limited, "candidate_kind": kind,
-        "hidden_sha256": task["hidden_sha256"], "test_names": task["test_names"],
+        "hidden_sha256": task["hidden_sha256"], "test_names": task.get("test_names"),
         "candidate_sha256": evaluation.sha(files[task["source"]]),
         "task_sha256": evaluation.sha(json.dumps(task, sort_keys=True, separators=(",", ":")).encode()),
         "oracle_sha256": evaluation.sha(Path(__file__).read_bytes()),
         "worker_sha256": evaluation.sha(Path(worker.__file__).read_bytes()),
+        "source_adapter_sha256": evaluation.sha(Path(__file__).with_name("coding_eval_source_oracle.py").read_bytes()),
         "materialized_worker_sha256": evaluation.sha(limited_source(Path(worker.__file__).read_bytes())),
         "scratch_sha256": evaluation.sha(Path(scratch.__file__).read_bytes()),
         "evaluator_sha256": evaluation.sha(Path(evaluation.__file__).read_bytes()),

@@ -30,7 +30,7 @@ MAX_CALLS = 128
 POLICY_RESULT_TYPES = frozenset({"argument-result", "verification-result", "capture-result",
                                 "bool", "bool-map", "path-result", "mode-result", "command-result",
                                 "diagnostic-result", "resource-result", "deadline-result", "job-result", "usage-result",
-                                "fixture-result", "native-result"})
+                                "fixture-result", "native-result", "source-result"})
 
 
 class ProtocolError(ValueError):
@@ -281,6 +281,9 @@ class RemoteFunction:
                 unpack_calls({"calls": result.get("calls")})
                 valid = (type(result) is dict and result.keys() == {"value", "calls"}
                          and observation_value(result["value"]))
+            elif self.result_type == "source-result":
+                valid = (type(result) is dict and result.keys() == {"observation", "calls", "artifacts"}
+                         and observation_value(result))
             else:
                 valid = False
             if not valid:
@@ -1717,6 +1720,13 @@ def fixture_proxies(remote, module):
     return arguments if remote.fixture_function == "doc_pack_arguments" else setup
 
 
+def source_adapter():
+    spec = importlib.util.spec_from_file_location("source_adapter", "/adapter/source_adapter.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def candidate(config):
     reader = sys.stdin.buffer
     # Keep the wire off standard output before importing any candidate module.
@@ -1748,7 +1758,7 @@ def candidate(config):
                     or type(request["seq"]) is not int or not isinstance(request["args"], list)):
                 raise ProtocolError("oracle.invalid-request")
             try:
-                function = (None if config["result_type"] in {"argument-result", "resource-result", "deadline-result", "job-result", "usage-result", "fixture-result", "native-result"}
+                function = (None if config["result_type"] in {"argument-result", "resource-result", "deadline-result", "job-result", "usage-result", "fixture-result", "native-result", "source-result"}
                             else getattr(module, config["function"]))
                 if config["result_type"] == "path-result":
                     result = path_result(function, module.AmbiguousReference, *request["args"])
@@ -1780,6 +1790,8 @@ def candidate(config):
                     result = fixture_result(module, *request["args"], fixture_roots)
                 elif config["result_type"] == "native-result":
                     result = native_result(module, *request["args"])
+                elif config["result_type"] == "source-result":
+                    result = source_adapter().result(module, *request["args"], sys.modules[__name__], config["source_fixture"])
                 elif config["result_type"] in {"bool", "bool-map"}:
                     result = predicate_result(function(*request["args"]), config["result_type"])
                 else:
@@ -1796,12 +1808,21 @@ def candidate(config):
 
 
 def oracle(config):
+    # Trusted fixture helpers may launch ordinary children with inherited
+    # stdout. Keep those diagnostics off the request pipe as well. The
+    # descriptor is non-inheritable; hidden assertions still run only here.
+    with os.fdopen(os.dup(1), "wb") as writer, contextlib.redirect_stdout(sys.stderr):
+        os.dup2(2, 1)
+        return oracle_run(config, writer)
+
+
+def oracle_run(config, writer):
     # This workspace contains the frozen base, never candidate source. Helpers,
     # fixture builders, imports and assertions all execute on the trusted side.
     sys.path.insert(0, "/workspace")
     module = importlib.import_module(config["module"])
     with Path("/output/wire.log").open("xb") as transcript:
-        remote = RemoteFunction(sys.stdin.buffer, sys.stdout.buffer, transcript, config["result_type"])
+        remote = RemoteFunction(sys.stdin.buffer, writer, transcript, config["result_type"])
         result = unittest.TestResult()
         try:
             remote.start()
@@ -1842,6 +1863,8 @@ def oracle(config):
                 proxy = fixture_proxies(remote, module)
             elif config["result_type"] == "native-result":
                 proxy = native_proxies(remote, module)
+            elif config["result_type"] == "source-result":
+                proxy = source_adapter().proxies(remote, module, sys.modules[__name__], config["source_fixture"])
             else:
                 proxy = remote
             setattr(module, config["function"], proxy)
@@ -1849,8 +1872,9 @@ def oracle(config):
             hidden = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(hidden)
             # Select complete original methods; hidden source is never rewritten.
-            suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromName(name, hidden)
-                                       for name in config["test_names"])
+            suite = (unittest.defaultTestLoader.loadTestsFromModule(hidden) if config["test_names"] is None else
+                     unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromName(name, hidden)
+                                        for name in config["test_names"]))
             result = unittest.TextTestRunner(stream=sys.stderr, verbosity=2).run(suite)
         try:
             remote.finish()
