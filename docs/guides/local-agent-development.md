@@ -170,3 +170,9 @@ review and prepare the owner test kit. An unavailable prerequisite or failing
 legacy check is reported explicitly; it cannot be relabeled a pass. The full
 gate has not run for this mission yet. No release is authorized by a local build,
 a green fast gate or a review of an earlier component.
+
+T-311.25 repairs the usage adapter's reviewed message-root identity false failure
+and refuses shared or effectful replay mocks. Frozen inputs and selected original
+methods stay unchanged. Generated admission, the real-harness baseline and broader
+coverage remain open; nested object identity and message-mutation propagation still
+need disposition before generated scoring.

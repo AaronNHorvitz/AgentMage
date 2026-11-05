@@ -18,6 +18,163 @@ class OracleProtocolTests(unittest.TestCase):
     def remote(self, raw, result_type="bool"):
         return worker.RemoteFunction(io.BytesIO(raw), io.BytesIO(), io.BytesIO(), result_type)
 
+    def test_usage_message_root_identity_survives_repeated_and_keyword_calls(self):
+        class Candidate:
+            def __init__(self):
+                self.roots = []
+
+            def tokenize_messages(self, messages):
+                if not any(messages is value for value in self.roots):
+                    self.roots.append(messages)
+                return {'roots': len(self.roots), 'contents': messages}
+
+        candidate = SimpleNamespace(OpenAIAdapter=Candidate, unix_http_request=None)
+        instances = {}
+
+        class Remote:
+            calls = 0
+            failed = False
+            policy_failed = False
+
+            def __call__(self, request):
+                self.calls += 1
+                return worker.usage_result(candidate, instances, request)
+
+        transport = mock.MagicMock(return_value=(200, b'{}', 0.1))
+        adapter = worker.usage_proxy(Remote(), SimpleNamespace(unix_http_request=transport))()
+        messages = [{'content': 'first'}]
+        self.assertEqual(adapter.tokenize_messages(messages), {'roots': 1, 'contents': messages})
+        self.assertEqual(adapter.tokenize_messages(messages), {'roots': 1, 'contents': messages})
+        self.assertEqual(adapter.tokenize_messages(list(messages)), {'roots': 2, 'contents': messages})
+        messages.append({'content': 'changed'})
+        self.assertEqual(adapter.tokenize_messages(messages=messages), {'roots': 2, 'contents': messages})
+        transport.assert_not_called()
+
+    def test_usage_shared_mock_is_refused_without_erasing_first_instance_history(self):
+        call = {'args': worker.pack_usage_value(('first-instance',)), 'kwargs': worker.pack_usage_value({})}
+        value = {'value': worker.pack_usage_value(None), 'calls': [call]}
+        frames = b''.join(worker.encode_message({'seq': i, 'result': value}) for i in (1, 2, 3))
+        remote = self.remote(frames, 'usage-result')
+        transport = mock.MagicMock(return_value=(200, b'{}', 0.1))
+        Adapter = worker.usage_proxy(remote, SimpleNamespace(unix_http_request=transport))
+        first = Adapter()
+        history = list(transport.call_args_list)
+        with self.assertRaises(worker.AdapterPolicyError):
+            Adapter()
+        self.assertEqual(transport.call_args_list, history)
+        self.assertEqual(remote.calls, 1)
+        self.assertTrue(remote.policy_failed)
+        transport.reset_mock()
+        with self.assertRaises(worker.AdapterPolicyError):
+            first.tokenize_messages([])
+        self.assertEqual(remote.calls, 1)
+        transport.assert_not_called()
+
+        empty = {'value': worker.pack_usage_value(None), 'calls': []}
+        remote = self.remote(worker.encode_message({'seq': 1, 'result': empty}), 'usage-result')
+        transport = mock.MagicMock(return_value=(200, b'{}', 0.1))
+        Adapter = worker.usage_proxy(remote, SimpleNamespace(unix_http_request=transport))
+        Adapter()
+        with self.assertRaises(worker.AdapterPolicyError):
+            Adapter()
+        self.assertTrue(remote.policy_failed)
+        self.assertEqual(remote.calls, 1)
+        transport.assert_not_called()
+
+    def test_usage_replay_refuses_mock_side_effects_and_wrapped_targets_before_request(self):
+        for configuration in ('side_effect', 'wraps'):
+            target = mock.Mock()
+            transport = mock.MagicMock(**{configuration: target})
+            remote = self.remote(b'', 'usage-result')
+            with self.subTest(configuration=configuration), self.assertRaises(worker.AdapterPolicyError):
+                worker.usage_proxy(remote, SimpleNamespace(unix_http_request=transport))()
+            target.assert_not_called()
+            transport.assert_not_called()
+            self.assertEqual(remote.calls, 0)
+            self.assertTrue(remote.policy_failed)
+
+    def test_usage_changed_mock_configuration_is_refused_before_cumulative_replay(self):
+        frame = worker.encode_message({'seq': 1, 'result': {'value': worker.pack_usage_value(None), 'calls': []}})
+        for configuration in ('side_effect', '_mock_wraps'):
+            transport = mock.MagicMock(return_value=(200, b'{}', 0.1))
+            remote = self.remote(frame, 'usage-result')
+            adapter = worker.usage_proxy(remote, SimpleNamespace(unix_http_request=transport))()
+            target = mock.Mock()
+            setattr(transport, configuration, target)
+            with self.subTest(configuration=configuration), self.assertRaises(worker.AdapterPolicyError):
+                adapter.tokenize_messages([])
+            target.assert_not_called()
+            transport.assert_not_called()
+            self.assertEqual(remote.calls, 1)
+            self.assertTrue(remote.policy_failed)
+
+    def test_usage_replay_checks_configuration_again_after_response(self):
+        for configuration in ('side_effect', '_mock_wraps'):
+            target = mock.Mock()
+            transport = mock.MagicMock(return_value=(200, b'{}', 0.1))
+
+            class Remote:
+                calls = 0
+                failed = False
+                policy_failed = False
+
+                def __call__(self, request):
+                    self.calls += 1
+                    setattr(transport, configuration, target)
+                    return {'value': worker.pack_usage_value(None), 'calls': [
+                        {'args': worker.pack_usage_value(('inert',)), 'kwargs': worker.pack_usage_value({})}]}
+
+            remote = Remote()
+            with self.subTest(configuration=configuration), self.assertRaises(worker.AdapterPolicyError):
+                worker.usage_proxy(remote, SimpleNamespace(unix_http_request=transport))()
+            target.assert_not_called()
+            transport.assert_not_called()
+            self.assertTrue(remote.policy_failed)
+
+    def test_usage_unowned_history_and_changed_transport_are_sticky_policy_refusals(self):
+        frame = worker.encode_message({'seq': 1, 'result': {'value': worker.pack_usage_value(None), 'calls': []}})
+        transport = mock.MagicMock(return_value=(200, b'{}', 0.1))
+        transport('preexisting')
+        remote = self.remote(frame, 'usage-result')
+        with self.assertRaises(worker.AdapterPolicyError):
+            worker.usage_proxy(remote, SimpleNamespace(unix_http_request=transport))()
+        transport.assert_called_once_with('preexisting')
+        self.assertEqual(remote.calls, 0)
+        self.assertTrue(remote.policy_failed)
+
+        transport = mock.MagicMock(return_value=(200, b'{}', 0.1))
+        module = SimpleNamespace(unix_http_request=transport)
+        remote = self.remote(frame, 'usage-result')
+        adapter = worker.usage_proxy(remote, module)()
+        module.unix_http_request = mock.MagicMock(return_value=(200, b'{}', 0.1))
+        with self.assertRaises(worker.AdapterPolicyError):
+            adapter.tokenize_messages([])
+        module.unix_http_request.assert_not_called()
+        transport.assert_not_called()
+        self.assertEqual(remote.calls, 1)
+        self.assertTrue(remote.policy_failed)
+
+    def test_usage_message_handles_are_bounded_typed_and_validated_before_candidate_calls(self):
+        module = SimpleNamespace(OpenAIAdapter=mock.Mock(), unix_http_request=None)
+        create = {'operation': 'create', 'instance': 1, 'stub': {'default': True},
+                  'args': worker.pack_usage_value(()), 'kwargs': worker.pack_usage_value({}), 'message_handle': None}
+        with self.assertRaises(worker.ProtocolError):
+            worker.usage_result(module, {}, {**create, 'message_handle': 1})
+        module.OpenAIAdapter.assert_not_called()
+        instances = {}
+        worker.usage_result(module, instances, create)
+        tokenize = {**create, 'operation': 'tokenize', 'stub': {'unchanged': True},
+                    'args': worker.pack_usage_value(([],))}
+        for handle in (None, True, False, 0, -1, worker.MAX_CALLS + 1, 1.0, '1', []):
+            with self.subTest(handle=handle), self.assertRaises(worker.ProtocolError):
+                worker.usage_result(module, instances, {**tokenize, 'message_handle': handle})
+        with self.assertRaises(worker.ProtocolError):
+            worker.usage_result(module, instances, {**tokenize, 'args': worker.pack_usage_value((None,)), 'message_handle': 1})
+        module.OpenAIAdapter.return_value.tokenize_messages.assert_not_called()
+        module.OpenAIAdapter.return_value.tokenize_messages.return_value = 37
+        result = worker.usage_result(module, instances, {**tokenize, 'message_handle': worker.MAX_CALLS})
+        self.assertEqual(worker.unpack_usage_result(result), (37, []))
+
     def test_usage_codec_preserves_transport_types_and_refuses_executable_values(self):
         values = (None, 37, False, b"\x00\xff", frozenset({400}),
                   ("POST", Path("/tmp/model.sock"), {"payload": [1], "statuses": frozenset()}))
@@ -76,10 +233,10 @@ class OracleProtocolTests(unittest.TestCase):
                 return 37
         module.OpenAIAdapter = Adapter
         instances = {}
-        request = {"operation": "create", "instance": 1, "stub": {"default": True},
+        request = {"operation": "create", "instance": 1, "stub": {"default": True}, "message_handle": None,
                    "args": worker.pack_usage_value(()), "kwargs": worker.pack_usage_value({})}
         self.assertEqual(worker.unpack_usage_result(worker.usage_result(module, instances, request)), (None, []))
-        request.update(operation="tokenize", args=worker.pack_usage_value(([{"role": "user"}],)),
+        request.update(operation="tokenize", message_handle=1, args=worker.pack_usage_value(([{"role": "user"}],)),
                        stub={"fixture": worker.pack_usage_value((200, b"{}", 0.1))})
         first = worker.usage_result(module, instances, request)
         request["stub"] = {"unchanged": True}
@@ -99,7 +256,7 @@ class OracleProtocolTests(unittest.TestCase):
 
     def test_usage_request_refuses_missing_duplicate_instances_and_malformed_stubs(self):
         module = SimpleNamespace(OpenAIAdapter=mock.Mock(), unix_http_request=lambda: None)
-        request = {"operation": "create", "instance": 1, "stub": {"default": True},
+        request = {"operation": "create", "instance": 1, "stub": {"default": True}, "message_handle": None,
                    "args": worker.pack_usage_value(()), "kwargs": worker.pack_usage_value({})}
         for value in ({**request, "instance": True}, {**request, "operation": "execute"},
                       {**request, "operation": "tokenize"}, {**request, "stub": {"unchanged": True}},

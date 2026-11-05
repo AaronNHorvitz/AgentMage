@@ -809,18 +809,44 @@ def unpack_usage_result(result):
 
 
 def usage_proxy(remote, module):
-    """Retain instance identity and replay transport observations only into mocks."""
+    """Keep message-root identity; replay only into an exclusively owned inert mock."""
+    owners = []
+
+    def refuse():
+        remote.policy_failed = True
+        raise AdapterPolicyError("oracle.usage-replay-policy")
+
     class Adapter:
         def __init__(self, *args, **kwargs):
             self.identifier = remote.calls + 1
             self.last_fixture = object()
+            self.transport = module.unix_http_request
+            self.message_roots = []
             self.invoke("create", args, kwargs)
 
-        def invoke(self, operation, args, kwargs):
+        def replay_target(self):
+            if remote.policy_failed:
+                refuse()
             transport = module.unix_http_request
             if not isinstance(transport, mock.MagicMock):
                 remote.failed = True
                 raise ProtocolError("oracle.usage-transport-not-mocked")
+            if (transport is not self.transport or transport.side_effect is not None
+                    or transport._mock_wraps is not None):
+                refuse()
+            for owned_transport, owner in owners:
+                if transport is owned_transport:
+                    if owner is not self:
+                        refuse()
+                    return transport
+            # Resetting an unowned mock would erase observations made elsewhere.
+            if transport.call_args_list or len(owners) >= MAX_CALLS:
+                refuse()
+            owners.append((transport, self))
+            return transport
+
+        def invoke(self, operation, args, kwargs):
+            transport = self.replay_target()
             fixture = transport.return_value
             if fixture is self.last_fixture:
                 stub = {"unchanged": True}
@@ -834,11 +860,26 @@ def usage_proxy(remote, module):
                 remote.failed = True
                 raise ProtocolError("oracle.unsupported-usage-fixture")
             self.last_fixture = fixture
+            handle = None
+            if operation == "tokenize":
+                messages = args[0] if args else kwargs.get("messages")
+                if type(messages) is list:
+                    for index, root in enumerate(self.message_roots, 1):
+                        if root is messages:
+                            handle = index
+                            break
+                    if handle is None:
+                        if len(self.message_roots) >= MAX_CALLS:
+                            refuse()
+                        self.message_roots.append(messages)
+                        handle = len(self.message_roots)
             value, calls = unpack_usage_result(remote({
                 "operation": operation, "instance": self.identifier, "stub": stub,
+                "message_handle": handle,
                 "args": pack_usage_value(args), "kwargs": pack_usage_value(kwargs)}))
-            # Replay the complete current history: earlier payload objects may
-            # have changed during a later call on the same candidate instance.
+            # Check again before invoking the mock; even a trusted fixture may
+            # have changed configuration while the response was in flight.
+            self.replay_target()
             transport.reset_mock()
             for call_args, call_kwargs in calls:
                 transport(*call_args, **call_kwargs)
@@ -850,7 +891,8 @@ def usage_proxy(remote, module):
 
 
 def usage_result(module, instances, request):
-    if (type(request) is not dict or request.keys() != {"operation", "instance", "stub", "args", "kwargs"}
+    if (type(request) is not dict
+            or request.keys() != {"operation", "instance", "stub", "args", "kwargs", "message_handle"}
             or type(request["operation"]) is not str or request["operation"] not in {"create", "tokenize"}
             or type(request["instance"]) is not int or not 1 <= request["instance"] <= MAX_CALLS
             or type(request["stub"]) is not dict):
@@ -858,6 +900,13 @@ def usage_result(module, instances, request):
     args, kwargs = unpack_usage_value(request["args"]), unpack_usage_value(request["kwargs"])
     if type(args) is not tuple or type(kwargs) is not dict:
         raise ProtocolError("oracle.invalid-usage-arguments")
+    handle = request["message_handle"]
+    messages = args[0] if args else kwargs.get("messages")
+    if request["operation"] == "tokenize" and type(messages) is list:
+        if type(handle) is not int or not 1 <= handle <= MAX_CALLS:
+            raise ProtocolError("oracle.invalid-message-handle")
+    elif handle is not None:
+        raise ProtocolError("oracle.invalid-message-handle")
     stub = request["stub"]
     if (stub.keys() in ({"default"}, {"unchanged"})
             and next(iter(stub.values())) is True):
@@ -877,16 +926,28 @@ def usage_result(module, instances, request):
         if stub.keys() == {"unchanged"}:
             raise ProtocolError("oracle.invalid-usage-stub")
         transport = mock.MagicMock()
+        roots = {}
     else:
         if identifier not in instances:
             raise ProtocolError("oracle.invalid-usage-instance")
-        _, transport = instances[identifier]
+        _, transport, roots = instances[identifier]
+        if handle is not None:
+            if handle not in roots:
+                roots[handle] = messages
+            else:
+                # Only the message-list root has stable identity. Nested
+                # values come from the latest trusted snapshot.
+                roots[handle][:] = messages
+            if args:
+                args = (roots[handle], *args[1:])
+            else:
+                kwargs["messages"] = roots[handle]
     if fixture is not None:
         transport.return_value = fixture
     with mock.patch.object(module, "unix_http_request", transport):
         if request["operation"] == "create":
-            instances[identifier] = (module.OpenAIAdapter(*args, **kwargs), transport)
-            value = None  # A constructor return value is not observed by Python callers.
+            instances[identifier] = (module.OpenAIAdapter(*args, **kwargs), transport, roots)
+            value = None
         else:
             value = instances[identifier][0].tokenize_messages(*args, **kwargs)
     try:

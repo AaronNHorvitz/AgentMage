@@ -41,11 +41,23 @@ The selected methods grade counts, repeated-message caching and four probe
 payload fields, including the exact false Boolean for `cache_prompt`. They do
 not assert the other transport arguments, the implementation of HTTP status
 filtering, malformed-response refusals, every statement clause or non-usage
-behavior, adapter attributes or other methods. Transport-call snapshots do not preserve arbitrary object identity,
-equality-overriding subclasses or cross-instance mutations after a response.
-Message arguments are rebuilt from values on each request; identity-dependent
-caching is outside this adapter's coverage. Those are explicit ungraded adapter
-limits requiring disposition before generated admission. This is
+behavior, adapter attributes or other methods.
+
+T-311.25 uses oracle v24 to preserve the identity of each repeated message-list
+root through a bounded per-instance handle. Equal but distinct roots remain
+distinct; positional and keyword calls share the same handles. Trusted changes
+update that root in place. Nested objects are rebuilt from the current snapshot;
+nested identity, equality-overriding subclasses and candidate-to-trusted message
+mutations remain unsupported and can change verdicts. These limits need
+disposition before generated admission.
+
+Replay requires an exclusively owned inert transport mock. A second adapter
+sharing that mock, pre-existing unowned history, a replacement mock, side effects
+or a wrapped target causes sticky adapter-policy refusal before replay or another
+request. The target is checked again after validating the response. This avoids
+erasing another instance's observations or executing a replay target. It does not
+merge cross-instance history or propagate cross-instance post-response mutations;
+shared mocks are refused even when their history is empty. This is
 an evaluator control, not inference, token-usage measurement or a model score.
 
 ## Run

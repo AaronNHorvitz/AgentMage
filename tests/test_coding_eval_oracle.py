@@ -90,6 +90,32 @@ class IndependentOracleTests(unittest.TestCase):
             launch.assert_not_called()
             self.assertFalse((self.root / 'refused').exists())
 
+    def test_usage_identity_keyed_cache_matches_original_in_process_verdict(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-016')
+        files = self.files(task)
+        files[task['source']] += b'''
+original_tokenize = OpenAIAdapter.tokenize_messages
+def identity_tokenize(self, messages):
+    if not hasattr(self, "identity_cache"):
+        self.identity_cache = {}
+    key = id(messages)
+    if key not in self.identity_cache:
+        self.token_count_cache.clear()
+        self.identity_cache[key] = original_tokenize(self, messages)
+    return self.identity_cache[key]
+OpenAIAdapter.tokenize_messages = identity_tokenize
+'''
+        with mock.patch.object(evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+            report = oracle.grade(task, files, self.root / 'identity')
+            legacy = evaluation.grade(task, files, self.root / 'identity-legacy')
+        self.assertTrue(legacy['passed'], legacy)
+        self.assertTrue(report['passed'], report)
+        self.assertEqual(report['calls'], 5)
+        self.assertEqual(report['tests']['tests'], 2)
+        self.assertFalse(report['adapter_policy_failed'])
+        self.assertIsNone(report['model_score'])
+        self.assertEqual(report['model_attempts'], 0)
+
     def test_usage_original_assertions_catch_bad_counts_cache_and_mutated_payload(self):
         task = next(t for t in evaluation.collection() if t['id'] == 'dev-016')
         variants = (
