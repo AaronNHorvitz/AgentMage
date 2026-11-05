@@ -1,0 +1,142 @@
+Commit: cb2c75143c9f58d9457249a3e2d58593541ede14
+Scope: local-coding-t311-23-stale-signal-mocks
+
+# Independent core review: T-311.23 expired signal mocks (review 1)
+
+Reviewer: separate read-only Claude Opus 5.5 session, extra-high effort. Same-model review;
+a cross-model review still has to happen before any public release. No repository file was modified, and
+nothing was approved in the repository. No GPU, model or held-out input was used.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `cb2c75143c9f58d9457249a3e2d58593541ede14` (clean tree);
+  base `149458e2205f2f309b38078a349f91d24d45a827`. Read the full base..HEAD diff (7 files),
+  the T-311.22/.23 TASKS rows, the new evidence and guide text, `job_proxies`, `job_result`,
+  `job_observation`, `RemoteFunction.__call__`, `candidate()` and `oracle()` in
+  `scripts/coding_eval_oracle_worker.py`, and the frozen dev-028 hidden method at the
+  reference commit.
+- Ran every required command from repository root in private scratch
+  `R=/lane/state/tmp/review-t311-23-9w4vno9q`, with suites/namespaces through
+  `/tools/build-slot`; `PATH` includes `target/local-agent-tools`. Node is v24.15.0, SHA-256
+  `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c` (verified).
+- Read the retained builder artifacts in `/lane/state/tmp/t311-23-stale-mock` without re-running
+  the exclusive-output wrappers there. Checked all 28 bound hashes myself.
+- Wrote and ran nine of my own real-namespace escape probes (`$R/reviewer_probes.py`, results in
+  `$R/reviewer_probes.json`). Each compares oracle v22 with the unchanged legacy grader on the
+  dev-028 reference source plus an appended stale-mock variant.
+
+## Commands and results
+
+1. `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base 149458e2205f2f309b38078a349f91d24d45a827 --timeout 600`:
+   **PASS**, exit 0. Ran 150 tests in 96.632 s, OK. The git diff check, untracked lint, Python lint and
+   markdownlint (3 files, 0 issues) all pass.
+2. `bash /tools/build-slot python3 -B -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v`:
+   **PASS**. 59 tests OK; no skip results; the only "skip" matches are in test names.
+3. `bash /tools/build-slot python3 scripts/coding_eval_oracle.py verify --output "$R/independent"`:
+   **PASS**. Version `coding-independent-oracle-v22`; 18 valid pairs; 23 reference methods /
+   187 reference calls; control attempts 36 = 18 pass / 18 fail; `generated_scoring` false,
+   `model_score` null; collection fingerprint `0c2a0624…1461570` unchanged. dev-028: base 13 calls,
+   1 error, `test_failure`; reference 18 calls, PASS. The coverage label adds `expired-signal-mock-refusal`
+   under `adapter_policy` only.
+4. `bash /tools/build-slot python3 scripts/coding_eval.py verify --output "$R/legacy"`:
+   **PASS**. `coding-development-v9`, 30 tasks, 89 reference tests, 0 skips.
+5. `cp /lane/state/tmp/t311-23-stale-mock/probes.py "$R/probes.py"; bash /tools/build-slot python3 -B "$R/probes.py"`:
+   **PASS**. 7 methods, 37 reports, 13 successful. The cause sequence is identical to the builder's retained
+   `probes.json`. The script writes only beside its own copy. The new reports I inspected:
+   - saved-mock, saved-side-effect and caught-call: v22 `passed` false, cause `adapter_policy`,
+     `adapter_policy_failed` true, 2 calls, attempts 1/0/1, 1 test counted. In `wire.log`, request 1
+     returns SIGINT and request 2 returns `{"adapter_policy":true}`, then the run ends. The legacy grader fails all three.
+   - retained-only: PASS in both graders, 18 calls, attempts 1/1/0.
+   - active-duplicate: v22 `test_failure` (original assertion, 3 calls, no policy/exception flags);
+     legacy also fails.
+6. `bash /tools/build-slot python3 scripts/validate_docs.py`: **PASS**, "Validated 726 Markdown
+   file(s) and all policy invariants." (Not the long documentation gate.)
+7. `git diff --check 149458e2… HEAD` exit 0. `git diff --exit-code 149458e2… HEAD --` on the ten preserved paths gives
+   exit 0 (unchanged). `cmp` also shows the retained T-311.22 review is byte-identical to
+   `/lane/reviews/1a1cbe865be5-local-coding-t311-22-no-live-repair.md`.
+
+Additional checks:
+
+- All 28 evidence-table hashes match the current files (repo sources plus retained artifacts),
+  0 mismatches.
+- `audit.json` reports passed, 133 reports, 327 log bindings, 30 frozen tasks and stable source digests equal to the
+  table. `red.log` shows that v21 falsely passed all three stale variants (`passed: True`, cause `none`,
+  18 calls), with four `TypeError` unit errors because the state parameter did not exist yet.
+- `final-integrity.log` failed `assert count==28` with 27. The script's mtime (18:54:59) predates both
+  runs, so it did not change between them. The evidence was regenerated at 18:58:53, and the retry passed with 28
+  bindings. Thresholds are unchanged.
+- The test diffs contain no removed lines, so every old test method body is intact. The changed paths are exactly the 7
+  declared files. The diff has no private path, username, hostname, credential, sibling-project name,
+  trademark branding or product comparison.
+
+## Code review
+
+- **Expiration.** `job_observation` sets `active = False` in a `finally` around the patch
+  context. `record_signal` reads `active` through its closure cell, so a call through the patched
+  mock, or directly through its `side_effect`, after the request has returned or raised sets
+  `signal_state["stale"]`. A unit test covers the exception path, and my `late-then-uncaught` probe
+  confirms it (candidate_exception, fail).
+- **Shared state.** `candidate()` creates `job_signal_state` once per worker and passes it on every job
+  request. `job_result` refuses before dispatch, so nothing runs after the refusal (the unit test asserts
+  `stop` is not called). It checks again after dispatch, so parse, export, bundle, no-live and
+  expected-refusal paths are all covered. A caught exception or `reset_mock()` cannot clear the
+  worker-owned dict.
+- **Assertion side.** An `{"adapter_policy": true}` reply raises `AdapterPolicyError`, which is not
+  KeyError, HarnessError or ArgumentTypeError, so the frozen `assertRaises` blocks cannot absorb it.
+  `policy_failed` is sticky, every later remote call refuses, and `passed` requires
+  `not remote.policy_failed`. A refusal therefore always fails, is counted as one failed attempt with
+  its test count, and is labelled `adapter_policy`, not `test_failure`.
+- **Scope.** There is no new authority, live signal replay, request/response schema change, profile, threshold, selection, hidden
+  byte, sandbox, launcher, cleanup, legacy evaluator or fast-gate change.
+- **Evaluation integrity.** Only dev-028 development controls and synthetic probes are touched. There is no held-out
+  content, generated admission, model run or score. Failures are retained, not dropped.
+
+## Reviewer probe results (v22 oracle vs legacy)
+
+| Variant | Oracle | Cause | Legacy |
+| --- | --- | --- | --- |
+| stale call inside `export_selection` | fail | adapter_policy | pass |
+| stale call inside `parser()` | fail | adapter_policy | pass |
+| stale call inside `support_bundle_directory` | fail | adapter_policy | pass |
+| stale call in unknown-command no-live `control` | fail | adapter_policy | pass |
+| stale call then uncaught `ValueError` | fail | candidate_exception | fail |
+| stale call with keyword arguments | fail | adapter_policy | fail |
+| wrong-arity stale call, caught | pass | none | pass |
+| side_effect set to None, call, restore (tampering) | pass | none | pass |
+| background thread calls stale mock between requests | fail | adapter_policy | pass |
+
+None of the variants is a false pass: every oracle PASS is also a legacy PASS. Both PASS cases are consistent
+with the original single mock. A wrong-arity call never reaches either side effect. Deliberately disabling and
+restoring `side_effect` also hides the call from the original test's `sent` list. The tampering case is
+deliberate in-process self-modification, which the guide openly says is outside this guard.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **Low L1: refusal is stricter than the original method for calls after its single assertion.**
+  `scripts/coding_eval_oracle_worker.py:470`. The frozen method asserts `sent` once,
+  immediately after its `with` block. A stale-mock call made later, during export, parser,
+  support-bundle or unknown-command no-live requests, cannot change that outcome in the legacy grader. Four
+  of my probes pass legacy, and all four are refused as `adapter_policy` by v22. The builder labels this
+  correctly as policy, not task failure, and the guide says the policy is stricter. However, the evidence's own contrasts
+  only show cases where both graders fail, so no committed test demonstrates the stricter-than-legacy
+  direction. Fix before generated admission: either keep `adapter_policy` attempts out of
+  any generated task-failure count, or carry late calls as ordered observations and replay them into the
+  original mock. In either case, add one committed legacy-pass/oracle-policy contrast. This is backlog, not a blocker.
+- Carried, unchanged: T-311.22's PurePath/subclass adapter policy remains a low backlog item before generated
+  admission.
+
+## Per-row result
+
+- **T-311.23: PASS** at exact commit `cb2c75143c9f58d9457249a3e2d58593541ede14`. The "done when" is
+  met: expired signal mocks are refused across independent candidate requests, active calls are kept,
+  refusal is sticky through caught exceptions and mock-history resets, and the original frozen assertions
+  run in separate namespaces with legacy contrasts. All required runs reproduce the claimed numbers, and all 28 evidence bindings
+  verify. There is no open high or medium finding; L1 is backlog. The row is correctly left `[ ]` in the commit for the builder to close
+  on this PASS.
+- **Parent T-311: stays open.** Generated admission, the remaining adapters, quotas, host metadata,
+  protected held-out inputs, coverage/dev-003 policy, the real harness baseline and deferred T-311.15/.16
+  are all still open.
+
+Verdict: PASS
