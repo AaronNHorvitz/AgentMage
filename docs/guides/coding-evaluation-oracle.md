@@ -47,9 +47,10 @@ T-311.25 uses oracle v24 to preserve the identity of each repeated message-list
 root through a bounded per-instance handle. Equal but distinct roots remain
 distinct; positional and keyword calls share the same handles. Trusted changes
 update that root in place. Nested objects are rebuilt from the current snapshot;
-nested identity, equality-overriding subclasses and candidate-to-trusted message
-mutations remain unsupported and can change verdicts. These limits need
-disposition before generated admission.
+nested identity and equality-overriding subclasses remain unsupported and can
+change verdicts. These limits need disposition before generated admission.
+Candidate-to-trusted mutation propagation is not implemented; v25 refuses net
+encoded changes instead, as described below.
 
 Replay requires an exclusively owned inert transport mock. A second adapter
 sharing that mock, pre-existing unowned history, a replacement mock, side effects
@@ -59,6 +60,24 @@ erasing another instance's observations or executing a replay target. It does no
 merge cross-instance history or propagate cross-instance post-response mutations;
 shared mocks are refused even when their history is empty. This is
 an evaluator control, not inference, token-usage measurement or a model score.
+
+T-311.26 uses oracle v25 to check that the trusted mock still has its last
+replayed history before sending a request and again before replay. Frozen encoded
+snapshots include child calls, direct calls and the fields used by mock assertions.
+A trusted reset, extra call, child call or changed call argument causes sticky
+adapter-policy refusal; the current history is preserved. Pre-existing child
+history also refuses ownership. Snapshots use bounded typed encodings, so mutable
+argument aliases and equal-valued Boolean/integer substitutions cannot hide drift.
+
+After each candidate call, v25 checks every retained message root against its
+pre-call encoded snapshot. Net root or nested-value changes, including changes to
+an earlier retained root, cause adapter-policy refusal before any result is
+replayed. It does not propagate candidate mutations or preserve nested aliases.
+Transient changes restored before return and asynchronous mutations after the
+snapshot are not observed. Input encoding refusals also set the sticky policy
+flag before raising, so catching `ValueError` cannot turn refusal into success.
+The original frozen assertions, selections, control profiles and thresholds stay
+unchanged; generated scoring remains disabled.
 
 ## Run
 

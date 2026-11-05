@@ -18,6 +18,109 @@ class OracleProtocolTests(unittest.TestCase):
     def remote(self, raw, result_type="bool"):
         return worker.RemoteFunction(io.BytesIO(raw), io.BytesIO(), io.BytesIO(), result_type)
 
+    def test_usage_trusted_history_drift_is_sticky_and_never_erased(self):
+        call = {"args": worker.pack_usage_value(({"value": 1},)), "kwargs": worker.pack_usage_value({})}
+        frame = worker.encode_message({"seq": 1, "result": {"value": worker.pack_usage_value(None), "calls": [call]}})
+        changes = {
+            "reset": lambda t: t.reset_mock(),
+            "direct": lambda t: t("trusted"),
+            "child": lambda t: t.child("trusted"),
+            "argument": lambda t: t.call_args.args[0].update(value=True),
+            "count": lambda t: setattr(t, "call_count", 0),
+            "direct-history": lambda t: t.call_args_list.clear(),
+        }
+        for name, change in changes.items():
+            with self.subTest(name=name):
+                remote = self.remote(frame, "usage-result")
+                transport = mock.MagicMock(return_value=(200, b"{}", 0.1))
+                adapter = worker.usage_proxy(remote, SimpleNamespace(unix_http_request=transport))()
+                change(transport)
+                saved = repr(transport.mock_calls), repr(transport.call_args_list), transport.call_count
+                with self.assertRaises(worker.AdapterPolicyError):
+                    adapter.tokenize_messages([])
+                self.assertEqual((repr(transport.mock_calls), repr(transport.call_args_list), transport.call_count), saved)
+                self.assertTrue(remote.policy_failed)
+                self.assertEqual(remote.calls, 1)
+                transport.reset_mock()
+                with self.assertRaises(worker.AdapterPolicyError):
+                    adapter.tokenize_messages([])
+                self.assertEqual(remote.calls, 1)
+
+    def test_usage_unowned_child_history_is_refused_before_request(self):
+        transport = mock.MagicMock(return_value=(200, b"{}", 0.1))
+        transport.child("trusted")
+        remote = self.remote(b"", "usage-result")
+        with self.assertRaises(worker.AdapterPolicyError):
+            worker.usage_proxy(remote, SimpleNamespace(unix_http_request=transport))()
+        self.assertEqual(transport.mock_calls, [mock.call.child("trusted")])
+        self.assertEqual(remote.calls, 0)
+        self.assertTrue(remote.policy_failed)
+
+    def test_usage_history_drift_during_response_is_refused_before_replay(self):
+        transport = mock.MagicMock(return_value=(200, b"{}", 0.1))
+        class Remote:
+            calls = 0
+            failed = False
+            policy_failed = False
+            def __call__(self, request):
+                self.calls += 1
+                transport.child("while-in-flight")
+                return {"value": worker.pack_usage_value(None), "calls": []}
+        remote = Remote()
+        with self.assertRaises(worker.AdapterPolicyError):
+            worker.usage_proxy(remote, SimpleNamespace(unix_http_request=transport))()
+        self.assertEqual(transport.mock_calls, [mock.call.child("while-in-flight")])
+        self.assertTrue(remote.policy_failed)
+
+    def test_usage_input_encoding_refusals_remain_sticky_after_caught_value_error(self):
+        class ListSubclass(list):
+            pass
+        frame = worker.encode_message({"seq": 1, "result": {"value": worker.pack_usage_value(None), "calls": []}})
+        for value in (ListSubclass(), object(), {"nested": object()}):
+            with self.subTest(value=type(value).__name__):
+                remote = self.remote(frame, "usage-result")
+                transport = mock.MagicMock(return_value=(200, b"{}", 0.1))
+                adapter = worker.usage_proxy(remote, SimpleNamespace(unix_http_request=transport))()
+                with self.assertRaises(ValueError):
+                    adapter.tokenize_messages(value)
+                self.assertTrue(remote.policy_failed)
+                self.assertEqual(remote.calls, 1)
+                with self.assertRaises(worker.AdapterPolicyError):
+                    adapter.tokenize_messages([])
+                self.assertEqual(remote.calls, 1)
+                transport.assert_not_called()
+
+    def test_usage_candidate_message_mutations_are_policy_not_success(self):
+        for name in ("append", "nested", "equal-type", "retained", "unsupported"):
+            with self.subTest(name=name):
+                class Candidate:
+                    saved = None
+                    def tokenize_messages(self, messages):
+                        if name == "append":
+                            messages.append({"content": "mutated"})
+                        elif name == "nested":
+                            messages[0]["content"] = "mutated"
+                        elif name == "equal-type":
+                            messages[0]["number"] = True
+                        elif name == "unsupported":
+                            messages.append(object())
+                        elif self.saved is not None:
+                            self.saved.append({"content": "mutated"})
+                        self.saved = messages
+                        return 37
+                module = SimpleNamespace(OpenAIAdapter=Candidate, unix_http_request=None)
+                instances = {}
+                create = {"operation": "create", "instance": 1, "stub": {"default": True},
+                          "args": worker.pack_usage_value(()), "kwargs": worker.pack_usage_value({}), "message_handle": None}
+                worker.usage_result(module, instances, create)
+                request = {**create, "operation": "tokenize", "message_handle": 1,
+                           "args": worker.pack_usage_value(([{"content": "original", "number": 1}],))}
+                result = worker.usage_result(module, instances, request)
+                if name == "retained":
+                    self.assertEqual(worker.unpack_usage_result(result), (37, []))
+                    result = worker.usage_result(module, instances, {**request, "message_handle": 2})
+                self.assertEqual(result, {"adapter_policy": True})
+
     def test_usage_message_root_identity_survives_repeated_and_keyword_calls(self):
         class Candidate:
             def __init__(self):

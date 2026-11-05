@@ -116,6 +116,30 @@ OpenAIAdapter.tokenize_messages = identity_tokenize
         self.assertIsNone(report['model_score'])
         self.assertEqual(report['model_attempts'], 0)
 
+    def test_usage_message_mutating_candidate_cannot_false_pass(self):
+        task = next(t for t in evaluation.collection() if t["id"] == "dev-016")
+        files = self.files(task)
+        files[task["source"]] += b'''
+original_tokenize = OpenAIAdapter.tokenize_messages
+def mutating_tokenize(self, messages):
+    value = original_tokenize(self, messages)
+    messages.append({"role": "user", "content": "synthetic mutation"})
+    return value
+OpenAIAdapter.tokenize_messages = mutating_tokenize
+'''
+        with mock.patch.object(evaluation, "require_historical_candidate", return_value="synthetic-probe"):
+            report = oracle.grade(task, files, self.root / "message-mutation")
+            legacy = evaluation.grade(task, files, self.root / "message-mutation-legacy")
+        self.assertFalse(legacy["passed"], legacy)
+        self.assertFalse(report["passed"], report)
+        self.assertEqual(report["cause"], "adapter_policy")
+        self.assertTrue(report["adapter_policy_failed"])
+        self.assertFalse(report["protocol_failed"])
+        self.assertEqual(report["tests"]["tests"], 2)
+        self.assertEqual(report["control_attempts"], {"total": 1, "passed": 0, "failed": 1})
+        self.assertEqual(report["model_attempts"], 0)
+        self.assertIsNone(report["model_score"])
+
     def test_usage_original_assertions_catch_bad_counts_cache_and_mutated_payload(self):
         task = next(t for t in evaluation.collection() if t['id'] == 'dev-016')
         variants = (

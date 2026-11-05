@@ -24,7 +24,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v24"
+VERSION = "coding-independent-oracle-v25"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
@@ -89,7 +89,9 @@ def coverage(task):
                            "transport-call-count-and-selected-probe-payload",
                            "context-error-token-count", "repeated-message-root-identity"],
                 "adapter_policy": ["bounded-encoded-response", "finite-transport-stubs",
-                                   "bounded-tagged-observations", "exclusive-inert-transport-mock"],
+                                   "bounded-tagged-observations", "exclusive-inert-transport-mock",
+                                   "trusted-mock-history-drift-refusal", "candidate-message-mutation-refusal",
+                                   "sticky-usage-input-encoding-refusal"],
                 "not_graded": ["real-model-or-network", "transport-status-filter-implementation",
                                "unasserted-transport-arguments", "invalid-count-and-error-refusals",
                                "non-usage-tokenization", "adapter-attributes-and-other-methods",

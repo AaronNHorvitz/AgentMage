@@ -816,6 +816,20 @@ def usage_proxy(remote, module):
         remote.policy_failed = True
         raise AdapterPolicyError("oracle.usage-replay-policy")
 
+    def history(transport):
+        # Freeze values, not aliases to mutable call arguments. Include the
+        # direct-call fields used by mock assertions as well as child calls.
+        groups = (transport.mock_calls, transport.call_args_list, transport.method_calls)
+        if any(len(group) > MAX_CALLS for group in groups):
+            refuse()
+        values = [tuple(tuple(call) for call in group) for group in groups]
+        values.append((transport.called, transport.call_count,
+                       None if transport.call_args is None else tuple(transport.call_args)))
+        try:
+            return tuple(encode_message(pack_usage_value(value)) for value in values)
+        except (AdapterPolicyError, ProtocolError):
+            refuse()
+
     class Adapter:
         def __init__(self, *args, **kwargs):
             self.identifier = remote.calls + 1
@@ -836,12 +850,15 @@ def usage_proxy(remote, module):
                 refuse()
             for owned_transport, owner in owners:
                 if transport is owned_transport:
-                    if owner is not self:
+                    if owner is not self or history(transport) != self.last_history:
                         refuse()
                     return transport
             # Resetting an unowned mock would erase observations made elsewhere.
-            if transport.call_args_list or len(owners) >= MAX_CALLS:
+            if (transport.mock_calls or transport.call_args_list or transport.method_calls
+                    or transport.called or transport.call_count or transport.call_args is not None
+                    or len(owners) >= MAX_CALLS):
                 refuse()
+            self.last_history = history(transport)
             owners.append((transport, self))
             return transport
 
@@ -873,16 +890,21 @@ def usage_proxy(remote, module):
                             refuse()
                         self.message_roots.append(messages)
                         handle = len(self.message_roots)
+            try:
+                packed_args, packed_kwargs = pack_usage_value(args), pack_usage_value(kwargs)
+            except AdapterPolicyError:
+                refuse()
             value, calls = unpack_usage_result(remote({
                 "operation": operation, "instance": self.identifier, "stub": stub,
                 "message_handle": handle,
-                "args": pack_usage_value(args), "kwargs": pack_usage_value(kwargs)}))
+                "args": packed_args, "kwargs": packed_kwargs}))
             # Check again before invoking the mock; even a trusted fixture may
             # have changed configuration while the response was in flight.
             self.replay_target()
             transport.reset_mock()
             for call_args, call_kwargs in calls:
                 transport(*call_args, **call_kwargs)
+            self.last_history = history(transport)
             return value
 
         def tokenize_messages(self, *args, **kwargs):
@@ -944,6 +966,10 @@ def usage_result(module, instances, request):
                 kwargs["messages"] = roots[handle]
     if fixture is not None:
         transport.return_value = fixture
+    try:
+        snapshots = {key: encode_message(pack_usage_value(root)) for key, root in roots.items()}
+    except (AdapterPolicyError, ProtocolError):
+        return {"adapter_policy": True}
     with mock.patch.object(module, "unix_http_request", transport):
         if request["operation"] == "create":
             instances[identifier] = (module.OpenAIAdapter(*args, **kwargs), transport, roots)
@@ -951,12 +977,17 @@ def usage_result(module, instances, request):
         else:
             value = instances[identifier][0].tokenize_messages(*args, **kwargs)
     try:
+        # Refuse net changes to any retained message root, including nested
+        # values. Never silently restore an argument the candidate mutated.
+        if any(encode_message(pack_usage_value(roots[key])) != snapshot
+               for key, snapshot in snapshots.items()):
+            return {"adapter_policy": True}
         calls = transport.call_args_list
         if len(calls) > 128:
             raise AdapterPolicyError("oracle.usage-call-count")
         return {"value": pack_usage_value(value), "calls": [
             {"args": pack_usage_value(call.args), "kwargs": pack_usage_value(call.kwargs)} for call in calls]}
-    except AdapterPolicyError:
+    except (AdapterPolicyError, ProtocolError):
         return {"adapter_policy": True}
 
 
