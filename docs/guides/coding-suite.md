@@ -124,40 +124,52 @@ the input-freeze or storage/ancestry checks.
 
 These commands do not enable generated scoring or produce a coding baseline.
 The independent development oracle now covers 20 of the 30 development
-tasks. Remaining development and held-out independent adapters, aggregate
-worker bounds, shared-fixture scratch quotas, legacy cleanup deadlines,
-mount-metadata privacy and remaining clause-coverage admission still need
+tasks. Remaining development and held-out independent adapters, legacy/Rust
+worker bounds, legacy cleanup deadlines, legacy mount-metadata privacy and
+remaining clause-coverage admission still need
 disposition within T-311.17. Resource, permission and evidence boundaries
 remain unchanged.
 
 ## Bounded independent-worker cleanup and private scratch
 
-The independent grader repairs/removes candidate scratch in a separate trusted
-host child, with a five-second parent-enforced deadline, five CPU seconds,
-256 MiB address space, 64 open descriptors and no core files. The child closes
-inherited descriptors, starts its own process group and requests termination
-if its parent dies. The parent kills and reaps the child before returning,
-including interruption and setup failure. No candidate code executes in this
-helper. Host-only direct traversal diagnostics retain their original API;
-grading uses the bounded helper.
+Oracle v28 stages input copies, adapters, shared mode fixtures and trusted
+results on one anonymous 128 MiB tmpfs with 32,768 inodes. Each worker's private
+temporary filesystem has 64 MiB and 8,192 inodes. Shared mode-fixture data uses
+the case quota. Read-only synthetic roots and devices prevent scratch bypass
+there. The trusted supervisor has a separate 16 MiB setup filesystem.
 
-The enclosing case uses the same bounded cleanup, without an unbounded removal
-fallback. A mode-fixture case can require two helpers, at most five seconds each;
-an ordinary case needs one. Detached deep-tree fragments stay in the private
-case container. Failed cleanup records that container for operator recovery and
-prevents counts or wire logs from publishing as results. The original
-interruption survives cleanup or recovery-record write failure. A failed
-recovery write cannot promise a recovery record exists; the private container
-remains. This is a cleanup deadline, not an aggregate worker quota or proof
-that every namespace descendant has already stopped.
+The mount supervisor runs only trusted code in a separate networkless user/PID
+namespace. Its namespace-local root maps to the same unprivileged host user;
+mount setup and nested root-ID mapping retain only the two setup capabilities.
+Both task workers drop every capability set and disable further user namespaces.
+The supervisor owns a private Unix control connection and bounded host logs;
+workers receive neither that connection, the full scratch descriptor nor the
+supervisor's mounts. It launches their existing exchange locally, so bind sources
+resolve to anonymous mount paths and expose no private host directories in mount
+metadata. Grading-only Git setup also runs in that namespace, without source
+history. Setup or transport failure refuses the case; no host-disk fallback runs.
 
-Each namespace-private `/tmp` has a 64 MiB tmpfs byte limit. The synthetic root
-and device mount are read-only, preventing ordinary files there from bypassing
-that limit. Shared host-backed mode fixtures remain outside this quota, as does
-the trusted oracle's result mount. This bounds private temporary file data,
-not aggregate process memory, inode usage, processes or CPU. The existing
-per-process limits and execution deadline remain. The lane's cgroup filesystem
-is read-only; no delegated aggregate limit is claimed or raised.
+After namespace creation, each worker installs a hard eight-process limit before
+importing any candidate source. Forked processes and threads share that namespace
+limit. The existing hard per-process 512 MiB address-space limit gives a derived
+4 GiB address-space ceiling per task namespace. This is a policy bound, not a
+resident-memory measurement. Trusted setup/reaper overhead is separate. The
+60-second per-process CPU limit and 90-second exchange deadline remain; this does
+not add aggregate CPU-time accounting or modify/delegate a host cgroup.
+
+Result publication follows worker termination, scratch-descriptor closure and
+supervisor termination/reaping. Releasing anonymous mount references replaces
+traversal of candidate-controlled trees, including locked deep trees. The
+enclosing host-only case container still uses the original five-second bounded
+cleanup child, with five CPU seconds, 256 MiB address space and 64 descriptors;
+its recovery and interruption rules remain. Direct traversal diagnostics retain
+their original API and controls. No unbounded candidate traversal fallback runs.
+
+Whole-suite `aggregate_worker_quotas` remains false: legacy and Rust grading are
+not covered by these independent Python-worker limits. No generated candidate
+is admitted and no broader resource, descendant-quiescence or release claim
+follows. The lane's read-only cgroup configuration and resource allocation stay
+unchanged.
 
 ## Coverage and attempt accounting
 

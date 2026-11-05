@@ -709,18 +709,21 @@ It keeps both leaders unreaped until process-group cleanup, including launch
 failure and interruption. Each PID namespace also bounds escaped descendants.
 Counts and wire logs are published only after process and temporary-tree cleanup;
 cleanup failure cannot report success. Existing private recovery records and
-historical records remain. Oracle v27 uses a separate trusted cleanup child and
-the enclosing private case container, with bounded CPU, address space,
-descriptors and a five-second parent deadline per cleanup. It keeps detached
-deep-tree fragments inside the recovery container and does not fall back to an
-unbounded host traversal. The [suite guide](coding-suite.md) records the exact
-limits, interruption behavior, private tmpfs byte cap and remaining quota gaps.
+historical records remain. Oracle v28 uses anonymous quota-backed scratch and a
+trusted mount supervisor; releasing its references replaces candidate-tree
+traversal. The enclosing host-only case container retains v27's bounded cleanup
+child and recovery behavior. The [suite guide](coding-suite.md) records exact
+byte/inode/process limits, capability separation, mount privacy and remaining
+legacy/Rust obligations.
 
 Both processes retain the evaluator's per-process 512 MiB address-space,
-60-second CPU, 32 MiB file and zero core-file limits. These are **not aggregate
-worker quotas**. Generated scoring remains disabled: this adapter covers twenty of
-30 tasks and does not implement separately delegated memory/process/CPU quotas,
-protected held-out inputs, covered-clause labels or a current-harness baseline.
+60-second CPU, 32 MiB file and zero core-file limits. A hard eight-process limit
+is installed inside each task namespace before candidate imports, yielding a
+derived 4 GiB address-space bound per namespace. This is not a resident-memory
+measurement, delegated cgroup limit or aggregate CPU-time counter. Generated
+scoring remains disabled: this adapter covers twenty of 30 development tasks;
+remaining adapters, legacy/Rust bounds, full admission and the current-harness
+baseline remain open. Held-out definitions stay private and frozen.
 The legacy grader continues to import candidate code with tests and has its
 unchanged frozen-controls-only restriction. This adapter does not silently
 replace it or broaden its admission.

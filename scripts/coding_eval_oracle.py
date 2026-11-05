@@ -24,11 +24,13 @@ import time
 if __package__:
     from . import coding_eval as evaluation
     from . import coding_eval_oracle_worker as worker
+    from . import coding_eval_scratch as scratch
 else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
+    import coding_eval_scratch as scratch
 
-VERSION = "coding-independent-oracle-v27"
+VERSION = "coding-independent-oracle-v28"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
@@ -56,6 +58,13 @@ SUPPORTED = {
 LOG_LIMIT = 2 * evaluation.MAX_FILE
 DIRECT_WALK_DEPTH = 256
 PRIVATE_TMP_BYTES = 64 * evaluation.MAX_FILE
+WORKER_PROCESSES = 8
+# Install the hard process quota after namespace creation and before importing
+# any task code. Lowering it on the host launcher would count unrelated work.
+WORKER_LIMIT_PREFIX = (
+    "import resource as _coding_quota_resource\n"
+    f"_coding_quota_resource.setrlimit(_coding_quota_resource.RLIMIT_NPROC, ({WORKER_PROCESSES}, {WORKER_PROCESSES}))\n"
+).encode("ascii")
 CLEANUP_SECONDS = 5
 CLEANUP_ADDRESS_BYTES = 256 * evaluation.MAX_FILE
 # Measured historical outcomes, not model scores or altered hidden assertions.
@@ -201,7 +210,15 @@ def supported_task(task):
     return {**SUPPORTED[task["id"]], "module": task["source"][:-3].replace("/", ".")}
 
 
-def sandbox(workspace, adapter, output, role, candidate_tmp=None):
+def limited_source(source):
+    """Prefix only the trusted worker copy; hidden/candidate bytes stay intact."""
+    anchor = b"from __future__ import annotations\n"
+    if anchor in source:
+        return source.replace(anchor, anchor + WORKER_LIMIT_PREFIX, 1)
+    return WORKER_LIMIT_PREFIX + source
+
+
+def sandbox(workspace, adapter, output, role, candidate_tmp=None, private_tmp=None):
     command = [
         "/usr/bin/bwrap", "--unshare-all", "--unshare-user", "--die-with-parent", "--new-session",
         "--disable-userns", "--clearenv", "--cap-drop", "ALL",
@@ -214,6 +231,8 @@ def sandbox(workspace, adapter, output, role, candidate_tmp=None):
     ]
     if candidate_tmp is not None and role == "candidate":
         command.extend(["--bind", str(candidate_tmp), "/tmp"])
+    elif private_tmp is not None:
+        command.extend(["--bind", str(private_tmp), "/tmp"])
     else:
         command.extend(["--size", str(PRIVATE_TMP_BYTES), "--tmpfs", "/tmp"])
     if candidate_tmp is not None and role == "oracle":
@@ -262,8 +281,10 @@ def launch(command, **options):
                                 env={}, pass_fds=(arguments.fileno(),), **options)
 
 
-def exchange(candidate_command, oracle_command, output, timeout):
+def exchange(candidate_command, oracle_command, output, timeout, *, mount=None, identity=False):
     """Connect pipes directly; the host accepts results only from the oracle mount."""
+    if mount is not None:
+        return mount.exchange(candidate_command, oracle_command, timeout, identity=identity)
     processes = []
     exit_code = candidate_exit = None
     timed_out = output_limited = False
@@ -727,8 +748,16 @@ def grade_case(task, files, output, timeout=evaluation.TIMEOUT):
     trusted_files = evaluation.projection(task)
     hidden = evaluation.pinned_blob(task["reference"], task["hidden_test"], task["hidden_sha256"])
     record = None
-    with case_workspace(output) as root, candidate_temporary(
-            root, config["result_type"] == "mode-result") as fixture_options:
+    # All task-visible bind sources live on one anonymous quota-backed mount.
+    # Its lifetime replaces traversal of candidate-controlled shared scratch;
+    # the outer host-only container retains bounded lifecycle fault handling.
+    with case_workspace(output), scratch.scratch_mount(output) as mount:
+        root = mount.root
+        fixture_options = {}
+        if config["result_type"] == "mode-result":
+            directory = root / "candidate-tmp"
+            directory.mkdir(mode=0o700)
+            fixture_options["candidate_tmp"] = directory
         trusted, candidate = root / "trusted", root / "candidate"
         oracle_adapter, candidate_adapter = root / "oracle-adapter", root / "candidate-adapter"
         results = root / "results"
@@ -741,8 +770,8 @@ def grade_case(task, files, output, timeout=evaluation.TIMEOUT):
             # The complete frozen method substitutes this one binary path.
             # Keep the same lexical module path and a private grading Git tree
             # on each side; only the candidate's inert dictionary crosses back.
-            for workspace in (trusted, candidate):
-                evaluation.initialize_grading_repository(workspace)
+            # Git initialization runs in the mount owner's namespace, where
+            # these directories have reachable cwd paths.
             evaluation.write_file(candidate / "identity_entry.py", b'''
 from pathlib import Path
 from scripts import coding_harness as subject
@@ -751,7 +780,7 @@ if callable(getattr(subject, "implementation_identity", None)):
     implementation_identity = subject.implementation_identity
 ''')
         for directory in (oracle_adapter, candidate_adapter):
-            evaluation.write_file(directory / "run.py", Path(worker.__file__).read_bytes())
+            evaluation.write_file(directory / "run.py", limited_source(Path(worker.__file__).read_bytes()))
         evaluation.publish(candidate_adapter / "config.json", {
             **config, **({"module": "identity_entry"} if config.get("identity_fixture") else {}),
         })
@@ -759,8 +788,11 @@ if callable(getattr(subject, "implementation_identity", None)):
             **config, "test_names": task["test_names"], "expected_tests": task["expected_tests"],
         })
         evaluation.write_file(oracle_adapter / "test.py", hidden)
-        outcome = exchange(sandbox(candidate, candidate_adapter, results, "candidate", **fixture_options),
-                           sandbox(trusted, oracle_adapter, results, "oracle", **fixture_options), output, timeout)
+        outcome = exchange(sandbox(candidate, candidate_adapter, results, "candidate",
+                                   private_tmp=root / "private-candidate", **fixture_options),
+                           sandbox(trusted, oracle_adapter, results, "oracle",
+                                   private_tmp=root / "private-oracle", **fixture_options), output, timeout,
+                           mount=mount, identity=bool(config.get("identity_fixture")))
         try:
             record = result_record(results / "tests.json", task)
         except (OSError, ValueError):
@@ -816,6 +848,9 @@ def grade(task, files, output):
         "task_sha256": evaluation.sha(json.dumps(task, sort_keys=True, separators=(",", ":")).encode()),
         "oracle_sha256": evaluation.sha(Path(__file__).read_bytes()),
         "worker_sha256": evaluation.sha(Path(worker.__file__).read_bytes()),
+        "materialized_worker_sha256": evaluation.sha(limited_source(Path(worker.__file__).read_bytes())),
+        "scratch_sha256": evaluation.sha(Path(scratch.__file__).read_bytes()),
+        "evaluator_sha256": evaluation.sha(Path(evaluation.__file__).read_bytes()),
         "wall_seconds": round(time.monotonic() - started, 6),
         "model_attempts": 0, "model_score": None, "gpu_minutes": 0, "tokens": None,
         "score_scope": "independent-oracle-controls-only",
@@ -825,12 +860,22 @@ def grade(task, files, output):
         "control_attempts": {"total": 1, "passed": int(passed), "failed": int(not passed)},
         "coverage": coverage(task),
         "aggregate_worker_quotas": False,
+        "worker_limits": {"processes_per_namespace": WORKER_PROCESSES,
+                          "address_bytes_per_process": 512 * evaluation.MAX_FILE,
+                          "derived_address_bytes_per_namespace": WORKER_PROCESSES * 512 * evaluation.MAX_FILE,
+                          "cpu_seconds_per_process": 60,
+                          "wall_seconds_per_exchange": evaluation.TIMEOUT,
+                          "scope": "independent-python-workers-only"},
         "cleanup_limits": {"wall_seconds_per_tree": CLEANUP_SECONDS,
                            "address_bytes": CLEANUP_ADDRESS_BYTES,
                            "cpu_seconds_per_tree": CLEANUP_SECONDS,
                            "open_files": 64},
         "scratch_limits": {"private_tmp_bytes_per_worker": PRIVATE_TMP_BYTES,
-                           "shared_mode_fixture_quota": False},
+                           "private_tmp_inodes_per_worker": scratch.PRIVATE_INODES,
+                           "shared_mode_fixture_quota": True,
+                           "case_mount_bytes": scratch.SCRATCH_BYTES,
+                           "case_mount_inodes": scratch.SCRATCH_INODES,
+                           "candidate_tree_cleanup": "anonymous-mount-release"},
         "logs": {name: evaluation.sha(evaluation.read_regular(output / name, LOG_LIMIT))
                  for name in ("candidate.log", "oracle.log", "wire.log") if (output / name).exists()},
     }
