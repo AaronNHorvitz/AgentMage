@@ -1200,6 +1200,239 @@ assert not root.exists()
             chmod(outside, 0o700)
             chmod(outside / 'child', 0o700)
 
+    def test_branching_repair_has_linear_directory_operations(self):
+        counts = []
+        real_open = os.open
+        for depth in (128, 256):
+            fixture = self.root / ('branching-' + str(depth))
+            fixture.mkdir()
+            fd = real_open(fixture, os.O_RDONLY | os.O_DIRECTORY)
+            try:
+                for _ in range(depth):
+                    os.mkdir('a', dir_fd=fd)
+                    os.mkdir('b', dir_fd=fd)
+                    child = real_open('a', os.O_RDONLY | os.O_DIRECTORY, dir_fd=fd)
+                    os.fchmod(fd, 0)
+                    os.close(fd)
+                    fd = child
+                os.fchmod(fd, 0)
+            finally:
+                os.close(fd)
+            try:
+                with mock.patch.object(oracle.os, 'open', wraps=real_open) as opened:
+                    oracle.repair_fixture_permissions(fixture)
+                    counts.append(opened.call_count)
+            finally:
+                oracle.remove_fixture_tree(fixture)
+            self.assertLessEqual(counts[-1], 8 * (2 * depth + 1), counts)
+        self.assertLessEqual(counts[1], 2 * counts[0] + 16, counts)
+
+    def test_detached_repair_preserves_names_files_and_external_targets(self):
+        fixture, outside = self.root / 'fixture', self.root / 'outside'
+        (fixture / 'parent/child').mkdir(parents=True)
+        outside.mkdir()
+        data = outside / 'data'
+        data.write_bytes(b'unchanged')
+        data.chmod(0o400)
+        outside.chmod(0o500)
+        child = fixture / 'parent/child'
+        unusual = ['line\nname', 'snow-\u2603', os.fsdecode(b'raw-\xff')]
+        for name in unusual:
+            (child / name).mkdir()
+            (child / name / 'data').write_bytes(b'preserved')
+            (child / name / 'data').chmod(0o400)
+            (child / name).chmod(0)
+        (child / 'outside').symlink_to(outside, target_is_directory=True)
+        (child / 'hardlink').hardlink_to(data)
+        child.chmod(0)
+        flags = os.O_PATH | os.O_DIRECTORY | os.O_NOFOLLOW
+        current, parent = os.open(child, flags), os.open(child.parent, flags)
+        original = os.fstat(current).st_ino
+        try:
+            oracle.detached_fixture_walk(current, parent, 'child', self.root, remove=False)
+            self.assertEqual(child.stat().st_ino, original)
+            self.assertEqual(child.stat().st_mode & 0o777, 0o700)
+            for name in unusual:
+                self.assertEqual((child / name).stat().st_mode & 0o777, 0o700)
+                self.assertEqual((child / name / 'data').read_bytes(), b'preserved')
+                self.assertEqual((child / name / 'data').stat().st_mode & 0o777, 0o400)
+            self.assertTrue((child / 'outside').is_symlink())
+            self.assertEqual(outside.stat().st_mode & 0o777, 0o500)
+            self.assertEqual(data.stat().st_mode & 0o777, 0o400)
+            self.assertEqual(data.read_bytes(), b'unchanged')
+            self.assertEqual(sorted(p.name for p in self.root.iterdir()), ['fixture', 'outside'])
+        finally:
+            os.close(current)
+            os.close(parent)
+            outside.chmod(0o700)
+
+    def test_detached_walk_refuses_replaced_staged_inode_without_following_it(self):
+        fixture, outside = self.root / 'fixture', self.root / 'outside'
+        (fixture / 'parent/child/nested').mkdir(parents=True)
+        outside.mkdir()
+        (outside / 'data').write_bytes(b'sentinel')
+        outside.chmod(0o500)
+        (fixture / 'parent/child/nested').chmod(0)
+        child = fixture / 'parent/child'
+        flags = os.O_PATH | os.O_DIRECTORY | os.O_NOFOLLOW
+        current, parent = os.open(child, flags), os.open(child.parent, flags)
+        rename = os.rename
+        replaced = False
+
+        def replace_after_move(source, target, **kwargs):
+            nonlocal replaced
+            result = rename(source, target, **kwargs)
+            if target == '1' and not replaced:
+                descriptor = kwargs['dst_dir_fd']
+                rename('1', 'retired', src_dir_fd=descriptor, dst_dir_fd=descriptor)
+                os.symlink(outside, '1', dir_fd=descriptor)
+                replaced = True
+            return result
+
+        before = set(os.listdir('/proc/self/fd'))
+        try:
+            with mock.patch.object(oracle.os, 'rename', side_effect=replace_after_move):
+                with self.assertRaisesRegex(OSError, 'fixture-moved-during-staging'):
+                    oracle.detached_fixture_walk(current, parent, 'child', self.root, remove=False)
+            self.assertTrue(replaced)
+            self.assertEqual(set(os.listdir('/proc/self/fd')), before)
+            self.assertEqual(outside.stat().st_mode & 0o777, 0o500)
+            self.assertEqual((outside / 'data').read_bytes(), b'sentinel')
+        finally:
+            os.close(current)
+            os.close(parent)
+            outside.chmod(0o700)
+            for stage in self.root.glob('oracle-fixture-stage-*'):
+                oracle.repair_fixture_permissions(stage)
+                oracle.remove_fixture_tree(stage)
+
+    def test_branching_repair_and_removal_fit_memory_and_descriptor_caps(self):
+        source = '''import json, os, resource, sys, time
+from pathlib import Path
+from scripts.coding_eval_oracle import repair_fixture_permissions, remove_fixture_tree
+resource.setrlimit(resource.RLIMIT_AS, (128 * 1024 * 1024, 128 * 1024 * 1024))
+resource.setrlimit(resource.RLIMIT_NOFILE, (32, 32))
+rows = []
+for depth in (10000, 20000):
+ root = Path(sys.argv[1]) / str(depth)
+ root.mkdir()
+ fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY)
+ try:
+  for _ in range(depth):
+   os.mkdir('a', dir_fd=fd)
+   os.mkdir('b', dir_fd=fd)
+   child = os.open('a', os.O_RDONLY | os.O_DIRECTORY, dir_fd=fd)
+   os.fchmod(fd, 0)
+   os.close(fd)
+   fd = child
+  os.fchmod(fd, 0)
+ finally: os.close(fd)
+ started = time.monotonic()
+ repair_fixture_permissions(root)
+ repaired = time.monotonic()
+ remove_fixture_tree(root)
+ finished = time.monotonic()
+ assert not root.exists()
+ rows.append(dict(depth=depth, repair_seconds=repaired-started,
+                  remove_seconds=finished-repaired, max_rss_kib=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
+print(json.dumps(rows), flush=True)
+'''
+        result = subprocess.run([sys.executable, '-B', '-c', source, str(self.root)],
+                                capture_output=True, timeout=90,
+                                # Do not map a locale archive larger than the
+                                # entire address-space cap before the test starts.
+                                env={**os.environ, 'LC_ALL': 'C'})
+        self.assertEqual(result.returncode, 0, result.stderr.decode(errors='replace'))
+        rows = json.loads(result.stdout)
+        self.assertEqual([row['depth'] for row in rows], [10000, 20000])
+        self.assertTrue(all(row['max_rss_kib'] < 128 * 1024 for row in rows), rows)
+        # Counted operations above provide the deterministic growth check.
+        # A broad timing bound also catches full-path reopening on these sizes.
+        self.assertLess(rows[1]['repair_seconds'], 3 * rows[0]['repair_seconds'] + 0.5, rows)
+        print('branching-cleanup-measurements ' + json.dumps(rows), flush=True)
+
+    def test_branching_candidate_cleanup_preserves_observed_result(self):
+        suffix = '''import os as _os
+original_mode = make_container_readable
+def make_container_readable(root):
+ original_mode(root)
+ _os.mkdir('/tmp/branching')
+ fd = _os.open('/tmp/branching', _os.O_RDONLY | _os.O_DIRECTORY)
+ try:
+  for _ in range(12000):
+   _os.mkdir('a', dir_fd=fd)
+   _os.mkdir('b', dir_fd=fd)
+   child = _os.open('a', _os.O_RDONLY | _os.O_DIRECTORY, dir_fd=fd)
+   _os.fchmod(fd, 0)
+   _os.close(fd)
+   fd = child
+  _os.fchmod(fd, 0)
+ finally: _os.close(fd)
+'''
+        report = self.mode_cleanup_probe(suffix, 'branching-candidate')
+        self.assertTrue(report['passed'], report)
+        self.assertEqual(report['cause'], 'none', report)
+
+    def test_permission_repair_releases_traversal_state_on_memory_error(self):
+        fixture = self.root / 'branching-error'
+        fixture.mkdir()
+        fd = os.open(fixture, os.O_RDONLY | os.O_DIRECTORY)
+        for _ in range(256):
+            os.mkdir('a', dir_fd=fd)
+            os.mkdir('b', dir_fd=fd)
+            child = os.open('a', os.O_RDONLY | os.O_DIRECTORY, dir_fd=fd)
+            os.close(fd)
+            fd = child
+        os.close(fd)
+        before = set(os.listdir('/proc/self/fd'))
+        chmod = os.chmod
+        calls = 0
+
+        def fail_during_walk(*args, **kwargs):
+            nonlocal calls
+            calls += 1
+            if calls == 200:
+                raise MemoryError('injected traversal allocation failure')
+            return chmod(*args, **kwargs)
+
+        try:
+            with mock.patch.object(oracle.os, 'chmod', side_effect=fail_during_walk):
+                try:
+                    oracle.repair_fixture_permissions(fixture)
+                except MemoryError as error:
+                    trace = error.__traceback__
+                    while trace and trace.tb_frame.f_code.co_name != 'repair_fixture_permissions':
+                        trace = trace.tb_next
+                    self.assertIsNotNone(trace)
+                    # A retained exception must not pin a deep pending traversal.
+                    buffers = [v for v in trace.tb_frame.f_locals.values()
+                               if isinstance(v, (list, bytearray)) or type(v).__module__ == 'array']
+                    self.assertTrue(all(not v for v in buffers), 'live traversal retained by traceback')
+                else:
+                    self.fail('injected MemoryError did not propagate')
+            self.assertEqual(set(os.listdir('/proc/self/fd')), before)
+        finally:
+            oracle.repair_fixture_permissions(fixture)
+            oracle.remove_fixture_tree(fixture)
+
+    def test_permission_repair_refuses_changed_parent_identity(self):
+        fixture = self.root / 'fixture'
+        (fixture / 'parent/child').mkdir(parents=True)
+        real_open = os.open
+        moved = False
+
+        def move_child(path, flags, **kwargs):
+            nonlocal moved
+            if path == '..' and not moved:
+                (fixture / 'parent/child').rename(fixture / 'relocated')
+                moved = True
+            return real_open(path, flags, **kwargs)
+
+        with mock.patch.object(oracle.os, 'open', side_effect=move_child):
+            with self.assertRaisesRegex(OSError, 'fixture-moved-during-repair'):
+                oracle.repair_fixture_permissions(fixture)
+        self.assertTrue(moved)
+
     def test_permission_repair_resists_live_ancestor_symlink_swapping(self):
         fixture, outside = self.root / 'fixture', self.root / 'sentinel'
         (fixture / 'parent/child').mkdir(parents=True)

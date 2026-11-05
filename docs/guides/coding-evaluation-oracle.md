@@ -79,6 +79,13 @@ flag before raising, so catching `ValueError` cannot turn refusal into success.
 The original frozen assertions, selections, control profiles and thresholds stay
 unchanged; generated scoring remains disabled.
 
+The T-311.26 review records two low findings for the suite admission backlog:
+deliberate candidate self-modification can defeat the candidate-side snapshot
+check, and mutation refusal is stricter than the original assertions (a mutation
+after the final call can leave those assertions passing). Such a policy refusal
+does not establish a frozen-task failure. Its scoring disposition remains open
+before generated admission. These are backlog notes, not new work rows.
+
 ## Run
 
 ```sh
@@ -527,15 +534,25 @@ teardown is asynchronous; repair must remain safe during concurrent mutation.
 Linux no-follow directory descriptors pin each inode, including mode-0000
 directories; chmod resolves only the host's own `/proc/self/fd` descriptor.
 Candidate names never enter a chmod path. Scanning and opening children are
-descriptor-relative; deferred branches reopen from the pinned root one component
-at a time without following symlinks. Deep chains use bounded descriptors and
-never construct full host paths. Directory renames cannot redirect chmod to a
+descriptor-relative. Oracle v26 retains pending sibling names and parent inode
+identities in compact buffers. Ascent opens `..` and checks the recorded identity
+before using that parent. There is no full-path copying or reopening from the root.
+At 256 levels it moves a subtree into a private host-only staging sibling of the
+fixture root, checks every moved inode and scans its directories through shallow
+numeric names. Records contain one basename and parent index, never a full path.
+Repair restores children before parents; removal deletes emptied staged directories.
+This also bounds deep bind-mount parent lookups. Constant descriptors and linear
+traversal state and directory operations cover deep branching trees. Pending
+buffers and staging records are cleared on exceptional exit before outer recovery.
+Staging remains inside the private case and is never mounted into a worker.
+Directory renames cannot redirect chmod to a
 symlink target. File modes and hard-link targets are never changed. Concurrent
 replacement can omit a branch; repair does not claim a complete stable snapshot.
 Descriptor-relative postorder removal then deletes scratch with constant open
 descriptors, rather than retaining one descriptor per ancestor as the generic
-remover does. Each ascent must match the recorded parent inode before inspecting
-or removing its child; a concurrent move refuses cleanup. Unlink and rmdir never
+remover does. Deep removal uses the same staging walk. Each shallow ascent must
+match the recorded parent inode before inspecting or removing its child; a
+concurrent move refuses cleanup. Unlink and rmdir never
 follow the removed name. The root's parent is private host-owned case storage.
 Existing case cleanup removes the remaining case tree before reports publish.
 This also runs on interruption or failed result reading;
@@ -550,8 +567,12 @@ Third review of T-311.15 found a remaining medium issue: the deferred full-path
 records and branch reopening use quadratic host memory and time on deep
 branching trees. A capped reproduction raised MemoryError without a case report,
 left an empty recovery record and retained scratch. Candidate quotas alone do
-not bound this host-side repair. T-311.15 remains open under the three-strike
-rule; T-311.16 records the required linear, bounded repair and scaling tests.
+not bound this host-side repair. The combined T-311.15/T-311.16 repair in v26
+addresses this finding under the owner's explicit restart. Operation-count,
+10,000/20,000-level memory/descriptor-cap and in-sandbox branching regressions
+check the replacement. Both rows remain open until independent exact-commit
+review approves the combined repair. Constant descriptor use and linear scaling
+do not impose an aggregate scratch quota or a host cleanup deadline.
 Do not infer safe generated scoring from the passing frozen controls.
 The candidate mount is host-disk-backed, without an aggregate disk quota. A
 size-limited or quota-backed mount is required before generated scoring.

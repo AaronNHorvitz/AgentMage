@@ -6,12 +6,14 @@ Generated scoring stays disabled until all remaining admission requirements hold
 from __future__ import annotations
 
 import argparse
+from array import array
 from contextlib import contextmanager
 import json
 import os
 from pathlib import Path
 import selectors
 import signal
+import stat
 import subprocess
 import sys
 import tempfile
@@ -24,7 +26,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v25"
+VERSION = "coding-independent-oracle-v26"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
@@ -49,6 +51,7 @@ SUPPORTED = {
     "dev-029": {"function": "suspend_resume_checks", "result_type": "bool-map"},
 }
 LOG_LIMIT = 2 * evaluation.MAX_FILE
+DIRECT_WALK_DEPTH = 256
 # Measured historical outcomes, not model scores or altered hidden assertions.
 # Subtests can report more failures than the number of selected methods.
 CONTROL_PROFILES = {
@@ -327,17 +330,118 @@ def result_record(path, task):
     return value
 
 
+def detached_fixture_walk(current, parent, name, staging_parent, *, remove):
+    """Walk a deep disposable subtree through shallow, private staging names.
+
+    Bind-mount '..' lookup can itself walk all ancestors in the kernel. Detach
+    directories into a host-only sibling, verifying each moved inode before use.
+    Each record stores one basename and parent index, never an ancestor path.
+    Repair restores children before parents; removal deletes emptied parents.
+    Worker-held descriptors can still mutate their own inodes, so every unsafe
+    move or failed operation refuses cleanup rather than publishing counts.
+    """
+    flags = os.O_PATH | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
+    records, entries = [], []
+    stage_fd = node = None
+    stage = None
+
+    def identity(info):
+        return info.st_dev, info.st_ino
+
+    def check(label, expected, directory):
+        if identity(os.stat(label, dir_fd=directory, follow_symlinks=False)) != expected:
+            raise OSError('oracle.fixture-moved-during-staging')
+
+    try:
+        original_info = os.fstat(current)
+        if not stat.S_ISDIR(original_info.st_mode):
+            raise OSError('oracle.fixture-not-directory')
+        original = identity(original_info)
+        check(name, original, parent)
+        os.chmod(f'/proc/self/fd/{current}', 0o700)
+        stage = staging_parent / ('oracle-fixture-stage-' + os.urandom(16).hex())
+        stage.mkdir(mode=0o700)
+        stage_fd = os.open(stage, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+        os.rename(name, '0', src_dir_fd=parent, dst_dir_fd=stage_fd)
+        check('0', original, stage_fd)
+        records.append((None, None, *original))
+        index = 0
+        while index < len(records):
+            label = str(index)
+            expected = records[index][2:]
+            node = os.open(label, flags, dir_fd=stage_fd)
+            if identity(os.fstat(node)) != expected:
+                raise OSError('oracle.fixture-moved-during-staging')
+            os.chmod(f'/proc/self/fd/{node}', 0o700)
+            readable = os.open('.', os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC, dir_fd=node)
+            try:
+                with os.scandir(readable) as scan:
+                    entries = list(scan)
+            finally:
+                os.close(readable)
+            for entry in entries:
+                if not entry.is_dir(follow_symlinks=False):
+                    if remove:
+                        os.unlink(entry.name, dir_fd=node)
+                    continue
+                try:
+                    child = os.open(entry.name, flags, dir_fd=node)
+                except (FileNotFoundError, NotADirectoryError):
+                    # Concurrent replacement is never followed or chmodded.
+                    # Any surviving entry makes removal fail closed below.
+                    continue
+                try:
+                    child_identity = identity(os.fstat(child))
+                    # Moving a directory changes its '..' entry and requires
+                    # write/search permission on that pinned child as well.
+                    os.chmod(f'/proc/self/fd/{child}', 0o700)
+                    child_label = str(len(records))
+                    os.rename(entry.name, child_label, src_dir_fd=node, dst_dir_fd=stage_fd)
+                    check(child_label, child_identity, stage_fd)
+                    records.append((index, entry.name, *child_identity))
+                finally:
+                    os.close(child)
+            entries.clear()
+            check(label, expected, stage_fd)
+            if remove:
+                os.rmdir(label, dir_fd=stage_fd)
+            os.close(node)
+            node = None
+            index += 1
+        if not remove:
+            for index in range(len(records) - 1, 0, -1):
+                parent_index, original_name, device, inode = records[index]
+                node = os.open(str(parent_index), flags, dir_fd=stage_fd)
+                if identity(os.fstat(node)) != records[parent_index][2:]:
+                    raise OSError('oracle.fixture-moved-during-staging')
+                check(str(index), (device, inode), stage_fd)
+                os.rename(str(index), original_name, src_dir_fd=stage_fd, dst_dir_fd=node)
+                os.close(node)
+                node = None
+            check('0', original, stage_fd)
+            os.rename('0', name, src_dir_fd=stage_fd, dst_dir_fd=parent)
+    finally:
+        entries.clear()
+        records.clear()
+        if node is not None:
+            os.close(node)
+        if stage_fd is not None:
+            os.close(stage_fd)
+    stage.rmdir()
+
+
 def repair_fixture_permissions(root):
     """Repair disposable directories through pinned Linux directory descriptors.
 
     Killing/reaping bwrap does not synchronously reap all namespace descendants.
     O_PATH|O_DIRECTORY|O_NOFOLLOW pins only real directories, even mode 0000;
     chmod through our own proc descriptor addresses that inode despite renames.
-    No candidate-controlled path is resolved by chmod. Reopen deferred branches
-    component by component from the pinned root, never across symlinks. A single
-    child is visited directly, so deep chains need neither long paths nor a
-    descriptor per ancestor. Concurrent removal/replacement may omit a branch;
-    the existing cleanup still refuses publication if removal fails.
+    No candidate-controlled path is resolved by chmod. A depth-first walk keeps
+    sibling names and parent inode identities, never full component paths. Each
+    directory is scanned once; ascent opens '..' and verifies its identity before
+    using it for another child. Work and retained names are linear in the tree,
+    with constant descriptors regardless of depth. Concurrent replacement may
+    omit a branch; cleanup still refuses publication if removal fails.
     """
     flags = os.O_PATH | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
 
@@ -347,40 +451,74 @@ def repair_fixture_permissions(root):
         except (FileNotFoundError, NotADirectoryError):
             return None
 
-    root_fd = os.open(root, flags)
-    current = None
+    # Packed buffers avoid retaining a graph of Python containers at each
+    # level. Frames contain (device, inode, names_start, names_cursor).
+    parents, names = array('Q'), bytearray()
+    current = os.open(root, flags)
     try:
-        current = os.dup(root_fd)
-        components, pending = (), []
-        while current is not None:
+        while True:
             os.chmod(f'/proc/self/fd/{current}', 0o700)
-            # O_PATH cannot be scanned; open the same pinned inode for reading.
-            readable = os.open('.', os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC, dir_fd=current)
-            try:
-                with os.scandir(readable) as entries:
-                    children = [entry.name for entry in entries if entry.is_dir(follow_symlinks=False)]
-            finally:
-                os.close(readable)
-            pending.extend(components + (name,) for name in children[1:])
-            child = open_child(current, children[0]) if children else None
-            os.close(current)
-            current = child
-            if current is not None:
-                components += (children[0],)
-                continue
-            while pending and current is None:
-                components = pending.pop()
-                current = os.dup(root_fd)
-                for name in components:
-                    child = open_child(current, name)
+            if len(parents) >= 4 * DIRECT_WALK_DEPTH:
+                parent_fd = os.open('..', flags, dir_fd=current)
+                try:
+                    parent = os.fstat(parent_fd)
+                    if (parent.st_dev, parent.st_ino) != (parents[-4], parents[-3]):
+                        raise OSError('oracle.fixture-moved-during-repair')
+                    detached_fixture_walk(current, parent_fd, child_name, root.parent, remove=False)
+                finally:
+                    os.close(parent_fd)
+                # The staged walk repaired and restored this entire subtree.
+                start = len(names)
+            else:
+                # O_PATH cannot be scanned; open the same inode for reading.
+                readable = os.open('.', os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC, dir_fd=current)
+                try:
+                    start = len(names)
+                    with os.scandir(readable) as entries:
+                        for entry in entries:
+                            if entry.is_dir(follow_symlinks=False):
+                                # Filesystem names cannot contain NUL or '/'.
+                                names.extend(os.fsencode(entry.name))
+                                names.append(0)
+                finally:
+                    os.close(readable)
+            parent = os.fstat(current)
+            parents.extend((parent.st_dev, parent.st_ino, start, len(names)))
+            # Consume each name once without copying ancestor paths or the
+            # remaining siblings. Truncate buffers only when a frame finishes.
+            while True:
+                child = None
+                start, cursor = parents[-2], parents[-1]
+                while cursor > start and child is None:
+                    end = cursor - 1
+                    cursor = max(start, names.rfind(b'\0', start, end) + 1)
+                    child_name = bytes(names[cursor:end])
+                    child = open_child(current, child_name)
+                    parents[-1] = cursor
+                if child is not None:
                     os.close(current)
                     current = child
-                    if current is None:
-                        break
+                    break
+                del names[start:]
+                del parents[-4:]
+                if not parents:
+                    return
+                parent_fd = os.open('..', flags, dir_fd=current)
+                try:
+                    parent = os.fstat(parent_fd)
+                    if (parent.st_dev, parent.st_ino) != (parents[-4], parents[-3]):
+                        raise OSError('oracle.fixture-moved-during-repair')
+                except BaseException:
+                    os.close(parent_fd)
+                    raise
+                os.close(current)
+                current = parent_fd
     finally:
-        if current is not None:
-            os.close(current)
-        os.close(root_fd)
+        # Exception tracebacks retain locals. Release pending names before the
+        # enclosing recovery/removal path runs, including after MemoryError.
+        names.clear()
+        del parents[:]
+        os.close(current)
 
 
 def remove_fixture_tree(root):
@@ -396,6 +534,21 @@ def remove_fixture_tree(root):
     parents = []
     try:
         while True:
+            if len(parents) >= DIRECT_WALK_DEPTH:
+                name, device, inode = parents[-1]
+                parent = os.open('..', flags, dir_fd=current)
+                try:
+                    observed = os.fstat(parent)
+                    if (observed.st_dev, observed.st_ino) != (device, inode):
+                        raise OSError('oracle.fixture-moved-during-cleanup')
+                    detached_fixture_walk(current, parent, name, root.parent, remove=True)
+                except BaseException:
+                    os.close(parent)
+                    raise
+                os.close(current)
+                current = parent
+                parents.pop()
+                continue
             descend = None
             with os.scandir(current) as entries:
                 for entry in entries:
@@ -429,6 +582,7 @@ def remove_fixture_tree(root):
             os.close(current)
             current = parent
     finally:
+        parents.clear()
         os.close(current)
     root.rmdir()
 

@@ -1,0 +1,269 @@
+Commit: 6976e1aa8105fc5b03f0a25493baa8692b020aa7
+Scope: local-coding-t311-26-usage-observations
+
+# Independent review: T-311.26 usage observations (oracle v25), review 1
+
+- Reviewer: Claude Opus 5.5, extra-high effort, in a separate read-only session.
+- Tier: core. Base: `a23089ccb5c63da57664fa1f64a3bf75b9023abd`.
+- `git rev-parse` confirms both SHAs. HEAD equals the reviewed commit, and the worktree was clean
+  before and after the review.
+- Scratch directory: `/lane/state/tmp/review-t311-26-7eIQ1Z` (referred to as `$R` below).
+- I did not modify the repository. I did not run `write-evidence.py`, and I did not rerun any
+  capture wrapper in place.
+
+## Methods
+
+1. **Policy and context.** I read IP-POLICY.md, the top of TASKS.md (rows T-311 to T-311.26),
+   and the T-311.25 review. I also read the 2026-11-04 REFOCUS in both briefs.
+2. **Code and tests.** I read the full code and test diff for `scripts/coding_eval_oracle.py`,
+   `scripts/coding_eval_oracle_worker.py` and both oracle test modules. I also read the
+   surrounding codec, `RemoteFunction` and candidate/oracle entry points.
+3. **Documents and frozen inputs.** I read the guide diff, the builder evidence and the two frozen
+   dev-016 hidden methods. I read the hidden methods only to design probes; no tuning is involved.
+4. **Required runs.** I ran every command in the request, using `build-slot` for suites and
+   namespaces.
+5. **Red reproduction.** I reproduced the pre-fix red run myself, not only from the retained log:
+   - I exported the base tree with `git archive a23089cc` into `$R/redtree`.
+   - I overlaid the committed tests.
+   - I ran the six new methods with `GIT_DIR` pointing read-only at the repository.
+6. **My own adversarial probes:**
+   - real-namespace candidates graded by both oracle v25 and the legacy grader;
+   - trusted-side scenarios run end to end through `usage_proxy`, the real frame codec and the
+     real candidate-side `usage_result`.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `node --version`; `sha256sum target/local-agent-tools/node` | v24.15.0, `d1de76d8…bd932c` (matches) |
+| `git status --short` | clean |
+| `git diff --check a23089cc… 6976e1aa…` | exit 0 |
+| `cmp docs/reviews/78c9d2f2f423-…txt /lane/reviews/78c9d2f2f423-….md` | identical |
+| `build-slot python3 scripts/local_agent_fast_gate.py --base a23089cc… --timeout 600` | FAST GATE: PASS, 173 tests, lint 0 issues |
+| focused command from `batch.json` (worker module + two real-namespace methods) | 85 tests OK |
+| `build-slot python3 -B -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | 59 tests OK, no skips |
+| `build-slot python3 scripts/coding_eval_oracle.py verify --output $R/independent` | exit 0 (details below) |
+| `build-slot python3 scripts/coding_eval.py verify --output $R/legacy` | exit 0 (details below) |
+| `build-slot python3 -B $R/probes.py` (fresh copy) | 7 methods OK, 27 reports (details below) |
+| `build-slot python3 -B $R/red-observation.py` (fresh copies of the script and both `red-` sources) | prior v24 `none`/pass; current v25 `adapter_policy`/fail; legacy `test_failure`/fail |
+| `cp -a …/t311-26-usage-observations $R/artifacts`; `build-slot python3 -B $R/artifacts/audit.py` | PASS (details below) |
+| `build-slot python3 -B $R/artifacts/final-integrity.py` | PASS (details below) |
+| `build-slot python3 scripts/validate_docs.py` | 729 Markdown files and all policy invariants validated |
+| my red reproduction on the exported base tree with the committed tests | 6 methods, FAILED (failures=10, errors=7) |
+
+Details:
+- **Independent verifier:**
+  - v25, 19 pairs, 25 reference methods, 192 reference calls;
+  - 38 attempts: 19 passed (references), 19 failed (bases);
+  - `generated_scoring` false, `model_score` null.
+  - My per-report contents match the retained reports exactly, apart from `oracle.log` digests,
+    which vary per run.
+- **Legacy verifier:** v9, 30 pairs, 89 reference tests. All bases fail and all references pass,
+  with no skips.
+- **Probes:** causes are identical to the retained `probes.json`.
+- **Audit:**
+  - 128 reports and 312 log bindings;
+  - 30 frozen tasks;
+  - collection fingerprint `0c2a0624…461570`.
+- **Final integrity:**
+  - 46 bindings, 7 changed paths, `public_hygiene` true;
+  - `commit.json` is byte-identical to the retained one.
+
+Source and red digests:
+- The red snapshots `red-coding_eval_oracle.py` (`3c5888c3…`) and `red-coding_eval_oracle_worker.py`
+  (`12165b9f…`) equal `git show a23089cc:<path> | sha256sum`.
+- `red-test_coding_eval_oracle.py` and `red-test_coding_eval_oracle_worker.py` are byte-identical to
+  the tests in the reviewed commit (`cmp`).
+- The current sources hash to `db20f04f…` and `88b66a80…`. These match `source-digests.json` and
+  every v25 report's `oracle_sha256` and `worker_sha256`.
+
+Every stated count reproduces:
+- pre-fix: 6 methods, 10 failures, 7 errors;
+- focused 85, fast 173, legacy unit 59;
+- independent 19 pairs / 25 methods / 192 calls, with 38 attempts (19 pass, 19 fail);
+- legacy 30 pairs / 89 tests;
+- probes 7 methods / 27 reports;
+- the old/new/legacy contrast.
+
+The evidence's run times equal the retained `*-result.json` seconds.
+
+## Code review
+
+`usage_proxy` is the trusted side; it runs in the assertion namespace with the original methods.
+
+- **L1 (history drift).**
+  - `history()` freezes typed, encoded copies of the following, each bounded by 128 calls and
+    the frame size:
+    - `mock_calls`, `call_args_list` and `method_calls`;
+    - `called`, `call_count` and `call_args`.
+  - The owned branch compares this snapshot with `last_history` both before the request and
+    before replay. Any mismatch calls `refuse()`, which is sticky, before `reset_mock()`, so
+    trusted observations are never erased.
+  - The unowned branch now also refuses on child, direct-call or flag history.
+  - `last_history` is updated only after the replay.
+- **L3 (sticky encoding).** Argument packing in `invoke` now converts `AdapterPolicyError` into
+  sticky `refuse()`. The only other packing failure paths are:
+  - frame size, which `RemoteFunction` turns into a sticky `failed`;
+  - depth, which is an `AdapterPolicyError`.
+
+`usage_result` is the candidate side. It snapshots every retained root of the instance after the
+trusted contents are applied and before the candidate call. It then returns
+`{"adapter_policy": True}` if any encoded root differs afterwards, and never restores the
+argument. `ProtocolError` from encoding is now also mapped to policy, not malformed protocol.
+
+Frozen inputs and integrity:
+- The audit checks that the following are unchanged from base:
+  - every function body other than `coverage`, `usage_proxy` and `usage_result` (AST level);
+  - `SUPPORTED` and `CONTROL_PROFILES`;
+  - all legacy, collection, Rust and fast-gate sources;
+  - the TASKS rows.
+- The diff confirms the only other edits: `VERSION` and three appended coverage tags.
+- I found no change to the sandbox, launcher, cleanup or admission code (it is unchanged in the
+  diff).
+- Collection fingerprint, hidden, source and fixture pins and selections are unchanged.
+- All 30 tasks are `development`. No held-out set exists, so none can have been used for tuning.
+- No model or GPU ran. Scores reproduce with one command. All 38 attempts are counted, failures
+  included.
+
+## Adversarial reproductions (mine)
+
+### Real namespaces
+
+Script: `$R/mine/ns_probe.py`, results in `$R/mine/ns.json`. Each candidate is the frozen dev-016
+reference with an appended wrapper. `require_historical_candidate` was patched to `synthetic-probe`.
+
+| Probe | Oracle v25 | Legacy | Reading |
+| --- | --- | --- | --- |
+| nested mutation (`messages[0]["content"] += "!"`) | fail, `adapter_policy` | fail, `test_failure` | Correct |
+| append before the original call | fail, `adapter_policy` | fail, `test_failure` | Correct |
+| identity-only replacement (`messages[0] = dict(messages[0])`) | pass | pass | Consistent; nested identity limit is disclosed |
+| transient append then pop | pass | pass | Consistent; transient limit is disclosed |
+| append only after the **second (last)** call | **fail, `adapter_policy`** | **pass** | Stricter than the original assertions (L2) |
+| append, then rewrite `snapshots` in the caller frame via `sys._getframe(1)` | **pass** | **fail, `test_failure`** | False pass by self-modification (L1) |
+
+All reports have `model_score` null and one counted control attempt.
+
+### Trusted-side scenarios
+
+Scripts: `$R/mine/unit_probe.py` and an inline variant. Each run goes through `usage_proxy`, the
+real frame encode/decode and the real `usage_result`. The candidate is identity-keyed and caching.
+
+- **Refused** with sticky `AdapterPolicyError`, `policy_failed` true and the trusted history
+  preserved:
+  - trusted `reset_mock()`;
+  - a direct call;
+  - a child call before ownership;
+  - a child call between candidate calls;
+  - a child call on the default `return_value`;
+  - mutation of the replayed payload dict;
+  - a `side_effect` assignment;
+  - setting `called`;
+  - an append to `mock_calls`.
+- **No refusal, as expected:**
+  - a trusted fixture change through `return_value`;
+  - read-only `assert_called_once()` and `call_args.args[3]` reads.
+- **List-subclass argument:** the `ValueError` is caught, and a fresh adapter on a new mock is
+  still refused.
+
+Every T-311.25 scenario (A, B, C and E) that previously proceeded silently now refuses.
+
+## Findings
+
+There are no critical, high or medium findings.
+
+### L1 (low): candidate-side mutation check is defeatable by deliberate self-modification; the guide omits that caveat
+
+- **Location:**
+  - `scripts/coding_eval_oracle_worker.py:970` and `:980-984`. The snapshot and comparison run
+    inside `usage_result`, in the candidate's own interpreter.
+  - The new guide text at `docs/guides/coding-evaluation-oracle.md:72-79`.
+- **Reproduction:** the `tamper-hides-mutation` probe above.
+  - The candidate appends to `messages`, then overwrites the caller frame's `snapshots` dict.
+  - Oracle v25 passes; the legacy grader fails with `Called 2 times`.
+- **Reasoning:**
+  - In legacy grading the trusted test observes the mutation directly. Under the oracle, the
+    observation is self-reported by code that hostile candidate Python can reach.
+  - The worker's own comment (`:1395-1396`) and the T-311.23 guard text (`guide:621-623`) state
+    this limit. The new paragraph instead says net changes "cause adapter-policy refusal" without
+    qualification.
+  - Generated scoring and admission are disabled, so no recorded score is affected.
+- **Fix:** before generated admission:
+  - add the self-modification caveat to the v25 paragraph;
+  - add a `not_graded` coverage tag, for example `deliberate-candidate-self-modification`;
+  - keep it on the generated-admission blocker list.
+
+### L2 (low): net-mutation refusal is stricter than the original assertions, undisclosed
+
+- **Location:**
+  - `scripts/coding_eval_oracle_worker.py:980-984`;
+  - `docs/guides/coding-evaluation-oracle.md:72-75`.
+- **Reproduction:** the `late-mutation-second-call` probe above. Oracle v25 fails with
+  `adapter_policy`, while legacy passes.
+- **Reasoning:**
+  - The refusal is conservative, and it is separable by cause in the reports. It is a fidelity
+    divergence, not a false pass.
+  - The guide discloses the equivalent PurePath/subclass strictness ("stricter than those original
+    assertions … does not establish a frozen-task failure"), but not this one.
+- **Fix:** before generated admission:
+  - state the same in the v25 paragraph;
+  - decide whether a mutation-policy refusal counts as a candidate failure or as ungradable.
+
+### Carried lows
+
+The following keep their prior dispositions and are not reopened by this diff:
+- nested identity and equality subclasses;
+- transient and asynchronous mutations;
+- cross-instance post-response mutations (coverage tag present);
+- PurePath/subclass policy;
+- policy-accounting contrast;
+- resource, admission, held-out and baseline blockers.
+
+Per the REFOCUS, L1 and L2 are **backlog notes**, not grounds for a new T-311 sub-row.
+
+## Delivery and REFOCUS disposition
+
+T-311.26 is a per-finding sub-row: it addresses T-311.25 lows L1–L3. The 2026-11-04 REFOCUS forbids
+new per-finding T-311 sub-rows, and the review brief treats them as medium. The same REFOCUS item 1
+first says "Finish the commit in progress." The retained timestamps show this was that commit:
+
+| Event | Time (-0600) |
+| --- | --- |
+| Base `a23089cc` committed | 22:11:09 |
+| Red test snapshots containing all six new methods | 22:12:26 |
+| Red run | 22:12:27 |
+| Initial repair passing 85 tests (`pilot.log`) | 22:13:03 |
+| Both briefs gained the REFOCUS | 22:13:58 |
+
+I therefore treat T-311.26 as the in-progress commit the REFOCUS exempts, not as a medium finding.
+Any further per-task or per-finding T-311 sub-row would be medium.
+
+The row is one level deep. It ends in running, measured code: v25, the regressions and the
+old/new/legacy contrast. It is not plan-only.
+
+## Public repository, IP and honesty
+
+- The added lines contain no private host path, username, hostname, credential, personal data or
+  private sibling-project name. I grepped them, and final-integrity `public_hygiene` also passed.
+- No other agent product is named or compared.
+- `OpenAIAdapter` and the model string are pre-existing identifiers in frozen historical source,
+  not branding.
+- I consulted no third-party code, documentation or patents.
+- The evidence labels the contrast candidate as synthetic diagnostic input, not a model attempt.
+  It states no model score. Its disclosed limits are accurate, apart from L1/L2 above.
+
+## Per-row result
+
+**T-311.26: PASS** at the exact commit, with no open high or medium finding.
+- The "done when" items are met:
+  - trusted mock-history drift is refused, stickily, without erasing observations;
+  - net candidate message mutations across the instance's retained roots are refused;
+  - trusted input-encoding refusals are sticky.
+- Frozen methods, task/source/hidden pins, selections, control profiles and thresholds are
+  unchanged.
+- Pre-fix failures are retained and independently reproduced.
+- Every stated count reproduces.
+- L1 and L2 are backlog before generated admission.
+
+Parent T-311 stays open; this review neither closes it nor reopens or closes any other row.
+
+Verdict: PASS
