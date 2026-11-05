@@ -570,8 +570,10 @@ left an empty recovery record and retained scratch. Candidate quotas alone do
 not bound this host-side repair. The combined T-311.15/T-311.16 repair in v26
 addresses this finding under the owner's explicit restart. Operation-count,
 10,000/20,000-level memory/descriptor-cap and in-sandbox branching regressions
-check the replacement. Both rows remain open until independent exact-commit
-review approves the combined repair. Constant descriptor use and linear scaling
+check the replacement. The [combined independent review](../reviews/494ee6cff86c-local-coding-t311-cleanup-refocus.txt)
+has **Verdict: PASS** for exact commit
+`494ee6cff86cb809d3ef079b84f19d4fc9eda2a5`, approving both cleanup rows.
+Constant descriptor use and linear scaling
 do not impose an aggregate scratch quota or a host cleanup deadline.
 Do not infer safe generated scoring from the passing frozen controls.
 The candidate mount is host-disk-backed, without an aggregate disk quota. A

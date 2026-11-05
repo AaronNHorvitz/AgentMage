@@ -9,6 +9,13 @@ It validates scoring machinery; it is not the complete suite, a model baseline
 or a scoreboard entry. No held-out task has been selected or inspected by it.
 Keep agent tuning deferred until the complete suite and its baseline exist.
 
+The expanded T-311.17 [suite runner](coding-suite.md) separately binds these
+unchanged development definitions and a private ten-task held-out descriptor.
+That input freeze does not complete admission, execute held-out tests or
+establish a model score. The command below continues to select development
+tasks only; held-out control validation requires the suite's explicit row-close
+operation.
+
 ## Frozen tasks
 
 The `coding-development-v4` revision appended 11 original-repository development
