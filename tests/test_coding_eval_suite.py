@@ -41,6 +41,33 @@ def descriptor(root, task=None, raw=None):
 
 
 class CodingSuiteTests(unittest.TestCase):
+    def test_coverage_discloses_unsupported_tasks_and_binds_original_selections(self):
+        with mock.patch.object(evaluation, "pinned_blob") as load, \
+                mock.patch.object(evaluation, "grade_case") as run:
+            manifest = suite.development_coverage()
+        load.assert_not_called()
+        run.assert_not_called()
+        tasks = {task["id"]: task for task in suite.development_tasks()}
+        rows = manifest["tasks"]
+        self.assertEqual({row["task"] for row in rows}, set(tasks))
+        self.assertEqual(len(rows), 30)
+        self.assertEqual(sum(row["expected_tests"] for row in rows), 89)
+        for row in rows:
+            task = tasks[row["task"]]
+            self.assertEqual(row["task_sha256"], suite.canonical_digest(task))
+            self.assertEqual(row["hidden_sha256"], task["hidden_sha256"])
+            self.assertEqual(row["method_selection"], task.get("test_names", "complete-original-module"))
+            self.assertFalse(row["generated_scoring"])
+            if task["id"] in suite.oracle.SUPPORTED:
+                self.assertEqual(row["independent_adapter"], suite.oracle.coverage(task))
+            else:
+                self.assertIsNone(row["independent_adapter"])
+                self.assertIn("independent-result-integrity", row["unestablished"])
+        self.assertEqual([row["task"] for row in rows if row["known_races"]], ["dev-003"])
+        self.assertEqual(manifest["attempt_policy"]["automatic_control_retries"], 0)
+        self.assertFalse(manifest["attempt_policy"]["infrastructure_excluded_from_denominator"])
+        self.assertFalse(manifest["attempt_policy"]["known_race_failure_is_pass"])
+
     def test_private_storage_refuses_repository_worktrees_and_configured_workspaces(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -343,6 +370,7 @@ class CodingSuiteTests(unittest.TestCase):
     def test_complete_orchestration_binds_raw_controls_but_printable_summary_has_no_task_feedback(self):
         with tempfile.TemporaryDirectory() as temporary, descriptor(Path(temporary)) as path:
             root = Path(temporary)
+            flaky = False
 
             def verify_existing(output):
                 evaluation.new_directory(output)
@@ -357,19 +385,25 @@ class CodingSuiteTests(unittest.TestCase):
                 evaluation.write_file(output / "stdout.log", b"private-test-diagnostic")
                 evaluation.write_file(output / "stderr.log", b"")
                 fixed = files["scripts/example.py"] == b"reference"
+                if fixed and flaky:
+                    return None, False, False, None
                 return (0 if fixed else 1), False, False, counts(failures=0 if fixed else 1)
 
             with mock.patch.object(suite, "check_inputs", return_value={"model_attempts": 0, "model_score": None,
                                                                         "generated_scoring": False}), \
                     mock.patch.object(evaluation, "verify", side_effect=verify_existing), \
                     mock.patch.object(suite.oracle, "verify", side_effect=verify_existing), \
-                    mock.patch.object(suite, "development_tasks", return_value=[{"id": "synthetic", "expected_tests": 1}]), \
+                    mock.patch.object(suite, "development_tasks", return_value=[{**synthetic_task(), "id": "synthetic"}]), \
                     mock.patch.object(evaluation, "projection", return_value={"scripts/example.py": b"base"}), \
                     mock.patch.object(evaluation, "pinned_blob", return_value=b"reference"), \
-                    mock.patch.object(evaluation, "grade_case", side_effect=grade_case):
+                    mock.patch.object(evaluation, "grade_case", side_effect=grade_case) as worker:
                 result = suite.verify(path, root / "run", "row-close")
                 with self.assertRaises(FileExistsError):
                     suite.verify(path, root / "run", "row-close")
+                self.assertEqual(worker.call_count, 2)
+                flaky = True
+                failed = suite.verify(path, root / "flaky", "row-close")
+                self.assertEqual(worker.call_count, 4, "failed reference must never retry itself")
             self.assertTrue(result["passed"])
             self.assertEqual(result["held_out_test_methods_run"], 2)
             self.assertEqual(result["control_attempts"], 6)
@@ -382,6 +416,14 @@ class CodingSuiteTests(unittest.TestCase):
             raw = json.loads((root / "run/held-out/controls.json").read_bytes())
             self.assertEqual(raw["tasks"][0]["task"], "held-001")
             self.assertTrue(raw["tasks"][0]["valid"])
+            self.assertFalse(failed["passed"])
+            self.assertFalse(failed["held_out_controls_valid"])
+            self.assertEqual(failed["control_attempts"], 6)
+            failed_controls = json.loads((root / "flaky/held-out/controls.json").read_bytes())
+            self.assertEqual(failed_controls["tasks"][0]["reference"]["cause"], "infrastructure")
+            self.assertIsNone(failed_controls["tasks"][0]["reference"]["tests"])
+            self.assertEqual((root / "flaky/held-out/held-001-reference/stdout.log").read_bytes(),
+                             b"private-test-diagnostic")
 
     def test_baseexception_propagates_without_publishing_a_result(self):
         with tempfile.TemporaryDirectory() as temporary, descriptor(Path(temporary)) as path:

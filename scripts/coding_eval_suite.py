@@ -25,7 +25,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle as oracle
 
-VERSION = "coding-suite-v2"
+VERSION = "coding-suite-v3"
 DEVELOPMENT_SHA256 = "0c2a0624df93085540f61c4677260490a9810a0325efd6bcb75db0dce1461570"
 HELD_OUT_SHA256 = "8141e9281c830fe510863403d6c1f137dcb661c2ba6067e68a94a578a13e5c3b"
 HELD_OUT_COUNT = 10
@@ -50,6 +50,35 @@ def development_tasks():
     if len(tasks) != 30 or canonical_digest(tasks) != DEVELOPMENT_SHA256:
         refuse("development-changed")
     return tasks
+
+
+def development_coverage():
+    """Bind coverage disclosures to frozen definitions, without loading tests.
+
+    Original test methods define the grade. An adapter's observed values do not
+    establish every requirement in a statement, integration or model quality.
+    """
+    rows = []
+    for task in development_tasks():
+        supported = task["id"] in oracle.SUPPORTED
+        rows.append({
+            "task": task["id"], "source": task["source"],
+            "task_sha256": canonical_digest(task), "hidden_sha256": task["hidden_sha256"],
+            "method_selection": task.get("test_names", "complete-original-module"),
+            "expected_tests": task["expected_tests"],
+            "historical_controls_only": True, "generated_scoring": False,
+            "independent_adapter": oracle.coverage(task) if supported else None,
+            "unestablished": ["unasserted-statement-clauses", "end-to-end-model-coding",
+                              *([] if supported else ["independent-result-integrity"])],
+            "known_races": (["disappearing-process-observation"] if task["id"] == "dev-003" else []),
+        })
+    return {"version": "coding-development-coverage-v1", "tasks": rows,
+            "development_sha256": DEVELOPMENT_SHA256,
+            "attempt_policy": {"automatic_control_retries": 0,
+                               "failed_attempts_retained": True,
+                               "infrastructure_excluded_from_denominator": False,
+                               "known_race_failure_is_pass": False},
+            "held_out_feedback_used": False}
 
 
 def unique_object(pairs):
@@ -283,6 +312,7 @@ def verify(held_out, output, purpose, workspace_roots=()):
     inputs = check_inputs(held_out, workspace_roots)
     evaluation.new_directory(output)
     started = time.monotonic()
+    evaluation.publish(output / "development-coverage.json", development_coverage())
     development = evaluation.verify(output / "development")
     development_valid = development_controls_valid(development)
     independent = oracle.verify(output / "independent-development")
@@ -315,10 +345,11 @@ def verify(held_out, output, purpose, workspace_roots=()):
                "evaluator_sha256": evaluation.sha(Path(evaluation.__file__).read_bytes()),
                "oracle_sha256": evaluation.sha(Path(oracle.__file__).read_bytes()),
                "admission_blockers": ["remaining-independent-development-adapters", "held-out-independent-adapters",
-                                      "aggregate-worker-quotas", "scratch-quota-and-cleanup-deadline",
-                                      "host-mount-metadata", "coverage-and-known-race-reporting"],
+                                      "aggregate-worker-quotas", "shared-fixture-scratch-quota",
+                                      "legacy-cleanup-deadline", "host-mount-metadata",
+                                      "remaining-clause-coverage-admission"],
                "logs": {name: evaluation.sha(evaluation.read_regular(output / name, 16 * evaluation.MAX_FILE))
-                        for name in ("development/summary.json", "independent-development/summary.json",
+                        for name in ("development-coverage.json", "development/summary.json", "independent-development/summary.json",
                                      "held-out/controls.json")}}
     evaluation.publish(output / "summary.json", summary)
     return summary

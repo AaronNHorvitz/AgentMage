@@ -8,9 +8,11 @@ from __future__ import annotations
 import argparse
 from array import array
 from contextlib import contextmanager
+import ctypes
 import json
 import os
 from pathlib import Path
+import resource
 import selectors
 import signal
 import stat
@@ -26,7 +28,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v26"
+VERSION = "coding-independent-oracle-v27"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
@@ -44,6 +46,7 @@ SUPPORTED = {
     "dev-020": {"function": "verify_case", "result_type": "verification-result"},
     "dev-021": {"function": "verify_case", "result_type": "verification-result"},
     "dev-022": {"function": "verify_case", "result_type": "verification-result", "observe_case_roots": True},
+    "dev-023": {"function": "implementation_identity", "result_type": "bool-map", "identity_fixture": True},
     "dev-024": {"function": "gpu_memory", "result_type": "resource-result"},
     "dev-026": {"function": "run_commands", "result_type": "deadline-result", "observe_commands": True},
     "dev-027": {"function": "extension_arguments", "result_type": "argument-result"},
@@ -52,6 +55,9 @@ SUPPORTED = {
 }
 LOG_LIMIT = 2 * evaluation.MAX_FILE
 DIRECT_WALK_DEPTH = 256
+PRIVATE_TMP_BYTES = 64 * evaluation.MAX_FILE
+CLEANUP_SECONDS = 5
+CLEANUP_ADDRESS_BYTES = 256 * evaluation.MAX_FILE
 # Measured historical outcomes, not model scores or altered hidden assertions.
 # Subtests can report more failures than the number of selected methods.
 CONTROL_PROFILES = {
@@ -73,6 +79,8 @@ CONTROL_PROFILES = {
     "dev-020": {"failures": 1, "base_calls": 2, "reference_calls": 3},
     "dev-021": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 6},
     "dev-022": {"failures": 0, "errors": 1, "base_calls": 2, "reference_calls": 4},
+    "dev-023": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 1,
+                "function_found": False, "candidate_exception": True},
     "dev-024": {"failures": 0, "errors": 2, "base_calls": 2, "reference_calls": 6,
                 "function_found": False, "candidate_exception": True},
     "dev-026": {"failures": 1, "base_calls": 3, "reference_calls": 3},
@@ -87,6 +95,12 @@ CONTROL_PROFILES = {
 def coverage(task):
     """State what transported observations can and cannot establish."""
     kind = SUPPORTED[task["id"]]["result_type"]
+    if task["id"] == "dev-023":
+        return {"graded": ["identity-field-counts-and-lengths", "wrapper-path-value"],
+                "adapter_policy": ["bounded-json-observations", "closed-binary-fixture"],
+                "not_graded": ["actual-identity-digest-content", "git-invocation-flags",
+                               "concurrent-file-mutation", "start-recording",
+                               "unselected-statement-clauses"]}
     if kind == "usage-result":
         return {"graded": ["selected-token-count-values", "repeated-message-cache",
                            "transport-call-count-and-selected-probe-payload",
@@ -201,13 +215,17 @@ def sandbox(workspace, adapter, output, role, candidate_tmp=None):
     if candidate_tmp is not None and role == "candidate":
         command.extend(["--bind", str(candidate_tmp), "/tmp"])
     else:
-        command.extend(["--tmpfs", "/tmp"])
+        command.extend(["--size", str(PRIVATE_TMP_BYTES), "--tmpfs", "/tmp"])
     if candidate_tmp is not None and role == "oracle":
         command.extend(["--ro-bind", str(candidate_tmp), "/candidate-tmp"])
     if role == "oracle":
         command.extend(["--bind", str(output), "/output"])
     elif role != "candidate":
         raise evaluation.EvaluationError("oracle.role-refused")
+    # Private scratch must not be bypassed by creating ordinary files in the
+    # synthetic root or device mount. Remounts are non-recursive: /tmp and the
+    # trusted result mount keep their explicitly selected access.
+    command.extend(["--remount-ro", "/dev", "--remount-ro", "/"])
     return [*command, "--", "/usr/bin/python3", "-I", "-B", "/adapter/run.py", role]
 
 
@@ -587,6 +605,98 @@ def remove_fixture_tree(root):
     root.rmdir()
 
 
+def cleanup_child(root, parent_pid):
+    """Trusted, single-process cleanup; no candidate code is imported here."""
+    # A killed parent must not leave a private cleanup process running. Install
+    # this before touching any tree, then close the fork/parent-death race.
+    libc = ctypes.CDLL(None, use_errno=True)
+    if libc.prctl(1, signal.SIGKILL, 0, 0, 0) != 0 or os.getppid() != parent_pid:
+        os._exit(2)
+    os.setsid()
+    for number in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP, signal.SIGALRM):
+        signal.signal(number, signal.SIG_DFL)
+    # Fork inherits the trusted host interpreter, but no host stream/lock may
+    # keep a reservation alive. Exit uses _exit, without inherited destructors.
+    maximum = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
+    os.closerange(0, int(maximum))
+    resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+    resource.setrlimit(resource.RLIMIT_AS, (CLEANUP_ADDRESS_BYTES, CLEANUP_ADDRESS_BYTES))
+    resource.setrlimit(resource.RLIMIT_CPU, (CLEANUP_SECONDS, CLEANUP_SECONDS))
+    resource.setrlimit(resource.RLIMIT_NOFILE, (64, 64))
+    repair_fixture_permissions(root)
+    remove_fixture_tree(root)
+
+
+def bounded_cleanup(root, timeout=CLEANUP_SECONDS):
+    """Publish no result until cleanup finishes under a parent-owned deadline.
+
+    The unreaped child reserves its PID until the final group signal. The child
+    never starts subprocesses; the parent also kills its PID if setup fails
+    before setsid. A timeout or repair/removal error retains the private tree.
+    """
+    parent_pid = os.getpid()
+    child = os.fork()
+    if child == 0:
+        try:
+            cleanup_child(root, parent_pid)
+        except BaseException:
+            os._exit(2)
+        os._exit(0)
+    deadline = time.monotonic() + timeout
+    try:
+        while True:
+            status = os.waitid(os.P_PID, child, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+            if status is not None:
+                if status.si_code != os.CLD_EXITED or status.si_status != 0:
+                    raise evaluation.EvaluationError("oracle.cleanup-failed")
+                return
+            if time.monotonic() >= deadline:
+                raise evaluation.EvaluationError("oracle.cleanup-timeout")
+            time.sleep(0.01)
+    finally:
+        # The child may have exited before setsid. Kill both identities while
+        # its unreaped PID still belongs to us, then reap exactly once.
+        for kill in (os.killpg, os.kill):
+            try:
+                kill(child, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        os.waitpid(child, 0)
+
+
+@contextmanager
+def case_workspace(output):
+    """Keep interrupted/failed cleanup bounded, including the enclosing case.
+
+    Staging stays inside an owner-only container, so recovery records also own
+    detached deep-tree fragments. No unbounded rmtree fallback runs afterward.
+    """
+    container = Path(tempfile.mkdtemp(prefix="agentmage-eval-"))
+    root = container / "case"
+    failed = False
+    try:
+        root.mkdir(mode=0o700)
+        yield root
+    except BaseException:
+        failed = True
+        raise
+    finally:
+        try:
+            bounded_cleanup(root)
+            container.rmdir()
+        except (OSError, evaluation.EvaluationError):
+            try:
+                evaluation.publish(output / "cleanup.json", {
+                    "removed": False, "attempts": 1, "private_workspace": str(container),
+                    "wall_limit_seconds": CLEANUP_SECONDS,
+                })
+            except (OSError, evaluation.EvaluationError):
+                if not failed:
+                    raise
+            if not failed:
+                raise
+
+
 @contextmanager
 def candidate_temporary(root, enabled):
     """Repair writable-fixture modes before the enclosing case cleanup."""
@@ -603,9 +713,8 @@ def candidate_temporary(root, enabled):
         raise
     finally:
         try:
-            repair_fixture_permissions(directory)
-            remove_fixture_tree(directory)
-        except OSError:
+            bounded_cleanup(directory)
+        except (OSError, evaluation.EvaluationError):
             # Preserve interruption/setup errors. The enclosing case_workspace
             # still attempts removal and retains its recovery record on failure.
             if not failed:
@@ -618,7 +727,7 @@ def grade_case(task, files, output, timeout=evaluation.TIMEOUT):
     trusted_files = evaluation.projection(task)
     hidden = evaluation.pinned_blob(task["reference"], task["hidden_test"], task["hidden_sha256"])
     record = None
-    with evaluation.case_workspace(output) as root, candidate_temporary(
+    with case_workspace(output) as root, candidate_temporary(
             root, config["result_type"] == "mode-result") as fixture_options:
         trusted, candidate = root / "trusted", root / "candidate"
         oracle_adapter, candidate_adapter = root / "oracle-adapter", root / "candidate-adapter"
@@ -628,9 +737,24 @@ def grade_case(task, files, output, timeout=evaluation.TIMEOUT):
         for workspace, content in ((trusted, trusted_files), (candidate, files)):
             for name, data in content.items():
                 evaluation.write_file(workspace / name, data)
+        if config.get("identity_fixture"):
+            # The complete frozen method substitutes this one binary path.
+            # Keep the same lexical module path and a private grading Git tree
+            # on each side; only the candidate's inert dictionary crosses back.
+            for workspace in (trusted, candidate):
+                evaluation.initialize_grading_repository(workspace)
+            evaluation.write_file(candidate / "identity_entry.py", b'''
+from pathlib import Path
+from scripts import coding_harness as subject
+subject.binary = lambda name: Path("/usr/bin/true")
+if callable(getattr(subject, "implementation_identity", None)):
+    implementation_identity = subject.implementation_identity
+''')
         for directory in (oracle_adapter, candidate_adapter):
             evaluation.write_file(directory / "run.py", Path(worker.__file__).read_bytes())
-        evaluation.publish(candidate_adapter / "config.json", config)
+        evaluation.publish(candidate_adapter / "config.json", {
+            **config, **({"module": "identity_entry"} if config.get("identity_fixture") else {}),
+        })
         evaluation.publish(oracle_adapter / "config.json", {
             **config, "test_names": task["test_names"], "expected_tests": task["expected_tests"],
         })
@@ -701,6 +825,12 @@ def grade(task, files, output):
         "control_attempts": {"total": 1, "passed": int(passed), "failed": int(not passed)},
         "coverage": coverage(task),
         "aggregate_worker_quotas": False,
+        "cleanup_limits": {"wall_seconds_per_tree": CLEANUP_SECONDS,
+                           "address_bytes": CLEANUP_ADDRESS_BYTES,
+                           "cpu_seconds_per_tree": CLEANUP_SECONDS,
+                           "open_files": 64},
+        "scratch_limits": {"private_tmp_bytes_per_worker": PRIVATE_TMP_BYTES,
+                           "shared_mode_fixture_quota": False},
         "logs": {name: evaluation.sha(evaluation.read_regular(output / name, LOG_LIMIT))
                  for name in ("candidate.log", "oracle.log", "wire.log") if (output / name).exists()},
     }

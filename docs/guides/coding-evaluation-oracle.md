@@ -111,6 +111,7 @@ Every selected original hidden method remains complete and unchanged.
 | dev-020 | `verify_case` | 1 | 1 / 0 | 2 | 3 |
 | dev-021 | `verify_case` | 1 | 0 / 1 | 1 | 6 |
 | dev-022 | `verify_case`, case roots | 1 | 0 / 1 | 2 | 4 |
+| dev-023 | `implementation_identity` | 1 | 0 / 1 | 1 | 1 |
 | dev-024 | `gpu_memory`, `CandidateResourceGuard` | 2 | 0 / 2 | 2 | 6 |
 | dev-026 | `run_commands`, `main`, command declarations | 2 | 1 / 0 | 3 | 3 |
 | dev-027 | `parser`, `extension_arguments` | 1 | 0 / 1 | 1 | 37 |
@@ -708,16 +709,36 @@ It keeps both leaders unreaped until process-group cleanup, including launch
 failure and interruption. Each PID namespace also bounds escaped descendants.
 Counts and wire logs are published only after process and temporary-tree cleanup;
 cleanup failure cannot report success. Existing private recovery records and
-removal retries come from the accepted evaluator.
+historical records remain. Oracle v27 uses a separate trusted cleanup child and
+the enclosing private case container, with bounded CPU, address space,
+descriptors and a five-second parent deadline per cleanup. It keeps detached
+deep-tree fragments inside the recovery container and does not fall back to an
+unbounded host traversal. The [suite guide](coding-suite.md) records the exact
+limits, interruption behavior, private tmpfs byte cap and remaining quota gaps.
 
 Both processes retain the evaluator's per-process 512 MiB address-space,
 60-second CPU, 32 MiB file and zero core-file limits. These are **not aggregate
-worker quotas**. Generated scoring remains disabled: this adapter covers eighteen of
+worker quotas**. Generated scoring remains disabled: this adapter covers twenty of
 30 tasks and does not implement separately delegated memory/process/CPU quotas,
 protected held-out inputs, covered-clause labels or a current-harness baseline.
 The legacy grader continues to import candidate code with tests and has its
 unchanged frozen-controls-only restriction. This adapter does not silently
 replace it or broaden its admission.
+
+Oracle v27 also grades dev-023's complete original identity regression. Each
+namespace receives its own grading-only Git snapshot; no source history is
+exposed. The candidate entry imports its original module at the same lexical
+path and substitutes the original test's fixed binary path. Only its inert
+identity dictionary crosses to the trusted assertions. An absent base function
+retains missing-function startup and candidate-exception observations. Wrong
+field lengths, binary counts or wrapper paths fail the original method even
+when candidate code patches its own assertion helpers.
+
+That method grades field shapes and the wrapper path, not the actual identity
+digest contents, Git argument flags, concurrent file mutation or run recording.
+These limitations are explicit coverage labels. Generated candidates remain
+refused before grading Git setup or namespace launch; this adapter does not
+provide generated-score admission.
 
 Every case retains `candidate.log`, `oracle.log`, bounded raw `wire.log`, a
 parent-authored report and, when available after cleanup, oracle-owned counts.

@@ -123,11 +123,58 @@ the input-freeze or storage/ancestry checks.
 ## Admission remains open
 
 These commands do not enable generated scoring or produce a coding baseline.
-The independent development oracle still covers only 19 of the 30 development
+The independent development oracle now covers 20 of the 30 development
 tasks. Remaining development and held-out independent adapters, aggregate
-worker bounds, scratch limits and cleanup deadlines, mount-metadata privacy,
-coverage labels and known-race accounting still need disposition within
-T-311.17. Resource, permission and evidence boundaries remain unchanged.
+worker bounds, shared-fixture scratch quotas, legacy cleanup deadlines,
+mount-metadata privacy and remaining clause-coverage admission still need
+disposition within T-311.17. Resource, permission and evidence boundaries
+remain unchanged.
+
+## Bounded independent-worker cleanup and private scratch
+
+The independent grader repairs/removes candidate scratch in a separate trusted
+host child, with a five-second parent-enforced deadline, five CPU seconds,
+256 MiB address space, 64 open descriptors and no core files. The child closes
+inherited descriptors, starts its own process group and requests termination
+if its parent dies. The parent kills and reaps the child before returning,
+including interruption and setup failure. No candidate code executes in this
+helper. Host-only direct traversal diagnostics retain their original API;
+grading uses the bounded helper.
+
+The enclosing case uses the same bounded cleanup, without an unbounded removal
+fallback. A mode-fixture case can require two helpers, at most five seconds each;
+an ordinary case needs one. Detached deep-tree fragments stay in the private
+case container. Failed cleanup records that container for operator recovery and
+prevents counts or wire logs from publishing as results. The original
+interruption survives cleanup or recovery-record write failure. A failed
+recovery write cannot promise a recovery record exists; the private container
+remains. This is a cleanup deadline, not an aggregate worker quota or proof
+that every namespace descendant has already stopped.
+
+Each namespace-private `/tmp` has a 64 MiB tmpfs byte limit. The synthetic root
+and device mount are read-only, preventing ordinary files there from bypassing
+that limit. Shared host-backed mode fixtures remain outside this quota, as does
+the trusted oracle's result mount. This bounds private temporary file data,
+not aggregate process memory, inode usage, processes or CPU. The existing
+per-process limits and execution deadline remain. The lane's cgroup filesystem
+is read-only; no delegated aggregate limit is claimed or raised.
+
+## Coverage and attempt accounting
+
+Row-closing verification writes `development-coverage.json`, binding every
+development definition, hidden digest, complete method selection and expected
+count. Supported independent adapters retain their graded observations,
+adapter-policy limits and ungraded behavior. Unsupported tasks explicitly have
+no independent adapter. Unasserted statement clauses and end-to-end model coding
+remain unestablished. This report reads definitions, not held-out assertions.
+Its digest is included in the private verification summary.
+
+The report names the previously observed disappearing-process race in dev-003.
+Controls receive no automatic retries. Every failed attempt remains retained,
+including infrastructure failures; a known race neither passes nor removes an
+attempt from the denominator. An operator's separate diagnostic rerun is a new
+retained run, never a replacement for a failed one. This is control accounting;
+the current-harness model baseline still belongs to T-311.18.
 
 No model or GPU run, held-out score, model-role choice, harness tuning or
 parent-row acceptance follows from a passing input check or historical control

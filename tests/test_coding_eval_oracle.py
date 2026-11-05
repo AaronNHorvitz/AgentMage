@@ -50,8 +50,8 @@ class IndependentOracleTests(unittest.TestCase):
     def test_real_two_sandbox_controls_keep_original_hidden_tests_and_counts(self):
         summary = oracle.verify(self.root / "controls")
         self.assertTrue(summary["passed"], summary)
-        self.assertEqual(len(summary["tasks"]), 19)
-        self.assertEqual(summary["control_attempts"], {"total": 38, "passed": 19, "failed": 19})
+        self.assertEqual(len(summary["tasks"]), 20)
+        self.assertEqual(summary["control_attempts"], {"total": 40, "passed": 20, "failed": 20})
         self.assertFalse(summary["generated_scoring"])
         self.assertIsNone(summary["model_score"])
         self.assertEqual(summary["collection_sha256"],
@@ -67,6 +67,54 @@ class IndependentOracleTests(unittest.TestCase):
             self.assertTrue(oracle.expected_base(
                 next(t for t in evaluation.collection() if t["id"] == row["task"]), row["base"]))
             self.assertFalse(row["reference"]["aggregate_worker_quotas"])
+
+    def test_identity_original_method_grades_inert_fields_across_the_boundary(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-023')
+        for fixed in (False, True):
+            with self.subTest(fixed=fixed):
+                report = oracle.grade(task, self.files(task, fixed), self.root / ('identity-' + str(fixed)))
+                self.assertEqual(report['passed'], fixed, report)
+                self.assertEqual(report['tests']['tests'], 1)
+                self.assertEqual(report['calls'], 1)
+                self.assertEqual(report['function_found'], fixed)
+                self.assertEqual(report['candidate_exception_failed'], not fixed)
+                self.assertIn('actual-identity-digest-content', report['coverage']['not_graded'])
+
+    def test_identity_wrong_observations_and_assertion_patching_do_not_forge_a_pass(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-023')
+        for name, expression in (('wrong-path', "identity['wrapper']['path'] = '/wrong'"),
+                                 ('short-head', "identity['head_commit'] = 'bad'"),
+                                 ('missing-binary', "identity['binaries'].pop()")):
+            files = self.files(task)
+            files[task['source']] += ('''
+import unittest
+unittest.TestCase.assertEqual = lambda *args, **kwargs: None
+unittest.TestCase.assertTrue = lambda *args, **kwargs: None
+original_identity = implementation_identity
+def implementation_identity():
+    identity = original_identity()
+    ''' + expression + '''
+    return identity
+''').encode()
+            with self.subTest(variant=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / name)
+            self.assertFalse(report['passed'], report)
+            self.assertEqual(report['cause'], 'test_failure', report)
+            self.assertEqual(report['tests']['tests'], 1)
+            self.assertGreater(report['tests']['failures'], 0)
+
+    def test_identity_generated_candidate_is_refused_before_any_git_or_namespace(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-023')
+        files = self.files(task)
+        files[task['source']] += b'\n# synthetic admission probe\n'
+        with mock.patch.object(evaluation, 'initialize_grading_repository') as git, \
+                mock.patch.object(oracle, 'exchange') as exchange:
+            with self.assertRaisesRegex(evaluation.EvaluationError, 'untrusted-candidate-disabled'):
+                oracle.grade(task, files, self.root / 'refused-identity')
+        git.assert_not_called()
+        exchange.assert_not_called()
+        self.assertFalse((self.root / 'refused-identity').exists())
 
     def test_usage_controls_keep_two_frozen_methods_and_refuse_generated_admission(self):
         task = next(t for t in evaluation.collection() if t['id'] == 'dev-016')
@@ -1527,7 +1575,7 @@ def make_container_readable(root):
                 with oracle.candidate_temporary(root, True):
                     raise KeyboardInterrupt()
             (root / 'candidate-tmp').rmdir()
-            with self.assertRaisesRegex(OSError, 'repair refused'):
+            with self.assertRaisesRegex(evaluation.EvaluationError, 'oracle.cleanup-failed'):
                 with oracle.candidate_temporary(root, True):
                     pass
 
@@ -2322,13 +2370,13 @@ def case_passed(case):
 
     def test_cleanup_failure_never_promotes_counts_or_success(self):
         files = self.files()
-        remove = evaluation.remove_case_workspace
+        remove = oracle.bounded_cleanup
 
-        def cleanup_failure(root, output):
-            remove(root, output)
+        def cleanup_failure(root):
+            remove(root)
             raise evaluation.EvaluationError("evaluation.cleanup-failed")
 
-        with mock.patch.object(evaluation, "remove_case_workspace", side_effect=cleanup_failure):
+        with mock.patch.object(oracle, "bounded_cleanup", side_effect=cleanup_failure):
             report = oracle.grade(self.task, files, self.root / "cleanup")
         self.assertFalse(report["passed"])
         self.assertIsNone(report["tests"])
