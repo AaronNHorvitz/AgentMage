@@ -1,0 +1,192 @@
+Commit: 494ee6cff86cb809d3ef079b84f19d4fc9eda2a5
+Scope: local-coding-t311-cleanup-refocus
+
+# Independent core review: T-311.15 / T-311.16 combined cleanup close (owner refocus)
+
+Reviewer: Claude Opus 5.5, extra-high effort, in a separate read-only session. Base:
+6976e1aa8105fc5b03f0a25493baa8692b020aa7. Rows: T-311.15 and T-311.16 (combined close under the
+owner's 2026-11-04 refocus, Decision 0154). Parent T-311 and generated or model scoring are out of
+scope.
+
+## Method
+
+- **Commit.** `git rev-parse HEAD` and `git rev-parse 494ee6cf…` both printed
+  494ee6cff86cb809d3ef079b84f19d4fc9eda2a5. `git status --short` was empty before and after the
+  review. One commit is in base..HEAD and it changes 7 files:
+  - TASKS.md;
+  - Decision 0154;
+  - the new evidence file;
+  - the oracle guide;
+  - the retained T-311.26 review;
+  - scripts/coding_eval_oracle.py (+224/-46 together with the tests);
+  - tests/test_coding_eval_oracle.py (+233).
+- **Reading.** I read:
+  - IP-POLICY.md, Decision 0154, the top of TASKS.md, and the T-311, T-311.15 and T-311.16 rows;
+  - review 3 of T-311.15 (69e083f8f0c7) and its M1;
+  - the complete code and test diff, plus the surrounding `sandbox`, `terminate`, `exchange`,
+    `candidate_temporary`, `grade_case` and `grade`;
+  - `case_workspace` and `remove_case_workspace` in scripts/coding_eval.py;
+  - the new evidence, the guide diff, and the builder's audit.py, red-run.py, branch-probe.py,
+    commands.json and the retained failure logs.
+- **Runs.** I ran every requested command into a fresh directory,
+  `/lane/state/tmp/review-t311-cleanup-COn5uO` (`review_results`). Heavy suites and namespace
+  probes ran through `bash /tools/build-slot`. Exit codes and wall times are in
+  `review_results/steps.txt` and `review_results/probes/rc.txt`.
+- **Builder artifacts.** I read them but did not change them. I ran audit.py only on a fresh copy,
+  and only after reading it. I did not run write-evidence.py, run.py, final-checks.py or
+  final-integrity.py.
+- **No GPU, model, held-out, tuning or download** was used.
+
+## Required commands and results
+
+| Command | Result |
+| --- | --- |
+| `node --version`; `sha256sum target/local-agent-tools/node` | v24.15.0; d1de76d8…bd932c (expected) |
+| `git diff --check 6976e1aa… 494ee6cf…` | rc 0, empty |
+| `cmp docs/reviews/6976e1aa8105-…txt /lane/reviews/6976e1aa8105-….md` | rc 0 (T-311.26 PASS retained byte-identically) |
+| `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base 6976e1aa… --timeout 600` | rc 0. "Ran 97 tests in 103.956s", OK, FAST GATE: PASS. Its 10k/20k branching case: repair 0.559/1.140 s, remove 0.447/0.898 s, reported RSS 89,908 KiB. The 806 s wall time includes about 700 s waiting for the reservation |
+| Focused command selected from complete/commands.json, under the slot | rc 0. "Ran 13 tests in 5.412s", OK. Branching 10k/20k: repair 0.572/1.146 s, remove 0.431/0.873 s, RSS 36,584 KiB |
+| `bash /tools/build-slot python3 -B -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | rc 0, "Ran 59 tests in 23.614s", OK |
+| `bash /tools/build-slot python3 scripts/coding_eval_oracle.py verify --output $review_results/independent` | rc 0. passed true; coding-independent-oracle-v26; 19 tasks; control_attempts 38/19/19; 25 reference methods; 192 reference calls; generated_scoring false; aggregate_worker_quotas false; model_score null; collection 0c2a0624…1570. dev-017 base is candidate_exception and dev-019 base is test_failure, both as before; both references pass |
+| `bash /tools/build-slot python3 scripts/coding_eval.py verify --output $review_results/legacy` | rc 0. passed true; coding-development-v9; 30 pairs; 89 reference tests; no invalid task |
+| `bash /tools/build-slot env LC_ALL=C python3 -B $review_results/branch-probe.py` | rc 0. Real namespace, 12,000-level locked branching tree. Correct: pass/none, 1.555 s. Wrong mode: test_failure (1 failure), 1.559 s. No residue and no cleanup.json; max RSS 66,616 KiB |
+| `bash /tools/build-slot python3 -B $review_results/red/red-run.py` | rc 1, "Ran 3 tests", FAILED (failures=3). All three are FAIL rather than ERROR: linear operation count, traversal-state release on MemoryError, and changed parent identity. red-coding_eval_oracle.py is byte-identical to the base oracle |
+| `python3 -B $review_results/audit/audit.py` (fresh copy) | rc 0. passed; 100 reports; 240 log bindings; 30 frozen tasks; 19 independent pairs, 25 methods, 192 calls; 30 legacy pairs, 89 tests; old ledger unchanged; review byte-identical |
+| `node node_modules/.bin/markdownlint-cli2 <4 changed docs>` | rc 0, "0 issues in 0 files" |
+| Read-only manifest and commit-binding recomputation | "540 manifest files and 7 committed paths match". All 17 digests in the evidence table also match. tested-coding_eval_oracle.py and tested-test_coding_eval_oracle.py equal the committed files |
+
+The retained failures match the evidence:
+
+- focused.log: 10k/20k repair 0.80/4.67 s against the growth bound;
+- timing-diagnostic.log and locale-pilot logs: the capped allocation failures;
+- verified/recover-owned.log: PermissionError on the staged child rename, the second
+  permission-order bug, which is now fixed by chmodding the pinned child before the move;
+- profile-packed.json: parent opens took 3.863 s of 4.361 s;
+- owned-recovery.json: the interrupted stage was removed.
+
+## Code review
+
+**The main walk (repair_fixture_permissions, lines 433-521):**
+
+- Frames are packed into `array('Q')`, and names into a NUL-separated bytearray with a cursor.
+- Each directory is scanned once. Ascent opens `..` and checks the frame's recorded
+  (st_dev, st_ino).
+- At depth 256 the subtree is handed to `detached_fixture_walk`. A host `..` lookup therefore never
+  happens deeper than 256 levels, and there is no reopening from the root.
+- `finally` clears both buffers and closes the single current descriptor.
+
+**`detached_fixture_walk` (lines 333-430):**
+
+- The stage is a random-named 0o700 sibling of candidate-tmp inside the private case root. It is
+  never bound into a worker: `sandbox()` binds only workspace, adapter, output and candidate-tmp.
+- Every moved inode is verified with `stat(..., follow_symlinks=False)` against its pinned identity.
+- chmod goes only through the host's own `/proc/self/fd/N` of an `O_PATH|O_DIRECTORY|O_NOFOLLOW`
+  descriptor. Files and symlinks are never chmodded or moved, and are unlinked only in removal mode.
+- Restoration runs in reverse BFS order into parent labels that have been identity-checked.
+- Cross-directory renames then have both parents inside the shallow stage, so kernel
+  ancestor-check costs stay constant.
+- Descriptors stay constant. Records are cleared in `finally`.
+
+**The remove walk** stages at the same depth, and its existing parent/child inode checks are
+unchanged. **The workers** are always terminated in `exchange`'s `finally` before
+`candidate_temporary` cleans up. **The only caller** is `candidate_temporary`.
+
+## Own adversarial probes (all under review_results/probes)
+
+| Probe | Result |
+| --- | --- |
+| p1, host: non-UTF-8 name with a newline at the staged depth-256 root; bytes and str names mixed in rename; 300 further levels, each with a non-UTF-8 dir, a hard link to an outside 0o400 file (nlink 301), symlinks to an outside 0o500 dir and file, and a FIFO; all dirs 0o000 | Repair restores the exact tree: same names, depth-555 leaf present, modes 0o700, no stage left. Removal leaves no fixture. The outside dir, its subdir and the file keep their modes and content, and nlink returns to 1. The descriptor set is identical |
+| p2, host: KeyboardInterrupt, MemoryError or OSError injected at the 1st/2nd/50th/400th/900th rename, chmod, rmdir or open inside the staged walk, through the real `case_workspace` + `candidate_temporary` (40 cases) | The original exception type always propagates. The descriptor set is unchanged in all 40. **Residue exists exactly when cleanup.json exists** (0 inconsistent). Late injections are cleaned with no residue |
+| p3, real bwrap with the oracle's flags: a live process with cwd at depth 290 when the host moves the depth-256 dir into a stage sibling of the bind; a `secret.txt` sits beside it in the case | Inside the process: `..`, 40×`..`, an `open(../…/secret.txt)` climb, a 400-step `..` climb and `mkdir ../x` all fail with ENOENT, getcwd fails, and `/proc/self/cwd` reads `/`. No host path leaks and nothing escapes. The real repair with the live process then succeeds, and its cwd is restored to the original path |
+| p4, real bwrap: 12 trials of a live process churning (mkdir/rename/rmdir/chmod 0/symlink swap) via fds held at depths 260/280/299, plus an unbounded "grow" variant, during real repair and removal | Every churn trial refuses with OSError: rmdir ENOTEMPTY, or a vanished name at the staged rename. Every stage stays inside the case. The outside sentinel, `secret.txt` and the case are unchanged. The grow variant chases new directories until the process dies (killed at 2 s), then finishes cleanly in about 13 s. Nothing ever escaped |
+| p5, host under AS 1024 MiB and NOFILE 16: branching 10k/20k/40k | Repair 0.578/1.180/2.377 s and remove 0.468/0.935/1.827 s (×2.0 per doubling). RSS 32/35/40 MB. Sampled open fds ≤ 8 |
+| p5: comb (chain to 255, then 20k/40k leaves at depth 256) | Repair 1.09/2.26 s, remove 3.36/6.71 s (linear) |
+| p5: 100k/200k sibling dirs at depth 10 versus depth 300 | Depth 10: repair 0.77/1.52 s, remove 13.6/26.5 s (pre-existing shallow remover, linear). Depth 300: repair 3.31/6.78 s, remove 2.78/5.57 s. RSS 53→78 MB, about **250 B per staged directory**, against about 12 B shallow |
+| p5: 100k/200k files at depth 10 versus depth 300 | Linear. At depth 300 `list(scan)` costs about 150 B per file (RSS 45→60 MB) |
+| p6, real `oracle.grade` on frozen dev-017 (reference plus suffix), under the slot. The candidate builds a 600-level tree: alternating 0o000/0o100, non-UTF-8 names with newlines, FIFOs, internal hard links, symlinks to `/` and `/workspace`. Variant: a double-forked setsid background process keeps making dirs | static correct: pass/none; static wrong: test_failure; linger correct: pass/none; linger wrong: test_failure. All four have calls 1, no error, no cleanup.json and an empty scratch |
+| Rate check, host | A 100k chain is built in 0.73 s (about 137k dirs/s). Repair plus removal takes 5.45 s, about 7.5× the build cost |
+
+**Review 3 M1 is resolved.**
+
+- Time and descriptor use are linear and constant across both depth regimes, at the requested
+  10k/20k scale and beyond it.
+- The capped reproduction that crashed v25 now completes at 20k levels in about 36 MB.
+- Exceptional exits release traversal state. Recovery records are truthful.
+- The real-namespace outcome survives cleanup.
+
+**Evaluation integrity.**
+
+- No hidden test, task, source, fixture pin, selection, control profile or threshold changed. The
+  audit and my diff confirm this, and the collection digest is unchanged.
+- The worker, legacy grader, sandbox and launcher are unchanged.
+- No held-out set exists, and none was used.
+- model_score is null, tokens are null, and GPU minutes and model attempts are 0.
+- Generated scoring is still disabled. Every failed control is counted (38/19/19).
+
+**Privacy, IP and delivery.**
+
+- The added text has no private host path, username, hostname, credential, personal data, product
+  comparison or trademark branding.
+- No new T-311 row was added. T-311.26 is marked done on its retained exact-commit PASS.
+- The other ledger rows are unchanged, consistent with Decision 0154.
+
+## Findings
+
+No critical, high or medium findings.
+
+### L1 (low, backlog): deep staging keeps uncompact per-directory records
+
+Location: scripts/coding_eval_oracle.py:344, 379 and 401.
+
+- `records` is a Python list of 4-tuples holding a str name and int identity. It is never trimmed
+  in removal mode, although deleted entries are no longer needed.
+- `entries = list(scan)` materialises every entry of one directory, files included.
+
+Measured cost: about 250 B per staged directory and about 150 B per file in one directory. The
+shallow walk costs about 12 B per name. This is linear and far from v25's quadratic growth, so it
+does not reopen M1.
+
+Combined with the carried L2, a candidate that spends its whole budget on a deep tree could still
+push host cleanup to GB-scale RSS and minutes of runtime. This is an extrapolation from the
+measured 137k dirs/s build rate and 250 B/dir, not a run.
+
+The evidence sentence "frames and names occupy compact primitive buffers" is true of the main walk
+only.
+
+Fix:
+
+- Pack staging records into `array('Q')` (parent index, st_dev, st_ino, name offset) plus a
+  bytearray of names.
+- Drop processed records in removal mode.
+- Unlink non-directories while iterating, instead of listing them.
+- Qualify the evidence sentence.
+
+### L2 (low, carried backlog): no aggregate scratch quota and no host cleanup deadline
+
+The host-backed candidate `/tmp` still has no aggregate disk or inode quota, and host cleanup has no
+deadline. While an in-namespace process survives, the staged walk keeps following the directories
+it creates (p4 "grow"). The guide (line 575) and the evidence (line 131) disclose this, and both
+note it is required before generated scoring.
+
+## Per-row result
+
+- **T-311.15: PASS.**
+  - Its deliverable is unchanged and reverified: dev-017/dev-019 graded independently, frozen
+    profiles, controls-only admission.
+  - The only open medium (review 3 M1) is resolved in-row at this exact commit under the owner's
+    explicit restart.
+  - Reviews 1 and 2 findings stay resolved: no confinement escape, file/hard-link/symlink targets
+    unchanged, interruption preserved, recovery truthful.
+  - Low L1/L2 are backlog.
+- **T-311.16: PASS.** Each part of its "done when" is met and reproduced:
+  - linear directory operations and traversal state, at both depths;
+  - constant descriptors;
+  - inode-checked ascent and staging;
+  - release of exceptional state;
+  - operation-scaling and memory-cap regressions;
+  - real-namespace regressions;
+  - no-follow confinement, observed outcomes and recovery records all preserved.
+- **Parent T-311 stays open**, as do generated scoring and the baseline. Nothing in the repository
+  was approved or modified by this review.
+
+Verdict: PASS
