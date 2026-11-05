@@ -80,6 +80,10 @@ T-311.22 adds dev-028 with oracle v20. Its complete original method checks
 job-control dispatch, parser options, export selection and support-directory
 validation through finite observations, described below.
 
+T-311.23 uses oracle v22 to refuse calls through signal mocks retained after
+their request ends. It addresses T-311.22 review 2 low L1 before generated
+admission; it adds no task or model score.
+
 The functions use JSON values and lexical paths. Three verification tasks also
 use finite text fixtures and stub observations, described below. Other tasks,
 general filesystem mocks, general exception transport and Rust execution are
@@ -548,6 +552,17 @@ and the wrappers' return values are not asserted. The finite helper has the
 original `(base, number)` signature, recording only calls that reach its body;
 a wrong-arity call caught by the candidate contributes no signal observation.
 Wrapper return values are discarded because no frozen assertion reads them.
+Each recorded request expires its signal mock in a `finally` block. Calling
+that mock or its original side effect after expiration sets a sticky worker
+flag. Every subsequent job operation, including parsing, export and no-live
+checks, refuses with adapter policy. The flag is checked after the operation
+too, so catching an exception or clearing a mock's history cannot hide the
+call. Merely retaining the mock does not fail a candidate. This refuses an
+observation the per-request adapter cannot faithfully replay; it does not claim
+the original test raised an adapter-policy exception. Current-request calls
+still reach the original assertions. Candidate Python remains able to tamper
+with objects inside its own interpreter; this guard does not isolate the
+worker from deliberate self-modification.
 PurePath and other subclasses outside the tagged codec remain adapter policy,
 even when they compare equal to a Path in the original test. This is stricter
 than those original assertions, as is the resource adapter's recorded subclass
@@ -651,5 +666,7 @@ the candidate against the finite private empty directory. It preserves the
 original method, all pins, thresholds and control profiles. Diagnostic variants
 compare both graders; none is admitted for generated scoring. Low L1's unasserted
 return and mock-arity mismatches and low L2's wrong-branch unit test are repaired;
-L1's PurePath restriction remains an explicit adapter-policy limit. The row stays
-open pending independent re-review.
+L1's PurePath restriction remains an explicit adapter-policy limit.
+The independent exact-commit re-review passed T-311.22; its newly reported stale
+signal-mock low is addressed by T-311.23, which requires its own independent
+review. Parent T-311 remains open.

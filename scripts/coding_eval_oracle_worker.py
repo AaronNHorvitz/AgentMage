@@ -457,7 +457,20 @@ def job_proxies(remote, module):
     return Parser, stop, control, export, bundle
 
 
-def job_result(module, request):
+def job_result(module, request, signal_state=None):
+    """Refuse observations lost through signal mocks retained across requests."""
+    if signal_state is None:
+        signal_state = {"stale": False}
+    if signal_state["stale"]:
+        return {"adapter_policy": True}
+    result = job_observation(module, request, signal_state)
+    # Check every operation, including parser and expected-refusal returns.
+    # Candidate code may catch an exception or clear its mock's call history;
+    # neither clears this worker-owned state.
+    return {"adapter_policy": True} if signal_state["stale"] else result
+
+
+def job_observation(module, request, signal_state):
     """Finite mocked dispatch and candidate-owned empty-directory refusal."""
     if type(request) is not dict or type(request.get("operation")) is not str:
         raise ProtocolError("oracle.invalid-job-request")
@@ -515,8 +528,12 @@ def job_result(module, request):
         if re.fullmatch(r"/tmp/[A-Za-z0-9_-]+", str(base)) is not None:
             base.mkdir(mode=0o700, exist_ok=True)
     observed = mock.Mock(return_value=None)
+    active = True
 
     def record_signal(base, number):
+        if not active:
+            signal_state["stale"] = True
+            return
         # Match the original side-effect signature. A swallowed wrong-arity
         # call never reached its body and contributes no signal observation.
         observed(base, number)
@@ -524,19 +541,22 @@ def job_result(module, request):
     exception, returned = "none", None
     replacement = (mock.patch.object(module, "signal_running_cli", side_effect=record_signal)
                    if recording else contextlib.nullcontext())
-    with replacement:
-        try:
-            if operation == "control":
-                returned = module.control(*value)
-            else:
-                name = {"stop": "stop", "export": "export_selection", "bundle": "support_bundle_directory"}[operation]
-                returned = getattr(module, name)(value)
-        except module.HarnessError:
-            exception = "harness"
-        except KeyError:
-            exception = "key"
-        except argparse.ArgumentTypeError:
-            exception = "argument-type"
+    try:
+        with replacement:
+            try:
+                if operation == "control":
+                    returned = module.control(*value)
+                else:
+                    name = {"stop": "stop", "export": "export_selection", "bundle": "support_bundle_directory"}[operation]
+                    returned = getattr(module, name)(value)
+            except module.HarnessError:
+                exception = "harness"
+            except KeyError:
+                exception = "key"
+            except argparse.ArgumentTypeError:
+                exception = "argument-type"
+    finally:
+        active = False
     try:
         calls = []
         for call in observed.call_args_list:
@@ -1148,6 +1168,7 @@ def candidate(config):
                                      callable(getattr(module, config["function"], None))}))
         writer.flush()
         guards = {}
+        job_signal_state = {"stale": False}
         while True:
             # EOF after the oracle exits is normal; truncated messages are not.
             if not reader.peek(1):
@@ -1184,7 +1205,7 @@ def candidate(config):
                 elif config["result_type"] == "deadline-result":
                     result = deadline_result(module, *request["args"])
                 elif config["result_type"] == "job-result":
-                    result = job_result(module, *request["args"])
+                    result = job_result(module, *request["args"], signal_state=job_signal_state)
                 elif config["result_type"] in {"bool", "bool-map"}:
                     result = predicate_result(function(*request["args"]), config["result_type"])
                 else:

@@ -179,6 +179,63 @@ class OracleProtocolTests(unittest.TestCase):
         self.assertEqual(worker.unpack_calls({'calls': result['calls']}), [((Path('/expected'), 2), {})])
         self.assertIsNone(worker.unpack_call_value(result['value']))
 
+    def test_job_retained_mocks_fail_stickily_after_their_recording_scope(self):
+        for later in ('control', 'export', 'parse'):
+            with self.subTest(later=later):
+                state = {'stale': False}
+                module = SimpleNamespace(HarnessError=RuntimeError, signal_running_cli=lambda *a: None)
+                saved = []
+                def stop(base):
+                    saved.append(module.signal_running_cli)
+                    module.signal_running_cli(base, signal.SIGINT)
+                def late_call():
+                    # Catching errors or editing the mock's call history must
+                    # not clear the adapter's independent sticky flag.
+                    saved[0].reset_mock()
+                    try:
+                        saved[0](Path('/expected'), signal.SIGUSR1)
+                    except Exception:
+                        pass
+                    saved[0].reset_mock()
+                module.stop = stop
+                module.control = lambda *a: late_call()
+                module.export_selection = lambda value: late_call()
+                def parse(arguments):
+                    late_call()
+                    return argparse.Namespace(command='pause')
+                module.parser = lambda: SimpleNamespace(parse_args=parse)
+                stop_request = {'operation': 'stop', 'value': worker.pack_call_value(Path('/expected')), 'record': True}
+                first = worker.job_result(module, stop_request, state)
+                self.assertTrue(worker.valid_job_result(first))
+                self.assertFalse(state['stale'])
+                requests = {
+                    'control': {'operation': 'control', 'value': worker.pack_call_value((Path('/expected'), 'pause')), 'record': True},
+                    'export': {'operation': 'export', 'value': worker.pack_call_value('routes:1:1')},
+                    'parse': {'operation': 'parse', 'argv': ['pause']},
+                }
+                self.assertEqual(worker.job_result(module, requests[later], state), {'adapter_policy': True})
+                self.assertTrue(state['stale'])
+                module.stop = mock.Mock(side_effect=AssertionError('must not execute after refusal'))
+                self.assertEqual(worker.job_result(module, stop_request, state), {'adapter_policy': True})
+                module.stop.assert_not_called()
+
+    def test_job_retained_mock_expires_even_after_a_candidate_exception(self):
+        state = {'stale': False}
+        module = SimpleNamespace(HarnessError=RuntimeError, signal_running_cli=lambda *a: None)
+        saved = []
+        def stop(base):
+            saved.append(module.signal_running_cli)
+            raise ValueError('private-expired-mock')
+        module.stop = stop
+        request = {'operation': 'stop', 'value': worker.pack_call_value(Path('/expected')), 'record': True}
+        with self.assertRaises(ValueError):
+            worker.job_result(module, request, state)
+        saved[0](Path('/expected'), signal.SIGINT)
+        self.assertTrue(state['stale'])
+        module.stop = mock.Mock()
+        self.assertEqual(worker.job_result(module, request, state), {'adapter_policy': True})
+        module.stop.assert_not_called()
+
     def test_job_parser_codec_keeps_list_defaults_paths_and_closed_exit_refusals(self):
         class HarnessError(RuntimeError):
             pass

@@ -230,6 +230,67 @@ def stop(base):
                 self.assertEqual(report['calls'], 18)
                 self.assertEqual(report['control_attempts'], {'total': 1, 'passed': 1, 'failed': 0})
 
+    def test_job_retained_signal_mocks_cannot_hide_later_duplicate_calls(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-028')
+        variants = (
+            ('saved-mock', 'saved_signal(base, signal.SIGUSR1)'),
+            ('saved-side-effect', 'saved_signal.side_effect(base, signal.SIGUSR1)'),
+            ('caught-call', '''try: saved_signal(base, signal.SIGUSR1)
+  except Exception: pass'''),
+        )
+        for name, call in variants:
+            files = self.files(task)
+            files[task['source']] += ('''
+original_stop, original_control = stop, control
+def stop(base):
+ global saved_signal
+ saved_signal = signal_running_cli
+ return original_stop(base)
+def control(base, command):
+ if command == 'pause':
+  ''' + call + '''
+ return original_control(base, command)
+''').encode()
+            with self.subTest(name=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / name)
+                legacy = evaluation.grade(task, files, self.root / (name + '-legacy'))
+                self.assertFalse(report['passed'], report)
+                self.assertFalse(legacy['passed'], legacy)
+                self.assertEqual(report['cause'], 'adapter_policy', report)
+                self.assertTrue(report['adapter_policy_failed'])
+                self.assertEqual(report['control_attempts'], {'total': 1, 'passed': 0, 'failed': 1})
+                self.assertEqual(report['tests']['tests'], 1)
+                self.assertFalse(report['candidate_exception_failed'] or report['protocol_failed'])
+
+    def test_job_retention_without_late_calls_and_active_duplicates_keep_original_verdicts(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-028')
+        variants = (
+            ('retained-only', '''original_stop = stop
+def stop(base):
+ global saved_signal
+ saved_signal = signal_running_cli
+ return original_stop(base)
+''', True, 'none'),
+            ('active-duplicate', '''original_stop = stop
+def stop(base):
+ original_stop(base)
+ signal_running_cli(base, signal.SIGINT)
+''', False, 'test_failure'),
+        )
+        for name, source, passed, cause in variants:
+            files = self.files(task)
+            files[task['source']] += ('\n' + source).encode()
+            with self.subTest(name=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / name)
+                legacy = evaluation.grade(task, files, self.root / (name + '-legacy'))
+                self.assertEqual((report['passed'], report['cause']), (passed, cause), report)
+                self.assertEqual(legacy['passed'], passed, legacy)
+                self.assertFalse(report['adapter_policy_failed'] or report['candidate_exception_failed']
+                                 or report['protocol_failed'])
+                self.assertEqual(report['control_attempts'], {'total': 1, 'passed': int(passed), 'failed': int(not passed)})
+
     def test_deadline_controls_preserve_mock_calls_and_timeout_without_writes(self):
         task = next(t for t in evaluation.collection() if t['id'] == 'dev-026')
         variants = [
