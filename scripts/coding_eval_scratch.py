@@ -60,6 +60,12 @@ with socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET) as control:
     sys.path.insert(0, "/runner")
     import coding_eval_oracle as oracle
     request = json.loads(control.recv(65537))
+    if type(request) is dict and request.get("mode") == "historical-control":
+        import coding_eval_control
+        result = coding_eval_control.run_request(request)
+        control.send(json.dumps(result, allow_nan=False).encode("ascii"))
+        control.recv(1)
+        raise SystemExit(0)
     if (type(request) is not dict or request.keys() != {"candidate", "oracle", "timeout", "identity"}
             or type(request["timeout"]) not in (int, float) or not 0 < request["timeout"] <= 90
             or type(request["identity"]) is not bool):
@@ -186,7 +192,7 @@ def control_directory():
 
 
 @contextmanager
-def scratch_mount(output=None):
+def scratch_mount(output=None, *, runtime_paths=None):
     """Export a private anonymous tmpfs; teardown needs no candidate traversal.
 
     No fallback to host disk exists. Setup failure refuses the case. Workers
@@ -226,6 +232,13 @@ def scratch_mount(output=None):
                 "--bind", str(endpoint), "/control", "--file", str(helper.fileno()), "/holder.py",
                 "--", "/usr/bin/python3", "-I", "-B", "/holder.py",
             ]
+            if runtime_paths is not None:
+                toolchain, registry = runtime_paths
+                boundary = command.index("--")
+                command[boundary:boundary] = [
+                    "--ro-bind", str(toolchain), "/runtime-input/toolchain",
+                    "--ro-bind", str(registry), "/runtime-input/registry", "--dir", "/runtime",
+                ]
             try:
                 process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                                            stderr=subprocess.DEVNULL, env={}, start_new_session=True,

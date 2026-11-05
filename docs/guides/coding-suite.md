@@ -124,9 +124,8 @@ the input-freeze or storage/ancestry checks.
 
 These commands do not enable generated scoring or produce a coding baseline.
 The independent development oracle now covers 20 of the 30 development
-tasks. Remaining development and held-out independent adapters, legacy/Rust
-worker bounds, legacy cleanup deadlines, legacy mount-metadata privacy and
-remaining clause-coverage admission still need
+tasks. Remaining development and held-out independent adapters, aggregate CPU
+and resident-memory accounting, and remaining clause-coverage admission still need
 disposition within T-311.17. Resource, permission and evidence boundaries
 remain unchanged.
 
@@ -165,11 +164,62 @@ cleanup child, with five CPU seconds, 256 MiB address space and 64 descriptors;
 its recovery and interruption rules remain. Direct traversal diagnostics retain
 their original API and controls. No unbounded candidate traversal fallback runs.
 
-Whole-suite `aggregate_worker_quotas` remains false: legacy and Rust grading are
-not covered by these independent Python-worker limits. No generated candidate
-is admitted and no broader resource, descendant-quiescence or release claim
-follows. The lane's read-only cgroup configuration and resource allocation stay
-unchanged.
+Whole-suite `aggregate_worker_quotas` remains false. The historical graders have
+the separate limits below; aggregate CPU and resident-memory accounting remain
+unavailable. No generated candidate is admitted and no broader resource,
+descendant-quiescence or release claim follows. The lane's read-only cgroup
+configuration and resource allocation stay unchanged.
+
+## Confined historical Python and Rust controls
+
+The public development grader and frozen held-out control entry use a trusted
+single-worker operation in the same anonymous-mount supervisor. The supervisor
+constructs its fixed command itself; its control request contains only the
+operation, language and deadline. Host preparation verifies hidden and Rust
+fixture bytes before starting it. Python grading-only Git initialization runs
+inside the supervisor, with no source history. Inputs, drivers and results share
+the 128 MiB case filesystem and its 32,768-inode quota.
+
+Python controls have a private 64 MiB temporary filesystem with 8,192 inodes and
+a hard eight-process limit, installed before importing task code. The existing
+512 MiB address-space and 60-second CPU limits remain per process. The derived
+address-space ceiling is 4 GiB per namespace.
+
+Rust controls have 768 MiB and 32,768 inodes for temporary build output and the
+writable Cargo home together. The registry is read-only. A hard sixteen-process
+limit and a tightened 768 MiB address-space limit apply before Cargo starts,
+giving a derived 12 GiB address-space ceiling. The trusted runtime driver narrows
+compilation to one job to fit this process/thread budget; the original driver
+bytes remain unchanged. Two test threads, four-CPU affinity and the 60-second
+per-process CPU limit remain.
+
+Binding a Rust runtime through an alias still exposes its backing filesystem's
+root path in mount metadata. Therefore the trusted supervisor copies the already
+installed toolchain and registry from read-only inputs to a separate anonymous
+1,536 MiB filesystem with 32,768 inodes. Workers receive read-only mounts from
+that snapshot, never the host inputs. No download, installation or cache write
+on the host occurs. Snapshot overflow or setup failure refuses the control;
+there is no disk fallback. Together, maximum Rust scratch capacities total
+2,432 MiB, plus the supervisor's 16 MiB setup filesystem. This declared capacity
+and the derived address-space ceiling are bounds, not measured resident use.
+
+Workers cannot write their root, device filesystem, inputs, driver, toolchain
+or registry, cannot reach the supervisor's connection, and cannot create a new
+user namespace. Anonymous argument transport and empty launcher environments
+keep host arguments and environment out of namespace PID 1. The supervisor
+caps each output stream at 2 MiB and execution at 90 seconds, then signals and
+reaps its worker before replying. Socket deadlines also bound preparation plus
+execution. Closing scratch descriptors and stopping/reaping the supervisor
+release anonymous candidate trees, including inaccessible deep trees. Host
+cleanup touches only fixed trusted control entries; it traverses no task tree.
+Counts publish after these steps. Original host-only synthetic lifecycle
+diagnostics remain separate and cannot pass the public historical-input guard.
+
+Reports bind the control and scratch implementations and retain the declared
+worker policy. These graders still execute assertions alongside historical
+candidate code. They establish control discrimination only; they do not provide
+independent result checking or admit generated code. The held-out input and
+row-close restrictions are unchanged.
 
 ## Coverage and attempt accounting
 

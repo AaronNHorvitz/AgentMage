@@ -32,7 +32,7 @@ else:
     import coding_eval_rust
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "coding-development-v9"
+VERSION = "coding-development-v10"
 MAX_FILE = 1024 * 1024
 MAX_TREE = 16 * MAX_FILE
 TIMEOUT = 90
@@ -754,6 +754,16 @@ def initialize_grading_repository(workspace: Path) -> None:
 
 
 def grade_case(task: dict, files: dict[str, bytes], output: Path) -> tuple:
+    # Public grade() has already admitted only a registered historical control.
+    # Keep the original host diagnostic path for synthetic lifecycle fault
+    # probes, which the public admission guard refuses before reaching here.
+    if (task.get("split") == "held-out" or task in collection()
+            and require_historical_candidate(task, files) in ("frozen-base", "frozen-reference")):
+        if __package__:
+            from . import coding_eval_control
+        else:
+            import coding_eval_control
+        return coding_eval_control.grade_case(task, files, output)
     driver = task_driver(task)
     hidden = pinned_blob(task.get("hidden_revision", task["reference"]), task["hidden_test"], task["hidden_sha256"])
     data = None
@@ -838,6 +848,10 @@ def grade_case(task: dict, files: dict[str, bytes], output: Path) -> tuple:
 
 def grade(task: dict, files: dict[str, bytes], output: Path) -> dict:
     candidate_kind = require_historical_candidate(task, files)
+    if __package__:
+        from . import coding_eval_control
+    else:
+        import coding_eval_control
     # Operator errors (including an existing destination) still fail before adoption.
     new_directory(output)
     started = time.monotonic()
@@ -870,6 +884,9 @@ def grade(task: dict, files: dict[str, bytes], output: Path) -> dict:
               "evaluator_sha256": sha(Path(__file__).read_bytes()),
               "collection_module_sha256": sha(Path(coding_eval_collection.__file__).read_bytes()),
               "rust_adapter_sha256": sha(Path(coding_eval_rust.__file__).read_bytes()),
+              "control_adapter_sha256": sha(Path(__file__).with_name("coding_eval_control.py").read_bytes()),
+              "scratch_adapter_sha256": sha(Path(__file__).with_name("coding_eval_scratch.py").read_bytes()),
+              "declared_worker_policy": coding_eval_control.policy(task.get("language") == "rust"),
               "task_sha256": sha(json.dumps(task, sort_keys=True, separators=(",", ":")).encode()),
               "candidate_sha256": sha(files[task["source"]]), "passed": passed,
               "cause": cause, "exit_code": exit_code, "tests": tests, "output_truncated": output_limited,

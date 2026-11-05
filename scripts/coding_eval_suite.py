@@ -20,12 +20,14 @@ import time
 
 if __package__:
     from . import coding_eval as evaluation
+    from . import coding_eval_control as control
     from . import coding_eval_oracle as oracle
 else:
     import coding_eval as evaluation
+    import coding_eval_control as control
     import coding_eval_oracle as oracle
 
-VERSION = "coding-suite-v3"
+VERSION = "coding-suite-v4"
 DEVELOPMENT_SHA256 = "0c2a0624df93085540f61c4677260490a9810a0325efd6bcb75db0dce1461570"
 HELD_OUT_SHA256 = "8141e9281c830fe510863403d6c1f137dcb661c2ba6067e68a94a578a13e5c3b"
 HELD_OUT_COUNT = 10
@@ -273,6 +275,9 @@ def held_out_control(held_out, task_id, kind, output, workspace_roots=()):
               "task_sha256": canonical_digest(task), "held_out_sha256": HELD_OUT_SHA256,
               "suite_sha256": evaluation.sha(Path(__file__).read_bytes()),
               "evaluator_sha256": evaluation.sha(Path(evaluation.__file__).read_bytes()),
+              "control_adapter_sha256": evaluation.sha(Path(control.__file__).read_bytes()),
+              "scratch_adapter_sha256": evaluation.sha(Path(control.scratch.__file__).read_bytes()),
+              "declared_worker_policy": control.policy(False),
               "hidden_sha256": task["hidden_sha256"], "test_names": task["test_names"],
               "input_error": input_error, "infrastructure_error": error,
               "output_truncated": limited, "wall_seconds": round(time.monotonic() - started, 6),
