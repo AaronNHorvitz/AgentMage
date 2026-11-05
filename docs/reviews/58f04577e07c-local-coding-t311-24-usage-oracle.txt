@@ -1,0 +1,196 @@
+Commit: 58f04577e07ca3bd26aa37db94478aa9d98346ca
+Scope: local-coding-t311-24-usage-oracle
+
+# Independent core review: T-311.24 (dev-016 usage-token oracle), review 1
+
+Reviewer: separate read-only session (Claude Opus 5.5, extra-high effort). Same-model review; a
+cross-model review is still required before any public release. No repository file was modified.
+No model, GPU, held-out task or prompt/harness tuning was used.
+
+## Commit and scope
+
+- `git rev-parse 58f04577e07ca3bd26aa37db94478aa9d98346ca` and `HEAD` both resolve to
+  `58f04577e07ca3bd26aa37db94478aa9d98346ca`; the worktree is clean.
+- Diff from base `ca5b1ab7a3a2110856b3317c8b73414edb20e143` touches 8 paths: TASKS.md (one new
+  open row), the T-311.24 evidence, two guides, `scripts/coding_eval_oracle.py`,
+  `scripts/coding_eval_oracle_worker.py` and their two test files.
+- I read IP-POLICY.md, decisions 0151–0153, the top of TASKS.md, the evidence, the guide diff and
+  all of the code and test diff. I also read the frozen dev-016 task (collection entry,
+  hidden methods at reference `0d132ecd`, base and reference `tokenize_messages`).
+
+## Commands and results (fresh private output R=/lane/state/tmp/review-t311-24-GODJ8r)
+
+All suites and namespaces ran through `bash /tools/build-slot` with
+`PATH=$PWD/target/local-agent-tools:$PATH` and `CARGO_TARGET_DIR=/lane/state/review-target`.
+Wall times include queueing for the shared slot.
+
+| Command | Result |
+| --- | --- |
+| `python3 scripts/local_agent_fast_gate.py --base ca5b1ab7… --timeout 600` | FAST GATE: PASS. diff-check, lint and markdownlint OK; 159 tests OK (98.31 s) |
+| `python3 -B -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | 59 tests OK |
+| `python3 scripts/coding_eval_oracle.py verify --output "$R/independent"` | rc 0. passed=true; 19 pairs, all valid; 25 reference methods; 192 reference calls; control_attempts 38/19/19; generated_scoring false; model_score null; aggregate_worker_quotas false; input_refused false; collection `0c2a0624…1570` |
+| — dev-016 row | valid. Base: cause candidate_exception, 0 failures / 2 errors, 5 calls. Reference: passed, 5 calls |
+| — every report | model_attempts 0, model_score null, gpu_minutes 0 |
+| `python3 scripts/coding_eval.py verify --output "$R/legacy"` | rc 0. passed=true; 30 pairs, all valid; 89 reference tests; 0 skips; model_score null; gpu 0; same collection fingerprint |
+| `cp …/probes.py "$R/probes.py"` (sha256 `8380f9b8…2e11`, matches evidence) then `python3 -B "$R/probes.py"` | rc 0. 5 tests and 23 reports (5 successful). The fresh `probes.json` is equal to the retained builder `probes.json`, with all 23 causes identical and in the same order |
+| `python3 scripts/validate_docs.py` | Validated 727 Markdown files and all policy invariants (policy validator only, not the long gate) |
+| `git diff --check ca5b1ab7… HEAD` | clean |
+| `git diff --exit-code ca5b1ab7… HEAD -- <legacy evaluator/collection/rust/fast-gate sources and tests>` | rc 0 (unchanged) |
+| `cmp docs/reviews/cb2c75143c9f-…-t311-23-stale-signal-mocks.txt /lane/reviews/cb2c75143c9f-…md` | identical |
+
+## Retained-artifact checks (/lane/state/tmp/t311-24-usage-oracle; read only, nothing executed in place)
+
+- **Evidence hashes.** All 36 SHA-256 bindings in the evidence table match: the four
+  sources/tests against `git show HEAD:<path>`, the other 32 against the retained files.
+  `source-digests.json` and `commit.json` equal the committed bytes.
+- **Pilot digests.** `pilot-source-digests.json` differs only for `coding_eval_oracle.py`
+  (the dev-016 control profile) and `tests/test_coding_eval_oracle.py`. The worker is
+  byte-identical between pilot and final.
+- **Pilot result.** The pilot base and fixed reports are retained:
+  - Base: 2 errors, 5 calls, candidate_exception.
+  - Fixed: pass, 5 calls.
+  - The pilot exit was 1 only because of the builder's initial expectation.
+- **Raw logs explain the base's two errors.**
+  - `KeyError: 'cache_prompt'` is raised inside the original trusted assertion.
+  - `CandidateExecutionError` comes from the base's `request_json` path on HTTP 400.
+  - Both match the frozen base source (`dcb2c824`), which has no `cache_prompt` and no
+    `allowed_statuses`.
+- **Focused runs.** `focused.log` shows 74 tests, with one FAIL (base
+  `candidate_exception_failed` True was expected False), as disclosed. The retry passed
+  76 tests.
+- **Other retained runs.**
+  - fast: 159 tests; legacy units: 59.
+  - Independent/legacy results match the numbers above.
+  - Initial audit failure (allowlist assertion on the aggregate-count method) and the passing
+    retry are both retained: 123 reports, 300 log bindings, 30 frozen tasks, 25 methods,
+    192 calls.
+  - final-integrity: 36 bindings, 8 changed paths, `public_hygiene` true.
+  - final-docs and policy: 727 files.
+- **review-draft.md** is the review request text, not a self-approval. No /lane/reviews file
+  existed for this commit before this report.
+
+## Evaluation integrity
+
+- dev-016 is in the development split. The diff contains no held-out task content, only
+  scope-disclaimer mentions.
+- The hidden file bytes at the reference hash `6921346d…9899`, the task entry, pins, selections
+  and thresholds are unchanged. The collection fingerprint is unchanged, and the collection
+  module is unchanged per the exit-code diff.
+- The control-profile change after the pilot is an expected-base description, not a threshold on
+  candidates. It is supported by the raw trusted traceback, and failures stay counted.
+- All 38 control attempts are counted. Generated candidates are still refused before launch
+  (`untrusted-candidate-disabled`, exercised in the new controls test).
+
+## Code review: what I checked
+
+- **Trusted-side parsing.**
+  - Frames are ≤64 KiB and transcripts ≤2 MiB. Recursion is bounded at depth 16; duplicate keys
+    and non-finite numbers are refused.
+  - `unpack_usage_value` accepts:
+    - bytes only as lowercase even-length hex (linear regex);
+    - integer frozensets only as sorted, unique, non-bool ints;
+    - only exact list/tuple/dict-with-str-key types.
+  - Anything else goes to the existing closed codec, which raises `ProtocolError`. Calls are
+    capped at 128.
+  - `RemoteFunction` and the proxy both validate the complete reply before `reset_mock()` and
+    replay (worker lines 836–844). The new worker tests show the mock is untouched on invalid
+    replies.
+- **Replay target.**
+  - Replay happens only into `module.unix_http_request`, and only when it is a `MagicMock`.
+  - A non-mock transport sets the sticky protocol failure.
+  - Candidate-chosen kwarg names, such as `self` or `""`, are replayed without crashing the
+    trusted side (my probe `ctor-call`).
+- **Candidate side.** Exceptions become the fixed `candidate_exception` tag; unsupported values
+  and oversize frames become `adapter_policy`. Malformed trusted requests and duplicate or missing
+  instance IDs are refused.
+- **Equivalence to in-process semantics for the two frozen methods.**
+  - Each test creates exactly one adapter under its own `@patch`.
+  - Fixture changes are sent when the identity changes and are otherwise "unchanged".
+  - Constructor-time MagicMock defaults map to the candidate's own default.
+  - Bool/int/float/Path round-trip with exact types, including `cache_prompt is False`.
+
+## Adversarial reproductions (my own scratch probes)
+
+The probes were run with `build-slot python3 -B $R/mine/probe.py $R/mine/out`. Synthetic
+candidates were appended to the frozen reference, and `require_historical_candidate` was patched
+to `synthetic-probe` as in the builder diagnostics. Each was graded by both oracle and legacy.
+
+| Probe | Oracle | Legacy | Reading |
+| --- | --- | --- | --- |
+| escape-bits | fail; trusted assertion shows `2024 != 37` | fail | Bitmask 1024 = only "write `/workspace/../escape-probe`" succeeded, i.e. bwrap's ephemeral root tmpfs; no such file exists on the host. No `/lane`, no `/var/home`, no host user/home in env, TCP 1.1.1.1:53 and 127.0.0.1:22 refused, system D-Bus Unix socket refused, `/adapter/test.py` and `/output` absent, `/tools` absent, ≤5 PIDs visible, no hostname. **Confinement held.** |
+| id-cache (cache keyed by `id(messages)`) | fail (1 failure, 5 calls) | **pass** | Reproduces the disclosed identity limit: a false fail relative to the original in-process grader (L1). |
+| call-flood (200 extra transport calls) | fail, adapter_policy | fail | Bounded. |
+| self-reset (2 real calls, candidate resets its own mock and re-records 1) | pass | pass | Same power as in-process; not an oracle-specific bypass. |
+| wrong-count (+1) | fail | fail | Counted. |
+| cache-prompt-zero (`cache_prompt = 0` after response) | fail | fail | The exact `is False` check holds across the codec. |
+| ctor reset (constructor calls `reset_mock()`) | pass | pass | Equivalent. |
+| ctor-call (extra constructor call with kwargs `self=1`, `""=2`) | fail ("Called 2 times") | fail | Replay tolerates odd keys and the count is preserved. |
+
+## Findings
+
+No critical, high or medium finding.
+
+### L1 (low, disclosed; carry before generated admission): identity-keyed caching false fail
+
+- **Location:** `scripts/coding_eval_oracle_worker.py:836-838` (args rebuilt per request) and
+  `:852-890` (`usage_result`). The disclosure is in `docs/guides/coding-evaluation-oracle.md:46`
+  and coverage `object-identity-and-equality-subclasses`.
+- **Reproduction:** probe `id-cache` above. The legacy grader passes; the oracle fails the first
+  method with two transport calls.
+- **Reasoning:** the task statement requires the existing canonical-content cache, so a correct
+  solution is not affected. The disclosure is accurate. However, this is an active mis-grade,
+  not an "ungraded" item.
+- **Fix before generated admission:** pass a per-instance argument handle so that repeated
+  trusted objects (`is` the same list) map to the same candidate-side object. Alternatively,
+  record the case as a policy-category outcome rather than a test failure.
+
+### L2 (low, latent; not reachable by the two selected methods): cross-instance history loss
+
+- **Location:** `scripts/coding_eval_oracle_worker.py:842-844`.
+- **Problem:** each proxy instance resets the shared trusted mock and replays only its own
+  instance history. If one test created two adapters under one patch, the second instance's
+  response would erase the first instance's recorded calls. Depending on the assertion, that
+  could produce a false pass or a false fail.
+- **Disclosure:** the guide discloses cross-instance post-response *mutations*, but not this
+  call-history loss.
+- **Fix:** keep the replay list keyed by mock and replay the union in call order. Or refuse with
+  sticky `adapter_policy` when a second live instance shares a mock that already holds another
+  instance's history. Add this to the disclosed limits before any new method is selected.
+
+### L3 (low, latent): replay executes the mock's side effect or wrapped target
+
+- **Location:** `scripts/coding_eval_oracle_worker.py:821` and `:844`.
+- **Problem:** the guard accepts any `MagicMock`. A trusted mock configured with `side_effect=`
+  or `wraps=` would be invoked on every cumulative replay with candidate-supplied arguments,
+  repeatedly. Neither frozen method does this.
+- **Fix:** refuse (sticky protocol/policy) when `transport.side_effect is not None` or the mock
+  wraps a target, and test that refusal.
+
+The other documented lows are carried forward unchanged: T-311.23 L1 (legacy-pass/policy
+contrast and generated-policy accounting), PurePath/subclass, resource, collector and model-lab.
+None of them was re-opened by this diff.
+
+## Public-repository hygiene and IP
+
+- The added lines contain no private host path, username, hostname, credential, personal data or
+  private sibling-project name.
+- The final-integrity `public_hygiene` check passed, and my own grep of the diff found nothing.
+- `OpenAIAdapter` is a pre-existing identifier in frozen historical source, used as an
+  interface name, not branding.
+- No other agent product is named or compared. No third-party code or patents were consulted.
+
+## Per-row result
+
+**T-311.24: PASS** at the exact commit.
+- "Done when" is met. The two complete frozen dev-016 methods run in the trusted namespace, and
+  candidate adapter instances and transport mocks persist across requests.
+- Validated cumulative history is replayed only into the original mock.
+- The base fails with the expected original profile; the reference passes with 5 calls.
+- The verifier and probe counts reproduce exactly.
+- Legacy, fast-gate and sandbox files are unchanged.
+- Admission is controls-only, and there is no real-model claim.
+- Lows L1–L3 are backlog before generated admission.
+
+Parent T-311 stays open; this review does not close it. T-311.15/.16 remain deferred.
+
+Verdict: PASS
