@@ -1,0 +1,219 @@
+Commit: 78c9d2f2f42381312775b3687e8222513db021c7
+Scope: local-coding-t311-25-usage-replay
+
+# Independent core review: T-311.25 (usage oracle v24: root identity and inert replay), review 1
+
+Reviewer: separate read-only session (Claude Opus 5.5, extra-high effort). This is a same-model
+review; a cross-model review is still required before any public release. I modified no
+repository file. I used no model, GPU, held-out task, download or prompt/harness tuning. I did not
+run `write-evidence.py`, `usage-functions.py`, `batch.py` or `capture.py`.
+
+## Commit and scope
+
+- `git rev-parse 78c9d2f2f42381312775b3687e8222513db021c7` and `HEAD` both resolve to
+  `78c9d2f2f42381312775b3687e8222513db021c7`. `git status --short` is empty before and after.
+- The diff from base `36879d28e711cc89ca725d8dd2104891787d7d8b` touches 8 paths:
+  - TASKS.md: one new open row, T-311.25.
+  - The T-311.25 evidence file and two guides.
+  - `scripts/coding_eval_oracle.py`: version and coverage only.
+  - `scripts/coding_eval_oracle_worker.py`: `usage_proxy` and `usage_result` only.
+  - The two oracle test files: additions, plus the required `message_handle` field in two
+    existing request fixtures.
+- I read the T-311.24 review 1 lows L1–L3, all code and test diffs, the evidence and the guide
+  diff. I also read the frozen dev-016 hidden methods at reference `0d132ecd`; the hidden bytes
+  hash to `6921346d…9899`, matching the task pin.
+
+## Commands and results
+
+Fresh private output `R=/lane/state/tmp/review-t311-25-UlxLGe`. Every suite and namespace ran
+through `bash /tools/build-slot` with `PATH=$PWD/target/local-agent-tools:$PATH` and
+`CARGO_TARGET_DIR=/lane/state/review-target`. Node is v24.15.0, sha256 `d1de76d8…932c`, as stated.
+
+| Command | Result |
+| --- | --- |
+| `python3 scripts/local_agent_fast_gate.py --base 36879d28… --timeout 600` | FAST GATE: PASS. 167 tests OK (100.40 s), no skips |
+| `python3 -B -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | 59 tests OK |
+| `python3 scripts/coding_eval_oracle.py verify --output $R/independent` | rc 0. Version v24; passed; 19 pairs; 25 reference methods; 192 reference calls; control_attempts 38/19/19; generated_scoring false; model_score null; collection `0c2a0624…1570`. dev-016: base candidate_exception with 5 calls, reference pass with 5 calls |
+| `python3 scripts/coding_eval.py verify --output $R/legacy` | rc 0. Passed; 30 pairs; 89 reference tests; same collection fingerprint |
+| `python3 -B $R/probes.py` (copied) | OK. 6 methods, 25 reports, 7 successful. The cause list is identical to the retained `probes.json` |
+| `python3 -B $R/red-observation.py` (copied with both `prior-` snapshots) | Prior v23 fails with test_failure. Its raw `oracle.log` shows `Expected 'unix_http_request' to have been called once. Called 2 times.` Current v24 and legacy pass. All runs have 2 tests and 5 calls |
+| `python3 -B $R/artifacts/audit.py` (copied artifacts) | PASS. 126 reports, 307 log bindings, 30 frozen tasks, stable sources |
+| `python3 -B $R/artifacts/final-integrity.py` | PASS. 47 bindings, 8 changed paths, public_hygiene true, sources_stable true |
+| `python3 scripts/validate_docs.py` | "Validated 728 Markdown file(s) and all policy invariants." (policy validator only, not the long documentation gate) |
+| `git diff --check 36879d28… HEAD` | clean |
+
+## Retained-artifact checks (read only)
+
+- **Source digests.** `source-digests.json` matches `sha256sum` of the four committed
+  sources/tests.
+- **Red snapshots.**
+  - The `prior-` snapshots equal `git show 36879d28:<path>` byte for byte.
+  - `red-source-digests.json` matches the `red-` test snapshots.
+  - The red oracle test file equals the final one.
+  - The red worker test file differs from the final one only by added subcases: empty shared
+    history, the post-response recheck and handle-boundary cases. No assertion was weakened.
+- **Red log.** It shows the intended pre-fix failure: 5 methods, 5 failures and 2 errors.
+- **Evidence bindings.** The audit and final-integrity scripts re-verify all 47 evidence-table
+  bindings, and both passed on my copy.
+- **Empty logs.** `independent.log` and `legacy.log` hash to the empty-file digest. They are empty
+  because those runs write into their result JSON and summary.
+- **Retained T-311.24 review.** The committed `docs/reviews/58f04577e07c-…txt` is byte-identical
+  to `/lane/reviews/58f04577e07c-…md` (checked with `cmp`).
+
+## Evaluation integrity
+
+- dev-016 is in the development split; the collection contains only development tasks. The diff
+  contains no held-out content; "held-out" appears only in scope disclaimers.
+- The following are unchanged:
+  - hidden bytes, task entries, pins and selections;
+  - `SUPPORTED` and `CONTROL_PROFILES` (audit literal-eval comparison);
+  - thresholds;
+  - legacy, collection, rust, fast-gate and sandbox/launcher files (audit byte comparison, and
+    the diff touches none of them).
+- All 38 control attempts are counted. Generated candidates remain refused before launch. No
+  model attempts, GPU minutes, tokens or model score appear in any report.
+
+## Code review: what holds
+
+- **L1 (identity-keyed caching).** Handles are computed on the trusted side, by `is` against a
+  bounded per-instance registry of at most `MAX_CALLS` roots held alive.
+  - The candidate side refuses a missing, wrong-typed or out-of-range handle, and a handle on a
+    constructor or non-list call, before running the candidate (`usage_result`).
+  - The repeated root is updated in place, so trusted content changes are seen.
+  - My probes `id-only-cache` and `is-root-cache-no-clear` now pass in both oracle and legacy.
+    Under v23, `id-only-cache` was a false fail.
+- **L2 (shared mocks).** A second adapter on an owned mock is refused before any request or
+  reset. A mock that already has call history when the adapter first uses it is also refused.
+  Both are tested.
+- **L3 (side effects and wraps).** `side_effect` and `_mock_wraps` are refused before the request
+  and again after the validated response, before `reset_mock()` and replay. Neither target is
+  ever invoked, as the tests show.
+- **Sticky refusal.** `refuse()` sets `remote.policy_failed`, and both `replay_target` and
+  `RemoteFunction.__call__` re-raise once it is set. My probe D confirms that a caught refusal
+  followed by a fresh adapter on a new mock is still refused, and the final report requires
+  `not remote.policy_failed`.
+- **No new trusted-side input.** The trusted side consumes nothing new from the candidate. The
+  handle only flows trusted → candidate, so a candidate gains no new lever. Reply validation is
+  unchanged and complete before replay.
+- **Honest scope.** The coverage lists add `repeated-message-root-identity` and
+  `exclusive-inert-transport-mock`, and list nested identity and candidate message-mutation
+  round-trips as not graded. The guide wording matches the behaviour.
+
+## Adversarial reproductions (my own scratch probes, under `$R/mine`)
+
+**Real namespaces** (`ns_probe.py`). These are synthetic candidates appended to the frozen
+reference. `require_historical_candidate` was patched to `synthetic-probe`. Each candidate was
+graded by both the oracle and legacy.
+
+| Probe | Oracle v24 | Legacy | Reading |
+| --- | --- | --- | --- |
+| id-only-cache (cache keyed by `id(messages)`) | pass, 5 calls | pass | T-311.24 L1 resolved |
+| is-root-cache-no-clear (root `is` cache) | pass | pass | Consistent |
+| no-cache-two-requests | fail, test_failure | fail | Broken cache still caught |
+| mutates-input (appends to `messages` after the first call) | **pass** | **fail** (`Called 2 times`) | False pass from the disclosed mutation limit (L2 below) |
+
+**Trusted-side unit probes.** These use `usage_proxy` with an in-process remote that calls
+`usage_result` (`unit_probe.py` and `encode_probe.py`).
+
+| Scenario | In-process | Oracle v24 |
+| --- | --- | --- |
+| A: test calls `reset_mock()` on the owned mock, then a cached second call is made | call_count 0 | call_count 1; no policy refusal |
+| B: test calls the owned mock directly between two candidate calls | 3 calls; trusted call kept | 2 calls; trusted call erased; no policy refusal |
+| C: trusted child-attribute call before first use (`call_args_list` empty) | — | child history erased by replay; no policy refusal |
+| D: refusal caught, then a new adapter on a new mock | — | refused; `policy_failed` true (sticky holds) |
+| E: list-subclass argument; the test catches `ValueError` | — | `AdapterPolicyError` caught as `ValueError`; `policy_failed` false |
+
+None of scenarios A, B, C or E is reachable by the two selected frozen methods. Each method
+uses a fresh `@patch` mock, makes no trusted reset or direct call, and passes plain lists.
+Generated scoring is disabled.
+
+## Findings
+
+There are no critical, high or medium findings.
+
+### L1 (low, latent; new): changes to the owned mock's history by the trusted test are silently overwritten
+
+- **Location:** `scripts/coding_eval_oracle_worker.py:837-841`. The owned branch returns without
+  comparing the current history to the last replay. Lines 883-885 then reset and replay the
+  cumulative history. Line 843 checks only `call_args_list`, so earlier child or attribute calls
+  (`mock_calls`) are not treated as unowned history.
+- **Reproduction:** unit probes A, B and C above.
+  - A trusted `reset_mock()` followed by a cache assertion becomes a false fail.
+  - A trusted direct call is erased, which can produce a false pass or a false fail with
+    count-based assertions.
+- **Reasoning:** this is the same history-loss class as T-311.24 L2. The repair covers only
+  cross-instance sharing and history that exists before ownership. Neither the guide nor the
+  coverage list discloses this case.
+- **Fix:** before generated admission or before selecting any new usage method:
+  - Store a snapshot of `transport.mock_calls` after each replay.
+  - In the owned branch, refuse with the sticky policy outcome if the current `mock_calls`
+    differ from that snapshot.
+  - Use `mock_calls` rather than `call_args_list` for the check before ownership.
+  - Add tests for reset, direct-call and child-call cases.
+
+### L2 (low, disclosed; concrete false pass): candidate mutation of the message list is not propagated
+
+- **Location:** `scripts/coding_eval_oracle_worker.py:940`. `roots[handle][:] = messages`
+  restores the trusted snapshot. The limit is disclosed as coverage
+  `candidate-message-mutation-roundtrip` (`scripts/coding_eval_oracle.py:97`) and in the guide
+  (`docs/guides/coding-evaluation-oracle.md:50`).
+- **Reproduction:** probe `mutates-input`. The oracle passes; the original in-process grader
+  fails with `Called 2 times`. v23 had the same behaviour, so this is not a regression.
+- **Reasoning:** the disclosure ("can change verdicts") is accurate. The concrete direction,
+  though, is a false pass, not just an ungraded item.
+- **Fix:** before generated admission, either:
+  - return the candidate-side root's packed contents after each call and apply them in place to
+    the trusted list; or
+  - when the post-call root differs from the snapshot sent, return the sticky adapter-policy
+    outcome.
+
+### L3 (low, pre-existing; part of the carried PurePath/subclass policy): trusted-side encoding refusals are not sticky
+
+- **Location:** `scripts/coding_eval_oracle_worker.py:879`. `pack_usage_value` raises
+  `AdapterPolicyError`, a `ValueError` subclass, before `RemoteFunction.__call__` is entered. So
+  `policy_failed` is never set.
+- **Reproduction:** scenario E.
+- **Reasoning:** a trusted `assertRaises(ValueError)` around such a call would pass without the
+  candidate running. This contradicts the general "sticky refusal" property, although the
+  evidence states that property only for replay refusals.
+- **Fix:** wrap argument packing in `invoke` in `try/except AdapterPolicyError: refuse()`.
+
+### Carried lows, unchanged
+
+The following lows keep their prior dispositions; this diff did not reopen them:
+- T-311.23 L1: policy-accounting contrast;
+- PurePath/subclass policy;
+- resource, collector and model-lab lows.
+
+## Public-repository hygiene and IP
+
+- The added lines contain no private host path, username, hostname, credential, personal data or
+  private sibling-project name. My grep of the added lines found nothing, and final-integrity
+  `public_hygiene` passed.
+- No other agent product is named or compared.
+- `OpenAIAdapter` is a pre-existing identifier in frozen historical source, used as an interface
+  name, not branding.
+- I consulted no third-party code, documentation or patents.
+
+## Delivery
+
+T-311.25 is a single sub-row under T-311, with no deeper nesting. It ends in running, measured
+code: the v24 oracle, the regressions and the namespace contrast. It is not a plan-only row.
+
+## Per-row result
+
+**T-311.25: PASS** at the exact commit, with no open high or medium finding.
+- "Done when" is met:
+  - repeated message-list root identity is preserved, which resolves the T-311.24 L1 false fail;
+  - shared, unowned-history and replacement mocks are refused with a sticky adapter-policy
+    outcome, as are side effects and wrapped targets;
+  - the target is rechecked after the validated response.
+- Selected methods, pins, selections, control profiles and thresholds are unchanged.
+- Real-namespace and identity-cache regressions exist.
+- Every stated count reproduces: focused 79, fast 167, legacy units 59, independent 19/25/192 with
+  38/19/19 attempts, legacy 30/89, probes 6/25, and the old/new/legacy contrast.
+- New lows L1–L3 are backlog before generated admission.
+
+Parent T-311 stays open. This review does not close it.
+
+Verdict: PASS
