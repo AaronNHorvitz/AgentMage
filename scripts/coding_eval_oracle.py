@@ -24,7 +24,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle_worker as worker
 
-VERSION = "coding-independent-oracle-v22"
+VERSION = "coding-independent-oracle-v23"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
@@ -35,6 +35,7 @@ SUPPORTED = {
     "dev-010": {"function": "test_only_files", "result_type": "path-result"},
     "dev-012": {"function": "test_only_files", "result_type": "path-result"},
     "dev-015": {"function": "case_passed", "result_type": "bool"},
+    "dev-016": {"function": "OpenAIAdapter", "result_type": "usage-result"},
     "dev-017": {"function": "make_container_readable", "result_type": "mode-result"},
     "dev-018": {"function": "capture", "result_type": "capture-result"},
     "dev-019": {"function": "extract_deb", "result_type": "command-result"},
@@ -60,6 +61,8 @@ CONTROL_PROFILES = {
     "dev-010": {"failures": 1, "base_calls": 1, "reference_calls": 4},
     "dev-012": {"failures": 10, "base_calls": 12, "reference_calls": 14},
     "dev-015": {"failures": 1, "base_calls": 3, "reference_calls": 4},
+    "dev-016": {"failures": 0, "errors": 2, "base_calls": 5, "reference_calls": 5,
+                "candidate_exception": True, "function_found": True},
     "dev-017": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 1,
                 "function_found": False, "candidate_exception": True},
     "dev-018": {"failures": 1, "base_calls": 1, "reference_calls": 5},
@@ -81,6 +84,17 @@ CONTROL_PROFILES = {
 def coverage(task):
     """State what transported observations can and cannot establish."""
     kind = SUPPORTED[task["id"]]["result_type"]
+    if kind == "usage-result":
+        return {"graded": ["selected-token-count-values", "repeated-message-cache",
+                           "transport-call-count-and-selected-probe-payload",
+                           "context-error-token-count"],
+                "adapter_policy": ["bounded-encoded-response", "finite-transport-stubs",
+                                   "bounded-tagged-observations"],
+                "not_graded": ["real-model-or-network", "transport-status-filter-implementation",
+                               "unasserted-transport-arguments", "invalid-count-and-error-refusals",
+                               "non-usage-tokenization", "adapter-attributes-and-other-methods",
+                               "object-identity-and-equality-subclasses",
+                               "cross-instance-post-response-mutations", "unselected-statement-clauses"]}
     if kind == "job-result":
         return {"graded": ["selected-parser-values", "export-selection-values-and-refusals",
                            "support-directory-values-and-refusals", "mocked-job-signal-order-and-values",

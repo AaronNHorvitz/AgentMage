@@ -259,7 +259,7 @@ its model-attempt count is zero.
 
 ## Historical controls only
 
-The separate [independent function oracle](coding-evaluation-oracle.md) runs eighteen
+The separate [independent function oracle](coding-evaluation-oracle.md) runs nineteen
 existing frozen tasks as base/reference controls with candidate execution and hidden assertions in
 different processes. It is an executable prerequisite experiment, not a change
 to this scorer's admission. Its narrow JSON adapters, missing aggregate quotas and open host cleanup

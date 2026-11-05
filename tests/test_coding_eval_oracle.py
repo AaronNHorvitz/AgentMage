@@ -50,8 +50,8 @@ class IndependentOracleTests(unittest.TestCase):
     def test_real_two_sandbox_controls_keep_original_hidden_tests_and_counts(self):
         summary = oracle.verify(self.root / "controls")
         self.assertTrue(summary["passed"], summary)
-        self.assertEqual(len(summary["tasks"]), 18)
-        self.assertEqual(summary["control_attempts"], {"total": 36, "passed": 18, "failed": 18})
+        self.assertEqual(len(summary["tasks"]), 19)
+        self.assertEqual(summary["control_attempts"], {"total": 38, "passed": 19, "failed": 19})
         self.assertFalse(summary["generated_scoring"])
         self.assertIsNone(summary["model_score"])
         self.assertEqual(summary["collection_sha256"],
@@ -67,6 +67,94 @@ class IndependentOracleTests(unittest.TestCase):
             self.assertTrue(oracle.expected_base(
                 next(t for t in evaluation.collection() if t["id"] == row["task"]), row["base"]))
             self.assertFalse(row["reference"]["aggregate_worker_quotas"])
+
+    def test_usage_controls_keep_two_frozen_methods_and_refuse_generated_admission(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-016')
+        for fixed in (False, True):
+            with self.subTest(fixed=fixed):
+                report = oracle.grade(task, self.files(task, fixed), self.root / str(fixed))
+                self.assertEqual(report['passed'], fixed, report)
+                self.assertEqual(report['tests']['tests'], 2)
+                self.assertEqual(report['calls'], 5)
+                self.assertFalse(report['protocol_failed'])
+                self.assertEqual(report['candidate_exception_failed'], not fixed)
+                self.assertEqual(report['tests']['errors'], 0 if fixed else 2)
+                self.assertEqual(report['cause'], 'none' if fixed else 'candidate_exception')
+                self.assertIn('transport-status-filter-implementation', report['coverage']['not_graded'])
+                self.assertEqual(report['control_attempts'], {'total': 1, 'passed': int(fixed), 'failed': int(not fixed)})
+        files = self.files(task)
+        files[task['source']] += b'\n# synthetic admission refusal\n'
+        with mock.patch.object(oracle, 'exchange') as launch:
+            with self.assertRaisesRegex(evaluation.EvaluationError, 'untrusted-candidate-disabled'):
+                oracle.grade(task, files, self.root / 'refused')
+            launch.assert_not_called()
+            self.assertFalse((self.root / 'refused').exists())
+
+    def test_usage_original_assertions_catch_bad_counts_cache_and_mutated_payload(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-016')
+        variants = (
+            ('wrong-count', 'def changed(self, messages): return 1', 'test_failure'),
+            ('no-cache', 'original_tokenize = OpenAIAdapter.tokenize_messages\ndef changed(self, messages):\n self.token_count_cache.clear()\n return original_tokenize(self, messages)', 'test_failure'),
+            ('mutated-payload', 'original_tokenize = OpenAIAdapter.tokenize_messages\ndef changed(self, messages):\n value = original_tokenize(self, messages)\n unix_http_request.call_args.args[3]["max_tokens"] = 2\n return value', 'test_failure'),
+            ('later-payload', 'original_tokenize = OpenAIAdapter.tokenize_messages\ndef changed(self, messages):\n if self.token_count_cache:\n  unix_http_request.call_args.args[3]["max_tokens"] = 2\n return original_tokenize(self, messages)', 'test_failure'),
+            ('retained-mock', 'original_tokenize = OpenAIAdapter.tokenize_messages\ndef changed(self, messages):\n if hasattr(self, "saved_transport"):\n  self.saved_transport("extra")\n self.saved_transport = unix_http_request\n return original_tokenize(self, messages)', 'test_failure'),
+            ('exception', 'def changed(self, messages): raise ValueError("private-usage-payload")', 'candidate_exception'),
+            ('unsupported-value', 'def changed(self, messages): return object()', 'adapter_policy'),
+        )
+        for name, source, cause in variants:
+            files = self.files(task)
+            files[task['source']] += ('\n' + source + '\nOpenAIAdapter.tokenize_messages = changed\n').encode()
+            with self.subTest(name=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / name)
+                legacy = evaluation.grade(task, files, self.root / (name + '-legacy'))
+                self.assertFalse(report['passed'], report)
+                self.assertFalse(legacy['passed'], legacy)
+                self.assertEqual(report['cause'], cause, report)
+                self.assertEqual(report['tests']['tests'], 2)
+                self.assertEqual(report['control_attempts'], {'total': 1, 'passed': 0, 'failed': 1})
+                for path in (self.root / name).iterdir():
+                    self.assertNotIn(b'private-usage-payload', path.read_bytes())
+
+    def test_usage_equal_float_values_and_unasserted_socket_paths_keep_original_verdict(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-016')
+        files = self.files(task)
+        files[task['source']] += b'\noriginal_tokenize = OpenAIAdapter.tokenize_messages\ndef changed(self, messages):\n self.socket_path = Path("/tmp/other-fixture.sock")\n return float(original_tokenize(self, messages))\nOpenAIAdapter.tokenize_messages = changed\n'
+        with mock.patch.object(evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+            report = oracle.grade(task, files, self.root / 'equal-values')
+            legacy = evaluation.grade(task, files, self.root / 'equal-values-legacy')
+        self.assertTrue(report['passed'], report)
+        self.assertTrue(legacy['passed'], legacy)
+        self.assertEqual(report['calls'], 5)
+
+    def test_usage_namespace_hides_assertions_and_malformed_wire_cannot_pass(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-016')
+        variants = (
+            ('separate-mounts', b'\noriginal_tokenize = OpenAIAdapter.tokenize_messages\ndef changed(self, messages):\n if Path("/adapter/test.py").exists() or Path("/output").exists(): return 1\n return original_tokenize(self, messages)\nOpenAIAdapter.tokenize_messages = changed\n', 'none'),
+            ('malformed-wire', WIRE_DESCRIPTOR_PROBE + b'\ndef changed(self, messages):\n os.write(protocol_fd(), b"not-json\\n")\n return 37\nOpenAIAdapter.tokenize_messages = changed\n', 'protocol'),
+            ('oversize', b'\ndef changed(self, messages): return "x" * 100000\nOpenAIAdapter.tokenize_messages = changed\n', 'adapter_policy'),
+        )
+        for name, source, cause in variants:
+            files = self.files(task)
+            files[task['source']] += source
+            with self.subTest(name=name), mock.patch.object(
+                    evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+                report = oracle.grade(task, files, self.root / name)
+                self.assertEqual(report['passed'], cause == 'none', report)
+                self.assertEqual(report['cause'], cause, report)
+                self.assertEqual(report['tests']['tests'], 2)
+
+    def test_usage_forged_assertions_cannot_change_separate_original_verdict(self):
+        task = next(t for t in evaluation.collection() if t['id'] == 'dev-016')
+        files = self.files(task)
+        files[task['source']] += b"\nimport unittest\nunittest.TestCase.assertEqual = lambda *a, **k: None\noriginal_tokenize = OpenAIAdapter.tokenize_messages\ndef wrong(self, messages): return original_tokenize(self, messages) + 1\nOpenAIAdapter.tokenize_messages = wrong\n"
+        with mock.patch.object(evaluation, 'require_historical_candidate', return_value='synthetic-probe'):
+            report = oracle.grade(task, files, self.root / 'forgery')
+            legacy = evaluation.grade(task, files, self.root / 'forgery-legacy')
+        self.assertFalse(report['passed'], report)
+        self.assertEqual(report['cause'], 'test_failure')
+        self.assertTrue(legacy['passed'], legacy)
+        self.assertEqual(report['tests']['tests'], 2)
 
     def test_job_controls_preserve_complete_frozen_method_and_refuse_generated_admission(self):
         task = next(t for t in evaluation.collection() if t['id'] == 'dev-028')

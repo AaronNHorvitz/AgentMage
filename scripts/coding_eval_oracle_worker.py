@@ -29,7 +29,7 @@ MAX_TRANSCRIPT = 2 * 1024 * 1024
 MAX_CALLS = 128
 POLICY_RESULT_TYPES = frozenset({"argument-result", "verification-result", "capture-result",
                                 "bool", "bool-map", "path-result", "mode-result", "command-result",
-                                "diagnostic-result", "resource-result", "deadline-result", "job-result"})
+                                "diagnostic-result", "resource-result", "deadline-result", "job-result", "usage-result"})
 
 
 class ProtocolError(ValueError):
@@ -243,6 +243,9 @@ class RemoteFunction:
                 valid = True
             elif self.result_type == "diagnostic-result":
                 valid = valid_diagnostic_result(result)
+            elif self.result_type == "usage-result":
+                unpack_usage_result(result)
+                valid = True
             elif self.result_type == "resource-result":
                 valid = type(result) is dict and result.keys() == {"harness_error"} and result["harness_error"] is True
                 if type(result) is dict and result.keys() == {"value"}:
@@ -754,6 +757,148 @@ def unpack_calls(result):
     return calls
 
 
+def pack_usage_value(value, depth=0):
+    """The usage transport fixture also needs inert bytes and frozenset values."""
+    if depth >= 16:
+        raise AdapterPolicyError("oracle.usage-depth")
+    if type(value) is bytes:
+        return {"kind": "bytes", "value": value.hex()}
+    if type(value) is frozenset and all(type(item) is int for item in value):
+        return {"kind": "integer-frozenset", "value": sorted(value)}
+    if type(value) in (list, tuple):
+        return {"kind": "list" if type(value) is list else "tuple",
+                "value": [pack_usage_value(item, depth + 1) for item in value]}
+    if type(value) is dict and all(type(key) is str for key in value):
+        return {"kind": "dict", "value": {key: pack_usage_value(item, depth + 1)
+                                          for key, item in value.items()}}
+    return pack_call_value(value, depth)
+
+
+def unpack_usage_value(value, depth=0):
+    if (depth >= 16 or type(value) is not dict or value.keys() != {"kind", "value"}
+            or type(value["kind"]) is not str):
+        raise ProtocolError("oracle.invalid-usage-value")
+    kind, data = value["kind"], value["value"]
+    if kind == "bytes" and type(data) is str and re.fullmatch(r"(?:[0-9a-f]{2})*", data):
+        return bytes.fromhex(data)
+    if (kind == "integer-frozenset" and type(data) is list
+            and all(type(item) is int for item in data) and data == sorted(set(data))):
+        return frozenset(data)
+    if kind in {"list", "tuple"} and type(data) is list:
+        items = [unpack_usage_value(item, depth + 1) for item in data]
+        return items if kind == "list" else tuple(items)
+    if kind == "dict" and type(data) is dict and all(type(key) is str for key in data):
+        return {key: unpack_usage_value(item, depth + 1) for key, item in data.items()}
+    return unpack_call_value(value, depth)
+
+
+def unpack_usage_result(result):
+    if (type(result) is not dict or result.keys() != {"value", "calls"}
+            or type(result["calls"]) is not list or len(result["calls"]) > 128):
+        raise ProtocolError("oracle.invalid-usage-result")
+    value = unpack_usage_value(result["value"])
+    calls = []
+    for call in result["calls"]:
+        if type(call) is not dict or call.keys() != {"args", "kwargs"}:
+            raise ProtocolError("oracle.invalid-usage-call")
+        args, kwargs = unpack_usage_value(call["args"]), unpack_usage_value(call["kwargs"])
+        if type(args) is not tuple or type(kwargs) is not dict:
+            raise ProtocolError("oracle.invalid-usage-arguments")
+        calls.append((args, kwargs))
+    return value, calls
+
+
+def usage_proxy(remote, module):
+    """Retain instance identity and replay transport observations only into mocks."""
+    class Adapter:
+        def __init__(self, *args, **kwargs):
+            self.identifier = remote.calls + 1
+            self.last_fixture = object()
+            self.invoke("create", args, kwargs)
+
+        def invoke(self, operation, args, kwargs):
+            transport = module.unix_http_request
+            if not isinstance(transport, mock.MagicMock):
+                remote.failed = True
+                raise ProtocolError("oracle.usage-transport-not-mocked")
+            fixture = transport.return_value
+            if fixture is self.last_fixture:
+                stub = {"unchanged": True}
+            elif isinstance(fixture, mock.MagicMock):
+                stub = {"default": True}
+            elif (type(fixture) is tuple and len(fixture) == 3
+                  and type(fixture[0]) is int and type(fixture[1]) is bytes
+                  and type(fixture[2]) in (int, float) and math.isfinite(fixture[2])):
+                stub = {"fixture": pack_usage_value(fixture)}
+            else:
+                remote.failed = True
+                raise ProtocolError("oracle.unsupported-usage-fixture")
+            self.last_fixture = fixture
+            value, calls = unpack_usage_result(remote({
+                "operation": operation, "instance": self.identifier, "stub": stub,
+                "args": pack_usage_value(args), "kwargs": pack_usage_value(kwargs)}))
+            # Replay the complete current history: earlier payload objects may
+            # have changed during a later call on the same candidate instance.
+            transport.reset_mock()
+            for call_args, call_kwargs in calls:
+                transport(*call_args, **call_kwargs)
+            return value
+
+        def tokenize_messages(self, *args, **kwargs):
+            return self.invoke("tokenize", args, kwargs)
+    return Adapter
+
+
+def usage_result(module, instances, request):
+    if (type(request) is not dict or request.keys() != {"operation", "instance", "stub", "args", "kwargs"}
+            or type(request["operation"]) is not str or request["operation"] not in {"create", "tokenize"}
+            or type(request["instance"]) is not int or not 1 <= request["instance"] <= MAX_CALLS
+            or type(request["stub"]) is not dict):
+        raise ProtocolError("oracle.invalid-usage-request")
+    args, kwargs = unpack_usage_value(request["args"]), unpack_usage_value(request["kwargs"])
+    if type(args) is not tuple or type(kwargs) is not dict:
+        raise ProtocolError("oracle.invalid-usage-arguments")
+    stub = request["stub"]
+    if (stub.keys() in ({"default"}, {"unchanged"})
+            and next(iter(stub.values())) is True):
+        fixture = None
+    elif stub.keys() == {"fixture"}:
+        fixture = unpack_usage_value(stub["fixture"])
+        if not (type(fixture) is tuple and len(fixture) == 3
+                and type(fixture[0]) is int and type(fixture[1]) is bytes
+                and type(fixture[2]) in (int, float) and math.isfinite(fixture[2])):
+            raise ProtocolError("oracle.invalid-usage-stub")
+    else:
+        raise ProtocolError("oracle.invalid-usage-stub")
+    identifier = request["instance"]
+    if request["operation"] == "create":
+        if identifier in instances or len(instances) >= MAX_CALLS:
+            raise ProtocolError("oracle.invalid-usage-instance")
+        if stub.keys() == {"unchanged"}:
+            raise ProtocolError("oracle.invalid-usage-stub")
+        transport = mock.MagicMock()
+    else:
+        if identifier not in instances:
+            raise ProtocolError("oracle.invalid-usage-instance")
+        _, transport = instances[identifier]
+    if fixture is not None:
+        transport.return_value = fixture
+    with mock.patch.object(module, "unix_http_request", transport):
+        if request["operation"] == "create":
+            instances[identifier] = (module.OpenAIAdapter(*args, **kwargs), transport)
+            value = None  # A constructor return value is not observed by Python callers.
+        else:
+            value = instances[identifier][0].tokenize_messages(*args, **kwargs)
+    try:
+        calls = transport.call_args_list
+        if len(calls) > 128:
+            raise AdapterPolicyError("oracle.usage-call-count")
+        return {"value": pack_usage_value(value), "calls": [
+            {"args": pack_usage_value(call.args), "kwargs": pack_usage_value(call.kwargs)} for call in calls]}
+    except AdapterPolicyError:
+        return {"adapter_policy": True}
+
+
 def command_proxy(remote, module):
     def call(package, root):
         # The complete original test installs this mock. Never replay into the
@@ -1168,6 +1313,7 @@ def candidate(config):
                                      callable(getattr(module, config["function"], None))}))
         writer.flush()
         guards = {}
+        usage_instances = {}
         job_signal_state = {"stale": False}
         while True:
             # EOF after the oracle exits is normal; truncated messages are not.
@@ -1180,7 +1326,7 @@ def candidate(config):
                     or type(request["seq"]) is not int or not isinstance(request["args"], list)):
                 raise ProtocolError("oracle.invalid-request")
             try:
-                function = (None if config["result_type"] in {"argument-result", "resource-result", "deadline-result", "job-result"}
+                function = (None if config["result_type"] in {"argument-result", "resource-result", "deadline-result", "job-result", "usage-result"}
                             else getattr(module, config["function"]))
                 if config["result_type"] == "path-result":
                     result = path_result(function, module.AmbiguousReference, *request["args"])
@@ -1200,6 +1346,8 @@ def candidate(config):
                     result = command_result(function, module, *request["args"])
                 elif config["result_type"] == "diagnostic-result":
                     result = diagnostic_result(function, *request["args"])
+                elif config["result_type"] == "usage-result":
+                    result = usage_result(module, usage_instances, *request["args"])
                 elif config["result_type"] == "resource-result":
                     result = resource_result(module, guards, *request["args"])
                 elif config["result_type"] == "deadline-result":
@@ -1255,6 +1403,8 @@ def oracle(config):
                 proxy = command_proxy(remote, module)
             elif config["result_type"] == "diagnostic-result":
                 proxy = diagnostic_proxy(remote)
+            elif config["result_type"] == "usage-result":
+                proxy = usage_proxy(remote, module)
             elif config["result_type"] == "resource-result":
                 proxy, module.CandidateResourceGuard = resource_proxies(remote, module)
             elif config["result_type"] == "deadline-result":

@@ -24,6 +24,30 @@ T-311.15 uses oracle v11 to add file-mode and helper-call observations for
 dev-017 and dev-019. Mode assertions inspect actual disposable files from the
 trusted process; a candidate cannot replace those observations with mode claims.
 
+T-311.24 adds dev-016 through oracle v23. A proxy retains each candidate model
+adapter instance across its original constructor and token-count calls. The
+candidate uses the original finite transport mock; no model or socket runs.
+Both complete frozen methods and their assertions stay in the trusted namespace.
+The proxy replays the current complete transport-call history into the original
+mock after validating the entire response. This preserves the cache call count,
+retained mock references and later mutations to earlier payload objects. Repeated
+frames replace that mock history rather than double-counting it. A changed fixture
+from the trusted test updates the candidate stub; otherwise candidate stub state
+persists. Only inert typed bytes, integer frozensets and the existing finite
+value types are transported. Unknown types are policy refusals; candidate
+exceptions have the existing sticky fixed category, without exception text.
+
+The selected methods grade counts, repeated-message caching and four probe
+payload fields, including the exact false Boolean for `cache_prompt`. They do
+not assert the other transport arguments, the implementation of HTTP status
+filtering, malformed-response refusals, every statement clause or non-usage
+behavior, adapter attributes or other methods. Transport-call snapshots do not preserve arbitrary object identity,
+equality-overriding subclasses or cross-instance mutations after a response.
+Message arguments are rebuilt from values on each request; identity-dependent
+caching is outside this adapter's coverage. Those are explicit ungraded adapter
+limits requiring disposition before generated admission. This is
+an evaluator control, not inference, token-usage measurement or a model score.
+
 ## Run
 
 ```sh
@@ -42,6 +66,7 @@ Every selected original hidden method remains complete and unchanged.
 | dev-010 | `test_only_files` | 1 | 1 / 0 | 1 | 4 |
 | dev-012 | `test_only_files` | 4 | 10 / 0 | 12 | 14 |
 | dev-015 | `case_passed` | 1 | 1 / 0 | 3 | 4 |
+| dev-016 | `OpenAIAdapter`, `tokenize_messages` | 2 | 0 / 2 | 5 | 5 |
 | dev-017 | `make_container_readable` | 1 | 0 / 1 | 1 | 1 |
 | dev-018 | `validate_raw`, `capture` | 1 | 1 / 0 | 1 | 5 |
 | dev-019 | `extract_deb` | 1 | 1 / 0 | 1 | 1 |
@@ -59,7 +84,9 @@ requires these exact failure/count/call profiles, successful startup and expecte
 function presence, plus a passing reference with its exact call count. The three
 argument-task bases lack their requested helper and reject the first parser
 call with `SystemExit(2)`; those are explicit failed controls. An
-arbitrary failure cannot validate a base. A missing function in dev-029 is the
+arbitrary failure cannot validate a base. Dev-016's base has its callable class,
+five calls and two original errors: the absent `cache_prompt` field followed by
+the fixed candidate-exception category for the unsupported context response. A missing function in dev-029 is the
 expected failed candidate-exception control: one call, one original test error,
 candidate exit 0 and oracle exit 1. The candidate now reports the fixed exception
 tag instead of crashing and leaving a broken pipe. No assertion or count changes.

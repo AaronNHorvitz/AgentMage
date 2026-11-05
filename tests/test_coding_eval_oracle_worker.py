@@ -18,6 +18,101 @@ class OracleProtocolTests(unittest.TestCase):
     def remote(self, raw, result_type="bool"):
         return worker.RemoteFunction(io.BytesIO(raw), io.BytesIO(), io.BytesIO(), result_type)
 
+    def test_usage_codec_preserves_transport_types_and_refuses_executable_values(self):
+        values = (None, 37, False, b"\x00\xff", frozenset({400}),
+                  ("POST", Path("/tmp/model.sock"), {"payload": [1], "statuses": frozenset()}))
+        for value in values:
+            with self.subTest(value=value):
+                observed = worker.unpack_usage_value(worker.pack_usage_value(value))
+                self.assertEqual(observed, value)
+                self.assertIs(type(observed), type(value))
+        for value in ({1, 2}, object(), frozenset({"invalid"})):
+            with self.subTest(value=value), self.assertRaises(worker.AdapterPolicyError):
+                worker.pack_usage_value(value)
+        for value in ({"kind": "bytes", "value": "0"}, {"kind": "bytes", "value": "GG"},
+                      {"kind": "integer-frozenset", "value": [400, 400]},
+                      {"kind": "integer-frozenset", "value": [True]},
+                      {"kind": "class", "value": "payload"}):
+            with self.subTest(value=value), self.assertRaises(worker.ProtocolError):
+                worker.unpack_usage_value(value)
+
+    def test_usage_proxy_validates_complete_history_before_replaying_only_into_mock(self):
+        call = {"args": worker.pack_usage_value(("POST", Path("/tmp/model.sock"), "/v1", {})),
+                "kwargs": worker.pack_usage_value({"allowed_statuses": frozenset({400})})}
+        valid = {"value": worker.pack_usage_value(37), "calls": [call]}
+        invalid = (None, {}, {**valid, "passed": True}, {**valid, "calls": [call, {}]},
+                   {**valid, "calls": [call] * 129}, {**valid, "value": {"kind": "class", "value": "x"}})
+        for value in invalid:
+            remote = self.remote(worker.encode_message({"seq": 1, "result": value}), "usage-result")
+            transport = mock.MagicMock(return_value=(200, b"{}", 0.1))
+            with self.subTest(value=value), self.assertRaises(worker.ProtocolError):
+                worker.usage_proxy(remote, SimpleNamespace(unix_http_request=transport))()
+            transport.assert_not_called()
+            self.assertTrue(remote.failed)
+        remote = self.remote(worker.encode_message({"seq": 1, "result": valid}), "usage-result")
+        live = mock.Mock(side_effect=AssertionError("must not perform transport"))
+        with self.assertRaises(worker.ProtocolError):
+            worker.usage_proxy(remote, SimpleNamespace(unix_http_request=lambda *a: live(*a)))()
+        live.assert_not_called()
+        self.assertTrue(remote.failed)
+
+    def test_usage_instance_keeps_cache_transport_state_and_current_payload_history(self):
+        module = SimpleNamespace(unix_http_request=lambda: None)
+        class Adapter:
+            def __init__(self):
+                self.transport = module.unix_http_request
+                self.payload = {"max_tokens": 1}
+                self.cached = False
+            def tokenize_messages(self, messages):
+                if not self.cached:
+                    module.unix_http_request("POST", Path("/tmp/fixture"), "/v1", self.payload,
+                                             allowed_statuses=frozenset({400}))
+                    # Candidate-side mutations stay present on the next request.
+                    module.unix_http_request.return_value = (200, b"changed", 0.2)
+                    self.cached = True
+                else:
+                    self.payload["max_tokens"] = 2
+                    assert self.transport.return_value == (200, b"changed", 0.2)
+                return 37
+        module.OpenAIAdapter = Adapter
+        instances = {}
+        request = {"operation": "create", "instance": 1, "stub": {"default": True},
+                   "args": worker.pack_usage_value(()), "kwargs": worker.pack_usage_value({})}
+        self.assertEqual(worker.unpack_usage_result(worker.usage_result(module, instances, request)), (None, []))
+        request.update(operation="tokenize", args=worker.pack_usage_value(([{"role": "user"}],)),
+                       stub={"fixture": worker.pack_usage_value((200, b"{}", 0.1))})
+        first = worker.usage_result(module, instances, request)
+        request["stub"] = {"unchanged": True}
+        second = worker.usage_result(module, instances, request)
+        self.assertEqual(worker.unpack_usage_result(first)[1][0][0][3]["max_tokens"], 1)
+        self.assertEqual(worker.unpack_usage_result(second)[1][0][0][3]["max_tokens"], 2)
+        # Replay the cumulative history without double-counting repeated frames.
+        frames = b"".join(worker.encode_message({"seq": i, "result": value}) for i, value in
+                          enumerate(({"value": worker.pack_usage_value(None), "calls": []}, first, second), 1))
+        remote = self.remote(frames, "usage-result")
+        transport = mock.MagicMock(return_value=(200, b"{}", 0.1))
+        adapter = worker.usage_proxy(remote, SimpleNamespace(unix_http_request=transport))()
+        adapter.tokenize_messages([])
+        adapter.tokenize_messages([])
+        transport.assert_called_once()
+        self.assertEqual(transport.call_args.args[3]["max_tokens"], 2)
+
+    def test_usage_request_refuses_missing_duplicate_instances_and_malformed_stubs(self):
+        module = SimpleNamespace(OpenAIAdapter=mock.Mock(), unix_http_request=lambda: None)
+        request = {"operation": "create", "instance": 1, "stub": {"default": True},
+                   "args": worker.pack_usage_value(()), "kwargs": worker.pack_usage_value({})}
+        for value in ({**request, "instance": True}, {**request, "operation": "execute"},
+                      {**request, "operation": "tokenize"}, {**request, "stub": {"unchanged": True}},
+                      {**request, "stub": {"default": 1}}, {**request, "stub": {"fixture": worker.pack_usage_value([])}}):
+            with self.subTest(value=value), self.assertRaises(worker.ProtocolError):
+                worker.usage_result(module, {}, value)
+        module.OpenAIAdapter.assert_not_called()
+        instances = {}
+        worker.usage_result(module, instances, request)
+        with self.assertRaises(worker.ProtocolError):
+            worker.usage_result(module, instances, request)
+        module.OpenAIAdapter.assert_called_once()
+
     def test_job_signal_observation_and_typed_refusals(self):
         class HarnessError(RuntimeError):
             pass
