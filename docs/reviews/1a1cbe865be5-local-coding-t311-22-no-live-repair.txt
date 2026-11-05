@@ -1,0 +1,179 @@
+Commit: 1a1cbe865be559b01df41a0451b035a0f724d625
+Scope: local-coding-t311-22-no-live-repair
+
+# Independent review — T-311.22 same-row M1 repair (oracle v21)
+
+Reviewer: Claude Opus 5.5, separate read-only session. Tier: core. Review 2 (same-row repair of review 1 M1).
+Base: 9270a9ab06f57fe99469be7d010ee465cc93e30a. Row reviewed: T-311.22 only.
+
+## Methods
+
+- `git rev-parse 1a1cbe865be559b01df41a0451b035a0f724d625` = HEAD. `git status --porcelain` was empty before and
+  after every run.
+- Read IP-POLICY.md, the T-311.22 row and the whole 8-file diff from the base: oracle VERSION/coverage label, worker
+  `job_result`, both oracle test modules, the guide, the repair evidence, the TASKS row and the retained review 1.
+  Re-read the unchanged `job_proxies`, `RemoteFunction.__call__` and `valid_job_result`, and the worker loop's
+  `except BaseException` → sticky `candidate_exception` mapping.
+- `cmp` of `/lane/reviews/9270a9ab06f5-local-coding-t311-22-job-oracle.md` with
+  `docs/reviews/9270a9ab06f5-local-coding-t311-22-job-oracle.txt`: identical bytes.
+- Extracted the frozen dev-028 base, reference and hidden test and checked them against the pins: `a93c667a…668c`,
+  `1c29f82e…3988` and `1eeefff2…97b7`, all matching. Re-read hidden lines 324-371 and reference
+  `signal_running_cli` (reference.py:930-951).
+  - The mock's side effect is `lambda base, number: sent.append(number)`. Only numbers from calls that reach its body
+    are asserted, so wrapper return values are never read.
+  - The final no-live block calls the module's real helper against a fresh empty `TemporaryDirectory`.
+  - The reference does `resolve(strict=True)`, then refuses at `read_run_record` before any pidfd or signal. Without
+    the recreated directory it would raise FileNotFoundError instead of HarnessError, so the reference PASS shows the
+    fixture is created.
+- Ran every required command in the fresh private directory `/lane/state/tmp/review2-t311-22-5hO0TdYR` through
+  `/tools/build-slot`. I copied `probes.py` there (sha256 `57bf9a56…f4e0`, identical to the builder's) and read it
+  first. I did not run `implement.py` or `run.py`. No GPU or model was used.
+- Ran 11 probes of my own against v21 (both graders) and one against an exported v20 tree (below).
+- Checked all 26 evidence SHA-256 rows. The 4 source/test rows match the committed blobs at HEAD; the 22 artifact rows
+  match the raw files in `/lane/state/tmp/t311-22-job-repair`. Also read `audit.json`, `source-digests.json`,
+  `red.log`/`red-result.json` and the `*-result.json` files.
+
+## Required reproduction
+
+Node: `v24.15.0`; `sha256sum target/local-agent-tools/node` = `d1de76d8…bd932c` (matches).
+Seconds include waits for the shared reservation.
+
+| # | Command | Result | Seconds |
+| --- | --- | --- | --- |
+| 1 | `bash /tools/build-slot python3 scripts/local_agent_fast_gate.py --base 9270a9ab06f57fe99469be7d010ee465cc93e30a --timeout 600` | exit 0; `Ran 146 tests`, OK; `FAST GATE: PASS` | 1439.6 |
+| 2 | `bash /tools/build-slot python3 -B -m unittest tests.test_coding_eval tests.test_coding_eval_collection tests.test_coding_eval_rust -v` | exit 0; `Ran 59 tests`, OK, no skips | 735.3 |
+| 3 | `bash /tools/build-slot python3 scripts/coding_eval_oracle.py verify --output "$R/independent"` | exit 0; version v21; 18 pairs, all valid; 23 reference methods; 187 reference calls; controls 36 = 18 pass / 18 fail; generated_scoring false; model_score null; collection `0c2a0624…1570`. dev-028: base fail, test_failure, 1 error, 13 calls; reference PASS, 18 calls | 17.8 |
+| 4 | `bash /tools/build-slot python3 scripts/coding_eval.py verify --output "$R/legacy"` | exit 0; 30 valid pairs; 89 reference tests; 0 skipped | 49.9 |
+| 5 | `bash /tools/build-slot python3 -B "$R/probes.py"` | exit 0; 5 tests OK; 27 reports; 11 successful; cause list equal to the builder's probes.json | 10.0 |
+| 6 | `bash /tools/build-slot python3 scripts/validate_docs.py` | exit 0; "Validated 725 Markdown file(s) and all policy invariants." | 152.8 |
+| 7a | `git diff --check 9270a9ab… HEAD` | exit 0 | — |
+| 7b | `git diff --exit-code 9270a9ab… HEAD -- <9 listed legacy/fast-gate/evidence files>` | exit 0 (unchanged) | — |
+
+Per-variant results in my run of the builder probes:
+
+- `liveness-deleted`: test_failure, 18 calls.
+- `liveness-crashes`: candidate_exception, `candidate_exception_failed` true.
+- `liveness-subclass`: pass.
+- Each of these reports counts exactly one control attempt.
+- `private-no-live-payload` is absent from every oracle artifact (report, tests, wire, oracle and candidate logs). It
+  appears only in the unchanged legacy grader's private stderr.
+
+## Reviewer probes
+
+- Script: `$R/own_probes.py`. Results: `$R/own.json`. Reports and logs: `$R/own/`.
+- Each probe is a synthetic dev-028 reference with appended code. Both the v21 oracle and the unchanged legacy grader
+  graded it.
+- Admission was mocked only inside the probe script, as in the builder tests.
+
+| Variant | Oracle (passed, cause, calls) | Legacy | Agreement |
+| --- | --- | --- | --- |
+| `nolive-requires-empty-dir` (refuses only for an existing empty `/tmp/` dir, otherwise returns None) | pass, none, 18 | pass | yes (fixture exists and is empty) |
+| `nolive-keyerror` | fail, test_failure (1 error) | fail | yes |
+| `nolive-argtype` | fail, test_failure (1 error) | fail | yes |
+| `nolive-systemexit` (SystemExit(0)) | fail, candidate_exception | fail | yes |
+| `nolive-harness-payload` (HarnessError with a private message) | pass | pass | yes; payload absent from all oracle artifacts |
+| `unknown-control-calls-helper` (calls the real helper on `/expected` before refusing) | fail, candidate_exception, 4 calls | fail | yes (`/expected` is not recreated) |
+| `keyword-signal-call` (`number=`, `base=`) | pass | pass | yes |
+| `bool-number` (True as the signal) | fail, test_failure | fail | yes |
+| `nolive-kill-self` (SIGKILL to its own worker inside the helper) | fail, protocol; control attempt failed 1 | fail (infrastructure) | yes; counted, not dropped |
+| `nolive-escape` (confinement read from inside the candidate's no-live helper) | pass | pass | yes; see below |
+| `stash-mock-duplicate` | **pass**, none, 18 | **fail** (failure) | **no; see L1** |
+
+From the escape probe's `candidate.log`, taken while the candidate's helper was running:
+
+- Environment `HOME, LANG, PATH, PWD` only; PIDs 1-2 only.
+- `/output`, `/candidate-tmp`, `/lane`, `/tools`, `/var/home`, `/home`, `/adapter/test.py` and `/etc/hostname` are
+  absent.
+- `/workspace`, `/adapter` and `/usr` are not writable; TCP to `1.1.1.1:53` is denied.
+- `/tmp` held only the two lexical fixture directories (the support-bundle directory and the no-live base). The
+  helper's `base` was `/tmp/tmp…`, under the candidate's private tmpfs.
+
+Running the candidate's own helper therefore adds no authority beyond the arbitrary candidate code the sandbox
+already runs.
+
+## Analysis against the inspection list
+
+- **Candidate-owned no-live helper.** `job_result` (`scripts/coding_eval_oracle_worker.py:509-527`) no longer patches
+  `signal_running_cli` when `record` is false.
+  - For stop/control it recreates only a `/tmp/[A-Za-z0-9_-]+` base with `mkdir(0o700, exist_ok=True)` in the
+    candidate's private tmpfs.
+  - The request comes from the trusted side, and the trusted temporary path matches.
+  - The verdicts match the review 1 fix:
+    - A normal return fails the original `assertRaises`.
+    - ValueError and SystemExit become the sticky `candidate_exception` through the worker loop's `except
+      BaseException`.
+    - HarnessError, including a subclass, maps to the closed `harness` tag. The trusted side raises its own
+      HarnessError with the fixed message.
+    - KeyError and ArgumentTypeError tags reproduce the original's error result.
+- **Mock dispatch.** Recorded calls patch a MagicMock whose `side_effect` has the original `(base, number)`
+  signature.
+  - Only calls that reach the body reach `observed`; arguments are normalised to positional form. This matches
+    `sent.append(number)`.
+  - The side effect returns None, as the original lambda does.
+  - Stop/control return values are dropped to None (`:550-551`). Export/bundle values still go through the
+    unchanged codec, and the `unsupported-return` diagnostic now exercises export.
+- **Trusted replay.** `job_proxies.call` is unchanged. It validates the whole reply first and replays only while
+  `isinstance(module.signal_running_cli, mock.Mock)` holds.
+  - A target replaced after the request was sent is refused with `oracle.unsupported-signal-fixture` (new unit test).
+  - Calls in a `record=False` reply are discarded; the new plain-helper control test shows `live` is never called.
+  - The export-branch test keeps its real purpose, and its comment is corrected (L2).
+- **Counts and admission.** dev-028 control profiles are unchanged (base 13 calls / 1 error, reference 18). Each
+  report counts one attempt. Generated scoring stays false. No held-out content, prompt, model or harness tuning is
+  in the diff or the commit message.
+  - The two old test expectations changed as documented: the `record=False` unit test now expects `none`/no calls
+    when the helper returns None, and `unsupported-return` moved to export.
+  - No other old method body changed.
+- **Integrity bindings.**
+  - The collection fingerprint `0c2a0624…1570` is unchanged and is reported by both verifiers.
+  - Both diff checks pass. TASKS changes only the existing .22 row, which stays `[ ]`.
+  - audit.json: passed; 123 reports; 302 log bindings; 30 frozen tasks; 8 unchanged files.
+  - The red record (2 methods, 5 subtest failures) fits the stated v20 regression order.
+- **Hygiene.** The diff has no private host path, username, hostname, credential, private sibling project,
+  other-product comparison or trademark branding.
+  - The retained review's `/lane`/`/tools` literals are generic lane paths, as in 37 earlier retained reviews.
+  - The model name appears only as reviewer attribution.
+- **Delivery.** One sub-row level; the repair ships running, measured code.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L1 (low; pre-existing in v20; backlog before generated admission): a retained per-request signal mock silently
+drops later calls, so the oracle can pass a candidate the original fails.**
+
+- Code: `scripts/coding_eval_oracle_worker.py:519-527` creates a fresh `observed` and patch for each recorded
+  stop/control request. Calls through a candidate-retained reference to an earlier request's mock go to a stale
+  `observed` and are never transported.
+- The frozen method has one patch across stop/pause/resume, so in the original such calls still append to `sent`.
+- Reproduction (`stash-mock-duplicate`): `stop` saves `signal_running_cli` (the patched mock), then
+  `control(..., 'pause')` calls the saved mock and also the normal path.
+  - The legacy grader fails: `sent` holds a duplicate SIGUSR1.
+  - v21 passes with 18 calls.
+  - The same variant on an exported v20 tree (`$R/v20`, run with `GIT_DIR` pointing to the repository's object
+    store, read-only) also passes. The defect is not introduced by this repair.
+- Severity: low. It needs a candidate that deliberately keeps the test double and calls both it and the patched
+  global. Natural lazy caching fails both graders, because the cached stale mock defeats the no-live refusal in the
+  original too. No score is produced while generated scoring is disabled.
+  - The guide's sentence "Order, missing calls, wrong values … still reach the original assertions" should not be
+    read as covering duplicate calls through retained doubles.
+- Fix: in `record_signal`, check a per-request `active` flag, cleared when the patch exits. Make any later invocation
+  of a stale double set a sticky flag that turns the next job reply into `adapter_policy`, or forward it as a
+  failure. Add `stash-mock-duplicate` as a must-fail variant.
+
+Carried, unchanged: review 1 L1's PurePath/subclass codec restriction. It is now disclosed in the guide and evidence
+as stricter than the original, and stays backlog before generated admission.
+
+## Per-row result
+
+- **T-311.22: PASS at exact commit `1a1cbe865be559b01df41a0451b035a0f724d625`.**
+  - Review 1 M1 is repaired: the candidate's own no-live helper runs against the finite private empty directory.
+  - Normal-return and ValueError faults now fail as the frozen method fails them, and refusal tags stay closed and
+    payload-free.
+  - Every required run reproduced with the stated counts, all 26 evidence bindings match, and confinement held under
+    my probes.
+  - Open lows (backlog): new L1 above (stale retained mock) and the carried PurePath/subclass policy.
+- Not reviewed or closed here: parent T-311 (it needs its own decision), T-311.15/.16, generated scoring and the other
+  open items listed in the evidence.
+- This review is not a certification or legal clearance.
+
+Verdict: PASS
