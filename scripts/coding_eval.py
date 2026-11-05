@@ -26,10 +26,11 @@ import tempfile
 import time
 
 if __package__:
-    from . import coding_eval_collection, coding_eval_rust
+    from . import coding_eval_collection, coding_eval_rust, coding_eval_resources
 else:
     import coding_eval_collection
     import coding_eval_rust
+    import coding_eval_resources
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = "coding-development-v10"
@@ -858,7 +859,8 @@ def grade(task: dict, files: dict[str, bytes], output: Path) -> dict:
     infrastructure_error = None
     input_error = None
     try:
-        exit_code, timed_out, output_limited, tests = grade_case(task, files, output)
+        with coding_eval_resources.measurement() as resource_observation:
+            exit_code, timed_out, output_limited, tests = grade_case(task, files, output)
     except (EvaluationError, OSError, subprocess.SubprocessError) as error:
         # Keep a failed case and continue validation; never turn partial counts into PASS.
         if isinstance(error, InputIntegrityError):
@@ -886,6 +888,8 @@ def grade(task: dict, files: dict[str, bytes], output: Path) -> dict:
               "rust_adapter_sha256": sha(Path(coding_eval_rust.__file__).read_bytes()),
               "control_adapter_sha256": sha(Path(__file__).with_name("coding_eval_control.py").read_bytes()),
               "scratch_adapter_sha256": sha(Path(__file__).with_name("coding_eval_scratch.py").read_bytes()),
+              "resource_adapter_sha256": sha(Path(coding_eval_resources.__file__).read_bytes()),
+              "inherited_lane_resources": resource_observation,
               "declared_worker_policy": coding_eval_control.policy(task.get("language") == "rust"),
               "task_sha256": sha(json.dumps(task, sort_keys=True, separators=(",", ":")).encode()),
               "candidate_sha256": sha(files[task["source"]]), "passed": passed,

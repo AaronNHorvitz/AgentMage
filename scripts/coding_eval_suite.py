@@ -255,7 +255,8 @@ def held_out_control(held_out, task_id, kind, output, workspace_roots=()):
     error = None
     input_error = None
     try:
-        exit_code, timed_out, limited, tests = evaluation.grade_case(task, files, output)
+        with evaluation.coding_eval_resources.measurement() as resource_observation:
+            exit_code, timed_out, limited, tests = evaluation.grade_case(task, files, output)
     except (ValueError, OSError, subprocess.SubprocessError) as exception:
         if isinstance(exception, evaluation.InputIntegrityError):
             input_error = evaluation.refusal_detail(exception)
@@ -277,6 +278,8 @@ def held_out_control(held_out, task_id, kind, output, workspace_roots=()):
               "evaluator_sha256": evaluation.sha(Path(evaluation.__file__).read_bytes()),
               "control_adapter_sha256": evaluation.sha(Path(control.__file__).read_bytes()),
               "scratch_adapter_sha256": evaluation.sha(Path(control.scratch.__file__).read_bytes()),
+              "resource_adapter_sha256": evaluation.sha(Path(evaluation.coding_eval_resources.__file__).read_bytes()),
+              "inherited_lane_resources": resource_observation,
               "declared_worker_policy": control.policy(False),
               "hidden_sha256": task["hidden_sha256"], "test_names": task["test_names"],
               "input_error": input_error, "infrastructure_error": error,

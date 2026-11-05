@@ -30,16 +30,18 @@ else:
     import coding_eval_oracle_worker as worker
     import coding_eval_scratch as scratch
 
-VERSION = "coding-independent-oracle-v28"
+VERSION = "coding-independent-oracle-v29"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
     "dev-005": {"function": "capture", "result_type": "capture-result"},
     "dev-006": {"function": "route_grant_arguments", "result_type": "argument-result"},
     "dev-007": {"function": "memory_arguments", "result_type": "argument-result"},
+    "dev-008": {"function": "doc_pack_arguments", "result_type": "fixture-result"},
     "dev-009": {"function": "subprocess_runner", "result_type": "diagnostic-result"},
     "dev-010": {"function": "test_only_files", "result_type": "path-result"},
     "dev-012": {"function": "test_only_files", "result_type": "path-result"},
+    "dev-013": {"function": "confinement_diagnosis", "result_type": "native-result"},
     "dev-015": {"function": "case_passed", "result_type": "bool"},
     "dev-016": {"function": "OpenAIAdapter", "result_type": "usage-result"},
     "dev-017": {"function": "make_container_readable", "result_type": "mode-result"},
@@ -50,6 +52,7 @@ SUPPORTED = {
     "dev-022": {"function": "verify_case", "result_type": "verification-result", "observe_case_roots": True},
     "dev-023": {"function": "implementation_identity", "result_type": "bool-map", "identity_fixture": True},
     "dev-024": {"function": "gpu_memory", "result_type": "resource-result"},
+    "dev-025": {"function": "setup", "result_type": "fixture-result"},
     "dev-026": {"function": "run_commands", "result_type": "deadline-result", "observe_commands": True},
     "dev-027": {"function": "extension_arguments", "result_type": "argument-result"},
     "dev-028": {"function": "control", "result_type": "job-result"},
@@ -75,9 +78,13 @@ CONTROL_PROFILES = {
                 "function_found": False},
     "dev-007": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 52,
                 "function_found": False},
+    "dev-008": {"failures": 0, "errors": 2, "base_calls": 2, "reference_calls": 40,
+                "function_found": False, "candidate_exception": True},
     "dev-009": {"failures": 1, "base_calls": 1, "reference_calls": 1},
     "dev-010": {"failures": 1, "base_calls": 1, "reference_calls": 4},
     "dev-012": {"failures": 10, "base_calls": 12, "reference_calls": 14},
+    "dev-013": {"failures": 0, "errors": 8, "base_calls": 8, "reference_calls": 12,
+                "function_found": False, "candidate_exception": True},
     "dev-015": {"failures": 1, "base_calls": 3, "reference_calls": 4},
     "dev-016": {"failures": 0, "errors": 2, "base_calls": 5, "reference_calls": 5,
                 "candidate_exception": True, "function_found": True},
@@ -92,6 +99,8 @@ CONTROL_PROFILES = {
                 "function_found": False, "candidate_exception": True},
     "dev-024": {"failures": 0, "errors": 2, "base_calls": 2, "reference_calls": 6,
                 "function_found": False, "candidate_exception": True},
+    "dev-025": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 3,
+                "function_found": True, "candidate_exception": True},
     "dev-026": {"failures": 1, "base_calls": 3, "reference_calls": 3},
     "dev-027": {"failures": 0, "errors": 1, "base_calls": 1, "reference_calls": 37,
                 "function_found": False},
@@ -104,6 +113,24 @@ CONTROL_PROFILES = {
 def coverage(task):
     """State what transported observations can and cannot establish."""
     kind = SUPPORTED[task["id"]]["result_type"]
+    if kind == "native-result":
+        return {"graded": ["selected-native-path-metadata-refusals", "manager-observation-values",
+                           "manager-call-timeout-output-and-environment", "no-probe-on-untrusted-systemctl"],
+                "adapter_policy": ["finite-metadata-fixtures", "inert-manager-process-stub",
+                                   "trusted-mock-only-call-replay", "bounded-json-observations"],
+                "not_graded": ["real-native-path-or-user-manager-trust", "unasserted-call-arguments",
+                               "unselected-statement-clauses"]}
+    if kind == "fixture-result":
+        return {"graded": (["selected-catalog-parser-values-and-refusals", "catalog-command-arguments",
+                            "sample-manifest-seal-and-file-bytes", "selected-file-mode-and-target-refusals"]
+                           if task["id"] == "dev-008" else
+                           ["selected-fixture-file-presence", "generated-validation-nonzero-exit"]),
+                "adapter_policy": ["read-only-candidate-fixture-observation", "closed-fixture-process-stubs",
+                                   "bounded-observations", "candidate-only-validation-execution"],
+                "not_graded": ["unselected-statement-clauses", "real-agent-execution",
+                               "git-history-and-reservation-correctness", "diagnosis-correctness",
+                               *(["catalog-command-presence-and-count"] if task["id"] == "dev-008" else
+                                 ["validation-result-schema", "setup-return-value-and-directory-modes"])]}
     if task["id"] == "dev-023":
         return {"graded": ["identity-field-counts-and-lengths", "wrapper-path-value"],
                 "adapter_policy": ["bounded-json-observations", "closed-binary-fixture"],
@@ -754,7 +781,7 @@ def grade_case(task, files, output, timeout=evaluation.TIMEOUT):
     with case_workspace(output), scratch.scratch_mount(output) as mount:
         root = mount.root
         fixture_options = {}
-        if config["result_type"] == "mode-result":
+        if config["result_type"] in {"mode-result", "fixture-result"}:
             directory = root / "candidate-tmp"
             directory.mkdir(mode=0o700)
             fixture_options["candidate_tmp"] = directory
@@ -813,7 +840,8 @@ def grade(task, files, output):
     error = None
     input_error = None
     try:
-        exit_code, candidate_exit, timed_out, output_limited, record = grade_case(task, files, output)
+        with evaluation.coding_eval_resources.measurement() as resource_observation:
+            exit_code, candidate_exit, timed_out, output_limited, record = grade_case(task, files, output)
     except (OSError, ValueError, subprocess.SubprocessError) as exception:
         error = evaluation.refusal_detail(exception)
         if isinstance(exception, evaluation.InputIntegrityError):
@@ -851,6 +879,8 @@ def grade(task, files, output):
         "materialized_worker_sha256": evaluation.sha(limited_source(Path(worker.__file__).read_bytes())),
         "scratch_sha256": evaluation.sha(Path(scratch.__file__).read_bytes()),
         "evaluator_sha256": evaluation.sha(Path(evaluation.__file__).read_bytes()),
+        "resource_adapter_sha256": evaluation.sha(Path(evaluation.coding_eval_resources.__file__).read_bytes()),
+        "inherited_lane_resources": resource_observation,
         "wall_seconds": round(time.monotonic() - started, 6),
         "model_attempts": 0, "model_score": None, "gpu_minutes": 0, "tokens": None,
         "score_scope": "independent-oracle-controls-only",

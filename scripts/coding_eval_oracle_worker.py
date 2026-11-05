@@ -29,7 +29,8 @@ MAX_TRANSCRIPT = 2 * 1024 * 1024
 MAX_CALLS = 128
 POLICY_RESULT_TYPES = frozenset({"argument-result", "verification-result", "capture-result",
                                 "bool", "bool-map", "path-result", "mode-result", "command-result",
-                                "diagnostic-result", "resource-result", "deadline-result", "job-result", "usage-result"})
+                                "diagnostic-result", "resource-result", "deadline-result", "job-result", "usage-result",
+                                "fixture-result", "native-result"})
 
 
 class ProtocolError(ValueError):
@@ -272,6 +273,14 @@ class RemoteFunction:
                          and type(result["value"]) is dict
                          and all(type(key) is str and observation_value(value)
                                  for key, value in result["value"].items()))
+            elif self.result_type == "fixture-result":
+                valid = valid_fixture_result(result, args[0])
+            elif self.result_type == "native-result":
+                if type(result) is not dict:
+                    raise ProtocolError("oracle.invalid-native-result")
+                unpack_calls({"calls": result.get("calls")})
+                valid = (type(result) is dict and result.keys() == {"value", "calls"}
+                         and observation_value(result["value"]))
             else:
                 valid = False
             if not valid:
@@ -374,7 +383,7 @@ def argument_proxies(remote, module):
     return Parser, arguments
 
 
-def argument_result(module, name, request):
+def argument_result(module, name, request, *, namespace_reader=namespace_values, namespace_writer=pack_namespace):
     """Run the candidate's parser and helper; all returned observations are data."""
     if not isinstance(request, dict):
         raise ProtocolError("oracle.invalid-argument-request")
@@ -385,11 +394,11 @@ def argument_result(module, name, request):
                 and all(type(value) is str for value in request["argv"])):
             parsed = module.parser().parse_args(request["argv"])
             try:
-                return {"namespace": pack_namespace(parsed)}
+                return {"namespace": namespace_writer(parsed)}
             except (ProtocolError, TypeError):
                 return {"adapter_policy": True}
         if operation == "arguments" and request.keys() == {"operation", "namespace"}:
-            values = namespace_values(request["namespace"])
+            values = namespace_reader(request["namespace"])
             function = getattr(module, name, None)
             if not callable(function):
                 return {"missing_function": True}
@@ -1388,6 +1397,326 @@ def deadline_observation(function, observed):
         return {"adapter_policy": True}
 
 
+NATIVE_FIXTURE_PATHS = ("/usr", "/usr/bin", "/usr/bin/bwrap", "/usr/bin/systemd-run",
+                        "/usr/bin/systemctl", "/usr/bin/git")
+
+
+def native_proxies(remote, module):
+    def invoke(operation, path=None):
+        run = module.subprocess.run
+        if not isinstance(run, mock.MagicMock) and operation == "diagnose":
+            remote.failed = True
+            raise ProtocolError("oracle.native-fixture-not-mocked")
+        # The complete methods replace Path.lstat, or replace the prerequisite
+        # helper itself. Transfer observations, never these callables.
+        mocked_helper = isinstance(module.native_executable_prerequisite, mock.MagicMock)
+        table = {}
+        if operation == "path" or not mocked_helper:
+            for name in NATIVE_FIXTURE_PATHS:
+                try:
+                    info = Path(name).lstat()
+                except FileNotFoundError:
+                    table[name] = None
+                else:
+                    table[name] = {field: getattr(info, field) for field in ("st_uid", "st_mode", "st_size")}
+        manager = {"kind": "unused"}
+        history = None
+        if operation == "diagnose":
+            history = list(run.call_args_list)
+            if type(run.side_effect) is subprocess.TimeoutExpired:
+                manager = {"kind": "timeout"}
+            elif type(run.side_effect) is OSError:
+                manager = {"kind": "oserror"}
+            elif run.side_effect is None and type(run.return_value) is subprocess.CompletedProcess:
+                if type(run.return_value.returncode) is not int:
+                    raise ProtocolError("oracle.native-manager-status-refused")
+                manager = {"kind": "completed", "returncode": run.return_value.returncode}
+            elif run.side_effect is None and isinstance(run.return_value, mock.MagicMock):
+                manager = {"kind": "mock"}
+            else:
+                raise ProtocolError("oracle.native-manager-stub-refused")
+        result = remote({"operation": operation, "path": str(path) if path is not None else None,
+                         "metadata": table, "prerequisite": "available" if mocked_helper else None,
+                         "manager": manager})
+        calls = unpack_calls({"calls": result["calls"]})
+        if operation == "diagnose":
+            if run is not module.subprocess.run or run.call_args_list != history:
+                remote.policy_failed = True
+                raise AdapterPolicyError("oracle.native-manager-history-changed")
+            for args, kwargs in calls:
+                try:
+                    run(*args, **kwargs)
+                except (OSError, subprocess.TimeoutExpired):
+                    pass
+        elif calls:
+            remote.failed = True
+            raise ProtocolError("oracle.native-path-unexpected-calls")
+        return result["value"]
+
+    module.native_executable_prerequisite = lambda path: invoke("path", path)
+    return lambda: invoke("diagnose")
+
+
+def native_result(module, request):
+    if (type(request) is not dict
+            or request.keys() != {"operation", "path", "metadata", "prerequisite", "manager"}
+            or request["operation"] not in {"path", "diagnose"}
+            or type(request["metadata"]) is not dict
+            or not set(request["metadata"]).issubset(NATIVE_FIXTURE_PATHS)
+            or request["prerequisite"] not in (None, "available")
+            or request["path"] != ("/usr/bin/git" if request["operation"] == "path" else None)):
+        raise ProtocolError("oracle.invalid-native-request")
+    table = request["metadata"]
+    for value in table.values():
+        if value is not None and (type(value) is not dict or value.keys() != {"st_uid", "st_mode", "st_size"}
+                                  or any(type(item) is not int for item in value.values())):
+            raise ProtocolError("oracle.invalid-native-metadata")
+    manager = request["manager"]
+    if (type(manager) is not dict or manager.get("kind") not in {"unused", "mock", "timeout", "oserror", "completed"}
+            or (manager.keys() != {"kind"} if manager.get("kind") != "completed" else
+                manager.keys() != {"kind", "returncode"} or type(manager["returncode"]) is not int)):
+        raise ProtocolError("oracle.invalid-native-manager")
+
+    def metadata(path):
+        if str(path) not in table:
+            raise AdapterPolicyError("oracle.native-metadata-path-refused")
+        info = table[str(path)]
+        if info is None:
+            raise FileNotFoundError
+        return SimpleNamespace(**info)
+
+    with contextlib.ExitStack() as stack:
+        stack.enter_context(mock.patch.object(Path, "lstat", metadata))
+        if request["prerequisite"] is not None:
+            stack.enter_context(mock.patch.object(module, "native_executable_prerequisite", return_value="available", create=True))
+        run = stack.enter_context(mock.patch.object(module.subprocess, "run"))
+        if manager["kind"] == "timeout":
+            run.side_effect = subprocess.TimeoutExpired("systemctl", 3)
+        elif manager["kind"] == "oserror":
+            run.side_effect = OSError("private failure text")
+        elif manager["kind"] == "completed":
+            run.return_value = subprocess.CompletedProcess([], manager["returncode"])
+        elif manager["kind"] == "unused":
+            run.side_effect = AdapterPolicyError("oracle.unexpected-native-manager-probe")
+        if request["operation"] == "path":
+            value = module.native_executable_prerequisite(Path(request["path"]))
+        else:
+            value = module.confinement_diagnosis()
+        calls = [{"args": pack_call_value(call.args), "kwargs": pack_call_value(call.kwargs)}
+                 for call in run.call_args_list]
+    if len(calls) > 128 or not observation_value(value):
+        return {"adapter_policy": True}
+    return {"value": value, "calls": calls}
+
+
+def fixture_path(value):
+    """Only lexical private temporary paths; never host or adapter paths."""
+    if (type(value) is not str or len(value) > 4096 or "\0" in value
+            or not value.startswith("/tmp/") or len(value.split("/")) > 64
+            or any(part in ("", ".", "..") for part in value.split("/")[2:])):
+        raise ProtocolError("oracle.invalid-fixture-path")
+    return Path(value)
+
+
+def valid_fixture_result(result, request):
+    if type(result) is not dict:
+        return False
+    if result.keys() == {"harness_error"}:
+        return result["harness_error"] is True
+    if request.get("operation") == "parse" and result.keys() == {"namespace"}:
+        fixture_namespace_values(result["namespace"])
+        return True
+    if request.get("operation") in {"parse", "arguments"}:
+        return valid_argument_result(result, request)
+    if request.get("operation") == "catalog":
+        unpack_calls({"calls": result.get("calls")})
+        return result.keys() == {"calls", "value"} and observation_value(result["value"])
+    if request.get("operation") == "validation":
+        return (result.keys() == {"returncode"} and type(result["returncode"]) is int
+                and -(2**31) <= result["returncode"] < 2**31)
+    if request.get("operation") == "sample":
+        return (result.keys() == {"value", "sample_files"} and observation_value(result["value"])
+                and type(result["sample_files"]) is list and len(result["sample_files"]) <= 128
+                and all(type(name) is str and len(name) <= 1024 for name in result["sample_files"])
+                and len(set(result["sample_files"])) == len(result["sample_files"]))
+    return (request.get("operation") == "setup"
+            and result.keys() == {"value"} and observation_value(result["value"]))
+
+
+def fixture_namespace_values(values):
+    """The catalog parser alone adds a finite list of licence identifiers."""
+    if type(values) is not dict:
+        raise ProtocolError("oracle.invalid-fixture-namespace")
+    if type(values.get("allow_license")) is not list:
+        return namespace_values(values)
+    licenses = values["allow_license"]
+    if len(values) > 128 or len(licenses) > 128 or not all(type(value) is str for value in licenses):
+        raise ProtocolError("oracle.invalid-fixture-namespace")
+    decoded = namespace_values({key: value for key, value in values.items() if key != "allow_license"})
+    return {**decoded, "allow_license": list(licenses)}
+
+
+def fixture_pack_namespace(namespace):
+    values = {key: {"path": str(value)} if isinstance(value, Path) else value
+              for key, value in vars(namespace).items()}
+    fixture_namespace_values(values)
+    return values
+
+
+def fixture_result(module, request, roots):
+    """Execute helpers on candidate scratch; never execute its files in the oracle."""
+    if type(request) is not dict:
+        raise ProtocolError("oracle.invalid-fixture-request")
+    operation = request.get("operation")
+    if operation in {"parse", "arguments"}:
+        # The parser/argument helper sees the same immediate directory fixture
+        # that the trusted test created. Missing paths stay missing.
+        if operation == "parse":
+            if request.keys() != {"operation", "argv", "directories"} or type(request["directories"]) is not list:
+                raise ProtocolError("oracle.invalid-fixture-request")
+            if len(request["directories"]) > 8:
+                raise ProtocolError("oracle.fixture-directory-limit")
+            for name in request["directories"]:
+                fixture_path(name).mkdir(mode=0o700, parents=True, exist_ok=True)
+            request = {key: value for key, value in request.items() if key != "directories"}
+        return argument_result(module, "doc_pack_arguments", request,
+                               namespace_reader=fixture_namespace_values, namespace_writer=fixture_pack_namespace)
+    try:
+        if operation == "setup" and request.keys() == {"operation", "path", "fixture"}:
+            target = fixture_path(request["path"])
+            if type(request["fixture"]) is not str:
+                raise ProtocolError("oracle.invalid-fixture-request")
+            target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+            with mock.patch.object(module, "binary", side_effect=lambda name: Path("/bin/true")):
+                value = module.setup(target, request["fixture"])
+            roots.add(str(target / "disposable/worktree"))
+        elif operation == "sample" and request.keys() == {"operation", "path", "version", "day"}:
+            # A relative target is deliberately passed through for the original
+            # helper to refuse; it never becomes a mounted observation path.
+            if request["path"] == "relative":
+                target = Path("relative")
+            else:
+                target = fixture_path(request["path"])
+                target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+            if type(request["version"]) is not str or type(request["day"]) is not str:
+                raise ProtocolError("oracle.invalid-fixture-request")
+            value = module.write_sample_pack(target, request["version"], request["day"])
+            files = getattr(module, "SAMPLE_PACK_FILES", None)
+            if type(files) is not dict or not observation_value(value):
+                return {"adapter_policy": True}
+            return {"value": value, "sample_files": list(files)}
+        elif operation == "validation" and request.keys() == {"operation", "cwd"}:
+            cwd = fixture_path(request["cwd"])
+            if str(cwd) not in roots:
+                raise ProtocolError("oracle.unknown-fixture-workspace")
+            # Fixed command, all output drained by the outer bounded supervisor.
+            process = subprocess.run(["python3", "tests/run_validation.py"], cwd=cwd,
+                                     check=False, stdout=subprocess.DEVNULL)
+            return {"returncode": process.returncode}
+        elif operation == "catalog" and request.keys() == {"operation", "path", "name", "args"}:
+            target = fixture_path(request["path"])
+            target.mkdir(mode=0o700, parents=True, exist_ok=True)
+            if request["name"] not in {"catalog", "ended_run"}:
+                raise ProtocolError("oracle.invalid-fixture-request")
+            arguments = unpack_call_value(request["args"])
+            if type(arguments) is not list:
+                raise ProtocolError("oracle.invalid-fixture-request")
+            with (mock.patch.object(module, "diagnose", return_value={"lifecycle": "ready", "transport_path": True}),
+                  mock.patch.object(module, "binary", return_value=Path("/expected/agentmage")),
+                  mock.patch.object(module, "RunRecordReservation"),
+                  mock.patch.object(module.subprocess, "Popen") as process):
+                process.return_value.wait.return_value = 0
+                process.return_value.poll.return_value = 0
+                value = getattr(module, request["name"])(target, *arguments)
+            if len(process.call_args_list) > 128:
+                raise AdapterPolicyError("oracle.fixture-call-limit")
+            return {"value": value, "calls": [
+                {"args": pack_call_value(call.args), "kwargs": pack_call_value(call.kwargs)}
+                for call in process.call_args_list]}
+        else:
+            raise ProtocolError("oracle.invalid-fixture-request")
+    except module.HarnessError:
+        return {"harness_error": True}
+    return {"value": value} if observation_value(value) else {"adapter_policy": True}
+
+
+def fixture_proxies(remote, module):
+    """Frozen assertions read a RO view; process results cross as inert values."""
+    def observed_target(path):
+        target = fixture_path(str(path))
+        view = Path("/candidate-tmp") / target.relative_to("/tmp")
+        if not target.exists() and not target.is_symlink():
+            target.symlink_to(view, target_is_directory=True)
+
+    def setup(path, fixture="repair"):
+        value = argument_value(remote({"operation": "setup", "path": str(path), "fixture": fixture}), module)
+        observed_target(path)
+        return value["value"]
+
+    def sample(path, version, day):
+        value = argument_value(remote({"operation": "sample", "path": str(path), "version": version, "day": day}), module)
+        observed_target(path)
+        module.SAMPLE_PACK_FILES = value["sample_files"]
+        return value["value"]
+
+    def validation(command, *, cwd, check, stdout, text):
+        if (command != ["python3", "tests/run_validation.py"] or check is not False
+                or stdout != subprocess.PIPE or text is not True):
+            remote.failed = True
+            raise ProtocolError("oracle.unsupported-fixture-command")
+        result = remote({"operation": "validation", "cwd": str(cwd)})
+        return subprocess.CompletedProcess(command, result["returncode"])
+
+    class Parser:
+        def parse_args(self, argv):
+            directories = []
+            if "--import" in argv:
+                index = argv.index("--import") + 1
+                if index < len(argv) and Path(argv[index]).is_absolute() and Path(argv[index]).is_dir():
+                    directories.append(str(fixture_path(argv[index])))
+            value = argument_value(remote({"operation": "parse", "argv": argv, "directories": directories}), module)
+            return argparse.Namespace(**fixture_namespace_values(value["namespace"]))
+
+    def arguments(namespace):
+        value = argument_value(remote({"operation": "arguments", "namespace": fixture_pack_namespace(namespace)}), module)
+        if "value" in value:
+            return value["value"]
+        return value["arguments"] if value["container"] == "list" else tuple(value["arguments"])
+
+    def catalog_call(name, path, args):
+        # The complete frozen method defines this inert Process fixture. Do not
+        # replay even a valid command into a real launcher or arbitrary callable.
+        process = module.subprocess.Popen
+        if (type(process) is not type or process.__module__ != "hidden_eval"
+                or process.__qualname__ != "CodingHarnessTests.test_catalog_operations_pass_closed_arguments_to_the_catalog_host.<locals>.Process"):
+            remote.failed = True
+            raise ProtocolError("oracle.catalog-fixture-not-mocked")
+        result = argument_value(remote({"operation": "catalog", "path": str(path), "name": name,
+                                        "args": pack_call_value(list(args))}), module)
+        calls = unpack_calls({"calls": result["calls"]})
+        # Validate the entire observation before updating the trusted fixture.
+        for positional, keywords in calls:
+            if (type(positional) is not tuple or len(positional) != 1 or type(positional[0]) is not list
+                    or not all(type(arg) is str for arg in positional[0])
+                    or keywords != {"stdin": None}):
+                remote.policy_failed = True
+                raise AdapterPolicyError("oracle.catalog-call-refused")
+        for positional, keywords in calls:
+            process(*positional, **keywords)
+        return result["value"]
+
+    module.parser = Parser
+    module.doc_pack_arguments = arguments
+    module.write_sample_pack = sample
+    module.catalog = lambda path, args: catalog_call("catalog", path, (args,))
+    module.ended_run = lambda path, run_id: catalog_call("ended_run", path, (run_id,))
+    module.setup = setup
+    # Keep trusted infrastructure's stdlib subprocess module intact. The frozen
+    # method patches only the subject's Popen attribute for its inert fixture.
+    module.subprocess = SimpleNamespace(**{**vars(module.subprocess), "run": validation})
+    return arguments if remote.fixture_function == "doc_pack_arguments" else setup
+
+
 def candidate(config):
     reader = sys.stdin.buffer
     # Keep the wire off standard output before importing any candidate module.
@@ -1407,6 +1736,7 @@ def candidate(config):
         guards = {}
         usage_instances = {}
         job_signal_state = {"stale": False}
+        fixture_roots = set()
         while True:
             # EOF after the oracle exits is normal; truncated messages are not.
             if not reader.peek(1):
@@ -1418,7 +1748,7 @@ def candidate(config):
                     or type(request["seq"]) is not int or not isinstance(request["args"], list)):
                 raise ProtocolError("oracle.invalid-request")
             try:
-                function = (None if config["result_type"] in {"argument-result", "resource-result", "deadline-result", "job-result", "usage-result"}
+                function = (None if config["result_type"] in {"argument-result", "resource-result", "deadline-result", "job-result", "usage-result", "fixture-result", "native-result"}
                             else getattr(module, config["function"]))
                 if config["result_type"] == "path-result":
                     result = path_result(function, module.AmbiguousReference, *request["args"])
@@ -1446,6 +1776,10 @@ def candidate(config):
                     result = deadline_result(module, *request["args"])
                 elif config["result_type"] == "job-result":
                     result = job_result(module, *request["args"], signal_state=job_signal_state)
+                elif config["result_type"] == "fixture-result":
+                    result = fixture_result(module, *request["args"], fixture_roots)
+                elif config["result_type"] == "native-result":
+                    result = native_result(module, *request["args"])
                 elif config["result_type"] in {"bool", "bool-map"}:
                     result = predicate_result(function(*request["args"]), config["result_type"])
                 else:
@@ -1503,6 +1837,11 @@ def oracle(config):
                 proxy, module.main = deadline_proxies(remote, module)
             elif config["result_type"] == "job-result":
                 module.parser, module.stop, proxy, module.export_selection, module.support_bundle_directory = job_proxies(remote, module)
+            elif config["result_type"] == "fixture-result":
+                remote.fixture_function = config["function"]
+                proxy = fixture_proxies(remote, module)
+            elif config["result_type"] == "native-result":
+                proxy = native_proxies(remote, module)
             else:
                 proxy = remote
             setattr(module, config["function"], proxy)

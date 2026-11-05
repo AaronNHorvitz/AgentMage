@@ -123,9 +123,9 @@ the input-freeze or storage/ancestry checks.
 ## Admission remains open
 
 These commands do not enable generated scoring or produce a coding baseline.
-The independent development oracle now covers 20 of the 30 development
-tasks. Remaining development and held-out independent adapters, aggregate CPU
-and resident-memory accounting, and remaining clause-coverage admission still need
+The independent development oracle now covers 23 of the 30 development
+tasks. Remaining development and held-out independent adapters, isolated worker
+accounting and remaining clause-coverage admission still need
 disposition within T-311.17. Resource, permission and evidence boundaries
 remain unchanged.
 
@@ -165,8 +165,9 @@ its recovery and interruption rules remain. Direct traversal diagnostics retain
 their original API and controls. No unbounded candidate traversal fallback runs.
 
 Whole-suite `aggregate_worker_quotas` remains false. The historical graders have
-the separate limits below; aggregate CPU and resident-memory accounting remain
-unavailable. No generated candidate is admitted and no broader resource,
+the separate limits below; candidate-only CPU and resident-memory accounting
+remain unavailable. The inherited lane observations below supplement these limits.
+No generated candidate is admitted and no broader resource,
 descendant-quiescence or release claim follows. The lane's read-only cgroup
 configuration and resource allocation stay unchanged.
 
@@ -242,3 +243,26 @@ No model or GPU run, held-out score, model-role choice, harness tuning or
 parent-row acceptance follows from a passing input check or historical control
 validation. Publish actual admitted model measurements in
 docs/evidence/coding-scoreboard.md at T-311.18, before changing the coding agent.
+
+## Inherited lane counters
+
+Each development, independent and held-out historical report also binds a trusted
+read-only resource reader. On the bounded Linux lane it records the existing
+cgroup's finite RAM, swap, CPU and task limits, CPU/event counter deltas and
+memory boundary samples. It changes no limit or delegation. The entire inherited
+lane is the scope: trusted setup and other lane-local work count too. The memory
+peak is the cgroup's lifetime peak, explicitly not a task peak or GPU measurement.
+
+The reader checks membership, cgroup identity, quota stability and monotonic
+counters at both boundaries, with a fixed refusal when observations are
+unavailable or changed. Historical controls may retain unavailable accounting;
+required mode refuses execution or final verified publication. Interruption
+still propagates if the final observation fails. Reports contain no cgroup path.
+These observations neither enable generated admission nor change the false
+whole-suite `aggregate_worker_quotas` flag.
+
+The ordinary worker unit module contains held-out selections. Preliminary
+adapter changes run separate synthetic adapter modules and development tests;
+the complete ordinary worker module remains deferred intact to row closing.
+Record this distinction when reporting fast checks. Do not call a preliminary
+batch an uninterrupted ordinary fast-gate run.

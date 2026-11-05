@@ -720,7 +720,7 @@ Both processes retain the evaluator's per-process 512 MiB address-space,
 60-second CPU, 32 MiB file and zero core-file limits. A hard eight-process limit
 is installed inside each task namespace before candidate imports, yielding a
 derived 4 GiB address-space bound per namespace. This is not a resident-memory
-measurement, delegated cgroup limit or aggregate CPU-time counter. Generated
+measurement, delegated cgroup limit or candidate-only CPU-time counter. Generated
 scoring remains disabled: this adapter covers twenty of 30 development tasks;
 remaining adapters, legacy/Rust bounds, full admission and the current-harness
 baseline remain open. Held-out definitions stay private and frozen.
@@ -775,3 +775,37 @@ L1's PurePath restriction remains an explicit adapter-policy limit.
 The independent exact-commit re-review passed T-311.22; its newly reported stale
 signal-mock low is addressed by T-311.23, which requires its own independent
 review. Parent T-311 remains open.
+
+## Fixture and native diagnostic observations
+
+Oracle v29 adds three frozen development tasks, for 23 supported tasks in the
+same suite batch. Catalog argument construction and sample-pack generation use
+complete original methods. Parser transport adds a finite licence-list field
+only for this adapter; existing scalar namespace protocols retain their schema.
+Catalog calls replay only into the exact inert process class defined by the
+frozen method. That method checks arguments for observed calls but does not
+establish command presence or count.
+
+Generated sample bytes, manifest JSON, modes and repository-fixture files stay
+on candidate scratch. Trusted assertions inspect a read-only view through
+aliases created in the oracle's own private temporary directory. A generated
+validation script runs only in the candidate namespace; a fixed command and
+closed exit-code observation serve the original test. No candidate script runs
+in the oracle. Setup diagnosis, directory modes, Git history, reservation
+correctness and the validation-result schema remain unestablished by these
+selected methods. The existing network, capability, scratch and process limits
+continue to apply.
+
+Native prerequisite diagnostics transport finite path metadata, closed manager
+stub kinds, return values and observed calls. A plain mock stays a plain mock;
+a completed-process fixture, timeout and OS error retain their respective
+kinds. Call observations replay only into the trusted test's inert manager
+mock, after checking that its history has not changed. These synthetic fixtures
+establish no real native executable or user-manager trust.
+
+Reports additionally bind the read-only inherited-lane resource reader described
+in the [suite guide](coding-suite.md#inherited-lane-counters). Those observations
+cover the entire lane, not candidate-only usage. Lifetime memory peak is not a
+task peak. Generated scoring and whole-suite aggregate admission stay disabled.
+The remaining adapters, clause coverage and admission requirements remain in
+T-311.17; no new row or model baseline follows from this increment.
