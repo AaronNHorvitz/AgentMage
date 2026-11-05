@@ -25,7 +25,7 @@ else:
     import coding_eval as evaluation
     import coding_eval_oracle as oracle
 
-VERSION = "coding-suite-v1"
+VERSION = "coding-suite-v2"
 DEVELOPMENT_SHA256 = "0c2a0624df93085540f61c4677260490a9810a0325efd6bcb75db0dce1461570"
 HELD_OUT_SHA256 = "8141e9281c830fe510863403d6c1f137dcb661c2ba6067e68a94a578a13e5c3b"
 HELD_OUT_COUNT = 10
@@ -61,7 +61,48 @@ def unique_object(pairs):
     return result
 
 
-def private_bytes(path):
+def resolved_location(path):
+    resolved = Path(path).resolve()
+    # Some runtimes leave a symlink loop unresolved in non-strict mode. Check
+    # the nearest existing component explicitly, while allowing a new output
+    # or an unavailable registered worktree. Only absence may be ignored.
+    ancestor = resolved
+    while True:
+        try:
+            ancestor.stat()
+        except FileNotFoundError:
+            if ancestor == ancestor.parent:
+                raise
+            ancestor = ancestor.parent
+        else:
+            return resolved
+
+
+def editing_roots(workspace_roots=()):
+    """Include registered worktrees even when they are currently unmounted."""
+    raw = evaluation.git("worktree", "list", "--porcelain", "-z")
+    paths = [Path(os.fsdecode(field[len(b"worktree "):]))
+             for field in raw.split(b"\0") if field.startswith(b"worktree ")]
+    if not paths or any(not path.is_absolute() for path in paths):
+        refuse("worktree-discovery-refused")
+    try:
+        return {resolved_location(path) for path in (evaluation.ROOT, *paths, *workspace_roots)}
+    except (OSError, RuntimeError):
+        refuse("worktree-discovery-refused")
+
+
+def private_location(path, workspace_roots=()):
+    """The operator owns these paths; resolve aliases before opening or mkdir."""
+    try:
+        resolved = resolved_location(path)
+    except (OSError, RuntimeError):
+        refuse("private-location-refused")
+    if any(resolved.is_relative_to(root) for root in editing_roots(workspace_roots)):
+        refuse("private-location-exposed")
+
+
+def private_bytes(path, workspace_roots=()):
+    private_location(path, workspace_roots)
     descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     with os.fdopen(descriptor, "rb") as stream:
         before = os.fstat(stream.fileno())
@@ -83,8 +124,8 @@ def relative_file(value, prefix):
             and all(re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", part) for part in value[:-3].split("/")))
 
 
-def held_out_tasks(path):
-    raw = private_bytes(path)
+def held_out_tasks(path, workspace_roots=()):
+    raw = private_bytes(path, workspace_roots)
     if evaluation.sha(raw) != HELD_OUT_SHA256:
         refuse("held-out-changed")
     value = json.loads(raw, object_pairs_hook=unique_object)
@@ -118,12 +159,25 @@ def held_out_tasks(path):
     return tasks
 
 
-def check_inputs(held_out):
+def is_ancestor(ancestor, descendant):
+    result = subprocess.run(
+        ["git", "--no-optional-locks", "merge-base", "--is-ancestor", ancestor, descendant],
+        cwd=evaluation.ROOT, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL, timeout=30,
+    )
+    if result.returncode not in (0, 1):
+        refuse("ancestry-unavailable")
+    return result.returncode == 0
+
+
+def check_inputs(held_out, workspace_roots=()):
     """Check pins and split leakage without running any held-out assertion."""
     development = development_tasks()
-    tasks = held_out_tasks(held_out)
+    tasks = held_out_tasks(held_out, workspace_roots)
     development_sources = set()
     development_changes = {(task["base"], task["source"]) for task in development}
+    development_revisions = {revision for task in development
+                             for revision in (task["base"], task.get("hidden_revision", task["reference"]))}
     for task in development:
         files = evaluation.projection(task)
         development_sources.update((name, evaluation.sha(data)) for name, data in files.items())
@@ -138,6 +192,8 @@ def check_inputs(held_out):
             refuse("split-leakage")
         if evaluation.git("rev-parse", task["reference"] + "^").decode().strip() != task["base"]:
             refuse("held-out-parent")
+        if any(is_ancestor(task["reference"], revision) for revision in sorted(development_revisions)):
+            refuse("split-ancestry-leakage")
         files = evaluation.projection(task)
         evaluation.pinned_blob(task["reference"], task["source"], task["reference_sha256"])
         evaluation.pinned_blob(task["reference"], task["hidden_test"], task["hidden_sha256"])
@@ -150,9 +206,10 @@ def check_inputs(held_out):
             "generated_scoring": False, "model_score": None, "model_attempts": 0}
 
 
-def held_out_control(held_out, task_id, kind, output):
+def held_out_control(held_out, task_id, kind, output, workspace_roots=()):
     """Accept only an id and control kind, never candidate bytes or task overrides."""
-    tasks = held_out_tasks(held_out)
+    private_location(output, workspace_roots)
+    tasks = held_out_tasks(held_out, workspace_roots)
     task = next((item for item in tasks if item["id"] == task_id), None)
     if task is None or kind not in ("base", "reference"):
         refuse("control-refused")
@@ -207,28 +264,42 @@ def controls_valid(base, reference):
             and reference["passed"] and reference["cause"] == "none")
 
 
-def verify(held_out, output, purpose):
+def development_controls_valid(summary):
+    tasks = development_tasks()
+    expected = {task["id"]: task["expected_tests"] for task in tasks}
+    rows = summary["tasks"]
+    return (summary["passed"] and len(rows) == len(tasks)
+            and {row["task"] for row in rows} == expected.keys()
+            and all(controls_valid(row["base"], row["reference"])
+                    and row["base"]["tests"]["tests"] == expected[row["task"]]
+                    and row["reference"]["tests"]["tests"] == expected[row["task"]]
+                    for row in rows))
+
+
+def verify(held_out, output, purpose, workspace_roots=()):
     if purpose != "row-close":
         refuse("held-out-purpose-refused")
-    inputs = check_inputs(held_out)
+    private_location(output, workspace_roots)
+    inputs = check_inputs(held_out, workspace_roots)
     evaluation.new_directory(output)
     started = time.monotonic()
     development = evaluation.verify(output / "development")
+    development_valid = development_controls_valid(development)
     independent = oracle.verify(output / "independent-development")
     private_output = output / "held-out"
     evaluation.new_directory(private_output)
     rows = []
-    for task in held_out_tasks(held_out):
-        base = held_out_control(held_out, task["id"], "base", private_output / (task["id"] + "-base"))
-        reference = held_out_control(held_out, task["id"], "reference", private_output / (task["id"] + "-reference"))
+    for task in held_out_tasks(held_out, workspace_roots):
+        base = held_out_control(held_out, task["id"], "base", private_output / (task["id"] + "-base"), workspace_roots)
+        reference = held_out_control(held_out, task["id"], "reference", private_output / (task["id"] + "-reference"), workspace_roots)
         rows.append({"task": task["id"], "base": base, "reference": reference,
                      "valid": controls_valid(base, reference)})
     evaluation.publish(private_output / "controls.json", {"tasks": rows})
     # Aggregate metadata is safe to inspect without supplying task-level held-out
     # feedback to future harness/prompt tuning. Raw files stay private.
     summary = {**inputs, "kind": "complete-suite-historical-controls-only",
-               "passed": development["passed"] and independent["passed"] and all(row["valid"] for row in rows),
-               "development_controls_valid": development["passed"],
+               "passed": development["passed"] and development_valid and independent["passed"] and all(row["valid"] for row in rows),
+               "development_controls_valid": development["passed"] and development_valid,
                "independent_development_controls_valid": independent["passed"],
                "independent_development_tasks": len(independent["tasks"]),
                "held_out_controls_valid": all(row["valid"] for row in rows),
@@ -259,12 +330,14 @@ def main():
     parser.add_argument("--held-out", type=Path, required=True)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--purpose", choices=("row-close",))
+    parser.add_argument("--workspace-root", type=Path, action="append", default=[],
+                        help="additional editing/model workspace to exclude from private storage; repeatable")
     args = parser.parse_args()
     if args.operation == "verify" and (args.output is None or args.purpose != "row-close"):
         parser.error("verify requires --output and --purpose row-close")
     try:
-        result = (check_inputs(args.held_out) if args.operation == "check"
-                  else verify(args.held_out, args.output, args.purpose))
+        result = (check_inputs(args.held_out, args.workspace_root) if args.operation == "check"
+                  else verify(args.held_out, args.output, args.purpose, args.workspace_root))
         print(json.dumps(result, sort_keys=True))
         return 0 if result["passed"] else 2 if result["input_refused"] else 1
     except (OSError, ValueError, subprocess.SubprocessError) as error:

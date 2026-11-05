@@ -76,9 +76,96 @@ held-out byte commitment is also in the runner and guide.
 | --- | --- |
 | final-fast.log | `4df0d72988c811423a9430206f548c76a0c430d1910b34d368cd9311d53d8d36` |
 | input-check.log | `d3c938262910bc6ce7de9a937e0040b35f57e46a795fab12d41c2b6a6e17f440` |
-| final-unit.log | `2392f4a450d7dcb330c5f0ec8e5af1e1bdb49a5380a465da38b11e703f68972a` |
-| fast.log | `b2a6ef3a1653fcd0eedf4d43e854bf9c0d090c6f5f7c684c2e013873d1cefe27` |
+| final-unit.log (initial failed unit run) | `2392f4a450d7dcb330c5f0ec8e5af1e1bdb49a5380a465da38b11e703f68972a` |
+| fast.log (initial failed gate) | `b2a6ef3a1653fcd0eedf4d43e854bf9c0d090c6f5f7c684c2e013873d1cefe27` |
 | validation-results.json | `d2763bca06fce0c958a7481f65d477fa156126e37f45af1eae78e09123a49d57` |
 | final-freeze.json | `a150890b383df5b689f1c6a837e34dde7f2883547b532d050881373e92e69d72` |
 | frozen-held-out-v1.json | `8141e9281c830fe510863403d6c1f137dcb661c2ba6067e68a94a578a13e5c3b` |
 | initial-test_coding_eval_suite.py | `198bffdbd80cb0e5c7e23b56d7248bdce2797d11cc02123ac8e95feaf0bb3035` |
+
+## Same-row storage and ancestry repair
+
+The [independent checkpoint review](../reviews/975f55b27bfd-local-coding-t311-suite-freeze.txt)
+is retained byte-identically. Its PASS covers exact commit
+`975f55b27bfd4df65d537e24606e8c9906a5cb97` and explicitly closes no expanded row.
+This follow-up stays in T-311.17; no per-finding row or new completion claim is
+added, and the earlier diagnostic-oracle milestone remains preserved.
+
+Suite v2 refuses descriptors and raw output in the repository, registered Git
+worktrees or additional configured editing/model workspaces, resolving ancestor
+aliases before reading or creating files. Worktree discovery and path resolution
+fail closed with content-minimized errors. The operator must supply additional
+workspace roots and keep their registration/ancestors stable during execution;
+this does not protect against a hostile host operator.
+
+The checker refuses any development base or hidden-test revision descended from
+or equal to a held-out reference, including when its source bytes have changed.
+Missing ancestry information refuses the check. Synthetic tests cover the
+previously untested parent, identity and hidden-input refusals without importing
+held-out tests. A throwaway two-commit repository exercises the real Git ancestry
+query.
+
+The suite also applies the documented strict control rule to development pairs:
+all tasks exactly once, exact original method counts on both controls, ordinary
+base exit 1 with observed failures/errors, no skips or expected failures, and a
+passing reference. The older development verifier remains unchanged. Synthetic
+contracts reject its otherwise passing summary when any stricter condition is
+missing.
+
+The [guide](../guides/coding-suite.md) records how adapter work avoids preliminary
+held-out runs, including the overlap with the ordinary worker unit module.
+Neither this source batch nor its fast gate imports that test module. No
+held-out assertion, model attempt, GPU work or harness tuning occurs here.
+The legacy grader, independent oracle/worker, admission guard, collection and
+frozen-test bytes are unchanged.
+
+The table above now labels the original failed unit/gate artifacts explicitly.
+This follow-up retains its post-write Markdown lint in final-docs.log; the final
+artifact manifest binds that log after it completes. Source snapshots, command
+results and all earlier logs remain private.
+
+### Follow-up verification
+
+All complete suites use the shared build reservation. Reservation wait is outside
+the command timings below. The initial 21-test and intermediate 22-test runner
+checks passed. The first complete fast gate then ran 23 tests with 22 passing
+and one failure in the new symlink-loop test: this runtime's non-strict resolver
+left the loop unresolved. The fix explicitly stats the nearest existing
+component, ignoring only absence. The same test assertions remain unchanged;
+the final fast gate binds the corrected source and all 23 passing tests. The
+failed log, source/test snapshots and initial result record remain retained.
+
+| Check | Observed result | Command wall seconds |
+| --- | --- | --- |
+| fast | PASS; 23 unit tests in 0.189 seconds, Python/whitespace, retained-review format and Markdown checks | 1.920299 |
+| check | PASS; 30 development / 10 held-out definitions, zero held-out assertions or model attempts | 5.983012 |
+| cli-input-workspace-refusal | Expected exit 2; configured workspace descriptor refused before reading | 0.083978 |
+| cli-output-repository-refusal | Expected exit 2; repository output refused before creating it | 0.090533 |
+| development-controls | PASS; all 30 frozen development base/reference pairs | 44.073336 |
+| strict-development | PASS; all 30 pairs satisfy the stricter rule; 89 reference methods | 0.080474 |
+
+### Follow-up artifact bindings
+
+Names below identify private retained artifacts, not public download links.
+
+| Artifact | SHA-256 |
+| --- | --- |
+| complete/fast.log | `146da1f277f38d7c7c8f7e068886b96213b5cd87ed79dee35ad782f9a7a33422` |
+| complete/check.log | `1d64cae1180fd5753ff16e397d6766e2779adbb12f0bb58acf2a4f00f7859e25` |
+| complete/cli-input-workspace-refusal.log | `09010f4adfb31c9e0b3ea33fc17ae0c79291c878c6309c9fc48f1f0e3bfc8d9d` |
+| complete/cli-output-repository-refusal.log | `09010f4adfb31c9e0b3ea33fc17ae0c79291c878c6309c9fc48f1f0e3bfc8d9d` |
+| complete/development-controls.log | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| complete/strict-development.log | `6c20943db9bfe70cf32b83b111b92b4b8993cc74ba1e0a1c6abd22c66007825e` |
+| complete/results.json | `64fbf4d32e1f4a20853ed67556e407e1ac6663e9c82f1ed9634622940ba8299f` |
+| complete/tested-sources.json | `6fce4184482588ad0624a6a52a44d7ed5253130dbd6e7dcaadd0ac6e7bfa2f0e` |
+| initial-audit.json | `c0a460c07a6a636872ab0d9d8fb90f6e71b7f3bfa7c7185ddb5dd1dc456d901e` |
+| fast.log | `8934178a1a5398df59e9c3ca614ea772c9e86c87e464c8182f191759c3ce0cf6` |
+| results.json | `6243f09d29231aecd8a86938c4c04bd398bcb718fb7a9244aca9a1a1befede3f` |
+| failed-coding_eval_suite.py | `6f9085bfc24e440338090f7bd00f9b8b2b93e668a1d0fae65da7eeb25ab9063e` |
+| failed-test_coding_eval_suite.py | `2f8cb908354db64ae950e359d97986b4b673c0e85540781d820e86ec3d251905` |
+
+T-311.17 remains open: 19 of 30 development independent adapters exist; remaining
+development and held-out adapters, aggregate quotas, scratch/cleanup deadlines,
+mount metadata, coverage and known-race accounting still need completion.
+Generated admission stays disabled. T-311.18 has no current-harness model
+baseline; no score, release or owner-ready claim follows from these controls.

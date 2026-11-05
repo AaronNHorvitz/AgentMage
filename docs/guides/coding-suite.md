@@ -25,6 +25,15 @@ permissions and files owned by a different user. There is no environment or
 command-line digest override, configurable test selection or generated-score
 entry point.
 
+The runner also refuses a descriptor or raw output under this repository, any
+registered Git worktree (including an unavailable worktree), or an additional
+editing/model workspace supplied with repeatable `--workspace-root` options.
+It resolves existing ancestor aliases before opening inputs or creating output.
+Worktree discovery failure refuses the operation. Supply every additional model
+workspace; unrelated programs' unregistered workspaces cannot be discovered by
+the runner. These checks assume operator-owned paths and stable workspace
+registration during the command; they do not isolate a hostile host operator.
+
 These held-out tasks concern Python evaluation-protocol repairs in this
 repository. All ten modify the same worker module at different historical
 commits. This is a narrow tooling set, not evidence of general application
@@ -37,8 +46,10 @@ also precedes those runs.
 
 Hidden tests remain absent from editing projections. The suite checks every
 original Git pin and refuses a held-out reference source already present in a
-development editing projection, or a repeated development source change. This
-check does not establish that the history is unknown to the builder or private
+development editing projection, or a repeated development source change. An
+ancestry check also refuses a development base or hidden-test revision that
+descends from, or equals, a held-out reference. Missing ancestry information
+refuses the check. This does not establish that the history is unknown to the builder or private
 on the public internet. The operator can see the underlying history; future
 model runs must receive only a fresh task projection and statement, with no
 repository history, tests, reference data or cross-task conversation state.
@@ -51,7 +62,8 @@ replace placeholders with operator-selected paths.
 
 ```sh
 bash /tools/build-slot python3 -B scripts/coding_eval_suite.py check \
-  --held-out <private-held-out-descriptor>
+  --held-out <private-held-out-descriptor> \
+  --workspace-root <additional-model-workspace>
 ```
 
 `check` validates the commitments and source separation without importing a
@@ -64,6 +76,7 @@ For a row-closing validation only:
 ```sh
 bash /tools/build-slot python3 -B scripts/coding_eval_suite.py verify \
   --held-out <private-held-out-descriptor> \
+  --workspace-root <additional-model-workspace> \
   --purpose row-close --output <new-private-output-directory>
 ```
 
@@ -84,6 +97,28 @@ propagates. Private reports retain each control's observations, source/test
 digests and bounded log digests. The printable summary contains aggregate
 results and bindings to private reports, without per-task held-out feedback.
 Failed runs stay retained; diagnostic reruns must use new output directories.
+
+The strict base rule applies to both development and held-out pairs in this
+suite command, even if the older development verifier's summary passes. The
+suite requires each development task exactly once and its complete selected
+count on both controls. A duplicate, missing task, skip or abnormal base exit
+cannot validate the collection. The standalone legacy verifier is unchanged.
+
+## Adapter validation without held-out tuning
+
+Develop grading adapters against synthetic contracts and development tasks.
+Run the frozen held-out controls only with the row-closing command; retain every
+attempt, including a failed close, and do not use that feedback to tune the
+coding harness, prompts or model selection. Keep raw held-out feedback outside
+editing/model workspaces. Its score will measure only the narrow protocol domain
+described above.
+
+The ordinary worker unit module overlaps the frozen held-out selections. This
+runner's tests do not import that module. If future adapter work changes that
+worker, perform its complete gate in the row-closing batch, or keep preliminary
+synthetic adapter checks in a separate test module. Do not filter or edit hidden
+tests to make a development gate pass. No held-out assertion has executed in
+the input-freeze or storage/ancestry checks.
 
 ## Admission remains open
 

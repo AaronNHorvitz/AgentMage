@@ -1,0 +1,220 @@
+Commit: 975f55b27bfd4df65d537e24606e8c9906a5cb97
+Scope: local-coding-t311-suite-freeze
+
+# Independent core review: T-311.17 suite input-freeze checkpoint (non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, in a separate read-only session.
+Base: 05cbea75622c60ecae9af66ad5f2acfab7c40219. Row: expanded T-311.17 (checkpoint only).
+The request does not ask to close anything. This PASS does **not** close expanded T-311.17,
+expanded T-311.18 or parent T-311. It also does not approve generated scoring, a held-out run or a
+model baseline.
+
+## Method
+
+- **Commit.** `git rev-parse HEAD` and `git rev-parse 975f55b2…` both printed
+  975f55b27bfd4df65d537e24606e8c9906a5cb97. `git status --short` was empty before and after the
+  review. base..HEAD is one commit that changes exactly seven paths:
+  - TASKS.md;
+  - the new checkpoint evidence;
+  - the coding-evaluation and oracle guides;
+  - the new coding-suite guide;
+  - scripts/coding_eval_suite.py (+278);
+  - tests/test_coding_eval_suite.py (+252).
+
+  No evaluator, collection, Rust adapter, oracle, worker, old test or review file differs from the
+  base.
+- **Reading.** I read the following:
+  - IP-POLICY.md, Decision 0154, the top of TASKS.md and the T-311.15 to T-311.18 rows;
+  - the complete source, test and guide diff;
+  - the evidence;
+  - the admission paths the runner reuses in scripts/coding_eval.py: `projection`, `pinned_blob`,
+    `task_driver`, `grade_case`, `require_historical_candidate` and `verify`.
+- **Builder artifacts.** I read every file in the builder's private batch directory without
+  modifying any of them, including the four helper scripts. I did not execute
+  write-evidence.py, prepare-holdout.py, run-validation.py or audit.py. Everything I reproduced, I
+  reproduced read-only in my own process.
+- **Fresh output.** All outputs went to a fresh directory, `/lane/state/tmp/review-975f55b2`.
+  Heavy commands went through `bash /tools/build-slot`.
+- **Not run.** I ran no `verify --purpose row-close`, held-out assertion, held-out control, model,
+  GPU, download, tuning or policy cascade. Nothing I did imported a held-out test module or ran
+  one of its methods.
+- **Privacy of this report.** It does not reproduce the descriptor body, statements, per-task
+  identities, commits or method names.
+
+## Required commands and results
+
+| Command | Result |
+| --- | --- |
+| `node --version` | v24.15.0 |
+| `sha256sum target/local-agent-tools/node` | d1de76d8…d74bd932c (matches the expected value) |
+| `git rev-parse HEAD` / `git status --short` | 975f55b27bfd…; clean |
+| `git diff --check 05cbea75… 975f55b2…` | rc 0, no output |
+| `cmp docs/reviews/494ee6cff86c-local-coding-t311-cleanup-refocus.txt /lane/reviews/494ee6cff86c-local-coding-t311-cleanup-refocus.md` | rc 0 (byte-identical) |
+| `bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base 05cbea75… --timeout 600` | rc 0. git diff --check, untracked lint, markdownlint over all **5** changed Markdown files (including the evidence), Python lint and `Ran 15 tests in 0.019s`, OK. Ends `FAST GATE: PASS`. Of the 22m51s wall time, almost all was spent queued for the shared reservation |
+| `bash /tools/build-slot python3 -B scripts/coding_eval_suite.py check --held-out <requested private descriptor path>` | rc 2, `suite.refused code=evaluation.io-failed type=FileNotFoundError`. That path is not mounted in this reviewer session; this session's lane state contains only `review-target` and `tmp`. This is an environment limit, not a product defect |
+| The same `check`, through build-slot, pointed at the builder's retained backup copy (sha256 8141e928…c3b, mode 600, nlink 1, same owner) | rc 0 in 2.080 s. Output: development_tasks 30, held_out_tasks 10, held_out_methods 52, held_out_test_methods_run 0, model_attempts 0, model_score null, generated_scoring false, passed true. Development digest 0c2a0624…1570; held-out digest 8141e928…c3b |
+
+The runner refuses any descriptor whose bytes differ from the committed digest. A passing check
+on the backup therefore establishes the same commitment the requested command would have checked.
+I could not see the primary operator copy myself, so I make no claim about it beyond the builder's
+retained audit.
+
+## Static and read-only reproductions
+
+1. **Bindings.**
+   - Every path in commit.json hashes identically to `git show 975f55b2:<path>`, and all seven
+     paths equal final-bindings.json.
+   - Every artifact digest in bindings.json and final-bindings.json matches the current file.
+   - tested-coding_eval_suite.py equals the committed runner (5e87622b…).
+   - The eight hashes in the evidence's artifact table match the retained files.
+2. **Development freeze.** `evaluation.collection()` still has 30 tasks with canonical digest
+   0c2a0624…1570, and their selected methods total 89.
+3. **Held-out commitments, checked statically with git and ast only, never executing a test.**
+   For all ten tasks:
+   - each reference's first parent equals the pinned base;
+   - source base and reference digests, the hidden-test digest and the projection digest match
+     git;
+   - each `test_names` list equals **exactly** the set of test methods added or changed between
+     base and reference in the original test module, compared by AST dump. That gives 52
+     selections, 46 distinct method names, and no method dropped or added by outcome.
+4. **Hidden-test dependencies.** The hidden tests import only the task's source module, and that
+   module imports nothing else from the repository. The one-file reference control is therefore
+   plausible, but it remains unproven until the row-close run.
+5. **Draft-to-final audit.**
+   - Re-running only the pure selection part of prepare-holdout.py in memory, with no write,
+     reproduces the retained draft digest b5377838…69dd exactly.
+   - Draft and final descriptors differ **only** in `statement`: each final statement appends an
+     interface-contract sentence. Every listed signature exactly matches the reference source, and
+     no definition whose signature changed is left out.
+   - Pins, selections, counts, titles and IDs are unchanged.
+
+   This supports the claim that the statement audit preceded the final freeze without changing
+   any hidden byte or selection.
+6. **Split separation.**
+   - The newest development base or reference is dated 2026-10-25. The oldest held-out base is
+     dated 2026-11-03.
+   - No held-out base or reference equals any development base, reference or hidden revision.
+   - No development projection contains the held-out source file.
+   - None of the 46 held-out method names and none of the ten titles occurs in any committed file
+     at HEAD other than the original test module. No prompt, harness, guide or evidence file
+     carries held-out content.
+7. **Retained artifacts and ordering.**
+   - The initial failure (final-unit.log and fast.log: 14 passing, one `KeyError` in the new
+     leakage fixture) is retained.
+   - The committed test differs from the initial snapshot only in that one synthetic fixture: it
+     adds pin fields and a `pinned_blob` mock.
+   - The failure traceback's line numbers match the committed runner.
+   - Artifact times are consistent with this order: draft, final freeze, validation, fixture fix,
+     final gate, bindings.
+8. **Refusal probes on throwaway copies in my own directory.**
+   - The runner refused a symlink alias, mode 0640, a hard link, a FIFO, a directory and a
+     one-byte whitespace change.
+   - `verify` with purpose None, `tune` or `development` refused before creating output.
+   - From the CLI, `verify` without `--output`/`--purpose`, or with `--purpose tune`, exits 2.
+   - No CLI path accepts candidate bytes, a task dictionary or a single held-out task ID.
+9. **Ledger and retention.**
+   - 05cbea75 changes only TASKS.md and adds the retained 494ee6cf review. That review starts with
+     the matching Commit/Scope lines and ends `Verdict: PASS`.
+   - Only T-311.15 and T-311.16 flip to `[x]`; their text records L1/L2 as backlog.
+   - In 975f55b2, T-311.17 and T-311.18 reopen as expanded rows under Decision 0154 item 5. Each
+     row keeps its original milestone text and review links.
+   - No row is added, no sub-row is split, and the ledger outside the active queue is unchanged.
+10. **Public-repository hygiene.** The diff contains no host path, username, hostname, e-mail,
+    credential, private project name or product comparison. The guide publishes only aggregate
+    facts plus the disclosure of the narrow single-module scope.
+
+## Findings
+
+No critical, high or medium finding. The low findings below are backlog/admission items in the
+same row, not new rows.
+
+### L1 (low): descriptor and output location are documented but not enforced
+
+scripts/coding_eval_suite.py:64-78 (`private_bytes`) and :214/:218 (`verify` output) accept any
+path. docs/guides/coding-suite.md:21 says the descriptor stays outside the repository and the
+editing workspace, but nothing refuses a copy or an `--output` inside the repository tree or a
+model workspace. My probe accepted a mode-600 copy at an arbitrary location. That same code path
+would accept one under the repository root.
+
+The row-close run writes per-task held-out stdout/stderr, including verbose test names and
+tracebacks. Those could then land in a tracked or model-visible tree.
+
+Fix: before reading the descriptor or creating output, resolve both paths and refuse them if they
+fall under `evaluation.ROOT` or any configured worktree or model-workspace root. Add synthetic
+tests for both refusals.
+
+### L2 (low): two input-check refusals are vacuous, and three refusals are untested
+
+- **Vacuous check.** scripts/coding_eval_suite.py:144 can never fire, because
+  `evaluation.projection` returns only `scripts/*.py`.
+- **Exact-bytes leakage only.** The leakage test at :136-138 compares exact source bytes. It would
+  not detect a future development base that descends from a held-out reference and so contains
+  the held-out fix in a later form. This is safe today, because the chronology in item 6 holds and
+  the development set is digest-pinned.
+- **Untested refusals.** `held-out-parent`, `held-out-identity` and `hidden-input-exposed` have no
+  test.
+
+Fix: add an ancestry refusal (no development base or hidden revision may be a descendant of any
+held-out reference) and synthetic tests for the three refusals.
+
+### L3 (low): guide states the strict base rule for every pair in the row-close command
+
+docs/guides/coding-suite.md:78-80 states the strict rule in a paragraph that covers all pairs: a
+base must exit 1, with no skips or expected failures. Only `controls_valid`
+(scripts/coding_eval_suite.py:201) applies that rule, and only to held-out pairs. The development
+pairs inside the same `verify` keep the older rule at scripts/coding_eval.py:902, which does not
+require exit 1 or zero skips.
+
+Fix: apply `controls_valid` to the development rows in the suite summary, or say in the guide that
+the strict rule is held-out-only.
+
+### L4 (low): artifact labelling and one evidence claim without a retained log
+
+The private artifact `final-unit.log`, and the `final-unit` label in validation-results.json, are
+the **initial failed** run. The evidence table at
+docs/evidence/t311-suite-freeze-checkpoint-2026-11-05.md:79 lists that artifact without saying so.
+
+Line 53 also claims a lint after writing the record, but that lint has no retained output. My
+fast gate linted all five Markdown files and passed, so the claim now holds independently.
+
+Fix: label failed artifacts as initial or failed in future records, and retain the post-write lint
+output.
+
+### L5 (low, admission planning): held-out scope and the "row-close only" execution rule
+
+The scope is disclosed honestly at coding-suite.md:28-34:
+- all ten held-out tasks change one evaluator-protocol module;
+- that module belongs to the grading machinery itself;
+- the builder wrote that history within the last three days.
+
+The remaining T-311.17 work includes held-out independent adapters, and that work runs into two
+problems:
+- **Execution rule.** Building those adapters means studying the held-out hidden tests and
+  validating the adapters against held-out controls. Evidence line 33 and the guide say held-out
+  execution is reserved for row closing.
+- **Changing source module.** Continued admission work may modify the same module, and the
+  repository's ordinary tests for it contain the held-out methods.
+
+None of this is agent tuning, and no violation has occurred.
+
+Fix: before the row-close request, record how adapter validation runs without extra held-out
+executions, or state that such runs are counted and retained. Record that held-out scores measure
+only this narrow protocol domain.
+
+## Per-row result
+
+- **T-311.17 (expanded), this checkpoint:** PASS. The runner, frozen inputs, statement audit, split
+  separation, refusal boundaries and evidence bindings are verified. The row stays **open**:
+  - admission is incomplete;
+  - 19 of 30 independent development adapters exist;
+  - held-out adapters, quotas and coverage work are still to do;
+  - the real row-close `verify` has not run.
+
+  This review must not be used to close T-311.17.
+- **T-311.18 (expanded):** not reviewed for closure. The row is correctly reopened, with its
+  original milestone preserved. No baseline exists.
+- **T-311.15 / T-311.16:** the retention and ledger transition in 05cbea75 are verified. I did not
+  restart the cleanup review.
+- **Parent T-311:** open.
+
+Verdict: PASS

@@ -5,6 +5,7 @@ from contextlib import contextmanager
 import json
 import os
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 from unittest import mock
@@ -40,6 +41,54 @@ def descriptor(root, task=None, raw=None):
 
 
 class CodingSuiteTests(unittest.TestCase):
+    def test_private_storage_refuses_repository_worktrees_and_configured_workspaces(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            repository, worktree, workspace = (root / name for name in ("repository", "worktree", "workspace"))
+            for path in (repository, worktree, workspace):
+                path.mkdir()
+            alias = root / "alias"
+            alias.symlink_to(worktree, target_is_directory=True)
+            discovery = b"worktree " + os.fsencode(worktree) + b"\0HEAD " + b"a" * 40 + b"\0\0"
+            with mock.patch.object(evaluation, "ROOT", repository), \
+                    mock.patch.object(evaluation, "git", return_value=discovery):
+                for directory in (repository, worktree, workspace, alias):
+                    with self.subTest(directory=directory.name):
+                        with self.assertRaisesRegex(evaluation.InputIntegrityError, "private-location-exposed"), \
+                                mock.patch.object(suite.os, "open") as opened:
+                            suite.private_bytes(directory / "secret.json", (workspace,))
+                        opened.assert_not_called()
+                        with self.assertRaisesRegex(evaluation.InputIntegrityError, "private-location-exposed"), \
+                                mock.patch.object(suite, "check_inputs") as check, \
+                                mock.patch.object(evaluation, "new_directory") as mkdir:
+                            suite.verify(root / "secret.json", directory / "new-output", "row-close", (workspace,))
+                        check.assert_not_called()
+                        mkdir.assert_not_called()
+                        with self.assertRaisesRegex(evaluation.InputIntegrityError, "private-location-exposed"), \
+                                mock.patch.object(suite, "held_out_tasks") as tasks:
+                            suite.held_out_control(root / "secret.json", "held-001", "base",
+                                                   directory / "new-control", (workspace,))
+                        tasks.assert_not_called()
+                suite.private_location(root / "private-output", (workspace,))
+                # Resolve an ancestor alias even when the final output does not exist.
+                self.assertFalse((alias / "new-output").exists())
+
+    def test_private_storage_discovery_fails_closed(self):
+        for raw in (b"", b"worktree relative\0", b"HEAD aaaa\0"):
+            with self.subTest(raw=raw), mock.patch.object(evaluation, "git", return_value=raw):
+                with self.assertRaisesRegex(evaluation.InputIntegrityError, "worktree-discovery-refused"):
+                    suite.private_location(Path("unused"))
+
+    def test_unresolvable_private_locations_and_workspace_roots_refuse_without_private_error_text(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "private-name"
+            path.symlink_to(path)
+            with self.assertRaisesRegex(evaluation.InputIntegrityError, "suite.private-location-refused") as refusal:
+                suite.private_location(path)
+            self.assertNotIn(str(path), str(refusal.exception))
+            with self.assertRaisesRegex(evaluation.InputIntegrityError, "suite.worktree-discovery-refused"):
+                suite.editing_roots((path,))
+
     def test_development_contracts_remain_the_exact_thirty_accepted_tasks(self):
         self.assertEqual(len(suite.development_tasks()), 30)
         self.assertEqual(sum(t["expected_tests"] for t in suite.development_tasks()), 89)
@@ -103,6 +152,19 @@ class CodingSuiteTests(unittest.TestCase):
                     worker.assert_not_called()
                     self.assertFalse((Path(temporary) / "output").exists())
 
+    def test_repeated_held_out_change_and_wrong_total_method_count_refuse(self):
+        task = synthetic_task()
+        data = json.dumps({"version": "coding-held-out-v1", "origin": "original-repository-history",
+                           "tasks": [task, {**task, "id": "held-002"}]}).encode()
+        with tempfile.TemporaryDirectory() as temporary, descriptor(Path(temporary), raw=data) as path, \
+                mock.patch.object(suite, "HELD_OUT_COUNT", 2), mock.patch.object(suite, "HELD_OUT_METHODS", 2):
+            with self.assertRaisesRegex(evaluation.InputIntegrityError, "held-out-identity"):
+                suite.held_out_tasks(path)
+        with tempfile.TemporaryDirectory() as temporary, descriptor(Path(temporary)) as path, \
+                mock.patch.object(suite, "HELD_OUT_METHODS", 2):
+            with self.assertRaisesRegex(evaluation.InputIntegrityError, "held-out-identity"):
+                suite.held_out_tasks(path)
+
     def test_control_entry_accepts_only_frozen_ids_and_kinds(self):
         with tempfile.TemporaryDirectory() as temporary, descriptor(Path(temporary)) as path:
             root = Path(temporary)
@@ -161,6 +223,22 @@ class CodingSuiteTests(unittest.TestCase):
                 self.assertFalse(suite.controls_valid({**base, **change}, reference))
         self.assertFalse(suite.controls_valid(base, {"passed": False, "cause": "test_failure"}))
 
+    def test_development_pairs_require_complete_discriminating_controls_even_if_legacy_summary_passes(self):
+        base = {"passed": False, "cause": "test_failure", "exit_code": 1, "tests": counts(failures=1)}
+        reference = {"passed": True, "cause": "none", "tests": counts()}
+        row = {"task": "dev-synthetic", "base": base, "reference": reference}
+        tasks = [{"id": "dev-synthetic", "expected_tests": 1}]
+        with mock.patch.object(suite, "development_tasks", return_value=tasks):
+            self.assertTrue(suite.development_controls_valid({"passed": True, "tasks": [row]}))
+            self.assertFalse(suite.development_controls_valid({"passed": False, "tasks": [row]}))
+            for rows in ([], [row, row], [{**row, "task": "unregistered"}],
+                         [{**row, "base": {**base, "exit_code": 7}}],
+                         [{**row, "base": {**base, "tests": {**counts(failures=1), "skipped": 1}}}],
+                         [{**row, "base": {**base, "tests": {**counts(failures=1), "tests": 2}}}],
+                         [{**row, "reference": {**reference, "tests": {**counts(), "tests": 2}}}]):
+                with self.subTest(rows=rows):
+                    self.assertFalse(suite.development_controls_valid({"passed": True, "tasks": rows}))
+
     def test_input_check_refuses_development_projection_leakage_without_running_hidden_code(self):
         with tempfile.TemporaryDirectory() as temporary, descriptor(Path(temporary)) as path:
             dev = {"base": "f" * 40, "reference": "e" * 40, "source": "scripts/other.py",
@@ -190,7 +268,9 @@ class CodingSuiteTests(unittest.TestCase):
                    "hidden_sha256": "a" * 64}
             with mock.patch.object(suite, "development_tasks", return_value=[dev]), \
                     mock.patch.object(evaluation, "projection", return_value={"scripts/example.py": b"base"}), \
+                    mock.patch.object(suite, "editing_roots", return_value={evaluation.ROOT}), \
                     mock.patch.object(evaluation, "git", return_value=("a" * 40 + "\n").encode()), \
+                    mock.patch.object(suite, "is_ancestor", return_value=False), \
                     mock.patch.object(evaluation, "pinned_blob") as pinned, \
                     mock.patch.object(evaluation, "grade_case") as worker:
                 result = suite.check_inputs(path)
@@ -199,13 +279,77 @@ class CodingSuiteTests(unittest.TestCase):
             self.assertEqual(pinned.call_count, 4)
             worker.assert_not_called()
 
+    def test_parent_ancestry_and_exposed_hidden_inputs_refuse_without_execution(self):
+        task = synthetic_task()
+        dev = {**task, "id": "dev-synthetic", "base": "f" * 40, "reference": "e" * 40,
+               "source": "scripts/other.py", "hidden_revision": "d" * 40}
+        for reason in ("held-out-parent", "split-ancestry-leakage", "hidden-input-exposed"):
+            with self.subTest(reason=reason), tempfile.TemporaryDirectory() as temporary, \
+                    descriptor(Path(temporary)) as path:
+                projection = {"scripts/example.py": b"base"}
+                if reason == "hidden-input-exposed":
+                    projection[task["hidden_test"]] = b"hidden-test-fixture-not-executed"
+                with mock.patch.object(suite, "development_tasks", return_value=[dev]), \
+                        mock.patch.object(suite, "editing_roots", return_value={evaluation.ROOT}), \
+                        mock.patch.object(evaluation, "git", return_value=(
+                            ("f" if reason == "held-out-parent" else "a") * 40 + "\n").encode()), \
+                        mock.patch.object(suite, "is_ancestor", return_value=reason == "split-ancestry-leakage"), \
+                        mock.patch.object(evaluation, "projection", return_value=projection), \
+                        mock.patch.object(evaluation, "pinned_blob"), \
+                        mock.patch.object(evaluation, "grade_case") as worker:
+                    with self.assertRaisesRegex(evaluation.InputIntegrityError, reason):
+                        suite.check_inputs(path)
+                worker.assert_not_called()
+
+    def test_ancestry_checks_each_development_base_and_hidden_revision(self):
+        task = synthetic_task()
+        dev = {**task, "id": "dev-synthetic", "base": "f" * 40, "reference": "e" * 40,
+               "source": "scripts/other.py", "hidden_revision": "d" * 40}
+        with tempfile.TemporaryDirectory() as temporary, descriptor(Path(temporary)) as path, \
+                mock.patch.object(suite, "development_tasks", return_value=[dev]), \
+                mock.patch.object(suite, "editing_roots", return_value={evaluation.ROOT}), \
+                mock.patch.object(evaluation, "git", return_value=("a" * 40 + "\n").encode()), \
+                mock.patch.object(evaluation, "projection", return_value={"scripts/example.py": b"base"}), \
+                mock.patch.object(evaluation, "pinned_blob"), \
+                mock.patch.object(suite, "is_ancestor", return_value=False) as ancestor:
+            self.assertTrue(suite.check_inputs(path)["passed"])
+            self.assertEqual(ancestor.call_args_list,
+                             [mock.call(task["reference"], revision) for revision in ("d" * 40, "f" * 40)])
+
+    def test_real_git_ancestry_distinguishes_descendants_without_inspecting_tests(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            env = {"PATH": "/usr/bin", "HOME": str(root), "GIT_CONFIG_NOSYSTEM": "1",
+                   "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_AUTHOR_NAME": "Synthetic",
+                   "GIT_AUTHOR_EMAIL": "synthetic@example.invalid", "GIT_COMMITTER_NAME": "Synthetic",
+                   "GIT_COMMITTER_EMAIL": "synthetic@example.invalid"}
+
+            def git(*args):
+                return subprocess.check_output(["/usr/bin/git", *args], cwd=root, env=env,
+                                               stderr=subprocess.DEVNULL, timeout=10).strip().decode()
+
+            git("init", "--quiet", "--template=", "--initial-branch=synthetic")
+            git("-c", "core.hooksPath=/dev/null", "commit", "--quiet", "--allow-empty", "-m", "First")
+            first = git("rev-parse", "HEAD")
+            git("-c", "core.hooksPath=/dev/null", "commit", "--quiet", "--allow-empty", "-m", "Second")
+            second = git("rev-parse", "HEAD")
+            with mock.patch.object(evaluation, "ROOT", root):
+                self.assertTrue(suite.is_ancestor(first, second))
+                self.assertTrue(suite.is_ancestor(second, second))
+                self.assertFalse(suite.is_ancestor(second, first))
+                with self.assertRaisesRegex(evaluation.InputIntegrityError, "ancestry-unavailable"):
+                    suite.is_ancestor("f" * 40, second)
+
     def test_complete_orchestration_binds_raw_controls_but_printable_summary_has_no_task_feedback(self):
         with tempfile.TemporaryDirectory() as temporary, descriptor(Path(temporary)) as path:
             root = Path(temporary)
 
             def verify_existing(output):
                 evaluation.new_directory(output)
-                result = {"passed": True, "input_refused": False, "tasks": [{}]}
+                base = {"passed": False, "cause": "test_failure", "exit_code": 1, "tests": counts(failures=1)}
+                reference = {"passed": True, "cause": "none", "tests": counts()}
+                result = {"passed": True, "input_refused": False,
+                          "tasks": [{"task": "synthetic", "base": base, "reference": reference}]}
                 evaluation.publish(output / "summary.json", result)
                 return result
 
@@ -219,6 +363,7 @@ class CodingSuiteTests(unittest.TestCase):
                                                                         "generated_scoring": False}), \
                     mock.patch.object(evaluation, "verify", side_effect=verify_existing), \
                     mock.patch.object(suite.oracle, "verify", side_effect=verify_existing), \
+                    mock.patch.object(suite, "development_tasks", return_value=[{"id": "synthetic", "expected_tests": 1}]), \
                     mock.patch.object(evaluation, "projection", return_value={"scripts/example.py": b"base"}), \
                     mock.patch.object(evaluation, "pinned_blob", return_value=b"reference"), \
                     mock.patch.object(evaluation, "grade_case", side_effect=grade_case):
