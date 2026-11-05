@@ -30,13 +30,15 @@ else:
     import coding_eval_oracle_worker as worker
     import coding_eval_scratch as scratch
 
-VERSION = "coding-independent-oracle-v31"
+VERSION = "coding-independent-oracle-v32"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
     "dev-rust-001": {"function": "WorkspacePath::new", "result_type": "bool-map"},
     "dev-001": {"function": "untracked_file_identities", "result_type": "source-result", "source_fixture": "identity"},
     "dev-002": {"function": "_model_request_diagnosis", "result_type": "source-result", "source_fixture": "diagnostics"},
+    "dev-003": {"function": "observe_exit", "result_type": "gate-result"},
+    "dev-004": {"function": "plan", "result_type": "gate-result"},
     "dev-005": {"function": "capture", "result_type": "capture-result"},
     "dev-006": {"function": "route_grant_arguments", "result_type": "argument-result"},
     "dev-007": {"function": "memory_arguments", "result_type": "argument-result"},
@@ -79,6 +81,10 @@ CLEANUP_ADDRESS_BYTES = 256 * evaluation.MAX_FILE
 # Subtests can report more failures than the number of selected methods.
 CONTROL_PROFILES = {
     "dev-rust-001": {"failures": 1, "base_calls": 1, "reference_calls": 576},
+    "dev-003": {"failures": 2, "errors": 3, "base_calls": 54, "reference_calls": 56,
+                "function_found": False, "candidate_exception": True},
+    "dev-004": {"failures": 11, "errors": 2, "base_calls": 16, "reference_calls": 25,
+                "function_found": True, "candidate_exception": True},
     "dev-001": {"failures": 0, "errors": 3, "base_calls": 4, "reference_calls": 7,
                 "function_found": False, "candidate_exception": True},
     "dev-002": {"failures": 0, "errors": 14, "base_calls": 14, "reference_calls": 53,
@@ -126,6 +132,14 @@ CONTROL_PROFILES = {
 def coverage(task):
     """State what transported observations can and cannot establish."""
     kind = SUPPORTED[task["id"]]["result_type"]
+    if kind == 'gate-result':
+        return {'graded': ['complete-frozen-fast-gate-methods', 'real-child-state-and-reservation-locks',
+                           'selected-plans-and-file-refusals', 'zombie-observation-and-cleanup-call-order'],
+                'execution_policy': ['separate-candidate-mounts-without-procfs', 'inspection-syscall-denial',
+                                     'finite-data-and-process-operation-replay', 'unchanged-original-assertions'],
+                'not_graded': ['candidate-self-reported-diagnostics-authenticity', 'unasserted-statement-clauses',
+                               'running-process-observe-exit', 'signal-enum-class-and-exception-messages',
+                               'general-operating-system-support']}
     if task.get("language") == "rust":
         return {"graded": ["original-constructor-corpus", "error-code-and-component-index",
                            "accepted-case-sensitive-spellings"],
@@ -318,6 +332,11 @@ def sandbox(workspace, adapter, output, role, candidate_tmp=None, private_tmp=No
     # trusted result mount keep their explicitly selected access.
     command.extend(["--remount-ro", "/dev", "--remount-ro", "/"])
     return [*command, "--", "/usr/bin/python3", "-I", "-B", "/adapter/run.py", role]
+
+
+# Standalone adapters validate the shared readiness hook against this original
+# factory; only its existing effect-free false command is also admitted.
+STANDARD_SANDBOX = sandbox
 
 
 def terminate(process):
@@ -820,6 +839,12 @@ def candidate_temporary(root, enabled):
 def grade_case(task, files, output, timeout=evaluation.TIMEOUT):
     """Host-owned diagnostic entry; the public verifier admits frozen controls only."""
     config = supported_task(task)
+    if config['result_type'] == 'gate-result':
+        if __package__:
+            from . import coding_eval_gate_oracle
+        else:
+            import coding_eval_gate_oracle
+        return coding_eval_gate_oracle.grade_case(task, files, output, timeout)
     if task.get("language") == "rust":
         if __package__:
             from . import coding_eval_rust_oracle
@@ -892,7 +917,8 @@ if callable(getattr(subject, "implementation_identity", None)):
 
 
 def grade(task, files, output):
-    supported_task(task)
+    configuration = supported_task(task)
+    gate = configuration['result_type'] == 'gate-result'
     kind = evaluation.require_historical_candidate(task, files)
     evaluation.new_directory(output)
     started = time.monotonic()
@@ -907,7 +933,7 @@ def grade(task, files, output):
             input_error = error
         exit_code, candidate_exit, timed_out, output_limited, record = None, None, False, False, None
     tests = record["tests"] if record else None
-    passed = (error is None and exit_code == 0 and candidate_exit == 0 and not timed_out and not output_limited
+    passed = (error is None and exit_code == 0 and candidate_exit == (None if gate else 0) and not timed_out and not output_limited
               and record is not None and record["candidate_ready"] and record["function_found"]
               and not record["protocol_failed"]
               and not record["adapter_policy_failed"] and not record["candidate_exception_failed"]
@@ -918,10 +944,11 @@ def grade(task, files, output):
              else "protocol" if record["protocol_failed"]
              else "adapter_policy" if record["adapter_policy_failed"]
              else "candidate_exception" if record["candidate_exception_failed"] else "candidate_exit"
-             if candidate_exit != 0 else "test_failure")
+             if candidate_exit != (None if gate else 0) else "test_failure")
     report = {
         "version": VERSION, "task": task["id"], "passed": passed, "cause": cause,
         "exit_code": exit_code, "candidate_exit_code": candidate_exit,
+        "candidate_exit_scope": "no-single-candidate-process" if gate else "candidate-worker",
         "tests": tests, "calls": record["calls"] if record else None,
         "protocol_failed": record["protocol_failed"] if record else None,
         "adapter_policy_failed": record["adapter_policy_failed"] if record else None,
@@ -937,8 +964,10 @@ def grade(task, files, output):
         "worker_sha256": evaluation.sha(Path(worker.__file__).read_bytes()),
         "source_adapter_sha256": evaluation.sha(Path(__file__).with_name("coding_eval_source_oracle.py").read_bytes()),
         "rust_oracle_sha256": evaluation.sha(Path(__file__).with_name("coding_eval_rust_oracle.py").read_bytes()),
+        "gate_oracle_sha256": evaluation.sha(Path(__file__).with_name("coding_eval_gate_oracle.py").read_bytes()),
         "materialized_worker_sha256": evaluation.sha(
             Path(__file__).with_name("coding_eval_rust_oracle.py").read_bytes() if task.get("language") == "rust"
+            else Path(__file__).with_name("coding_eval_gate_oracle.py").read_bytes() if gate
             else limited_source(Path(worker.__file__).read_bytes())),
         "scratch_sha256": evaluation.sha(Path(scratch.__file__).read_bytes()),
         "evaluator_sha256": evaluation.sha(Path(evaluation.__file__).read_bytes()),
@@ -953,13 +982,14 @@ def grade(task, files, output):
         "control_attempts": {"total": 1, "passed": int(passed), "failed": int(not passed)},
         "coverage": coverage(task),
         "aggregate_worker_quotas": False,
-        "worker_limits": {"processes_per_namespace": 16 if task.get("language") == "rust" else WORKER_PROCESSES,
+        "worker_limits": {"processes_per_namespace": 16 if task.get("language") == "rust" or gate else WORKER_PROCESSES,
                           "address_bytes_per_process": (768 if task.get("language") == "rust" else 512) * evaluation.MAX_FILE,
-                          "derived_address_bytes_per_namespace": (16 * 768 if task.get("language") == "rust"
+                          "derived_address_bytes_per_namespace": (16 * 768 if task.get("language") == "rust" else 16 * 512 if gate
                                                                   else WORKER_PROCESSES * 512) * evaluation.MAX_FILE,
                           "cpu_seconds_per_process": 60,
                           "wall_seconds_per_exchange": evaluation.TIMEOUT,
-                          "scope": "independent-rust-workers-only" if task.get("language") == "rust" else "independent-python-workers-only"},
+                          "scope": ("independent-rust-workers-only" if task.get("language") == "rust" else
+                                    "independent-gate-shared-pid-namespace" if gate else "independent-python-workers-only")},
         "cleanup_limits": {"wall_seconds_per_tree": CLEANUP_SECONDS,
                            "address_bytes": CLEANUP_ADDRESS_BYTES,
                            "cpu_seconds_per_tree": CLEANUP_SECONDS,
@@ -996,7 +1026,7 @@ def expected_base(task, report):
             and report["protocol_failed"] is False
             and report["candidate_exception_failed"] is missing
             and report["adapter_policy_failed"] is False
-            and report["candidate_exit_code"] == 0
+            and report["candidate_exit_code"] == (None if SUPPORTED[task['id']]['result_type'] == 'gate-result' else 0)
             and report["exit_code"] == 1)
 
 

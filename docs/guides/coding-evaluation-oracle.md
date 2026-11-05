@@ -916,3 +916,86 @@ workspace identity, other component methods and unasserted statement clauses
 remain ungraded. Two development adapters, held-out independent grading and final
 admission work remain open. No held-out assertion or model run follows from this
 increment.
+
+## Fast-gate process and file observations
+
+Oracle v32 adds dev-003 and dev-004 in the same T-311.17 batch. The complete
+23-method original module and nine-method original selection run unchanged in
+the trusted assertion interpreter. Candidate source is never imported there.
+Direct function calls use finite typed requests; original subprocess fixtures
+run candidate code in nested, networkless, read-only workspace mounts. Only
+quota-backed temporary fixture data is writable and shared with the tests.
+
+The candidate shares the trusted worker's PID namespace so original tests can
+inspect actual process states, send signals and check reservation locks. Its
+mount namespace contains no procfs, hidden module or result directory. A fixed
+Linux x86-64 seccomp filter refuses ptrace, process-memory reads/writes, foreign
+file-descriptor duplication, performance-event inspection and x32 syscalls.
+Other architectures refuse setup. Every candidate capability set is empty;
+further user namespaces are disabled. The trusted interpreter also disables
+dumpability. Neither a candidate result nor printed test-summary text supplies
+assertion counts or the final verdict.
+
+The sandbox launcher normally inserts a parent process. Trusted bootstrap pauses
+before candidate import, creates a separate session and atomically records its
+PID. The supervisor checks its kernel ancestry against its own unreaped launcher,
+pins the actual child with a pidfd, ends and reaps the launcher ancestors, and
+verifies that the paused child is now its own waitable child. It then releases
+the child and uses native Popen waits and signals for that actual PID. The
+subreaper flag is enabled only during this adoption window. Namespace init
+retains ordinary reaping of candidate descendants after release. An invalid
+ancestry or failed adoption refuses the launch; candidate-selected PIDs never
+authorize cleanup of a foreign process.
+
+The direct `observe_exit`/`stop_check` regression starts with actual unreaped
+children on the trusted side. The candidate receives a finite zombie-status
+snapshot and records only closed wait, poll and process-group signal operations.
+Trusted replay executes those operations in order against the original child,
+including the original frozen signal mocks. Reaping before the last group signal
+therefore fails the original assertion. Running-child observations, exact signal
+enum classes and exception messages are ungraded. Other subprocess fixtures run
+the actual candidate supervisor and check real descendant states and locks.
+
+Direct calls start a fresh candidate interpreter; they do not establish general
+module-global continuity between calls. Complete candidate command lifecycles
+remain within their actual child process. Diagnostic stdout/stderr is bounded
+data, not independently authenticated command history. Fixed exception categories
+preserve the original selected refusals without transporting exception objects.
+The transcript retains bounded requests and observations. Each direct pipe has
+a 64 KiB cap, the transcript has a 2 MiB cap, a direct exchange has 75 seconds,
+startup has five seconds, and the full case retains its 90-second deadline.
+
+The trusted worker installs a hard 16-process limit and inherits the 512 MiB
+per-process address-space and 60-second CPU limits before importing the frozen
+baseline. Candidate processes inherit those limits. Private shared fixtures have
+64 MiB and 8,192 inodes; the case mount retains 128 MiB and 32,768 inodes. Mount
+release follows namespace termination. Inherited resource observations still
+cover the entire lane, not candidate-only resident-memory peaks. Whole-suite
+resource and generated-candidate admission remain disabled.
+
+There is no single candidate process exit for these tests: several deliberate
+nonzero exits and signals are test inputs. Reports leave that aggregate exit
+null with an explicit scope, rather than inventing a zero exit. Trusted original
+assertions, closed protocol status and the actual assertion-worker exit decide
+the grade. Reports bind this separate adapter and its materialized worker bytes.
+Unasserted statement clauses and general operating-system support remain open.
+
+A historical control also observed the original dev-003 fixture's PID file
+between creation and its first content write. The resulting empty-string
+ValueError disrupted later subcases. The original hidden method and command
+bytes stay unchanged. Like the previously documented disappearing-process race,
+this is a failed attempt with retained logs; it never earns a pass or leaves a
+score denominator. A diagnostic control repeat reruns the complete historical
+verifier into a new output. Passing source-bound unit checks may be retained
+with their original provenance; report such validation as staged, rather than
+as one uninterrupted reservation.
+
+Trusted fixture Git commands also enter the nested candidate boundary. A
+candidate can change a temporary repository's Git configuration, including an
+executable filesystem-monitor hook. Git must therefore have the same absent
+procfs, hidden inputs and result directory as Python. Other trusted fixture
+executables are refused until an explicit confined path exists. A separate
+synthetic regression runs a Git status command after untrusted configuration:
+its control variant with unsandboxed Git exposes the synthetic assertion mount
+and fails; the confined variant passes. This does not change any frozen hidden
+method, task statement or selection.

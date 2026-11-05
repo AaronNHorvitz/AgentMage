@@ -50,8 +50,8 @@ class IndependentOracleTests(unittest.TestCase):
     def test_real_two_sandbox_controls_keep_original_hidden_tests_and_counts(self):
         summary = oracle.verify(self.root / "controls")
         self.assertTrue(summary["passed"], summary)
-        self.assertEqual(len(summary["tasks"]), 28)
-        self.assertEqual(summary["control_attempts"], {"total": 56, "passed": 28, "failed": 28})
+        self.assertEqual(len(summary["tasks"]), 30)
+        self.assertEqual(summary["control_attempts"], {"total": 60, "passed": 30, "failed": 30})
         self.assertFalse(summary["generated_scoring"])
         self.assertIsNone(summary["model_score"])
         self.assertEqual(summary["collection_sha256"],
@@ -2209,7 +2209,9 @@ def case_passed(case):
         with self.assertRaisesRegex(evaluation.EvaluationError, "untrusted-candidate-disabled"):
             oracle.grade(self.task, files, self.root / "generated")
         self.assertFalse((self.root / "generated").exists())
-        other = next(t for t in evaluation.collection() if t["id"] == "dev-003")
+        # Every development task now has an adapter. An invented task remains
+        # refused even if it borrows all other fields from an admitted one.
+        other = {**self.task, 'id': 'unsupported-synthetic-task'}
         with self.assertRaisesRegex(evaluation.EvaluationError, "oracle.task-refused"):
             oracle.grade(other, {}, self.root / "unsupported")
         self.assertFalse((self.root / "unsupported").exists())

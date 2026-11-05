@@ -123,10 +123,11 @@ the input-freeze or storage/ancestry checks.
 ## Admission remains open
 
 These commands do not enable generated scoring or produce a coding baseline.
-The independent development oracle now covers 27 of the 30 development
-tasks. Remaining development and held-out independent adapters, isolated worker
-accounting and remaining clause-coverage admission still need
-disposition within T-311.17. Resource, permission and evidence boundaries
+The independent development oracle now covers all 30 development tasks and
+all 89 original reference methods. Its finite observations do not establish
+unasserted statement clauses or model quality. Held-out independent grading,
+whole-suite resource accounting and remaining clause-coverage admission still
+need disposition within T-311.17. Resource, permission and evidence boundaries
 remain unchanged.
 
 ## Bounded independent-worker cleanup and private scratch
