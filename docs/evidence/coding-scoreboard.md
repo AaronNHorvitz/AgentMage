@@ -11,7 +11,9 @@ not execution of the native coding agent. The running chat API has no repository
 tools, tests or retry loop; the native CLI retains the deferred host-trust blocker.
 The [policy and limits](../guides/coding-baseline.md) were committed before the
 first request. [Freeze verification](t311-18-baseline-freeze-2026-11-05.md) binds
-all 160 control attempts. T-311.18 and parent T-311 await independent core review.
+all 160 control attempts. The [independent core re-review](../reviews/3a6daad09675-local-coding-t311-18-reporting-repair.txt)
+passes expanded T-311.18 and parent T-311 at exact commit
+`3a6daad096755c8e76ad53fd6c555524f554b5ca`, with no open high/medium finding.
 
 ## Baseline runs
 
@@ -175,8 +177,11 @@ protocol domain, not general application coding.
 ## Closing verification
 
 The [same-row reporting repair](t311-18-baseline-reporting-repair-2026-11-06.md)
-addresses the independent review's medium failure-attribution finding. T-311.18
-and parent T-311 stay open pending exact-commit re-review.
+addresses the independent review's medium failure-attribution finding. The
+[independent re-review](../reviews/3a6daad09675-local-coding-t311-18-reporting-repair.txt)
+reproduces all 80 classifications and passes expanded T-311.18 and parent T-311.
+Low L5 remains backlog: the reporter needs the original retained location and
+currently collapses specific refusals into a generic diagnostic.
 
 The completed campaign passed parameter and cleanup checks for all 16 batches.
 All 80 grading reports and 260 direct log bindings were verified. Replaying the

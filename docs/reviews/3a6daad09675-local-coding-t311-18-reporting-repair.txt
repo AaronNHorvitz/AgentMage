@@ -1,0 +1,174 @@
+Commit: 3a6daad096755c8e76ad53fd6c555524f554b5ca
+Scope: local-coding-t311-18-reporting-repair
+
+# Independent core re-review: T-311.18 baseline reporting repair (M1) and parent T-311
+
+Reviewer: separate Claude Opus 5.5 session at extra-high effort, read-only repository access, own runs.
+Base: `4ee14c9b7de7ae612eb3e516b3d32fe32d0deab0`. Rows: T-311.18 (expanded), parent T-311. Tier: core.
+No model, GPU, GPU slot, hidden test, task execution or held-out attempt was used by this review.
+
+## Methods
+
+- Read IP-POLICY.md and Decision 0154. Read the T-311 and T-311.18 rows and the status of every
+  T-311 sub-row. Read the full `4ee14c9b..3a6daad0` diff: TASKS.md, scoreboard, repair evidence,
+  both guides, the copied prior review, `scripts/coding_baseline_termination.py` and its tests.
+- Confirmed the copied prior review is byte-identical to the original review file
+  (SHA-256 `38016ae6…afe768e`).
+- Ran the requested gate, reporter and data assertions.
+- Classified all 80 attempts again with my own parser, written separately from the builder's
+  `classify()`. It uses different evidence: the `total time … / N tokens` value compared with the
+  observed `n_ctx`, the `| eval time` count compared with each bound request's `max_tokens`, and
+  the context-error string. It checks the `truncated` flag for consistency and counts
+  `launch_slot_` events in each slice against each whole server log.
+- Cross-checked each development classification against its API terminal event and its graded
+  result.
+- Ran adversarial probes against the reporter on a private copy of the consumed files.
+- Checked held-out leakage, privacy and scope.
+
+## Exact commands and results
+
+Run from the repository root.
+
+| Command | Result |
+| --- | --- |
+| `git status --short`; `git rev-parse HEAD` | Empty before and after; `3a6daad096755c8e76ad53fd6c555524f554b5ca` |
+| `git diff --check 4ee14c9b7de7ae612eb3e516b3d32fe32d0deab0 HEAD` | exit 0 |
+| `CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot env PATH="$PWD/target/local-agent-tools:$PATH" python3 -B scripts/local_agent_fast_gate.py --base 4ee14c9b… --timeout 900` | **FAST GATE: PASS**, exit 0. Every check passed: Git whitespace, untracked lint, review format (copied review), markdownlint on 5 files (0 issues), Python lint on 2 files, 8 tests in 0.065 s. Node SHA-256 `d1de76d8…bd932c` matches. |
+| `python3 -B scripts/coding_baseline_termination.py --root /lane/state/tmp/t311-baseline --manifest-sha256 932463662e05…ba9f1` | exit 0. UTF-8 stdout SHA-256 **`e83f6f3a7cc422772abcf79b6a7311c35ae2e31b9e2b29a91a6e09802a98b198`**, as stated. 60 development rows (30 unique task IDs per model); held-out output is counts and file hashes only. Bindings equal the four published aggregate SHA-256s. |
+| Requested optional data-assertion block | `Report digest and published 80 classifications PASS` |
+| Builder raw checks under `/lane/state/tmp` | Fast-gate log ends `FAST GATE: PASS`. The canceled final log ends while waiting for the reservation, before any check. `t311-termination-verified.json` = `e83f6f3a…`. The initial probe says `termination.records-refused`. The audit JSON has `passed: true`. |
+
+### Independent reclassification (own parser)
+
+| Model | Split | prompt-exceeds-context | context-exhausted | output-cap | stopped |
+| --- | --- | --- | --- | --- | --- |
+| muse | dev | 10 | 9 | 7 | 4 |
+| muse | held | 5 | 5 | 0 | 0 |
+| gpt-oss | dev | 10 | 12 | 6 | 2 |
+| gpt-oss | held | 5 | 5 | 0 | 0 |
+
+- **Agreement.** These are identical to the reporter and the scoreboard.
+- **Truncation flag.** `truncated = 1` occurs exactly on the context-exhausted attempts, with no
+  exceptions.
+- **Slice coverage.** Every `launch_slot_` in each server log falls inside a bound slice, so no
+  request is unaccounted for.
+- **Arithmetic.** Prompt and output tokens sum to 8,192 on every context-exhausted row. Every
+  output-cap row has 4,096 output tokens.
+
+Cross-tabulation of the development rows:
+
+- **Muse:**
+  - all 4 `stopped` rows end `complete:stop` and passed;
+  - 2 `output-cap` rows end `complete:length`;
+  - every other non-rejected row ends `chat.response.incomplete`.
+- **GPT-OSS:**
+  - both `stopped` rows (dev-009, dev-017) end `chat.response.invalid`;
+  - the third `invalid` and the single `complete:length` are both context-exhausted.
+- **Rejected requests:** all 20 prompt rejections end `chat.transport.status`.
+
+The scoreboard's prose claims ("ten development requests never reached generation", "No held-out
+attempt fit", "All four Muse generations … passed", "two GPT-OSS … refused as
+`chat.response.invalid`", 36/40 and 38/40) are therefore exact.
+
+### Adversarial reporter probes
+
+I copied every consumed file and re-bound the launcher, resource and manifest hashes, so each probe
+reaches the check under test.
+
+| Probe | Result |
+| --- | --- |
+| Rebound copy at a new root (control) | Same 80 classes |
+| `state_directory` set to an absolute directory outside the root that contains a real `server.log` | Refused: `relative_to` raises a `ValueError` |
+| `state_directory` contains a `..` that resolves inside the root | Refused: `termination.path-refused` |
+| `server.log` replaced by a symlink to identical bytes | Refused: `termination.path-refused` |
+| One timing dropped from a launcher | Refused: `termination.incomplete-split` |
+| Duplicated task in one batch | Refused: `termination.task-coverage` |
+| `api_reaped` set to false on a held-out batch | Refused: `termination.launcher-mismatch` |
+| Unmodified copy run with the original manifest digest | Refused (`records-refused`): the absolute `state_directory` points outside the new root. See L5. |
+
+The reporter is data-only. It makes no network calls and runs no subprocess. Nothing from the
+records is executed. Reads are capped at 32 MiB per file and duplicate JSON keys are refused.
+
+### Integrity, privacy and scope checks
+
+- **Frozen material unchanged.** The diff touches only 8 files. The collector
+  (`scripts/coding_baseline.py`), suite sources, hidden tests and held-out descriptor are
+  unchanged.
+- **No new model activity.** No launcher, server log or event file in the campaign or in
+  `/lane/state/tmp` is newer than `campaign-complete.json`, except my own probe copy. No model
+  was rerun and no attempt was added or replaced.
+- **Original columns preserved.** The first seven columns of all 60 development rows are
+  byte-identical to `4ee14c9b`. So are the pass rates, times, GPU minutes, API terminal table and
+  aggregate hashes. The old split-level cause table became one sentence with the same totals
+  (Muse 4 passes / 36 `chat-failed`; GPT-OSS 40 `chat-failed`).
+- **No held-out leakage.** None of the 10 held-out task IDs, 70 descriptor strings of 12 or more
+  characters, or 47 `test_…` names occurs in the added text, outside the copied review. The test
+  fixture uses synthetic `PRIVATE-HELD-*` IDs.
+- **No private host information.** Added text has no home path, username, hostname or credential.
+  It names no other agent product. The copied review contains `/lane/state` scratch paths, as do
+  48 earlier committed reviews. These are lane paths, not host or personal data.
+- **Status honest.** T-311.18 and T-311 remain `[ ]` in TASKS.md, and nothing self-approves.
+
+## Prior-finding disposition
+
+- **M1 (medium): RESOLVED.** All parts of the requested fix are in place:
+  - four backend classes, derived from the hash-bound slices;
+  - published per split and per development task;
+  - a leading statement of 36/40 and 38/40 budget-limited attempts, including all held-out;
+  - "not evidence of relative model quality";
+  - later budgets to be named as a separate variable;
+  - one-command re-derivation that I reproduced exactly.
+- **L2: fixed.** The dev-004 SIGINT race is disclosed in the suite guide, the baseline guide and
+  each dev-004 row.
+- **L3: fixed.** The mixed 8K / 4,096 configuration is described accurately.
+- **L1, L4: backlog.** Both are recorded in the guide and the repair evidence. That is acceptable
+  under Decision 0154 for low findings.
+
+## Findings
+
+No critical, high or medium findings.
+
+### L5 (low, backlog): the reporter runs only at the original absolute path
+
+`scripts/coding_baseline_termination.py:135` combined with `relative()` at `:79-85`
+
+The launchers record an absolute `state_directory`. If the retained campaign is restored or moved
+anywhere other than its original absolute path, the reporter refuses with
+`termination.records-refused`, even though every file is unchanged and the manifest digest
+matches. The guide's `<private-retained-baseline-root>` placeholder suggests any root works.
+
+- **Why it is low.** The failure is safe (a refusal) and the current retained location reproduces
+  exactly.
+- **A second weakness.** `main()` collapses every specific refusal code (for example
+  `termination.slice-changed`) into one generic message, which makes such a refusal hard to
+  diagnose.
+
+**Fix:** if `state_directory` starts with a recorded original root, interpret it relative to
+`--root`, while keeping the confinement check. Print the specific `termination.*` code on refusal.
+Alternatively, document that the command needs the original location.
+
+## Per-row result
+
+- **Expanded T-311.18: PASS.** The only open medium finding (M1) is resolved and was verified
+  independently from the raw logs. No high or medium finding remains. The unchanged baseline
+  measurement satisfies the row, as established in the prior review: actual, untuned and fully
+  traced, with all 80 attempts counted, times, tokens, reserved GPU minutes and hash-bound raw
+  logs. It is honestly labelled as a chat-only text-proposal baseline, not the native loop.
+- **Parent T-311: PASS.** The prior review held the parent open only for M1's failure-cause
+  reporting. That item is now met. All T-311 sub-rows except T-311.18 are closed, and T-311.18
+  passes here.
+  - **Suite.** The suite (T-311.17) was re-verified in the prior review: 160/160 controls passed
+    on the unchanged repeat, with the dev-004 race retained and now disclosed. No suite source
+    changed in `4ee14c9b..3a6daad0`.
+  - **Integrity and claims.** Evaluation integrity holds: held-out tasks were used only for the
+    scoreboard, hidden tests and frozen bases are untouched, and failures are counted. The
+    scoreboard makes no product comparison.
+
+The scope does not include, and this PASS does not imply: native agent-loop execution, model
+qualification, release, owner-ready status, or the inherited repository-wide host-path scrub that
+the prior review recorded. That scrub still needs owner attention before any public release.
+
+No GPU was used by this reviewer. No UI row is in scope. Nothing in the repository was modified or
+approved.
+
+Verdict: PASS
