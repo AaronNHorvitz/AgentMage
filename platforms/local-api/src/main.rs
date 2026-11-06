@@ -5,7 +5,7 @@ use std::net::{SocketAddr, TcpListener};
 use std::path::Path;
 use std::sync::{Arc, atomic::AtomicBool};
 
-use agentmage_platform_linux_inference::local_chat_api::{ApiTokens, serve};
+use agentmage_local_api::{ApiTokens, serve};
 
 fn main() {
     if run().is_err() {

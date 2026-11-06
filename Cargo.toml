@@ -5,6 +5,7 @@ members = [
   "capabilities/read-only",
   "kernel/contracts",
   "kernel/engine",
+  "platforms/local-api",
   "platforms/linux-inference",
   "platforms/linux",
   "platforms/windows",

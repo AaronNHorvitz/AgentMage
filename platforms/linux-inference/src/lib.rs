@@ -37,9 +37,6 @@ pub mod local_chat;
 /// Explicitly approved, credential-owning loopback chat transport.
 pub mod local_chat_transport;
 
-/// Authenticated, bounded versioned loopback HTTP service for local chat.
-pub mod local_chat_api;
-
 pub use native_resource_admission::NativeDevelopmentResourcePolicy;
 
 pub use docker_guard::{

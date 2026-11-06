@@ -188,8 +188,14 @@ impl ChatCancellation {
     pub fn cancel(&self) {
         self.0.store(true, Ordering::Relaxed);
     }
+    /// Whether cancellation has been requested. This observes the flag only;
+    /// it grants no authority and performs no I/O.
+    #[must_use]
+    pub fn is_cancelled(&self) -> bool {
+        self.0.load(Ordering::Relaxed)
+    }
     fn check(&self) -> Result<(), TransportError> {
-        if self.0.load(Ordering::Relaxed) {
+        if self.is_cancelled() {
             Err(TransportError::Cancelled)
         } else {
             Ok(())

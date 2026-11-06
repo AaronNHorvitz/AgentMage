@@ -1,5 +1,7 @@
+#![deny(missing_docs)]
+#![forbid(unsafe_code)]
 // SPDX-License-Identifier: Apache-2.0
-//! Text-only local API. Control credentials authorize explicit settings choices;
+//! Text-only local API. Control credentials authorize settings and read scopes;
 //! ordinary clients cannot turn discovery or model output into authority.
 
 use std::collections::VecDeque;
@@ -24,8 +26,12 @@ use agentmage_capability_repository_map::coding_proposal::{
     CODING_PROPOSAL_INSTRUCTION, CodingSource, check_coding_proposal, prepare_coding_proposal,
 };
 
-use crate::local_chat::{ChatFinish, ChatMessage, ChatRole, LocalChatEndpoint, encode_chat};
-use crate::local_chat_transport::{
+use agentmage_platform_linux::LinuxCodingReadScope;
+
+use agentmage_platform_linux_inference::local_chat::{
+    ChatFinish, ChatMessage, ChatRole, LocalChatEndpoint, encode_chat,
+};
+use agentmage_platform_linux_inference::local_chat_transport::{
     BearerKey, ChatCancellation, LocalChatApproval, LocalChatTransport, LocalProbeApproval,
     TransportLimits, probe_endpoints,
 };
@@ -174,8 +180,15 @@ struct Configuration {
     approval: LocalChatApproval,
 }
 
+struct WorkspaceGrant {
+    scope: LinuxCodingReadScope,
+    model_context_revision: Option<u64>,
+}
+
 #[derive(Default)]
 struct State {
+    workspace: Option<Arc<WorkspaceGrant>>,
+    workspace_revision: u64,
     configured: Option<Arc<Configuration>>,
     active: Option<ChatCancellation>,
     revision: u64,
@@ -186,7 +199,7 @@ struct State {
 impl State {
     fn record(&mut self, action: &'static str, outcome: &'static str) {
         self.sequence += 1;
-        self.activity.push_back(json!({"sequence":self.sequence,"settings_revision":self.revision,"endpoint":self.configured.as_ref().map(|c|&c.endpoint),"action":action,"outcome":outcome}));
+        self.activity.push_back(json!({"sequence":self.sequence,"settings_revision":self.revision,"endpoint":self.configured.as_ref().map(|c|&c.endpoint),"workspace_revision":self.workspace_revision,"action":action,"outcome":outcome}));
         if self.activity.len() > 128 {
             self.activity.pop_front();
         }
@@ -196,7 +209,7 @@ impl State {
 /// Serves four bounded connection workers on a caller-owned loopback listener.
 /// All routes require bearer authentication and exact numeric Host; browser
 /// origins/cookies/fetch metadata are refused and no CORS headers are emitted.
-/// Only one upstream operation is active, leaving workers for cancellation.
+/// Only one source or upstream operation is active, leaving workers for cancellation.
 /// On shutdown, cancels the active operation and joins every owned worker.
 pub fn serve(
     listener: TcpListener,
@@ -449,7 +462,7 @@ fn error(socket: &mut TcpStream, status: u16) -> Result<(), ApiError> {
     let message = match status {
         401 => "Use a valid local API bearer token.",
         403 => {
-            "This request is not allowed. Settings require the separate control credential and an explicit endpoint choice."
+            "This request is not allowed. Use trusted controls for explicit endpoint or workspace choices."
         }
         404 => "Use a supported version 1 API route and method.",
         409 => "Wait for the active connection or cancel it, then retry.",
@@ -506,6 +519,54 @@ struct CodingProposalRequest {
     max_tokens: u32,
 }
 
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct WorkspaceSelection {
+    root: String,
+    paths: Vec<String>,
+    approve_read: bool,
+    approve_model_context: bool,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct WorkspaceRead {
+    workspace_revision: u64,
+    paths: Vec<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct WorkspaceSearch {
+    workspace_revision: u64,
+    paths: Vec<String>,
+    query: String,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct WorkspaceProposal {
+    workspace_revision: u64,
+    paths: Vec<String>,
+    model: String,
+    task: String,
+    max_message_bytes: usize,
+    max_tokens: u32,
+}
+
+// Named serde structs also accept arrays. All API additions require objects;
+// typed parsing first still rejects duplicate keys before the shape check.
+fn object_json<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<T, ()> {
+    let value = serde_json::from_slice(bytes).map_err(|_| ())?;
+    if !serde_json::from_slice::<Value>(bytes)
+        .map_err(|_| ())?
+        .is_object()
+    {
+        return Err(());
+    }
+    Ok(value)
+}
+
 struct Operation<'a> {
     state: &'a Mutex<State>,
     cancel: ChatCancellation,
@@ -548,6 +609,148 @@ fn begin<'a>(
     ))
 }
 
+// The operation token prevents grant/settings replacement while collecting and
+// using these snapshots. No grant object or absolute path reaches the model.
+fn workspace_sources(
+    state: &Mutex<State>,
+    revision: u64,
+    paths: &[String],
+    for_model: bool,
+) -> Result<Vec<CodingSource>, (u16, &'static str)> {
+    let scope = {
+        let guard = state.lock().map_err(|_| (500, "code.workspace.state"))?;
+        if revision != guard.workspace_revision {
+            return Err((409, "code.workspace.stale"));
+        }
+        let workspace = guard
+            .workspace
+            .clone()
+            .ok_or((428, "code.workspace.choice-required"))?;
+        if for_model
+            && (workspace.model_context_revision != Some(guard.revision)
+                || guard.configured.is_none())
+        {
+            return Err((403, "code.workspace.disclosure-required"));
+        }
+        workspace
+    };
+    scope
+        .scope
+        .read(paths)
+        .map(|files| {
+            files
+                .into_iter()
+                .map(|s| CodingSource {
+                    path: s.path,
+                    content: s.content,
+                })
+                .collect()
+        })
+        .map_err(|e| (400, e.code()))
+}
+
+fn coding_proposal(
+    socket: &mut TcpStream,
+    input: CodingProposalRequest,
+    mut op: Operation<'_>,
+    config: Option<Arc<Configuration>>,
+    workspace_revision: Option<u64>,
+) -> Result<(), ApiError> {
+    // This is an effect-free proposal over caller-supplied snapshots.
+    // Source paths are data, never resolved against the service host.
+    let context = match prepare_coding_proposal(&input.task, &input.files, input.max_message_bytes)
+    {
+        Ok(context) => context,
+        Err(e) => {
+            op.outcome = e.code();
+            return response(socket, 400, json!({"error":e.code()}));
+        }
+    };
+    let messages = [
+        ChatMessage {
+            role: ChatRole::System,
+            content: CODING_PROPOSAL_INSTRUCTION,
+        },
+        ChatMessage {
+            role: ChatRole::User,
+            content: context.user_message(),
+        },
+    ];
+    if !(1..=4096).contains(&input.max_tokens)
+        || encode_chat(&input.model, &messages, input.max_tokens).is_err()
+    {
+        op.outcome = "api.request";
+        return error(socket, 400);
+    }
+    let Some(config) = config else {
+        op.outcome = "api.endpoint-choice-required";
+        return error(socket, 428);
+    };
+    headers(socket, 200, "application/x-ndjson", None)?;
+    event(
+        socket,
+        json!({"type":"context", "version":1,
+        "message_bytes":context.message_bytes(), "files":context.outlines(),
+        "excerpts":context.excerpts(), "authority":"proposal-only","workspace_revision":workspace_revision}),
+    )?;
+    let mut answer = Zeroizing::new(String::new());
+    let mut writable = true;
+    let mut oversized = false;
+    let result = config.transport.chat(
+        &config.approval,
+        &input.model,
+        &messages,
+        input.max_tokens,
+        &op.cancel,
+        |text| {
+            if text.len() > (64 * 1024_usize).saturating_sub(answer.len()) {
+                oversized = true;
+                op.cancel.cancel();
+            } else if !oversized {
+                answer.push_str(text);
+                if writable && event(socket, json!({"type":"text","text":text})).is_err() {
+                    writable = false;
+                    op.cancel.cancel();
+                }
+            }
+        },
+    );
+    if !writable {
+        op.outcome = "api.client-disconnected";
+        return Err(ApiError::Io);
+    }
+    let refused = if oversized {
+        Some("code.proposal.limit")
+    } else {
+        match result {
+            Ok(ChatFinish::Stop) => None,
+            Ok(ChatFinish::Length) => Some("code.proposal.incomplete"),
+            Err(e) => Some(e.code()),
+        }
+    };
+    if let Some(code) = refused {
+        op.outcome = code;
+        return event(socket, json!({"type":"error","code":code,"partial":true}));
+    }
+    match check_coding_proposal(&context, &input.files, &answer) {
+        Ok(changes) => {
+            op.outcome = "proposed";
+            event(
+                socket,
+                json!({"type":"proposal","version":1,"changes":changes,
+                "applied":false,"tested":false,"authority":"proposal-only","workspace_revision":workspace_revision}),
+            )
+        }
+        Err(e) => {
+            op.outcome = e.code();
+            event(
+                socket,
+                json!({"type":"error","code":e.code(),"partial":true}),
+            )
+        }
+    }
+}
+
 fn handle(
     socket: &mut TcpStream,
     address: SocketAddr,
@@ -561,6 +764,12 @@ fn handle(
     };
     let route = (req.method.as_str(), req.path.as_str());
     if matches!(req.path.as_str(), "/v1/settings" | "/v1/probe") && !req.control {
+        return error(socket, 403);
+    }
+    if req.path == "/v1/code/workspace"
+        && matches!(req.method.as_str(), "PUT" | "DELETE")
+        && !req.control
+    {
         return error(socket, 403);
     }
     match route {
@@ -580,98 +789,167 @@ fn handle(
             {
                 return error(socket, 400);
             }
-            // This is an effect-free proposal over caller-supplied snapshots.
-            // Source paths are data, never resolved against the service host.
-            let context =
-                match prepare_coding_proposal(&input.task, &input.files, input.max_message_bytes) {
-                    Ok(context) => context,
-                    Err(e) => return response(socket, 400, json!({"error":e.code()})),
-                };
-            let messages = [
-                ChatMessage {
-                    role: ChatRole::System,
-                    content: CODING_PROPOSAL_INSTRUCTION,
-                },
-                ChatMessage {
-                    role: ChatRole::User,
-                    content: context.user_message(),
-                },
-            ];
-            if !(1..=4096).contains(&input.max_tokens)
-                || encode_chat(&input.model, &messages, input.max_tokens).is_err()
-            {
-                return error(socket, 400);
-            }
-            let (mut op, config) = match begin(state, stop, "code.proposal") {
+            let (op, config) = match begin(state, stop, "code.proposal") {
                 Ok(operation) => operation,
                 Err(status) => return error(socket, status),
             };
-            let Some(config) = config else {
-                return error(socket, 428);
-            };
-            headers(socket, 200, "application/x-ndjson", None)?;
-            event(
+            coding_proposal(socket, input, op, config, None)
+        }
+        ("GET", "/v1/code/workspace") => {
+            let guard = state.lock().map_err(|_| ApiError::Io)?;
+            response(
                 socket,
-                json!({"type":"context", "version":1,
-                "message_bytes":context.message_bytes(), "files":context.outlines(),
-                "excerpts":context.excerpts(), "authority":"proposal-only"}),
-            )?;
-            let mut answer = Zeroizing::new(String::new());
-            let mut writable = true;
-            let mut oversized = false;
-            let result = config.transport.chat(
-                &config.approval,
-                &input.model,
-                &messages,
-                input.max_tokens,
-                &op.cancel,
-                |text| {
-                    if text.len() > (64 * 1024_usize).saturating_sub(answer.len()) {
-                        oversized = true;
-                        op.cancel.cancel();
-                    } else if !oversized {
-                        answer.push_str(text);
-                        if writable && event(socket, json!({"type":"text","text":text})).is_err() {
-                            writable = false;
-                            op.cancel.cancel();
-                        }
-                    }
-                },
-            );
-            if !writable {
-                op.outcome = "api.client-disconnected";
-                return Err(ApiError::Io);
-            }
-            let refused = if oversized {
-                Some("code.proposal.limit")
-            } else {
-                match result {
-                    Ok(ChatFinish::Stop) => None,
-                    Ok(ChatFinish::Length) => Some("code.proposal.incomplete"),
-                    Err(e) => Some(e.code()),
-                }
+                200,
+                json!({"workspace_revision":guard.workspace_revision,
+                "selected":guard.workspace.is_some(), "authority":"read-only",
+                "paths":guard.workspace.as_ref().map(|w| w.scope.paths()).unwrap_or_default(),
+                "model_context_approved":guard.workspace.as_ref().is_some_and(|w|
+                    w.model_context_revision == Some(guard.revision) && guard.configured.is_some())}),
+            )
+        }
+        ("PUT", "/v1/code/workspace") => {
+            let Ok(input) = object_json::<WorkspaceSelection>(&req.body) else {
+                return error(socket, 400);
             };
-            if let Some(code) = refused {
-                op.outcome = code;
-                return event(socket, json!({"type":"error","code":code,"partial":true}));
+            if !input.approve_read {
+                return error(socket, 403);
             }
-            match check_coding_proposal(&context, &input.files, &answer) {
-                Ok(changes) => {
-                    op.outcome = "proposed";
-                    event(
-                        socket,
-                        json!({"type":"proposal","version":1,"changes":changes,
-                        "applied":false,"tested":false,"authority":"proposal-only"}),
-                    )
-                }
+            let (mut op, config) = match begin(state, stop, "code.workspace.select") {
+                Ok(operation) => operation,
+                Err(status) => return error(socket, status),
+            };
+            if input.approve_model_context && config.is_none() {
+                return error(socket, 428);
+            }
+            let scope = match LinuxCodingReadScope::select(Path::new(&input.root), &input.paths) {
+                Ok(scope) => scope,
                 Err(e) => {
                     op.outcome = e.code();
-                    event(
-                        socket,
-                        json!({"type":"error","code":e.code(),"partial":true}),
-                    )
+                    return response(socket, 400, json!({"error":e.code()}));
                 }
+            };
+            let mut guard = state.lock().map_err(|_| ApiError::Io)?;
+            guard.workspace_revision += 1;
+            guard.workspace = Some(Arc::new(WorkspaceGrant {
+                scope,
+                model_context_revision: input.approve_model_context.then_some(guard.revision),
+            }));
+            op.outcome = "accepted";
+            response(
+                socket,
+                200,
+                json!({"selected":true,"workspace_revision":guard.workspace_revision,
+                "authority":"read-only"}),
+            )
+        }
+        ("DELETE", "/v1/code/workspace") => {
+            let mut guard = state.lock().map_err(|_| ApiError::Io)?;
+            if guard.active.is_some() {
+                return error(socket, 409);
             }
+            guard.workspace = None;
+            guard.workspace_revision += 1;
+            guard.record("code.workspace.revoke", "accepted");
+            response(
+                socket,
+                200,
+                json!({"selected":false,"workspace_revision":guard.workspace_revision}),
+            )
+        }
+        ("POST", "/v1/code/workspace/read") | ("POST", "/v1/code/workspace/search") => {
+            let (revision, paths, query) = if req.path.ends_with("/search") {
+                let Ok(input) = object_json::<WorkspaceSearch>(&req.body) else {
+                    return error(socket, 400);
+                };
+                if input.query.is_empty() || input.query.len() > 128 || input.query.contains('\0') {
+                    return error(socket, 400);
+                }
+                (input.workspace_revision, input.paths, Some(input.query))
+            } else {
+                let Ok(input) = object_json::<WorkspaceRead>(&req.body) else {
+                    return error(socket, 400);
+                };
+                (input.workspace_revision, input.paths, None)
+            };
+            let (mut op, _) = match begin(
+                state,
+                stop,
+                if query.is_some() {
+                    "code.workspace.search"
+                } else {
+                    "code.workspace.read"
+                },
+            ) {
+                Ok(operation) => operation,
+                Err(status) => return error(socket, status),
+            };
+            let sources = match workspace_sources(state, revision, &paths, false) {
+                Ok(sources) => sources,
+                Err((status, code)) => {
+                    op.outcome = code;
+                    return response(socket, status, json!({"error":code}));
+                }
+            };
+            if op.cancel.is_cancelled() {
+                op.outcome = "code.workspace.cancelled";
+                return response(socket, 409, json!({"error":op.outcome}));
+            }
+            op.outcome = "read";
+            if let Some(query) = query {
+                let mut matches = Vec::new();
+                let mut truncated = false;
+                'files: for source in sources {
+                    for (start, text) in source.content.match_indices(&query) {
+                        if matches.len() == 128 {
+                            truncated = true;
+                            break 'files;
+                        }
+                        matches.push(json!({"path":source.path,"start":start,"end":start+text.len(),"text":text}));
+                    }
+                }
+                response(
+                    socket,
+                    200,
+                    json!({"workspace_revision":revision,"matches":matches,
+                    "truncated":truncated,"authority":"read-only"}),
+                )
+            } else {
+                response(
+                    socket,
+                    200,
+                    json!({"workspace_revision":revision,"files":sources,"authority":"read-only"}),
+                )
+            }
+        }
+        ("POST", "/v1/code/workspace/proposals") => {
+            let Ok(input) = object_json::<WorkspaceProposal>(&req.body) else {
+                return error(socket, 400);
+            };
+            let (mut op, config) = match begin(state, stop, "code.workspace.proposal") {
+                Ok(operation) => operation,
+                Err(status) => return error(socket, status),
+            };
+            let files = match workspace_sources(state, input.workspace_revision, &input.paths, true)
+            {
+                Ok(sources) => sources,
+                Err((status, code)) => {
+                    op.outcome = code;
+                    return response(socket, status, json!({"error":code}));
+                }
+            };
+            coding_proposal(
+                socket,
+                CodingProposalRequest {
+                    model: input.model,
+                    task: input.task,
+                    files,
+                    max_message_bytes: input.max_message_bytes,
+                    max_tokens: input.max_tokens,
+                },
+                op,
+                config,
+                Some(input.workspace_revision),
+            )
         }
         ("GET", "/v1/status") => {
             let state = state.lock().map_err(|_| ApiError::Io)?;

@@ -14,7 +14,7 @@ use std::sync::{
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
-use agentmage_platform_linux_inference::local_chat_api::{ApiError, ApiTokens, serve};
+use agentmage_local_api::{ApiError, ApiTokens, serve};
 use serde_json::{Value, json};
 
 const CLIENT: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -410,6 +410,17 @@ fn coding_cancellation_remains_available_and_inert() {
     assert_eq!(
         api.call("POST", "/v1/code/proposals", CLIENT, Some(coding_request()))
             .0,
+        409
+    );
+    assert_eq!(api.call("DELETE", "/v1/settings", CONTROL, None).0, 409);
+    assert_eq!(
+        api.call(
+            "PUT",
+            "/v1/settings",
+            CONTROL,
+            Some(json!({"endpoint":endpoint,"approve_conversations":true}))
+        )
+        .0,
         409
     );
     assert_eq!(api.call("POST", "/v1/cancel", CLIENT, None).0, 200);
@@ -946,5 +957,509 @@ fn process_entrypoint_initializes_tokens_and_serves_authenticated_status() {
     assert_eq!(
         serde_json::from_slice::<Value>(&body).unwrap()["configured"],
         false
+    );
+}
+
+struct WorkspaceFiles(PathBuf);
+impl WorkspaceFiles {
+    fn new() -> Self {
+        let root = std::env::temp_dir().join(format!(
+            "agentmage-api-workspace-{}-{}",
+            std::process::id(),
+            NEXT.fetch_add(1, Ordering::Relaxed)
+        ));
+        fs::create_dir(&root).unwrap();
+        fs::set_permissions(&root, fs::Permissions::from_mode(0o700)).unwrap();
+        fs::write(root.join("calc.py"), "def add(a, b):\n    return a - b\n").unwrap();
+        fs::write(root.join("unselected.py"), "private unselected content").unwrap();
+        Self(root)
+    }
+    fn selection(&self, model: bool) -> Value {
+        json!({"root":self.0,"paths":["calc.py"],"approve_read":true,"approve_model_context":model})
+    }
+    fn select(&self, api: &Api, model: bool) -> u64 {
+        let (status, body) = api.call(
+            "PUT",
+            "/v1/code/workspace",
+            CONTROL,
+            Some(self.selection(model)),
+        );
+        assert_eq!(status, 200, "{}", String::from_utf8_lossy(&body));
+        serde_json::from_slice::<Value>(&body).unwrap()["workspace_revision"]
+            .as_u64()
+            .unwrap()
+    }
+}
+impl Drop for WorkspaceFiles {
+    fn drop(&mut self) {
+        fs::remove_dir_all(&self.0).unwrap();
+    }
+}
+fn workspace_proposal(revision: u64) -> Value {
+    json!({"workspace_revision":revision,"paths":["calc.py"],"model":"fixture",
+        "task":"Fix add so it adds the numbers","max_message_bytes":4096,"max_tokens":512})
+}
+fn document(bytes: &[u8]) -> Value {
+    serde_json::from_slice(bytes).unwrap()
+}
+
+#[test]
+fn workspace_requires_control_choice_exact_paths_and_explicit_model_disclosure() {
+    let api = Api::new();
+    let files = WorkspaceFiles::new();
+    assert_eq!(
+        api.call(
+            "PUT",
+            "/v1/code/workspace",
+            CLIENT,
+            Some(files.selection(false))
+        )
+        .0,
+        403
+    );
+    assert_eq!(
+        api.call("DELETE", "/v1/code/workspace", CLIENT, None).0,
+        403
+    );
+    assert_eq!(api.call("GET", "/v1/code/workspace", CLIENT, None).0, 200);
+    let mut refused = files.selection(false);
+    refused["approve_read"] = json!(false);
+    assert_eq!(
+        api.call("PUT", "/v1/code/workspace", CONTROL, Some(refused))
+            .0,
+        403
+    );
+    assert_eq!(
+        api.call(
+            "PUT",
+            "/v1/code/workspace",
+            CONTROL,
+            Some(files.selection(true))
+        )
+        .0,
+        428
+    );
+    let revision = files.select(&api, false);
+    let state = document(&api.call("GET", "/v1/code/workspace", CLIENT, None).1);
+    assert_eq!(state["paths"], json!(["calc.py"]));
+    assert_eq!(state["authority"], "read-only");
+    assert_eq!(state["model_context_approved"], false);
+    assert!(!state.to_string().contains(files.0.to_str().unwrap()));
+    let request = json!({"workspace_revision":revision,"paths":["calc.py"]});
+    let result = api.call("POST", "/v1/code/workspace/read", CLIENT, Some(request));
+    assert_eq!(result.0, 200);
+    assert_eq!(
+        document(&result.1)["files"][0]["content"],
+        "def add(a, b):\n    return a - b\n"
+    );
+    let mut invalid = files.selection(false);
+    invalid["paths"] = json!(["missing.py"]);
+    assert_eq!(
+        api.call("PUT", "/v1/code/workspace", CONTROL, Some(invalid))
+            .0,
+        400
+    );
+    assert_eq!(
+        document(&api.call("GET", "/v1/code/workspace", CLIENT, None).1)["workspace_revision"],
+        revision
+    );
+    for paths in [
+        json!(["unselected.py"]),
+        json!(["../outside"]),
+        json!(["calc.py", "calc.py"]),
+        json!([]),
+    ] {
+        assert_eq!(
+            api.call(
+                "POST",
+                "/v1/code/workspace/read",
+                CLIENT,
+                Some(json!({"workspace_revision":revision,"paths":paths}))
+            )
+            .0,
+            400
+        );
+    }
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/proposals",
+            CLIENT,
+            Some(workspace_proposal(revision))
+        )
+        .0,
+        403
+    );
+    // Giving read consent never grants model disclosure, even after endpoint choice.
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    api.configure(&format!("http://{}/v1", listener.local_addr().unwrap()));
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/proposals",
+            CLIENT,
+            Some(workspace_proposal(revision))
+        )
+        .0,
+        403
+    );
+    assert!(matches!(listener.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock));
+    assert_eq!(
+        api.call("DELETE", "/v1/code/workspace", CONTROL, None).0,
+        200
+    );
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/read",
+            CLIENT,
+            Some(json!({"workspace_revision":revision,"paths":["calc.py"]}))
+        )
+        .0,
+        409
+    );
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/read",
+            CLIENT,
+            Some(json!({"workspace_revision":revision+1,"paths":["calc.py"]}))
+        )
+        .0,
+        428
+    );
+}
+
+#[test]
+fn workspace_file_to_model_to_checked_proposal_is_read_only_and_recorded() {
+    let api = Api::new();
+    let files = WorkspaceFiles::new();
+    let (endpoint, task) = upstream(|mut socket| {
+        let raw = incoming(&mut socket);
+        let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
+        let body = document(&raw[start..]);
+        let context = document(body["messages"][1]["content"].as_str().unwrap().as_bytes());
+        assert_eq!(context["files"].as_array().unwrap().len(), 1);
+        assert_eq!(context["files"][0]["path"], "calc.py");
+        assert!(!body.to_string().contains("private unselected"));
+        assert!(!body.to_string().contains("agentmage-api-workspace"));
+        reply(
+            &mut socket,
+            "text/event-stream",
+            &format!("{}{}", chunk(&coding_answer()), end()),
+        );
+    });
+    api.configure(&endpoint);
+    let revision = files.select(&api, true);
+    let (status, bytes) = api.call(
+        "POST",
+        "/v1/code/workspace/proposals",
+        CLIENT,
+        Some(workspace_proposal(revision)),
+    );
+    assert_eq!(status, 200);
+    let rows = events(&bytes);
+    let proposal = rows.last().unwrap();
+    assert_eq!(rows[0]["workspace_revision"], revision);
+    assert_eq!(proposal["type"], "proposal");
+    assert_eq!(proposal["workspace_revision"], revision);
+    assert_eq!(proposal["applied"], false);
+    assert_eq!(proposal["tested"], false);
+    assert!(
+        proposal["changes"][0]["content"]
+            .as_str()
+            .unwrap()
+            .contains("return a + b")
+    );
+    assert!(
+        fs::read_to_string(files.0.join("calc.py"))
+            .unwrap()
+            .contains("return a - b")
+    );
+    task.join().unwrap();
+    let activity = document(&api.call("GET", "/v1/activity", CLIENT, None).1);
+    assert!(
+        activity["events"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|v| v["action"] == "code.workspace.proposal"
+                && v["outcome"] == "proposed"
+                && v["workspace_revision"] == revision)
+    );
+    assert!(!activity.to_string().contains(files.0.to_str().unwrap()));
+    assert!(!activity.to_string().contains("return a - b"));
+}
+
+#[test]
+fn workspace_search_is_literal_bounded_and_uses_utf8_byte_offsets() {
+    let api = Api::new();
+    let files = WorkspaceFiles::new();
+    fs::write(files.0.join("calc.py"), "é.*é.*").unwrap();
+    let revision = files.select(&api, false);
+    let request = |q: &str| json!({"workspace_revision":revision,"paths":["calc.py"],"query":q});
+    let (status, bytes) = api.call(
+        "POST",
+        "/v1/code/workspace/search",
+        CLIENT,
+        Some(request(".*")),
+    );
+    assert_eq!(status, 200);
+    let result = document(&bytes);
+    assert_eq!(
+        result["matches"],
+        json!([{"path":"calc.py","start":2,"end":4,"text":".*"},{"path":"calc.py","start":6,"end":8,"text":".*"}])
+    );
+    assert_eq!(result["truncated"], false);
+    fs::write(files.0.join("calc.py"), "x".repeat(129)).unwrap();
+    let result = document(
+        &api.call(
+            "POST",
+            "/v1/code/workspace/search",
+            CLIENT,
+            Some(request("x")),
+        )
+        .1,
+    );
+    assert_eq!(result["matches"].as_array().unwrap().len(), 128);
+    assert_eq!(result["truncated"], true);
+    for query in ["".to_string(), "a".repeat(129), "\0".into()] {
+        assert_eq!(
+            api.call(
+                "POST",
+                "/v1/code/workspace/search",
+                CLIENT,
+                Some(request(&query))
+            )
+            .0,
+            400
+        );
+    }
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/search",
+            CLIENT,
+            Some(request("absent"))
+        )
+        .0,
+        200
+    );
+}
+
+#[test]
+fn workspace_endpoint_changes_and_path_substitution_require_fresh_authority() {
+    let api = Api::new();
+    let files = WorkspaceFiles::new();
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let endpoint = format!("http://{}/v1", listener.local_addr().unwrap());
+    api.configure(&endpoint);
+    let revision = files.select(&api, true);
+    api.configure(&endpoint); // Even the same address invalidates the earlier disclosure revision.
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/proposals",
+            CLIENT,
+            Some(workspace_proposal(revision))
+        )
+        .0,
+        403
+    );
+    assert_eq!(
+        document(&api.call("GET", "/v1/code/workspace", CLIENT, None).1)["model_context_approved"],
+        false
+    );
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/read",
+            CLIENT,
+            Some(json!({"workspace_revision":revision,"paths":["calc.py"]}))
+        )
+        .0,
+        200
+    );
+    let fresh = files.select(&api, true);
+    assert!(fresh > revision);
+    fs::remove_file(files.0.join("calc.py")).unwrap();
+    symlink(files.0.join("unselected.py"), files.0.join("calc.py")).unwrap();
+    let result = api.call(
+        "POST",
+        "/v1/code/workspace/proposals",
+        CLIENT,
+        Some(workspace_proposal(fresh)),
+    );
+    assert_eq!(result.0, 400);
+    assert_eq!(document(&result.1)["error"], "code.workspace.boundary");
+    assert!(!String::from_utf8_lossy(&result.1).contains(files.0.to_str().unwrap()));
+    assert!(matches!(listener.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock));
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/proposals",
+            CLIENT,
+            Some(workspace_proposal(revision))
+        )
+        .0,
+        409
+    );
+}
+
+#[test]
+fn workspace_json_shape_unknown_and_duplicate_fields_refuse_before_selection() {
+    let api = Api::new();
+    let files = WorkspaceFiles::new();
+    let mut extra = files.selection(false);
+    extra["command"] = json!("execute");
+    for value in [
+        extra,
+        json!([files.0, ["calc.py"], true, false]),
+        json!({"root":files.0,"paths":["calc.py"],"approve_read":true}),
+    ] {
+        assert_eq!(
+            api.call("PUT", "/v1/code/workspace", CONTROL, Some(value))
+                .0,
+            400
+        );
+    }
+    for extra in [
+        "Origin: null\r\n",
+        "Cookie: session=test\r\n",
+        "Sec-Fetch-Site: same-origin\r\n",
+    ] {
+        let raw = api.bytes(
+            "PUT",
+            "/v1/code/workspace",
+            CONTROL,
+            &serde_json::to_vec(&files.selection(false)).unwrap(),
+            extra,
+        );
+        assert_eq!(split(api.raw(&raw)).0, 403);
+    }
+    let raw = api.bytes("PUT", "/v1/code/workspace", CONTROL,
+        b"{\"root\":\"/\",\"root\":\"/other\",\"paths\":[\"file.py\"],\"approve_read\":true,\"approve_model_context\":false}", "");
+    assert_eq!(split(api.raw(&raw)).0, 400);
+    assert_eq!(
+        document(&api.call("GET", "/v1/code/workspace", CLIENT, None).1)["selected"],
+        false
+    );
+    for path in ["read", "search", "proposals"] {
+        assert_eq!(
+            api.call(
+                "POST",
+                &format!("/v1/code/workspace/{path}"),
+                CLIENT,
+                Some(json!([0, ["calc.py"]]))
+            )
+            .0,
+            400
+        );
+    }
+}
+
+#[test]
+fn coding_api_answer_cap_is_terminal_and_recorded_without_a_proposal() {
+    let api = Api::new();
+    let (endpoint, task) = upstream(|mut socket| {
+        incoming(&mut socket);
+        // Each event fits the transport cap; their sum exceeds the API cap.
+        let body = format!(
+            "{}{}",
+            (0..9).map(|_| chunk(&"x".repeat(8192))).collect::<String>(),
+            end()
+        );
+        let _ = socket.write_all(format!("HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: {}\r\n\r\n{}", body.len(), body).as_bytes());
+    });
+    api.configure(&endpoint);
+    let rows = events(
+        &api.call("POST", "/v1/code/proposals", CLIENT, Some(coding_request()))
+            .1,
+    );
+    assert_eq!(rows.last().unwrap()["code"], "code.proposal.limit");
+    assert_eq!(
+        rows.iter()
+            .filter_map(|r| r.get("text").and_then(Value::as_str))
+            .map(str::len)
+            .sum::<usize>(),
+        65536
+    );
+    assert!(!rows.iter().any(|r| r["type"] == "proposal"));
+    task.join().unwrap();
+    let activity = document(&api.call("GET", "/v1/activity", CLIENT, None).1);
+    assert!(
+        activity["events"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|v| v["outcome"] == "code.proposal.limit")
+    );
+}
+
+#[test]
+fn workspace_proposal_blocks_scope_or_settings_replacement_until_cancelled() {
+    let api = Api::new();
+    let files = WorkspaceFiles::new();
+    let (tx, rx) = mpsc::channel();
+    let (endpoint, task) = upstream(move |mut socket| {
+        incoming(&mut socket);
+        socket
+            .write_all(b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\n\r\n")
+            .unwrap();
+        tx.send(()).unwrap();
+        let mut byte = [0];
+        assert_eq!(socket.read(&mut byte).unwrap(), 0);
+    });
+    api.configure(&endpoint);
+    let revision = files.select(&api, true);
+    let mut socket = api.socket();
+    socket
+        .write_all(&api.bytes(
+            "POST",
+            "/v1/code/workspace/proposals",
+            CLIENT,
+            &serde_json::to_vec(&workspace_proposal(revision)).unwrap(),
+            "",
+        ))
+        .unwrap();
+    rx.recv_timeout(Duration::from_secs(3)).unwrap();
+    assert_eq!(api.call("GET", "/v1/status", CLIENT, None).0, 200);
+    assert_eq!(
+        api.call(
+            "PUT",
+            "/v1/code/workspace",
+            CONTROL,
+            Some(files.selection(true))
+        )
+        .0,
+        409
+    );
+    assert_eq!(
+        api.call("DELETE", "/v1/code/workspace", CONTROL, None).0,
+        409
+    );
+    assert_eq!(api.call("DELETE", "/v1/settings", CONTROL, None).0, 409);
+    assert_eq!(
+        api.call(
+            "PUT",
+            "/v1/settings",
+            CONTROL,
+            Some(json!({"endpoint":endpoint,"approve_conversations":true}))
+        )
+        .0,
+        409
+    );
+    assert_eq!(api.call("POST", "/v1/cancel", CLIENT, None).0, 200);
+    let mut bytes = Vec::new();
+    socket.read_to_end(&mut bytes).unwrap();
+    let rows = events(&split(bytes).1);
+    assert_eq!(rows.last().unwrap()["code"], "chat.transport.cancelled");
+    assert!(!rows.iter().any(|r| r["type"] == "proposal"));
+    task.join().unwrap();
+    assert_eq!(
+        api.call("DELETE", "/v1/code/workspace", CONTROL, None).0,
+        200
     );
 }

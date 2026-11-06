@@ -1,0 +1,158 @@
+Commit: 3aef4160e8814103a78958b7d7762946c88e8aca
+Scope: local-coding-snapshot-proposals
+
+# Independent core review: T-303/T-306 connected snapshot-proposal batch
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only on the repository.
+Batch: `d19356407e57e1d5be0192419041b39a85646c36..3aef4160e8814103a78958b7d7762946c88e8aca`
+(source checkpoint `21f75c8646ee2a1b94eb1f3b9a305851c46c72ff`, publication commit `3aef4160`).
+Closure requested: NONE. **Any PASS below covers only this implementation batch. It does not close
+T-303, T-306 or any part of them, and it does not qualify the native coding workflow.**
+
+## Methods
+
+Read IP-POLICY.md, Decision 0154, TASKS.md (row diff), docs/guides/coding-proposals.md,
+docs/guides/local-chat-api.md diff, docs/evidence/t303-snapshot-proposal-api-2026-11-06.md and the
+new scoreboard section. Line-by-line review of `capabilities/repository-map/src/coding_proposal.rs`
+(new), the `/v1/code/proposals` route in `platforms/linux-inference/src/local_chat_api.rs`, the shared
+request preamble (auth/Host/Origin/Cookie/Sec-Fetch/body limits) and the transport's finish handling
+(`local_chat.rs` `decode_event`), both new test files, the new collector
+`scripts/coding_proposal_measurement.py` and its unit tests, and the private campaign driver,
+launcher and audit scripts under `/lane/state/tmp/t303-proposals`. Ran every required command. Then
+I ran my own escape and edge-case probes in a scratch `git archive HEAD` export at
+`/lane/state/tmp/review-3aef/src`, outside the repository, and independently cross-checked the
+retained raw campaign data. No model, GPU, hidden test or held-out assertion was run. The repository
+was not modified. `git status --short` was empty before and after.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `git rev-parse 3aef4160… HEAD` | both `3aef4160e8814103a78958b7d7762946c88e8aca` |
+| `git status --short` | empty (before and after) |
+| `git diff --check d1935640… HEAD` | exit 0 |
+| `sha256sum target/local-agent-tools/node` | `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c` (matches the expected value) |
+| `PATH=…/target/local-agent-tools:$PATH CARGO_TARGET_DIR=/lane/state/review-target python3 -B scripts/local_agent_fast_gate.py --base d1935640… --timeout 1800` | **FAST GATE: FAIL**, as the builder disclosed. diff-check, untracked lint, markdownlint (3 files), Python lint, Python unit tests (4 OK), cargo fmt, cargo clippy: all exit 0. cargo test exit 101: **2,993 pass / 72 fail / 78 ignored / 0 filtered**. My 72 failure identities are byte-identical to the builder's `tmp/t303-fast-v1.log` set. All 72 appear in the committed `docs/evidence/t301-baseline-failures-2026-10-25.md` appendix: 53 in `shells/host`, 19 in `platforms/linux` (command_runner, local_commit, repository_safety, secret_service). None is in a crate this batch changed. This is pre-existing T-301.1 debt, not an allowlist. |
+| `bash /tools/build-slot env … cargo test --locked --offline -p agentmage-capability-repository-map --test coding_proposals` | ok. 8 passed; 0 failed; 0 ignored; 0 filtered (0.02 s) |
+| `bash /tools/build-slot env … cargo test --locked --offline -p agentmage-platform-linux-inference --test local_chat_api` | ok. 20 passed; 0 failed; 0 ignored; 0 filtered (4.22 s) |
+| `bash /tools/build-slot python3 -B /lane/state/tmp/t303-proposals/audit.py` | exit 0. Muse 1/30, GPT-OSS 2/30; 60 reports / 300 log bindings. Re-emitted `audited-results.json` SHA-256 is `a2f7eacaa0ce6f0975104258d7b0674efe25fbcfde59381d7cf7b6ba4565fac1` before and after (matches the published value). |
+| `sha256sum retained-manifest.json` plus a recheck of every manifest entry | `2d8413a3…4c35`; 39,149 entries, 0 missing, 0 digest mismatches |
+| `sha256sum /lane/state/tmp/t311-baseline/controls-v1/summary.json` | `06d419f5…e5da1`, equal to `control_receipt_sha256` in both grading summaries |
+
+Logs: `/lane/state/tmp/review-3aef/{fast-gate,focused-proposals,focused-api,audit,probes-lib,probes-api}.log`.
+
+## Independent verification
+
+**Library (`coding_proposal.rs`)**
+- No filesystem, command, network or credential access. `parse_structure` takes bytes and a label
+  only, and runs inside the existing panic guard. Paths are never resolved.
+- Slicing is safe. Parser ranges are checked with `str::get`. Line windows and whole-file
+  candidates fall on `\n` boundaries. The uniqueness rescan starts on the next char boundary. The
+  growth arithmetic runs after the overlap check, so it cannot underflow.
+- Probes (scratch `review_probes.rs`, release build):
+  - Duplicate top-level `edits` key, duplicate `new` key, BOM prefix and Markdown fence: all `Format`.
+  - The same `old` twice: `Edit`. Adjacent non-overlapping edits apply correctly ("XY").
+  - Swapped file contents and a missing file: `Stale`. Reordered sources: accepted, correctly bound by
+    path.
+  - A 128 KiB file with 400 nested definitions padded with 6×-escaping control characters prepares
+    in 47 ms. 26,000 matching lines prepare in 2 ms. I found no practical CPU amplification.
+
+**API route**
+- Authentication, the Host check and the Origin/Cookie/Sec-Fetch/forwarding refusals come from the
+  shared `request()` preamble, which runs before routing. Probes:
+  - `Origin`, `Cookie`, `Sec-Fetch-Site` and `Host: localhost` → 403. Wrong token → 401 (committed
+    test).
+  - A client-token `PUT /v1/settings` → 403.
+  - While a proposal is active: settings PUT 409, DELETE 409, chat 409, status 200. Cancel →
+    `chat.transport.cancelled`, with no proposal.
+  - A synthetic upstream streaming 80 KiB stops at exactly 65,536 streamed bytes with terminal
+    `code.proposal.limit` and no proposal. Activity records only the code.
+  - A prompt-injected task and source, with an answer that adds an `/etc/passwd` edit →
+    `code.proposal.edit`. The whole proposal is refused.
+  - The upstream request has only `max_tokens, messages, model, n, stream`, with no tools. The system
+    message is the fixed instruction.
+- Endpoint choice reuses the configured transport and approval (428 when unset). The request
+  carries no client-chosen upstream address. An unknown `endpoint` field → 400 (committed test).
+- A length finish → `code.proposal.incomplete`. A `[DONE]` with zero content bytes →
+  `chat.response.incomplete` (existing transport). Late bytes or a missing marker → error. All
+  confirmed in committed tests and the probes.
+
+**Evaluation integrity**
+- The collector imports only `development_tasks()`, `projection()` and helpers. It has no held-out
+  import or argument (`split=` → TypeError). `scripts/coding_eval*.py`, the suite, graders, hidden
+  tests, pins and thresholds are unchanged across the batch: only the two new script/test files
+  changed.
+- `audit.py` asserts every `request.json` is exactly {model, statement, source path, frozen base
+  source, 6000, 2048}. No hidden test or reference reaches a prompt.
+- No held-out IDs or content appear in the batch diff.
+- The campaign driver checks a clean tree at `21f75c86` before each job. Grading used the unchanged
+  `scripts/coding_eval_admission.py --split development` with the accepted controls receipt.
+- Additional cross-check (not in the builder's audit):
+  - For all 60 attempts, the grader's `report.json` `candidate_sha256` and `task_sha256` equal the
+    collection record's `candidate_sha256` and `task_sha256`. The scored bytes are the collected
+    candidates.
+  - No base-fallback attempt has a passing grade. Muse grading `passed_tasks` = 1 and GPT-OSS = 2,
+    equal to proposal∧pass.
+- All 60 published per-task rows match `audited-results.json` exactly: seconds, tokens, backend
+  termination, API terminal and grade (0 differences). Aggregates also match: 1412.594/49.647/25.891
+  and 303.390/48.116/6.395, tokens 44495/61323 and 46045/58868.
+- The 3 `code.proposal.incomplete` rows carry 459–557 bytes of text with a length finish. The 54
+  `chat.response.incomplete` rows carry zero content (reasoning consumed the cap). Both are
+  consistent with the backend-derived output-cap class. Failures are counted, not dropped. The
+  dev-003/dev-004 races stay failures.
+- `git diff --stat 21f75c86 HEAD` touches only TASKS.md and two evidence Markdown files. The engine
+  and collector are byte-identical to the measured checkpoint (also asserted by the audit's
+  source-bindings check).
+
+**Honest labelling, IP and privacy**
+- Docs consistently say proposal-only, `applied:false`/`tested:false`, not native workflow, not
+  held-out, bytes are not tokens, and reserved GPU minutes are not kernel minutes. API usage is
+  reported as unavailable and backend counters are labelled separately.
+- No comparison with or naming of other agent products. Model names identify existing local
+  weights, not branding.
+- No new third-party dependency: Cargo.lock adds only a workspace edge. SPDX headers are present.
+- No private host path, username, hostname or credential in the added text. The inherited
+  whole-file TASKS.md privacy debt stays prior-review backlog.
+- Commit trailers are present. No sub-row was added; T-303 text was only extended.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L1 (low): API answer cap and active-operation settings refusal lack committed regressions.**
+`platforms/linux-inference/src/local_chat_api.rs:627-631` (the 64 KiB `oversized` path producing
+`code.proposal.limit`) is not exercised by `platforms/linux-inference/tests/local_chat_api.rs`. The
+transport's own text cap is 1 MiB, so this route-level cap is the effective bound. Settings
+PUT/DELETE refusal during an active proposal (claimed in coding-proposals.md, "Events and
+cancellation") is also not tested for this route. My scratch probes show both behave correctly
+today. Fix: add a synthetic-upstream test that streams more than 64 KiB and asserts the terminal
+`code.proposal.limit`, no proposal and the activity outcome. Extend
+`coding_cancellation_remains_available_and_inert` to assert 409 for settings PUT/DELETE while
+active.
+
+**L2 (low): the campaign audit does not bind grades to candidate bytes.**
+`/lane/state/tmp/t303-proposals/audit.py` (private, line ~101) uses `scored['passed']` without
+asserting `report['candidate_sha256'] == row['candidate_sha256']`. I verified the binding
+independently (60/60 match), so the published scores stand. Fix: add that assertion, plus
+`report['task_sha256']`, to the audit used for the row-closing scoreboard.
+
+**L3 (low, forward-looking): `valid_path` is a display-path check, not a write guard.**
+`capabilities/repository-map/src/coding_proposal.rs:137-148` accepts case-colliding paths
+(`A.py` + `a.py`), `...` and `a/.git.`. That is harmless here because paths are never resolved.
+Fix (T-306): do not reuse `valid_path` as worktree confinement. Re-validate every proposed path
+through the kernel/worktree authority (no symlink following, case-collision and Git-internal
+refusal) before any apply.
+
+## Per-row result
+
+- **T-303 (connected batch: snapshot proposals, bounded context, strict edits, API surface,
+  development measurement): PASS for this implementation batch only.** The parent row stays open:
+  tool loop, confined workspace effects, sandboxed commands, durability/replay, retry feedback,
+  CLI/MCP and held-out measurement are unimplemented.
+- **T-306 (related): PASS for this batch's contribution only.** The parent row stays open: isolated
+  worktree, test/retry loop, diff, approved commit/push and out-of-worktree refusal tests are
+  unimplemented.
+- T-311 and its frozen suite were not reopened. Hidden tests, pins and thresholds are unchanged, and
+  no held-out assertion was rerun.
+
+Verdict: PASS

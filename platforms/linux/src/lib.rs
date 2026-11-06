@@ -3,6 +3,7 @@
 #![forbid(unsafe_code)]
 //! Fedora and Ubuntu platform path adapter.
 
+mod coding_workspace;
 mod command_runner;
 mod configuration_store;
 mod development_boundary;
@@ -24,6 +25,7 @@ mod strict_local;
 mod write_root_inventory;
 mod write_transaction;
 
+pub use coding_workspace::{LinuxCodingReadError, LinuxCodingReadScope, LinuxCodingSource};
 pub use command_runner::{
     LinuxBoundedCommandExecutor, LinuxCommandManifest, LinuxCommandRunnerError,
     LinuxCommandRunnerErrorKind,

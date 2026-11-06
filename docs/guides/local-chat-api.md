@@ -1,11 +1,14 @@
 # Version 1 local chat API
 
-T-302.3 adds the `local_chat_api` library and `agentmage-local-api` executable
-to the Linux inference crate. This is a local API other programs can use. It
+T-302.3 introduced the local API and `agentmage-local-api` executable. The
+service now lives in the separate `agentmage-local-api` crate at
+`platforms/local-api`; inference remains a transport/model boundary without
+native workspace dependencies. This is a local API other programs can use. It
 composes the [approved transport](local-chat-transport.md) without activating
 the older qualification-bound runtime. It serves text conversations, model
-listing and effect-free [snapshot coding proposals](coding-proposals.md);
-tools, durable runs, MCP and a task CLI remain later mission work.
+listing, effect-free [snapshot coding proposals](coding-proposals.md), and
+explicitly selected [workspace source tools](coding-workspace.md). Workspace
+writes, commands, durable runs, MCP and a task CLI remain later mission work.
 There is no desktop UI here. Synthetic socket tests do not qualify a model.
 
 ## Start and authentication
@@ -13,7 +16,7 @@ There is no desktop UI here. Synthetic socket tests do not qualify a model.
 Build offline through the shared reservation:
 
 ```sh
-bash /tools/build-slot env CARGO_BUILD_JOBS=2 cargo build --locked --offline -p agentmage-platform-linux-inference --bin agentmage-local-api
+bash /tools/build-slot env CARGO_BUILD_JOBS=2 cargo build --locked --offline -p agentmage-local-api --bin agentmage-local-api
 umask 077
 mkdir -p "$HOME/.local/share/agentmage"
 target/debug/agentmage-local-api init-auth "$HOME/.local/share/agentmage/api-auth"
@@ -39,7 +42,8 @@ chosen listener address. It never serves a public/wildcard listener.
 The control token belongs to trusted, person-facing settings controls only.
 Give ordinary conversation clients the client token. Never put either token or
 the model endpoint key into model context, documents, tools, logs or command
-history. Possession of the control token is authority to choose an endpoint;
+history. Possession of the control token is authority to choose an endpoint and approve
+an exact read-only workspace source selection;
 clients must obtain the person's explicit choice before using it. The engine
 cannot prove a person clicked a control. These credentials do not isolate
 mutually hostile processes running under the same operating-system account.
@@ -68,6 +72,8 @@ upgrade, redirects or retries.
 | POST `/v1/probe` | Control | `{"endpoints":["http://127.0.0.1:8080/v1"]}`; at most eight explicit candidates, unauthenticated model listings only |
 | GET `/v1/models` | Client or control | Tests the chosen connection and returns bounded model IDs |
 | POST `/v1/chat` | Client or control | Streams the explicit text conversation below |
+| GET/PUT/DELETE `/v1/code/workspace` | Client for GET; control for PUT/DELETE | Inspect, explicitly select or revoke an exact read-only source scope; see [workspace tools](coding-workspace.md) |
+| POST `/v1/code/workspace/read`, `/search`, `/proposals` | Client or control | Read/search selected sources or propose edits with separate model-disclosure consent; no writes |
 | POST `/v1/cancel` | Client or control | Empty body; requests cancellation of the single active upstream operation |
 
 After the person chooses the endpoint for conversations, trusted settings send:
@@ -171,7 +177,7 @@ T-303 must integrate the canonical run store. Discovery retains the transport's
 all-or-nothing timeout when its shared budget expires between candidates.
 
 ```sh
-bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo test --locked --offline -p agentmage-platform-linux-inference --test local_chat_api
+bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo test --locked --offline -p agentmage-local-api --test local_chat_api
 ```
 
 The tests use actual API/upstream sockets with synthetic responses and include

@@ -6,7 +6,9 @@ snapshots it is allowed to disclose to the configured local endpoint. The API
 selects excerpts, streams an untrusted model answer, and returns a checked
 candidate. It opens no source paths, writes no workspace files, runs no commands
 and grants no permission to apply, commit or push. Those operations remain
-T-303/T-306 work. This is a local API other programs can use.
+T-303/T-306 work. The [workspace source route](coding-workspace.md) can now
+collect explicitly approved files before calling the same proposal machinery.
+This is a local API other programs can use.
 
 ## Request
 
@@ -83,7 +85,8 @@ validate an edit proposal, not its correctness or safety to execute.
 A successful request returns `application/x-ndjson`:
 
 1. `context`: version, exact message bytes, file outlines and delivered excerpts,
-   with `authority: "proposal-only"`.
+   with `authority: "proposal-only"` and a null `workspace_revision`. The workspace
+   route includes the selected revision in context/proposal events.
 2. Zero or more `text` events containing untrusted model text.
 3. Exactly one terminal `proposal` or `error`. A proposal carries complete changed
    file text and before/after SHA-256s, with `applied: false`, `tested: false` and

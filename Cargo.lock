@@ -117,6 +117,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "agentmage-local-api"
+version = "0.0.0"
+dependencies = [
+ "agentmage-capability-repository-map",
+ "agentmage-platform-linux",
+ "agentmage-platform-linux-inference",
+ "rustix",
+ "serde",
+ "serde_json",
+ "zeroize",
+]
+
+[[package]]
 name = "agentmage-platform-linux"
 version = "0.0.0"
 dependencies = [
@@ -139,7 +152,6 @@ dependencies = [
 name = "agentmage-platform-linux-inference"
 version = "0.0.0"
 dependencies = [
- "agentmage-capability-repository-map",
  "agentmage-kernel-contracts",
  "rustix",
  "serde",
