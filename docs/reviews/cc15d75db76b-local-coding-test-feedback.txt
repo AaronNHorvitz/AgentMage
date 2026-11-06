@@ -1,0 +1,161 @@
+Commit: cc15d75db76b3bb071c9d709f7baa77ad036e536
+Scope: local-coding-test-feedback
+
+# Independent core review: approved test envelopes and bounded exact reruns (T-303, related T-306)
+
+Reviewer: Claude Opus 5.5, separate session, read-only access to the repository. Same-model review;
+a cross-model review is still required before any public release. This is a NON-CLOSING batch: this
+verdict accepts only the exact commit's batch and closes neither T-303 nor T-306.
+
+## Methods
+
+- Confirmed `git rev-parse` for HEAD = `cc15d75db76b3bb071c9d709f7baa77ad036e536` and base
+  `3a303aed10c3b03b296e0824b70035bb60ccaa0c`. Working tree clean. Diff: 14 files, +1436/-121.
+- Read IP-POLICY.md, the T-303/T-306 rows and the TASKS.md diff (two added sentences only), the new
+  evidence file and the validation guide. I read every changed source line:
+  `platforms/linux/src/coding_repository_validation.rs` (new), the `coding_repository_command.rs`,
+  `coding_repository.rs` and `lib.rs` diffs, `platforms/local-api/src/coding_repository_api.rs` and
+  `coding_cli.rs` diffs, and both test diffs. I also read the unchanged kernel `seal_validation_template`,
+  `normalize_validation_result`, `verify_validation_receipt`, `plan_failed_test_rerun`,
+  `verify_rerun_plan` and the envelope status rules they depend on.
+- Ran the seven requested commands myself (below), compared the full failure ID set against the
+  baseline logs myself, and checked the builder's raw-log digests.
+- Wrote my own adversarial native-owner tests in a disposable `git archive` copy of the exact commit
+  (outside the repository; deleted afterwards). The repository was not modified.
+- Privacy/IP/branding scan of all added lines.
+
+## Commands and results
+
+Environment: `PATH=/lane/state/tmp/shared-node-v24.15.0/bin:$PATH`, `CARGO_TARGET_DIR=/lane/state/review-target`,
+`CARGO_BUILD_JOBS=2`, `RUST_TEST_THREADS=4`. All Cargo work went through `bash /tools/build-slot`;
+no GPU was used.
+
+| # | Command | Result |
+| --- | --- | --- |
+| 0 | `node --version; sha256sum .../bin/node` | `v24.15.0`; SHA-256 `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c`, as stated |
+| 1 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib coding_repository -- --nocapture` | exit 0; **19 passed**, 0 failed, 0 ignored, 256 filtered. Both `native command not measured` and `native validation not measured` trust-refusal messages appear: the refusal branch ran, so positive native execution is **not** demonstrated |
+| 2 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api --test coding_worktree -- --nocapture` | exit 0; **8 passed**, 0 filtered. The consent peer is a synthetic loopback HTTP stub |
+| 3 | `python3 -B scripts/local_agent_fast_gate.py --base 3a303aed... --timeout 3600` | **FAST GATE: FAIL** (exit 1), as expected. fmt `--check` exit 0 (0.95 s); Clippy all-targets `-D warnings` exit 0 (14.43 s); source tests exit 101: **809 passed / 72 failed / 62 ignored / 0 filtered** (92.48 s) |
+| 3a | Failure ID comparison (mine) | Extracted the 72 unique `... FAILED` IDs from my run and the IDs from the two baseline logs named in `docs/evidence/t301-baseline-failures-2026-10-25.md` (`batch35-source-2/11.log`: 53, `07.log`: 19). `diff` of the sorted sets: **identical**, with no new and no missing IDs. The baseline logs, that evidence file and `scripts/` are unchanged in this diff |
+| 4 | `node node_modules/.bin/markdownlint-cli2 <5 files>` | exit 0; 0 issues in 5 files |
+| 5 | `python3 -B scripts/validate_docs.py` | exit 0; validated 762 Markdown files and all policy invariants |
+| 6 | `cmp docs/reviews/3a303aed10c3-...-repair.txt /lane/reviews/3a303aed10c3-...-repair.md` | identical, exit 0; SHA-256 `fc43e0e9...7945a84f`, as stated |
+| 7 | `git diff --check 3a303aed... HEAD` | exit 0, clean |
+| 8 | Builder raw records `sha256sum` | All six digests (fast-final, native-final, api-initial, markdown-final, docs-final, audit.json) match the request. The builder fast log also totals 809/72/62, and its failure set equals mine. I did not rely on the builder audit |
+
+### Adversarial cases (my own; disposable copy, `cargo test ... --lib reviewer_`)
+
+All four of my tests passed after one correction to my own assumption, described in case 2.
+
+1. **Slot swap across routes.** With a validation preview pending, I replaced the slot with an ordinary
+   command preview. `decide_validation` on either digest returned `code.validation.choice-required`, and
+   `decide_command` on the validation digest returned `code.command.stale`. With a validation preview back
+   in the slot, `decide_command` (approve or deny) returned `code.command.validation-choice-required`, and
+   the preview stayed pending. Attempts stayed 0 and there were no canonical receipts. **No crossing.**
+2. **Replay and a stale held-aside preview.** I took an attempt-1 preview out of the slot, then prepared and
+   admitted another attempt-1 preview (assertion failure). Re-deciding the consumed digest returned
+   `choice-required`. Running the held-aside preview through `run_command` returned
+   `code.validation.stale` from the consumption-time re-check, before the executor ran (calls = 1,
+   attempts = 1, latest retained). There was exactly one canonical receipt. My first draft asserted that
+   the receipt JSON contains the outer preview digest. That assertion failed because canonical receipts
+   are content-free (IDs and `operation_sha256`), the same as on the existing command route. I traced
+   the outer hash instead: `run_command` places it in `ExactEffect.preview_hash` (command.rs:228), which
+   becomes the grant/approval `preview_sha256` (coding_repository.rs:616,647,683). Not a finding.
+3. **Outer preview binding.** Recomputing SHA-256 over the preview minus `preview_sha256` equals the
+   pending hash. The hashed body contains `validation_template`, `prior_receipt_sha256`, `attempt`,
+   `maximum_attempts`, the expiry, the root and creation receipt, and the full kernel command preview.
+   `operation` is `execute-validation`. The outer digest differs from the inner command preview digest,
+   and a changed kind changes `template_sha256`.
+4. **Contradictory or hostile envelopes** (all `validation_passed: false`, status `malformed`):
+   - exit 0 with `assertion_failed`;
+   - exit 0 with `compile_failed`;
+   - a failed name containing ESC/CSI and U+202E;
+   - `passed` with a non-empty failed-name list;
+   - an unknown envelope field;
+   - two concatenated envelopes.
+
+   An envelope claiming `u32::MAX` passed tests with exit 0 normalizes to `passed`. This is expected: the
+   envelope producer is trusted to describe its own tests, which the guide states plainly ("normalization
+   is not independent task grading").
+
+## Assessment against the requested focus
+
+- **Exact outer preview binding** (template, budget, prior, attempt, expiry, root, creation receipt):
+  verified by code (validation.rs:152-168) and case 3. The receipt's `approval_sha256` is the outer hash
+  (builder test, validation.rs:274 via command.rs:274).
+- **Input confirmation vs execution approval.** `approve_definition` must be the literal Boolean `true`
+  (a string gives 400, `false` gives 403). Confirmation yields only an inert preview. Execution needs the
+  separate exact `decide` plus TTY `test <sha>` consent. `user_input_approval_sha256` is set to the
+  deterministic source hash. The guide and the code comment honestly call this a provenance binding,
+  not authority.
+- **Route separation and single slot overwrite.** Verified (builder tests and case 1). Inspect routes
+  filter by preview kind. The CLI refuses when the inspected `operation` mismatches.
+- **Denial and expiry vs consumption.** Denial and expiry leave attempts at 0 (builder test). The attempt
+  is spent in `run_command` after root and expiry re-checks and before `exact.execute`
+  (command.rs:215-219). An authority refusal before launch therefore also spends and blocks; this is
+  conservative and documented.
+- **Stale or changed definition and prior.** A changed minimum count, kind or template, a foreign or
+  absent prior, a pass as prior, a non-assertion prior or an exhausted budget all refuse (builder tests
+  and case 2). One immutable template per created worktree: `self.validation` resets only on observed
+  native creation success (coding_repository.rs:388).
+- **Uncertain, corrupt or unwound state.** Corrupt stdout digest and synthetic panic leave attempts = 1,
+  latest = null, and every further prepare refuses with `code.validation.uncertain`. In the API, an
+  unwind poisons the repository mutex, which fails closed.
+- **Reopen without adoption.** Reopen shows no pending, no latest, 0 attempts and `created` = none, with
+  canonical receipts unchanged (builder native test). The API restart test shows unchanged state and no
+  caller-path adoption.
+- **CLI exit.** `validation-run` returns failure when `validation.validation_passed != true`, even with
+  outcome `succeeded` (coding_cli.rs:672). The synthetic peer covers (validation, failed), giving a
+  non-zero exit.
+- **Escaped preview and root drift around TTY consent.** The full preview is rendered through `safe()`
+  (non-ASCII and DEL escaped; JSON escapes C0). The root is verified before and after consent, the request
+  is sent once, and the server re-verifies the held root. Covered by the rewritten loop test. Every prior
+  assertion is preserved for the command route and extended to validation.
+- **Kernel verification and no false grading claims.** `normalize_validation_result` and
+  `verify_validation_receipt` are re-run at the owner (validation.rs:238-261). Results carry
+  `verification_scope: approved-command-envelope`, and `current_workspace_verified`,
+  `test_suite_verified`, `automatic_retry` and `model_retry_connected` are all false. The evidence and
+  guide claim no grading, score, native positive run, model repair, owned-edit binding, durable recovery,
+  commit or push.
+- **Confinement.** No new executor or bypass. The same `command_registry` bounds, native manifest
+  verification, read-only offline worktree and `CommandEffectDriver` path apply, and the template sealer
+  additionally refuses `network`, `interactive` and `inherit_environment`. The generic executor seam
+  remains `pub(super)` and test-only.
+- **Evaluation integrity.** No frozen task, held-out input, hidden test, grader, prompt, model,
+  threshold, baseline list, dependency (`Cargo.lock` unchanged), SBOM or status field changed. No score
+  is claimed. There are no new sub-rows.
+- **Privacy, IP and branding.** Added lines contain no host home path, username, hostname, credential,
+  private sibling-project name or other-product naming. The only paths are lane-generic `/lane/...`
+  strings inside the byte-identical retained report, consistent with 58 earlier committed reports.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog), platforms/local-api/src/coding_cli.rs:660.** The TTY consent wrapper for
+  `validation-run` reuses the ordinary-command warning ("Runs the exact command offline... Exit zero
+  does not verify a test suite"). It is accurate, and the displayed preview carries the validation-specific
+  warning. Even so, the wrapper does not say that a pass is envelope-only or that each attempt spends one
+  of three. Fix: choose the warning text by route, alongside `challenge` and `operation`.
+- **L2 (low, backlog), platforms/linux/src/coding_repository_validation.rs:145-151.**
+  `check_validation_selection` runs at preview time with `pending.hash` *before* the outer hash is
+  recomputed (line 165), so it uses the inner command-preview hash as the approval input. The resulting plan
+  is discarded, and the consumption-time plan (command.rs:217) correctly uses the outer approved hash,
+  so there is no security effect. The preview-time check simply validates against a different approval
+  digest than the one later recorded. Fix: run the preview-time check without building a plan, or
+  after finalizing the outer hash.
+- Carried, unchanged and still open before parent acceptance: L4 (shared repository error prefix),
+  L5 (post-create same-user identity window), and missing positive native creation, command and
+  validation coverage (the trust-refusal branch is the only native branch exercised in this lane).
+
+## Per-row result
+
+- **T-303** (this batch only): PASS for exact commit `cc15d75db76b3bb071c9d709f7baa77ad036e536`. The
+  batch is non-closing; the row stays open for the connected model repair loop, owned-edit binding,
+  durable run recovery, positive native coverage and the measured development and held-out campaign.
+- **T-306** (related): PASS for this batch's contribution; the row stays open for the connected loop,
+  apply, commit and push approval.
+- Full fast gate remains FAIL with exactly the 72 baseline failures. The builder retains this failure and
+  makes no allowlisting or skip.
+
+Verdict: PASS

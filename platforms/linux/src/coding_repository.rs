@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-//! Person-approved worktree creation through the canonical durable effect owner.
+//! Approved worktree creation, held ownership, commands and exact source edits.
 
 use std::collections::BTreeSet;
 use std::os::unix::ffi::OsStrExt;
@@ -42,6 +42,8 @@ use crate::{
 
 #[path = "coding_repository_command.rs"]
 mod command;
+#[path = "coding_repository_edit.rs"]
+mod edit;
 #[path = "coding_repository_validation.rs"]
 mod validation;
 
@@ -111,7 +113,8 @@ struct Pending {
 
 /// Non-production local coding repository owner. Uses the existing encrypted
 /// authority store; previews are process-only and are never resumed or replayed.
-/// Exact commands use the existing bounded executor; no model, commit, push or deletion.
+/// Exact commands use the existing bounded executor and exact edits the native
+/// write transaction. No model loop, commit, push or deletion.
 pub struct LinuxCodingRepository {
     authority: LinuxAuthorityRuntime,
     state_root: PathBuf,
@@ -119,6 +122,8 @@ pub struct LinuxCodingRepository {
     created: Option<CreatedWorktree>,
     command: Option<command::PendingCommand>,
     validation: Option<validation::ValidationSeries>,
+    edit: Option<edit::PendingEdit>,
+    edit_result: Option<Value>,
 }
 
 impl LinuxCodingRepository {
@@ -153,6 +158,8 @@ impl LinuxCodingRepository {
             created: None,
             command: None,
             validation: None,
+            edit: None,
+            edit_result: None,
         })
     }
 
@@ -386,6 +393,8 @@ impl LinuxCodingRepository {
                 // process-local provenance, never reconstructed from a caller path.
                 self.command = None;
                 self.validation = None;
+                self.edit = None;
+                self.edit_result = None;
                 self.created = Some(CreatedWorktree {
                     path: pending.destination,
                     held,

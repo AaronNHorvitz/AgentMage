@@ -142,13 +142,6 @@ impl LinuxCodingRepository {
         })
         .map_err(|_| err("code.validation.definition"))?;
         let attempts = self.validation.as_ref().map_or(0, |s| s.attempts);
-        self.check_validation_selection(
-            &template,
-            attempts,
-            prior,
-            &pending.prepared.preview().command_attempt_id,
-            &pending.hash,
-        )?;
         pending.preview["operation"] = json!("execute-validation");
         pending.preview["validation_template"] = json!(template);
         pending.preview["prior_receipt_sha256"] = json!(prior);
@@ -166,6 +159,13 @@ impl LinuxCodingRepository {
             &serde_json::to_vec(&pending.preview).map_err(|_| err("code.validation.definition"))?,
         );
         pending.preview["preview_sha256"] = json!(pending.hash);
+        self.check_validation_selection(
+            &template,
+            attempts,
+            prior,
+            &pending.prepared.preview().command_attempt_id,
+            &pending.hash,
+        )?;
         pending.validation = Some(PendingValidation {
             template,
             expected_attempts: attempts,

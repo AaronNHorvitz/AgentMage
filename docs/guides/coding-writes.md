@@ -125,3 +125,11 @@ transaction; preserve them until the affected files and outcome are understood.
 Durable journal integration remains required
 for parent-row acceptance. Undo is a new exact proposal and approval against
 current bytes; no implicit reset, restore, stash, checkout or deletion occurs.
+
+## Service-created worktree path
+
+[Owned edits](coding-owned-edits.md) use the same writer and strict proposal
+checker, with a separate control-only API and terminal path that additionally
+requires process-held native creation provenance. The selected-workspace routes
+above retain their existing scope and do not acquire ownership by selecting a
+path. Native creation is still unmeasured in this lane.

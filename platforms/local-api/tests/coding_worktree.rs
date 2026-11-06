@@ -572,7 +572,14 @@ fn command_api_requires_control_created_ownership_and_strict_requests() {
 #[test]
 fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
     // Synthetic peer checks terminal command approval only; no command is launched.
-    for (validation, validation_passed) in [(false, true), (true, true), (true, false)] {
+    for (kind, validation_passed) in [
+        ("command", true),
+        ("validation", true),
+        ("validation", false),
+        ("edit", true),
+    ] {
+        let validation = kind == "validation";
+        let edit = kind == "edit";
         for response in ["incorrect", "approve", "replace-root"] {
             let mut f = Fixture::new();
             f.stop();
@@ -594,7 +601,16 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
                 "bounds":{"timeout_ms":119_001,"stdout_bytes":65_535,"stderr_bytes":65_534,
                     "memory_bytes":134_217_728,"task_count":8,"cpu_percent":100},
                 "preview_sha256":"d".repeat(64)}});
-            let (inspect, decide) = if validation {
+            let (inspect, decide) = if edit {
+                preview = json!({"preview_sha256":"a".repeat(64),"worktree_root_sha256":identity(&root),
+                    "operation":"edit-worktree","creation_receipt_sha256":"b".repeat(64),
+                    "write_preview":{"change_set_sha256":"c".repeat(64),"preview_sha256":"d".repeat(64),
+                        "diff":"untrusted-λ\u{202e}\u{7f}","before":"original","after":"replacement"}});
+                (
+                    "/v1/code/repository/edit",
+                    "/v1/code/repository/edit/decide",
+                )
+            } else if validation {
                 preview["operation"] = json!("execute-validation");
                 preview["validation_template"] = json!({"kind":"unit","minimum_test_count":2,
                 "parser":"agent_mage_json_v1","parser_sha256":"e".repeat(64)});
@@ -656,7 +672,7 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
                         json!({"pending":preview})
                     } else {
                         assert_eq!(route, format!("POST {decide} HTTP/1.1"));
-                        json!({"outcome":"succeeded","validation":{"validation_passed":validation_passed}})
+                        json!({"outcome":if edit {"committed"} else {"succeeded"},"validation":{"validation_passed":validation_passed}})
                     };
                     requests.push((route, body));
                     let bytes = serde_json::to_vec(&value).unwrap();
@@ -667,7 +683,9 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
             });
             let observed = f.terminal(
                 &[
-                    if validation {
+                    if edit {
+                        "edit-apply"
+                    } else if validation {
                         "validation-run"
                     } else {
                         "command-run"
@@ -684,7 +702,9 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
                 response == "approve" && validation_passed
             );
             let transcript = observed["transcript"].as_str().unwrap();
-            assert!(transcript.contains(if validation {
+            assert!(transcript.contains(if edit {
+                "Type exactly edit "
+            } else if validation {
                 "Type exactly test "
             } else {
                 "Type exactly run "
@@ -815,4 +835,208 @@ fn validation_api_and_cli_require_explicit_control_and_cannot_adopt_a_worktree()
         fs::read(f.root.join("repo/sentinel")).unwrap(),
         b"human work"
     );
+}
+
+#[test]
+fn owned_edit_api_requires_control_read_consent_and_never_adopts_a_caller_root() {
+    let mut f = Fixture::new();
+    let inspect = "/v1/code/repository/edit";
+    let prepare = "/v1/code/repository/edit/prepare";
+    let decide = "/v1/code/repository/edit/decide";
+    let definition = json!({"paths":["sentinel"],"expected_sources":[{"path":"sentinel","sha256":"a".repeat(64)}],
+        "task":"Repair sentinel","max_message_bytes":4096,
+        "answer":"{\"edits\":[{\"path\":\"sentinel\",\"old\":\"human work\",\"new\":\"replacement\"}]}","approve_read":true});
+    assert_eq!(f.call_bytes("GET", inspect, false, b"").0, 403);
+    for (route, body) in [
+        (prepare, definition.clone()),
+        (
+            decide,
+            json!({"preview_sha256":"a".repeat(64),"approve":true}),
+        ),
+    ] {
+        assert_eq!(f.call("POST", route, false, body).0, 403);
+    }
+    for bytes in [
+        br#"[]"#.as_slice(),
+        br#"{"paths":[],"expected_sources":[],"task":"x","max_message_bytes":4096,"answer":"x","approve_read":"true"}"#.as_slice(),
+        br#"{"paths":[],"expected_sources":[],"task":"x","max_message_bytes":4096,"answer":"x","approve_read":true,"approve_read":false}"#.as_slice(),
+        br#"{"paths":[],"expected_sources":[["sentinel","hash"]],"task":"x","max_message_bytes":4096,"answer":"x","approve_read":true}"#.as_slice(),
+    ] { assert_eq!(f.call_bytes("POST",prepare,true,bytes).0,400); }
+    let mut no_consent = definition.clone();
+    no_consent["approve_read"] = json!(false);
+    assert_eq!(f.call("POST", prepare, true, no_consent).0, 403);
+    for extra in ["root", "creation_receipt_sha256", "approve"] {
+        let mut injected = definition.clone();
+        injected[extra] = json!("caller-supplied");
+        assert_eq!(f.call("POST", prepare, true, injected).0, 400);
+    }
+    let refused = f.call("POST", prepare, true, definition);
+    assert_eq!(refused.0, 409);
+    assert_eq!(refused.1["error"], "code.command.worktree-required");
+    assert_eq!(refused.1["effect"], "no-write-dispatch");
+    for bytes in [
+        br#"{"preview_sha256":"a","approve":true,"approve":false}"#.as_slice(),
+        br#"{"preview_sha256":"a","approve":"true"}"#.as_slice(),
+        br#"{"preview_sha256":"a","approve":true,"root":"/outside"}"#.as_slice(),
+        br#"["a",true]"#.as_slice(),
+    ] {
+        assert_eq!(f.call_bytes("POST", decide, true, bytes).0, 400);
+    }
+    let refused = f.call(
+        "POST",
+        decide,
+        true,
+        json!({"preview_sha256":"a".repeat(64),"approve":true}),
+    );
+    assert_eq!(refused.1["error"], "code.edit.choice-required");
+    assert_eq!(refused.1["effect"], "unknown");
+    let output = f.cli(&["edit"]);
+    assert!(output.status.success());
+    let before: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(before["pending"].is_null());
+    assert!(before["latest"].is_null());
+    assert!(before["worktree_root_sha256"].is_null());
+    assert!(
+        !f.cli(&["edit-apply", f.root.join("repo").to_str().unwrap()])
+            .status
+            .success()
+    );
+    assert!(!f.cli(&["edit-deny"]).status.success());
+    f.stop();
+    f.start();
+    let output = f.cli(&["edit"]);
+    assert!(output.status.success());
+    let after: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(before, after);
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"human work"
+    );
+}
+
+#[test]
+fn synthetic_propose_worktree_requires_complete_proposal_and_fresh_read_consent() {
+    // This is protocol evidence only: both proposal and creation are synthetic.
+    for (complete, choice) in [
+        (true, "approve"),
+        (true, "incorrect"),
+        (true, "replace-root"),
+        (false, "approve"),
+    ] {
+        let mut f = Fixture::new();
+        f.stop();
+        let root = f.root.join("repo");
+        let identity =
+            agentmage_platform_linux::discover_linux_coding_map(&root, "sentinel", || false)
+                .unwrap()
+                .root_sha256;
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        listener.set_nonblocking(true).unwrap();
+        f.address = Some(listener.local_addr().unwrap());
+        let stop = Arc::new(AtomicBool::new(false));
+        let done = stop.clone();
+        let expected_identity = identity.clone();
+        let worker = thread::spawn(move || {
+            let deadline = Instant::now() + Duration::from_secs(12);
+            let mut requests = Vec::new();
+            while !done.load(Ordering::Relaxed) {
+                assert!(Instant::now() < deadline);
+                let (mut socket, _) = match listener.accept() {
+                    Ok(pair) => pair,
+                    Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                        thread::sleep(Duration::from_millis(5));
+                        continue;
+                    }
+                    Err(e) => panic!("{e}"),
+                };
+                socket
+                    .set_read_timeout(Some(Duration::from_secs(2)))
+                    .unwrap();
+                let mut header = Vec::new();
+                while !header.ends_with(b"\r\n\r\n") {
+                    let mut byte = [0];
+                    socket.read_exact(&mut byte).unwrap();
+                    header.push(byte[0]);
+                    assert!(header.len() < 8192);
+                }
+                let header = String::from_utf8(header).unwrap();
+                let route = header.lines().next().unwrap().to_owned();
+                let length = header
+                    .lines()
+                    .find_map(|l| l.strip_prefix("Content-Length: "))
+                    .unwrap()
+                    .parse::<usize>()
+                    .unwrap();
+                assert!(length < 8192);
+                let mut body = vec![0; length];
+                socket.read_exact(&mut body).unwrap();
+                let (media,bytes) = match route.as_str() {
+                    "GET /v1/code/workspace HTTP/1.1" => ("application/json",serde_json::to_vec(&json!({"selected":true,"workspace_revision":7,"paths":["sentinel"],"model_context_approved":true})).unwrap()),
+                    "POST /v1/code/workspace/proposals HTTP/1.1" => {
+                        let answer = r#"{"edits":[{"path":"sentinel","old":"human work","new":"replacement"}]}"#;
+                        let events = [json!({"type":"context","workspace_revision":7,"files":[{"path":"sentinel","sha256":"b".repeat(64)}]}),
+                            json!({"type":"text","text":answer}),
+                            if complete {json!({"type":"proposal","workspace_revision":7,"applied":false,"tested":false})} else {json!({"type":"error","partial":true})}];
+                        let mut bytes=Vec::new();for event in events {bytes.extend(serde_json::to_vec(&event).unwrap());bytes.push(b'\n');}
+                        ("application/x-ndjson",bytes)
+                    }
+                    "GET /v1/status HTTP/1.1" => ("application/json",serde_json::to_vec(&json!({"busy":false})).unwrap()),
+                    "GET /v1/code/repository/edit HTTP/1.1" => ("application/json",serde_json::to_vec(&json!({"worktree_root_sha256":identity})).unwrap()),
+                    "POST /v1/code/repository/edit/prepare HTTP/1.1" => ("application/json",serde_json::to_vec(&json!({"operation":"edit-worktree","preview_sha256":"a".repeat(64)})).unwrap()),
+                    _ => panic!("unexpected route {route}"),
+                };
+                requests.push((route, body));
+                if media == "application/x-ndjson" {
+                    socket.write_all(format!("HTTP/1.1 200 Response\r\nContent-Type: {media}\r\nConnection: close\r\n\r\n").as_bytes()).unwrap();
+                } else {
+                    socket.write_all(format!("HTTP/1.1 200 Response\r\nContent-Type: {media}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",bytes.len()).as_bytes()).unwrap();
+                }
+                socket.write_all(&bytes).unwrap();
+            }
+            requests
+        });
+        let observed = f.terminal(
+            &[
+                "propose-worktree",
+                root.to_str().unwrap(),
+                "synthetic-model",
+                "4096",
+                "128",
+                "Repair sentinel",
+            ],
+            choice,
+        );
+        stop.store(true, Ordering::Relaxed);
+        let requests = worker.join().unwrap();
+        let approved = complete && choice == "approve";
+        assert_eq!(observed["status"] == 0, approved);
+        assert_eq!(observed["sent"], complete);
+        let prepared = requests
+            .iter()
+            .filter(|(route, _)| route == "POST /v1/code/repository/edit/prepare HTTP/1.1")
+            .collect::<Vec<_>>();
+        assert_eq!(prepared.len(), usize::from(approved));
+        assert_eq!(
+            requests
+                .iter()
+                .filter(|(r, _)| r == "POST /v1/code/workspace/proposals HTTP/1.1")
+                .count(),
+            1
+        );
+        if approved {
+            let body: Value = serde_json::from_slice(&prepared[0].1).unwrap();
+            assert_eq!(
+                body,
+                json!({"paths":["sentinel"],"expected_sources":[{"path":"sentinel","sha256":"b".repeat(64)}],
+                "task":"Repair sentinel","max_message_bytes":4096,"answer":r#"{"edits":[{"path":"sentinel","old":"human work","new":"replacement"}]}"#,"approve_read":true})
+            );
+            assert!(
+                observed["transcript"]
+                    .as_str()
+                    .unwrap()
+                    .contains(&format!("read {expected_identity}"))
+            );
+        }
+        assert!(!requests.iter().any(|(r, _)| r.contains("/decide")));
+    }
 }

@@ -27,7 +27,8 @@ use serde_json::{Value, json};
 use zeroize::Zeroizing;
 
 use agentmage_capability_repository_map::coding_proposal::{
-    CODING_PROPOSAL_INSTRUCTION, CodingSource, check_coding_proposal, prepare_coding_proposal,
+    CODING_PROPOSAL_INSTRUCTION, CodingProposedChange, CodingSource, check_coding_proposal,
+    prepare_coding_proposal,
 };
 
 use agentmage_platform_linux::{
@@ -684,6 +685,32 @@ fn object_json<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<T, ()> {
     Ok(value)
 }
 
+// Both edit entry points use the same strict proposal and complete-snapshot
+// checks. Neither accepts paths/replacements from a partial model generation.
+fn checked_changes(
+    task: &str,
+    sources: &[CodingSource],
+    max_message_bytes: usize,
+    expected_sources: &[ExpectedSource],
+    answer: &str,
+) -> Result<Vec<CodingProposedChange>, (u16, &'static str)> {
+    let context =
+        prepare_coding_proposal(task, sources, max_message_bytes).map_err(|e| (400, e.code()))?;
+    let actual: BTreeMap<_, _> = context
+        .outlines()
+        .iter()
+        .map(|o| (o.path.clone(), o.sha256.clone()))
+        .collect();
+    let expected: BTreeMap<_, _> = expected_sources
+        .iter()
+        .map(|s| (s.path.clone(), s.sha256.clone()))
+        .collect();
+    if actual.len() != expected_sources.len() || actual != expected {
+        return Err((409, "code.proposal.stale"));
+    }
+    check_coding_proposal(&context, sources, answer).map_err(|e| (400, e.code()))
+}
+
 struct Operation<'a> {
     state: &'a Mutex<State>,
     cancel: ChatCancellation,
@@ -962,26 +989,13 @@ fn handle(
             let prepared = (|| {
                 let sources =
                     workspace_sources(state, input.workspace_revision, &input.paths, false)?;
-                let context =
-                    prepare_coding_proposal(&input.task, &sources, input.max_message_bytes)
-                        .map_err(|e| (400, e.code()))?;
-                // These must be the exact complete snapshots from the proposal's
-                // context event, including files that the model did not edit.
-                let actual: BTreeMap<_, _> = context
-                    .outlines()
-                    .iter()
-                    .map(|o| (o.path.clone(), o.sha256.clone()))
-                    .collect();
-                let expected: BTreeMap<_, _> = input
-                    .expected_sources
-                    .iter()
-                    .map(|s| (s.path.clone(), s.sha256.clone()))
-                    .collect();
-                if actual.len() != input.expected_sources.len() || actual != expected {
-                    return Err((409, "code.proposal.stale"));
-                }
-                let changes = check_coding_proposal(&context, &sources, &input.answer)
-                    .map_err(|e| (400, e.code()))?;
+                let changes = checked_changes(
+                    &input.task,
+                    &sources,
+                    input.max_message_bytes,
+                    &input.expected_sources,
+                    &input.answer,
+                )?;
                 let scope = state
                     .lock()
                     .map_err(|_| (500, "code.workspace.state"))?

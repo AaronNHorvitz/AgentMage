@@ -790,3 +790,355 @@ fn native_validation_keeps_manifest_refusal_or_reports_empty_output_as_malformed
         }
     }
 }
+
+#[test]
+fn owned_edit_writes_real_bytes_only_after_exact_approval_and_preserves_original() {
+    let f = Fixture::new();
+    fs::create_dir(f.0.join("original")).unwrap();
+    fs::write(f.0.join("original/sentinel"), b"preserve").unwrap();
+    let mut owner = f.open();
+    f.synthetic_created(&mut owner);
+    let command_digest = f.pending(&mut owner);
+    let scope = owner.select_created_sources(&["sentinel".into()]).unwrap();
+    let preview = owner
+        .prepare_edit(
+            scope,
+            &[crate::LinuxCodingReplacement {
+                path: "sentinel",
+                before_sha256: &hash(b"preserve"),
+                content: "repaired\n",
+            }],
+            "Repair sentinel",
+            NOW,
+        )
+        .unwrap();
+    assert_eq!(
+        fs::read(f.0.join("owned/worktree/sentinel")).unwrap(),
+        b"preserve"
+    );
+    assert_eq!(preview["operation"], "edit-worktree");
+    assert_eq!(
+        preview["creation_receipt_sha256"],
+        hash(b"synthetic creation")
+    );
+    let mut body = preview.clone();
+    body.as_object_mut().unwrap().remove("preview_sha256");
+    assert_eq!(
+        preview["preview_sha256"],
+        hash(&serde_json::to_vec(&body).unwrap())
+    );
+    assert!(preview["write_preview"]["preview_sha256"].is_string());
+    assert_eq!(
+        owner
+            .decide_edit(&hash(b"wrong"), true, NOW)
+            .unwrap_err()
+            .code(),
+        "code.edit.stale"
+    );
+    assert_eq!(owner.inspect_edit().unwrap()["pending"], preview);
+    let digest = preview["preview_sha256"].as_str().unwrap();
+    assert_eq!(
+        owner.decide_command(digest, true, NOW).unwrap_err().code(),
+        "code.command.stale"
+    );
+    assert_eq!(
+        owner
+            .decide_edit(&command_digest, true, NOW)
+            .unwrap_err()
+            .code(),
+        "code.edit.stale"
+    );
+    assert_eq!(owner.inspect_edit().unwrap()["pending"], preview);
+    let result = owner.decide_edit(digest, true, NOW).unwrap();
+    assert_eq!(result["outcome"], "committed");
+    assert_eq!(result["ownership_scope"], "service-created-worktree");
+    assert_eq!(result["tested"], false);
+    assert_eq!(result["write_result"]["isolation_verified"], false);
+    assert!(
+        result["write_result"]["receipts"]
+            .as_array()
+            .is_some_and(|r| !r.is_empty())
+    );
+    assert_eq!(owner.inspect_edit().unwrap()["latest"], result);
+    assert_eq!(
+        fs::read(f.0.join("owned/worktree/sentinel")).unwrap(),
+        b"repaired\n"
+    );
+    assert_eq!(
+        fs::read(f.0.join("original/sentinel")).unwrap(),
+        b"preserve"
+    );
+    assert_eq!(
+        owner.decide_edit(digest, true, NOW).unwrap_err().code(),
+        "code.edit.choice-required"
+    );
+    assert_eq!(
+        owner
+            .decide_command(&command_digest, true, NOW)
+            .unwrap_err()
+            .code(),
+        "code.command.choice-required"
+    );
+    // Writes reuse the existing process-only writer, not canonical durability.
+    assert!(
+        owner.inspect().unwrap()["receipts"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    drop(owner);
+    let mut reopened = f.open();
+    assert!(reopened.inspect_edit().unwrap()["pending"].is_null());
+    assert!(reopened.inspect_edit().unwrap()["latest"].is_null());
+    assert!(reopened.inspect_edit().unwrap()["worktree_root_sha256"].is_null());
+    assert_eq!(
+        reopened
+            .select_created_sources(&["sentinel".into()])
+            .err()
+            .unwrap()
+            .code(),
+        "code.command.worktree-required"
+    );
+    assert_eq!(
+        reopened.decide_edit(digest, true, NOW).unwrap_err().code(),
+        "code.edit.choice-required"
+    );
+}
+
+fn edit_preview(owner: &mut LinuxCodingRepository) -> Value {
+    let scope = owner.select_created_sources(&["sentinel".into()]).unwrap();
+    owner
+        .prepare_edit(
+            scope,
+            &[crate::LinuxCodingReplacement {
+                path: "sentinel",
+                before_sha256: &hash(b"preserve"),
+                content: "repaired\n",
+            }],
+            "Repair sentinel",
+            NOW,
+        )
+        .unwrap()
+}
+
+#[test]
+fn owned_edits_reject_adoption_foreign_scopes_reserved_paths_and_changed_creation() {
+    let f = Fixture::new();
+    let mut owner = f.open();
+    assert_eq!(
+        owner
+            .select_created_sources(&["sentinel".into()])
+            .err()
+            .unwrap()
+            .code(),
+        "code.command.worktree-required"
+    );
+    f.synthetic_created(&mut owner);
+    for paths in [
+        vec!["../state/authority".into()],
+        vec![".git/config".into()],
+        vec!["sentinel".into(), "sentinel".into()],
+    ] {
+        assert!(owner.select_created_sources(&paths).is_err());
+    }
+    fs::write(f.0.join("outside"), b"outside").unwrap();
+    let foreign = LinuxCodingReadScope::select(&f.0, &["outside".into()]).unwrap();
+    assert_eq!(
+        owner
+            .prepare_edit(
+                foreign,
+                &[crate::LinuxCodingReplacement {
+                    path: "outside",
+                    before_sha256: &hash(b"outside"),
+                    content: "wrong",
+                }],
+                "Refuse",
+                NOW
+            )
+            .unwrap_err()
+            .code(),
+        "code.edit.scope"
+    );
+    assert_eq!(fs::read(f.0.join("outside")).unwrap(), b"outside");
+    let preview = edit_preview(&mut owner);
+    owner.created.as_mut().unwrap().creation_receipt_sha256 = hash(b"different creation");
+    assert_eq!(
+        owner
+            .decide_edit(preview["preview_sha256"].as_str().unwrap(), true, NOW)
+            .unwrap_err()
+            .code(),
+        "code.edit.stale"
+    );
+    assert!(owner.inspect_edit().unwrap()["pending"].is_null());
+    assert_eq!(
+        fs::read(f.0.join("owned/worktree/sentinel")).unwrap(),
+        b"preserve"
+    );
+}
+
+#[test]
+fn owned_edit_denial_expiry_source_drift_and_root_replacement_preserve_files() {
+    for case in [
+        "deny",
+        "expire",
+        "clock",
+        "source",
+        "root",
+        "management",
+        "symlink",
+    ] {
+        let f = Fixture::new();
+        let mut owner = f.open();
+        f.synthetic_created(&mut owner);
+        let preview = edit_preview(&mut owner);
+        let digest = preview["preview_sha256"].as_str().unwrap();
+        let original = f.0.join("owned/worktree/sentinel");
+        match case {
+            "source" => fs::write(&original, b"human edit").unwrap(),
+            "root" => {
+                fs::rename(f.0.join("owned/worktree"), f.0.join("saved-worktree")).unwrap();
+                fs::create_dir(f.0.join("owned/worktree")).unwrap();
+                fs::write(&original, b"replacement").unwrap();
+            }
+            "management" => {
+                fs::rename(f.0.join("owned"), f.0.join("saved-owned")).unwrap();
+                fs::create_dir_all(f.0.join("owned/worktree")).unwrap();
+                fs::write(&original, b"replacement").unwrap();
+            }
+            "symlink" => {
+                fs::write(f.0.join("outside"), b"outside").unwrap();
+                fs::remove_file(&original).unwrap();
+                symlink(f.0.join("outside"), &original).unwrap();
+            }
+            _ => (),
+        }
+        let result = owner.decide_edit(
+            digest,
+            case != "deny",
+            if case == "expire" {
+                NOW + LIFETIME_MS
+            } else if case == "clock" {
+                NOW - 1
+            } else {
+                NOW
+            },
+        );
+        match case {
+            "deny" => assert_eq!(result.unwrap()["outcome"], "denied"),
+            "source" | "symlink" => {
+                assert_eq!(result.unwrap_err().code(), "code.write.transaction")
+            }
+            _ => assert!(result.is_err()),
+        }
+        let expected: &[u8] = match case {
+            "source" => b"human edit",
+            "root" | "management" => b"replacement",
+            "symlink" => b"outside",
+            _ => b"preserve",
+        };
+        assert_eq!(fs::read(&original).unwrap(), expected, "{case}");
+        assert!(owner.inspect_edit().unwrap()["pending"].is_null());
+        assert_eq!(
+            owner.decide_edit(digest, true, NOW).unwrap_err().code(),
+            "code.edit.choice-required"
+        );
+    }
+}
+
+#[test]
+fn invalid_edit_preparation_keeps_the_existing_exact_preview_and_command() {
+    let f = Fixture::new();
+    let mut owner = f.open();
+    let command = f.pending(&mut owner);
+    let preview = edit_preview(&mut owner);
+    for (path, digest) in [
+        ("unselected", hash(b"preserve")),
+        ("sentinel", hash(b"stale")),
+    ] {
+        let scope = owner.select_created_sources(&["sentinel".into()]).unwrap();
+        assert!(
+            owner
+                .prepare_edit(
+                    scope,
+                    &[crate::LinuxCodingReplacement {
+                        path,
+                        before_sha256: &digest,
+                        content: "wrong",
+                    }],
+                    "Refuse",
+                    NOW
+                )
+                .is_err()
+        );
+        assert_eq!(owner.inspect_edit().unwrap()["pending"], preview);
+        assert_eq!(
+            owner.inspect_command().unwrap()["pending"]["preview_sha256"],
+            command
+        );
+    }
+    owner
+        .decide_edit(preview["preview_sha256"].as_str().unwrap(), false, NOW)
+        .unwrap();
+    assert_eq!(
+        owner.inspect_command().unwrap()["pending"]["preview_sha256"],
+        command
+    );
+}
+
+#[test]
+fn owned_edit_invalidates_pending_validation_but_preserves_spent_budget_and_prior() {
+    let f = Fixture::new();
+    let mut owner = f.open();
+    f.synthetic_created(&mut owner);
+    let calls = Arc::new(AtomicUsize::new(0));
+    let first = validation_pending(&mut owner, None).unwrap();
+    let failed = validation_execute(
+        &mut owner,
+        &first,
+        envelope("assertion_failed", 1, 1, 0),
+        1,
+        &calls,
+        false,
+    )
+    .unwrap();
+    let prior = failed["validation"]["receipt"]["receipt_sha256"]
+        .as_str()
+        .unwrap();
+    let old = validation_pending(&mut owner, Some(prior)).unwrap();
+    let validation_before = owner.inspect_validation().unwrap();
+    let preview = edit_preview(&mut owner);
+    assert_eq!(
+        owner
+            .decide_edit(preview["preview_sha256"].as_str().unwrap(), true, NOW)
+            .unwrap()["outcome"],
+        "committed"
+    );
+    let validation_after = owner.inspect_validation().unwrap();
+    assert!(validation_after["pending"].is_null());
+    assert_eq!(validation_before["latest"], validation_after["latest"]);
+    assert_eq!(validation_before["attempts"], validation_after["attempts"]);
+    assert_eq!(validation_after["attempts"], 1);
+    assert_eq!(
+        owner.decide_validation(&old, true, NOW).unwrap_err().code(),
+        "code.validation.choice-required"
+    );
+    assert_eq!(
+        validation_pending(&mut owner, None).unwrap_err().code(),
+        "code.validation.stale"
+    );
+    let fresh = validation_pending(&mut owner, Some(prior)).unwrap();
+    assert_ne!(fresh, old);
+    let passed = validation_execute(
+        &mut owner,
+        &fresh,
+        envelope("passed", 2, 0, 0),
+        0,
+        &calls,
+        false,
+    )
+    .unwrap();
+    assert_eq!(passed["validation"]["attempt"], 2);
+    assert_eq!(passed["validation"]["validation_passed"], true);
+    assert_eq!(passed["validation"]["current_workspace_verified"], false);
+    assert_eq!(calls.load(Ordering::Relaxed), 2);
+}

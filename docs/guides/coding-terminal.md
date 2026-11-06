@@ -172,3 +172,15 @@ It exits unsuccessfully when command exit is successful but the normalized
 validation does not pass. Its output includes both states. Definition confirmation
 alone does not launch a command. Neither normal-command consent nor a client token
 can approve validation. These commands do not connect automatic model repair.
+
+## Edits bound to created worktrees
+
+Use [owned edits](coding-owned-edits.md) after a successful `worktree-create`:
+`propose-worktree <worktree> <model> <message-bytes> <output-tokens> <task>`
+connects the existing complete strict proposal to an owned inert diff, with
+separate terminal read consent. `edit` shows that preview; `edit-apply <worktree>`
+requires its complete diff and exact `edit <digest>` consent. `edit-deny` consumes
+it without writing. `edit-prepare <worktree> <strict-change-json>` accepts a
+previously retained strict proposal with all original source hashes. Caller roots
+are checked against the service's held ownership and cannot invent it. These
+commands do not apply back to the original repository, run tests, commit or push.

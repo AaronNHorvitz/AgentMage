@@ -326,6 +326,7 @@ fn propose(
     message_bytes: &str,
     tokens: &str,
     task: &str,
+    worktree: Option<&str>,
 ) -> Result<()> {
     let selected = selection(client)?;
     if selected["model_context_approved"] != true {
@@ -374,10 +375,78 @@ fn propose(
     // Status polling handles the server's documented proposal-terminal/lease
     // release race. It never resends generation, preparation or any effect.
     client.idle()?;
-    show(&client.json("POST", "/v1/code/workspace/changes", false, Some(json!({
+    let mut request = json!({
         "workspace_revision":selected["workspace_revision"],"paths":selected["paths"],
         "expected_sources":expected,"task":task,"max_message_bytes":message_bytes,"answer":&**answer
-    })))?)
+    });
+    if let Some(root) = worktree {
+        request
+            .as_object_mut()
+            .ok_or(())?
+            .remove("workspace_revision");
+        request["approve_read"] = json!(true);
+        edit_prepare(client, root, request)
+    } else {
+        show(&client.json("POST", "/v1/code/workspace/changes", false, Some(request))?)
+    }
+}
+
+fn edit_prepare(client: &Client, root: &str, body: Value) -> Result<()> {
+    let status = client.json("GET", "/v1/code/repository/edit", true, None)?;
+    let identity = status["worktree_root_sha256"]
+        .as_str()
+        .filter(|s| digest(s))
+        .ok_or(())?;
+    let verify = || LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ());
+    verify()?;
+    confirm(
+        &json!({"worktree":root,"worktree_root_sha256":identity,"request":body,
+        "warning":"Reads only the displayed source paths in the held service-created worktree to prepare an inert diff. No model request, write, command, commit or push. Writing needs separate exact diff approval."}),
+        &format!("read {identity}"),
+    )?;
+    verify()?;
+    show(&client.json("POST", "/v1/code/repository/edit/prepare", true, Some(body))?)
+}
+
+fn edit_decide(client: &Client, root: Option<&str>) -> Result<()> {
+    let status = client.json("GET", "/v1/code/repository/edit", true, None)?;
+    let preview = &status["pending"];
+    if preview["operation"] != "edit-worktree" {
+        return Err(());
+    }
+    let hash = preview["preview_sha256"]
+        .as_str()
+        .filter(|s| digest(s))
+        .ok_or(())?;
+    if let Some(root) = root {
+        let identity = preview["worktree_root_sha256"].as_str().ok_or(())?;
+        let verify =
+            || LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ());
+        verify()?;
+        confirm(
+            &json!({"worktree":root,"preview":preview,
+            "warning":"Writes the exact displayed diff in the held service-created worktree. No tests, original-repository apply, commit or push. Process-only records: inspect disk after a lost reply; never resend approval."}),
+            &format!("edit {hash}"),
+        )?;
+        verify()?;
+    }
+    let result = client.json(
+        "POST",
+        "/v1/code/repository/edit/decide",
+        true,
+        Some(json!({"preview_sha256":hash,"approve":root.is_some()})),
+    )?;
+    show(&result)?;
+    if result["outcome"]
+        != if root.is_some() {
+            "committed"
+        } else {
+            "denied"
+        }
+    {
+        return Err(());
+    }
+    Ok(())
 }
 
 fn apply(client: &Client, root: Option<&str>) -> Result<()> {
@@ -427,6 +496,21 @@ fn execute(args: &[String]) -> Result<()> {
     };
     let client = Client::new(address, auth)?;
     match (command.as_str(), tail) {
+        ("edit", []) => show(&client.json("GET", "/v1/code/repository/edit", true, None)?),
+        ("edit-prepare", [root, request]) => {
+            if request.len() > MAX_REQUEST {
+                return Err(());
+            }
+            super::object_json::<crate::coding_repository_api::PrepareEdit>(request.as_bytes())
+                .map_err(|_| ())?;
+            edit_prepare(
+                &client,
+                root,
+                serde_json::from_str(request).map_err(|_| ())?,
+            )
+        }
+        ("edit-apply", [root]) => edit_decide(&client, Some(root)),
+        ("edit-deny", []) => edit_decide(&client, None),
         ("command", []) => show(&client.json("GET", "/v1/code/repository/command", true, None)?),
         ("command-prepare", [spec]) => {
             if spec.len() > MAX_REQUEST {
@@ -565,7 +649,12 @@ fn execute(args: &[String]) -> Result<()> {
             };
             show(&client.json("POST", route, false, Some(body))?)
         }
-        ("propose", [model, bytes, tokens, task]) => propose(&client, model, bytes, tokens, task),
+        ("propose", [model, bytes, tokens, task]) => {
+            propose(&client, model, bytes, tokens, task, None)
+        }
+        ("propose-worktree", [root, model, bytes, tokens, task]) => {
+            propose(&client, model, bytes, tokens, task, Some(root))
+        }
         ("apply", [root]) => apply(&client, Some(root)),
         ("deny", []) => apply(&client, None),
         _ => {
@@ -577,7 +666,7 @@ fn execute(args: &[String]) -> Result<()> {
 
 fn usage() {
     eprintln!(
-        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> validation|validation-prepare <definition-json>|validation-run <worktree>|validation-deny|command|command-prepare <spec-json>|command-run <worktree>|command-deny|worktree|worktree-prepare <repository> <private-management-directory> <task-id> <base-commit>|worktree-create <repository> <private-management-directory>|worktree-deny|map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
+        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> edit|edit-prepare <worktree> <strict-change-json>|edit-apply <worktree>|edit-deny|propose-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|validation|validation-prepare <definition-json>|validation-run <worktree>|validation-deny|command|command-prepare <spec-json>|command-run <worktree>|command-deny|worktree|worktree-prepare <repository> <private-management-directory> <task-id> <base-commit>|worktree-create <repository> <private-management-directory>|worktree-deny|map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
     );
 }
 
@@ -655,9 +744,13 @@ fn command_decide(client: &Client, root: Option<&String>, validation: bool) -> R
         let verify =
             || LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ());
         verify()?;
+        let warning = if validation {
+            "Runs the exact approved test command offline in the read-only created worktree. A pass verifies only its result envelope. Dispatch spends one of three attempts; output is untrusted. After a lost reply inspect receipts; never resend approval."
+        } else {
+            "Runs the exact command offline in the read-only created worktree. Output is untrusted. Exit zero does not verify a test suite. After a lost reply inspect receipts; never resend approval."
+        };
         confirm(
-            &json!({"worktree":root,"preview":preview,
-            "warning":"Runs the exact command offline in the read-only created worktree. Output is untrusted. Exit zero does not verify a test suite. After a lost reply inspect receipts; never resend approval."}),
+            &json!({"worktree":root,"preview":preview,"warning":warning}),
             &format!("{challenge} {hash}"),
         )?;
         verify()?;
