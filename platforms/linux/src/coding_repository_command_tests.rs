@@ -398,6 +398,7 @@ use agentmage_kernel_engine::validation_template::ValidationKind;
 struct Envelope {
     calls: Arc<AtomicUsize>,
     stdout: Vec<u8>,
+    stderr: Vec<u8>,
     exit: i32,
     corrupt: bool,
 }
@@ -417,9 +418,9 @@ impl BoundedCommandExecutor for Envelope {
             stdout: self.stdout.clone(),
             stdout_sha256: hash(if self.corrupt { b"wrong" } else { &self.stdout }),
             stdout_total_bytes: self.stdout.len() as u64,
-            stderr: vec![],
-            stderr_sha256: hash(b""),
-            stderr_total_bytes: 0,
+            stderr: self.stderr.clone(),
+            stderr_sha256: hash(&self.stderr),
+            stderr_total_bytes: self.stderr.len() as u64,
             elapsed_ms: 1,
             resource_usage: None,
             descendants_terminated: true,
@@ -434,7 +435,14 @@ fn envelope(status: &str, passed: u32, failed: u32, skipped: u32) -> Vec<u8> {
 }
 fn validation_pending(owner: &mut LinuxCodingRepository, prior: Option<&str>) -> Result<String> {
     let registry = command_registry(spec()).unwrap();
-    let pending = owner.validation_preview(&registry, ValidationKind::Unit, 2, prior, NOW)?;
+    let pending = owner.validation_preview(
+        &registry,
+        ValidationKind::Unit,
+        2,
+        Default::default(),
+        prior,
+        NOW,
+    )?;
     let digest = pending.hash.clone();
     owner.command = Some(pending);
     Ok(digest)
@@ -453,6 +461,7 @@ fn validation_execute(
         Envelope {
             calls: calls.clone(),
             stdout,
+            stderr: vec![],
             exit,
             corrupt,
         },
@@ -599,7 +608,14 @@ fn validation_three_attempt_budget_survives_denial_and_cannot_reset_definition()
             let registry = command_registry(spec()).unwrap();
             assert_eq!(
                 owner
-                    .validation_preview(&registry, ValidationKind::Unit, 1, prior.as_deref(), NOW)
+                    .validation_preview(
+                        &registry,
+                        ValidationKind::Unit,
+                        1,
+                        Default::default(),
+                        prior.as_deref(),
+                        NOW
+                    )
                     .err()
                     .unwrap()
                     .code(),
@@ -703,7 +719,14 @@ fn validation_definition_scope_and_cross_route_checks_fail_closed() {
     f.synthetic_created(&mut owner);
     assert_eq!(
         owner
-            .validation_preview(&registry, ValidationKind::Build, 2, None, NOW)
+            .validation_preview(
+                &registry,
+                ValidationKind::Build,
+                2,
+                Default::default(),
+                None,
+                NOW
+            )
             .err()
             .unwrap()
             .code(),
@@ -711,7 +734,14 @@ fn validation_definition_scope_and_cross_route_checks_fail_closed() {
     );
     assert_eq!(
         owner
-            .validation_preview(&registry, ValidationKind::Unit, 0, None, NOW)
+            .validation_preview(
+                &registry,
+                ValidationKind::Unit,
+                0,
+                Default::default(),
+                None,
+                NOW
+            )
             .err()
             .unwrap()
             .code(),
@@ -763,7 +793,14 @@ fn native_validation_keeps_manifest_refusal_or_reports_empty_output_as_malformed
     let f = Fixture::new();
     let mut owner = f.open();
     f.synthetic_created(&mut owner);
-    match owner.prepare_validation(spec(), ValidationKind::Unit, 2, None, NOW) {
+    match owner.prepare_validation(
+        spec(),
+        ValidationKind::Unit,
+        2,
+        Default::default(),
+        None,
+        NOW,
+    ) {
         Err(e) => {
             assert_eq!(e.code(), "linux.command.manifest.invalid");
             assert!(owner.inspect_validation().unwrap()["pending"].is_null());
@@ -1141,4 +1178,114 @@ fn owned_edit_invalidates_pending_validation_but_preserves_spent_budget_and_prio
     assert_eq!(passed["validation"]["validation_passed"], true);
     assert_eq!(passed["validation"]["current_workspace_verified"], false);
     assert_eq!(calls.load(Ordering::Relaxed), 2);
+}
+
+#[test]
+fn selected_project_output_formats_bind_the_preview_and_keep_exact_retry_budget() {
+    use super::super::validation::LinuxCodingTestFormat;
+    for (format, parser, fail, pass) in [
+        (
+            LinuxCodingTestFormat::RustLibtestTextV1,
+            "rust_libtest_text_v1",
+            "running 1 test\ntest add ... FAILED\n\nfailures:\nassertion failed\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n",
+            "running 1 test\ntest add ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n",
+        ),
+        (
+            LinuxCodingTestFormat::PythonUnittestTextV1,
+            "python_unittest_text_v1",
+            "test_add (calc.Tests.test_add) ... FAIL\n\n======================================================================\nFAIL: test_add (calc.Tests.test_add)\n----------------------------------------------------------------------\nAssertionError\n\n----------------------------------------------------------------------\nRan 1 test in 0.001s\n\nFAILED (failures=1)\n",
+            "test_add (calc.Tests.test_add) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 0.001s\n\nOK\n",
+        ),
+    ] {
+        let f = Fixture::new();
+        let mut owner = f.open();
+        f.synthetic_created(&mut owner);
+        let calls = Arc::new(AtomicUsize::new(0));
+        let registry = command_registry(spec()).unwrap();
+        let pending = owner
+            .validation_preview(&registry, ValidationKind::Unit, 1, format, None, NOW)
+            .unwrap();
+        assert_eq!(pending.preview["validation_template"]["parser"], parser);
+        assert_eq!(
+            pending.preview["validation_template"]["parser_sha256"],
+            hash(
+                &serde_json::to_vec(&[
+                    hash(include_bytes!(
+                        "../../../kernel/engine/src/validation_result.rs"
+                    )),
+                    hash(include_bytes!(
+                        "../../../kernel/engine/src/validation_result_text.rs"
+                    ))
+                ])
+                .unwrap()
+            )
+        );
+        let mut prior = None;
+        for attempt in 1..=2 {
+            let pending = owner
+                .validation_preview(
+                    &registry,
+                    ValidationKind::Unit,
+                    1,
+                    format,
+                    prior.as_deref(),
+                    NOW,
+                )
+                .unwrap();
+            let approval = pending.hash.clone();
+            owner.command = Some(pending);
+            let pending = owner.take_command(&approval, true, NOW).unwrap().unwrap();
+            let output = if attempt == 1 { fail } else { pass }.as_bytes().to_vec();
+            let (stdout, stderr) = if parser == "python_unittest_text_v1" {
+                (vec![], output)
+            } else {
+                (output, vec![])
+            };
+            let value = owner
+                .run_command(
+                    pending,
+                    Envelope {
+                        calls: calls.clone(),
+                        stdout,
+                        stderr,
+                        exit: if attempt == 1 { 1 } else { 0 },
+                        corrupt: false,
+                    },
+                    NOW,
+                )
+                .unwrap();
+            assert_eq!(value["validation"]["attempt"], attempt);
+            assert_eq!(value["validation"]["receipt"]["parser"], parser);
+            assert_eq!(value["validation"]["receipt"]["approval_sha256"], approval);
+            assert_eq!(value["validation"]["validation_passed"], attempt == 2);
+            assert_eq!(value["test_suite_verified"], false);
+            assert_eq!(value["validation"]["model_retry_connected"], false);
+            if attempt == 1 {
+                assert_eq!(value["validation"]["receipt"]["status"], "assertion_failed");
+                prior = value["validation"]["receipt"]["receipt_sha256"]
+                    .as_str()
+                    .map(str::to_owned);
+                // Parser selection cannot erase a failed result or reset budget.
+                assert_eq!(
+                    owner
+                        .validation_preview(
+                            &registry,
+                            ValidationKind::Unit,
+                            1,
+                            LinuxCodingTestFormat::AgentMageJsonV1,
+                            prior.as_deref(),
+                            NOW
+                        )
+                        .err()
+                        .unwrap()
+                        .code(),
+                    "code.validation.stale"
+                );
+            } else {
+                assert_eq!(value["rerun_plan"]["prior_receipt_sha256"], json!(prior));
+            }
+        }
+        assert_eq!(owner.inspect_validation().unwrap()["attempts"], 2);
+        assert_eq!(calls.load(Ordering::Relaxed), 2);
+    }
 }

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "run_id": "coding-run-0001",
+  "request_sha256": "f0d6483bc403a3924ee0a4ac6000e8881d6feb790d4e5307d23028ce3214c141",
+  "job": {
+    "job_id": "coding-run-0001",
+    "phase": "cancelled",
+    "revision": 3,
+    "cancellation_requested": true,
+    "head_sha256": "6d7d0524db9d65030b94213eaaad5a04e40441eb043438c7facb34de6c34c97c"
+  }
+}

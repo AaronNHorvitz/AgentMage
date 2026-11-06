@@ -1,4 +1,4 @@
-"""Checks of the runtime producer contract's fixtures and document (Decisions 0135, 0143, 0144 and 0150)."""
+"""Checks of the runtime producer contract's fixtures and document (Decisions 0135, 0143, 0144, 0150 and 0155)."""
 
 from __future__ import annotations
 
@@ -10,8 +10,9 @@ from pathlib import Path
 from scripts.runtime_producer_fixtures import printed_fixtures
 
 ROOT = Path(__file__).resolve().parents[1]
-FIXTURES = ROOT / "fixtures/runtime-producer/v4"
-DOCUMENT = ROOT / "docs/architecture/runtime-producer-contract-v4.md"
+FIXTURES = ROOT / "fixtures/runtime-producer/v5"
+FOURTH_FIXTURES = ROOT / "fixtures/runtime-producer/v4"
+DOCUMENT = ROOT / "docs/architecture/runtime-producer-contract-v5.md"
 THIRD_FIXTURES = ROOT / "fixtures/runtime-producer/v3"
 THIRD_DOCUMENT = ROOT / "docs/architecture/runtime-producer-contract-v3.md"
 SECOND_FIXTURES = ROOT / "fixtures/runtime-producer/v2"
@@ -47,7 +48,7 @@ class RuntimeProducerContractTests(unittest.TestCase):
     def test_the_manifest_names_every_fixture_with_its_digest(self) -> None:
         manifest = self.manifest()
         self.assertEqual(manifest["contract"], "agentmage-runtime-producer")
-        self.assertEqual(manifest["contract_version"], 4)
+        self.assertEqual(manifest["contract_version"], 5)
         self.assertEqual(manifest["wire_version"], 18)
         listed = {entry["file"]: entry for entry in manifest["records"]}
         self.assertEqual(len(listed), len(manifest["records"]))
@@ -88,7 +89,7 @@ class RuntimeProducerContractTests(unittest.TestCase):
         text = DOCUMENT.read_text(encoding="utf-8")
         for name in [*RECORDS, "manifest.json"]:
             self.assertIn(f"`{name}`", text)
-        self.assertIn("| This contract | 4 |", text)
+        self.assertIn("| This contract | 5 |", text)
         self.assertIn("| Transport wire | 18 |", text)
         self.assertIn("| Run declarations | schema 5 |", text)
         self.assertIn("`session_recoverability`", text)
@@ -106,7 +107,7 @@ class RuntimeProducerContractTests(unittest.TestCase):
         for name, entry in listed.items():
             data = (THIRD_FIXTURES / name).read_bytes()
             self.assertEqual(entry["sha256"], hashlib.sha256(data).hexdigest(), name)
-            self.assertEqual(data, (FIXTURES / name).read_bytes(), name)
+            self.assertEqual(data, (FOURTH_FIXTURES / name).read_bytes(), name)
         text = THIRD_DOCUMENT.read_text(encoding="utf-8")
         self.assertIn("| This contract | 3 |", text)
         self.assertIn("runtime-producer-contract-v4.md", text)
@@ -123,10 +124,30 @@ class RuntimeProducerContractTests(unittest.TestCase):
         for name, entry in listed.items():
             data = (SECOND_FIXTURES / name).read_bytes()
             self.assertEqual(entry["sha256"], hashlib.sha256(data).hexdigest(), name)
-            self.assertEqual(data, (FIXTURES / name).read_bytes(), name)
+            self.assertEqual(data, (FOURTH_FIXTURES / name).read_bytes(), name)
         text = SECOND_DOCUMENT.read_text(encoding="utf-8")
         self.assertIn("| This contract | 2 |", text)
         self.assertIn("runtime-producer-contract-v3.md", text)
+
+    def test_all_earlier_manifests_are_pinned_with_their_complete_file_sets(self) -> None:
+        pins = {
+            1: "c743446ce09af857f3ff00efa715aea9f6d6c88279deaf010b10a7441994a6de",
+            2: "279e85cd094f38e772ab3f71c10db6cf6a4348f86ba27416e198f87fa05e68fa",
+            3: "033b765cbcf2c3d4dc68562b93422fcd34f7256ac83c24a2c86b0906e73e9021",
+            4: "b77f3bfb6b562cb10b105c0658db0ca9c9d23ee161db7467a8a8aa3b712dff98",
+        }
+        for version, pin in pins.items():
+            directory = ROOT / f"fixtures/runtime-producer/v{version}"
+            data = (directory / "manifest.json").read_bytes()
+            self.assertEqual(hashlib.sha256(data).hexdigest(), pin)
+            manifest = json.loads(data)
+            self.assertEqual((manifest["contract_version"], manifest["wire_version"]),
+                             (version, 14 + version))
+            self.assertEqual({p.name for p in directory.iterdir()},
+                             {"manifest.json", *(e["file"] for e in manifest["records"])})
+            for entry in manifest["records"]:
+                self.assertEqual(hashlib.sha256((directory / entry["file"]).read_bytes()).hexdigest(),
+                                 entry["sha256"])
 
     def test_the_first_version_stays_as_it_was(self) -> None:
         # Decision 0143: version 1 keeps every byte its manifest names, and its

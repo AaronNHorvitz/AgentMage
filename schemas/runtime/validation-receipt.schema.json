@@ -104,7 +104,7 @@
       "items": { "enum": ["LANG", "LC_ALL", "NO_COLOR", "TZ"] }
     },
     "environment_sha256": { "$ref": "#/$defs/sha256" },
-    "parser": { "enum": ["agent_mage_json_v1", "process_exit_v1"] },
+    "parser": { "enum": ["agent_mage_json_v1", "process_exit_v1", "rust_libtest_text_v1", "python_unittest_text_v1"] },
     "parser_version": { "$ref": "#/$defs/version" },
     "parser_sha256": { "$ref": "#/$defs/sha256" },
     "termination": {

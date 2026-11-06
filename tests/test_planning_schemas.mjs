@@ -2349,3 +2349,19 @@ test("future profile catalog entries cannot claim registration, network, or macO
     );
   }
 });
+
+
+test("validation receipts admit only the closed project-test parser set", () => {
+  const receipt = JSON.parse(fs.readFileSync(
+    path.join(ROOT, "schemas/runtime/examples/validation-receipt.valid.json"),
+    "utf8",
+  ));
+  for (const parser of ["agent_mage_json_v1", "process_exit_v1",
+    "rust_libtest_text_v1", "python_unittest_text_v1"]) {
+    const result = validateRuntimeRecord("validation-receipt", { ...receipt, parser }, runtimeValidators);
+    assert.equal(result.valid, true, JSON.stringify(result.errors));
+  }
+  const result = validateRuntimeRecord("validation-receipt",
+    { ...receipt, parser: "unknown_runner" }, runtimeValidators);
+  assert.equal(result.valid, false);
+});

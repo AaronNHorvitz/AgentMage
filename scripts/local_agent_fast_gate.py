@@ -20,6 +20,19 @@ import tokenize
 
 
 ROOT = Path(__file__).resolve().parents[1]
+# Keep this exact schema and its consumer tests checked without accepting
+# arbitrary JSON/JavaScript changes as documentation-only work.
+VALIDATION_SCHEMA_INPUTS = {
+    "schemas/runtime/validation-receipt.schema.json",
+    "tests/test_planning_schemas.mjs",
+}
+RUNTIME_PRODUCER_FIXTURE_INPUTS = {
+    "fixtures/runtime-producer/v5/" + name for name in (
+        "ended-run-histories.json", "job-control-request.json", "job-control.json",
+        "job-status.json", "manifest.json", "run-declarations-absent.json",
+        "run-declarations.json", "run-recipe.json", "run-request.json",
+    )
+}
 CRATE_INPUT_SUFFIXES = {".rs", ".toml", ".json", ".sql", ".txt"}
 CRATE_EXTENSIONLESS_INPUTS = {
     "kernel/contracts/LICENSE",
@@ -124,6 +137,10 @@ def plan(root: Path, paths: list[str], metadata: dict) -> list[list[str]]:
     ]
     python_paths = [p for p in paths if p.endswith(".py")]
     modules = set()
+    producer_fixtures = bool(RUNTIME_PRODUCER_FIXTURE_INPUTS.intersection(paths))
+    if producer_fixtures:
+        packages = sorted(set(packages) | {"agentmage-host"})
+        modules.add("tests.test_runtime_producer_contract")
     # These process roles form one grading boundary. Their complete integration
     # scenarios live together; collect them once when several roles change.
     worker_roles = {
@@ -134,7 +151,9 @@ def plan(root: Path, paths: list[str], metadata: dict) -> list[list[str]]:
         path = PurePosixPath(name)
         if name == 'scripts/coding_eval_worker_graph.py':
             modules.add('tests.test_coding_eval_worker_oracle')
-        if name in worker_roles:
+        if name == "scripts/runtime_producer_fixtures.py":
+            module = "tests.test_runtime_producer_contract"
+        elif name in worker_roles:
             module = "tests.test_coding_eval_worker_oracle"
         elif path.parent == PurePosixPath("tests") and path.name.startswith("test_"):
             module = "tests." + path.stem
@@ -149,7 +168,9 @@ def plan(root: Path, paths: list[str], metadata: dict) -> list[list[str]]:
     review_paths = [p for p in paths if PurePosixPath(p).parent == PurePosixPath("docs/reviews")
                     and p.endswith(".txt")]
     for name in paths:
-        if name in known_global or name in review_paths or name.endswith((".md", ".py")):
+        if (name in known_global or name in review_paths or name in VALIDATION_SCHEMA_INPUTS
+                or name in RUNTIME_PRODUCER_FIXTURE_INPUTS
+                or name.endswith((".md", ".py"))):
             continue
         if any(name.startswith(directory) for directory in package_roots) and (
             PurePosixPath(name).suffix in CRATE_INPUT_SUFFIXES or name in CRATE_EXTENSIONLESS_INPUTS
@@ -164,9 +185,17 @@ def plan(root: Path, paths: list[str], metadata: dict) -> list[list[str]]:
     markdown = ["./" + p for p in paths if p.endswith(".md") and (root / p).is_file()]
     if markdown:
         commands.append(["node", "node_modules/.bin/markdownlint-cli2", *markdown])
+    if VALIDATION_SCHEMA_INPUTS.intersection(paths):
+        commands.append(["node", "--test", "tests/test_planning_schemas.mjs"])
     if python_paths:
         commands.append([sys.executable, "scripts/local_agent_fast_gate.py", "--lint-python", *python_paths])
+    if modules:
         commands.append([sys.executable, "-m", "unittest", *sorted(modules)])
+    if producer_fixtures:
+        check = [sys.executable, "-B", "scripts/runtime_producer_fixtures.py"]
+        if Path("/tools/build-slot").is_file():
+            check = ["bash", "/tools/build-slot", *check]
+        commands.append(check)
     if packages:
         selection = [item for name in packages for item in ("-p", name)]
         commands.extend([

@@ -102,6 +102,27 @@ class FastGateTests(unittest.TestCase):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 gate.plan(self.root, [name], self.metadata)
 
+    def test_validation_schema_changes_run_the_actual_consumer_tests(self):
+        for name in sorted(gate.VALIDATION_SCHEMA_INPUTS):
+            commands = gate.plan(self.root, [name], self.metadata)
+            self.assertIn(["node", "--test", "tests/test_planning_schemas.mjs"], commands)
+        with self.assertRaises(ValueError):
+            gate.plan(self.root, ["schemas/runtime/unknown.schema.json"], self.metadata)
+        with self.assertRaises(ValueError):
+            gate.plan(self.root, ["tests/unknown.mjs"], self.metadata)
+
+    def test_producer_fixture_changes_check_reproduction_and_closed_input_set(self):
+        for name in sorted(gate.RUNTIME_PRODUCER_FIXTURE_INPUTS):
+            commands = gate.plan(self.root, [name], self.metadata)
+            self.assertIn([sys.executable, "-m", "unittest", "tests.test_runtime_producer_contract"], commands)
+            check = next(c for c in commands if c[-1] == "scripts/runtime_producer_fixtures.py")
+            self.assertNotIn("--write", check)
+            self.assertIn("agentmage-host", commands[-1])
+            if Path("/tools/build-slot").is_file():
+                self.assertEqual(check[:2], ["bash", "/tools/build-slot"])
+        with self.assertRaises(ValueError):
+            gate.plan(self.root, ["fixtures/runtime-producer/v5/unknown.json"], self.metadata)
+
     def test_crate_data_inputs_keep_full_rust_coverage(self):
         for suffix in (".rs", ".toml", ".json", ".sql", ".txt"):
             with self.subTest(suffix=suffix):
@@ -255,13 +276,22 @@ class FastGateTests(unittest.TestCase):
         while True:
             try:
                 state = stat.read_text().rsplit(") ", 1)[1].split()[0]
-            except FileNotFoundError:
+            except (FileNotFoundError, ProcessLookupError):
                 return
             if state in {"Z", "X"}:
                 return
             if time.monotonic() >= deadline:
                 self.fail(f"owned process {pid} still running")
             time.sleep(0.01)
+
+    def test_process_stop_observation_handles_proc_disappearance_only(self):
+        # procfs may report ESRCH after open but before read when a task is reaped.
+        for missing in (FileNotFoundError(), ProcessLookupError()):
+            with patch.object(Path, "read_text", side_effect=missing):
+                self.assert_process_stopped(12345)
+        with patch.object(Path, "read_text", side_effect=PermissionError()):
+            with self.assertRaises(PermissionError):
+                self.assert_process_stopped(12345)
 
     def check_tree(self, finish_normally=False, next_check=False):
         """A check and TERM-ignoring child share an inherited reservation lock."""

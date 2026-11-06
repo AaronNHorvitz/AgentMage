@@ -572,11 +572,15 @@ fn command_api_requires_control_created_ownership_and_strict_requests() {
 #[test]
 fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
     // Synthetic peer checks terminal command approval only; no command is launched.
-    for (kind, validation_passed) in [
-        ("command", true),
-        ("validation", true),
-        ("validation", false),
-        ("edit", true),
+    for (kind, validation_passed, parser) in [
+        ("command", true, "agent_mage_json_v1"),
+        ("validation", true, "agent_mage_json_v1"),
+        ("validation", false, "agent_mage_json_v1"),
+        ("validation", true, "rust_libtest_text_v1"),
+        ("validation", false, "rust_libtest_text_v1"),
+        ("validation", true, "python_unittest_text_v1"),
+        ("validation", false, "python_unittest_text_v1"),
+        ("edit", true, "agent_mage_json_v1"),
     ] {
         let validation = kind == "validation";
         let edit = kind == "edit";
@@ -613,7 +617,7 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
             } else if validation {
                 preview["operation"] = json!("execute-validation");
                 preview["validation_template"] = json!({"kind":"unit","minimum_test_count":2,
-                "parser":"agent_mage_json_v1","parser_sha256":"e".repeat(64)});
+                "parser":parser,"parser_sha256":"e".repeat(64)});
                 preview["attempt"] = json!(2);
                 preview["maximum_attempts"] = json!(3);
                 preview["prior_receipt_sha256"] = json!("f".repeat(64));
@@ -778,6 +782,34 @@ fn validation_api_and_cli_require_explicit_control_and_cannot_adopt_a_worktree()
         let mut invalid = definition.clone();
         invalid[key] = value;
         assert_eq!(f.call("POST", prepare, true, invalid).0, 400);
+    }
+    for format in [
+        "agent_mage_json_v1",
+        "rust_libtest_text_v1",
+        "python_unittest_text_v1",
+    ] {
+        let mut input = definition.clone();
+        input["output_format"] = json!(format);
+        // Valid protocol selection still cannot supply ownership or execute.
+        let refused = f.call("POST", prepare, true, input.clone());
+        assert_eq!(refused.0, 409);
+        assert_eq!(refused.1["error"], "code.command.worktree-required");
+        let bytes = serde_json::to_string(&input).unwrap().replacen(
+            '{',
+            "{\"output_format\":\"rust_libtest_text_v1\",",
+            1,
+        );
+        assert_eq!(f.call_bytes("POST", prepare, true, bytes.as_bytes()).0, 400);
+    }
+    for bad in [
+        json!("process_exit_v1"),
+        json!("auto"),
+        json!(true),
+        Value::Null,
+    ] {
+        let mut input = definition.clone();
+        input["output_format"] = bad;
+        assert_eq!(f.call("POST", prepare, true, input).0, 400);
     }
     let mut denied = definition.clone();
     denied["approve_definition"] = json!(false);

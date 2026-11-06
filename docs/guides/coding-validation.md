@@ -1,7 +1,7 @@
-# Approved test envelopes and exact reruns
+# Approved project tests and exact reruns
 
-The local coding owner can normalize a separately approved command's test-result
-envelope and expose failure names. It uses the existing kernel validation
+The local coding owner can normalize a separately approved command's selected
+test-output protocol and expose failure names. It uses the existing kernel validation
 templates, normalizer and rerun planner, and the same native executor and
 canonical authority as [ordinary commands](coding-commands.md). T-303 and T-306
 remain open. Positive native execution remains unmeasured in this lane under the
@@ -19,17 +19,18 @@ ordinary commands. The definition request is a closed JSON object:
 | `command` | Complete sealed kernel command specification; the existing offline, read-only worktree and resource limits apply |
 | `kind` | `unit`, `integration` or `end_to_end`; other check kinds refuse |
 | `minimum_test_count` | Positive minimum executed passing tests required for a pass |
+| `output_format` | Optional closed protocol: `agent_mage_json_v1` (default), `rust_libtest_text_v1` or `python_unittest_text_v1`; selection is fixed before execution |
 | `approve_definition` | Explicit Boolean `true` confirms this exact definition, including repeatable setup; it does not approve execution |
 | `prior_receipt_sha256` | Absent/null initially; exact last failed receipt for a later separately approved rerun |
 
-The owner constructs the immutable template. The parser is always the existing
-`AgentMageJsonV1`, version `1.0.0`, bound to the actual normalizer source digest.
+The owner constructs the immutable template. The parser is the explicitly selected built-in protocol, version `1.0.0`, bound
+to the normalizer source digest (and the text-adapter source for text protocols).
 The definition's source and input-confirmation digests bind the canonical command,
-kind and minimum count. Those deterministic hashes are provenance bindings, not
+kind, minimum count and parser. Those deterministic hashes are provenance bindings, not
 authentication or execution authority. The control token authenticates definition
 selection; the subsequent full preview approval authorizes one execution.
-There are no caller-selected parser, artifact, baseline or failure-attribution
-fields. The template declares a focused test check and repeatable temporary setup.
+There are no caller-selected parser version/digest, artifact, baseline or
+failure-attribution fields. `process_exit_v1` is not a test protocol and refuses. The template declares a focused test check and repeatable temporary setup.
 
 ```sh
 target/debug/agentmage-code <loopback-ip:port> <private-auth-directory> validation-prepare '<definition-json>'
@@ -61,11 +62,11 @@ All three require the control token. Unknown, duplicate, positional and wrongly
 typed request fields refuse. API cancellation remains unavailable after admission;
 the existing native timeout and descendant cleanup apply.
 
-## Result envelope and scope
+## Result protocols and scope
 
-This entry point supports commands that already emit the kernel's result envelope
-on stdout. It does not convert ordinary test-runner prose into counts. A plain
-test-runner transcript becomes `malformed`, even with exit zero. For example:
+The default protocol still requires the kernel's strict JSON envelope on stdout.
+It never guesses a parser from output. Ordinary test prose under that default is
+`malformed`, even with exit zero. For example:
 
 ```json
 {
@@ -82,18 +83,52 @@ test-runner transcript becomes `malformed`, even with exit zero. For example:
 }
 ```
 
-The unchanged kernel checks the command receipt and captured output digests,
+For an ordinary project runner, select a text protocol in the same definition:
+
+```json
+{"output_format":"python_unittest_text_v1"}
+```
+
+This fragment is added to the complete definition above; it cannot execute alone.
+Supply the exact sealed runner executable, argument vector and environment in
+`command`. The service does not discover, rewrite or add shell commands. The
+existing native launcher/executable trust and offline sandbox still apply.
+
+- `rust_libtest_text_v1` reads default verbose libtest stdout, including multiple
+  complete blocks such as a Cargo test invocation. Each block needs its declared
+  running count, unique per-test events and a matching final summary. Failed names
+  have a one-based block prefix (`libtest[1]::name`) to distinguish binary-local
+  names. Ignored tests are skipped. Benchmarks, filtered tests, terse/JSON output,
+  custom ignored reasons and arbitrary text outside test/failure blocks refuse.
+- `python_unittest_text_v1` reads one standard `python -m unittest -v` stderr
+  transcript. Unique per-test events, failure/error headings, executed count and
+  terminal summary must agree. Skips are counted; errors are unsuccessful tests.
+  Quiet output, subtests, expected failures, unexpected successes, custom multiline
+  test descriptions and multiple runner summaries refuse. Stdout is preserved in
+  the command response but supplies no Python result counts.
+
+The selected transcript must be bounded ASCII with complete final lines; ANSI escapes, CR, unsupported
+formats and incomplete or contradictory summaries are malformed. A pass needs
+exit zero and the minimum executed passing tests. A nonzero exit contradicting a
+passing summary is malformed; compilation with no test transcript is malformed,
+not inferred from compiler prose. Test durations are not extracted from these
+protocols; the receipt retains the command's measured elapsed time. Skipped-only
+and zero/insufficient-test results never pass. All raw channels remain digest-bound.
+
+The kernel checks the command receipt and captured output digests,
 termination, output bounds, envelope consistency and minimum test count. Assertion
 failure, compilation failure, malformed output, skipped-only output and too few
-tests remain distinct. A zero command exit cannot replace a passing envelope.
+tests remain distinct. A zero command exit cannot replace a passing parsed result.
 The result includes `validation.receipt` and `validation.validation_passed`.
 The terminal exits unsuccessfully for a failed validation even when the command
 itself exited successfully.
 
-`verification_scope: approved-command-envelope` describes this result. Its scope
+`verification_scope: approved-command-tests` describes text results; the default
+JSON protocol preserves `approved-command-envelope`. Its scope
 digest binds the held worktree root and creation receipt, not a source-content
-snapshot. The envelope producer remains trusted to describe its own tests;
-normalization is not independent task grading. No full-suite coverage, current
+snapshot. The approved runner remains trusted to describe its own tests;
+normalization is not independent task grading. Project test code can print forged
+runner output; these adapters do not make such code a grading oracle. No full-suite coverage, current
 repository correctness, failure attribution or coding-model score is established.
 `current_workspace_verified` and `test_suite_verified` remain false. Command output
 and failed names are untrusted local data; the terminal escapes them. Output is
@@ -121,5 +156,7 @@ created worktree starts a new series. Restart loses ownership, previews, results
 and budgets; it cannot restore command authority from receipts. These limits
 bound this manual validation series, not a durable coding run or the separate
 ordinary-command API. Source changes between attempts are not classified as
-flakiness. There is no automatic model feedback/repair, connected coordinator
-retry, durable run recovery, owned-edit binding, commit, push or independent grade.
+flakiness. The [owned-edit binding](coding-owned-edits.md) preserves the immutable definition,
+spent budget and prior result while invalidating pending test approvals. There is
+no automatic model feedback/repair, connected coordinator retry, durable run
+recovery, commit, push or independent grade.

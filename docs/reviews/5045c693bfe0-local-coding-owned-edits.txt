@@ -1,0 +1,191 @@
+Commit: 5045c693bfe03b413f73722203229f6b3b16226f
+Scope: local-coding-owned-edits
+
+# Independent core review: T-303 / T-306 owned edits (non-closing batch)
+
+Reviewer: separate read-only session, Claude Opus 5.5 (same model family as the builder;
+cross-model review still required before any public release). Base
+`cc15d75db76b3bb071c9d709f7baa77ad036e536`. `git rev-parse` of the requested sha and HEAD both
+returned `5045c693bfe03b413f73722203229f6b3b16226f`; the working tree was clean before and after
+every run. The repository was not modified. Reviewer reproductions ran only in a `git archive`
+copy under `/lane/state/tmp/rev-5045/src`.
+
+## Methods
+
+- Read the complete diff (14 files): `coding_repository_edit.rs` (new), the
+  `coding_repository.rs`/`coding_repository_validation.rs` changes, `coding_cli.rs`,
+  `coding_repository_api.rs`, `lib.rs`, both test files, TASKS.md, the evidence and three guides.
+  Traced the reused code paths: `verify_created`, `LinuxCodingReadScope::{select,verify_root,read}`,
+  `prepare_write`/`apply` (kernel grant issue and atomic driver), `WriteApprovalPreview`
+  (`complete_diffs`), terminal `confirm`/`safe`, and the auth gate of `handle_repository`.
+- Ran the seven requested commands, compared the fast-gate failure identities with the
+  unchanged retained baseline logs, and wrote extra reviewer escape and glue tests in the
+  scratch copy.
+- Checked the added lines for private data, frozen evaluation inputs, dependencies and sub-rows.
+
+## Exact commands and results
+
+Environment: `PATH=/lane/state/tmp/shared-node-v24.15.0/bin:$PATH`,
+`CARGO_TARGET_DIR=/lane/state/review-target`, `CARGO_BUILD_JOBS=2`, `RUST_TEST_THREADS=4`.
+`node --version` printed v24.15.0; the binary's SHA-256 was
+`d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c`, matching the request.
+All Cargo runs went through `/tools/build-slot`.
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib coding_repository -- --nocapture` | PASS: 24 passed, 0 failed, 0 ignored, 256 filtered out (the focus selection). The panic lines are the intended unwind tests, which pass. Log digest below |
+| 2 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api -- --nocapture` | PASS: 3+9+10+35 = 57 passed, 0 failed, 0 ignored, 0 filtered |
+| 3 | `python3 -B scripts/local_agent_fast_gate.py --base cc15d75db76b… --timeout 3600` | **FAIL** (kept, not filtered): 817 passed, 72 failed, 62 ignored, 0 filtered; `RESULT exit=101 seconds=94.18`. Format, clippy and the other steps returned exit 0 |
+| 4 | `node node_modules/.bin/markdownlint-cli2` on the 5 named files | PASS: 0 issues in 5 files |
+| 5 | `python3 -B scripts/validate_docs.py` | PASS: validated 764 Markdown files and all policy invariants |
+| 6 | `cmp docs/reviews/cc15d75db76b-local-coding-test-feedback.txt /lane/reviews/cc15d75db76b-local-coding-test-feedback.md` | identical, exit 0; SHA-256 `a5084f7f83f3bd240519626badd45cbf93bddf8036ea3ec31aaf9cd46ed03bc4`, as stated |
+| 7 | `git diff --check cc15d75db76b… HEAD` | clean, exit 0 |
+
+Comparison of failure identities: I extracted every `test … FAILED` identity from my fast-gate
+log (72 unique). These are byte-identical (sorted list SHA-256
+`75c11eb40950e01f29283419742c9cfeb51c8cda7673f7b3129efd084d2dfe98`) to the union of the
+retained baseline logs `artifacts/verification-logs/standalone-evidence-host-2026-10-04/batch35-source-2/11.log`
+(53) and `07.log` (19). Neither those logs nor `docs/evidence/t301-baseline-failures-2026-10-25.md`
+changed in this diff. They also match the builder's `fast-final.log` exactly, with no new or
+missing failure. My log contains the same refusal classes as the baseline: 56 `InvalidManifest`,
+15 `InvalidGitArtifact` and 1 `ArtifactDenied`, which are the environmental UID-65534
+executable-trust refusals.
+
+Builder raw-log digests: these five files hash exactly to the values in the request:
+`focused-initial.log`, `fast-final.log`, `markdown-final.log`, `docs-initial.log` and `audit.json`.
+The builder's fast-gate log reports the same 817/72/62/0 counts and `seconds=163.42`.
+
+Reviewer logs (`/lane/state/tmp/rev-5045/`): c1.log `8bf516bb8b24300109ca9940ebb9c13fb9329cc7f00486cded92b07c339a31d9`,
+c2.log `ce9b1d5955768fd20d3fca01fa70de1ba9eb6d34595d85dcbca9bbdfa4c68f95`,
+fast.log `12e7553c830f45db6c795274dc4f9bd59e51f93fd5634d35658ea504b214814d`,
+escape.log `093d4b8f46b3ba1f50f6a86ab4376948d618b91f9db0fef4fa2096e57d040a2b`,
+glue.log `6dc8ee01812690cf6d9fb22e6b7ee6f630fa03bf72db4e19bc12357d69de2afd`.
+
+### Reviewer reproductions (scratch copy only, not committed)
+
+1. `reviewer_owned_edit_escape_attempts`: a native test against real held roots and synthetic
+   creation provenance, run with `cargo test … -p agentmage-platform-linux --lib
+   reviewer_owned_edit_escape_attempts`. **PASS.**
+   - Selection refuses all of these paths: `/etc/passwd`, `sub/../sentinel`, `..`, `.`,
+     `./sentinel`, `sentinel/`, the empty path, `SENTINEL/../sentinel`, `owned/../sentinel` and a
+     missing new file.
+   - Preparation refuses when the selected leaf is already a hardlink to an outside file, a
+     symlink to an outside file, or reached through a directory symlink to an outside directory.
+   - Swaps made after the preview and before approval all refuse with no outside byte changed:
+     - leaf to hardlink: `code.write.transaction`
+     - parent directory to symlink: `code.write.transaction`
+     - worktree root to symlink: `code.command.scope`
+     - management directory to a symlinked fake tree: `code.command.scope`
+     - leaf to FIFO: `code.write.transaction`
+     - leaf to directory: `code.write.transaction`
+   - Two-file edit with drift in one file: refused and nothing written. The untouched first file
+     stays at its preimage, and `latest` records `effect: unknown`.
+2. `reviewer_api_glue_prepares_and_writes_owned_edit`: a local-api unit test that calls the
+   committed `coding_repository_api::prepare_edit` glue. Because native creation is refused in
+   this lane, a scratch-only `pub` injector supplies synthetic creation provenance. **PASS.**
+   - The request order differs from the sorted read order.
+   - An injected model answer that targets `../state/x` refuses.
+   - A valid answer yields a complete escaped diff and writes nothing during preparation.
+   - Exact `decide_edit` commits real bytes. The unchanged co-selected file is preserved.
+   - Re-preparing with the now-stale snapshot refuses.
+
+## Review against the requested inspection points
+
+- **Ownership and adoption.** Every owned-edit route checks `req.control` before doing anything
+  (`coding_repository_api.rs:124`). `PrepareEdit` and `Decide` use `deny_unknown_fields` and reject
+  duplicate keys; root, creation receipt and approval fields refuse (tests and my reading agree).
+  The root comes only from `self.created`. `select_created_sources` and `verify_edit_scope` compare
+  the root's canonical path/device/inode digest with the held handle
+  (`coding_repository_edit.rs:20-34`), and the scratch tests confirm a foreign scope refuses.
+  Test-only injection is reachable only through private-field access in a `#[cfg(test)]` module
+  (`coding_repository_command.rs:336-338`).
+- **Binding and consumption.**
+  - The outer hash covers operation, root digest, creation receipt, the entire kernel
+    `write_preview` (including `complete_diffs` and inner digests), times, retention and warning
+    (`coding_repository_edit.rs:52-58`).
+  - A digest mismatch refuses before consumption. A match takes the pending edit before denial,
+    expiry, scope or creation checks.
+  - The inner change-set and preview digests passed to `apply` come from the stored preview, not
+    from the caller. `apply` also enforces its own monotonic deadline, and the API passes the
+    server clock (`clock_ms()`).
+- **Route separation.** A command digest refuses at edit decide and an edit digest at command
+  decide, and neither consumes the other (native test).
+- **Invalidation and the validation budget.** `self.command = None` runs immediately before
+  dispatch, which clears both pending command and pending validation previews (validation is
+  stored as `PendingCommand.validation`). `self.validation`, holding the template, spent attempts
+  and latest receipt, is kept, so the native test's attempt count goes 1 → 1 → 2. A new successful
+  creation clears the pending edit and the latest result (`coding_repository.rs:396-397`).
+- **Preimage drift, root and management swaps, changed creation, denial and expiry, restart.**
+  All are covered by committed tests and by my reproductions above. Restart loses all edit state
+  and ownership, and no receipt restores it.
+- **Prior low findings.**
+  - L2 is repaired: `check_validation_selection` now receives the finalized outer
+    `pending.hash` (`coding_repository_validation.rs:162-168`), and `consume_validation`
+    re-derives the plan with the same approval digest.
+  - L1 is repaired: the validation route now has its own terminal warning
+    (`coding_cli.rs:747-751`).
+- **Full escaped consent.**
+  - `edit-apply` shows the complete server preview through `safe()`. JSON escaping plus forced
+    `\uXXXX` for non-ASCII and DEL means bidi and control characters cannot hide content; the
+    terminal test asserts this for the edit route.
+  - The root is verified before and after the TTY challenge `edit <outer digest>`, and the
+    decision is sent exactly once.
+  - `propose-worktree` sends the edit preparation only after a complete `context…text…proposal`
+    stream, then asks for a separate `read <root digest>` consent. Partial or refused generations
+    send nothing (synthetic-peer test).
+- **Original workspace.** The native test shows the original fixture unchanged. Edits touch only
+  the held worktree.
+- **Honest labelling.** The evidence and guides state the following, all of which matches the
+  code:
+  - synthetic creation provenance
+  - synthetic terminal peers
+  - process-only records
+  - `tested:false` and `isolation_verified:false`
+  - unmeasured positive native creation and commands
+  - no score, model or GPU run
+  - no parent closure
+- **Integrity, IP, privacy and delivery.**
+  - No frozen task, hidden test, held-out, grader, prompt, dependency, lockfile or SBOM file is in
+    the diff.
+  - Added lines contain no host home path, username, hostname or credential; the only paths are
+    lane-generic `/lane/...` ones inside the byte-identical retained report.
+  - No other product is named.
+  - TASKS.md gains prose only: no new sub-row and no checkbox change.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, pre-acceptance).** The positive owned-edit path through the actual HTTP routes and
+  CLI is never exercised against a held worktree. This covers `coding_repository_api.rs:48-94`
+  and the `/edit/decide` arm at 178-186. All committed API tests end at
+  `code.command.worktree-required`, because native creation is refused in this lane and the API
+  crate cannot inject provenance. My scratch glue reproduction passes, so this is a coverage
+  gap, not a defect. Fix before parent acceptance: an HTTP-level positive prepare→decide test
+  once positive native creation is measured, or a narrowly `cfg(test)`-gated provenance seam
+  usable from the API crate.
+- **L2 (low, backlog; extends the open prior L4).** Edit routes return `code.command.scope` and
+  `code.command.worktree-required` for root, management or ownership refusals, because
+  `verify_created` is shared (`coding_repository_command.rs:86-108`). Fix: map these to
+  `code.edit.*` in `verify_edit_scope`/`select_created_sources`.
+- **L3 (low, backlog).** A decision consumed but refused before dispatch leaves `latest`
+  unchanged. This happens on expiry, clock reversal, scope refusal or changed creation
+  (`coding_repository_edit.rs:94-102`). After a lost reply, `inspect_edit` shows `pending: null`
+  and the previous preview's result. The two can be told apart only by comparing
+  `preview_sha256`. Fix: record
+  `{"preview_sha256":digest,"outcome":"refused","error":code,"effect":"none"}` before returning
+  these errors.
+
+Prior open low findings are retained as stated by the builder: L4 shared error prefixes (see L2
+above), L5 the same-user post-create identity window, and the missing native positive proof.
+
+## Per-row result
+
+- **T-303 (owned-edit implementation batch): batch accepted.** No open high or medium finding.
+  This is non-closing: the parent stays open for automatic model repair, standard runner
+  adapters, durable recovery and cancellation, positive native creation and commands,
+  original-repository apply, commit/push and MCP, plus the measured development campaign and
+  held-out scoreboard.
+- **T-306 (related): not closed.** The batch only supplies the edit step of the loop.
+
+Verdict: PASS

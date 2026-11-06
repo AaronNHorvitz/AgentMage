@@ -15,6 +15,9 @@ use crate::validation_template::{
     ValidationKind, ValidationParserKind, ValidationTemplate, verify_validation_template,
 };
 
+#[path = "validation_result_text.rs"]
+mod text;
+
 const VALIDATION_RESULT_SCHEMA_VERSION: u16 = 1;
 const MAX_RESULT_BYTES: usize = 256 * 1024;
 const MAX_FAILED_NAMES: usize = 2_048;
@@ -680,6 +683,10 @@ fn normalize_fields(
             } else {
                 empty_fields(ValidationStatus::InfrastructureFailed)
             }
+        }
+        ValidationParserKind::RustLibtestTextV1 | ValidationParserKind::PythonUnittestTextV1 => {
+            text::parse(template, command_receipt, observation)
+                .unwrap_or_else(|| empty_fields(ValidationStatus::Malformed))
         }
         ValidationParserKind::AgentMageJsonV1 => parse_test_envelope(
             template,
@@ -1681,5 +1688,199 @@ mod tests {
             flaky.failure_classification,
             Some(ValidationFailureClassification::Flaky)
         );
+    }
+    fn text_result(
+        parser: ValidationParserKind,
+        stdout: &[u8],
+        stderr: &[u8],
+        exit: i32,
+        truncated: bool,
+        minimum: u32,
+    ) -> ValidationReceipt {
+        let mut input = template();
+        input.parser = parser;
+        input.minimum_test_count = minimum;
+        input.template_sha256 = crate::validation_template::seal_validation_template(
+            crate::validation_template::ValidationTemplateInput {
+                validation_id: input.validation_id.clone(),
+                kind: input.kind,
+                command: input.command.clone(),
+                source: input.source,
+                source_sha256: input.source_sha256.clone(),
+                source_path: input.source_path.clone(),
+                user_input_approval_sha256: input.user_input_approval_sha256.clone(),
+                execution_scope_sha256: input.execution_scope_sha256.clone(),
+                parser,
+                parser_version: input.parser_version.clone(),
+                parser_sha256: input.parser_sha256.clone(),
+                minimum_test_count: minimum,
+                focused: input.focused,
+                fail_fast: input.fail_fast,
+                failed_test_rerun_allowed: input.failed_test_rerun_allowed,
+                setup_idempotent: input.setup_idempotent,
+                expected_artifacts: vec![],
+            },
+        )
+        .unwrap()
+        .template_sha256;
+        let prepared = prepared(&input);
+        let command = command_receipt(
+            &prepared,
+            stdout,
+            stderr,
+            CommandTermination::Exited,
+            Some(exit),
+            None,
+            truncated,
+            "fixture.text",
+        );
+        let mut observed = observation(stdout.to_vec());
+        observed.stderr = stderr.to_vec();
+        let receipt = normalize_validation_result(&input, &prepared, &command, observed).unwrap();
+        assert!(verify_validation_receipt(
+            &input, &prepared, &command, &receipt
+        ));
+        receipt
+    }
+
+    const RUST_PASS: &str = "\nrunning 2 tests\ntest calc::add ... ok\ntest calc::keep ... ok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n";
+    const RUST_FAIL: &str = "\nrunning 2 tests\ntest calc::add ... FAILED\ntest calc::keep ... ok\n\nfailures:\n\n---- calc::add stdout ----\nassertion failed\n\nfailures:\n    calc::add\n\ntest result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n";
+    const PYTHON_PASS: &str = "test_add (calc.Tests.test_add) ... ok\ntest_keep (calc.Tests.test_keep) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.001s\n\nOK\n";
+    const PYTHON_FAIL: &str = "test_add (calc.Tests.test_add) ... FAIL\ntest_keep (calc.Tests.test_keep) ... ok\n\n======================================================================\nFAIL: test_add (calc.Tests.test_add)\n----------------------------------------------------------------------\nTraceback (most recent call last):\nAssertionError: 1 != 2\n\n----------------------------------------------------------------------\nRan 2 tests in 0.001s\n\nFAILED (failures=1)\n";
+
+    #[test]
+    fn project_text_results_require_matching_events_summary_and_exit() {
+        for (parser, pass, fail) in [
+            (
+                ValidationParserKind::RustLibtestTextV1,
+                RUST_PASS,
+                RUST_FAIL,
+            ),
+            (
+                ValidationParserKind::PythonUnittestTextV1,
+                PYTHON_PASS,
+                PYTHON_FAIL,
+            ),
+        ] {
+            let parse = |output: &str, exit, truncated, min| {
+                let (stdout, stderr) = if parser == ValidationParserKind::RustLibtestTextV1 {
+                    (output.as_bytes(), &b""[..])
+                } else {
+                    (&b""[..], output.as_bytes())
+                };
+                text_result(parser, stdout, stderr, exit, truncated, min)
+            };
+            let passed = parse(pass, 0, false, 2);
+            assert!(passed.is_full_pass());
+            assert_eq!((passed.passed, passed.failed, passed.skipped), (2, 0, 0));
+            let failed = parse(fail, 1, false, 2);
+            assert_eq!(failed.status, ValidationStatus::AssertionFailed);
+            assert_eq!(
+                (failed.passed, failed.failed, failed.failed_names.len()),
+                (1, 1, 1)
+            );
+            assert_eq!(parse(pass, 1, false, 2).status, ValidationStatus::Malformed);
+            assert_eq!(parse(fail, 0, false, 2).status, ValidationStatus::Malformed);
+            assert_eq!(parse(pass, 0, false, 3).status, ValidationStatus::ZeroTests);
+            assert_eq!(parse(pass, 0, true, 2).status, ValidationStatus::Truncated);
+            for bad in [
+                pass.replace("2 tests", "3 tests"),
+                pass.replace("2 passed", "3 passed")
+                    .replace("Ran 2", "Ran 3"),
+                pass.replace(" ... ok", " ... unknown"),
+                pass.replace("calc::keep", "calc::add")
+                    .replace("test_keep", "test_add"),
+                format!("{pass}unexpected trailing output\n"),
+                format!("{pass}{pass}"),
+                pass.trim_end().to_owned(),
+                format!("\u{1b}[32m{pass}"),
+                pass.replace('\n', "\r\n"),
+                "OK\n".into(),
+            ] {
+                // Multiple complete libtest blocks are intentionally supported.
+                if parser == ValidationParserKind::RustLibtestTextV1
+                    && bad == format!("{pass}{pass}")
+                {
+                    assert_eq!(parse(&bad, 0, false, 2).passed, 4);
+                } else {
+                    assert_eq!(
+                        parse(&bad, 0, false, 2).status,
+                        ValidationStatus::Malformed,
+                        "{bad}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn text_adapters_do_not_promote_empty_skipped_or_unsupported_results() {
+        for (parser, empty, skipped) in [
+            (
+                ValidationParserKind::RustLibtestTextV1,
+                "running 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n",
+                "running 1 test\ntest slow ... ignored\n\ntest result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s\n",
+            ),
+            (
+                ValidationParserKind::PythonUnittestTextV1,
+                "----------------------------------------------------------------------\nRan 0 tests in 0.000s\n\nOK\n",
+                "test_slow (calc.Tests.test_slow) ... skipped 'slow'\n\n----------------------------------------------------------------------\nRan 1 test in 0.000s\n\nOK (skipped=1)\n",
+            ),
+        ] {
+            for (output, expected) in [
+                (empty, ValidationStatus::ZeroTests),
+                (skipped, ValidationStatus::SkippedOnly),
+            ] {
+                let (out, err) = if parser == ValidationParserKind::RustLibtestTextV1 {
+                    (output.as_bytes(), &b""[..])
+                } else {
+                    (&b""[..], output.as_bytes())
+                };
+                let receipt = text_result(parser, out, err, 0, false, 1);
+                assert_eq!(receipt.status, expected);
+                assert!(!receipt.is_full_pass());
+                assert_eq!(
+                    text_result(parser, err, out, 0, false, 1).status,
+                    ValidationStatus::Malformed
+                );
+            }
+        }
+        for bad in [
+            RUST_PASS.replace("0 measured", "1 measured"),
+            RUST_PASS.replace("0 filtered out", "1 filtered out"),
+            RUST_PASS.replace(" ... ok", " ... ignored, reason"),
+        ] {
+            assert_eq!(
+                text_result(
+                    ValidationParserKind::RustLibtestTextV1,
+                    bad.as_bytes(),
+                    b"",
+                    0,
+                    false,
+                    1
+                )
+                .status,
+                ValidationStatus::Malformed
+            );
+        }
+        for bad in [
+            PYTHON_PASS.replace(" ... ok", " ... expected failure"),
+            PYTHON_FAIL.replace("FAILED (failures=1)", "FAILED (errors=2)"),
+            PYTHON_FAIL.replace("FAIL: test_add", "FAIL: other"),
+            PYTHON_PASS.replace("OK", "OK (unexpected successes=1)"),
+        ] {
+            assert_eq!(
+                text_result(
+                    ValidationParserKind::PythonUnittestTextV1,
+                    b"",
+                    bad.as_bytes(),
+                    1,
+                    false,
+                    1
+                )
+                .status,
+                ValidationStatus::Malformed
+            );
+        }
     }
 }

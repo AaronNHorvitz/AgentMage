@@ -1,0 +1,60 @@
+{
+  "manifest": {
+    "schema_version": 1,
+    "recipe_id": "agentmage-sample-repair",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "kind": "tests",
+    "title": "Change only the code under test until its unit validation passes",
+    "parameters": [
+      {
+        "name": "attempts",
+        "summary": "How many repair attempts the person expects",
+        "parameter_type": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "required": false
+      },
+      {
+        "name": "target",
+        "summary": "The source file the repair is about",
+        "parameter_type": {
+          "type": "path"
+        },
+        "required": true
+      }
+    ],
+    "scope": [
+      "src"
+    ],
+    "max_changed_files": 1,
+    "prerequisites": [
+      {
+        "kind": "clean_worktree"
+      }
+    ],
+    "verification": [
+      "unit"
+    ],
+    "rollback": {
+      "boundary": "revert_writes_only"
+    },
+    "needs_network_grant": false,
+    "manifest_sha256": "73002a357e9ce574a9293da85f20463952327d1badd47bd9b359b7caeefcf45d"
+  },
+  "parameters": {
+    "attempts": {
+      "type": "integer",
+      "value": 2
+    },
+    "target": {
+      "type": "path",
+      "value": "src/calc.py"
+    }
+  }
+}

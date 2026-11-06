@@ -76,6 +76,10 @@ pub enum ValidationTemplateSource {
 pub enum ValidationParserKind {
     /// Strict AgentMage JSON result envelope version 1.
     AgentMageJsonV1,
+    /// Bounded Rust libtest verbose text, checked against per-test events.
+    RustLibtestTextV1,
+    /// Bounded Python unittest verbose stderr, checked against per-test events.
+    PythonUnittestTextV1,
     /// Process/postcondition-only validation for non-test checks.
     ProcessExitV1,
 }
@@ -381,7 +385,7 @@ pub fn seal_validation_template(
             .iter()
             .any(|artifact| !valid_identifier(&artifact.artifact_id) || artifact.maximum_bytes == 0)
         || (input.kind.is_test() && input.minimum_test_count == 0)
-        || (input.kind.is_test() && input.parser != ValidationParserKind::AgentMageJsonV1)
+        || (input.kind.is_test() && input.parser == ValidationParserKind::ProcessExitV1)
         || (!input.kind.is_test() && input.minimum_test_count != 0)
         || (input.failed_test_rerun_allowed && !input.setup_idempotent)
         || (input.focused && !input.kind.is_test())

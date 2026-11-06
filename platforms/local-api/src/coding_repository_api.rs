@@ -17,12 +17,32 @@ struct Prepare {
 struct PrepareCommand {
     command: agentmage_platform_linux::LinuxCodingCommandSpec,
 }
+// Wire decoding belongs here; the native owner needs no serialization dependency.
+#[derive(Default, Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum TestOutputFormat {
+    #[default]
+    AgentMageJsonV1,
+    RustLibtestTextV1,
+    PythonUnittestTextV1,
+}
+impl From<TestOutputFormat> for agentmage_platform_linux::LinuxCodingTestFormat {
+    fn from(format: TestOutputFormat) -> Self {
+        match format {
+            TestOutputFormat::AgentMageJsonV1 => Self::AgentMageJsonV1,
+            TestOutputFormat::RustLibtestTextV1 => Self::RustLibtestTextV1,
+            TestOutputFormat::PythonUnittestTextV1 => Self::PythonUnittestTextV1,
+        }
+    }
+}
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct PrepareValidation {
     command: agentmage_platform_linux::LinuxCodingCommandSpec,
     kind: agentmage_platform_linux::LinuxCodingValidationKind,
     minimum_test_count: u32,
+    #[serde(default)]
+    output_format: TestOutputFormat,
     approve_definition: bool,
     prior_receipt_sha256: Option<String>,
 }
@@ -247,6 +267,7 @@ pub(super) fn handle_repository(
                 input.command,
                 input.kind,
                 input.minimum_test_count,
+                input.output_format.into(),
                 input.prior_receipt_sha256.as_deref(),
                 clock_ms()?,
             )

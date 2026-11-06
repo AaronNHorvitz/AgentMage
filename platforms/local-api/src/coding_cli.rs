@@ -745,7 +745,7 @@ fn command_decide(client: &Client, root: Option<&String>, validation: bool) -> R
             || LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ());
         verify()?;
         let warning = if validation {
-            "Runs the exact approved test command offline in the read-only created worktree. A pass verifies only its result envelope. Dispatch spends one of three attempts; output is untrusted. After a lost reply inspect receipts; never resend approval."
+            "Runs the exact approved test command offline in the read-only created worktree. A pass verifies only its selected test-output protocol. Dispatch spends one of three attempts; output is untrusted. After a lost reply inspect receipts; never resend approval."
         } else {
             "Runs the exact command offline in the read-only created worktree. Output is untrusted. Exit zero does not verify a test suite. After a lost reply inspect receipts; never resend approval."
         };

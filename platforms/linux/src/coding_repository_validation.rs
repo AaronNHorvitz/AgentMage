@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-//! Approved test envelopes and bounded, separately approved exact reruns.
+//! Approved project test results and bounded, separately approved exact reruns.
 //! No new command executor, model loop, persistence format or grading oracle.
 
 use super::command::{PendingCommand, command_registry, native_executor};
@@ -17,9 +17,31 @@ use agentmage_kernel_engine::validation_template::{
     ValidationTemplateSource, seal_validation_template,
 };
 
+/// Explicit person-selected output protocol; never inferred from process prose.
+#[derive(Clone, Copy, Default)]
+pub enum LinuxCodingTestFormat {
+    /// Existing strict result envelope on stdout.
+    #[default]
+    AgentMageJsonV1,
+    /// Rust libtest default verbose stdout; no benchmarks or filtered tests.
+    RustLibtestTextV1,
+    /// Python unittest verbose stderr; no subtests or expected failures.
+    PythonUnittestTextV1,
+}
+impl LinuxCodingTestFormat {
+    fn parser(self) -> ValidationParserKind {
+        match self {
+            Self::AgentMageJsonV1 => ValidationParserKind::AgentMageJsonV1,
+            Self::RustLibtestTextV1 => ValidationParserKind::RustLibtestTextV1,
+            Self::PythonUnittestTextV1 => ValidationParserKind::PythonUnittestTextV1,
+        }
+    }
+}
+
 const MAX_ATTEMPTS: u8 = 3;
 // Bind the actual parser implementation, not a caller's assertion of its hash.
 const PARSER: &[u8] = include_bytes!("../../../kernel/engine/src/validation_result.rs");
+const TEXT_PARSER: &[u8] = include_bytes!("../../../kernel/engine/src/validation_result_text.rs");
 
 pub(super) struct PendingValidation {
     template: ValidationTemplate,
@@ -34,7 +56,7 @@ pub(super) struct ValidationSeries {
 
 impl LinuxCodingRepository {
     /// Shows only process-retained validation state. A pass refers to the exact
-    /// approved command envelope, never the current repository or an independent
+    /// approved command result, never the current repository or an independent
     /// task grade. Raw output is not retained. Restart cannot restore or rerun it.
     pub fn inspect_validation(&self) -> Result<Value> {
         self.authority
@@ -50,7 +72,7 @@ impl LinuxCodingRepository {
     }
 
     /// Caller explicitly confirms the exact test definition, then separately
-    /// approves its prepared execution. Only the built-in strict JSON parser is
+    /// approves its prepared execution. Only closed built-in output formats are
     /// admitted. This starts one immutable definition per created worktree; a
     /// failed assertion may select the exact prior receipt for a fresh rerun.
     /// Three admitted attempts exhaust the process-local series. No automatic
@@ -60,6 +82,7 @@ impl LinuxCodingRepository {
         command: CommandSpec,
         kind: ValidationKind,
         minimum_test_count: u32,
+        output_format: LinuxCodingTestFormat,
         prior_receipt_sha256: Option<&str>,
         now: u64,
     ) -> Result<Value> {
@@ -69,6 +92,7 @@ impl LinuxCodingRepository {
             &registry,
             kind,
             minimum_test_count,
+            output_format,
             prior_receipt_sha256,
             now,
         )?;
@@ -99,6 +123,7 @@ impl LinuxCodingRepository {
         registry: &agentmage_kernel_engine::command_runner::CommandRegistry,
         kind: ValidationKind,
         minimum_test_count: u32,
+        output_format: LinuxCodingTestFormat,
         prior: Option<&str>,
         now: u64,
     ) -> Result<PendingCommand> {
@@ -107,9 +132,10 @@ impl LinuxCodingRepository {
             return Err(err("code.validation.definition"));
         }
         let mut pending = self.command_preview(registry, now)?;
+        let parser = output_format.parser();
         let source = hash(
             &serde_json::to_vec(&json!({"command":registry.commands()[0],
-            "kind":kind,"minimum_test_count":minimum_test_count}))
+            "kind":kind,"minimum_test_count":minimum_test_count,"parser":parser}))
             .map_err(|_| err("code.validation.definition"))?,
         );
         let scope = hash(
@@ -130,9 +156,16 @@ impl LinuxCodingRepository {
             // authority. The later exact preview approval is recorded separately.
             user_input_approval_sha256: Some(source),
             execution_scope_sha256: scope,
-            parser: ValidationParserKind::AgentMageJsonV1,
+            parser,
             parser_version: "1.0.0".into(),
-            parser_sha256: hash(PARSER),
+            parser_sha256: if parser == ValidationParserKind::AgentMageJsonV1 {
+                hash(PARSER)
+            } else {
+                hash(
+                    &serde_json::to_vec(&[hash(PARSER), hash(TEXT_PARSER)])
+                        .map_err(|_| err("code.validation.definition"))?,
+                )
+            },
             minimum_test_count,
             focused: true,
             fail_fast: false,
@@ -148,7 +181,7 @@ impl LinuxCodingRepository {
         pending.preview["attempt"] = json!(attempts + 1);
         pending.preview["maximum_attempts"] = json!(MAX_ATTEMPTS);
         pending.preview["warning"] = json!(
-            "Runs this exact approved test definition offline in the read-only created worktree. Strict result-envelope checks do not independently grade the task or verify current source. Output and failed names are untrusted. At most three attempts; each needs fresh consent. No automatic model retry, commit or push."
+            "Runs this exact approved test definition offline in the read-only created worktree. Selected output-protocol checks do not independently grade the task or verify current source. Output and failed names are untrusted. At most three attempts; each needs fresh consent. No automatic model retry, commit or push."
         );
         pending
             .preview
@@ -266,7 +299,9 @@ impl LinuxCodingRepository {
         let value = json!({"receipt":receipt,"validation_passed":receipt.is_full_pass(),
             "prior_receipt_sha256":validation.prior_receipt_sha256,
             "attempt":series.attempts,"maximum_attempts":MAX_ATTEMPTS,
-            "verification_scope":"approved-command-envelope","current_workspace_verified":false,
+            "verification_scope": if validation.template.parser == ValidationParserKind::AgentMageJsonV1 {
+                "approved-command-envelope"
+            } else { "approved-command-tests" },"current_workspace_verified":false,
             "automatic_retry":false,"model_retry_connected":false});
         series.latest = Some(receipt);
         Ok(value)
