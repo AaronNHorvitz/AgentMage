@@ -26,8 +26,10 @@ must subsequently pass the existing independent admission boundary.
   within-budget rates are identical because the current chat path has no retry
   capability. Later engine rows must publish their changed budgets separately.
 - Request 4,096 output tokens, including reasoning. Use the existing local
-  candidate weights, one at a time, with the current 8K chat profile and recorded
-  server defaults. This does not claim the separate 32K coding-preparation scope.
+  candidate weights, one at a time, with 8K context (the product chat value)
+  and the lab's 4,096-token output reservation. The product chat profile itself
+  uses 2,048 output tokens; this baseline is a mixed configuration. This does
+  not claim the separate 32K coding-preparation scope.
 - Keep the API's existing 120-second operation deadline, 30-second idle budget,
   byte limits, authentication and explicit endpoint choice.
 - At most five tasks per GPU reservation; stop/reap owned servers and release
@@ -36,7 +38,8 @@ must subsequently pass the existing independent admission boundary.
   retain an explicitly labelled base snapshot, never a fabricated model answer.
 - Admission still requires current full-suite controls and verified lane quotas.
   Its finite-observation, self-modification, temporary-fixture and identity/state
-  limits accompany all scores. Known dev-003 process races remain failures.
+  limits accompany all scores. Known dev-003 process-observation and dev-004
+  SIGINT timing races remain failures; no hidden test or threshold changes.
 - The API does not expose upstream token usage: token fields are null, never an
   estimate or zero. Separately retained backend timing counters may supplement
   the record with an explicitly stated scope. Reserved GPU minutes include
@@ -78,3 +81,37 @@ The narrow held-out protocol domain is described in the [suite guide](coding-sui
 
 Synthetic collector tests and synthetic held-out entry tests do not import or
 run the actual held-out modules. They do not count as model or task scores.
+
+## Retained-log termination report
+
+The baseline's backend failure causes can be regenerated without a model,
+GPU, hidden tests or another held-out attempt:
+
+```sh
+python3 -B scripts/coding_baseline_termination.py \
+  --root <private-retained-baseline-root> \
+  --manifest-sha256 932463662e05b984a28fd3b329c24df898839d10a749e08b28fc8574725ba9f1
+```
+
+The command verifies the original manifest's digest and every consumed file's
+binding, then verifies the individual log slices against their timing records.
+It checks observed 8,192 context settings and bound requests for 4,096 output
+rather than deriving a cause from an API error. It refuses missing, duplicated,
+changed, ambiguous or contradictory records. Output contains per-development-task
+classes and held-out aggregate counts; no held-out identifiers or raw text.
+This supplemental report changes no original aggregate, collector or score.
+Its four classes are `prompt-exceeds-context`, `context-exhausted`, `output-cap`
+and `stopped`, as defined in the [scoreboard](../evidence/coding-scoreboard.md).
+
+The observed 8K/4K budget blocked 36 of 40 Muse and 38 of 40 GPT-OSS attempts,
+including every held-out attempt. These scores do not establish relative model
+quality. Publish changed context and output budgets as separate variables in
+later scoreboard entries; do not attribute their effects solely to the engine.
+
+Review backlog: deeply nested JSON can raise `RecursionError` in the frozen
+collector and abort collection before its batch record. No scored attempt did
+so. Preserve this collector for baseline replay; handle this as `edit-refused`
+and add a synthetic test before reusing its parser in the T-303/T-306 loop.
+The API's context-overflow and length-stop diagnostics also need clearer codes
+at hardening. Neither low-priority repair authorizes repeating this baseline or
+using held-out responses to tune a prompt or the coding engine.

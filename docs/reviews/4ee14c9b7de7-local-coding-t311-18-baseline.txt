@@ -1,0 +1,211 @@
+Commit: 4ee14c9b7de7ae612eb3e516b3d32fe32d0deab0
+Scope: local-coding-t311-18-baseline
+
+# Independent core review: expanded T-311.18 (chat-only baseline) and parent T-311
+
+Reviewer: separate Claude Opus 5.5 session at extra-high effort, read-only repository access, own runs.
+Base: `1104abe26db9c5816dc988aabfa882fee312b415`. Rows: T-311.18 (expanded), parent T-311. Tier: core.
+
+## Methods
+
+- Read IP-POLICY.md, Decision 0154, the T-311 / T-311.17 / T-311.18 / T-311.19 rows, the
+  coding-baseline guide, the freeze record, the scoreboard, and the complete `1104abe2..4ee14c9b`
+  diff. That diff covers all code, test and guide changes, including the worker graph/runtime/oracle,
+  admission and suite grading helpers.
+- Read all six builder-private helpers before running anything: `launch_batch.py`, `campaign.py`,
+  `aggregate.py`, `publish_results.py`, `reapply_audit.py` and `verify.py`. Only data-only checks
+  were executed. No model, GPU, download or GPU slot was used by this review.
+- Independently cross-checked the raw records against every published number: aggregates,
+  per-task table, terminal outcomes, GPU minutes, launcher parameters, freeze ordering and
+  backend log slices (hash-checked).
+- Adversarial checks: hostile model answers against `apply_edits`, held-out content leakage into the
+  diff, grading-flag equivalence before and after the helper change, base-fallback scoring, the
+  four passing model edits, retained credentials, extra or dropped model attempts.
+
+## Exact commands and results
+
+Run from the repository with `PATH="$PWD/target/local-agent-tools:$PATH"`,
+`CARGO_TARGET_DIR=/lane/state/review-target` and private scratch
+`/lane/state/tmp/t311-baseline-review-xWylqM` (`$R`).
+
+| Command | Result |
+| --- | --- |
+| `git rev-parse 4ee14c9b HEAD 1104abe2` | `4ee14c9b7de7ae612eb3e516b3d32fe32d0deab0` (= HEAD); base `1104abe26db9c5816dc988aabfa882fee312b415`; `git status --short` empty before and after |
+| `bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base 1104abe2 --timeout 900` | **PASS**: 62 tests in 8.703 s, `FAST GATE: PASS` (after a long reservation wait) |
+| `bash /tools/build-slot python3 -B scripts/coding_eval_suite.py verify --held-out /lane/state/tmp/t311-suite-batch/frozen-held-out-v1.json --purpose row-close --output $R/controls` | **FAIL (retained)**: `passed: false`, `independent_development_controls_valid: false`, only pair dev-004 invalid. The dev-004 *base* control gave errors 3 / failures 10 instead of the frozen profile's 2 / 11. Hidden test `test_termination_cleans_descendants_and_starts_no_next_check` (SIGINT) hit `TimeoutExpired` at its 10 s wait instead of `AssertionError: -2 != 1`. Base wall time was 29.7 s against the builder's 19.6 s. The base still failed and the reference passed. `source_changed: false`; source hashes identical to the builder's `controls-v1`. See L2. |
+| Same command, new output `$R/controls-repeat-1` (diagnostic repeat; the original failure is retained) | **PASS**: `passed: true`, 160 control attempts; development, independent development, held-out and independent held-out all valid; 104 held-out methods; dev-004 base back at 2 / 11, 19.8 s; 176.2 s |
+| `reapply_audit.py`, run as a copy in `$R` with only the descriptor path changed to the backup | **PASS**: `Exact frozen prompts and candidate replay PASS: 80 requests, 4 applied proposals`. The primary `/lane/state/coding-held-out-v1.json` is not visible in this session. The backup has the stated SHA `8141e9281c830fe510863403d6c1f137dcb661c2ba6067e68a94a578a13e5c3b`; the diff of the copy is the one path line. |
+| Requested Python block (receipt, manifest, four `scoreboard` recomputations) | **PASS**: receipt `06d419f5…e5da1`; manifest SHA `93246366…ba9f1`, all 55,618 files match; recomputed aggregates equal the retained ones. muse dev 4/4/30, muse held 0/0/10, gpt-oss dev 0/0/30, gpt-oss held 0/0/10. Aggregate SHA-256s equal the four published values. |
+
+Additional independent checks (no model, no GPU):
+
+- **Freeze ordering.** `20575afe` was committed 03:14:22 UTC; `20575afe..4ee14c9b` changes only
+  TASKS.md and the scoreboard. First model batch `started_at` 03:29:47 UTC; last batch
+  05:11:02 UTC; `4ee14c9b` committed 05:20:11 UTC. `campaign-complete.json` binds commit `20575afe`:
+  23 jobs, all exit 0, plus the separately verified first batch. There are no other baseline or
+  model-attempt directories under `/lane/state/tmp`.
+- **Launch parameters.** All 16 `launcher.json` files share launcher SHA `543ff0df…dd69` and record
+  `--ctx-size 8192 --n-predict 4096 --temp 0 --seed 42`, with the medium family reasoning keyword
+  (`reasoning_strength` for muse, `reasoning_effort` for gpt-oss). Every launcher records
+  `api_reaped` and `settings_revoked` true, server exit -15, and auth/token directories removed.
+- **Published numbers.** All 60 development rows (generation s, grading s rounded to 3 dp, backend
+  input/output tokens, cause), both GPU-minute totals (29.607 / 7.540), generation and grading sums
+  and all 12 terminal-outcome counts reproduce from the raw records.
+- **Grading.** Admission summaries: 30/10 attempts, 0 excluded, 0 ungradable, lane quotas verified,
+  receipt `06d419f55deb…`. The four passes are exactly the four applied proposals. All 76 base
+  fallbacks fail grading (`test_failure` / `candidate_exception`). The four passing muse edits
+  (dev-009, dev-018, dev-024, dev-026) are genuine, task-directed changes with no grader tampering.
+- **Helper change.** In `coding_eval_worker_graph.py` / `_runtime.py`, every path that previously set
+  `peer.failed` now goes through `assertion()` or `failure()`. Unclean exits map to protocol, policy
+  or fixture-assertion. Each of these flags blocks a pass in `coding_eval_worker_oracle._grade`, and
+  the worker still requires `not manager.failed`. Grading is not weakened.
+- **Held-out integrity.** No held-out title, test name, statement prefix or source path occurs in
+  the diff. `tests/test_coding_eval_oracle_worker.py` (the held-out hidden-test path, pinned by
+  blob/base) and `scripts/coding_eval_oracle_worker.py` are unchanged in `1104abe2..4ee14c9b`. The
+  new held-out admission test is synthetic. The collector and the held-out set are frozen and
+  untuned.
+- **Hygiene of the diff.** Added text has no host path, username, hostname, credential or
+  `/lane` path. It names no other agent product. Model names are descriptive; both weight sets are
+  recorded as Apache-2.0.
+
+## Findings
+
+### M1 (medium): the scoreboard leaves out failure causes that the retained logs show, so the low scores read as poor coding ability
+
+`docs/evidence/coding-scoreboard.md:43-50` (Failure causes) and `:52-73` (terminal outcomes)
+
+The scoreboard reports 76 of 80 failures only as `chat-failed`. It states that the API outcomes "do
+not identify a model-internal cause", but never states the cause that its own hash-bound backend log
+slices record. I classified every attempt from the retained `server.log` slices; every slice hash
+matches its `backend-timing.json`:
+
+| Model | Split | Prompt larger than 8,192-token context (rejected before generation) | Context filled mid-generation (`truncated = 1`) | 4,096 output cap reached | Stopped below limits |
+| --- | --- | --- | --- | --- | --- |
+| muse | dev | 10 | 9 | 7 | 4 (all 4 passed) |
+| muse | held | 5 | 5 | 0 | 0 |
+| gpt-oss | dev | 10 | 12 | 6 | 2 (`chat.response.invalid`) |
+| gpt-oss | held | 5 | 5 | 0 | 0 |
+
+For example, muse dev-002: `request (11373 tokens) exceeds the available context size (8192 tokens)`.
+The held-out prompts that were rejected were 10,093 to 18,578 tokens.
+
+- **No held-out attempt fit.** For both models, not one of the ten held-out attempts produced a
+  generation that fit the budget.
+- **One third of development never reached a model.** 10 of 30 development requests were rejected
+  before any generation.
+- **Every muse attempt that fit passed.** All four muse generations that finished within the limits
+  passed.
+
+The published 0/10, 0/30 and 4/30 therefore mainly measure the chosen context budget: 8,192 tokens
+in total, with 4,096 of them reserved for output including reasoning. They say little about coding
+ability. The API messages in the table add to the confusion: the status event says "Check that its
+model is ready", and output-cap stops appear as `incomplete`.
+
+Why this is medium:
+
+- **Requirement.** T-311 requires "failure causes", and Decision 0154 §4 requires "failures".
+- **Baseline value.** This is the reference later rows will be compared against. A later engine
+  given a larger context would show a large gain that comes from context size rather than the
+  engine.
+- **Not high.** Every published number traces to raw records. No attempt was dropped and nothing
+  was tuned.
+
+**Fix (in-row, no model rerun, no held-out reuse):**
+
+1. Derive a per-attempt backend termination class from the already bound log slices. Use these
+   classes: `prompt-exceeds-context`, `context-exhausted`, `output-cap`, `stopped`.
+2. Publish the class per model and split, and per development task.
+3. State plainly at the top of the scoreboard that the 8K / 4K budget stopped 36 of 40 (muse) and
+   38 of 40 (gpt-oss) attempts from producing a complete answer, including every held-out attempt.
+4. Say that the result is therefore not evidence of relative model quality, and that later
+   scoreboards must name a changed context or output budget as a separate variable.
+5. Preferably have `scripts/coding_baseline.py` or the aggregate carry that class, so the published
+   cause can be re-derived with one command.
+
+### L1 (low): a deeply nested model answer crashes collection
+
+`scripts/coding_baseline.py:51` and `:89`
+
+`apply_edits` calls `json.loads` on model text. `one()` catches only
+`OSError, ValueError, SmokeError, HTTPException`. A deeply nested answer, which fits inside 4,096
+tokens, raises an uncaught `RecursionError`. Reproduced: `apply_edits(b'x = 1\n', '['*100000+']'*100000)`
+gives `UNCAUGHT RecursionError`, while NaN, duplicate keys and huge integers refuse correctly.
+
+The batch would then abort with no `record.json` or `batch.json`, and the rerun refuses
+(`candidate-exists`). This fails closed: `scoreboard` refuses an incomplete split. It did not happen
+in this campaign. The risk is that it pushes an operator toward a substitute rerun.
+
+**Fix:** catch `RecursionError` and treat it as `edit-refused`, or parse with a depth bound. Add a
+synthetic test. Apply the same to the parser that T-303/T-306 will reuse.
+
+### L2 (low): the frozen dev-004 base control has a timing race that can fail the whole verifier
+
+This is seen only at runtime, in the hidden dev-004 SIGINT termination test.
+
+My first complete `verify --purpose row-close` failed only because the dev-004 base control
+classified one method as ERROR (`TimeoutExpired` after 10 s) rather than FAIL. The repeat passed.
+The base still fails and the reference still passes, so this is not a discrimination failure. But
+`expected_base` (`scripts/coding_eval_oracle.py:1030-1048`) requires the exact count profile, so
+system load alone can invalidate the receipt that admission requires.
+
+For generated candidates, a correct solution under load could time out and score a false negative.
+It can never produce a false pass. It did not affect this baseline: both models failed dev-004 at
+the output cap.
+
+**Fix (backlog):** disclose dev-004 as a known timing race next to dev-003 in coverage and attempt
+rows. Do not change the hidden test or the threshold.
+
+### L3 (low): the "current 8K chat profile" label describes a mixed configuration
+
+`docs/guides/coding-baseline.md:31-33` and the scoreboard's "Baseline runs" section
+
+The product chat profile `demo/model.json` is 8,192 context with 2,048 output. The baseline instead
+ran the development model-lab launcher, used its 4,096 output, and overrode its 32,768 context to
+8,192. The private `launch_batch.py` makes that override after `coding_model_lab.load_config()` has
+validated "context must be above 8K". The published parameters are accurate. Only the "current
+profile" wording overstates the match.
+
+**Fix:** state that the configuration was "8K context (product chat value) with the lab's 4,096
+output reservation".
+
+### L4 (low, T-302 backlog): API diagnostics mislabel context overflow and length stops
+
+When upstream rejects an oversized prompt, the API emits `chat.transport.status` with "Check that its
+model is ready". Most stops at the output cap surface as `chat.response.incomplete`; only 3 of them
+appear as `complete:length`. This misleads users and future scoreboards.
+
+**Fix:** map upstream context-size rejections to a distinct code, and report length terminations
+consistently.
+
+### Out of scope (repository-level, outside this row's diff; owner attention before any public release)
+
+At this commit, 49 tracked files contain the host username and absolute home paths. Examples:
+`demo/model.json:4` and `demo/model.json:7`, and
+`artifacts/coding-harness/2026-09-23/muse-campaign13-summary.json:23`, whose path also embeds
+another product's name. Of the 49, 45 are under `artifacts/sprints`, with one each under
+`docs/verification` and `docs/audits`. All predate `1104abe2`, and this diff adds none.
+
+Given the public-repository rule, this needs a repository-wide scrub. It is recorded here as
+backlog, not as a finding against T-311.18.
+
+## Per-row result
+
+- **Expanded T-311.18: NOT CLOSED.** These are met:
+  - the measurement is actual, untuned and fully traced;
+  - both models ran all 30 development and 10 held-out tasks;
+  - one-attempt and within-budget rates are reported;
+  - times, backend tokens and reserved GPU minutes are present;
+  - the raw logs are retained and hash-bound;
+  - confinement holds: data-only edits, no tools, and candidates graded only in the independent
+    sandbox;
+  - the chat-only, non-native scope is labelled honestly.
+
+  M1 is open, so the row cannot close.
+- **Parent T-311: NOT CLOSED.** The baseline's failure-cause reporting (M1) is a T-311 "done when"
+  item. The suite part, closed under T-311.17, re-verified here: 160/160 controls passed on repeat,
+  with one retained flaky failure (L2).
+
+No GPU was used by this reviewer. No UI row is in scope. Nothing in the repository was modified or
+approved.
+
+Verdict: FINDINGS

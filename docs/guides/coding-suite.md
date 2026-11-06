@@ -244,7 +244,12 @@ no independent adapter. Unasserted statement clauses and end-to-end model coding
 remain unestablished. This report reads definitions, not held-out assertions.
 Its digest is included in the private verification summary.
 
-The report names the previously observed disappearing-process race in dev-003.
+The frozen report names the previously observed disappearing-process race in
+dev-003. A later independent baseline review also observed a dev-004 SIGINT
+termination timing race: its base still failed, but one timeout changed the
+expected FAIL/ERROR profile and invalidated that verifier attempt. The unchanged
+repeat passed. The baseline scoreboard labels both races per development task;
+these disclosures do not alter frozen definitions, hidden tests or thresholds.
 Controls receive no automatic retries. Every failed attempt remains retained,
 including infrastructure failures; a known race neither passes nor removes an
 attempt from the denominator. An operator's separate diagnostic rerun is a new
