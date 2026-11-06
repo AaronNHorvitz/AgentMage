@@ -4,6 +4,7 @@
 //! Fedora and Ubuntu platform path adapter.
 
 mod coding_map;
+mod coding_repository;
 mod coding_workspace;
 mod command_runner;
 mod configuration_store;
@@ -29,6 +30,7 @@ mod write_transaction;
 pub use coding_map::{
     LinuxCodingMap, LinuxCodingMapEntry, LinuxCodingMapError, discover_linux_coding_map,
 };
+pub use coding_repository::{LinuxCodingRepository, LinuxCodingRepositoryError};
 pub use coding_workspace::{
     LinuxCodingPendingWrite, LinuxCodingReadError, LinuxCodingReadScope, LinuxCodingReplacement,
     LinuxCodingSource, LinuxCodingWriteError,

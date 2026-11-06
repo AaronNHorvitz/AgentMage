@@ -1,5 +1,9 @@
 # Version 1 local chat API
 
+The separate [approved worktree path](coding-worktrees.md) adds control-only
+repository operations and optional canonical durable authority state through
+`serve-coding`. Existing chat and source-selection behavior stays process-only.
+
 T-302.3 introduced the local API and `agentmage-local-api` executable. The
 service now lives in the separate `agentmage-local-api` crate at
 `platforms/local-api`; inference remains a transport/model boundary without

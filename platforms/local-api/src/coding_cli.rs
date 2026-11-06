@@ -427,6 +427,28 @@ fn execute(args: &[String]) -> Result<()> {
     };
     let client = Client::new(address, auth)?;
     match (command.as_str(), tail) {
+        ("worktree", []) => show(&client.json("GET", "/v1/code/repository", true, None)?),
+        ("worktree-prepare", [root, owned, task, base]) => {
+            // The challenge itself is written to the terminal. Validate the
+            // immutable object ID before interpolating caller bytes.
+            if ![40, 64].contains(&base.len())
+                || !base
+                    .bytes()
+                    .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+            {
+                return Err(());
+            }
+            confirm(
+                &json!({"repository":root,"management_directory":owned,"task_id":task,"base_commit":base,
+                "warning":"Runs hardened local Git inspection and reads the entire repository to prepare a worktree. No network, model, branch creation or test execution. The management directory must be private, empty and outside the repository and state."}),
+                &format!("inspect {base}"),
+            )?;
+            show(&client.json("POST","/v1/code/repository/prepare",true,Some(json!({
+                "root":root,"owned_root":owned,"task_id":task,"base_commit":base,"approve_inspection":true
+            })))?)
+        }
+        ("worktree-create", [root, owned]) => worktree_decide(&client, Some((root, owned))),
+        ("worktree-deny", []) => worktree_decide(&client, None),
         ("map" | "map-select", [root, query]) => {
             let map = client.json(
                 "POST",
@@ -518,8 +540,52 @@ fn execute(args: &[String]) -> Result<()> {
 
 fn usage() {
     eprintln!(
-        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
+        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> worktree|worktree-prepare <repository> <private-management-directory> <task-id> <base-commit>|worktree-create <repository> <private-management-directory>|worktree-deny|map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
     );
+}
+
+fn worktree_decide(client: &Client, roots: Option<(&String, &String)>) -> Result<()> {
+    let status = client.json("GET", "/v1/code/repository", true, None)?;
+    let preview = &status["pending"];
+    let hash = preview["preview_sha256"]
+        .as_str()
+        .filter(|s| digest(s))
+        .ok_or(())?;
+    if let Some((root, owned)) = roots {
+        let repository_identity = preview["repository_root_sha256"].as_str().ok_or(())?;
+        let owned_identity = preview["owned_root_sha256"].as_str().ok_or(())?;
+        let verify = || {
+            LinuxCodingReadScope::verify_root(Path::new(root), repository_identity)
+                .map_err(|_| ())?;
+            LinuxCodingReadScope::verify_root(Path::new(owned), owned_identity).map_err(|_| ())
+        };
+        verify()?;
+        confirm(
+            &json!({"repository":root,"management_directory":owned,"preview":preview,
+            "warning":"Creates the displayed task branch and management_directory/worktree. Does not select source, run tests, commit, push or delete. After a lost reply inspect the canonical receipts and disk; never resend an approval."}),
+            &format!("create {hash}"),
+        )?;
+        verify()?;
+    }
+    let result = client.json(
+        "POST",
+        "/v1/code/repository/decide",
+        true,
+        Some(json!({
+            "preview_sha256":hash,"approve":roots.is_some()
+        })),
+    )?;
+    show(&result)?;
+    if result["outcome"]
+        != if roots.is_some() {
+            "succeeded"
+        } else {
+            "denied"
+        }
+    {
+        return Err(());
+    }
+    Ok(())
 }
 
 #[cfg(test)]

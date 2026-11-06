@@ -7,6 +7,12 @@ streaming [strict proposals](coding-proposals.md), preview preparation and
 or model process. T-303 and T-306 remain open: worktree isolation, confined tests,
 retries, durable runs, resume/replay, Git operations and MCP are still required.
 
+The separate [approved worktree path](coding-worktrees.md) adds `worktree`,
+`worktree-prepare`, `worktree-create` and `worktree-deny` through this same API.
+It uses canonical durable authority receipts but has not demonstrated native
+creation in this lane. It does not yet bind source writes to worktree ownership
+or add project tests, retries or durable coding runs.
+
 Use a disposable workspace. This client currently writes the explicitly selected
 workspace itself; it does not create or verify an isolated Git worktree. Source
 selection and all approvals are trusted person-facing operations. Never give

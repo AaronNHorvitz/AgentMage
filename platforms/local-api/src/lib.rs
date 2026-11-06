@@ -6,6 +6,7 @@
 
 /// Terminal client over this service's versioned coding routes.
 pub mod coding_cli;
+mod coding_repository_api;
 
 use std::collections::{BTreeMap, VecDeque};
 use std::fs::{DirBuilder, File};
@@ -30,7 +31,7 @@ use agentmage_capability_repository_map::coding_proposal::{
 };
 
 use agentmage_platform_linux::{
-    LinuxCodingPendingWrite, LinuxCodingReadScope, LinuxCodingReplacement,
+    LinuxCodingPendingWrite, LinuxCodingReadScope, LinuxCodingReplacement, LinuxCodingRepository,
     discover_linux_coding_map,
 };
 
@@ -199,6 +200,7 @@ struct PendingChange {
 
 #[derive(Default)]
 struct State {
+    repository: Option<Arc<Mutex<LinuxCodingRepository>>>,
     pending_change: Option<PendingChange>,
     write_records: VecDeque<Value>,
     write_sequence: u64,
@@ -241,12 +243,53 @@ pub fn serve(
     tokens: ApiTokens,
     stop: Arc<AtomicBool>,
 ) -> Result<(), ApiError> {
+    serve_state(listener, tokens, stop, State::default())
+}
+
+/// Serves the same API with an explicitly chosen private canonical authority
+/// directory for non-production repository operations. Starting this service
+/// authorizes encrypted state writes there, not repository commands or effects.
+/// Keep the control token unchanged: its domain-separated key opens this state.
+pub fn serve_coding(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    state_root: &Path,
+) -> Result<(), ApiError> {
+    if !listener
+        .local_addr()
+        .map_err(|_| ApiError::Io)?
+        .ip()
+        .is_loopback()
+    {
+        return Err(ApiError::Configuration);
+    }
+    let repository =
+        LinuxCodingRepository::open(state_root, tokens.control.as_bytes(), clock_ms()?)
+            .map_err(|_| ApiError::Configuration)?;
+    serve_state(
+        listener,
+        tokens,
+        stop,
+        State {
+            repository: Some(Arc::new(Mutex::new(repository))),
+            ..State::default()
+        },
+    )
+}
+
+fn serve_state(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    initial: State,
+) -> Result<(), ApiError> {
     let address = listener.local_addr().map_err(|_| ApiError::Io)?;
     if !address.ip().is_loopback() {
         return Err(ApiError::Configuration);
     }
     listener.set_nonblocking(true).map_err(|_| ApiError::Io)?;
-    let state = Mutex::new(State::default());
+    let state = Mutex::new(initial);
     thread::scope(|scope| {
         let mut workers = Vec::new();
         for _ in 0..4 {
@@ -839,6 +882,9 @@ fn handle(
         Err(status) => return error(socket, status),
     };
     let route = (req.method.as_str(), req.path.as_str());
+    if req.path.starts_with("/v1/code/repository") {
+        return coding_repository_api::handle_repository(socket, &req, state, stop);
+    }
     if matches!(req.path.as_str(), "/v1/settings" | "/v1/probe") && !req.control {
         return error(socket, 403);
     }

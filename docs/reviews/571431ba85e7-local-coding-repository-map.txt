@@ -1,0 +1,173 @@
+Commit: 571431ba85e77a919136ec9ea15da69a12190a0d
+Scope: local-coding-repository-map
+
+# Independent core review: T-303 + T-306 file-map batch (non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only access to the repository.
+Base for the diff: `7c35f361faebb878561eec89c1891d26d3f3fd7b`. `git rev-parse 571431ba85e77a919136ec9ea15da69a12190a0d`
+resolves to that exact commit, and it is HEAD of a clean working tree. Before and after every run,
+`git status --short` was empty. I modified no repository file, and I approved nothing in the repository.
+
+This verdict covers only this implementation batch. It does not close T-303 or T-306. Both parents stay
+OPEN: worktree isolation, project tests, retries, durable records, resume/replay, Git approval
+operations and MCP remain undelivered.
+
+## Methods
+
+- Read IP-POLICY.md, decisions 0153/0154, the top of TASKS.md and the request. I read the full 14-file
+  diff against the base: `platforms/linux/src/coding_map.rs` (new),
+  `coding_workspace.rs`, `lib.rs`, the API route and selection binding in
+  `platforms/local-api/src/lib.rs`, the terminal client `coding_cli.rs`, all new tests, the guides,
+  the evidence file and TASKS.md.
+- Traced the native adapter paths that the map relies on (`authorize_workspace_root`,
+  `LinuxPathAdapter::resolve`, `admitted_kind`, `observe_directory_names`, `LinuxHeldObject::revalidate`,
+  `LinuxCodingReadScope::select/verify_root`). This confirmed that discovery opens objects only with
+  `O_PATH|O_NOFOLLOW` (Metadata) or `O_RDONLY|O_DIRECTORY` (ReadDirectory). It never opens a
+  regular file for reading, and it refuses symlinks, hard links (nlink>1), special objects and mount
+  crossings.
+- Rebuilt everything independently in `CARGO_TARGET_DIR=/lane/state/review-target`. Every Cargo command
+  went through `/tools/build-slot` with two build jobs and four test threads.
+- Wrote and ran four adversarial probes of my own against my own binaries, using disposable temp
+  directories: `/lane/state/tmp/review-571431/{probe,pty_probe,fd_probe,pending_probe}.py`. They used no
+  model and no GPU; the only upstream was a local stub.
+- Ran a private copy of the reproduction driver. Only the `api_binary`/`cli_binary` line was changed, to
+  point at my binaries. Ran a private copy of the builder audit with only its output path changed; the
+  builder's `publication-audit.json` was not touched.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo test --locked --offline -p agentmage-platform-linux --test coding_map` | exit 0: 5 passed, 0 failed/ignored/filtered |
+| `bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo test --locked --offline -p agentmage-local-api --lib --test coding_cli --test local_chat_api` | exit 0: lib 2, coding_cli 9, local_chat_api 35 passed, 0 failed/ignored/filtered |
+| `PATH="$PWD/target/local-agent-tools:$PATH" python3 -B scripts/local_agent_fast_gate.py --base 7c35f361… --timeout 3600` | FAST GATE: FAIL (as declared). diff-check, untracked lint, review lint and markdownlint (5 files) PASS. `cargo fmt --check` PASS. All-target Clippy `-D warnings` PASS. Tests: 782 passed / 72 failed / 62 ignored / 0 filtered, 79.63 s. The 72 failure IDs exactly equal `docs/evidence/t301-baseline-failures-2026-10-25.md`, with no new or missing failure. The 2/5/9/35 focused targets each report `ok … 0 failed; 0 ignored; … 0 filtered out` |
+| `sha256sum target/local-agent-tools/node` | `d1de76d8…bd932c`, matching the request |
+| `bash /tools/build-slot python3 -B scripts/validate_docs.py` | exit 0: "Validated 755 Markdown file(s) and all policy invariants." This is the whole-repository docs policy scan that the builder could not run |
+| `cmp docs/reviews/7c35f361faeb-local-coding-terminal-client.txt /lane/reviews/7c35f361faeb-local-coding-terminal-client.md` | identical (byte-for-byte retained) |
+| `bash /tools/build-slot python3 -B <private driver copy> /lane/state/tmp/review-571431ba85e7-map-development` (directory absent beforehand) | exit 0: 30/30 development contexts match both historical campaigns, 3/3 historical replies applied, 33 maps, 4.551 s. My API `4430cb4e1461…` and CLI `addd5f0bdf96…` were built from this commit |
+| Comparison against the builder `development/summary.json` (excluding timings, ports, root hashes) | per-task request SHA-256 and user SHA-256 identical (33), source SHA-256 rows identical (30), replay answer/after/historical-events SHA-256 identical (3), ranked paths identical (33), source bindings identical, flags `not_a_model_score`/no inference/no held-out/no hidden tests |
+| `python3 -B <private audit copy>` (output path only changed) | exit 0. Summary `f4074e19…fdc75` and manifest `15cfd4df…584a6` match the request. 240 manifest files verify. Receipt chains recompute. Frozen evaluation inputs, prompts and dependencies are unchanged, as are ledger and checkboxes. Prior API tests are byte-identical. Privacy and links pass |
+| `sha256sum target/debug/agentmage-{local-api,code}` (builder binaries) | `65fb55c9…8e54` / `fd2d1d9b…f3be`, equal to the request's run-time observations |
+| SHA-256 of builder driver and audit scripts | `77e61b3d…6381` / `89e3666c…e2fc`, matching the request |
+
+## Adversarial reproduction (my probes, my binaries)
+
+Native map through `POST /v1/code/map`, using the control token unless stated otherwise:
+
+- A root containing `..`, which is `ParentDir`, gives `400 code.map.boundary`. A relative root gives
+  `400 code.map.input`. The client token gives 403, and `approve_discovery:"true"` as a string gives 400.
+- A symlink root, and a root with a trailing slash through a symlink, both give `400 code.map.boundary`.
+- In-root symlink loop, dangling symlink, directory symlink to `/etc`, FIFO and UNIX socket are all
+  skipped (`skipped: 5`), with only `ok.rs` returned. Opening the FIFO did not block.
+- Mount crossing (`/dev`, `/proc/self`), an unreadable subdirectory, and a non-UTF-8 name each give
+  `400 code.map.boundary` with no partial map.
+- Excluded objects: `.git`, `Target`, `NODE_MODULES`, `.ssh` and `venv` are excluded case-insensitively.
+  A mode-000 file is still listed by name only, which proves content is never opened.
+- A DEL in the query gives 400. A query with 65 terms gives 400. A non-ASCII query is split down to its
+  ASCII terms.
+- Exact limits: 255 subdirectories (256 directories) pass and 256 subdirectories refuse with
+  `code.map.limit`. 4096 files pass and 4097 refuse. `/usr/share` refuses with `limit`.
+- Race test: a thread repeatedly swapped a 200-directory subtree entry between a directory and a symlink
+  to an outside directory, across 40 concurrent maps. All 40 returned 200, and no outside path appeared
+  in any map.
+- An existing scope is byte-identical after a map. Using `expected_root_sha256` taken from a different
+  root's map gives `409 code.workspace.root-stale`, and a corrupted digest gives the same 409. Both
+  preserve the old scope. Activity records `code.map` with no root and no query.
+
+Terminal client over a real PTY with a controlling terminal:
+
+- Changing the endpoint while the `share` approval is displayed refuses with
+  `code.workspace.settings-stale`, exit 1. The old scope is preserved.
+- Replacing the mapped `calc.py` with a symlink to an outside file during display refuses with
+  `code.workspace.boundary`. Replacing it with a hard link to an outside file also refuses with
+  `code.workspace.boundary`. In both cases the old scope is preserved and the outside file is not read.
+- A case-alias pair `calc.py`/`Calc.py` refuses with `code.workspace.selection` and preserves the old
+  scope (see L1).
+- `map-select` without a TTY exits 1 and selects nothing.
+- A map-boundary refusal prints the escaped `API refusal (400): {"error":"code.map.boundary"}` on stderr,
+  with empty stdout and exit 1.
+- A pending preview created through a stub upstream, select-model and `propose` remains byte-identical
+  after `map` and after a declined `map-select`. The source file is unchanged.
+
+## Assessment of the claimed boundaries
+
+- **Metadata consent grants no further scope:** confirmed by code (`lib.rs:857-898` touches neither
+  `workspace` nor `pending_change`) and by my probes. The map route is control-only. It reaches no more
+  than the existing control-only `select` already could, and it discloses only names, and only to that
+  credential holder.
+- **No content read; no link, mount, hard-link or special-file traversal:** confirmed. Every fail-closed
+  error is content-free.
+- **Deadline:** the deadline is cooperative and checked between native calls. The documentation says
+  so, and that blocked syscalls can delay it.
+- **Revalidation and root replacement:** the CLI verifies the root before and after confirmation. The
+  server verifies `expected_root_sha256` before selection and again against the held scope's digest, so
+  a replacement between the two checks is still caught. This was confirmed by test and by my PTY probes.
+- **Strict JSON request shape:** unknown, duplicate and positional fields refuse, by test and by probe.
+- **16-file ceiling:** `take(16)` in the CLI, plus the native `MAX_FILES`, both apply. The 20-file test
+  selects exactly 16 paths.
+- **Refusal framing (prior L3):** non-200 responses must be 400–599. They need JSON with a
+  Content-Length of at most 4096, and streaming is rejected. The body is parsed before display, then
+  escaped, printed to stderr only, and the client exits nonzero. There is no retry path: `idle()` only
+  polls status, and every effectful call is sent exactly once. **The prior L3 is resolved.**
+- **DEL (prior L2):** `safe()` now escapes U+007F. Every server-derived string goes through `show`,
+  `confirm` or the refusal print, and all three use `safe()`. A unit test and an executable test cover it.
+  **The prior L2 is resolved.**
+- **Prior L1 (API-port squatting):** this is now documented in `local-chat-api.md` and
+  `coding-terminal.md` as required pre-install-kit work. The residual exposure itself remains open and
+  is properly labelled as such; it is not counted as fixed.
+- **Evaluation integrity:** the diff touches no scripts, tests corpus, capabilities, model profiles,
+  supply chain or Cargo files (confirmed by the audit's `git diff` assertion). The driver uses only the 30
+  development tasks and previously recorded development replies, with no held-out content. There is no
+  prompt, context or threshold change, and the historical scoreboard is unchanged. No new model number
+  is claimed.
+- **Honest labelling:** the evidence repeatedly states synthetic upstream, known-basename queries on
+  one-source projections, "not retrieval quality", and no model score. The numbers I could trace (5, 2,
+  9, 35, 782/72/62, 30/30, 3/3, 33) all reproduce. My wall time differs (4.551 s against 4.743 s), as
+  expected.
+- **Publication hygiene:** the added lines contain no private host path, username, hostname,
+  credential, personal data or trademark branding. The `/lane/...` paths in the retained review are the
+  established generic lane convention, already present in 55 committed review files.
+- **Delivery:** no new row, sub-row or checkbox change. The batch ends in something that runs and is
+  measured. This is acceptable under the refocus.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, usability):** `platforms/local-api/src/coding_cli.rs:446-452`. `map-select` takes the first
+  16 positive-score paths without excluding entries that native selection is certain to refuse:
+  case-fold aliases (`calc.py`/`Calc.py`), and non-UTF-8, binary or oversized files. One such path
+  refuses the whole selection with `code.workspace.selection` or `boundary`, and `map-select` offers no
+  way to drop a single path. I reproduced this over a PTY. The behaviour is fail-closed and the old scope
+  is preserved, so this is not a security issue. Suggested fix: pre-filter case-fold duplicates on the
+  client side, or offer per-path exclusion; until then, document that the user should fall back to
+  explicit `select-model`.
+- **L2 (low, approval display):** `platforms/local-api/src/lib.rs:1182` (behaviour shared with
+  `select-model`). A successful `map-select` discards an existing pending write preview, but the
+  `share` confirmation does not say that it will. This matches the existing selection contract, but a
+  person may not expect it. Suggested fix: include `"pending_preview_discarded": true` in the displayed
+  review when a preview exists.
+- **L3 (low, diagnosability):** `platforms/linux/src/coding_map.rs:146-152` and `:200`. One unreadable
+  subdirectory, non-UTF-8 name or in-tree mount refuses the entire map as `code.map.boundary`, with
+  nothing to tell the person which entry is responsible. The refusal is correctly fail-closed and the
+  guide says to use a smaller root. Suggested fix: add a content-free reason sub-code, such as
+  `unreadable`, `name` or `mount`.
+- **L4 (low, wording):** the TASKS.md T-303 row describes this one commit as two consecutive "next"
+  batches ("The next batch documents …" followed by "The next [file-map batch] …"). Suggested fix: merge
+  them into one sentence.
+- **Note (not a finding):** `expected_root_sha256` binds canonical path, device and inode, so an inode
+  reused after the root is fully deleted and recreated would pass the binding. Exact native per-file
+  checks still run afterwards, so no confinement depends on this binding.
+
+Historical lows from earlier reviews remain backlog, as declared.
+
+## Per-row result
+
+- **T-303 (this batch only):** PASS for the exact commit, with no open high or medium finding. The row
+  stays OPEN: the plan/act/observe loop, confined test commands, retries, durability, resume/replay and
+  MCP are undelivered.
+- **T-306 (this batch only):** PASS for the exact commit, with no open high or medium finding. The row
+  stays OPEN: there is no isolated worktree, test/fix loop, Git apply/commit/push approval or MCP.
+- Lows L1–L4 go to backlog. This PASS must not be read as closing either parent.
+
+Verdict: PASS
