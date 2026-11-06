@@ -8,7 +8,8 @@ composes the [approved transport](local-chat-transport.md) without activating
 the older qualification-bound runtime. It serves text conversations, model
 listing, effect-free [snapshot coding proposals](coding-proposals.md), and
 explicitly selected [workspace source tools](coding-workspace.md). Workspace
-writes, commands, durable runs, MCP and a task CLI remain later mission work.
+[writes](coding-writes.md) require a separate exact control approval. Commands,
+durable runs, MCP and a task CLI remain later mission work.
 There is no desktop UI here. Synthetic socket tests do not qualify a model.
 
 ## Start and authentication
@@ -74,6 +75,8 @@ upgrade, redirects or retries.
 | POST `/v1/chat` | Client or control | Streams the explicit text conversation below |
 | GET/PUT/DELETE `/v1/code/workspace` | Client for GET; control for PUT/DELETE | Inspect, explicitly select or revoke an exact read-only source scope; see [workspace tools](coding-workspace.md) |
 | POST `/v1/code/workspace/read`, `/search`, `/proposals` | Client or control | Read/search selected sources or propose edits with separate model-disclosure consent; no writes |
+| GET/POST `/v1/code/workspace/changes` | Client or control | Inspect retained previews/receipts or prepare an inert exact diff |
+| POST `/v1/code/workspace/apply` | Control only | Consume an exact approval and apply through the kernel/native write transaction; see [limits and recovery](coding-writes.md) |
 | POST `/v1/cancel` | Client or control | Empty body; requests cancellation of the single active upstream operation |
 
 After the person chooses the endpoint for conversations, trusted settings send:

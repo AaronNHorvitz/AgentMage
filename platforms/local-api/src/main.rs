@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-//! Explicit local chat API process; no tool execution or production activation.
+//! Local API process with explicit source scopes and separately approved writes.
 
 use std::net::{SocketAddr, TcpListener};
 use std::path::Path;

@@ -1,10 +1,10 @@
 #![deny(missing_docs)]
 #![forbid(unsafe_code)]
 // SPDX-License-Identifier: Apache-2.0
-//! Text-only local API. Control credentials authorize settings and read scopes;
-//! ordinary clients cannot turn discovery or model output into authority.
+//! Local API with explicit source scopes and separately approved exact writes.
+//! Ordinary clients cannot turn discovery or model output into write authority.
 
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, VecDeque};
 use std::fs::{DirBuilder, File};
 use std::io::{Read, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
@@ -15,7 +15,7 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use rustix::fs::{Mode, OFlags, open, openat};
 use serde::Deserialize;
@@ -26,7 +26,9 @@ use agentmage_capability_repository_map::coding_proposal::{
     CODING_PROPOSAL_INSTRUCTION, CodingSource, check_coding_proposal, prepare_coding_proposal,
 };
 
-use agentmage_platform_linux::LinuxCodingReadScope;
+use agentmage_platform_linux::{
+    LinuxCodingPendingWrite, LinuxCodingReadScope, LinuxCodingReplacement,
+};
 
 use agentmage_platform_linux_inference::local_chat::{
     ChatFinish, ChatMessage, ChatRole, LocalChatEndpoint, encode_chat,
@@ -185,18 +187,37 @@ struct WorkspaceGrant {
     model_context_revision: Option<u64>,
 }
 
+struct PendingChange {
+    workspace_revision: u64,
+    scope: Arc<WorkspaceGrant>,
+    write: LinuxCodingPendingWrite,
+}
+
 #[derive(Default)]
 struct State {
+    pending_change: Option<PendingChange>,
+    write_records: VecDeque<Value>,
+    write_sequence: u64,
     workspace: Option<Arc<WorkspaceGrant>>,
     workspace_revision: u64,
     configured: Option<Arc<Configuration>>,
     active: Option<ChatCancellation>,
+    active_cancellable: bool,
     revision: u64,
     sequence: u64,
     activity: VecDeque<Value>,
 }
 
 impl State {
+    fn record_write(&mut self, mut record: Value) {
+        self.write_sequence += 1;
+        record["sequence"] = json!(self.write_sequence);
+        self.write_records.push_back(record);
+        if self.write_records.len() > 8 {
+            self.write_records.pop_front();
+        }
+    }
+
     fn record(&mut self, action: &'static str, outcome: &'static str) {
         self.sequence += 1;
         self.activity.push_back(json!({"sequence":self.sequence,"settings_revision":self.revision,"endpoint":self.configured.as_ref().map(|c|&c.endpoint),"workspace_revision":self.workspace_revision,"action":action,"outcome":outcome}));
@@ -554,6 +575,41 @@ struct WorkspaceProposal {
     max_tokens: u32,
 }
 
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct WorkspaceChange {
+    workspace_revision: u64,
+    paths: Vec<String>,
+    expected_sources: Vec<ExpectedSource>,
+    task: String,
+    max_message_bytes: usize,
+    answer: String,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ExpectedSource {
+    path: String,
+    sha256: String,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct WorkspaceApply {
+    workspace_revision: u64,
+    change_set_sha256: String,
+    preview_sha256: String,
+    approve: bool,
+}
+
+fn clock_ms() -> Result<u64, ApiError> {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .ok()
+        .and_then(|d| u64::try_from(d.as_millis()).ok())
+        .ok_or(ApiError::Io)
+}
+
 // Named serde structs also accept arrays. All API additions require objects;
 // typed parsing first still rejects duplicate keys before the shape check.
 fn object_json<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<T, ()> {
@@ -579,6 +635,7 @@ impl Drop for Operation<'_> {
         if let Ok(mut state) = self.state.lock() {
             state.record(self.action, self.outcome);
             state.active = None;
+            state.active_cancellable = false;
         }
     }
 }
@@ -597,6 +654,7 @@ fn begin<'a>(
     }
     let cancel = ChatCancellation::default();
     guard.active = Some(cancel.clone());
+    guard.active_cancellable = true;
     guard.record(action, "started");
     Ok((
         Operation {
@@ -772,7 +830,199 @@ fn handle(
     {
         return error(socket, 403);
     }
+    if req.path == "/v1/code/workspace/apply" && !req.control {
+        return error(socket, 403);
+    }
     match route {
+        ("POST", "/v1/code/workspace/changes") => {
+            let Ok(input) = object_json::<WorkspaceChange>(&req.body) else {
+                return error(socket, 400);
+            };
+            let Ok(shape) = serde_json::from_slice::<Value>(&req.body) else {
+                return error(socket, 400);
+            };
+            if !shape["expected_sources"]
+                .as_array()
+                .is_some_and(|sources| sources.iter().all(Value::is_object))
+            {
+                return error(socket, 400);
+            }
+            let (mut op, _) = match begin(state, stop, "code.write.prepare") {
+                Ok(operation) => operation,
+                Err(status) => return error(socket, status),
+            };
+            let prepared = (|| {
+                let sources =
+                    workspace_sources(state, input.workspace_revision, &input.paths, false)?;
+                let context =
+                    prepare_coding_proposal(&input.task, &sources, input.max_message_bytes)
+                        .map_err(|e| (400, e.code()))?;
+                // These must be the exact complete snapshots from the proposal's
+                // context event, including files that the model did not edit.
+                let actual: BTreeMap<_, _> = context
+                    .outlines()
+                    .iter()
+                    .map(|o| (o.path.clone(), o.sha256.clone()))
+                    .collect();
+                let expected: BTreeMap<_, _> = input
+                    .expected_sources
+                    .iter()
+                    .map(|s| (s.path.clone(), s.sha256.clone()))
+                    .collect();
+                if actual.len() != input.expected_sources.len() || actual != expected {
+                    return Err((409, "code.proposal.stale"));
+                }
+                let changes = check_coding_proposal(&context, &sources, &input.answer)
+                    .map_err(|e| (400, e.code()))?;
+                let scope = state
+                    .lock()
+                    .map_err(|_| (500, "code.workspace.state"))?
+                    .workspace
+                    .clone()
+                    .ok_or((428, "code.workspace.choice-required"))?;
+                let replacements = changes
+                    .iter()
+                    .map(|c| LinuxCodingReplacement {
+                        path: &c.path,
+                        before_sha256: &c.before_sha256,
+                        content: &c.content,
+                    })
+                    .collect::<Vec<_>>();
+                let write = scope
+                    .scope
+                    .prepare_write(
+                        &replacements,
+                        &input.task,
+                        clock_ms().map_err(|_| (500, "code.write.clock"))?,
+                    )
+                    .map_err(|e| (409, e.code()))?;
+                Ok(PendingChange {
+                    workspace_revision: input.workspace_revision,
+                    scope,
+                    write,
+                })
+            })();
+            let pending = match prepared {
+                Ok(pending) => pending,
+                Err((status, code)) => {
+                    op.outcome = code;
+                    drop(op);
+                    return response(socket, status, json!({"error":code}));
+                }
+            };
+            let mut guard = state.lock().map_err(|_| ApiError::Io)?;
+            if op.cancel.is_cancelled() || stop.load(Ordering::Relaxed) {
+                op.outcome = "code.workspace.cancelled";
+                drop(guard);
+                drop(op);
+                return response(socket, 409, json!({"error":"code.workspace.cancelled"}));
+            }
+            let value = json!({"workspace_revision":pending.workspace_revision,
+                "workspace_root_sha256":pending.write.workspace_root_sha256(),
+                "preview":pending.write.preview(),"expires_at_epoch_ms":pending.write.expires_at_epoch_ms(),
+                "applied":false,"tested":false,"isolation_verified":false,"retention":"process-only"});
+            guard.pending_change = Some(pending);
+            op.outcome = "prepared";
+            drop(guard);
+            drop(op);
+            response(socket, 200, value)
+        }
+        ("GET", "/v1/code/workspace/changes") => {
+            let guard = state.lock().map_err(|_| ApiError::Io)?;
+            response(
+                socket,
+                200,
+                json!({"retention":"process-only","records":guard.write_records,
+                "maximum_records":8,"last_sequence":guard.write_sequence,"history_truncated":guard.write_sequence > 8,
+                "pending":guard.pending_change.as_ref().map(|p| json!({
+                    "workspace_revision":p.workspace_revision,"preview":p.write.preview(),
+                    "workspace_root_sha256":p.write.workspace_root_sha256(),
+                    "expires_at_epoch_ms":p.write.expires_at_epoch_ms(),
+                    "applied":false,"tested":false,"isolation_verified":false}))}),
+            )
+        }
+        ("POST", "/v1/code/workspace/apply") => {
+            let Ok(input) = object_json::<WorkspaceApply>(&req.body) else {
+                return error(socket, 400);
+            };
+            let (mut op, _) = match begin(state, stop, "code.write.apply") {
+                Ok(operation) => operation,
+                Err(status) => return error(socket, status),
+            };
+            let mut guard = state.lock().map_err(|_| ApiError::Io)?;
+            let Some(pending) = guard.pending_change.as_ref() else {
+                op.outcome = "code.write.choice-required";
+                drop(guard);
+                drop(op);
+                return response(socket, 428, json!({"error":"code.write.choice-required"}));
+            };
+            if input.workspace_revision != guard.workspace_revision
+                || input.workspace_revision != pending.workspace_revision
+                || input.change_set_sha256 != pending.write.preview().change_set_sha256
+                || input.preview_sha256 != pending.write.preview().preview_sha256
+            {
+                op.outcome = "code.write.stale";
+                drop(guard);
+                drop(op);
+                return response(socket, 409, json!({"error":"code.write.stale"}));
+            }
+            if op.cancel.is_cancelled() || stop.load(Ordering::Relaxed) {
+                op.outcome = "code.workspace.cancelled";
+                drop(guard);
+                drop(op);
+                return response(socket, 409, json!({"error":"code.workspace.cancelled"}));
+            }
+            let now = clock_ms()?;
+            // Consumption is serialized with cancellation and grant replacement.
+            // Never restore a taken pending change, even after error/disconnect.
+            let pending = guard.pending_change.take().ok_or(ApiError::Io)?;
+            let binding = json!({"workspace_revision":input.workspace_revision,
+                "change_set_sha256":input.change_set_sha256,"preview_sha256":input.preview_sha256});
+            if !input.approve {
+                guard.record_write(json!({"binding":binding,"outcome":"denied","effect":"none"}));
+                op.outcome = "denied";
+                drop(guard);
+                drop(op);
+                return response(socket, 200, json!({"outcome":"denied","effect":"none"}));
+            }
+            // Native write transactions reconcile partial failures as one unit.
+            // A cancel request after this point reports non-interruptibility.
+            guard.active_cancellable = false;
+            guard.record_write(
+                json!({"binding":binding,"outcome":"dispatching","effect":"unknown"}),
+            );
+            drop(guard);
+            let result = pending.write.apply(
+                &pending.scope.scope,
+                &input.change_set_sha256,
+                &input.preview_sha256,
+                now,
+            );
+            let (status, value) = match result {
+                Ok(value) => {
+                    op.outcome = match value["outcome"].as_str() {
+                        Some("committed") => "committed",
+                        Some("failed_no_change") => "failed_no_change",
+                        Some("restored") => "restored",
+                        _ => "uncertain",
+                    };
+                    (200, value)
+                }
+                Err(e) => {
+                    op.outcome = e.code();
+                    (
+                        409,
+                        json!({"error":e.code(),"effect":"unknown","tested":false}),
+                    )
+                }
+            };
+            state
+                .lock()
+                .map_err(|_| ApiError::Io)?
+                .record_write(json!({"binding":binding,"result":value}));
+            drop(op);
+            response(socket, status, value)
+        }
         ("POST", "/v1/code/proposals") => {
             let Ok(input) = serde_json::from_slice::<CodingProposalRequest>(&req.body) else {
                 return error(socket, 400);
@@ -829,6 +1079,11 @@ fn handle(
                 }
             };
             let mut guard = state.lock().map_err(|_| ApiError::Io)?;
+            if op.cancel.is_cancelled() || stop.load(Ordering::Relaxed) {
+                op.outcome = "code.workspace.cancelled";
+                return response(socket, 409, json!({"error":op.outcome}));
+            }
+            guard.pending_change = None;
             guard.workspace_revision += 1;
             guard.workspace = Some(Arc::new(WorkspaceGrant {
                 scope,
@@ -848,6 +1103,7 @@ fn handle(
                 return error(socket, 409);
             }
             guard.workspace = None;
+            guard.pending_change = None;
             guard.workspace_revision += 1;
             guard.record("code.workspace.revoke", "accepted");
             response(
@@ -956,7 +1212,7 @@ fn handle(
             response(
                 socket,
                 200,
-                json!({"version":1,"configured":state.configured.is_some(),"settings_revision":state.revision,"busy":state.active.is_some()}),
+                json!({"version":1,"configured":state.configured.is_some(),"settings_revision":state.revision,"busy":state.active.is_some(),"cancellable":state.active_cancellable}),
             )
         }
         ("GET", "/v1/activity") => {
@@ -1005,6 +1261,7 @@ fn handle(
                 transport,
                 approval,
             }));
+            state.pending_change = None;
             state.revision += 1;
             state.record("settings.choice", "accepted");
             response(socket, 200, json!({"configured":true}))
@@ -1015,14 +1272,17 @@ fn handle(
                 return error(socket, 409);
             }
             state.configured = None;
+            state.pending_change = None;
             state.revision += 1;
             state.record("settings.revoke", "accepted");
             response(socket, 200, json!({"configured":false}))
         }
         ("POST", "/v1/cancel") if req.body.is_empty() => {
             let mut state = state.lock().map_err(|_| ApiError::Io)?;
-            let active = state.active.is_some();
-            if let Some(cancel) = &state.active {
+            let active = state.active.is_some() && state.active_cancellable;
+            if let Some(cancel) = &state.active
+                && state.active_cancellable
+            {
                 cancel.cancel();
             }
             state.record("cancel", "requested");

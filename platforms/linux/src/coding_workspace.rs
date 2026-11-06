@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-//! Explicit, read-only source selection for the local coding API. This uses the
-//! native path adapter; it does not activate production writes or commands.
+//! Explicit source selection for the local coding API. Read consent alone
+//! confers no writes; separately approved changes use the native kernel driver.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -11,6 +11,10 @@ use agentmage_kernel_contracts::{
 };
 
 use crate::{LinuxAuthorizedWorkspace, LinuxPathAdapter, authorize_workspace_root};
+
+#[path = "coding_workspace_write.rs"]
+mod write;
+pub use write::{LinuxCodingPendingWrite, LinuxCodingReplacement, LinuxCodingWriteError};
 
 const MAX_FILES: usize = 16;
 const MAX_BYTES: usize = 128 * 1024;
@@ -48,7 +52,8 @@ pub struct LinuxCodingSource {
 
 /// A continuously held directory and an immutable exact path allowlist. Call
 /// `select` only at a trusted explicit person-choice boundary. This type cannot
-/// write, execute, enumerate other paths or activate a production platform.
+/// execute, enumerate other paths or activate a production platform. Preparing
+/// a shadow edit is inert; applying it requires a separate trusted decision.
 pub struct LinuxCodingReadScope {
     workspace: LinuxAuthorizedWorkspace,
     adapter: LinuxPathAdapter,

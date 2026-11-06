@@ -1463,3 +1463,381 @@ fn workspace_proposal_blocks_scope_or_settings_replacement_until_cancelled() {
         200
     );
 }
+
+fn idle(api: &Api) {
+    let deadline = Instant::now() + Duration::from_secs(2);
+    while document(&api.call("GET", "/v1/status", CLIENT, None).1)["busy"] == true {
+        assert!(Instant::now() < deadline);
+        thread::sleep(Duration::from_millis(2));
+    }
+}
+
+fn change_request(api: &Api, files: &WorkspaceFiles) -> (u64, Value) {
+    let (endpoint, task) = upstream(|mut socket| {
+        incoming(&mut socket);
+        reply(
+            &mut socket,
+            "text/event-stream",
+            &format!("{}{}", chunk(&coding_answer()), end()),
+        );
+    });
+    api.configure(&endpoint);
+    let revision = files.select(api, true);
+    idle(api);
+    let (status, bytes) = api.call(
+        "POST",
+        "/v1/code/workspace/proposals",
+        CLIENT,
+        Some(workspace_proposal(revision)),
+    );
+    assert_eq!(status, 200);
+    let rows = events(&bytes);
+    assert_eq!(rows.last().unwrap()["type"], "proposal");
+    let expected = rows[0]["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| json!({"path":s["path"],"sha256":s["sha256"]}))
+        .collect::<Vec<_>>();
+    let request = json!({"workspace_revision":revision,"paths":["calc.py"],
+        "expected_sources":expected,"task":"Fix add so it adds the numbers", "max_message_bytes":4096,
+        "answer":coding_answer()});
+    task.join().unwrap();
+    idle(api);
+    (revision, request)
+}
+
+fn prepare_change(api: &Api, request: Value) -> Value {
+    let (status, bytes) = api.call("POST", "/v1/code/workspace/changes", CLIENT, Some(request));
+    assert_eq!(status, 200, "{}", String::from_utf8_lossy(&bytes));
+    let value = document(&bytes);
+    assert_eq!(value["applied"], false);
+    assert_eq!(value["tested"], false);
+    assert_eq!(value["isolation_verified"], false);
+    assert!(
+        value["preview"]["complete_diffs"][0]
+            .as_str()
+            .unwrap()
+            .contains("return a + b")
+    );
+    value
+}
+
+fn apply_request(prepared: &Value, approve: bool) -> Value {
+    json!({"workspace_revision":prepared["workspace_revision"],
+        "change_set_sha256":prepared["preview"]["change_set_sha256"],
+        "preview_sha256":prepared["preview"]["preview_sha256"],"approve":approve})
+}
+
+#[test]
+fn checked_model_edit_needs_exact_control_approval_and_retains_receipts_without_replay() {
+    let api = Api::new();
+    let files = WorkspaceFiles::new();
+    let (_, request) = change_request(&api, &files);
+    let prepared = prepare_change(&api, request);
+    assert!(
+        fs::read_to_string(files.0.join("calc.py"))
+            .unwrap()
+            .contains("return a - b")
+    );
+    let selection = document(
+        &api.call("GET", "/v1/code/workspace/changes", CLIENT, None)
+            .1,
+    );
+    assert_eq!(selection["pending"]["preview"], prepared["preview"]);
+    let approval = apply_request(&prepared, true);
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/apply",
+            CLIENT,
+            Some(approval.clone())
+        )
+        .0,
+        403
+    );
+    let mut forged = approval.clone();
+    forged["preview_sha256"] = json!("0".repeat(64));
+    assert_eq!(
+        api.call("POST", "/v1/code/workspace/apply", CONTROL, Some(forged))
+            .0,
+        409
+    );
+    let (status, bytes) = api.call(
+        "POST",
+        "/v1/code/workspace/apply",
+        CONTROL,
+        Some(approval.clone()),
+    );
+    assert_eq!(status, 200, "{}", String::from_utf8_lossy(&bytes));
+    let result = document(&bytes);
+    assert_eq!(result["outcome"], "committed");
+    assert_eq!(result["tested"], false);
+    assert_eq!(
+        result["receipts"].as_array().unwrap().last().unwrap()["status"],
+        "verified"
+    );
+    assert!(
+        fs::read_to_string(files.0.join("calc.py"))
+            .unwrap()
+            .contains("return a + b")
+    );
+    assert_eq!(
+        fs::read_to_string(files.0.join("unselected.py")).unwrap(),
+        "private unselected content"
+    );
+    // The new apply releases the lease and records its result before replying.
+    assert_eq!(
+        api.call("POST", "/v1/code/workspace/apply", CONTROL, Some(approval))
+            .0,
+        428
+    );
+    let history = document(
+        &api.call("GET", "/v1/code/workspace/changes", CLIENT, None)
+            .1,
+    );
+    assert_eq!(history["pending"], Value::Null);
+    assert_eq!(history["records"].as_array().unwrap().len(), 2);
+    assert_eq!(history["records"][0]["outcome"], "dispatching");
+    assert_eq!(history["records"][1]["result"], result);
+    let activity = document(&api.call("GET", "/v1/activity", CLIENT, None).1);
+    for value in [history, activity] {
+        let text = value.to_string();
+        assert!(!text.contains(files.0.to_str().unwrap()));
+        assert!(!text.contains("return a"));
+        assert!(!text.contains(CLIENT));
+        assert!(!text.contains(CONTROL));
+    }
+}
+
+#[test]
+fn denied_superseded_and_revoked_previews_cannot_write() {
+    let api = Api::new();
+    let files = WorkspaceFiles::new();
+    let (_, request) = change_request(&api, &files);
+    let first = prepare_change(&api, request.clone());
+    let second = prepare_change(&api, request.clone());
+    assert_ne!(
+        first["preview"]["preview_sha256"],
+        second["preview"]["preview_sha256"]
+    );
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/apply",
+            CONTROL,
+            Some(apply_request(&first, true))
+        )
+        .0,
+        409
+    );
+    let (status, bytes) = api.call(
+        "POST",
+        "/v1/code/workspace/apply",
+        CONTROL,
+        Some(apply_request(&second, false)),
+    );
+    assert_eq!(status, 200);
+    assert_eq!(document(&bytes)["outcome"], "denied");
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/apply",
+            CONTROL,
+            Some(apply_request(&second, true))
+        )
+        .0,
+        428
+    );
+    let third = prepare_change(&api, request);
+    assert_eq!(api.call("DELETE", "/v1/settings", CONTROL, None).0, 200);
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/apply",
+            CONTROL,
+            Some(apply_request(&third, true))
+        )
+        .0,
+        428
+    );
+    // No model disclosure is needed to prepare an already supplied edit locally.
+    let (_, request) = change_request(&api, &files);
+    let fourth = prepare_change(&api, request);
+    assert_eq!(
+        api.call("DELETE", "/v1/code/workspace", CONTROL, None).0,
+        200
+    );
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/apply",
+            CONTROL,
+            Some(apply_request(&fourth, true))
+        )
+        .0,
+        428
+    );
+    assert!(
+        fs::read_to_string(files.0.join("calc.py"))
+            .unwrap()
+            .contains("return a - b")
+    );
+}
+
+#[test]
+fn stale_model_context_and_later_file_substitution_never_overwrite_person_edits() {
+    let api = Api::new();
+    let files = WorkspaceFiles::new();
+    let (_, request) = change_request(&api, &files);
+    let mut wrong = request.clone();
+    wrong["expected_sources"][0]["sha256"] = json!("0".repeat(64));
+    assert_eq!(
+        api.call("POST", "/v1/code/workspace/changes", CLIENT, Some(wrong))
+            .0,
+        409
+    );
+    fs::write(
+        files.0.join("calc.py"),
+        "# person's prefix\ndef add(a,b):\n    return a - b\n",
+    )
+    .unwrap();
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/changes",
+            CLIENT,
+            Some(request.clone())
+        )
+        .0,
+        409
+    );
+    fs::write(
+        files.0.join("calc.py"),
+        "def add(a, b):\n    return a - b\n",
+    )
+    .unwrap();
+    let prepared = prepare_change(&api, request);
+    fs::remove_file(files.0.join("calc.py")).unwrap();
+    symlink(files.0.join("unselected.py"), files.0.join("calc.py")).unwrap();
+    let (status, bytes) = api.call(
+        "POST",
+        "/v1/code/workspace/apply",
+        CONTROL,
+        Some(apply_request(&prepared, true)),
+    );
+    assert_eq!(status, 409);
+    assert_eq!(document(&bytes)["effect"], "unknown");
+    assert_eq!(
+        fs::read_to_string(files.0.join("unselected.py")).unwrap(),
+        "private unselected content"
+    );
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/apply",
+            CONTROL,
+            Some(apply_request(&prepared, true))
+        )
+        .0,
+        428
+    );
+}
+
+#[test]
+fn change_json_and_edit_injection_refuse_without_replacing_a_valid_preview() {
+    let api = Api::new();
+    let files = WorkspaceFiles::new();
+    let (_, request) = change_request(&api, &files);
+    let prepared = prepare_change(&api, request.clone());
+    for (field, value) in [
+        ("root", json!("/")),
+        ("command", json!("execute")),
+        ("expected_sources", json!([["calc.py", "digest"]])),
+        (
+            "answer",
+            json!(r#"{"edits":[{"path":"../unselected.py","old":"a","new":"b"}]}"#),
+        ),
+        ("answer", json!(r#"{"edits":[],"approve":true}"#)),
+    ] {
+        let mut wrong = request.clone();
+        wrong[field] = value;
+        assert_eq!(
+            api.call("POST", "/v1/code/workspace/changes", CLIENT, Some(wrong))
+                .0,
+            400
+        );
+    }
+    let mut duplicate = request.clone();
+    duplicate["expected_sources"]
+        .as_array_mut()
+        .unwrap()
+        .push(request["expected_sources"][0].clone());
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/changes",
+            CLIENT,
+            Some(duplicate)
+        )
+        .0,
+        409
+    );
+    let mut wrong = apply_request(&prepared, true);
+    wrong["approve"] = json!("true");
+    assert_eq!(
+        api.call("POST", "/v1/code/workspace/apply", CONTROL, Some(wrong))
+            .0,
+        400
+    );
+    assert_eq!(
+        document(
+            &api.call("GET", "/v1/code/workspace/changes", CLIENT, None)
+                .1
+        )["pending"]["preview"],
+        prepared["preview"]
+    );
+    assert!(
+        fs::read_to_string(files.0.join("calc.py"))
+            .unwrap()
+            .contains("return a - b")
+    );
+}
+
+#[test]
+fn concurrent_identical_approvals_dispatch_exactly_one_kernel_transaction() {
+    let api = Api::new();
+    let files = WorkspaceFiles::new();
+    let (_, request) = change_request(&api, &files);
+    let prepared = prepare_change(&api, request);
+    let raw = api.bytes(
+        "POST",
+        "/v1/code/workspace/apply",
+        CONTROL,
+        &serde_json::to_vec(&apply_request(&prepared, true)).unwrap(),
+        "",
+    );
+    let mut a = api.socket();
+    let mut b = api.socket();
+    a.write_all(&raw).unwrap();
+    b.write_all(&raw).unwrap();
+    let mut left = Vec::new();
+    let mut right = Vec::new();
+    a.read_to_end(&mut left).unwrap();
+    b.read_to_end(&mut right).unwrap();
+    let a = split(left);
+    let b = split(right);
+    assert_eq!([a.0, b.0].into_iter().filter(|s| *s == 200).count(), 1);
+    assert!([a.0, b.0].into_iter().all(|s| [200, 409, 428].contains(&s)));
+    let value = if a.0 == 200 {
+        document(&a.1)
+    } else {
+        document(&b.1)
+    };
+    assert_eq!(value["outcome"], "committed");
+    let history = document(
+        &api.call("GET", "/v1/code/workspace/changes", CLIENT, None)
+            .1,
+    );
+    assert_eq!(history["records"].as_array().unwrap().len(), 2);
+}

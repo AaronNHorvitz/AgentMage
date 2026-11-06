@@ -1,0 +1,159 @@
+Commit: b8ed4625ce71bd78a54c6036c348211851cbf907
+Scope: local-coding-workspace-sources
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only on the repository.
+Row: T-303 and T-306, non-closing implementation batch only. Tier: core.
+Base: 3aef4160e8814103a78958b7d7762946c88e8aca. Both SHAs confirmed with `git rev-parse`; HEAD
+equals the reviewed commit; `git status --short` is empty before and after the review.
+
+This verdict covers only the connected workspace source-tool batch. It does not close T-303 or
+T-306. The parent coding workflow, durability, worktree/apply/commit/push and qualification stay
+OPEN. I ran no model, GPU, held-out input, hidden assertion or generated candidate.
+
+## Methods
+
+1. Read IP-POLICY.md, the T-303/T-306 rows in TASKS.md (diff: one T-303 text update, no checkbox
+   change, no new sub-row) and the request.
+2. Read the full diff line by line: `platforms/linux/src/coding_workspace.rs` (new),
+   `platforms/local-api/{Cargo.toml,src/lib.rs,src/main.rs,tests/local_chat_api.rs}`, compared
+   byte for byte with the former `linux-inference` API, binary and test files (git did not record
+   a rename). Also read the inference `Cargo.toml`/`lib.rs`/transport change, workspace
+   `Cargo.toml`/`Cargo.lock`, the new guide and evidence, and the guide edits.
+3. Read the reused native boundary: `authorize_workspace_root`, `LinuxPathAdapter::resolve`,
+   `LinuxHeldObject::{read_exact_bytes,revalidate}` and `WorkspacePath` component validation.
+4. Ran every requested command (below) plus independent black-box probes against the API
+   executable that I built in the review target. All probe material is outside the repository
+   under `/lane/state/tmp/review-b8ed/`.
+
+File SHA-256 at the reviewed commit:
+
+- `platforms/local-api/src/lib.rs` `9756c727bb7ec49eaeeaf48b769019fba1a93dfcd2d6cb0f580f27258923f27f`
+- `platforms/linux/src/coding_workspace.rs` `bf311f7d2e8570d95b093c0855855fb0b011296bf43fa3c5bbd217dad5ac91cf`
+- `platforms/local-api/tests/local_chat_api.rs` `b67647342de81cbbb142edd270a2974a5200a1082a9df86339cec02e60ec7053`
+- `platforms/linux/tests/coding_workspace.rs` `ec05e84fb0e8793bd00bc515d05c245edaa5692ede840c5f9a1b811c6150ae1d`
+
+## Exact commands and results
+
+| Command | Result |
+| --- | --- |
+| `sha256sum target/local-agent-tools/node` | `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c` (expected) |
+| `PATH="$PWD/target/local-agent-tools:$PATH" CARGO_TARGET_DIR=/lane/state/review-target python3 -B scripts/local_agent_fast_gate.py --base 3aef4160… --timeout 3600` | **FAST GATE: FAIL**, as disclosed. Cargo.toml changed, so all 11 packages were selected. diff-check, untracked lint, review lint, markdownlint (5 files), fmt, Clippy all-targets `-D warnings`: exit 0. cargo test exit 101: **3,006 passed / 72 failed / 78 ignored / 0 measured / 0 filtered** over 69 result lines. My 72 failure identities equal the committed `docs/evidence/t301-baseline-failures-2026-10-25.md` set and the builder's `t303-workspace-fast-v2.log` set exactly; nothing added or missing. None is in a crate this batch changed. Pre-existing T-301.1 debt, not an allowlist. |
+| `… cargo test --locked --offline -p agentmage-platform-linux --test coding_workspace` (build slot) | ok. 6 passed; 0 failed; 0 ignored; 0 filtered |
+| `… cargo test --locked --offline -p agentmage-local-api --test local_chat_api` (build slot) | ok. 27 passed; 0 failed; 0 ignored; 0 filtered (4.27 s) |
+| `… cargo test --locked --offline -p agentmage-platform-linux-inference --lib` (build slot) | ok. 175 passed; 0 failed; 4 ignored; 0 filtered. `docker_linux_observer::tests::current_process_is_held_and_revalidated` also passes inside my full gate. |
+| `python3 -B /lane/state/tmp/t303-workspace/audit-publication.py` | exit 0. Totals 3006/72/78/0/0, failures equal prior gate and baseline, third-party lock entries unchanged, review bytes preserved, all summary/manifest/events/request hashes match, frozen eval/strict-proposal inputs unchanged, added-text privacy pass. The rewritten receipt is byte-identical to the builder's copy. |
+| `bash /tools/build-slot python3 -B …/check-development-context-v3.py /lane/state/tmp/review-b8ed4625ce71-workspace-context` (directory absent beforehand) | exit 0: 30 tasks, 30 matching contexts, synthetic upstream, 3.17 s, binary `c1dd25cf…` (the builder's current `target/debug` artifact) |
+| Same driver, with only the binary path changed to my own build `/lane/state/review-target/debug/agentmage-local-api` (`c3cc4cb8…`) | exit 0: 30/30 exact contexts, 2.80 s |
+| `git diff --check 3aef4160… b8ed4625…` | exit 0, no output |
+| `git status --short` | empty |
+| `sha256sum` of `summary.json` and `retained-manifest.json` | `d2fe8fd3…49fe` and `c9895861…7abc`, as published; the audit re-checked all 184 manifest entries |
+| `cmp docs/reviews/3aef4160e881-…txt /lane/reviews/3aef4160e881-….md` | identical, SHA-256 `6799480f…699b` |
+
+Logs: `/lane/state/tmp/review-b8ed/{fast,focused*,audit,context,context-own,probe1,probe2}.log`.
+
+## Independent probes (my build, synthetic upstream, real sockets and filesystem)
+
+`probe.py`/`probe2.py` (84 checks each; probe2 differs only by a balanced swap timing). Final run:
+**84/84 PASS**. Run 1 had 83/84: zero leaks, but the swap race produced only refusals (1,869 × 400),
+which failed my own liveness condition. Probe2 widened the in-scope window so that both outcomes
+occurred. Results:
+
+- **Authority:** client token PUT/DELETE workspace and PUT settings give 403. Model consent without a
+  chosen endpoint gives 428. A read-only grant cannot disclose (403, zero upstream connections).
+  Settings revoke-and-rechoose of the same endpoint invalidates disclosure (403, zero upstream
+  connections). The proposal body refuses `files`, `root` and `endpoint` overrides (400).
+- **Path substitutions at selection:** all refused with 400: `../outside/secret.py`,
+  `sub/../calc.py`, `./calc.py`, `/etc/passwd`, `sub//mod.py`, `sub/`, empty, `.git/config`,
+  `.GIT/HEAD`, `sub/.Git/x`, trailing dot/space, `%`-encoding, non-ASCII, NUL, backslash, colon,
+  wildcard, 257-byte paths, case collisions, 17 files, relative root, `..` in root, symlink root
+  and symlink ancestor. Inside the root, FIFO (no hang), hardlink to an outside file, symlinked file,
+  symlinked directory component, directory, empty, NUL, invalid UTF-8 and 128 KiB+1 are refused.
+  `/dev/zero` and `/proc/self/{environ,cmdline}` are refused. No refusal body contains outside
+  bytes or the absolute root.
+- **Substitution after selection:** a directory component replaced by a symlink to outside is
+  refused, and a two-file batch is refused whole with no prefix. Hardlink and FIFO substitutions are
+  refused promptly. Renaming the root and planting a replacement at the old pathname keeps reads on
+  the held original directory, as the guide documents. In a user and mount namespace, a bind mount
+  over a selected directory after selection is refused on read and on reselection (400, no
+  outside bytes).
+- **Concurrent races:** about 4 s of continuous rename/symlink swaps of a selected parent directory
+  during API reads gave mixed 200/400 and never returned outside bytes. A revision race ran two
+  reader threads against a control thread alternating grants between two roots plus periodic
+  revokes. Every 200 read returned the content of the root granted at its revision, and no read
+  succeeded at an unknown revision. Statically, grant or settings replacement is refused while any
+  operation is active. The grant and revision are checked under the state lock after the lease is
+  taken, and settings PUT/DELETE and workspace DELETE check `active` under the same lock. No
+  check-then-use window remains.
+- **JSON refusals:** string/integer booleans, string `paths`, positional arrays, `null`, duplicate
+  keys, unknown fields, `2^64` and negative revisions all give 400. No grant exists after any refusal.
+- **Model-data separation and injected instructions:** a selected file contained instructions to
+  widen the root and edit an outside file, and the stub model "obeyed" them with edits to
+  `../outside/secret.py`, unselected `unselected.py` and the selected-but-not-requested
+  `sub/mod.py`. Each ended in a terminal `error`, never a proposal. A valid edit produced
+  `applied:false, tested:false, authority:"proposal-only"` with disk unchanged. Upstream bodies
+  never contained the absolute root, unselected or outside content, or unrequested selected files.
+- **Logging and secrets:** activity and stderr contain no root, source, outside bytes or either token.
+- **Inference separation:** the lock closure of `agentmage-platform-linux-inference` is now only
+  `agentmage-kernel-contracts`. Linux and repository-map dependencies sit only in
+  `agentmage-local-api`. The observer test, its bound, scripts, tests and baseline are unchanged in
+  the diff. The builder's 194,350,920- and 35,797,600-byte figures match real artifacts
+  `…linux_inference-d117042da8f9cdfb` and `…-5fc27fd4d1c7ad24` in the builder's ignored target
+  directory, and those exact executable IDs appear in the retained failing and separated logs. My
+  review target uses line-table-only debug info, so my sizes differ; the test passes.
+- **Legacy guards:** apart from the import line and two added regression hunks, the 20 prior API
+  tests are byte-identical, and all pass.
+
+## Evaluation integrity, claims and hygiene
+
+- No change under `scripts/`, `tests/`, eval, model profiles, supply chain, or
+  `capabilities/repository-map/src/coding_proposal.rs` (audit plus diff stat). The context driver
+  loads only `suite.development_tasks()` and the retained historical development contexts. No
+  held-out or hidden-test content is touched. No new score is claimed, and the scoreboard is
+  historical.
+- Every evidence number I checked traces to a run: test counts, gate totals, failure identities,
+  the 30/30 context match, artifact hashes and executable sizes.
+- No third-party package, version or licence change. The new crate uses the workspace Apache-2.0
+  licence. No other agent product is named in added files.
+- Added text has no private host path, username, hostname, credential or personal data. `/lane/...`
+  sandbox paths occur only inside the retained prior review, as in earlier committed reviews.
+- Delivery: no checkbox closed, no sub-row added. The batch ends in a runnable, measured API surface.
+
+## Findings
+
+No critical, high or medium finding.
+
+**L1 (low) — selection ignores a concurrent cancellation.** `platforms/local-api/src/lib.rs:824-845`.
+`PUT /v1/code/workspace` installs the grant after `LinuxCodingReadScope::select` without checking
+`op.cancel.is_cancelled()`. A `/v1/cancel` that answered `cancellation_requested: true` during
+selection still leaves a live grant and an `accepted` record. The read and search routes do check
+(`:893`). The window is small because selection is bounded and non-blocking, and the control client
+still receives a 200. Fix: check cancellation before taking the state lock. If set, return
+`409 code.workspace.cancelled` and keep the previous grant. Add a regression test.
+
+**L2 (low) — lease released only after the terminal response is written.** `Operation::drop`
+(`lib.rs:577`) runs after `response`/`event` returns, so a strictly sequential client can receive
+its answer and then get a spurious `409 api.busy` on the next call. The builder's first driver
+failed this way. The guide now tells clients to poll `/v1/status`, but every API consumer
+(the future MCP/CLI) inherits the race. Fix: record the outcome and clear `active` before writing
+the final response, or release the lease explicitly before the last write.
+
+**L3 (low) — the snapshot route now takes the lease before validating input.**
+`lib.rs:792` versus `coding_proposal` (`:652`). Malformed `/v1/code/proposals` requests now take the
+single-operation lease, appear in activity, and return 409 instead of 400 while another operation
+is active. Previously they were refused before any state change. Content stays private and no
+authority changes. Fix: run `prepare_coding_proposal`, the token check and the encoding check
+before `begin`, or document the change.
+
+Prior lows: 3aef L1 is addressed (answer-cap, terminal-outcome and settings-refusal regressions
+exist and pass). L2 (campaign grade/candidate binding) and L3 (worktree write revalidation) stay
+backlog, as stated.
+
+## Per-row result
+
+- T-303 (non-closing implementation batch: approved workspace read/search/disclosure into strict
+  proposals): **PASS** for this batch at the exact commit. The row stays OPEN.
+- T-306 (same batch; no worktree, write, test, apply, commit or push in scope): **PASS** for this
+  batch only. The row stays OPEN.
+- Full fast gate remains FAIL on exactly the 72 baseline identities; this is not a green gate.
+
+Verdict: PASS

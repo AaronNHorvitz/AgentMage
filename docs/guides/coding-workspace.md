@@ -2,8 +2,10 @@
 
 The [local API](local-chat-api.md) can read and search explicitly selected source
 files, then feed those files to the existing [proposal API](coding-proposals.md).
-It uses the native Linux path adapter. It adds no writes, commands, worktree,
-test execution, retries, commit or push authority. T-303 and T-306 remain open.
+It uses the native Linux path adapter. Source consent itself authorizes reads
+only. [Reviewed workspace edits](coding-writes.md) provide a separate exact
+preview/approval path for writes. Commands, worktree creation, test execution,
+retries, commit and push remain open, along with parent T-303 and T-306.
 
 ## Selection and consent
 

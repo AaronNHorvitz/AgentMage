@@ -25,7 +25,10 @@ mod strict_local;
 mod write_root_inventory;
 mod write_transaction;
 
-pub use coding_workspace::{LinuxCodingReadError, LinuxCodingReadScope, LinuxCodingSource};
+pub use coding_workspace::{
+    LinuxCodingPendingWrite, LinuxCodingReadError, LinuxCodingReadScope, LinuxCodingReplacement,
+    LinuxCodingSource, LinuxCodingWriteError,
+};
 pub use command_runner::{
     LinuxBoundedCommandExecutor, LinuxCommandManifest, LinuxCommandRunnerError,
     LinuxCommandRunnerErrorKind,
