@@ -3,8 +3,9 @@
 T-302.3 adds the `local_chat_api` library and `agentmage-local-api` executable
 to the Linux inference crate. This is a local API other programs can use. It
 composes the [approved transport](local-chat-transport.md) without activating
-the older qualification-bound runtime. It serves text conversations and model
-listing; tools, durable runs, MCP and a task CLI remain later mission work.
+the older qualification-bound runtime. It serves text conversations, model
+listing and effect-free [snapshot coding proposals](coding-proposals.md);
+tools, durable runs, MCP and a task CLI remain later mission work.
 There is no desktop UI here. Synthetic socket tests do not qualify a model.
 
 ## Start and authentication

@@ -20,6 +20,10 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use zeroize::Zeroizing;
 
+use agentmage_capability_repository_map::coding_proposal::{
+    CODING_PROPOSAL_INSTRUCTION, CodingSource, check_coding_proposal, prepare_coding_proposal,
+};
+
 use crate::local_chat::{ChatFinish, ChatMessage, ChatRole, LocalChatEndpoint, encode_chat};
 use crate::local_chat_transport::{
     BearerKey, ChatCancellation, LocalChatApproval, LocalChatTransport, LocalProbeApproval,
@@ -492,6 +496,16 @@ struct Chat {
     max_tokens: u32,
 }
 
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct CodingProposalRequest {
+    model: String,
+    task: String,
+    files: Vec<CodingSource>,
+    max_message_bytes: usize,
+    max_tokens: u32,
+}
+
 struct Operation<'a> {
     state: &'a Mutex<State>,
     cancel: ChatCancellation,
@@ -550,6 +564,115 @@ fn handle(
         return error(socket, 403);
     }
     match route {
+        ("POST", "/v1/code/proposals") => {
+            let Ok(input) = serde_json::from_slice::<CodingProposalRequest>(&req.body) else {
+                return error(socket, 400);
+            };
+            // Typed named structs can admit positional arrays. Require objects
+            // at both request and source levels after bounded typed parsing.
+            let Ok(shape) = serde_json::from_slice::<Value>(&req.body) else {
+                return error(socket, 400);
+            };
+            if !shape.is_object()
+                || !shape["files"]
+                    .as_array()
+                    .is_some_and(|files| files.iter().all(Value::is_object))
+            {
+                return error(socket, 400);
+            }
+            // This is an effect-free proposal over caller-supplied snapshots.
+            // Source paths are data, never resolved against the service host.
+            let context =
+                match prepare_coding_proposal(&input.task, &input.files, input.max_message_bytes) {
+                    Ok(context) => context,
+                    Err(e) => return response(socket, 400, json!({"error":e.code()})),
+                };
+            let messages = [
+                ChatMessage {
+                    role: ChatRole::System,
+                    content: CODING_PROPOSAL_INSTRUCTION,
+                },
+                ChatMessage {
+                    role: ChatRole::User,
+                    content: context.user_message(),
+                },
+            ];
+            if !(1..=4096).contains(&input.max_tokens)
+                || encode_chat(&input.model, &messages, input.max_tokens).is_err()
+            {
+                return error(socket, 400);
+            }
+            let (mut op, config) = match begin(state, stop, "code.proposal") {
+                Ok(operation) => operation,
+                Err(status) => return error(socket, status),
+            };
+            let Some(config) = config else {
+                return error(socket, 428);
+            };
+            headers(socket, 200, "application/x-ndjson", None)?;
+            event(
+                socket,
+                json!({"type":"context", "version":1,
+                "message_bytes":context.message_bytes(), "files":context.outlines(),
+                "excerpts":context.excerpts(), "authority":"proposal-only"}),
+            )?;
+            let mut answer = Zeroizing::new(String::new());
+            let mut writable = true;
+            let mut oversized = false;
+            let result = config.transport.chat(
+                &config.approval,
+                &input.model,
+                &messages,
+                input.max_tokens,
+                &op.cancel,
+                |text| {
+                    if text.len() > (64 * 1024_usize).saturating_sub(answer.len()) {
+                        oversized = true;
+                        op.cancel.cancel();
+                    } else if !oversized {
+                        answer.push_str(text);
+                        if writable && event(socket, json!({"type":"text","text":text})).is_err() {
+                            writable = false;
+                            op.cancel.cancel();
+                        }
+                    }
+                },
+            );
+            if !writable {
+                op.outcome = "api.client-disconnected";
+                return Err(ApiError::Io);
+            }
+            let refused = if oversized {
+                Some("code.proposal.limit")
+            } else {
+                match result {
+                    Ok(ChatFinish::Stop) => None,
+                    Ok(ChatFinish::Length) => Some("code.proposal.incomplete"),
+                    Err(e) => Some(e.code()),
+                }
+            };
+            if let Some(code) = refused {
+                op.outcome = code;
+                return event(socket, json!({"type":"error","code":code,"partial":true}));
+            }
+            match check_coding_proposal(&context, &input.files, &answer) {
+                Ok(changes) => {
+                    op.outcome = "proposed";
+                    event(
+                        socket,
+                        json!({"type":"proposal","version":1,"changes":changes,
+                        "applied":false,"tested":false,"authority":"proposal-only"}),
+                    )
+                }
+                Err(e) => {
+                    op.outcome = e.code();
+                    event(
+                        socket,
+                        json!({"type":"error","code":e.code(),"partial":true}),
+                    )
+                }
+            }
+        }
         ("GET", "/v1/status") => {
             let state = state.lock().map_err(|_| ApiError::Io)?;
             response(

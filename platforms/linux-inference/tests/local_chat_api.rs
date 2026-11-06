@@ -192,6 +192,235 @@ fn events(body: &[u8]) -> Vec<Value> {
         .collect()
 }
 
+fn coding_request() -> Value {
+    json!({"model":"fixture", "task":"Fix add so it adds the numbers",
+        "files":[{"path":"calc.py","content":"def add(a, b):\n    return a - b\n"}],
+        "max_message_bytes":4096,"max_tokens":512})
+}
+
+fn coding_answer() -> String {
+    json!({"edits":[{"path":"calc.py","old":"return a - b","new":"return a + b"}]}).to_string()
+}
+
+#[test]
+fn coding_proposal_streams_selected_context_and_returns_only_an_unapplied_change() {
+    let api = Api::new();
+    let (endpoint, task) = upstream(|mut socket| {
+        let raw = incoming(&mut socket);
+        let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
+        let request: Value = serde_json::from_slice(&raw[start..]).unwrap();
+        assert_eq!(request["max_tokens"], 512);
+        assert!(request.get("tools").is_none());
+        let context: Value =
+            serde_json::from_str(request["messages"][1]["content"].as_str().unwrap()).unwrap();
+        assert_eq!(context["files"][0]["path"], "calc.py");
+        assert!(
+            context["excerpts"][0]["text"]
+                .as_str()
+                .unwrap()
+                .contains("return a - b")
+        );
+        let answer = coding_answer();
+        reply(
+            &mut socket,
+            "text/event-stream",
+            &format!("{}{}{}", chunk(&answer[..10]), chunk(&answer[10..]), end()),
+        );
+    });
+    api.configure(&endpoint);
+    let (status, body) = api.call("POST", "/v1/code/proposals", CLIENT, Some(coding_request()));
+    assert_eq!(status, 200);
+    let events = events(&body);
+    assert_eq!(events[0]["type"], "context");
+    assert_eq!(events[0]["authority"], "proposal-only");
+    assert!(events[0]["message_bytes"].as_u64().unwrap() <= 4096);
+    assert_eq!(events[1]["type"], "text");
+    let proposal = events.last().unwrap();
+    assert_eq!(proposal["type"], "proposal");
+    assert_eq!(proposal["applied"], false);
+    assert_eq!(proposal["tested"], false);
+    assert_eq!(proposal["changes"][0]["path"], "calc.py");
+    assert_eq!(
+        proposal["changes"][0]["content"],
+        "def add(a, b):\n    return a + b\n"
+    );
+    assert_ne!(
+        proposal["changes"][0]["before_sha256"],
+        proposal["changes"][0]["after_sha256"]
+    );
+    task.join().unwrap();
+    let activity: Value =
+        serde_json::from_slice(&api.call("GET", "/v1/activity", CLIENT, None).1).unwrap();
+    assert_eq!(
+        activity["events"].as_array().unwrap().last().unwrap()["outcome"],
+        "proposed"
+    );
+    assert!(
+        !String::from_utf8_lossy(&api.call("GET", "/v1/activity", CLIENT, None).1)
+            .contains("return a")
+    );
+}
+
+#[test]
+fn coding_requests_need_auth_endpoint_choice_and_valid_snapshot_before_inference() {
+    let api = Api::new();
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/proposals",
+            "wrong",
+            Some(coding_request())
+        )
+        .0,
+        401
+    );
+    assert_eq!(
+        api.call("POST", "/v1/code/proposals", CLIENT, Some(coding_request()))
+            .0,
+        428
+    );
+    // A listening unused endpoint proves invalid proposals never start inference.
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    api.configure(&format!("http://{}/v1", listener.local_addr().unwrap()));
+    for (field, value) in [
+        ("max_message_bytes", json!(1)),
+        ("max_tokens", json!(4097)),
+        ("task", json!("")),
+        ("files", json!([{"path":"../outside","content":"bytes"}])),
+        ("command", json!("run")),
+        ("endpoint", json!("http://127.0.0.1:1/v1")),
+    ] {
+        let mut request = coding_request();
+        request[field] = value;
+        assert_eq!(
+            api.call("POST", "/v1/code/proposals", CLIENT, Some(request))
+                .0,
+            400
+        );
+    }
+    let raw = api.bytes(
+        "POST",
+        "/v1/code/proposals",
+        CLIENT,
+        b"{\"model\":\"fixture\",\"model\":\"other\"}",
+        "",
+    );
+    assert_eq!(split(api.raw(&raw)).0, 400);
+    let mut positional_file = coding_request();
+    positional_file["files"] = json!([["calc.py", "bytes"]]);
+    assert_eq!(
+        api.call("POST", "/v1/code/proposals", CLIENT, Some(positional_file))
+            .0,
+        400
+    );
+    let positional_request =
+        json!(["fixture", "task", [{"path":"calc.py","content":"bytes"}], 4096, 512]);
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/proposals",
+            CLIENT,
+            Some(positional_request)
+        )
+        .0,
+        400
+    );
+    assert!(matches!(listener.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock));
+}
+
+#[test]
+fn coding_nested_ambiguous_and_out_of_scope_model_edits_never_produce_a_proposal() {
+    let deep = format!("{{\"edits\":{}0{}}}", "[".repeat(2000), "]".repeat(2000));
+    for answer in [
+        deep,
+        "{\"edits\":[],\"edits\":[]}".into(),
+        json!({"edits":[{"path":"../outside","old":"return a - b","new":"run commands"}]})
+            .to_string(),
+        json!({"edits":[{"path":"calc.py","old":"return a - b","new":"ok","command":"run"}]})
+            .to_string(),
+    ] {
+        let api = Api::new();
+        let (endpoint, task) = upstream(move |mut s| {
+            incoming(&mut s);
+            reply(
+                &mut s,
+                "text/event-stream",
+                &format!("{}{}", chunk(&answer), end()),
+            );
+        });
+        api.configure(&endpoint);
+        let (status, body) = api.call("POST", "/v1/code/proposals", CLIENT, Some(coding_request()));
+        assert_eq!(status, 200);
+        let events = events(&body);
+        assert!(!events.iter().any(|e| e["type"] == "proposal"));
+        assert_eq!(events.last().unwrap()["type"], "error");
+        task.join().unwrap();
+    }
+}
+
+#[test]
+fn coding_truncated_or_incomplete_generations_never_become_valid_edits() {
+    let length_end = end().replace("\"stop\"", "\"length\"");
+    for suffix in [length_end, String::new(), format!("{}late", end())] {
+        let api = Api::new();
+        let (endpoint, task) = upstream(move |mut s| {
+            incoming(&mut s);
+            reply(
+                &mut s,
+                "text/event-stream",
+                &format!("{}{}", chunk(&coding_answer()), suffix),
+            );
+        });
+        api.configure(&endpoint);
+        let events = events(
+            &api.call("POST", "/v1/code/proposals", CLIENT, Some(coding_request()))
+                .1,
+        );
+        assert!(!events.iter().any(|e| e["type"] == "proposal"));
+        assert_eq!(events.last().unwrap()["type"], "error");
+        task.join().unwrap();
+    }
+}
+
+#[test]
+fn coding_cancellation_remains_available_and_inert() {
+    let api = Api::new();
+    let (tx, rx) = mpsc::channel();
+    let (endpoint, task) = upstream(move |mut s| {
+        incoming(&mut s);
+        s.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\n\r\n")
+            .unwrap();
+        tx.send(()).unwrap();
+        let mut byte = [0];
+        assert_eq!(s.read(&mut byte).unwrap(), 0);
+    });
+    api.configure(&endpoint);
+    let mut socket = api.socket();
+    socket
+        .write_all(&api.bytes(
+            "POST",
+            "/v1/code/proposals",
+            CLIENT,
+            &serde_json::to_vec(&coding_request()).unwrap(),
+            "",
+        ))
+        .unwrap();
+    rx.recv_timeout(Duration::from_secs(3)).unwrap();
+    assert_eq!(
+        api.call("POST", "/v1/code/proposals", CLIENT, Some(coding_request()))
+            .0,
+        409
+    );
+    assert_eq!(api.call("POST", "/v1/cancel", CLIENT, None).0, 200);
+    let mut bytes = Vec::new();
+    socket.read_to_end(&mut bytes).unwrap();
+    let events = events(&split(bytes).1);
+    assert_eq!(events.last().unwrap()["code"], "chat.transport.cancelled");
+    assert!(!events.iter().any(|e| e["type"] == "proposal"));
+    task.join().unwrap();
+}
+
 #[test]
 fn authentication_origins_host_and_authority_fail_closed() {
     let api = Api::new();

@@ -139,6 +139,7 @@ dependencies = [
 name = "agentmage-platform-linux-inference"
 version = "0.0.0"
 dependencies = [
+ "agentmage-capability-repository-map",
  "agentmage-kernel-contracts",
  "rustix",
  "serde",

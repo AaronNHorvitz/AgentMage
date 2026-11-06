@@ -5,6 +5,8 @@
 mod cache;
 mod change_intent;
 mod change_plan;
+/// Effect-free bounded coding context and strict model-edit proposals.
+pub mod coding_proposal;
 mod deep_analysis;
 mod deep_views;
 mod grammar;
