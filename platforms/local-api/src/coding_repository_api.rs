@@ -152,8 +152,9 @@ pub(super) fn handle_repository(
         Ok(op) => op,
         Err(status) => return error(socket, status),
     };
-    // Native manifest collection and worktree transactions are bounded but not
-    // interruptible through the chat token. Never acknowledge a fake cancellation.
+    // Collection, worktree creation and writes remain bounded non-interruptible
+    // steps. Exact command decisions arm the native token below; never report
+    // cancellation support before a matching command handle is published.
     let repository = {
         let mut state = state.lock().map_err(|_| ApiError::Io)?;
         if op.cancel.is_cancelled() || stop.load(Ordering::Relaxed) {
@@ -253,7 +254,19 @@ pub(super) fn handle_repository(
             if stop.load(Ordering::Relaxed) {
                 return error(socket, 503);
             }
-            repository.decide_command(&input.preview_sha256, input.approve, clock_ms()?)
+            let control = {
+                let mut guard = state.lock().map_err(|_| ApiError::Io)?;
+                arm_command_cancellation(&mut guard, stop, &op.cancel, &repository, &input, false)
+            };
+            match control {
+                Ok(control) => repository.decide_command_with_cancellation(
+                    &input.preview_sha256,
+                    input.approve,
+                    clock_ms()?,
+                    control.as_ref(),
+                ),
+                Err(e) => Err(e),
+            }
         }
         ("GET", "/v1/code/repository/validation") => repository.inspect_validation(),
         ("POST", "/v1/code/repository/validation/prepare") => {
@@ -282,7 +295,19 @@ pub(super) fn handle_repository(
             if stop.load(Ordering::Relaxed) {
                 return error(socket, 503);
             }
-            repository.decide_validation(&input.preview_sha256, input.approve, clock_ms()?)
+            let control = {
+                let mut guard = state.lock().map_err(|_| ApiError::Io)?;
+                arm_command_cancellation(&mut guard, stop, &op.cancel, &repository, &input, true)
+            };
+            match control {
+                Ok(control) => repository.decide_validation_with_cancellation(
+                    &input.preview_sha256,
+                    input.approve,
+                    clock_ms()?,
+                    control.as_ref(),
+                ),
+                Err(e) => Err(e),
+            }
         }
         _ => unreachable!(),
     };
@@ -303,6 +328,41 @@ pub(super) fn handle_repository(
     drop(repository);
     drop(op);
     response(socket, status, value)
+}
+
+fn arm_command_cancellation(
+    state: &mut State,
+    stop: &AtomicBool,
+    operation: &ChatCancellation,
+    repository: &LinuxCodingRepository,
+    input: &Decide,
+    validation: bool,
+) -> Result<
+    Option<LinuxCodingCommandCancellation>,
+    agentmage_platform_linux::LinuxCodingRepositoryError,
+> {
+    // A cancellation received while this route was still interruptible must not
+    // be lost at handoff. No state mutex is held during native execution.
+    let control = input
+        .approve
+        .then(|| {
+            if validation {
+                repository.validation_cancellation(&input.preview_sha256)
+            } else {
+                repository.command_cancellation(&input.preview_sha256)
+            }
+        })
+        .transpose()?;
+    if let Some(control) = &control {
+        if stop.load(Ordering::Relaxed) {
+            control.shutdown()?;
+        } else if operation.is_cancelled() {
+            control.cancel()?;
+        }
+        state.active_command = Some(control.clone());
+        state.active_cancellable = true;
+    }
+    Ok(control)
 }
 
 #[cfg(test)]

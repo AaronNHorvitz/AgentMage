@@ -81,7 +81,7 @@ upgrade, redirects or retries.
 | POST `/v1/code/workspace/read`, `/search`, `/proposals` | Client or control | Read/search selected sources or propose edits with separate model-disclosure consent; no writes |
 | GET/POST `/v1/code/workspace/changes` | Client or control | Inspect retained previews/receipts or prepare an inert exact diff |
 | POST `/v1/code/workspace/apply` | Control only | Consume an exact approval and apply through the kernel/native write transaction; see [limits and recovery](coding-writes.md) |
-| POST `/v1/cancel` | Client or control | Empty body; requests cancellation of the single active upstream operation |
+| POST `/v1/cancel` | Client or control | Empty body; requests cancellation of the single active cancellable operation |
 
 After the person chooses the endpoint for conversations, trusted settings send:
 
@@ -177,8 +177,11 @@ the model is silent may be noticed only when it next writes or hits its deadline
 Slow requests release their worker on timeout. Saturation can delay admission;
 there is no availability guarantee against a hostile local process. Incoming
 reads are interrupted by service shutdown. Orderly library shutdown cancels the
-active operation and joins the workers. The standalone process can be stopped
-by the operating system and starts no child process or detached worker.
+active cancellable operation and joins the workers. The chat-only `serve`
+process starts no child process or detached worker. The development
+`serve-coding` surface can start separately approved confined native commands;
+[command cancellation and recovery](coding-commands.md#sandbox-and-results)
+describe its receipt, cleanup and non-interruptible-step boundaries.
 
 Activity records endpoint choices/revocations, upstream operation start/result
 and cancellation requests with an increasing sequence and settings revision.

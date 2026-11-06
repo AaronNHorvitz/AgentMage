@@ -107,6 +107,8 @@ runtime coordinator has no automatic model retry. The additive
 `automatic_model_retry` remains false. Native trust checks still refuse positive
 worktree/command execution in this lane. Component and synthetic socket/terminal
 tests are not an executable native coding campaign or a fresh model score.
+[Native command cancellation](coding-commands.md#sandbox-and-results) is now
+connected separately; it does not make a cancelled validation repairable.
 Automatic repair through the existing host/kernel coordinator, durable coding
 runs, cancellation during native effects, compile-failure and unsupported-runner
 handling, original-repository apply, approved commit/push, MCP and measured

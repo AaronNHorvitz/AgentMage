@@ -151,6 +151,14 @@ output or lost in-process completion leaves the series blocked, with no retry
 authorization. Canonical authority receipts remain inspectable. A failed reply
 must not be automatically resent.
 
+The shared [command cancellation](coding-commands.md#sandbox-and-results) also
+applies to validations. After dispatch admission, cancellation before native launch records a cancelled
+attempt without calling the executor; cancellation during execution waits for
+verified descendant cleanup. Dispatch still spends an attempt, no cancelled
+receipt passes, and it cannot select failed-test repair or rerun eligibility.
+Unknown cleanup leaves canonical uncertainty and no fabricated command result.
+Cancellation does not release the API lease or restore a consumed approval.
+
 The budget and normalized last receipt are process-only. A new successfully
 created worktree starts a new series. Restart loses ownership, previews, results
 and budgets; it cannot restore command authority from receipts. These limits

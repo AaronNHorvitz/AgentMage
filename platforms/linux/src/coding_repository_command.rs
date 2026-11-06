@@ -10,6 +10,59 @@ use agentmage_kernel_engine::command_runner::{
 };
 
 const COMMAND_TOOL: &str = "local-coding-command";
+
+/// Cancellation of one exact process-held command preview. Clones share only
+/// this attempt's signal; they cannot approve, resume or cancel a later command.
+#[derive(Clone)]
+pub struct LinuxCodingCommandCancellation {
+    preview_sha256: String,
+    attempt_id: String,
+    token: CancellationToken,
+}
+
+impl LinuxCodingCommandCancellation {
+    fn for_pending(pending: &PendingCommand) -> Self {
+        let attempt_id = pending.prepared.preview().command_attempt_id.clone();
+        Self {
+            preview_sha256: pending.hash.clone(),
+            token: CancellationToken::root(
+                BoundaryKind::Shell,
+                TaskId::from_raw(&attempt_id),
+                CorrelationId::from_raw(&attempt_id),
+            ),
+            attempt_id,
+        }
+    }
+
+    /// Requests cancellation, idempotently. A request is not evidence that a
+    /// child stopped: only the eventual command and authority receipts say that.
+    pub fn cancel(&self) -> Result<()> {
+        self.request(agentmage_kernel_contracts::CancellationReason::UserRequested)
+    }
+
+    /// Requests orderly product-shutdown cancellation of this exact attempt.
+    /// The first signal remains authoritative if the person already cancelled.
+    pub fn shutdown(&self) -> Result<()> {
+        self.request(agentmage_kernel_contracts::CancellationReason::Shutdown)
+    }
+
+    fn request(&self, reason: agentmage_kernel_contracts::CancellationReason) -> Result<()> {
+        self.token
+            .cancel(agentmage_kernel_contracts::CancellationSignal {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                cancellation_id: agentmage_kernel_contracts::CancellationId::from_raw(format!(
+                    "cancel-{}",
+                    self.attempt_id
+                )),
+                correlation_id: CorrelationId::from_raw(&self.attempt_id),
+                task_id: TaskId::from_raw(&self.attempt_id),
+                reason,
+                requested_by: BoundaryKind::Shell,
+            })
+            .map(|_| ())
+            .map_err(|_| err("code.command.cancellation"))
+    }
+}
 // Kept at this composition boundary: the registered tool validates the exact
 // canonical request bytes, rather than accepting caller-supplied command fields.
 const COMMAND_REQUEST_SCHEMA: &str = r#"{
@@ -34,6 +87,39 @@ pub(super) struct PendingCommand {
 }
 
 impl LinuxCodingRepository {
+    /// Obtains an inert cancellation handle for the exact pending command or
+    /// validation. This grants no execution authority and consumes no approval.
+    /// Pass it to the matching `decide_*_with_cancellation` method to connect it.
+    pub fn command_cancellation(&self, digest: &str) -> Result<LinuxCodingCommandCancellation> {
+        let pending = self
+            .command
+            .as_ref()
+            .ok_or(err("code.command.choice-required"))?;
+        if pending.hash != digest {
+            return Err(err("code.command.stale"));
+        }
+        Ok(LinuxCodingCommandCancellation::for_pending(pending))
+    }
+
+    pub(super) fn verify_command_cancellation(
+        &self,
+        digest: &str,
+        cancellation: Option<&LinuxCodingCommandCancellation>,
+    ) -> Result<()> {
+        if let Some(cancellation) = cancellation {
+            let pending = self
+                .command
+                .as_ref()
+                .ok_or(err("code.command.choice-required"))?;
+            if cancellation.preview_sha256 != digest
+                || pending.hash != digest
+                || cancellation.attempt_id != pending.prepared.preview().command_attempt_id
+            {
+                return Err(err("code.command.cancellation-stale"));
+            }
+        }
+        Ok(())
+    }
     /// Inspects process-only command state. Canonical authority receipts are
     /// available through `inspect`; output and command previews are not durable.
     pub fn inspect_command(&self) -> Result<Value> {
@@ -67,6 +153,18 @@ impl LinuxCodingRepository {
     /// command success, never a parsed test result or repository correctness.
     /// Any uncertain dispatch requires manual inspection, never automatic retry.
     pub fn decide_command(&mut self, digest: &str, approve: bool, now: u64) -> Result<Value> {
+        self.decide_command_with_cancellation(digest, approve, now, None)
+    }
+
+    /// Decides the same exact approval with an optional attempt-bound live
+    /// cancellation handle. Cancellation never restores a consumed approval.
+    pub fn decide_command_with_cancellation(
+        &mut self,
+        digest: &str,
+        approve: bool,
+        now: u64,
+        cancellation: Option<&LinuxCodingCommandCancellation>,
+    ) -> Result<Value> {
         if self
             .command
             .as_ref()
@@ -74,13 +172,14 @@ impl LinuxCodingRepository {
         {
             return Err(err("code.command.validation-choice-required"));
         }
+        self.verify_command_cancellation(digest, cancellation)?;
         let Some(pending) = self.take_command(digest, approve, now)? else {
             return Ok(json!({"outcome":"denied","effect":"none"}));
         };
         self.verify_created()?;
         let registry = command_registry(pending.prepared.command().clone())?;
         let executor = native_executor(&registry)?;
-        self.run_command(pending, executor, now)
+        self.run_command_with_cancellation(pending, executor, now, cancellation)
     }
 
     pub(super) fn verify_created(&self) -> Result<&CreatedWorktree> {
@@ -177,6 +276,7 @@ impl LinuxCodingRepository {
 
     // Generic only for component tests; public execution always uses the native
     // bounded Linux executor. There is no production injection hook.
+    #[cfg(test)]
     pub(super) fn run_command<
         E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
     >(
@@ -185,6 +285,28 @@ impl LinuxCodingRepository {
         executor: E,
         now: u64,
     ) -> Result<Value> {
+        self.run_command_with_cancellation(pending, executor, now, None)
+    }
+
+    pub(super) fn run_command_with_cancellation<
+        E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    >(
+        &mut self,
+        pending: PendingCommand,
+        executor: E,
+        now: u64,
+        cancellation: Option<&LinuxCodingCommandCancellation>,
+    ) -> Result<Value> {
+        let cancellation = match cancellation {
+            Some(control)
+                if control.preview_sha256 == pending.hash
+                    && control.attempt_id == pending.prepared.preview().command_attempt_id =>
+            {
+                control.clone()
+            }
+            Some(_) => return Err(err("code.command.cancellation-stale")),
+            None => LinuxCodingCommandCancellation::for_pending(&pending),
+        };
         let created = self.verify_created()?;
         if pending.preview["worktree_root_sha256"] != created.held.root_path_sha256()
             || pending.preview["creation_receipt_sha256"] != created.creation_receipt_sha256
@@ -229,18 +351,17 @@ impl LinuxCodingRepository {
             expires_at: pending.expires_at,
             now: dispatch_now,
         };
-        let cancellation = CancellationToken::root(
-            BoundaryKind::Kernel,
-            TaskId::from_raw(&id),
-            CorrelationId::from_raw(&id),
-        );
         // Split borrows: the existing driver holds the exact owned-worktree root.
         let created = self
             .created
             .as_ref()
             .ok_or(err("code.command.worktree-required"))?;
-        let mut driver =
-            CommandEffectDriver::new(executor, &created.held, prepared.clone(), cancellation);
+        let mut driver = CommandEffectDriver::new(
+            executor,
+            &created.held,
+            prepared.clone(),
+            cancellation.token,
+        );
         let receipt = exact.execute(self.authority.authority_mut(), &mut driver)?;
         let command_receipt = driver.take_receipt();
         let output = driver.take_output();

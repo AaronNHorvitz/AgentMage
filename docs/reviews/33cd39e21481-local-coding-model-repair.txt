@@ -1,0 +1,144 @@
+Commit: 33cd39e21481d442efd5a8ed8479dc0dab5ae4fb
+Scope: local-coding-model-repair
+
+# Independent exact-commit review: T-303/T-306 failure diagnostics to a repair proposal
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only repository access.
+Tier: core. Rows: T-303/T-306 (non-closing implementation batch; both parents stay open).
+Same-model review; a cross-model review is still required before any public release.
+
+## Methods
+
+- Confirmed `git rev-parse 33cd39e21481d442efd5a8ed8479dc0dab5ae4fb` equals HEAD, working tree clean,
+  parent `ec5aa678a500b46d006d1bf892143f98a63a6abb`. Read IP-POLICY.md, the TASKS.md word-level diff,
+  the new guide `docs/guides/coding-model-repair.md`, the evidence file
+  `docs/evidence/t303-model-repair-2026-11-06.md` and the two edited guides.
+- Read every changed source line: `platforms/local-api/src/coding_repair_api.rs` (new),
+  `platforms/local-api/src/lib.rs`, `coding_repository_api.rs`, `coding_cli.rs`,
+  `platforms/linux/src/coding_repository_validation.rs`, the native and API test diffs. Traced
+  surrounding code: operation lease (`begin`/`Operation::drop`), `workspace_sources`, workspace
+  selection and settings mutation sites, `select_created_sources`/`verify_edit_scope`,
+  `workspace_path_sha256`, `encode_chat` limits, CLI `safe`/`confirm`, command-runner bwrap setup.
+- Ran the required commands myself (environment as specified; Node SHA-256
+  `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c` verified). Reviewer logs:
+  `/lane/state/tmp/review-33cd39e2/`.
+- Live probes against my own build of this commit: client vs control token and path variants on the
+  new routes.
+- Compared all 72 failure identities to `docs/evidence/t301-baseline-failures-2026-10-25.md`.
+- No GPU, model, download, push or repository modification.
+
+## Commands and results
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib coding_repository` | exit 0; 28 passed, 0 failed, 256 filtered (name filter as requested), including `repair_feedback_consumes_exact_failure_once_preserving_test_budget_and_write_consent`, `repair_refuses_pass_uncertainty_restart_and_held_root_replacement`, `failure_excerpts_bound_both_ends_escape_controls_and_label_lossy_decoding` |
+| 2 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api --all-targets --no-fail-fast` | exit 0; 60 passed (5 lib + 9 coding_cli + 11 coding_worktree + 35 local_chat_api), 0 failed, 0 ignored |
+| 3 | `python3 -B scripts/local_agent_fast_gate.py --base ec5aa678a500b46d006d1bf892143f98a63a6abb --timeout 3600` | FAST GATE: FAIL (exit 1), as disclosed. diff check, untracked lint, review lint, Markdown lint (5 files, 0 issues), fmt, all-target Clippy `-D warnings` all exit 0; `cargo test --all-targets --no-fail-fast` exit 101: 825 passed / 72 failed / 62 ignored / 0 filtered; host lib 513 passed 53 failed, Linux lib 214 passed 19 failed |
+| 3a | Failure identity comparison (`comm -3` of sorted unique FAILED names vs baseline document identities) | 72 vs 72, empty difference: no added or missing failure |
+| 4 | `python3 -B scripts/validate_docs.py` | exit 0; "Validated 770 Markdown file(s) and all policy invariants." |
+| 5 | `cmp docs/reviews/ec5aa678a500-local-coding-project-tests-repair.txt /lane/reviews/ec5aa678a500-local-coding-project-tests-repair.md` | identical, exit 0 |
+| 6 | `git diff --check ec5aa678a500b46d006d1bf892143f98a63a6abb HEAD` | no output, exit 0 |
+| 7 | `bash /tools/build-slot python3 -B /lane/state/tmp/t303-model-repair/check-development-context.py /lane/state/tmp/review-33cd39e2/devctx` | exit 0; 30 tasks, 30 matching contexts, `held_out_run: false`, `hidden_tests_run: false`, `model_inference: false`; 2.82 s check time. Driver SHA-256 `8e2b1b54...281366` matches the request before use. My binary SHA-256 is `eadf0512...98f4de` (my own build of this commit; the builder's `68887791...b239` differs, which is expected for a separately built debug binary and does not affect the result) |
+
+Builder data checked, not relied on: `audit.json` SHA-256 matches `9ba35e78...23a1`; builder
+`fast-final.log` ends `RESULT exit=101 seconds=102.46` / `FAST GATE: FAIL`; builder summary reports
+30/30 at 2.96 s. These agree with my own runs.
+
+Live route probes (my build, fresh private auth directory, no repository state configured):
+`GET /v1/code/repository/repair` with the client token gives 403 `api.authority`; with the control token
+428 `code.repository.state-required`. `POST .../repair/proposals` gives 403 with the client token and 428
+with the control token. `.../repair/`, `.../repairs`, `.../repair/../edit`, `GET .../repair/proposals`,
+`PUT`/`POST .../repair` all give 404. A query string gives 400.
+
+## Review notes (what was verified)
+
+Authorization and consent
+
+- Both routes check `req.control` before taking the lease or parsing the body
+  (`coding_repair_api.rs:34`). Body parsing uses `deny_unknown_fields` plus `object_json`: arrays,
+  unknown, duplicate and non-boolean fields refuse (tested).
+- `prepare_repair` requires `approve_failure_disclosure`, the current settings revision and endpoint,
+  a selected workspace whose root identity equals the held worktree's, the existing endpoint-bound
+  model-context approval (`workspace_sources(..., true)`), and held creation provenance
+  (`select_created_sources`). Settings and workspace replacement need the same single operation lease,
+  so they cannot race the check.
+- The CLI shows the exact preview, settings, selection, model and budgets through `safe()` (JSON with
+  every non-ASCII and DEL character escaped; serde escapes C0 controls). So test output cannot inject
+  terminal escapes into the consent screen. The challenge is bound to `feedback_sha256`, and the root is
+  re-verified before and after consent. The server recomputes the preview and refuses a hash or receipt
+  mismatch. Failure disclosure, read consent, exact write approval and fresh test approval stay separate
+  (synthetic terminal tests cover decline, root replacement and incomplete answers).
+
+Budget and recovery
+
+- `consume_repair_feedback` sets `repair_requested` under the held owner mutex after all
+  pre-admission checks and before network admission. No error path resets it. Only `consume_validation`
+  creates a new series, which needs a separately approved fresh test attempt. Edits do not touch the
+  series. `attempts >= MAX_ATTEMPTS` refuses, and eligibility uses the kernel's
+  `plan_failed_test_rerun`. The native test exercises fail, consume, edit, still spent, fresh fail,
+  consume, third fail, refused.
+- Lock order: the repair path holds repository then state; every other path takes and releases
+  state before locking the repository, and every competing repository route fails `begin()` with 409
+  before trying the repository mutex. No deadlock. Status and cancel use only the state mutex.
+
+Untrusted input and confinement
+
+- Diagnostics come only from the native owner's normalized result. Each channel keeps the whole
+  output or the first and last 512 raw bytes, decoded lossily with that labelled. Failed names are
+  capped at 16 × 256 characters with a truncation flag. Successful results keep no excerpts.
+- The commands that produce the output run under bwrap with `--unshare-all`, `--clearenv` and the
+  worktree mounted at `/work`. Diagnostics therefore don't contain host paths or the host environment.
+  `worktree_root_sha256` includes device and inode identity, so it can't be guessed offline from a path.
+- The repair request adds no tools (asserted). Diagnostics sit in a separate JSON user message under
+  `untrusted_test_observation`, and their serialized bytes plus the extra instruction are reserved from
+  the same ≤32 KiB ceiling. The strict edit checker rejects `../escape`. A proposal is inert:
+  `applied: false`, `tested: false`, and no write or command is reachable without the existing exact
+  approvals. No new write, command or network path is added.
+- The ordinary proposal path is unchanged when `feedback` is `None`: same two messages and the same
+  context event. Command 7 confirms this externally for all 30 development contexts.
+
+Evaluation integrity, claims and hygiene
+
+- Changed files are 13 (TASKS.md, four docs, one retained review, seven Rust source/test files). No
+  task, hidden test, held-out input, grader, threshold, baseline, schema, fixture, SBOM, Cargo manifest
+  or lockfile changes. No checkbox or status changes (the TASKS.md diff is text only). No new sub-row.
+- `REPAIR_INSTRUCTION` is generic and has no task-specific content. The command 7 driver reads only
+  development tasks and historical development contexts.
+- The evidence labels synthetic provenance, outcomes, upstreams and terminal peers as synthetic. It
+  claims no native positive route admission, model campaign or score, and keeps the source gate FAIL.
+- Added lines contain no private host path, username, hostname, credential or personal data. The only
+  `/lane/...` paths are in the byte-identical retained prior review, which earlier review accepted as
+  lane-generic. No product comparison and no trademark used as branding.
+- No UI screen changes; no browser review applies. The terminal flow ran through PTY tests (command 2).
+
+## Findings
+
+No critical, high or medium finding.
+
+- **Low L1: the pre-consumption encode check does not test the exact request.**
+  `platforms/local-api/src/coding_repair_api.rs:140-158` validates `encode_chat` on the ordinary
+  two-message prompt. After consumption, `lib.rs` encodes the three-message repair prompt (extended
+  system instruction plus diagnostics message). I found no reachable failure: model-name and token
+  checks are identical, total content is ≤32 KiB, and worst-case JSON escaping stays far below the
+  256 KiB `MAX_REQUEST_BYTES`. But the guarantee that invalid input refuses before consumption rests on
+  this implicit size argument. Fix: build the actual repair message set once in a shared helper, call
+  `encode_chat` on it in `prepare_repair`, and pass the encoded messages or helper into
+  `coding_proposal_with_feedback`. Backlog.
+- **Low (retained backlog, unchanged):** no test exercises the positive `handle_repair` path from a
+  successful `prepare_repair` through consume to stream against a real native owner. The shared renderer
+  and owner are each tested, but not joined over HTTP. This is the disclosed "native positive HTTP
+  coverage" item, which the lane's executable-trust refusal blocks. The other disclosed low backlog
+  items are unchanged.
+
+## Per-row result
+
+- T-303: this non-closing batch is accepted. Failed-test diagnostics, separate disclosure consent, one
+  checked proposal request, then a separately consented inert owned diff is implemented, confined and
+  tested at component and synthetic-socket level as claimed. The row stays open: native positive
+  execution, automatic repair through the coordinator, durable runs, apply, commit/push and measured
+  acceptance are outstanding.
+- T-306: this non-closing batch is accepted, same scope; the row stays open.
+- No row closes on this review. The batch is accepted with no open high or medium finding; L1 is
+  backlog.
+
+Verdict: PASS

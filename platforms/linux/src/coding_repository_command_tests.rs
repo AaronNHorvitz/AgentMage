@@ -137,6 +137,217 @@ fn execute(
         NOW,
     )
 }
+
+#[test]
+fn command_cancellation_is_exact_single_use_and_prelaunch_cancellation_spends_authority() {
+    let f = Fixture::new();
+    let mut owner = f.open();
+    let calls = Arc::new(AtomicUsize::new(0));
+    let digest = f.pending(&mut owner);
+    let control = owner.command_cancellation(&digest).unwrap();
+    assert_eq!(
+        owner.validation_cancellation(&digest).err().unwrap().code(),
+        "code.validation.choice-required"
+    );
+    control.cancel().unwrap();
+    let denied = owner
+        .decide_command_with_cancellation(&digest, false, NOW, Some(&control))
+        .unwrap();
+    assert_eq!(denied["outcome"], "denied");
+    assert!(
+        owner.inspect().unwrap()["receipts"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    let digest = f.pending(&mut owner);
+    let control = owner.command_cancellation(&digest).unwrap();
+    control.cancel().unwrap();
+    control.cancel().unwrap();
+    let pending = owner.take_command(&digest, true, NOW).unwrap().unwrap();
+    let result = owner
+        .run_command_with_cancellation(
+            pending,
+            Synthetic {
+                calls: calls.clone(),
+                exit: 0,
+                crash: false,
+                corrupt: false,
+            },
+            NOW,
+            Some(&control),
+        )
+        .unwrap();
+    assert_eq!(calls.load(Ordering::Relaxed), 0);
+    assert_eq!(result["outcome"], "cancelled");
+    assert_eq!(result["command_receipt"]["termination"], "cancelled");
+    assert_eq!(result["receipt"]["outcome"], "cancelled");
+    assert!(owner.decide_command(&digest, true, NOW).is_err());
+    let old = control;
+    let digest = f.pending(&mut owner);
+    assert_eq!(
+        owner
+            .decide_command_with_cancellation(&digest, true, NOW, Some(&old))
+            .unwrap_err()
+            .code(),
+        "code.command.cancellation-stale"
+    );
+    assert!(
+        owner.command.is_some(),
+        "foreign handle must not consume consent"
+    );
+    let result = execute(&mut owner, &digest, &calls, 0, false, false).unwrap();
+    assert_eq!(result["outcome"], "succeeded");
+    assert_eq!(calls.load(Ordering::Relaxed), 1);
+    assert_eq!(
+        fs::read(f.0.join("owned/worktree/sentinel")).unwrap(),
+        b"preserve"
+    );
+    assert_eq!(
+        owner.inspect().unwrap()["receipts"]
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
+}
+
+struct CancelDuringExecution {
+    entered: std::sync::mpsc::Sender<()>,
+    cleanup_known: bool,
+    shutdown: bool,
+}
+impl BoundedCommandExecutor for CancelDuringExecution {
+    type WorkingDirectory = LinuxAuthorizedWorkspace;
+    fn execute(
+        &mut self,
+        _: CommandLaunchPermit<'_>,
+        _: &LinuxAuthorizedWorkspace,
+        cancellation: &dyn EffectCancellationObservation,
+    ) -> std::result::Result<CommandPlatformResult, CommandExecutionFailure> {
+        assert!(
+            cancellation
+                .observe_effect_cancellation()
+                .unwrap()
+                .is_none()
+        );
+        self.entered.send(()).unwrap();
+        let deadline = Instant::now() + Duration::from_secs(2);
+        loop {
+            if let Some(signal) = cancellation.observe_effect_cancellation().unwrap() {
+                assert_eq!(
+                    signal.reason,
+                    if self.shutdown {
+                        agentmage_kernel_contracts::CancellationReason::Shutdown
+                    } else {
+                        agentmage_kernel_contracts::CancellationReason::UserRequested
+                    }
+                );
+                break;
+            }
+            assert!(
+                Instant::now() < deadline,
+                "cancellation was not forwarded to executor"
+            );
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        if !self.cleanup_known {
+            return Err(CommandExecutionFailure::CleanupUncertain);
+        }
+        let stdout = b"partial untrusted output".to_vec();
+        Ok(CommandPlatformResult {
+            termination: CommandTermination::Cancelled,
+            exit_code: None,
+            signal: None,
+            stdout_sha256: hash(&stdout),
+            stdout_total_bytes: stdout.len() as u64,
+            stdout,
+            stderr: vec![],
+            stderr_sha256: hash(b""),
+            stderr_total_bytes: 0,
+            elapsed_ms: 1,
+            resource_usage: None,
+            descendants_terminated: true,
+            platform_code: "test.synthetic.cancelled".into(),
+        })
+    }
+}
+
+#[test]
+fn live_attempt_cancellation_reaches_executor_and_never_turns_uncertain_cleanup_into_completion() {
+    for validation in [false, true] {
+        for cleanup_known in [false, true] {
+            let f = Fixture::new();
+            let mut owner = f.open();
+            let command_digest = f.pending(&mut owner);
+            let digest = if validation {
+                validation_pending(&mut owner, None).unwrap()
+            } else {
+                command_digest
+            };
+            let control = owner.command_cancellation(&digest).unwrap();
+            let signal = control.clone();
+            let (entered, receive) = std::sync::mpsc::channel();
+            let cancel_worker = std::thread::spawn(move || {
+                receive.recv_timeout(Duration::from_secs(2)).unwrap();
+                if validation {
+                    signal.shutdown().unwrap();
+                } else {
+                    signal.cancel().unwrap();
+                }
+                signal.cancel().unwrap();
+            });
+            let pending = owner.take_command(&digest, true, NOW).unwrap().unwrap();
+            let result = owner.run_command_with_cancellation(
+                pending,
+                CancelDuringExecution {
+                    entered,
+                    cleanup_known,
+                    shutdown: validation,
+                },
+                NOW,
+                Some(&control),
+            );
+            cancel_worker.join().unwrap();
+            if cleanup_known {
+                let result = result.unwrap();
+                assert_eq!(result["outcome"], "cancelled");
+                assert_eq!(result["command_receipt"]["termination"], "cancelled");
+                assert_eq!(
+                    result["stdout"],
+                    json!(b"partial untrusted output".to_vec())
+                );
+                if validation {
+                    assert_eq!(result["validation"]["validation_passed"], false);
+                    assert_eq!(result["validation"]["receipt"]["status"], "cancelled");
+                }
+            } else {
+                assert_eq!(result.unwrap_err().code(), "command.cleanup.uncertain");
+                assert_eq!(
+                    owner.inspect().unwrap()["receipts"][0]["outcome"],
+                    "uncertain"
+                );
+            }
+            assert!(owner.command.is_none());
+            assert!(owner.command_cancellation(&digest).is_err());
+            assert!(owner.decide_command(&digest, true, NOW).is_err());
+            if validation {
+                assert_eq!(owner.inspect_validation().unwrap()["attempts"], 1);
+                assert!(owner.repair_feedback().is_err());
+                assert!(validation_pending(&mut owner, None).is_err());
+            }
+            assert_eq!(
+                fs::read(f.0.join("owned/worktree/sentinel")).unwrap(),
+                b"preserve"
+            );
+            let retained = owner.inspect().unwrap()["receipts"].clone();
+            drop(owner);
+            let reopened = f.open();
+            assert_eq!(reopened.inspect().unwrap()["receipts"], retained);
+            assert!(reopened.command_cancellation(&digest).is_err());
+        }
+    }
+}
 #[test]
 fn exact_commands_record_failure_then_fresh_approved_success_without_test_claims() {
     let f = Fixture::new();

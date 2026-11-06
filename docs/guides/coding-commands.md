@@ -79,14 +79,31 @@ prints escaped JSON. Exit zero is command success only:
 `test_suite_verified: false` stays explicit. The separate
 [test-envelope surface](coding-validation.md) adds per-invocation parsed counts
 and failure names with bounded, separately approved reruns. Test-suite coverage,
-repository snapshot binding, failure-to-model feedback and budgeted automatic
-repair remain unimplemented in this composition.
+repository snapshot binding and budgeted automatic repair remain open.
+The separate [manual repair proposal](coding-model-repair.md) discloses failure
+excerpts only after explicit consent.
 
-Command requests serialize with other coding operations. API cancellation is
-truthfully unavailable after admission (`cancellable: false`); the runner's
-fixed timeout and cleanup still apply. This surface has no live command-output
-stream or connected cancellation token. Starting the service does not approve
-any command.
+Command requests serialize with other coding operations. During an exact
+command or validation decision, `status` reports `cancellable: true` after the
+service publishes that attempt's native cancellation handle. Use a second
+terminal to request cancellation:
+
+```sh
+target/debug/agentmage-code <loopback-ip:port> <private-auth-directory> cancel
+```
+
+The acknowledgement means requested, not stopped. The same operation keeps its
+lease until native execution, descendant cleanup and receipt handling finish;
+settings, source replacement and competing effects still refuse. Cancellation
+reaches the existing kernel driver and confined runner. Its fixed timeout and
+cleanup remain in force. A cancelled receipt never implies test success, and
+unknown cleanup remains uncertain. The consumed approval cannot be replayed,
+and an old cancellation handle cannot affect a fresh command. Orderly library
+shutdown requests cancellation before joining its workers. Abrupt process
+termination and a lost reply still require manual inspection. Collection,
+worktree creation and writes remain non-interruptible (`cancellable: false`);
+this surface has no live command-output stream. Starting the service does not
+approve any command.
 
 Previews and ownership are process-only; command output is response-only.
 Canonical content-free authority receipts survive restart. There is no durable

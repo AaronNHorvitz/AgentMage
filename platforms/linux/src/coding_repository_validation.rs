@@ -57,6 +57,15 @@ pub(super) struct ValidationSeries {
 }
 
 impl LinuxCodingRepository {
+    /// Obtains cancellation for an exact pending validation, preserving the
+    /// validation route's typed precondition before the shared command binding.
+    pub fn validation_cancellation(&self, digest: &str) -> Result<LinuxCodingCommandCancellation> {
+        if self.command.as_ref().is_none_or(|p| p.validation.is_none()) {
+            return Err(err("code.validation.choice-required"));
+        }
+        self.command_cancellation(digest)
+    }
+
     /// Shows only process-retained validation state. A pass refers to the exact
     /// approved command result, never the current repository or an independent
     /// task grade. Bounded failure excerpts are retained separately for explicit
@@ -110,16 +119,29 @@ impl LinuxCodingRepository {
     /// Decides exactly one validation preview. Ordinary command decisions cannot
     /// approve it. Denial/expiry do not dispatch or spend an execution attempt.
     pub fn decide_validation(&mut self, digest: &str, approve: bool, now: u64) -> Result<Value> {
+        self.decide_validation_with_cancellation(digest, approve, now, None)
+    }
+
+    /// Decides the exact validation with live cancellation scoped to this
+    /// pending attempt. Cancelled execution spends its attempt and cannot pass.
+    pub fn decide_validation_with_cancellation(
+        &mut self,
+        digest: &str,
+        approve: bool,
+        now: u64,
+        cancellation: Option<&LinuxCodingCommandCancellation>,
+    ) -> Result<Value> {
         if self.command.as_ref().is_none_or(|p| p.validation.is_none()) {
             return Err(err("code.validation.choice-required"));
         }
+        self.verify_command_cancellation(digest, cancellation)?;
         let Some(pending) = self.take_command(digest, approve, now)? else {
             return Ok(json!({"outcome":"denied","effect":"none"}));
         };
         self.verify_created()?;
         let registry = command_registry(pending.prepared.command().clone())?;
         let executor = native_executor(&registry)?;
-        self.run_command(pending, executor, now)
+        self.run_command_with_cancellation(pending, executor, now, cancellation)
     }
 
     // The generic executor seam remains private to command component tests.

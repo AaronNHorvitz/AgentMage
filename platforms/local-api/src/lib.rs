@@ -33,8 +33,8 @@ use agentmage_capability_repository_map::coding_proposal::{
 };
 
 use agentmage_platform_linux::{
-    LinuxCodingPendingWrite, LinuxCodingReadScope, LinuxCodingReplacement, LinuxCodingRepository,
-    discover_linux_coding_map,
+    LinuxCodingCommandCancellation, LinuxCodingPendingWrite, LinuxCodingReadScope,
+    LinuxCodingReplacement, LinuxCodingRepository, discover_linux_coding_map,
 };
 
 use agentmage_platform_linux_inference::local_chat::{
@@ -210,6 +210,7 @@ struct State {
     workspace_revision: u64,
     configured: Option<Arc<Configuration>>,
     active: Option<ChatCancellation>,
+    active_command: Option<LinuxCodingCommandCancellation>,
     active_cancellable: bool,
     revision: u64,
     sequence: u64,
@@ -217,6 +218,24 @@ struct State {
 }
 
 impl State {
+    fn cancel_active(&self, shutdown: bool) -> Result<bool, ApiError> {
+        if self.active.is_none() || !self.active_cancellable {
+            return Ok(false);
+        }
+        if let Some(command) = &self.active_command {
+            let result = if shutdown {
+                command.shutdown()
+            } else {
+                command.cancel()
+            };
+            result.map_err(|_| ApiError::Io)?;
+        }
+        if let Some(chat) = &self.active {
+            chat.cancel();
+        }
+        Ok(true)
+    }
+
     fn record_write(&mut self, mut record: Value) {
         self.write_sequence += 1;
         record["sequence"] = json!(self.write_sequence);
@@ -328,9 +347,10 @@ fn serve_state(
             }
             thread::sleep(Duration::from_millis(10));
         }
-        if let Some(cancel) = &state.lock().map_err(|_| ApiError::Io)?.active {
-            cancel.cancel();
-        }
+        state
+            .lock()
+            .map_err(|_| ApiError::Io)?
+            .cancel_active(true)?;
         for worker in workers {
             worker.join().map_err(|_| ApiError::Io)??;
         }
@@ -724,6 +744,7 @@ impl Drop for Operation<'_> {
         if let Ok(mut state) = self.state.lock() {
             state.record(self.action, self.outcome);
             state.active = None;
+            state.active_command = None;
             state.active_cancellable = false;
         }
     }
@@ -1481,12 +1502,7 @@ fn handle(
         }
         ("POST", "/v1/cancel") if req.body.is_empty() => {
             let mut state = state.lock().map_err(|_| ApiError::Io)?;
-            let active = state.active.is_some() && state.active_cancellable;
-            if let Some(cancel) = &state.active
-                && state.active_cancellable
-            {
-                cancel.cancel();
-            }
+            let active = state.cancel_active(false)?;
             state.record("cancel", "requested");
             response(socket, 200, json!({"cancellation_requested":active}))
         }
@@ -1628,4 +1644,38 @@ fn event(socket: &mut TcpStream, value: Value) -> Result<(), ApiError> {
     let mut bytes = Zeroizing::new(serde_json::to_vec(&value).map_err(|_| ApiError::Io)?);
     bytes.push(b'\n');
     write(socket, &bytes)
+}
+
+#[cfg(test)]
+mod operation_tests {
+    use super::*;
+
+    #[test]
+    fn cancellation_request_keeps_lease_until_owner_completion_and_next_operation_is_fresh() {
+        let state = Mutex::new(State::default());
+        let stop = AtomicBool::new(false);
+        let (operation, _) = begin(&state, &stop, "test.operation").unwrap();
+        assert!(state.lock().unwrap().cancel_active(false).unwrap());
+        assert!(operation.cancel.is_cancelled());
+        assert!(matches!(begin(&state, &stop, "test.competing"), Err(409)));
+        assert!(state.lock().unwrap().active.is_some());
+        drop(operation);
+        let (next, _) = begin(&state, &stop, "test.next").unwrap();
+        assert!(!next.cancel.is_cancelled());
+        assert!(state.lock().unwrap().active_command.is_none());
+        drop(next);
+        assert!(!state.lock().unwrap().cancel_active(false).unwrap());
+    }
+
+    #[test]
+    fn non_interruptible_effect_does_not_acknowledge_or_latch_a_cancel() {
+        let state = Mutex::new(State::default());
+        let stop = AtomicBool::new(false);
+        let (operation, _) = begin(&state, &stop, "test.non-interruptible").unwrap();
+        state.lock().unwrap().active_cancellable = false;
+        assert!(!state.lock().unwrap().cancel_active(false).unwrap());
+        assert!(!operation.cancel.is_cancelled());
+        assert!(matches!(begin(&state, &stop, "test.competing"), Err(409)));
+        drop(operation);
+    }
 }

@@ -46,6 +46,7 @@ mod command;
 mod edit;
 #[path = "coding_repository_validation.rs"]
 mod validation;
+pub use command::LinuxCodingCommandCancellation;
 pub use validation::LinuxCodingTestFormat;
 
 const TOOL: &str = "local-coding-worktree-create";

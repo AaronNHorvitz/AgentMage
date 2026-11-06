@@ -35,7 +35,7 @@ pub use coding_map::{
     LinuxCodingMap, LinuxCodingMapEntry, LinuxCodingMapError, discover_linux_coding_map,
 };
 /// Closed output protocols for separately approved project tests.
-pub use coding_repository::LinuxCodingTestFormat;
+pub use coding_repository::{LinuxCodingCommandCancellation, LinuxCodingTestFormat};
 pub use coding_repository::{LinuxCodingRepository, LinuxCodingRepositoryError};
 pub use coding_workspace::{
     LinuxCodingPendingWrite, LinuxCodingReadError, LinuxCodingReadScope, LinuxCodingReplacement,
