@@ -215,3 +215,152 @@ No release, model qualification or owner-ready claim follows.
 | muse held | `32397bb2331e406e9b2a94ad4e1215aaf674ebd81fe0884bad2e11c3253f8f1b` |
 | gpt-oss dev | `979f50e13de69b82844d0b02f96ea5ac0df83381dab5199f203d45c6b129f2a5` |
 | gpt-oss held | `ab5ab42508eebbff47c1d6bd6e53b7380ec5ee63deb9e52ebb2f4194e39a1bf8` |
+
+## Snapshot proposals: development checkpoint, 2026-11-06
+
+**57 of 60 attempts hit the 2,048-token output cap.** The three generations
+ending within the limits produced checked proposals and passed independent
+grading. These results chiefly expose the restrictive output budget, not
+relative model quality or a working native coding workflow.
+
+This is a **non-closing T-303/T-306 implementation checkpoint**, not a native
+agent-loop run. Source commit: `21f75c8646ee2a1b94eb1f3b9a305851c46c72ff`.
+The [proposal API record](t303-snapshot-proposal-api-2026-11-06.md) and
+[fixed collector policy](../guides/coding-proposals.md#development-measurement)
+describe caller-supplied snapshots, bounded source selection and strict in-memory
+edits. No workspace tools, commands, tests, worktree or retry feedback were used
+by the model. Both parent rows remain open. Held-out tasks were not run in this
+checkpoint; they remain reserved for the combined row-closing scoreboard.
+
+Observed serving: 8,192 context tokens; requests: **6,000 application message
+bytes / 2,048 output tokens**, including reasoning. Temperature zero, seed 42
+and medium family-specific reasoning. This changes both source selection and
+output budget from the original baseline; it cannot isolate their effects.
+One attempt per task is the complete budget, so first and within-budget rates
+match. No prompt/source change or test feedback occurred during the campaign.
+
+| Model | Development first / within budget | Held-out | Checked proposals | Generation s | Grading s | Reserved GPU work min |
+| --- | --- | --- | --- | --- | --- | --- |
+| muse | 1/30 / 1/30 | not run | 1/30 | 1412.594 | 49.647 | 25.891 |
+| gpt-oss | 2/30 / 2/30 | not run | 2/30 | 303.390 | 48.116 | 6.395 |
+
+Independent grading uses the unchanged finite-observation adapters and frozen
+original assertions. A valid proposal still needs a passing grade; a refused
+generation/base fallback earns no model credit. All 30 tasks remain in each
+denominator. Scores do not establish general coding quality, an executable
+coding agent, model-role selection or a comparison of model quality.
+
+### Termination and observed tokens
+
+Backend classes below are derived directly from the retained exact
+server-log slices and timing counters. They are not inferred from API error
+labels. Output-cap means 2,048 generated tokens without context truncation.
+
+| Model | Prompt exceeds context | Context exhausted | Output cap | Stopped | Observed input tokens | Observed output tokens | Counter coverage |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| muse | 0 | 0 | 29 | 1 | 44495 | 61323 | 30/30 |
+| gpt-oss | 0 | 0 | 28 | 2 | 46045 | 58868 | 30/30 |
+
+API token usage remains unavailable; the counts above are observed backend
+counters, including reasoning. Unknown values stay unobserved, not estimates.
+Generation/grading durations exclude queue waits. Reserved GPU work minutes
+include verification, loading and owned-process cleanup; they are not active
+GPU kernel minutes. Batches contain at most five tasks and release both shared
+reservations between jobs.
+
+| Model | API terminal | Attempts |
+| --- | --- | --- |
+| muse | `chat.response.incomplete` | 29 |
+| muse | `proposal` | 1 |
+| gpt-oss | `chat.response.incomplete` | 25 |
+| gpt-oss | `code.proposal.incomplete` | 3 |
+| gpt-oss | `proposal` | 2 |
+
+### Development task records
+
+`pass` below requires both a valid proposed snapshot and a passing independent
+grade. Per-task token counts are backend counters. The retained dev-003 process
+observation race and dev-004 SIGINT timing race remain failures, never
+exclusions. The API path has no retry loop.
+
+| Model | Task | Generation s | Grading s | Input tokens | Output tokens | Backend termination | API terminal | Grade |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| muse | dev-001 | 52.309 | 0.549 | 1543 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-002 | 47.161 | 0.268 | 1429 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-003 | 46.685 | 11.967 | 1475 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-004 | 46.389 | 19.508 | 1413 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-005 | 46.311 | 0.275 | 1446 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-006 | 52.625 | 0.278 | 1412 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-007 | 47.511 | 0.264 | 1430 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-008 | 46.669 | 0.264 | 1448 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-009 | 46.348 | 0.250 | 1403 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-010 | 46.411 | 0.248 | 1484 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-011 | 51.898 | 0.293 | 1467 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-012 | 45.983 | 0.255 | 1476 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-013 | 46.230 | 0.254 | 1490 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-014 | 45.850 | 0.319 | 1360 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-015 | 45.972 | 0.227 | 1556 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-016 | 51.319 | 0.227 | 1408 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-017 | 45.150 | 0.256 | 1502 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-018 | 45.248 | 0.245 | 1425 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-019 | 42.708 | 0.260 | 1568 | 1931 | stopped | `proposal` | pass |
+| muse | dev-020 | 45.261 | 0.250 | 1591 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-021 | 51.736 | 0.250 | 1568 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-022 | 46.171 | 0.250 | 1565 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-023 | 46.542 | 0.425 | 1576 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-024 | 46.346 | 0.250 | 1567 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-025 | 46.779 | 0.253 | 1555 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-026 | 50.803 | 0.255 | 1483 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-027 | 45.287 | 0.271 | 1426 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-028 | 45.053 | 0.257 | 1472 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-029 | 44.979 | 0.258 | 1540 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| muse | dev-rust-001 | 44.859 | 7.277 | 1417 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-001 | 13.972 | 0.522 | 1586 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-002 | 9.654 | 0.276 | 1467 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-003 | 9.726 | 12.062 | 1520 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-004 | 9.679 | 19.570 | 1466 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-005 | 9.674 | 0.247 | 1504 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-006 | 14.037 | 0.273 | 1458 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-007 | 9.556 | 0.274 | 1468 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-008 | 9.657 | 0.263 | 1494 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-009 | 10.109 | 0.249 | 1478 | 2048 | output-cap | `code.proposal.incomplete` | fail |
+| gpt-oss | dev-010 | 9.704 | 0.248 | 1535 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-011 | 13.918 | 0.288 | 1531 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-012 | 9.513 | 0.250 | 1528 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-013 | 9.463 | 0.250 | 1529 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-014 | 9.458 | 0.300 | 1415 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-015 | 9.597 | 0.215 | 1630 | 2048 | output-cap | `code.proposal.incomplete` | fail |
+| gpt-oss | dev-016 | 14.557 | 0.227 | 1480 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-017 | 9.440 | 0.252 | 1555 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-018 | 9.764 | 0.238 | 1475 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-019 | 4.026 | 0.260 | 1625 | 747 | stopped | `proposal` | pass |
+| gpt-oss | dev-020 | 9.724 | 0.248 | 1649 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-021 | 13.694 | 0.255 | 1630 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-022 | 9.559 | 0.244 | 1621 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-023 | 9.534 | 0.415 | 1618 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-024 | 9.766 | 0.244 | 1603 | 2048 | output-cap | `code.proposal.incomplete` | fail |
+| gpt-oss | dev-025 | 9.499 | 0.244 | 1604 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-026 | 8.217 | 0.241 | 1541 | 777 | stopped | `proposal` | pass |
+| gpt-oss | dev-027 | 9.457 | 0.265 | 1460 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-028 | 9.497 | 0.262 | 1511 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-029 | 9.466 | 0.246 | 1594 | 2048 | output-cap | `chat.response.incomplete` | fail |
+| gpt-oss | dev-rust-001 | 9.476 | 5.966 | 1470 | 2048 | output-cap | `chat.response.incomplete` | fail |
+
+### Checkpoint bindings
+
+| Model | Observed weights SHA-256 | Observed API binary SHA-256 |
+| --- | --- | --- |
+| muse | `4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e` | `1ae162d2b187726673b24b007b8bc38d2fd6585de5bf2518a7ec08b00467d2f3` |
+| gpt-oss | `27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901` | `1ae162d2b187726673b24b007b8bc38d2fd6585de5bf2518a7ec08b00467d2f3` |
+
+Audit: **60 grading reports / 300 direct log bindings**, all 60 source
+snapshots, exact serialized context byte counts, backend slices and cleanup
+records verified. The unchanged accepted complete-controls receipt is reused;
+no held-out assertion is re-executed for this checkpoint.
+
+Audited-results SHA-256: `a2f7eacaa0ce6f0975104258d7b0674efe25fbcfde59381d7cf7b6ba4565fac1`.
+Retained-manifest SHA-256: `2d8413a399d65cbbbf09aa1882445e2228cef60ff56240c454bc71adc76b4c35` (39149 files).
+Raw requests, events, candidates, graders and server logs remain private.
+The independent reviewer receives the exact retained location and reproduction
+commands. This source batch awaits independent core review and closes no
+parent row, acceptance or release gate.
