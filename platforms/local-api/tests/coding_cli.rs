@@ -20,6 +20,53 @@ use serde_json::{Value, json};
 static NEXT: AtomicU64 = AtomicU64::new(0);
 const BEFORE: &str = "def add(a, b):\n    return a - b\n";
 
+#[test]
+fn terminal_cancel_uses_control_authentication_without_an_approval_prompt() {
+    let fixture = Fixture::new();
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let address = listener.local_addr().unwrap();
+    let control = fs::read_to_string(fixture.root.join("auth/control.token")).unwrap();
+    let client = fs::read_to_string(fixture.root.join("auth/client.token")).unwrap();
+    // Inspect only the terminal's HTTP request at a synthetic peer. This grants
+    // no native ownership and is separate from the real handler authority test.
+    let worker = thread::spawn(move || {
+        let (mut socket, _) = listener.accept().unwrap();
+        socket
+            .set_read_timeout(Some(Duration::from_secs(5)))
+            .unwrap();
+        let mut header = Vec::new();
+        while !header.ends_with(b"\r\n\r\n") {
+            let mut byte = [0];
+            socket.read_exact(&mut byte).unwrap();
+            header.push(byte[0]);
+            assert!(header.len() < 8192);
+        }
+        let header = String::from_utf8(header).unwrap();
+        assert!(header.starts_with("POST /v1/cancel HTTP/1.1\r\n"));
+        assert!(header.contains(&format!("\r\nAuthorization: Bearer {control}\r\n")));
+        assert!(!header.contains(&client));
+        assert!(header.contains("\r\nContent-Length: 0\r\n"));
+        let body = b"{\"cancellation_requested\":true}";
+        socket.write_all(format!("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", body.len()).as_bytes()).unwrap();
+        socket.write_all(body).unwrap();
+    });
+    let output = Command::new(env!("CARGO_BIN_EXE_agentmage-code"))
+        .args([
+            address.to_string(),
+            fixture.root.join("auth").to_str().unwrap().to_owned(),
+            "cancel".into(),
+        ])
+        .stdin(Stdio::null())
+        .output()
+        .unwrap();
+    worker.join().unwrap();
+    assert!(output.status.success());
+    assert_eq!(
+        serde_json::from_slice::<Value>(&output.stdout).unwrap()["cancellation_requested"],
+        true
+    );
+}
+
 struct Fixture {
     root: PathBuf,
     address: SocketAddr,

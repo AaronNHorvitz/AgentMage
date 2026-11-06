@@ -92,6 +92,12 @@ terminal to request cancellation:
 target/debug/agentmage-code <loopback-ip:port> <private-auth-directory> cancel
 ```
 
+The control credential is required to cancel repository operations, including
+command/validation decisions and repair proposals. An ordinary client token
+receives 403 without signalling or consuming an attempt. This requirement starts
+with the operation lease, before publication of a native cancellation handle.
+Client tokens can still cancel ordinary chat and source-proposal operations.
+
 The acknowledgement means requested, not stopped. The same operation keeps its
 lease until native execution, descendant cleanup and receipt handling finish;
 settings, source replacement and competing effects still refuse. Cancellation
@@ -104,6 +110,12 @@ termination and a lost reply still require manual inspection. Collection,
 worktree creation and writes remain non-interruptible (`cancellable: false`);
 this surface has no live command-output stream. Starting the service does not
 approve any command.
+
+The attempt's passive cancellation observer tries at most eight nonblocking
+reads, yielding between unavailable reads. Persistent unavailability remains a
+fail-closed termination, never an uncancelled observation or proof of cleanup.
+Invalid signals and scope mismatches are not retried. The kernel still checks
+every signal against the consumed attempt, and native cleanup owns the outcome.
 
 Previews and ownership are process-only; command output is response-only.
 Canonical content-free authority receipts survive restart. There is no durable

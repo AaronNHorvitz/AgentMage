@@ -665,7 +665,7 @@ fn execute(args: &[String]) -> Result<()> {
         ("status", []) => show(&client.json("GET", "/v1/status", false, None)?),
         ("workspace", []) => show(&client.json("GET", "/v1/code/workspace", false, None)?),
         ("review", []) => show(&client.json("GET", "/v1/code/workspace/changes", false, None)?),
-        ("cancel", []) => show(&client.json("POST", "/v1/cancel", false, None)?),
+        ("cancel", []) => show(&client.json("POST", "/v1/cancel", true, None)?),
         ("revoke", []) => show(&client.json("DELETE", "/v1/code/workspace", true, None)?),
         ("select" | "select-model", [root, paths @ ..]) if !paths.is_empty() => {
             let mut body = json!({"root":root,"paths":paths,"approve_read":true,"approve_model_context":command == "select-model"});

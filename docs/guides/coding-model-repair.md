@@ -94,12 +94,20 @@ attempt. Edits cannot reset it. A fresh separately approved failed test attempt
 can make the next request eligible, within the unchanged three-test-attempt
 series. A third failure has no remaining repair/rerun budget.
 
+Preflight encodes the complete three-message request before consuming repair
+consent: additional system instructions, selected source context and serialized
+diagnostics. Dispatch uses the same message constructor and encoder limits.
+Malformed model identities, invalid token reserves and oversized encoded requests
+therefore refuse before consumption or network admission.
+
 Generation shares the existing operation lease, status and cancellation. Settings,
 scope replacement, writes and commands cannot race it through the API. Source
 drift after the snapshot refuses diff preparation rather than overwriting human
 work. Never automatically resend a failed request. Bounded excerpts and the
 consumption flag are process-only. Restart loses worktree ownership and all these
 selections; canonical receipts cannot restore them or replay an action.
+Cancelling a repair proposal requires the control token; a client token cannot
+consume its single model request by cancelling the operation.
 
 `model_retry_connected: false` remains the legacy declaration that the native
 runtime coordinator has no automatic model retry. The additive
@@ -110,6 +118,6 @@ tests are not an executable native coding campaign or a fresh model score.
 [Native command cancellation](coding-commands.md#sandbox-and-results) is now
 connected separately; it does not make a cancelled validation repairable.
 Automatic repair through the existing host/kernel coordinator, durable coding
-runs, cancellation during native effects, compile-failure and unsupported-runner
-handling, original-repository apply, approved commit/push, MCP and measured
-parent acceptance remain open. Held-out tasks run only at row closes.
+runs, cancellation of worktree creation and write effects, compile-failure and
+unsupported-runner handling, original-repository apply, approved commit/push,
+MCP and measured parent acceptance remain open. Held-out tasks run only at row closes.

@@ -14,6 +14,70 @@ use std::sync::{
 };
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
+
+#[test]
+fn passive_command_poll_retries_only_unavailability_and_keeps_a_fixed_fail_closed_bound() {
+    struct Observation {
+        calls: AtomicUsize,
+        unavailable: usize,
+        terminal: std::result::Result<
+            Option<agentmage_kernel_contracts::CancellationSignal>,
+            CancellationObservationError,
+        >,
+    }
+    impl EffectCancellationObservation for Observation {
+        fn observe_effect_cancellation(
+            &self,
+        ) -> std::result::Result<
+            Option<agentmage_kernel_contracts::CancellationSignal>,
+            CancellationObservationError,
+        > {
+            if self.calls.fetch_add(1, Ordering::Relaxed) < self.unavailable {
+                Err(CancellationObservationError::Unavailable)
+            } else {
+                self.terminal.clone()
+            }
+        }
+    }
+    for (unavailable, terminal, expected_calls, expected) in [
+        (0, Ok(None), 1, Ok(None)),
+        (1, Ok(None), 2, Ok(None)),
+        (7, Ok(None), 8, Ok(None)),
+        (
+            8,
+            Ok(None),
+            8,
+            Err(CancellationObservationError::Unavailable),
+        ),
+        (
+            usize::MAX,
+            Ok(None),
+            8,
+            Err(CancellationObservationError::Unavailable),
+        ),
+        (
+            0,
+            Err(CancellationObservationError::InvalidSignal),
+            1,
+            Err(CancellationObservationError::InvalidSignal),
+        ),
+        (
+            1,
+            Err(CancellationObservationError::ScopeMismatch),
+            2,
+            Err(CancellationObservationError::ScopeMismatch),
+        ),
+    ] {
+        let observation = Observation {
+            calls: AtomicUsize::new(0),
+            unavailable,
+            terminal,
+        };
+        assert_eq!(observe_command_cancellation(&observation), expected);
+        assert_eq!(observation.calls.load(Ordering::Relaxed), expected_calls);
+    }
+}
+
 const NOW: u64 = 1000;
 const KEY: &[u8] = b"synthetic-command-state-secret-not-a-real-credential";
 struct Fixture(PathBuf);

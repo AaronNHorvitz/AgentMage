@@ -1,0 +1,142 @@
+Commit: d0bbe2546b9408ad6025272bf5105e46e4a04c54
+Scope: local-coding-command-cancellation
+
+# Independent exact-commit review: native command cancellation (T-303/T-306, core, non-closing)
+
+Reviewer: Claude Opus 5.5, separate session, read-only repository access. Same-model review.
+`git rev-parse d0bbe2546b9408ad6025272bf5105e46e4a04c54 HEAD` both resolve to the requested commit;
+the working tree was clean before and after the review. Base for the diff: `33cd39e21481d442efd5a8ed8479dc0dab5ae4fb`.
+
+## Methods
+
+I read IP-POLICY.md, the newest decision titles (0151 to 0155), the TASKS.md diff (prose only;
+no new row, no checkbox change), the new evidence file, all four changed guides and every changed
+source line in `platforms/linux/src/coding_repository{,_command,_command_tests,_validation}.rs`,
+`platforms/linux/src/lib.rs`, `platforms/local-api/src/{lib.rs,coding_repository_api.rs}`.
+I traced the unchanged code the change relies on: `CancellationToken`, `ScopedEffectCancellation` and
+`validate_effect_cancellation` (kernel/engine/src/propagation.rs), `CommandEffectDriver::execute`
+(kernel/engine/src/command_runner.rs:752 onward), `ExactEffect::execute`
+(platforms/linux/src/coding_repository.rs:563 onward), the native runner delegation
+(platforms/linux/src/command_runner.rs:445) and the sandbox supervisor poll loop
+(platforms/linux/src/sandbox_supervision.rs:661-720). I also traced the API lease (`begin`, `Operation::drop`),
+`/v1/cancel`, `/v1/status`, orderly shutdown in `serve_state`, the repair route and the CLI `cancel` command.
+
+Specific checks and conclusions:
+
+- **Signal scope.** The handle's root token uses `TaskId`/`CorrelationId` = `command_attempt_id`.
+  `ExactEffect` builds the policy task, session and `ToolCall.correlation_id` from the same `id`
+  (`prepared.preview().command_attempt_id`), so the scoped observer accepts the signal; it does not fail closed
+  as a scope mismatch. `requested_by: Shell` equals the root boundary (`OriginMismatch` is impossible) and is in
+  the observer's accepted origin set.
+- **Handle binding.** `verify_command_cancellation` runs before `take_command`, so a foreign or stale handle
+  (wrong digest or attempt) returns `code.command.cancellation-stale` without consuming consent. The test
+  asserts this (`owner.command.is_some()`). `run_command_with_cancellation` re-checks the binding. The struct has
+  private fields, no `Debug`, and a constructor only from the held pending preview. No model-reachable path
+  creates or selects a handle: the only callers are the two control-authenticated decide routes, and the
+  repair route dispatches no command.
+- **Error-code preservation.** `command_cancellation` returns `choice-required` / `stale` in the same order and
+  with the same codes as `take_command`. The validation route keeps `code.validation.choice-required` through
+  `validation_cancellation`. Denial (`approve: false`) arms nothing and leaves `active_cancellable: false`.
+  The old public `decide_command`/`decide_validation` pass `None` and get a private, never-signalled token,
+  so their behavior is unchanged. `run_command` is now `#[cfg(test)]`, so no production injection seam was added.
+- **Handoff latch and lock order.** `arm_command_cancellation` runs under the state mutex while the route holds the
+  repository mutex. Every other path that takes both uses the same order: repository then state, or state released
+  before the repository is locked (`coding_repair_api.rs:41-46`). I found no deadlock. Shutdown stores `stop`,
+  then locks state to call `cancel_active(true)`. If the route locks first, the handle is published and shutdown
+  forwards to it. If shutdown locks first, it sees `active_cancellable == false` and does nothing, and the route
+  then observes `stop` under the same mutex and latches `Shutdown`. Either way the signal is not lost.
+- **Lease retention.** `active`/`active_command` are cleared only in `Operation::drop`, which runs after
+  `decide_*` returns (post-execution, cleanup and receipt handling). `begin` refuses competing operations
+  with 409 meanwhile. The API unit test covers lease retention, a fresh next operation and non-interruptible
+  non-acknowledgement.
+- **Truthful outcomes.** Pre-launch cancellation is seen by the unchanged driver after authority consumption:
+  `Cancelled`, no executor call, and the attempt spent (`consume_validation` precedes `execute`). If cleanup is
+  unknown, the result is `uncertain_command_effect` with no command receipt, and the API returns 409 with
+  `effect: unknown`. A cancelled validation normalizes to status `cancelled`, `validation_passed: false`.
+  The test asserts `repair_feedback` and redefinition are refused.
+- **Confinement.** No sandbox, manifest, executable-trust, timeout, resource, network or path code changed (diff
+  stat). Cancellation only adds an earlier termination trigger to the existing supervisor. Native
+  positive execution is refused by unchanged executable trust in this lane, so I could not run a live child
+  escape or termination reproduction, and neither could the builder; this is disclosed. The existing
+  path-traversal, symlink and hardlink confinement suites (`coding_workspace`, `coding_write`) ran and passed
+  inside command 3. Prompt injection cannot reach this surface: handles and decisions are only reachable from
+  control-authenticated HTTP.
+- **Public hygiene.** The added lines contain no private host path, username, credential or product name.
+  The only `/lane/...` strings are in the byte-identical retained prior review (`docs/reviews/33cd39e21481-...txt`),
+  already accepted. The evidence names its scratch only as relative `tmp/t303-command-cancel/`.
+- **Evaluation integrity.** No evaluation, grading, schema, fixture, baseline, held-out or dependency file
+  changed. The baseline list `docs/evidence/t301-baseline-failures-2026-10-25.md` was last modified on 2026-10-25
+  (4fda20f7). Command 7's driver reads only `development_tasks()` (30) and historical development contexts,
+  and uses a synthetic stub upstream; it reports `held_out_run: false`, `hidden_tests_run: false`,
+  `model_inference: false`. This batch publishes no score.
+- **Delivery.** No new row or sub-row. The batch ends in runnable, tested plumbing, not a plan.
+
+## Commands and results (all from the commit root, environment as requested)
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib coding_repository` | exit 0; 30 passed, 0 failed, 256 filtered (name filter as requested) |
+| 2 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api --all-targets --no-fail-fast` | exit 0; 62 passed: lib 7, coding_cli 9, coding_worktree 11, local_chat_api 35 |
+| 3 | `python3 -B scripts/local_agent_fast_gate.py --base 33cd39e21481d442efd5a8ed8479dc0dab5ae4fb --timeout 3600` | **FAST GATE: FAIL** (exit 1). fmt exit 0, all-target Clippy `-D warnings` exit 0 (14.22 s); source tests exit 101 in 102.36 s: 829 passed, 72 failed, 62 ignored, 0 filtered. Failure identities: 72, equal to the baseline set, with no additions and no omissions; 53 in `agentmage-host --lib`, 19 in `agentmage-platform-linux --lib` |
+| 4 | `python3 -B scripts/validate_docs.py` | exit 0; "Validated 771 Markdown file(s) and all policy invariants." |
+| 5 | `cmp docs/reviews/33cd39e21481-local-coding-model-repair.txt /lane/reviews/33cd39e21481-local-coding-model-repair.md` | identical, exit 0 |
+| 6 | `git diff --check 33cd39e21481d442efd5a8ed8479dc0dab5ae4fb HEAD` | exit 0, no output |
+| 7 | `bash /tools/build-slot python3 -B /lane/state/tmp/t303-model-repair/check-development-context.py /lane/state/tmp/review-d0bbe254/devctx` | Driver SHA-256 `8e2b1b54...281366` verified before use. exit 0; 30 tasks, 30 matching contexts, 2.97 s; `held_out_run`/`hidden_tests_run`/`model_inference` all false. My binary SHA-256 is `eab0db05...4618fc`; it differs from the builder's `2385fc38...f603e`, as expected for a separate debug build |
+
+The command 3 numbers equal the builder's final run (`fast-final.log`: fmt 0.95 s, Clippy 7.92 s, source
+103.25 s, exit 101). The gate result remains FAIL by its own definition; I do not relabel it. The failures
+are the retained environmental baseline (native manifest and trust refusals), not regressions from this batch.
+Raw logs: `/lane/state/tmp/review-d0bbe254/`. After the runs, no API or driver child process remained.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L1 (low, backlog): concurrent cancel can collide with the passive `try_lock` poll and surface as
+`cancellation-unavailable` instead of `cancelled`; the new live test can flake for the same reason.**
+`EffectCancellationObservation for CancellationToken` (kernel/engine/src/propagation.rs, `try_lock` in
+`observe_effect_cancellation`) returns `Unavailable` if another thread holds the node mutex.
+`LinuxCodingCommandCancellation::request` (platforms/linux/src/coding_repository_command.rs:47-64) locks that
+mutex twice inside `CancellationToken::cancel`. Before this batch the command token was never signalled
+concurrently; `/v1/cancel` and shutdown now do so while the supervisor polls
+(sandbox_supervision.rs:668 and 698, `is_cancelled()?`). On a collision the run ends through the existing
+fail-closed path (`CommandExecutionFailure::CancellationUnavailable`, `failed_command_effect`). The child is
+still terminated by the existing cleanup path, the attempt is spent and nothing passes, so this is safe, but the
+person sees a "cancellation unavailable" failure rather than a cancelled receipt. The new synthetic executor in
+`coding_repository_command_tests.rs` (`CancelDuringExecution::execute`, the `observe_effect_cancellation().unwrap()`
+loop) polls the same way while another thread calls `shutdown()`/`cancel()`, so a collision would panic the test.
+The window is microseconds against a 1 ms poll, so this is rare but not impossible. Fix: give the command handle
+an observer that retries `try_lock` a bounded number of times before reporting `Unavailable`, or have the
+synthetic test tolerate `Err(Unavailable)` by retrying. In either case, document that a collision fails closed.
+
+**L2 (low, backlog): the client token can now cancel a control-approved command or validation and spend one of
+its three attempts.** `/v1/cancel` keeps its "client or control" authentication (`lib.rs`, `("POST", "/v1/cancel")`;
+documented in `docs/guides/local-chat-api.md:84`). With `active_command` armed, an ordinary conversation-client
+token holder can now interrupt an approved validation. That spends an attempt (`MAX_ATTEMPTS = 3`,
+coding_repository_validation.rs:41), and repeating it exhausts the series and forces a new worktree.
+Cancellation is fail-safe and the permission model stays visible, but this widens what the lower-privilege
+token can affect, and the guide does not state it. Fix: either require the control token to cancel
+control-approved effects, or state the cross-token reach explicitly in coding-commands.md and local-chat-api.md.
+
+**L3 (low, backlog): one stale sentence in the repair guide.** `docs/guides/coding-model-repair.md:110-115` says
+native command cancellation is "now connected", then lists "cancellation during native effects" as remaining
+open. Fix: say "cancellation of worktree creation and write effects" (the non-interruptible ones) or remove it.
+
+The retained earlier lows stay open as backlog, unchanged by this batch: 33cd39e2 L1 exact repair-message
+pre-encoding; native positive HTTP admission and child termination (still not demonstrable here, and the new
+API latch in `arm_command_cancellation` is therefore exercised only by reasoning and the State-level unit tests,
+not by a positive HTTP run); shared error prefixes; refused-edit latest-result; the same-user window; and
+unsupported runner and compile-failure retries.
+
+## Per-row result
+
+- **T-303 (non-closing batch, cancellation plumbing): PASS** for this batch's scope at the exact commit. The
+  parent row stays open: native positive execution, coordinator integration, durable runs, apply, commit/push and
+  measured acceptance remain unestablished, as the evidence says.
+- **T-306 (non-closing batch, same plumbing): PASS** for this batch's scope at the exact commit. The parent row
+  stays open for the same reasons.
+
+This verdict accepts only the cancellation batch. It closes neither parent row and is not a score,
+native-execution or release claim, and it makes no certification, compliance or legal statement.
+
+Verdict: PASS

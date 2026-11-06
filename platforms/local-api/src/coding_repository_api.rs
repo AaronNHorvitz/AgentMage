@@ -148,7 +148,7 @@ pub(super) fn handle_repository(
     if !req.control {
         return error(socket, 403);
     }
-    let (mut op, _) = match begin(state, stop, "code.repository") {
+    let (mut op, _) = match begin_controlled(state, stop, "code.repository") {
         Ok(op) => op,
         Err(status) => return error(socket, status),
     };

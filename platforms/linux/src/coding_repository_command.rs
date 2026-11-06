@@ -8,6 +8,9 @@ use agentmage_kernel_engine::command_runner::{
     BoundedCommandExecutor, CommandEffectDriver, CommandRegistry, CommandRequest, CommandSpec,
     CommandWorkingDirectory, PreparedCommand, prepare_command, verify_command_receipt,
 };
+use agentmage_kernel_engine::propagation::{
+    CancellationObservationError, EffectCancellationObservation,
+};
 
 const COMMAND_TOOL: &str = "local-coding-command";
 
@@ -62,6 +65,37 @@ impl LinuxCodingCommandCancellation {
             .map(|_| ())
             .map_err(|_| err("code.command.cancellation"))
     }
+}
+
+impl EffectCancellationObservation for LinuxCodingCommandCancellation {
+    fn observe_effect_cancellation(
+        &self,
+    ) -> std::result::Result<
+        Option<agentmage_kernel_contracts::CancellationSignal>,
+        CancellationObservationError,
+    > {
+        observe_command_cancellation(&self.token)
+    }
+}
+
+// Cancellation briefly locks the token while the existing supervisor polls it.
+// Never block on that mutex or turn an unavailable owner into an uncancelled
+// observation. Yield between a fixed number of passive reads, then fail closed.
+fn observe_command_cancellation(
+    observation: &dyn EffectCancellationObservation,
+) -> std::result::Result<
+    Option<agentmage_kernel_contracts::CancellationSignal>,
+    CancellationObservationError,
+> {
+    for attempt in 0..8 {
+        match observation.observe_effect_cancellation() {
+            Err(CancellationObservationError::Unavailable) if attempt < 7 => {
+                std::thread::yield_now();
+            }
+            result => return result,
+        }
+    }
+    Err(CancellationObservationError::Unavailable)
 }
 // Kept at this composition boundary: the registered tool validates the exact
 // canonical request bytes, rather than accepting caller-supplied command fields.
@@ -356,12 +390,8 @@ impl LinuxCodingRepository {
             .created
             .as_ref()
             .ok_or(err("code.command.worktree-required"))?;
-        let mut driver = CommandEffectDriver::new(
-            executor,
-            &created.held,
-            prepared.clone(),
-            cancellation.token,
-        );
+        let mut driver =
+            CommandEffectDriver::new(executor, &created.held, prepared.clone(), cancellation);
         let receipt = exact.execute(self.authority.authority_mut(), &mut driver)?;
         let command_receipt = driver.take_receipt();
         let output = driver.take_output();

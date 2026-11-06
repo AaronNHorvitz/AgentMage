@@ -81,7 +81,15 @@ upgrade, redirects or retries.
 | POST `/v1/code/workspace/read`, `/search`, `/proposals` | Client or control | Read/search selected sources or propose edits with separate model-disclosure consent; no writes |
 | GET/POST `/v1/code/workspace/changes` | Client or control | Inspect retained previews/receipts or prepare an inert exact diff |
 | POST `/v1/code/workspace/apply` | Control only | Consume an exact approval and apply through the kernel/native write transaction; see [limits and recovery](coding-writes.md) |
-| POST `/v1/cancel` | Client or control | Empty body; requests cancellation of the single active cancellable operation |
+| POST `/v1/cancel` | Control for repository operations; client or control otherwise | Empty body; requests cancellation of the single active cancellable operation |
+
+Repository operations include native command/validation decisions and repair
+proposals. Their lease records the control requirement atomically when admitted;
+a client token receives 403 without latching cancellation. The operation retains
+its lease until completion, including after control cancellation. Ordinary chat
+and source proposals retain client cancellation. Orderly service shutdown remains
+able to cancel its owned work. Non-interruptible effects do not acknowledge a
+cancellation request.
 
 After the person chooses the endpoint for conversations, trusted settings send:
 

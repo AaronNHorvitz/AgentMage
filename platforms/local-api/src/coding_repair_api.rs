@@ -34,7 +34,7 @@ pub(super) fn handle_repair(
     if !req.control {
         return error(socket, 403);
     }
-    let (mut op, config) = match begin(state, stop, "code.repository.repair") {
+    let (mut op, config) = match begin_controlled(state, stop, "code.repository.repair") {
         Ok(operation) => operation,
         Err(status) => return error(socket, status),
     };
@@ -137,31 +137,50 @@ fn prepare_repair(
     let (_, source_budget) = repair_prompt(&feedback, input.max_message_bytes)?;
     let context =
         prepare_coding_proposal(&input.task, &files, source_budget).map_err(|e| (400, e.code()))?;
-    if !(1..=4096).contains(&input.max_tokens)
-        || encode_chat(
-            &input.model,
-            &[
-                ChatMessage {
-                    role: ChatRole::System,
-                    content: CODING_PROPOSAL_INSTRUCTION,
-                },
-                ChatMessage {
-                    role: ChatRole::User,
-                    content: context.user_message(),
-                },
-            ],
-            input.max_tokens,
-        )
-        .is_err()
-    {
-        return Err((400, "api.request"));
-    }
+    prepare_proposal_messages(&input.model, input.max_tokens, &context, Some(&feedback))?;
     Ok((files, feedback, source_budget))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn repair_preflight_encodes_the_exact_combined_messages_and_refuses_wire_overflow() {
+        let sources = [CodingSource {
+            path: "calc.py".into(),
+            content: "def add(a, b): return a - b\n".into(),
+        }];
+        let context = prepare_coding_proposal("Fix add", &sources, 8192).unwrap();
+        let feedback = json!({"stderr": "\0\n\u{1b}\"\\界", "authority": "untrusted"});
+        let prepared = prepare_proposal_messages("fixture", 64, &context, Some(&feedback)).unwrap();
+        let bytes = encode_chat("fixture", &prepared.messages(&context), 64).unwrap();
+        let wire: Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(wire["messages"].as_array().unwrap().len(), 3);
+        assert_eq!(
+            wire["messages"][0]["content"],
+            format!("{CODING_PROPOSAL_INSTRUCTION}{REPAIR_INSTRUCTION}")
+        );
+        assert_eq!(wire["messages"][1]["content"], context.user_message());
+        let diagnostics: Value =
+            serde_json::from_str(wire["messages"][2]["content"].as_str().unwrap()).unwrap();
+        assert_eq!(diagnostics, json!({"untrusted_test_observation":feedback}));
+        let oversized = json!({"stderr": "\0".repeat(64 * 1024)});
+        // Ordinary two-message validation fits; the complete repair must refuse.
+        // Production diagnostics are smaller. This probes encoder behavior without
+        // increasing any source, feedback, token or wire ceiling.
+        assert!(prepare_proposal_messages("fixture", 64, &context, None).is_ok());
+        assert_eq!(
+            prepare_proposal_messages("fixture", 64, &context, Some(&oversized)).err(),
+            Some((400, "api.request"))
+        );
+        for tokens in [0, 4097] {
+            assert_eq!(
+                prepare_proposal_messages("fixture", tokens, &context, Some(&feedback)).err(),
+                Some((400, "api.request"))
+            );
+        }
+    }
 
     #[test]
     fn repair_reserves_exact_serialized_diagnostic_bytes_including_control_escapes() {
