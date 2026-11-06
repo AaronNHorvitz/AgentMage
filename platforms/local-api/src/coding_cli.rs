@@ -327,6 +327,7 @@ fn propose(
     tokens: &str,
     task: &str,
     worktree: Option<&str>,
+    repair: bool,
 ) -> Result<()> {
     let selected = selection(client)?;
     if selected["model_context_approved"] != true {
@@ -334,16 +335,48 @@ fn propose(
     }
     let message_bytes = message_bytes.parse::<usize>().map_err(|_| ())?;
     let tokens = tokens.parse::<u32>().map_err(|_| ())?;
-    let events = client.call(
-        "POST",
-        "/v1/code/workspace/proposals",
-        false,
-        Some(json!({
-            "workspace_revision":selected["workspace_revision"],"paths":selected["paths"],
-            "model":model,"task":task,"max_message_bytes":message_bytes,"max_tokens":tokens
-        })),
-        show,
-    )?;
+    let mut body = json!({
+        "workspace_revision":selected["workspace_revision"],"paths":selected["paths"],
+        "model":model,"task":task,"max_message_bytes":message_bytes,"max_tokens":tokens
+    });
+    let mut expected_feedback = None;
+    let route = if repair {
+        let root = worktree.ok_or(())?;
+        let feedback = client.json("GET", "/v1/code/repository/repair", true, None)?;
+        let hash = feedback["feedback_sha256"]
+            .as_str()
+            .filter(|s| digest(s))
+            .ok_or(())?;
+        let identity = feedback["worktree_root_sha256"]
+            .as_str()
+            .filter(|s| digest(s))
+            .ok_or(())?;
+        let receipt = feedback["receipt_sha256"]
+            .as_str()
+            .filter(|s| digest(s))
+            .ok_or(())?;
+        let settings = client.json("GET", "/v1/settings", true, None)?;
+        let revision = settings["settings_revision"].as_u64().ok_or(())?;
+        let endpoint = settings["endpoint"].as_str().ok_or(())?;
+        LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ())?;
+        confirm(
+            &json!({"feedback":feedback,"settings":settings,"selection":selected,
+            "model":model,"task":task,"max_message_bytes":message_bytes,"max_tokens":tokens,
+            "warning":"Sends the displayed untrusted failure excerpts and selected source to this endpoint. Output can contain sensitive text. Spends one proposal request for this failed receipt even on error or cancellation. Writes and tests need separate consent."}),
+            &format!("share-failure {hash}"),
+        )?;
+        LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ())?;
+        body["receipt_sha256"] = json!(receipt);
+        body["feedback_sha256"] = json!(hash);
+        body["settings_revision"] = json!(revision);
+        body["settings_endpoint"] = json!(endpoint);
+        body["approve_failure_disclosure"] = json!(true);
+        expected_feedback = Some(feedback);
+        "/v1/code/repository/repair/proposals"
+    } else {
+        "/v1/code/workspace/proposals"
+    };
+    let events = client.call("POST", route, repair, Some(body), show)?;
     let context = events.first().ok_or(())?;
     let terminal = events.last().ok_or(())?;
     if context["type"] != "context"
@@ -352,6 +385,17 @@ fn propose(
         || terminal["workspace_revision"] != selected["workspace_revision"]
         || terminal["applied"] != false
         || terminal["tested"] != false
+    {
+        return Err(());
+    }
+    if let Some(expected) = expected_feedback
+        && (context["repair_feedback"] != expected
+            || context["message_bytes"]
+                .as_u64()
+                .is_none_or(|n| n > message_bytes as u64)
+            || context["source_message_bytes"]
+                .as_u64()
+                .is_none_or(|n| n >= message_bytes as u64))
     {
         return Err(());
     }
@@ -377,7 +421,9 @@ fn propose(
     client.idle()?;
     let mut request = json!({
         "workspace_revision":selected["workspace_revision"],"paths":selected["paths"],
-        "expected_sources":expected,"task":task,"max_message_bytes":message_bytes,"answer":&**answer
+        "expected_sources":expected,"task":task,"max_message_bytes": if repair {
+            context["source_message_bytes"].as_u64().filter(|n| (2048..=32768).contains(n)).ok_or(())?
+        } else { message_bytes as u64 },"answer":&**answer
     });
     if let Some(root) = worktree {
         request
@@ -650,10 +696,13 @@ fn execute(args: &[String]) -> Result<()> {
             show(&client.json("POST", route, false, Some(body))?)
         }
         ("propose", [model, bytes, tokens, task]) => {
-            propose(&client, model, bytes, tokens, task, None)
+            propose(&client, model, bytes, tokens, task, None, false)
         }
         ("propose-worktree", [root, model, bytes, tokens, task]) => {
-            propose(&client, model, bytes, tokens, task, Some(root))
+            propose(&client, model, bytes, tokens, task, Some(root), false)
+        }
+        ("repair-worktree", [root, model, bytes, tokens, task]) => {
+            propose(&client, model, bytes, tokens, task, Some(root), true)
         }
         ("apply", [root]) => apply(&client, Some(root)),
         ("deny", []) => apply(&client, None),
@@ -666,7 +715,7 @@ fn execute(args: &[String]) -> Result<()> {
 
 fn usage() {
     eprintln!(
-        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> edit|edit-prepare <worktree> <strict-change-json>|edit-apply <worktree>|edit-deny|propose-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|validation|validation-prepare <definition-json>|validation-run <worktree>|validation-deny|command|command-prepare <spec-json>|command-run <worktree>|command-deny|worktree|worktree-prepare <repository> <private-management-directory> <task-id> <base-commit>|worktree-create <repository> <private-management-directory>|worktree-deny|map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
+        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> repair-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|edit|edit-prepare <worktree> <strict-change-json>|edit-apply <worktree>|edit-deny|propose-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|validation|validation-prepare <definition-json>|validation-run <worktree>|validation-deny|command|command-prepare <spec-json>|command-run <worktree>|command-deny|worktree|worktree-prepare <repository> <private-management-directory> <task-id> <base-commit>|worktree-create <repository> <private-management-directory>|worktree-deny|map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
     );
 }
 

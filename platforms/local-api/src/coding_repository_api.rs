@@ -119,6 +119,9 @@ pub(super) fn handle_repository(
     state: &Mutex<State>,
     stop: &AtomicBool,
 ) -> Result<(), ApiError> {
+    if req.path.starts_with("/v1/code/repository/repair") {
+        return super::coding_repair_api::handle_repair(socket, req, state, stop);
+    }
     let route = (req.method.as_str(), req.path.as_str());
     if !matches!(
         route,

@@ -1,0 +1,119 @@
+Commit: ec5aa678a500b46d006d1bf892143f98a63a6abb
+Scope: local-coding-project-tests-repair
+
+# Independent re-review: M1 schema-consumer gate repair (T-303, related T-306)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only repository access.
+Base: `cd3179cfbc94d2933a2aba6000019baa3439cada`. This re-review covers only the repair of medium
+M1 from `docs/reviews/cd3179cfbc94-local-coding-project-tests.txt`. Neither parent row closes.
+
+## Methods
+
+- Confirmed the commit: `git rev-parse HEAD` = `ec5aa678a500b46d006d1bf892143f98a63a6abb`. It is
+  a single commit on the base, and the working tree is clean.
+- Read IP-POLICY.md, decisions 0153-0155, the T-303/T-306 rows, the original M1 text and the whole
+  base..HEAD diff (7 files). The diff changes `scripts/local_agent_fast_gate.py`,
+  `tests/test_local_agent_fast_gate.py`, two corrected documents, the new evidence file, the T-303
+  cell and the retained review.
+- Searched the whole tree for consumers of the schema
+  (`grep -rn "validation-receipt.schema"` across .rs/.py/.mjs/.js/.toml). The only Rust consumer is
+  `shells/host/src/coding_tools.rs:70` (`include_str!`). The remaining hits are the gate itself and
+  two historical evidence scripts. Nothing in kernel or capability crates consumes it.
+- Ran the exact production planner against real `cargo metadata` with probe path sets: schema only,
+  one fixture only, the JS test only, schema plus JS test, and three unregistered paths.
+- Reproduced the "before" failure myself: I put the base commit's gate script next to the new test
+  file in scratch, outside the repository.
+- Verified the helper (command 3) checksum and read its contents. It imports the production
+  `plan`/`execute`, calls `cargo metadata` and has no `--write`.
+- Compared the host failure identities against the retained baseline log, which was committed in
+  `ecf33af3` and is unchanged by this commit.
+- Ran no GPU, model, development or held-out task.
+
+Environment: `PATH=/lane/state/tmp/shared-node-v24.15.0/bin:$PATH`,
+`CARGO_TARGET_DIR=/lane/state/review-target`, `CARGO_BUILD_JOBS=2`, `RUST_TEST_THREADS=4`.
+Node binary SHA-256 is `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c`
+(v24.15.0), as stated. Reviewer logs are in `/lane/state/tmp/review-ec5aa678a500/`.
+
+## Commands and results
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `python3 -B -m unittest tests.test_local_agent_fast_gate tests.test_runtime_producer_contract` | Ran 36 tests, OK |
+| 2 | `python3 -B scripts/local_agent_fast_gate.py --base cd3179cf... --timeout 3600` | FAST GATE: PASS. All six steps exit 0: diff check, untracked lint, review lint, markdownlint of 4 files (0 issues), Python lint, 27 gate tests OK. Log SHA-256 `db82c8d1...8247` |
+| 3 | `python3 -B /lane/state/tmp/t303-schema-gate-repair/run-schema-plan.py` (helper SHA-256 `849d328a...a5da3d`, matches) | FAST GATE: FAIL, as expected. Steps 1-7 exit 0: diff check, untracked lint, `node --test` (78 tests / 78 pass / 0 fail, skipped, cancelled or todo), producer unittest (9 OK), reserved read-only reproduction ("runtime producer fixtures match (9 files)"), host fmt, host all-target Clippy `-D warnings`. Step 8, host `cargo test --all-targets --no-fail-fast`, exit 101: 513+15+5 = 533 passed, 53 failed, 9+2 = 11 ignored, 0 filtered. Log SHA-256 `12030489...02cb` |
+| 3a | Sorted unique `... FAILED` names, current vs `artifacts/verification-logs/standalone-evidence-host-2026-10-04/batch35-source-2/11.log` | Both 53 names; `diff` is empty; both SHA-256 `dbfcc2c2f86bedf8218c0e72145e1ab4ad5b78a1c2c01bd83a8f09354f909725`, matching the claim |
+| 4 | `python3 -B scripts/validate_docs.py` | "Validated 768 Markdown file(s) and all policy invariants." exit 0 |
+| 5 | `cmp docs/reviews/cd3179cfbc94-local-coding-project-tests.txt /lane/reviews/cd3179cfbc94-local-coding-project-tests.md` | identical, exit 0 |
+| 6 | `git diff --check cd3179cf... HEAD` | empty, exit 0 |
+| 7 | Base gate script + new test, in scratch | `test_validation_schema_changes_run_the_actual_consumer_tests` fails with StopIteration because no cargo operation is planned. The other 26 pass. This matches `regression-before.log` |
+| 8 | Real-metadata planner probes | See below |
+| 9 | `git diff --quiet cd3179cf HEAD -- shells kernel schemas fixtures capabilities Cargo.toml Cargo.lock` | exit 0: no runtime, schema, fixture, crate or lock change |
+
+Probe results (command 8):
+
+- **Schema only:** the plan has diff check, untracked lint, `node --test`, producer unittest, the
+  reproduction under `bash /tools/build-slot` without `--write`, and fmt, Clippy and test for
+  `-p agentmage-host`.
+- **One v5 fixture only:** the same plan minus `node --test`.
+- **JS test only:** no cargo operation is planned.
+- **Unregistered paths:** `fixtures/runtime-producer/v5/extra.json`,
+  `schemas/runtime/other.schema.json` and `fixtures/runtime-producer/v4/manifest.json` all refuse
+  with "no fast check registered".
+- **Real metadata:** `agentmage-host` exists at `shells/host/Cargo.toml` and has no reverse
+  dependents. Cargo commands get the build-slot wrapper in `execute_checks`
+  (`scripts/local_agent_fast_gate.py:304`).
+
+The builder's log and helper checksums all match the files in `/lane/state/tmp/t303-schema-gate-repair/`.
+
+## Analysis of the repair
+
+- `scripts/local_agent_fast_gate.py:39-41` defines `HOST_CATALOG_INPUTS`: the nine registered v5
+  fixtures plus the exact receipt schema.
+- Lines 76-77 seed `agentmage-host` before the reverse-dependency fixpoint, so every transitive host
+  consumer is selected. Before the repair, fixture changes added the host after expansion, which
+  missed its dependents. That gap is now closed too, and coverage only grew.
+- Lines 148-150 and 201-205 add the producer unittest and the reserved read-only reproduction for
+  the schema as well as the fixtures. This matches the three items of the original concrete fix.
+- If `agentmage-host` were ever renamed, the hard-coded name would make cargo refuse
+  `-p agentmage-host`. That fails closed.
+- The regression (`tests/test_local_agent_fast_gate.py:109-126`) asserts the exact selection
+  `[agentmage-host, host-client, host-consumer]` for fmt, Clippy and test. That excludes the
+  unrelated `foundation`, `runtime`, `client` and `other` crates. It also checks the producer
+  unittest, the reproduction without `--write`, the build-slot wrapper when present, and that a
+  JS-only change plans no cargo command.
+- Document corrections: `docs/guides/local-agent-development.md` and
+  `docs/evidence/t303-test-adapters-2026-11-06.md` now name the Rust consumer. They also state that
+  the original batch's complete run covered the host only because crate sources changed.
+- Claims checked against my runs: every number in the new evidence file is reproduced above. The
+  scope is stated honestly: "A passing repair gate does not establish a passing host source gate",
+  and the transitive behaviour is shown only on the synthetic graph. The file makes no confinement,
+  model, score or closure claim. The T-303 checkbox stays `[ ]`, and T-306 and all other rows are
+  unchanged.
+- Public-repository hygiene: the added lines contain no home path, username, hostname, credential,
+  personal data, sibling-project name or third-party product name. The only absolute paths are the
+  lane-generic `/lane/...` paths inside the byte-for-byte retained review; that report was already
+  accepted in this form.
+- Delivery: no new row or sub-row was added; the repair stays in the existing batch.
+- Evaluation integrity: no evaluator, held-out task, hidden test, threshold or prompt changed.
+
+## Findings
+
+No critical, high or medium finding. M1 is resolved.
+
+These remain backlog, carried from earlier reviews and unchanged by this commit:
+
+- Low L1 from the original project-test review: unsupported honest-runner output and compile
+  failures become non-retryable malformed results. This must be resolved before parent acceptance.
+- The earlier low findings: native positive HTTP coverage, shared error prefixes, refused-decision
+  latest-result retention, and the same-user worktree identity window.
+
+## Per-row result
+
+- **T-303:** the M1 repair is accepted for exact commit `ec5aa678a500b46d006d1bf892143f98a63a6abb`,
+  together with the rest of the project-test batch, which the original review otherwise confirmed.
+  This is a non-closing batch. The row stays open for model repair, native positive execution,
+  durable recovery/cancellation, L1 and measured acceptance.
+- **T-306:** a related non-closing batch with the same result. Original apply, approved
+  commit/push, MCP and measured acceptance remain open.
+
+Verdict: PASS

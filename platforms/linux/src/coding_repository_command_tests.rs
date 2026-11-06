@@ -567,6 +567,159 @@ fn validation_failure_feedback_then_exact_fresh_rerun_passes_without_task_grade(
     assert_eq!(reopened.inspect().unwrap()["receipts"], receipts);
     assert!(reopened.created.is_none());
 }
+
+#[test]
+fn repair_feedback_consumes_exact_failure_once_preserving_test_budget_and_write_consent() {
+    let f = Fixture::new();
+    let mut owner = f.open();
+    assert!(owner.repair_feedback().is_err());
+    f.synthetic_created(&mut owner);
+    assert_eq!(
+        owner.repair_feedback().unwrap_err().code(),
+        "code.repair.failure-required"
+    );
+    let calls = Arc::new(AtomicUsize::new(0));
+    let first = validation_pending(&mut owner, None).unwrap();
+    let failed = validation_execute(
+        &mut owner,
+        &first,
+        envelope("assertion_failed", 1, 1, 0),
+        1,
+        &calls,
+        false,
+    )
+    .unwrap();
+    let feedback = owner.repair_feedback().unwrap();
+    let prior = failed["validation"]["receipt"]["receipt_sha256"]
+        .as_str()
+        .unwrap();
+    let digest = feedback["feedback_sha256"].as_str().unwrap();
+    assert_eq!(feedback["receipt_sha256"], prior);
+    assert_eq!(feedback["failed_names"], json!(["synthetic.test"]));
+    assert_eq!(feedback["attempt"], 1);
+    assert_eq!(
+        feedback["stdout_sha256"],
+        failed["validation"]["receipt"]["stdout_sha256"]
+    );
+    assert_eq!(feedback["output"]["stdout"]["truncated"], false);
+    for (receipt, hash) in [("wrong", digest), (prior, "wrong")] {
+        assert_eq!(
+            owner
+                .consume_repair_feedback(receipt, hash)
+                .unwrap_err()
+                .code(),
+            "code.repair.stale"
+        );
+        assert_eq!(owner.repair_feedback().unwrap(), feedback);
+    }
+    assert_eq!(
+        owner.consume_repair_feedback(prior, digest).unwrap(),
+        feedback
+    );
+    assert_eq!(
+        owner.repair_feedback().unwrap_err().code(),
+        "code.repair.budget"
+    );
+    assert!(owner.consume_repair_feedback(prior, digest).is_err());
+    let state = owner.inspect_validation().unwrap();
+    assert_eq!(state["attempts"], 1);
+    assert_eq!(state["repair_requested"], true);
+    assert_eq!(calls.load(Ordering::Relaxed), 1);
+    assert!(owner.inspect_edit().unwrap()["pending"].is_null());
+    assert_eq!(
+        fs::read(f.0.join("owned/worktree/sentinel")).unwrap(),
+        b"preserve"
+    );
+    // The unchanged native exact write still needs independent consent. Editing
+    // cannot reset the spent model request or the immutable test series.
+    let edit = edit_preview(&mut owner);
+    owner
+        .decide_edit(edit["preview_sha256"].as_str().unwrap(), true, NOW)
+        .unwrap();
+    assert_eq!(
+        owner.repair_feedback().unwrap_err().code(),
+        "code.repair.budget"
+    );
+    let next = validation_pending(&mut owner, Some(prior)).unwrap();
+    let second = validation_execute(
+        &mut owner,
+        &next,
+        envelope("assertion_failed", 1, 1, 0),
+        1,
+        &calls,
+        false,
+    )
+    .unwrap();
+    let second_feedback = owner.repair_feedback().unwrap();
+    assert_eq!(
+        second_feedback["receipt_sha256"],
+        second["validation"]["receipt"]["receipt_sha256"]
+    );
+    assert_ne!(second_feedback["receipt_sha256"], prior);
+    let prior = second_feedback["receipt_sha256"].as_str().unwrap();
+    owner
+        .consume_repair_feedback(prior, second_feedback["feedback_sha256"].as_str().unwrap())
+        .unwrap();
+    let third = validation_pending(&mut owner, Some(prior)).unwrap();
+    validation_execute(
+        &mut owner,
+        &third,
+        envelope("assertion_failed", 1, 1, 0),
+        1,
+        &calls,
+        false,
+    )
+    .unwrap();
+    assert_eq!(
+        owner.repair_feedback().unwrap_err().code(),
+        "code.repair.budget"
+    );
+    assert_eq!(calls.load(Ordering::Relaxed), 3);
+}
+
+#[test]
+fn repair_refuses_pass_uncertainty_restart_and_held_root_replacement() {
+    for case in ["pass", "corrupt", "root", "restart"] {
+        let f = Fixture::new();
+        let mut owner = f.open();
+        f.synthetic_created(&mut owner);
+        let calls = Arc::new(AtomicUsize::new(0));
+        let first = validation_pending(&mut owner, None).unwrap();
+        let pass = case == "pass";
+        let result = validation_execute(
+            &mut owner,
+            &first,
+            envelope(
+                if pass { "passed" } else { "assertion_failed" },
+                if pass { 2 } else { 1 },
+                if pass { 0 } else { 1 },
+                0,
+            ),
+            if pass { 0 } else { 1 },
+            &calls,
+            case == "corrupt",
+        );
+        if case == "corrupt" {
+            assert!(result.is_err());
+        } else {
+            result.unwrap();
+        }
+        match case {
+            "root" => {
+                let root = f.0.join("owned/worktree");
+                fs::rename(&root, f.0.join("old-worktree")).unwrap();
+                fs::create_dir(&root).unwrap();
+            }
+            "restart" => {
+                drop(owner);
+                owner = f.open();
+            }
+            _ => (),
+        }
+        assert!(owner.repair_feedback().is_err(), "{case}");
+        assert_eq!(calls.load(Ordering::Relaxed), 1);
+    }
+}
 #[test]
 fn validation_three_attempt_budget_survives_denial_and_cannot_reset_definition() {
     let f = Fixture::new();
@@ -1262,6 +1415,28 @@ fn selected_project_output_formats_bind_the_preview_and_keep_exact_retry_budget(
             assert_eq!(value["validation"]["model_retry_connected"], false);
             if attempt == 1 {
                 assert_eq!(value["validation"]["receipt"]["status"], "assertion_failed");
+                let feedback = owner.repair_feedback().unwrap();
+                assert_eq!(
+                    feedback["receipt_sha256"],
+                    value["validation"]["receipt"]["receipt_sha256"]
+                );
+                let channel = if parser == "python_unittest_text_v1" {
+                    "stderr"
+                } else {
+                    "stdout"
+                };
+                assert!(
+                    feedback["output"][channel]["head"]
+                        .as_str()
+                        .unwrap()
+                        .contains("FAILED")
+                );
+                owner
+                    .consume_repair_feedback(
+                        feedback["receipt_sha256"].as_str().unwrap(),
+                        feedback["feedback_sha256"].as_str().unwrap(),
+                    )
+                    .unwrap();
                 prior = value["validation"]["receipt"]["receipt_sha256"]
                     .as_str()
                     .map(str::to_owned);

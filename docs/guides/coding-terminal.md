@@ -121,6 +121,12 @@ no effects. The existing API cancellation and transaction semantics apply.
 
 ## Bounds and recovery
 
+For a separately approved failed project test, use
+[`repair-worktree`](coding-model-repair.md). It adds exact failure-disclosure
+consent to the existing selected-source/model and owned diff paths. The control
+token is required for failure preview and its one-use model proposal. It does not
+automatically write or execute a test, and adds no durable run or model score.
+
 The client uses the existing protected token loader. Source/proposal/status operations send
 only the client token; settings inspection for disclosure, selection, revocation
 and explicit apply/deny send the control token. Tokens never enter arguments, output, prompts or model requests.

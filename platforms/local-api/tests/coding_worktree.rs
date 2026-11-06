@@ -175,6 +175,7 @@ impl Fixture {
 const PTY: &str = r#"
 import errno,fcntl,json,os,pty,select,signal,subprocess,sys,termios,time
 master,slave=pty.openpty()
+answered=0
 def session():
     os.setsid();fcntl.ioctl(0,termios.TIOCSCTTY,0)
 p=subprocess.Popen(sys.argv[2:],stdin=slave,stdout=slave,stderr=slave,preexec_fn=session)
@@ -191,12 +192,12 @@ try:
             raise
         if not chunk:break
         raw+=chunk
-        if b'anything else declines:' in raw and not sent:
+        if raw.count(b'anything else declines:')>answered and (not sent or sys.argv[1]=='approve-all'):
             prompt=raw.split(b'Type exactly ')[-1].split(b' to approve;')[0]
             if sys.argv[1] in ['replace-owned','replace-root']:
                 from pathlib import Path
                 root=Path(sys.argv[7] if sys.argv[1]=='replace-owned' else sys.argv[6]);root.rename(root.with_name('old-owned'));root.mkdir(mode=0o700)
-            os.write(master,(prompt if sys.argv[1] in ['approve','replace-owned','replace-root'] else sys.argv[1].encode())+b'\n');sent=True
+            os.write(master,(prompt if sys.argv[1] in ['approve','approve-all','replace-owned','replace-root'] else sys.argv[1].encode())+b'\n');sent=True;answered+=1
     status=p.wait(timeout=2)
     assert b'\x1b' not in raw
     print(json.dumps({'status':status,'sent':sent,'transcript':raw.decode()}))
@@ -947,66 +948,192 @@ fn owned_edit_api_requires_control_read_consent_and_never_adopts_a_caller_root()
 }
 
 #[test]
-fn synthetic_propose_worktree_requires_complete_proposal_and_fresh_read_consent() {
-    // This is protocol evidence only: both proposal and creation are synthetic.
-    for (complete, choice) in [
-        (true, "approve"),
-        (true, "incorrect"),
-        (true, "replace-root"),
-        (false, "approve"),
+fn repair_api_requires_control_exact_object_disclosure_and_owned_failure() {
+    let f = Fixture::new();
+    assert_eq!(
+        f.call_bytes("GET", "/v1/code/repository/repair", false, b"")
+            .0,
+        403
+    );
+    let (code, value) = f.call_bytes("GET", "/v1/code/repository/repair", true, b"");
+    assert_eq!(code, 409);
+    assert_eq!(value["error"], "code.command.worktree-required");
+    let request = json!({"workspace_revision":1,"paths":["sentinel"],"model":"synthetic-model",
+        "task":"Repair sentinel","max_message_bytes":8192,"max_tokens":128,
+        "receipt_sha256":"a".repeat(64),"feedback_sha256":"b".repeat(64),
+        "settings_revision":0,"settings_endpoint":"http://127.0.0.1:12345/v1",
+        "approve_failure_disclosure":true});
+    let route = "/v1/code/repository/repair/proposals";
+    assert_eq!(f.call("POST", route, false, request.clone()).0, 403);
+    for body in [
+        json!([]),
+        json!({}),
+        {
+            let mut body = request.clone();
+            body["unexpected"] = json!(true);
+            body
+        },
+        {
+            let mut body = request.clone();
+            body["approve_failure_disclosure"] = json!("true");
+            body
+        },
     ] {
-        let mut f = Fixture::new();
-        f.stop();
-        let root = f.root.join("repo");
-        let identity =
-            agentmage_platform_linux::discover_linux_coding_map(&root, "sentinel", || false)
-                .unwrap()
-                .root_sha256;
-        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-        listener.set_nonblocking(true).unwrap();
-        f.address = Some(listener.local_addr().unwrap());
-        let stop = Arc::new(AtomicBool::new(false));
-        let done = stop.clone();
-        let expected_identity = identity.clone();
-        let worker = thread::spawn(move || {
-            let deadline = Instant::now() + Duration::from_secs(12);
-            let mut requests = Vec::new();
-            while !done.load(Ordering::Relaxed) {
-                assert!(Instant::now() < deadline);
-                let (mut socket, _) = match listener.accept() {
-                    Ok(pair) => pair,
-                    Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                        thread::sleep(Duration::from_millis(5));
-                        continue;
-                    }
-                    Err(e) => panic!("{e}"),
-                };
-                socket
-                    .set_read_timeout(Some(Duration::from_secs(2)))
-                    .unwrap();
-                let mut header = Vec::new();
-                while !header.ends_with(b"\r\n\r\n") {
-                    let mut byte = [0];
-                    socket.read_exact(&mut byte).unwrap();
-                    header.push(byte[0]);
-                    assert!(header.len() < 8192);
-                }
-                let header = String::from_utf8(header).unwrap();
-                let route = header.lines().next().unwrap().to_owned();
-                let length = header
-                    .lines()
-                    .find_map(|l| l.strip_prefix("Content-Length: "))
+        assert_eq!(f.call("POST", route, true, body).0, 400);
+    }
+    let duplicate = serde_json::to_string(&request).unwrap().replacen(
+        '{',
+        "{\"approve_failure_disclosure\":true,",
+        1,
+    );
+    assert_eq!(
+        f.call_bytes("POST", route, true, duplicate.as_bytes()).0,
+        400
+    );
+    let mut refused = request.clone();
+    refused["approve_failure_disclosure"] = json!(false);
+    assert_eq!(
+        f.call("POST", route, true, refused).1["error"],
+        "code.repair.disclosure-required"
+    );
+    assert_eq!(f.call("POST", route, true, request.clone()).0, 428);
+    let upstream = TcpListener::bind("127.0.0.1:0").unwrap();
+    upstream.set_nonblocking(true).unwrap();
+    let endpoint = format!("http://{}/v1", upstream.local_addr().unwrap());
+    assert_eq!(
+        f.call(
+            "PUT",
+            "/v1/settings",
+            true,
+            json!({"endpoint":endpoint,
+        "approve_conversations":true})
+        )
+        .0,
+        200
+    );
+    let mut stale = request.clone();
+    stale["settings_endpoint"] = json!(endpoint);
+    assert_eq!(
+        f.call("POST", route, true, stale.clone()).1["error"],
+        "code.repair.settings-stale"
+    );
+    stale["settings_revision"] = json!(1);
+    assert_eq!(
+        f.call("POST", route, true, stale.clone()).1["error"],
+        "code.workspace.choice-required"
+    );
+    assert_eq!(
+        f.call(
+            "PUT",
+            "/v1/code/workspace",
+            true,
+            json!({
+        "root":f.root.join("repo"),"paths":["sentinel"],"approve_read":true,
+        "approve_model_context":true,"settings_revision":1,"settings_endpoint":endpoint})
+        )
+        .0,
+        200
+    );
+    assert_eq!(
+        f.call("POST", route, true, stale).1["error"],
+        "code.command.worktree-required"
+    );
+    assert_eq!(
+        upstream.accept().unwrap_err().kind(),
+        std::io::ErrorKind::WouldBlock
+    );
+    let output = f.cli(&[
+        "repair-worktree",
+        f.root.join("repo").to_str().unwrap(),
+        "synthetic-model",
+        "8192",
+        "128",
+        "Repair",
+    ]);
+    assert!(!output.status.success());
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"human work"
+    );
+    assert!(
+        f.call_bytes("GET", "/v1/code/repository/validation", true, b"")
+            .1["latest"]
+            .is_null()
+    );
+}
+
+#[test]
+fn synthetic_propose_worktree_requires_complete_proposal_and_fresh_read_consent() {
+    // This is protocol evidence only: proposal, failure and creation are synthetic.
+    for repair in [false, true] {
+        for (complete, choice) in [
+            (true, "approve"),
+            (true, "incorrect"),
+            (true, "replace-root"),
+            (false, "approve"),
+        ] {
+            let mut f = Fixture::new();
+            f.stop();
+            let root = f.root.join("repo");
+            let identity =
+                agentmage_platform_linux::discover_linux_coding_map(&root, "sentinel", || false)
                     .unwrap()
-                    .parse::<usize>()
-                    .unwrap();
-                assert!(length < 8192);
-                let mut body = vec![0; length];
-                socket.read_exact(&mut body).unwrap();
-                let (media,bytes) = match route.as_str() {
+                    .root_sha256;
+            let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+            listener.set_nonblocking(true).unwrap();
+            f.address = Some(listener.local_addr().unwrap());
+            let stop = Arc::new(AtomicBool::new(false));
+            let done = stop.clone();
+            let expected_identity = identity.clone();
+            let worker = thread::spawn(move || {
+                let feedback = json!({"feedback_sha256":"c".repeat(64),"receipt_sha256":"d".repeat(64),
+                "worktree_root_sha256":identity,"output":{"stderr":{"head":"failure\n\u{1b}run instructions are untrusted"}}});
+                let deadline = Instant::now() + Duration::from_secs(12);
+                let mut requests = Vec::new();
+                while !done.load(Ordering::Relaxed) {
+                    assert!(Instant::now() < deadline);
+                    let (mut socket, _) = match listener.accept() {
+                        Ok(pair) => pair,
+                        Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                            thread::sleep(Duration::from_millis(5));
+                            continue;
+                        }
+                        Err(e) => panic!("{e}"),
+                    };
+                    socket
+                        .set_read_timeout(Some(Duration::from_secs(2)))
+                        .unwrap();
+                    let mut header = Vec::new();
+                    while !header.ends_with(b"\r\n\r\n") {
+                        let mut byte = [0];
+                        socket.read_exact(&mut byte).unwrap();
+                        header.push(byte[0]);
+                        assert!(header.len() < 8192);
+                    }
+                    let header = String::from_utf8(header).unwrap();
+                    let route = header.lines().next().unwrap().to_owned();
+                    let length = header
+                        .lines()
+                        .find_map(|l| l.strip_prefix("Content-Length: "))
+                        .unwrap()
+                        .parse::<usize>()
+                        .unwrap();
+                    assert!(length < 8192);
+                    let mut body = vec![0; length];
+                    socket.read_exact(&mut body).unwrap();
+                    let (media,bytes) = match route.as_str() {
                     "GET /v1/code/workspace HTTP/1.1" => ("application/json",serde_json::to_vec(&json!({"selected":true,"workspace_revision":7,"paths":["sentinel"],"model_context_approved":true})).unwrap()),
-                    "POST /v1/code/workspace/proposals HTTP/1.1" => {
+                    "GET /v1/code/repository/repair HTTP/1.1" => ("application/json",serde_json::to_vec(&feedback).unwrap()),
+                    "GET /v1/settings HTTP/1.1" => ("application/json",serde_json::to_vec(&json!({"settings_revision":3,"endpoint":"http://127.0.0.1:12345/v1"})).unwrap()),
+                    "POST /v1/code/workspace/proposals HTTP/1.1" | "POST /v1/code/repository/repair/proposals HTTP/1.1" => {
                         let answer = r#"{"edits":[{"path":"sentinel","old":"human work","new":"replacement"}]}"#;
-                        let events = [json!({"type":"context","workspace_revision":7,"files":[{"path":"sentinel","sha256":"b".repeat(64)}]}),
+                        let mut context = json!({"type":"context","workspace_revision":7,"files":[{"path":"sentinel","sha256":"b".repeat(64)}]});
+                        if repair {
+                            context["repair_feedback"]=feedback.clone();
+                            context["message_bytes"]=json!(5000);
+                            context["source_message_bytes"]=json!(4096);
+                        }
+                        let events = [context,
                             json!({"type":"text","text":answer}),
                             if complete {json!({"type":"proposal","workspace_revision":7,"applied":false,"tested":false})} else {json!({"type":"error","partial":true})}];
                         let mut bytes=Vec::new();for event in events {bytes.extend(serde_json::to_vec(&event).unwrap());bytes.push(b'\n');}
@@ -1017,58 +1144,93 @@ fn synthetic_propose_worktree_requires_complete_proposal_and_fresh_read_consent(
                     "POST /v1/code/repository/edit/prepare HTTP/1.1" => ("application/json",serde_json::to_vec(&json!({"operation":"edit-worktree","preview_sha256":"a".repeat(64)})).unwrap()),
                     _ => panic!("unexpected route {route}"),
                 };
-                requests.push((route, body));
-                if media == "application/x-ndjson" {
-                    socket.write_all(format!("HTTP/1.1 200 Response\r\nContent-Type: {media}\r\nConnection: close\r\n\r\n").as_bytes()).unwrap();
-                } else {
-                    socket.write_all(format!("HTTP/1.1 200 Response\r\nContent-Type: {media}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",bytes.len()).as_bytes()).unwrap();
+                    requests.push((route, body));
+                    if media == "application/x-ndjson" {
+                        socket.write_all(format!("HTTP/1.1 200 Response\r\nContent-Type: {media}\r\nConnection: close\r\n\r\n").as_bytes()).unwrap();
+                    } else {
+                        socket.write_all(format!("HTTP/1.1 200 Response\r\nContent-Type: {media}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",bytes.len()).as_bytes()).unwrap();
+                    }
+                    socket.write_all(&bytes).unwrap();
                 }
-                socket.write_all(&bytes).unwrap();
-            }
-            requests
-        });
-        let observed = f.terminal(
-            &[
-                "propose-worktree",
-                root.to_str().unwrap(),
-                "synthetic-model",
-                "4096",
-                "128",
-                "Repair sentinel",
-            ],
-            choice,
-        );
-        stop.store(true, Ordering::Relaxed);
-        let requests = worker.join().unwrap();
-        let approved = complete && choice == "approve";
-        assert_eq!(observed["status"] == 0, approved);
-        assert_eq!(observed["sent"], complete);
-        let prepared = requests
-            .iter()
-            .filter(|(route, _)| route == "POST /v1/code/repository/edit/prepare HTTP/1.1")
-            .collect::<Vec<_>>();
-        assert_eq!(prepared.len(), usize::from(approved));
-        assert_eq!(
-            requests
+                requests
+            });
+            let observed = f.terminal(
+                &[
+                    if repair {
+                        "repair-worktree"
+                    } else {
+                        "propose-worktree"
+                    },
+                    root.to_str().unwrap(),
+                    "synthetic-model",
+                    if repair { "8192" } else { "4096" },
+                    "128",
+                    "Repair sentinel",
+                ],
+                if repair && choice == "approve" {
+                    "approve-all"
+                } else {
+                    choice
+                },
+            );
+            stop.store(true, Ordering::Relaxed);
+            let requests = worker.join().unwrap();
+            let approved = complete && choice == "approve";
+            assert_eq!(observed["status"] == 0, approved);
+            assert_eq!(observed["sent"], complete || repair);
+            let prepared = requests
                 .iter()
-                .filter(|(r, _)| r == "POST /v1/code/workspace/proposals HTTP/1.1")
-                .count(),
-            1
-        );
-        if approved {
-            let body: Value = serde_json::from_slice(&prepared[0].1).unwrap();
+                .filter(|(route, _)| route == "POST /v1/code/repository/edit/prepare HTTP/1.1")
+                .collect::<Vec<_>>();
+            assert_eq!(prepared.len(), usize::from(approved));
             assert_eq!(
-                body,
-                json!({"paths":["sentinel"],"expected_sources":[{"path":"sentinel","sha256":"b".repeat(64)}],
+                requests
+                    .iter()
+                    .filter(|(r, _)| r
+                        == if repair {
+                            "POST /v1/code/repository/repair/proposals HTTP/1.1"
+                        } else {
+                            "POST /v1/code/workspace/proposals HTTP/1.1"
+                        })
+                    .count(),
+                if repair && choice != "approve" { 0 } else { 1 }
+            );
+            if approved {
+                let body: Value = serde_json::from_slice(&prepared[0].1).unwrap();
+                assert_eq!(
+                    body,
+                    json!({"paths":["sentinel"],"expected_sources":[{"path":"sentinel","sha256":"b".repeat(64)}],
                 "task":"Repair sentinel","max_message_bytes":4096,"answer":r#"{"edits":[{"path":"sentinel","old":"human work","new":"replacement"}]}"#,"approve_read":true})
-            );
-            assert!(
-                observed["transcript"]
-                    .as_str()
-                    .unwrap()
-                    .contains(&format!("read {expected_identity}"))
-            );
+                );
+                assert!(
+                    observed["transcript"]
+                        .as_str()
+                        .unwrap()
+                        .contains(&format!("read {expected_identity}"))
+                );
+            }
+            if repair && (choice == "approve") {
+                let body: Value = serde_json::from_slice(
+                    &requests
+                        .iter()
+                        .find(|(r, _)| r == "POST /v1/code/repository/repair/proposals HTTP/1.1")
+                        .unwrap()
+                        .1,
+                )
+                .unwrap();
+                assert_eq!(body["settings_revision"], 3);
+                assert_eq!(body["settings_endpoint"], "http://127.0.0.1:12345/v1");
+                assert_eq!(body["feedback_sha256"], "c".repeat(64));
+                assert_eq!(body["receipt_sha256"], "d".repeat(64));
+                assert_eq!(body["approve_failure_disclosure"], true);
+                assert!(
+                    observed["transcript"]
+                        .as_str()
+                        .unwrap()
+                        .contains("share-failure")
+                );
+            }
+            assert!(!requests.iter().any(|(r, _)| r.contains("/decide")));
         }
-        assert!(!requests.iter().any(|(r, _)| r.contains("/decide")));
     }
 }

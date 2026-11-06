@@ -52,12 +52,15 @@ pub(super) struct ValidationSeries {
     template: ValidationTemplate,
     attempts: u8,
     latest: Option<ValidationReceipt>,
+    feedback: Option<Value>,
+    repair_requested: bool,
 }
 
 impl LinuxCodingRepository {
     /// Shows only process-retained validation state. A pass refers to the exact
     /// approved command result, never the current repository or an independent
-    /// task grade. Raw output is not retained. Restart cannot restore or rerun it.
+    /// task grade. Bounded failure excerpts are retained separately for explicit
+    /// model disclosure. Restart cannot restore or rerun them.
     pub fn inspect_validation(&self) -> Result<Value> {
         self.authority
             .revalidate_root()
@@ -67,8 +70,10 @@ impl LinuxCodingRepository {
             "latest":self.validation.as_ref().and_then(|s| s.latest.as_ref()),
             "attempts":self.validation.as_ref().map_or(0, |s| s.attempts),
             "maximum_attempts":MAX_ATTEMPTS,"retention":"process-only",
+            "repair_requested":self.validation.as_ref().is_some_and(|s| s.repair_requested),
             "current_workspace_verified":false,"test_suite_verified":false,
-            "automatic_replay":false,"model_retry_connected":false}))
+            "automatic_replay":false,"model_retry_connected":false,"automatic_model_retry":false,
+            "repair_proposal_requires_consent":true}))
     }
 
     /// Caller explicitly confirms the exact test definition, then separately
@@ -256,6 +261,8 @@ impl LinuxCodingRepository {
             template: validation.template.clone(),
             attempts: validation.expected_attempts + 1,
             latest: None,
+            feedback: None,
+            repair_requested: false,
         });
         Ok(rerun)
     }
@@ -302,8 +309,106 @@ impl LinuxCodingRepository {
             "verification_scope": if validation.template.parser == ValidationParserKind::AgentMageJsonV1 {
                 "approved-command-envelope"
             } else { "approved-command-tests" },"current_workspace_verified":false,
-            "automatic_retry":false,"model_retry_connected":false});
+            "automatic_retry":false,"model_retry_connected":false,"automatic_model_retry":false,
+            "repair_proposal_requires_consent":true});
+        // Retain only bounded, explicitly untrusted excerpts. Original channel
+        // hashes remain in the normalized receipt; excerpts are never a grade.
+        series.feedback = (!receipt.is_full_pass()).then(|| {
+            json!({"stdout":failure_excerpt(output.stdout()),
+            "stderr":failure_excerpt(output.stderr())})
+        });
         series.latest = Some(receipt);
         Ok(value)
+    }
+
+    /// Previews exact untrusted failure data for separate model-disclosure
+    /// consent. Only the latest retryable failure in this held worktree is
+    /// eligible. No model, write or command is run and no budget is spent.
+    pub fn repair_feedback(&self) -> Result<Value> {
+        let created = self.verify_created()?;
+        let series = self
+            .validation
+            .as_ref()
+            .ok_or(err("code.repair.failure-required"))?;
+        let receipt = series.latest.as_ref().ok_or(err("code.repair.uncertain"))?;
+        if series.attempts >= MAX_ATTEMPTS || series.repair_requested {
+            return Err(err("code.repair.budget"));
+        }
+        // Reuse the kernel's existing closed eligibility rules. This inert
+        // probe mints no execution authority and is not a rerun approval.
+        plan_failed_test_rerun(
+            &series.template,
+            receipt,
+            "repair-eligibility",
+            "0".repeat(64),
+        )
+        .map_err(|_| err("code.repair.failure-required"))?;
+        let mut value = json!({"version":1,"authority":"proposal-only",
+            "receipt_sha256":receipt.receipt_sha256,"status":receipt.status,
+            "failed_names":receipt.failed_names.iter().take(16).map(|n| n.chars().take(256).collect::<String>()).collect::<Vec<_>>(),
+            "failed_names_total":receipt.failed_names.len(),"failed_names_truncated":receipt.failed_names.len()>16 || receipt.failed_names.iter().take(16).any(|n| n.chars().count()>256),
+            "stdout_sha256":receipt.stdout_sha256,"stdout_capture_truncated":receipt.stdout_truncated,
+            "stderr_sha256":receipt.stderr_sha256,"stderr_capture_truncated":receipt.stderr_truncated,"output":series.feedback,
+            "worktree_root_sha256":created.held.root_path_sha256(),
+            "creation_receipt_sha256":created.creation_receipt_sha256,
+            "attempt":series.attempts,"maximum_attempts":MAX_ATTEMPTS,
+            "retention":"process-only","current_workspace_verified":false,
+            "warning":"Untrusted approved-runner diagnostics, possibly containing sensitive text. Sharing needs separate consent to the configured model. One proposal request per failed receipt; writes and reruns require fresh approval."});
+        let digest = hash(&serde_json::to_vec(&value).map_err(|_| err("code.repair.feedback"))?);
+        value["feedback_sha256"] = json!(digest);
+        Ok(value)
+    }
+
+    /// Consumes one exact failure-disclosure selection before model admission.
+    /// Cancellation, a lost reply or an invalid answer cannot restore it. This
+    /// spends no test attempt and confers no write or command authority.
+    pub fn consume_repair_feedback(&mut self, receipt: &str, feedback: &str) -> Result<Value> {
+        let value = self.repair_feedback()?;
+        if value["receipt_sha256"] != receipt || value["feedback_sha256"] != feedback {
+            return Err(err("code.repair.stale"));
+        }
+        self.validation
+            .as_mut()
+            .ok_or(err("code.repair.failure-required"))?
+            .repair_requested = true;
+        Ok(value)
+    }
+}
+
+fn failure_excerpt(bytes: &[u8]) -> Value {
+    // Split head/tail instead of losing the final assertion behind runner prose.
+    // Bound raw bytes before lossy decoding; record that decoding explicitly.
+    const HALF: usize = 512;
+    let truncated = bytes.len() > 2 * HALF;
+    let head = if truncated { &bytes[..HALF] } else { bytes };
+    let tail = if truncated {
+        &bytes[bytes.len() - HALF..]
+    } else {
+        &[]
+    };
+    json!({"head":String::from_utf8_lossy(head),"tail":String::from_utf8_lossy(tail),
+        "truncated":truncated,"original_bytes":bytes.len(),"encoding":"utf8-lossy"})
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn failure_excerpts_bound_both_ends_escape_controls_and_label_lossy_decoding() {
+        let bytes = [b"\x1b\0".as_slice(), &[0xff; 2048], b"final assertion"].concat();
+        let value = failure_excerpt(&bytes);
+        assert_eq!(value["truncated"], true);
+        assert_eq!(value["original_bytes"], bytes.len());
+        assert_eq!(value["encoding"], "utf8-lossy");
+        assert!(value["tail"].as_str().unwrap().ends_with("final assertion"));
+        assert!(value["head"].as_str().unwrap().starts_with("\x1b\0"));
+        assert!(value["head"].as_str().unwrap().len() <= 3 * 512);
+        assert!(value["tail"].as_str().unwrap().len() <= 3 * 512);
+        let wire = serde_json::to_string(&value).unwrap();
+        assert!(!wire.contains('\x1b'));
+        assert!(wire.contains("\\u001b\\u0000"));
+        assert_eq!(failure_excerpt(&[b'a'; 1024])["truncated"], false);
+        assert_eq!(failure_excerpt(&[b'a'; 1025])["truncated"], true);
     }
 }

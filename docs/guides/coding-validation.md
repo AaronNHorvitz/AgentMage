@@ -159,4 +159,9 @@ ordinary-command API. Source changes between attempts are not classified as
 flakiness. The [owned-edit binding](coding-owned-edits.md) preserves the immutable definition,
 spent budget and prior result while invalidating pending test approvals. There is
 no automatic model feedback/repair, connected coordinator retry, durable run
-recovery, commit, push or independent grade.
+recovery, commit, push or independent grade. The separately consented
+[repair proposal path](coding-model-repair.md) now discloses bounded excerpts of
+the latest retryable failure to the configured model, once per failed receipt.
+It prepares an inert diff; writes and test reruns retain their separate exact
+approvals. Failure excerpts and the spent-request marker are process-only, and
+successful results retain no excerpts.
