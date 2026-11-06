@@ -1,0 +1,253 @@
+Commit: d746e28e243862d5a414a034fc96d9a1af52e742
+Scope: local-coding-t311-suite-admission
+
+# Independent core review: T-311.17 complete suite and independent candidate admission
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate read-only session. Base:
+f32fba079a33dde6aa26b0b066327c74c9a84e41. Row: expanded T-311.17 (closing review requested).
+This review does not close T-311.18, parent T-311 or any model baseline, and it records no
+model score.
+
+## Method
+
+- **Commit.** `git rev-parse d746e28e…` and `git rev-parse HEAD` both printed
+  d746e28e243862d5a414a034fc96d9a1af52e742. `git status --short` was empty before, between and
+  after every run. base..HEAD is one commit: 20 paths, +2,996/−40. The paths match the
+  builder's commit.json.
+- **Reading.** I read the following:
+  - IP-POLICY.md, Decision 0154, the T-311 rows in TASKS.md and the TASKS.md diff;
+  - the evidence and worker guide;
+  - the guide diffs (coding-evaluation.md, coding-suite.md and coding-evaluation-oracle.md);
+  - the complete new sources: admission, worker oracle, graph, seal, runtime, client and facade;
+  - the oracle, suite and fast-gate diffs;
+  - the reused launch boundary in coding_eval_gate_oracle.py (`nested_command`,
+    `install_launch_boundary`, `run_request`);
+  - coding_eval_resources.py and `read_candidate`;
+  - all four new or changed test modules.
+- **Builder artifacts.** I read the two builder helper scripts I was asked to run
+  (admission_probe.py, plus the head of capacity.py) before running them. I also read the
+  retained closing/post-v1 records, the red/green Boolean diagnostics and commit.json. I
+  modified none of them.
+- **Isolation.** All my outputs went to the fresh `/lane/state/tmp/t311-suite-review-o3Q8a3`.
+  Heavy commands went through `bash /tools/build-slot`. I used no GPU, model, download or tuning.
+  I ran held-out assertions only through the requested `verify --purpose row-close`. I ran no
+  held-out admission and imported no held-out test module myself.
+- **Privacy.** This report reproduces no descriptor body, statement, task identity, commit or
+  held-out method name.
+
+### Environment deviations (both are equivalent)
+
+- `/lane/state/coding-held-out-v1.json` does not exist in this reviewer lane. I used the
+  builder's private copy at `/lane/state/tmp/t311-suite-batch/frozen-held-out-v1.json`. Its
+  sha256 is 8141e928…c3b, equal to the committed `HELD_OUT_SHA256`, and the runner refuses any
+  other bytes.
+- `/lane/state/tooling/node-v24.15.0-linux-x64` does not exist. I used the repository's
+  `target/local-agent-tools/node` (v24.15.0), the same binary a prior review verified by sha256.
+
+## Required commands and results
+
+| Command | Result |
+| --- | --- |
+| `git status --short` / `git rev-parse HEAD` | clean / d746e28e… |
+| `bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base f32fba07… --timeout 900` (first run) | **rc 1.** `Ran 176 tests in 280.869s, FAILED (failures=1)`. The failing test is `test_coding_eval_oracle.IndependentOracleTests.test_real_two_sandbox_controls_keep_original_hidden_tests_and_counts`. In the independent oracle, the frozen dev-003 **reference** gave tests 23 / errors 1, cause test_failure, wall time 12.9 s, no OOM event; control_attempts 60/29/31. Every other pair was valid. The log is retained as `fast.log`. See L5. |
+| The same fast gate, repeated in full into a separate log (policy: a failed verifier is repeated, never replaced) | rc 0. `Ran 176 tests in 281.298s, OK`, `FAST GATE: PASS`. The log is retained as `fast-repeat.log`. |
+| Diagnostic: frozen dev-003 independent reference control, eight times, outputs retained | 8 of 8 pass (23/23 each). It did not reproduce, so the race is intermittent. |
+| `bash /tools/build-slot python3 -B scripts/coding_eval_suite.py verify --held-out <private copy> --purpose row-close --output $R/suite` | rc 0 in 197.3 s. passed true; control_attempts 160. Development, independent development, held-out and independent held-out controls are all valid. held_out_test_methods_run 104 and independent_held_out_test_methods_run 104. source_changed false; input_refused false; aggregate_worker_quotas false. Both frozen digests match. Independent held-out controls: all ten bases are test_failure, all ten references none, 3,016 reference calls (matches the evidence). |
+| `bash /tools/build-slot python3 -B …/admission_probe.py $R` | rc 0 in 39.3 s. 30 tasks / 30 passed / 0 ungradable; model_attempts 0, model_score null; held-out methods run 0. Every per-task report is `generated`, required resources verified, and log hashes are bound. |
+| `bash /tools/build-slot python3 -B …/capacity.py $R/capacity` | rc 0 in 58.7 s of work after a long lock wait. passed true; outcome [0,0,false,false]; capacity_calls 128; graph, runner, facade and subject hashes equal HEAD; held_out_assertions 0. |
+| Twelve remaining modules, each in a fresh process, through build-slot | rc 0, all OK: 38 + 9 + 11 + 11 + 10 + 11 + 83 + 6 + 10 + 6 + 16 + 16 = **227** methods. With the fast gate's 176 that makes 403, matching the evidence. |
+
+The admission probe counts as a builder-created control, not a model score; the evidence says so too.
+
+## Reviewer probes (my own scripts, development or synthetic only)
+
+1. **Mixed admission set** (`probes/admission_mixed.py`; real `admission.score` against my suite
+   receipt, 30 development tasks). rc 0. tasks 30 / attempts 30 / passed 25 / ungradable 4 /
+   excluded 0. Each refusal was caught before execution and kept in the denominator:
+   - missing snapshot: ungradable, `io-failed`;
+   - symlinked projection file: ungradable, `candidate-directory-refused`;
+   - extra `tests/` file: ungradable, `candidate-directory-refused`;
+   - edit outside the one source file: ungradable, `out-of-scope-edit`.
+
+   The unchanged base plus a comment was graded and failed (`candidate_exception`). The 25
+   references plus a comment passed. Lane resources were verified.
+2. **Worker confinement** (`probes/tmp_probe.py`, through the committed synthetic `probe`
+   harness, with no held-out content). From candidate code:
+   - outbound TCP to an external address and to loopback both fail, so there is no network;
+   - the committed test already shows that `/adapter`, `/output`, `/proc`, capabilities and
+     ptrace-class syscalls are unavailable to the candidate.
+
+   However, a candidate **can rewrite files in the trusted oracle's temporary fixture directory,
+   including a script that a trusted native fixture then executes**. Assertions requiring the
+   forged values pass, and the unmodified-subject controls fail. See L1.
+3. **Cause labelling** (`probes/cause_probe.py`). A fixture callback assertion that the candidate
+   catches is sticky: passed is false. It is reported as `cause: protocol` with zero failures.
+   See L2.
+4. **Held-out leakage.** No selected held-out method name (46 distinct) and no held-out title
+   occurs in any committed file at HEAD outside the original hidden module. The hidden module
+   (`tests/test_coding_eval_oracle_worker.py`) and the worker subject are byte-identical to the
+   base. Neither the descriptor nor `DEVELOPMENT_SHA256`/`HELD_OUT_SHA256` changed.
+5. **Bindings.**
+   - All 19 `scripts/coding_eval*.py` hashes at HEAD equal the builder's post-v1 `after`
+     bindings.
+   - The closing suite summary hash 556f033f… matches the evidence.
+   - The red→green Boolean diagnostic uses the same committed test bytes (965d3630…). The only
+     graph change between the red and final sources is the Boolean token encode/decode.
+   - The red diagnostic failed (rc 1) and the green passed (rc 0), and the closing run postdates
+     the fix.
+   - The original audit failure (`audit.log`, AssertionError on uniform base causes) is retained.
+6. **Public-repository hygiene.** The diff adds no private path, username, host, credential,
+   private project or other-product name. The single "Cursor" hit is an iterator comment.
+
+## Assessment by area
+
+- **Sealed assertion process.** The runtime compiles the original module first, then detaches
+  `/adapter`, `/output` and `/proc`, checks that they are gone and that `/` is read-only, and only
+  then launches the candidate bridge (seal.py:48-59, runtime.py:99-120). Results go only to
+  pre-opened `xb` descriptors. The bridge uses `close_fds=True`, passes only the seccomp
+  descriptor and an empty environment, and is PID 1 in a fresh PID namespace without network,
+  capabilities or user namespaces.
+
+  Host pass requires all of the following:
+  - the oracle exit code is 0;
+  - exactly one test per method, with no failures, errors, skips or unexpected successes;
+  - calls > 0;
+  - the method is sealed, with no open proc window;
+  - every method is present.
+
+  A forged summary print, an assertion monkeypatch or an early exit cannot pass (existing tests,
+  confirmed in code).
+- **Candidate namespace and typed graph.** The wire carries only JSON primitives, typed tokens
+  and identities. Decoding never instantiates a candidate class in the oracle. Exceptions are
+  restricted to builtin, API or trusted fixture categories without running constructors.
+  TestCase and TestResult tokens refuse. Mock `assert*` and reset APIs cannot be overridden.
+  Candidate requests into the oracle are limited to fixture callbacks, fixture classes and
+  objects, and memory streams; they run at callback depth under an audit hook that blocks
+  process, socket, ctypes, compile, exec and frame access. I found no route from candidate data
+  to oracle code execution or to the result descriptors.
+
+  Mock core fields (call history, return value, side effect) do synchronise from the candidate.
+  That matches in-process semantics and is covered by the admission policy's disclosed
+  `candidate-self-reported-observation-fidelity` and `deliberate-candidate-self-modification`
+  limits.
+- **Boolean/integer fidelity.** The fix is correct and minimal. I checked the other token kinds
+  for Python-equality aliasing in the delta cache (float, bigint, bytes, path, tuple/set/frozenset,
+  dict pairs) and found no remaining alias that would hide a type change.
+- **Native exceptions.** `native_exception` keeps `SystemExit.code` and `StopIteration.value`
+  without fixture constructors. A candidate cannot produce `SkipTest`, and skips fail the host
+  check anyway.
+- **Proc windows.** A window opens only when the oracle is single-threaded, not already in a
+  window and not inside a callback, and it is detached and re-cloned in `finally`. The candidate's
+  nested root has an empty `/proc` directory, so an oracle-side attach does not propagate.
+- **Complete-set admission.**
+  - The receipt must match every field: 160 attempts, 30 + 10 independent tasks, 104 + 104
+    held-out methods and whole-file `coding_eval*.py` hashes. Its five bound logs must hash
+    correctly.
+  - Sources are re-checked at the end.
+  - The admission run processes the full split, and every refusal stays in the denominator.
+  - Legacy entry points keep the generated-snapshot refusal.
+  - Held-out scoring requires `--purpose row-close-scoreboard` before the descriptor is read.
+- **Lane-quota scope (the request's explicit question).** Acceptable.
+  - **What is checked.** `coding_eval_resources.snapshot` refuses unless the inherited leaf cgroup
+    has finite memory (≤16 GiB), swap (≤1 GiB), pids (≤1024) and CPU (≤4 cores, zero burst)
+    limits. Limits and identity must be unchanged at both boundaries, outside and inside every
+    attempt.
+  - **Per-attempt bounds.** They are unchanged: 8 processes per namespace, 512 MiB address space
+    and 60 s CPU per process, 90 s per task, 128 MiB + 64 MiB tmpfs and frame/transcript caps.
+    Attempts run sequentially.
+  - **Why that is enough.** A runaway candidate can exhaust at most its own lane, which a hard
+    kernel quota bounds. Failure modes are attempt failure or an aborted run that publishes no
+    summary; neither can yield a pass.
+  - **What is lost.** Isolation from other lane work and candidate-only peaks. Both are disclosed
+    (`aggregate_worker_quotas: false`, `memory_peak_is_task_peak: false`).
+  - **Decision 0154.** No limit, delegation or reservation was relaxed, so this fits its
+    "no resource boundary is relaxed" rule.
+  - **Remaining issue.** One stale guide paragraph still says the reverse (L3).
+- **Held-out scope.** The ten held-out tasks are repairs of one protocol module. That is disclosed
+  as a narrow domain with no general-quality claim. The grading adapter was developed against
+  held-out base/reference controls; the evidence says so. That is grader construction, not agent
+  tuning: no prompt, harness or model changed. Base controls still fail, the hidden bytes are
+  unchanged, and no held-out content entered committed files.
+- **Delivery.** No new sub-row; the work lands in T-311.17 as Decision 0154 directs.
+
+## Findings
+
+No critical, high or medium finding. All five findings below are **low** backlog items.
+
+- **L1 (low): undisclosed shared writable fixture filesystem**
+  - **Where.** The candidate bridge and trusted native fixtures share the oracle's `/tmp`
+    read-write: `nested_command` binds `--bind /tmp /tmp` (`scripts/coding_eval_gate_oracle.py:138`),
+    used by `launch_bridge` (`scripts/coding_eval_worker_seal.py:122`).
+  - **Reproduction.** Probe 2: candidate code rewrote a trusted fixture file, and the script a
+    trusted native fixture executed, after the test created them. The hidden-side assertions
+    observed the forged values; the controls did not.
+  - **What it does not allow.** The candidate stays inside the per-method 64 MiB tmpfs, without
+    results, assertions, procfs or network. Exploiting it needs a deliberately adversarial
+    candidate that knows hidden fixture paths. In-process original semantics allow the same, and
+    no control is affected.
+  - **Why it is still a finding.** The worker guide (`docs/guides/coding-evaluation-worker-oracle.md:18-20`)
+    describes the filesystem as sealed. Neither `coverage()['not_graded']`
+    (`scripts/coding_eval_worker_oracle.py:192`) nor the admission limitations name this channel.
+  - **Fix.** Before publishing held-out scores, add a `candidate-writable-temporary-fixtures`
+    limitation to worker coverage and the guide. Longer term, give the bridge its own tmpfs,
+    shared with the oracle only through explicitly passed paths, and run native fixtures from
+    trusted read-only copies.
+- **L2 (low): misattributed failure causes in the held-out path**
+  - **Where.** The runtime hard-codes `adapter_policy_failed: False`
+    (`scripts/coding_eval_worker_runtime.py:132`), while `Peer.answer`/`guard_class` set
+    `failed = True` for both fixture-callback assertions and graph refusals
+    (`scripts/coding_eval_worker_graph.py:869,894,940,946`).
+  - **Consequence.** Candidate test failures inside callbacks, adapter-representation limits and
+    true wire faults all become `cause: protocol`, and admission labels them `fail`, never
+    `ungradable` (`scripts/coding_eval_admission.py:99-100`). Probe 3 shows a caught callback
+    assertion reported as protocol with zero failures. The guides' statement that a policy
+    refusal is ungradable does not hold for this path.
+  - **Impact.** Pass counts and denominators are unaffected.
+  - **Fix.** Before T-311.18 publishes failure causes, record separate flags for
+    fixture-assertion, boundary-refusal and wire-fault in the method record. Map them to
+    `test_failure`, `adapter_policy` (ungradable) and `protocol`.
+- **L3 (low): stale guide text**
+  - **Where.** `docs/guides/coding-evaluation.md:271` still says the independent oracle "runs
+    nineteen" tasks. Lines 278 and 292-293 say generated scoring is disabled "until … separate
+    aggregate worker quotas exist" and that L2 (aggregate quotas) "still block[s] enabling
+    generated scoring".
+  - **Problem.** That contradicts the new admission command.
+  - **Fix.** Scope those sentences to this legacy scorer and point to the admission section's
+    lane-quota disposition.
+- **L4 (low): held-out generated entry never executed end-to-end**
+  - **Where.** The `--split held-out` branch (`scripts/coding_eval_admission.py:86,96`) is never
+    exercised. Only the purpose refusal is unit-tested (`tests/test_coding_eval_admission.py:67`),
+    and the actual entry ran on development only.
+  - **Mitigation.** It shares `worker_oracle._grade` with the verified held-out controls.
+  - **Fix.** Add a synthetic-descriptor admission test through `split='held-out'` (mocked
+    `held_out_tasks`, synthetic worker fixture). The first real use is the T-311.18 row-close
+    scoreboard.
+- **L5 (low): intermittent frozen dev-003 race**
+  - **Observation.** The race reproduced once in my required fast gate (1 error in the dev-003
+    reference) and not in 8 retained repeats or the suite run.
+  - **Policy.** `docs/guides/coding-evaluation.md:187-199` counts it as a failed attempt with no
+    retry, and admission does that. The same text requires "this label" on reports before
+    generated scoring is enabled.
+  - **Gap.** Admission rows and per-task reports carry no known-race label. It exists only in the
+    receipt-bound `development-coverage.json`.
+  - **Fix.** Before T-311.18 publishes dev-003 results, copy `known_races` into the attempt row or
+    summary.
+
+## Per-row result
+
+**T-311.17 (expanded): PASS**, with no open high or medium finding. Everything this row requires
+was reproduced at this exact commit:
+- all 80 discriminating pairs / 160 attempts;
+- 403 methods (176 + 227), with the single fast-gate failure retained and repeated per policy;
+- 128-call capacity;
+- verified lane resources;
+- development admission with the complete-set denominator.
+
+Hidden bytes, pins, selections, thresholds and the worker subject are unchanged, and no held-out
+content leaked. The lane-quota substitution is acceptable as disclosed. L1-L5 go to backlog; L1,
+L2 and L5 should be resolved before T-311.18 publishes held-out or failure-cause numbers.
+
+T-311.18, T-303/T-306 and parent T-311 stay open. No model score, baseline, release or
+owner-ready claim follows.
+
+Verdict: PASS
