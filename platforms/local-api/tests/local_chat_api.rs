@@ -1841,3 +1841,45 @@ fn concurrent_identical_approvals_dispatch_exactly_one_kernel_transaction() {
     );
     assert_eq!(history["records"].as_array().unwrap().len(), 2);
 }
+
+#[test]
+fn workspace_disclosure_choice_can_bind_the_displayed_settings_revision() {
+    let api = Api::new();
+    let files = WorkspaceFiles::new();
+    api.configure("http://127.0.0.1:19999/v1");
+    let settings: Value =
+        serde_json::from_slice(&api.call("GET", "/v1/settings", CONTROL, None).1).unwrap();
+    api.configure("http://127.0.0.1:19998/v1");
+    let request = json!({"root":files.0,"paths":["calc.py"],"approve_read":true,
+        "approve_model_context":true,"settings_revision":settings["settings_revision"]});
+    let (status, body) = api.call("PUT", "/v1/code/workspace", CONTROL, Some(request.clone()));
+    assert_eq!(status, 409);
+    assert_eq!(
+        serde_json::from_slice::<Value>(&body).unwrap()["error"],
+        "code.workspace.settings-stale"
+    );
+    let current: Value =
+        serde_json::from_slice(&api.call("GET", "/v1/settings", CONTROL, None).1).unwrap();
+    let mut fresh = request;
+    fresh["settings_revision"] = current["settings_revision"].clone();
+    fresh["settings_endpoint"] = settings["endpoint"].clone();
+    assert_eq!(
+        api.call("PUT", "/v1/code/workspace", CONTROL, Some(fresh.clone()))
+            .0,
+        409
+    );
+    fresh["settings_endpoint"] = current["endpoint"].clone();
+    // Lease release can lag the error response in this existing selection route.
+    let start = Instant::now();
+    while serde_json::from_slice::<Value>(&api.call("GET", "/v1/status", CLIENT, None).1).unwrap()["busy"]
+        == true
+    {
+        assert!(start.elapsed() < Duration::from_secs(1));
+        thread::sleep(Duration::from_millis(1));
+    }
+    assert_eq!(
+        api.call("PUT", "/v1/code/workspace", CONTROL, Some(fresh))
+            .0,
+        200
+    );
+}

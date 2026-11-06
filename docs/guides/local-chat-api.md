@@ -188,3 +188,7 @@ the real executable. They cover separate authority, probe isolation, credential
 routing, bounded HTTP, first-fragment streaming, partial/error outcomes,
 cancellation, settings races, shutdown, activity retention and private token
 files. A real local-model conversation through the GPU slot is T-302.4.
+
+The [terminal coding client](coding-terminal.md) provides explicit source selection,
+read/search, streamed proposals, previews and typed exact-write approvals over
+these routes. Worktrees, project tests, retries and durable runs remain open.

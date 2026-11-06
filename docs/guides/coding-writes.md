@@ -8,8 +8,9 @@ filesystem writer. T-303 and T-306 remain open.
 
 This is an explicit selected-workspace edit primitive. **The API does not create
 or verify an isolated Git worktree.** Choose a disposable workspace for development
-use and review its identity before approving. Commands, tests, retries, durable
-resume/replay, Git apply/commit/push, MCP and task CLI remain separate work. The
+use and review its identity before approving. The [terminal client](coding-terminal.md) connects proposals, previews and typed
+approvals over this API. Commands, tests, retries, durable resume/replay, Git
+apply/commit/push, MCP and the full task CLI remain separate work. The
 native executable trust checks stay enforced; no ownership workaround is enabled.
 
 ## Prepare without effects
@@ -118,6 +119,9 @@ client disconnects. Scope replacement is refused during a transaction.
 it does not undo writes. This milestone provides no crash-safe audit, recovery
 or automatic replay. After a lost response inspect the retained result while
 the service still runs. After a crash inspect the actual files and diff manually
-before starting a new proposal. Durable journal integration remains required
+before starting a new proposal. Inspect for native-driver
+`.agentmage-write-*.tmp` temporary/reconciliation files left by an interrupted
+transaction; preserve them until the affected files and outcome are understood.
+Durable journal integration remains required
 for parent-row acceptance. Undo is a new exact proposal and approval against
 current bytes; no implicit reset, restore, stash, checkout or deletion occurs.

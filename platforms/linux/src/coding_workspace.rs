@@ -61,6 +61,32 @@ pub struct LinuxCodingReadScope {
 }
 
 impl LinuxCodingReadScope {
+    /// Verifies a person's displayed root against an API preview's held identity.
+    /// Opens directory metadata only; grants no source, write or command access.
+    pub fn verify_root(root: &Path, expected_sha256: &str) -> Result<(), LinuxCodingReadError> {
+        if !root.is_absolute()
+            || root.as_os_str().len() > 4096
+            || root.components().count() > 256
+            || expected_sha256.len() != 64
+            || !expected_sha256
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+        {
+            return Err(LinuxCodingReadError::Selection);
+        }
+        let held = authorize_workspace_root(
+            root,
+            WorkspaceId::from_raw("local-coding-read"),
+            WorkspaceAuthorizationId::from_raw("local-coding-read"),
+            AdapterInstanceId::from_raw("local-coding-read"),
+        )
+        .map_err(|_| LinuxCodingReadError::Boundary)?;
+        if held.root_path_sha256() != expected_sha256 {
+            return Err(LinuxCodingReadError::Boundary);
+        }
+        Ok(())
+    }
+
     /// Selects an absolute root with no symlink ancestors, validates a bounded
     /// allowlist, and checks every selected source before returning a grant.
     /// Later reads resolve afresh beneath the held root through the same native

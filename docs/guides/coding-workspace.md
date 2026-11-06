@@ -9,6 +9,9 @@ retries, commit and push remain open, along with parent T-303 and T-306.
 
 ## Selection and consent
 
+The [terminal client](coding-terminal.md) provides selection, read/search,
+streaming proposal and exact typed write approval commands.
+
 Only a trusted person-facing client with the **control** credential can select
 or revoke the scope. Model output and ordinary API clients cannot select a root,
 add a file or authorize disclosure. After displaying the root, exact paths and
@@ -29,6 +32,13 @@ PUT /v1/code/workspace
 
 All fields are required. False read consent refuses selection. Model-disclosure
 consent requires an already chosen endpoint and binds to its settings revision.
+Optional `settings_revision` and `settings_endpoint` fields bind selection to
+the settings displayed by a trusted control. A mismatch returns `409 code.workspace.settings-stale` and
+preserves the existing selection and pending preview. The terminal client uses
+both fields for model-disclosure consent, including the exact endpoint so that
+a service restart cannot reuse a revision for a different destination. Omission preserves the existing API
+contract; other controls remain responsible for displaying their chosen endpoint.
+
 Every endpoint setting change, including choosing the same address again or
 revoking settings, invalidates that disclosure consent. Reads remain authorized;
 select again with explicit model consent to send source after a settings change.

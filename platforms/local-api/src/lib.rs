@@ -4,6 +4,9 @@
 //! Local API with explicit source scopes and separately approved exact writes.
 //! Ordinary clients cannot turn discovery or model output into write authority.
 
+/// Terminal client over this service's versioned coding routes.
+pub mod coding_cli;
+
 use std::collections::{BTreeMap, VecDeque};
 use std::fs::{DirBuilder, File};
 use std::io::{Read, Write};
@@ -547,6 +550,10 @@ struct WorkspaceSelection {
     paths: Vec<String>,
     approve_read: bool,
     approve_model_context: bool,
+    #[serde(default)]
+    settings_revision: Option<u64>,
+    #[serde(default)]
+    settings_endpoint: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -1068,6 +1075,26 @@ fn handle(
                 Ok(operation) => operation,
                 Err(status) => return error(socket, status),
             };
+            let displayed_settings_match = {
+                let guard = state.lock().map_err(|_| ApiError::Io)?;
+                input
+                    .settings_revision
+                    .is_none_or(|expected| expected == guard.revision)
+                    && input.settings_endpoint.as_ref().is_none_or(|expected| {
+                        config
+                            .as_ref()
+                            .is_some_and(|current| expected == &current.endpoint)
+                    })
+            };
+            if !displayed_settings_match {
+                op.outcome = "code.workspace.settings-stale";
+                drop(op);
+                return response(
+                    socket,
+                    409,
+                    json!({"error":"code.workspace.settings-stale"}),
+                );
+            }
             if input.approve_model_context && config.is_none() {
                 return error(socket, 428);
             }

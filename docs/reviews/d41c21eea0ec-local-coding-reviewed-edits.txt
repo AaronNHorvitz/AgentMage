@@ -1,0 +1,148 @@
+Commit: d41c21eea0ecdf4fa5ca9fcf0ac10a969c898b2e
+Scope: local-coding-reviewed-edits
+
+# Independent review: T-303 + T-306 reviewed workspace edits (non-closing batch)
+
+Reviewer: separate read-only Claude Opus 5.5 session at extra-high effort, with no shared context with
+the builder. Base `b8ed4625ce71bd78a54c6036c348211851cbf907`. Tier: core. This verdict covers only the
+connected edit primitive: strict answer plus complete context-digest checks, then kernel shadow diff,
+separate exact CONTROL approval, exact kernel grant consumption, existing `LinuxAtomicWriteDriver`
+and process-only receipts. It **does not close T-303 or T-306**, and both parent checkboxes stay open.
+I did not modify the repository. No model, GPU, held-out, hidden-test or grader process was run.
+
+## Method
+
+1. Confirmed `git rev-parse d41c21ee… HEAD` gives `d41c21eea0ecdf4fa5ca9fcf0ac10a969c898b2e` for both.
+   The working tree was clean at the start and again after all runs.
+2. Read IP-POLICY.md, decisions 0153/0154, the T-303/T-306 rows and the full diff for 13 files,
+   including `platforms/linux/src/coding_workspace_write.rs`, the `platforms/local-api/src/lib.rs`
+   routes, both new test sets, `docs/guides/coding-writes.md` and the evidence file. I also read the
+   kernel code this batch relies on: `issue_write_grant` (write_approval.rs:759-791), which re-checks
+   the change-set/preview hashes, `user_confirmed`, observed/approval times and lifetime; the preview
+   renderer (write_approval.rs:1191); the driver's `NONBLOCK`/`NOFOLLOW` opens and its regular-file,
+   `nlink == 1` checks (write_transaction.rs:816-845); and `workspace_path_sha256`, which digests the
+   canonical path plus device and inode (lib.rs:528-540).
+3. Ran every requested command myself with a private target, plus my own adversarial probes against the
+   real `agentmage-local-api` executable (below).
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `sha256sum target/local-agent-tools/node` | `d1de76d8…932c`, as stated |
+| `bash /tools/build-slot env CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo test --locked --offline -p agentmage-platform-linux --test coding_write` | **5 passed / 0 failed / 0 ignored / 0 filtered** (0.01 s) |
+| same, `-p agentmage-local-api --test local_chat_api` | **32 passed / 0 failed / 0 ignored / 0 filtered** (4.31 s) |
+| `PATH="$PWD/target/local-agent-tools:$PATH" CARGO_TARGET_DIR=/lane/state/review-target python3 -B scripts/local_agent_fast_gate.py --base b8ed4625… --timeout 3600` | **FAST GATE: FAIL**, as disclosed. diff-check, untracked lint, review lint, markdownlint (5 files), `cargo fmt --check`, Clippy all-targets `-D warnings`: exit 0. `cargo test` for host, local-api and platform-linux: exit 101, **762 passed / 72 failed / 62 ignored / 0 measured / 0 filtered** over 16 result lines. My 72 failure names equal `docs/evidence/t301-baseline-failures-2026-10-25.md` and the builder's `fast-v1.log` set exactly. The new `coding_write` and `local_chat_api` targets are not among them. |
+| `python3 -B /lane/state/tmp/t303-approved-writes/audit-publication.py` | exit 0: totals 762/72/62/0/0, failures equal the baseline, 211 manifest entries rehashed, source/binary/driver bindings, three historical proposal bindings, receipt chains recomputed, review bytes, frozen inputs unchanged, privacy/links. Its rewritten `publication-audit.json` is byte-for-byte identical in content to the builder's copy, which I saved first. |
+| `git diff --check b8ed4625… d41c21ee…` | exit 0 |
+| `cmp docs/reviews/b8ed4625ce71-local-coding-workspace-sources.txt /lane/reviews/b8ed4625ce71-local-coding-workspace-sources.md` | identical |
+| `python3 -B scripts/validate_docs.py` | `Validated 752 Markdown file(s) and all policy invariants.` |
+| `bash /tools/build-slot python3 -B …/check-development-writes.py /lane/state/tmp/review-d41c21eea0ec-development` (directory absent beforehand) | exit 0: 30/30 matching contexts, 3/3 historical replies applied, 3.68 s, repo binary `9a0a71c3…`, driver `e39dbadf…` |
+| Private copy at `/lane/state/tmp/review-d41c21eea0ec/driver/` with only the `binary=` line changed to `/lane/state/review-target/debug/agentmage-local-api` (`449ebe93…`), output `…-development-own` | exit 0: 30/30, 3/3, 3.43 s, driver `16522c0b…` (expected for this variant) |
+| Cross-check of both runs against builder `development-v1/summary.json` | replay model/task/answer/before/after digests, per-task source digests, upstream user-message digests and all 12 source bindings are equal. Replays: muse dev-019, gpt-oss dev-019, gpt-oss dev-026. The 12 source bindings also equal `git show d41c21ee:<file>` hashes. |
+
+Note: the repo `target/debug/agentmage-local-api` (`9a0a71c3…`, mtime 04:26) is not the retained
+tested binary (`da9ceb30…`, 04:24), because the builder's later gate relinked it. The evidence binds the
+retained copy correctly, and I confirmed the behaviour with both the current repo binary and my own
+build. My first gate attempt deadlocked because I wrapped the gate, which takes the reservation for each
+cargo step, in an outer `build-slot`. I stopped only my own processes and reran without the outer
+wrapper. The results above come from that rerun.
+
+## Independent escape probes (real binary, no model)
+
+The probe script and logs are at `/lane/state/tmp/review-d41c21eea0ec/probe.py` and `probe-run{1,2}.log`.
+It uses my binary (`449ebe93…`), fresh `init-auth` credentials, a temporary workspace per case, an
+outside directory and a slow synthetic upstream. **54/54 checks PASS.**
+
+- **Authority:** a client token on `/apply` gets 403. Forged hashes, a wrong `workspace_revision` and a
+  superseded preview get 409. Replay after commit, denial, settings change, scope revoke or expiry gets
+  428. `approve:false` gives `denied`/`effect:none` and writes nothing. While a slow proposal is
+  streaming, `/apply` and scope `PUT` both get 409, and the pending preview survives and later commits.
+  Idle `/v1/cancel` reports `cancellation_requested:false`. The 403 check and route matching use the same
+  path string, so there is no path-variant bypass.
+- **Path substitution after prepare** (apply must not commit, and outside and original bytes must not
+  change): parent directory swapped for a symlink to an outside copy; parent replaced by a fresh
+  directory with identical bytes; same-inode in-place edit; target replaced by a FIFO (409 in 0.0 s,
+  service not left busy); target replaced by a directory; extra hardlink created from outside. All give
+  409 `code.write.transaction` with `effect:unknown`, and every outside and original byte is preserved.
+- **Selection:** `.git/config`, `.GIT/x`, `.Git/z`, `sub/.git/y`, `./src/calc.py`, `src//calc.py` and
+  `src/../src/calc.py` all get 400.
+- **Edit injection:** answers editing a selected but not requested file, a new file or `/etc/passwd`
+  get 400 `code.proposal.edit`. Leaving one context file out of `expected_sources` gets 409
+  `code.proposal.stale`. A >128 KiB replacement gets 400, and mixed line endings get 409
+  `code.write.input`. Nothing is written in any of these cases.
+- **Expiry (real time):** after preparing, waiting 121 s and approving, the result is 409
+  `code.write.approval`, the file is unchanged and replay gets 428.
+- **Success path:** the exact bytes are written, the other file is untouched, no temporary file is left
+  and the receipt chain runs proposed → approved → applied → verified.
+- **Privacy:** previews, history, activity and stderr contain no absolute root, source text or tokens.
+- **Root replacement (information only):** after preparing I renamed the selected root and recreated a
+  directory with the same name. The approved write went to the originally held directory object (now at
+  the renamed path), and the new directory was untouched. This matches descriptor-held identity
+  (`workspace_root_sha256` = canonical path + device + inode at selection). It is not an escape.
+
+The code review found no interleaving gap. All scope and settings mutations either go through `begin`
+or refuse while `active` is set (lib.rs:1100-1104, 1255, 1271). The apply route's binding check,
+cancellation check, `take()` and `active_cancellable = false` all run in one critical section of the
+state lock (lib.rs:952-995), and `/v1/cancel` takes the same lock (lib.rs:1280-1287). The scope used for
+dispatch is the `Arc` captured at prepare time, and revision equality ties it to the current grant.
+Preparation re-reads current bytes, checks them against the context-derived `before_sha256`, and binds
+held identity and preimage into the kernel targets. The kernel then re-verifies hashes and lifetime at
+grant issue. No shell, Git or command path is reachable. Cargo manifests and lockfile are unchanged.
+
+## Evaluation integrity and claims
+
+- No file under `scripts`, `tests`, `capabilities`, `model-profiles` or `supply-chain` and no
+  `Cargo.*` file changed (audit check plus diff file list). The driver reads only
+  `suite.development_tasks()` and the earlier development campaign. No held-out definition, hidden
+  assertion, candidate or grader runs. No new score is claimed, and the scoreboard is untouched.
+- The TASKS checkbox state and the lifecycle text after the queue are preserved. No new sub-row was
+  added. The batch ends in something that runs and is measured (the actual API process writing real
+  temporary files).
+- Labels are honest: `tested:false`, `isolation_verified:false`, `retention:"process-only"`. The review
+  narrative states the risks (untested, not an isolated worktree, crash needs manual inspection), and the
+  guide and evidence state the same limits. No private host path, username, credential, trademark
+  branding or other product comparison appears in the added text. The copied prior review mentions
+  `/lane/...` lane paths, which were accepted in that earlier review.
+
+## Findings
+
+No critical, high or medium findings. Low findings go to backlog, with no new rows:
+
+- **L1 (low, test coverage)** `platforms/local-api/src/lib.rs:913-918, 968-973, 990, 1082-1085,
+  1215, 1282-1285`: the new cancellation semantics have no regression test. These are the
+  `cancellable` status field, `cancellation_requested:false` after dispatch, cancellation before a
+  pending preview is installed, and the selection-install cancellation fix (`grep cancellable` in
+  `tests/local_chat_api.rs` finds nothing). I confirmed them only by reading the single-lock critical
+  section above. Fix: add API tests using a slow upstream and status polling, or a test-only pause hook.
+- **L2 (low, record accuracy)** `platforms/local-api/src/lib.rs:990-1016`,
+  `platforms/linux/src/coding_workspace_write.rs:290-321`: refusals that happen before the driver
+  exists (expiry, root mismatch, kernel approval mismatch) are recorded after a `dispatching` record as
+  `effect:"unknown"`. My P12 probe shows this: the preview expired, the file was unchanged, and the
+  reply said `effect:unknown`. Expired previews also stay listed as `pending` in
+  `GET /v1/code/workspace/changes` until an apply consumes them. The label is conservative, not unsafe.
+  Fix: check expiry and root before `take()`, or report `LinuxCodingWriteError::Approval` as
+  `effect:"none"`, and hide or drop expired pending previews on GET.
+- **L3 (low, recovery documentation)** `docs/guides/coding-writes.md:115-122`: the crash guidance does
+  not say that interrupted transactions can leave the driver's `.agentmage-write-*.tmp`
+  temporary/reconcile files inside the workspace (`platforms/linux/src/write_transaction.rs:655, 900`).
+  Fix: name them in the manual-inspection steps.
+- **L4 (low, approval usability; existing renderer)** `kernel/engine/src/write_approval.rs:1191`,
+  as described at `docs/guides/coding-writes.md:47`: the "complete diff" is two whole-file,
+  Rust-debug-escaped strings per file, not a line diff. For files up to 128 KiB a person cannot
+  practically find the change. It is not a bypass: the hashes bind exact bytes, and control and bidi
+  characters are escaped. Fix: the future person-facing control should render a line diff from the exact
+  pre- and postimages and recheck both hashes before showing the approve control.
+
+The earlier lows stay as disclosed: read/proposal lease release, snapshot validation order, campaign
+grade/candidate binding, and future worktree path revalidation.
+
+## Per-row result
+
+- **T-303 + T-306, reviewed workspace edit batch at `d41c21ee`: PASS** for this connected edit
+  primitive only, with no open high or medium finding. This review does **not** close T-303 or T-306. An
+  isolated agent-owned worktree, confined no-network commands, project tests and retries, durable
+  audit/resume/replay, Git apply/commit/push with approval, MCP and the task CLI all remain open, as the
+  batch states.
+
+Verdict: PASS

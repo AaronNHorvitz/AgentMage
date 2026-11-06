@@ -7,7 +7,8 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use agentmage_platform_linux::{
-    LinuxCodingPendingWrite, LinuxCodingReadScope, LinuxCodingReplacement, LinuxCodingWriteError,
+    LinuxCodingPendingWrite, LinuxCodingReadError, LinuxCodingReadScope, LinuxCodingReplacement,
+    LinuxCodingWriteError,
 };
 use sha2::{Digest, Sha256};
 
@@ -260,4 +261,34 @@ fn multi_file_preflight_is_whole_batch_and_malformed_replacements_are_inert() {
         );
         assert_eq!(files.bytes(), BEFORE);
     }
+}
+
+#[test]
+fn displayed_root_identity_cannot_authorize_a_different_or_replaced_root() {
+    let files = Files::new();
+    let scope = files.scope();
+    let pending = files.prepare(&scope);
+    let expected = pending.workspace_root_sha256();
+    assert_eq!(
+        LinuxCodingReadScope::verify_root(&files.0, expected),
+        Ok(())
+    );
+    let other = Files::new();
+    assert_eq!(
+        LinuxCodingReadScope::verify_root(&other.0, expected),
+        Err(LinuxCodingReadError::Boundary)
+    );
+    let alias = files.0.join("alias");
+    symlink(&other.0, &alias).unwrap();
+    assert!(LinuxCodingReadScope::verify_root(&alias, expected).is_err());
+    assert!(LinuxCodingReadScope::verify_root(std::path::Path::new("relative"), expected).is_err());
+    assert!(LinuxCodingReadScope::verify_root(&files.0, "invalid").is_err());
+    let moved = files.0.with_extension("moved");
+    fs::rename(&files.0, &moved).unwrap();
+    fs::create_dir(&files.0).unwrap();
+    assert_eq!(
+        LinuxCodingReadScope::verify_root(&files.0, expected),
+        Err(LinuxCodingReadError::Boundary)
+    );
+    fs::rename(&moved, files.0.join("original")).unwrap();
 }
