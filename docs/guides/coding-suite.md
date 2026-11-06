@@ -80,8 +80,10 @@ bash /tools/build-slot python3 -B scripts/coding_eval_suite.py verify \
   --purpose row-close --output <new-private-output-directory>
 ```
 
-This one command runs all 30 original development control pairs, the independent
-development oracle's supported pairs, and ten held-out control pairs. Every
+This one command runs all 30 original development control pairs, all 30
+independent development pairs, ten historical held-out pairs and ten independent
+held-out pairs: 160 attempts. The independent worker boundary is described in
+[the worker grading guide](coding-evaluation-worker-oracle.md). Every
 candidate is reconstructed from pinned base or reference bytes by the host.
 The held-out entry accepts an opaque task ID and the base/reference kind, never
 candidate bytes, task dictionaries or arbitrary patches. The legacy grader
@@ -120,15 +122,24 @@ synthetic adapter checks in a separate test module. Do not filter or edit hidden
 tests to make a development gate pass. No held-out assertion has executed in
 the input-freeze or storage/ancestry checks.
 
-## Admission remains open
+## Independent candidate admission
 
-These commands do not enable generated scoring or produce a coding baseline.
-The independent development oracle now covers all 30 development tasks and
-all 89 original reference methods. Its finite observations do not establish
-unasserted statement clauses or model quality. Held-out independent grading,
-whole-suite resource accounting and remaining clause-coverage admission still
-need disposition within T-311.17. Resource, permission and evidence boundaries
-remain unchanged.
+Control verification produces no model score. Suite v6 additionally binds every
+whole grading-helper file and refuses verified publication if those sources
+change during the batch. The separate
+[independent admission command](coding-evaluation-worker-oracle.md#generated-candidate-entry)
+requires a successful matching complete-suite receipt and bound logs, then
+scores complete frozen sets through independent assertions with required
+inherited lane quota verification. Historical in-process graders retain their
+generated-candidate refusal.
+
+Every failure and ungradable attempt remains in the denominator. Observed passes
+cover the declared finite observations and unchanged original assertions;
+unasserted statement clauses, deliberate self-modification and adapter-specific
+identity/state limitations remain disclosed. No broader model-quality claim or
+current-harness baseline follows. Separate worker cgroups and candidate-only
+resource peaks remain unavailable; no quota, reservation or boundary is changed.
+Independent exact-commit core review is still required for the expanded row.
 
 ## Bounded independent-worker cleanup and private scratch
 
@@ -259,8 +270,10 @@ counters at both boundaries, with a fixed refusal when observations are
 unavailable or changed. Historical controls may retain unavailable accounting;
 required mode refuses execution or final verified publication. Interruption
 still propagates if the final observation fails. Reports contain no cgroup path.
-These observations neither enable generated admission nor change the false
-whole-suite `aggregate_worker_quotas` flag.
+Historical reports retain these observations without requiring availability.
+The separate admission command requires verified accounting at both boundaries;
+it does not change the false `aggregate_worker_quotas` flag or claim separate
+worker cgroups. The hard inherited lane limit is its aggregate resource scope.
 
 The ordinary worker unit module contains held-out selections. Preliminary
 adapter changes run separate synthetic adapter modules and development tests;

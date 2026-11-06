@@ -1,7 +1,8 @@
 """Validate an independent function oracle on frozen development controls.
 
 Candidate source and hidden assertions run in separate networkless namespaces.
-Generated scoring stays disabled until all remaining admission requirements hold.
+The historical CLI refuses generated code; the admission command requires a
+matching complete-suite control receipt and verified inherited lane quotas.
 """
 from __future__ import annotations
 
@@ -30,7 +31,7 @@ else:
     import coding_eval_oracle_worker as worker
     import coding_eval_scratch as scratch
 
-VERSION = "coding-independent-oracle-v32"
+VERSION = "coding-independent-oracle-v33"
 # Complete frozen methods for finite function and fixture observations. Paths
 # are lexical values; a fixed ambiguity tag becomes a trusted local exception.
 SUPPORTED = {
@@ -207,7 +208,8 @@ def coverage(task):
                                "non-usage-tokenization", "adapter-attributes-and-other-methods",
                                "nested-object-identity-and-equality-subclasses",
                                "candidate-message-mutation-roundtrip",
-                               "cross-instance-post-response-mutations", "unselected-statement-clauses"]}
+                               "cross-instance-post-response-mutations", "deliberate-candidate-self-modification",
+                               "conservative-mutation-policy-false-failures", "unselected-statement-clauses"]}
     if kind == "job-result":
         return {"graded": ["selected-parser-values", "export-selection-values-and-refusals",
                            "support-directory-values-and-refusals", "mocked-job-signal-order-and-values",
@@ -917,15 +919,27 @@ if callable(getattr(subject, "implementation_identity", None)):
 
 
 def grade(task, files, output):
+    supported_task(task)
+    kind = evaluation.require_historical_candidate(task, files)
+    return _grade(task, files, output, kind, False)
+
+
+def grade_observations(task, files, output, *, candidate_kind, required_resources):
+    """Trusted admission caller validates the exact candidate projection first."""
+    if candidate_kind != 'generated' or required_resources is not True:
+        raise evaluation.EvaluationError('oracle.generated-policy-refused')
+    return _grade(task, files, output, candidate_kind, required_resources)
+
+
+def _grade(task, files, output, kind, required_resources):
     configuration = supported_task(task)
     gate = configuration['result_type'] == 'gate-result'
-    kind = evaluation.require_historical_candidate(task, files)
     evaluation.new_directory(output)
     started = time.monotonic()
     error = None
     input_error = None
     try:
-        with evaluation.coding_eval_resources.measurement() as resource_observation:
+        with evaluation.coding_eval_resources.measurement(required=required_resources) as resource_observation:
             exit_code, candidate_exit, timed_out, output_limited, record = grade_case(task, files, output)
     except (OSError, ValueError, subprocess.SubprocessError) as exception:
         error = evaluation.refusal_detail(exception)
@@ -975,11 +989,15 @@ def grade(task, files, output):
         "inherited_lane_resources": resource_observation,
         "wall_seconds": round(time.monotonic() - started, 6),
         "model_attempts": 0, "model_score": None, "gpu_minutes": 0, "tokens": None,
-        "score_scope": "independent-oracle-controls-only",
+        "score_scope": "independent-generated-observations" if required_resources else "independent-oracle-controls-only",
+        "required_inherited_lane_resources": required_resources,
         # All launched diagnostic controls remain in the denominator, including
         # missing startup, infrastructure errors, timeout and protocol failure.
         # These counts are not model attempts or a generated-candidate score.
-        "control_attempts": {"total": 1, "passed": int(passed), "failed": int(not passed)},
+        "control_attempts": {"total": int(not required_resources), "passed": int(passed and not required_resources),
+                             "failed": int(not passed and not required_resources)},
+        "candidate_attempts": {"total": int(required_resources), "passed": int(passed and required_resources),
+                               "failed": int(not passed and required_resources)},
         "coverage": coverage(task),
         "aggregate_worker_quotas": False,
         "worker_limits": {"processes_per_namespace": 16 if task.get("language") == "rust" or gate else WORKER_PROCESSES,

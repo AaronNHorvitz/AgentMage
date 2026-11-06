@@ -11,10 +11,12 @@ Keep agent tuning deferred until the complete suite and its baseline exist.
 
 The expanded T-311.17 [suite runner](coding-suite.md) separately binds these
 unchanged development definitions and a private ten-task held-out descriptor.
-That input freeze does not complete admission, execute held-out tests or
-establish a model score. The command below continues to select development
-tasks only; held-out control validation requires the suite's explicit row-close
-operation.
+The suite's row-closing command validates both historical and independent
+controls. A separate [independent admission command](coding-evaluation-worker-oracle.md#generated-candidate-entry)
+requires a matching successful complete-suite receipt and verified inherited
+quotas. Neither control validation nor admission produces a model baseline.
+The historical command below continues to select development controls only;
+held-out controls require the suite's explicit row-close operation.
 
 ## Frozen tasks
 

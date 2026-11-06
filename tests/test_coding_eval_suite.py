@@ -389,24 +389,38 @@ class CodingSuiteTests(unittest.TestCase):
                     return None, False, False, None
                 return (0 if fixed else 1), False, False, counts(failures=0 if fixed else 1)
 
+            def grade_independent(task, files, output, **kwargs):
+                evaluation.new_directory(output)
+                fixed = files['scripts/example.py'] == b'reference'
+                result = {'passed': fixed and not flaky, 'cause': 'infrastructure' if fixed and flaky else
+                          'none' if fixed else 'test_failure', 'exit_code': None if fixed and flaky else 0 if fixed else 1,
+                          'tests': None if fixed and flaky else counts(failures=0 if fixed else 1)}
+                evaluation.publish(output / 'report.json', result)
+                return result
+
             with mock.patch.object(suite, "check_inputs", return_value={"model_attempts": 0, "model_score": None,
                                                                         "generated_scoring": False}), \
                     mock.patch.object(evaluation, "verify", side_effect=verify_existing), \
                     mock.patch.object(suite.oracle, "verify", side_effect=verify_existing), \
                     mock.patch.object(suite, "development_tasks", return_value=[{**synthetic_task(), "id": "synthetic"}]), \
-                    mock.patch.object(evaluation, "projection", return_value={"scripts/example.py": b"base"}), \
+                    mock.patch.object(evaluation, "projection", side_effect=lambda _task: {"scripts/example.py": b"base"}), \
                     mock.patch.object(evaluation, "pinned_blob", return_value=b"reference"), \
-                    mock.patch.object(evaluation, "grade_case", side_effect=grade_case) as worker:
+                    mock.patch.object(evaluation, "grade_case", side_effect=grade_case) as worker, \
+                    mock.patch.object(suite.worker_oracle, 'grade', side_effect=grade_independent) as independent_worker:
                 result = suite.verify(path, root / "run", "row-close")
                 with self.assertRaises(FileExistsError):
                     suite.verify(path, root / "run", "row-close")
                 self.assertEqual(worker.call_count, 2)
+                self.assertEqual(independent_worker.call_count, 2)
                 flaky = True
                 failed = suite.verify(path, root / "flaky", "row-close")
                 self.assertEqual(worker.call_count, 4, "failed reference must never retry itself")
+                self.assertEqual(independent_worker.call_count, 4, 'independent reference must never retry itself')
             self.assertTrue(result["passed"])
             self.assertEqual(result["held_out_test_methods_run"], 2)
-            self.assertEqual(result["control_attempts"], 6)
+            self.assertEqual(result["control_attempts"], 8)
+            self.assertTrue(result['independent_held_out_controls_valid'])
+            self.assertEqual(result['independent_held_out_test_methods_run'], 2)
             self.assertIsNone(result["model_score"])
             self.assertFalse(result["generated_scoring"])
             self.assertNotIn("held-001", json.dumps(result))
@@ -418,7 +432,8 @@ class CodingSuiteTests(unittest.TestCase):
             self.assertTrue(raw["tasks"][0]["valid"])
             self.assertFalse(failed["passed"])
             self.assertFalse(failed["held_out_controls_valid"])
-            self.assertEqual(failed["control_attempts"], 6)
+            self.assertEqual(failed["control_attempts"], 8)
+            self.assertFalse(failed['independent_held_out_controls_valid'])
             failed_controls = json.loads((root / "flaky/held-out/controls.json").read_bytes())
             self.assertEqual(failed_controls["tasks"][0]["reference"]["cause"], "infrastructure")
             self.assertIsNone(failed_controls["tasks"][0]["reference"]["tests"])

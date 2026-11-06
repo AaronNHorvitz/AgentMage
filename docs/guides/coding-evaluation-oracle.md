@@ -999,3 +999,20 @@ synthetic regression runs a Git status command after untrusted configuration:
 its control variant with unsandboxed Git exposes the synthetic assertion mount
 and fails; the confined variant passes. This does not change any frozen hidden
 method, task statement or selection.
+
+## Current independent admission entry
+
+Oracle v33 preserves the historical control command and its generated-snapshot
+refusal. The expanded T-311.17 adds a separate
+[complete-set admission command](coding-evaluation-worker-oracle.md#generated-candidate-entry).
+It requires matching complete-suite controls and verified inherited lane quotas,
+and uses independent assertion processes for generated candidates. The historical
+milestones above do not themselves grant that admission or establish a model score.
+
+The original usage adapter's deliberate self-modification and conservative
+mutation-refusal limitations remain disclosed in coverage. An adapter-policy
+refusal is ungradable and earns no pass; it remains in the complete-set denominator.
+Unasserted statement clauses and adapter-specific identity/effect limitations stay
+ungraded. No frozen assertion, method selection, threshold or legacy guard changes.
+Separate worker cgroups and candidate-only resource peaks remain unavailable;
+the new command requires the hard inherited lane quota at both boundaries.

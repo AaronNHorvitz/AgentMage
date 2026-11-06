@@ -124,9 +124,19 @@ def plan(root: Path, paths: list[str], metadata: dict) -> list[list[str]]:
     ]
     python_paths = [p for p in paths if p.endswith(".py")]
     modules = set()
+    # These process roles form one grading boundary. Their complete integration
+    # scenarios live together; collect them once when several roles change.
+    worker_roles = {
+        "scripts/coding_eval_worker_client.py", "scripts/coding_eval_worker_facade.py",
+        "scripts/coding_eval_worker_runtime.py", "scripts/coding_eval_worker_seal.py",
+    }
     for name in python_paths:
         path = PurePosixPath(name)
-        if path.parent == PurePosixPath("tests") and path.name.startswith("test_"):
+        if name == 'scripts/coding_eval_worker_graph.py':
+            modules.add('tests.test_coding_eval_worker_oracle')
+        if name in worker_roles:
+            module = "tests.test_coding_eval_worker_oracle"
+        elif path.parent == PurePosixPath("tests") and path.name.startswith("test_"):
             module = "tests." + path.stem
         elif path.parent == PurePosixPath("scripts"):
             module = "tests.test_" + path.stem

@@ -22,12 +22,14 @@ if __package__:
     from . import coding_eval as evaluation
     from . import coding_eval_control as control
     from . import coding_eval_oracle as oracle
+    from . import coding_eval_worker_oracle as worker_oracle
 else:
     import coding_eval as evaluation
     import coding_eval_control as control
     import coding_eval_oracle as oracle
+    import coding_eval_worker_oracle as worker_oracle
 
-VERSION = "coding-suite-v4"
+VERSION = "coding-suite-v6"
 DEVELOPMENT_SHA256 = "0c2a0624df93085540f61c4677260490a9810a0325efd6bcb75db0dce1461570"
 HELD_OUT_SHA256 = "8141e9281c830fe510863403d6c1f137dcb661c2ba6067e68a94a578a13e5c3b"
 HELD_OUT_COUNT = 10
@@ -41,6 +43,12 @@ TASK_FIELDS = frozenset({
 
 def canonical_digest(value):
     return evaluation.sha(json.dumps(value, sort_keys=True, separators=(",", ":")).encode())
+
+
+def source_hashes():
+    """Whole-file bindings, including every dynamically materialized helper."""
+    return {path.name: evaluation.sha(path.read_bytes())
+            for path in sorted(Path(__file__).parent.glob('coding_eval*.py'))}
 
 
 def refuse(code):
@@ -301,6 +309,18 @@ def controls_valid(base, reference):
             and reference["passed"] and reference["cause"] == "none")
 
 
+def held_out_independent_control(held_out, task_id, kind, output, workspace_roots=()):
+    """Reconstruct pinned controls; never accept supplied candidate bytes here."""
+    private_location(output, workspace_roots)
+    task = next((task for task in held_out_tasks(held_out, workspace_roots) if task['id'] == task_id), None)
+    if task is None or kind not in ('base', 'reference'):
+        refuse('control-refused')
+    files = evaluation.projection(task)
+    if kind == 'reference':
+        files[task['source']] = evaluation.pinned_blob(task['reference'], task['source'], task['reference_sha256'])
+    return worker_oracle.grade(task, files, output, held_out=held_out, workspace_roots=workspace_roots)
+
+
 def development_controls_valid(summary):
     tasks = development_tasks()
     expected = {task["id"]: task["expected_tests"] for task in tasks}
@@ -318,6 +338,7 @@ def verify(held_out, output, purpose, workspace_roots=()):
         refuse("held-out-purpose-refused")
     private_location(output, workspace_roots)
     inputs = check_inputs(held_out, workspace_roots)
+    sources = source_hashes()
     evaluation.new_directory(output)
     started = time.monotonic()
     evaluation.publish(output / "development-coverage.json", development_coverage())
@@ -333,32 +354,51 @@ def verify(held_out, output, purpose, workspace_roots=()):
         rows.append({"task": task["id"], "base": base, "reference": reference,
                      "valid": controls_valid(base, reference)})
     evaluation.publish(private_output / "controls.json", {"tasks": rows})
+    independent_output = output / 'independent-held-out'
+    evaluation.new_directory(independent_output)
+    worker_rows = []
+    for task in held_out_tasks(held_out, workspace_roots):
+        base = held_out_independent_control(held_out, task['id'], 'base',
+                                           independent_output / (task['id'] + '-base'), workspace_roots)
+        reference = held_out_independent_control(held_out, task['id'], 'reference',
+                                                independent_output / (task['id'] + '-reference'), workspace_roots)
+        worker_rows.append({'task': task['id'], 'base': base, 'reference': reference,
+                            'valid': controls_valid(base, reference)})
+    evaluation.publish(independent_output / 'controls.json', {'tasks': worker_rows})
+    source_changed = sources != source_hashes()
     # Aggregate metadata is safe to inspect without supplying task-level held-out
     # feedback to future harness/prompt tuning. Raw files stay private.
     summary = {**inputs, "kind": "complete-suite-historical-controls-only",
-               "passed": development["passed"] and development_valid and independent["passed"] and all(row["valid"] for row in rows),
+               "passed": (not source_changed and development["passed"] and development_valid and independent["passed"]
+                          and all(row["valid"] for row in rows) and all(row['valid'] for row in worker_rows)),
                "development_controls_valid": development["passed"] and development_valid,
                "independent_development_controls_valid": independent["passed"],
                "independent_development_tasks": len(independent["tasks"]),
                "held_out_controls_valid": all(row["valid"] for row in rows),
+               'independent_held_out_controls_valid': all(row['valid'] for row in worker_rows),
+               'independent_held_out_tasks': len(worker_rows),
                "held_out_test_methods_run": sum(case["tests"]["tests"] if case["tests"] else 0
                                                 for row in rows for case in (row["base"], row["reference"])),
-               "control_attempts": 2 * (len(development["tasks"]) + len(independent["tasks"]) + len(rows)),
-               "input_refused": (development["input_refused"] or independent["input_refused"]
+               'independent_held_out_test_methods_run': sum(case['tests']['tests'] if case['tests'] else 0
+                                                          for row in worker_rows for case in (row['base'], row['reference'])),
+               "control_attempts": 2 * (len(development["tasks"]) + len(independent["tasks"]) + len(rows) + len(worker_rows)),
+               "input_refused": (source_changed or development["input_refused"] or independent["input_refused"]
                                  or any(case["cause"] == "input_integrity" for row in rows
-                                        for case in (row["base"], row["reference"]))),
+                                        for case in (row["base"], row["reference"]))
+                                 or any(case['cause'] == 'input_integrity' for row in worker_rows
+                                        for case in (row['base'], row['reference']))),
                "wall_seconds": round(time.monotonic() - started, 6),
                "aggregate_worker_quotas": False,
+               'source_hashes': sources, 'source_changed': source_changed,
                "suite_sha256": evaluation.sha(Path(__file__).read_bytes()),
                "evaluator_sha256": evaluation.sha(Path(evaluation.__file__).read_bytes()),
                "oracle_sha256": evaluation.sha(Path(oracle.__file__).read_bytes()),
-               "admission_blockers": ["remaining-independent-development-adapters", "held-out-independent-adapters",
-                                      "aggregate-worker-quotas", "shared-fixture-scratch-quota",
-                                      "legacy-cleanup-deadline", "host-mount-metadata",
-                                      "remaining-clause-coverage-admission"],
+               'admission_requirements': ['matching-complete-control-receipt',
+                                          'required-inherited-lane-quota-verification',
+                                          'declared-finite-observation-scope'],
                "logs": {name: evaluation.sha(evaluation.read_regular(output / name, 16 * evaluation.MAX_FILE))
                         for name in ("development-coverage.json", "development/summary.json", "independent-development/summary.json",
-                                     "held-out/controls.json")}}
+                                     "held-out/controls.json", 'independent-held-out/controls.json')}}
     evaluation.publish(output / "summary.json", summary)
     return summary
 
