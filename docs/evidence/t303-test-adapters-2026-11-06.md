@@ -89,7 +89,12 @@ They do not demonstrate native Git creation or confined command execution.
 API tests cover the closed selection set, defaults, unknown/duplicate fields,
 wrong types and refusal to adopt caller-owned worktrees. The versioned receipt
 schema admits the two new parser identities; the fast gate registers this exact
-schema and its actual JavaScript consumer tests. Other unregistered schema and
+schema and its JavaScript consumer tests. The subsequent independent review found
+that schema-only changes also need the host Rust consumer and catalog-bound
+producer checks; the [same-batch gate repair](t303-schema-gate-repair-2026-11-06.md)
+adds those selections. The original batch's complete source run below included
+the host because crate sources changed; it did not prove schema-only coverage.
+Other unregistered schema and
 JavaScript inputs still refuse. No threshold or trust boundary is weakened. Frozen tasks, hidden tests, held-out
 inputs, status fields, ledger checkboxes and supply-chain outputs are unchanged. No model/GPU run or new coding score is claimed. The
 row-closing development campaign and held-out scoreboard remain required.

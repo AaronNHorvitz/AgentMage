@@ -33,6 +33,12 @@ RUNTIME_PRODUCER_FIXTURE_INPUTS = {
         "run-declarations.json", "run-recipe.json", "run-request.json",
     )
 }
+# The host embeds the receipt schema in its tool catalog. Its digest also binds
+# the current producer fixtures, so either input needs the full Rust consumers
+# and read-only fixture reproduction, even when no crate source changed.
+HOST_CATALOG_INPUTS = RUNTIME_PRODUCER_FIXTURE_INPUTS | {
+    "schemas/runtime/validation-receipt.schema.json",
+}
 CRATE_INPUT_SUFFIXES = {".rs", ".toml", ".json", ".sql", ".txt"}
 CRATE_EXTENSIONLESS_INPUTS = {
     "kernel/contracts/LICENSE",
@@ -67,6 +73,8 @@ def affected_packages(metadata: dict, paths: list[str], root: Path) -> list[str]
         name for name, directory in roots.items()
         if any(path == directory or path.startswith(directory + "/") for path in paths)
     }
+    if HOST_CATALOG_INPUTS.intersection(paths):
+        affected.add("agentmage-host")
     while True:
         expanded = affected | {
             name for name, p in packages.items()
@@ -137,9 +145,8 @@ def plan(root: Path, paths: list[str], metadata: dict) -> list[list[str]]:
     ]
     python_paths = [p for p in paths if p.endswith(".py")]
     modules = set()
-    producer_fixtures = bool(RUNTIME_PRODUCER_FIXTURE_INPUTS.intersection(paths))
-    if producer_fixtures:
-        packages = sorted(set(packages) | {"agentmage-host"})
+    producer_checks = bool(HOST_CATALOG_INPUTS.intersection(paths))
+    if producer_checks:
         modules.add("tests.test_runtime_producer_contract")
     # These process roles form one grading boundary. Their complete integration
     # scenarios live together; collect them once when several roles change.
@@ -191,7 +198,7 @@ def plan(root: Path, paths: list[str], metadata: dict) -> list[list[str]]:
         commands.append([sys.executable, "scripts/local_agent_fast_gate.py", "--lint-python", *python_paths])
     if modules:
         commands.append([sys.executable, "-m", "unittest", *sorted(modules)])
-    if producer_fixtures:
+    if producer_checks:
         check = [sys.executable, "-B", "scripts/runtime_producer_fixtures.py"]
         if Path("/tools/build-slot").is_file():
             check = ["bash", "/tools/build-slot", *check]

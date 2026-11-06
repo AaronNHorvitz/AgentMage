@@ -32,9 +32,13 @@ staged edits, unstaged edits and untracked files not ignored by Git. With no
 base; it cannot silently report that nothing was tested. To inspect the selected
 paths and commands, add `--plan`; this does not establish a passing gate.
 
-The exact validation-receipt schema and its JavaScript consumer test are also
-registered with `node --test tests/test_planning_schemas.mjs`. Other JSON and
-JavaScript files outside crates still require their own coverage registration.
+The exact validation-receipt schema and its JavaScript consumer test run
+`node --test tests/test_planning_schemas.mjs`. A schema change also selects its
+Rust consumer, `agentmage-host`, and all reverse dependencies for formatting,
+Clippy and complete source tests: the host embeds these schema bytes in its
+model-visible tool catalog. It also runs the producer manifest unit tests and
+reserved read-only fixture reproduction, whose inputs bind that catalog digest.
+Other JSON and JavaScript files outside crates still require their own coverage registration.
 The exact version 5 runtime producer fixture files run their Python manifest
 checks, read-only regeneration comparison under the build reservation, and the
 host crate's full source checks. Historical fixture directories are not rewritten.

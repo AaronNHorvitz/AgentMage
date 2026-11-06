@@ -106,6 +106,24 @@ class FastGateTests(unittest.TestCase):
         for name in sorted(gate.VALIDATION_SCHEMA_INPUTS):
             commands = gate.plan(self.root, [name], self.metadata)
             self.assertIn(["node", "--test", "tests/test_planning_schemas.mjs"], commands)
+        metadata = {"packages": self.metadata["packages"] + [
+            self.package("agentmage-host", "shells/host", []),
+            self.package("host-client", "shells/host-client", ["agentmage-host"]),
+            self.package("host-consumer", "shells/host-consumer", ["host-client"]),
+        ]}
+        commands = gate.plan(self.root, ["schemas/runtime/validation-receipt.schema.json"], metadata)
+        for operation in ("fmt", "clippy", "test"):
+            command = next(c for c in commands if c[:2] == ["cargo", operation])
+            selection = [command[i + 1] for i, arg in enumerate(command) if arg == "-p"]
+            self.assertEqual(selection, ["agentmage-host", "host-client", "host-consumer"])
+        self.assertIn([sys.executable, "-m", "unittest", "tests.test_runtime_producer_contract"], commands)
+        reproduction = next(c for c in commands if c[-1] == "scripts/runtime_producer_fixtures.py")
+        self.assertNotIn("--write", reproduction)
+        if Path("/tools/build-slot").is_file():
+            self.assertEqual(reproduction[:2], ["bash", "/tools/build-slot"])
+        # The JavaScript test does not change the embedded schema/catalog bytes.
+        commands = gate.plan(self.root, ["tests/test_planning_schemas.mjs"], metadata)
+        self.assertFalse(any(c[0] == "cargo" for c in commands))
         with self.assertRaises(ValueError):
             gate.plan(self.root, ["schemas/runtime/unknown.schema.json"], self.metadata)
         with self.assertRaises(ValueError):

@@ -1,0 +1,220 @@
+Commit: cd3179cfbc94d2933a2aba6000019baa3439cada
+Scope: local-coding-project-tests
+
+# Independent core review: T-303 / T-306 project-test output protocols
+
+Reviewer: separate Claude Opus 5.5 session, extra-high effort, read-only repository access
+(the repository is a read-only bind mount in this sandbox; `git status --porcelain` was empty
+before and after every run). Tier: core. Row: T-303; related T-306 (a non-closing batch).
+Base: `5045c693bfe03b413f73722203229f6b3b16226f`.
+`git rev-parse cd3179cfbc94d2933a2aba6000019baa3439cada HEAD` returned the same full SHA for both.
+
+## Method
+
+1. Read IP-POLICY context, Decisions 0154 and 0155, the top of TASKS.md, the T-303 and T-306 rows,
+   the request and the complete diff from the base (33 files): `kernel/engine/src/validation_result_text.rs`
+   (new), the normalizer wiring and template seal in `validation_result.rs` and `validation_template.rs`,
+   the native owner `platforms/linux/src/coding_repository_validation.rs`, the API wire decoding in
+   `platforms/local-api/src/coding_repository_api.rs`, the CLI, all tests, the receipt schema, the fast
+   gate, the producer fixture versioning (v5 plus the historical pins) and all changed documents.
+2. Ran all 12 requested commands from the exact commit root in the stated environment. Heavy commands
+   went through `/tools/build-slot`.
+3. Ran an independent real-runner probe that replays actual outputs through the unchanged production
+   `validation_result_text.rs`. It is a scratch scaffold outside the repository, built from the
+   builder's type stubs, with my own inputs and driver.
+4. Replayed adversarial synthetic transcripts through the same scaffold.
+5. Ran the fast-gate planner read-only on single-path inputs to check that coverage is registered.
+6. Compared every failing test identity in my full gate run with the retained baseline, and verified
+   all 13 builder raw-evidence checksums.
+
+No GPU, model, development or held-out campaign was run. None was required or claimed.
+
+## Commands and results
+
+Environment: `PATH=/lane/state/tmp/shared-node-v24.15.0/bin:$PATH`,
+`CARGO_TARGET_DIR=/lane/state/review-target`, `CARGO_BUILD_JOBS=2`, `RUST_TEST_THREADS=4`.
+Reviewer logs are in `/lane/state/tmp/review-cd3179/`.
+
+| # | Command | Result | Log SHA-256 |
+| --- | --- | --- | --- |
+| 1 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-kernel-engine --lib validation_result -- --nocapture` | PASS: 7 passed, 0 failed, 0 ignored, 1476 filtered (focus) | `d4c53c6f2684a53d3483258fd98a7f8cbcd58f3be6e9fa8129670d2993cc7aba` |
+| 2 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib coding_repository -- --nocapture` | PASS: 25 passed, 0 failed, 0 ignored, 256 filtered (focus) | `12f7b4e161b945650e8dd9a290f0de8cd97ecb50776f1d0ed3f54630cedad36d` |
+| 3 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api -- --nocapture` | PASS: 3+9+10+35 = 57 passed, 0 failed/ignored/filtered | `0b9743c9879ee9010dca9f6a63fad574638ce96e1fc8b7648af43bbe760160bb` |
+| 4 | `python3 -B scripts/local_agent_fast_gate.py --base 5045c693bfe03b413f73722203229f6b3b16226f --timeout 3600` | FAIL (as expected): every non-Rust step and fmt/clippy pass; all-target source 2361 passed, 72 failed, 70 ignored, 0 filtered; `error: 2 targets failed: -p agentmage-host --lib, -p agentmage-platform-linux --lib`; 274.2 s including reservation | `67feb09c10c5f166814ffc9f1a3a6e8df68066560c1df7749230168c80111769` |
+| 5 | `node --test tests/test_planning_schemas.mjs` | PASS: 78 pass, 0 fail/cancelled/skipped/todo | `f408301e0acc2bd87eed1056a0e9a95f5303f0161d81c3d5914724661aa7dbb8` |
+| 6 | `node node_modules/.bin/markdownlint-cli2 ./TASKS.md ... ./docs/architecture/runtime-producer-contract-v5.md` (six files) | PASS: 0 issues in 6 files | `8c83b8ba122fa3363d40ed7b8bd8e835c5ac79d8739ecd5d31d2d6991d3bebb5` (byte-identical to builder's markdown-final.log) |
+| 7 | `python3 -B scripts/validate_docs.py` | PASS: 767 Markdown files and all policy invariants | `ec77fd0f62820bfe740b46d76381bc7c1bad21667f14a1def62fb423e317af6b` (identical to builder) |
+| 8 | `cmp docs/reviews/5045c693bfe0-local-coding-owned-edits.txt /lane/reviews/5045c693bfe0-local-coding-owned-edits.md` | identical, exit 0 | empty |
+| 9 | `git diff --check 5045c693bfe0... HEAD` | clean, exit 0 | empty |
+| 10 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-host --lib runtime_producer_contract_tests -- --nocapture` | PASS: 10 passed, 0 failed, 1 ignored (existing printer), 564 filtered | `7bca290410f7298272a373023be6e580873d4a72748526f5e62afb3b6c6d66e0` |
+| 11 | `bash /tools/build-slot python3 -B scripts/runtime_producer_fixtures.py` | PASS: "runtime producer fixtures match (9 files)" (about 24 min, almost all spent waiting for the shared reservation) | `0f64c61563260515c16200cd4641bcfa1e1b997291784ef94e762c8755132f9b` |
+| 12 | `python3 -B -m unittest tests.test_local_agent_fast_gate tests.test_runtime_producer_contract` | PASS: Ran 36 tests, OK | `3184aee743896a8f5d5b0bbfc3b2d912df414828f2501107b14c3d53c1785b5b` |
+
+Full-gate failure identity comparison: I extracted the `test ... FAILED` identities from my run 4,
+sorted and deduplicated them, and compared them with the union from the unchanged baseline logs
+`artifacts/verification-logs/standalone-evidence-host-2026-10-04/batch35-source-2/11.log` (53) and
+`07.log` (19). Both lists have 72 entries, and `diff` reports them **identical**. Both sorted lists hash
+to `75c11eb40950e01f29283419742c9cfeb51c8cda7673f7b3129efd084d2dfe98`, which is exactly the digest the
+builder states. The gate ran every selected target unfiltered with `--all-targets --no-fail-fast`;
+no ignore or allowlist change is present in the diff.
+
+Builder evidence: all 13 checksums in the request match the files in `/lane/state/tmp/t303-test-adapters/`.
+
+## Independent real-runner probe (scratch, outside the repository)
+
+The scaffold (`/lane/state/tmp/review-cd3179/probe/scaffold.rs`, SHA-256
+`bd30868df01819a02da70ca520574884dbde2e805c72cefe5ffe8d55cd748b7d`) includes the unchanged production
+`kernel/engine/src/validation_result_text.rs` by `#[path]`. Its inputs are outputs from real runners
+on this host: rustc/cargo 1.99.1 and Python 3.15.0. The probe crate has lib unit tests (pass,
+`should_panic`, `#[ignore]`, conditional failure), an integration test file and a doctest. The
+Python probes cover pass, FAIL+ERROR+skip, docstring, subTest, expectedFailure, multiple modules,
+empty discovery and discover.
+
+| Real transcript | Exit | Parser result |
+| --- | --- | --- |
+| `cargo test`, 3 binaries (lib, integration, doctest) | 0 | Passed, 5/0/1 (passed/failed/skipped) |
+| `cargo test --lib` | 0 | Passed, 3/0/1 |
+| `cargo test`, one failing lib test (stops after the lib binary) | 101 | AssertionFailed, 2/1/1, `libtest[1]::tests::maybe_fails` |
+| `cargo test --no-fail-fast`, same failure (all 3 binaries) | 101 | AssertionFailed, 4/1/1, same name |
+| `cargo test adds` (filtered) | 0 | refused, Malformed |
+| failing test whose captured stdout contains a `test result: ` line | 101 | refused, Malformed (see L1) |
+| `python -m unittest -v` pass with a skip | 0 | Passed, 2/0/1 |
+| FAIL + ERROR + skip | 1 | AssertionFailed, 0/2/1, both exact names |
+| FAIL only | 1 | AssertionFailed, 1/1/1 |
+| discover | 0 | Passed, 2/0/1 |
+| docstring description, subTest, expectedFailure, empty (`NO TESTS RAN`, exit 5) | 0/1/0/5 | each refused, Malformed |
+
+Synthetic adversarial transcripts (same scaffold):
+
+- These were all refused as Malformed: a libtest binary crashing mid-block, a later binary failing to
+  launch, `failures:` with no failure, a 60-second warning line, Python FAIL events with an `OK`
+  summary, a failing summary with exit 0, logging to stderr, a stray tab line and non-ASCII names.
+- The same test name in two libtest blocks counts separately, with block-prefixed failure names.
+
+I found no honest-runner transcript that the parser promotes to a wrong pass, wrong count or wrong
+status. As the guide and evidence disclose, project test code can forge runner output by writing to
+the raw stream and exiting 0. This is the stated trust model and not a grading claim.
+
+## Review by area
+
+- **Parser selection and immutability:** `output_format` is a closed serde enum. Unknown values,
+  `null`, booleans, `process_exit_v1` and duplicate keys return 400 (API test). The kernel seal now
+  refuses only `ProcessExitV1` for test kinds (`validation_template.rs:388`). The selected parser enters
+  the definition `source` digest and the sealed template. The text parser identity is
+  `sha256(json([sha256(validation_result.rs), sha256(validation_result_text.rs)]))`, a structured
+  pair of whole-file digests computed from `include_bytes!`, never from caller input.
+- **Retry budget:** `check_validation_selection` requires `series.template == template`. Any format
+  change after the first admitted attempt returns `code.validation.stale`, and the spent count is
+  retained. The new platform test asserts this for both text formats; I confirmed it in the code. A
+  rerun still requires the exact prior receipt, `plan_failed_test_rerun` and `verify_rerun_plan`.
+- **Normalizer:** text parsing runs only after the existing checks: digest-bound channels,
+  termination, signal, truncation, secret classification and control bytes. Rust reads only stdout
+  and Python only stderr; swapping the channels returns Malformed (kernel test). A pass requires
+  exit 0 and the minimum count. Failures require a nonzero exit. Skipped-only and too-few results
+  never pass. Counters use checked arithmetic.
+- **Ownership and auth:** the API still requires the control token and a service-created worktree.
+  A valid format cannot adopt a caller worktree (409 `code.command.worktree-required`). The CLI
+  validates the same closed type, shows the complete escaped preview (which includes the selected
+  parser) and requires the exact `test <sha>` challenge before one decide POST.
+- **Producer fixtures:** v1–v4 bytes are unchanged (the diff adds only `v5/`). Complete original
+  manifest pins and file-set closure are checked in both Rust and Python. v2–v4 decode exactly and
+  pass client verification against their own frozen requests. v5 reproduces exactly (run 11 and the
+  host test). The v4→v5 differences are the catalog digest and dependent digests. This repair is
+  sound, not a weakening: the old "historical equals current build" assertion became impossible
+  after a legitimate catalog change, and it was replaced by stronger pinning.
+- **Evaluation integrity:** no frozen task, hidden test, held-out input, threshold, prompt or
+  evaluator file is in the diff. No score is claimed.
+- **Public-repository hygiene:** the added lines have no home path, username, hostname, credential
+  or sibling-project name. The only paths are the lane-generic `/lane/...` ones inside the
+  byte-identical retained review. No other agent product is named.
+- **Delivery:** no new sub-row. The batch runs end to end through component tests and the API, and
+  it is measured.
+
+## Findings
+
+### M1 (medium): the fast gate now accepts a change to the validation-receipt schema without building or testing its Rust consumer
+
+Location: `scripts/local_agent_fast_gate.py:25` (`VALIDATION_SCHEMA_INPUTS`), `:171` (skips the
+schema in the coverage check) and `:188` (adds only `node --test`). Test:
+`tests/test_local_agent_fast_gate.py:106`. Claims: `docs/guides/local-agent-development.md:35` and
+`docs/evidence/t303-test-adapters-2026-11-06.md:92` ("its actual JavaScript consumer tests").
+
+`shells/host/src/coding_tools.rs:70` embeds this exact schema with
+`include_str!("../../../schemas/runtime/validation-receipt.schema.json")` as
+`TARGETED_VALIDATION_OUTPUT_SCHEMA_JSON`. That schema feeds the model-visible tool-catalog digest.
+Decision 0155 and this batch's evidence report that this dependency caused four host producer-fixture
+failures. So the schema has a Rust consumer, `agentmage-host` and its dependents, and the current v5
+fixtures depend on its bytes. Before this commit, a schema change outside a crate made the gate
+refuse (no coverage registered). Now it is accepted with JavaScript coverage only.
+
+Reproduction (read-only), from the commit root:
+
+```text
+python3 -B -c 'import json,subprocess,sys; sys.path.insert(0,"."); import scripts.local_agent_fast_gate as g;
+md=json.loads(subprocess.check_output(["cargo","metadata","--no-deps","--format-version","1","--locked","--offline"]));
+print(g.plan(g.ROOT,["schemas/runtime/validation-receipt.schema.json"],md))'
+```
+
+The output plans only `git diff --check`, `--lint-untracked` and `node --test
+tests/test_planning_schemas.mjs`. It plans no `cargo fmt`, `clippy` or `test` for `agentmage-host`
+and no producer reproduction. A future schema-only edit (for example, another parser identity) would
+pass the per-change gate while breaking `the_committed_fixtures_are_the_records_the_runtime_builds`
+and the other host catalog tests. That is the same breakage this batch hit, which was caught only
+because kernel sources changed at the same time.
+
+Concrete fix:
+
+1. When `schemas/runtime/validation-receipt.schema.json` is in `paths`, add `agentmage-host` to the
+   package selection, expanded through `affected_packages`' reverse dependencies. Also add the
+   reserved `runtime_producer_fixtures.py` check and `tests.test_runtime_producer_contract`, as for
+   the fixture inputs.
+2. Extend `test_validation_schema_changes_run_the_actual_consumer_tests` so a schema-only plan must
+   include `-p agentmage-host` in its `cargo test` command.
+3. Correct the two documents to name the Rust consumer.
+
+This is gate-soundness evidence integrity, not a runtime security defect. It must be fixed before
+T-303/T-306 close on a batch that relies on this gate.
+
+### L1 (low, backlog before T-303 parent acceptance): common honest outputs become non-retryable Malformed results
+
+Location: `kernel/engine/src/validation_result_text.rs:66`, `:152` and `:228`, together with the
+unchanged rerun precondition at `kernel/engine/src/validation_result.rs:602`.
+
+The following honest transcripts are refused as Malformed:
+
+- `#[ignore = "reason"]` (`ignored, reason`). This repository's own gate output contains this line;
+  see run 4, `print_runtime_producer_fixtures ... ignored, run by ...`.
+- libtest's ">60 seconds" progress line.
+- Python tests that write to stderr, such as default `logging` warnings.
+- `NO TESTS RAN` (Python ≥3.12, exit 5).
+- A failing Rust test whose captured stdout contains a line starting with `test result: ` or
+  `running `.
+- A Rust compilation failure, which leaves stdout empty (`:66`).
+
+`plan_failed_test_rerun` admits only `AssertionFailed` or `CompileFailed`. After any Malformed
+receipt, the worktree's validation series therefore cannot continue, even with attempts left; a
+changed format is `stale`. Refusal is the safe direction, and the guide discloses some of these
+cases: custom ignored reasons, and compilation as malformed. But the T-303 row requires
+"read failures and retry within budgets". Retrying after a compile error is the most common case
+in a Rust repair loop, and the measured parent loop needs a safe, explicit path for it: for example,
+a distinct compile/incomplete classification from the exit code plus an empty transcript, with
+separately approved rerun, and the remaining refusals listed in the guide. No change in this batch
+is required.
+
+No critical or high finding.
+
+## Per-row result
+
+- **T-303:** this batch's implementation, tests and evidence are confirmed except for M1. The row
+  does not close: M1 is open, and model repair, native positive execution, recovery/cancellation and
+  measured acceptance remain open, as the evidence states.
+- **T-306:** a related non-closing batch, with the same result. Original apply, commit/push and MCP
+  remain open.
+- The retained prior owned-edit PASS report is byte-identical (run 8). Its low findings and the
+  same-user identity window remain backlog, as stated.
+
+Summary: M1 (medium) is open. The per-change gate accepts a schema-only change to
+validation-receipt.schema.json without building or testing its Rust consumer, agentmage-host. All
+required runs otherwise matched the builder's evidence, and there is no high or critical finding.
+
+Verdict: FINDINGS
