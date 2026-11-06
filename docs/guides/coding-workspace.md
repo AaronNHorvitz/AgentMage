@@ -39,6 +39,13 @@ both fields for model-disclosure consent, including the exact endpoint so that
 a service restart cannot reuse a revision for a different destination. Omission preserves the existing API
 contract; other controls remain responsible for displaying their chosen endpoint.
 
+Optional `expected_root_sha256` binds a selection to a preceding file map's
+canonical root path/device/inode digest. The API verifies it before source
+selection and against the selected native scope. A mismatch returns
+`409 code.workspace.root-stale`, preserving the old grant and preview.
+This field narrows selection; it confers no read, disclosure or write authority.
+Omitting it preserves the original explicit-selection contract.
+
 Every endpoint setting change, including choosing the same address again or
 revoking settings, invalidates that disclosure consent. Reads remain authorized;
 select again with explicit model consent to send source after a settings change.
@@ -84,6 +91,54 @@ nonempty, unique and exactly match selected names. Errors contain fixed codes,
 never an absolute root, source text or OS diagnostic. File and HTTP budgets do
 not establish a filesystem I/O deadline; a stalled filesystem can delay a native
 read. This is not an arbitrary untrusted command sandbox.
+
+## Metadata-only file map
+
+The trusted control credential can request a one-shot scan:
+
+```text
+POST /v1/code/map
+```
+
+```json
+{"root":"<absolute-selected-directory>","query":"calc tests","approve_discovery":true}
+```
+
+False consent or the ordinary client credential refuses. Unknown/duplicate
+fields and positional arrays refuse. This separate metadata permission opens
+directories and inspects object metadata through the native path adapter; it
+reads no file content and invokes no command, Git, model or instruction file.
+It does not change any existing source scope or pending preview. Its
+`selected: false` and `model_context_approved: false` describe the map's lack of
+authority, not the state of an existing scope. Requests are visible in activity.
+
+The response contains `root_sha256`, all eligible `{path, score}` entries and
+counts of directories, names, exclusions and unsafe entries. Ranking is
+deterministic: split the query into distinct lowercase ASCII alphanumeric
+terms; each term contributes one point for a path substring match and two
+more for a basename match. Sort by descending score, then ascending path.
+Zero scores remain in the map. Only the terminal client's `map-select` proposes
+the first sixteen positive-score entries, subject to fresh read/disclosure
+consent. File contents, binary validity and source relevance are not inferred
+from names. Existing exact reads and context excerpt selection run afterward.
+
+Hidden names and names `target`, `build`, `dist`, `node_modules`, `venv` and
+`__pycache__` are excluded without opening, case-insensitively for the listed
+names. Links, multiply-linked files, special objects and non-selectable ASCII
+paths are omitted. This is a directory view, not Git status, tracked-file
+inventory, Git-ignore handling, or a secret classifier. Review paths before
+sharing source; visible names can still identify sensitive files.
+
+Limits are fixed: query 1,024 bytes and at most 64 distinct searchable terms;
+256 directories, depth sixteen, 8,192 observed names, 4,096 eligible files;
+4,096 names and 256 KiB of names per directory. Paths use the same canonical
+256-byte ASCII selection format. A cooperative two-second traversal deadline
+and cancellation checks run between native operations; a blocked filesystem
+call can delay either. Traversal or identity failures return a content-free
+error, never a usable partial map. Use a smaller root if the scan exceeds its
+budget. Enumeration rechecks traversed directory identities and the root
+pathname before publication. It is not an atomic filesystem snapshot: changes
+after mapping require fresh native validation during exact source selection.
 
 ## Read, search and propose
 

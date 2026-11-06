@@ -147,7 +147,11 @@ try:
                 token = (Path(sys.argv[4])/'control.token').read_text()
                 connection.request('DELETE', '/v1/code/workspace', headers={'Authorization':'Bearer '+token,'Content-Length':'0'})
                 reply = connection.getresponse(); assert reply.status == 200; reply.read(); connection.close()
-            answer = prompt if sys.argv[1] in ['approve', 'revoke'] else sys.argv[1].encode()
+            if sys.argv[1] == 'replace-root':
+                from pathlib import Path
+                root = Path(sys.argv[6]); root.rename(root.with_name('old-workspace')); root.mkdir()
+                (root/'calc.py').write_text('replacement sentinel')
+            answer = prompt if sys.argv[1] in ['approve', 'revoke', 'replace-root'] else sys.argv[1].encode()
             os.write(master, answer+b'\n'); sent = True
     status = p.wait(timeout=2)
     # No response/proposal can emit a raw terminal escape or Unicode bidi.
@@ -205,6 +209,160 @@ fn executable_reads_searches_and_revokes_only_the_explicit_selection() {
     assert_eq!(f.json(&["workspace"])["paths"], json!(["calc.py"]));
     assert_eq!(f.json(&["revoke"])["selected"], false);
     assert!(!f.cli(&["read"]).status.success());
+}
+
+#[test]
+fn executable_maps_without_reading_and_selects_ranked_paths_only_after_typed_consent() {
+    let f = Fixture::new();
+    let root = f.root.join("workspace");
+    fs::write(root.join(".env"), "private secret").unwrap();
+    fs::write(root.join("calc-binary.py"), b"\0unreadable as text").unwrap();
+    let map = f.json(&["map", root.to_str().unwrap(), "calc"]);
+    assert_eq!(map["entries"][0]["path"], "calc-binary.py");
+    assert_eq!(map["excluded"], 1);
+    assert_eq!(f.json(&["workspace"])["selected"], false);
+    fs::remove_file(root.join("calc-binary.py")).unwrap();
+    f.api(
+        "PUT",
+        "/v1/settings",
+        json!({"endpoint":"http://127.0.0.1:19997/v1","approve_conversations":true}),
+    );
+    assert!(
+        !f.cli(&["map-select", root.to_str().unwrap(), "calc"])
+            .status
+            .success()
+    );
+    let wrong = f.terminal(&["map-select", root.to_str().unwrap(), "calc"], "yes");
+    let wrong: Value = serde_json::from_slice(&wrong.stdout).unwrap();
+    assert_eq!(wrong["status"], 1);
+    assert_eq!(f.json(&["workspace"])["selected"], false);
+    let output = f.terminal(&["map-select", root.to_str().unwrap(), "calc"], "approve");
+    let output: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(output["status"], 0, "{output}");
+    assert_eq!(output["sent"], true);
+    let selected = f.json(&["workspace"]);
+    assert_eq!(selected["paths"], json!(["calc.py"]));
+    assert_eq!(selected["model_context_approved"], true);
+    assert_eq!(f.json(&["read"])["files"][0]["content"], BEFORE);
+    let output = f.terminal(
+        &["map-select", root.to_str().unwrap(), "no-match"],
+        "approve",
+    );
+    let output: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(output["status"], 1);
+    assert_eq!(output["sent"], false);
+    assert_eq!(f.json(&["workspace"])["paths"], json!(["calc.py"]));
+    assert_eq!(
+        fs::read_to_string(root.join("untouched.py")).unwrap(),
+        "sentinel\n"
+    );
+}
+
+#[test]
+fn ranked_source_selection_refuses_root_replacement_while_the_approval_is_displayed() {
+    let f = Fixture::new();
+    f.api(
+        "PUT",
+        "/v1/settings",
+        json!({"endpoint":"http://127.0.0.1:19996/v1","approve_conversations":true}),
+    );
+    let root = f.root.join("workspace");
+    let output = f.terminal(
+        &["map-select", root.to_str().unwrap(), "calc"],
+        "replace-root",
+    );
+    let output: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(output["sent"], true);
+    assert_eq!(output["status"], 1, "{output}");
+    assert_eq!(f.json(&["workspace"])["selected"], false);
+    assert_eq!(
+        fs::read_to_string(root.join("calc.py")).unwrap(),
+        "replacement sentinel"
+    );
+    assert_eq!(
+        fs::read_to_string(f.root.join("old-workspace/calc.py")).unwrap(),
+        BEFORE
+    );
+}
+
+#[test]
+fn ranked_source_choice_stays_within_the_existing_sixteen_file_read_budget() {
+    let f = Fixture::new();
+    let root = f.root.join("workspace");
+    for index in 0..20 {
+        fs::write(root.join(format!("calc-{index:02}.py")), "source\n").unwrap();
+    }
+    f.api(
+        "PUT",
+        "/v1/settings",
+        json!({"endpoint":"http://127.0.0.1:19995/v1","approve_conversations":true}),
+    );
+    let output = f.terminal(&["map-select", root.to_str().unwrap(), "calc"], "approve");
+    let output: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(output["status"], 0, "{output}");
+    let selected = f.json(&["workspace"]);
+    let paths = selected["paths"].as_array().unwrap();
+    assert_eq!(paths.len(), 16);
+    assert_eq!(paths[0], "calc-00.py");
+    assert_eq!(paths[15], "calc-15.py");
+    assert_eq!(f.json(&["read"])["files"].as_array().unwrap().len(), 16);
+    assert_eq!(
+        fs::read_to_string(root.join("calc-19.py")).unwrap(),
+        "source\n"
+    );
+}
+
+#[test]
+fn executable_shows_bounded_escaped_refusals_without_treating_them_as_success() {
+    let f = Fixture::new();
+    let output = f.cli(&["map", f.root.join("workspace").to_str().unwrap(), "!!!"]);
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("code.map.input"));
+    assert!(output.stdout.is_empty());
+    for body in [
+        json!({"error":"code.write.stale"}),
+        json!({"error":"native.failure\u{1b}\u{202e}\u{7f}","effect":"unknown"}),
+    ] {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        let expected = if body["effect"] == "unknown" {
+            "unknown"
+        } else {
+            "code.write.stale"
+        };
+        let worker = thread::spawn(move || {
+            let (mut socket, _) = listener.accept().unwrap();
+            socket
+                .set_read_timeout(Some(Duration::from_secs(3)))
+                .unwrap();
+            let mut request = Vec::new();
+            while !request.ends_with(b"\r\n\r\n") {
+                let mut byte = [0];
+                socket.read_exact(&mut byte).unwrap();
+                request.push(byte[0]);
+                assert!(request.len() < 8192);
+            }
+            let bytes = serde_json::to_vec(&body).unwrap();
+            socket.write_all(format!("HTTP/1.1 409 Conflict\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", bytes.len()).as_bytes()).unwrap();
+            socket.write_all(&bytes).unwrap();
+        });
+        let output = Command::new(env!("CARGO_BIN_EXE_agentmage-code"))
+            .args([
+                address.to_string(),
+                f.root.join("auth").to_str().unwrap().to_owned(),
+                "status".into(),
+            ])
+            .stdin(Stdio::null())
+            .output()
+            .unwrap();
+        worker.join().unwrap();
+        assert!(!output.status.success());
+        assert!(output.stdout.is_empty());
+        let text = String::from_utf8(output.stderr).unwrap();
+        assert!(text.contains(expected));
+        assert!(!text.contains(['\u{1b}', '\u{202e}', '\u{7f}']));
+        assert!(text.is_ascii());
+    }
 }
 
 #[test]

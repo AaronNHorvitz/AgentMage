@@ -1,0 +1,164 @@
+Commit: 7c35f361faebb878561eec89c1891d26d3f3fd7b
+Scope: local-coding-terminal-client
+
+# Independent core review: T-303 + T-306 terminal coding client (non-closing batch)
+
+Reviewer: a separate, read-only Claude Opus 5.5 session at extra-high effort. It shares no context with
+the builder and made no repository change. Base `d41c21eea0ecdf4fa5ca9fcf0ac10a969c898b2e`. Tier: core.
+This verdict covers only the 14-file diff `d41c21ee..7c35f361`. It does **not** close T-303 or T-306.
+No GPU, model, grader, hidden test or held-out task was used.
+
+## Methods
+
+- Confirmed the commit: `git rev-parse 7c35f361faebb878561eec89c1891d26d3f3fd7b` = HEAD, with a clean
+  working tree before and after. Read IP-POLICY.md, Decisions 0153/0154, the T-303/T-306 rows and the
+  request.
+- Read the whole diff line by line:
+  - `coding_cli.rs` (555 lines), `bin/agentmage-code.rs` and the `lib.rs` selection binding;
+  - `LinuxCodingReadScope::verify_root`, read against `authorize_workspace_root` and
+    `workspace_path_sha256` (identity = canonical path + device + inode, with no symlink ancestor);
+  - the new integration, unit and native tests, three guides, the evidence and the TASKS.md delta.
+- Traced the route authority. The server treats the control token as a superset of the client token
+  (`lib.rs:378`). PUT/DELETE workspace, apply and settings need control. Changes, proposals, read,
+  search, status and cancel accept client.
+- Checked lease consistency for the endpoint binding. `begin()` holds `active`, and PUT/DELETE settings
+  refuse while `active` is set. So the `config` snapshot, `guard.revision` at the check (`lib.rs:1078-1097`)
+  and the `model_context_revision` stamped later cannot drift apart inside one selection operation.
+- Wrote and ran my own adversarial probe (`/lane/state/tmp/review-7c35f361faeb/probe.py`). It used my
+  independently built API and CLI, real sockets, real PTYs and a synthetic upstream (results below).
+- Re-ran the builder's development-client driver twice: once unchanged with the repo binaries, and once
+  as a private copy whose only change is the binary assignment line, pointing at my review-target
+  binaries. I compared per-task digests rather than timings, ports or IDs.
+- Ran the publication audit from a private copy whose only change is the output path, so the builder's
+  `publication-audit.json` was not overwritten. My output is byte-identical to the builder's.
+
+## Exact commands and results
+
+All cargo runs used `CARGO_TARGET_DIR=/lane/state/review-target`, set by the lane environment.
+
+| Command | Result |
+| --- | --- |
+| `sha256sum target/local-agent-tools/node` | `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c` (matches) |
+| `bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo test --locked --offline -p agentmage-platform-linux --test coding_write` | **6 passed / 0 failed / 0 ignored / 0 filtered** |
+| `bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo test --locked --offline -p agentmage-local-api --lib --test coding_cli --test local_chat_api` | lib **2**, coding_cli **5**, local_chat_api **33** passed; 0 failed / 0 ignored / 0 filtered each |
+| `PATH="$PWD/target/local-agent-tools:$PATH" python3 -B scripts/local_agent_fast_gate.py --base d41c21ee… --timeout 3600` (not inside an outer build-slot) | **FAST GATE: FAIL**, as disclosed. diff-check, untracked lint, review lint, markdownlint (6 files, 0 issues), `cargo fmt --check` and Clippy all-targets `-D warnings` all exit 0. `cargo test` exits 101: **771 passed / 72 failed / 62 ignored / 0 measured / 0 filtered** over 18 result lines. My 72 failure names equal `docs/evidence/t301-baseline-failures-2026-10-25.md` and the builder's `fast-v2.log` set exactly. No `coding_cli`, `coding_write` or `local_chat_api` test is among them. |
+| `python3 -B …/audit-publication.py` (private copy, output path changed only) | exit 0. All checks pass: totals 771/72/62/0/0, 209 manifest files, 30 contexts / 3 replays, receipt chains recomputed, review sha `a3f00a44…`, frozen inputs unchanged, ledger preserved, privacy/links. The output JSON equals the builder's byte for byte. |
+| `bash /tools/build-slot python3 -B scripts/validate_docs.py` | `Validated 754 Markdown file(s) and all policy invariants.` exit 0 |
+| `cmp docs/reviews/d41c21eea0ec-local-coding-reviewed-edits.txt /lane/reviews/d41c21eea0ec-local-coding-reviewed-edits.md` | identical |
+| `git diff --check d41c21ee… 7c35f361…` | exit 0, no output; 14 files changed |
+| `bash /tools/build-slot python3 -B …/check-development-client.py /lane/state/tmp/review-7c35f361faeb-terminal` (absent beforehand) | exit 0: 30/30 contexts match both historical campaigns, 3/3 replies applied, 4.56 s, driver `8acaea5b…` |
+| Private driver copy at `/lane/state/tmp/review-7c35f361faeb/driver/` with only the binary line changed to my `/lane/state/review-target/debug` API (`fa883e18…`) and CLI (`5004388c…`), output `…-terminal-own` | exit 0: 30/30, 3/3, 4.10 s, driver `2d625120…`, a difference expected for this variant |
+| Per-task digest comparison of builder `development-v2/summary.json` with both reviewer runs | 33 upstream request and user-message digests, 30 source digests, the 3 replays' historical-event, answer and after-image digests, and all source bindings are **identical** in both runs |
+
+The repo `target/debug` binaries present today (`e81bfbb2…` API, `74c9a5f5…` CLI) differ from the retained
+`tested-api`/`tested-cli` digests. That is expected because the directory is mutable; the audit binds the
+retained copies, and my independent build reproduces every behavioural digest.
+
+### Reviewer probe (26 checks, 25 PASS; the one FAIL was a wrong expectation in my probe)
+
+- **P1, token exposure (reproduces L1):** a plain listener on an unused loopback port received the
+  **control** bearer token from both `select` and `revoke`, before any proof that the server is the API.
+- **P2, escaping:** repository bytes (ESC, CSI clear, OSC title, BEL, U+202E, DEL) and a model replacement
+  containing ESC/U+202E/BEL went through `propose`, `review` and a PTY `apply`. stdout and the tty
+  transcript contained **no raw ESC, BEL or U+202E**, and the file received the exact model bytes. The one
+  exception was a **raw 0x7F byte passed through to stdout** (L2). The unselected sentinel was unchanged.
+- **P3, prompt injection:** model edits of `unselected.txt`, `../w2/calc.py`, `/etc/passwd` and
+  `calc.py/../unselected.txt`, and a non-strict answer embedding a fake `Type exactly apply 000…` line,
+  all failed without a pending preview and changed no file.
+- **P4, root identity:** the root was renamed and replaced *while the typed challenge was displayed*. The
+  correct answer was then refused after the second identity check, no write occurred in either directory
+  and the pending preview was retained. A symlink alias, the replacement directory and the moved original
+  path were all refused before any prompt. (My P4d expected a prompt for the moved path; the client
+  correctly refused it earlier, which P4g confirms.)
+- **P5, superseded preview:** a client-token preparation replaced the pending preview during the prompt.
+  The typed old hash was refused with HTTP 409, and neither change was written.
+- **P6, endpoint display binding:** an endpoint change during the `share` prompt was refused, and
+  model-context consent stayed false. Re-choosing the *same* endpoint (a revision bump) was also refused.
+  The existing selection was preserved, and non-tty `select-model` was refused.
+- **P7:** failure output contained no token and no root path.
+
+## Review notes (no finding)
+
+- **API authority:** the optional `settings_revision`/`settings_endpoint` fields can only *refuse*. The
+  check runs under the operation lease before scope selection, and a mismatch preserves scope and pending
+  state. Omitting the fields preserves the prior contract, which is documented honestly.
+- **Typed approvals:** `confirm` requires stdin to be a tty and reads at most 256 bytes from `/dev/tty`.
+  An exact challenge is required: `share <revision>`, or `apply <server preview_sha256>`, which the server
+  re-checks. There is no `--yes`, environment or stdin path. The `apply` review prints the complete pending
+  preview (complete diffs, hashes, expiry, risks) and the verified root.
+- **Root identity:** `verify_root` uses the same native O_PATH/NOFOLLOW walk and path+dev+inode hash as
+  selection, and grants nothing. It is checked before and after the prompt. The API still enforces its own
+  revision, hash and preimage checks.
+- **Token routing:** this matches the guide. The control token is used for settings inspection, select,
+  revoke and apply/deny only. Tokens go through the existing owner-only, single-link, 0600/0700, no-symlink
+  loader (also tested). They never appear in arguments, output or model requests: P7 checks the output, and
+  the upstream assertion in `coding_cli.rs:362` checks model requests.
+- **Wire framing:** the client accepts only `HTTP/1.1 200`. It refuses duplicate, obs-fold, non-printable,
+  chunked, compressed or `Connection` (other than close) headers, mismatched or over-cap lengths, partial
+  NDJSON lines, empty streams, and more than 8,192 events or 4 MiB. Reads have a 180 s deadline, and fixed
+  literal routes make header injection impossible.
+- **Stream failure:** only a `context, text…, proposal` sequence with matching revisions and
+  `applied:false, tested:false` leads to preparation. Errors, truncation and length-finish fail first,
+  which the tests cover for `length`.
+- **No-effect retry:** there is exactly one apply send and no retry loop anywhere. The only polling is
+  read-only `/v1/status` for at most 2 s.
+- **Privacy/IP:** the added lines contain no private host path, username, hostname, credential, personal
+  data, sibling project or third-party product name. Lane-path text appears only inside the retained,
+  byte-identical d41 review, as accepted earlier. Cargo.toml/Cargo.lock are unchanged, so there is no new
+  dependency, and SPDX headers are present.
+- **Evaluation integrity:** frozen tasks, hidden tests, graders, prompts and thresholds are untouched (the
+  audit's `git diff` and my diff reading agree). The driver uses only `development_tasks()` and historical
+  development events. No held-out content appears, and no score is claimed.
+- **Delivery:** there is no new sub-row; it is one runnable, measured client batch. TASKS.md says
+  accurately that the batch awaits review and that both parents stay open.
+
+## Findings
+
+No critical, high or medium findings. The lows below go to backlog, with no new rows.
+
+- **L1 (low, credential exposure to a non-API local listener; documentation gap now, design before the
+  install kit).** Location: `platforms/local-api/src/coding_cli.rs:35-44` (loopback-only address check),
+  `:46-53` and `:84-89` (bearer sent before any server authentication), and `docs/guides/coding-terminal.md:88-92`.
+  - **Problem:** the client sends the control token, which the server accepts for every route
+    (`lib.rs:378`), to whatever process holds the supplied loopback port.
+  - **Scenario:** the API restarts on a new `127.0.0.1:0` port and the person reruns a command with the
+    stale port from shell history. Another local OS account listening there receives full API authority.
+    Reproduced as P1. With that token the account could select an owner-readable root, prepare its own
+    answer and apply it, writing the owner's files.
+  - **Mitigating facts:** this needs a second hostile local account plus a stale or mistyped port. The
+    pre-existing smoke client has the same exposure. The API guide (`local-chat-api.md:102-106`) documents
+    the analogous residual only for the model port.
+  - **Fix:** now, document the API-port residual in the terminal and API guides. Before the install kit,
+    serve the API on an owner-only Unix-domain socket inside the private auth directory, with a peer
+    credential check. Alternatively, have the API record its bound address in that directory and make the
+    server prove token possession (for example an HMAC challenge) before the client sends any bearer.
+    Add a squatting-listener test.
+- **L2 (low, escaping accuracy).** Location: `coding_cli.rs:243-259`.
+  - **Problem:** `serde_json` leaves DEL (0x7F) unescaped. `safe()` passes it raw to the terminal,
+    although the comment says every control character is escaped (P2d).
+  - **Impact:** common terminal emulators ignore DEL on output, so no display spoofing was found.
+  - **Fix:** escape `0x7F` as `\u007f` in `safe()` and add it to the unit test.
+- **L3 (low, refusal visibility).** Location: `coding_cli.rs:139-141` and `bin/agentmage-code.rs:5-10`.
+  - **Problem:** every non-200 reply is discarded unread. After a typed `apply`, the person sees the same
+    generic message for `code.write.stale` (no effect, and no record is written) as for a dispatched
+    `effect: unknown` failure. The same holds for `code.workspace.settings-stale`.
+  - **Mitigating facts:** this is conservative, since the message says to inspect before retrying, and
+    `review` shows dispatched records.
+  - **Fix:** print the bounded, `safe()`-escaped error JSON for non-200 replies, then exit nonzero.
+
+The earlier lows stay backlog as disclosed: cancellation coverage, conservative unknown-effect labels,
+lease release, snapshot validation order, full-file escaped diff usability, campaign grade/candidate
+binding and future worktree authority.
+
+## Per-row result
+
+- **T-303 (non-closing terminal-client batch): PASS for this batch.** The client reaches the claimed
+  surface: selected read/search, streamed strict proposals, preparation and exact typed approval through
+  the versioned API. It has working display bindings and confinement through the existing native/kernel
+  path, and honest labels (synthetic/replay only, no score). The row stays **open**: tests/commands,
+  retries, repository map, durability, resume/replay and MCP are absent.
+- **T-306 (non-closing): PASS for this batch.** The terminal exposure of the reviewed write primitive is
+  sound. The row stays **open**: there is no isolated worktree, test run, Git apply/commit/push or push
+  approval.
+
+Verdict: PASS

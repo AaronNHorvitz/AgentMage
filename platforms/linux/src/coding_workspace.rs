@@ -61,6 +61,12 @@ pub struct LinuxCodingReadScope {
 }
 
 impl LinuxCodingReadScope {
+    /// Canonical root path/device/inode binding. Grants no additional authority.
+    #[must_use]
+    pub fn root_sha256(&self) -> &str {
+        self.workspace.root_path_sha256()
+    }
+
     /// Verifies a person's displayed root against an API preview's held identity.
     /// Opens directory metadata only; grants no source, write or command access.
     pub fn verify_root(root: &Path, expected_sha256: &str) -> Result<(), LinuxCodingReadError> {

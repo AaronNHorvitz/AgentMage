@@ -1883,3 +1883,120 @@ fn workspace_disclosure_choice_can_bind_the_displayed_settings_revision() {
         200
     );
 }
+
+#[test]
+fn repository_map_needs_explicit_control_and_grants_no_source_or_model_authority() {
+    let api = Api::new();
+    let files = WorkspaceFiles::new();
+    fs::create_dir(files.0.join(".git")).unwrap();
+    fs::write(files.0.join(".git/config"), "secret-token").unwrap();
+    let request = json!({"root":files.0,"query":"calc","approve_discovery":true});
+    assert_eq!(
+        api.call("POST", "/v1/code/map", CLIENT, Some(request.clone()))
+            .0,
+        403
+    );
+    let mut denied = request.clone();
+    denied["approve_discovery"] = json!(false);
+    assert_eq!(
+        api.call("POST", "/v1/code/map", CONTROL, Some(denied)).0,
+        403
+    );
+    for invalid in [
+        json!([files.0, "calc", true]),
+        json!({"root":files.0,"query":"calc","approve_discovery":true,"extra":true}),
+        json!({"root":files.0,"query":"!!!","approve_discovery":true}),
+    ] {
+        assert_eq!(
+            api.call("POST", "/v1/code/map", CONTROL, Some(invalid)).0,
+            400
+        );
+    }
+    let duplicate = format!(
+        "{{\"root\":{},\"query\":\"calc\",\"query\":\"other\",\"approve_discovery\":true}}",
+        json!(files.0)
+    );
+    assert_eq!(
+        split(api.raw(&api.bytes("POST", "/v1/code/map", CONTROL, duplicate.as_bytes(), ""))).0,
+        400
+    );
+    let (status, bytes) = api.call("POST", "/v1/code/map", CONTROL, Some(request));
+    assert_eq!(status, 200);
+    let map = document(&bytes);
+    assert_eq!(map["authority"], "metadata-only");
+    assert_eq!(map["ranking"], "lexical-path");
+    assert_eq!(map["entries"][0], json!({"path":"calc.py","score":3}));
+    assert_eq!(map["entries"].as_array().unwrap().len(), 2);
+    assert_eq!(map["excluded"], 1);
+    assert!(
+        !String::from_utf8(bytes)
+            .unwrap()
+            .contains("private unselected content")
+    );
+    assert_eq!(
+        document(&api.call("GET", "/v1/code/workspace", CLIENT, None).1)["selected"],
+        false
+    );
+    assert_eq!(
+        document(&api.call("GET", "/v1/status", CLIENT, None).1)["busy"],
+        false
+    );
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/workspace/read",
+            CLIENT,
+            Some(json!({"workspace_revision":0,"paths":["calc.py"]}))
+        )
+        .0,
+        428
+    );
+    let events = document(&api.call("GET", "/v1/activity", CLIENT, None).1);
+    assert!(
+        events["events"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|e| e["action"] == "code.map" && e["outcome"] == "mapped")
+    );
+}
+
+#[test]
+fn selection_binds_map_root_without_losing_an_existing_scope_on_refusal() {
+    let api = Api::new();
+    let files = WorkspaceFiles::new();
+    let revision = files.select(&api, false);
+    let request = json!({"root":files.0,"query":"calc","approve_discovery":true});
+    let map = document(&api.call("POST", "/v1/code/map", CONTROL, Some(request)).1);
+    let mut selection = files.selection(false);
+    selection["expected_root_sha256"] = json!("0".repeat(64));
+    let (status, error) = api.call(
+        "PUT",
+        "/v1/code/workspace",
+        CONTROL,
+        Some(selection.clone()),
+    );
+    assert_eq!(status, 409);
+    assert_eq!(document(&error)["error"], "code.workspace.root-stale");
+    let state = document(&api.call("GET", "/v1/code/workspace", CLIENT, None).1);
+    assert_eq!(state["workspace_revision"], revision);
+    selection["expected_root_sha256"] = map["root_sha256"].clone();
+    assert_eq!(
+        api.call(
+            "PUT",
+            "/v1/code/workspace",
+            CONTROL,
+            Some(selection.clone())
+        )
+        .0,
+        200
+    );
+    let moved = files.0.with_extension("moved");
+    fs::rename(&files.0, &moved).unwrap();
+    fs::create_dir(&files.0).unwrap();
+    fs::write(files.0.join("calc.py"), "replacement").unwrap();
+    let (status, error) = api.call("PUT", "/v1/code/workspace", CONTROL, Some(selection));
+    assert_eq!(status, 409);
+    assert_eq!(document(&error)["error"], "code.workspace.root-stale");
+    fs::remove_dir_all(moved).unwrap();
+}

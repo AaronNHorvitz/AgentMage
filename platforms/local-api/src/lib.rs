@@ -31,6 +31,7 @@ use agentmage_capability_repository_map::coding_proposal::{
 
 use agentmage_platform_linux::{
     LinuxCodingPendingWrite, LinuxCodingReadScope, LinuxCodingReplacement,
+    discover_linux_coding_map,
 };
 
 use agentmage_platform_linux_inference::local_chat::{
@@ -554,6 +555,16 @@ struct WorkspaceSelection {
     settings_revision: Option<u64>,
     #[serde(default)]
     settings_endpoint: Option<String>,
+    #[serde(default)]
+    expected_root_sha256: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct MapRequest {
+    root: String,
+    query: String,
+    approve_discovery: bool,
 }
 
 #[derive(Deserialize)]
@@ -840,7 +851,51 @@ fn handle(
     if req.path == "/v1/code/workspace/apply" && !req.control {
         return error(socket, 403);
     }
+    if req.path == "/v1/code/map" && !req.control {
+        return error(socket, 403);
+    }
     match route {
+        ("POST", "/v1/code/map") => {
+            let Ok(input) = object_json::<MapRequest>(&req.body) else {
+                return error(socket, 400);
+            };
+            if !input.approve_discovery {
+                return error(socket, 403);
+            }
+            let (mut op, _) = match begin(state, stop, "code.map") {
+                Ok(operation) => operation,
+                Err(status) => return error(socket, status),
+            };
+            let map = match discover_linux_coding_map(Path::new(&input.root), &input.query, || {
+                op.cancel.is_cancelled() || stop.load(Ordering::Relaxed)
+            }) {
+                Ok(map) => map,
+                Err(e) => {
+                    op.outcome = e.code();
+                    return response(socket, 400, json!({"error":e.code()}));
+                }
+            };
+            op.outcome = "mapped";
+            let entries = map
+                .entries
+                .iter()
+                .map(|entry| json!({"path":entry.path,"score":entry.score}))
+                .collect::<Vec<_>>();
+            drop(op);
+            response(
+                socket,
+                200,
+                json!({
+                    "version":1,"root_sha256":map.root_sha256,"entries":entries,
+                    "directories":map.directories,"names":map.names,
+                    "excluded":map.excluded,"skipped":map.skipped,
+                    "authority":"metadata-only","ranking":"lexical-path",
+                    "coverage":"visible paths; hidden and generated objects excluded; not Git ignore rules",
+                    "selected":false,"model_context_approved":false,
+                    "applied":false,"tested":false
+                }),
+            )
+        }
         ("POST", "/v1/code/workspace/changes") => {
             let Ok(input) = object_json::<WorkspaceChange>(&req.body) else {
                 return error(socket, 400);
@@ -1098,6 +1153,12 @@ fn handle(
             if input.approve_model_context && config.is_none() {
                 return error(socket, 428);
             }
+            if let Some(expected) = &input.expected_root_sha256
+                && LinuxCodingReadScope::verify_root(Path::new(&input.root), expected).is_err()
+            {
+                op.outcome = "code.workspace.root-stale";
+                return response(socket, 409, json!({"error":op.outcome}));
+            }
             let scope = match LinuxCodingReadScope::select(Path::new(&input.root), &input.paths) {
                 Ok(scope) => scope,
                 Err(e) => {
@@ -1105,6 +1166,14 @@ fn handle(
                     return response(socket, 400, json!({"error":e.code()}));
                 }
             };
+            if input
+                .expected_root_sha256
+                .as_ref()
+                .is_some_and(|expected| expected != scope.root_sha256())
+            {
+                op.outcome = "code.workspace.root-stale";
+                return response(socket, 409, json!({"error":op.outcome}));
+            }
             let mut guard = state.lock().map_err(|_| ApiError::Io)?;
             if op.cancel.is_cancelled() || stop.load(Ordering::Relaxed) {
                 op.outcome = "code.workspace.cancelled";

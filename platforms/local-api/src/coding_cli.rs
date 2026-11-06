@@ -21,7 +21,7 @@ type Result<T> = std::result::Result<T, ()>;
 
 /// Runs the terminal coding client over fixed version-1 API routes. Consequential
 /// approvals require the controlling terminal; no piped or automatic approval.
-/// Errors contain no credentials, repository bytes, root or OS diagnostic.
+/// Returned errors are content-free. Bounded server refusals are escaped on stderr.
 pub fn run(args: &[String]) -> std::result::Result<(), ApiError> {
     execute(args).map_err(|()| ApiError::Configuration)
 }
@@ -136,7 +136,15 @@ fn receive(
     let header = std::str::from_utf8(&header).map_err(|_| ())?;
     let mut lines = header[..header.len() - 4].split("\r\n");
     let mut status = lines.next().ok_or(())?.splitn(3, ' ');
-    if status.next() != Some("HTTP/1.1") || status.next() != Some("200") {
+    if status.next() != Some("HTTP/1.1") {
+        return Err(());
+    }
+    let code = status.next().ok_or(())?;
+    if code.len() != 3 || !code.bytes().all(|b| b.is_ascii_digit()) {
+        return Err(());
+    }
+    let code = code.parse::<u16>().map_err(|_| ())?;
+    if code != 200 && !(400..=599).contains(&code) {
         return Err(());
     }
     let mut seen = BTreeSet::new();
@@ -173,7 +181,8 @@ fn receive(
         Some("application/x-ndjson") => true,
         _ => return Err(()),
     };
-    if length.is_some_and(|n| n > MAX_REPLY) {
+    let limit = if code == 200 { MAX_REPLY } else { 4096 };
+    if length.is_some_and(|n| n > limit) || (code != 200 && (streaming || length.is_none())) {
         return Err(());
     }
     let mut bytes = Zeroizing::new(Vec::new());
@@ -186,7 +195,7 @@ fn receive(
             break;
         }
         total += n;
-        if total > MAX_REPLY || length.is_some_and(|len| total > len) {
+        if total > limit || length.is_some_and(|len| total > len) {
             return Err(());
         }
         bytes.extend_from_slice(&chunk[..n]);
@@ -211,6 +220,12 @@ fn receive(
         }
     } else {
         values.push(serde_json::from_slice(&bytes).map_err(|_| ())?);
+    }
+    if code != 200 {
+        // Never turn a refused or uncertain operation into success or retry it.
+        // Validate framing first, and render only bounded escaped JSON.
+        eprintln!("API refusal ({code}): {}", safe(&values[0])?);
+        return Err(());
     }
     Ok(values)
 }
@@ -246,7 +261,7 @@ fn safe(value: &Value) -> Result<String> {
     use std::fmt::Write as _;
     let mut output = String::new();
     for character in serde_json::to_string_pretty(value).map_err(|_| ())?.chars() {
-        if character.is_ascii() {
+        if character.is_ascii() && character != '\u{7f}' {
             output.push(character);
         } else {
             let mut units = [0; 2];
@@ -412,6 +427,52 @@ fn execute(args: &[String]) -> Result<()> {
     };
     let client = Client::new(address, auth)?;
     match (command.as_str(), tail) {
+        ("map" | "map-select", [root, query]) => {
+            let map = client.json(
+                "POST",
+                "/v1/code/map",
+                true,
+                Some(json!({
+                    "root":root,"query":query,"approve_discovery":true
+                })),
+            )?;
+            if command == "map" {
+                return show(&map);
+            }
+            let identity = map["root_sha256"]
+                .as_str()
+                .filter(|s| digest(s))
+                .ok_or(())?;
+            let paths = map["entries"]
+                .as_array()
+                .ok_or(())?
+                .iter()
+                .filter(|entry| entry["score"].as_u64().is_some_and(|score| score > 0))
+                .take(16)
+                .map(|entry| entry["path"].as_str().map(str::to_owned).ok_or(()))
+                .collect::<Result<Vec<_>>>()?;
+            if paths.is_empty() {
+                show(&map)?;
+                return Err(());
+            }
+            let settings = client.json("GET", "/v1/settings", true, None)?;
+            let revision = settings["settings_revision"].as_u64().ok_or(())?;
+            if settings["endpoint"].as_str().is_none() {
+                return Err(());
+            }
+            LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ())?;
+            let body = json!({"root":root,"paths":paths,"approve_read":true,
+                "approve_model_context":true,"settings_revision":revision,
+                "settings_endpoint":settings["endpoint"],"expected_root_sha256":identity});
+            confirm(
+                &json!({"selection":body,"settings":settings,
+                "ranking":"lexical path match only; review every selected path",
+                "warning":"Allows complete selected file text to be read and sent to this configured endpoint. Mapping is not a source or test result."}),
+                &format!("share {revision}"),
+            )?;
+            LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ())?;
+            show(&client.json("PUT", "/v1/code/workspace", true, Some(body))?)
+        }
         ("status", []) => show(&client.json("GET", "/v1/status", false, None)?),
         ("workspace", []) => show(&client.json("GET", "/v1/code/workspace", false, None)?),
         ("review", []) => show(&client.json("GET", "/v1/code/workspace/changes", false, None)?),
@@ -457,7 +518,7 @@ fn execute(args: &[String]) -> Result<()> {
 
 fn usage() {
     eprintln!(
-        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
+        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
     );
 }
 
@@ -495,8 +556,9 @@ mod tests {
         }
         assert!(Client::new("127.0.0.1:80", "unused").is_ok());
         assert!(Client::new("[::1]:80", "unused").is_ok());
-        let text = safe(&json!({"source":"\u{1b}[2J\u{202e}\t\n"})).unwrap();
-        assert!(!text.contains(['\u{1b}', '\u{202e}', '\t']));
+        let text = safe(&json!({"source":"\u{1b}[2J\u{202e}\u{7f}\t\n"})).unwrap();
+        assert!(!text.contains(['\u{1b}', '\u{202e}', '\u{7f}', '\t']));
+        assert!(text.contains("\\u007f"));
         assert!(text.contains("\\u202e"));
         assert!(text.is_ascii());
         let unicode = json!({"source":"λ\u{202e}😀"});
@@ -551,5 +613,16 @@ mod tests {
         assert!(wire(stream, b"{}\n{}").is_err());
         assert!(wire(stream, b"garbage\n").is_err());
         assert!(wire(stream, b"").is_err());
+        let error = valid.replace("200", "409");
+        assert!(wire(&error, b"{}").is_err());
+        assert!(wire(&error, b"{").is_err());
+        assert!(
+            wire(
+                &error.replace("Content-Length: 2", "Content-Length: 4097"),
+                b"{}"
+            )
+            .is_err()
+        );
+        assert!(wire(&stream.replace("200", "409"), b"{}\n").is_err());
     }
 }

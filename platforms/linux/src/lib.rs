@@ -3,6 +3,7 @@
 #![forbid(unsafe_code)]
 //! Fedora and Ubuntu platform path adapter.
 
+mod coding_map;
 mod coding_workspace;
 mod command_runner;
 mod configuration_store;
@@ -25,6 +26,9 @@ mod strict_local;
 mod write_root_inventory;
 mod write_transaction;
 
+pub use coding_map::{
+    LinuxCodingMap, LinuxCodingMapEntry, LinuxCodingMapError, discover_linux_coding_map,
+};
 pub use coding_workspace::{
     LinuxCodingPendingWrite, LinuxCodingReadError, LinuxCodingReadScope, LinuxCodingReplacement,
     LinuxCodingSource, LinuxCodingWriteError,

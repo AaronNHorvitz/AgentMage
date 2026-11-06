@@ -104,6 +104,13 @@ Plain loopback HTTP authenticates the API caller by token, not the process
 holding the configured model port: if another local account takes that port,
 it can receive the model key. Use an appropriately protected local model service;
 the install kit must revisit this residual port trust.
+The same residual applies to the API listener itself: a client sends its bearer
+to the supplied loopback address before authenticating the server process. A
+different local account occupying a stale or mistyped API port can receive the
+client or control token. The control token confers full API authority. Use the
+address printed by the current API process. Before the install kit, add an
+owner-only local socket with peer checks or explicit server authentication;
+numeric loopback and private token files do not establish server identity.
 
 ## Streaming and cancellation
 

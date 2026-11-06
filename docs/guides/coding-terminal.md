@@ -49,6 +49,30 @@ cannot approve. The API checks both the displayed revision and exact endpoint wh
 its operation lease; an intervening endpoint change refuses the selection. Later endpoint
 changes still revoke model disclosure as before.
 
+To find paths before selecting source, use the metadata-only file map:
+
+```sh
+target/debug/agentmage-code <loopback-ip:port> <private-auth-directory> map <absolute-workspace-root> 'calc tests'
+target/debug/agentmage-code <loopback-ip:port> <private-auth-directory> map-select <absolute-workspace-root> 'calc tests'
+```
+
+Invoking either command authorizes one bounded directory scan of that root.
+`map` displays ranked relative paths without reading file content or changing
+the current source selection. Ranking matches query terms against path names;
+it does not understand file contents or establish semantic relevance. Hidden
+objects and generated/dependency trees are omitted. See the
+[map contract and limits](coding-workspace.md#metadata-only-file-map).
+
+`map-select` proposes up to sixteen paths with positive path scores. It shows
+every selected path, root and endpoint, then requires the same fresh typed
+`share` confirmation as `select-model`. Review the selection carefully; use
+explicit `select-model` paths when the suggestions are unsuitable. No matches,
+decline, invalid source text, or a root/endpoint change refuses selection and
+preserves the previous scope. The displayed root identity is checked before
+and after confirmation and bound in the selection request. Complete selected
+source text becomes available for model context; only `propose` sends it.
+Mapping alone authorizes no reads of file content, model disclosure or writes.
+
 ## Propose, inspect and approve
 
 ```sh
@@ -90,6 +114,12 @@ no effects. The existing API cancellation and transaction semantics apply.
 The client uses the existing protected token loader. Source/proposal/status operations send
 only the client token; settings inspection for disclosure, selection, revocation
 and explicit apply/deny send the control token. Tokens never enter arguments, output, prompts or model requests.
+Mapping also uses the control token. Loopback HTTP does not authenticate the
+process holding the API port: a different local account taking a stale or
+mistyped port can receive that bearer, including full control authority. Check
+the address printed by the running API. Server authentication or an owner-only
+local socket with peer checks remains required work before the install kit;
+the protected token directory alone does not protect the listening port.
 Each request body is capped at 256 KiB. Responses are capped at 4 MiB and 8,192
 streaming events, with an 8 KiB header cap. Connection and write timeouts are two
 seconds each; response reads have a 180-second total deadline. The client
@@ -97,6 +127,14 @@ refuses redirects, compressed/chunked replies, duplicate headers, mismatched
 lengths and unfinished NDJSON. No request that generates, prepares or applies
 anything is automatically retried. Read-only status polling handles the API's
 known terminal-event/lease-release race before preparation.
+
+For HTTP 400 through 599, the client prints the bounded, escaped JSON refusal
+on stderr and exits unsuccessfully. Error replies require unambiguous JSON
+framing and at most 4 KiB; malformed, streaming or oversized error bodies are
+refused without displaying them. This lets `code.write.stale` and a dispatched
+`effect: unknown` remain distinguishable. A missing or invalid reply still
+requires manual inspection; it never proves absence of file effects. No error
+response triggers a retry or a success result.
 
 Terminal output uses JSON escaping and ASCII Unicode escapes, including for
 bidi characters. No repository or model bytes are interpreted as terminal
