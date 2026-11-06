@@ -14,6 +14,11 @@ struct Prepare {
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
+struct PrepareCommand {
+    command: agentmage_platform_linux::LinuxCodingCommandSpec,
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Decide {
     preview_sha256: String,
     approve: bool,
@@ -28,10 +33,13 @@ pub(super) fn handle_repository(
     let route = (req.method.as_str(), req.path.as_str());
     if !matches!(
         route,
-        ("GET", "/v1/code/repository")
+        ("GET", "/v1/code/repository" | "/v1/code/repository/command")
             | (
                 "POST",
-                "/v1/code/repository/prepare" | "/v1/code/repository/decide"
+                "/v1/code/repository/prepare"
+                    | "/v1/code/repository/decide"
+                    | "/v1/code/repository/command/prepare"
+                    | "/v1/code/repository/command/decide"
             )
     ) {
         return error(socket, 404);
@@ -99,6 +107,25 @@ pub(super) fn handle_repository(
             }
             repository.decide(&input.preview_sha256, input.approve, clock_ms()?)
         }
+        ("GET", "/v1/code/repository/command") => repository.inspect_command(),
+        ("POST", "/v1/code/repository/command/prepare") => {
+            let Ok(input) = object_json::<PrepareCommand>(&req.body) else {
+                return error(socket, 400);
+            };
+            if stop.load(Ordering::Relaxed) {
+                return error(socket, 503);
+            }
+            repository.prepare_command(input.command, clock_ms()?)
+        }
+        ("POST", "/v1/code/repository/command/decide") => {
+            let Ok(input) = object_json::<Decide>(&req.body) else {
+                return error(socket, 400);
+            };
+            if stop.load(Ordering::Relaxed) {
+                return error(socket, 503);
+            }
+            repository.decide_command(&input.preview_sha256, input.approve, clock_ms()?)
+        }
         _ => unreachable!(),
     };
     let (status, value) = match result {
@@ -111,7 +138,7 @@ pub(super) fn handle_repository(
             // Conservatively never assert an unchanged disk after a decision.
             (
                 409,
-                json!({"error":e.code(),"effect": if req.path.ends_with("/decide") {"unknown"} else {"no-worktree-dispatch"}}),
+                json!({"error":e.code(),"effect": if req.path.ends_with("/decide") {"unknown"} else if req.path.contains("/command") {"no-command-dispatch"} else {"no-worktree-dispatch"}}),
             )
         }
     };

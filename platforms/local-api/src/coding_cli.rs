@@ -427,6 +427,22 @@ fn execute(args: &[String]) -> Result<()> {
     };
     let client = Client::new(address, auth)?;
     match (command.as_str(), tail) {
+        ("command", []) => show(&client.json("GET", "/v1/code/repository/command", true, None)?),
+        ("command-prepare", [spec]) => {
+            if spec.len() > MAX_REQUEST {
+                return Err(());
+            }
+            let spec: agentmage_platform_linux::LinuxCodingCommandSpec =
+                serde_json::from_str(spec).map_err(|_| ())?;
+            show(&client.json(
+                "POST",
+                "/v1/code/repository/command/prepare",
+                true,
+                Some(json!({"command":spec})),
+            )?)
+        }
+        ("command-run", [root]) => command_decide(&client, Some(root)),
+        ("command-deny", []) => command_decide(&client, None),
         ("worktree", []) => show(&client.json("GET", "/v1/code/repository", true, None)?),
         ("worktree-prepare", [root, owned, task, base]) => {
             // The challenge itself is written to the terminal. Validate the
@@ -540,7 +556,7 @@ fn execute(args: &[String]) -> Result<()> {
 
 fn usage() {
     eprintln!(
-        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> worktree|worktree-prepare <repository> <private-management-directory> <task-id> <base-commit>|worktree-create <repository> <private-management-directory>|worktree-deny|map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
+        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> command|command-prepare <spec-json>|command-run <worktree>|command-deny|worktree|worktree-prepare <repository> <private-management-directory> <task-id> <base-commit>|worktree-create <repository> <private-management-directory>|worktree-deny|map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
     );
 }
 
@@ -578,6 +594,44 @@ fn worktree_decide(client: &Client, roots: Option<(&String, &String)>) -> Result
     show(&result)?;
     if result["outcome"]
         != if roots.is_some() {
+            "succeeded"
+        } else {
+            "denied"
+        }
+    {
+        return Err(());
+    }
+    Ok(())
+}
+
+fn command_decide(client: &Client, root: Option<&String>) -> Result<()> {
+    let status = client.json("GET", "/v1/code/repository/command", true, None)?;
+    let preview = &status["pending"];
+    let hash = preview["preview_sha256"]
+        .as_str()
+        .filter(|s| digest(s))
+        .ok_or(())?;
+    if let Some(root) = root {
+        let identity = preview["worktree_root_sha256"].as_str().ok_or(())?;
+        let verify =
+            || LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ());
+        verify()?;
+        confirm(
+            &json!({"worktree":root,"preview":preview,
+            "warning":"Runs the exact command offline in the read-only created worktree. Output is untrusted. Exit zero does not verify a test suite. After a lost reply inspect receipts; never resend approval."}),
+            &format!("run {hash}"),
+        )?;
+        verify()?;
+    }
+    let result = client.json(
+        "POST",
+        "/v1/code/repository/command/decide",
+        true,
+        Some(json!({"preview_sha256":hash,"approve":root.is_some()})),
+    )?;
+    show(&result)?;
+    if result["outcome"]
+        != if root.is_some() {
             "succeeded"
         } else {
             "denied"

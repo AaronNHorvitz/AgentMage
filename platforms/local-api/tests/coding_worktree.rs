@@ -193,10 +193,10 @@ try:
         raw+=chunk
         if b'anything else declines:' in raw and not sent:
             prompt=raw.split(b'Type exactly ')[-1].split(b' to approve;')[0]
-            if sys.argv[1]=='replace-owned':
+            if sys.argv[1] in ['replace-owned','replace-root']:
                 from pathlib import Path
-                root=Path(sys.argv[7]);root.rename(root.with_name('old-owned'));root.mkdir(mode=0o700)
-            os.write(master,(prompt if sys.argv[1] in ['approve','replace-owned'] else sys.argv[1].encode())+b'\n');sent=True
+                root=Path(sys.argv[7] if sys.argv[1]=='replace-owned' else sys.argv[6]);root.rename(root.with_name('old-owned'));root.mkdir(mode=0o700)
+            os.write(master,(prompt if sys.argv[1] in ['approve','replace-owned','replace-root'] else sys.argv[1].encode())+b'\n');sent=True
     status=p.wait(timeout=2)
     assert b'\x1b' not in raw
     print(json.dumps({'status':status,'sent':sent,'transcript':raw.decode()}))
@@ -476,6 +476,173 @@ fn synthetic_api_creation_preview_needs_exact_tty_consent_and_current_roots() {
             ],
             response,
         );
+        stop.store(true, Ordering::Relaxed);
+        let requests = worker.join().unwrap();
+        assert_eq!(observed["sent"], true);
+        assert_eq!(observed["status"] == 0, response == "approve");
+        assert!(
+            observed["transcript"]
+                .as_str()
+                .unwrap()
+                .contains("refs/heads/agentmage/tasks/fixture")
+        );
+        assert_eq!(requests.len(), if response == "approve" { 2 } else { 1 });
+        if response == "approve" {
+            assert_eq!(
+                serde_json::from_slice::<Value>(&requests[1].1).unwrap(),
+                json!({"preview_sha256":"a".repeat(64),"approve":true})
+            );
+        }
+        assert!(!owned.join("worktree").exists());
+    }
+}
+
+#[test]
+fn command_api_requires_control_created_ownership_and_strict_requests() {
+    let mut f = Fixture::new();
+    let inspect = "/v1/code/repository/command";
+    let prepare = "/v1/code/repository/command/prepare";
+    let decide = "/v1/code/repository/command/decide";
+    assert_eq!(f.call_bytes("GET", inspect, false, b"").0, 403);
+    for (method, path, body) in [
+        ("POST", prepare, json!({"command":{}})),
+        (
+            "POST",
+            decide,
+            json!({"preview_sha256":"a".repeat(64),"approve":true}),
+        ),
+    ] {
+        assert_eq!(f.call(method, path, false, body).0, 403);
+    }
+    for body in [
+        json!([]),
+        json!({"command":{}}),
+        json!({"command":{},"approve":true}),
+    ] {
+        assert_eq!(f.call("POST", prepare, true, body).0, 400);
+    }
+    for bytes in [
+        br#"{"preview_sha256":"a","approve":true,"approve":false}"#.as_slice(),
+        br#"{"preview_sha256":"a","approve":"true"}"#.as_slice(),
+        br#"{"preview_sha256":"a","approve":true,"root":"/outside"}"#.as_slice(),
+    ] {
+        assert_eq!(f.call_bytes("POST", decide, true, bytes).0, 400);
+    }
+    let spec = json!({"schema_version":1,"template_id":"synthetic","template_version":"1.0.0",
+        "executable":"/usr/bin/true","executable_sha256":"a".repeat(64),"arguments":[],
+        "working_directory":"owned_worktree","environment":{},"risk":"moderate","grant_required":true,
+        "interactive":false,"network":false,"inherit_environment":false,
+        "bounds":{"timeout_ms":1000,"stdout_bytes":1024,"stderr_bytes":1024,"memory_bytes":134217728,"task_count":8,"cpu_percent":100},
+        "spec_sha256":"a".repeat(64)});
+    // No caller path can invent the provenance; refuse before native verification.
+    let refused = f.call("POST", prepare, true, json!({"command":spec}));
+    assert_eq!(refused.0, 409);
+    assert_eq!(refused.1["error"], "code.command.worktree-required");
+    assert_eq!(refused.1["effect"], "no-command-dispatch");
+    let refused = f.call(
+        "POST",
+        decide,
+        true,
+        json!({"preview_sha256":"a".repeat(64),"approve":true}),
+    );
+    assert_eq!(refused.1["error"], "code.command.choice-required");
+    assert_eq!(refused.1["effect"], "unknown");
+    let output = f.cli(&["command"]);
+    assert!(output.status.success());
+    let before: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(before["pending"].is_null());
+    assert!(before["worktree_root_sha256"].is_null());
+    assert!(
+        !f.cli(&["command-run", f.root.join("repo").to_str().unwrap()])
+            .status
+            .success()
+    );
+    assert!(!f.cli(&["command-deny"]).status.success());
+    f.stop();
+    f.start();
+    let after: Value = serde_json::from_slice(&f.cli(&["command"]).stdout).unwrap();
+    assert_eq!(before, after);
+    assert!(
+        f.call_bytes("GET", "/v1/code/repository", true, b"").1["receipts"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"human work"
+    );
+}
+
+#[test]
+fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
+    // Synthetic peer checks terminal command approval only; no command is launched.
+    for response in ["incorrect", "approve", "replace-root"] {
+        let mut f = Fixture::new();
+        f.stop();
+        let root = f.root.join("repo");
+        let owned = f.root.join("owned");
+        let identity = |path: &std::path::Path| {
+            agentmage_platform_linux::discover_linux_coding_map(path, "sentinel", || false)
+                .unwrap()
+                .root_sha256
+        };
+        let preview = json!({"preview_sha256":"a".repeat(64),"worktree_root_sha256":identity(&root),
+            "owned_root_sha256":identity(&owned),"plan":{"branch_ref":"refs/heads/agentmage/tasks/fixture","expected_new_object":"1".repeat(40)}});
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        listener.set_nonblocking(true).unwrap();
+        f.address = Some(listener.local_addr().unwrap());
+        let stop = Arc::new(AtomicBool::new(false));
+        let done = stop.clone();
+        let worker = thread::spawn(move || {
+            let deadline = Instant::now() + Duration::from_secs(12);
+            let mut requests = Vec::new();
+            while !done.load(Ordering::Relaxed) {
+                assert!(Instant::now() < deadline);
+                let (mut socket, _) = match listener.accept() {
+                    Ok(pair) => pair,
+                    Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                        thread::sleep(Duration::from_millis(5));
+                        continue;
+                    }
+                    Err(e) => panic!("{e}"),
+                };
+                socket
+                    .set_read_timeout(Some(Duration::from_secs(2)))
+                    .unwrap();
+                let mut header = Vec::new();
+                while !header.ends_with(b"\r\n\r\n") {
+                    let mut byte = [0];
+                    socket.read_exact(&mut byte).unwrap();
+                    header.push(byte[0]);
+                    assert!(header.len() < 8192);
+                }
+                let header = String::from_utf8(header).unwrap();
+                let route = header.lines().next().unwrap().to_owned();
+                let length = header
+                    .lines()
+                    .find_map(|line| line.strip_prefix("Content-Length: "))
+                    .unwrap()
+                    .parse::<usize>()
+                    .unwrap();
+                assert!(length < 4096);
+                let mut body = vec![0; length];
+                socket.read_exact(&mut body).unwrap();
+                let value = if route.starts_with("GET ") {
+                    assert_eq!(route, "GET /v1/code/repository/command HTTP/1.1");
+                    json!({"pending":preview})
+                } else {
+                    assert_eq!(route, "POST /v1/code/repository/command/decide HTTP/1.1");
+                    json!({"outcome":"succeeded"})
+                };
+                requests.push((route, body));
+                let bytes = serde_json::to_vec(&value).unwrap();
+                socket.write_all(format!("HTTP/1.1 200 Response\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",bytes.len()).as_bytes()).unwrap();
+                socket.write_all(&bytes).unwrap();
+            }
+            requests
+        });
+        let observed = f.terminal(&["command-run", root.to_str().unwrap()], response);
         stop.store(true, Ordering::Relaxed);
         let requests = worker.join().unwrap();
         assert_eq!(observed["sent"], true);

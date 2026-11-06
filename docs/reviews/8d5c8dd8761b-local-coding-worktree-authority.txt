@@ -1,0 +1,112 @@
+Commit: 8d5c8dd8761b5b391b53e2e45e12c8ba1ed25fe6
+Scope: local-coding-worktree-authority
+
+# Independent core review: T-303/T-306 approved worktree authority (non-closing batch)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only access to the repository.
+Base: `571431ba85e77a919136ec9ea15da69a12190a0d`. Rows: T-303 (related T-306). Closing: no. Tier: core.
+
+## Methods
+
+- Confirmed `git rev-parse 8d5c8dd8761b5b391b53e2e45e12c8ba1ed25fe6` = HEAD, clean tree. Read IP-POLICY.md,
+  the top of TASKS.md, the T-303/T-306 ledger diff, the evidence record and both guides.
+- Read the full diff (14 files): `platforms/linux/src/coding_repository.rs` (native owner),
+  `coding_repository_tests.rs`, `platforms/local-api/src/coding_repository_api.rs`, the `lib.rs`/`main.rs`
+  `serve-coding` wiring, the `coding_cli.rs` worktree commands, `tests/coding_worktree.rs`. Traced the reused
+  code it depends on: `authorize_workspace_root` (component-wise `O_NOFOLLOW` walk, refuses `.`/`..` components),
+  `LinuxStrictLocalRootInspector::inspect` (owner/0077 mode/no symlink), `LinuxRepositoryScope::verify`
+  (canonical, non-overlapping roots), `LinuxRepositoryExecutor` destination/plan checks, the hardened Git
+  observation prefix and hazardous-configuration refusal, `plan_worktree_create` and the `begin`/`/v1/cancel`
+  operation guard.
+- Rebuilt everything in `CARGO_TARGET_DIR=/lane/state/review-target`; all Cargo work went through
+  `/tools/build-slot` (the fast gate wraps its own Cargo commands). No GPU, model, held-out task, hidden test
+  or grader was used. Raw reviewer records: `/lane/state/tmp/review-8d5c8dd8/`.
+- Ran escape probes against my own `serve-coding` build over real HTTP (scripts `escape_probe.py` and
+  `escape2-copy.py` in the raw directory; temporary fixtures removed afterwards).
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `cargo test --locked --offline -p agentmage-platform-linux --lib coding_repository::tests -- --nocapture` (build-slot, JOBS=2, THREADS=4) | 5 passed, 0 failed, 0 ignored; prints "native creation not measured: exact system Git trust refusal retained" |
+| `cargo test --locked --offline -p agentmage-local-api --test coding_worktree -- --nocapture` | 5 passed, 0 failed, 0 ignored, 0 filtered; native admission refused on Git ownership |
+| `python3 -B scripts/local_agent_fast_gate.py --base 571431ba… --timeout 3600` | **FAST GATE: FAIL** (expected). `git diff --check`, untracked lint, review lint, markdownlint, fmt and all-target Clippy `-D warnings` exit 0; tests exit 101. Totals over 20 result lines: **792 passed / 72 failed / 62 ignored / 0 measured / 0 filtered**. Failed-ID set equals the 72 IDs in `docs/evidence/t301-baseline-failures-2026-10-25.md` exactly (symmetric difference empty) and equals the builder's failed set. All 10 new tests report `ok` inside the full suite |
+| `node node_modules/.bin/markdownlint-cli2` on the 5 named files | 0 issues in 5 files (Node v24.15.0; shared node SHA-256 `d1de76d8…932c` matches the request) |
+| `python3 -B scripts/validate_docs.py` (optional) | "Validated 757 Markdown file(s) and all policy invariants." |
+| `cmp docs/reviews/571431ba85e7-local-coding-repository-map.txt /lane/reviews/571431ba85e7-local-coding-repository-map.md` | identical |
+| Builder scratch digests | driver `350585f5…9093`, audit script `49c9633a…eb18f`, builder `publication-audit.json` `ee8ca804…c067`, `development/summary.json` `83a76a28…c1d9`, manifest SHA `9c724f70…187` (verified via its 240 entries): all match the request |
+| Private audit copy (only the output path changed) | exit 0; output is byte-identical to the builder's (`ee8ca804…c067`): frozen inputs unchanged, ledger checkbox/status unchanged, prior review retained, 240 manifest files, privacy/link checks, receipt chains, current source digests. The repository's `target/debug` API/CLI still hash `e1bb91a0…34f3` / `cd7850cc…7fd67` as claimed |
+| `cargo build --locked --offline -p agentmage-local-api --bins`, then private driver copy (only `api_binary`/`cli_binary` changed to my build; fresh output `development/`) | exit 0: 30/30 development contexts match both historical campaigns, 3/3 recorded replies applied, 33 upstream requests, 4.476 s. My API `3c270d06…07f9` / CLI `5e87bcd4…a1a0` were built from this commit. Summary `b1c57597…4ce6`, manifest `bedfdd8d…ee5b`, 240 files, all self-verified |
+| Comparison with the builder's `development/summary.json` | per-task request/user SHA-256, source SHA-256, ranked map paths, replay historical/answer/after SHA-256 and all source bindings identical; source bindings match this tree. Differences are limited to tmp-root hashes, timings and binary digests. I recomputed all three native write receipt chains from my run (`proposed→approved→applied→verified`, each receipt hash and back-link verified; historical manifest `2d8413a3…4c35`) |
+
+The development run calls ordinary `serve` and is regression/context-compatibility evidence only. It does
+not touch the worktree routes, inference, grading, hidden tests or held-out tasks, as the evidence states.
+
+## Escape and authority probes (actual `serve-coding`, my build)
+
+Results: client token prepare/inspect → 403; `approve_inspection:false` → 403; unknown field → 400;
+decide without preview → 409 `choice-required`. Lexically overlapping `..` spellings → `code.repository.input`.
+Non-overlapping `..` traversal of the repository root, and `..` traversal of the management directory into
+the state root → `code.repository.scope`. Management directory inside state, root = state, root containing
+state, symlinked root, symlinked management directory, group-readable management directory, NUL in path →
+scope; non-empty management directory → `destination`; management directory inside the repository,
+`../../x`/`-f` task IDs, `HEAD` and `--orphan=…` bases → `input`. A well-formed request reaches the exact
+`linux.repository.git_artifact.invalid` refusal. After every probe: no receipt, no pending preview, no
+`worktree` anywhere, sentinels intact. Model output cannot reach these routes: they require the control token,
+and no model-driven tool path exists.
+
+Code-level checks: the native creation path is the only executor instance (`LinuxRepositoryExecutor`).
+The generic `dispatch` is fed synthetic executors only from `#[cfg(test)]`. The policy pins actor, task,
+action, tool and version, operation and the exact held `.git` target, and denies network, credential and
+publication scopes. The grant is single-use and bound to the plan and request hash, the preview digest and
+the expiry. Monotonic preflight time is added before consumption. `decide` takes the preview before
+dispatch, so no path can retry. The API flips `cancellable:false` under the state lock only after checking
+for an earlier acknowledged cancellation, and `/v1/cancel` then truthfully reports `false`. The HKDF key is
+derived from the 64-character control token (salt/info domain-separated) and held in `Zeroizing`. No key
+file is written. Error codes are static strings: no path, Git output or token is logged.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, correctness/usability) — `platforms/linux/src/coding_repository.rs:209`.**
+  `destination = owned_root.join("worktree")` hashes the caller's *raw* spelling. Path checks normalise
+  `//` and mid-path `/./`, so `/x/./owned` or `/x//owned` pass preparation (probe `dot-component-owned`
+  reached the Git trust check). The executor compares the plan's `worktree_path_sha256` with the
+  *canonical* `scope.worktree_path()` (`repository_safety.rs:937-942`). On a host with trusted Git, an
+  approved creation for such a spelling would therefore consume the durable grant and then fail with
+  `linux.git.worktree.destination`. This fails closed and is safe, but the approval is wasted and the
+  failure is confusing. Fix: derive the destination from `scope.owned_root().join("worktree")` (already
+  canonical and crate-visible), or refuse when the input differs from `canonicalize()`. Add a test.
+- **L2 (low, evidence coverage; blocking only at parent acceptance) —
+  `coding_repository_tests.rs:396-514`, `coding_repository.rs:285-370`.**
+  The positive native branch has never executed in this lane. The executor's own worktree tests are also
+  in the T-301 baseline failure set. As written, the positive branch also never exercises the decide-time
+  refusals that the evidence and guide describe: root or management-directory replacement, a destination
+  that became non-empty, or repository drift between prepare and decide. It also leaves the post-success
+  `held_root(destination)` path untested. The labelling is honest and this batch claims no native creation.
+  Before T-303/T-306 close, run this test on a host with root-owned Git and add those drift cases.
+- **L3 (low, diagnostics) — `coding_repository.rs:366`.** After a durable `Succeeded` receipt, a failing
+  `held_root(&pending.destination)?` returns `code.repository.scope`. That code reads like a pre-dispatch
+  refusal; the API wraps it as `effect: unknown` and the CLI exits non-zero. Map it to
+  `code.repository.uncertain`, as the adjacent post-dispatch revalidations already do.
+
+Integrity and publication: the diff touches no scripts, tests, capabilities, model profiles, supply chain,
+Cargo manifests/lock or status model. It contains no held-out or hidden-test content and changes no ledger
+checkbox. It has no private host path, username, hostname, credential, sibling-project name, product
+comparison or trademark branding. New dependencies: none. The retained prior review is byte-identical.
+
+## Per-row result
+
+- **T-303 (implementation batch):** PASS for this exact commit. This covers the control-only
+  inspect/prepare/decide routes, terminal consent with root revalidation, the native owner on existing
+  kernel grant/policy/durable authority with `RepositoryEffectDriver`/`LinuxRepositoryExecutor`, and
+  `serve-coding` state startup. Native creation is **not** measured (system Git trust refusal retained),
+  and the synthetic peer and executor results are labelled as such. **Row remains OPEN.** Tests/retries,
+  durable coding runs, ownership binding of writes, MCP and native verification (L2) are outstanding.
+- **T-306 (related):** no closure; ledger wording is accurate. **Row remains OPEN.** Connected isolated
+  edit/test/retry, approved commit/push and native-child recovery are outstanding.
+
+Low findings L1-L3 go to backlog; L2 must be resolved before either parent is accepted.
+
+Verdict: PASS

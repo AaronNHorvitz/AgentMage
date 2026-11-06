@@ -11,11 +11,15 @@ The separate [approved worktree path](coding-worktrees.md) adds `worktree`,
 `worktree-prepare`, `worktree-create` and `worktree-deny` through this same API.
 It uses canonical durable authority receipts but has not demonstrated native
 creation in this lane. It does not yet bind source writes to worktree ownership
-or add project tests, retries or durable coding runs.
+or add project tests, retries or durable coding runs. The separate
+[confined command path](coding-commands.md) exposes `command`, `command-prepare`,
+`command-run` and `command-deny` with fresh typed execution approval. Native
+command execution is not measured in this lane; parsed test results and the
+connected retry loop remain open.
 
-Use a disposable workspace. This client currently writes the explicitly selected
-workspace itself; it does not create or verify an isolated Git worktree. Source
-selection and all approvals are trusted person-facing operations. Never give
+Use a disposable workspace. The source-write path edits the explicitly selected
+workspace; its approvals are not yet bound to service-created worktree ownership.
+Source selection and all approvals are trusted person-facing operations. Never give
 this client, its authentication directory or its controlling terminal to a model
 or an untrusted command worker.
 

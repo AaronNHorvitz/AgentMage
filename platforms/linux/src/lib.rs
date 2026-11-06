@@ -27,6 +27,8 @@ mod strict_local;
 mod write_root_inventory;
 mod write_transaction;
 
+/// Exact kernel command specification accepted by the local coding owner.
+pub use agentmage_kernel_engine::command_runner::CommandSpec as LinuxCodingCommandSpec;
 pub use coding_map::{
     LinuxCodingMap, LinuxCodingMapEntry, LinuxCodingMapError, discover_linux_coding_map,
 };

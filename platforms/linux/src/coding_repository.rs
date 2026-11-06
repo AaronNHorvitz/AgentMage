@@ -40,7 +40,17 @@ use crate::{
     LinuxStrictLocalRootInspector, authorize_workspace_root, open_linux_development_authority,
 };
 
+#[path = "coding_repository_command.rs"]
+mod command;
+
 const TOOL: &str = "local-coding-worktree-create";
+
+struct CreatedWorktree {
+    path: PathBuf,
+    held: LinuxAuthorizedWorkspace,
+    owned: LinuxAuthorizedWorkspace,
+    creation_receipt_sha256: String,
+}
 const LIFETIME_MS: u64 = 120_000;
 
 /// Content-free refusal. After dispatch an error never establishes no effects.
@@ -99,11 +109,13 @@ struct Pending {
 
 /// Non-production local coding repository owner. Uses the existing encrypted
 /// authority store; previews are process-only and are never resumed or replayed.
-/// This owner creates worktrees only: no tests, model, commit, push or deletion.
+/// Exact commands use the existing bounded executor; no model, commit, push or deletion.
 pub struct LinuxCodingRepository {
     authority: LinuxAuthorityRuntime,
     state_root: PathBuf,
     pending: Option<Pending>,
+    created: Option<CreatedWorktree>,
+    command: Option<command::PendingCommand>,
 }
 
 impl LinuxCodingRepository {
@@ -135,6 +147,8 @@ impl LinuxCodingRepository {
             authority,
             state_root: state_root.to_path_buf(),
             pending: None,
+            created: None,
+            command: None,
         })
     }
 
@@ -206,7 +220,7 @@ impl LinuxCodingRepository {
             return Err(err("code.repository.state"));
         }
         let transaction = format!("worktree-{}", hash(&random));
-        let destination = owned_root.join("worktree");
+        let destination = scope.owned_root().join("worktree");
         let plan = plan_worktree_create(
             &transaction,
             task,
@@ -359,12 +373,28 @@ impl LinuxCodingRepository {
             .map_err(|_| err("code.repository.uncertain"))?;
         // Receipt proves repository preservation, not permission to read or edit
         // the new worktree. Source selection remains a separate explicit action.
+        let worktree_root_sha256 =
+            if receipt.outcome == agentmage_kernel_contracts::OperationOutcome::Succeeded {
+                let held = held_root(&pending.destination)
+                    .map_err(|_| err("code.repository.uncertain"))?;
+                let identity = held.root_path_sha256().to_owned();
+                // Retain a held identity only after observed native success. This is
+                // process-local provenance, never reconstructed from a caller path.
+                self.command = None;
+                self.created = Some(CreatedWorktree {
+                    path: pending.destination,
+                    held,
+                    owned: pending.owned,
+                    creation_receipt_sha256: receipt.receipt_sha256.clone(),
+                });
+                Some(identity)
+            } else {
+                None
+            };
         Ok(
             json!({"outcome":receipt.outcome,"receipt":receipt,"repository_receipt":specialized,
             "repository_root_sha256":pending.repository.root_path_sha256(),
-            "worktree_root_sha256": if receipt.outcome == agentmage_kernel_contracts::OperationOutcome::Succeeded {
-                Some(held_root(&pending.destination)?.root_path_sha256().to_owned())
-            } else {None},
+            "worktree_root_sha256": worktree_root_sha256,
             "source_selected":false,"tested":false,"retention":"canonical-authority"}),
         )
     }
@@ -481,9 +511,6 @@ fn dispatch<E: agentmage_kernel_engine::repository_safety::BoundedRepositoryExec
     agentmage_kernel_contracts::Receipt,
     Option<agentmage_kernel_engine::repository_safety::RepositoryOperationReceipt>,
 )> {
-    let plan = prepared.plan();
-    let id = &plan.transaction_id;
-    let operation = OperationBinding::new(GrantOperation::GitWorktreeCreate);
     let target = GrantTarget::held_object(&metadata).map_err(|_| err("code.repository.scope"))?;
     let scope = GrantTarget::workspace_scope(
         repository,
@@ -492,65 +519,122 @@ fn dispatch<E: agentmage_kernel_engine::repository_safety::BoundedRepositoryExec
             .as_scope(),
     )
     .map_err(|_| err("code.repository.scope"))?;
-    let policy = PolicyEngine::new(PolicyDocument {
-        schema_version: 1,
-        revision: 1,
-        actors: rules([ActorId::from_raw("local-control")]),
-        tasks: rules([TaskId::from_raw(id)]),
-        actions: rules([ActionId::from_raw(TOOL)]),
-        tools: rules([ToolPolicyBinding {
-            tool_id: ToolId::from_raw(TOOL),
-            tool_version: "1.0.0".into(),
-        }]),
-        operations: rules([operation]),
-        targets: rules([target.clone()]),
-        denied_argument_sha256s: BTreeSet::new(),
-        denied_preimage_sha256s: BTreeSet::new(),
-        network_scopes: ScopeRules::deny_all(),
-        credential_scopes: ScopeRules::deny_all(),
-        publication_scopes: ScopeRules::deny_all(),
-    })
-    .map_err(|_| err("code.repository.policy"))?;
-    let parent = runtime
-        .issue_session_read(SessionReadGrantRequest {
-            grant_id: GrantId::from_raw(format!("read-{id}")),
-            actor_id: ActorId::from_raw("local-control"),
-            session_id: SessionId::from_raw(id),
-            task_id: TaskId::from_raw(id),
-            targets: vec![scope],
-            excluded_targets: vec![],
-            sensitivity: DataSensitivity::Restricted,
-            issued_at_epoch_ms: now,
-            expires_at_epoch_ms: expires_at,
-            nonce: GrantNonce::from_raw(format!("read-{id}")),
-            maximum_derived_operations: 1,
-            preview_sha256: preview_hash.clone(),
-            policy_sha256: policy.policy_sha256().into(),
+    let exact = ExactEffect {
+        id: prepared.plan().transaction_id.clone(),
+        operation: OperationBinding::new(GrantOperation::GitWorktreeCreate),
+        target,
+        scope,
+        plan_sha256: prepared.plan().plan_sha256.clone(),
+        request_sha256: prepared.request_sha256().into(),
+        tool: RepositoryTool::new(prepared.request_bytes()),
+        preview_hash,
+        expires_at,
+        now,
+    };
+    let cancellation = CancellationToken::root(
+        BoundaryKind::Kernel,
+        TaskId::from_raw(&exact.id),
+        CorrelationId::from_raw(&exact.id),
+    );
+    let mut driver =
+        RepositoryEffectDriver::new(executor, metadata, prepared, before, cancellation)
+            .map_err(|_| err("code.repository.authority"))?;
+    let receipt = exact.execute(runtime, &mut driver)?;
+    Ok((receipt, driver.take_receipt()))
+}
+
+// Both native effects use the same exact, single-use canonical authority path.
+struct ExactEffect {
+    id: String,
+    operation: OperationBinding,
+    target: GrantTarget,
+    scope: GrantTarget,
+    plan_sha256: String,
+    request_sha256: String,
+    tool: RepositoryTool,
+    preview_hash: String,
+    expires_at: u64,
+    now: u64,
+}
+impl ExactEffect {
+    fn execute(
+        self,
+        runtime: &mut agentmage_kernel_engine::operational_store::DurableAuthorityRuntime,
+        driver: &mut impl agentmage_kernel_engine::authority_transaction::EffectDriver,
+    ) -> Result<agentmage_kernel_contracts::Receipt> {
+        let Self {
+            id,
+            operation,
+            target,
+            scope,
+            plan_sha256,
+            request_sha256,
+            tool,
+            preview_hash,
+            expires_at,
+            now,
+        } = self;
+        let tool_id = tool.definition.tool_id.clone();
+        let request_bytes = tool.bytes.clone();
+        let policy = PolicyEngine::new(PolicyDocument {
+            schema_version: 1,
+            revision: 1,
+            actors: rules([ActorId::from_raw("local-control")]),
+            tasks: rules([TaskId::from_raw(&id)]),
+            actions: rules([ActionId::from_raw(tool_id.as_str())]),
+            tools: rules([ToolPolicyBinding {
+                tool_id: tool_id.clone(),
+                tool_version: "1.0.0".into(),
+            }]),
+            operations: rules([operation]),
+            targets: rules([target.clone()]),
+            denied_argument_sha256s: BTreeSet::new(),
+            denied_preimage_sha256s: BTreeSet::new(),
+            network_scopes: ScopeRules::deny_all(),
+            credential_scopes: ScopeRules::deny_all(),
+            publication_scopes: ScopeRules::deny_all(),
         })
-        .map_err(|_| err("code.repository.parent"))?;
-    let approval = ApprovalId::from_raw(format!("approval-{id}"));
-    let effects = vec![GrantSideEffect {
-        operation,
-        target_indexes: vec![0],
-        details_sha256: plan.plan_sha256.clone(),
-    }];
-    let grant = runtime
+        .map_err(|_| err("code.repository.policy"))?;
+        let parent = runtime
+            .issue_session_read(SessionReadGrantRequest {
+                grant_id: GrantId::from_raw(format!("read-{id}")),
+                actor_id: ActorId::from_raw("local-control"),
+                session_id: SessionId::from_raw(&id),
+                task_id: TaskId::from_raw(&id),
+                targets: vec![scope],
+                excluded_targets: vec![],
+                sensitivity: DataSensitivity::Restricted,
+                issued_at_epoch_ms: now,
+                expires_at_epoch_ms: expires_at,
+                nonce: GrantNonce::from_raw(format!("read-{id}")),
+                maximum_derived_operations: 1,
+                preview_sha256: preview_hash.clone(),
+                policy_sha256: policy.policy_sha256().into(),
+            })
+            .map_err(|_| err("code.repository.parent"))?;
+        let approval = ApprovalId::from_raw(format!("approval-{id}"));
+        let effects = vec![GrantSideEffect {
+            operation,
+            target_indexes: vec![0],
+            details_sha256: plan_sha256.clone(),
+        }];
+        let grant = runtime
         .derive_operation(
             &parent.grant_id,
             DerivedOperationGrantRequest {
                 grant_id: GrantId::from_raw(format!("create-{id}")),
                 approval_id: approval.clone(),
-                action_id: ActionId::from_raw(TOOL),
+                action_id: ActionId::from_raw(tool_id.as_str()),
                 action_kind: ActionKind::DeterministicTool,
                 operation,
-                tool_id: ToolId::from_raw(TOOL),
+                tool_id: tool_id.clone(),
                 tool_version: "1.0.0".into(),
                 targets: vec![target.clone()],
-                argument_sha256: prepared.request_sha256().into(),
+                argument_sha256: request_sha256.clone(),
                 preimages: vec![],
                 expected_side_effects: effects.clone(),
                 rollback_description:
-                    "Retain worktree; inspect manually after interruption. No automatic removal."
+                    "Inspect disk and receipts after interruption. No automatic replay or removal."
                         .into(),
                 issued_at_epoch_ms: now,
                 expires_at_epoch_ms: expires_at,
@@ -560,67 +644,58 @@ fn dispatch<E: agentmage_kernel_engine::repository_safety::BoundedRepositoryExec
             },
         )
         .map_err(|_| err("code.repository.grant"))?;
-    let tool = RepositoryTool::new(prepared.request_bytes());
-    let definition = tool.definition.clone();
-    let mut registry = ToolRegistry::new();
-    registry
-        .register_shell_tool(Box::new(tool))
-        .map_err(|_| err("code.repository.tool"))?;
-    let call = ToolCall {
-        schema_version: CONTRACT_SCHEMA_VERSION,
-        tool_call_id: ToolCallId::from_raw(format!("call-{id}")),
-        correlation_id: CorrelationId::from_raw(id),
-        action_id: ActionId::from_raw(TOOL),
-        tool_id: ToolId::from_raw(TOOL),
-        tool_version: "1.0.0".into(),
-        arguments: ContractPayload {
-            schema: definition.input_schema,
-            media_type: "application/json".into(),
-            bytes: prepared.request_bytes().to_vec(),
-            sha256: prepared.request_sha256().into(),
-        },
-    };
-    let context = PolicyEvaluationContext {
-        actor_id: ActorId::from_raw("local-control"),
-        session_id: SessionId::from_raw(id),
-        task_id: TaskId::from_raw(id),
-        action_id: ActionId::from_raw(TOOL),
-        action_kind: ActionKind::DeterministicTool,
-        tool_id: ToolId::from_raw(TOOL),
-        tool_version: "1.0.0".into(),
-        targets: vec![target],
-        argument_sha256: prepared.request_sha256().into(),
-        preimages: vec![],
-        expected_side_effects: effects,
-        preview_sha256: preview_hash,
-        now_epoch_ms: now,
-        network_scope: None,
-        credential_scope: None,
-        publication_scope: None,
-    };
-    let request = AuthorityTransactionRequest::new(
-        AuthorityTransactionId::from_raw(id),
-        OperationAttemptId::from_raw(format!("attempt-{id}")),
-        approval,
-        grant.grant_id,
-        call,
-        context,
-        now,
-        now.to_string(),
-    )
-    .map_err(|_| err("code.repository.request"))?;
-    let cancellation = CancellationToken::root(
-        BoundaryKind::Kernel,
-        TaskId::from_raw(id),
-        CorrelationId::from_raw(id),
-    );
-    let mut driver =
-        RepositoryEffectDriver::new(executor, metadata, prepared, before, cancellation)
-            .map_err(|_| err("code.repository.authority"))?;
-    let receipt = runtime
-        .execute_effect(&registry, &policy, request, &mut driver)
-        .map_err(|_| err("code.repository.uncertain"))?;
-    Ok((receipt, driver.take_receipt()))
+        let definition = tool.definition.clone();
+        let mut registry = ToolRegistry::new();
+        registry
+            .register_shell_tool(Box::new(tool))
+            .map_err(|_| err("code.repository.tool"))?;
+        let call = ToolCall {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id: ToolCallId::from_raw(format!("call-{id}")),
+            correlation_id: CorrelationId::from_raw(&id),
+            action_id: ActionId::from_raw(tool_id.as_str()),
+            tool_id: tool_id.clone(),
+            tool_version: "1.0.0".into(),
+            arguments: ContractPayload {
+                schema: definition.input_schema,
+                media_type: "application/json".into(),
+                bytes: request_bytes,
+                sha256: request_sha256.clone(),
+            },
+        };
+        let context = PolicyEvaluationContext {
+            actor_id: ActorId::from_raw("local-control"),
+            session_id: SessionId::from_raw(&id),
+            task_id: TaskId::from_raw(&id),
+            action_id: ActionId::from_raw(tool_id.as_str()),
+            action_kind: ActionKind::DeterministicTool,
+            tool_id: tool_id.clone(),
+            tool_version: "1.0.0".into(),
+            targets: vec![target],
+            argument_sha256: request_sha256.clone(),
+            preimages: vec![],
+            expected_side_effects: effects,
+            preview_sha256: preview_hash,
+            now_epoch_ms: now,
+            network_scope: None,
+            credential_scope: None,
+            publication_scope: None,
+        };
+        let request = AuthorityTransactionRequest::new(
+            AuthorityTransactionId::from_raw(&id),
+            OperationAttemptId::from_raw(format!("attempt-{id}")),
+            approval,
+            grant.grant_id,
+            call,
+            context,
+            now,
+            now.to_string(),
+        )
+        .map_err(|_| err("code.repository.request"))?;
+        runtime
+            .execute_effect(&registry, &policy, request, driver)
+            .map_err(|_| err("code.repository.uncertain"))
+    }
 }
 
 #[cfg(test)]

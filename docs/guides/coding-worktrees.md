@@ -75,8 +75,10 @@ removal or automatic cleanup is authorized.
 Creation does not select source. Explicitly select the new worktree through
 `select` or `select-model` before proposals or writes. Current write previews
 conservatively retain their unverified isolation/test labels: writes are not yet
-bound to worktree ownership. Confined tests, failure feedback, retries and durable
-coding runs remain open in T-303 and T-306.
+bound to worktree ownership. The separate [exact command path](coding-commands.md)
+uses this service instance's successful creation for process-only command
+ownership. Parsed tests, failure feedback, retries and durable coding runs
+remain open in T-303 and T-306.
 
 ## API and recovery
 
