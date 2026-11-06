@@ -1,0 +1,153 @@
+Commit: 3bd1720d778bbb77c9b37aa433535fa6d4c9fcba
+Scope: local-coding-control-repair
+
+# Independent review: T-303 + T-306 control and repair follow-up (non-closing)
+
+Reviewer: Claude Opus 5.5, separate read-only session. Base `d0bbe2546b9408ad6025272bf5105e46e4a04c54`.
+`git rev-parse` confirms the full SHA for both commits, and HEAD equals the reviewed commit; the
+working tree is clean. One commit separates base and head; it changes 13 files (+654/-68). No
+row, checkbox, parent acceptance or score closure was requested, and none is granted.
+
+## Methods
+
+- I read IP-POLICY.md, decisions 0153/0154 (present), the T-303 TASKS.md change (one appended
+  sentence linking the prior review and this evidence), the batch evidence
+  `docs/evidence/t303-control-review-repair-2026-11-06.md`, all three guide diffs, the prior
+  review's L1-L3 (`docs/reviews/d0bbe2546b94-local-coding-command-cancellation.txt:95-125`) and
+  the complete source diff.
+- I traced the code paths myself: kernel `CommandEffectDriver` (kernel/engine/src/command_runner.rs:752-880),
+  `ScopedEffectCancellation` and the `CancellationToken` `try_lock` observer (kernel/engine/src/propagation.rs:139-214),
+  every `begin`/`begin_controlled`/`cancel_active` call site in `platforms/local-api/src`, the
+  repair preflight→consume→dispatch path (coding_repair_api.rs:22-141, lib.rs:926-1030), and
+  `encode_chat` limits (platforms/linux-inference/src/local_chat.rs:160-207). The transport
+  re-encodes with the same function (local_chat_transport.rs:304).
+- I looked for other consumers of `/v1/cancel`. `demo/web/app.js` talks to a separate `/api/`
+  server, not this API. The only in-repo terminal consumer is `coding_cli.rs:668`.
+- I hashed the committed sources and the retained review and compared them with the builder audit.
+
+## Commands and results
+
+Environment: `CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4`.
+The requested node path `/lane/state/tooling/node-v24.15.0-linux-x64/bin/node` **does not exist**
+in this lane. The binary with the stated hash is `/lane/state/tmp/shared-node-v24.15.0/bin/node`
+(sha256 `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c`, matches), and I put it
+on PATH. No download was made.
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib coding_repository` | exit 0; 31 passed, 0 failed, 256 filtered (name filter as requested) |
+| 2 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api --all-targets --no-fail-fast` | exit 0; 67 passed (11 lib, 10 coding_cli, 11 coding_worktree, 35 local_chat_api), 0 failed |
+| 3 | `python3 -B scripts/local_agent_fast_gate.py --base d0bbe254… --timeout 3600` | **FAST GATE: FAIL** (exit 1). Six preliminary steps (diff-check, untracked/review lint, markdown, fmt, clippy) exit 0. The test step exits 101 after 104.78 s: 835 ok, 72 FAILED, 62 ignored, 0 filtered. Failures: host lib 53, platform-linux lib 19 |
+| 3a | Whitespace-normalized sorted diff of the 72 FAILED IDs against the 72 IDs listed in `docs/evidence/t301-baseline-failures-2026-10-25.md` | **identical**: no additions, no omissions |
+| 4 | `python3 -B scripts/validate_docs.py` | exit 0; "Validated 772 Markdown file(s) and all policy invariants." |
+| 5 | `cmp docs/reviews/d0bbe2546b94-local-coding-command-cancellation.txt /lane/reviews/d0bbe2546b94-local-coding-command-cancellation.md` | exit 0, identical |
+| 6 | `git diff --check d0bbe254… HEAD` | exit 0 |
+| 7 | `sha256sum …/check-development-context.py` | `8e2b1b5443c8521d03979ff80e969c335fcf611f71230a4ac7acef9010281366`, matches |
+| 8 | `bash /tools/build-slot python3 -B …/check-development-context.py /lane/state/tmp/review-control-repair-development` (directory was absent beforehand) | exit 0; tasks 30, matching_contexts 30, 2.98 s, `model_inference`/`held_out_run`/`hidden_tests_run` false, `not_a_model_score` true. My API binary sha256 `fafdde23…a3bda4` differs from the builder's `f2b16ed6…bbbcbbb6`, as expected for a separate target directory |
+
+Builder artefacts: `audit.json` sha256 is `f302e76a…5e8892`, matching the request. All seven
+committed source hashes at 3bd1720d match `audit.json.source_sha256`. The committed retained review's
+sha256 `576e0507…518bee` matches `review_sha256`. `final-comparison.json` reports 72/72 equal, 0
+added, 0 missing. Totals 835/72/62/0 match my run. No API, driver or terminal child process remained
+after my runs.
+
+## Assessment of the requested points
+
+**Bounded passive observer (prior L1).** `LinuxCodingCommandCancellation` now implements
+`EffectCancellationObservation` (coding_repository_command.rs:70-78) and is passed whole into the
+unchanged `CommandEffectDriver::new` (line 393-394, the only construction site). The kernel still
+wraps it in `ScopedEffectCancellation` bound to the consumed permit's task/correlation identity, so
+scope validation, cleanup and receipts stay with the kernel and runner. `observe_command_cancellation`
+(lines 84-99) retries only `Unavailable`, at most 8 calls with `yield_now` between them, and then
+returns `Unavailable` (fail closed). `InvalidSignal`/`ScopeMismatch`/`Ok` return immediately.
+A poisoned mutex also yields `Unavailable` from `try_lock`, so it fails closed after 8 reads. The
+table test (command_tests.rs:18-79) pins the call counts at 1/2/8/8/8/1/2. It never blocks and adds
+no timeout. Correct.
+
+**Control-only cancellation of repository and repair leases (prior L2).** `begin_scoped`
+(lib.rs:781-797) sets `active_control_only` under the same `State` guard that publishes `active`,
+so the requirement applies from admission, before any native handle is armed. Both repository
+entry points use `begin_controlled`: coding_repository_api.rs:151, and coding_repair_api.rs:37,
+which covers the GET preview and the POST proposal. `request_cancel` (lib.rs:222-230) returns 403
+and records `cancel/denied` before calling anything, so no signal is latched and no attempt is spent.
+Shutdown (lib.rs:364) still calls `cancel_active(true)` directly and is unaffected. With a
+non-cancellable step the control token gets `Ok(false)`. `Operation::drop` alone clears the flag with
+the lease (lib.rs:757-760). The real HTTP test (lib.rs:1725-1755) drives `handle()` over loopback
+sockets. The client bearer gets 403 with the token uncancelled, the control bearer gets 200 with
+the token cancelled, and the lease is retained. Correct.
+
+**Terminal (cancellation reachability).** `coding_cli.rs:668` now selects the control token. `token()` only loads
+files, so no prompt was added. The integration test runs the real `agentmage-code` binary against
+a synthetic peer. It asserts that the request carries `Authorization: Bearer <control>`, that the
+client token is absent and that the body is empty. As claimed, this covers the consumer only, not
+native termination.
+
+**Complete repair pre-encoding (model-repair L1).** `prepare_proposal_messages` (lib.rs:892-914) builds
+the system, source and diagnostic messages and runs `encode_chat` plus the 1..=4096 token check. The
+preflight (coding_repair_api.rs:137-141) calls it with `Some(&feedback)` before
+`consume_repair_feedback` (line 76-81). Dispatch (lib.rs:945-957) calls the same function with the
+same context inputs (same files, same `source_budget`, same feedback `Value`), and the transport
+re-encodes with the same `encode_chat`. So, short of transport/socket failure, nothing
+deterministic can refuse after consumption. Source, diagnostic, token and wire ceilings are
+unchanged. `check_coding_proposal` output stays `proposal-only` / `applied:false` / `tested:false`,
+and no model output gains authority.
+
+**Prior L3.** coding-model-repair.md now says "cancellation of worktree creation and write effects".
+Fixed.
+
+**Boundaries and integrity.** No confinement, sandbox, path, network, write or command-authority code
+changed. The affected boundary is cancel authority, which is narrowed, not widened. No evaluation,
+hidden-test, held-out, fixture, schema, threshold, dependency, Cargo.lock or SBOM file changed. Test
+inputs are synthetic (`calc.py`/"Fix add"). Added lines contain no host path, username, hostname,
+credential or product name. The only `/lane/...` strings are lane-generic paths inside the
+byte-identical retained prior review. Every number in the evidence traces to my runs or to the
+hash-matched retained logs.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L1 (low, backlog): status advertises a cancellation the client token cannot perform.**
+`GET /v1/status` (lib.rs:1507) reports `"cancellable": state.active_cancellable`. During a
+controlled repository/repair lease it reports `true` to a client-token caller, whose
+`POST /v1/cancel` will now get 403. This is safe (no signal, denial recorded) but misleading to a
+client-token UI. Fix: add `"cancel_requires_control": state.active_control_only` to status, or
+report `cancellable` relative to the caller's token, and document it in local-chat-api.md.
+
+**L2 (low, backlog): repair pre-encoding has no test of the call site.**
+`repair_preflight_encodes_the_exact_combined_messages_and_refuses_wire_overflow`
+(coding_repair_api.rs:148-183) tests `prepare_proposal_messages` directly. If someone changed
+`prepare_repair`'s call (coding_repair_api.rs:140) back to `None`, every test would still pass. At
+production caps (total ≤32768 bytes against `MAX_REQUEST_BYTES` 256 KiB) the two- and
+three-message outcomes cannot differ over HTTP, so this is a regression guard, not a reachable
+defect. Fix: factor the post-`select_created_sources` part of `prepare_repair` into a pure helper
+that takes `(input, files, feedback)`, and assert that it refuses the oversized synthetic feedback.
+
+**L3 (low, backlog): the bounded retry lowers, but cannot remove, the collision window.** If the
+cancelling thread is preempted while holding the token's node mutex for longer than eight
+`yield_now` calls, the poll still fails closed as `CancellationUnavailable`. That outcome is
+documented and safe. The synthetic `CancelDuringExecution` executor (command_tests.rs:292-301)
+still `.unwrap()`s each observation, so the cancellation test can still flake in principle, though
+much less often. Fix: in the synthetic executor, treat `Err(Unavailable)` as "poll again" until the
+deadline.
+
+Observation (not a finding): the dated prior-batch evidence `docs/evidence/t303-command-cancellation-2026-11-06.md:30`
+still describes the client/control cancel authentication as it was at d0bbe. It is historical, and
+the current guides and this batch's evidence are accurate.
+
+Environment note (not a repository finding): the node path given in the request is absent. The
+hash-matched binary lives at `/lane/state/tmp/shared-node-v24.15.0/bin/node`.
+
+## Per-row result
+
+- **T-303 (non-closing same-row follow-up): PASS** for this batch's scope at the exact commit. It
+  resolves prior cancellation lows L1-L3 and model-repair L1 as described above. The parent row stays open:
+  positive native execution/termination, coordinator composition, durable runs, apply,
+  commit/push and measured acceptance are not established, as the evidence states.
+- **T-306 (same follow-up): PASS** for the same scope. The parent stays open for the same reasons.
+
+The complete source gate remains FAIL on exactly the 72 retained environmental baseline identities.
+This verdict accepts only this batch. It is not a score, native-execution or release claim, and it
+makes no certification, compliance or legal statement.
+
+Verdict: PASS

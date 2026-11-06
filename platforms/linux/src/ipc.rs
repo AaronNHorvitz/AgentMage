@@ -7,7 +7,7 @@ use std::os::unix::fs::{FileTypeExt, MetadataExt, PermissionsExt};
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use rustix::net::sockopt::socket_peercred;
 use rustix::rand::{GetRandomFlags, getrandom};
@@ -54,7 +54,7 @@ pub enum LinuxIpcErrorKind {
     Replay,
     /// The fixed-size authentication frame was malformed or incomplete.
     MalformedFrame,
-    /// A bounded peer executable read exceeded its limit.
+    /// A bounded operation exceeded its byte or time ceiling.
     ResourceLimitExceeded,
     /// A required operating-system operation failed without safe detail.
     PlatformFailure,
@@ -377,6 +377,8 @@ impl LinuxLaunchEnvelope {
                 identity: current,
                 protocol_version: LINUX_IPC_PROTOCOL_VERSION,
             },
+            frame_timeout: None,
+            frame_failed: false,
         })
     }
 }
@@ -416,6 +418,8 @@ pub struct LinuxAuthenticatedPeer {
 pub struct LinuxAuthenticatedIpcSession {
     stream: UnixStream,
     peer: LinuxAuthenticatedPeer,
+    frame_timeout: Option<Duration>,
+    frame_failed: bool,
 }
 
 impl fmt::Debug for LinuxAuthenticatedIpcSession {
@@ -427,7 +431,92 @@ impl fmt::Debug for LinuxAuthenticatedIpcSession {
     }
 }
 
+fn frame_remaining(deadline: Instant) -> Result<Duration, LinuxIpcError> {
+    deadline
+        .checked_duration_since(Instant::now())
+        .filter(|d| !d.is_zero())
+        .ok_or_else(|| ipc_error(LinuxIpcErrorKind::ResourceLimitExceeded))
+}
+fn frame_io_error(error: std::io::Error) -> LinuxIpcError {
+    ipc_error(
+        if matches!(
+            error.kind(),
+            std::io::ErrorKind::TimedOut | std::io::ErrorKind::WouldBlock
+        ) {
+            LinuxIpcErrorKind::ResourceLimitExceeded
+        } else {
+            LinuxIpcErrorKind::MalformedFrame
+        },
+    )
+}
+fn read_frame_bytes(
+    stream: &mut UnixStream,
+    mut bytes: &mut [u8],
+    deadline: Option<Instant>,
+) -> Result<(), LinuxIpcError> {
+    let Some(deadline) = deadline else {
+        return stream
+            .read_exact(bytes)
+            .map_err(|_| ipc_error(LinuxIpcErrorKind::MalformedFrame));
+    };
+    while !bytes.is_empty() {
+        stream
+            .set_read_timeout(Some(frame_remaining(deadline)?))
+            .map_err(frame_io_error)?;
+        match stream.read(bytes) {
+            Ok(0) => return Err(ipc_error(LinuxIpcErrorKind::MalformedFrame)),
+            Ok(n) => {
+                bytes = &mut bytes[n..];
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+            Err(e) => return Err(frame_io_error(e)),
+        }
+    }
+    frame_remaining(deadline)?;
+    Ok(())
+}
+fn write_frame_bytes(
+    stream: &mut UnixStream,
+    mut bytes: &[u8],
+    deadline: Option<Instant>,
+) -> Result<(), LinuxIpcError> {
+    let Some(deadline) = deadline else {
+        return stream
+            .write_all(bytes)
+            .map_err(|_| ipc_error(LinuxIpcErrorKind::PlatformFailure));
+    };
+    while !bytes.is_empty() {
+        stream
+            .set_write_timeout(Some(frame_remaining(deadline)?))
+            .map_err(frame_io_error)?;
+        match stream.write(bytes) {
+            Ok(0) => return Err(ipc_error(LinuxIpcErrorKind::PlatformFailure)),
+            Ok(n) => {
+                bytes = &bytes[n..];
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+            Err(e) => return Err(frame_io_error(e)),
+        }
+    }
+    frame_remaining(deadline)?;
+    Ok(())
+}
+
 impl LinuxAuthenticatedIpcSession {
+    /// Bounds each complete frame read or write, including partial transfers,
+    /// by one monotonic deadline. Default sessions retain their existing I/O.
+    /// A failed frame permanently closes this bounded channel: a late reply
+    /// cannot be consumed by a subsequent request. Complete host refusals are
+    /// ordinary frames and do not poison it.
+    /// The fixed ceiling prevents an adapter from requesting an unbounded wait.
+    pub fn with_frame_timeout(mut self, timeout: Duration) -> Result<Self, LinuxIpcError> {
+        if timeout.is_zero() || timeout > Duration::from_secs(30) {
+            return Err(ipc_error(LinuxIpcErrorKind::ResourceLimitExceeded));
+        }
+        self.frame_timeout = Some(timeout);
+        Ok(self)
+    }
+
     /// Returns the peer admitted by kernel credentials and the one-use handshake.
     #[must_use]
     pub const fn peer(&self) -> &LinuxAuthenticatedPeer {
@@ -436,36 +525,63 @@ impl LinuxAuthenticatedIpcSession {
 
     /// Reads one big-endian length-prefixed frame within the caller's closed bound.
     pub fn read_frame(&mut self, maximum_bytes: usize) -> Result<Vec<u8>, LinuxIpcError> {
+        if self.frame_failed {
+            return Err(ipc_error(LinuxIpcErrorKind::MalformedFrame));
+        }
+        let result = self.read_product_frame(maximum_bytes);
+        self.close_failed_frame(result.is_err());
+        result
+    }
+
+    fn close_failed_frame(&mut self, failed: bool) {
+        if self.frame_timeout.is_some() && failed {
+            self.frame_failed = true;
+            let _ = self.stream.shutdown(std::net::Shutdown::Both);
+        }
+    }
+
+    fn read_product_frame(&mut self, maximum_bytes: usize) -> Result<Vec<u8>, LinuxIpcError> {
         if maximum_bytes == 0 || maximum_bytes > 4 * 1024 * 1024 {
             return Err(ipc_error(LinuxIpcErrorKind::ResourceLimitExceeded));
         }
+        let deadline = self.frame_timeout.map(|timeout| Instant::now() + timeout);
         let mut length = [0_u8; 4];
-        self.stream
-            .read_exact(&mut length)
-            .map_err(|_| ipc_error(LinuxIpcErrorKind::MalformedFrame))?;
+        read_frame_bytes(&mut self.stream, &mut length, deadline)?;
         let length = usize::try_from(u32::from_be_bytes(length))
             .map_err(|_| ipc_error(LinuxIpcErrorKind::ResourceLimitExceeded))?;
         if length == 0 || length > maximum_bytes {
             return Err(ipc_error(LinuxIpcErrorKind::ResourceLimitExceeded));
         }
         let mut frame = vec![0_u8; length];
-        self.stream
-            .read_exact(&mut frame)
-            .map_err(|_| ipc_error(LinuxIpcErrorKind::MalformedFrame))?;
+        read_frame_bytes(&mut self.stream, &mut frame, deadline)?;
         Ok(frame)
     }
 
     /// Writes one big-endian length-prefixed frame within the caller's closed bound.
     pub fn write_frame(&mut self, frame: &[u8], maximum_bytes: usize) -> Result<(), LinuxIpcError> {
+        if self.frame_failed {
+            return Err(ipc_error(LinuxIpcErrorKind::MalformedFrame));
+        }
+        let result = self.write_product_frame(frame, maximum_bytes);
+        self.close_failed_frame(result.is_err());
+        result
+    }
+
+    fn write_product_frame(
+        &mut self,
+        frame: &[u8],
+        maximum_bytes: usize,
+    ) -> Result<(), LinuxIpcError> {
         if frame.is_empty() || frame.len() > maximum_bytes || maximum_bytes > 4 * 1024 * 1024 {
             return Err(ipc_error(LinuxIpcErrorKind::ResourceLimitExceeded));
         }
         let length = u32::try_from(frame.len())
             .map_err(|_| ipc_error(LinuxIpcErrorKind::ResourceLimitExceeded))?;
+        let deadline = self.frame_timeout.map(|timeout| Instant::now() + timeout);
+        write_frame_bytes(&mut self.stream, &length.to_be_bytes(), deadline)?;
+        write_frame_bytes(&mut self.stream, frame, deadline)?;
         self.stream
-            .write_all(&length.to_be_bytes())
-            .and_then(|()| self.stream.write_all(frame))
-            .and_then(|()| self.stream.flush())
+            .flush()
             .map_err(|_| ipc_error(LinuxIpcErrorKind::PlatformFailure))
     }
 }
@@ -522,7 +638,12 @@ impl LinuxHostIpcEndpoint {
         let (stream, peer) = self
             .listener
             .accept_authenticated(authenticator, maximum_executable_bytes)?;
-        Ok(LinuxAuthenticatedIpcSession { stream, peer })
+        Ok(LinuxAuthenticatedIpcSession {
+            stream,
+            peer,
+            frame_timeout: None,
+            frame_failed: false,
+        })
     }
 }
 
@@ -1259,5 +1380,160 @@ mod tests {
         std::fs::set_permissions(&directory, std::fs::Permissions::from_mode(0o700))
             .expect("private fixture");
         directory
+    }
+}
+
+#[cfg(test)]
+mod frame_deadline_tests {
+    use super::*;
+    fn synthetic_session(stream: UnixStream) -> LinuxAuthenticatedIpcSession {
+        LinuxAuthenticatedIpcSession {
+            stream,
+            peer: LinuxAuthenticatedPeer {
+                identity: LinuxPeerIdentity::new(1, 1, 1, [1; 32]),
+                protocol_version: LINUX_IPC_PROTOCOL_VERSION,
+            },
+            frame_timeout: None,
+            frame_failed: false,
+        }
+    }
+    #[test]
+    fn failed_bounded_frame_closes_the_channel_and_refuses_later_requests() {
+        let (reader, mut peer) = UnixStream::pair().unwrap();
+        let mut session = synthetic_session(reader)
+            .with_frame_timeout(Duration::from_millis(50))
+            .unwrap();
+        peer.write_all(&4_u32.to_be_bytes()).unwrap();
+        peer.write_all(b"x").unwrap();
+        assert_eq!(
+            session.read_frame(16).unwrap_err().kind(),
+            LinuxIpcErrorKind::ResourceLimitExceeded
+        );
+        assert!(session.frame_failed);
+        assert_eq!(
+            session
+                .write_frame(b"later request", 16)
+                .unwrap_err()
+                .kind(),
+            LinuxIpcErrorKind::MalformedFrame
+        );
+        assert_eq!(
+            session.read_frame(16).unwrap_err().kind(),
+            LinuxIpcErrorKind::MalformedFrame
+        );
+        let mut bytes = [0; 4];
+        assert_eq!(peer.read(&mut bytes).unwrap(), 0);
+    }
+    #[test]
+    fn complete_bounded_frames_and_unbounded_preflight_refusals_remain_usable() {
+        let (reader, mut peer) = UnixStream::pair().unwrap();
+        let mut session = synthetic_session(reader);
+        assert_eq!(
+            session.read_frame(0).unwrap_err().kind(),
+            LinuxIpcErrorKind::ResourceLimitExceeded
+        );
+        assert!(!session.frame_failed);
+        session = session.with_frame_timeout(Duration::from_secs(2)).unwrap();
+        for body in [b"denied".as_slice(), b"retry".as_slice()] {
+            peer.write_all(&(body.len() as u32).to_be_bytes()).unwrap();
+            peer.write_all(body).unwrap();
+            assert_eq!(session.read_frame(16).unwrap(), body);
+            assert!(!session.frame_failed);
+        }
+        assert!(
+            synthetic_session(UnixStream::pair().unwrap().0)
+                .with_frame_timeout(Duration::ZERO)
+                .is_err()
+        );
+        assert!(
+            synthetic_session(UnixStream::pair().unwrap().0)
+                .with_frame_timeout(Duration::from_secs(31))
+                .is_err()
+        );
+    }
+    #[test]
+    fn frame_read_deadline_covers_partial_header_and_payload() {
+        let (mut reader, mut writer) = UnixStream::pair().unwrap();
+        writer.write_all(&[0, 0]).unwrap();
+        let mut header = [0; 4];
+        assert_eq!(
+            read_frame_bytes(
+                &mut reader,
+                &mut header,
+                Some(Instant::now() + Duration::from_millis(50))
+            )
+            .unwrap_err()
+            .kind(),
+            LinuxIpcErrorKind::ResourceLimitExceeded
+        );
+        let (mut reader, mut writer) = UnixStream::pair().unwrap();
+        writer.write_all(&4_u32.to_be_bytes()).unwrap();
+        let deadline = Instant::now() + Duration::from_millis(50);
+        read_frame_bytes(&mut reader, &mut header, Some(deadline)).unwrap();
+        let mut body = [0; 4];
+        assert_eq!(
+            read_frame_bytes(&mut reader, &mut body, Some(deadline))
+                .unwrap_err()
+                .kind(),
+            LinuxIpcErrorKind::ResourceLimitExceeded
+        );
+    }
+    #[test]
+    fn partial_progress_cannot_renew_the_frame_deadline() {
+        let (mut reader, mut writer) = UnixStream::pair().unwrap();
+        let producer = std::thread::spawn(move || {
+            for _ in 0..6 {
+                if writer.write_all(b"x").is_err() {
+                    break;
+                }
+                std::thread::sleep(Duration::from_millis(20));
+            }
+        });
+        let mut bytes = [0; 6];
+        let result = read_frame_bytes(
+            &mut reader,
+            &mut bytes,
+            Some(Instant::now() + Duration::from_millis(50)),
+        );
+        drop(reader);
+        producer.join().unwrap();
+        assert_eq!(
+            result.unwrap_err().kind(),
+            LinuxIpcErrorKind::ResourceLimitExceeded
+        );
+    }
+    #[test]
+    fn full_transfer_and_expired_write_preserve_exact_bytes() {
+        let (mut reader, mut writer) = UnixStream::pair().unwrap();
+        let deadline = Instant::now() + Duration::from_secs(2);
+        write_frame_bytes(&mut writer, b"body", Some(deadline)).unwrap();
+        let mut bytes = [0; 4];
+        read_frame_bytes(&mut reader, &mut bytes, Some(deadline)).unwrap();
+        assert_eq!(&bytes, b"body");
+        let expired = Instant::now() - Duration::from_secs(1);
+        assert_eq!(
+            write_frame_bytes(&mut writer, b"forbidden", Some(expired))
+                .unwrap_err()
+                .kind(),
+            LinuxIpcErrorKind::ResourceLimitExceeded
+        );
+        reader.set_nonblocking(true).unwrap();
+        assert_eq!(
+            reader.read(&mut bytes).unwrap_err().kind(),
+            std::io::ErrorKind::WouldBlock
+        );
+    }
+    #[test]
+    fn backpressured_frame_write_is_bounded() {
+        let (_reader, mut writer) = UnixStream::pair().unwrap();
+        let result = write_frame_bytes(
+            &mut writer,
+            &vec![b'x'; 4 * 1024 * 1024],
+            Some(Instant::now() + Duration::from_millis(50)),
+        );
+        assert_eq!(
+            result.unwrap_err().kind(),
+            LinuxIpcErrorKind::ResourceLimitExceeded
+        );
     }
 }

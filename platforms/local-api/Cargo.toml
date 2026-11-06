@@ -9,12 +9,16 @@ repository.workspace = true
 publish.workspace = true
 
 [dependencies]
+agentmage-host = { path = "../../shells/host", default-features = false, features = ["interactive-cli", "native-chat"] }
+agentmage-kernel-contracts.workspace = true
+agentmage-kernel-engine = { workspace = true, default-features = false }
 agentmage-capability-repository-map.workspace = true
 agentmage-platform-linux-inference.workspace = true
 agentmage-platform-linux.workspace = true
 rustix.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+signal-hook.workspace = true
 zeroize.workspace = true
 
 [lints]

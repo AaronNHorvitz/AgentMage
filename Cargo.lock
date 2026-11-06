@@ -121,11 +121,15 @@ name = "agentmage-local-api"
 version = "0.0.0"
 dependencies = [
  "agentmage-capability-repository-map",
+ "agentmage-host",
+ "agentmage-kernel-contracts",
+ "agentmage-kernel-engine",
  "agentmage-platform-linux",
  "agentmage-platform-linux-inference",
  "rustix",
  "serde",
  "serde_json",
+ "signal-hook",
  "zeroize",
 ]
 

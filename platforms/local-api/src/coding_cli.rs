@@ -17,6 +17,9 @@ const MAX_REPLY: usize = 4 * 1024 * 1024;
 const MAX_REQUEST: usize = 256 * 1024;
 const DEADLINE: Duration = Duration::from_secs(180);
 
+#[path = "coding_cli_runtime.rs"]
+mod runtime;
+
 type Result<T> = std::result::Result<T, ()>;
 
 /// Runs the terminal coding client over fixed version-1 API routes. Consequential
@@ -541,6 +544,9 @@ fn execute(args: &[String]) -> Result<()> {
         return Err(());
     };
     let client = Client::new(address, auth)?;
+    if command == "runtime" || command.starts_with("runtime-") {
+        return runtime::execute(&client, command, tail);
+    }
     match (command.as_str(), tail) {
         ("edit", []) => show(&client.json("GET", "/v1/code/repository/edit", true, None)?),
         ("edit-prepare", [root, request]) => {
@@ -715,7 +721,7 @@ fn execute(args: &[String]) -> Result<()> {
 
 fn usage() {
     eprintln!(
-        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> repair-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|edit|edit-prepare <worktree> <strict-change-json>|edit-apply <worktree>|edit-deny|propose-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|validation|validation-prepare <definition-json>|validation-run <worktree>|validation-deny|command|command-prepare <spec-json>|command-run <worktree>|command-deny|worktree|worktree-prepare <repository> <private-management-directory> <task-id> <base-commit>|worktree-create <repository> <private-management-directory>|worktree-deny|map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
+        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> runtime|runtime-prepare <task>|runtime-start <prepared-request-json>|runtime-step <run-id> <request-digest>|runtime-approve <run-id> <request-digest>|runtime-deny <run-id> <request-digest>|runtime-job <run-id> <request-digest>|runtime-control <run-id> <request-digest> <cancel|suspend|resume>|runtime-declarations <run-id> <request-digest>|runtime-release <run-id> <request-digest>|repair-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|edit|edit-prepare <worktree> <strict-change-json>|edit-apply <worktree>|edit-deny|propose-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|validation|validation-prepare <definition-json>|validation-run <worktree>|validation-deny|command|command-prepare <spec-json>|command-run <worktree>|command-deny|worktree|worktree-prepare <repository> <private-management-directory> <task-id> <base-commit>|worktree-create <repository> <private-management-directory>|worktree-deny|map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
     );
 }
 

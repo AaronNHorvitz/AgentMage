@@ -8,6 +8,9 @@
 pub mod coding_cli;
 mod coding_repair_api;
 mod coding_repository_api;
+mod coding_runtime_api;
+
+pub use coding_runtime_api::{CodingRuntimeDevelopment, serve_coding_runtime_development};
 
 use std::collections::{BTreeMap, VecDeque};
 use std::fs::{DirBuilder, File};
@@ -202,6 +205,7 @@ struct PendingChange {
 
 #[derive(Default)]
 struct State {
+    runtime: Option<Arc<Mutex<coding_runtime_api::RuntimeSession>>>,
     repository: Option<Arc<Mutex<LinuxCodingRepository>>>,
     pending_change: Option<PendingChange>,
     write_records: VecDeque<Value>,
@@ -1045,6 +1049,20 @@ fn handle(
         Err(status) => return error(socket, status),
     };
     let route = (req.method.as_str(), req.path.as_str());
+    if req.path.starts_with("/v1/code/runtime") {
+        return coding_runtime_api::handle_runtime(socket, &req, state, stop);
+    }
+    // The live host owns its workspace and canonical stores. A runtime service
+    // never also exposes the independent manual proposal/effect owner.
+    if state.lock().map_err(|_| ApiError::Io)?.runtime.is_some()
+        && !(req.method == "GET" && matches!(req.path.as_str(), "/v1/status" | "/v1/activity"))
+    {
+        return response(
+            socket,
+            409,
+            json!({"error":"code.runtime.dedicated-service"}),
+        );
+    }
     if req.path.starts_with("/v1/code/repository") {
         return coding_repository_api::handle_repository(socket, &req, state, stop);
     }
@@ -1504,7 +1522,7 @@ fn handle(
             response(
                 socket,
                 200,
-                json!({"version":1,"configured":state.configured.is_some(),"settings_revision":state.revision,"busy":state.active.is_some(),"cancellable":state.active_cancellable}),
+                json!({"version":1,"configured":state.configured.is_some(),"settings_revision":state.revision,"busy":state.active.is_some(),"cancellable":state.active_cancellable,"runtime_attached":state.runtime.is_some()}),
             )
         }
         ("GET", "/v1/activity") => {
