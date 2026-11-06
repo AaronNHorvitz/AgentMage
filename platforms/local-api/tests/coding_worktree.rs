@@ -528,12 +528,7 @@ fn command_api_requires_control_created_ownership_and_strict_requests() {
     ] {
         assert_eq!(f.call_bytes("POST", decide, true, bytes).0, 400);
     }
-    let spec = json!({"schema_version":1,"template_id":"synthetic","template_version":"1.0.0",
-        "executable":"/usr/bin/true","executable_sha256":"a".repeat(64),"arguments":[],
-        "working_directory":"owned_worktree","environment":{},"risk":"moderate","grant_required":true,
-        "interactive":false,"network":false,"inherit_environment":false,
-        "bounds":{"timeout_ms":1000,"stdout_bytes":1024,"stderr_bytes":1024,"memory_bytes":134217728,"task_count":8,"cpu_percent":100},
-        "spec_sha256":"a".repeat(64)});
+    let spec = synthetic_command_spec();
     // No caller path can invent the provenance; refuse before native verification.
     let refused = f.call("POST", prepare, true, json!({"command":spec}));
     assert_eq!(refused.0, 409);
@@ -577,17 +572,18 @@ fn command_api_requires_control_created_ownership_and_strict_requests() {
 #[test]
 fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
     // Synthetic peer checks terminal command approval only; no command is launched.
-    for response in ["incorrect", "approve", "replace-root"] {
-        let mut f = Fixture::new();
-        f.stop();
-        let root = f.root.join("repo");
-        let owned = f.root.join("owned");
-        let identity = |path: &std::path::Path| {
-            agentmage_platform_linux::discover_linux_coding_map(path, "sentinel", || false)
-                .unwrap()
-                .root_sha256
-        };
-        let preview = json!({"preview_sha256":"a".repeat(64),"worktree_root_sha256":identity(&root),
+    for (validation, validation_passed) in [(false, true), (true, true), (true, false)] {
+        for response in ["incorrect", "approve", "replace-root"] {
+            let mut f = Fixture::new();
+            f.stop();
+            let root = f.root.join("repo");
+            let owned = f.root.join("owned");
+            let identity = |path: &std::path::Path| {
+                agentmage_platform_linux::discover_linux_coding_map(path, "sentinel", || false)
+                    .unwrap()
+                    .root_sha256
+            };
+            let mut preview = json!({"preview_sha256":"a".repeat(64),"worktree_root_sha256":identity(&root),
             "operation":"execute-command", "creation_receipt_sha256":"b".repeat(64),
             "command":{"schema_version":1,"command_attempt_id":"synthetic-attempt",
                 "template_id":"synthetic-check","template_version":"1.0.0",
@@ -598,82 +594,225 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
                 "bounds":{"timeout_ms":119_001,"stdout_bytes":65_535,"stderr_bytes":65_534,
                     "memory_bytes":134_217_728,"task_count":8,"cpu_percent":100},
                 "preview_sha256":"d".repeat(64)}});
-        let expected_preview = preview.clone();
-        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-        listener.set_nonblocking(true).unwrap();
-        f.address = Some(listener.local_addr().unwrap());
-        let stop = Arc::new(AtomicBool::new(false));
-        let done = stop.clone();
-        let worker = thread::spawn(move || {
-            let deadline = Instant::now() + Duration::from_secs(12);
-            let mut requests = Vec::new();
-            while !done.load(Ordering::Relaxed) {
-                assert!(Instant::now() < deadline);
-                let (mut socket, _) = match listener.accept() {
-                    Ok(pair) => pair,
-                    Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                        thread::sleep(Duration::from_millis(5));
-                        continue;
+            let (inspect, decide) = if validation {
+                preview["operation"] = json!("execute-validation");
+                preview["validation_template"] = json!({"kind":"unit","minimum_test_count":2,
+                "parser":"agent_mage_json_v1","parser_sha256":"e".repeat(64)});
+                preview["attempt"] = json!(2);
+                preview["maximum_attempts"] = json!(3);
+                preview["prior_receipt_sha256"] = json!("f".repeat(64));
+                (
+                    "/v1/code/repository/validation",
+                    "/v1/code/repository/validation/decide",
+                )
+            } else {
+                (
+                    "/v1/code/repository/command",
+                    "/v1/code/repository/command/decide",
+                )
+            };
+            let expected_preview = preview.clone();
+            let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+            listener.set_nonblocking(true).unwrap();
+            f.address = Some(listener.local_addr().unwrap());
+            let stop = Arc::new(AtomicBool::new(false));
+            let done = stop.clone();
+            let worker = thread::spawn(move || {
+                let deadline = Instant::now() + Duration::from_secs(12);
+                let mut requests = Vec::new();
+                while !done.load(Ordering::Relaxed) {
+                    assert!(Instant::now() < deadline);
+                    let (mut socket, _) = match listener.accept() {
+                        Ok(pair) => pair,
+                        Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                            thread::sleep(Duration::from_millis(5));
+                            continue;
+                        }
+                        Err(e) => panic!("{e}"),
+                    };
+                    socket
+                        .set_read_timeout(Some(Duration::from_secs(2)))
+                        .unwrap();
+                    let mut header = Vec::new();
+                    while !header.ends_with(b"\r\n\r\n") {
+                        let mut byte = [0];
+                        socket.read_exact(&mut byte).unwrap();
+                        header.push(byte[0]);
+                        assert!(header.len() < 8192);
                     }
-                    Err(e) => panic!("{e}"),
-                };
-                socket
-                    .set_read_timeout(Some(Duration::from_secs(2)))
-                    .unwrap();
-                let mut header = Vec::new();
-                while !header.ends_with(b"\r\n\r\n") {
-                    let mut byte = [0];
-                    socket.read_exact(&mut byte).unwrap();
-                    header.push(byte[0]);
-                    assert!(header.len() < 8192);
+                    let header = String::from_utf8(header).unwrap();
+                    let route = header.lines().next().unwrap().to_owned();
+                    let length = header
+                        .lines()
+                        .find_map(|line| line.strip_prefix("Content-Length: "))
+                        .unwrap()
+                        .parse::<usize>()
+                        .unwrap();
+                    assert!(length < 4096);
+                    let mut body = vec![0; length];
+                    socket.read_exact(&mut body).unwrap();
+                    let value = if route.starts_with("GET ") {
+                        assert_eq!(route, format!("GET {inspect} HTTP/1.1"));
+                        json!({"pending":preview})
+                    } else {
+                        assert_eq!(route, format!("POST {decide} HTTP/1.1"));
+                        json!({"outcome":"succeeded","validation":{"validation_passed":validation_passed}})
+                    };
+                    requests.push((route, body));
+                    let bytes = serde_json::to_vec(&value).unwrap();
+                    socket.write_all(format!("HTTP/1.1 200 Response\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",bytes.len()).as_bytes()).unwrap();
+                    socket.write_all(&bytes).unwrap();
                 }
-                let header = String::from_utf8(header).unwrap();
-                let route = header.lines().next().unwrap().to_owned();
-                let length = header
-                    .lines()
-                    .find_map(|line| line.strip_prefix("Content-Length: "))
-                    .unwrap()
-                    .parse::<usize>()
-                    .unwrap();
-                assert!(length < 4096);
-                let mut body = vec![0; length];
-                socket.read_exact(&mut body).unwrap();
-                let value = if route.starts_with("GET ") {
-                    assert_eq!(route, "GET /v1/code/repository/command HTTP/1.1");
-                    json!({"pending":preview})
-                } else {
-                    assert_eq!(route, "POST /v1/code/repository/command/decide HTTP/1.1");
-                    json!({"outcome":"succeeded"})
-                };
-                requests.push((route, body));
-                let bytes = serde_json::to_vec(&value).unwrap();
-                socket.write_all(format!("HTTP/1.1 200 Response\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",bytes.len()).as_bytes()).unwrap();
-                socket.write_all(&bytes).unwrap();
-            }
-            requests
-        });
-        let observed = f.terminal(&["command-run", root.to_str().unwrap()], response);
-        stop.store(true, Ordering::Relaxed);
-        let requests = worker.join().unwrap();
-        assert_eq!(observed["sent"], true);
-        assert_eq!(observed["status"] == 0, response == "approve");
-        let transcript = observed["transcript"].as_str().unwrap();
-        assert!(transcript.is_ascii());
-        assert!(!transcript.contains('\u{7f}'));
-        assert!(transcript.contains("\\u03bb\\u202e\\u007f"));
-        // Parse the displayed consent before the challenge. Every command field
-        // must reach the person, including exact arguments, environment and limits.
-        let consent: Value =
-            serde_json::from_str(transcript.split("Type exactly ").next().unwrap()).unwrap();
-        assert_eq!(consent["preview"], expected_preview);
-        assert_eq!(consent["worktree"], root.to_str().unwrap());
-        assert_eq!(requests.len(), if response == "approve" { 2 } else { 1 });
-        if response == "approve" {
-            assert_eq!(
-                serde_json::from_slice::<Value>(&requests[1].1).unwrap(),
-                json!({"preview_sha256":"a".repeat(64),"approve":true})
+                requests
+            });
+            let observed = f.terminal(
+                &[
+                    if validation {
+                        "validation-run"
+                    } else {
+                        "command-run"
+                    },
+                    root.to_str().unwrap(),
+                ],
+                response,
             );
+            stop.store(true, Ordering::Relaxed);
+            let requests = worker.join().unwrap();
+            assert_eq!(observed["sent"], true);
+            assert_eq!(
+                observed["status"] == 0,
+                response == "approve" && validation_passed
+            );
+            let transcript = observed["transcript"].as_str().unwrap();
+            assert!(transcript.contains(if validation {
+                "Type exactly test "
+            } else {
+                "Type exactly run "
+            }));
+            assert!(transcript.is_ascii());
+            assert!(!transcript.contains('\u{7f}'));
+            assert!(transcript.contains("\\u03bb\\u202e\\u007f"));
+            // Parse the displayed consent before the challenge. Every command field
+            // must reach the person, including exact arguments, environment and limits.
+            let consent: Value =
+                serde_json::from_str(transcript.split("Type exactly ").next().unwrap()).unwrap();
+            assert_eq!(consent["preview"], expected_preview);
+            assert_eq!(consent["worktree"], root.to_str().unwrap());
+            assert_eq!(requests.len(), if response == "approve" { 2 } else { 1 });
+            if response == "approve" {
+                assert_eq!(
+                    serde_json::from_slice::<Value>(&requests[1].1).unwrap(),
+                    json!({"preview_sha256":"a".repeat(64),"approve":true})
+                );
+            }
+            assert!(!owned.join("worktree").exists());
         }
-        assert!(!owned.join("worktree").exists());
     }
+}
+
+fn synthetic_command_spec() -> Value {
+    json!({"schema_version":1,"template_id":"synthetic","template_version":"1.0.0",
+        "executable":"/usr/bin/true","executable_sha256":"a".repeat(64),"arguments":[],
+        "working_directory":"owned_worktree","environment":{},"risk":"moderate","grant_required":true,
+        "interactive":false,"network":false,"inherit_environment":false,
+        "bounds":{"timeout_ms":1000,"stdout_bytes":1024,"stderr_bytes":1024,"memory_bytes":134217728,"task_count":8,"cpu_percent":100},
+        "spec_sha256":"a".repeat(64)})
+}
+
+#[test]
+fn validation_api_and_cli_require_explicit_control_and_cannot_adopt_a_worktree() {
+    let mut f = Fixture::new();
+    let inspect = "/v1/code/repository/validation";
+    let prepare = "/v1/code/repository/validation/prepare";
+    let decide = "/v1/code/repository/validation/decide";
+    let definition = json!({"command":synthetic_command_spec(),"kind":"unit",
+        "minimum_test_count":2,"approve_definition":true});
+    assert_eq!(f.call_bytes("GET", inspect, false, b"").0, 403);
+    assert_eq!(f.call("POST", prepare, false, definition.clone()).0, 403);
+    assert_eq!(
+        f.call(
+            "POST",
+            decide,
+            false,
+            json!({"preview_sha256":"a".repeat(64),"approve":true})
+        )
+        .0,
+        403
+    );
+    for key in [
+        "approve_definition",
+        "minimum_test_count",
+        "kind",
+        "command",
+    ] {
+        let mut missing = definition.clone();
+        missing.as_object_mut().unwrap().remove(key);
+        assert_eq!(f.call("POST", prepare, true, missing).0, 400);
+    }
+    for (key, value) in [
+        ("approve_definition", json!("true")),
+        ("root", json!("/outside")),
+        ("parser", json!("process_exit_v1")),
+        ("maximum_attempts", json!(100)),
+    ] {
+        let mut invalid = definition.clone();
+        invalid[key] = value;
+        assert_eq!(f.call("POST", prepare, true, invalid).0, 400);
+    }
+    let mut denied = definition.clone();
+    denied["approve_definition"] = json!(false);
+    assert_eq!(f.call("POST", prepare, true, denied).0, 403);
+    assert_eq!(f.call("POST", prepare, true, json!([])).0, 400);
+    let bytes = serde_json::to_string(&definition).unwrap().replacen(
+        '{',
+        "{\"approve_definition\":true,",
+        1,
+    );
+    assert_eq!(f.call_bytes("POST", prepare, true, bytes.as_bytes()).0, 400);
+    let refused = f.call("POST", prepare, true, definition.clone());
+    assert_eq!(refused.0, 409);
+    assert_eq!(refused.1["error"], "code.command.worktree-required");
+    assert_eq!(refused.1["effect"], "no-command-dispatch");
+    let refused = f.call(
+        "POST",
+        decide,
+        true,
+        json!({"preview_sha256":"a".repeat(64),"approve":true}),
+    );
+    assert_eq!(refused.1["error"], "code.validation.choice-required");
+    assert_eq!(refused.1["effect"], "unknown");
+    let before: Value = serde_json::from_slice(&f.cli(&["validation"]).stdout).unwrap();
+    assert!(before["pending"].is_null());
+    assert!(before["latest"].is_null());
+    assert_eq!(before["maximum_attempts"], 3);
+    assert!(
+        !f.cli(&["validation-run", f.root.join("repo").to_str().unwrap()])
+            .status
+            .success()
+    );
+    assert!(!f.cli(&["validation-deny"]).status.success());
+    let prepared = f.cli(&[
+        "validation-prepare",
+        &serde_json::to_string(&definition).unwrap(),
+    ]);
+    assert!(!prepared.status.success());
+    assert!(
+        String::from_utf8(prepared.stderr)
+            .unwrap()
+            .contains("code.command.worktree-required")
+    );
+    f.stop();
+    f.start();
+    let after: Value = serde_json::from_slice(&f.cli(&["validation"]).stdout).unwrap();
+    assert_eq!(before, after);
+    assert!(
+        f.call_bytes("GET", "/v1/code/repository", true, b"").1["receipts"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"human work"
+    );
 }

@@ -76,9 +76,11 @@ Responses include the canonical authority receipt, verified command receipt,
 exit classification and bounded stdout/stderr as byte arrays. Treat output as
 untrusted data; never execute it or display raw terminal controls. The terminal
 prints escaped JSON. Exit zero is command success only:
-`test_suite_verified: false` stays explicit. Parsed test counts, test-suite
-coverage, repository snapshot binding, failure-to-model feedback and budgeted
-automatic retries remain unimplemented in this composition.
+`test_suite_verified: false` stays explicit. The separate
+[test-envelope surface](coding-validation.md) adds per-invocation parsed counts
+and failure names with bounded, separately approved reruns. Test-suite coverage,
+repository snapshot binding, failure-to-model feedback and budgeted automatic
+repair remain unimplemented in this composition.
 
 Command requests serialize with other coding operations. API cancellation is
 truthfully unavailable after admission (`cancellable: false`); the runner's

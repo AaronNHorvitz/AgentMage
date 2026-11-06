@@ -1,0 +1,123 @@
+Commit: 3a303aed10c3b03b296e0824b70035bb60ccaa0c
+Scope: local-coding-confined-commands-repair
+
+# Independent review: T-303 / T-306 confined-command review repair
+
+Reviewer: separate Claude Opus 5.5 session (extra-high effort), read-only on the repository.
+Row: T-303 (related T-306), tier core, non-closing. Range: exact parent
+`8742e65697fd9a76b92b72ed3b9c421b32799ee8` to `3a303aed10c3b03b296e0824b70035bb60ccaa0c`.
+
+## Methods
+
+- `git rev-parse 3a303aed10c3b03b296e0824b70035bb60ccaa0c` resolves to the full sha and equals `HEAD`;
+  its first parent is `8742e65697fd9a76b92b72ed3b9c421b32799ee8`. Working tree clean before and after.
+- Read IP-POLICY.md, the top T-303/T-306 rows, the repair evidence
+  `docs/evidence/t303-confined-command-review-repair-2026-11-06.md`, the retained original report and
+  the full diff of the eight changed paths.
+- Confirmed the changed set is exactly: TASKS.md, two evidence files, two guides, the retained report
+  `docs/reviews/8742e65697fd-local-coding-confined-commands.txt` (new file), and two Rust test files
+  (`platforms/linux/src/coding_repository_command_tests.rs`, `platforms/local-api/tests/coding_worktree.rs`).
+  No product source, parser, permission, sandbox, kernel, schema, dependency, Cargo.lock, frozen-suite,
+  scoreboard, prompt or baseline file changes (`git diff --name-only 8742e656 3a303aed`).
+- Checked each original low finding against its suggested fix and the unchanged runtime it describes.
+- Ran every requested command myself, plus three mutation tests in a throwaway `git archive` copy outside
+  the repository (separate target dir `/lane/state/review-target-3a303aed-mut`; copy deleted afterwards).
+- Own logs: `/lane/state/review-tmp-3a303aed/` (c1 `c1a1bbbb...bd63a`, c2 `ad0ceeb4...e88f2`, c3
+  `470cb93d...7550`, c5 `62a3e695...9130`, m1 `6c6efda8...ea44`, m2 `2a7ececd...4e30`, m3 `cf16c27d...71cef`).
+
+All Cargo work used `bash /tools/build-slot` with `CARGO_TARGET_DIR=/lane/state/review-target`,
+`CARGO_BUILD_JOBS=2`, `RUST_TEST_THREADS=4`. The fast gate was run unwrapped (it takes the slot itself).
+No GPU, model, evaluation, hidden-test or held-out activity.
+
+## Commands and results
+
+| # | Command | Result |
+| --- | --- | --- |
+| 0 | `export PATH=/lane/state/tmp/shared-node-v24.15.0/bin:$PATH; node --version; sha256sum .../bin/node` | `v24.15.0`; SHA-256 `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c`, as stated. `LICENSE` and `provenance.json` (upstream tarball URL, SHA-256 and "exact published SHASUMS256.txt match") are present. The runtime is not committed |
+| 1 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib coding_repository -- --nocapture` | exit 0; **13 passed**, 0 failed, 0 ignored (256 outside the name filter, as expected). Includes the new `valid_sealed_commands_enforce_the_narrower_composition_limits` and the renamed `tampered_specs_and_out_of_scope_commands_are_refused`. `native_command_manifest_retains_trust_refusal_without_a_launch` and `native_worktree_path_runs_or_retains_the_exact_trust_refusal` pass on the refusal branch; positive native creation/command is **not** demonstrated |
+| 2 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api --test coding_worktree -- --nocapture` | exit 0; **7 passed**, 0 filtered. The command-consent peer is synthetic (loopback HTTP stub); nothing is executed |
+| 3 | `python3 -B scripts/local_agent_fast_gate.py --base 8742e65697fd9a76b92b72ed3b9c421b32799ee8 --timeout 3600` | **FAST GATE: FAIL** (expected). `git diff --check`, untracked lint, review lint, gate markdownlint (5 changed Markdown files, 0 issues), `cargo fmt --check` and all-target Clippy `-D warnings` exit 0. Tests exit 101. Summed: **802 passed / 72 failed / 62 ignored / 0 filtered** (53 host + 19 Linux). The set of 72 failed IDs equals the set of 72 test paths in `docs/evidence/t301-baseline-failures-2026-10-25.md` exactly (`comm` empty both directions); that file is unchanged in the range |
+| 4 | `node node_modules/.bin/markdownlint-cli2 ./TASKS.md ./docs/guides/coding-commands.md ./docs/guides/coding-worktrees.md ./docs/guides/coding-terminal.md ./docs/guides/local-agent-development.md ./docs/evidence/t303-confined-commands-2026-11-06.md ./docs/evidence/t303-confined-command-review-repair-2026-11-06.md` | markdownlint-cli2 v0.23.2 (markdownlint v0.41.1); **Linting: 7 files; Summary: 0 issues in 0 files; exit 0**. The union covers all five files of the originally unrun command |
+| 4b | `printf 'title\n#bad\n' \| node node_modules/.bin/markdownlint-cli2 -` | exit 1; MD041 and MD018 reported. The linter is live and does reject bad input |
+| 5 | `python3 -B scripts/validate_docs.py` | exit 0; "Validated 760 Markdown file(s) and all policy invariants." |
+| 6 | `cmp docs/reviews/8742e65697fd-local-coding-confined-commands.txt /lane/reviews/8742e65697fd-local-coding-confined-commands.md` | identical, exit 0; SHA-256 `5818951dcc91b4d7d7f1c45b20e58fd6c7bb7af356dcfba98ba7b9304d3b9be8`, as stated |
+| 7 | Builder fast log `sha256sum /lane/state/tmp/t303-command-review-repair/fast.log` | `66a9e1c0...d44d9e`, equal to the request. I did not rely on the builder audit script; checks above are my own |
+
+### Mutation tests (throwaway copy; repository untouched)
+
+| Mutation in copy | Test | Result |
+| --- | --- | --- |
+| M1: `coding_repository_command.rs:254` timeout ceiling `> 120_000` changed to `> 120_001` | `valid_sealed_commands...` | **FAILS** at `coding_repository_command_tests.rs:303` (the 120 001 ms sealed spec is no longer refused) |
+| M2: `coding_cli.rs:264` DEL exclusion removed from `safe()` (raw U+007F reaches the TTY) | `synthetic_api_command_preview...` | **FAILS** at `coding_worktree.rs:662` |
+| M3: `coding_repository_command.rs:253` worktree-only scope check replaced by `false` | `valid_sealed_commands...` | **FAILS** at `coding_repository_command_tests.rs:322` (empty-scratch spec admitted) |
+
+The original report showed that deleting all six composition bounds left the old test passing. The new
+test now detects both the bounds and the scope check. Memory, task and CPU composition ceilings equal the
+kernel ceilings (`kernel/engine/src/command_runner.rs:1054-1056` versus `coding_repository_command.rs:255-257`),
+so a valid sealed spec cannot exceed them by one. The evidence says this plainly and claims no
+independent contract for those three.
+
+## Assessment of the repair
+
+- **L1 (wording): resolved.** `docs/guides/coding-commands.md:62-67` now says the kernel refuses a fixed
+  list of names and specific inline-evaluation flag forms. It also says other interpreters, including
+  versioned names and attached short options, pass and remain under the sandbox and exact approval. That
+  matches `PROHIBITED_EXECUTABLE_NAMES` / `PROHIBITED_ARGUMENT_PREFIXES` (`command_runner.rs:30-63`) and
+  the exact-or-`=` match in `valid_argument` (`:1092-1105`). No filter changed.
+- **L2 (bounds test): resolved.** The new test seals valid specs at the inclusive limits (accepted).
+  It then raises timeout, stdout and stderr by one each, and separately uses an `EmptyScratch` spec. Each
+  passes `verify()` and `CommandRegistry::build` and is refused with `code.command.bounds` specifically.
+  Stale digests play no part. The renamed tampered-spec test keeps all nine original malformed cases.
+- **L3 (consent fidelity): resolved.** The synthetic peer now serves a command-shaped preview: operation,
+  executable identity, a non-ASCII argument containing U+03BB, U+202E (bidi override) and U+007F (DEL),
+  environment and all bounds. The test checks that the transcript is ASCII-only with no raw DEL, and that
+  the escaped text `\u03bb\u202e\u007f` is shown. It also parses the displayed JSON before the challenge and
+  requires `consent.preview` to equal the served preview in full, plus the worktree path. The incorrect,
+  approve and replace-root cases are kept, including the exact decide body on approve. The DEL code point
+  is not a kernel-admissible argument (`valid_argument` rejects ASCII control bytes). U+03BB and U+202E are
+  admissible, so the escaping case is realistic. The test is labelled as synthetic terminal-protocol
+  evidence, which is accurate.
+- **L4, L5 and carried native coverage:** not addressed, honestly recorded as backlog in the TASKS.md
+  T-303 row and the repair evidence. They remain low findings for before parent acceptance.
+- **Handoff wording.** The original evidence file gains a follow-up section admitting the earlier
+  "shared" runtime claim was incorrect, and the development guide now describes checking the launcher's
+  actual shared mounts. Both are accurate against what I observed in this namespace.
+
+## Other checks
+
+- **Confinement boundary.** No runtime, authorization, sandbox, parser or runner byte changes. I did not
+  repeat the native escape probes from the original report because there is no new code to probe. The
+  original exact-commit report's probes and conclusions apply unchanged. Native positive command
+  execution remains unmeasured under the retained executable-trust refusal, as the evidence states.
+- **Evaluation integrity.** No changes to frozen tasks, hidden tests, held-out content, prompts,
+  thresholds, scoreboard or baseline-failure list. No new score is claimed.
+- **Honest claims.** Every count in the repair evidence table reproduces in my runs: 13, 7,
+  802/72/62/0, 72 IDs equal to the baseline, five-file gate lint, 760-file validator. Timings differ
+  because of build-cache state, which is expected. Neither checkbox closes: T-303 and T-306 remain `[ ]`.
+  No sub-row is added.
+- **Privacy, IP and branding.** The diff contains no host home path, username, hostname, credential,
+  personal data, sibling-project name, third-party product comparison or trademark branding. The only
+  `/lane/...` strings are lane-generic paths inside the byte-identical retained report. The Node runtime
+  is a tool in scratch, not a committed dependency.
+- **Secrets/logging.** Test-only Rust changes; no new logging.
+
+## Findings
+
+No critical, high or medium findings. No new low findings.
+
+Carried low backlog (unchanged, from the original exact-commit report): L4 (command errors reuse the
+`code.repository.*` prefix inside the shared `ExactEffect`, `platforms/linux/src/coding_repository.rs:597-697`).
+L5 (post-success path open by name rather than via the held descriptor, `coding_repository.rs:378`).
+Also carried: positive native creation, decide-time drift and native command sandbox demonstration on an
+admitted host, all required before T-303/T-306 acceptance.
+
+## Per-row result
+
+- **T-303 (non-closing):** the repair batch PASSes at this exact commit. The originally missing linter run
+  now executes and is clean, L1-L3 are fixed with tests shown by mutation to be effective, and the gate
+  failure set is byte-for-byte the recorded baseline. T-303 stays **open**: test-run/failure-feedback/retry,
+  durable coding-run recovery and native positive coverage are outstanding.
+- **T-306 (related, non-closing):** guide wording is accurate. No commit, push or default-branch path is
+  added. T-306 stays **open**.
+
+Verdict: PASS

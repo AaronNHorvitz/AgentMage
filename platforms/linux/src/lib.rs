@@ -29,6 +29,8 @@ mod write_transaction;
 
 /// Exact kernel command specification accepted by the local coding owner.
 pub use agentmage_kernel_engine::command_runner::CommandSpec as LinuxCodingCommandSpec;
+/// Closed kernel check family; the local coding owner admits test kinds only.
+pub use agentmage_kernel_engine::validation_template::ValidationKind as LinuxCodingValidationKind;
 pub use coding_map::{
     LinuxCodingMap, LinuxCodingMapEntry, LinuxCodingMapError, discover_linux_coding_map,
 };

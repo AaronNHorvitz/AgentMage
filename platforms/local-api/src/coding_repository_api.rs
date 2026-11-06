@@ -19,6 +19,15 @@ struct PrepareCommand {
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
+pub(super) struct PrepareValidation {
+    command: agentmage_platform_linux::LinuxCodingCommandSpec,
+    kind: agentmage_platform_linux::LinuxCodingValidationKind,
+    minimum_test_count: u32,
+    approve_definition: bool,
+    prior_receipt_sha256: Option<String>,
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Decide {
     preview_sha256: String,
     approve: bool,
@@ -33,14 +42,20 @@ pub(super) fn handle_repository(
     let route = (req.method.as_str(), req.path.as_str());
     if !matches!(
         route,
-        ("GET", "/v1/code/repository" | "/v1/code/repository/command")
-            | (
-                "POST",
-                "/v1/code/repository/prepare"
-                    | "/v1/code/repository/decide"
-                    | "/v1/code/repository/command/prepare"
-                    | "/v1/code/repository/command/decide"
-            )
+        (
+            "GET",
+            "/v1/code/repository"
+                | "/v1/code/repository/command"
+                | "/v1/code/repository/validation"
+        ) | (
+            "POST",
+            "/v1/code/repository/prepare"
+                | "/v1/code/repository/decide"
+                | "/v1/code/repository/command/prepare"
+                | "/v1/code/repository/command/decide"
+                | "/v1/code/repository/validation/prepare"
+                | "/v1/code/repository/validation/decide"
+        )
     ) {
         return error(socket, 404);
     }
@@ -126,6 +141,34 @@ pub(super) fn handle_repository(
             }
             repository.decide_command(&input.preview_sha256, input.approve, clock_ms()?)
         }
+        ("GET", "/v1/code/repository/validation") => repository.inspect_validation(),
+        ("POST", "/v1/code/repository/validation/prepare") => {
+            let Ok(input) = object_json::<PrepareValidation>(&req.body) else {
+                return error(socket, 400);
+            };
+            if !input.approve_definition {
+                return error(socket, 403);
+            }
+            if stop.load(Ordering::Relaxed) {
+                return error(socket, 503);
+            }
+            repository.prepare_validation(
+                input.command,
+                input.kind,
+                input.minimum_test_count,
+                input.prior_receipt_sha256.as_deref(),
+                clock_ms()?,
+            )
+        }
+        ("POST", "/v1/code/repository/validation/decide") => {
+            let Ok(input) = object_json::<Decide>(&req.body) else {
+                return error(socket, 400);
+            };
+            if stop.load(Ordering::Relaxed) {
+                return error(socket, 503);
+            }
+            repository.decide_validation(&input.preview_sha256, input.approve, clock_ms()?)
+        }
         _ => unreachable!(),
     };
     let (status, value) = match result {
@@ -138,7 +181,7 @@ pub(super) fn handle_repository(
             // Conservatively never assert an unchanged disk after a decision.
             (
                 409,
-                json!({"error":e.code(),"effect": if req.path.ends_with("/decide") {"unknown"} else if req.path.contains("/command") {"no-command-dispatch"} else {"no-worktree-dispatch"}}),
+                json!({"error":e.code(),"effect": if req.path.ends_with("/decide") {"unknown"} else if req.path.contains("/command") || req.path.contains("/validation") {"no-command-dispatch"} else {"no-worktree-dispatch"}}),
             )
         }
     };

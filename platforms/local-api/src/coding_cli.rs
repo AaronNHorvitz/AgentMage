@@ -441,8 +441,29 @@ fn execute(args: &[String]) -> Result<()> {
                 Some(json!({"command":spec})),
             )?)
         }
-        ("command-run", [root]) => command_decide(&client, Some(root)),
-        ("command-deny", []) => command_decide(&client, None),
+        ("command-run", [root]) => command_decide(&client, Some(root), false),
+        ("command-deny", []) => command_decide(&client, None, false),
+        ("validation", []) => {
+            show(&client.json("GET", "/v1/code/repository/validation", true, None)?)
+        }
+        ("validation-prepare", [definition]) => {
+            if definition.len() > MAX_REQUEST {
+                return Err(());
+            }
+            // The same closed typed request as the API, including explicit
+            // definition confirmation. Execution still needs fresh TTY consent.
+            serde_json::from_str::<crate::coding_repository_api::PrepareValidation>(definition)
+                .map_err(|_| ())?;
+            let definition: Value = serde_json::from_str(definition).map_err(|_| ())?;
+            show(&client.json(
+                "POST",
+                "/v1/code/repository/validation/prepare",
+                true,
+                Some(definition),
+            )?)
+        }
+        ("validation-run", [root]) => command_decide(&client, Some(root), true),
+        ("validation-deny", []) => command_decide(&client, None, true),
         ("worktree", []) => show(&client.json("GET", "/v1/code/repository", true, None)?),
         ("worktree-prepare", [root, owned, task, base]) => {
             // The challenge itself is written to the terminal. Validate the
@@ -556,7 +577,7 @@ fn execute(args: &[String]) -> Result<()> {
 
 fn usage() {
     eprintln!(
-        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> command|command-prepare <spec-json>|command-run <worktree>|command-deny|worktree|worktree-prepare <repository> <private-management-directory> <task-id> <base-commit>|worktree-create <repository> <private-management-directory>|worktree-deny|map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
+        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> validation|validation-prepare <definition-json>|validation-run <worktree>|validation-deny|command|command-prepare <spec-json>|command-run <worktree>|command-deny|worktree|worktree-prepare <repository> <private-management-directory> <task-id> <base-commit>|worktree-create <repository> <private-management-directory>|worktree-deny|map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
     );
 }
 
@@ -604,9 +625,27 @@ fn worktree_decide(client: &Client, roots: Option<(&String, &String)>) -> Result
     Ok(())
 }
 
-fn command_decide(client: &Client, root: Option<&String>) -> Result<()> {
-    let status = client.json("GET", "/v1/code/repository/command", true, None)?;
+fn command_decide(client: &Client, root: Option<&String>, validation: bool) -> Result<()> {
+    let (inspect, decide, challenge, operation) = if validation {
+        (
+            "/v1/code/repository/validation",
+            "/v1/code/repository/validation/decide",
+            "test",
+            "execute-validation",
+        )
+    } else {
+        (
+            "/v1/code/repository/command",
+            "/v1/code/repository/command/decide",
+            "run",
+            "execute-command",
+        )
+    };
+    let status = client.json("GET", inspect, true, None)?;
     let preview = &status["pending"];
+    if preview["operation"] != operation {
+        return Err(());
+    }
     let hash = preview["preview_sha256"]
         .as_str()
         .filter(|s| digest(s))
@@ -619,17 +658,20 @@ fn command_decide(client: &Client, root: Option<&String>) -> Result<()> {
         confirm(
             &json!({"worktree":root,"preview":preview,
             "warning":"Runs the exact command offline in the read-only created worktree. Output is untrusted. Exit zero does not verify a test suite. After a lost reply inspect receipts; never resend approval."}),
-            &format!("run {hash}"),
+            &format!("{challenge} {hash}"),
         )?;
         verify()?;
     }
     let result = client.json(
         "POST",
-        "/v1/code/repository/command/decide",
+        decide,
         true,
         Some(json!({"preview_sha256":hash,"approve":root.is_some()})),
     )?;
     show(&result)?;
+    if validation && root.is_some() && result["validation"]["validation_passed"] != true {
+        return Err(());
+    }
     if result["outcome"]
         != if root.is_some() {
             "succeeded"

@@ -391,3 +391,402 @@ fn native_command_manifest_retains_trust_refusal_without_a_launch() {
     );
     eprintln!("native command not measured: exact launcher/executable trust refusal retained");
 }
+
+// Validation outcomes below are synthetic, under the same real held roots and
+// encrypted authority. They do not claim a native child ran project tests.
+use agentmage_kernel_engine::validation_template::ValidationKind;
+struct Envelope {
+    calls: Arc<AtomicUsize>,
+    stdout: Vec<u8>,
+    exit: i32,
+    corrupt: bool,
+}
+impl BoundedCommandExecutor for Envelope {
+    type WorkingDirectory = LinuxAuthorizedWorkspace;
+    fn execute(
+        &mut self,
+        _: CommandLaunchPermit<'_>,
+        _: &LinuxAuthorizedWorkspace,
+        _: &dyn EffectCancellationObservation,
+    ) -> std::result::Result<CommandPlatformResult, CommandExecutionFailure> {
+        self.calls.fetch_add(1, Ordering::Relaxed);
+        Ok(CommandPlatformResult {
+            termination: CommandTermination::Exited,
+            exit_code: Some(self.exit),
+            signal: None,
+            stdout: self.stdout.clone(),
+            stdout_sha256: hash(if self.corrupt { b"wrong" } else { &self.stdout }),
+            stdout_total_bytes: self.stdout.len() as u64,
+            stderr: vec![],
+            stderr_sha256: hash(b""),
+            stderr_total_bytes: 0,
+            elapsed_ms: 1,
+            resource_usage: None,
+            descendants_terminated: true,
+            platform_code: "test.synthetic.envelope".into(),
+        })
+    }
+}
+fn envelope(status: &str, passed: u32, failed: u32, skipped: u32) -> Vec<u8> {
+    serde_json::to_vec(&json!({"schema_version":1,"status":status,"passed":passed,"failed":failed,
+        "skipped":skipped,"duration_ms":1,"failed_names":if failed > 0 {vec!["synthetic.test"]} else {vec![]},
+        "artifact_ids":[],"retry_count":0,"initial_failure_sha256":null})).unwrap()
+}
+fn validation_pending(owner: &mut LinuxCodingRepository, prior: Option<&str>) -> Result<String> {
+    let registry = command_registry(spec()).unwrap();
+    let pending = owner.validation_preview(&registry, ValidationKind::Unit, 2, prior, NOW)?;
+    let digest = pending.hash.clone();
+    owner.command = Some(pending);
+    Ok(digest)
+}
+fn validation_execute(
+    owner: &mut LinuxCodingRepository,
+    digest: &str,
+    stdout: Vec<u8>,
+    exit: i32,
+    calls: &Arc<AtomicUsize>,
+    corrupt: bool,
+) -> Result<Value> {
+    let pending = owner.take_command(digest, true, NOW).unwrap().unwrap();
+    owner.run_command(
+        pending,
+        Envelope {
+            calls: calls.clone(),
+            stdout,
+            exit,
+            corrupt,
+        },
+        NOW,
+    )
+}
+#[test]
+fn validation_failure_feedback_then_exact_fresh_rerun_passes_without_task_grade() {
+    let f = Fixture::new();
+    let mut owner = f.open();
+    f.synthetic_created(&mut owner);
+    let calls = Arc::new(AtomicUsize::new(0));
+    let first = validation_pending(&mut owner, None).unwrap();
+    assert!(owner.inspect_command().unwrap()["pending"].is_null());
+    let preview = owner.inspect_validation().unwrap()["pending"].clone();
+    assert_eq!(preview["attempt"], 1);
+    assert_eq!(preview["validation_template"]["minimum_test_count"], 2);
+    assert_eq!(
+        preview["validation_template"]["parser_sha256"],
+        hash(include_bytes!(
+            "../../../kernel/engine/src/validation_result.rs"
+        ))
+    );
+    assert_eq!(
+        owner.decide_command(&first, true, NOW).unwrap_err().code(),
+        "code.command.validation-choice-required"
+    );
+    let failed = validation_execute(
+        &mut owner,
+        &first,
+        envelope("assertion_failed", 1, 1, 0),
+        1,
+        &calls,
+        false,
+    )
+    .unwrap();
+    assert_eq!(
+        failed["validation"]["receipt"]["status"],
+        "assertion_failed"
+    );
+    assert_eq!(
+        failed["validation"]["receipt"]["failed_names"],
+        json!(["synthetic.test"])
+    );
+    assert_eq!(failed["validation"]["receipt"]["approval_sha256"], first);
+    assert_eq!(failed["validation"]["validation_passed"], false);
+    assert_eq!(
+        failed["validation"]["receipt"]["failure_classification"],
+        "unclassified"
+    );
+    let prior = failed["validation"]["receipt"]["receipt_sha256"]
+        .as_str()
+        .unwrap();
+    assert_eq!(
+        validation_pending(&mut owner, None).unwrap_err().code(),
+        "code.validation.stale"
+    );
+    assert_eq!(
+        validation_pending(&mut owner, Some(&hash(b"foreign")))
+            .unwrap_err()
+            .code(),
+        "code.validation.stale"
+    );
+    let second = validation_pending(&mut owner, Some(prior)).unwrap();
+    assert_ne!(first, second);
+    let passed = validation_execute(
+        &mut owner,
+        &second,
+        envelope("passed", 2, 0, 0),
+        0,
+        &calls,
+        false,
+    )
+    .unwrap();
+    assert_eq!(passed["validation"]["validation_passed"], true);
+    assert_eq!(passed["validation"]["attempt"], 2);
+    assert_eq!(passed["rerun_plan"]["prior_receipt_sha256"], prior);
+    assert_eq!(passed["rerun_plan"]["approval_sha256"], second);
+    assert_eq!(
+        passed["rerun_plan"]["command_spec_sha256"],
+        spec().spec_sha256
+    );
+    assert_eq!(passed["test_suite_verified"], false);
+    assert_eq!(passed["validation"]["current_workspace_verified"], false);
+    assert_eq!(passed["validation"]["automatic_retry"], false);
+    let latest = passed["validation"]["receipt"]["receipt_sha256"]
+        .as_str()
+        .unwrap();
+    assert_eq!(
+        validation_pending(&mut owner, Some(latest))
+            .unwrap_err()
+            .code(),
+        "code.validation.rerun-forbidden"
+    );
+    assert_eq!(calls.load(Ordering::Relaxed), 2);
+    let receipts = owner.inspect().unwrap()["receipts"].clone();
+    drop(owner);
+    let reopened = f.open();
+    let state = reopened.inspect_validation().unwrap();
+    assert!(state["latest"].is_null());
+    assert!(state["pending"].is_null());
+    assert_eq!(state["attempts"], 0);
+    assert_eq!(reopened.inspect().unwrap()["receipts"], receipts);
+    assert!(reopened.created.is_none());
+}
+#[test]
+fn validation_three_attempt_budget_survives_denial_and_cannot_reset_definition() {
+    let f = Fixture::new();
+    let mut owner = f.open();
+    f.synthetic_created(&mut owner);
+    let calls = Arc::new(AtomicUsize::new(0));
+    let first = validation_pending(&mut owner, None).unwrap();
+    assert_eq!(
+        owner.decide_validation(&first, false, NOW).unwrap()["outcome"],
+        "denied"
+    );
+    assert_eq!(owner.inspect_validation().unwrap()["attempts"], 0);
+    let first = validation_pending(&mut owner, None).unwrap();
+    assert_eq!(
+        owner
+            .decide_validation(&first, true, NOW + LIFETIME_MS)
+            .unwrap_err()
+            .code(),
+        "code.command.expired"
+    );
+    assert_eq!(owner.inspect_validation().unwrap()["attempts"], 0);
+    let mut prior = None;
+    for attempt in 1..=3 {
+        let digest = validation_pending(&mut owner, prior.as_deref()).unwrap();
+        let value = validation_execute(
+            &mut owner,
+            &digest,
+            envelope("assertion_failed", 1, 1, 0),
+            1,
+            &calls,
+            false,
+        )
+        .unwrap();
+        assert_eq!(value["validation"]["attempt"], attempt);
+        prior = value["validation"]["receipt"]["receipt_sha256"]
+            .as_str()
+            .map(str::to_owned);
+        if attempt == 1 {
+            let registry = command_registry(spec()).unwrap();
+            assert_eq!(
+                owner
+                    .validation_preview(&registry, ValidationKind::Unit, 1, prior.as_deref(), NOW)
+                    .err()
+                    .unwrap()
+                    .code(),
+                "code.validation.stale"
+            );
+        }
+    }
+    assert_eq!(
+        validation_pending(&mut owner, prior.as_deref())
+            .unwrap_err()
+            .code(),
+        "code.validation.budget"
+    );
+    assert_eq!(calls.load(Ordering::Relaxed), 3);
+    assert!(owner.inspect_validation().unwrap()["pending"].is_null());
+}
+#[test]
+fn validation_exit_zero_never_substitutes_for_strict_positive_test_counts() {
+    for (stdout, exit, status) in [
+        (b"all tests pass".to_vec(), 0, "malformed"),
+        (envelope("passed", 0, 0, 0), 0, "zero_tests"),
+        (envelope("passed", 1, 0, 0), 0, "zero_tests"),
+        (envelope("passed", 2, 0, 0), 1, "malformed"),
+        (envelope("skipped_only", 0, 0, 2), 0, "skipped_only"),
+        (envelope("compile_failed", 0, 0, 0), 1, "compile_failed"),
+    ] {
+        let f = Fixture::new();
+        let mut owner = f.open();
+        f.synthetic_created(&mut owner);
+        let calls = Arc::new(AtomicUsize::new(0));
+        let digest = validation_pending(&mut owner, None).unwrap();
+        let value = validation_execute(&mut owner, &digest, stdout, exit, &calls, false).unwrap();
+        assert_eq!(value["validation"]["receipt"]["status"], status);
+        assert_eq!(value["validation"]["validation_passed"], false);
+        let prior = value["validation"]["receipt"]["receipt_sha256"]
+            .as_str()
+            .unwrap();
+        assert_eq!(
+            validation_pending(&mut owner, Some(prior))
+                .unwrap_err()
+                .code(),
+            "code.validation.rerun-forbidden"
+        );
+        assert_eq!(calls.load(Ordering::Relaxed), 1);
+    }
+}
+#[test]
+fn validation_corrupt_output_or_unwind_poison_the_series_before_retry() {
+    for crash in [false, true] {
+        let f = Fixture::new();
+        let mut owner = f.open();
+        f.synthetic_created(&mut owner);
+        let calls = Arc::new(AtomicUsize::new(0));
+        let digest = validation_pending(&mut owner, None).unwrap();
+        if crash {
+            let pending = owner.take_command(&digest, true, NOW).unwrap().unwrap();
+            assert!(
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| owner.run_command(
+                    pending,
+                    Synthetic {
+                        calls: calls.clone(),
+                        exit: 0,
+                        crash: true,
+                        corrupt: false
+                    },
+                    NOW
+                )))
+                .is_err()
+            );
+        } else {
+            assert!(
+                validation_execute(
+                    &mut owner,
+                    &digest,
+                    envelope("passed", 2, 0, 0),
+                    0,
+                    &calls,
+                    true
+                )
+                .is_err()
+            );
+        }
+        assert_eq!(owner.inspect_validation().unwrap()["attempts"], 1);
+        assert!(owner.inspect_validation().unwrap()["latest"].is_null());
+        assert_eq!(
+            validation_pending(&mut owner, None).unwrap_err().code(),
+            "code.validation.uncertain"
+        );
+        assert_eq!(calls.load(Ordering::Relaxed), 1);
+    }
+}
+#[test]
+fn validation_definition_scope_and_cross_route_checks_fail_closed() {
+    let f = Fixture::new();
+    let mut owner = f.open();
+    let registry = command_registry(spec()).unwrap();
+    assert_eq!(
+        validation_pending(&mut owner, None).unwrap_err().code(),
+        "code.command.worktree-required"
+    );
+    f.synthetic_created(&mut owner);
+    assert_eq!(
+        owner
+            .validation_preview(&registry, ValidationKind::Build, 2, None, NOW)
+            .err()
+            .unwrap()
+            .code(),
+        "code.validation.definition"
+    );
+    assert_eq!(
+        owner
+            .validation_preview(&registry, ValidationKind::Unit, 0, None, NOW)
+            .err()
+            .unwrap()
+            .code(),
+        "code.validation.definition"
+    );
+    let command = f.pending(&mut owner);
+    assert_eq!(
+        owner
+            .decide_validation(&command, true, NOW)
+            .unwrap_err()
+            .code(),
+        "code.validation.choice-required"
+    );
+    assert_eq!(
+        owner.inspect_command().unwrap()["pending"]["preview_sha256"],
+        command
+    );
+    let digest = validation_pending(&mut owner, None).unwrap();
+    assert_eq!(
+        owner
+            .decide_validation(&hash(b"foreign"), true, NOW)
+            .unwrap_err()
+            .code(),
+        "code.command.stale"
+    );
+    let root = f.0.join("owned/worktree");
+    fs::rename(&root, f.0.join("old")).unwrap();
+    fs::create_dir(&root).unwrap();
+    let calls = Arc::new(AtomicUsize::new(0));
+    assert_eq!(
+        validation_execute(
+            &mut owner,
+            &digest,
+            envelope("passed", 2, 0, 0),
+            0,
+            &calls,
+            false
+        )
+        .unwrap_err()
+        .code(),
+        "code.command.scope"
+    );
+    assert_eq!(owner.inspect_validation().unwrap()["attempts"], 0);
+    assert_eq!(calls.load(Ordering::Relaxed), 0);
+}
+
+#[test]
+fn native_validation_keeps_manifest_refusal_or_reports_empty_output_as_malformed() {
+    let f = Fixture::new();
+    let mut owner = f.open();
+    f.synthetic_created(&mut owner);
+    match owner.prepare_validation(spec(), ValidationKind::Unit, 2, None, NOW) {
+        Err(e) => {
+            assert_eq!(e.code(), "linux.command.manifest.invalid");
+            assert!(owner.inspect_validation().unwrap()["pending"].is_null());
+            assert_eq!(owner.inspect_validation().unwrap()["attempts"], 0);
+            assert!(
+                owner.inspect().unwrap()["receipts"]
+                    .as_array()
+                    .unwrap()
+                    .is_empty()
+            );
+            eprintln!(
+                "native validation not measured: exact launcher/executable trust refusal retained"
+            );
+        }
+        Ok(preview) => {
+            // This branch uses the real native runner but synthetic creation
+            // provenance. It is not an end-to-end created-worktree demonstration.
+            let value = owner
+                .decide_validation(preview["preview_sha256"].as_str().unwrap(), true, NOW)
+                .unwrap();
+            assert_eq!(value["outcome"], "succeeded");
+            assert_eq!(value["validation"]["receipt"]["status"], "malformed");
+            assert_eq!(value["validation"]["validation_passed"], false);
+        }
+    }
+}

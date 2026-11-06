@@ -42,6 +42,8 @@ use crate::{
 
 #[path = "coding_repository_command.rs"]
 mod command;
+#[path = "coding_repository_validation.rs"]
+mod validation;
 
 const TOOL: &str = "local-coding-worktree-create";
 
@@ -116,6 +118,7 @@ pub struct LinuxCodingRepository {
     pending: Option<Pending>,
     created: Option<CreatedWorktree>,
     command: Option<command::PendingCommand>,
+    validation: Option<validation::ValidationSeries>,
 }
 
 impl LinuxCodingRepository {
@@ -149,6 +152,7 @@ impl LinuxCodingRepository {
             pending: None,
             created: None,
             command: None,
+            validation: None,
         })
     }
 
@@ -381,6 +385,7 @@ impl LinuxCodingRepository {
                 // Retain a held identity only after observed native success. This is
                 // process-local provenance, never reconstructed from a caller path.
                 self.command = None;
+                self.validation = None;
                 self.created = Some(CreatedWorktree {
                     path: pending.destination,
                     held,

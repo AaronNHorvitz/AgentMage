@@ -159,3 +159,16 @@ crash can leave writes without a receipt. Follow the
 [manual recovery guidance](coding-writes.md#cancellation-records-and-recovery-limits).
 No model is downloaded, no GPU reservation is acquired by this client and no
 release or installed-product qualification follows from these commands.
+
+## Approved test envelopes
+
+Use `validation-prepare '<definition-json>'`, `validation`,
+`validation-run <absolute-worktree>` and `validation-deny` for the separate
+[test-envelope API](coding-validation.md). Execution requires the exact
+`test <preview-sha256>` challenge on the controlling terminal. The full escaped
+preview includes the command, parser, minimum count, attempt and prior receipt.
+The client checks the root before and after consent and sends exactly once.
+It exits unsuccessfully when command exit is successful but the normalized
+validation does not pass. Its output includes both states. Definition confirmation
+alone does not launch a command. Neither normal-command consent nor a client token
+can approve validation. These commands do not connect automatic model repair.

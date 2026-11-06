@@ -24,9 +24,10 @@ const COMMAND_REQUEST_SCHEMA: &str = r#"{
   }
 }"#;
 pub(super) struct PendingCommand {
-    prepared: PreparedCommand,
-    preview: Value,
-    hash: String,
+    pub(super) prepared: PreparedCommand,
+    pub(super) preview: Value,
+    pub(super) hash: String,
+    pub(super) validation: Option<super::validation::PendingValidation>,
     created_at: u64,
     expires_at: u64,
     deadline: Instant,
@@ -40,7 +41,7 @@ impl LinuxCodingRepository {
             .revalidate_root()
             .map_err(|_| err("code.repository.state"))?;
         Ok(
-            json!({"version":1,"pending":self.command.as_ref().map(|p| &p.preview),
+            json!({"version":1,"pending":self.command.as_ref().filter(|p| p.validation.is_none()).map(|p| &p.preview),
             "worktree_root_sha256":self.created.as_ref().map(|c| c.held.root_path_sha256()),
             "ownership_retention":"process-only","output_retention":"response-only",
             "automatic_replay":false,"test_suite_verified":false}),
@@ -66,6 +67,13 @@ impl LinuxCodingRepository {
     /// command success, never a parsed test result or repository correctness.
     /// Any uncertain dispatch requires manual inspection, never automatic retry.
     pub fn decide_command(&mut self, digest: &str, approve: bool, now: u64) -> Result<Value> {
+        if self
+            .command
+            .as_ref()
+            .is_some_and(|p| p.validation.is_some())
+        {
+            return Err(err("code.command.validation-choice-required"));
+        }
         let Some(pending) = self.take_command(digest, approve, now)? else {
             return Ok(json!({"outcome":"denied","effect":"none"}));
         };
@@ -75,7 +83,7 @@ impl LinuxCodingRepository {
         self.run_command(pending, executor, now)
     }
 
-    fn verify_created(&self) -> Result<&CreatedWorktree> {
+    pub(super) fn verify_created(&self) -> Result<&CreatedWorktree> {
         self.authority
             .revalidate_root()
             .map_err(|_| err("code.repository.state"))?;
@@ -99,7 +107,11 @@ impl LinuxCodingRepository {
         Ok(created)
     }
 
-    fn command_preview(&self, registry: &CommandRegistry, now: u64) -> Result<PendingCommand> {
+    pub(super) fn command_preview(
+        &self,
+        registry: &CommandRegistry,
+        now: u64,
+    ) -> Result<PendingCommand> {
         let created = self.verify_created()?;
         let mut random = [0; 16];
         if rustix::rand::getrandom(&mut random, rustix::rand::GetRandomFlags::empty()) != Ok(16) {
@@ -125,6 +137,7 @@ impl LinuxCodingRepository {
         preview["preview_sha256"] = json!(digest);
         Ok(PendingCommand {
             prepared,
+            validation: None,
             preview,
             hash: digest,
             created_at: now,
@@ -133,7 +146,7 @@ impl LinuxCodingRepository {
         })
     }
 
-    fn take_command(
+    pub(super) fn take_command(
         &mut self,
         digest: &str,
         approve: bool,
@@ -164,7 +177,9 @@ impl LinuxCodingRepository {
 
     // Generic only for component tests; public execution always uses the native
     // bounded Linux executor. There is no production injection hook.
-    fn run_command<E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>>(
+    pub(super) fn run_command<
+        E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    >(
         &mut self,
         pending: PendingCommand,
         executor: E,
@@ -185,6 +200,9 @@ impl LinuxCodingRepository {
             return Err(err("code.command.expired"));
         }
         let prepared = pending.prepared;
+        let validation = pending.validation;
+        // Spend before dispatch, including an uncertain authority/runner result.
+        // A lost result never becomes automatic retry authority.
         let id = prepared.preview().command_attempt_id.clone();
         let target = GrantTarget::held_workspace_root(&created.held)
             .map_err(|_| err("code.command.scope"))?;
@@ -194,6 +212,11 @@ impl LinuxCodingRepository {
                 .map_err(|_| err("code.command.scope"))?,
         )
         .map_err(|_| err("code.command.scope"))?;
+        let rerun_plan = validation
+            .as_ref()
+            .map(|validation| self.consume_validation(validation, &id, &pending.hash))
+            .transpose()?
+            .flatten();
         let exact = ExactEffect {
             id: id.clone(),
             operation: OperationBinding::new(GrantOperation::CommandExecute),
@@ -202,7 +225,7 @@ impl LinuxCodingRepository {
             plan_sha256: prepared.preview().preview_sha256.clone(),
             request_sha256: prepared.request_sha256().into(),
             tool: command_tool(&prepared),
-            preview_hash: pending.hash,
+            preview_hash: pending.hash.clone(),
             expires_at: pending.expires_at,
             now: dispatch_now,
         };
@@ -241,15 +264,27 @@ impl LinuxCodingRepository {
         }
         // Byte arrays preserve arbitrary output exactly; clients must escape
         // control characters before displaying untrusted command output.
+        let validation_result = validation
+            .map(|validation| {
+                self.finish_validation(
+                    validation,
+                    &prepared,
+                    &command_receipt,
+                    &output,
+                    &pending.hash,
+                )
+            })
+            .transpose()?;
         Ok(
             json!({"outcome":receipt.outcome,"receipt":receipt,"command_receipt":command_receipt,
             "stdout":output.stdout(),"stderr":output.stderr(),"output_retention":"response-only",
+            "validation":validation_result,"rerun_plan":rerun_plan,
             "test_suite_verified":false,"automatic_replay":false}),
         )
     }
 }
 
-fn command_registry(spec: CommandSpec) -> Result<CommandRegistry> {
+pub(super) fn command_registry(spec: CommandSpec) -> Result<CommandRegistry> {
     if spec.working_directory != CommandWorkingDirectory::OwnedWorktree
         || spec.bounds.timeout_ms > 120_000
         || spec.bounds.memory_bytes > 4 * 1024 * 1024 * 1024
@@ -262,7 +297,7 @@ fn command_registry(spec: CommandSpec) -> Result<CommandRegistry> {
     }
     CommandRegistry::build(vec![spec]).map_err(|e| err(e.code()))
 }
-fn native_executor(registry: &CommandRegistry) -> Result<LinuxBoundedCommandExecutor> {
+pub(super) fn native_executor(registry: &CommandRegistry) -> Result<LinuxBoundedCommandExecutor> {
     let manifest = LinuxCommandManifest::verify(
         "/usr/bin/systemd-run",
         "/usr/bin/systemctl",
