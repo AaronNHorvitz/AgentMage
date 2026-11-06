@@ -60,6 +60,9 @@ impl Drop for Fixture {
     }
 }
 fn spec() -> CommandSpec {
+    spec_with_bounds(CommandBounds::new(1000, 1024, 1024, 128 * 1024 * 1024, 8, 100).unwrap())
+}
+fn spec_with_bounds(bounds: CommandBounds) -> CommandSpec {
     CommandSpec::seal(
         "test-status",
         "1.0.0",
@@ -69,7 +72,7 @@ fn spec() -> CommandSpec {
         CommandWorkingDirectory::OwnedWorktree,
         Default::default(),
         CommandRisk::Moderate,
-        CommandBounds::new(1000, 1024, 1024, 128 * 1024 * 1024, 8, 100).unwrap(),
+        bounds,
     )
     .unwrap()
 }
@@ -261,7 +264,7 @@ fn drift_of_worktree_or_management_directory_refuses_before_consumption() {
     }
 }
 #[test]
-fn command_scope_and_bounds_cannot_expand_the_native_contract() {
+fn tampered_specs_and_out_of_scope_commands_are_refused() {
     let original = spec();
     for change in 0..9 {
         let mut s = original.clone();
@@ -278,6 +281,47 @@ fn command_scope_and_bounds_cannot_expand_the_native_contract() {
         }
         assert!(command_registry(s).is_err());
     }
+}
+#[test]
+fn valid_sealed_commands_enforce_the_narrower_composition_limits() {
+    let limit =
+        CommandBounds::new(120_000, 65_536, 65_536, 4 * 1024 * 1024 * 1024, 64, 400).unwrap();
+    // All composition ceilings are inclusive. These are valid kernel inputs,
+    // not stale digests that can fail before testing the narrower local limits.
+    assert!(command_registry(spec_with_bounds(limit)).is_ok());
+    for change in 0..3 {
+        let mut bounds = limit;
+        match change {
+            0 => bounds.timeout_ms += 1,
+            1 => bounds.stdout_bytes += 1,
+            _ => bounds.stderr_bytes += 1,
+        }
+        let sealed = spec_with_bounds(bounds);
+        sealed.verify().unwrap();
+        CommandRegistry::build(vec![sealed.clone()]).unwrap();
+        assert_eq!(
+            command_registry(sealed).unwrap_err().code(),
+            "code.command.bounds"
+        );
+    }
+    let original = spec();
+    let scratch = CommandSpec::seal(
+        original.template_id,
+        original.template_version,
+        original.executable,
+        original.executable_sha256,
+        original.arguments,
+        CommandWorkingDirectory::EmptyScratch,
+        original.environment,
+        original.risk,
+        original.bounds,
+    )
+    .unwrap();
+    CommandRegistry::build(vec![scratch.clone()]).unwrap();
+    assert_eq!(
+        command_registry(scratch).unwrap_err().code(),
+        "code.command.bounds"
+    );
 }
 #[test]
 fn corrupted_output_is_not_promoted_to_command_success() {

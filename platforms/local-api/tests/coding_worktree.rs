@@ -588,7 +588,17 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
                 .root_sha256
         };
         let preview = json!({"preview_sha256":"a".repeat(64),"worktree_root_sha256":identity(&root),
-            "owned_root_sha256":identity(&owned),"plan":{"branch_ref":"refs/heads/agentmage/tasks/fixture","expected_new_object":"1".repeat(40)}});
+            "operation":"execute-command", "creation_receipt_sha256":"b".repeat(64),
+            "command":{"schema_version":1,"command_attempt_id":"synthetic-attempt",
+                "template_id":"synthetic-check","template_version":"1.0.0",
+                "executable":"/usr/bin/true","executable_sha256":"c".repeat(64),
+                "arguments":["untrusted-λ\u{202e}\u{7f}"],"working_directory":"owned_worktree",
+                "environment":{"LANG":"C.UTF-8"},"risk":"moderate",
+                "grant_required":true,"interactive":false,"network":false,"inherit_environment":false,
+                "bounds":{"timeout_ms":119_001,"stdout_bytes":65_535,"stderr_bytes":65_534,
+                    "memory_bytes":134_217_728,"task_count":8,"cpu_percent":100},
+                "preview_sha256":"d".repeat(64)}});
+        let expected_preview = preview.clone();
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         listener.set_nonblocking(true).unwrap();
         f.address = Some(listener.local_addr().unwrap());
@@ -647,12 +657,16 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
         let requests = worker.join().unwrap();
         assert_eq!(observed["sent"], true);
         assert_eq!(observed["status"] == 0, response == "approve");
-        assert!(
-            observed["transcript"]
-                .as_str()
-                .unwrap()
-                .contains("refs/heads/agentmage/tasks/fixture")
-        );
+        let transcript = observed["transcript"].as_str().unwrap();
+        assert!(transcript.is_ascii());
+        assert!(!transcript.contains('\u{7f}'));
+        assert!(transcript.contains("\\u03bb\\u202e\\u007f"));
+        // Parse the displayed consent before the challenge. Every command field
+        // must reach the person, including exact arguments, environment and limits.
+        let consent: Value =
+            serde_json::from_str(transcript.split("Type exactly ").next().unwrap()).unwrap();
+        assert_eq!(consent["preview"], expected_preview);
+        assert_eq!(consent["worktree"], root.to_str().unwrap());
         assert_eq!(requests.len(), if response == "approve" { 2 } else { 1 });
         if response == "approve" {
             assert_eq!(

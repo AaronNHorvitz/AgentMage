@@ -16,7 +16,11 @@ Markdown linter from node_modules; the gate never installs dependencies. Put the
 Node binary directory on PATH if the lane does not expose it by default.
 For separate review sessions, verify that this directory is in a mount shared
 with the reviewer; a builder-only tool directory is insufficient. Record the
-runtime version, binary checksum and exact PATH setup in the private request.
+runtime version, binary checksum and exact PATH setup in the private request. In a
+split namespace, inspect the launcher's actual shared mounts; a builder-private
+state directory is not sufficient. Put the existing runtime and its licence in
+the shared scratch mount, retain its provenance, verify its binary checksum, and
+name that accessible path in the private review request.
 
 ```sh
 python3 scripts/local_agent_fast_gate.py --base <commit-before-this-batch>

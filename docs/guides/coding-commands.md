@@ -59,10 +59,12 @@ network, credential and publication scopes.
 
 The existing systemd and namespace runner supplies an offline, read-only
 worktree at `/work`, read-only system runtime files and temporary writable
-scratch. It inherits no ambient environment or credentials. Shell/interpreter
-entry points remain prohibited by the kernel command contract. Commands that
-need generated files must direct them into temporary scratch; this surface
-does not provide a writable project checkout or dependency downloads.
+scratch. It inherits no ambient environment or credentials. The kernel refuses
+a fixed list of shell and interpreter names and specific inline-evaluation flag
+forms. Other interpreters, including versioned names and attached short options,
+can pass that filter and remain subject to the same sandbox and exact approval.
+Commands that need generated files must direct them into temporary scratch;
+this surface does not provide a writable project checkout or dependency downloads.
 
 The local coding entry point further limits each command to 120 seconds,
 4 GiB memory, 64 tasks, four CPU equivalents and 64 KiB retained output per

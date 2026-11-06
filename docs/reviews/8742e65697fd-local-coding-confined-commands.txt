@@ -1,0 +1,157 @@
+Commit: 8742e65697fd9a76b92b72ed3b9c421b32799ee8
+Scope: local-coding-confined-commands
+
+# Independent review: exact confined commands (T-303, related T-306)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only on the repository.
+Row: T-303; related T-306; tier core; non-closing (both parents stay open on any verdict).
+Range reviewed: exact parent `8d5c8dd8761b5b391b53e2e45e12c8ba1ed25fe6` to the named commit
+(`git rev-parse` confirms both; HEAD = named commit; working tree clean before and after).
+
+## Methods
+
+- Read IP-POLICY.md, the T-303/T-306 rows in TASKS.md, `docs/evidence/t303-confined-commands-2026-11-06.md`,
+  `docs/guides/coding-commands.md` and the guide diffs (`coding-terminal.md`, `coding-worktrees.md`).
+- Read the full 13-file diff: new `platforms/linux/src/coding_repository_command.rs` and its tests;
+  the `ExactEffect` extraction and post-success ownership in `coding_repository.rs`; the `lib.rs`
+  re-export; the API routes in `coding_repository_api.rs`; the CLI `command*` verbs and
+  `command_decide` in `coding_cli.rs`; and the new API/PTY tests in `tests/coding_worktree.rs`.
+- Read the unchanged code the batch depends on: kernel `command_runner.rs` (spec shape, argument,
+  environment, executable and bounds validation) and Linux `command_runner.rs` (manifest verification,
+  root-owned path walk, systemd-run/bwrap arguments, descriptor-bound read-only `/work`,
+  `--unshare-all`, `--clearenv`, `RestrictAddressFamilies`), plus the terminal `safe()`/`confirm()` helpers.
+- Ran my own escape and mutation probes in a scratch copy produced by
+  `git archive 8742e656… | tar -x` under `/lane/state/tmp/review-8742/copy` (outside the repository,
+  separate target `/lane/state/review-target-8742`). I did not modify the repository.
+- No GPU, model, held-out, hidden-test or grading activity. This batch claims no score.
+
+## Commands and results
+
+All Cargo work used `bash /tools/build-slot` with `CARGO_TARGET_DIR=/lane/state/review-target`
+(probes: `/lane/state/review-target-8742`), `CARGO_BUILD_JOBS=2` and `RUST_TEST_THREADS=4`.
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `cargo test --locked --offline -p agentmage-platform-linux --lib coding_repository -- --nocapture` | 12 passed, 0 failed; 7 new `command::tests` included. The native command case prints "native command not measured: exact launcher/executable trust refusal retained"; the native worktree case keeps its Git trust refusal |
+| 2 | `cargo test --locked --offline -p agentmage-local-api --test coding_worktree -- --nocapture` | 7 passed, 0 failed, 0 filtered, including `command_api_requires_control_created_ownership_and_strict_requests` and `synthetic_api_command_preview_needs_exact_tty_consent_and_current_root` |
+| 3 | `python3 -B scripts/local_agent_fast_gate.py --base 8d5c8dd8… --timeout 3600` | **FAST GATE: FAIL** (expected). `git diff --check`, untracked lint, review lint, `cargo fmt --check` (0.95 s) and all-target Clippy `-D warnings` (12.98 s) exit 0. Tests exit 101. Summed over all result lines: **801 passed / 72 failed / 62 ignored / 0 filtered**, the same as the builder. The 72 failed IDs equal the 72 test IDs in `docs/evidence/t301-baseline-failures-2026-10-25.md` exactly; the only other tokens in that file are a commit SHA and three helper names. The gate's markdownlint step exited **127**: `node` was not found |
+| 4 | `node node_modules/.bin/markdownlint-cli2 …` (five named files) | **NOT RUN.** The stated runtime `/lane/state/tooling/node-v24.15.0-linux-x64/bin` does not exist in this lane (`/lane/state` contains only `review-target*` and `tmp`). A filesystem-wide search found no `node` executable, and no alternative Markdown linter is installed. The builder's private `markdown-final.log` reports "0 issues in 0 files" over 5 files, and their negative probe shows MD018. I could only run my own approximate structural check (final newline, MD009/010/012/018/031/040/058): no issues. That does not replace the linter |
+| 5 | `python3 -B scripts/validate_docs.py` | "Validated 759 Markdown file(s) and all policy invariants.", exit 0 |
+| 6 | `cmp docs/reviews/8d5c8dd8761b-local-coding-worktree-authority.txt /lane/reviews/8d5c8dd8761b-local-coding-worktree-authority.md` | identical, exit 0; SHA-256 `d6e186a4…b770` matches the request |
+| — | `sha256sum` of builder records | verification-manifest `18e2135d…847d`, publication-audit `fbf07bd5…6edc`, audit script `ad878e1c…4185`, fast-v1.log `646af661…6c89`: all match the request |
+| — | `python3 -B …/audit-publication.py` (builder provenance, not review) | exit 0; reports 801/72/62/0, baseline IDs equal, frozen inputs and ledger statuses unchanged |
+
+### Reviewer probes (scratch copy; 17/17 pass with probes added)
+
+| Probe | Observed |
+| --- | --- |
+| Worktree replaced by a **real directory** (rename + `mkdir`, not a symlink) after preview | `code.command.scope`; executor calls 0; no receipt |
+| Worktree swapped **during** execution, inside the executor | `code.command.uncertain`, not success; executor calls 1; one canonical receipt; a resent decision returns `code.command.choice-required` with no relaunch |
+| Pending preview after provenance changed to a different creation receipt | `code.command.stale`; calls 0 |
+| Resealed specs with valid digests: timeout 120 001 ms, stdout 65 537 B | both `code.command.bounds`; 120 000 ms / 65 536 B accepted |
+| **Mutation:** delete all six composition bounds in `command_registry` | the builder's `command_scope_and_bounds_cannot_expand_the_native_contract` **still passes**; only my resealed probe fails (see L2) |
+| Kernel seal + `command_registry` for interpreters | `/usr/bin/python3 x` refused; `python3.15 -c print(1)` refused; **`python3.15 -cprint(1)`, `perl5.44.0 -eprint 1`, `tclsh9.0 /work/x.tcl`, `gawk 'BEGIN{print 1}'` all accepted** (see L1) |
+
+## Review of the requested areas
+
+- **Native owner and authorization.** All four routes check `req.control` (403 otherwise; tested) and
+  serialize through `begin()`. Preparation needs `self.created`, which is set only in `decide` after an
+  observed `Succeeded` receipt (`coding_repository.rs:376-392`). There is no caller-path adoption
+  (API test: `code.command.worktree-required`). Restart drops `created` and `command` (tested).
+  A model reply or source selection cannot reach these routes. Consent is a client-side typed challenge
+  on `/dev/tty`. As in the prior accepted batch, the server's guarantee is control-token plus exact
+  preview digest.
+- **ExactEffect extraction.** It preserves the previous worktree composition: the same policy shape,
+  session parent, single derived operation, registry, call, context and `execute_effect`. The tool ID now
+  comes from the tool definition (`TOOL` for worktrees, `local-coding-command` for commands), version
+  1.0.0 on both sides. Only the rollback text changed. Commands use `GrantOperation::CommandExecute`,
+  the held worktree root as target, the kernel preview SHA as plan SHA, and network, credential and
+  publication scopes deny-all.
+- **Post-success ownership.** Prior L1 is repaired: the destination is now derived from `scope.owned_root()`
+  (`coding_repository.rs:223`). Prior L3 is repaired: a post-success `held_root` failure maps to
+  `code.repository.uncertain` (`:379`). Prior L2 is not addressed by this batch and is carried:
+  positive native creation and decide-time drift on an admitted host are still required before parent
+  acceptance. `verify_created` revalidates both held roots by identity before preview, before
+  consumption and after execution; my real-directory and mid-execution swap probes confirm this.
+- **Command module.** Digest mismatch preserves the preview; denial, expiry and attempted dispatch consume
+  it. A monotonic deadline is checked at take and at dispatch, with the dispatch clock advanced by
+  monotonic elapsed time. Output is accepted only if `verify_command_receipt` and the retained byte
+  counts agree (the corrupt-output test and my probes confirm). `test_suite_verified:false` is always
+  present, and there is no retry or replay.
+- **Confinement, via the unchanged native runner and kernel contract.** The worktree is bound read-only
+  by descriptor at `/work`, so there is no path TOCTOU. Other mounts: tmpfs `/tmp`, read-only
+  `/usr/lib*`, `/lib*` and `ld.so.cache` only; no `/usr/bin`, `/etc`, home or main repository.
+  `--unshare-all` gives a network namespace. `--clearenv`, with the environment limited to
+  `LANG`, `LC_ALL`, `NO_COLOR` and `TZ`. The executable path must be root-owned with no symlinks, and its
+  digest is pinned and the file descriptor-bound. Arguments are refused if they contain ASCII controls
+  or shell metacharacters. Seccomp, cgroup limits and descendant cleanup apply. Symlinks inside the
+  worktree resolve inside the sandbox namespace only. **The positive native branch was not executed by
+  me or the builder.** This lane is a user namespace (`/usr`, `/usr/bin/{true,bwrap,systemd-run,systemctl}`
+  owned by uid 65534), so `linux.command.manifest.invalid` is the genuine, expected refusal. The labelling
+  is honest and no native claim is made. Not raised as a finding for this non-closing batch; it stays a
+  parent-acceptance obligation.
+- **Untrusted output and display.** stdout and stderr return as JSON byte arrays. The terminal's `safe()`
+  escapes every non-ASCII character and DEL, which neutralizes ANSI, C1 and bidi spoofing in both the
+  consent prompt and the results. Kernel argument validation already refuses ASCII controls.
+- **Secrets and logging.** The new code adds no logging of arguments or output; API outcomes are codes only.
+  The test key is labelled synthetic.
+- **Supply chain, evaluation integrity, IP and privacy.** No changes to `Cargo.lock`, manifests, schemas,
+  scripts, tasks, hidden tests, prompts or model profiles. There are no other-product names or trademarks.
+  The diff contains no host user path, username, hostname, credential or personal data. The only
+  `/lane/...` strings are inside the byte-identical retained prior review.
+- **Delivery.** This is one sub-batch with runnable, measured component and API tests. It does not
+  split rows or only add plans.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, honest labelling) — `docs/guides/coding-commands.md:62-63`.** The guide says
+  "Shell/interpreter entry points remain prohibited by the kernel command contract". The kernel refuses
+  only exact basenames (`kernel/engine/src/command_runner.rs:1124`). It refuses `-c`/`-e` only as exact
+  tokens or `-c=`/`-e=` forms (`:1098`). On this host, `/usr/bin/python3.15 -cprint(1)`,
+  `/usr/bin/perl5.44.0 '-eprint 1'`, `tclsh9.0` and `gawk` all seal and pass `command_registry` (probe
+  above). The sandbox is still the boundary, and the approval shows the exact executable and arguments,
+  so nothing escapes. But the sentence overstates a defence-in-depth property that a reviewer of an
+  approval might rely on. Fix: reword to "a fixed list of shell and interpreter names and exact inline
+  evaluation flags is refused; other interpreters, including versioned names, run inside the same
+  sandbox". Alternatively harden the kernel check in its own row (pre-existing behaviour) to cover
+  version suffixes and attached short-option forms.
+- **L2 (low, test coverage) — `platforms/linux/src/coding_repository_command_tests.rs:264-282`.**
+  `command_scope_and_bounds_cannot_expand_the_native_contract` mutates sealed specs without resealing,
+  so every case also fails the kernel digest check. Deleting all six composition bounds at
+  `coding_repository_command.rs:252-260` leaves this test passing (mutation run above). Fix: build each
+  case with `CommandSpec::seal`/`CommandBounds::new` at values above the composition limit but within the
+  kernel limit, for example 120 001 ms or 65 537 B, and assert `code.command.bounds` specifically.
+- **L3 (low, test fidelity) — `platforms/local-api/tests/coding_worktree.rs:591,654`.** The synthetic
+  command-consent peer serves a worktree-shaped preview (`plan.branch_ref`) and asserts that branch ref
+  appears. It never shows that the executable, arguments, environment and bounds of a command preview
+  reach the consent transcript. Fix: serve a command-shaped preview (`operation: execute-command`,
+  `command.executable`, `command.arguments` including non-ASCII) and assert those fields appear escaped.
+- **L4 (low, diagnostics) — `platforms/linux/src/coding_repository.rs:597-697`.** Inside the shared
+  `ExactEffect::execute`, command-path policy, parent, grant, tool, request and transaction errors
+  surface as `code.repository.*`, for example `code.repository.uncertain` after a command dispatch,
+  instead of `code.command.*`. This is conservative and safe, but the label is misleading. Fix: carry a
+  code prefix in `ExactEffect`.
+- **L5 (low, same-user window) — `platforms/linux/src/coding_repository.rs:378`.** Post-success
+  ownership opens `pending.destination` by path, not relative to the held management-directory
+  descriptor. A same-user process that swaps `<owned>/worktree` between native creation and this open
+  would have the swapped directory adopted. Later checks are self-consistent with the swap, and exposure
+  is read-only inside the sandbox. Fix: open the child via the held `owned` descriptor, or bind the held
+  identity to the native receipt's observed object.
+
+Carried, not new: prior review L2 (positive native creation and decide-time drift on an admitted host)
+and the unmeasured positive native command branch both remain required before T-303/T-306 acceptance.
+
+## Per-row result
+
+- **T-303 (this batch, non-closing):** the code, confinement composition, API, terminal consent and
+  evidence support every claim made. Synthetic outcomes are labelled synthetic, native execution is
+  labelled unmeasured, and the gate failures are exactly the 72 baseline IDs. Only low findings.
+  The batch result is INCONCLUSIVE solely because required command 4 (markdownlint) could not run in
+  this lane. T-303 stays open.
+- **T-306 (related, non-closing):** the guide link and primitive description are accurate. There is no
+  commit, push or default-branch path. T-306 stays open.
+
+Verdict: INCONCLUSIVE
+Required command 4 (markdownlint-cli2 on the five named Markdown files) could not be executed: the stated Node v24.15.0 runtime path does not exist in the reviewer lane and no node executable is present; all other required runs pass as expected with only low findings, so a rerun of command 4 with Node available that reports 0 issues would support PASS.

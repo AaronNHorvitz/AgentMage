@@ -118,3 +118,13 @@ Raw initial failures, final tests, linter probes and the content-free auxiliary
 cancellation record are retained. The builder's final publication audit checks
 all failure identities, source digests, frozen inputs, ledger statuses, prior
 review bytes, privacy and local links. It is not independent review.
+
+## Independent review follow-up
+
+The [exact-commit independent report](../reviews/8742e65697fd-local-coding-confined-commands.txt)
+has **Verdict: INCONCLUSIVE**, solely because the supplied Node path was not
+mounted in the separate reviewer namespace. It found no open high or medium
+issue. The builder's statement above that this runtime was shared was incorrect.
+The [same-batch repair](t303-confined-command-review-repair-2026-11-06.md) records
+the corrected shared runtime path and test/wording changes. Neither parent row
+closes, and this report is retained unchanged.
