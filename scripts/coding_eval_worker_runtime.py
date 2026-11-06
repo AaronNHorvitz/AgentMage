@@ -37,6 +37,8 @@ class Manager:
         self.records=[]
         self.calls=0
         self.failed=False
+        self.protocol_failed=False
+        self.policy_failed=False
         self.ready=False
         self.found=None
         self.fixture_assertions=[]
@@ -74,10 +76,13 @@ class Manager:
                 process.stdin.close();process.stdout.close()
             self.calls+=peer.sequence
             self.failed|=peer.failed or not clean
+            self.policy_failed|=peer.policy_failed
+            self.protocol_failed|=peer.wire_failed or (not clean and not peer.policy_failed and not peer.fixture_assertions)
             self.fixture_assertions.extend(peer.fixture_assertions)
             self.records.append({'method':self.active_name,'calls':peer.sequence,'events':peer.events,
                                  'bytes':peer.bytes,'clean_exit':clean,'boundary_failed':peer.failed,
                                  'boundary_errors':peer.boundary_errors,
+                                 'wire_fault':peer.wire_failed,'boundary_refusal':peer.policy_failed,
                                  'fixture_assertions':len(peer.fixture_assertions)})
             self.peer=None
 
@@ -128,8 +133,9 @@ def main():
         counts={'tests':result.testsRun,'failures':len(result.failures),'errors':len(result.errors),
                 'skipped':len(result.skipped),'expected_failures':len(result.expectedFailures),
                 'unexpected_successes':len(result.unexpectedSuccesses)}
-        record={'tests':counts,'calls':manager.calls,'protocol_failed':manager.failed,
-                'adapter_policy_failed':False,'candidate_exception_failed':False,
+        record={'tests':counts,'calls':manager.calls,'protocol_failed':manager.protocol_failed,
+                'adapter_policy_failed':manager.policy_failed,'candidate_exception_failed':False,
+                'fixture_assertion_failed':bool(manager.fixture_assertions),
                 'candidate_ready':manager.ready,'function_found':manager.found,
                 'methods':manager.records,'private_fs_sealed':boundary.sealed,
                 'proc_windows':boundary.windows,'proc_window_open':bool(boundary.proc_depth),

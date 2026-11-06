@@ -35,7 +35,8 @@ POLICY = {
     'automatic_retries': 0,
     'whole_statement_correctness': False,
     'limitations': ['unasserted-statement-clauses', 'candidate-self-reported-observation-fidelity',
-                    'deliberate-candidate-self-modification', 'adapter-specific-identity-and-state-limits'],
+                    'deliberate-candidate-self-modification', 'adapter-specific-identity-and-state-limits',
+                    'candidate-writable-temporary-fixtures'],
 }
 
 
@@ -105,6 +106,7 @@ def score(candidates, output, receipt, *, split='development', held_out=None,
                 # attempts. They never validate a task or reduce the denominator.
                 row = {'task': task['id'], 'passed': False, 'status': 'ungradable',
                        'cause': 'input-or-infrastructure-refusal', 'error': evaluation.refusal_detail(error)}
+            row['known_races'] = suite.known_races(task) if split == 'development' else []
             rows.append(row)
         evaluation.publish(output / 'attempts.json', {'tasks': rows})
     if source_hashes() != sources:

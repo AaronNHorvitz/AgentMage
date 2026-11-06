@@ -211,6 +211,47 @@ def predicate_result(value,result_type):return {'value':'wrong'}
         self.assertFalse(report['protocol_failed'], report)
         self.assertEqual(report['cause'], 'test_failure')
 
+    def test_caught_fixture_assertion_is_a_test_failure_with_separate_sticky_flag(self):
+        fixture = b'''
+import unittest
+from scripts import coding_eval_oracle_worker as worker
+class SyntheticTests(unittest.TestCase):
+ def test_callback(self):
+  def callback():self.assertEqual('observed','required')
+  self.assertEqual(worker.predicate_result(callback,'bool'),{'value':True})
+'''
+        suffix = b'''
+def predicate_result(value,result_type):
+ try:value()
+ except AssertionError:pass
+ return {'value':True}
+'''
+        report = self.probe('caught-assertion', suffix, ['SyntheticTests.test_callback'], fixture=fixture)
+        self.assertFalse(report['passed'])
+        self.assertEqual(report['cause'], 'test_failure', report)
+        self.assertTrue(report['fixture_assertion_failed'])
+        self.assertFalse(report['protocol_failed'])
+        self.assertFalse(report['adapter_policy_failed'])
+        self.assertEqual(report['tests']['failures'], 0)
+
+    def test_representation_refusal_and_wire_failure_have_different_causes(self):
+        fixture = b'''
+import unittest
+from scripts import coding_eval_oracle_worker as worker
+class SyntheticTests(unittest.TestCase):
+ def test_callback(self):
+  def callback():return slice(1)
+  worker.predicate_result(callback,'bool')
+'''
+        for name, suffix, cause in (
+                ('policy', b"\ndef predicate_result(value,result_type):return value()\n", 'adapter_policy'),
+                ('wire', b"\ndef predicate_result(value,result_type):\n import os\n os._exit(0)\n", 'protocol')):
+            with self.subTest(name=name):
+                report = self.probe(name, suffix, ['SyntheticTests.test_callback'], fixture=fixture)
+                self.assertFalse(report['passed'])
+                self.assertEqual(report['cause'], cause, report)
+                self.assertEqual(report['adapter_policy_failed'], cause == 'adapter_policy')
+
     def test_historical_subject_without_later_library_imports_still_runs_assertions(self):
         subject = b'class RemoteFunction:pass\ndef predicate_result(value,result_type):return {"value":value}\n'
         report = self.probe('minimal', methods=[METHODS[0]], subject=subject)

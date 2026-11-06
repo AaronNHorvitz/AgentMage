@@ -195,9 +195,9 @@ the raw log retained and a visible known-race note. It is never reclassified as 
 pass or removed from the denominator. A diagnostic rerun gets a separate output
 and never replaces a score. A failed verifier is an invalid control run; repeat
 the entire verifier into a new output if diagnosing it and retain both results.
-No generated scoring is currently admitted. Future reports must implement this
-label and the per-task covered-clause labels before enabling it; this guide does
-not claim the reporting integration already exists.
+The independent admission entry copies the known-race note into each dev-003
+attempt, including refused attempts. Its reports retain covered-observation
+limits. This legacy scorer still admits only historical controls.
 
 ## Rust control
 
@@ -268,31 +268,24 @@ its model-attempt count is zero.
 
 ## Historical controls only
 
-The separate [independent function oracle](coding-evaluation-oracle.md) runs nineteen
-existing frozen tasks as base/reference controls with candidate execution and hidden assertions in
-different processes. It is an executable prerequisite experiment, not a change
-to this scorer's admission. Its narrow JSON adapters, missing aggregate quotas and open host cleanup
-finding do not enable generated scoring for either command. T-311.15 remains
-open after three reviews; T-311.16 records the required bounded cleanup repair.
+The separate [independent function oracle](coding-evaluation-oracle.md) covers
+all 30 development tasks. The [worker oracle](coding-evaluation-worker-oracle.md)
+covers the separate frozen worker-protocol set. Both keep assertions and candidate
+code in different processes. T-311.15/T-311.16 cleanup is independently closed.
 
-Until independent result checking and separate aggregate worker quotas exist,
-**generated-candidate scoring is disabled**. Both `score` and the internal `grade`
-entry check the complete snapshot against this task's frozen base or historical
-reference. The task definition itself must match the registered task exactly.
-Other Python or Rust bytes, even a comment-only edit or a plausible solution,
-are refused before output creation or worker launch with `evaluation.untrusted-candidate-disabled`
-and exit 2. This is a temporary restriction, not a generated-candidate sandbox or
-an independent score verifier. An exact historical reference is always a control,
-never a model attempt.
+This **legacy** scorer's `score` and internal `grade` entries remain restricted
+to complete frozen base/reference snapshots. Other Python or Rust bytes, even a
+comment-only edit, are refused before output creation or launch with
+`evaluation.untrusted-candidate-disabled` and exit 2. Task definitions must also
+match the frozen registry. These guards preserve the legacy scorer's admission;
+they are not the generated entry.
 
-The guard is outside the candidate process and mounts. Candidate code cannot
-remove it by monkeypatching the test framework, printing a forged Rust test
-summary, exiting successfully early or writing forged passing counts.
-The command-line regression tests include that forgery attempt and verify that
-no result directory is created. Low findings L1 (result forgery) and L2 (aggregate
-quotas) still block enabling generated scoring; the guard enforces that blocker.
-The current lane exposes read-only cgroup controls, so this work does not claim
-a separately delegated worker memory, process or CPU quota.
+Generated snapshots use the [independent admission command](coding-evaluation-worker-oracle.md#generated-candidate-entry).
+It requires complete matching control receipts and verified inherited lane quotas.
+Separate worker cgroups remain unavailable; this limitation is disclosed rather
+than claimed as implemented. The historical result-forgery and quota findings
+therefore do not enable this in-process scorer. Its command-line forgery
+regressions still require refusal without creating a result directory.
 
 For a single frozen control:
 

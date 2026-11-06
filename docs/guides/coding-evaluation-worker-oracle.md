@@ -17,7 +17,13 @@ The assertion interpreter compiles the whole original module before removing
 its assertion, result and procfs mounts. Result, exception-detail and transcript
 files have preopened private descriptors. The remaining filesystem is read-only
 except quota-backed temporary fixtures. Symlinks cannot restore removed mounts.
-Candidate code receives neither original tests nor a result directory.
+Candidate code receives neither original tests nor a result directory. The
+bridge and trusted native fixtures share writable quota-backed `/tmp` contents.
+A deliberately adversarial candidate can change fixture files, including files a
+trusted native fixture later executes. This is the explicit
+`candidate-writable-temporary-fixtures` limitation; filesystem sealing protects
+assertions/results/procfs, not temporary fixture integrity. A future separate
+bridge tmpfs and read-only native fixtures remain backlog.
 
 A bounded typed graph transports data and explicit operations. It preserves
 mutable list, dictionary, namespace and native Mock identities and call histories.

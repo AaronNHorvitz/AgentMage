@@ -57,7 +57,7 @@ def method_record(raw):
     if (type(value) is not dict or value.keys() != {
             'tests', 'calls', 'protocol_failed', 'adapter_policy_failed', 'candidate_exception_failed',
             'candidate_ready', 'function_found', 'methods', 'private_fs_sealed', 'proc_windows',
-            'proc_window_open', 'module_global_continuity'}
+            'proc_window_open', 'module_global_continuity', 'fixture_assertion_failed'}
             or type(value['tests']) is not dict or value['tests'].keys() != counts
             or any(type(item) is not int or item < 0 for item in value['tests'].values())
             or value['tests']['tests'] != 1
@@ -65,7 +65,7 @@ def method_record(raw):
             or any(type(value[key]) is not bool for key in (
                 'protocol_failed', 'adapter_policy_failed', 'candidate_exception_failed',
                 'candidate_ready', 'function_found', 'private_fs_sealed', 'proc_window_open',
-                'module_global_continuity'))
+                'module_global_continuity', 'fixture_assertion_failed'))
             or value['private_fs_sealed'] is not True or value['proc_window_open'] is not False
             or value['module_global_continuity'] is not False
             or type(value['proc_windows']) is not int or value['proc_windows'] < 1
@@ -174,6 +174,7 @@ def grade_case(task, files, output, timeout, parts=None):
         'protocol_failed': any(row['record']['protocol_failed'] for row in rows),
         'adapter_policy_failed': any(row['record']['adapter_policy_failed'] for row in rows),
         'candidate_exception_failed': any(row['record']['candidate_exception_failed'] for row in rows),
+        'fixture_assertion_failed': any(row['record']['fixture_assertion_failed'] for row in rows),
         'candidate_ready': all(row['record']['candidate_ready'] for row in rows),
         'function_found': all(row['record']['function_found'] for row in rows),
     }
@@ -191,7 +192,7 @@ def coverage():
                            'immutable-verdict-objects-and-mock-assertion-methods'],
         'not_graded': ['cross-method-module-and-class-state', 'fixture-class-introspection',
                        'arbitrary-Python-object-identity', 'custom-list-subclass-behavior',
-                       'unselected-statement-clauses'],
+                       'unselected-statement-clauses', 'candidate-writable-temporary-fixtures'],
         'unsupported': ['fixture-class-inheritance', 'mock-class-specifications-and-delegates'],
     }
 
@@ -247,6 +248,7 @@ def _grade(task, files, output, kind, required_resources):
     passed = (error is None and code == 0 and not timed_out and not limited and record is not None
               and record['candidate_ready'] and record['function_found']
               and not any(record[key] for key in ('protocol_failed', 'adapter_policy_failed', 'candidate_exception_failed'))
+              and not record['fixture_assertion_failed']
               and tests['tests'] == task['expected_tests']
               and all(value == 0 for key, value in tests.items() if key != 'tests'))
     cause = ('none' if passed else 'input_integrity' if input_error else 'timeout' if timed_out else 'output_limit' if limited else
@@ -260,7 +262,7 @@ def _grade(task, files, output, kind, required_resources):
         'candidate_exit_scope': 'no-single-candidate-process', 'tests': tests,
         'calls': record['calls'] if record else None, 'calls_scope': 'outer-worker-API-RPC',
         **{key: record[key] if record else None for key in ('protocol_failed', 'adapter_policy_failed',
-            'candidate_exception_failed', 'candidate_ready', 'function_found')},
+            'candidate_exception_failed', 'candidate_ready', 'function_found', 'fixture_assertion_failed')},
         'error': error, 'input_error': input_error,
         'candidate_kind': kind, 'candidate_sha256': evaluation.sha(files[task['source']]),
         'hidden_sha256': task['hidden_sha256'], 'test_names': task['test_names'],

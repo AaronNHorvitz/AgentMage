@@ -132,6 +132,47 @@ class AdmissionTests(unittest.TestCase):
         self.assertEqual(result['passed_tasks'], 0)
         self.assertEqual(result['ungradable_attempts'], 1)
 
+    def test_known_races_are_visible_even_on_refused_attempts(self):
+        task = next(task for task in suite.development_tasks() if task['id'] == 'dev-003')
+        with mock.patch.object(admission, 'control_receipt', return_value='synthetic'), \
+                mock.patch.object(suite, 'development_tasks', return_value=[task]), \
+                mock.patch.object(evaluation.coding_eval_resources, 'measurement', self.resources):
+            admission.score(self.root / 'missing', self.root / 'races', self.root / 'unused')
+        rows = json.loads((self.root / 'races/attempts.json').read_bytes())['tasks']
+        self.assertEqual(rows[0]['known_races'], ['disappearing-process-observation'])
+        self.assertFalse(rows[0]['passed'])
+
+    def test_held_out_entry_runs_synthetic_worker_assertions_and_keeps_refusals(self):
+        # This fixture is newly authored, with no actual held-out descriptor or
+        # hidden module imported. Exercise the real worker path, not its mock.
+        from scripts import coding_eval_worker_oracle as worker
+        source = Path(evaluation.__file__).with_name('coding_eval_oracle_worker.py').read_bytes()
+        hidden = b'''import unittest
+from scripts import coding_eval_oracle_worker as worker
+class SyntheticTests(unittest.TestCase):
+ def test_value(self):
+  self.assertEqual(worker.predicate_result(True,'bool'),{'value':True})
+'''
+        tasks = [{'id': 'synthetic-held', 'source': worker.SOURCE,
+                  'reference': 'synthetic', 'hidden_test': 'synthetic.py',
+                  'hidden_sha256': evaluation.sha(hidden), 'expected_tests': 1,
+                  'test_names': ['SyntheticTests.test_value']}]
+        files = {'scripts/__init__.py': b'', worker.SOURCE: source}
+        candidates = self.root / 'candidates'
+        for name, content in files.items():
+            evaluation.write_file(candidates / 'synthetic-held' / name, content + (b'\n# generated fixture\n' if name == worker.SOURCE else b''))
+        with mock.patch.object(admission, 'control_receipt', return_value='synthetic'), \
+                mock.patch.object(suite, 'held_out_tasks', return_value=tasks) as descriptor, \
+                mock.patch.object(evaluation, 'projection', return_value=files), \
+                mock.patch.object(evaluation, 'pinned_blob', return_value=hidden):
+            result = admission.score(candidates, self.root / 'held-scored', self.root / 'unused',
+                                     split='held-out', held_out=self.root / 'private', purpose='row-close-scoreboard')
+        descriptor.assert_called_once()
+        self.assertEqual(result['tasks'], 1)
+        self.assertEqual(result['passed_tasks'], 1)
+        self.assertTrue(result['inherited_lane_resources']['verified'])
+        self.assertEqual(result['excluded_attempts'], 0)
+
     def test_required_final_observation_failure_publishes_no_verified_summary(self):
         @contextmanager
         def fail_after(*, required=False):

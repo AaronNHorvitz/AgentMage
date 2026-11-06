@@ -62,6 +62,10 @@ def development_tasks():
     return tasks
 
 
+def known_races(task):
+    return ["disappearing-process-observation"] if task['id'] == 'dev-003' else []
+
+
 def development_coverage():
     """Bind coverage disclosures to frozen definitions, without loading tests.
 
@@ -80,7 +84,7 @@ def development_coverage():
             "independent_adapter": oracle.coverage(task) if supported else None,
             "unestablished": ["unasserted-statement-clauses", "end-to-end-model-coding",
                               *([] if supported else ["independent-result-integrity"])],
-            "known_races": (["disappearing-process-observation"] if task["id"] == "dev-003" else []),
+            "known_races": known_races(task),
         })
     return {"version": "coding-development-coverage-v1", "tasks": rows,
             "development_sha256": DEVELOPMENT_SHA256,

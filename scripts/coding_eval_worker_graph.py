@@ -237,8 +237,11 @@ class Graph:
                 _CALLBACK_DEPTH += 1
                 try:
                     return function(*args, **kwargs)
-                except (BoundaryError, AssertionError):
-                    self.peer.failed = True
+                except BoundaryError as error:
+                    self.peer.failure('fixture-class', error)
+                    raise
+                except AssertionError as error:
+                    self.peer.assertion(error)
                     raise
                 finally:
                     _CALLBACK_DEPTH -= 1
@@ -586,8 +589,11 @@ class Graph:
                 # Local guarding sends no frame. Newly registered objects must
                 # still be announced the next time this peer writes the wire.
                 self.wire_state = wire_state
-        except (BoundaryError, AssertionError):
-            self.peer.failed = True
+        except BoundaryError as error:
+            self.peer.failure('fixture-call', error)
+            raise
+        except AssertionError as error:
+            self.peer.assertion(error)
             raise
 
     def guard(self, identifier):
@@ -853,26 +859,36 @@ class Peer:
         self.graph = Graph(self, prefix, fixture_file)
         self.sequence, self.events, self.bytes = 0, 0, 0
         self.failed = False
+        self.policy_failed = False
+        self.wire_failed = False
         self.boundary_errors = []
         self.fixture_assertions = []
         self.transcript = transcript
         self.dispatch = None
 
     def send(self, frame):
-        raw = encode(frame)
+        try:
+            raw = encode(frame)
+        except BoundaryError as error:
+            self.failure('encode', error)
+            raise
         self.observe(raw)
         self.writer.write(raw); self.writer.flush()
 
     def observe(self, raw):
         self.events += 1; self.bytes += len(raw)
         if self.events > EXCHANGES or self.bytes > TRANSCRIPT_BYTES:
-            self.failed = True
+            self.failure('observe', BoundaryError('graph.transcript-limit'))
             raise BoundaryError('graph.transcript-limit')
         if self.transcript is not None:
             self.transcript.write(raw); self.transcript.flush()
 
     def read(self):
-        frame = receive(self.reader)
+        try:
+            frame = receive(self.reader)
+        except BoundaryError as error:
+            self.failure('read', error, wire=True)
+            raise
         self.observe(encode(frame))
         return frame
 
@@ -890,8 +906,15 @@ class Peer:
             self.failure('snapshot', error)
             raise BoundaryError('graph.unrepresentable-value-graph') from None
 
-    def failure(self, operation, error):
+    def assertion(self, error):
         self.failed = True
+        if not any(item is error for item in self.fixture_assertions):
+            self.fixture_assertions.append(error)
+
+    def failure(self, operation, error, *, wire=False):
+        self.failed = True
+        self.wire_failed |= wire
+        self.policy_failed |= not wire
         if len(self.boundary_errors) < 16:
             # Fixed adapter diagnostics only; never assertion text or values.
             code = str(error) if type(error) is BoundaryError else type(error).__name__
@@ -909,26 +932,35 @@ class Peer:
             while True:
                 frame = self.read()
                 if type(frame) is not dict:
+                    self.failure('response', BoundaryError('graph.response'), wire=True)
                     raise BoundaryError('graph.response')
                 if frame.get('event') == 'request':
                     self.answer(frame)
                     continue
                 if frame.keys() != {'event', 'id', 'values', 'error'} or frame['event'] != 'result' or frame['id'] != identifier:
+                    self.failure('response', BoundaryError('graph.sequence'), wire=True)
                     raise BoundaryError('graph.sequence')
                 result = self.load(frame['values'])
                 if frame['error'] is not None:
                     exception = self.graph.value(frame['error'])
                     if type(exception) is not type or not issubclass(exception, BaseException):
+                        self.failure('response', BoundaryError('graph.error'), wire=True)
                         raise BoundaryError('graph.error')
+                    if exception is BoundaryError:
+                        self.failure('candidate-boundary', BoundaryError('graph.candidate-boundary'))
                     raise native_exception(exception, result)
                 return result
         except BoundaryError as error:
-            self.failure('request', error)
+            # load/snapshot, remote boundary errors and malformed wire frames
+            # have already recorded their distinct sticky cause.
+            if not self.failed:
+                self.failure('request', error, wire=True)
             raise
 
     def answer(self, frame):
         if (type(frame) is not dict or frame.keys() != {'event', 'id', 'operation', 'target', 'values'}
                 or frame['event'] != 'request' or type(frame['id']) is not str):
+            self.failure('request-frame', BoundaryError('graph.request'), wire=True)
             raise BoundaryError('graph.request')
         error = None
         try:
@@ -936,15 +968,14 @@ class Peer:
             if type(args) is not tuple or type(kwargs) is not dict:
                 raise BoundaryError('graph.arguments')
             result = self.dispatch(frame['operation'], frame['target'], args, kwargs)
-        except BoundaryError:
-            self.failed = True
+        except BoundaryError as exception:
+            self.failure('dispatch', exception)
             raise
         except BaseException as exception:
             if self.graph.prefix == 't' and isinstance(exception, AssertionError):
                 # An assertion in a trusted fixture remains a failed attempt,
                 # even if untrusted code catches its transported exception.
-                self.failed = True
-                self.fixture_assertions.append(exception)
+                self.assertion(exception)
             exception_type = type(exception)
             if exception_type not in self.graph.exceptions.values() and not self.graph.fixture(exception_type):
                 exception_type = CandidateFailure
