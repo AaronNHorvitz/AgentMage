@@ -257,6 +257,31 @@ project run. Arbitrary project layouts, source creation, arbitrary endpoints,
 manual strict-proposal composition, positive native original-apply workflow
 observation, commit/push, MCP and measured parent acceptance remain open.
 
+## Root-level Python tests
+
+Select `python-root-project` explicitly, either as the final
+`serve-runtime-development` argument or as `scenario` in the owned runtime's
+attach request. This uses the same coordinator, exact existing `src/` source
+scope, model profiles, tools and individual approvals as `python-project`.
+The terminal `runtime-run` client accepts both selections.
+
+The fixed command is `-I -B -m unittest discover -s . -t . -v`. It discovers
+root-level `test_*.py` modules and tests in importable packages below the root.
+A repository with a top-level `test_calc.py` needs no `tests/__init__.py`.
+Directories without package initialization are not recursively discovered;
+this selection does not make an unpackaged `tests/` directory importable.
+Use `python-project` for the existing explicit `tests/` package selection.
+Choosing the root may execute additional tests in other importable packages;
+review the exact command before approving it. There is no automatic layout
+fallback, inline interpreter code or editable runner added to the worktree.
+
+The command identity, arguments and validation definition are different from
+the package selection. A distinct sealed constraint rejects cross-layout resume,
+including absent, duplicate and conflicting layout markers. Each layout keeps
+the positive-test minimum, no skips or errors for full success, offline command
+confinement and separate execution approval. Standard project test output remains
+non-independent evidence; the frozen scorer decides coding scores.
+
 ## Task-aware repository context
 
 The existing native context owner ranks its prepared, nonessential repository

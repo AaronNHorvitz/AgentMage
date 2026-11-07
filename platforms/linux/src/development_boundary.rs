@@ -677,6 +677,7 @@ fn development_scenario_valid(scenario: &str) -> bool {
         "no-op"
             | "failed-test-repair"
             | "python-project"
+            | "python-root-project"
             | "native-command-failure"
             | "slow-cancel"
             | "restart-repair"
@@ -758,6 +759,7 @@ mod tests {
     #[test]
     fn correction_scenarios_are_explicit_closed_development_operations() {
         for scenario in [
+            "python-root-project",
             "native-command-failure",
             "protocol-correction",
             "arguments-correction",

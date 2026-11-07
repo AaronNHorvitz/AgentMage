@@ -55,7 +55,7 @@ fn attach(state: &Mutex<State>, stop: &AtomicBool, input: Attach) -> Result<Valu
         .filter(|_| {
             matches!(
                 input.scenario.as_str(),
-                "failed-test-repair" | "python-project"
+                "failed-test-repair" | "python-project" | "python-root-project"
             )
         })
         .ok_or((400, "code.runtime.scenario"))?;

@@ -189,6 +189,8 @@ pub enum CodingDevelopmentScenario {
     FailedTestRepair,
     /// Run the selected repository's verbose unittest discovery through the coordinator.
     PythonProject,
+    /// Run verbose unittest discovery from the repository root, selected explicitly.
+    PythonRootProject,
     /// Execute native-ordered command arguments and retain the genuine nonzero failure.
     NativeCommandFailure,
     /// Hold one cancellable model call so actual signal propagation can be exercised.
@@ -224,12 +226,25 @@ pub enum CodingDevelopmentScenario {
 }
 
 impl CodingDevelopmentScenario {
+    const fn is_python_project(self) -> bool {
+        matches!(self, Self::PythonProject | Self::PythonRootProject)
+    }
+
+    const fn python_project_constraint(self) -> Option<&'static str> {
+        match self {
+            Self::PythonProject => Some("Python project unittest definition selected"),
+            Self::PythonRootProject => Some("Python root project unittest definition selected"),
+            _ => None,
+        }
+    }
+
     /// Parses one exact CLI label.
     pub fn parse(value: &str) -> Option<Self> {
         match value {
             "no-op" => Some(Self::NoOp),
             "failed-test-repair" => Some(Self::FailedTestRepair),
             "python-project" => Some(Self::PythonProject),
+            "python-root-project" => Some(Self::PythonRootProject),
             "native-command-failure" => Some(Self::NativeCommandFailure),
             "slow-cancel" => Some(Self::SlowCancel),
             "restart-repair" => Some(Self::RestartRepair),
@@ -425,7 +440,7 @@ impl CodingDevelopmentRuntimeFactory {
         model: CodingDevelopmentModel,
         resume_requested: bool,
     ) -> Result<Self, CodingDevelopmentRuntimeError> {
-        if scenario == CodingDevelopmentScenario::PythonProject && !model.is_candidate() {
+        if scenario.is_python_project() && !model.is_candidate() {
             return Err(CodingDevelopmentRuntimeError::Profile);
         }
         activation
@@ -640,12 +655,7 @@ impl CodingDevelopmentRuntimeFactory {
             || base_request.session_id != binding.session_id
             || base_request.task.task_id != binding.task_id
             || base_request.task.objective != objective
-            || (self.scenario == CodingDevelopmentScenario::PythonProject)
-                != base_request
-                    .task
-                    .constraints
-                    .iter()
-                    .any(|s| s == "Python project unittest definition selected")
+            || !python_project_constraints_match(self.scenario, &base_request.task.constraints)
             || base_request.model_profile != *self.profile.model_profile()
             || base_request.workspace_id != *self.profile.write_scope().workspace_id()
             || base_request.workspace_snapshot_sha256 != self.profile.worktree().record_sha256
@@ -777,7 +787,7 @@ fn build_repository_composition(
     // Creation needs the platform's parent identity, not a model-invented tree
     // hash. Observe only the already authorized writable roots. The effect
     // boundary still rebinds the parent/siblings and refuses any later drift.
-    if scenario != CodingDevelopmentScenario::PythonProject {
+    if !scenario.is_python_project() {
         supporting_sources.extend(build_creation_parent_sources(
             platform,
             profile,
@@ -1055,7 +1065,8 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         })
         .map_err(|_| prepare_denied("policy"))?;
         let (acceptance, required_evidence) = match self.scenario {
-            CodingDevelopmentScenario::PythonProject => (
+            CodingDevelopmentScenario::PythonProject
+            | CodingDevelopmentScenario::PythonRootProject => (
                 vec![
                     "The exact approved Python project tests pass with positive test counts"
                         .to_owned(),
@@ -1090,7 +1101,8 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             ),
         };
         let mutable_files = match self.scenario {
-            CodingDevelopmentScenario::PythonProject => self
+            CodingDevelopmentScenario::PythonProject
+            | CodingDevelopmentScenario::PythonRootProject => self
                 .profile
                 .write_scope()
                 .writable_roots()
@@ -1120,7 +1132,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 acceptance_criteria: acceptance,
                 constraints: {
                     let mut constraints = vec![
-                        if self.scenario == CodingDevelopmentScenario::PythonProject {
+                        if self.scenario.is_python_project() {
                             "Explicitly marked disposable Python project only"
                         } else {
                             "Disposable synthetic repository only"
@@ -1128,8 +1140,13 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                         .to_owned(),
                         "No network, publication, package installation, or commit".to_owned(),
                     ];
-                    if self.scenario == CodingDevelopmentScenario::PythonProject {
-                        constraints.push("Python project unittest definition selected".to_owned());
+                    if self.scenario.is_python_project() {
+                        constraints.push(
+                            self.scenario
+                                .python_project_constraint()
+                                .expect("project selection")
+                                .to_owned(),
+                        );
                     }
                     if let Some(preauthorization) = &self.preauthorization {
                         constraints.push(format!(
@@ -1899,19 +1916,19 @@ fn build_profile(
         record_sha256: "0".repeat(64),
     })
     .map_err(|_| CodingDevelopmentRuntimeError::Worktree)?;
-    let project_paths = if scenario == CodingDevelopmentScenario::PythonProject {
+    let project_paths = if scenario.is_python_project() {
         python_project_paths(repository_map)?
     } else {
         Vec::new()
     };
-    let command = if scenario == CodingDevelopmentScenario::PythonProject {
-        python_project_command()?
+    let command = if scenario.is_python_project() {
+        python_project_command(scenario)?
     } else {
         validation_command()?
     };
     let commands = CommandRegistry::build(vec![command.clone()])
         .map_err(|_| CodingDevelopmentRuntimeError::Validation)?;
-    let project = scenario == CodingDevelopmentScenario::PythonProject;
+    let project = scenario.is_python_project();
     let validation = if project {
         python_project_validation(command, &worktree.record_sha256)?
     } else {
@@ -2071,15 +2088,43 @@ fn python_project_paths(
     Ok(paths)
 }
 
-fn python_project_command() -> Result<CommandSpec, CodingDevelopmentRuntimeError> {
+fn python_project_constraints_match(
+    scenario: CodingDevelopmentScenario,
+    constraints: &[String],
+) -> bool {
+    let markers = constraints
+        .iter()
+        .filter(|value| {
+            matches!(
+                value.as_str(),
+                "Python project unittest definition selected"
+                    | "Python root project unittest definition selected"
+            )
+        })
+        .map(String::as_str)
+        .collect::<Vec<_>>();
+    match scenario.python_project_constraint() {
+        Some(expected) => markers == [expected],
+        None => markers.is_empty(),
+    }
+}
+
+fn python_project_command(
+    scenario: CodingDevelopmentScenario,
+) -> Result<CommandSpec, CodingDevelopmentRuntimeError> {
+    let (template_id, start) = match scenario {
+        CodingDevelopmentScenario::PythonProject => ("project.python-unittest", "tests"),
+        CodingDevelopmentScenario::PythonRootProject => ("project.python-root-unittest", "."),
+        _ => return Err(CodingDevelopmentRuntimeError::Profile),
+    };
     let fixture = validation_command()?;
     CommandSpec::seal(
-        "project.python-unittest",
+        template_id,
         "1.0.0",
         fixture.executable,
         fixture.executable_sha256,
         [
-            "-I", "-B", "-m", "unittest", "discover", "-s", "tests", "-t", ".", "-v",
+            "-I", "-B", "-m", "unittest", "discover", "-s", start, "-t", ".", "-v",
         ]
         .into_iter()
         .map(str::to_owned)
@@ -2353,7 +2398,9 @@ fn scripted_steps(
     };
     match scenario {
         // A real project never silently falls back to scripted repairs.
-        CodingDevelopmentScenario::PythonProject => Err(CodingDevelopmentRuntimeError::Profile),
+        CodingDevelopmentScenario::PythonProject | CodingDevelopmentScenario::PythonRootProject => {
+            Err(CodingDevelopmentRuntimeError::Profile)
+        }
         CodingDevelopmentScenario::NativeCommandFailure => {
             let command = profile
                 .commands()

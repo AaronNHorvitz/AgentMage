@@ -67,8 +67,8 @@ JSON fields:
 ```
 
 The path placeholders must be replaced with absolute selected paths. The model
-selection is exactly `muse` or `gpt-oss`; the scenario is exactly `python-project`
-or `failed-test-repair`. This does not use the separately configured chat endpoint.
+selection is exactly `muse` or `gpt-oss`; the scenario is exactly
+`python-project`, `python-root-project` or `failed-test-repair`. This does not use the separately configured chat endpoint.
 There is no resume flag: handoff starts a new process-held ownership lifecycle.
 The runtime state must be separate from the manual authority store and held
 repositories. Startup may inspect the chosen activation, initialize private

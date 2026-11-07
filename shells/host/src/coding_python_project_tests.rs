@@ -103,7 +103,7 @@ fn python_project_definition_enters_existing_profile_with_no_test_write_scope() 
     let map = project(&["src/a.py", "src/b.py", "tests/test_a.py"]);
     let paths = python_project_paths(&map).unwrap();
     let mut input = crate::coding_session::tests::input();
-    let command = python_project_command().unwrap();
+    let command = python_project_command(CodingDevelopmentScenario::PythonProject).unwrap();
     assert_eq!(
         command.arguments,
         [
@@ -263,7 +263,7 @@ fn selected_python_command_observes_project_imports_failure_then_fix_and_zero_te
         "raise RuntimeError('workspace runner shadow')\n",
     )
     .unwrap();
-    let spec = python_project_command().unwrap();
+    let spec = python_project_command(CodingDevelopmentScenario::PythonProject).unwrap();
     let run = || {
         std::process::Command::new(&spec.executable)
             .args(&spec.arguments)
@@ -294,4 +294,138 @@ fn selected_python_command_observes_project_imports_failure_then_fix_and_zero_te
     // Zero discovered tests never satisfy the positive-test pass requirement.
     // Supported runtimes return either zero or the dedicated no-tests exit 5.
     fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn root_project_definition_is_explicit_exact_and_resume_bound() {
+    let packaged = CodingDevelopmentScenario::PythonProject;
+    let root = CodingDevelopmentScenario::PythonRootProject;
+    assert_eq!(
+        CodingDevelopmentScenario::parse("python-root-project"),
+        Some(root)
+    );
+    for invalid in [
+        "python-root-project;sh",
+        "python-root-project ",
+        "root-project",
+    ] {
+        assert_eq!(CodingDevelopmentScenario::parse(invalid), None);
+    }
+    let command = python_project_command(root).unwrap();
+    let package_command = python_project_command(packaged).unwrap();
+    assert_eq!(
+        command.arguments,
+        [
+            "-I", "-B", "-m", "unittest", "discover", "-s", ".", "-t", ".", "-v"
+        ]
+    );
+    assert!(
+        !command.network
+            && !command.interactive
+            && !command.inherit_environment
+            && command.grant_required
+    );
+    assert_eq!(command.bounds, package_command.bounds);
+    assert_ne!(command, package_command);
+    let template = python_project_validation(command, &"a".repeat(64)).unwrap();
+    let package_template = python_project_validation(package_command, &"a".repeat(64)).unwrap();
+    assert_ne!(template.template_sha256, package_template.template_sha256);
+    assert_eq!(template.parser, ValidationParserKind::PythonUnittestTextV1);
+    assert_eq!(template.minimum_test_count, 1);
+    assert!(!template.fail_fast && !template.focused);
+    for scenario in [
+        CodingDevelopmentScenario::NoOp,
+        CodingDevelopmentScenario::FailedTestRepair,
+    ] {
+        assert!(python_project_command(scenario).is_err());
+        assert!(python_project_constraints_match(scenario, &[]));
+    }
+    let package_marker = packaged.python_project_constraint().unwrap().to_owned();
+    let root_marker = root.python_project_constraint().unwrap().to_owned();
+    for (scenario, expected, other) in [
+        (packaged, &package_marker, &root_marker),
+        (root, &root_marker, &package_marker),
+    ] {
+        assert!(python_project_constraints_match(
+            scenario,
+            &["Unrelated constraint".into(), expected.clone()]
+        ));
+        for constraints in [
+            vec![],
+            vec![other.clone()],
+            vec![expected.clone(), other.clone()],
+            vec![expected.clone(), expected.clone()],
+        ] {
+            assert!(!python_project_constraints_match(scenario, &constraints));
+        }
+        assert!(!python_project_constraints_match(
+            CodingDevelopmentScenario::FailedTestRepair,
+            std::slice::from_ref(expected)
+        ));
+    }
+}
+
+#[test]
+fn root_python_command_runs_actual_failure_repair_import_error_and_zero_tests() {
+    // Actual standard-interpreter execution in a synthetic repository. This
+    // tests the selected argv, not native confinement, approvals or inference.
+    let started = std::time::Instant::now();
+    let root = std::env::temp_dir().join(format!(
+        "agentmage-python-root-command-{}",
+        std::process::id()
+    ));
+    fs::create_dir(&root).unwrap();
+    fs::create_dir(root.join("src")).unwrap();
+    fs::write(
+        root.join("src/calc.py"),
+        "def add(a, b):\n    return a - b\n",
+    )
+    .unwrap();
+    fs::write(root.join("test_calc.py"), "import unittest\nfrom src.calc import add\nclass Calc(unittest.TestCase):\n    def test_add(self):\n        self.assertEqual(add(2, 3), 5)\n").unwrap();
+    fs::write(
+        root.join("unittest.py"),
+        "raise RuntimeError('workspace runner shadow')\n",
+    )
+    .unwrap();
+    let spec = python_project_command(CodingDevelopmentScenario::PythonRootProject).unwrap();
+    let run = || {
+        std::process::Command::new(&spec.executable)
+            .args(&spec.arguments)
+            .current_dir(&root)
+            .env_clear()
+            .envs(&spec.environment)
+            .output()
+            .unwrap()
+    };
+    let failed = run();
+    assert_eq!(failed.status.code(), Some(1));
+    assert!(failed.stdout.is_empty());
+    assert!(String::from_utf8_lossy(&failed.stderr).contains("FAILED (failures=1)"));
+    fs::write(
+        root.join("src/calc.py"),
+        "def add(a, b):\n    return a + b\n",
+    )
+    .unwrap();
+    let passed = run();
+    assert!(passed.status.success());
+    assert!(passed.stdout.is_empty());
+    assert!(String::from_utf8_lossy(&passed.stderr).contains("Ran 1 test"));
+    assert!(passed.stderr.ends_with(b"OK\n"));
+    fs::write(
+        root.join("src/calc.py"),
+        "raise ImportError('synthetic broken source')\n",
+    )
+    .unwrap();
+    let broken = run();
+    assert_eq!(broken.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&broken.stderr).contains("FAILED (errors=1)"));
+    fs::remove_file(root.join("test_calc.py")).unwrap();
+    let empty = run();
+    assert!(matches!(empty.status.code(), Some(0 | 5)));
+    assert!(String::from_utf8_lossy(&empty.stderr).contains("Ran 0 tests"));
+    fs::remove_dir_all(root).unwrap();
+    eprintln!(
+        "root_project_fail_repair_error_empty_us={}",
+        started.elapsed().as_micros()
+    );
 }

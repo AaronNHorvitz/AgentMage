@@ -1,0 +1,254 @@
+Commit: 7976c11955565f4b98f33df765384b22624b6117
+Scope: local-coding-recovery-lifecycle
+
+# Independent review: failed-start/continuation worker join and retained recovery (T-303 / T-306, non-closing)
+
+- Reviewer: Claude Opus 5.5, extra-high effort, separate read-only session. No repository file was
+  modified; `git status --short` is empty after all runs. No GPU was used.
+- Base: `eb0e03a8d1cd4d05c4afd56c3abd7035a5a70360`. `git rev-parse` of the requested sha and of HEAD
+  both return `7976c11955565f4b98f33df765384b22624b6117`.
+- Request: same-row repair of prior review L1 (a worker detached by a failed start turns recovery into
+  permanent ownership loss) and L3 (the attach exclusion is checked outside the operation lock). No row
+  closes.
+
+## Methods
+
+1. Verified every hash in the request inventory before executing any helper; all 18 match. I read
+   `focused.py`, `batch_gate.py`, `process.py`, `run-policy.py`, `audit.py`, `/tools/build-slot` and
+   the gate's `execute_checks`. None writes into the repository. One exception outside the repository:
+   `audit.py` also rewrites the builder's `/lane/state/tmp/t306-recovery/audit.json`. To leave builder
+   evidence untouched I ran a copy with only that `write_text` call removed (the one-line diff is
+   recorded below).
+2. Read IP-POLICY.md, the top of TASKS.md, Decision 0159 (the newest), the retained prior review and
+   the full diff. Covered: the seven Rust sources, the guide, the evidence and the TASKS.md text.
+3. Ran the exact requested commands, then compared my failure identities with the baseline.
+4. Mutation checks, beyond the request, to see whether each new test detects its bug. Each mutant is a
+   `git archive` of the exact commit with one fix reverted, extracted outside the repository and built
+   under the build slot.
+5. Escape and authorization review by reading:
+   - every manual route's admission while a runtime is attached or a recovery is pending;
+   - the control-token check on the ownership routes;
+   - whether recovery can adopt any serialized or path input;
+   - poison handling;
+   - the publisher's blocking behaviour during a join.
+
+## Exact commands and results
+
+Environment, exactly as requested: PATH prefixed with the pinned node, `CARGO_TARGET_DIR=/lane/state/review-target`,
+`CARGO_BUILD_JOBS=2`, `RUST_TEST_THREADS=4`,
+`AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-recovery-lifecycle-7976c1195556` (created with mode 700).
+
+### Focused checks and full gate
+
+`bash /tools/build-slot python3 -B /lane/state/tmp/t306-recovery/focused.py > $DIR/focused.log`, after a
+reservation wait. Results:
+
+- `cargo fmt --all -- --check`: exit 0.
+- Platform `runtime_`: 9 passed / 0 failed / 0 ignored / 312 filtered.
+- Host `runtime_start_tests::embedded_`: 3 passed / 0 / 0 / 588 filtered.
+- API `coding_`: 20 passed / 0 / 0 / 5 filtered.
+- Binary build: exit 0.
+- Real manual service: `{"status_http":200,"runtime_attached":false,"exit":0,"seconds":0.199861,"model_or_native_worktree":false}`.
+- Fixture timings: `failed_start_join_us=752538` and `recovery_slot_native_write_and_apply_us=412903`.
+  The builder reported 753,087 and 409,579.
+- Full gate (`fast.log`, plan byte-identical to the builder's `plan.json`):
+  - `git diff --check`, untracked lint, review lint, Markdown (3 files), fmt and Clippy `-D warnings`
+    all exit 0;
+  - `cargo test --all-targets` exits 101 and the gate prints `FAST GATE: FAIL`;
+  - `BATCHED_GATE_EXIT 1`.
+- Totals over 22 target summaries: **916 passed / 72 failed / 63 ignored / 0 filtered**. My 72 failure
+  identities equal both the previous batch's baseline (`t306-owned-api/fast.log`) and the builder's
+  `t306-recovery/fast.log`: 53 `agentmage_host` and 19 `agentmage_platform_linux` unit tests, the
+  existing deferred T-301.1 failures.
+- Named tests pass in the complete run:
+  - `runtime_recovery_slot_retains_busy_owner_and_lineage_until_explicit_retry`;
+  - `embedded_failed_start_joins_unregistered_worker_before_returning_empty`;
+  - `real_http_requires_control_refuses_mixing_and_keeps_status_available`;
+  - `runtime_poisoned_owner_recovers_without_creation_authority_or_pending_approval`;
+  - the abrupt-restart regression `a_run_resumed_after_a_restart_marks_its_stored_job_control_chain_incomplete`.
+- The gate result stays FAIL, as the request expects. This is not a passing gate.
+
+### Policy, retained review and whitespace
+
+- `python3 -B /lane/state/tmp/t306-read-consent/run-policy.py $DIR/policy-source`: exit 0, "Validated
+  792 Markdown file(s) and all policy invariants". My input manifest (9047 sources) is identical to the
+  builder's `policy-source-inputs.json`. My `policy.log` has the builder's exact hash, `3fa32ac3…`.
+- `cmp docs/reviews/eb0e03a8d1cd-local-coding-owned-http.txt /lane/reviews/eb0e03a8d1cd-local-coding-owned-http.md`:
+  exit 0, byte-identical.
+- `git diff --check eb0e03a8d1cd4d05c4afd56c3abd7035a5a70360 --`: exit 0. The commit-to-commit variant
+  also exits 0.
+
+### Builder audit
+
+My no-write copy differs from the original in one line only: line 55 drops
+`(OUT/'audit.json').write_text(...)`. It exits 0, and its output equals the builder's `audit.json`,
+SHA-256 `04566f0a012570c5bf1c675a31718025c1c8b001282d55af7c5b9c9f94ba8670` (the declared final audit
+hash). That confirms the following against the current tree:
+
+- exactly 11 changed paths;
+- unchanged ledger statuses and `#[ignore]` sets;
+- raw-review identity;
+- the privacy regex;
+- all seven frozen Rust hashes;
+- all 9047 policy inputs;
+- the exact 72 failure identities and the 916/72/63/0 totals;
+- helper, log and node hashes.
+
+### Mutation checks (mine)
+
+Logged in `$DIR/mutants/mutants.log` and `mutant-d.log`.
+
+| Mutant | Reverted fix | Test | Result |
+| --- | --- | --- | --- |
+| A | `session.shutdown_worker()` on the `session.start()` error exit | host `embedded_failed_start…` | **FAILS** at `runtime_start_tests.rs:3240` (`assert!(held)`) |
+| B | the `runtime_excludes_manual` check in `begin_scoped` | API `real_http_requires_control…` | **FAILS** at `coding_runtime_api.rs:735` |
+| C | `*slot = Some(lease)` on a busy `recover_repository` | platform `runtime_recovery_slot…` | **FAILS** at `coding_repository_apply_tests.rs:1007` |
+| D | `session.shutdown_worker()` on the `continue_job` error exit | full host lib suite | **survives**: 529 passed / 53 failed, exactly the 53 baseline identities |
+
+## What I verified by reading
+
+### Worker join (`shells/host/src/coding_live_runtime.rs:711-724`, `:948-952`)
+
+- `start` now calls `shutdown_worker()` on a `session.start()` error. That method sends a shutdown
+  cancellation only once a correlation ID exists, retries `Stop` until it is queued, drains the
+  capacity-one `results` channel, waits for `is_finished`, joins the worker and then shuts down the
+  event pump.
+- I checked the other post-spawn exits:
+  - `begin_job` failure in `start`;
+  - `sync_events` and `RuntimeEvidenceDenied` in `continue_from_checkpoint`.
+
+  Each occurs with `busy == false`: `busy` is set only by `dispatch`, and `continue_job` is the first
+  dispatch on the continuation path. On those exits the unchanged `Drop` queues `Stop` and joins an
+  idle worker, so none of them detaches.
+- `continue_job` can fail after `dispatch`, either in its `refresh` or in the Cancelled branch's
+  `signal_cancellation`. That exit now also joins.
+- `RuntimeEventPublisher::publish` (`kernel/engine/src/runtime_event.rs`) uses `try_send` and drops
+  full subscribers. A worker being joined therefore cannot block on an undrained event or on the
+  slow-subscriber channel.
+- No terminal outcome or acknowledged cancellation is created: the new test shows the ledger still
+  `Running` and a duplicate start `RequestDenied`. Registered-session `Drop` semantics are unchanged,
+  which keeps the abrupt-restart fixture passing.
+- The only fixture change: `GatedCoordinator::advance` now blocks on its gate when `events` is empty.
+  Only the new test passes an empty `events`; the six other `gated_live_service` callers pass non-empty
+  events. No existing test is weakened.
+
+### Retained recovery (`platforms/linux/src/coding_repository_runtime.rs:55-69`, `platforms/local-api/src/coding_owned_api.rs:122-137`, `:186-231`)
+
+- `recover_repository` takes from an in-memory `Option<LinuxCodingWorktreeLease>` and puts the same
+  lease back on `Arc::try_unwrap` failure (`owner-held`). `Recover` has a single
+  `approve_recovery: bool` with `deny_unknown_fields`. No path, marker, receipt or serialized owner can
+  populate `State::recovering`; only `restore_lease` sets it, with a lease the process already holds.
+- Poison: `try_into_repository` still clears `created`, `pending`, `command`, `validation`, `edit` and
+  `apply`. The poison test now goes through the slot and still passes.
+- `recover` checks in this order:
+  1. consent (403);
+  2. an existing manual owner (409);
+  3. a pending slot, which it retries under the state lock and the held controlled operation;
+  4. otherwise the prior runtime path, whose `restore_lease` retains the lease on a busy result.
+
+  Success returns `apply_approved:false, fresh_diff_required:true`. The platform test shows the old
+  apply decision refused, the original checkout unchanged until a fresh preview, and then a separate
+  decision applying the retained worker write.
+- The prior review's lease holders (factory `owned_worktree`, boundary clones) are all owned values.
+  None is `Box::leak`ed, so a pending slot can complete once the composition drops.
+- The positive pending-recovery branch in the API is not executed by any test, as the evidence says.
+  I checked its ordering and retention by reading.
+
+### Exclusion under one lock (`platforms/local-api/src/lib.rs`)
+
+`runtime_excludes_manual()` (runtime or a pending slot) is now checked in these places:
+
+- the early guard (`:1077`);
+- `begin_scoped` (`:809`), which every manual route uses: chat, models, probe, map, write
+  prepare/apply, proposals, workspace select/read/search/proposals, `code.repository` and repair;
+- each direct-state route:
+  - `GET` workspace/changes, workspace and settings;
+  - `DELETE` workspace;
+  - `PUT` and `DELETE` settings;
+  - `request_cancel`.
+
+Each check runs under the same mutex that attach and recover publish under. While attached or pending,
+only a control-authenticated `begin_controlled("code.runtime.ownership")` is admitted.
+`handle_owned` returns 403 without `req.control`, and the lease stays exclusive: a second ownership
+operation gets 409, as the test shows. Status and activity stay available; the new
+`runtime_recovery_pending` field is a content-free boolean.
+
+### Honesty and public-repository checks
+
+- The evidence's numbers (9/3/20, 916/72/63/0, the 53/19 split, the fixture timings and the
+  initial-deadlock history) match my runs or the retained logs.
+- Limits are stated plainly:
+  - the coordinator is scripted;
+  - creation provenance is synthetic;
+  - the HTTP peer is a synthetic transport;
+  - positive native attach, run, recover and apply, and the API's pending-recovery branch, remain
+    unobserved;
+  - no model, score or status claim is made.
+- No decision, dependency, `Cargo.lock`, eval, hidden-test, held-out, threshold or SBOM path changed.
+- In the added lines: no private host path, username, hostname, credential or sibling-project name.
+  No product comparison or trademark branding. No new sub-row.
+
+## Findings
+
+No critical, high or medium finding.
+
+### L1 (low, backlog): the failed-continuation join has no test
+
+- **Where.** `shells/host/src/coding_live_runtime.rs:948-952`.
+- **Evidence.** Mutant D deletes this `shutdown_worker()` call, and the complete host lib suite gives
+  the same 529 passed / 53 baseline failures. The guide and evidence both state that continuations
+  join; only the start path is demonstrated. The code mirrors the tested start fix and is correct by
+  reading, hence low.
+- **Fix.** Add a gated-coordinator host test in which the job is resumed from a suspension and
+  `continue_job` fails after `dispatch`, for example an expired `refresh` boundary deadline with the
+  worker held behind the gate. Assert the following:
+  - the control call does not return before the gate is released;
+  - it then returns the error with `is_empty()`;
+  - no terminal ledger record is created.
+
+### L2 (low, backlog): the API's pending-recovery wiring is not executed
+
+- **Where.** `platforms/local-api/src/coding_owned_api.rs:122-137` and `:195-198`, and the status field
+  at `lib.rs:1554`.
+- **Evidence.** The slot semantics are tested at the platform layer (mutant C is caught). Nothing in
+  the API runs these steps: `restore_lease` storing a busy lease, the early guard and `begin_scoped`
+  refusing while pending, `runtime_recovery_pending:true`, and a consented retry. A regression in that
+  wiring would go undetected. The evidence discloses this, hence low.
+- **Fix.** A `#[cfg(test)]` unit test that places a lease from the existing platform synthetic-creation
+  fixture into `State::recovering`. No production HTTP fixture is needed. Assert, in order:
+  1. 403 without consent;
+  2. 409 `owner-held` while a clone lives, with status `pending:true` and manual routes 409;
+  3. 200 after the clone is dropped;
+  4. 428 on a second retry.
+
+### Carried backlog
+
+Prior L2 (factory `Box::leak` allocations and a workspace descriptor per attach) remains open. It is
+disclosed in the guide and is unchanged by this commit.
+
+## Per-row result
+
+- **T-306: same-row repair accepted (non-closing).** Prior L1 and L3 are repaired and regression-tested
+  for start and admission. No high or medium finding is open; L1 and L2 above are backlog. The row stays
+  open: native attach, run, recover and apply, approved commit and push, MCP and measurements remain
+  unobserved.
+- **T-303: no change in status (non-closing).** The shared ownership, admission and recovery behaviour
+  is accepted as above. No parent closes.
+- The full gate is FAIL on exactly the 72 retained T-301.1 identities, with no new failure, ignore or
+  threshold.
+
+This verdict does not certify or claim compliance or legal clearance.
+
+## Retained reviewer artifacts (`/lane/state/tmp/review-recovery-lifecycle-7976c1195556/`)
+
+| File | SHA-256 |
+| --- | --- |
+| `focused.log` | `23a2e1e3cdac48fffff41014814366dc3b224e88dbc2ba81e61cd8cf025141ab` |
+| `fast.log` | `138368e59cadaf34db92d0f08a8daa62d5a2aabde4dccac3dbee3aa35285d1b4` |
+| `plan.json` | `2db12c4965e76d64106e09c919f5da8e4dbaa9ad353cc3c6bdc50aeb3c7fe771` (identical to builder) |
+| `policy.log` | `3fa32ac3ba75cbf264b6361457a503b34e739cb5af33b27d2a8de88e856e362c` (identical to builder) |
+| `audit.json` (no-write copy output) | `04566f0a012570c5bf1c675a31718025c1c8b001282d55af7c5b9c9f94ba8670` (identical to builder) |
+| `mutants/mutants.log` (A–C) | `e108929add2ddf8493b2cc5b82a0b02986c1856b44bb02eafc9a069247b4f4f0` |
+| `mutants/mutant-d.log` | `229ff8d2dbd8393ed21617589ee76549e6422bc23722620657563896918c528d` |
+
+Verdict: PASS

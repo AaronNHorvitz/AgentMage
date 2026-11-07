@@ -374,7 +374,7 @@ pub(super) fn run(client: &Client, seconds: &str, task: &str) -> Result<()> {
         || selection["activation"] != "coding-development-v1"
         || !matches!(
             selection["scenario"].as_str(),
-            Some("failed-test-repair" | "python-project")
+            Some("failed-test-repair" | "python-project" | "python-root-project")
         )
         || selection["chat_endpoint_used"] != false
         || selection["requires_control"] != true

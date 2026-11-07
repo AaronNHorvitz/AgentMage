@@ -581,6 +581,8 @@ fn connected_driver_checks_events_asks_exactly_and_reports_a_verified_non_succes
         (true, "failed-test-repair"),
         (false, "python-project"),
         (true, "python-project"),
+        (false, "python-root-project"),
+        (true, "python-root-project"),
     ] {
         let (first, last) = driven_steps(&r, allow);
         let mut selection = driven_selection(&r);
