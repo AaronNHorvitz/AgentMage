@@ -100,6 +100,13 @@ existing native launcher/executable trust and offline sandbox still apply.
   have a one-based block prefix (`libtest[1]::name`) to distinguish binary-local
   names. Ignored tests are skipped. Benchmarks, filtered tests, terse/JSON output,
   custom ignored reasons and arbitrary text outside test/failure blocks refuse.
+  Before tests start, one complete Cargo compilation failure on stderr is also
+  admitted: empty stdout, exit 101, a separate rustc error diagnostic and a final
+  `error: could not compile` summary naming a supported target and positive error
+  count. Optional emitted-warning counts must agree with their singular/plural
+  form. The result is `compile_failed` with zero executed tests and no failed test
+  names. Mixed test/compiler output, multiple compiler summaries, trailing job
+  notices, incomplete diagnostics and other Cargo failures remain malformed.
 - `python_unittest_text_v1` reads one standard `python -m unittest -v` stderr
   transcript. Unique per-test events, failure/error headings, executed count and
   terminal summary must agree. Skips are counted; errors are unsuccessful tests.
@@ -107,11 +114,12 @@ existing native launcher/executable trust and offline sandbox still apply.
   test descriptions and multiple runner summaries refuse. Stdout is preserved in
   the command response but supplies no Python result counts.
 
-The selected transcript must be bounded ASCII with complete final lines; ANSI escapes, CR, unsupported
+Test transcripts must be bounded ASCII with complete final lines; compiler
+diagnostics may contain UTF-8 source text. ANSI escapes, CR, unsupported
 formats and incomplete or contradictory summaries are malformed. A pass needs
 exit zero and the minimum executed passing tests. A nonzero exit contradicting a
-passing summary is malformed; compilation with no test transcript is malformed,
-not inferred from compiler prose. Test durations are not extracted from these
+passing summary is malformed. Compiler prose outside the narrow Cargo form above
+remains malformed. Test durations are not extracted from these
 protocols; the receipt retains the command's measured elapsed time. Skipped-only
 and zero/insufficient-test results never pass. All raw channels remain digest-bound.
 
@@ -138,12 +146,14 @@ classified restricted, without a new secret-scanning claim.
 
 The first admitted execution fixes one immutable definition for the created
 worktree in this process, with at most three admitted executions. Each attempt requires a new preview and exact
-consent. After an assertion failure, prepare the unchanged definition with the
+consent. After an assertion or admitted compilation failure, prepare the unchanged definition with the
 exact last receipt digest. The existing kernel rerun planner binds the prior
 failure, unchanged command and new approval. A pass, unknown prior receipt,
 changed definition, exhausted budget or unrepeatable result refuses selection.
-Compilation failure has no failed-name set under this parser and therefore cannot
-select the existing failed-test rerun planner in this composition.
+Compilation failure binds the complete prior receipt and both output digests,
+without inventing a failed-name set. It can select the same separately approved
+rerun planner, including for the strict JSON envelope's `compile_failed` status.
+Neither a compilation failure nor a rerun plan supplies execution authority.
 
 Denial and expiry spend no execution attempt. Dispatch spends an attempt before
 authority execution and clears the last result. Uncertain dispatch, corrupted

@@ -1,0 +1,101 @@
+Commit: d671b595e4326a1f22a400ffcf7b949969e0c964
+Scope: local-coding-http-consent-repair
+
+# Independent core re-review: T-303 / T-306 terminal consent repair (M1, non-closing)
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate session with read-only use of the repository.
+Base `3de442f11ce0030bd72c685f74116dcda65f53d8`. Tier: core. The request is to accept the repair of
+medium M1 from the base review `3de442f11ce0-local-coding-http-driver`. No row, sub-row or parent closure
+was requested, and none is granted. This is same-model review; a cross-model review must precede any
+public release.
+
+## Methods
+
+- Confirmed the commit, a clean tree and the Node runtime hash. Read IP-POLICY.md, the T-303/T-306 rows, the evidence
+  `docs/evidence/t303-http-consent-repair-2026-11-06.md`, the retained base review and the complete diff
+  (6 paths: `coding_cli_driver.rs`, `tests/coding_runtime_cli.rs`, guide, evidence, retained review, TASKS.md).
+- Read `Signals::confirm`, `Presentation::decide` and `HttpRuntime::consent` in full at this commit. Traced the results
+  through the unchanged shared host driver (`shells/host/src/cli_runtime.rs:269-460`: `drive_interactive_cli_runtime`,
+  `RunDriver::drive`, `cancel_run`) and `CodingApprovalPort::decide_with_selection` (`shells/host/src/coding_client.rs:210-216`).
+- Compared the changed confirm with the other explicit terminal commands' confirm (`platforms/local-api/src/coding_cli.rs:286-313`).
+- Reran my own M1 reproduction from the base review against the `agentmage-code` binary built from this commit. Checked
+  the new tests' harness, mode logic and the hard-coded argument digest independently.
+- The repository was not modified. My logs are in `/lane/state/tmp/review-d671b595e432-logs/`. No GPU, inference or
+  native startup was used.
+
+Environment: `PATH=/lane/state/tmp/shared-node-v24.15.0/bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target
+CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4`. The gate's Rust steps go through the shared build reservation.
+
+## Commands and results
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `git status --short`; `git rev-parse HEAD`; `sha256sum …/node` | clean; `d671b595e4326a1f22a400ffcf7b949969e0c964`; `d1de76d8…bd932c` as stated |
+| 2 | `python3 -B scripts/local_agent_fast_gate.py --base 3de442f1… --timeout 3600` | **FAST GATE: PASS**, exit 0. The plan has the 6 listed paths: diff check, untracked lint, retained-review lint and Markdown lint all exit 0. `cargo fmt -p agentmage-local-api --check` exit 0 (0.15 s); `cargo clippy --locked --offline -p agentmage-local-api --all-targets -- -D warnings` exit 0 (1.20 s); `cargo test … --all-targets --no-fail-fast` exit 0 (17.81 s). Totals 20+0+0+10+15+11+35 = **91 passed / 0 failed / 0 ignored / 0 filtered**. The `coding_runtime_cli` target has 15 tests, including the 4 new ones: `connected_driver_drains_large_inspection_before_accepting_a_typed_refusal`, `…_drains_large_start_and_tool_reviews_before_exact_decisions`, `…_terminal_eof_and_overflow_send_no_decision`, `…_stop_interrupts_backpressured_prompt_writes` |
+| 3 | `python3 -B /lane/state/tmp/t303-runtime-api/run-policy.py /lane/state/tmp/review-d671b595e432-policy-source` (driver sha `32a882a1…3058d0`, matches) | exit 0, "Validated 775 Markdown file(s) and all policy invariants", 8.2 s. This is a source-policy check, not the T-310 long gate. The mirror was removed after inspection; its input manifest `review-d671b595e432-policy-source-inputs.json` is kept |
+| 4 | `cmp docs/reviews/3de442f11ce0-local-coding-http-driver.txt /lane/reviews/3de442f11ce0-local-coding-http-driver.md` | exit 0, byte-identical; it still ends with `Verdict: FINDINGS` |
+| 5 | `git diff --check 3de442f1… HEAD` | exit 0 |
+| 6 | `python3 -B /lane/state/tmp/t303-http-consent-repair/audit.py` (script sha `262f6f6d…fb910`, matches) | exit 0; `audit_sha256` `61946c63bd7b995f4d3e8865780d2aead27472cdf5498e88455dc9b684d510ad` as expected; 6 paths, 2 source files, 91/0/0/0/0. This is a builder audit and adds no independent evidence |
+| 7 | Own M1 reproduction (`…/review-d671b595e432-logs/ttyrepro/repro.py`, unchanged from the base review) against this commit's binary: tasks of 3,000 / 13,000 / 15,000 / 16,000 / 16,384 bytes; 4 KiB reads with 0 and 5 ms reader delay | **all 10 runs** print the complete review with the "Type exactly" line and then send `POST /v1/code/runtime/prepare`. At the base commit the 15,000 and 16,000 byte runs were truncated with only the GET sent. Exit 1 is expected because the fake peer answers prepare with 409. Log: `repro-d671.log` |
+| 8 | Own checks | The hard-coded test digest `cd1a2f6b…86cd30` equals SHA-256 of `"` + 8192×`T` + `"`. The added lines contain no private path, username, hostname, credential or agent-product name; `/lane/…` appears only inside the retained base review, as in previously accepted batches. No Cargo, lockfile or SBOM change |
+
+## Assessment of the repair against M1
+
+1. **Complete reviews survive backpressure.** `confirm` (`coding_cli_driver.rs:85-99`) now loops on `write`, advancing
+   `remaining` by the bytes written, retrying on `Interrupted` and sleeping 10 ms on `WouldBlock`. Any other error or a
+   zero-length write returns `Err`. A read starts only after `remaining` is empty, so an answer cannot be read against a
+   truncated review. `std::fs::File` writes are unbuffered, so no hidden buffer is lost. The new tests use the real
+   binary under a pty and ≥64 KiB inspection, start and tool reviews drained at 1 KiB per 5 ms; they would fail at the
+   base, which truncated at ~12–26 KB in my base-review experiments. My item-7 rerun confirms the fix on the original repro.
+2. **EOF, terminal failures and overflow send no decision.** A read returning 0 (EOF) or any non-retryable error,
+   and a 256-byte line without a newline, return `Err` (`:105-121`). An `Err` from opening `/dev/tty`, a write or
+   `safe()` also returns `Err`. In `decide` (`:205-207`) `Err` becomes `CodingClientError::Approval`. The shared driver
+   then propagates it before computing a response (`cli_runtime.rs` `decide_with_selection(...).map_err(...)?`), so
+   `advance` is never called. The driver's error path makes a best-effort release. In `consent` (`:241-247`) `Err`,
+   `Deny` and `Stopped` all refuse inspection/start. The test `…_terminal_eof_and_overflow_send_no_decision` checks EOF at
+   inspection, start and tool stages, plus overflow at the tool stage. It asserts the exact call count, no `advance` route
+   and `cli.runtime.approval_unavailable` for the tool cases.
+3. **The stop path still reaches canonical job control before dispatch.** `stopped()` is latched: an `AtomicBool`
+   set only by the signal handlers, or `Instant::elapsed() >= limit`, which is monotonic. `Confirmation::Stopped` from
+   either the write or the read phase maps to `Deny` in `decide` (`:212`). But the shared driver calls
+   `cancellation.poll` right after `decide`, and that poll must observe the stop. It then either calls `cancel_run`,
+   which uses `request_job_control(Cancel)` (revision-bound), or, if a cancellation was already sent, returns
+   `Err(Cancellation)`. So the placeholder `Deny` can never reach `advance`. The generic `cancel` port still returns
+   `RequestDenied`. The existing `…_interrupt_at_approval_uses_canonical_job_control_and_sends_no_grant` passes, and the
+   new stalled-signal/deadline test shows a write blocked by an undrained terminal ends within the deadline with no prepare.
+4. **Exact allow and denial are distinguished.** Only a complete line equal to `allow <challenge digest>` gives `Allow`;
+   any other complete line gives `Deny`, which the prompt states. The large start/tool test checks that the dispatched
+   disposition is exactly `allow` or `deny`, matching what was typed. `consent` treats only `Allow` as consent.
+5. **Other boundaries are intact.** The lost-reply no-resend, event/artifact tampering, preparation binding and pipe
+   refusal tests are unchanged and pass. The host loop, grants, endpoint, sandbox, run records and permission policy
+   are not touched (2 source files changed, both in the API client crate). Other terminal commands keep their blocking
+   `/dev/tty` confirm (`coding_cli.rs:286-313`), which does not have the M1 write truncation and is unchanged here.
+6. **Evaluation integrity** is not affected: no held-out content, hidden test, fixture, threshold, score, model or
+   dependency changed. The evidence makes no score, native-positive or parent-acceptance claim, and its labelling of
+   synthetic peers as non-native is accurate.
+
+## Findings
+
+No high or medium findings. Medium M1 from the base review is repaired.
+
+Observations, kept with the existing backlog rather than added as new findings:
+
+- The backpressured-write stop is tested only at the inspection prompt. At the tool prompt it goes through the same
+  `Confirmation::Stopped` value as the read-phase stop, which is tested. A future tool-stage stalled-write test would
+  close that gap; its absence does not block the repair.
+- The longer write window lengthens the typed-ahead exposure that is already low L1 in the base review (input typed
+  during a slow review is read afterwards). Typed-ahead text can still never approve, because the digest is fresh for
+  each prompt. The overflow case now ends the client instead of leaving the line's remainder queued, which narrows L1
+  slightly. L1 and L2 from the base review, and the earlier resume, closed-channel and shutdown findings, remain backlog
+  as stated.
+
+## Per-row result
+
+- T-303: the M1 repair is **accepted** at this commit, with no open high or medium finding for this batch. The row
+  stays open; no closure was requested.
+- T-306: the M1 repair is **accepted** at this commit on the same basis. The row stays open.
+
+The open items listed in the evidence remain open and are not assessed here: native positive failure-to-repair,
+configured-endpoint/manual composition, durable HTTP recovery, original-checkout apply, approved commit/push and MCP.
+
+Verdict: PASS

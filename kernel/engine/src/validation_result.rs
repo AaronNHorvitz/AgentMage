@@ -597,11 +597,7 @@ pub fn plan_failed_test_rerun(
         || !template.kind.is_test()
         || !template.failed_test_rerun_allowed
         || !template.setup_idempotent
-        || !matches!(
-            prior.status,
-            ValidationStatus::AssertionFailed | ValidationStatus::CompileFailed
-        )
-        || prior.failed_names.is_empty()
+        || !retryable_failure(prior)
         || !valid_identifier(&validation_attempt_id)
         || !is_sha256(&approval_sha256)
     {
@@ -633,6 +629,10 @@ pub fn verify_rerun_plan(
 ) -> bool {
     plan.schema_version == VALIDATION_RESULT_SCHEMA_VERSION
         && verify_validation_template(template)
+        && template.kind.is_test()
+        && prior.validation_id == template.validation_id
+        && prior.validation_template_sha256 == template.template_sha256
+        && retryable_failure(prior)
         && valid_identifier(&plan.validation_attempt_id)
         && plan.validation_id == template.validation_id
         && plan.validation_template_sha256 == template.template_sha256
@@ -645,6 +645,29 @@ pub fn verify_rerun_plan(
         && plan.command_spec_sha256 == template.command.spec_sha256
         && !plan.execution_authority
         && rerun_digest(plan).as_ref() == Ok(&plan.rerun_sha256)
+}
+
+fn retryable_failure(prior: &ValidationReceipt) -> bool {
+    // Compilation has no failed test names: tests never started. The complete
+    // prior receipt still binds both diagnostic channels and the exact rerun.
+    prior.termination == CommandTermination::Exited
+        && prior.exit_code.is_some_and(|exit| exit != 0)
+        && prior.signal.is_none()
+        && !prior.stdout_truncated
+        && !prior.stderr_truncated
+        && prior.secret_match_count == 0
+        && prior.stdout_classification != ValidationOutputClassification::SecretDetected
+        && prior.stderr_classification != ValidationOutputClassification::SecretDetected
+        && match prior.status {
+            ValidationStatus::AssertionFailed => !prior.failed_names.is_empty(),
+            ValidationStatus::CompileFailed => {
+                prior.passed == 0
+                    && prior.failed == 0
+                    && prior.skipped == 0
+                    && prior.failed_names.is_empty()
+            }
+            _ => false,
+        }
 }
 
 fn normalize_fields(
@@ -1689,14 +1712,7 @@ mod tests {
             Some(ValidationFailureClassification::Flaky)
         );
     }
-    fn text_result(
-        parser: ValidationParserKind,
-        stdout: &[u8],
-        stderr: &[u8],
-        exit: i32,
-        truncated: bool,
-        minimum: u32,
-    ) -> ValidationReceipt {
+    fn text_template(parser: ValidationParserKind, minimum: u32) -> ValidationTemplate {
         let mut input = template();
         input.parser = parser;
         input.minimum_test_count = minimum;
@@ -1723,6 +1739,18 @@ mod tests {
         )
         .unwrap()
         .template_sha256;
+        input
+    }
+
+    fn text_result(
+        parser: ValidationParserKind,
+        stdout: &[u8],
+        stderr: &[u8],
+        exit: i32,
+        truncated: bool,
+        minimum: u32,
+    ) -> ValidationReceipt {
+        let input = text_template(parser, minimum);
         let prepared = prepared(&input);
         let command = command_receipt(
             &prepared,
@@ -1747,6 +1775,158 @@ mod tests {
     const RUST_FAIL: &str = "\nrunning 2 tests\ntest calc::add ... FAILED\ntest calc::keep ... ok\n\nfailures:\n\n---- calc::add stdout ----\nassertion failed\n\nfailures:\n    calc::add\n\ntest result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n";
     const PYTHON_PASS: &str = "test_add (calc.Tests.test_add) ... ok\ntest_keep (calc.Tests.test_keep) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.001s\n\nOK\n";
     const PYTHON_FAIL: &str = "test_add (calc.Tests.test_add) ... FAIL\ntest_keep (calc.Tests.test_keep) ... ok\n\n======================================================================\nFAIL: test_add (calc.Tests.test_add)\n----------------------------------------------------------------------\nTraceback (most recent call last):\nAssertionError: 1 != 2\n\n----------------------------------------------------------------------\nRan 2 tests in 0.001s\n\nFAILED (failures=1)\n";
+
+    const RUST_COMPILE_FAIL: &str = "   Compiling calc v0.1.0\nerror[E0308]: mismatched types\n --> src/lib.rs:1:21\n  |\n1 | pub fn add() -> u32 { \"broken\" }\n  |                     ^^^^^^^^ expected `u32`, found `&str`\n\nFor more information about this error, try `rustc --explain E0308`.\nerror: could not compile `calc` (lib) due to 1 previous error\n";
+
+    #[test]
+    fn compiler_failure_is_retryable_without_inventing_executed_tests() {
+        for parser in [
+            ValidationParserKind::RustLibtestTextV1,
+            ValidationParserKind::AgentMageJsonV1,
+        ] {
+            let receipt = if parser == ValidationParserKind::RustLibtestTextV1 {
+                text_result(parser, b"", RUST_COMPILE_FAIL.as_bytes(), 101, false, 2)
+            } else {
+                let output = envelope("compile_failed", 0, 0, 0, &[], 0, None);
+                text_result(parser, &output, b"", 1, false, 2)
+            };
+            assert_eq!(receipt.status, ValidationStatus::CompileFailed);
+            assert_eq!((receipt.passed, receipt.failed, receipt.skipped), (0, 0, 0));
+            assert!(receipt.failed_names.is_empty());
+            assert!(!receipt.is_full_pass());
+            // text_result's template is reconstructed from the same selected
+            // parser so the exact command and definition remain hash-bound.
+            let input = text_template(parser, 2);
+            let plan =
+                plan_failed_test_rerun(&input, &receipt, "compile-rerun", "a".repeat(64)).unwrap();
+            assert!(verify_rerun_plan(&input, &receipt, &plan));
+            assert!(!plan.execution_authority);
+            assert_eq!(plan.prior_receipt_sha256, receipt.receipt_sha256);
+            let mut wrong = receipt.clone();
+            wrong.status = ValidationStatus::Malformed;
+            assert!(
+                plan_failed_test_rerun(&input, &wrong, "compile-rerun", "a".repeat(64)).is_err()
+            );
+            assert!(!verify_rerun_plan(&input, &wrong, &plan));
+            for bad in [
+                {
+                    let mut r = receipt.clone();
+                    r.exit_code = Some(0);
+                    r
+                },
+                {
+                    let mut r = receipt.clone();
+                    r.stdout_truncated = true;
+                    r
+                },
+                {
+                    let mut r = receipt.clone();
+                    r.failed_names = vec!["invented::test".into()];
+                    r
+                },
+                {
+                    let mut r = receipt.clone();
+                    r.passed = 1;
+                    r
+                },
+                {
+                    let mut r = receipt.clone();
+                    r.secret_match_count = 1;
+                    r
+                },
+                {
+                    let mut r = receipt.clone();
+                    r.termination = CommandTermination::Cancelled;
+                    r
+                },
+            ] {
+                assert!(
+                    plan_failed_test_rerun(&input, &bad, "compile-rerun", "a".repeat(64)).is_err()
+                );
+                assert!(!verify_rerun_plan(&input, &bad, &plan));
+            }
+        }
+    }
+
+    #[test]
+    fn cargo_compiler_adapter_refuses_ambiguous_partial_or_noncompiler_failures() {
+        let parse = |out: &[u8], err: &[u8], exit, truncated| {
+            text_result(
+                ValidationParserKind::RustLibtestTextV1,
+                out,
+                err,
+                exit,
+                truncated,
+                2,
+            )
+        };
+        for suffix in [
+            "`calc` (lib) due to 1 previous error; 1 warning emitted",
+            "`calc` (lib test) due to 2 previous errors; 3 warnings emitted",
+            "`calc` (bin \"calc-tool\" test) due to 1 previous error",
+            "`calc` (test \"integration\") due to 1 previous error",
+            "`calc` (example \"demo\") due to 1 previous error",
+            "`calc` (bench \"bench\") due to 1 previous error",
+            "`calc` (build script) due to 1 previous error",
+        ] {
+            let diagnostic =
+                format!("error: expected `;`, found `}}`\nerror: could not compile {suffix}\n");
+            assert_eq!(
+                parse(b"", diagnostic.as_bytes(), 101, false).status,
+                ValidationStatus::CompileFailed
+            );
+        }
+        for invalid in [
+            RUST_COMPILE_FAIL.replace("1 previous error", "0 previous errors"),
+            RUST_COMPILE_FAIL.replace("1 previous error", "2 previous error"),
+            RUST_COMPILE_FAIL.replace("(lib)", "(unknown)"),
+            RUST_COMPILE_FAIL.replace("`calc`", "`../escape`"),
+            RUST_COMPILE_FAIL.replace("1 previous error", "1 previous error; 0 warnings emitted"),
+            RUST_COMPILE_FAIL.replace(
+                "error[E0308]: mismatched types",
+                "warning: something went wrong",
+            ),
+            "error: could not compile `calc` (lib) due to 1 previous error\n".into(),
+            format!(
+                "{RUST_COMPILE_FAIL}warning: build failed, waiting for other jobs to finish...\n"
+            ),
+            format!("{RUST_COMPILE_FAIL}{RUST_COMPILE_FAIL}"),
+            RUST_COMPILE_FAIL.trim_end().into(),
+            RUST_COMPILE_FAIL.replace('\n', "\r\n"),
+            RUST_COMPILE_FAIL.replace("error[E0308]", "\u{1b}[31merror[E0308]"),
+            "error: failed to run custom build command for `calc`\n".into(),
+        ] {
+            assert_eq!(
+                parse(b"", invalid.as_bytes(), 101, false).status,
+                ValidationStatus::Malformed,
+                "{invalid}"
+            );
+        }
+        for exit in [0, 1] {
+            assert_eq!(
+                parse(b"", RUST_COMPILE_FAIL.as_bytes(), exit, false).status,
+                ValidationStatus::Malformed
+            );
+        }
+        assert_eq!(
+            parse(RUST_PASS.as_bytes(), RUST_COMPILE_FAIL.as_bytes(), 0, false).status,
+            ValidationStatus::Malformed
+        );
+        assert_eq!(
+            parse(
+                RUST_FAIL.as_bytes(),
+                RUST_COMPILE_FAIL.as_bytes(),
+                101,
+                false
+            )
+            .status,
+            ValidationStatus::Malformed
+        );
+        assert_eq!(
+            parse(b"", RUST_COMPILE_FAIL.as_bytes(), 101, true).status,
+            ValidationStatus::Truncated
+        );
+    }
 
     #[test]
     fn project_text_results_require_matching_events_summary_and_exit() {

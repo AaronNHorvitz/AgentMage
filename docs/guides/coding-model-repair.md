@@ -9,7 +9,7 @@ runner, runtime coordinator or automatic loop. T-303 and T-306 remain open.
 
 First create the worktree through this service, select its exact source paths
 with `select-model`, and run the separately approved
-[project test definition](coding-validation.md). After a retryable assertion
+[project test definition](coding-validation.md). After a retryable assertion or compilation
 failure, run:
 
 ```sh
@@ -73,6 +73,12 @@ decoding, omitted bytes and command-capture truncation are explicit. At most
 16 failed names of 256 characters are supplied, with total/truncation metadata;
 the full normalized result remains bound by its receipt digest. No secret scan
 is claimed. Successful results retain no output excerpts.
+
+An admitted compilation failure has zero executed tests and no failed test
+names. Its bounded compiler diagnostics and exact receipt are still eligible
+for one separately consented repair proposal. A complete reviewed edit and a
+fresh exact test approval remain necessary; compiler output cannot establish a
+passing test or reset the three-attempt series.
 
 Diagnostics are JSON in a separate user message. Additional fixed instructions
 classify them as untrusted data. They cannot change tools, endpoint or authority.

@@ -1081,12 +1081,19 @@ fn validation_exit_zero_never_substitutes_for_strict_positive_test_counts() {
         let prior = value["validation"]["receipt"]["receipt_sha256"]
             .as_str()
             .unwrap();
-        assert_eq!(
-            validation_pending(&mut owner, Some(prior))
-                .unwrap_err()
-                .code(),
-            "code.validation.rerun-forbidden"
-        );
+        if status == "compile_failed" {
+            // Compilation is still unsuccessful with zero tests. Only an
+            // inert, separately approvable retry preview becomes eligible.
+            validation_pending(&mut owner, Some(prior)).unwrap();
+            assert_eq!(owner.inspect_validation().unwrap()["attempts"], 1);
+        } else {
+            assert_eq!(
+                validation_pending(&mut owner, Some(prior))
+                    .unwrap_err()
+                    .code(),
+                "code.validation.rerun-forbidden"
+            );
+        }
         assert_eq!(calls.load(Ordering::Relaxed), 1);
     }
 }
@@ -1384,6 +1391,102 @@ fn edit_preview(owner: &mut LinuxCodingRepository) -> Value {
             NOW,
         )
         .unwrap()
+}
+
+#[test]
+fn compilation_diagnostics_reach_one_repair_then_fresh_edit_and_exact_rerun() {
+    use super::super::validation::LinuxCodingTestFormat;
+    for format in [
+        LinuxCodingTestFormat::RustLibtestTextV1,
+        LinuxCodingTestFormat::AgentMageJsonV1,
+    ] {
+        let f = Fixture::new();
+        let mut owner = f.open();
+        f.synthetic_created(&mut owner);
+        let calls = Arc::new(AtomicUsize::new(0));
+        let registry = command_registry(spec()).unwrap();
+        let pending = owner
+            .validation_preview(&registry, ValidationKind::Unit, 1, format, None, NOW)
+            .unwrap();
+        let approval = pending.hash.clone();
+        owner.command = Some(pending);
+        let pending = owner.take_command(&approval, true, NOW).unwrap().unwrap();
+        let text = matches!(format, LinuxCodingTestFormat::RustLibtestTextV1);
+        let failed = owner.run_command(pending, Envelope {
+            calls: calls.clone(),
+            stdout: if text { vec![] } else { envelope("compile_failed", 0, 0, 0) },
+            stderr: b"error[E0308]: mismatched types\nerror: could not compile `calc` (lib) due to 1 previous error\n".to_vec(),
+            exit: 101, corrupt: false,
+        }, NOW).unwrap();
+        let receipt = &failed["validation"]["receipt"];
+        assert_eq!(receipt["status"], "compile_failed");
+        assert_eq!(receipt["passed"], 0);
+        assert_eq!(receipt["failed"], 0);
+        assert_eq!(receipt["failed_names"], json!([]));
+        assert_eq!(failed["validation"]["validation_passed"], false);
+        let prior = receipt["receipt_sha256"].as_str().unwrap();
+        let feedback = owner.repair_feedback().unwrap();
+        assert_eq!(feedback["status"], "compile_failed");
+        assert_eq!(feedback["failed_names"], json!([]));
+        assert_eq!(feedback["stderr_sha256"], receipt["stderr_sha256"]);
+        assert!(
+            feedback["output"]["stderr"]["head"]
+                .as_str()
+                .unwrap()
+                .contains("error[E0308]")
+        );
+        owner
+            .consume_repair_feedback(prior, feedback["feedback_sha256"].as_str().unwrap())
+            .unwrap();
+        assert!(
+            owner
+                .consume_repair_feedback(prior, feedback["feedback_sha256"].as_str().unwrap())
+                .is_err()
+        );
+        assert_eq!(owner.inspect_validation().unwrap()["attempts"], 1);
+        assert!(owner.inspect_edit().unwrap()["pending"].is_null());
+        // Failure disclosure is not permission to edit. A declined diff writes
+        // nothing; only a separately prepared and approved diff changes bytes.
+        let edit = edit_preview(&mut owner);
+        owner
+            .decide_edit(edit["preview_sha256"].as_str().unwrap(), false, NOW)
+            .unwrap();
+        assert_eq!(
+            fs::read(f.0.join("owned/worktree/sentinel")).unwrap(),
+            b"preserve"
+        );
+        let edit = edit_preview(&mut owner);
+        owner
+            .decide_edit(edit["preview_sha256"].as_str().unwrap(), true, NOW)
+            .unwrap();
+        assert_eq!(
+            fs::read(f.0.join("owned/worktree/sentinel")).unwrap(),
+            b"repaired\n"
+        );
+        assert_eq!(calls.load(Ordering::Relaxed), 1);
+        assert!(
+            owner
+                .validation_preview(&registry, ValidationKind::Unit, 1, format, None, NOW)
+                .is_err()
+        );
+        let pending = owner
+            .validation_preview(&registry, ValidationKind::Unit, 1, format, Some(prior), NOW)
+            .unwrap();
+        let approval = pending.hash.clone();
+        owner.command = Some(pending);
+        let pending = owner.take_command(&approval, true, NOW).unwrap().unwrap();
+        let passed = owner.run_command(pending, Envelope {
+            calls: calls.clone(),
+            stdout: if text { b"running 1 test\ntest add ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n".to_vec() } else { envelope("passed", 1, 0, 0) },
+            stderr: vec![], exit: 0, corrupt: false,
+        }, NOW).unwrap();
+        assert_eq!(passed["validation"]["validation_passed"], true);
+        assert_eq!(passed["validation"]["attempt"], 2);
+        assert_eq!(passed["rerun_plan"]["prior_receipt_sha256"], prior);
+        assert_eq!(calls.load(Ordering::Relaxed), 2);
+        assert!(owner.repair_feedback().is_err());
+        assert_eq!(passed["test_suite_verified"], false);
+    }
 }
 
 #[test]

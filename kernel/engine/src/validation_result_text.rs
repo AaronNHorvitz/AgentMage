@@ -58,6 +58,23 @@ pub(super) fn parse(
     if !template.kind.is_test() || !observation.artifacts.is_empty() {
         return None;
     }
+    // Cargo reports compilation on stderr, before libtest can produce events.
+    // A recognized compiler summary can never coexist with a test pass. Keep
+    // this narrow: mixed/partial test output and other Cargo failures refuse.
+    if template.parser == ValidationParserKind::RustLibtestTextV1
+        && std::str::from_utf8(&observation.stderr)
+            .ok()?
+            .lines()
+            .any(|line| line.starts_with("error: could not compile "))
+    {
+        if !observation.stdout.is_empty()
+            || command.exit_code != Some(101)
+            || !cargo_compile_failure(&observation.stderr)
+        {
+            return None;
+        }
+        return Some(empty_fields(ValidationStatus::CompileFailed));
+    }
     let bytes = match template.parser {
         ValidationParserKind::RustLibtestTextV1 => &observation.stdout,
         ValidationParserKind::PythonUnittestTextV1 => &observation.stderr,
@@ -106,6 +123,94 @@ pub(super) fn parse(
         retry_count: 0,
         initial_failure_sha256: None,
         reported_duration_ms: None,
+    })
+}
+
+fn cargo_compile_failure(bytes: &[u8]) -> bool {
+    fn summary(line: &str) -> Option<()> {
+        let rest = line.strip_prefix("error: could not compile `")?;
+        let (package, rest) = rest.split_once('`')?;
+        if package.is_empty()
+            || package.len() > 128
+            || !package
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b"_-".contains(&b))
+        {
+            return None;
+        }
+        let rest = rest.strip_prefix(" (")?;
+        let (target, rest) = rest.split_once(") due to ")?;
+        if !matches!(target, "lib" | "lib test" | "build script") {
+            let target = target.strip_suffix(" test").unwrap_or(target);
+            let (kind, name) = target.split_once(" \"")?;
+            let name = name.strip_suffix('"')?;
+            if !matches!(kind, "bin" | "example" | "test" | "bench")
+                || name.is_empty()
+                || name.len() > 128
+                || !name
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || b"_-".contains(&b))
+            {
+                return None;
+            }
+        }
+        let (errors, rest) = rest.split_once(" previous error")?;
+        let errors = number(errors)?;
+        if errors == 0 {
+            return None;
+        }
+        let rest = if errors == 1 {
+            rest
+        } else {
+            rest.strip_prefix('s')?
+        };
+        if !rest.is_empty() {
+            let (warnings, suffix) = rest.strip_prefix("; ")?.split_once(' ')?;
+            let warnings = number(warnings)?;
+            if warnings == 0
+                || suffix
+                    != if warnings == 1 {
+                        "warning emitted"
+                    } else {
+                        "warnings emitted"
+                    }
+            {
+                return None;
+            }
+        }
+        Some(())
+    }
+    if bytes.is_empty() || bytes.len() > MAX_RESULT_BYTES || !bytes.ends_with(b"\n") {
+        return false;
+    }
+    let Ok(source) = std::str::from_utf8(bytes) else {
+        return false;
+    };
+    if source.contains('\r') {
+        return false;
+    }
+    let lines = source.lines().filter(|s| !s.is_empty()).collect::<Vec<_>>();
+    let Some(last) = lines.last() else {
+        return false;
+    };
+    if summary(last).is_none()
+        || lines
+            .iter()
+            .filter(|s| s.starts_with("error: could not compile "))
+            .count()
+            != 1
+    {
+        return false;
+    }
+    // Require a separate rustc diagnostic, not just a Cargo termination label.
+    lines[..lines.len() - 1].iter().any(|line| {
+        line.strip_prefix("error[E").is_some_and(|rest| {
+            rest.split_once("]: ").is_some_and(|(code, message)| {
+                code.len() == 4 && code.bytes().all(|b| b.is_ascii_digit()) && !message.is_empty()
+            })
+        }) || line
+            .strip_prefix("error: ")
+            .is_some_and(|message| !message.is_empty())
     })
 }
 
