@@ -188,6 +188,7 @@ pub struct LinuxRepositoryScope {
     git_directory: PathBuf,
     owned_root: PathBuf,
     repository_path_sha256: String,
+    linked_read_only: Option<crate::LinuxLinkedRepository>,
 }
 
 impl LinuxRepositoryScope {
@@ -214,7 +215,38 @@ impl LinuxRepositoryScope {
             git_directory,
             owned_root,
             repository_path_sha256,
+            linked_read_only: None,
         })
+    }
+
+    /// Explicit read-only inventory scope for metadata already bound by a
+    /// development activation. Never admitted to the mutating Git executor.
+    pub fn verify_linked_read_only(
+        linked: &crate::LinuxLinkedRepository,
+        owned_root: impl AsRef<Path>,
+    ) -> Result<Self, LinuxRepositoryError> {
+        linked.revalidate()?;
+        let owned_root = verify_owned_directory(owned_root.as_ref())?;
+        if [linked.worktree_root(), linked.common_directory()]
+            .iter()
+            .any(|root| owned_root.starts_with(root) || root.starts_with(&owned_root))
+        {
+            return Err(error(LinuxRepositoryErrorKind::InvalidPath));
+        }
+        Ok(Self {
+            checkout_root: linked.worktree_root().to_owned(),
+            git_directory: linked.git_directory().to_owned(),
+            owned_root,
+            repository_path_sha256: path_identity(linked.worktree_root())?,
+            linked_read_only: Some(linked.clone()),
+        })
+    }
+
+    fn revalidate_linked(&self) -> Result<(), LinuxRepositoryError> {
+        if let Some(linked) = &self.linked_read_only {
+            linked.revalidate()?;
+        }
+        Ok(())
     }
 
     /// Returns the digest expected in an exact repository plan.
@@ -273,6 +305,11 @@ impl LinuxRepositoryCollector {
         &self,
         scope: &LinuxRepositoryScope,
     ) -> Result<RepositoryPreservationManifest, LinuxRepositoryError> {
+        // Full preservation manifests belong to the ordinary mutating owner.
+        // The linked development extension admits inventory/inspection only.
+        if scope.linked_read_only.is_some() {
+            return Err(error(LinuxRepositoryErrorKind::PlanDenied));
+        }
         revalidate_git_artifact(&self.git)?;
         let object_format =
             text_required(self.observe(scope, &["rev-parse", "--show-object-format"])?)?;
@@ -462,6 +499,7 @@ impl LinuxRepositoryCollector {
         scope: &LinuxRepositoryScope,
         arguments: &[&str],
     ) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
+        scope.revalidate_linked()?;
         revalidate_git_artifact(&self.git)?;
         let output = Command::new(&self.git.launch_path)
             .env_clear()
@@ -514,12 +552,16 @@ impl LinuxRepositoryCollector {
         maximum_bytes: usize,
         cancellation: Option<&CancellationToken>,
     ) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
+        scope.revalidate_linked()?;
         if maximum_bytes == 0 || maximum_bytes > 32 * 1024 * 1024 {
             return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
         }
         revalidate_git_artifact(&self.git)?;
         if cancellation.is_some_and(CancellationToken::is_cancelled) {
             return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+        }
+        if let Some(linked) = &scope.linked_read_only {
+            return self.observe_linked_inventory(linked, arguments, maximum_bytes, cancellation);
         }
         let mut command = Command::new(&self.git.launch_path);
         command
@@ -541,12 +583,89 @@ impl LinuxRepositoryCollector {
             .stdin(Stdio::null());
         let (status, stdout) =
             run_inventory_process(&mut command, maximum_bytes, cancellation, PROCESS_TIMEOUT)?;
+        scope.revalidate_linked()?;
         if status.success() {
             Ok(Some(stdout))
         } else if matches!(status.code(), Some(1 | 128)) {
             Ok(None)
         } else {
             Err(error(LinuxRepositoryErrorKind::ObservationFailed))
+        }
+    }
+    // Startup inventory has explicit activation read consent rather than a
+    // model tool grant. Use the offline worker for linked metadata too: local
+    // config includes and object alternates must not expose arbitrary host paths.
+    fn observe_linked_inventory(
+        &self,
+        linked: &crate::LinuxLinkedRepository,
+        arguments: &[&str],
+        maximum_bytes: usize,
+        cancellation: Option<&CancellationToken>,
+    ) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
+        use agentmage_kernel_contracts::{
+            AdapterInstanceId, BoundaryKind, CorrelationId, TaskId, WorkspaceAuthorizationId,
+            WorkspaceId,
+        };
+        let manifest = LinuxRepositoryInspectionManifest::verify(
+            "/usr/bin/systemd-run",
+            "/usr/bin/systemctl",
+            "/usr/bin/bwrap",
+            self.git.launch_path(),
+        )?;
+        let executor = LinuxBoundedRepositoryInspectionExecutor::for_linked_worktree(
+            manifest,
+            linked.clone(),
+        )?;
+        let workspace = crate::authorize_workspace_root(
+            linked.worktree_root(),
+            WorkspaceId::from_raw("linked-startup-inventory"),
+            WorkspaceAuthorizationId::from_raw("linked-startup-inventory"),
+            AdapterInstanceId::from_raw("linked-startup-inventory"),
+        )
+        .map_err(|_| error(LinuxRepositoryErrorKind::InvalidPath))?;
+        let fallback = CancellationToken::root(
+            BoundaryKind::Shell,
+            TaskId::from_raw("linked-startup-inventory"),
+            CorrelationId::from_raw("linked-startup-inventory"),
+        );
+        let arguments: Vec<String> = hardened_observation_prefix()
+            .into_iter()
+            .chain(arguments.iter().copied())
+            .map(str::to_owned)
+            .collect();
+        let environment = [
+            ("GIT_CONFIG_NOSYSTEM", "1"),
+            ("GIT_CONFIG_GLOBAL", "/dev/null"),
+            ("GIT_TERMINAL_PROMPT", "0"),
+            ("GIT_OPTIONAL_LOCKS", "0"),
+            ("GIT_LFS_SKIP_SMUDGE", "1"),
+            ("GCM_INTERACTIVE", "Never"),
+            ("HOME", "/nonexistent"),
+            ("XDG_CONFIG_HOME", "/nonexistent"),
+            ("LANG", "C"),
+            ("LC_ALL", "C"),
+        ]
+        .into_iter()
+        .map(|(key, value)| (key.to_owned(), value.to_owned()))
+        .collect();
+        let result = executor
+            .run_read_only(
+                &arguments,
+                &environment,
+                maximum_bytes,
+                &workspace,
+                cancellation.unwrap_or(&fallback),
+            )
+            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
+        if result.termination != RepositoryInspectionTermination::Exited
+            || !result.descendants_terminated
+        {
+            return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+        }
+        match result.exit_code {
+            Some(0) => Ok(Some(result.stdout)),
+            Some(1 | 128) => Ok(None),
+            _ => Err(error(LinuxRepositoryErrorKind::ObservationFailed)),
         }
     }
 }
@@ -630,6 +749,7 @@ fn read_inventory_output(
 pub struct LinuxBoundedRepositoryInspectionExecutor {
     manifest: Arc<LinuxRepositoryInspectionManifest>,
     seccomp_bpf: Vec<u8>,
+    linked: Option<crate::LinuxLinkedRepository>,
 }
 
 impl LinuxBoundedRepositoryInspectionExecutor {
@@ -640,12 +760,45 @@ impl LinuxBoundedRepositoryInspectionExecutor {
         Ok(Self {
             manifest: Arc::new(manifest),
             seccomp_bpf: seccomp,
+            linked: None,
         })
+    }
+
+    /// Binds read-only metadata to the exact explicitly activated linked
+    /// worktree. No caller-supplied Git path is accepted at dispatch.
+    pub fn for_linked_worktree(
+        manifest: LinuxRepositoryInspectionManifest,
+        linked: crate::LinuxLinkedRepository,
+    ) -> Result<Self, LinuxRepositoryError> {
+        linked.revalidate()?;
+        let mut executor = Self::new(manifest)?;
+        executor.linked = Some(linked);
+        Ok(executor)
     }
 
     fn run(
         &self,
         prepared: &agentmage_kernel_engine::repository_inspection::PreparedRepositoryInspection,
+        working_directory: &crate::LinuxAuthorizedWorkspace,
+        cancellation: &dyn EffectCancellationObservation,
+    ) -> Result<RepositoryInspectionPlatformResult, RepositoryInspectionExecutionFailure> {
+        if !prepared.stdin().is_empty() {
+            return failed_inspection("linux.git-inspection.preflight.failed");
+        }
+        self.run_read_only(
+            prepared.arguments(),
+            prepared.environment(),
+            MAX_OBSERVATION_BYTES,
+            working_directory,
+            cancellation,
+        )
+    }
+
+    fn run_read_only(
+        &self,
+        arguments: &[String],
+        environment: &std::collections::BTreeMap<String, String>,
+        stdout_limit: usize,
         working_directory: &crate::LinuxAuthorizedWorkspace,
         cancellation: &dyn EffectCancellationObservation,
     ) -> Result<RepositoryInspectionPlatformResult, RepositoryInspectionExecutionFailure> {
@@ -660,13 +813,15 @@ impl LinuxBoundedRepositoryInspectionExecutor {
             || revalidate_git_artifact(&self.manifest.bubblewrap).is_err()
             || revalidate_git_artifact(&self.manifest.git).is_err()
             || working_directory.revalidate().is_err()
-            || !prepared.stdin().is_empty()
+            || stdout_limit == 0
+            || stdout_limit > 32 * 1024 * 1024
         {
             return failed_inspection("linux.git-inspection.preflight.failed");
         }
         let Ok(root) = working_directory.reopen_root_directory() else {
             return failed_inspection("linux.git-inspection.root.failed");
         };
+        let projections = linked_inspection_projections(self.linked.as_ref(), root)?;
         let Ok(unit_stem) = random_inspection_unit() else {
             return failed_inspection("linux.git-inspection.unit.failed");
         };
@@ -679,7 +834,7 @@ impl LinuxBoundedRepositoryInspectionExecutor {
         let filter_pipe = crate::sandbox::supervision::FilterPipe::new()
             .map_err(inspection_supervision_failure)?;
         let seccomp_descriptor = format!("/proc/{parent_pid}/fd/{}", filter_pipe.read_descriptor());
-        let worktree_descriptor = format!("/proc/{parent_pid}/fd/{}", root.as_raw_fd());
+        let worktree_descriptor = format!("/proc/{parent_pid}/fd/{}", projections[0].as_raw_fd());
         let runtime_directory = format!("/run/user/{}", getuid().as_raw());
         let session_bus = format!("unix:path={runtime_directory}/bus");
         let mut command = Command::new(&self.manifest.systemd_run.launch_path);
@@ -719,17 +874,25 @@ impl LinuxBoundedRepositoryInspectionExecutor {
             ))
             .arg(format!(
                 "--property=OpenFile={worktree_descriptor}:worktree:read-only"
-            ))
-            .arg(&self.manifest.bubblewrap.launch_path)
-            .args([
-                "--unshare-all",
-                "--unshare-user",
-                "--disable-userns",
-                "--new-session",
-                "--die-with-parent",
-                "--clearenv",
-            ]);
-        for (name, value) in prepared.environment() {
+            ));
+        for (name, fd) in ["git-metadata", "git-common"]
+            .iter()
+            .zip(projections.iter().skip(1))
+        {
+            command.arg(format!(
+                "--property=OpenFile=/proc/{parent_pid}/fd/{}:{name}:read-only",
+                fd.as_raw_fd()
+            ));
+        }
+        command.arg(&self.manifest.bubblewrap.launch_path).args([
+            "--unshare-all",
+            "--unshare-user",
+            "--disable-userns",
+            "--new-session",
+            "--die-with-parent",
+            "--clearenv",
+        ]);
+        for (name, value) in environment {
             command.arg("--setenv").arg(name).arg(value);
         }
         command.args([
@@ -753,16 +916,23 @@ impl LinuxBoundedRepositoryInspectionExecutor {
         add_inspection_runtime_mounts(&mut command);
         command
             .args(["--ro-bind-fd", "3", GUEST_GIT_EXECUTABLE])
-            .args(["--ro-bind-fd", "5", "/work"])
-            .args([
-                "--chdir",
-                "/work",
-                "--seccomp",
-                "4",
-                "--",
-                GUEST_GIT_EXECUTABLE,
-            ])
-            .args(prepared.arguments())
+            .args(["--ro-bind-fd", "5", "/work"]);
+        if self.linked.is_some() {
+            add_linked_inspection_mounts(&mut command);
+        }
+        command.args([
+            "--chdir",
+            "/work",
+            "--seccomp",
+            "4",
+            "--",
+            GUEST_GIT_EXECUTABLE,
+        ]);
+        if self.linked.is_some() {
+            add_linked_inspection_git_arguments(&mut command);
+        }
+        command
+            .args(arguments)
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
@@ -771,10 +941,10 @@ impl LinuxBoundedRepositoryInspectionExecutor {
             command,
             crate::sandbox::supervision::Launch {
                 owner: crate::sandbox::supervision::LaunchOwner::Git(self.manifest.clone()),
-                projections: vec![root],
+                projections,
                 unit,
                 deadline,
-                stdout_limit: MAX_OBSERVATION_BYTES,
+                stdout_limit,
                 stderr_limit: MAX_OBSERVATION_BYTES,
                 filter_pipe: Some(filter_pipe),
             },
@@ -785,7 +955,12 @@ impl LinuxBoundedRepositoryInspectionExecutor {
         if !result.output_complete {
             return Err(RepositoryInspectionExecutionFailure::ExecutionFailed);
         }
-        if working_directory.revalidate().is_err() {
+        if working_directory.revalidate().is_err()
+            || self
+                .linked
+                .as_ref()
+                .is_some_and(|linked| linked.revalidate().is_err())
+        {
             return Err(RepositoryInspectionExecutionFailure::CleanupUncertain);
         }
         let termination = match result.outcome {
@@ -869,6 +1044,159 @@ fn add_inspection_runtime_mounts(command: &mut Command) {
     }
 }
 
+fn add_linked_inspection_mounts(command: &mut Command) {
+    command.args([
+        "--dir",
+        "/metadata",
+        "--ro-bind-fd",
+        "6",
+        "/metadata/worktree",
+        "--ro-bind-fd",
+        "7",
+        "/metadata/common",
+        "--setenv",
+        "GIT_COMMON_DIR",
+        "/metadata/common",
+    ]);
+}
+
+fn add_linked_inspection_git_arguments(command: &mut Command) {
+    command.args(["--git-dir=/metadata/worktree", "--work-tree=/work"]);
+}
+
+fn linked_inspection_projections(
+    linked: Option<&crate::LinuxLinkedRepository>,
+    root: OwnedFd,
+) -> Result<Vec<OwnedFd>, RepositoryInspectionExecutionFailure> {
+    let mut projections = vec![root];
+    if let Some(linked) = linked {
+        if linked.revalidate().is_err() || !linked.matches_root(&projections[0]) {
+            return Err(RepositoryInspectionExecutionFailure::ExecutionFailed);
+        }
+        for fd in [linked.git_fd(), linked.common_fd()] {
+            projections.push(
+                rustix::io::dup(fd)
+                    .map_err(|_| RepositoryInspectionExecutionFailure::ExecutionFailed)?,
+            );
+        }
+    }
+    Ok(projections)
+}
+
+#[cfg(test)]
+mod linked_boundary_tests {
+    use super::*;
+    use std::os::unix::fs::PermissionsExt;
+
+    #[test]
+    fn linked_worker_uses_only_read_only_metadata_projections_and_fixed_git_paths() {
+        let mut command = Command::new("inert-command-plan");
+        add_linked_inspection_mounts(&mut command);
+        add_linked_inspection_git_arguments(&mut command);
+        let args: Vec<_> = command.get_args().map(|a| a.to_str().unwrap()).collect();
+        assert_eq!(
+            args,
+            [
+                "--dir",
+                "/metadata",
+                "--ro-bind-fd",
+                "6",
+                "/metadata/worktree",
+                "--ro-bind-fd",
+                "7",
+                "/metadata/common",
+                "--setenv",
+                "GIT_COMMON_DIR",
+                "/metadata/common",
+                "--git-dir=/metadata/worktree",
+                "--work-tree=/work"
+            ]
+        );
+    }
+
+    #[test]
+    fn linked_projection_refuses_other_root_stale_metadata_and_mutation_collection() {
+        let base = std::env::temp_dir().join(format!(
+            "agentmage-linked-projections-{}",
+            std::process::id()
+        ));
+        let root = base.join("worktree");
+        let git = base.join("original/.git/worktrees/worktree");
+        let state = base.join("state");
+        for path in [&root, &git, &state] {
+            fs::create_dir_all(path).unwrap();
+        }
+        fs::set_permissions(&root, fs::Permissions::from_mode(0o700)).unwrap();
+        fs::write(root.join(".git"), format!("gitdir: {}\n", git.display())).unwrap();
+        fs::write(git.join("commondir"), "../..\n").unwrap();
+        fs::write(
+            git.join("gitdir"),
+            format!("{}\n", root.join(".git").display()),
+        )
+        .unwrap();
+        fs::write(git.join("HEAD"), "ref: refs/heads/agentmage/task\n").unwrap();
+        let linked = crate::LinuxLinkedRepository::verify(
+            &root,
+            &git,
+            git.parent().unwrap().parent().unwrap(),
+        )
+        .unwrap();
+        let flags = OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC;
+        let projections = linked_inspection_projections(
+            Some(&linked),
+            open(&root, flags, Mode::empty()).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(projections.len(), 3);
+        for (fd, expected) in projections[1..]
+            .iter()
+            .zip([linked.git_fd(), linked.common_fd()])
+        {
+            let a = fstat(fd).unwrap();
+            let b = fstat(expected).unwrap();
+            assert_eq!((a.st_dev, a.st_ino), (b.st_dev, b.st_ino));
+            assert_eq!(
+                rustix::fs::fcntl_getfl(fd).unwrap() & OFlags::ACCMODE,
+                OFlags::RDONLY
+            );
+        }
+        assert!(
+            linked_inspection_projections(
+                Some(&linked),
+                open(&state, flags, Mode::empty()).unwrap()
+            )
+            .is_err()
+        );
+        assert_eq!(
+            linked_inspection_projections(None, open(&root, flags, Mode::empty()).unwrap())
+                .unwrap()
+                .len(),
+            1
+        );
+        let scope = LinuxRepositoryScope::verify_linked_read_only(&linked, &state).unwrap();
+        // Inert artifact, confined to this test. Both early refusals must occur
+        // before artifact validation or any command. It never reaches dispatch.
+        let collector = LinuxRepositoryCollector::new(LinuxGitArtifact {
+            descriptor: open("/dev/null", OFlags::RDONLY | OFlags::CLOEXEC, Mode::empty()).unwrap(),
+            launch_path: base.join("must-never-launch"),
+            sha256: "0".repeat(64),
+        });
+        assert_eq!(
+            collector.collect(&scope).unwrap_err().kind(),
+            LinuxRepositoryErrorKind::PlanDenied
+        );
+        fs::write(git.join("commondir"), "../../outside\n").unwrap();
+        assert!(
+            linked_inspection_projections(
+                Some(&linked),
+                open(&root, flags, Mode::empty()).unwrap()
+            )
+            .is_err()
+        );
+        fs::remove_dir_all(base).unwrap();
+    }
+}
+
 fn random_inspection_unit() -> Result<String, LinuxRepositoryError> {
     let mut random = [0_u8; 12];
     getrandom(&mut random, GetRandomFlags::empty())
@@ -921,6 +1249,9 @@ impl LinuxRepositoryExecutor {
         approved_before: &RepositoryPreservationManifest,
         cancellation: &CancellationToken,
     ) -> RepositoryPlatformResult {
+        if self.scope.linked_read_only.is_some() {
+            return unchanged_failure(approved_before, "linux.git.linked.read-only");
+        }
         let current = match self.collector.collect(&self.scope) {
             Ok(value) => value,
             Err(_) => return unchanged_failure(approved_before, "linux.git.preflight.failed"),

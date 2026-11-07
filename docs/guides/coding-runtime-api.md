@@ -23,6 +23,9 @@ bash /tools/build-slot cargo build --locked --offline -p agentmage-host --bin ag
 
 Use an existing marked disposable development Git workspace and its separate
 private host state as required by the existing coding-development activation.
+An explicitly marked [linked worktree](coding-linked-worktrees.md) can also bind
+its exact external Git metadata for read-only inventory and inspection. An old
+workspace-only marker cannot authorize linked metadata reads.
 Do not point this at the person's active checkout. Starting the service
 explicitly authorizes native repository inspection and canonical state access;
 the host composes its repository map before accepting an HTTP request.

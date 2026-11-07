@@ -6,6 +6,7 @@ use std::io::{Read, Write};
 use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
 use std::path::{Path, PathBuf};
 
+use agentmage_platform_linux::LinuxLinkedRepository;
 use sha2::{Digest, Sha256};
 
 use agentmage_kernel_engine::operational_store::{
@@ -14,7 +15,7 @@ use agentmage_kernel_engine::operational_store::{
 
 /// Exact activation identity; this value is never accepted by production startup.
 pub const CODING_DEVELOPMENT_ACTIVATION: &str = "coding-development-v1";
-const MARKER_NAME: &str = ".agentmage-development-workspace";
+pub(crate) const MARKER_NAME: &str = ".agentmage-development-workspace";
 const MAX_MARKER_BYTES: u64 = 4096;
 const DEVELOPMENT_KEY_NAME: &str = "operational-store-development-v1.key";
 
@@ -27,7 +28,7 @@ pub enum CodingDevelopmentActivationError {
     WorkspaceDenied,
     /// The owned marker was absent, substituted, linked, malformed, or stale.
     MarkerDenied,
-    /// The selected directory was not a private ordinary Git worktree.
+    /// The selected directory was not an admitted ordinary or linked Git worktree.
     GitWorktreeDenied,
 }
 
@@ -60,10 +61,12 @@ pub struct CodingDevelopmentActivation {
     workspace_root: PathBuf,
     marker_sha256: String,
     marker_epoch_ms: u64,
+    linked_repository: Option<LinuxLinkedRepository>,
 }
 
 impl CodingDevelopmentActivation {
-    /// Validates exact private roots, the ordinary Git worktree, and its path-bound marker.
+    /// Validates exact private roots, Git metadata, and the explicit path-bound
+    /// marker. Linked worktrees require additional exact metadata marker fields.
     pub fn validate(
         state_root: &Path,
         disposable_root: &Path,
@@ -82,7 +85,6 @@ impl CodingDevelopmentActivation {
         {
             return Err(CodingDevelopmentActivationError::WorkspaceDenied);
         }
-        verify_git_directory(&workspace_root)?;
         let marker = workspace_root.join(MARKER_NAME);
         let metadata = fs::symlink_metadata(&marker)
             .map_err(|_| CodingDevelopmentActivationError::MarkerDenied)?;
@@ -105,9 +107,44 @@ impl CodingDevelopmentActivation {
             })
             .filter(|value| *value > 0)
             .ok_or(CodingDevelopmentActivationError::MarkerDenied)?;
-        let bytes =
-            fs::read(&marker).map_err(|_| CodingDevelopmentActivationError::MarkerDenied)?;
-        let expected = marker_contents(&workspace_root)?;
+        let mut marker_file = OpenOptions::new()
+            .read(true)
+            .custom_flags(
+                (rustix::fs::OFlags::NOFOLLOW | rustix::fs::OFlags::NONBLOCK).bits() as i32,
+            )
+            .open(&marker)
+            .map_err(|_| CodingDevelopmentActivationError::MarkerDenied)?;
+        let opened = marker_file
+            .metadata()
+            .map_err(|_| CodingDevelopmentActivationError::MarkerDenied)?;
+        if (
+            opened.dev(),
+            opened.ino(),
+            opened.mode(),
+            opened.len(),
+            opened.nlink(),
+        ) != (
+            metadata.dev(),
+            metadata.ino(),
+            metadata.mode(),
+            metadata.len(),
+            metadata.nlink(),
+        ) {
+            return Err(CodingDevelopmentActivationError::MarkerDenied);
+        }
+        let mut bytes = Vec::new();
+        Read::by_ref(&mut marker_file)
+            .take(MAX_MARKER_BYTES + 1)
+            .read_to_end(&mut bytes)
+            .map_err(|_| CodingDevelopmentActivationError::MarkerDenied)?;
+        if bytes.len() as u64 != metadata.len() || bytes.len() as u64 > MAX_MARKER_BYTES {
+            return Err(CodingDevelopmentActivationError::MarkerDenied);
+        }
+        // Resolve external metadata only after a valid private marker names
+        // its exact paths. A workspace-only or malformed marker cannot expand
+        // read scope by following an untrusted .git pointer.
+        let linked_repository = linked_repository_for_marker(&workspace_root, &bytes)?;
+        let expected = marker_contents(&workspace_root, linked_repository.as_ref())?;
         if bytes != expected {
             return Err(CodingDevelopmentActivationError::MarkerDenied);
         }
@@ -117,6 +154,7 @@ impl CodingDevelopmentActivation {
             workspace_root,
             marker_sha256: hex(&Sha256::digest(bytes)),
             marker_epoch_ms,
+            linked_repository,
         })
     }
 
@@ -157,6 +195,13 @@ impl CodingDevelopmentActivation {
         &self.marker_sha256
     }
 
+    /// Metadata explicitly included in this activation's marker, if linked.
+    /// This is read-only scope, never manual worktree-creation provenance.
+    #[must_use]
+    pub fn linked_repository(&self) -> Option<&LinuxLinkedRepository> {
+        self.linked_repository.as_ref()
+    }
+
     /// Returns the marker-bound start time used for stable development-session retention.
     #[must_use]
     pub const fn marker_epoch_ms(&self) -> u64 {
@@ -171,7 +216,56 @@ pub fn coding_development_marker(
     let workspace = workspace_root
         .canonicalize()
         .map_err(|_| CodingDevelopmentActivationError::WorkspaceDenied)?;
-    marker_contents(&workspace)
+    verify_git_directory(&workspace)?;
+    marker_contents(&workspace, None)
+}
+
+/// Displays linked setup bytes only for the two explicitly selected metadata
+/// roots. An untrusted workspace pointer cannot redirect these reads elsewhere.
+pub fn coding_development_linked_marker(
+    workspace_root: &Path,
+    git_metadata: &Path,
+    git_common: &Path,
+) -> Result<Vec<u8>, CodingDevelopmentActivationError> {
+    let linked = LinuxLinkedRepository::verify(workspace_root, git_metadata, git_common)
+        .map_err(|_| CodingDevelopmentActivationError::GitWorktreeDenied)?;
+    marker_contents(workspace_root, Some(&linked))
+}
+
+fn linked_repository_for_marker(
+    workspace: &Path,
+    bytes: &[u8],
+) -> Result<Option<LinuxLinkedRepository>, CodingDevelopmentActivationError> {
+    let denied = CodingDevelopmentActivationError::MarkerDenied;
+    let prefix = marker_contents(workspace, None)?;
+    if bytes == prefix {
+        if fs::symlink_metadata(workspace.join(".git")).is_ok_and(|m| m.is_file()) {
+            return Err(denied);
+        }
+        verify_git_directory(workspace)?;
+        return Ok(None);
+    }
+    let suffix = bytes.strip_prefix(prefix.as_slice()).ok_or(denied)?;
+    let fields: Vec<_> = std::str::from_utf8(suffix)
+        .map_err(|_| denied)?
+        .split_terminator('\n')
+        .collect();
+    let [git, common, digest] = fields.as_slice() else {
+        return Err(denied);
+    };
+    let git = git.strip_prefix("git-metadata=").ok_or(denied)?;
+    let common = common.strip_prefix("git-common=").ok_or(denied)?;
+    let digest = digest.strip_prefix("metadata-sha256=").ok_or(denied)?;
+    if digest.len() != 64
+        || !digest
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    {
+        return Err(denied);
+    }
+    LinuxLinkedRepository::verify(workspace, Path::new(git), Path::new(common))
+        .map(Some)
+        .map_err(|_| CodingDevelopmentActivationError::GitWorktreeDenied)
 }
 
 /// File-backed 256-bit key restricted to the separate coding-development state root.
@@ -266,12 +360,33 @@ impl Drop for CodingDevelopmentKeyProvider {
     }
 }
 
-fn marker_contents(workspace: &Path) -> Result<Vec<u8>, CodingDevelopmentActivationError> {
+fn marker_contents(
+    workspace: &Path,
+    linked: Option<&LinuxLinkedRepository>,
+) -> Result<Vec<u8>, CodingDevelopmentActivationError> {
     let workspace = workspace
         .to_str()
         .filter(|value| !value.contains('\0') && !value.contains('\n'))
         .ok_or(CodingDevelopmentActivationError::MarkerDenied)?;
-    Ok(format!("activation={CODING_DEVELOPMENT_ACTIVATION}\nworkspace={workspace}\n").into_bytes())
+    let mut marker = format!("activation={CODING_DEVELOPMENT_ACTIVATION}\nworkspace={workspace}\n");
+    if let Some(linked) = linked {
+        marker.push_str(&format!(
+            "git-metadata={}\ngit-common={}\nmetadata-sha256={}\n",
+            linked
+                .git_directory()
+                .to_str()
+                .ok_or(CodingDevelopmentActivationError::MarkerDenied)?,
+            linked
+                .common_directory()
+                .to_str()
+                .ok_or(CodingDevelopmentActivationError::MarkerDenied)?,
+            linked.identity_sha256()
+        ));
+    }
+    if marker.len() > MAX_MARKER_BYTES as usize {
+        return Err(CodingDevelopmentActivationError::MarkerDenied);
+    }
+    Ok(marker.into_bytes())
 }
 
 fn private_canonical_directory(path: &Path) -> Result<PathBuf, ()> {
@@ -296,13 +411,16 @@ fn verify_git_directory(workspace: &Path) -> Result<(), CodingDevelopmentActivat
     let git = workspace.join(".git");
     let git_metadata = fs::symlink_metadata(&git)
         .map_err(|_| CodingDevelopmentActivationError::GitWorktreeDenied)?;
-    let head = git.join("HEAD");
-    let head_metadata = fs::symlink_metadata(head)
-        .map_err(|_| CodingDevelopmentActivationError::GitWorktreeDenied)?;
     if !git_metadata.is_dir()
         || git_metadata.uid() != rustix::process::getuid().as_raw()
         || git_metadata.mode() & 0o022 != 0
-        || !head_metadata.is_file()
+    {
+        return Err(CodingDevelopmentActivationError::GitWorktreeDenied);
+    }
+    let head = git.join("HEAD");
+    let head_metadata = fs::symlink_metadata(head)
+        .map_err(|_| CodingDevelopmentActivationError::GitWorktreeDenied)?;
+    if !head_metadata.is_file()
         || head_metadata.uid() != rustix::process::getuid().as_raw()
         || head_metadata.nlink() != 1
     {
@@ -368,5 +486,131 @@ mod tests {
             Err(CodingDevelopmentActivationError::MarkerDenied)
         );
         fs::remove_dir_all(base).expect("cleanup");
+    }
+
+    #[test]
+    fn real_linked_worktree_requires_metadata_marker_and_refuses_substitution() {
+        // Git is used only to create this disposable fixture. This does not
+        // bypass or exercise the product's pinned executable/worker boundary.
+        let started = std::time::Instant::now();
+        let base = std::env::temp_dir().join(format!(
+            "agentmage-linked-activation-{}-{}",
+            std::process::id(),
+            NEXT.fetch_add(1, Ordering::Relaxed)
+        ));
+        let state = base.join("state");
+        let disposable = base.join("disposable");
+        let original = base.join("original");
+        let workspace = disposable.join("worktree");
+        for path in [&base, &state, &disposable, &original] {
+            fs::create_dir(path).unwrap();
+            fs::set_permissions(path, fs::Permissions::from_mode(0o700)).unwrap();
+        }
+        for args in [
+            vec!["init", "--quiet", "--initial-branch=main"],
+            vec![
+                "-c",
+                "user.name=Fixture",
+                "-c",
+                "user.email=fixture@example.invalid",
+                "-c",
+                "commit.gpgsign=false",
+                "commit",
+                "--quiet",
+                "--allow-empty",
+                "-m",
+                "fixture",
+            ],
+            vec![
+                "worktree",
+                "add",
+                "--quiet",
+                "-b",
+                "agentmage/tasks/linked-fixture",
+                workspace.to_str().unwrap(),
+                "HEAD",
+            ],
+        ] {
+            let output = std::process::Command::new("/usr/bin/git")
+                .env_clear()
+                .env("PATH", "/usr/bin:/bin")
+                .env("HOME", &base)
+                .env("GIT_CONFIG_NOSYSTEM", "1")
+                .env("GIT_CONFIG_GLOBAL", "/dev/null")
+                .env("LANG", "C")
+                .arg("-C")
+                .arg(&original)
+                .args(args)
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "fixture Git: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
+        fs::set_permissions(&workspace, fs::Permissions::from_mode(0o700)).unwrap();
+        let marker = workspace.join(MARKER_NAME);
+        fs::write(
+            &marker,
+            format!(
+                "activation={CODING_DEVELOPMENT_ACTIVATION}\nworkspace={}\n",
+                workspace.display()
+            ),
+        )
+        .unwrap();
+        fs::set_permissions(&marker, fs::Permissions::from_mode(0o600)).unwrap();
+        assert_eq!(
+            CodingDevelopmentActivation::validate(&state, &disposable, &workspace),
+            Err(CodingDevelopmentActivationError::MarkerDenied)
+        );
+        let git_metadata = original.join(".git/worktrees/worktree");
+        let parked = original.join(".git/worktrees/parked");
+        fs::rename(&git_metadata, &parked).unwrap();
+        assert_eq!(
+            CodingDevelopmentActivation::validate(&state, &disposable, &workspace),
+            Err(CodingDevelopmentActivationError::MarkerDenied),
+            "legacy marker must refuse before following unavailable external metadata"
+        );
+        fs::rename(&parked, &git_metadata).unwrap();
+        let contents =
+            coding_development_linked_marker(&workspace, &git_metadata, &original.join(".git"))
+                .unwrap();
+        assert!(String::from_utf8_lossy(&contents).contains("\ngit-common="));
+        assert!(String::from_utf8_lossy(&contents).contains("\nmetadata-sha256="));
+        fs::write(&marker, &contents).unwrap();
+        let activation =
+            CodingDevelopmentActivation::validate(&state, &disposable, &workspace).unwrap();
+        activation.revalidate().unwrap();
+        let linked = activation.linked_repository().unwrap();
+        assert_eq!(linked.worktree_root(), workspace);
+        assert_eq!(linked.common_directory(), original.join(".git"));
+        let management = state.join("repository-management");
+        fs::create_dir(&management).unwrap();
+        fs::set_permissions(&management, fs::Permissions::from_mode(0o700)).unwrap();
+        agentmage_platform_linux::LinuxRepositoryScope::verify_linked_read_only(
+            linked,
+            &management,
+        )
+        .unwrap();
+        let pointer = workspace.join(".git");
+        let saved = workspace.join("saved-pointer");
+        fs::rename(&pointer, &saved).unwrap();
+        fs::write(&pointer, fs::read(&saved).unwrap()).unwrap();
+        assert_eq!(
+            activation.revalidate(),
+            Err(CodingDevelopmentActivationError::MarkerDenied)
+        );
+        // The earlier marker cannot authorize a same-byte replacement. Fresh
+        // setup is necessary; neither path nor old digest restores activation.
+        assert_eq!(
+            CodingDevelopmentActivation::validate(&state, &disposable, &workspace),
+            Err(CodingDevelopmentActivationError::MarkerDenied)
+        );
+        eprintln!(
+            "real Git linked activation component: created=1 activated=1 legacy_marker_refused=1 replacement_refused=1 elapsed_us={}",
+            started.elapsed().as_micros()
+        );
+        fs::remove_dir_all(&base).unwrap();
     }
 }

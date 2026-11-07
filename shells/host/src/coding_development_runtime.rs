@@ -689,11 +689,15 @@ fn build_repository_composition(
     let management = activation.state_root().join("repository-management");
     ensure_private_development_directory(&management)
         .map_err(CodingDevelopmentRuntimeError::from)?;
-    let scope = LinuxRepositoryScope::verify(
-        activation.workspace_root(),
-        activation.workspace_root().join(".git"),
-        &management,
-    )
+    let scope = if let Some(linked) = activation.linked_repository() {
+        LinuxRepositoryScope::verify_linked_read_only(linked, &management)
+    } else {
+        LinuxRepositoryScope::verify(
+            activation.workspace_root(),
+            activation.workspace_root().join(".git"),
+            &management,
+        )
+    }
     .map_err(CodingDevelopmentRuntimeError::from)?;
     let collector = LinuxRepositoryCollector::new(
         LinuxGitArtifact::verify("/usr/bin/git").map_err(CodingDevelopmentRuntimeError::from)?,
@@ -701,15 +705,11 @@ fn build_repository_composition(
     let inventory = collector
         .collect_inventory(&scope)
         .map_err(CodingDevelopmentRuntimeError::from)?;
+    activation
+        .revalidate()
+        .map_err(|_| CodingDevelopmentRuntimeError::Activation)?;
     if inventory.entries.iter().any(|entry| {
-        !matches!(
-            entry.state,
-            LinuxRepositoryInventoryState::Tracked {
-                staged_changed: false,
-                conflicted: false,
-                ..
-            }
-        )
+        !development_inventory_entry_is_admissible(activation.linked_repository().is_some(), entry)
     }) {
         return Err(CodingDevelopmentRuntimeError::Repository);
     }
@@ -717,7 +717,7 @@ fn build_repository_composition(
         "coding-development-map-v1",
         vec![
             vec![".git".to_owned()],
-            vec![".agentmage-development-workspace".to_owned()],
+            vec![crate::coding_development_activation::MARKER_NAME.to_owned()],
         ],
         vec![vec!["target".to_owned()]],
         vec![vec!["vendor".to_owned()]],
@@ -758,6 +758,29 @@ fn build_repository_composition(
         )?);
     }
     Ok((profile, workspace, supporting_sources))
+}
+
+fn development_inventory_entry_is_admissible(
+    linked_activation: bool,
+    entry: &agentmage_platform_linux::LinuxRepositoryInventoryEntry,
+) -> bool {
+    match entry.state {
+        LinuxRepositoryInventoryState::Tracked {
+            staged_changed: false,
+            conflicted: false,
+            ..
+        } => true,
+        LinuxRepositoryInventoryState::Untracked | LinuxRepositoryInventoryState::Ignored => {
+            // This exact private activation file is independently revalidated
+            // above and denied by the map policy below. Never require private
+            // path-bound activation bytes to enter a repository's Git history.
+            linked_activation
+                && entry.path.as_slice() == [crate::coding_development_activation::MARKER_NAME]
+                && entry.object_hint
+                    == agentmage_platform_linux::LinuxRepositoryObjectHint::WorktreeObject
+        }
+        _ => false,
+    }
 }
 
 fn build_creation_parent_sources(
@@ -1298,9 +1321,16 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         )
         .map_err(CodingDevelopmentRuntimeError::from)
         .map_err(CodingDevelopmentRuntimeError::report_composition_failure)?;
-        let git_executor = LinuxBoundedRepositoryInspectionExecutor::new(git_manifest)
-            .map_err(CodingDevelopmentRuntimeError::from)
-            .map_err(CodingDevelopmentRuntimeError::report_composition_failure)?;
+        let git_executor = if let Some(linked) = self.activation.linked_repository() {
+            LinuxBoundedRepositoryInspectionExecutor::for_linked_worktree(
+                git_manifest,
+                linked.clone(),
+            )
+        } else {
+            LinuxBoundedRepositoryInspectionExecutor::new(git_manifest)
+        }
+        .map_err(CodingDevelopmentRuntimeError::from)
+        .map_err(CodingDevelopmentRuntimeError::report_composition_failure)?;
         let sandbox_manifest =
             LinuxSandboxManifest::verify_development_read_only_worker(self.platform)
                 .map_err(CodingDevelopmentRuntimeError::from)
@@ -3878,6 +3908,57 @@ fn now_epoch_ms() -> Result<u64, CodingDevelopmentRuntimeError> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn linked_inventory_exception_is_only_the_validated_private_activation_marker() {
+        use super::*;
+        use agentmage_platform_linux::{LinuxRepositoryInventoryEntry, LinuxRepositoryObjectHint};
+        let marker = crate::coding_development_activation::MARKER_NAME.to_owned();
+        let mut entry = LinuxRepositoryInventoryEntry {
+            path: vec![marker.clone()],
+            object_hint: LinuxRepositoryObjectHint::WorktreeObject,
+            state: LinuxRepositoryInventoryState::Untracked,
+        };
+        assert!(development_inventory_entry_is_admissible(true, &entry));
+        assert!(!development_inventory_entry_is_admissible(false, &entry));
+        entry.state = LinuxRepositoryInventoryState::Ignored;
+        assert!(development_inventory_entry_is_admissible(true, &entry));
+        for path in [
+            vec!["source.py".into()],
+            vec!["nested".into(), marker.clone()],
+            vec![marker.clone(), "child".into()],
+            vec![],
+        ] {
+            entry.path = path;
+            assert!(!development_inventory_entry_is_admissible(true, &entry));
+        }
+        entry.path = vec![marker];
+        for kind in [
+            LinuxRepositoryObjectHint::RegularFile,
+            LinuxRepositoryObjectHint::SymbolicLink,
+            LinuxRepositoryObjectHint::Gitlink,
+        ] {
+            entry.object_hint = kind;
+            assert!(!development_inventory_entry_is_admissible(true, &entry));
+        }
+        entry.object_hint = LinuxRepositoryObjectHint::RegularFile;
+        for (staged_changed, conflicted) in [(false, false), (true, false), (false, true)] {
+            entry.state = LinuxRepositoryInventoryState::Tracked {
+                index_object_id: "1".repeat(40),
+                index_mode: "100644".into(),
+                staged_changed,
+                conflicted,
+            };
+            assert_eq!(
+                development_inventory_entry_is_admissible(true, &entry),
+                !staged_changed && !conflicted
+            );
+            assert_eq!(
+                development_inventory_entry_is_admissible(false, &entry),
+                !staged_changed && !conflicted
+            );
+        }
+    }
+
     #[test]
     fn native_setup_refusals_retain_their_categories_without_private_inputs() {
         use super::*;

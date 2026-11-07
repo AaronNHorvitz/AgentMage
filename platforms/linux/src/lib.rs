@@ -14,6 +14,7 @@ mod instruction_discovery;
 mod inventory;
 mod ipc;
 mod lifecycle;
+mod linked_repository;
 mod local_commit;
 mod platform;
 mod repository_inventory;
@@ -82,6 +83,7 @@ pub use lifecycle::{
     LinuxOperationalKeyProvisionReceipt, provision_linux_operational_key,
     rotate_linux_operational_key,
 };
+pub use linked_repository::LinuxLinkedRepository;
 pub use local_commit::{
     LinuxLocalCommitError, LinuxLocalCommitErrorKind, LinuxLocalCommitExecutor, LinuxOpenPgpSigner,
 };

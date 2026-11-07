@@ -1,0 +1,181 @@
+Commit: 9008ee386cc44eea8984e64f198dae6769567892
+Scope: local-coding-read-consent-repair
+
+# Independent core review: original-read consent binding and full-size retrieval decode (T-303/T-306, same-row non-closing repair)
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate read-only session. This is a
+same-model review. A cross-model review is still required before any public release. This review
+grants no certification, compliance or legal clearance.
+
+## Commit and scope confirmation
+
+- `git rev-parse 9008ee386cc44eea8984e64f198dae6769567892 HEAD` returned the same sha for both.
+  `git status --short` printed nothing before and after the review.
+- `git log 51e166c1..9008ee38` shows one commit. The diff from
+  `51e166c107ff7b6ab90fb8412421f7c98c140968` touches exactly 13 paths (+639/−27). That is the
+  builder audit's `EXPECTED` set. No `Cargo.*`, lockfile, `package*.json`, SBOM, evaluation,
+  held-out, hidden-test, threshold or status-model input changed.
+- Read: the T-303/T-306 additions to TASKS.md (append-only text; all row statuses unchanged), the
+  evidence file, all three guide diffs, the retained prior review, and the complete Rust diff. I
+  also read the surrounding code: `inspect_apply`/`verify_apply_roots`/`decide_apply`,
+  `verify_created`, `LinuxAuthorizedWorkspace::root_path_sha256` (a canonical path/device/inode
+  digest), `prepare_edit` lineage and cap, the creation branch that resets `edits`, CLI
+  `original_apply_prepare`/`edit_prepare`, `handle_repository`/`object_json`, the native source
+  producer `build_repository_context_sources`, and `rank_sources`/`matches`/`body_matches`.
+
+## Methods
+
+1. Line-by-line reading of the change. I traced the expected identities from the terminal display
+   through the CLI request, `PrepareApply` (`deny_unknown_fields`, required `String`) and
+   `handle_repository`, to `LinuxCodingRepository::prepare_apply`.
+2. I ran every requested command myself. I compared the full failure identities (test binary,
+   target and method) against the builder's log and against the prior review's base identity
+   file.
+3. Reviewer probes and mutation tests. I used a `git archive` export of the exact commit outside
+   the repository, with its own `CARGO_TARGET_DIR=/lane/state/review-target/scratch-9008ee` so the
+   fingerprints could not collide with repository builds. The export was deleted afterwards; the
+   patch is retained.
+
+No GPU, model or network was used. I did not modify the repository.
+
+## Exact commands and results
+
+Environment: `PATH=/lane/state/tmp/shared-node-v24.15.0/bin:$PATH` (node sha256 `d1de76d8…bd932c`,
+matches); `/tools/build-slot` sha256 `453086eb…ea02ef` (matches);
+`CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4`; toolchain
+1.95.0 (rust-toolchain.toml); locked/offline.
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `python3 -B scripts/local_agent_fast_gate.py --base 51e166c1… --timeout 3600` | Exit 1, `FAST GATE: FAIL` as expected. `git diff --check`, untracked lint, review lint and markdownlint (5 files, 0 issues) exit 0. `cargo fmt --check` exit 0. Clippy `--all-targets -D warnings` exit 0. `cargo test` (host, local-api, linux; all targets; `--no-fail-fast`) exit 101 with **891 passed, 72 failed, 62 ignored, 0 filtered**. The 72 failures are 53 `agentmage_host` lib and 19 `agentmage_platform_linux` lib. The sorted full identities are **byte-identical** to the builder's `fast.log` and to the prior review's base file (`fail-review.txt`, same sha256 `2ea76ffc…f38799`), so no new failures appear. The +3 passes are the three new tests. All three passed in this run, as did `original_apply_api_requires_control_explicit_read_and_existing_creation_and_edit` and `synthetic_original_preparation_discloses_both_roots_and_requires_fresh_read_consent`. |
+| 2 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib coding_repository::apply:: -- --nocapture` | Exit 0, **11 passed**, 294 filtered (filtered on purpose; row 1 is unfiltered). Component line: `4 approved worktree edits, 2 approved original transfers, 3 transferred file versions; elapsed_us=495481` (the builder measured 464074). Real file effects with synthetic creation provenance. It is not native Git creation and not a model, GPU or score measurement. |
+| 3 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-host --lib coding_context::retrieval_tests:: -- --nocapture` | Exit 0, **7 passed**, 579 filtered. `full-size retrieval component: sources=5 source_bytes_each=65536 largest_envelope_bytes=393246 scan_boundary_controls=2 elapsed_us=43307` (the builder measured 44780). This is component timing only. |
+| 4 | `node_modules/.bin/markdownlint-cli2` on the five named files | Exit 0, 0 issues. |
+| 5 | `python3 -B scripts/local_agent_fast_gate.py --lint-reviews docs/reviews/51e166c107ff-local-coding-original-apply.txt` | Exit 0. |
+| 6 | `cmp docs/reviews/51e166c107ff-…txt /lane/reviews/51e166c107ff-…md` | Exit 0; the prior PASS is retained byte for byte. |
+| 7 | `python3 -B /lane/state/tmp/t306-read-consent/audit.py` | Exit 0. Totals `[891, 72, 62, 0]`, 72 identities, `new_failure_identities: []`. It rewrote `audit.json` with identical bytes (`483b2ebe…`). This is the builder's audit, not independent evidence; its exact-path-set and identity assertions agree with my own row 1 comparison. |
+| 8 | `python3 -B /lane/state/tmp/t306-read-consent/run-policy.py /lane/state/tmp/review-read-consent-source-9008ee386cc4` | Exit 0: "Validated 782 Markdown file(s) and all policy invariants." 9027 inputs. My manifest sha256 `050ff9b2…92ea0` is **identical** to the builder's `policy-source-final-inputs.json`. I removed only my mirror and kept the manifest. This is not the T-310 long gate. |
+| 9 | `git diff --check 51e166c1… --` | Exit 0. |
+| P | Reviewer probes, 3 scratch tests on the exact commit | 14/14 apply tests pass (11 builder + 3 reviewer). |
+| M | Mutation A: remove the identity comparison in `prepare_apply` | Both new builder tests and two of my probes **fail** (4 failed, 10 passed). The no-adoption probe still passes because nothing is held. |
+| M | Mutation B: restore `excerpt.len() <= 65_536` | `retrieval_decodes_full_size_native_sources_without_extending_the_scan` **fails** at its rank assertion (line 327). The new regression therefore discriminates the defect in Rust, beyond the builder's Python control. |
+
+I verified the builder's artifact hashes against the request. All 11 match: `audit.py`
+`a2a2b839…`, `audit.json` `483b2ebe…`, `source-freeze.json` `746e8186…`, `fast.log` `5470e371…`,
+`apply-component.log` `cea8153a…`, `retrieval-component.log` `4a4cf2b4…`, `run-policy.py`
+`32a882a1…`, `policy-source-final-inputs.json` `050ff9b2…`, `policy-final.log` `d5dfd00a…`,
+`markdown-final.log` `7647dbd8…`, `encoded-fallback-control.log` `7ea06fa6…`. The evidence
+numbers trace to these logs: 891/72/62/0; stage times of 378.80/499.10/117.68 s; 464074 µs;
+44780 µs; 393,246 bytes.
+
+## Verification of the requested properties
+
+- **Identity binding, end to end.** The CLI takes `root`/`tree` from `GET /apply`, accepting only
+  64-hex digests. It checks both against the typed paths before and after consent
+  (`coding_cli.rs:477-490`). It displays both identities in the escaped JSON and in the exact
+  `read <root> <tree>` token, and sends both in the POST body (`coding_cli.rs:495-496`). The
+  terminal test asserts the exact wire JSON, including both identities, and the token in the
+  transcript. `PrepareApply` makes both fields required `String`s under `deny_unknown_fields` and
+  `object_json`. The API test refuses missing, null, numeric, array, object and duplicate-key
+  values with 400, and 403 without control. Duplicate fields are rejected by the serde-derived
+  struct.
+- **Order before reads.** `prepare_apply` (`coding_repository_apply.rs:65-73`) compares both
+  strings against the in-memory held pair (`created.original` / `created.held`). It does this
+  before `verify_apply_roots`, source selection, any read, `prepare_write` or the
+  `self.apply = Some(..)` assignment. The comparison is exact and byte-wise. My probe confirms
+  that uppercase, trailing-space, trailing-newline, truncated, swapped and duplicated digests
+  refuse `code.apply.read-scope`. The builder test parks the original root and selects an
+  ineligible path; the refusal still comes first, and the preview, receipts and both sources'
+  bytes are unchanged. The repository mutex is held across the check and use, so creation cannot
+  interleave.
+- **Preserved preview stays usable.** My probe shows that after six stale refusals the earlier
+  pending preview still decides and commits its exact bytes, and human work is preserved.
+- **Digests cannot adopt.** The digests are only compared, never used to resolve a path. With no
+  held pair (restart), correct old digests refuse and nothing is pending or written (probe). With a
+  same-path recreated worktree (new directory object, identical bytes) the held identity changes,
+  and the old consent refuses (probe). This confirms the digest binds the object, not only the
+  path.
+- **Separate write consent is unchanged.** `decide_apply`, its grant and transaction, consumption,
+  expiry and lineage consumption are untouched by the diff. There is no automatic retry in the CLI
+  or API. Synthetic peer and creation injection stay inside `#[cfg(test)]` modules or integration
+  tests, and are labelled.
+- **Retrieval.** The native producer caps raw content at 64 KiB
+  (`coding_development_runtime.rs:830-851`). JSON escaping expands it to at most about 6× (`\u0000`).
+  The test's largest envelope is 393,246 bytes. The decode now covers that envelope. `matches`
+  still scans only `take(65_536)` of the decoded content, which covers an entire admitted source.
+  Both boundary controls (a term inside versus beyond byte 65,536) behave correctly. Only
+  `item_id` changes; the test restores it and asserts full `CodingContextSource` equality
+  (provenance, hashes, excerpt bytes). Ranking only applies to the eligible, non-essential
+  `repository-source-<16 hex>` tier with a `agentmage:workspace-file:` source id. Only the native
+  producer emits that tier, and repository text sits inside a JSON string, so parsing cannot
+  amplify its structure. Token counting and model admission code is unchanged.
+- **L2 documentation.** The new guide paragraph matches the code
+  (`coding_repository_edit.rs:49-75`): more than 16 distinct paths across held and new edits gives
+  `code.edit.lineage-limit`. A preimage differing from the last committed postimage gives
+  `code.edit.lineage`. A new creation resets `edits` (`coding_repository.rs:421`). Restart drops
+  ownership. Nothing is weakened.
+- **Honest claims and hygiene.** The evidence states that the prior batch's L1 repair was
+  incomplete. It labels the Python control as analytic and the timings as component-only, and
+  makes no native, model, GPU, score or release claim. The added lines contain no private host
+  path, username, hostname, credential or personal data. No other agent product is named in the
+  new text. No row or sub-row is added; T-303/T-306 stay `[ ]`. Delivery is a same-row repair
+  that ends in running, measured tests.
+
+## Findings
+
+No critical, high or medium findings.
+
+### L1 (low, backlog): owned-edit read consent still names a root digest the server does not bind
+
+Location: `platforms/local-api/src/coding_cli.rs:446-461` (`edit_prepare`) and
+`platforms/local-api/src/coding_repository_api.rs:68-75` (`PrepareEdit`). This code predates the
+diff and has the same pattern as the original-apply L3 that this commit repairs.
+
+The terminal requires `read <worktree-root-digest>`, but the body sends no identity. Suppose a
+separately approved new creation completes during the prompt. The server then reads the new held
+worktree. The per-source `expected_sources` hashes limit this to files with identical bytes, and
+the result is an inert preview returned to the same trusted caller. Fix: add a required
+`expected_worktree_root_sha256` to `PrepareEdit`, compare it against `created.held` before
+`select_created_sources`, and send the displayed identity from `edit_prepare`.
+
+### Backlog notes (not findings)
+
+- The ranking helper's JSON decode no longer has a size cap for excerpts that are not from the
+  producer. It is reachable only through trusted in-process construction of the
+  `repository-source-` tier, and the excerpt is already token-counted in full. Capping the decode
+  at the producer's maximum envelope would make that explicit.
+- The retained prior review repeats, as a recommendation to rename, the pre-existing committed file
+  name `docs/guides/codex-coding-implementation-brief.md` (also `scripts/start_coding_codex.sh` and
+  its test), which uses another product's name. This is pre-existing and out of scope.
+- Still open as stated: native Git trusted-executable refusal (T-301.1), ordinary-`.git` activation
+  versus manual linked-worktree composition, configured-endpoint admission, durable HTTP recovery,
+  coordinator-connected worktree/edit/test/apply, approved commit/push, MCP and parent
+  measurements.
+
+## Per-row result
+
+- **T-306: repair accepted for this exact commit (non-closing).** It addresses L1 and L3 of the
+  original-apply review, and documents L2. There is no open high or medium finding; the new low L1
+  is backlog. The row stays OPEN. This is not parent acceptance, not a native positive-workflow
+  claim and not a score.
+- **T-303: repair accepted (non-closing).** The full-size retrieval decode gap is closed and
+  covered by a discriminating regression. The row stays OPEN.
+
+## Retained reviewer artifacts (`/lane/state/tmp/review-9008ee386cc4/`)
+
+- `fast.log` `1a1a1277e7912197f74358bc4fa44140594db2ddd0a1ac27dccec98945e0c83c`
+- `fails-review.txt` (72 full identities) `2ea76ffc364805b75a5e49a48dcef91bcade9e94f13697b08dff57e97af38799`
+- `focused-apply.log` `d5d5d47a139d14c717863fa93de8d85708d3ffdb3d58c3dca51761db4696a178`
+- `focused-retrieval.log` `b4054b113ad9680195c6821615207812fccb417c0d3e9a20cbb83cb7a9ad0822`
+- `probe-apply.log` `af4c73a1c55f266f6bf1c1d6d104169ea2a69d680d5befd2d13ead2a3b3f99b9`
+- `mutation-a.log` `a4729d96ee1dba37eb66943c34a8b68518606554be61a92545e33f50a55e2f4b`
+- `mutation-b.log` `5689e58319508b199d03385be29ef1d7df3619d6c142b7833b81befc54bff29c`
+- `reviewer-probes-and-mutations.patch` (final scratch state: probes plus both mutations)
+  `ddc8dac4a507f572851a287fd7129cecc8599fda9c43cf609db09091e8bbd643`
+- `audit.log` `9c6c1a24b7f89754c254ef33b9f9d72d4c60b705cb12aa8298c8e6e49deab48a`
+- `policy.log` `d5dfd00acf81122b862d5c85c9667e961de4d0ceb28c0b4a963ff96340163cf1`
+- `markdown.log` `7647dbd8174e56e2083d85c958225069cd64df1f03fd3bb8a04a2ff9e75c74c0`
+- `/lane/state/tmp/review-read-consent-source-9008ee386cc4-inputs.json`
+  `050ff9b2dca9998ff909480de08da32e649a7847125846def6fbb799c3392ea0`
+
+Verdict: PASS

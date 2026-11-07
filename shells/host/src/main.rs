@@ -22,6 +22,32 @@ fn main() -> Result<(), HostExit> {
             #[cfg(target_os = "linux")]
             [command] if command == "--bootstrap-linux" => return bootstrap_linux(),
             #[cfg(target_os = "linux")]
+            [command, workspace_root] if command == "--coding-development-marker" => {
+                use std::io::Write;
+                let marker =
+                    agentmage_host::coding_development_activation::coding_development_marker(
+                        std::path::Path::new(workspace_root),
+                    )
+                    .map_err(|error| HostExit(error.code()))?;
+                return std::io::stdout()
+                    .lock()
+                    .write_all(&marker)
+                    .map_err(|_| HostExit("coding.development.marker-output-failed"));
+            }
+            #[cfg(target_os = "linux")]
+            [command, workspace_root, git_metadata, git_common]
+                if command == "--coding-development-linked-marker" =>
+            {
+                use std::io::Write;
+                let marker = agentmage_host::coding_development_activation::coding_development_linked_marker(
+                    std::path::Path::new(workspace_root), std::path::Path::new(git_metadata), std::path::Path::new(git_common))
+                    .map_err(|error| HostExit(error.code()))?;
+                return std::io::stdout()
+                    .lock()
+                    .write_all(&marker)
+                    .map_err(|_| HostExit("coding.development.marker-output-failed"));
+            }
+            #[cfg(target_os = "linux")]
             [
                 command,
                 state_root,
