@@ -15,7 +15,8 @@ use std::time::{Duration, Instant};
 use zeroize::{Zeroize, Zeroizing};
 
 use crate::local_chat::{
-    ChatError, ChatEvent, ChatFinish, ChatMessage, ChatStream, LocalChatEndpoint, encode_chat,
+    ChatError, ChatEvent, ChatFinish, ChatMessage, ChatStream, ChatUsage, LocalChatEndpoint,
+    encode_chat, encode_chat_with_usage,
 };
 
 const IO_TICK: Duration = Duration::from_millis(50);
@@ -212,6 +213,16 @@ pub struct LocalChatTransport {
     limits: TransportLimits,
 }
 
+/// Completion confirmed at HTTP and codec EOF. Counts remain server reports;
+/// they never qualify a model or supply verified local resource observations.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ChatCompletion {
+    /// Normal stop or visible output limit.
+    pub finish: ChatFinish,
+    /// Optional final provider-reported usage; absence is never zero.
+    pub usage: Option<ChatUsage>,
+}
+
 impl LocalChatTransport {
     /// Configures an explicit local endpoint. Credentials belong to this exact
     /// instance; replacing the destination requires a new transport and approval.
@@ -297,17 +308,50 @@ impl LocalChatTransport {
         messages: &[ChatMessage<'_>],
         max_tokens: u32,
         cancel: &ChatCancellation,
-        mut text: impl FnMut(&str),
+        text: impl FnMut(&str),
     ) -> Result<ChatFinish, TransportError> {
         self.authorized(approval)?;
         cancel.check()?;
         let body = Zeroizing::new(encode_chat(model, messages, max_tokens)?);
-        let mut codec = ChatStream::new(model)?;
+        self.chat_encoded(model, &body, None, cancel, text)
+            .map(|r| r.finish)
+    }
+
+    /// Opt-in provider usage. Sends `stream_options.include_usage`; servers
+    /// may omit usage, which remains None. Refusal never retries without the
+    /// option. No usage escapes on partial, cancelled or invalid completion.
+    pub fn chat_with_usage(
+        &self,
+        approval: &LocalChatApproval,
+        model: &str,
+        messages: &[ChatMessage<'_>],
+        max_tokens: u32,
+        cancel: &ChatCancellation,
+        text: impl FnMut(&str),
+    ) -> Result<ChatCompletion, TransportError> {
+        self.authorized(approval)?;
+        cancel.check()?;
+        let body = Zeroizing::new(encode_chat_with_usage(model, messages, max_tokens)?);
+        self.chat_encoded(model, &body, Some(max_tokens), cancel, text)
+    }
+
+    fn chat_encoded(
+        &self,
+        model: &str,
+        body: &[u8],
+        usage_limit: Option<u32>,
+        cancel: &ChatCancellation,
+        mut text: impl FnMut(&str),
+    ) -> Result<ChatCompletion, TransportError> {
+        let mut codec = match usage_limit {
+            Some(limit) => ChatStream::with_usage(model, limit)?,
+            None => ChatStream::new(model)?,
+        };
         let mut wire = self.request(
             "POST",
             &self.endpoint.chat_path(),
             "text/event-stream",
-            &body,
+            body,
             cancel,
         )?;
         let framing = wire.headers("text/event-stream")?;
@@ -324,7 +368,10 @@ impl LocalChatTransport {
         })?;
         codec.end()?;
         wire.check()?;
-        finish.ok_or(ChatError::Incomplete.into())
+        Ok(ChatCompletion {
+            finish: finish.ok_or(ChatError::Incomplete)?,
+            usage: codec.usage(),
+        })
     }
 
     fn request<'a>(

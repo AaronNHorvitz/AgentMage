@@ -245,5 +245,96 @@ class SmokeTests(unittest.TestCase):
         self.assertEqual(observed[-1][:2], ("DELETE", "/v1/settings"))
 
 
+class ProviderUsageTests(unittest.TestCase):
+    setUp = SmokeTests.setUp
+    stream = SmokeTests.stream
+    consume = SmokeTests.consume
+    json_api = SmokeTests.json_api
+    # Use the same dedicated synthetic API setup without inheriting its test methods.
+
+    def test_usage_envelope_requires_opt_in_and_strict_nonnegative_counts(self):
+        text = {"type": "text", "text": "answer"}
+        end = {"type": "complete", "finish": "stop", "usage_source": "provider-reported",
+               "usage": {"prompt_tokens": 12, "completion_tokens": 4, "total_tokens": 16}}
+        for usage in [end["usage"], None]:
+            event = dict(end, usage=usage)
+            _, timing = smoke.consume_stream(self.stream(text, event), io.StringIO(), 1,
+                                             time.monotonic(), True)
+            self.assertEqual(timing["provider_usage"], usage)
+            with self.assertRaises(smoke.SmokeError):
+                self.consume(self.stream(text, event))
+        invalid = [{}, [], {"completion_tokens": 4}]
+        for key in end["usage"]:
+            for value in [-1, 4.5, True, "4", 2**32]:
+                invalid.append(dict(end["usage"], **{key: value}))
+        invalid.extend([dict(end["usage"], total_tokens=17),
+                        {"prompt_tokens": 12, "completion_tokens": 1025, "total_tokens": 1037}])
+        for usage in invalid:
+            with self.subTest(usage=usage), self.assertRaises(smoke.SmokeError):
+                smoke.consume_stream(self.stream(text, dict(end, usage=usage)), io.StringIO(), 1,
+                                     time.monotonic(), True)
+        for ending in [{"type": "complete", "finish": "stop"},
+                       dict(end, usage_source="verified"), dict(end, finish="length")]:
+            with self.assertRaises(smoke.SmokeError):
+                smoke.consume_stream(self.stream(text, ending), io.StringIO(), 1,
+                                     time.monotonic(), True)
+
+    def test_opted_in_measurement_aggregates_only_complete_reports(self):
+        self.calls = []
+        captured = []
+        class Connection:
+            def close(inner):
+                pass
+        for missing in [False, True]:
+            count = 0
+            def request(*args):
+                nonlocal count
+                count += 1
+                captured.append(args[-1])
+                return Connection(), self.stream(
+                    {"type": "text", "text": "red"},
+                    {"type": "complete", "finish": "stop", "usage_source": "provider-reported",
+                     "usage": None if missing and count == 2 else {
+                         "prompt_tokens": 12, "completion_tokens": 4, "total_tokens": 16}})
+            with patch.object(smoke, "json_request", side_effect=self.json_api), \
+                    patch.object(smoke, "request", side_effect=request):
+                report = smoke.measure(self.address, self.auth, "http://127.0.0.1:8080/v1",
+                                       "fixture", self.root / str(missing), include_usage=True)
+            self.assertEqual(report["result"], "PASS")
+            self.assertEqual(report["schema_version"], 2)
+            self.assertEqual(report["tokens"], None if missing else {
+                "prompt_tokens": 24, "completion_tokens": 8, "total_tokens": 32})
+            self.assertTrue(report["settings_revoked"])
+        self.assertTrue(all(p["include_usage"] is True for p in captured))
+
+    def test_failed_second_turn_does_not_create_an_aggregate_or_count_partial_usage(self):
+        self.calls = []
+        class Connection:
+            def close(inner):
+                pass
+        for failure in ["partial", "late", "length"]:
+            count = 0
+            def request(*args):
+                nonlocal count
+                count += 1
+                rows = [{"type": "text", "text": "red"}]
+                if count == 1 or failure != "partial":
+                    rows.append({"type": "complete", "finish": "length" if count == 2 and
+                                 failure == "length" else "stop", "usage_source": "provider-reported",
+                                 "usage": {"prompt_tokens": 12, "completion_tokens": 4, "total_tokens": 16}})
+                if count == 2 and failure == "late":
+                    rows.append({"type": "text", "text": "late"})
+                return Connection(), self.stream(*rows)
+            with patch.object(smoke, "json_request", side_effect=self.json_api), \
+                    patch.object(smoke, "request", side_effect=request):
+                report = smoke.measure(self.address, self.auth, "http://127.0.0.1:8080/v1",
+                                       "fixture", self.root / failure, include_usage=True)
+            self.assertEqual(report["result"], "FAIL")
+            self.assertIsNone(report["tokens"])
+            self.assertEqual(len(report["turns"]), 1)
+            self.assertEqual(report["turns"][0]["provider_usage"]["total_tokens"], 16)
+            self.assertTrue(report["settings_revoked"])
+
+
 if __name__ == "__main__":
     unittest.main()

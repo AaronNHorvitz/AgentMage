@@ -702,3 +702,117 @@ fn probe_candidates_share_one_total_deadline() {
     assert!(start.elapsed() < Duration::from_secs(1));
     task.join().unwrap();
 }
+
+#[test]
+fn usage_transport_keeps_exact_approval_and_reports_only_valid_eof() {
+    for mode in ["report", "missing", "truncated", "status", "cancelled"] {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        listener.set_nonblocking(true).unwrap();
+        let endpoint =
+            LocalChatEndpoint::parse(&format!("http://{}/v1", listener.local_addr().unwrap()))
+                .unwrap();
+        let wrong = LocalChatApproval::for_endpoint(
+            LocalChatEndpoint::parse(&format!("http://{}/other", listener.local_addr().unwrap()))
+                .unwrap(),
+        );
+        let (transport, approval) = connection(endpoint, limits());
+        let cancel = ChatCancellation::default();
+        let messages = [ChatMessage {
+            role: ChatRole::User,
+            content: "synthetic task",
+        }];
+        assert_eq!(
+            transport.chat_with_usage(&wrong, "test-model", &messages, 16, &cancel, |_| {}),
+            Err(TransportError::Approval)
+        );
+        assert_eq!(
+            listener.accept().unwrap_err().kind(),
+            std::io::ErrorKind::WouldBlock
+        );
+        let task = thread::spawn(move || {
+            let start = Instant::now();
+            let mut s = loop {
+                match listener.accept() {
+                    Ok((s, _)) => break s,
+                    Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                        assert!(start.elapsed() < Duration::from_secs(4));
+                        thread::sleep(Duration::from_millis(2));
+                    }
+                    Err(e) => panic!("{e}"),
+                }
+            };
+            let raw = read_request(&mut s);
+            let offset = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
+            let input: serde_json::Value = serde_json::from_slice(&raw[offset..]).unwrap();
+            assert_eq!(
+                input["stream_options"],
+                serde_json::json!({"include_usage":true})
+            );
+            if mode == "status" {
+                s.write_all(b"HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n")
+                    .unwrap();
+            } else {
+                let finish = ending("stop");
+                let cutoff = finish
+                    .windows(b"data: [DONE]".len())
+                    .position(|v| v == b"data: [DONE]")
+                    .unwrap();
+                let mut body = text_frame("answer");
+                body.extend_from_slice(&finish[..cutoff]);
+                if mode != "missing" {
+                    body.extend_from_slice(
+                        format!(
+                            "data: {}\n\n",
+                            serde_json::json!({"model":"test-model","choices":[],
+                        "usage":{"prompt_tokens":12,"completion_tokens":4,"total_tokens":16}})
+                        )
+                        .as_bytes(),
+                    );
+                }
+                if mode != "truncated" {
+                    body.extend_from_slice(b"data: [DONE]\n\n");
+                }
+                // Ignore a broken pipe only in the explicitly cancelled case.
+                let write = s.write_all(&response("text/event-stream", &body));
+                if mode != "cancelled" {
+                    write.unwrap();
+                }
+            }
+            drop(s);
+            assert_eq!(
+                listener.accept().unwrap_err().kind(),
+                std::io::ErrorKind::WouldBlock
+            );
+        });
+        let mut text = String::new();
+        let result = transport.chat_with_usage(
+            &approval,
+            "test-model",
+            &messages,
+            16,
+            &cancel,
+            |fragment| {
+                text.push_str(fragment);
+                if mode == "cancelled" {
+                    cancel.cancel();
+                }
+            },
+        );
+        match mode {
+            "report" | "missing" => {
+                let completion = result.unwrap();
+                assert_eq!(completion.finish, ChatFinish::Stop);
+                assert_eq!(
+                    completion.usage.map(|u| u.total_tokens),
+                    if mode == "report" { Some(16) } else { None }
+                );
+                assert_eq!(text, "answer");
+            }
+            "status" => assert_eq!(result, Err(TransportError::Status)),
+            "cancelled" => assert_eq!(result, Err(TransportError::Cancelled)),
+            "truncated" => assert_eq!(result, Err(TransportError::Chat(ChatError::Incomplete))),
+            _ => unreachable!(),
+        }
+        task.join().unwrap();
+    }
+}

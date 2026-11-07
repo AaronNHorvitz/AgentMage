@@ -92,7 +92,7 @@ def json_request(address: tuple[str, int], token: str, method: str, route: str,
 
 
 def consume_stream(response: http.client.HTTPResponse, target, turn: int,
-                   started: float) -> tuple[str, dict]:
+                   started: float, include_usage: bool = False) -> tuple[str, dict]:
     if response.getheader("Content-Type") != "application/x-ndjson":
         raise SmokeError("Unexpected chat media type")
     text = []
@@ -100,6 +100,7 @@ def consume_stream(response: http.client.HTTPResponse, target, turn: int,
     terminal = False
     total = 0
     count = 0
+    usage = None
     while True:
         if time.monotonic() - started > 130:
             raise SmokeError("Chat measurement deadline exceeded")
@@ -123,14 +124,33 @@ def consume_stream(response: http.client.HTTPResponse, target, turn: int,
                 first = elapsed
             text.append(event["text"])
         elif event == {"type": "complete", "finish": "stop"}:
+            if include_usage:
+                raise SmokeError("Missing requested usage envelope")
+            terminal = True
+        elif (include_usage and isinstance(event, dict)
+              and set(event) == {"type", "finish", "usage", "usage_source"}
+              and event["type"] == "complete" and event["finish"] == "stop"
+              and event["usage_source"] == "provider-reported"):
+            usage = event["usage"]
+            if usage is not None:
+                fields = {"prompt_tokens", "completion_tokens", "total_tokens"}
+                if (not isinstance(usage, dict) or set(usage) != fields
+                        or any(type(n) is not int or not 0 <= n <= 0xffffffff
+                               for n in usage.values())
+                        or usage["prompt_tokens"] + usage["completion_tokens"] != usage["total_tokens"]
+                        or usage["completion_tokens"] > 1024):
+                    raise SmokeError("Invalid provider usage report")
             terminal = True
         else:
             raise SmokeError("Chat failed, was truncated, or returned an unsupported event")
     answer = "".join(text)
     if not terminal or not answer.strip():
         raise SmokeError("No complete nonempty model answer")
-    return answer, {"first_text_seconds": first, "wall_seconds": time.monotonic() - started,
-                    "events": count, "text_bytes": len(answer.encode("utf-8")), "finish": "stop"}
+    timing = {"first_text_seconds": first, "wall_seconds": time.monotonic() - started,
+              "events": count, "text_bytes": len(answer.encode("utf-8")), "finish": "stop"}
+    if include_usage:
+        timing["provider_usage"] = usage
+    return answer, timing
 
 
 def private_output(path: Path):
@@ -145,13 +165,17 @@ def save(path: Path, value: object) -> None:
 
 
 def measure(address: tuple[str, int], auth: Path, endpoint: str, model: str,
-            output: Path, key_file: Path | None = None) -> dict:
+            output: Path, key_file: Path | None = None, include_usage: bool = False) -> dict:
     # A new output directory prevents overwriting records or following a leaf symlink.
     output.mkdir(mode=0o700)
     report = {"schema_version": 1, "purpose": "connection-only", "result": "FAIL",
               "prompts": list(PROMPTS), "turns": [], "tokens": None,
-              "token_note": "The API does not expose upstream token usage.",
+              "token_note": "Upstream token usage was not requested.",
               "settings_revoked": False}
+    if include_usage:
+        report.update(schema_version=2, usage_requested=True,
+                      token_note="Optional provider reports, not verified tokenizer observations; "
+                                 "null means unavailable. No counts from partial or failed turns.")
     control = client = None
     choice_attempted = False
     try:
@@ -175,15 +199,19 @@ def measure(address: tuple[str, int], auth: Path, endpoint: str, model: str,
             for number, prompt in enumerate(PROMPTS, 1):
                 messages.append({"role": "user", "content": prompt})
                 started = time.monotonic()
-                connection, response = request(address, client, "POST", "/v1/chat",
-                                               {"model": model, "messages": messages,
-                                                "max_tokens": 1024})
+                payload = {"model": model, "messages": messages, "max_tokens": 1024}
+                if include_usage:
+                    payload["include_usage"] = True
+                connection, response = request(address, client, "POST", "/v1/chat", payload)
                 try:
-                    answer, timing = consume_stream(response, events, number, started)
+                    answer, timing = consume_stream(response, events, number, started, include_usage)
                 finally:
                     connection.close()
                 messages.append({"role": "assistant", "content": answer})
                 report["turns"].append(timing)
+        if include_usage and all(t["provider_usage"] is not None for t in report["turns"]):
+            report["tokens"] = {key: sum(t["provider_usage"][key] for t in report["turns"])
+                                for key in ("prompt_tokens", "completion_tokens", "total_tokens")}
         report["result"] = "PASS"
     except (SmokeError, OSError, ValueError, http.client.HTTPException):
         # No upstream body, key, token, path or arbitrary exception text in diagnostics.
@@ -218,13 +246,15 @@ def main() -> int:
     parser.add_argument("--model", required=True)
     parser.add_argument("--output-directory", required=True, type=Path)
     parser.add_argument("--endpoint-key-file", type=Path)
+    parser.add_argument("--include-usage", action="store_true",
+                        help="Request optional provider token counts; never retry if refused")
     parser.add_argument("--approve-conversations", required=True, action="store_true",
                         help="Explicitly authorize the two synthetic prompts to this endpoint")
     args = parser.parse_args()
     os.umask(0o077)
     try:
         report = measure(api_address(args.api_address), args.auth_directory, args.endpoint,
-                         args.model, args.output_directory, args.endpoint_key_file)
+                         args.model, args.output_directory, args.endpoint_key_file, args.include_usage)
     except (SmokeError, OSError, ValueError):
         print("CHAT CONNECTION: FAIL (check private inputs and use a new output directory)")
         return 1

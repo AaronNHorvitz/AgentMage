@@ -2000,3 +2000,127 @@ fn selection_binds_map_root_without_losing_an_existing_scope_on_refusal() {
     assert_eq!(document(&error)["error"], "code.workspace.root-stale");
     fs::remove_dir_all(moved).unwrap();
 }
+
+#[test]
+fn opted_in_usage_is_provider_reported_and_never_implies_verified_tokens() {
+    for mode in ["reported", "missing", "bad", "duplicate", "late", "length"] {
+        let api = Api::new();
+        let (endpoint, task) = upstream(move |mut socket| {
+            let raw = incoming(&mut socket);
+            let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
+            let request: Value = serde_json::from_slice(&raw[start..]).unwrap();
+            assert_eq!(request["stream_options"], json!({"include_usage":true}));
+            assert_eq!(request["max_tokens"], 32);
+            let usage = format!(
+                "data: {}\n\n",
+                json!({"model":"fixture","choices":[],"usage":{
+                "prompt_tokens":12,"completion_tokens":4,"total_tokens":if mode == "bad" {17} else {16}}})
+            );
+            let finish = format!(
+                "data: {}\n\n",
+                json!({"model":"fixture","choices":[{
+                "index":0,"delta":{},"finish_reason":if mode == "length" {"length"} else {"stop"}}]})
+            );
+            let mut body = format!("{}{}", chunk("untrusted answer"), finish);
+            if mode != "missing" {
+                body.push_str(&usage);
+            }
+            if mode == "duplicate" {
+                body.push_str(&usage);
+            }
+            body.push_str("data: [DONE]\n\n");
+            if mode == "late" {
+                body.push_str("late");
+            }
+            reply(&mut socket, "text/event-stream", &body);
+        });
+        api.configure(&endpoint);
+        let mut input = chat();
+        input["include_usage"] = json!(true);
+        let (status, body) = api.call("POST", "/v1/chat", CLIENT, Some(input));
+        assert_eq!(status, 200);
+        let rows = events(&body);
+        if matches!(mode, "bad" | "duplicate" | "late") {
+            assert!(!rows.iter().any(|row| row["type"] == "complete"));
+            assert!(rows.iter().all(|row| row.get("usage").is_none()));
+            assert_eq!(rows.last().unwrap()["partial"], true);
+        } else {
+            let last = rows.last().unwrap();
+            assert_eq!(last["type"], "complete");
+            assert_eq!(
+                last["finish"],
+                if mode == "length" { "length" } else { "stop" }
+            );
+            assert_eq!(last["usage_source"], "provider-reported");
+            assert_eq!(
+                last["usage"],
+                if mode == "missing" {
+                    Value::Null
+                } else {
+                    json!({"prompt_tokens":12,"completion_tokens":4,"total_tokens":16})
+                }
+            );
+        }
+        task.join().unwrap();
+    }
+}
+
+#[test]
+fn proposal_usage_uses_the_same_validated_stream_without_authorizing_edits() {
+    for mode in ["report", "missing", "bad", "invalid-edit"] {
+        let api = Api::new();
+        let (endpoint, task) = upstream(move |mut s| {
+            let raw = incoming(&mut s);
+            let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
+            let request: Value = serde_json::from_slice(&raw[start..]).unwrap();
+            assert_eq!(request["stream_options"], json!({"include_usage":true}));
+            assert!(request.get("tools").is_none());
+            let answer = if mode == "invalid-edit" {
+                "not a strict edit".into()
+            } else {
+                coding_answer()
+            };
+            let mut body = chunk(&answer);
+            let tail = end();
+            let (finish, done) = tail.split_once("data: [DONE]").unwrap();
+            body.push_str(finish);
+            if mode != "missing" {
+                body.push_str(&format!("data: {}\n\n", json!({"model":"fixture","choices":[],
+                    "usage":{"prompt_tokens":100,"completion_tokens":40,"total_tokens": if mode == "bad" {141} else {140}}})));
+            }
+            body.push_str("data: [DONE]");
+            body.push_str(done);
+            reply(&mut s, "text/event-stream", &body);
+        });
+        api.configure(&endpoint);
+        let mut input = coding_request();
+        input["include_usage"] = json!(true);
+        let (status, body) = api.call("POST", "/v1/code/proposals", CLIENT, Some(input));
+        assert_eq!(status, 200);
+        let rows = events(&body);
+        let last = rows.last().unwrap();
+        if matches!(mode, "bad" | "invalid-edit") {
+            assert_eq!(last["type"], "error");
+            if mode == "bad" {
+                assert!(rows.iter().all(|r| r.get("usage").is_none()));
+            } else {
+                assert_eq!(last["usage"]["total_tokens"], 140);
+            }
+            assert!(!rows.iter().any(|r| r["type"] == "proposal"));
+        } else {
+            assert_eq!(last["type"], "proposal");
+            assert_eq!(last["applied"], false);
+            assert_eq!(last["tested"], false);
+            assert_eq!(last["usage_source"], "provider-reported");
+            assert_eq!(
+                last["usage"],
+                if mode == "missing" {
+                    Value::Null
+                } else {
+                    json!({"prompt_tokens":100,"completion_tokens":40,"total_tokens":140})
+                }
+            );
+        }
+        task.join().unwrap();
+    }
+}

@@ -1,0 +1,173 @@
+Commit: b6d2829368e7e01716f4fc78c84e1154a62ed3f8
+Scope: local-coding-created-file-transfer
+
+# Independent core review: transfer verified new files from owned coding worktrees
+
+Reviewer: a separate, read-only Claude Opus 5.5 session at extra-high effort. This is a same-model
+review; a cross-model review must still come before any public release. Row: T-306 (shared with T-303),
+a non-closing increment. Both parent rows stay OPEN whatever the verdict.
+
+## Methods
+
+I reviewed only the frozen checkout `/lane/review-checkout` at the exact commit above, against base
+`198af125dfdc7a22d46b8905c6a78da5907c0311` (19 paths, +1643/-49). Before running anything I read
+IP-POLICY.md, the TASKS.md T-306 change, Decision 0160, the evidence file, both changed guides, the
+retained prior report and every private helper (`verify.py`, `audit.py`, `docs-final.py`,
+`run-policy.py`). Then I read the complete source diff, plus the code it depends on: the kernel
+filesystem plan, observation and verification rules (`kernel/engine/src/filesystem_control.rs`), the
+native controlled-filesystem driver, the original-apply owner, the host create and structured-write
+paths, the runtime loop's execution branches and the CLI confirmation path. I wrote four of my own
+escape probes in a scratch copy outside the repository (`git archive` of the exact commit) with a
+separate target directory and ran them through the build slot. I did not modify the repository.
+No GPU, model or network service was used.
+
+## Exact commands and results (all run in `/lane/review-checkout`)
+
+```sh
+git rev-parse HEAD b6d2829368e7e01716f4fc78c84e1154a62ed3f8   # both b6d2829368e7e01716f4fc78c84e1154a62ed3f8
+sha256sum -c /lane/state/tmp/t306-created-transfer/review-inputs.sha256   # all 27 OK
+sha256sum /lane/state/tmp/t306-created-transfer/review-inputs.sha256      # c5e4d05e…6be0f, as requested
+export PATH=/lane/state/tmp/t306-owned-api/node-v24.15.0/bin:$PATH
+export CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+export AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-created-transfer-b6d2829368e7
+mkdir -m 700 "$AGENTMAGE_VALIDATION_DIR"
+bash /tools/build-slot python3 -B /lane/state/tmp/t306-created-transfer/verify.py > "$AGENTMAGE_VALIDATION_DIR/verification.log" 2>&1
+#   exit 1. FOCUSED native exit 0 (29 passed/0 failed/0 ignored/301 filtered);
+#   FOCUSED terminal exit 0 (13/0/0/0 filtered); FAST_GATE_EXIT 1.
+#   Gate commands: exits 0,0,0,0,0 (fmt --check),0 (Clippy -D warnings, 33.55 s),101 (tests, 109.91 s); FAST GATE: FAIL.
+#   Component timing in my focused run: new_file_component_two_creates_edit_transfer_us=431200
+cmp …/validation-3/plan.json "$AGENTMAGE_VALIDATION_DIR/plan.json"                          # identical
+cmp …/validation-3/source-freeze.json "$AGENTMAGE_VALIDATION_DIR/source-freeze.json"        # identical
+python3 -B /lane/state/tmp/t306-created-transfer/docs-final.py > …/docs-final.log 2>&1      # exit 0; markdownlint 0 issues in 5 files; FINAL DOCS CHECKS PASS
+cmp …/validation-3/plan-final.json "$AGENTMAGE_VALIDATION_DIR/plan-final.json"              # identical
+python3 -B /lane/state/tmp/t306-read-consent/run-policy.py …/policy-final > …/policy-final.log 2>&1   # exit 0; "Validated 799 Markdown file(s) and all policy invariants."
+cmp …/validation-3/policy-final-inputs.json "$AGENTMAGE_VALIDATION_DIR/policy-final-inputs.json"  # identical (9,062 inputs)
+python3 -B /lane/state/tmp/t306-created-transfer/audit.py > "$AGENTMAGE_VALIDATION_DIR/audit.json"  # exit 0
+cmp …/validation-3/audit.json "$AGENTMAGE_VALIDATION_DIR/audit.json"                        # identical
+cmp docs/reviews/198af125dfdc-local-coding-bound-recovery.txt /lane/reviews/198af125dfdc-local-coding-bound-recovery.md  # identical
+git diff --check 198af125dfdc7a22d46b8905c6a78da5907c0311 --                                 # clean
+git status --short                                                                            # clean
+```
+
+I also checked the results independently rather than relying only on the audit. My `fast.log` has 22
+test targets, 945 passed, 72 failed, 63 ignored and 0 filtered. Of the 72 failures, 53 are host and 19
+are Linux, and their identities and normalized diagnostics equal the retained baseline. The only
+FAILED summaries are the host lib (539/53/9) and the Linux lib (259/19/52); every other target has
+0 failed. All eight `runtime_new_file_*` methods pass in the unfiltered run. So do
+`runtime_poisoned_owner_recovers_without_creation_authority_or_pending_approvals` (the synthetic
+poison panic is caught), `synthetic_api_command_preview_needs_exact_tty_consent_and_current_root` (now
+with an `original-create` case) and `synthetic_original_preparation_discloses_both_roots_and_requires_fresh_read_consent`.
+The 19 Linux failures are in `command_runner`, `local_commit`, `repository_safety` and
+`secret_service`, none of which this diff touches. The host failures panic in a shared fixture at
+`linux_coding_runtime.rs:11255`, which is the recorded executable-trust blocker. As a result, no host
+`linux_coding_runtime` test passes in this lane, so the host change in this diff is supported by source
+inspection only, as the evidence says.
+
+I checked the builder's raw attempts. Attempt 1 has two E0277 path-component conversion errors at
+`coding_workspace_create.rs:71/92` and runs no tests. In attempt 2, 22 tests pass and 7 fail, all at
+`prepare_create(...).unwrap()` with `Err(Input)`. That matches the unchanged kernel rule
+`validate_verification` (`filesystem_control.rs:2544`, which refuses an empty list). The diff changes
+no kernel file. The summed command time of 183.59 s and the 434,456 µs component timing in
+`validation-3` match the evidence.
+
+Reviewer probes (scratch copy only, `CARGO_TARGET_DIR=/lane/state/tmp/review-scratch-target`, via
+`bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib reviewer_probe -- --nocapture`):
+4 passed, 0 failed.
+
+- Original parent `pkg` is a symlink to an outside directory before preparation: preparation refuses.
+  After preparation, `pkg` is swapped for that symlink: the decision does not commit. In both cases the
+  outside directory stays empty.
+- `../new.py`, `./new.py`, `new.py/`, `/new.py`, `pkg/../new.py` and the case alias `NEW.py` all
+  refuse. The created worktree file replaced by a symlink, or by a hardlink to identical bytes outside,
+  also refuses. Nothing appears in the original.
+- A native two-file worktree creation whose later destination becomes occupied after preparation does
+  not commit. The earlier file is never written, the human bytes stay intact and no lineage is
+  recorded.
+- Mode 0755 is displayed in the preview with `overwrite_allowed:false`,
+  `implicit_parent_creation:false` and the complete escaped content, and it is applied exactly. The
+  kernel caps modes at 0o777 (`validate_mode`), so setuid, setgid and sticky bits are impossible.
+
+## Source review
+
+- **Lineage establishment** (`coding_repository_create.rs`): `create_driver` uses `try_lock`, so a
+  busy or poisoned owner refuses. It also requires the held worktree root and revalidates it.
+  `apply` accepts Create operations only. It refuses paths that already have lineage, duplicates, and
+  anything past the shared 16-path limit, and it clears pending command, edit and apply decisions
+  before dispatch. `complete` requires all of: the wrapper's own `applied` flag (all indexes, no
+  failure, not uncertain); a `Committed` outcome; the same transaction and consumed grant; a valid
+  receipt chain with matching transaction and grant ids; and, per operation, an exact map of path,
+  postimage and mode against the authorized plan. Restore clears `applied`. Zero digests, caller
+  receipts and rehashed foreign receipts cannot create lineage, and the tests exercise these refusals.
+  Edits keep `created_mode` and the zero preimage (`coding_repository_edit.rs:63`,
+  `coding_repository_runtime.rs:313`).
+- **Original creation** (`coding_workspace_create.rs`, `coding_repository_apply.rs`): explicit
+  root-pair read consent is still checked before any observation. The public `select` still reads;
+  `select_targets` is `pub(crate)` and still refuses `.git`, case aliases and non-ASCII-safe paths.
+  Parents are resolved through the no-symlink adapter; a missing parent refuses and none is created.
+  Preparation requires an absent destination, and the kernel's pre-consumption observation checks
+  parent identity, absence and case-folded collision freedom. The `CreationPreflight` wrapper also
+  requires the exact sibling snapshot before apply. Mixed selections refuse (`code.apply.mixed-kinds`).
+  Approval is single-use, expiring, stale-checked (including `created_mode`) and never replayed. Only
+  a `committed` outcome removes lineage. Restart restores nothing.
+- **Host**: with a lease, the owned create driver is used; without one, the `unowned` wrapper delegates
+  to the native driver. Completion runs after `finish_specialized_effect_event`. The ordinary
+  grant, privacy and boundary checks are unchanged. One exception is M1 below.
+- **Privacy and IP**: no private host path, username, hostname, credential, personal data, sibling
+  project name or trademark branding appears in added content. The `/lane/...` paths and the reviewer
+  model name appear only inside the retained, byte-identical predecessor report, as before. No
+  dependency, SBOM, evaluation input, hidden test, threshold, ignore, prompt or score changes. Only the
+  T-306 ledger line changes, and no new row or sub-row is added.
+
+## Findings
+
+**M1 (medium): owned native creation is not refused on the hookless direct execution path, so it can
+record transfer lineage without the coordinator's tool-terminal publication.**
+`shells/host/src/linux_coding_runtime.rs:2637-2641` refuses owned structured writes when
+`event_context` is `None`, because "Owned lineage needs the coordinator's atomic tool-terminal commit.
+The legacy direct boundary path has no such publication owner." The new create path,
+`execute_prepared_controlled_create` (`:2880`), has no such guard. With a lease attached it selects
+`lease.create_driver` (`:2942-2947`). On the direct path, `finish_specialized_effect_event` takes the
+`(None, None)` branch (`:3222-3228`), which only checkpoints the authority write transaction, and then
+`driver.complete(&result)` (`:3073-3075`) inserts absent-before lineage.
+
+This path is reachable through the public API. `compose_ephemeral_coding_coordinator`
+(`shells/host/src/coding_harness.rs:27`, built on `ReusableRuntimeCoordinator::new`, which has no
+correctness hooks, `runtime_loop.rs:1372-1395`) accepts any `RuntimeToolBoundary`. The loop then calls
+`tool_boundary.execute(...)` (`runtime_loop.rs:3575`), which reaches `execute_call(..., None)`
+(`linux_coding_runtime.rs:4026`). A `LinuxCodingRuntimeBoundary` with `attach_owned_worktree` therefore
+reaches the create path with an owned lease and no event context. Owned structured writes are refused
+there; owned creations become transferable.
+
+This contradicts Decision 0160 ("Failed publication … establish[es] no lineage"), the brief ("unpublished
+ownership confers no new transfer lineage"), `docs/guides/coding-original-apply.md:89` ("only after
+creation through the live coordinator's … driver, followed by successful terminal publication") and
+`docs/guides/coding-owned-runtime.md:38-40`. The shipped development factory composes the durable
+coordinator, and the original write still needs a separate exact approval. Even so, this is the exact
+provenance invariant the increment claims, and it is enforced inconsistently with its write sibling.
+No test covers the owned host create path in either direction.
+
+Fix: add the same refusal before any effect at the start of `execute_prepared_controlled_create`:
+`if self.owned_worktree.is_some() && event_context.is_none() { return Err(RuntimePortFailure::Invalid); }`.
+Add a host regression showing that an owned boundary on the direct path refuses creation before
+grant consumption and leaves `available_paths` empty. If host tests cannot run in this lane, add a
+component-level equivalent and record that limit.
+
+**L1 (low, backlog): the original-apply terminal confirmation wording is edit-centric.**
+`platforms/local-api/src/coding_cli.rs:517` says "Writes exactly this complete diff in the original
+checkout" for creation previews too. The complete creation preview is displayed, so nothing is hidden.
+Fix: mention "new files" when `write_preview.operations` is present.
+
+Existing backlog lows (lifecycle/continuation, factory allocation, standard-library shadowing, the
+predecessor's terminal status/owner snapshot consistency L1) are unchanged and stay backlog.
+
+## Per-row result
+
+- **T-306 (shared T-303), local-coding-created-file-transfer increment**: not accepted. All requested
+  runs pass or match exactly: focused 29 and 13, the eight new methods in the full run, the source
+  gate FAIL with exactly the retained 72 failures and 63 ignores at 945 passed, formatting and Clippy,
+  docs, policy (799/9,062), audit, plans and the retained report. My confinement probes found no
+  escape. Medium M1 is open, so this increment cannot be accepted until it is fixed in-row and
+  re-reviewed. L1 is backlog. T-306 and T-303 stay OPEN. No native Git creation, connected
+  model workflow, coding score or release readiness is established or claimed.
+
+Verdict: FINDINGS

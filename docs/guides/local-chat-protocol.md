@@ -22,6 +22,9 @@ fallback or an implicit prompt. The model ID is bounded to 256 bytes without
 control characters; at most 256 nonempty messages and 32,768 requested output
 tokens are allowed. The encoded request must fit 256 KiB, including JSON escaping.
 Returned bytes contain private conversation data and must not be logged.
+`encode_chat_with_usage` adds only `stream_options: {"include_usage": true}`;
+the original encoder keeps its existing wire request unchanged. This option
+requests server reports, never verified local tokenizer observations.
 
 ## Streaming contract
 
@@ -38,6 +41,21 @@ one choice at index zero, assistant-role text deltas and the `stop` or `length`
 finish reason. Usage-only events are permitted after the finish reason. Tool or
 function proposals, mismatched models and other finish reasons are refused.
 It does not qualify a model or verify the truth of its answer.
+
+`ChatStream::with_usage(model, max_tokens)` additionally collects at most one
+non-null usage object, on the finish chunk or in a later usage-only event. Its
+`prompt_tokens`, `completion_tokens` and `total_tokens` must be unsigned 32-bit
+integers; their checked sum must match, and completion tokens cannot exceed the
+requested output ceiling. Additional provider detail fields remain untrusted and
+are not retained. Early reports, duplicates, missing required counts, wrong
+types, overflow and inconsistent totals refuse the opted-in stream. A null usage
+field on a normal choice chunk is ignored. A server may omit usage entirely;
+absence stays `None`, never zero. Zero counts are retained as the server's claim,
+not accepted as proof that a nonempty response used no tokens.
+
+`usage()` returns counts only after `end()` succeeds. A later decoding failure
+revokes them. The caller must still establish actual HTTP EOF before invoking
+`end`. Legacy `ChatStream::new` keeps its existing text-only usage handling.
 
 The limits are 64 KiB per event (including comments and metadata), 4 MiB total
 body and 1 MiB decoded output text. These are byte limits, not token estimates.

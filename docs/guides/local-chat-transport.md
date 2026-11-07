@@ -100,6 +100,15 @@ actual EOF. A length finish remains distinct from normal stop. On **any** error,
 every previously displayed text fragment is partial. Do not report success from
 seeing a completion marker in content or merely from receiving some text.
 
+`chat_with_usage` has the same approval, credential, cancellation, byte and time
+boundaries. It explicitly requests optional provider usage and returns
+`ChatCompletion { finish, usage }` only after the same valid physical EOF.
+Missing usage remains `None`; malformed reports refuse the operation. Unsupported
+options or other endpoint refusals fail without retrying a different request.
+`chat` preserves the original request and return type. Counts are untrusted
+provider reports, not pre-dispatch token counts, served context, weight identity,
+resource observations or admission into the qualification-bound coordinator.
+
 ## Verification
 
 ```sh

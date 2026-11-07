@@ -53,9 +53,17 @@ event and stream EOF for **both** turns. Missing completion, error, length limit
 malformed event, trailing event, excessive record size or deadline fails. Text
 fragments are flushed as they arrive, including partial records on failure.
 This does not grade the answer's semantic correctness or measure coding ability.
-Token counts are null because this API does not expose upstream usage. No GPU
-measurement is inferred by this client; collect reservation/resource observations
-in the owning launcher.
+Without `--include-usage`, the original request and version 1 report remain in
+use; token counts are null because they were not requested. `--include-usage`
+opts in on both turns and writes a version 2 report with per-turn
+`provider_usage`. Each count is an untrusted provider report, not a verified
+local tokenizer observation. The aggregate `tokens` sums both completed turns
+only when both report counts; if either omits usage it stays null. Known per-turn
+counts remain visible. An invalid usage envelope fails the measurement; a null
+report is accepted as unavailable. A failed or truncated turn supplies no counts.
+The client does not retry without the option when an endpoint refuses it.
+No GPU measurement is inferred by this client; collect reservation/resource
+observations in the owning launcher.
 
 The client requests cancellation, waits for idle, and revokes its settings on
 ordinary success/failure. Failed revocation makes the result FAIL. After a

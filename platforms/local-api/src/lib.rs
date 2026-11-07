@@ -42,11 +42,11 @@ use agentmage_platform_linux::{
 };
 
 use agentmage_platform_linux_inference::local_chat::{
-    ChatFinish, ChatMessage, ChatRole, LocalChatEndpoint, encode_chat,
+    ChatFinish, ChatMessage, ChatRole, LocalChatEndpoint, encode_chat, encode_chat_with_usage,
 };
 use agentmage_platform_linux_inference::local_chat_transport::{
-    BearerKey, ChatCancellation, LocalChatApproval, LocalChatTransport, LocalProbeApproval,
-    TransportLimits, probe_endpoints,
+    BearerKey, ChatCancellation, ChatCompletion, LocalChatApproval, LocalChatTransport,
+    LocalProbeApproval, TransportLimits, probe_endpoints,
 };
 
 const MAX_HEADER: usize = 8192;
@@ -621,6 +621,8 @@ struct Chat {
     model: String,
     messages: Vec<Message>,
     max_tokens: u32,
+    #[serde(default)]
+    include_usage: bool,
 }
 
 #[derive(Deserialize)]
@@ -631,6 +633,8 @@ struct CodingProposalRequest {
     files: Vec<CodingSource>,
     max_message_bytes: usize,
     max_tokens: u32,
+    #[serde(default)]
+    include_usage: bool,
 }
 
 #[derive(Deserialize)]
@@ -680,6 +684,8 @@ struct WorkspaceProposal {
     task: String,
     max_message_bytes: usize,
     max_tokens: u32,
+    #[serde(default)]
+    include_usage: bool,
 }
 
 #[derive(Deserialize)]
@@ -914,6 +920,7 @@ fn prepare_proposal_messages(
     max_tokens: u32,
     context: &CodingProposalContext,
     feedback: Option<&Value>,
+    include_usage: bool,
 ) -> Result<ProposalMessages, (u16, &'static str)> {
     let prepared = ProposalMessages {
         repair_system: feedback
@@ -923,9 +930,12 @@ fn prepare_proposal_messages(
             .transpose()
             .map_err(|_| (400, "api.request"))?,
     };
-    if !(1..=4096).contains(&max_tokens)
-        || encode_chat(model, &prepared.messages(context), max_tokens).is_err()
-    {
+    let encoded = if include_usage {
+        encode_chat_with_usage(model, &prepared.messages(context), max_tokens)
+    } else {
+        encode_chat(model, &prepared.messages(context), max_tokens)
+    };
+    if !(1..=4096).contains(&max_tokens) || encoded.is_err() {
         return Err((400, "api.request"));
     }
     Ok(prepared)
@@ -940,6 +950,17 @@ fn repair_prompt(feedback: &Value, budget: usize) -> Result<(String, usize), (u1
         .filter(|_| budget <= 32768)
         .ok_or((400, "code.repair.context"))?;
     Ok((text, source_budget))
+}
+
+// A rejected strict edit still consumed a completed inference. Preserve its
+// optional counts for attempt accounting, without promoting it to a proposal.
+// Transport failures and partial generations provide no completed observation.
+fn proposal_usage(mut value: Value, requested: bool, completion: Option<ChatCompletion>) -> Value {
+    if requested && let Some(completion) = completion {
+        value["usage"] = json!(completion.usage);
+        value["usage_source"] = json!("provider-reported");
+    }
+    value
 }
 
 fn coding_proposal_with_feedback(
@@ -965,6 +986,7 @@ fn coding_proposal_with_feedback(
         input.max_tokens,
         &context,
         feedback.as_ref(),
+        input.include_usage,
     ) {
         Ok(prepared) => prepared,
         Err((status, code)) => {
@@ -996,56 +1018,93 @@ fn coding_proposal_with_feedback(
     let mut answer = Zeroizing::new(String::new());
     let mut writable = true;
     let mut oversized = false;
-    let result = config.transport.chat(
-        &config.approval,
-        &input.model,
-        &messages,
-        input.max_tokens,
-        &op.cancel,
-        |text| {
-            if text.len() > (64 * 1024_usize).saturating_sub(answer.len()) {
-                oversized = true;
+    let display_text = |text: &str| {
+        if text.len() > (64 * 1024_usize).saturating_sub(answer.len()) {
+            oversized = true;
+            op.cancel.cancel();
+        } else if !oversized {
+            answer.push_str(text);
+            if writable && event(socket, json!({"type":"text","text":text})).is_err() {
+                writable = false;
                 op.cancel.cancel();
-            } else if !oversized {
-                answer.push_str(text);
-                if writable && event(socket, json!({"type":"text","text":text})).is_err() {
-                    writable = false;
-                    op.cancel.cancel();
-                }
             }
-        },
-    );
+        }
+    };
+    let result = if input.include_usage {
+        config.transport.chat_with_usage(
+            &config.approval,
+            &input.model,
+            &messages,
+            input.max_tokens,
+            &op.cancel,
+            display_text,
+        )
+    } else {
+        config
+            .transport
+            .chat(
+                &config.approval,
+                &input.model,
+                &messages,
+                input.max_tokens,
+                &op.cancel,
+                display_text,
+            )
+            .map(|finish| ChatCompletion {
+                finish,
+                usage: None,
+            })
+    };
     if !writable {
         op.outcome = "api.client-disconnected";
         return Err(ApiError::Io);
     }
+    let completion = result.as_ref().ok().copied();
     let refused = if oversized {
         Some("code.proposal.limit")
     } else {
         match result {
-            Ok(ChatFinish::Stop) => None,
-            Ok(ChatFinish::Length) => Some("code.proposal.incomplete"),
+            Ok(ChatCompletion {
+                finish: ChatFinish::Stop,
+                ..
+            }) => None,
+            Ok(ChatCompletion {
+                finish: ChatFinish::Length,
+                ..
+            }) => Some("code.proposal.incomplete"),
             Err(e) => Some(e.code()),
         }
     };
     if let Some(code) = refused {
         op.outcome = code;
-        return event(socket, json!({"type":"error","code":code,"partial":true}));
+        return event(
+            socket,
+            proposal_usage(
+                json!({"type":"error","code":code,"partial":true}),
+                input.include_usage,
+                completion,
+            ),
+        );
     }
     match check_coding_proposal(&context, &input.files, &answer) {
         Ok(changes) => {
             op.outcome = "proposed";
+            let proposal = json!({"type":"proposal","version":1,"changes":changes,
+                "applied":false,"tested":false,"authority":"proposal-only","workspace_revision":workspace_revision});
             event(
                 socket,
-                json!({"type":"proposal","version":1,"changes":changes,
-                "applied":false,"tested":false,"authority":"proposal-only","workspace_revision":workspace_revision}),
+                proposal_usage(proposal, input.include_usage, completion),
             )
         }
         Err(e) => {
             op.outcome = e.code();
             event(
                 socket,
-                json!({"type":"error","code":e.code(),"partial":true}),
+                proposal_usage(
+                    json!({"type":"error","code":e.code(),"partial":true}),
+                    input.include_usage,
+                    completion,
+                ),
             )
         }
     }
@@ -1540,6 +1599,7 @@ fn handle(
                     files,
                     max_message_bytes: input.max_message_bytes,
                     max_tokens: input.max_tokens,
+                    include_usage: input.include_usage,
                 },
                 op,
                 config,
@@ -1708,24 +1768,48 @@ fn handle(
                 let Ok(messages) = messages else {
                     return error(socket, 400);
                 };
-                if encode_chat(&chat.model, &messages, chat.max_tokens).is_err() {
+                let encoded = if chat.include_usage {
+                    encode_chat_with_usage(&chat.model, &messages, chat.max_tokens)
+                } else {
+                    encode_chat(&chat.model, &messages, chat.max_tokens)
+                };
+                if encoded.is_err() {
                     return error(socket, 400);
                 }
+                drop(encoded);
                 headers(socket, 200, "application/x-ndjson", None)?;
                 let mut writable = true;
-                let result = config.transport.chat(
-                    &config.approval,
-                    &chat.model,
-                    &messages,
-                    chat.max_tokens,
-                    &op.cancel,
-                    |text| {
-                        if writable && event(socket, json!({"type":"text","text":text})).is_err() {
-                            writable = false;
-                            op.cancel.cancel();
-                        }
-                    },
-                );
+                let display_text = |text: &str| {
+                    if writable && event(socket, json!({"type":"text","text":text})).is_err() {
+                        writable = false;
+                        op.cancel.cancel();
+                    }
+                };
+                let result = if chat.include_usage {
+                    config.transport.chat_with_usage(
+                        &config.approval,
+                        &chat.model,
+                        &messages,
+                        chat.max_tokens,
+                        &op.cancel,
+                        display_text,
+                    )
+                } else {
+                    config
+                        .transport
+                        .chat(
+                            &config.approval,
+                            &chat.model,
+                            &messages,
+                            chat.max_tokens,
+                            &op.cancel,
+                            display_text,
+                        )
+                        .map(|finish| ChatCompletion {
+                            finish,
+                            usage: None,
+                        })
+                };
                 if !writable {
                     op.outcome = "api.client-disconnected";
                     return Err(ApiError::Io);
@@ -1737,8 +1821,13 @@ fn handle(
                 event(
                     socket,
                     match result {
-                        Ok(finish) => {
-                            json!({"type":"complete","finish":match finish { ChatFinish::Stop => "stop", ChatFinish::Length => "length" }})
+                        Ok(result) => {
+                            let mut complete = json!({"type":"complete","finish":match result.finish { ChatFinish::Stop => "stop", ChatFinish::Length => "length" }});
+                            if chat.include_usage {
+                                complete["usage"] = json!(result.usage);
+                                complete["usage_source"] = json!("provider-reported");
+                            }
+                            complete
                         }
                         Err(e) => {
                             json!({"type":"error","code":e.code(),"message":e.message(),"partial":true})

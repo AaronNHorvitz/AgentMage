@@ -168,6 +168,25 @@ pub fn encode_chat(
     messages: &[ChatMessage<'_>],
     max_tokens: u32,
 ) -> Result<Vec<u8>, ChatError> {
+    encode_chat_request(model, messages, max_tokens, false)
+}
+
+/// Requests optional provider-reported token usage, without granting admission
+/// or treating a server report as a verified tokenizer observation.
+pub fn encode_chat_with_usage(
+    model: &str,
+    messages: &[ChatMessage<'_>],
+    max_tokens: u32,
+) -> Result<Vec<u8>, ChatError> {
+    encode_chat_request(model, messages, max_tokens, true)
+}
+
+fn encode_chat_request(
+    model: &str,
+    messages: &[ChatMessage<'_>],
+    max_tokens: u32,
+    include_usage: bool,
+) -> Result<Vec<u8>, ChatError> {
     if !valid_model(model)
         || !(1..=32768).contains(&max_tokens)
         || messages.is_empty()
@@ -192,6 +211,12 @@ pub fn encode_chat(
         stream: bool,
         max_tokens: u32,
         n: u8,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        stream_options: Option<StreamOptions>,
+    }
+    #[derive(Serialize)]
+    struct StreamOptions {
+        include_usage: bool,
     }
     let encoded = serde_json::to_vec(&Request {
         model,
@@ -199,6 +224,9 @@ pub fn encode_chat(
         stream: true,
         max_tokens,
         n: 1,
+        stream_options: include_usage.then_some(StreamOptions {
+            include_usage: true,
+        }),
     })
     .map_err(|_| ChatError::Request)?;
     if encoded.len() > MAX_REQUEST_BYTES {
@@ -214,6 +242,41 @@ pub enum ChatFinish {
     Stop,
     /// The answer was cut short by the server's token ceiling.
     Length,
+}
+
+/// Untrusted provider counts, structurally checked but never local tokenizer,
+/// memory, hardware or model-identity evidence. Missing reports stay absent.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+pub struct ChatUsage {
+    /// Reported input tokens, including any cached tokens.
+    pub prompt_tokens: u32,
+    /// Reported output tokens, including any reasoning tokens.
+    pub completion_tokens: u32,
+    /// Checked sum of reported input and output tokens.
+    pub total_tokens: u32,
+}
+
+impl ChatUsage {
+    fn parse(value: &Value, max_tokens: u32) -> Result<Self, ChatError> {
+        let count = |name| {
+            value
+                .get(name)
+                .and_then(Value::as_u64)
+                .and_then(|n| u32::try_from(n).ok())
+                .ok_or(ChatError::Protocol)
+        };
+        let usage = Self {
+            prompt_tokens: count("prompt_tokens")?,
+            completion_tokens: count("completion_tokens")?,
+            total_tokens: count("total_tokens")?,
+        };
+        if usage.prompt_tokens.checked_add(usage.completion_tokens) != Some(usage.total_tokens)
+            || usage.completion_tokens > max_tokens
+        {
+            return Err(ChatError::Protocol);
+        }
+        Ok(usage)
+    }
 }
 
 /// Incremental untrusted text, or a completion marker pending transport EOF.
@@ -245,6 +308,9 @@ pub struct ChatStream {
     first_line: bool,
     complete: bool,
     failed: bool,
+    usage_limit: Option<u32>,
+    usage: Option<ChatUsage>,
+    ended: bool,
 }
 
 impl ChatStream {
@@ -264,7 +330,33 @@ impl ChatStream {
             first_line: true,
             complete: false,
             failed: false,
+            usage_limit: None,
+            usage: None,
+            ended: false,
         })
+    }
+
+    /// Collect one optional final usage report. A report before the finish
+    /// reason, a duplicate, invalid counters or output above the requested
+    /// ceiling refuses the stream. Legacy text-only decoding is unchanged.
+    pub fn with_usage(model: &str, max_tokens: u32) -> Result<Self, ChatError> {
+        if !(1..=32768).contains(&max_tokens) {
+            return Err(ChatError::Request);
+        }
+        let mut stream = Self::new(model)?;
+        stream.usage_limit = Some(max_tokens);
+        Ok(stream)
+    }
+
+    /// Usage is available only after valid completion and transport EOF. A
+    /// subsequent decoding error revokes it along with completion.
+    #[must_use]
+    pub fn usage(&self) -> Option<ChatUsage> {
+        if self.ended && !self.failed {
+            self.usage
+        } else {
+            None
+        }
     }
 
     /// Consumes one body fragment and returns ordered display events. Any error
@@ -289,6 +381,7 @@ impl ChatStream {
             self.failed = true;
             return Err(ChatError::Incomplete);
         }
+        self.ended = true;
         Ok(())
     }
 
@@ -375,6 +468,7 @@ impl ChatStream {
             return if event.get("usage").is_some_and(Value::is_object)
                 && self.finish_reason.is_some()
             {
+                self.collect_usage(&event)?;
                 Ok(())
             } else {
                 Err(ChatError::Protocol)
@@ -416,6 +510,19 @@ impl ChatStream {
                 Some("length") => ChatFinish::Length,
                 _ => return Err(ChatError::Protocol),
             });
+        }
+        self.collect_usage(&event)?;
+        Ok(())
+    }
+
+    fn collect_usage(&mut self, event: &Value) -> Result<(), ChatError> {
+        if let Some(limit) = self.usage_limit
+            && let Some(value) = event.get("usage").filter(|v| !v.is_null())
+        {
+            if self.finish_reason.is_none() || self.usage.is_some() {
+                return Err(ChatError::Protocol);
+            }
+            self.usage = Some(ChatUsage::parse(value, limit)?);
         }
         Ok(())
     }

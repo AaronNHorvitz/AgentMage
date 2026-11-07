@@ -12,6 +12,8 @@ struct Repair {
     task: String,
     max_message_bytes: usize,
     max_tokens: u32,
+    #[serde(default)]
+    include_usage: bool,
     receipt_sha256: String,
     feedback_sha256: String,
     settings_revision: u64,
@@ -91,6 +93,7 @@ pub(super) fn handle_repair(
             files,
             max_message_bytes: source_budget,
             max_tokens: input.max_tokens,
+            include_usage: input.include_usage,
         },
         op,
         config,
@@ -137,7 +140,13 @@ fn prepare_repair(
     let (_, source_budget) = repair_prompt(&feedback, input.max_message_bytes)?;
     let context =
         prepare_coding_proposal(&input.task, &files, source_budget).map_err(|e| (400, e.code()))?;
-    prepare_proposal_messages(&input.model, input.max_tokens, &context, Some(&feedback))?;
+    prepare_proposal_messages(
+        &input.model,
+        input.max_tokens,
+        &context,
+        Some(&feedback),
+        input.include_usage,
+    )?;
     Ok((files, feedback, source_budget))
 }
 
@@ -153,7 +162,8 @@ mod tests {
         }];
         let context = prepare_coding_proposal("Fix add", &sources, 8192).unwrap();
         let feedback = json!({"stderr": "\0\n\u{1b}\"\\界", "authority": "untrusted"});
-        let prepared = prepare_proposal_messages("fixture", 64, &context, Some(&feedback)).unwrap();
+        let prepared =
+            prepare_proposal_messages("fixture", 64, &context, Some(&feedback), false).unwrap();
         let bytes = encode_chat("fixture", &prepared.messages(&context), 64).unwrap();
         let wire: Value = serde_json::from_slice(&bytes).unwrap();
         assert_eq!(wire["messages"].as_array().unwrap().len(), 3);
@@ -165,18 +175,29 @@ mod tests {
         let diagnostics: Value =
             serde_json::from_str(wire["messages"][2]["content"].as_str().unwrap()).unwrap();
         assert_eq!(diagnostics, json!({"untrusted_test_observation":feedback}));
+        let opted =
+            prepare_proposal_messages("fixture", 64, &context, Some(&feedback), true).unwrap();
+        let bytes = encode_chat_with_usage("fixture", &opted.messages(&context), 64).unwrap();
+        let opted_wire: Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(opted_wire["messages"], wire["messages"]);
+        assert_eq!(opted_wire["stream_options"], json!({"include_usage":true}));
         let oversized = json!({"stderr": "\0".repeat(64 * 1024)});
+        assert_eq!(
+            prepare_proposal_messages("fixture", 64, &context, Some(&oversized), true).err(),
+            Some((400, "api.request"))
+        );
         // Ordinary two-message validation fits; the complete repair must refuse.
         // Production diagnostics are smaller. This probes encoder behavior without
         // increasing any source, feedback, token or wire ceiling.
-        assert!(prepare_proposal_messages("fixture", 64, &context, None).is_ok());
+        assert!(prepare_proposal_messages("fixture", 64, &context, None, false).is_ok());
         assert_eq!(
-            prepare_proposal_messages("fixture", 64, &context, Some(&oversized)).err(),
+            prepare_proposal_messages("fixture", 64, &context, Some(&oversized), false).err(),
             Some((400, "api.request"))
         );
         for tokens in [0, 4097] {
             assert_eq!(
-                prepare_proposal_messages("fixture", tokens, &context, Some(&feedback)).err(),
+                prepare_proposal_messages("fixture", tokens, &context, Some(&feedback), false)
+                    .err(),
                 Some((400, "api.request"))
             );
         }
@@ -197,7 +218,7 @@ mod tests {
     fn synthetic_feedback_uses_existing_stream_and_strict_edit_checker_with_a_bounded_prompt() {
         // Exercise the actual shared renderer and socket transport, with synthetic
         // feedback. This does not inject native ownership or claim route admission.
-        for valid in [true, false] {
+        for (valid, include_usage) in [(true, false), (false, false), (true, true), (false, true)] {
             let upstream = TcpListener::bind("127.0.0.1:0").unwrap();
             let endpoint =
                 LocalChatEndpoint::parse(&format!("http://{}/v1", upstream.local_addr().unwrap()))
@@ -231,6 +252,10 @@ mod tests {
                 let mut bytes = vec![0; size];
                 socket.read_exact(&mut bytes).unwrap();
                 let request: Value = serde_json::from_slice(&bytes).unwrap();
+                assert_eq!(
+                    request.get("stream_options"),
+                    include_usage.then_some(&json!({"include_usage":true}))
+                );
                 let messages = request["messages"].as_array().unwrap();
                 assert_eq!(messages.len(), 3);
                 assert_eq!(messages[0]["role"], "system");
@@ -257,7 +282,16 @@ mod tests {
                 };
                 let chunk = json!({"model":"synthetic-model","choices":[{"index":0,"delta":{"content":answer},"finish_reason":null}]}).to_string();
                 let end = json!({"model":"synthetic-model","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}).to_string();
-                let body = format!("data: {chunk}\n\ndata: {end}\n\ndata: [DONE]\n\n");
+                let usage = if include_usage {
+                    format!(
+                        "data: {}\n\n",
+                        json!({"model":"synthetic-model","choices":[],
+                        "usage":{"prompt_tokens":100,"completion_tokens":40,"total_tokens":140}})
+                    )
+                } else {
+                    String::new()
+                };
+                let body = format!("data: {chunk}\n\ndata: {end}\n\n{usage}data: [DONE]\n\n");
                 socket.write_all(format!("HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).as_bytes()).unwrap();
                 actual_bytes
             });
@@ -290,6 +324,7 @@ mod tests {
                         }],
                         max_message_bytes: source_budget,
                         max_tokens: 128,
+                        include_usage,
                     },
                     op,
                     Some(config),
@@ -320,7 +355,18 @@ mod tests {
                     terminal["changes"][0]["content"],
                     "def add(a, b):\n    return a + b\n"
                 );
+                if include_usage {
+                    assert_eq!(terminal["usage_source"], "provider-reported");
+                    assert_eq!(terminal["usage"]["total_tokens"], 140);
+                } else {
+                    assert!(terminal.get("usage").is_none());
+                }
             } else {
+                if include_usage {
+                    assert_eq!(terminal["usage"]["total_tokens"], 140);
+                } else {
+                    assert!(terminal.get("usage").is_none());
+                }
                 assert_eq!(terminal["type"], "error");
                 assert!(!events.iter().any(|e| e["type"] == "proposal"));
             }

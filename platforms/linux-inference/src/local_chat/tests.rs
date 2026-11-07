@@ -599,3 +599,126 @@ fn errors_are_content_free_and_model_html_stays_plain_text() {
         vec![ChatEvent::Text(text.to_owned())]
     );
 }
+
+#[test]
+fn provider_usage_is_opt_in_and_published_only_after_valid_eof() {
+    let usage = json!({"prompt_tokens":12,"completion_tokens":4,"total_tokens":16});
+    let body = [
+        frame(chunk(json!({"content":"answer"}), Value::Null)),
+        frame(chunk(json!({}), json!("stop"))),
+        frame(json!({"model":"test-model","choices":[],"usage":usage})),
+        b"data: [DONE]\n\n".to_vec(),
+    ]
+    .concat();
+    for split in 0..=body.len() {
+        let mut codec = ChatStream::with_usage("test-model", 4).unwrap();
+        codec.feed(&body[..split]).unwrap();
+        assert_eq!(codec.usage(), None);
+        codec.feed(&body[split..]).unwrap();
+        assert_eq!(codec.usage(), None);
+        codec.end().unwrap();
+        assert_eq!(serde_json::to_value(codec.usage()).unwrap(), usage);
+        assert_eq!(codec.feed(b"late"), Err(ChatError::Protocol));
+        assert_eq!(codec.usage(), None);
+    }
+    let messages = [ChatMessage {
+        role: ChatRole::User,
+        content: "hello",
+    }];
+    let legacy: Value =
+        serde_json::from_slice(&encode_chat("test-model", &messages, 4).unwrap()).unwrap();
+    let mut opted: Value =
+        serde_json::from_slice(&encode_chat_with_usage("test-model", &messages, 4).unwrap())
+            .unwrap();
+    assert_eq!(
+        opted.as_object_mut().unwrap().remove("stream_options"),
+        Some(json!({"include_usage":true}))
+    );
+    assert_eq!(opted, legacy);
+}
+
+#[test]
+fn provider_usage_refuses_bad_counts_order_duplicates_and_late_failures() {
+    let text = frame(chunk(json!({"content":"answer"}), Value::Null));
+    let finish = frame(chunk(json!({}), json!("stop")));
+    let valid = json!({"prompt_tokens":12,"completion_tokens":4,"total_tokens":16});
+    let report = |value: Value| frame(json!({"model":"test-model","choices":[],"usage":value}));
+    let mut malformed = vec![
+        Value::Null,
+        json!({}),
+        json!([]),
+        json!({"completion_tokens":4}),
+    ];
+    for field in ["prompt_tokens", "completion_tokens", "total_tokens"] {
+        for bad in [
+            json!(-1),
+            json!(1.5),
+            json!("4"),
+            json!(true),
+            json!(u64::MAX),
+        ] {
+            let mut value = valid.clone();
+            value[field] = bad;
+            malformed.push(value);
+        }
+    }
+    malformed.extend([
+        json!({"prompt_tokens":12,"completion_tokens":4,"total_tokens":15}),
+        json!({"prompt_tokens":12,"completion_tokens":5,"total_tokens":17}),
+        json!({"prompt_tokens":u32::MAX,"completion_tokens":1,"total_tokens":0}),
+    ]);
+    for value in malformed {
+        let mut codec = ChatStream::with_usage("test-model", 4).unwrap();
+        codec.feed(&text).unwrap();
+        codec.feed(&finish).unwrap();
+        assert_eq!(codec.feed(&report(value)), Err(ChatError::Protocol));
+        assert_eq!(codec.usage(), None);
+        assert_eq!(codec.end(), Err(ChatError::Failed));
+    }
+    for body in [
+        [text.clone(), report(valid.clone()), finish.clone()].concat(),
+        [
+            text.clone(),
+            finish.clone(),
+            report(valid.clone()),
+            report(valid.clone()),
+        ]
+        .concat(),
+    ] {
+        let mut codec = ChatStream::with_usage("test-model", 4).unwrap();
+        assert_eq!(codec.feed(&body), Err(ChatError::Protocol));
+        assert_eq!(codec.usage(), None);
+    }
+    let mut codec = ChatStream::with_usage("test-model", 4).unwrap();
+    codec.feed(&[text, finish, report(valid)].concat()).unwrap();
+    assert_eq!(codec.end(), Err(ChatError::Incomplete));
+    assert_eq!(codec.usage(), None);
+}
+
+#[test]
+fn provider_usage_can_be_absent_or_part_of_the_finish_chunk() {
+    for usage in [
+        None,
+        Some(json!({"prompt_tokens":0,"completion_tokens":0,"total_tokens":0})),
+    ] {
+        let mut finish = chunk(json!({"content":"answer"}), json!("length"));
+        if let Some(value) = usage.clone() {
+            finish["usage"] = value;
+        }
+        let mut codec = ChatStream::with_usage("test-model", 1).unwrap();
+        codec
+            .feed(&[frame(finish), b"data: [DONE]\n\n".to_vec()].concat())
+            .unwrap();
+        codec.end().unwrap();
+        assert_eq!(
+            serde_json::to_value(codec.usage()).unwrap(),
+            usage.unwrap_or(Value::Null)
+        );
+    }
+    for ceiling in [0, 32769, u32::MAX] {
+        assert!(matches!(
+            ChatStream::with_usage("test-model", ceiling),
+            Err(ChatError::Request)
+        ));
+    }
+}

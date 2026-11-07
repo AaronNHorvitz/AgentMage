@@ -570,6 +570,23 @@ where
     owned_worktree: Option<LinuxCodingWorktreeLease>,
 }
 
+// This only gates entry. An admitted path still needs all ordinary grants,
+// native reconciliation and successful terminal publication before lineage.
+fn with_owned_terminal_publication<T>(
+    owned_worktree: bool,
+    terminal_context: bool,
+    execute: impl FnOnce() -> Result<T, RuntimePortFailure>,
+) -> Result<T, RuntimePortFailure> {
+    if owned_worktree && !terminal_context {
+        return Err(RuntimePortFailure::Invalid);
+    }
+    execute()
+}
+
+#[cfg(test)]
+#[path = "linux_coding_owned_publication_tests.rs"]
+mod owned_publication_tests;
+
 /// One proposed write a run's recipe plan refused (Decision 0133).
 struct RecipeRefusal<'call> {
     operation_id: &'call RuntimeOperationId,
@@ -2878,6 +2895,32 @@ where
     }
 
     fn execute_prepared_controlled_create(
+        &mut self,
+        request: &RuntimeRunRequest,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        issued: IssuedCodingOperation<'workspace>,
+        event_context: Option<RuntimeEffectEventContext<'_>>,
+    ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
+        // Like owned structured writes, owned creations require the
+        // coordinator's atomic tool-terminal publication. Refuse before
+        // opening the issued operation or dispatching any native effect.
+        with_owned_terminal_publication(
+            self.owned_worktree.is_some(),
+            event_context.is_some(),
+            || {
+                self.execute_prepared_controlled_create_admitted(
+                    request,
+                    definition,
+                    call,
+                    issued,
+                    event_context,
+                )
+            },
+        )
+    }
+
+    fn execute_prepared_controlled_create_admitted(
         &mut self,
         request: &RuntimeRunRequest,
         definition: &ToolDefinition,

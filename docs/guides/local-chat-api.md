@@ -138,7 +138,8 @@ Send an explicit model, messages and output-token ceiling:
 
 Roles are `system`, `user` and `assistant`; the last message must be `user`.
 The model and messages are validated before upstream I/O. No hidden prompt,
-tools, endpoint override or provider fields are added. A successful HTTP status
+tools or endpoint override are added. Except for the explicit usage option below,
+no provider fields are added. A successful HTTP status
 starts `application/x-ndjson` with one JSON object per line:
 
 ```json
@@ -153,6 +154,33 @@ does not establish success. On failure the last event is `type: error` with
 `code`, fixed plain-language `message` and `partial: true`. Every earlier
 fragment is then partial. If the client loses its socket before the final event,
 it must also treat all text as partial. The API never retries automatically.
+
+Clients may explicitly send `"include_usage": true` on `/v1/chat`. Its default
+is false, preserving both the old upstream request and old event shape. Opting
+in adds `stream_options.include_usage` upstream; an unsupported option fails
+without a fallback request. A completed event then has this shape:
+
+```json
+{"type":"complete","finish":"stop","usage_source":"provider-reported","usage":{"prompt_tokens":12,"completion_tokens":4,"total_tokens":16}}
+```
+
+A server that omits counts produces `"usage": null`, never zero. Reports must
+contain three unsigned 32-bit integers, a matching checked total and output no
+larger than the request ceiling. Duplicates, early reports or invalid counts fail
+the stream. A valid `length` finish can carry counts while remaining truncated.
+Cancelled, incomplete or invalid streams expose no usage observation. These
+counts cannot establish exact tokenizer, resource or model identity facts.
+
+The same optional boolean is supported by caller-snapshot, selected-workspace
+and failed-test repair proposal requests. Existing source-disclosure, failure
+receipt consumption, message preflight, strict edit checks and approval rules
+still apply. After a valid upstream completion, the terminal proposal or strict
+edit rejection includes `usage_source` and `usage` when requested. A length
+rejection also retains valid counts: a failed attempt still consumed inference.
+Invalid transport completion emits no usage. A usage report never means the
+proposal was applied, tested or accepted; inspect the terminal type and outcome.
+There is no automatic retry and this does not connect the configured endpoint
+to the native coordinator or change its model admission.
 
 All fragments and model IDs are untrusted data. JSON encoding protects event
 framing; it does not make text safe to execute or display as markup. Clients
