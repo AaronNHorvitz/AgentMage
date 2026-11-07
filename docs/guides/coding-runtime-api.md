@@ -194,13 +194,14 @@ and outcome labels; exact run details remain with the existing canonical owner.
 The default native composition remains the fixed `failed-test-repair` scenario: only
 `src/calc.py` is mutable, with the synthetic validation acceptance criterion
 reported at startup. It retains its exact profile and workspace restrictions. The explicit Python project selection below generalizes the selected source and test layout.
-The newer manual strict-edit/test and
-[original-checkout apply](coding-original-apply.md) routes remain separate from that
-coordinator. The real
-model/host workflow, arbitrary endpoint composition, coordinator-connected original apply,
-approved commit/push, MCP, measured development reruns and row-closing held-out
-scores remain open. Preserve both authority systems while completing that
-composition; do not replace either with a frontend agent loop.
+The separate-process launcher has no manual creation owner. The manual service
+can instead use the explicit [live-owner handoff](coding-owned-runtime.md#http-handoff-in-the-manual-coding-service)
+to connect this same coordinator to later separately approved
+[original-checkout application](coding-original-apply.md). Positive native
+create/run/apply observation, arbitrary endpoint composition, approved commit/push,
+MCP, measured development reruns and row-closing held-out scores remain open.
+Both authority systems retain their existing boundaries; there is no frontend
+agent loop.
 
 ## Python project selection
 
@@ -253,8 +254,8 @@ existing exact native development candidate profiles, not the separately
 configured chat endpoint. The current lane refuses native executable trust;
 component and synthetic terminal tests do not establish a working native
 project run. Arbitrary project layouts, source creation, arbitrary endpoints,
-manual strict-proposal composition, original-checkout apply, commit/push, MCP
-and measured parent acceptance remain open.
+manual strict-proposal composition, positive native original-apply workflow
+observation, commit/push, MCP and measured parent acceptance remain open.
 
 ## Task-aware repository context
 
@@ -292,3 +293,14 @@ This behavior is shared by the existing native coordinator callers, including
 the HTTP/terminal projection. It does not admit the configured chat endpoint as
 a native coding model. The deterministic context fixture is not a local-model
 coding score; native positive execution and parent acceptance remain open.
+
+## Live-owner handoff
+
+The manual `serve-coding` service can now hand its successfully created worktree
+into the same native coordinator within its own process. The control-only
+`/v1/code/runtime/attach` and `/v1/code/runtime/recover` routes are documented in
+[the ownership guide](coding-owned-runtime.md#http-handoff-in-the-manual-coding-service).
+They never decode creation authority. Attached runtime operations retain this
+page's existing strict requests and individual approvals. The separate-process
+launcher retains its prior behavior and cannot recover manual ownership. Native
+positive workflow and model measurements remain open.

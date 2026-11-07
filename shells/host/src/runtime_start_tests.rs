@@ -3102,3 +3102,98 @@ fn a_persisted_recorder_keeps_each_entry_in_memory_and_in_the_store() {
         crate::coding_live_runtime::CODING_HOST_JOB_OWNER
     );
 }
+
+#[test]
+fn embedded_lifecycle_tracks_prepared_active_and_released_runs() {
+    let (request, events, outcome, observed) =
+        crate::runtime_read_tests::completed_native_read_fixture();
+    assert!(observed);
+    let store = JobLedgerStore::new("embedded-lifecycle");
+    let ledgers = store.try_runtime().unwrap().job_ledgers();
+    let (mut service, gate, input) =
+        gated_live_service(&request, events, outcome, ledgers, None, None);
+    assert!(service.is_empty());
+    service.prepare(input.clone()).unwrap();
+    assert!(!service.is_empty());
+    service
+        .release(&request.run_id, &request.request_sha256)
+        .unwrap();
+    assert!(service.is_empty());
+    service.prepare(input).unwrap();
+    let mut step = service.start(request.clone()).unwrap();
+    assert!(!service.is_empty());
+    assert!(
+        service
+            .release(&request.run_id, &request.request_sha256)
+            .is_err()
+    );
+    let status = service
+        .job_status(&request.run_id, &request.request_sha256)
+        .unwrap();
+    let control = service
+        .control_embedded_job(
+            &request.run_id,
+            &request.request_sha256,
+            &cancel_request("embedded-cancel", status.job.revision, &request.run_id),
+        )
+        .unwrap();
+    assert!(matches!(
+        control.decision,
+        JobControlDecision::Applied { .. }
+    ));
+    gate.send(()).unwrap();
+    for _ in 0..400 {
+        let cursor = last_cursor(&step);
+        let next = service
+            .advance(
+                &request.run_id,
+                &request.request_sha256,
+                Some(&cursor),
+                None,
+            )
+            .unwrap();
+        if !next.events.is_empty() || next.outcome.is_some() {
+            let mut events = step.events.clone();
+            events.extend(next.events.iter().cloned());
+            step = crate::runtime_transport::RuntimeTransportStep { events, ..next };
+        }
+        if step.outcome.is_some() {
+            break;
+        }
+    }
+    assert!(!service.is_empty());
+    service
+        .release(&request.run_id, &request.request_sha256)
+        .unwrap();
+    assert!(service.is_empty());
+}
+
+#[test]
+fn embedded_shutdown_joins_busy_worker_instead_of_detaching() {
+    let (request, events, outcome, observed) =
+        crate::runtime_read_tests::completed_native_read_fixture();
+    assert!(observed);
+    let store = JobLedgerStore::new("embedded-shutdown");
+    let ledgers = store.try_runtime().unwrap().job_ledgers();
+    let (mut service, gate, input) =
+        gated_live_service(&request, events, outcome, ledgers, None, None);
+    service.prepare(input).unwrap();
+    service.start(request).unwrap();
+    std::thread::scope(|scope| {
+        // This test coordinator deliberately waits on a gate rather than
+        // observing cancellation. Shutdown must wait for its actual return.
+        let done = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let observed = done.clone();
+        let service_ref = &mut service;
+        let task = scope.spawn(move || {
+            service_ref.shutdown();
+            done.store(true, Ordering::SeqCst);
+        });
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        assert!(!observed.load(Ordering::SeqCst));
+        gate.send(()).unwrap();
+        task.join().unwrap();
+        assert!(observed.load(Ordering::SeqCst));
+    });
+    assert!(service.is_empty());
+}

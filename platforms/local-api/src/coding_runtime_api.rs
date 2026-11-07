@@ -36,21 +36,75 @@ pub struct CodingRuntimeDevelopment<'a> {
 }
 
 #[derive(Clone)]
-struct Selection {
-    scenario: String,
-    profile_id: String,
-    expected_entry_sha256: String,
-    workspace_id: String,
-    workspace_root: String,
-    resume: bool,
+pub(super) struct Selection {
+    pub(super) scenario: String,
+    pub(super) profile_id: String,
+    pub(super) expected_entry_sha256: String,
+    pub(super) workspace_id: String,
+    pub(super) workspace_root: String,
+    pub(super) resume: bool,
 }
 
 pub(super) struct RuntimeSession {
-    // Production construction below uses ONLY an authenticated IPC session.
-    // The private trait object lets unit tests observe forwarding without a
-    // production fake factory, source fixture or native trust bypass.
-    port: Box<dyn RuntimeTransportPort + Send>,
-    selection: Selection,
+    // Remote construction uses authenticated IPC. Owned construction requires
+    // this service's process-held creation lease and the same native factory.
+    // Test-only peers observe forwarding without a production fake factory.
+    pub(super) port: RuntimePort,
+    pub(super) selection: Selection,
+    pub(super) owner: Option<agentmage_platform_linux::LinuxCodingWorktreeLease>,
+}
+
+// Both modes project the same existing host service. The owned mode keeps
+// creation authority in this process, never in a decoded IPC message.
+pub(super) enum RuntimePort {
+    Remote(Box<dyn RuntimeTransportPort + Send>),
+    Owned(
+        Box<
+            agentmage_host::coding_live_runtime::LiveCodingRuntimeService<
+                agentmage_host::coding_development_runtime::CodingDevelopmentRuntimeFactory,
+            >,
+        >,
+    ),
+}
+impl std::ops::Deref for RuntimePort {
+    type Target = dyn RuntimeTransportPort + Send;
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Remote(port) => &**port,
+            Self::Owned(port) => &**port,
+        }
+    }
+}
+impl std::ops::DerefMut for RuntimePort {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        match self {
+            Self::Remote(port) => &mut **port,
+            Self::Owned(port) => &mut **port,
+        }
+    }
+}
+impl Drop for RuntimePort {
+    fn drop(&mut self) {
+        if let Self::Owned(service) = self {
+            service.shutdown();
+        }
+    }
+}
+impl RuntimePort {
+    fn control(
+        &mut self,
+        run_id: &RuntimeRunId,
+        digest: &str,
+        request: &JobControlRequest,
+    ) -> Result<agentmage_host::runtime_transport::RuntimeJobControl, RuntimeTransportError> {
+        match self {
+            Self::Remote(port) => port.control_job(run_id, digest, request),
+            Self::Owned(service) => service.control_embedded_job(run_id, digest, request),
+        }
+    }
+    pub(super) fn recoverable(&self) -> bool {
+        matches!(self, Self::Owned(service) if service.is_empty())
+    }
 }
 
 /// Serves the existing native coding coordinator through authenticated HTTP.
@@ -115,7 +169,8 @@ pub fn serve_coding_runtime_development(
             .with_frame_timeout(Duration::from_secs(30))
             .map_err(|_| ApiError::Configuration)?;
         let runtime = RuntimeSession {
-            port: Box::new(LinuxRuntimeIpcClient::new(channel)),
+            port: RuntimePort::Remote(Box::new(LinuxRuntimeIpcClient::new(channel))),
+            owner: None,
             selection,
         };
         serve_state(
@@ -194,6 +249,7 @@ impl RuntimeSession {
             ("GET", "/v1/code/runtime") => Ok(json!({
                 "version":1,"runtime":"existing-live-native-coding-host",
                 "activation":"coding-development-v1","scenario":self.selection.scenario,
+                "live_creation_owner": self.owner.is_some(),
                 "mutable_files":if self.selection.scenario == "python-project" { Value::Null }
                     else { json!(["src/calc.py"]) },
                 "mutable_scope":if self.selection.scenario == "python-project" {
@@ -250,7 +306,7 @@ impl RuntimeSession {
                 let request: Control = input(body)?;
                 // IPC derives the job-control scope from its authenticated peer.
                 // Do not call cancel directly or invent a caller-supplied scope.
-                forwarded(self.port.control_job(
+                forwarded(self.port.control(
                     &request.run_id,
                     &request.request_sha256,
                     &request.request,
@@ -427,7 +483,8 @@ mod tests {
         let observed = Arc::new(Mutex::new(Observed::default()));
         (
             RuntimeSession {
-                port: Box::new(Peer(observed.clone())),
+                port: RuntimePort::Remote(Box::new(Peer(observed.clone()))),
+                owner: None,
                 selection: Selection {
                     scenario: "failed-test-repair".into(),
                     profile_id: "configured-evaluation-profile".into(),

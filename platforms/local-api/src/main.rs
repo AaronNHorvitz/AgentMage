@@ -48,13 +48,9 @@ fn run() -> Result<(), ()> {
                 "AgentMage local API starting on {}",
                 listener.local_addr().map_err(|_| ())?
             );
-            serve_coding(
-                listener,
-                tokens,
-                Arc::new(AtomicBool::new(false)),
-                Path::new(state_root),
-            )
-            .map_err(|_| ())
+            with_stop_signals(|stop| {
+                serve_coding(listener, tokens, stop, Path::new(state_root)).map_err(|_| ())
+            })
         }
         [
             command,
@@ -88,23 +84,6 @@ fn run() -> Result<(), ()> {
             };
             let tokens = ApiTokens::load(Path::new(directory)).map_err(|_| ())?;
             let listener = TcpListener::bind(address).map_err(|_| ())?;
-            let stop = Arc::new(AtomicBool::new(false));
-            let mut signals = Vec::new();
-            for signal in [
-                signal_hook::consts::SIGINT,
-                signal_hook::consts::SIGTERM,
-                signal_hook::consts::SIGHUP,
-            ] {
-                match signal_hook::flag::register(signal, stop.clone()) {
-                    Ok(id) => signals.push(id),
-                    Err(_) => {
-                        for id in signals {
-                            signal_hook::low_level::unregister(id);
-                        }
-                        return Err(());
-                    }
-                }
-            }
             println!(
                 "AgentMage coding runtime starting on {}",
                 listener.local_addr().map_err(|_| ())?
@@ -112,24 +91,22 @@ fn run() -> Result<(), ()> {
             eprintln!(
                 "Starting the existing development host: repository inspection and private state; model and tools require separate approval."
             );
-            let result = serve_coding_runtime_development(
-                listener,
-                tokens,
-                stop,
-                CodingRuntimeDevelopment {
-                    state_root: Path::new(state),
-                    disposable_root: Path::new(disposable),
-                    workspace_root: Path::new(workspace),
-                    model,
-                    scenario: args.get(8).map_or("failed-test-repair", String::as_str),
-                    resume,
-                },
-            )
-            .map_err(|_| ());
-            for id in signals {
-                signal_hook::low_level::unregister(id);
-            }
-            result
+            with_stop_signals(|stop| {
+                serve_coding_runtime_development(
+                    listener,
+                    tokens,
+                    stop,
+                    CodingRuntimeDevelopment {
+                        state_root: Path::new(state),
+                        disposable_root: Path::new(disposable),
+                        workspace_root: Path::new(workspace),
+                        model,
+                        scenario: args.get(8).map_or("failed-test-repair", String::as_str),
+                        resume,
+                    },
+                )
+                .map_err(|_| ())
+            })
         }
         _ => {
             eprintln!(
@@ -138,4 +115,29 @@ fn run() -> Result<(), ()> {
             Err(())
         }
     }
+}
+
+fn with_stop_signals(operation: impl FnOnce(Arc<AtomicBool>) -> Result<(), ()>) -> Result<(), ()> {
+    let stop = Arc::new(AtomicBool::new(false));
+    let mut signals = Vec::new();
+    for signal in [
+        signal_hook::consts::SIGINT,
+        signal_hook::consts::SIGTERM,
+        signal_hook::consts::SIGHUP,
+    ] {
+        match signal_hook::flag::register(signal, stop.clone()) {
+            Ok(id) => signals.push(id),
+            Err(_) => {
+                for id in signals {
+                    signal_hook::low_level::unregister(id);
+                }
+                return Err(());
+            }
+        }
+    }
+    let result = operation(stop);
+    for id in signals {
+        signal_hook::low_level::unregister(id);
+    }
+    result
 }

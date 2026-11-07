@@ -651,7 +651,9 @@ fn runtime_lease(owner: LinuxCodingRepository) -> crate::LinuxCodingWorktreeLeas
         .as_str()
         .unwrap()
         .to_owned();
-    owner.into_runtime_worktree(&identity).unwrap()
+    owner
+        .into_runtime_worktree(&identity)
+        .unwrap_or_else(|(_, error)| panic!("{error:?}"))
 }
 fn recover_lease(lease: crate::LinuxCodingWorktreeLease) -> LinuxCodingRepository {
     match lease.try_into_repository() {
@@ -943,5 +945,42 @@ fn runtime_poisoned_owner_recovers_without_creation_authority_or_pending_approva
     );
     assert!(owner.select_created_sources(&["one.py".into()]).is_err());
     assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+    f.assert_preserved();
+}
+
+#[test]
+fn runtime_refused_handoff_preserves_manual_owner_and_edits_for_retry() {
+    let f = Fixture::new();
+    let mut owner = f.owner();
+    f.edit(&mut owner, "one.py", "retained repair\n");
+    let (owner, error) = owner.into_runtime_worktree(&"0".repeat(64)).err().unwrap();
+    assert_eq!(error.code(), "code.runtime.scope");
+    let lease = runtime_lease(owner);
+    assert!(lease.check_runtime_state_root(&f.0.join("state")).is_err());
+    assert!(lease.check_runtime_state_root(&f.0).is_err());
+    assert!(
+        lease
+            .check_runtime_state_root(&f.0.join("original/nested"))
+            .is_err()
+    );
+    assert!(
+        lease
+            .check_runtime_state_root(&f.0.join("owned/worktree/nested"))
+            .is_err()
+    );
+    assert!(
+        lease
+            .check_runtime_state_root(&f.0.join("separate-runtime"))
+            .is_ok()
+    );
+    let mut owner = lease.try_into_repository().ok().unwrap();
+    let preview = f.prepare(&mut owner);
+    owner
+        .decide_apply(preview["preview_sha256"].as_str().unwrap(), true, NOW)
+        .unwrap();
+    assert_eq!(
+        fs::read(f.0.join("original/one.py")).unwrap(),
+        b"retained repair\n"
+    );
     f.assert_preserved();
 }

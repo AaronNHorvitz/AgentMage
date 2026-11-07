@@ -1,14 +1,16 @@
 # Live created-worktree ownership in the coding coordinator
 
 The Linux repository owner and existing development coding coordinator now have
-an in-process ownership handoff. This is an embeddable library path; the HTTP
-native-host launcher still uses a separate process and does not call it. A
-complete manual-create → native-run → original-apply API workflow remains open.
+an in-process ownership handoff. The manual HTTP service now composes this path
+with the existing coordinator, as described below. Its separate-process launcher
+remains available without ownership transfer. Positive native create/run/apply
+execution remains unobserved in this lane.
 See [Decision 0158](../decisions/0158-live-worktree-authority-in-the-native-coordinator.md).
 
 After successful native worktree creation, show the owner's held worktree root
 identity and obtain explicit handoff consent. Consume that same owner through
-`LinuxCodingRepository::into_runtime_worktree(expected_root_sha256)`. The returned
+`LinuxCodingRepository::into_runtime_worktree(expected_root_sha256)`; refusal returns
+the owner and its error intact. The returned
 `LinuxCodingWorktreeLease` is process-only, cannot be decoded from input and
 confers no read, model, command or write approval. Pending manual decisions are
 discarded. Keep one lease for explicit recovery; attach it to the existing
@@ -38,3 +40,75 @@ provenance with real held directories, kernel grants and native atomic writes;
 they do not prove native Git creation, coordinator execution or inference.
 The complete native host still encounters the deferred executable-ownership
 blocker in this lane. No new coding score or model admission is established.
+
+## HTTP handoff in the manual coding service
+
+`serve-coding` now has an explicit in-process path into the same native coding
+coordinator. First create a worktree through the existing repository preview and
+single-use decision routes. Install its private linked development marker through
+the existing explicit setup procedure. Keep the original metadata paths exact;
+a marker never supplies creation authority. Run this service inside the existing
+bounded GPU reservation whenever it can start native model work.
+
+Using the control credential, send `POST /v1/code/runtime/attach` with these exact
+JSON fields:
+
+```json
+{
+  "state_root": "<separate-private-runtime-state>",
+  "disposable_root": "<private-disposable-root>",
+  "workspace_root": "<created-marked-worktree>",
+  "expected_worktree_root_sha256": "<identity-shown-by-repository-edit-status>",
+  "model": "gpt-oss",
+  "scenario": "python-project",
+  "approve_inspection": true,
+  "approve_handoff": true
+}
+```
+
+The path placeholders must be replaced with absolute selected paths. The model
+selection is exactly `muse` or `gpt-oss`; the scenario is exactly `python-project`
+or `failed-test-repair`. This does not use the separately configured chat endpoint.
+There is no resume flag: handoff starts a new process-held ownership lifecycle.
+The runtime state must be separate from the manual authority store and held
+repositories. Startup may inspect the chosen activation, initialize private
+runtime state and freeze the repository composition. It grants no model call,
+command, source edit or original-checkout application.
+
+The service consumes its actual live owner before activation. A path, marker,
+receipt or serialized object cannot replace it. Invalid identity, absent live
+creation, concurrent references, activation failure and composition failure refuse
+without adopting a workspace. Normal handoff refusals return the same owner;
+successful lease creation invalidates pending manual decisions even if later
+composition refuses. Poisoned manual ownership remains poisoned and unavailable.
+
+While attached, use the existing [runtime routes](coding-runtime-api.md) and
+`runtime-run` client. Every model disclosure and tool effect retains its existing
+approval. Chat, settings and manual repository effects refuse during this period;
+status and activity remain available. Embedded job control uses one fixed scope
+for the authenticated control client, and the canonical ledger still decides each
+request. HTTP input cannot select a peer identity.
+
+Release every prepared or active run with the existing `/v1/code/runtime/release`
+route. Even a terminal run must be explicitly released, closing its canonical
+histories. Then send `POST /v1/code/runtime/recover` with exactly
+`{"approve_recovery":true}`. Busy handlers and unreleased runs refuse. Successful
+recovery drops the empty coordinator service and returns the original manual
+owner. Inspect `/v1/code/repository/apply`, approve reading the exact roots and
+paths, review a fresh full diff, and provide a new single-use apply decision.
+Recovery itself applies nothing. The separate-process runtime service cannot use
+this recovery route because it holds no creation owner.
+
+The coding service registers interrupt, termination and hangup signals through
+the existing stop flag. On shutdown, the embedded service signals its passive cancellation probe,
+drains results and joins its worker threads before returning. A previously
+accepted cancellation stays authoritative. Shutdown waits for native bounded work
+to return; it does not claim an acknowledged job-control decision or synthesize a
+successful terminal record. Incomplete histories remain incomplete. Hard process
+termination still loses process-only ownership; restart cannot reconstruct it.
+
+The new HTTP tests exercise real socket refusals and owner preservation without
+synthetic creation authority. Host lifecycle tests use a scripted coordinator and
+real worker threads. Neither establishes native Git creation, actual inference,
+a successful full HTTP create/run/apply workflow or a coding score. Those native
+observations remain unavailable under the lane's executable-ownership blocker.

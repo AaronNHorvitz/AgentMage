@@ -21,20 +21,27 @@ pub struct LinuxCodingWorktreeLease(Arc<Mutex<LinuxCodingRepository>>);
 impl LinuxCodingRepository {
     /// Transfers this live owner, after explicit handoff consent, to the native
     /// coordinator. The displayed root must match before inspecting roots.
-    /// Clears pending manual decisions. No source, model, command or write
-    /// permission is issued. A marker or caller receipt cannot create this lease.
+    /// Returns the owner intact on refusal. Clears pending manual decisions.
+    /// No source, model, command or write permission is issued. A marker or caller receipt cannot create this lease.
+    #[allow(clippy::result_large_err)] // Refusal must preserve the live authority owner.
     pub fn into_runtime_worktree(
         mut self,
         expected_root_sha256: &str,
-    ) -> Result<LinuxCodingWorktreeLease> {
-        let created = self
-            .created
-            .as_ref()
-            .ok_or(err("code.runtime.worktree-required"))?;
-        if created.held.root_path_sha256() != expected_root_sha256 {
-            return Err(err("code.runtime.scope"));
+    ) -> std::result::Result<LinuxCodingWorktreeLease, (Self, LinuxCodingRepositoryError)> {
+        let check = (|| {
+            let created = self
+                .created
+                .as_ref()
+                .ok_or(err("code.runtime.worktree-required"))?;
+            if created.held.root_path_sha256() != expected_root_sha256 {
+                return Err(err("code.runtime.scope"));
+            }
+            self.verify_created()?;
+            Ok(())
+        })();
+        if let Err(error) = check {
+            return Err((self, error));
         }
-        self.verify_created()?;
         self.pending = None;
         self.command = None;
         self.validation = None;
@@ -45,6 +52,21 @@ impl LinuxCodingRepository {
 }
 
 impl LinuxCodingWorktreeLease {
+    /// Checks a canonical private runtime state root is separate from the manual
+    /// authority store and every held repository root. No store is opened here.
+    pub fn check_runtime_state_root(&self, root: &Path) -> Result<()> {
+        let owner = self.0.try_lock().map_err(|_| err("code.runtime.busy"))?;
+        let created = owner.verify_created()?;
+        if !root.is_absolute()
+            || [&owner.state_root, &created.original_path, &created.path]
+                .iter()
+                .any(|held| root.starts_with(held) || held.starts_with(root))
+        {
+            return Err(err("code.runtime.state-scope"));
+        }
+        Ok(())
+    }
+
     /// Revalidates the exact activation path against held creation authority.
     /// Reads directory metadata only. It never adopts a path or receipt.
     pub fn check_workspace(&self, root: &Path) -> Result<()> {

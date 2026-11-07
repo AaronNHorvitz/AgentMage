@@ -6,6 +6,7 @@
 
 /// Terminal client over this service's versioned coding routes.
 pub mod coding_cli;
+mod coding_owned_api;
 mod coding_repair_api;
 mod coding_repository_api;
 mod coding_runtime_api;
@@ -1049,6 +1050,12 @@ fn handle(
         Err(status) => return error(socket, status),
     };
     let route = (req.method.as_str(), req.path.as_str());
+    if matches!(
+        req.path.as_str(),
+        "/v1/code/runtime/attach" | "/v1/code/runtime/recover"
+    ) {
+        return coding_owned_api::handle_owned(socket, &req, state, stop);
+    }
     if req.path.starts_with("/v1/code/runtime") {
         return coding_runtime_api::handle_runtime(socket, &req, state, stop);
     }

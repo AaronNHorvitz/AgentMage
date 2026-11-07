@@ -551,6 +551,42 @@ where
         }
     }
 
+    /// True only after every prepared and active run has been explicitly released.
+    /// Terminal workers still count until release closes their canonical histories.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.prepared.is_empty() && self.active.is_empty()
+    }
+
+    /// Controls a run for the embedding local service's single authenticated
+    /// control client. The embedding transport must check its control credential
+    /// before calling; callers cannot supply or impersonate an IPC peer scope.
+    pub fn control_embedded_job(
+        &mut self,
+        run_id: &RuntimeRunId,
+        request_sha256: &str,
+        request: &JobControlRequest,
+    ) -> Result<RuntimeJobControl, RuntimeTransportError> {
+        self.control_job_for_client(
+            &RuntimeClientScope::derived("embedded-local-control-v1".to_owned()),
+            run_id,
+            request_sha256,
+            request,
+        )
+    }
+
+    /// Stops an embedding service without detaching model or tool workers.
+    /// Keeps draining worker results/events until their native bounded calls
+    /// return, then joins them. This is shutdown, not an acknowledged job-control
+    /// decision or a fabricated terminal result. Incomplete records stay incomplete.
+    pub fn shutdown(&mut self) {
+        for session in self.active.values_mut() {
+            session.shutdown_worker();
+        }
+        self.active.clear();
+        self.prepared.clear();
+    }
+
     #[cfg(test)]
     pub(crate) const fn factory_for_tests(&self) -> &F {
         &self.factory
@@ -1020,6 +1056,51 @@ impl LiveJob {
 }
 
 impl LiveCodingSession {
+    fn shutdown_worker(&mut self) {
+        let Some(worker) = self.worker.take() else {
+            return;
+        };
+        let mut cancellation_sent = false;
+        let mut stop_sent = false;
+        while !worker.is_finished() {
+            if !cancellation_sent {
+                let correlation = self
+                    .events
+                    .first()
+                    .map(|event| event.correlation_id.clone())
+                    .or_else(|| {
+                        self.event_pump.state.try_lock().ok().and_then(|pump| {
+                            pump.events
+                                .first()
+                                .map(|event| event.correlation_id.clone())
+                        })
+                    });
+                if let Some(correlation_id) = correlation {
+                    // Keep a previous accepted cancellation. Probe poison is
+                    // unavailable control; the native worker fails closed.
+                    let _ = self.cancellation.request(CancellationSignal {
+                        schema_version: self.request.schema_version,
+                        cancellation_id: CancellationId::from_raw("embedded-host-shutdown"),
+                        correlation_id,
+                        task_id: self.request.task.task_id.clone(),
+                        reason: CancellationReason::Shutdown,
+                        requested_by: BoundaryKind::Shell,
+                    });
+                    cancellation_sent = true;
+                }
+            }
+            if !stop_sent {
+                stop_sent = self.commands.try_send(WorkerCommand::Stop).is_ok();
+            }
+            // A worker may be publishing a boundary into the capacity-one
+            // channel. Never join while that publication is blocked.
+            while self.results.try_recv().is_ok() {}
+            thread::sleep(WAIT_SLICE);
+        }
+        let _ = worker.join();
+        self.event_pump.shutdown();
+    }
+
     fn spawn<R>(
         request: RuntimeRunRequest,
         mut runtime: R,

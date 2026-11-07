@@ -1,0 +1,243 @@
+Commit: b915775f5bb7cf21301878d8f00d920781c590e7
+Scope: local-coding-live-owner-bridge
+
+# Independent core review: live worktree ownership in native coding writes (T-303/T-306, same-row, non-closing)
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate read-only session. This is a
+same-model review, and a cross-model review is still required before any public release. This
+review grants no certification, compliance or legal clearance, and it closes no row.
+
+## Commit and scope confirmation
+
+- `git rev-parse b915775f5bb7cf21301878d8f00d920781c590e7` and `HEAD` return the same sha.
+- `git status --short` printed nothing before and after the review. I made no repository change.
+- The diff from base `637cffbc78460d5dfbcd0cd14fc21f97617c7277` is one commit touching exactly 12
+  paths (+1169/-28). They are the builder audit's `EXPECTED` set:
+  - seven Rust sources: five in `platforms/linux/src/` and two in `shells/host/src/`;
+  - TASKS.md, Decision 0158, the new guide and the new evidence record;
+  - the retained prior review.
+- No `Cargo.*`, lockfile, `package*.json`, SBOM, evaluation, held-out, hidden-test, threshold,
+  score, GPU or status-model input changed.
+- TASKS.md adds one sentence to each of the open T-303 and T-306 rows. Every `| [ ] |`/`| [x] |`
+  status is unchanged.
+- I read the following in full:
+  - `coding_repository_runtime.rs` (new);
+  - the `coding_workspace_write.rs` refactor;
+  - both host diffs;
+  - the seven new tests;
+  - Decision 0158, the guide and the evidence record.
+- I also re-read the code this batch depends on:
+  - `verify_created`;
+  - `CreatedWorktree`/`AppliedEdit`;
+  - `prepare_apply`/`decide_apply`;
+  - `authorize_workspace_root`/`revalidate`/`root_path_sha256`;
+  - the kernel's `execute_write_transaction_with_checkpoint` call order (observe → revalidate →
+    consume → apply → observe → restore);
+  - `execute_prepared_structured_write`, `finish_specialized_effect_event` and the factory's only
+    boundary construction site.
+
+## Methods
+
+1. **Line-by-line reading** of the lease, the wrapper driver and the host wiring. The reading
+   covered every item the request lists:
+   - refusal, uncertain, drop and poison paths;
+   - lock lifetime and scope identities;
+   - pending-decision invalidation and manual recovery.
+2. **All requested commands**, using my own logs and the shared review target directory.
+3. **Reviewer escape and edge probes.** I added five extra tests in a reviewer-owned
+   `git archive` copy of the exact commit (`reviewer-probes.rs`). They use the same synthetic
+   creation fixture as the builder's tests. I made no other change, then deleted the copy.
+4. **Privacy, IP and evaluation-integrity scans** of all 1169 added lines.
+
+## Commands and results
+
+Environment:
+- `PATH=/lane/state/tmp/shared-node-v24.15.0/bin:$PATH`; node sha256 `d1de76d8…bd932c` matches.
+- `/tools/build-slot` sha256 `453086eb…ea02ef` matches.
+- `CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4`.
+- All Cargo runs used `--locked --offline`. Every heavy run waited for the shared reservation.
+- No GPU or model process, and no held-out or hidden test.
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `python3 -B scripts/local_agent_fast_gate.py --base 637cffbc… --timeout 3600` | Exit 1, as expected. diff-check, untracked lint, review lint and markdownlint (4 files, 0 issues) PASS. fmt PASS (2385.88 s, almost all of it waiting for the reservation). Clippy `-D warnings` PASS (409.83 s). Complete tests **FAIL: 907 passed, 72 failed, 63 ignored, 0 filtered**, the same totals as the builder. My 72 sorted failure identities (53 `agentmage_host` unittests, 19 `agentmage_platform_linux` unittests; `mine.ids`) are identical to those in the builder's `fast.log`. They are also identical to the base gate log `/lane/state/tmp/t306-linked-repair/fast.log` (sha256 `319974de…`, totals 900/72/63/0), so there is no new failure. The 7 additional passes are the 7 new methods, and each shows `ok` in the complete run. The failures stay FAIL under the disclosed T-301.1 environment. Example: 14 panics are `git artifact: … InvalidGitArtifact`. |
+| 2 | `bash /tools/build-slot cargo test … -p agentmage-platform-linux --lib coding_repository::apply::tests::runtime_ -- --nocapture` | Exit 0: **7 passed, 0 failed, 0 ignored, 312 filtered**, 1.17 s. The cumulative case prints `owned_runtime_native_writes_and_original_apply_us=510782` (builder: 478,690). This is a component timing with synthetic creation provenance. It is not native Git creation, coordinator execution or inference. |
+| 3 | `python3 -B /lane/state/tmp/t306-owned-runtime/audit.py` | Exit 0. It rewrote `audit.json` with identical bytes (`22470fad…`, the same as my stdout log). The builder artifact hashes in the request match all 12 files, including `review-final.log` (the empty-file digest). The 7 `source-freeze.json` hashes match the checked-out Rust sources. This is the builder's audit, not independent evidence. |
+| 4 | `python3 -B /lane/state/tmp/t306-read-consent/run-policy.py /lane/state/tmp/review-live-owner-b915775f5bb7-source` | Exit 0: "Validated 789 Markdown file(s) and all policy invariants." (8.7 s, 9041 inputs). My manifest sha256 `78a15ad4…c5429c0` is **identical** to the builder's `policy-source-inputs.json`. I removed only my mirror and kept the manifest. This is not the T-310 long gate. |
+| 5 | `cmp docs/reviews/637cffbc7846-…txt /lane/reviews/637cffbc7846-…md` | Exit 0. My prior PASS report is retained byte for byte. |
+| 6 | `git diff --check 637cffbc… --` | Exit 0. |
+| P | Reviewer probes, run in the copy with `cargo test … --lib coding_repository::apply::tests::reviewer_probes -- --nocapture --test-threads=1` through the build slot | Exit 0, **5 passed**. Details below. |
+
+Probe details (all use real held directories, kernel grants and the native atomic writer):
+
+- **Path traversal and symlinked directories.** With a lease held, `LinuxCodingReadScope::select`
+  on the worktree refuses all four paths I tried:
+  - `../../original/one.py`;
+  - `/etc/passwd`;
+  - `link/one.py`, where `link` is a symlink to the original checkout;
+  - `./one.py/../../original/one.py`.
+- **Symlink swap after the preview.** After `prepare_write`, I replaced `one.py` with a symlink to
+  `original/one.py`, then applied through the owned driver.
+  - Result: `Err(Transaction)`.
+  - `original/one.py` stays `first\n`, and the symlink is left untouched.
+  - A later `prepare_apply` refuses.
+  - The kernel's pre-consumption observation catches this. The wrapper never reaches native
+    application.
+- **Byte race after the preview.** I overwrote the file between preview and apply.
+  - Result: `Err(Transaction)`, and the raced bytes are preserved.
+  - The manual lineage entry remains listed, but `prepare_apply` refuses on source drift.
+- **Substituted root.** I renamed the worktree and recreated a directory at the same path.
+  `write_driver` refuses both the fresh descriptor and the stale descriptor of the moved
+  directory.
+- **Sixteen-path lineage limit.**
+  - Sixteen distinct owned writes commit.
+  - The 17th path is refused by the wrapper. It ends `FailedNoChange`, and the file is
+    unchanged.
+  - A repeat write to an existing lineage path still commits at the limit.
+  - After recovery, exactly 16 paths are available.
+
+## Verified properties (no finding)
+
+- **Construction.** `LinuxCodingWorktreeLease` is a private-field `Arc<Mutex<_>>` with no
+  `Serialize`/`Deserialize` and no constructor except `into_runtime_worktree(self, …)`.
+  - That function requires a live `created` (`coding_repository_runtime.rs:30-33`).
+  - It checks the displayed identity before revalidating (`:34-37`).
+  - It clears `pending`/`command`/`validation`/`edit`/`apply` (`:38-42`).
+  - `created` itself is only set after observed native success (`coding_repository.rs:408-427`)
+    or by the `#[cfg(test)]` fixture.
+  - No path, marker or receipt reaches it.
+- **Scope identities.**
+  - The factory compares the canonical activation path with `created.path`, then calls
+    `verify_created`. That check re-resolves the path with `NOFOLLOW` and matches the
+    path/device/inode digest.
+  - The boundary and every write compare the per-operation workspace's `root_path_sha256`
+    (path, device and inode) with the held root and revalidate it (`:93-100`).
+  - The factory checks before prepare (`coding_development_runtime.rs:946`), at run composition
+    (`:1190`), on refresh (`:493`) and at boundary attach (`:1430` → `linux_coding_runtime.rs:845`).
+  - The factory has only one boundary construction site (`:1409`).
+- **Lock lifetime.**
+  - The `MutexGuard` lives in the driver. In the host it spans observation, consumption,
+    application, verification, the tool-terminal commit and `complete`
+    (`linux_coding_runtime.rs:2725-2877`).
+  - The guard is `!Send`. `try_lock` refuses (rather than blocks) when the owner is busy or
+    poisoned, and the concurrent-writer test plus the probes confirm this.
+- **Refusal, uncertain, drop and poison paths.**
+  - Attempted paths are removed from lineage before native application (`:279-281`).
+  - Lineage is re-added only when all of the following hold (`:146-189`):
+    - a non-uncertain, fully applied report;
+    - a `Committed` outcome;
+    - a matching transaction id and consumed-grant digest;
+    - a valid receipt chain;
+    - every receipt with this transaction and grant;
+    - the set of verified operations equal to the attempt's preimage/postimage pairs;
+    - a fresh `verify_created`.
+  - Restore clears success (`:295`). Drop without `complete` leaves the paths ineligible, which
+    the test with no publication covers.
+  - A failure after publication (`complete` → `Uncertain`) follows the existing post-commit
+    `revalidate_root` pattern (`:3235-3237`) and cannot grant eligibility.
+  - Poison recovery clears `created` and every pending decision (`:70-78`), which the panic test
+    covers.
+- **Manual recovery.** `Arc::try_unwrap` returns the lease intact while any clone lives. The
+  borrow checker prevents recovery while a driver exists. Old manual approvals are refused after
+  recovery, and the test covers this.
+- **Original transfer is unchanged and still gated.**
+  - `prepare_apply` still requires the original bytes to equal the first preimage and the
+    worktree bytes to equal the last postimage.
+  - It then needs a new complete diff and a separate single-use exact approval.
+  - `.git` components are refused by `select` (`coding_workspace.rs:119`).
+  - This bounds the new source of lineage, which can now include model-proposed coordinator
+    edits, behind a person's review of the complete diff.
+- **Unowned path unchanged.**
+  - `LinuxCodingRuntimeWriteDriver::unowned` delegates `observe`/`apply`/`restore` directly, and
+    its `complete` is a no-op `Ok`.
+  - The `LinuxCodingPendingWrite::apply` refactor keeps the same limits, checks and order.
+  - The `#[cfg(test)]` helper is absent from production builds.
+- **Confinement.** No path resolution, sandbox, network, environment or trust check changed. The
+  owned wrapper only adds refusals to the unchanged native writer. The low L2 projection-identity
+  finding from the prior review remains backlog (`sandbox_supervision.rs` is untouched).
+- **Honest claims.**
+  - The guide, the decision and the evidence Limits section each state:
+    - the HTTP launcher cannot transfer the lease;
+    - no manual-create/native-run/apply workflow exists;
+    - the tests use synthetic creation and prove no Git creation, coordinator execution or
+      inference;
+    - T-301.1 is still blocked.
+  - Every number I could trace matches the raw logs:
+    - 7/312, 1.21 s, 14.65 s and 478,690 µs (component log);
+    - 12.02 s, 29.65 s, 374.31 s and 907/72/63/0 (fast log);
+    - 789 Markdown files and 9041 inputs (policy run).
+- **Integrity, privacy and IP.**
+  - No new row, sub-row or status change. No evaluation, held-out, hidden-test, threshold,
+    score, dependency or ignore change: the ignore set is unchanged at 63.
+  - The added lines contain no host-specific path, username, hostname, credential, personal data
+    or private project name. The evidence uses `<lane-state>`. The only model name is the
+    reviewer attribution in the retained review.
+  - No other product is named or compared.
+
+## Findings
+
+### L1 (low, backlog): `into_runtime_worktree` destroys the live owner on refusal
+
+- **Location:** `platforms/linux/src/coding_repository_runtime.rs:26-37`. The method takes `self`
+  by value. A mismatched displayed identity, or a transient `verify_created` failure, drops the
+  owner.
+- **Consequence:** its creation authority, held roots and any cumulative manual edit lineage are
+  lost. By design they can never be rebuilt (`f.owner().into_runtime_worktree(&"0".repeat(64))`
+  in the new test shows the refusal, not the loss).
+- **Impact:** no file changes and the failure is closed. But a stale or mistyped consent display
+  costs the person every transferable edit, while `try_into_repository` deliberately returns
+  ownership intact.
+- **Fix:** return `Result<LinuxCodingWorktreeLease, (LinuxCodingRepository, LinuxCodingRepositoryError)>`
+  (or check through `&self` before consuming). Then add the wrong-identity-then-retry case to the
+  handoff test.
+
+### L2 (low, backlog): the host owned-write composition has no executing test
+
+- **What is untested.** No test calls either `attach_owned_worktree`
+  (`shells/host/src/coding_development_runtime.rs:475`, `shells/host/src/linux_coding_runtime.rs:837`).
+  So none of these is ever executed:
+  - the factory checks before prepare, refresh and composition;
+  - the boundary attach check;
+  - the refusal of owned writes on the legacy direct path (`linux_coding_runtime.rs:2639-2641`);
+  - the ordering of `complete` after the tool-terminal commit (`:2868-2877`).
+- **What I confirmed by reading.** Every one of these branches only adds a refusal or records
+  lineage after the commit, so I found no defect.
+- **Why it is untested.** A lease needs a live created owner, which needs native creation
+  (blocked by T-301.1).
+- **Wording.** The guide and the evidence Limits section disclose "no coordinator execution".
+  However, evidence line 60-62 ("The native coordinator refuses an owned structured write on the
+  legacy direct path…") sits in the Verification section as if observed.
+- **Why it is not rated medium.** The gap is disclosed, it cannot weaken confinement, and the
+  original-checkout transfer that consumes this lineage is tested and separately approved.
+- **Fix:**
+  - Reword that sentence as a property established by construction or code reading.
+  - Once a lease can be obtained legitimately in tests, add a host boundary regression covering:
+    - legacy-path refusal with the grant not consumed;
+    - wrong-workspace attach refusal;
+    - lineage recorded only after a successful event-path terminal commit.
+
+## Per-row result
+
+- **T-306: implementation batch accepted (non-closing).** No high or medium finding is open. L1
+  and L2 are backlog.
+  - Verified at component level: the lease, the wrapper's refusal and promotion rules,
+    recovery and poison handling, and the 16-path limit.
+  - Verified by reading only: the host wiring.
+  - Still open: the HTTP lifecycle, durable ownership, new-file transfer, commit/push, MCP,
+    positive native creation and startup (T-301.1), and the model and parent measurements.
+  - The row stays OPEN, as requested.
+- **T-303: implementation batch accepted (non-closing).** Same reasons. This batch makes no
+  coordinator or model run claim, and the row stays OPEN.
+
+## Retained reviewer artifacts
+
+- `/lane/state/tmp/review-b915775f/fast.log` `9b90620c87cd10db9b253dcd941bc9c318dca3137bb5d54f275ef62af4bba058`
+- `/lane/state/tmp/review-b915775f/mine.ids` `2ea76ffc364805b75a5e49a48dcef91bcade9e94f13697b08dff57e97af38799`
+- `/lane/state/tmp/review-b915775f/focused.log` `49f7d2437f32031b6fb5f3ef0bf412de2658c6372267658e42c371cd5e93dd10`
+- `/lane/state/tmp/review-b915775f/audit.log` `22470fad2d99260f587a85ba34911d9bc1ff8abb122bc191de11bbad9c0cdb3b`
+- `/lane/state/tmp/review-b915775f/policy.log` `80776fd6d8788f5a72fab9004de10232aaeb23dcf97a1ab426deb8964af5bcab`
+- `/lane/state/tmp/review-live-owner-b915775f5bb7-source-inputs.json` `78a15ad4ea42184bf1a8dd1bb6d9a641df84c857f698eb60cc4229fd4c5429c0`
+- `/lane/state/tmp/review-b915775f/reviewer-probes.rs` `b5e20e4d4100d06868867f271e170e5b5653e6eecc15e6af64d2c7c51a18b8a0`
+- `/lane/state/tmp/review-b915775f/probes.log` `9ba9367ad5cc95a1c5f75298e2a3c5d9fa4dec37f77de7ac944f16103721836f`
+
+Verdict: PASS
