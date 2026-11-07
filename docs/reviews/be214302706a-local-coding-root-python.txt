@@ -1,0 +1,170 @@
+Commit: be214302706ac1caee2b7c0e54d2009f7864e8c8
+Scope: local-coding-root-python
+
+# Independent core review: T-306 (shared T-303) explicit root-level Python unittest selection
+
+Reviewer: separate read-only Claude Opus 5.5 session, extra-high effort. Same-model review
+(accepted for now; a cross-model review must happen before any public release). This review
+did not change the repository. The only files written were this review, the validation
+directory below and throwaway probe directories under `/lane/state/tmp` (deleted).
+
+Tier: core. Row: T-306, shared T-303. Both parents stay OPEN. This is a non-closing
+implementation increment. No row, status, score or model qualification is claimed, and
+this review accepts none.
+
+## Methods
+
+1. I confirmed the commit and base: `git rev-parse be214302706ac1caee2b7c0e54d2009f7864e8c8` gives HEAD;
+   `git rev-parse 7976c11955565f4b98f33df765384b22624b6117` resolves. The working tree was clean before and after.
+   `git diff --stat` base..commit shows exactly 13 paths: 628 insertions and 70 deletions.
+2. I checked integrity before running any helper: `sha256sum -c` passes for all 15 SHA-256 values in the request,
+   and every one also matches `/lane/state/tmp/t306-root-project/review-inputs.json`.
+3. I read every helper before running it:
+   - `verify.py` checks that fd 9 matches the real shared lock (dev/ino) and takes it non-blocking. It runs the
+     4 focused cargo commands, then the repository's own `scripts/local_agent_fast_gate.py` planner/executor.
+     The only change is that each cargo command gets an `env` prefix, which stops the executor from taking the
+     lock a second time. It writes only to `$AGENTMAGE_VALIDATION_DIR`.
+   - `audit.py` is read-only unless `--record` is passed, and I did not pass it. It checks the exact 13-path
+     scope, that ledger rows other than T-303/T-306 are unchanged, that the retained review is byte-identical,
+     that no `#[ignore]` set changed, that added lines contain no private paths, and the 8-source freeze. It
+     also compares the failure set with the prior baseline and checks the totals.
+   - `probe.py` is an interpreter-only layout probe in a temp directory.
+   - `run-policy.py` (unchanged) mirrors tracked sources and runs `scripts/validate_docs.py`.
+4. I read the full diff, IP-POLICY.md, Decision 0155, the TASKS.md T-303/T-306 additions, both guide changes
+   and the new evidence file. I traced every `PythonProject` / `python-project` branch across `shells/host`,
+   `platforms/local-api` and `platforms/linux` (`git grep`). I also traced every `self.scenario` comparison in
+   `coding_development_runtime.rs`.
+5. I ran my own interpreter reproductions with an empty environment (`env -i /usr/bin/python3 -I -B -m unittest
+   discover -s . -t . -v`). These were not repository code.
+
+## Exact commands and results
+
+Environment: `PATH=/lane/state/tmp/t306-owned-api/node-v24.15.0/bin:$PATH`, `CARGO_TARGET_DIR=/lane/state/review-target`,
+`CARGO_BUILD_JOBS=2`, `RUST_TEST_THREADS=4`, `AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-root-python-be214302706a`
+(created with `mkdir -m 700`). No GPU or model process was used.
+
+- `bash /tools/build-slot python3 -B /lane/state/tmp/t306-root-project/verify.py > $V/focused.log 2>&1` exited with 1,
+  as the request expected. It waited for the shared reservation first.
+  - Host `coding_development_runtime::python_project_tests::`: 6 passed, 0 failed, 0 ignored, 587 filtered.
+    The root fixture took 247400 us; the builder measured 244640 us.
+  - Local-api `--lib coding_`: 20 passed, 0 failed, 0 ignored, 5 filtered.
+  - `coding_runtime_cli` connected driver: 1 passed, 0 failed, 0 ignored, 14 filtered.
+  - Linux `correction_scenarios_are_explicit_closed_development_operations`: 1 passed, 0 failed, 0 ignored, 320 filtered.
+  - My `plan.json` is byte-identical to the builder's.
+  - Fast-gate step exits: `0 0 0 0 0 0 101`. These steps are diff-check, untracked lint, review lint, markdownlint
+    on 4 files, `cargo fmt --check`, `cargo clippy --all-targets -D warnings` and the complete test run.
+  - Complete run: 22 target summaries, 918 passed, 72 failed, 63 ignored, 0 filtered. `FAST GATE: FAIL`.
+  - Using the audit's own parser, my 72 failure identities equal the builder's `fast.log` exactly. They also equal
+    the prior-batch baseline `/lane/state/tmp/t306-recovery/fast.log`: 53 `agentmage_host` and 19
+    `agentmage_platform_linux`, with an empty symmetric difference.
+  - The sampled failures panic with `test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }`, which
+    is the deferred T-301.1 native trust blocker. There is no new failure, ignore or allowlist.
+  - All four named new or expanded tests show `... ok` in the complete run.
+- `python3 -B /lane/state/tmp/t306-read-consent/run-policy.py $V/policy-source`: exit 0, "Validated 793 Markdown
+  file(s) and all policy invariants."; source_count is 9049.
+- `cmp /lane/state/tmp/t306-root-project/policy-source-inputs.json $V/policy-source-inputs.json`: identical.
+- `python3 -B /lane/state/tmp/t306-root-project/audit.py > $V/builder-audit.json`: exit 0.
+  `cmp` against the builder's `audit.json` is identical (SHA-256 `212f53f36d67d7fa02e48bfce0aa6a328abeb1efc7f14cfbf506b2b401600836`).
+- `cmp docs/reviews/7976c1195556-local-coding-recovery-lifecycle.txt /lane/reviews/7976c1195556-local-coding-recovery-lifecycle.md`: identical.
+- `git diff --check 7976c11955565f4b98f33df765384b22624b6117 --`: clean. `git status --short`: empty.
+- Privacy grep of all added lines (`/var/home`, `/home/`, the username, the hostname, the private sibling project
+  name, credential patterns): no hits. The only absolute paths are generic `/lane/...` paths inside the retained
+  prior review copy.
+- Builder probe log: an unpackaged `tests/` gives ImportError for `-s tests -t .`, a missing `src` module without
+  `-t`, and `Ran 0 tests` exit 5 for `-s .`. This matches the guide's stated non-support of an unpackaged `tests/`.
+
+## Branch and boundary analysis
+
+- **Selection is closed.** All five intake points use exact string or enum allowlists with no prefix or
+  normalisation:
+  - `CodingDevelopmentScenario::parse` (`shells/host/src/coding_development_runtime.rs:242-249`). The test rejects
+    `;sh`, trailing space and partial labels.
+  - Linux `development_scenario_valid` (`platforms/linux/src/development_boundary.rs:674-697`).
+  - Owned attach (`platforms/local-api/src/coding_owned_api.rs:54-61`).
+  - Separate-process service (`coding_runtime_api.rs:126-136`).
+  - Terminal driver (`coding_cli_driver.rs:374-378`).
+
+  A prepare body cannot change the selection. `project_selection_is_explicit_and_cannot_be_changed_by_a_prepare_body`
+  now covers both project layouts with zero host calls on the rejected body.
+- **No scripted fallback.** `CodingDevelopmentRuntimeFactory::new` refuses a non-candidate model for both
+  layouts (`:443`), and `scripted_steps` returns `Profile` for both (`:2401`). I found no other branch that
+  routes a project layout to scripted steps.
+- **No grant expansion.** Both layouts take the same `python_project_paths` (1-16 parsed regular `src/**.py`
+  files), `CodingWriteScope::exact_files`, `build_coding_project_plan_binding` and `runtime_limits`. Limits have
+  no project-specific branch.
+  Creation-parent sources stay excluded for both (`:790`), so creation is still impossible.
+  The command differs only in the template id (`project.python-root-unittest`) and `-s .`. `network`,
+  `interactive` and `inherit_environment` are false and `grant_required` is true (asserted in test). Bounds
+  equal the package command's.
+- **Identity is distinct.** The validation definition hash includes the command, so the template SHA-256
+  differs (asserted).
+- **Resume marker.** `python_project_constraints_match` (`:2091-2110`) requires exactly one marker equal to the
+  scenario's own marker, or none for non-project scenarios.
+  This is stricter than the base check, which only tested whether the marker was present. It refuses
+  cross-layout, missing, duplicate and conflicting markers (all asserted).
+  Constraints are host-constructed (`:1133-1160`). User text reaches only the `objective`, so a prompt cannot
+  inject a marker.
+  Requests persisted by an earlier `python-project` session still match their own layout.
+- **Runner shadowing.** A worktree-root `unittest.py` does not replace the stdlib runner under `-I`. The test
+  asserts this, and I confirmed it by reasoning: `-I` keeps cwd off `sys.path`, and discovery inserts `-t`
+  only after `unittest` has been imported.
+- **Native confinement is not exercised.** The new argv runs under the same unchanged native command sandbox
+  as the package layout, but the sandbox-backed tests fail on the deferred T-301.1 manifest blocker. The
+  evidence says plainly that the interpreter fixture is trusted, unconfined execution and is not sandbox,
+  model or workflow evidence. That labelling is honest. No new sandbox code or authority is introduced, so
+  there is no new confinement surface left untested.
+- **Evaluation integrity:** no evaluation task, hidden or held-out input, threshold, scorer, dependency or SBOM
+  file is in the diff (audit-enforced 13-path set). No score or comparison with other products appears.
+  IP-POLICY: nothing copied and no trademark branding.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L1 (low): root discovery runs model-writable test modules under `src/`.**
+
+- Location: `shells/host/src/coding_development_runtime.rs:2058-2089` (`python_project_paths`) combined with
+  `:2117` (`-s .`). The disclosure gap is in `docs/guides/coding-runtime-api.md` ("Root-level Python tests").
+- Problem: in a src-package layout (`src/__init__.py` present), the root selection discovers and executes
+  `src/test*.py` and tests in nested `src` packages. The same files are inside the exact writable source
+  scope, because every parsed `src/**.py` file is writable. The package selection (`-s tests`) never runs
+  `src/` modules as tests. So in root mode the model can satisfy "The exact approved Python project tests
+  pass" by editing the assertions themselves.
+- Reproduction: I made a temp repo with `src/__init__.py`, `src/calc.py` (bug) and `src/test_calc_in_src.py`.
+  `env -i /usr/bin/python3 -I -B -m unittest discover -s . -t . -v` gives `FAILED (failures=1)`, exit 1.
+  After rewriting only `src/test_calc_in_src.py` (a file inside the scope) to `pass`, the same command gives
+  `OK`, exit 0.
+- Why it is low:
+  - Confinement and the grant set are unchanged.
+  - Decision 0155 says the approved runner is trusted and this is not independent grading.
+  - Editable `src` code can already tamper with the runner in either layout.
+  - The frozen scorer, not this output, decides coding scores.
+  - Every write remains individually visible.
+- Fix:
+  - In the root layout, refuse startup when any writable path's basename matches the discovery pattern
+    `test*.py`, or exclude such paths from `exact_files`.
+  - Add a unit test next to `python_project_definition_enters_existing_profile_with_no_test_write_scope`.
+  - State the rule in the guide.
+- This must be resolved before any root-layout run is cited as coding-success evidence.
+
+**L2 (low): the root validation definition is labelled as the package selection.**
+
+- Location: `shells/host/src/coding_development_runtime.rs:2024-2027`. The sealed definition JSON hard-codes
+  `"selection":"python-project"` for both layouts.
+- Impact: identities still differ through the embedded command, so this is not a collision. But the sealed
+  record misdescribes the root layout to anyone auditing it.
+- Fix: derive the label from the scenario (`python-root-project`) in a future change that already re-seals.
+  It is not worth a standalone identity change.
+
+Backlog carried forward, not reopened here: the prior recovery review's low L1/L2 coverage findings and the
+factory allocation lifetime issue (`Box::leak` per composition refresh). The deferred T-301.1 native trust
+blocker still prevents native positive workflow and model measurement.
+
+## Per-row result
+
+- **T-306 (non-closing increment):** PASS for this increment at exact commit
+  `be214302706ac1caee2b7c0e54d2009f7864e8c8`. No open high or medium finding. L1 and L2 go to the backlog.
+  The row stays OPEN: no native positive workflow, measurements or parent completion are established.
+- **T-303 (shared, non-closing):** PASS for this increment with the same reasoning. The row stays OPEN.
+
+Verdict: PASS

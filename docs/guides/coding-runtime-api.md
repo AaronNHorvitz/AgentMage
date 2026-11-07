@@ -214,9 +214,11 @@ inside the same bounded GPU reservation:
 target/debug/agentmage-local-api serve-runtime-development 127.0.0.1:43129 <private-auth> <state-root> <disposable-root> <marked-workspace> gpt-oss new python-project
 ```
 
-The marked disposable repository must have one to sixteen parsed, admitted
-Python files under `src/` and a unittest package under `tests/` (including
-`tests/__init__.py`). All selected source
+By default, the marked disposable repository must have one to sixteen parsed,
+admitted Python source files under `src/` and a unittest package under `tests/`
+(including `tests/__init__.py`). Discovery modules whose basename starts with
+`test`, directories named `test` or `tests`, and hidden components are excluded
+from writes in both layouts. All selected source
 paths are exact existing files; tests, other files, descendants of a selected
 file path and file creation are refused. The sealed request shows the mutable
 files. Startup metadata reports the selection rule and leaves `mutable_files`
@@ -261,8 +263,8 @@ observation, commit/push, MCP and measured parent acceptance remain open.
 
 Select `python-root-project` explicitly, either as the final
 `serve-runtime-development` argument or as `scenario` in the owned runtime's
-attach request. This uses the same coordinator, exact existing `src/` source
-scope, model profiles, tools and individual approvals as `python-project`.
+attach request. This uses the same coordinator, source-selection rules,
+model profiles, tools and individual approvals as `python-project`.
 The terminal `runtime-run` client accepts both selections.
 
 The fixed command is `-I -B -m unittest discover -s . -t . -v`. It discovers
@@ -281,6 +283,54 @@ including absent, duplicate and conflicting layout markers. Each layout keeps
 the positive-test minimum, no skips or errors for full success, offline command
 confinement and separate execution approval. Standard project test output remains
 non-independent evidence; the frozen scorer decides coding scores.
+
+## Explicit Python source files
+
+The owned service's `POST /v1/code/runtime/attach` additionally accepts an
+optional `source_paths` list for either project layout. For example:
+
+```json
+{"source_paths": [["calculator.py"], ["package", "core.py"]]}
+```
+
+This is an additional field in the complete attach body, not a standalone
+request. The control credential and explicit inspection and handoff consent
+are required as before. The list replaces the default `src/` selection and
+can name Python sources anywhere in the held worktree. Each path is a relative
+array of components, never an absolute path or a slash-separated string.
+One to sixteen unique paths are required. The host sorts them before sealing.
+Every selected file must be an admitted, read, parsed regular Python file in
+the repository map; a missing, excluded, unread or symlink input refuses the
+whole selection. Discovery test modules (`test*.py`), any `test` or `tests`
+directory and hidden path components are refused. The conservative test-name
+rule also excludes ordinary source modules beginning with `test`.
+
+Omission or null preserves the default selection. An empty array is an error.
+An explicit list never adds other files automatically. Descendant paths, new
+files and out-of-list patches stay refused by the existing exact-file scope.
+No creation-parent context is added. Status shows `selected_source_paths` as
+canonical component arrays (or null for the default). `mutable_files` stays
+null until prepare; the sealed work packet contains the complete actual list.
+The existing terminal driver displays this status and packet before consent.
+
+The factory retains this immutable startup selection on every repository
+refresh. An exact digest constraint additionally rejects resume when an
+explicit list is changed, removed, inserted or duplicated. This does not make
+the process-held worktree lease durable. The separate-process development
+launcher still exposes only the default source rule; the optional list is an
+owned-attach API and host-factory feature. No model or repository content can
+supply it through prepare, and every model call and effect keeps its existing
+approval boundary.
+
+The root validation now describes `python-root-project` in its sealed source
+definition, rather than the package label. Its hash changes deliberately.
+Existing root requests sealed under the earlier label are refused on resume
+as profile drift; start a fresh run after inspecting and consenting. The
+package-layout source definition is unchanged. Both layouts now bind the
+complete profile, including the exact default write scope and validation
+registry, into a required digest constraint. Earlier project requests without
+this binding also require a fresh run. These are development selections, not
+model admission or independent coding-success evidence.
 
 ## Task-aware repository context
 

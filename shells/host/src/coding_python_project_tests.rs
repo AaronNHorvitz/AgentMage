@@ -6,6 +6,15 @@ use agentmage_capability_repository_map::{
 };
 
 fn project(names: &[&str]) -> RepositoryMap {
+    project_inputs(
+        &names
+            .iter()
+            .map(|name| (*name, b"def value():\n    return 1\n".as_slice()))
+            .collect::<Vec<_>>(),
+    )
+}
+
+fn project_inputs(files: &[(&str, &[u8])]) -> RepositoryMap {
     build_repository_map(RepositoryMapInput {
         workspace_id: WorkspaceId::from_raw("workspace-coding"),
         repository_sha256: "a".repeat(64),
@@ -14,21 +23,18 @@ fn project(names: &[&str]) -> RepositoryMap {
         commit_id: "1".repeat(40),
         policy_sha256: "d".repeat(64),
         freshness_sha256: "e".repeat(64),
-        files: names
+        files: files
             .iter()
-            .map(|name| {
-                let content = b"def value():\n    return 1\n";
-                RepositoryFileInput {
-                    path: name.split('/').map(str::to_owned).collect(),
-                    size_bytes: content.len() as u64,
-                    content_sha256: sha256(content),
-                    content: Some(content.to_vec()),
-                    object_kind: RepositoryObjectKind::RegularFile,
-                    git_state: GitTrackedState::TrackedClean,
-                    policy_excluded: false,
-                    generated: false,
-                    vendored: false,
-                }
+            .map(|(name, content)| RepositoryFileInput {
+                path: name.split('/').map(str::to_owned).collect(),
+                size_bytes: content.len() as u64,
+                content_sha256: sha256(content),
+                content: Some(content.to_vec()),
+                object_kind: RepositoryObjectKind::RegularFile,
+                git_state: GitTrackedState::TrackedClean,
+                policy_excluded: false,
+                generated: false,
+                vendored: false,
             })
             .collect(),
     })
@@ -44,7 +50,7 @@ fn python_project_selects_exact_sources_and_refuses_empty_or_excess_scope() {
         "setup.py",
         "src/note.md",
     ]);
-    let paths = python_project_paths(&map).unwrap();
+    let paths = python_project_paths(&map, None).unwrap();
     let names: Vec<_> = paths
         .iter()
         .map(|p| {
@@ -66,25 +72,26 @@ fn python_project_selects_exact_sources_and_refuses_empty_or_excess_scope() {
                 .contains(&serde_json::to_value(path).unwrap())
         );
     }
-    assert!(python_project_paths(&project(&["tests/test_z.py", "setup.py"])).is_err());
+    assert!(python_project_paths(&project(&["tests/test_z.py", "setup.py"]), None).is_err());
     let names: Vec<_> = (0..17).map(|i| format!("src/f{i}.py")).collect();
     assert!(
-        python_project_paths(&project(
-            &names.iter().map(String::as_str).collect::<Vec<_>>()
-        ))
+        python_project_paths(
+            &project(&names.iter().map(String::as_str).collect::<Vec<_>>()),
+            None
+        )
         .is_err()
     );
     let mut denied = map.clone();
     for file in &mut denied.files {
         file.content_read = false;
     }
-    assert!(python_project_paths(&denied).is_err());
+    assert!(python_project_paths(&denied, None).is_err());
     let mut denied = map.clone();
     for file in &mut denied.files {
         file.disposition =
             agentmage_capability_repository_map::RepositoryEntryDisposition::GeneratedExcluded;
     }
-    assert!(python_project_paths(&denied).is_err());
+    assert!(python_project_paths(&denied, None).is_err());
     let mut reversed = paths.clone();
     reversed.reverse();
     assert!(build_coding_project_plan_binding(&map, &reversed).is_err());
@@ -101,7 +108,7 @@ fn python_project_selects_exact_sources_and_refuses_empty_or_excess_scope() {
 #[test]
 fn python_project_definition_enters_existing_profile_with_no_test_write_scope() {
     let map = project(&["src/a.py", "src/b.py", "tests/test_a.py"]);
-    let paths = python_project_paths(&map).unwrap();
+    let paths = python_project_paths(&map, None).unwrap();
     let mut input = crate::coding_session::tests::input();
     let command = python_project_command(CodingDevelopmentScenario::PythonProject).unwrap();
     assert_eq!(
@@ -116,8 +123,12 @@ fn python_project_definition_enters_existing_profile_with_no_test_write_scope() 
             && !command.network
             && !command.inherit_environment
     );
-    let template =
-        python_project_validation(command.clone(), &input.worktree.record_sha256).unwrap();
+    let template = python_project_validation(
+        CodingDevelopmentScenario::PythonProject,
+        command.clone(),
+        &input.worktree.record_sha256,
+    )
+    .unwrap();
     assert_eq!(template.parser, ValidationParserKind::PythonUnittestTextV1);
     assert_eq!(template.minimum_test_count, 1);
     assert!(!template.focused && !template.fail_fast);
@@ -192,8 +203,12 @@ fn python_project_definition_enters_existing_profile_with_no_test_write_scope() 
         .is_ok()
     );
     let template = &profile.validations().templates[0];
-    let changed_scope =
-        python_project_validation(template.command.clone(), &"f".repeat(64)).unwrap();
+    let changed_scope = python_project_validation(
+        CodingDevelopmentScenario::PythonProject,
+        template.command.clone(),
+        &"f".repeat(64),
+    )
+    .unwrap();
     assert_ne!(template.template_sha256, changed_scope.template_sha256);
 }
 
@@ -327,8 +342,9 @@ fn root_project_definition_is_explicit_exact_and_resume_bound() {
     );
     assert_eq!(command.bounds, package_command.bounds);
     assert_ne!(command, package_command);
-    let template = python_project_validation(command, &"a".repeat(64)).unwrap();
-    let package_template = python_project_validation(package_command, &"a".repeat(64)).unwrap();
+    let template = python_project_validation(root, command, &"a".repeat(64)).unwrap();
+    let package_template =
+        python_project_validation(packaged, package_command, &"a".repeat(64)).unwrap();
     assert_ne!(template.template_sha256, package_template.template_sha256);
     assert_eq!(template.parser, ValidationParserKind::PythonUnittestTextV1);
     assert_eq!(template.minimum_test_count, 1);
@@ -428,4 +444,309 @@ fn root_python_command_runs_actual_failure_repair_import_error_and_zero_tests() 
         "root_project_fail_repair_error_empty_us={}",
         started.elapsed().as_micros()
     );
+}
+
+fn selected(names: &[&str]) -> CodingPythonSourceSelection {
+    CodingPythonSourceSelection::new(
+        names
+            .iter()
+            .map(|name| name.split('/').map(str::to_owned).collect())
+            .collect(),
+    )
+    .unwrap()
+}
+
+#[test]
+fn project_sources_exclude_discovery_modules_and_test_directories() {
+    let map = project(&[
+        "src/calc.py",
+        "src/__init__.py",
+        "src/test_calc.py",
+        "src/nested/testHelpers.py",
+        "src/tests/helper.py",
+        "src/test/helper.py",
+        "test_calc.py",
+    ]);
+    let paths = python_project_paths(&map, None).unwrap();
+    let scope = CodingWriteScope::exact_files(
+        map.workspace_id.clone(),
+        paths
+            .iter()
+            .map(|p| {
+                p.components()
+                    .iter()
+                    .map(|p| p.as_str().to_owned())
+                    .collect()
+            })
+            .collect(),
+    )
+    .unwrap();
+    assert_eq!(paths.len(), 2);
+    for path in [
+        vec!["src", "test_calc.py"],
+        vec!["src", "nested", "testHelpers.py"],
+        vec!["src", "tests", "helper.py"],
+        vec!["src", "test", "helper.py"],
+        vec!["test_calc.py"],
+    ] {
+        assert!(
+            scope
+                .resolve(&path.into_iter().map(str::to_owned).collect::<Vec<_>>())
+                .is_err()
+        );
+    }
+    assert!(python_project_paths(&project(&["src/test_calc.py"]), None).is_err());
+}
+
+#[test]
+fn explicit_project_sources_are_canonical_exact_and_all_must_be_admissible() {
+    let map = project(&[
+        "calculator.py",
+        "package/core.py",
+        "src/unselected.py",
+        "test_calc.py",
+    ]);
+    let selection = selected(&["package/core.py", "calculator.py"]);
+    assert_eq!(
+        selection.constraint,
+        selected(&["calculator.py", "package/core.py"]).constraint
+    );
+    let paths = python_project_paths(&map, Some(&selection)).unwrap();
+    assert_eq!(paths.len(), 2);
+    let plan = build_coding_project_plan_binding(&map, &paths).unwrap();
+    assert!(plan.verify());
+    let scope =
+        CodingWriteScope::exact_files(map.workspace_id.clone(), selection.paths.clone()).unwrap();
+    assert!(scope.resolve(&["calculator.py".into()]).is_ok());
+    for path in [
+        vec!["src", "unselected.py"],
+        vec!["package", "absent.py"],
+        vec!["package", "core.py", "child.py"],
+        vec!["test_calc.py"],
+    ] {
+        assert!(
+            scope
+                .resolve(&path.into_iter().map(str::to_owned).collect::<Vec<_>>())
+                .is_err()
+        );
+    }
+    assert!(python_project_paths(&map, Some(&selected(&["missing.py"]))).is_err());
+    for mutate in 0..3 {
+        let mut denied = map.clone();
+        for file in &mut denied.files {
+            match mutate {
+                0 => file.content_read = false,
+                1 => file.object_kind = RepositoryObjectKind::SymbolicLink,
+                _ => file.disposition = agentmage_capability_repository_map::RepositoryEntryDisposition::GeneratedExcluded,
+            }
+        }
+        assert!(python_project_paths(&denied, Some(&selection)).is_err());
+    }
+    // Every selected input must be admitted; never silently narrow an explicit list.
+    assert!(python_project_paths(&map, Some(&selected(&["calculator.py", "missing.py"]))).is_err());
+}
+
+#[test]
+fn explicit_project_sources_refuse_unsafe_empty_duplicate_and_test_paths() {
+    for names in [
+        vec![],
+        vec!["a.py", "a.py"],
+        vec![""],
+        vec!["../a.py"],
+        vec!["/a.py"],
+        vec!["a/../b.py"],
+        vec!["a.py/child"],
+        vec!["src/a.rs"],
+        vec!["src/test_calc.py"],
+        vec!["test.py"],
+        vec!["tests/helper.py"],
+        vec!["package/test/helper.py"],
+        vec![".git/config.py"],
+        vec![".hidden/a.py"],
+        vec!["src//a.py"],
+    ] {
+        let paths = names
+            .iter()
+            .map(|name| name.split('/').map(str::to_owned).collect())
+            .collect();
+        assert!(
+            CodingPythonSourceSelection::new(paths).is_err(),
+            "{names:?}"
+        );
+    }
+    let names = (0..17).map(|i| vec![format!("a{i}.py")]).collect();
+    assert!(CodingPythonSourceSelection::new(names).is_err());
+    assert!(CodingPythonSourceSelection::new(vec![vec!["x".repeat(256)]]).is_err());
+}
+
+#[test]
+fn explicit_source_selection_cannot_be_removed_replaced_or_duplicated_on_resume() {
+    let a = selected(&["calculator.py"]);
+    let b = selected(&["package/core.py"]);
+    assert_ne!(a.constraint, b.constraint);
+    assert!(python_source_constraints_match(None, &[]));
+    assert!(python_source_constraints_match(
+        Some(&a),
+        &["unrelated".into(), a.constraint.clone()]
+    ));
+    assert!(!python_source_constraints_match(
+        None,
+        std::slice::from_ref(&a.constraint)
+    ));
+    for constraints in [
+        vec![],
+        vec![b.constraint.clone()],
+        vec![a.constraint.clone(), a.constraint.clone()],
+        vec![a.constraint.clone(), b.constraint.clone()],
+        vec![format!("{PYTHON_SOURCE_CONSTRAINT_PREFIX}invalid")],
+    ] {
+        assert!(!python_source_constraints_match(Some(&a), &constraints));
+    }
+}
+
+#[test]
+fn root_validation_identity_describes_its_actual_selection_and_refuses_mismatched_command() {
+    let root = CodingDevelopmentScenario::PythonRootProject;
+    let command = python_project_command(root).unwrap();
+    let expected = development_sha256(&serde_json::json!({"selection":"python-root-project", "command":command, "parser":"python_unittest_text_v1", "minimum_test_count":1})).unwrap();
+    let validation = python_project_validation(root, command.clone(), &"a".repeat(64)).unwrap();
+    assert_eq!(validation.source_sha256, expected);
+    assert_eq!(validation.user_input_approval_sha256, Some(expected));
+    assert!(
+        python_project_validation(
+            CodingDevelopmentScenario::PythonProject,
+            command.clone(),
+            &"a".repeat(64)
+        )
+        .is_err()
+    );
+    assert!(
+        python_project_validation(
+            CodingDevelopmentScenario::FailedTestRepair,
+            command,
+            &"a".repeat(64)
+        )
+        .is_err()
+    );
+}
+
+#[test]
+fn explicit_top_level_source_patch_repairs_actual_test_without_writing_tests() {
+    // Trusted component execution, outside the native sandbox: selected scope ->
+    // strict patch planner -> real interpreter. No model or workflow claim.
+    let started = std::time::Instant::now();
+    let root = std::env::temp_dir().join(format!(
+        "agentmage-python-selected-source-{}",
+        std::process::id()
+    ));
+    fs::create_dir(&root).unwrap();
+    let preimage = "def add(a, b):\n    return a - b\n";
+    let tests = "import unittest\nfrom calculator import add\nclass Calc(unittest.TestCase):\n    def test_add(self):\n        self.assertEqual(add(2, 3), 5)\n";
+    fs::write(root.join("calculator.py"), preimage).unwrap();
+    fs::write(root.join("test_calc.py"), tests).unwrap();
+    let map = project_inputs(&[
+        ("calculator.py", preimage.as_bytes()),
+        ("test_calc.py", tests.as_bytes()),
+    ]);
+    let selection = selected(&["calculator.py"]);
+    let paths = python_project_paths(&map, Some(&selection)).unwrap();
+    let plan = build_coding_project_plan_binding(&map, &paths).unwrap();
+    let scope =
+        CodingWriteScope::exact_files(map.workspace_id.clone(), selection.paths.clone()).unwrap();
+    let spec = python_project_command(CodingDevelopmentScenario::PythonRootProject).unwrap();
+    let run = || {
+        std::process::Command::new(&spec.executable)
+            .args(&spec.arguments)
+            .current_dir(&root)
+            .env_clear()
+            .envs(&spec.environment)
+            .output()
+            .unwrap()
+    };
+    let failed = run();
+    assert_eq!(failed.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&failed.stderr).contains("FAILED (failures=1)"));
+    let start = preimage.find("a - b").unwrap() as u64;
+    let proposal = StructuredPatchProposal {
+        schema_version: 1,
+        change_id: "selected-source-fix".into(),
+        path: vec!["calculator.py".into()],
+        expected_preimage_sha256: sha256(preimage.as_bytes()),
+        intent_sha256: plan.intent_sha256().into(),
+        change_plan_sha256: plan.plan_sha256().into(),
+        language: StructuredLanguage::Python,
+        artifact_class: StructuredArtifactClass::Code,
+        edits: vec![StructuredEdit::ReplaceSyntaxNode {
+            edit_id: "fix-sum".into(),
+            start_byte: start,
+            end_byte: start + 5,
+            expected_node_sha256: sha256(b"a - b"),
+            replacement: "a + b".into(),
+        }],
+        additional_review_hooks: vec![],
+        generated: false,
+        allow_generated: false,
+    };
+    let mut denied = proposal.clone();
+    denied.path = vec!["test_calc.py".into()];
+    assert!(
+        crate::coding_changes::bind_structured_patch_proposal(
+            &scope,
+            denied,
+            preimage.as_bytes().to_vec()
+        )
+        .is_err()
+    );
+    let patch = crate::coding_changes::bind_structured_patch_proposal(
+        &scope,
+        proposal,
+        preimage.as_bytes().to_vec(),
+    )
+    .unwrap();
+    fs::write(root.join("calculator.py"), patch.postimage()).unwrap();
+    let passed = run();
+    assert!(passed.status.success());
+    assert!(String::from_utf8_lossy(&passed.stderr).contains("Ran 1 test"));
+    assert!(passed.stderr.ends_with(b"OK\n"));
+    assert_eq!(
+        fs::read_to_string(root.join("test_calc.py")).unwrap(),
+        tests
+    );
+    fs::remove_dir_all(root).unwrap();
+    eprintln!(
+        "explicit_source_strict_patch_fail_repair_us={}",
+        started.elapsed().as_micros()
+    );
+}
+
+#[test]
+fn project_resume_binds_the_complete_profile_including_the_default_write_scope() {
+    let default_input = crate::coding_session::tests::input();
+    let mut exact_input = crate::coding_session::tests::input();
+    exact_input.write_scope = CodingWriteScope::exact_files(
+        exact_input.write_scope.workspace_id().clone(),
+        vec![vec!["src".into(), "lib.rs".into()]],
+    )
+    .unwrap();
+    let default = CodingSessionProfile::build(default_input).unwrap();
+    let exact = CodingSessionProfile::build(exact_input).unwrap();
+    let marker = format!(
+        "{PYTHON_PROFILE_CONSTRAINT_PREFIX}{}",
+        exact.profile_sha256()
+    );
+    assert!(python_profile_constraints_match(
+        Some(&exact),
+        std::slice::from_ref(&marker)
+    ));
+    assert!(!python_profile_constraints_match(
+        Some(&default),
+        std::slice::from_ref(&marker)
+    ));
+    assert!(!python_profile_constraints_match(Some(&exact), &[]));
+    assert!(!python_profile_constraints_match(
+        Some(&exact),
+        &[marker.clone(), marker.clone()]
+    ));
+    assert!(!python_profile_constraints_match(None, &[marker]));
+    assert!(python_profile_constraints_match(None, &[]));
 }

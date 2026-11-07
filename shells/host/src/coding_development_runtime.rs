@@ -396,12 +396,98 @@ const fn stored_chain_start(resumed: bool, after_restart: bool) -> StoredChainSt
     }
 }
 
+const PYTHON_SOURCE_CONSTRAINT_PREFIX: &str = "Explicit Python source selection sha256: ";
+const PYTHON_PROFILE_CONSTRAINT_PREFIX: &str = "Python project profile sha256: ";
+
+/// Startup-selected exact existing Python sources for a project layout.
+/// This inert selection grants no read, write, command or model authority.
+#[derive(Clone, Debug)]
+pub struct CodingPythonSourceSelection {
+    paths: Vec<Vec<String>>,
+    constraint: String,
+}
+
+impl CodingPythonSourceSelection {
+    /// Accepts one to sixteen unique relative component paths. Discovery test
+    /// modules and test directories are never writable project sources.
+    pub fn new(mut paths: Vec<Vec<String>>) -> Result<Self, CodingDevelopmentRuntimeError> {
+        if paths.is_empty() || paths.len() > 16 {
+            return Err(CodingDevelopmentRuntimeError::Profile);
+        }
+        for path in &paths {
+            WorkspacePath::new(
+                WorkspaceId::from_raw("coding-python-selection"),
+                path.clone(),
+            )
+            .map_err(|_| CodingDevelopmentRuntimeError::Profile)?;
+            if !python_source_path_allowed(path.iter().map(String::as_str)) {
+                return Err(CodingDevelopmentRuntimeError::Profile);
+            }
+        }
+        paths.sort();
+        if paths.windows(2).any(|pair| pair[0] == pair[1]) {
+            return Err(CodingDevelopmentRuntimeError::Profile);
+        }
+        let constraint = format!(
+            "{PYTHON_SOURCE_CONSTRAINT_PREFIX}{}",
+            development_sha256(&paths)?
+        );
+        Ok(Self { paths, constraint })
+    }
+
+    /// Returns the canonical exact relative component paths for disclosure.
+    #[must_use]
+    pub fn paths(&self) -> &[Vec<String>] {
+        &self.paths
+    }
+}
+
+fn python_source_path_allowed<'a>(parts: impl Iterator<Item = &'a str>) -> bool {
+    let parts = parts.collect::<Vec<_>>();
+    !parts
+        .iter()
+        .any(|part| part.starts_with('.') || matches!(*part, "tests" | "test"))
+        && parts
+            .last()
+            .is_some_and(|name| name.ends_with(".py") && !name.starts_with("test"))
+}
+
+fn python_source_constraints_match(
+    selection: Option<&CodingPythonSourceSelection>,
+    constraints: &[String],
+) -> bool {
+    let markers = constraints
+        .iter()
+        .filter(|value| value.starts_with(PYTHON_SOURCE_CONSTRAINT_PREFIX))
+        .map(String::as_str)
+        .collect::<Vec<_>>();
+    match selection {
+        Some(selection) => markers == [selection.constraint.as_str()],
+        None => markers.is_empty(),
+    }
+}
+
+fn python_profile_constraints_match(
+    profile: Option<&CodingSessionProfile>,
+    constraints: &[String],
+) -> bool {
+    let markers = constraints
+        .iter()
+        .filter_map(|value| value.strip_prefix(PYTHON_PROFILE_CONSTRAINT_PREFIX))
+        .collect::<Vec<_>>();
+    match profile {
+        Some(profile) => markers == [profile.profile_sha256()],
+        None => markers.is_empty(),
+    }
+}
+
 /// Factory that composes the real coordinator only for one explicit disposable activation.
 pub struct CodingDevelopmentRuntimeFactory {
     owned_worktree: Option<agentmage_platform_linux::LinuxCodingWorktreeLease>,
     activation: CodingDevelopmentActivation,
     scenario: CodingDevelopmentScenario,
     model: CodingDevelopmentModel,
+    source_selection: Option<CodingPythonSourceSelection>,
     platform: &'static LinuxDevelopmentPlatformAdapter,
     profile: &'static CodingSessionProfile,
     workspace: &'static LinuxCodingWorkspace<'static, 'static>,
@@ -440,6 +526,21 @@ impl CodingDevelopmentRuntimeFactory {
         model: CodingDevelopmentModel,
         resume_requested: bool,
     ) -> Result<Self, CodingDevelopmentRuntimeError> {
+        Self::new_with_python_sources(activation, scenario, model, resume_requested, None)
+    }
+
+    /// Freezes an optional exact source selection at startup, before any session.
+    /// Only project layouts admit it; every selected file must exist in the map.
+    pub fn new_with_python_sources(
+        activation: CodingDevelopmentActivation,
+        scenario: CodingDevelopmentScenario,
+        model: CodingDevelopmentModel,
+        resume_requested: bool,
+        source_selection: Option<CodingPythonSourceSelection>,
+    ) -> Result<Self, CodingDevelopmentRuntimeError> {
+        if source_selection.is_some() && !scenario.is_python_project() {
+            return Err(CodingDevelopmentRuntimeError::Profile);
+        }
         if scenario.is_python_project() && !model.is_candidate() {
             return Err(CodingDevelopmentRuntimeError::Profile);
         }
@@ -458,13 +559,19 @@ impl CodingDevelopmentRuntimeFactory {
             )
             .map_err(|_| CodingDevelopmentRuntimeError::Platform)?,
         ));
-        let (profile, workspace, supporting_sources) =
-            build_repository_composition(&activation, platform, scenario, model)?;
+        let (profile, workspace, supporting_sources) = build_repository_composition(
+            &activation,
+            platform,
+            scenario,
+            model,
+            source_selection.as_ref(),
+        )?;
         Ok(Self {
             owned_worktree: None,
             activation,
             scenario,
             model,
+            source_selection,
             platform,
             profile,
             workspace,
@@ -515,6 +622,7 @@ impl CodingDevelopmentRuntimeFactory {
             self.platform,
             self.scenario,
             self.model,
+            self.source_selection.as_ref(),
         )?;
         self.profile = profile;
         self.workspace = workspace;
@@ -656,6 +764,14 @@ impl CodingDevelopmentRuntimeFactory {
             || base_request.task.task_id != binding.task_id
             || base_request.task.objective != objective
             || !python_project_constraints_match(self.scenario, &base_request.task.constraints)
+            || !python_source_constraints_match(
+                self.source_selection.as_ref(),
+                &base_request.task.constraints,
+            )
+            || !python_profile_constraints_match(
+                self.scenario.is_python_project().then_some(self.profile),
+                &base_request.task.constraints,
+            )
             || base_request.model_profile != *self.profile.model_profile()
             || base_request.workspace_id != *self.profile.write_scope().workspace_id()
             || base_request.workspace_snapshot_sha256 != self.profile.worktree().record_sha256
@@ -704,6 +820,7 @@ fn build_repository_composition(
     platform: &'static LinuxDevelopmentPlatformAdapter,
     scenario: CodingDevelopmentScenario,
     model: CodingDevelopmentModel,
+    source_selection: Option<&CodingPythonSourceSelection>,
 ) -> Result<
     (
         &'static CodingSessionProfile,
@@ -773,6 +890,7 @@ fn build_repository_composition(
         &repository_map,
         scenario,
         model,
+        source_selection,
     )?));
     let workspace = Box::leak(Box::new(
         LinuxCodingWorkspace::bind_development(
@@ -1147,6 +1265,15 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                                 .expect("project selection")
                                 .to_owned(),
                         );
+                    }
+                    if self.scenario.is_python_project() {
+                        constraints.push(format!(
+                            "{PYTHON_PROFILE_CONSTRAINT_PREFIX}{}",
+                            self.profile.profile_sha256()
+                        ));
+                    }
+                    if let Some(selection) = &self.source_selection {
+                        constraints.push(selection.constraint.clone());
                     }
                     if let Some(preauthorization) = &self.preauthorization {
                         constraints.push(format!(
@@ -1879,6 +2006,7 @@ fn build_profile(
     repository_map: &agentmage_capability_repository_map::RepositoryMap,
     scenario: CodingDevelopmentScenario,
     model: CodingDevelopmentModel,
+    source_selection: Option<&CodingPythonSourceSelection>,
 ) -> Result<CodingSessionProfile, CodingDevelopmentRuntimeError> {
     let limits = runtime_limits(scenario, model);
     let path_sha256 = linux_repository_path_sha256(activation.workspace_root())
@@ -1917,7 +2045,7 @@ fn build_profile(
     })
     .map_err(|_| CodingDevelopmentRuntimeError::Worktree)?;
     let project_paths = if scenario.is_python_project() {
-        python_project_paths(repository_map)?
+        python_project_paths(repository_map, source_selection)?
     } else {
         Vec::new()
     };
@@ -1930,7 +2058,7 @@ fn build_profile(
         .map_err(|_| CodingDevelopmentRuntimeError::Validation)?;
     let project = scenario.is_python_project();
     let validation = if project {
-        python_project_validation(command, &worktree.record_sha256)?
+        python_project_validation(scenario, command, &worktree.record_sha256)?
     } else {
         seal_validation_template(ValidationTemplateInput {
             validation_id: VALIDATION_ID.to_owned(),
@@ -2015,14 +2143,23 @@ fn build_profile(
 }
 
 fn python_project_validation(
+    scenario: CodingDevelopmentScenario,
     command: CommandSpec,
     scope_sha256: &str,
 ) -> Result<
     agentmage_kernel_engine::validation_template::ValidationTemplate,
     CodingDevelopmentRuntimeError,
 > {
+    let selection = match scenario {
+        CodingDevelopmentScenario::PythonProject => "python-project",
+        CodingDevelopmentScenario::PythonRootProject => "python-root-project",
+        _ => return Err(CodingDevelopmentRuntimeError::Validation),
+    };
+    if command != python_project_command(scenario)? {
+        return Err(CodingDevelopmentRuntimeError::Validation);
+    }
     let definition_sha256 = development_sha256(&serde_json::json!({
-        "selection":"python-project", "command":command,
+        "selection":selection, "command":command,
         "parser":"python_unittest_text_v1", "minimum_test_count":1,
     }))?;
     seal_validation_template(ValidationTemplateInput {
@@ -2057,6 +2194,7 @@ fn python_project_validation(
 
 fn python_project_paths(
     map: &RepositoryMap,
+    selection: Option<&CodingPythonSourceSelection>,
 ) -> Result<Vec<WorkspacePath>, CodingDevelopmentRuntimeError> {
     let mut paths = map
         .files
@@ -2064,16 +2202,23 @@ fn python_project_paths(
         .filter(|file| {
             file.content_read
                 && file.object_kind == RepositoryObjectKind::RegularFile
-                && file
-                    .path
-                    .components()
-                    .first()
-                    .is_some_and(|part| part.as_str() == "src")
-                && file
-                    .path
-                    .components()
-                    .last()
-                    .is_some_and(|part| part.as_str().ends_with(".py"))
+                && python_source_path_allowed(
+                    file.path.components().iter().map(|part| part.as_str()),
+                )
+                && match selection {
+                    Some(selection) => selection.paths.iter().any(|path| {
+                        file.path
+                            .components()
+                            .iter()
+                            .map(|part| part.as_str())
+                            .eq(path.iter().map(String::as_str))
+                    }),
+                    None => file
+                        .path
+                        .components()
+                        .first()
+                        .is_some_and(|part| part.as_str() == "src"),
+                }
                 && matches!(file.disposition,
                 agentmage_capability_repository_map::RepositoryEntryDisposition::Parsed
                 | agentmage_capability_repository_map::RepositoryEntryDisposition::ParsedWithErrors)
@@ -2082,7 +2227,10 @@ fn python_project_paths(
         .collect::<Vec<_>>();
     paths.sort();
     paths.dedup();
-    if paths.is_empty() || paths.len() > 16 {
+    if paths.is_empty()
+        || paths.len() > 16
+        || selection.is_some_and(|selection| paths.len() != selection.paths.len())
+    {
         return Err(CodingDevelopmentRuntimeError::Profile);
     }
     Ok(paths)

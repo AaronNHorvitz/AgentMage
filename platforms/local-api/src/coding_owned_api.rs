@@ -7,6 +7,7 @@ use agentmage_host::{
     coding_development_activation::CodingDevelopmentActivation,
     coding_development_runtime::{
         CodingDevelopmentModel, CodingDevelopmentRuntimeFactory, CodingDevelopmentScenario,
+        CodingPythonSourceSelection,
     },
     coding_live_runtime::LiveCodingRuntimeService,
 };
@@ -23,8 +24,28 @@ struct Attach {
     expected_worktree_root_sha256: String,
     model: String,
     scenario: String,
+    #[serde(default)]
+    source_paths: Option<Vec<Vec<String>>>,
     approve_inspection: bool,
     approve_handoff: bool,
+}
+
+impl Attach {
+    fn source_selection(&self) -> Result<Option<CodingPythonSourceSelection>, Failure> {
+        if self.source_paths.is_some()
+            && !matches!(
+                self.scenario.as_str(),
+                "python-project" | "python-root-project"
+            )
+        {
+            return Err((400, "code.runtime.source-selection"));
+        }
+        self.source_paths
+            .clone()
+            .map(CodingPythonSourceSelection::new)
+            .transpose()
+            .map_err(|_| (400, "code.runtime.source-selection"))
+    }
 }
 
 #[derive(serde::Serialize, Deserialize)]
@@ -59,6 +80,7 @@ fn attach(state: &Mutex<State>, stop: &AtomicBool, input: Attach) -> Result<Valu
             )
         })
         .ok_or((400, "code.runtime.scenario"))?;
+    let source_selection = input.source_selection()?;
     let owner = {
         let mut state = state.lock().map_err(|_| (500, "code.runtime.state"))?;
         if stop.load(Ordering::Relaxed) {
@@ -92,7 +114,7 @@ fn attach(state: &Mutex<State>, stop: &AtomicBool, input: Attach) -> Result<Valu
             return Err((409, error.code()));
         }
     };
-    let built = build(&lease, &input, model, scenario, stop);
+    let built = build(&lease, &input, model, scenario, source_selection, stop);
     match built {
         Ok(runtime) => {
             let mut guard = state.lock().map_err(|_| (500, "code.runtime.state"))?;
@@ -140,6 +162,7 @@ fn build(
     input: &Attach,
     model: CodingDevelopmentModel,
     scenario: CodingDevelopmentScenario,
+    source_selection: Option<CodingPythonSourceSelection>,
     stop: &AtomicBool,
 ) -> Result<RuntimeSession, Failure> {
     // Check creation provenance before following any activation path. Markers
@@ -161,6 +184,9 @@ fn build(
     }
     let selection = Selection {
         scenario: input.scenario.clone(),
+        source_paths: source_selection
+            .as_ref()
+            .map(|selection| selection.paths().to_vec()),
         profile_id: model.profile_id().to_owned(),
         expected_entry_sha256: activation.marker_sha256().to_owned(),
         workspace_id: format!("coding-development-{}", &activation.marker_sha256()[..24]),
@@ -171,8 +197,14 @@ fn build(
             .to_owned(),
         resume: false,
     };
-    let mut factory = CodingDevelopmentRuntimeFactory::new(activation, scenario, model, false)
-        .map_err(|e| (409, e.code()))?;
+    let mut factory = CodingDevelopmentRuntimeFactory::new_with_python_sources(
+        activation,
+        scenario,
+        model,
+        false,
+        source_selection,
+    )
+    .map_err(|e| (409, e.code()))?;
     factory
         .attach_owned_worktree(lease)
         .map_err(|e| (409, e.code()))?;
@@ -325,6 +357,7 @@ mod tests {
             expected_worktree_root_sha256: "a".repeat(64),
             model: "gpt-oss".into(),
             scenario: "python-project".into(),
+            source_paths: None,
             approve_inspection: true,
             approve_handoff: true,
         }
@@ -397,6 +430,69 @@ mod tests {
                 .is_poisoned()
         );
     }
+    #[test]
+    fn source_selection_is_optional_closed_and_checked_before_owner_extraction() {
+        let f = Fixture::new();
+        let state = f.state();
+        let stop = AtomicBool::new(false);
+        let original = state.lock().unwrap().repository.clone().unwrap();
+        let mut value = serde_json::to_value(input()).unwrap();
+        value.as_object_mut().unwrap().remove("source_paths");
+        let missing: Attach = serde_json::from_value(value.clone()).unwrap();
+        assert!(missing.source_selection().unwrap().is_none());
+        value["source_paths"] = json!([["package", "core.py"], ["calculator.py"]]);
+        let explicit: Attach = serde_json::from_value(value.clone()).unwrap();
+        assert!(explicit.source_selection().unwrap().is_some());
+        // The held Arc makes extraction fail. Selection itself does not inspect
+        // activation paths, take the owner or grant a tool operation.
+        assert_eq!(
+            attach(&state, &stop, explicit),
+            Err((409, "code.runtime.busy"))
+        );
+        for paths in [
+            json!([]),
+            json!([["..", "a.py"]]),
+            json!([["test_calc.py"]]),
+            json!([["tests", "helper.py"]]),
+            json!([["a.py"], ["a.py"]]),
+        ] {
+            value["source_paths"] = paths;
+            let invalid: Attach = serde_json::from_value(value.clone()).unwrap();
+            assert_eq!(
+                attach(&state, &stop, invalid),
+                Err((400, "code.runtime.source-selection"))
+            );
+        }
+        value["source_paths"] = json!("calculator.py");
+        assert!(serde_json::from_value::<Attach>(value.clone()).is_err());
+        value["source_paths"] = json!([["calculator.py"]]);
+        value["scenario"] = json!("failed-test-repair");
+        assert_eq!(
+            attach(
+                &state,
+                &stop,
+                serde_json::from_value(value.clone()).unwrap()
+            ),
+            Err((400, "code.runtime.source-selection"))
+        );
+        value["approve_inspection"] = json!(false);
+        assert_eq!(
+            attach(
+                &state,
+                &stop,
+                serde_json::from_value(value.clone()).unwrap()
+            ),
+            Err((403, "code.runtime.handoff-consent"))
+        );
+        value["extra"] = json!(true);
+        assert!(serde_json::from_value::<Attach>(value).is_err());
+        assert!(Arc::ptr_eq(
+            &original,
+            state.lock().unwrap().repository.as_ref().unwrap()
+        ));
+        assert!(state.lock().unwrap().runtime.is_none());
+    }
+
     #[test]
     fn recovery_cannot_adopt_a_manual_owner_or_an_empty_state() {
         let f = Fixture::new();
@@ -471,6 +567,21 @@ mod tests {
             call("/v1/code/runtime/attach", true, extra).1["error"],
             "code.runtime.input"
         );
+        let mut explicit = body.clone();
+        explicit["source_paths"] = json!([["calculator.py"]]);
+        assert_eq!(
+            call("/v1/code/runtime/attach", false, explicit.clone()).0,
+            403
+        );
+        assert_eq!(
+            call("/v1/code/runtime/attach", true, explicit.clone()).1["error"],
+            "code.runtime.worktree-required"
+        );
+        explicit["source_paths"] = json!([["test_calc.py"]]);
+        assert_eq!(
+            call("/v1/code/runtime/attach", true, explicit).1["error"],
+            "code.runtime.source-selection"
+        );
         assert_eq!(
             call("/v1/code/runtime/attach", true, body).1["error"],
             "code.runtime.worktree-required"
@@ -489,7 +600,7 @@ mod tests {
         assert!(!activity.contains("not-opened"));
         assert!(activity.contains("code.runtime.worktree-required"));
         println!(
-            "owned_api_four_refusal_exchanges_us={}",
+            "owned_api_seven_refusal_exchanges_us={}",
             start.elapsed().as_micros()
         );
     }

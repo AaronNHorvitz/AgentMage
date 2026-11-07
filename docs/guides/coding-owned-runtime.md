@@ -66,6 +66,20 @@ JSON fields:
 }
 ```
 
+For either project scenario, the attach body may also contain `source_paths`,
+for example `"source_paths": [["calculator.py"], ["package", "core.py"]]`.
+This chooses one to sixteen exact existing Python source files, including files
+outside `src/`. Component arrays are relative to the held worktree. The list
+is canonicalized and frozen at startup; empty, duplicate, unsafe, missing or
+inadmissible paths refuse the attachment. Discovery modules whose basename
+starts with `test`, directories named `test` or `tests`, and hidden components
+are excluded. Omitting the field or setting it to null keeps the default
+`src/` selection with the same exclusions. An explicit list replaces the
+default; it never adds the remaining `src/` files. Other scenarios refuse it.
+The runtime status exposes `selected_source_paths`; the prepared request shows
+the actual mutable files. A prepare body cannot supply a new selection.
+See [source selection](coding-runtime-api.md#explicit-python-source-files).
+
 The path placeholders must be replaced with absolute selected paths. The model
 selection is exactly `muse` or `gpt-oss`; the scenario is exactly
 `python-project`, `python-root-project` or `failed-test-repair`. This does not use the separately configured chat endpoint.

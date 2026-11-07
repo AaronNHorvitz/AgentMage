@@ -38,6 +38,7 @@ pub struct CodingRuntimeDevelopment<'a> {
 #[derive(Clone)]
 pub(super) struct Selection {
     pub(super) scenario: String,
+    pub(super) source_paths: Option<Vec<Vec<String>>>,
     pub(super) profile_id: String,
     pub(super) expected_entry_sha256: String,
     pub(super) workspace_id: String,
@@ -143,6 +144,7 @@ pub fn serve_coding_runtime_development(
     .map_err(|_| ApiError::Configuration)?;
     let selection = Selection {
         scenario: input.scenario.to_owned(),
+        source_paths: None,
         profile_id: model.profile_id().to_owned(),
         expected_entry_sha256: activation.marker_sha256().to_owned(),
         workspace_id: format!("coding-development-{}", &activation.marker_sha256()[..24]),
@@ -253,10 +255,11 @@ impl RuntimeSession {
                 "version":1,"runtime":"existing-live-native-coding-host",
                 "activation":"coding-development-v1","scenario":self.selection.scenario,
                 "live_creation_owner": self.owner.is_some(),
+                "selected_source_paths": self.selection.source_paths,
                 "mutable_files":if matches!(self.selection.scenario.as_str(), "python-project" | "python-root-project") { Value::Null }
                     else { json!(["src/calc.py"]) },
                 "mutable_scope":if matches!(self.selection.scenario.as_str(), "python-project" | "python-root-project") {
-                    "Exact host-prepared existing src Python paths, at most 16; inspect the sealed request"
+                    "Exact host-prepared existing Python paths, at most 16; explicit startup list or src default, excluding test paths; inspect the sealed request"
                 } else { "Fixed fixture" },
                 "acceptance_criteria":if matches!(self.selection.scenario.as_str(), "python-project" | "python-root-project") {
                     json!(["The exact approved Python project tests pass with positive test counts"])
@@ -490,6 +493,7 @@ mod tests {
                 owner: None,
                 selection: Selection {
                     scenario: "failed-test-repair".into(),
+                    source_paths: None,
                     profile_id: "configured-evaluation-profile".into(),
                     expected_entry_sha256: "a".repeat(64),
                     workspace_id: "owned-workspace".into(),
@@ -507,6 +511,34 @@ mod tests {
             &serde_json::to_vec(&body).unwrap(),
         )
     }
+    #[test]
+    fn explicit_sources_are_disclosed_but_cannot_be_changed_by_prepare() {
+        let (mut runtime, observed) = fixture();
+        runtime.selection.scenario = "python-root-project".into();
+        runtime.selection.source_paths = Some(vec![vec!["calculator.py".into()]]);
+        let selection = runtime.dispatch("GET", "/v1/code/runtime", b"").unwrap();
+        assert_eq!(
+            selection["selected_source_paths"],
+            json!([["calculator.py"]])
+        );
+        assert!(selection["mutable_files"].is_null());
+        assert!(
+            selection["mutable_scope"]
+                .as_str()
+                .unwrap()
+                .contains("explicit startup list")
+        );
+        assert_eq!(
+            dispatch(
+                &mut runtime,
+                "prepare",
+                json!({"prompt":"repair", "approve_inspection":true, "source_paths":[["other.py"]]})
+            ),
+            Err((400, "code.runtime.input"))
+        );
+        assert!(observed.lock().unwrap().calls.is_empty());
+    }
+
     #[test]
     fn startup_refuses_scripted_and_stopped_services_before_any_host_launch() {
         for (model, stopped) in [("scripted", false), ("muse", true)] {
