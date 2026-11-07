@@ -1,0 +1,283 @@
+Commit: d6cc0a26b55adf1e9b622ef09c8b61e6fe9f7f3c
+Scope: local-coding-context-retrieval
+
+# Independent review: task-aware repository context ranking (T-303, related T-306)
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate read-only session. Same-model review.
+A cross-model review is still required before any public release. This review covers only this
+non-closing implementation batch. T-303 and T-306 remain OPEN. Nothing in the repository is
+approved by this file.
+
+## Commit and scope confirmation
+
+- `git rev-parse d6cc0a26b55adf1e9b622ef09c8b61e6fe9f7f3c` gives that SHA, which is also HEAD.
+  The working tree is clean before and after every run.
+- `git diff --stat 69250fca75df..d6cc0a26b55a` shows exactly seven paths: `TASKS.md`,
+  `docs/evidence/t303-context-retrieval-2026-11-07.md`, `docs/guides/coding-runtime-api.md`,
+  `docs/reviews/69250fca75df-local-coding-python-project.txt`, `shells/host/src/coding_context.rs`,
+  `shells/host/src/coding_context_retrieval.rs` (new) and
+  `shells/host/src/coding_context_retrieval_tests.rs` (new). They add 682 lines and remove 6.
+- The diff touches no evaluation input, held-out descriptor, hidden test, fixture, threshold,
+  dependency, `Cargo.lock`, pin, SBOM, legacy artifact or status model.
+- In `TASKS.md`, only text is appended to the T-303 row, which stays `[ ]`. No row or sub-row is
+  added.
+- The evidence date is 2026-11-07, while the commit is dated 2026-11-06 22:33 −0600. That is
+  2026-11-07 in UTC, so the date is consistent.
+
+## Methods
+
+1. I read IP-POLICY.md, Decisions 0154/0155, the top of TASKS.md, the request, the full code diff,
+   the new tests, the guide and evidence changes, and the unchanged code paths the change depends
+   on:
+   - `CodingContextPort::build_context` and `candidate` (`coding_context.rs:387-880`).
+   - `compose_context`, `verify_composed_context` and `validate_composition_input` (kernel
+     `context_management.rs:47-300`).
+   - `verify_recomposition` (`context_inspection.rs:302+`).
+   - The production source builder `build_repository_context_sources`
+     (`coding_development_runtime.rs:825-885`) and its call site (`:730`, `:1266`).
+2. I ran all eight requested commands (results below).
+3. I wrote independent probes:
+   - A byte-level Python port of `terms`/`matches`, applied to the production excerpt encoding.
+   - Two scratch Rust tests, appended to the test file in a `git archive` copy of the exact commit
+     outside the repository. They were built with the pinned toolchain through `build-slot`, and
+     the copy was then deleted.
+
+   Probe scripts, the diff and logs are retained under
+   `/lane/state/tmp/review-d6cc0a26b55a/` (sha256 listed at the end).
+
+## Exact commands and results
+
+Environment:
+
+```text
+PATH=/lane/state/tmp/shared-node-v24.15.0/bin:$PATH
+CARGO_TARGET_DIR=/lane/state/review-target
+CARGO_BUILD_JOBS=2
+RUST_TEST_THREADS=4
+```
+
+- Node SHA256 `d1de76d8…bd932c` matches the request.
+- build-slot SHA256 `453086eb…2ea02ef` matches the request.
+- `rust-toolchain.toml` selects 1.95.0 (`rustc 1.95.0 (59807616e 2026-04-14)`, `cargo 1.95.0`).
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `python3 -B scripts/local_agent_fast_gate.py --base 69250fca… --timeout 3600` | **FAST GATE: FAIL**, as expected, not PASS. See the details after this table. |
+| 2 | `bash /tools/build-slot cargo test -p agentmage-host --lib --locked --offline coding_context::retrieval_tests:: -- --nocapture` | exit 0. 5 passed, 579 filtered out (filtered on purpose; an observation, not the gate). Fixture line: `sources=5 supplied_bytes=239608 included_sources=4 omitted_sources=1 packet_bytes=237152 fixture_tokens=59290 elapsed_us=154507`. Every figure except timing matches the evidence (builder 169798 µs). The tokens come from the SYNTHETIC fixture counter. These are component packet constructions, not native inference. |
+| 3 | `node_modules/.bin/markdownlint-cli2 TASKS.md docs/guides/coding-runtime-api.md docs/evidence/t303-context-retrieval-2026-11-07.md` | 0 issues in 3 files |
+| 4 | `python3 -B scripts/local_agent_fast_gate.py --lint-reviews docs/reviews/69250fca75df-local-coding-python-project.txt` | exit 0 |
+| 5 | `cmp docs/reviews/69250fca75df-local-coding-python-project.txt /lane/reviews/69250fca75df-local-coding-python-project.md` | identical (exit 0). The prior PASS is retained byte for byte. |
+| 6 | `python3 -B /lane/state/tmp/t303-context-retrieval/audit.py` | exit 0. Reports 7 paths, totals 634/53/11/0/0, and the measurement above. The audit sha `edf83a1e…a2488` matches the request. This is the builder's audit, not independent evidence. |
+| 7 | `python3 -B …/run-policy.py /lane/state/tmp/review-context-retrieval-source-d6cc0a26b55a` | exit 0, "Validated 778 Markdown file(s) and all policy invariants." 9019 mirrored inputs. My `-inputs.json` sha256 `e3c9d38f…1ca4dd` is identical to the builder's `policy-final2-source-inputs.json`. I removed only my mirror and kept the manifest. This is not the T-310 long gate. |
+| 8 | `git diff --check 69250fca… --` | exit 0 |
+
+Details of command 1:
+
+- Formatting PASS. Clippy with all targets and `-D warnings` PASS.
+- `cargo test --locked --offline -p agentmage-host -p agentmage-local-api --all-targets --no-fail-fast`:
+  634 passed, 53 failed, 11 ignored, 0 filtered. All 53 failures are in the host lib target.
+- All five `coding_context::retrieval_tests::*` methods pass.
+- All 92 API contract tests pass, with none ignored or filtered: local-api lib 21, `coding_cli` 10,
+  `coding_runtime_cli` 15, `coding_worktree` 11, `local_chat_api` 35.
+- The sorted set of 53 failure names equals the builder's `fast-final2.log` set exactly.
+- Every one of the 53 is among the 72 `FAILED` identities in the committed baseline logs referenced
+  by `docs/evidence/t301-baseline-failures-2026-10-25.md`
+  (`artifacts/verification-logs/standalone-evidence-host-2026-10-04/batch35-source-2/{07,11}.log`).
+  `comm`: no failure is new. The other 19 baseline identities belong to the unchanged Linux
+  platform crate, which this host/API batch does not select.
+
+Hashes of the retained private bindings all match the request: `audit.py` `94cc2468…`,
+`audit.json` `edf83a1e…`, `source-freeze.json` `d3f0cbca…`, `run-policy.py` `32a882a1…`,
+`policy-final2-source-inputs.json` `e3c9d38f…`.
+
+## Verification of the requested properties
+
+- **Priority comes from the existing context owner.**
+  - `rank_sources` (`coding_context_retrieval.rs:70-124`) runs inside the existing
+    `CodingContextPort::build_context` (`coding_context.rs:556-562`). It replaces the former
+    `self.supporting_sources.clone()` loop.
+  - No new coordinator, model adapter, tool path or permission path exists.
+  - The production `build_repository_context_sources` (`coding_development_runtime.rs:873-878`)
+    creates exactly the participating shape: `repository-source-<16 hex>` with
+    `agentmage:workspace-file:<path>`, kind Supporting, admission Eligible, non-essential.
+  - The coordinator passes these sources into `CodingContextPort::for_profile`
+    (`coding_development_runtime.rs:730`, `:1266`), so the CLI/HTTP projection reaches the new
+    behavior.
+- **Authority and tier cannot be escalated.**
+  - The composer orders by `(!authoritative_evidence, !essential, priority(kind), item_id)`
+    (`context_management.rs:54-61`). Ranking rewrites only `item_id`, and only for Supporting,
+    Eligible, non-essential repository-shaped sources.
+  - So a ranked file cannot move above evidence, essential material, instructions, corrections,
+    continuity, or any higher-priority kind.
+  - Within the Supporting non-essential tier, the `coding-tool-result-*`, `coding-tool-rejection-*`
+    and `coding-model-rejection-*` IDs still sort before `repository-source-*`. Ranking therefore
+    cannot displace tool observations.
+  - Kind, role (`message_role`), sensitivity, admission, source ID, revision, content hash and
+    excerpt are unchanged. The test at `coding_context_retrieval_tests.rs:44-50` checks byte
+    equality after restoring the ID.
+  - Repository text can reorder repository files within that tier, as disclosed. It cannot become
+    an instruction, a tool or a grant.
+- **Duplicate identities fail closed.**
+  - When any supplied source duplicates another supplied source, or duplicates a reserved candidate
+    (system, request, continuity summary, continuity originals), `rank_sources` returns the input
+    unchanged. `validate_composition_input` then refuses any repeated `item_id`
+    (`context_management.rs:285-296`), whatever its material.
+  - Later candidates (tool results, rejections, evidence) use non-repository prefixes, so they
+    cannot collide with a rewritten ID.
+  - My scratch probe `reviewer_probe_rewritten_identity_collision_fails_closed` plants a
+    non-participating source whose `item_id` equals another source's rewritten ID. The resulting
+    `build_context` is refused (`is_err=true`), so a collision with a forged rewritten ID also
+    fails closed.
+- **Provenance and omission accounting stay complete.**
+  - Every candidate is still accounted by the unchanged composer.
+  - The integrated test matches each omitted source by exact `source_id` and `content_sha256` in
+    the `omitted_sources` notice. It also checks that `context.supporting_sources` keeps the
+    original list.
+  - The rewritten ID contains `sha256(original item_id)`, so the original allocation identity can
+    be traced.
+  - The ID is 90 bytes, below `MAX_ID_BYTES` 256.
+  - `MAX_TERMS - matches` cannot underflow, because matches ≤ |query| ≤ 128.
+- **Output bytes are deterministic.**
+  - Ranking depends only on the sealed objective and the source bytes. BTreeSets and the
+    composer's total order by `item_id` make the result independent of input order. Ties break on
+    the digest of the distinct original ID.
+  - Reversed input gives an identical `ModelContextPacket` in the integrated test, which I
+    reproduced in run 2.
+  - Within one run the objective is fixed, so the reflow loop's `verify_recomposition` sees stable
+    IDs.
+- **Native token preflight, reflow and approvals are unchanged.**
+  - `bind_tokens`, the input-capacity check, whole-source reflow, CAP-28 retained-constraint
+    refusal and every approval and tool path are byte-unchanged.
+  - The only other edits widen `FixtureCounter` and `request` in the existing test module to
+    `pub(super)`.
+- **Untrusted input is bounded.**
+  - The query is limited to 8 KiB, at most 128 distinct terms, and 3–64 ASCII bytes per term.
+  - Each source scan is limited to 64 KiB and stops early once all terms are found. Non-ASCII bytes
+    are delimiters, and no string slicing occurs.
+  - Cost is linear in what the owner already counts per turn.
+- **Evaluation integrity.**
+  - No held-out content, hidden test, frozen base, threshold or score is touched.
+  - The fixture words (`refund`, `invoice`, `noise`) do not appear in any committed evaluation
+    input.
+  - No GPU or model run, and no new number is placed in the scoreboard.
+- **Honest labelling.**
+  - The evidence and guide call the fixture comparison synthetic and component-only, not a model
+    score or a native workflow.
+  - The full gate is reported as FAIL.
+  - The configured chat endpoint is explicitly not admitted.
+- **Public hygiene and IP.**
+  - The diff contains no private host path, username, hostname, credential or personal data, and
+    no product name or comparison. The evidence uses `<lane-state>`.
+  - `/lane/...` appears only inside the retained prior review, as in earlier retained reviews.
+  - The code is original, with no new dependency.
+
+## Findings
+
+No critical, high or medium findings.
+
+### L1 (low, backlog): escaped newlines and tabs hide line-initial words from body matching
+
+Location: `shells/host/src/coding_context_retrieval.rs:113` (`matches(&query, &source.bounded_excerpt)`)
+together with `shells/host/src/coding_development_runtime.rs:862-868`.
+
+**Cause.** The production repository excerpt is a JSON document (`serde_json::to_string` of
+`{"schema_version", "untrusted_repository_source", "path", "content_sha256", "content"}`). In it,
+newlines, tabs and carriage returns appear as the two-byte escapes `\n`, `\t` and `\r`. The
+backslash acts as a delimiter, but the following `n`, `t` or `r` is alphanumeric and is glued onto
+the next word.
+
+**Effect.** The first word of every unindented line becomes `n<word>`, every word directly after a
+tab becomes `t<word>`, and neither can match the objective. In tab-indented code this hits the
+first word of nearly every line.
+
+**Reproduction.** In the scratch Rust probe `reviewer_probe_line_initial_words_in_production_excerpts`
+(objective `refund`, production excerpt shape), the body scores were:
+
+| File content | Body score |
+| --- | --- |
+| `x = 1\nrefund = 2\n` | 128-0 matches |
+| `package c\nfunc F() {\n\trefund := 1\n}\n` | 128-0 matches |
+| `x = 1\ny = refund\n` (mid-line use) | 128-1 |
+| no `refund` at all | 128-0 |
+
+So a file that defines the relevant name at column 0, or uses it at tab indentation, ranks the same
+as an unrelated file.
+
+**Measured extent.** I ran the Python port over this repository's own files, counting distinct
+words of 3–64 bytes that become unmatchable:
+
+| Files | Distinct words lost |
+| --- | --- |
+| `scripts/*.py` (198 files) | 362 of 50,490 (0.7%) |
+| `docs/guides/*.md` (74 files) | 905 of 19,747 (4.6%) |
+| `shells/host/src/*.rs` (92 files) | 183 of 32,977 |
+
+Path ranking, the dominant key, is unaffected, and nothing crosses an authority or confinement
+boundary. It is still a correctness defect in the batch's only behavior.
+
+**Test gap.** All five tests build plain-text excerpts, never the production JSON shape, so the
+claim that body matching scores "source words" (guide) / "excerpt words" (evidence) is untested on
+the real input.
+
+**Fix.** Score the decoded `content` field, for example by computing body terms in
+`build_repository_context_sources` before wrapping, or by parsing the excerpt as JSON inside the
+existing owner. Alternatively, treat `\n`, `\t`, `\r`, `\"`, `\\` and `\uXXXX` escape sequences as
+delimiters. Add a test that uses the exact production excerpt shape, with relevant words at
+column 0 and after a tab. Resolve before any T-311 measurement attributes a change to this ranking.
+
+### L2 (low, pre-existing, backlog): a conflicting identity is reported as a budget failure
+
+Location: `shells/host/src/coding_context.rs:753-763` and
+`shells/host/src/coding_context_retrieval_tests.rs:95-105`.
+
+`compose_context` errors, including `ConflictingIdentity`, are mapped to
+`RuntimePortFailure::ResourceExhausted`. The new duplicate test asserts that label, so a duplicate
+identity reads to a caller as a budget overflow. It is not retried (the `?` exits the loop) and
+fails closed. Only the diagnostic is misleading.
+
+Fix: map `ConflictingIdentity` and `InvalidInput` to `RuntimePortFailure::Invalid`, keep
+`ResourceExhausted` for `EssentialItemExceedsBudget`, and update the test. This mapping predates
+this batch.
+
+### Notes (not findings)
+
+- CamelCase identifiers are not split (`parseConfig` versus "parse config"). This is consistent with
+  the documented behavior, which splits at punctuation and underscores only.
+- The fixed JSON wrapper words (`schema`, `version`, `untrusted`, `repository`, `source`, `path`,
+  `content`, `sha256`, `true`) add the same offset to every production source. They do not change
+  the order.
+- Rewritten IDs encode per-file counts of matched objective words in the omission notice and in the
+  content-free inspection view. The same views already carry the full source path, so this adds
+  negligible disclosure.
+- Configured-endpoint composition, native positive execution (T-301.1), durable HTTP recovery,
+  apply, commit/push, MCP and the measured parent workflow remain open, as disclosed.
+- Prior low findings L1–L4 of `69250fca75df` remain backlog. The guide's runner-count sentence
+  accurately claims no independent grading.
+
+## Per-row result
+
+- **T-303 (this non-closing batch):** PASS for the exact commit. The batch implements task-based
+  lexical priority inside the existing context owner. It keeps authority classes, provenance and
+  complete omission accounting, fails closed on duplicate identities (including reserved continuity
+  IDs and forged rewritten IDs), produces deterministic bytes, and leaves token preflight, reflow
+  and approvals unchanged. The full gate is honestly FAIL on exactly the existing environmental
+  identities. L1 and L2 are backlog. The row remains OPEN; this is not parent acceptance.
+- **T-306 (related):** no change in scope; remains OPEN.
+
+## Retained reviewer artifacts (`/lane/state/tmp/review-d6cc0a26b55a/`)
+
+```text
+869666258c63c0c816a4836750533ad6002507e14085dfa9f2aeacfad1c49a49  fast-gate.log
+53adecb7b857971a4ee7e3794c8e89834163fd0e7894e1cbaddc5cff8f96cfeb  focused.log
+d8c11275940f0ae715e7d10dcb2774b018b27a47ee9d3d88051ec2fcd41e9368  audit.log
+899dd58230daa99e3b77bbe226560fad26723213ade3bad6a460821acac56151  policy.log
+16eeabe9a07e05168153a26cfcbca92c0df49a2b4ea3a4df28efc9074fcdc648  probe.log
+5c33745f0d9228cfbd4d072140ee36191175f3de17bff9a3645beb3fccce012d  probe-tests.diff
+dc6f49021fbb11297c757986d83d7cdb33eb84c9692d608cd96f728a42916420  escape_sim.py
+dbfcc2c2f86bedf8218c0e72145e1ab4ad5b78a1c2c01bd83a8f09354f909725  failures.txt
+75c11eb40950e01f29283419742c9cfeb51c8cda7673f7b3129efd084d2dfe98  baseline.txt
+```
+
+No certification, compliance or legal clearance is claimed.
+
+Verdict: PASS

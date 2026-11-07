@@ -102,7 +102,15 @@ impl Fixture {
     fn synthetic_created(&self, owner: &mut LinuxCodingRepository) {
         // No native creation claim: inject only process-local provenance in tests.
         let path = self.0.join("owned/worktree");
+        let original = self.0.join("original");
+        fs::create_dir_all(&original).unwrap();
+        if !original.join("sentinel").exists() {
+            fs::write(original.join("sentinel"), b"preserve").unwrap();
+        }
         owner.created = Some(CreatedWorktree {
+            original: held_root(&original).unwrap(),
+            original_path: original,
+            edits: BTreeMap::new(),
             held: held_root(&path).unwrap(),
             path,
             owned: held_root(&self.0.join("owned")).unwrap(),

@@ -582,9 +582,11 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
         ("validation", true, "python_unittest_text_v1"),
         ("validation", false, "python_unittest_text_v1"),
         ("edit", true, "agent_mage_json_v1"),
+        ("original", true, "agent_mage_json_v1"),
     ] {
         let validation = kind == "validation";
         let edit = kind == "edit";
+        let original = kind == "original";
         for response in ["incorrect", "approve", "replace-root"] {
             let mut f = Fixture::new();
             f.stop();
@@ -606,7 +608,17 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
                 "bounds":{"timeout_ms":119_001,"stdout_bytes":65_535,"stderr_bytes":65_534,
                     "memory_bytes":134_217_728,"task_count":8,"cpu_percent":100},
                 "preview_sha256":"d".repeat(64)}});
-            let (inspect, decide) = if edit {
+            let (inspect, decide) = if original {
+                preview = json!({"preview_sha256":"a".repeat(64),"repository_root_sha256":identity(&root),
+                    "worktree_root_sha256":"e".repeat(64),"operation":"apply-to-original",
+                    "creation_receipt_sha256":"b".repeat(64),
+                    "write_preview":{"change_set_sha256":"c".repeat(64),"preview_sha256":"d".repeat(64),
+                        "diff":"untrusted-λ\u{202e}\u{7f}","before":"original","after":"replacement"}});
+                (
+                    "/v1/code/repository/apply",
+                    "/v1/code/repository/apply/decide",
+                )
+            } else if edit {
                 preview = json!({"preview_sha256":"a".repeat(64),"worktree_root_sha256":identity(&root),
                     "operation":"edit-worktree","creation_receipt_sha256":"b".repeat(64),
                     "write_preview":{"change_set_sha256":"c".repeat(64),"preview_sha256":"d".repeat(64),
@@ -677,7 +689,7 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
                         json!({"pending":preview})
                     } else {
                         assert_eq!(route, format!("POST {decide} HTTP/1.1"));
-                        json!({"outcome":if edit {"committed"} else {"succeeded"},"validation":{"validation_passed":validation_passed}})
+                        json!({"outcome":if edit || original {"committed"} else {"succeeded"},"validation":{"validation_passed":validation_passed}})
                     };
                     requests.push((route, body));
                     let bytes = serde_json::to_vec(&value).unwrap();
@@ -688,7 +700,9 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
             });
             let observed = f.terminal(
                 &[
-                    if edit {
+                    if original {
+                        "original-apply"
+                    } else if edit {
                         "edit-apply"
                     } else if validation {
                         "validation-run"
@@ -707,7 +721,9 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
                 response == "approve" && validation_passed
             );
             let transcript = observed["transcript"].as_str().unwrap();
-            assert!(transcript.contains(if edit {
+            assert!(transcript.contains(if original {
+                "Type exactly apply-original "
+            } else if edit {
                 "Type exactly edit "
             } else if validation {
                 "Type exactly test "
@@ -722,7 +738,10 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
             let consent: Value =
                 serde_json::from_str(transcript.split("Type exactly ").next().unwrap()).unwrap();
             assert_eq!(consent["preview"], expected_preview);
-            assert_eq!(consent["worktree"], root.to_str().unwrap());
+            assert_eq!(
+                consent[if original { "repository" } else { "worktree" }],
+                root.to_str().unwrap()
+            );
             assert_eq!(requests.len(), if response == "approve" { 2 } else { 1 });
             if response == "approve" {
                 assert_eq!(
@@ -1232,5 +1251,201 @@ fn synthetic_propose_worktree_requires_complete_proposal_and_fresh_read_consent(
             }
             assert!(!requests.iter().any(|(r, _)| r.contains("/decide")));
         }
+    }
+}
+
+#[test]
+fn original_apply_api_requires_control_explicit_read_and_existing_creation_and_edit() {
+    let mut f = Fixture::new();
+    let inspect = "/v1/code/repository/apply";
+    let prepare = "/v1/code/repository/apply/prepare";
+    let decide = "/v1/code/repository/apply/decide";
+    let body = json!({"paths":["sentinel"],"task":"Apply repair","approve_read":true});
+    assert_eq!(f.call_bytes("GET", inspect, false, b"").0, 403);
+    for (path, input) in [
+        (prepare, body.clone()),
+        (
+            decide,
+            json!({"preview_sha256":"a".repeat(64),"approve":true}),
+        ),
+    ] {
+        assert_eq!(f.call("POST", path, false, input).0, 403);
+    }
+    for bytes in [
+        br#"[]"#.as_slice(),
+        br#"{"paths":[],"task":"x","approve_read":"true"}"#.as_slice(),
+        br#"{"paths":[],"task":"x","approve_read":true,"approve_read":false}"#.as_slice(),
+    ] {
+        assert_eq!(f.call_bytes("POST", prepare, true, bytes).0, 400);
+    }
+    for extra in [
+        "root",
+        "worktree",
+        "creation_receipt_sha256",
+        "answer",
+        "approve",
+    ] {
+        let mut injected = body.clone();
+        injected[extra] = json!("caller supplied");
+        assert_eq!(f.call("POST", prepare, true, injected).0, 400);
+    }
+    let mut no_read = body.clone();
+    no_read["approve_read"] = json!(false);
+    assert_eq!(f.call("POST", prepare, true, no_read).0, 403);
+    let refused = f.call("POST", prepare, true, body);
+    assert_eq!(refused.0, 409);
+    assert_eq!(refused.1["error"], "code.command.worktree-required");
+    assert_eq!(refused.1["effect"], "no-write-dispatch");
+    for bytes in [
+        br#"["a",true]"#.as_slice(),
+        br#"{"preview_sha256":"a","approve":true,"approve":false}"#.as_slice(),
+        br#"{"preview_sha256":"a","approve":"true"}"#.as_slice(),
+        br#"{"preview_sha256":"a","approve":true,"root":"/outside"}"#.as_slice(),
+    ] {
+        assert_eq!(f.call_bytes("POST", decide, true, bytes).0, 400);
+    }
+    let refused = f.call(
+        "POST",
+        decide,
+        true,
+        json!({"preview_sha256":"a".repeat(64),"approve":true}),
+    );
+    assert_eq!(refused.1["error"], "code.apply.choice-required");
+    assert_eq!(refused.1["effect"], "unknown");
+    let output = f.cli(&["original"]);
+    assert!(output.status.success());
+    let before: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(before["pending"].is_null());
+    assert!(before["latest"].is_null());
+    assert!(before["repository_root_sha256"].is_null());
+    assert!(
+        !f.cli(&[
+            "original-prepare",
+            f.root.join("repo").to_str().unwrap(),
+            f.root.join("owned").to_str().unwrap(),
+            "Apply",
+            "sentinel"
+        ])
+        .status
+        .success()
+    );
+    assert!(
+        !f.cli(&["original-apply", f.root.join("repo").to_str().unwrap()])
+            .status
+            .success()
+    );
+    assert!(!f.cli(&["original-deny"]).status.success());
+    f.stop();
+    f.start();
+    let after: Value = serde_json::from_slice(&f.cli(&["original"]).stdout).unwrap();
+    assert_eq!(before, after);
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"human work"
+    );
+}
+
+#[test]
+fn synthetic_original_preparation_discloses_both_roots_and_requires_fresh_read_consent() {
+    for answer in ["incorrect", "approve", "replace-root", "replace-owned"] {
+        let mut f = Fixture::new();
+        f.stop();
+        let original = f.root.join("repo");
+        let worktree = f.root.join("owned");
+        fs::write(worktree.join("sentinel"), b"synthetic worktree source").unwrap();
+        let identity = |root: &std::path::Path| {
+            agentmage_platform_linux::discover_linux_coding_map(root, "sentinel", || false)
+                .unwrap()
+                .root_sha256
+        };
+        let original_id = identity(&original);
+        let worktree_id = identity(&worktree);
+        let status =
+            json!({"repository_root_sha256":original_id,"worktree_root_sha256":worktree_id});
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        listener.set_nonblocking(true).unwrap();
+        f.address = Some(listener.local_addr().unwrap());
+        let stop = Arc::new(AtomicBool::new(false));
+        let done = stop.clone();
+        let worker = thread::spawn(move || {
+            let mut requests = Vec::new();
+            let deadline = Instant::now() + Duration::from_secs(12);
+            while !done.load(Ordering::Relaxed) {
+                assert!(Instant::now() < deadline);
+                let (mut socket, _) = match listener.accept() {
+                    Ok(pair) => pair,
+                    Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                        thread::sleep(Duration::from_millis(5));
+                        continue;
+                    }
+                    Err(e) => panic!("{e}"),
+                };
+                socket
+                    .set_read_timeout(Some(Duration::from_secs(2)))
+                    .unwrap();
+                let mut header = Vec::new();
+                while !header.ends_with(b"\r\n\r\n") {
+                    let mut byte = [0];
+                    socket.read_exact(&mut byte).unwrap();
+                    header.push(byte[0]);
+                    assert!(header.len() < 8192);
+                }
+                let header = String::from_utf8(header).unwrap();
+                let route = header.lines().next().unwrap().to_owned();
+                let length = header
+                    .lines()
+                    .find_map(|s| s.strip_prefix("Content-Length: "))
+                    .unwrap()
+                    .parse::<usize>()
+                    .unwrap();
+                assert!(length < 4096);
+                let mut body = vec![0; length];
+                socket.read_exact(&mut body).unwrap();
+                let reply = if route == "GET /v1/code/repository/apply HTTP/1.1" {
+                    status.clone()
+                } else {
+                    assert_eq!(route, "POST /v1/code/repository/apply/prepare HTTP/1.1");
+                    json!({"operation":"apply-to-original","effect":"none"})
+                };
+                requests.push((route, body));
+                let bytes = serde_json::to_vec(&reply).unwrap();
+                socket.write_all(format!("HTTP/1.1 200 Response\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",bytes.len()).as_bytes()).unwrap();
+                socket.write_all(&bytes).unwrap();
+            }
+            requests
+        });
+        let result = f.terminal(
+            &[
+                "original-prepare",
+                original.to_str().unwrap(),
+                worktree.to_str().unwrap(),
+                "Apply fixture",
+                "sentinel",
+            ],
+            answer,
+        );
+        stop.store(true, Ordering::Relaxed);
+        let requests = worker.join().unwrap();
+        assert_eq!(result["status"] == 0, answer == "approve");
+        assert_eq!(requests.len(), if answer == "approve" { 2 } else { 1 });
+        let transcript = result["transcript"].as_str().unwrap();
+        assert!(transcript.contains(&format!("read {original_id} {worktree_id}")));
+        let display: Value =
+            serde_json::from_str(transcript.split("Type exactly ").next().unwrap()).unwrap();
+        assert_eq!(display["repository"], original.to_str().unwrap());
+        assert_eq!(display["worktree"], worktree.to_str().unwrap());
+        assert_eq!(display["paths"], json!(["sentinel"]));
+        assert_eq!(display["task"], "Apply fixture");
+        if answer == "approve" {
+            assert_eq!(
+                serde_json::from_slice::<Value>(&requests[1].1).unwrap(),
+                json!({"paths":["sentinel"],"task":"Apply fixture","approve_read":true})
+            );
+        }
+        assert_eq!(
+            fs::read(original.join("sentinel"))
+                .unwrap_or_else(|_| fs::read(f.root.join("old-owned/sentinel")).unwrap()),
+            b"human work"
+        );
     }
 }

@@ -460,6 +460,82 @@ fn edit_prepare(client: &Client, root: &str, body: Value) -> Result<()> {
     show(&client.json("POST", "/v1/code/repository/edit/prepare", true, Some(body))?)
 }
 
+fn original_apply_prepare(
+    client: &Client,
+    original: &str,
+    worktree: &str,
+    task: &str,
+    paths: &[String],
+) -> Result<()> {
+    let status = client.json("GET", "/v1/code/repository/apply", true, None)?;
+    let root = status["repository_root_sha256"]
+        .as_str()
+        .filter(|s| digest(s))
+        .ok_or(())?;
+    let tree = status["worktree_root_sha256"]
+        .as_str()
+        .filter(|s| digest(s))
+        .ok_or(())?;
+    let verify = || {
+        LinuxCodingReadScope::verify_root(Path::new(original), root).map_err(|_| ())?;
+        LinuxCodingReadScope::verify_root(Path::new(worktree), tree).map_err(|_| ())
+    };
+    verify()?;
+    confirm(
+        &json!({"repository":original,"worktree":worktree,"paths":paths,"task":task,
+        "warning":"Reads the displayed existing files from both roots to prepare the complete original-checkout diff. No writes, model request, command, commit or push."}),
+        &format!("read {root} {tree}"),
+    )?;
+    verify()?;
+    show(&client.json(
+        "POST",
+        "/v1/code/repository/apply/prepare",
+        true,
+        Some(json!({"paths":paths,"task":task,"approve_read":true})),
+    )?)
+}
+
+fn original_apply_decide(client: &Client, original: Option<&str>) -> Result<()> {
+    let status = client.json("GET", "/v1/code/repository/apply", true, None)?;
+    let preview = &status["pending"];
+    if preview["operation"] != "apply-to-original" {
+        return Err(());
+    }
+    let hash = preview["preview_sha256"]
+        .as_str()
+        .filter(|s| digest(s))
+        .ok_or(())?;
+    if let Some(root) = original {
+        let identity = preview["repository_root_sha256"].as_str().ok_or(())?;
+        let verify =
+            || LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ());
+        verify()?;
+        confirm(
+            &json!({"repository":root,"preview":preview,
+            "warning":"Writes exactly this complete diff in the original checkout. No index change, commit, push or test claim. Process-only records: inspect disk after a lost reply; never resend approval."}),
+            &format!("apply-original {hash}"),
+        )?;
+        verify()?;
+    }
+    let result = client.json(
+        "POST",
+        "/v1/code/repository/apply/decide",
+        true,
+        Some(json!({"preview_sha256":hash,"approve":original.is_some()})),
+    )?;
+    show(&result)?;
+    if result["outcome"]
+        != if original.is_some() {
+            "committed"
+        } else {
+            "denied"
+        }
+    {
+        return Err(());
+    }
+    Ok(())
+}
+
 fn edit_decide(client: &Client, root: Option<&str>) -> Result<()> {
     let status = client.json("GET", "/v1/code/repository/edit", true, None)?;
     let preview = &status["pending"];
@@ -603,6 +679,12 @@ fn execute(args: &[String]) -> Result<()> {
         }
         ("validation-run", [root]) => command_decide(&client, Some(root), true),
         ("validation-deny", []) => command_decide(&client, None, true),
+        ("original", []) => show(&client.json("GET", "/v1/code/repository/apply", true, None)?),
+        ("original-prepare", [root, worktree, task, paths @ ..]) if !paths.is_empty() => {
+            original_apply_prepare(&client, root, worktree, task, paths)
+        }
+        ("original-apply", [root]) => original_apply_decide(&client, Some(root)),
+        ("original-deny", []) => original_apply_decide(&client, None),
         ("worktree", []) => show(&client.json("GET", "/v1/code/repository", true, None)?),
         ("worktree-prepare", [root, owned, task, base]) => {
             // The challenge itself is written to the terminal. Validate the
@@ -724,7 +806,7 @@ fn execute(args: &[String]) -> Result<()> {
 
 fn usage() {
     eprintln!(
-        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> runtime|runtime-run <seconds> <task>|runtime-prepare <task>|runtime-start <prepared-request-json>|runtime-step <run-id> <request-digest>|runtime-approve <run-id> <request-digest>|runtime-deny <run-id> <request-digest>|runtime-job <run-id> <request-digest>|runtime-control <run-id> <request-digest> <cancel|suspend|resume>|runtime-declarations <run-id> <request-digest>|runtime-release <run-id> <request-digest>|repair-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|edit|edit-prepare <worktree> <strict-change-json>|edit-apply <worktree>|edit-deny|propose-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|validation|validation-prepare <definition-json>|validation-run <worktree>|validation-deny|command|command-prepare <spec-json>|command-run <worktree>|command-deny|worktree|worktree-prepare <repository> <private-management-directory> <task-id> <base-commit>|worktree-create <repository> <private-management-directory>|worktree-deny|map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
+        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> original|original-prepare <repository> <worktree> <task> <paths...>|original-apply <repository>|original-deny|runtime|runtime-run <seconds> <task>|runtime-prepare <task>|runtime-start <prepared-request-json>|runtime-step <run-id> <request-digest>|runtime-approve <run-id> <request-digest>|runtime-deny <run-id> <request-digest>|runtime-job <run-id> <request-digest>|runtime-control <run-id> <request-digest> <cancel|suspend|resume>|runtime-declarations <run-id> <request-digest>|runtime-release <run-id> <request-digest>|repair-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|edit|edit-prepare <worktree> <strict-change-json>|edit-apply <worktree>|edit-deny|propose-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|validation|validation-prepare <definition-json>|validation-run <worktree>|validation-deny|command|command-prepare <spec-json>|command-run <worktree>|command-deny|worktree|worktree-prepare <repository> <private-management-directory> <task-id> <base-commit>|worktree-create <repository> <private-management-directory>|worktree-deny|map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
     );
 }
 

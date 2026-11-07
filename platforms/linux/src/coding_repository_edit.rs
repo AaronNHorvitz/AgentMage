@@ -11,6 +11,7 @@ pub(super) struct PendingEdit {
     hash: String,
     creation_receipt_sha256: String,
     created_at: u64,
+    edits: BTreeMap<String, AppliedEdit>,
 }
 
 impl LinuxCodingRepository {
@@ -45,6 +46,33 @@ impl LinuxCodingRepository {
     ) -> Result<Value> {
         let created = self.verify_edit_scope(&scope)?;
         let creation_receipt_sha256 = created.creation_receipt_sha256.clone();
+        let mut edits = BTreeMap::new();
+        for replacement in replacements {
+            let prior = created.edits.get(replacement.path);
+            if prior.is_some_and(|prior| prior.after_sha256 != replacement.before_sha256) {
+                return Err(err("code.edit.lineage"));
+            }
+            edits.insert(
+                replacement.path.to_owned(),
+                AppliedEdit {
+                    before_sha256: prior.map_or_else(
+                        || replacement.before_sha256.to_owned(),
+                        |p| p.before_sha256.clone(),
+                    ),
+                    after_sha256: hash(replacement.content.as_bytes()),
+                },
+            );
+        }
+        if created
+            .edits
+            .keys()
+            .chain(edits.keys())
+            .collect::<BTreeSet<_>>()
+            .len()
+            > 16
+        {
+            return Err(err("code.edit.lineage-limit"));
+        }
         let write = scope
             .prepare_write(replacements, intent, now)
             .map_err(|e| err(e.code()))?;
@@ -64,6 +92,7 @@ impl LinuxCodingRepository {
             hash: digest,
             creation_receipt_sha256,
             created_at: now,
+            edits,
         });
         Ok(preview)
     }
@@ -108,6 +137,13 @@ impl LinuxCodingRepository {
         self.edit_result =
             Some(json!({"preview_sha256":digest,"outcome":"dispatching","effect":"unknown"}));
         self.command = None;
+        self.apply = None;
+        // Uncertain writes must never leave an older transferable postimage.
+        if let Some(created) = &mut self.created {
+            for path in pending.edits.keys() {
+                created.edits.remove(path);
+            }
+        }
         let result = pending.write.apply(
             &pending.scope,
             pending.preview["write_preview"]["change_set_sha256"]
@@ -139,6 +175,13 @@ impl LinuxCodingRepository {
                 return Err(e);
             }
         };
+        if value["outcome"] == "committed" {
+            self.created
+                .as_mut()
+                .ok_or(err("code.edit.uncertain"))?
+                .edits
+                .extend(pending.edits);
+        }
         self.edit_result = Some(value.clone());
         Ok(value)
     }

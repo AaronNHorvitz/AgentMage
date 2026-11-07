@@ -48,6 +48,14 @@ pub(super) struct PrepareValidation {
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
+struct PrepareApply {
+    paths: Vec<String>,
+    task: String,
+    approve_read: bool,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Decide {
     preview_sha256: String,
     approve: bool,
@@ -131,6 +139,7 @@ pub(super) fn handle_repository(
                 | "/v1/code/repository/command"
                 | "/v1/code/repository/validation"
                 | "/v1/code/repository/edit"
+                | "/v1/code/repository/apply"
         ) | (
             "POST",
             "/v1/code/repository/prepare"
@@ -141,6 +150,8 @@ pub(super) fn handle_repository(
                 | "/v1/code/repository/validation/decide"
                 | "/v1/code/repository/edit/prepare"
                 | "/v1/code/repository/edit/decide"
+                | "/v1/code/repository/apply/prepare"
+                | "/v1/code/repository/apply/decide"
         )
     ) {
         return error(socket, 404);
@@ -181,6 +192,28 @@ pub(super) fn handle_repository(
     };
     let mut repository = repository.lock().map_err(|_| ApiError::Io)?;
     let result = match route {
+        ("GET", "/v1/code/repository/apply") => repository.inspect_apply(),
+        ("POST", "/v1/code/repository/apply/prepare") => {
+            let Ok(input) = object_json::<PrepareApply>(&req.body) else {
+                return error(socket, 400);
+            };
+            if !input.approve_read {
+                return error(socket, 403);
+            }
+            if stop.load(Ordering::Relaxed) {
+                return error(socket, 503);
+            }
+            repository.prepare_apply(&input.paths, &input.task, clock_ms()?)
+        }
+        ("POST", "/v1/code/repository/apply/decide") => {
+            let Ok(input) = object_json::<Decide>(&req.body) else {
+                return error(socket, 400);
+            };
+            if stop.load(Ordering::Relaxed) {
+                return error(socket, 503);
+            }
+            repository.decide_apply(&input.preview_sha256, input.approve, clock_ms()?)
+        }
         ("GET", "/v1/code/repository/edit") => repository.inspect_edit(),
         ("POST", "/v1/code/repository/edit/prepare") => {
             if stop.load(Ordering::Relaxed) {
@@ -321,7 +354,7 @@ pub(super) fn handle_repository(
             // Conservatively never assert an unchanged disk after a decision.
             (
                 409,
-                json!({"error":e.code(),"effect": if req.path.ends_with("/decide") {"unknown"} else if req.path.contains("/edit") {"no-write-dispatch"} else if req.path.contains("/command") || req.path.contains("/validation") {"no-command-dispatch"} else {"no-worktree-dispatch"}}),
+                json!({"error":e.code(),"effect": if req.path.ends_with("/decide") {"unknown"} else if req.path.contains("/edit") || req.path.contains("/apply") {"no-write-dispatch"} else if req.path.contains("/command") || req.path.contains("/validation") {"no-command-dispatch"} else {"no-worktree-dispatch"}}),
             )
         }
     };

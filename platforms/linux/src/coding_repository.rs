@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //! Approved worktree creation, held ownership, commands and exact source edits.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::os::unix::ffi::OsStrExt;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
@@ -40,6 +40,8 @@ use crate::{
     LinuxStrictLocalRootInspector, authorize_workspace_root, open_linux_development_authority,
 };
 
+#[path = "coding_repository_apply.rs"]
+mod apply;
 #[path = "coding_repository_command.rs"]
 mod command;
 #[path = "coding_repository_edit.rs"]
@@ -51,7 +53,16 @@ pub use validation::LinuxCodingTestFormat;
 
 const TOOL: &str = "local-coding-worktree-create";
 
+#[derive(Clone)]
+struct AppliedEdit {
+    before_sha256: String,
+    after_sha256: String,
+}
+
 struct CreatedWorktree {
+    original_path: PathBuf,
+    original: LinuxAuthorizedWorkspace,
+    edits: BTreeMap<String, AppliedEdit>,
     path: PathBuf,
     held: LinuxAuthorizedWorkspace,
     owned: LinuxAuthorizedWorkspace,
@@ -126,6 +137,8 @@ pub struct LinuxCodingRepository {
     validation: Option<validation::ValidationSeries>,
     edit: Option<edit::PendingEdit>,
     edit_result: Option<Value>,
+    apply: Option<apply::PendingApply>,
+    apply_result: Option<Value>,
 }
 
 impl LinuxCodingRepository {
@@ -162,6 +175,8 @@ impl LinuxCodingRepository {
             validation: None,
             edit: None,
             edit_result: None,
+            apply: None,
+            apply_result: None,
         })
     }
 
@@ -386,6 +401,7 @@ impl LinuxCodingRepository {
             .map_err(|_| err("code.repository.uncertain"))?;
         // Receipt proves repository preservation, not permission to read or edit
         // the new worktree. Source selection remains a separate explicit action.
+        let repository_root_sha256 = pending.repository.root_path_sha256().to_owned();
         let worktree_root_sha256 =
             if receipt.outcome == agentmage_kernel_contracts::OperationOutcome::Succeeded {
                 let held = held_root(&pending.destination)
@@ -397,7 +413,12 @@ impl LinuxCodingRepository {
                 self.validation = None;
                 self.edit = None;
                 self.edit_result = None;
+                self.apply = None;
+                self.apply_result = None;
                 self.created = Some(CreatedWorktree {
+                    original_path: pending.root,
+                    original: pending.repository,
+                    edits: BTreeMap::new(),
                     path: pending.destination,
                     held,
                     owned: pending.owned,
@@ -409,7 +430,7 @@ impl LinuxCodingRepository {
             };
         Ok(
             json!({"outcome":receipt.outcome,"receipt":receipt,"repository_receipt":specialized,
-            "repository_root_sha256":pending.repository.root_path_sha256(),
+            "repository_root_sha256":repository_root_sha256,
             "worktree_root_sha256": worktree_root_sha256,
             "source_selected":false,"tested":false,"retention":"canonical-authority"}),
         )

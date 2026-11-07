@@ -191,8 +191,10 @@ and outcome labels; exact run details remain with the existing canonical owner.
 The default native composition remains the fixed `failed-test-repair` scenario: only
 `src/calc.py` is mutable, with the synthetic validation acceptance criterion
 reported at startup. It retains its exact profile and workspace restrictions. The explicit Python project selection below generalizes the selected source and test layout.
-The newer manual strict-edit/test routes remain separate from that coordinator. The real
-model/host workflow, arbitrary endpoint composition, original-checkout apply,
+The newer manual strict-edit/test and
+[original-checkout apply](coding-original-apply.md) routes remain separate from that
+coordinator. The real
+model/host workflow, arbitrary endpoint composition, coordinator-connected original apply,
 approved commit/push, MCP, measured development reruns and row-closing held-out
 scores remain open. Preserve both authority systems while completing that
 composition; do not replace either with a frontend agent loop.
@@ -258,8 +260,10 @@ sources against the sealed task objective before budget allocation. Matching
 path words take priority over matching source words. Matches are case-insensitive,
 distinct ASCII words, split at punctuation and underscores; repeating a word
 cannot raise its score. The query uses at most 128 words of 3–64 bytes from the
-first 8 KiB of the objective. Each source scan reads at most 64 KiB of its existing
-bounded excerpt. This lexical heuristic does not establish semantic relevance;
+first 8 KiB of the objective. Each source scan reads at most 64 KiB. Native repository JSON excerpts are
+decoded before matching their content, so escaped line breaks, tabs and Unicode
+escapes cannot hide source words. Original excerpt bytes remain unchanged.
+Plain excerpts retain bounded text matching. This lexical heuristic does not establish semantic relevance;
 it has no multilingual or dependency-graph ranking claim.
 
 Only eligible supporting items with the native repository-source identity shape

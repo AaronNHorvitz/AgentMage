@@ -263,3 +263,39 @@ fn retrieval_changes_actual_bounded_packets_and_preserves_all_omission_identitie
         started.elapsed().as_micros()
     );
 }
+
+#[test]
+fn retrieval_matches_decoded_production_source_lines_and_indentation() {
+    for content in [
+        "x = 1\nrefund = 2\n",
+        "package c\nfunc F() {\n\trefund := 1\n}\n",
+        "\"refund\"",
+        "\\refund",
+        "\rrefund",
+    ] {
+        let wrapped = |content: &str| {
+            serde_json::to_string(&serde_json::json!({
+                "schema_version":1,"untrusted_repository_source":true,
+                "path":"src/helper.py","content_sha256":sha256(content.as_bytes()),"content":content
+            }))
+            .unwrap()
+        };
+        let relevant = retrieval_source("relevant", "src/helper.py", &wrapped(content));
+        let unrelated = retrieval_source("unrelated", "src/other.py", &wrapped("nothing"));
+        let ranked = ranked_sources("refund", &[relevant.clone(), unrelated]);
+        assert!(ranked[0].item_id < ranked[1].item_id, "{content:?}");
+        assert!(ranked[0].item_id.starts_with("repository-source-128-127-"));
+        assert_eq!(ranked[0].bounded_excerpt, relevant.bounded_excerpt);
+    }
+    // JSON escapes are decoded as characters, including a Unicode ASCII escape.
+    let escaped = retrieval_source(
+        "escaped",
+        "src/helper.py",
+        r#"{"schema_version":1,"untrusted_repository_source":true,"content":"\u0072efund"}"#,
+    );
+    assert!(
+        ranked_sources("refund", &[escaped])[0]
+            .item_id
+            .starts_with("repository-source-128-127-")
+    );
+}

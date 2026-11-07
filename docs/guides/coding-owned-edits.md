@@ -111,7 +111,8 @@ reply or crash requires manual inspection; never resend an approval automaticall
 The existing bounded write transaction finishes/reconciles after consumption;
 API cancellation cannot interrupt it halfway through.
 
-This path changes only files in the held worktree. Applying changes back to the
-original repository, automatic model repair, standard test-runner adapters,
+This edit path changes only files in the held worktree. A separate
+[original-checkout diff and approval](coding-original-apply.md) can transfer its
+committed edits after source checks on both sides. Coordinator composition,
 durable coding-run recovery, commit, push and MCP integration remain open. No
 model qualification, coding score or parent-row acceptance is established.
