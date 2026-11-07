@@ -264,7 +264,7 @@ impl RuntimeTransportPort for HttpRuntime<'_> {
             return Err(RuntimeTransportError::RequestDenied);
         }
         self.consent(&json!({"selection":self.selection,"task":input.prompt,
-            "warning":"Inspects the startup-selected disposable repository. This is the fixed failed-test-repair scenario, not a general repository task. No model or tool approval is granted."}),
+            "warning":"Inspects the startup-selected disposable repository. The displayed startup selection fixes the source scope and test definition; inspect the exact prepared request. No model or tool approval is granted."}),
             &format!("inspect {}", input.expected_entry_sha256))?;
         self.post(
             "/v1/code/runtime/prepare",
@@ -372,7 +372,10 @@ pub(super) fn run(client: &Client, seconds: &str, task: &str) -> Result<()> {
     let selection = client.json("GET", "/v1/code/runtime", true, None)?;
     if selection["version"] != 1
         || selection["activation"] != "coding-development-v1"
-        || selection["scenario"] != "failed-test-repair"
+        || !matches!(
+            selection["scenario"].as_str(),
+            Some("failed-test-repair" | "python-project")
+        )
         || selection["chat_endpoint_used"] != false
         || selection["requires_control"] != true
         || selection["preauthorization"] != false

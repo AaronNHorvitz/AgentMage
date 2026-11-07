@@ -28,12 +28,16 @@ pub struct CodingRuntimeDevelopment<'a> {
     pub workspace_root: &'a Path,
     /// Exact existing candidate label: `muse` or `gpt-oss`. No download/fallback.
     pub model: &'a str,
+    /// Explicit closed selection: `failed-test-repair` or `python-project`.
+    /// The latter selects the documented unittest definition, not execution consent.
+    pub scenario: &'a str,
     /// Request reconstruction through the host's existing durable checkpoint path.
     pub resume: bool,
 }
 
 #[derive(Clone)]
 struct Selection {
+    scenario: String,
     profile_id: String,
     expected_entry_sha256: String,
     workspace_id: String,
@@ -69,6 +73,7 @@ pub fn serve_coding_runtime_development(
             .ip()
             .is_loopback()
         || !matches!(input.model, "muse" | "gpt-oss")
+        || !matches!(input.scenario, "failed-test-repair" | "python-project")
     {
         return Err(ApiError::Configuration);
     }
@@ -80,6 +85,7 @@ pub fn serve_coding_runtime_development(
     )
     .map_err(|_| ApiError::Configuration)?;
     let selection = Selection {
+        scenario: input.scenario.to_owned(),
         profile_id: model.profile_id().to_owned(),
         expected_entry_sha256: activation.marker_sha256().to_owned(),
         workspace_id: format!("coding-development-{}", &activation.marker_sha256()[..24]),
@@ -94,7 +100,7 @@ pub fn serve_coding_runtime_development(
         activation.state_root(),
         activation.disposable_root(),
         activation.workspace_root(),
-        "failed-test-repair",
+        input.scenario,
         input.model,
         input.resume,
     )
@@ -187,9 +193,15 @@ impl RuntimeSession {
         match (method, path) {
             ("GET", "/v1/code/runtime") => Ok(json!({
                 "version":1,"runtime":"existing-live-native-coding-host",
-                "activation":"coding-development-v1","scenario":"failed-test-repair",
-                "mutable_files":["src/calc.py"],
-                "acceptance_criteria":["The exact synthetic validation passes after the bounded repair"],
+                "activation":"coding-development-v1","scenario":self.selection.scenario,
+                "mutable_files":if self.selection.scenario == "python-project" { Value::Null }
+                    else { json!(["src/calc.py"]) },
+                "mutable_scope":if self.selection.scenario == "python-project" {
+                    "Exact host-prepared existing src Python paths, at most 16; inspect the sealed request"
+                } else { "Fixed fixture" },
+                "acceptance_criteria":if self.selection.scenario == "python-project" {
+                    json!(["The exact approved Python project tests pass with positive test counts"])
+                } else { json!(["The exact synthetic validation passes after the bounded repair"]) },
                 "profile_id":self.selection.profile_id,
                 "workspace_id":self.selection.workspace_id,"workspace_root":self.selection.workspace_root,
                 "expected_entry_sha256":self.selection.expected_entry_sha256,"resume":self.selection.resume,
@@ -417,6 +429,7 @@ mod tests {
             RuntimeSession {
                 port: Box::new(Peer(observed.clone())),
                 selection: Selection {
+                    scenario: "failed-test-repair".into(),
                     profile_id: "configured-evaluation-profile".into(),
                     expected_entry_sha256: "a".repeat(64),
                     workspace_id: "owned-workspace".into(),
@@ -447,11 +460,51 @@ mod tests {
                     disposable_root: Path::new("/not-an-activation"),
                     workspace_root: Path::new("/not-an-activation"),
                     model,
+                    scenario: "failed-test-repair",
                     resume: false,
                 },
             );
             assert_eq!(result, Err(ApiError::Configuration));
         }
+    }
+    #[test]
+    fn project_selection_is_explicit_and_cannot_be_changed_by_a_prepare_body() {
+        let (mut runtime, observed) = fixture();
+        runtime.selection.scenario = "python-project".into();
+        let selection = runtime.dispatch("GET", "/v1/code/runtime", b"").unwrap();
+        assert!(selection["mutable_files"].is_null());
+        assert_eq!(selection["scenario"], "python-project");
+        assert_eq!(selection["chat_endpoint_used"], false);
+        assert_eq!(selection["model_qualification"], "evaluation-only");
+        assert!(
+            selection["acceptance_criteria"][0]
+                .as_str()
+                .unwrap()
+                .contains("positive test counts")
+        );
+        assert_eq!(
+            dispatch(
+                &mut runtime,
+                "prepare",
+                json!({
+                    "prompt":"Fix the project", "approve_inspection":true, "scenario":"failed-test-repair"
+                })
+            ),
+            Err((400, "code.runtime.input"))
+        );
+        assert!(observed.lock().unwrap().calls.is_empty());
+        let _ = dispatch(
+            &mut runtime,
+            "prepare",
+            json!({"prompt":"Fix the project","approve_inspection":true}),
+        );
+        let calls = &observed.lock().unwrap().calls;
+        assert_eq!(calls.len(), 1);
+        assert_eq!(
+            calls[0]["prepare"]["profile_id"],
+            "configured-evaluation-profile"
+        );
+        assert_eq!(calls[0]["prepare"]["preauthorization"], Value::Null);
     }
     #[test]
     fn start_requires_disclosure_and_preserves_the_complete_exact_host_request() {

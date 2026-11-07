@@ -676,6 +676,7 @@ fn development_scenario_valid(scenario: &str) -> bool {
         scenario,
         "no-op"
             | "failed-test-repair"
+            | "python-project"
             | "native-command-failure"
             | "slow-cancel"
             | "restart-repair"

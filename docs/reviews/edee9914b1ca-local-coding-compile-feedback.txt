@@ -1,0 +1,142 @@
+Commit: edee9914b1caff3af05de868e91c3f7b73d7c707
+Scope: local-coding-compile-feedback
+
+# Independent core review: compilation feedback into the existing repair and rerun owners
+
+Rows: T-303 (related T-306), tier core, non-closing batch. Base `d671b595e4326a1f22a400ffcf7b949969e0c964`.
+Reviewer: Claude Opus 5.5, separate read-only session. The repository was not modified.
+`git status --short` was empty before and after; HEAD is `edee9914b1caff3af05de868e91c3f7b73d7c707`.
+My logs and probes are in `/lane/state/tmp/review-edee9914b1ca/`. I used no GPU, inference or model.
+
+## Methods
+
+- Read the full source diff: `kernel/engine/src/validation_result.rs` (`retryable_failure`, planner and
+  verifier changes, two new kernel tests), `kernel/engine/src/validation_result_text.rs` (Cargo
+  compile-failure adapter) and `platforms/linux/src/coding_repository_command_tests.rs` (one new owner
+  test, one changed expectation). Read the guide, evidence and TASKS.md changes.
+- Traced every consumer of `plan_failed_test_rerun`/`verify_rerun_plan`. The only production callers are
+  `platforms/linux/src/coding_repository_validation.rs:258-262` (rerun selection) and `:361` (inert repair
+  eligibility probe). The local API repair route (`platforms/local-api/src/coding_repair_api.rs`) and CLI
+  reach the same owner and apply no extra status gate, so the claimed manual API/CLI reachability holds.
+  The host native coordinator does not call the planner, which matches the evidence's open-scope statement.
+- Checked authority. `plan.execution_authority` stays false and the verifier rejects a plan tampered to true.
+  No change touches the sandbox, command runner, write paths, grants, routes or stores. Each step still
+  needs its own consent: disclosure (single-use), edit (a declined edit preserves bytes) and rerun
+  (a fresh preview and approval).
+- Ran independent experiments: a new probe crate against the public normalizer/planner, plus real Cargo
+  runs on 11 disposable crates outside the repository.
+
+## Commands and results
+
+Environment: `PATH=/lane/state/tmp/shared-node-v24.15.0/bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target
+CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4`. The Node binary, `/tools/build-slot`, `audit.py` and `run-policy.py`
+SHA-256 values match the request.
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `git status --short; git rev-parse HEAD; git diff --check d671b595… HEAD` | clean; exact sha; exit 0 |
+| 2 | `python3 -B scripts/local_agent_fast_gate.py --base d671b595e4326a1f22a400ffcf7b949969e0c964 --timeout 3600` | **FAST GATE: FAIL**, exit 1 (expected). diff-check, untracked lint, review lint, markdownlint (including the evidence file), fmt and clippy `-D warnings` all exit 0. The cargo test step exits 101 in 264.38 s with 2410 passed, 72 failed, 70 ignored, 0 measured and 0 filtered. The sorted unique `FAILED` identities are **byte-identical** to the union of the two retained baseline logs named in `docs/evidence/t301-baseline-failures-2026-10-25.md` (72 = 72, `diff` empty). The refusal grouping matches the baseline: 56 InvalidManifest, 15 InvalidGitArtifact, 1 ArtifactDenied. All three new tests and the changed `validation_exit_zero_never_substitutes_for_strict_positive_test_counts` pass. T-301.1 remains deferred, not cleared |
+| 3 | `python3 -B /lane/state/tmp/t303-compile-repair/audit.py` | exit 0; `audit_sha256` `2d81c11e…4b39d1b4ab71` as stated; 8 paths, 3 source files, 2410/72/70/0/0. This is a builder audit and adds no independent evidence |
+| 4 | `bash /tools/build-slot cargo run --locked --offline --manifest-path …/probe/Cargo.toml -- /lane/state/tmp/t303-compile-repair` | exit 0. Probe source sha `6760f8c5…a8c` matches. The real Cargo compile output yields `compile_failed` (0/0/0, no names) and the fixed run yields `passed` (1 test). Receipt channel hashes equal the SHA-256 of the raw stdout/stderr files. The output is labelled "synthetic-receipt … not native agent execution" |
+| 5 | `cmp docs/reviews/d671b595e432-local-coding-http-consent-repair.txt /lane/reviews/d671b595e432-local-coding-http-consent-repair.md` | exit 0, byte-identical |
+| 6 | `python3 -B /lane/state/tmp/t303-runtime-api/run-policy.py /lane/state/tmp/review-edee9914b1ca-compile-source` | exit 0, "Validated 776 Markdown file(s) and all policy invariants.", 9.3 s. This is not the T-310 long gate. The mirror was removed; its input manifest `review-edee9914b1ca-compile-source-inputs.json` (sha `5353fbf4…da04`) is kept |
+| 7 | Builder logs cross-check | `fast-final.log` totals 2410/72/70, and its fmt (1373.19 s including reservation wait), clippy (2.18 s) and test (221.24 s) times match the evidence table. `fast-initial.log` (2409/73/70) has exactly one failure outside the baseline: the changed compile expectation. The evidence discloses this |
+| 8 | Own probe, `bash /tools/build-slot bash own.sh` (public `normalize_validation_result`/`plan_failed_test_rerun`/`verify_rerun_plan`, synthetic receipts) | Results are listed below |
+| 9 | Own real Cargo runs (`real.sh`, 11 disposable crates, `cargo test --offline`, `NO_COLOR=1`, 2 jobs), normalized as `rust_libtest_text_v1` | Results are listed below |
+
+Own probe results (status / full pass / plan created and verified):
+
+- Real Cargo, normalized as `compile_failed` with a plan that verifies: lib type error (`(lib test)`),
+  warnings plus error (`; 1 warning emitted`), two errors, syntax error, bin-only crate, build-script
+  compile error, and UTF-8 source in the diagnostic.
+- Real Cargo, normalized as `malformed`:
+  - an integration-test compile error (`test "integration"`, then `warning: build failed, waiting for other jobs…`)
+  - lib and integration test both failing (two summaries)
+  - a passing test that `eprintln!`s a `could not compile` line under `--nocapture` (see L1)
+- A plain real pass gives `passed`, and no plan can be created from it.
+- Synthetic inputs that refuse: summary not last, whitespace on stdout, exit 1, leading spaces, a u32-overflow
+  error count, Python parser, and JSON `compile_failed` with exit 0.
+- Synthetic: a pass and an assertion failure whose stderr contains one non-UTF-8 byte both become `malformed` (L1).
+- Synthetic, accepted as `compile_failed`: an `error: <anything>` line in place of a rustc diagnostic, a
+  leading-zero count (`01 previous error`), and bidi/C1 characters inside a diagnostic (see L2/L3).
+- A plan from template A does not verify against template B, and the planner refuses B. A plan with
+  `execution_authority` tampered to true does not verify.
+
+Evaluation integrity: the diff touches no T-311 task, hidden test, threshold, base commit, fixture,
+scoreboard, dependency, lockfile or SBOM. No score is claimed. Privacy: the added lines contain no private
+host path, username, hostname, credential, sibling-project name or agent-product name. `/lane/…` appears only
+inside the byte-identical retained prior review, as in previously accepted batches.
+
+## Assessment of claims
+
+- The base's impossible `CompileFailed` combination is fixed. `retryable_failure`
+  (`validation_result.rs:650-671`) requires an exited process with a nonzero exit, no signal, no truncation
+  and no secret indicators. For compilation it requires 0/0/0 counts and empty names. For assertions it
+  requires nonempty names. The verifier now repeats the prior-identity and eligibility checks (`:632-635`),
+  which strictly tightens it. Compilation can never pass: `is_full_pass` requires `Passed`.
+- Only an inert retry preview is admitted, and nothing extra is dispatched. The changed expectation still
+  asserts `validation_passed == false`, the status, `attempts == 1` and `calls == 1`. The new owner test
+  covers both protocols:
+  - a single-use disclosure is consumed;
+  - a declined edit leaves `sentinel` unchanged and an approved edit changes it;
+  - a fresh preview without a prior receipt is refused;
+  - an approved exact rerun passes as attempt 2, with `calls == 2` and `test_suite_verified == false`.
+- The evidence labels everything honestly: synthetic creation provenance and command outcomes, standalone
+  Cargo commands, "not native agent commands, coding scores or model repairs". No native execution,
+  coordinator composition, durability, apply, commit/push or MCP is claimed, and I infer none.
+- Prompt-injection surface: compiler diagnostics reach the model only through the existing excerpt, which is
+  labelled untrusted and needs separate consent. A diagnostic cannot gain authority, because every effect
+  still needs its own approval.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L1 (low, correctness regression, fail-closed): honest Rust libtest runs are refused because of stderr content.**
+At `kernel/engine/src/validation_result_text.rs:64-67`, `std::str::from_utf8(&observation.stderr).ok()?` and
+the `could not compile` line scan now run before every Rust libtest parse. At the base, this parser read only
+stdout (`git show d671b595:kernel/engine/src/validation_result_text.rs:60-64`). Two results change:
+
+- A real passing `cargo test -- --nocapture` whose test prints a `could not compile` line becomes `malformed`
+  (real run `pass`).
+- A pass or assertion failure whose stderr holds any non-UTF-8 byte becomes `malformed` (own probe).
+
+Neither result is retryable, and the non-UTF-8 case is neither documented nor tested. No false pass is
+possible. Fix: enter the compilation branch only when `observation.stdout.is_empty()` and scan stderr
+byte-wise (`split(|b| *b == b'\n')`), so a libtest transcript on stdout keeps the base behaviour. Add a
+pass-with-non-UTF-8-stderr test. Backlog.
+
+**L2 (low, documentation precision): the guide overstates the diagnostic check.**
+`docs/guides/coding-validation.md:103-106` says a "separate rustc error diagnostic" is required. In
+`validation_result_text.rs:205-214`, any non-empty `error: …` line qualifies, including Cargo-level errors,
+and leading-zero counts are accepted. This is harmless to authority, because the result is still unsuccessful
+and still needs approval. Fix one of two ways:
+
+- tighten the code: require `error[E####]: ` or rustc's `error: ` followed by a ` --> ` location line, and
+  reject leading zeros in `number`;
+- or change the wording to "an `error:` diagnostic line".
+
+Backlog.
+
+**L3 (low, pre-existing, now also reachable from compile output): bidi and C1 characters reach the excerpt unescaped.**
+The guide says compiler diagnostics may contain UTF-8. Bidi overrides (U+202E) and C1 controls (U+0085) pass
+`has_forbidden_controls` (`validation_result.rs:1056-1060`, bytes < 0x20 only). They also reach the
+`failure_excerpt` JSON (`coding_repository_validation.rs:400-412`) unescaped, because serde_json does not
+escape them. A terminal or model view could misrender them. Rust stderr was already unchecked for assertion
+failures before this batch. Fix: escape or flag U+0080–U+009F and bidi controls in excerpts, either in the
+CLI renderer or in `failure_excerpt`. Backlog.
+
+Observation, no finding: with two build jobs, real Cargo integration-test and multi-target compile failures
+emit the parallel-jobs notice or several summaries, so in practice they are refused (real runs `integ` and
+`both`). This narrows the useful scope mostly to lib, bin and build-script failures. The evidence already
+discloses the parallel-notice limit as backlog.
+
+## Per-row result
+
+- **T-303 (this batch):** accepted at the exact commit. It has no open high or medium finding; L1–L3 go to
+  the backlog. The row stays **open**: configured-endpoint/coordinator composition, native positive
+  execution, durability and the rest of the "done when" remain.
+- **T-306 (related):** no change to apply, commit or push behaviour. The row stays **open**.
+- No new row or sub-row is created, and no checkbox is closed by this review.
+
+Verdict: PASS

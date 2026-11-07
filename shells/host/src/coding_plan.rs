@@ -287,6 +287,25 @@ fn sha256(bytes: &[u8]) -> String {
 pub fn build_coding_development_plan_binding(
     map: &RepositoryMap,
 ) -> Result<CodingPlanBinding, CodingPlanBindingError> {
+    build_development_plan(map, None)
+}
+
+/// Binds an authority-free project plan to facts citing selected mapped paths.
+/// This selects existing planning facts; it grants no read, write or test authority.
+pub fn build_coding_project_plan_binding(
+    map: &RepositoryMap,
+    paths: &[WorkspacePath],
+) -> Result<CodingPlanBinding, CodingPlanBindingError> {
+    if paths.is_empty() || paths.len() > 16 || paths.windows(2).any(|p| p[0] >= p[1]) {
+        return Err(CodingPlanBindingError::BindingDenied);
+    }
+    build_development_plan(map, Some(paths))
+}
+
+fn build_development_plan(
+    map: &RepositoryMap,
+    project_paths: Option<&[WorkspacePath]>,
+) -> Result<CodingPlanBinding, CodingPlanBindingError> {
     use agentmage_capability_repository_map::{
         ChangeAlternativeDimension, ChangeAlternativeOption, ChangeAlternativeSet,
         ChangeImpactSurfaceKind, ChangeIntentInput, ChangePlanInput, ChangeRiskDomain,
@@ -298,29 +317,75 @@ pub fn build_coding_development_plan_binding(
 
     let index = build_deep_repository_index(map, Vec::new(), Vec::new())
         .map_err(|_| CodingPlanBindingError::SourceDenied)?;
-    let target = index
-        .facts
-        .iter()
-        .find(|fact| fact.kind == RepositoryFactKind::Definition)
-        .or_else(|| {
+    let targets = if let Some(paths) = project_paths {
+        let mut targets = Vec::new();
+        for path in paths {
+            let fact = index
+                .facts
+                .iter()
+                .find(|fact| {
+                    fact.kind == RepositoryFactKind::Language
+                        && fact.citations.iter().any(|citation| &citation.path == path)
+                })
+                .ok_or(CodingPlanBindingError::SourceDenied)?;
+            targets.push(fact.fact_id.clone());
+        }
+        // Language facts group citations from multiple files. Keep the complete
+        // facts; the separate exact write scope remains the effect boundary.
+        targets.sort();
+        targets.dedup();
+        targets
+    } else {
+        vec![
             index
                 .facts
                 .iter()
-                .find(|fact| fact.kind == RepositoryFactKind::Language)
-        })
-        .ok_or(CodingPlanBindingError::SourceDenied)?
-        .fact_id
-        .clone();
+                .find(|fact| fact.kind == RepositoryFactKind::Definition)
+                .or_else(|| {
+                    index
+                        .facts
+                        .iter()
+                        .find(|fact| fact.kind == RepositoryFactKind::Language)
+                })
+                .ok_or(CodingPlanBindingError::SourceDenied)?
+                .fact_id
+                .clone(),
+        ]
+    };
     let intent = normalize_change_intent(
         &index,
         ChangeIntentInput {
             intent_id: "intent-coding-fixture".to_owned(),
-            requested_behavior: "Produce the requested bounded fixture behavior".to_owned(),
-            current_behavior: "The cited fixture retains its original behavior".to_owned(),
-            current_behavior_fact_ids: vec![target.clone()],
-            target_fact_ids: vec![target],
-            users: vec!["fixture callers".to_owned()],
-            acceptance_checks: vec!["The focused fixture passes".to_owned()],
+            requested_behavior: if project_paths.is_some() {
+                "Implement the requested bounded project change"
+            } else {
+                "Produce the requested bounded fixture behavior"
+            }
+            .to_owned(),
+            current_behavior: if project_paths.is_some() {
+                "The cited project sources retain their observed behavior"
+            } else {
+                "The cited fixture retains its original behavior"
+            }
+            .to_owned(),
+            current_behavior_fact_ids: targets.clone(),
+            target_fact_ids: targets,
+            users: vec![
+                if project_paths.is_some() {
+                    "project callers"
+                } else {
+                    "fixture callers"
+                }
+                .to_owned(),
+            ],
+            acceptance_checks: vec![
+                if project_paths.is_some() {
+                    "The selected project tests pass"
+                } else {
+                    "The focused fixture passes"
+                }
+                .to_owned(),
+            ],
             exclusions: vec!["No unrelated repository changes".to_owned()],
             risks: vec![ChangeRiskDomain::Reliability],
             rollback: "Restore the exact prior bytes through a fresh grant".to_owned(),
@@ -347,14 +412,24 @@ pub fn build_coding_development_plan_binding(
             options: vec![
                 ChangeAlternativeOption {
                     option_id: "option-minimal".to_owned(),
-                    description: "Change only the exact bounded fixture".to_owned(),
+                    description: if project_paths.is_some() {
+                        "Change only the selected project sources"
+                    } else {
+                        "Change only the exact bounded fixture"
+                    }
+                    .to_owned(),
                     tradeoffs: vec!["Keeps the evidence scope bounded".to_owned()],
                     evidence_fact_ids: Vec::new(),
                     irreversible: false,
                 },
                 ChangeAlternativeOption {
                     option_id: "option-wide".to_owned(),
-                    description: "Broaden the change beyond the cited fixture".to_owned(),
+                    description: if project_paths.is_some() {
+                        "Broaden the change beyond the selected sources"
+                    } else {
+                        "Broaden the change beyond the cited fixture"
+                    }
+                    .to_owned(),
                     tradeoffs: vec!["Would require additional evidence".to_owned()],
                     evidence_fact_ids: Vec::new(),
                     irreversible: dimension == ChangeAlternativeDimension::Irreversibility,
@@ -377,7 +452,14 @@ pub fn build_coding_development_plan_binding(
             regression_test: RegressionTestPlan {
                 disposition: RegressionTestDisposition::NotDefect,
                 test_fact_ids: Vec::new(),
-                rationale: Some("The fixture represents planned behavior".to_owned()),
+                rationale: Some(
+                    if project_paths.is_some() {
+                        "The project selection represents planned behavior"
+                    } else {
+                        "The fixture represents planned behavior"
+                    }
+                    .to_owned(),
+                ),
                 regression_sha256: String::new(),
             },
             hypotheses: HypothesisRecord {
@@ -391,7 +473,12 @@ pub fn build_coding_development_plan_binding(
             validations: vec![PlannedValidation {
                 validation_id: "validation-unit".to_owned(),
                 kind: PlannedValidationKind::Unit,
-                description: "Run the exact focused fixture".to_owned(),
+                description: if project_paths.is_some() {
+                    "Run the selected exact project test command"
+                } else {
+                    "Run the exact focused fixture"
+                }
+                .to_owned(),
                 acceptance_checks: intent.input.acceptance_checks.clone(),
                 separate_grant_required: true,
                 write_authority: false,

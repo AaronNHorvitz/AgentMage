@@ -124,6 +124,7 @@ pub struct ControlledFileCreationProposal {
 pub struct CodingWriteScope {
     workspace_id: WorkspaceId,
     writable_roots: Vec<Vec<String>>,
+    exact_files_only: bool,
 }
 
 impl CodingWriteScope {
@@ -157,7 +158,29 @@ impl CodingWriteScope {
         Ok(Self {
             workspace_id,
             writable_roots,
+            exact_files_only: false,
         })
+    }
+
+    /// Selects exact existing file paths rather than descendants of directories.
+    /// Native composition must independently verify existence and provenance.
+    /// File creation is unavailable for this scope.
+    pub fn exact_files(
+        workspace_id: WorkspaceId,
+        paths: Vec<Vec<String>>,
+    ) -> Result<Self, CodingChangeError> {
+        if paths.iter().any(Vec::is_empty) {
+            return Err(CodingChangeError::InvalidScope);
+        }
+        let mut scope = Self::new(workspace_id, paths)?;
+        scope.exact_files_only = true;
+        Ok(scope)
+    }
+
+    /// Whether the paths name exact files, with no descendants or creation.
+    #[must_use]
+    pub const fn is_exact_files(&self) -> bool {
+        self.exact_files_only
     }
 
     /// Returns the exact approved workspace identity.
@@ -180,7 +203,13 @@ impl CodingWriteScope {
             .map_err(|_| CodingChangeError::PathDenied)?;
         self.writable_roots
             .iter()
-            .any(|root| components.starts_with(root) && components.len() > root.len())
+            .any(|root| {
+                if self.exact_files_only {
+                    components == root
+                } else {
+                    components.starts_with(root) && components.len() > root.len()
+                }
+            })
             .then_some(path)
             .ok_or(CodingChangeError::PathDenied)
     }
@@ -456,6 +485,9 @@ fn validate_create(
     scope: &CodingWriteScope,
     proposal: &ControlledFileCreationProposal,
 ) -> Result<(), CodingChangeError> {
+    if scope.exact_files_only {
+        return Err(CodingChangeError::PathDenied);
+    }
     scope.resolve(&proposal.path)?;
     if proposal.schema_version != 1
         || !valid_identifier(&proposal.creation_id)

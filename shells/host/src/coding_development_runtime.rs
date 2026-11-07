@@ -105,7 +105,7 @@ use crate::{
         CHANGE_HISTORY_OUTPUT_SCHEMA_ID, CHANGE_HISTORY_TOOL_ID, CODING_HISTORY_TOOL_VERSION,
         ChangeHistoryOutput, ChangeHistoryRequest, ROLLBACK_TOOL_ID, RollbackRequest,
     },
-    coding_plan::build_coding_development_plan_binding,
+    coding_plan::{build_coding_development_plan_binding, build_coding_project_plan_binding},
     coding_run::{CodingRunRequestInput, build_ephemeral_coding_run_request},
     coding_session::{CodingSessionProfile, CodingSessionProfileInput},
     coding_session_recoverability::PersistedRunEffects,
@@ -187,6 +187,8 @@ pub enum CodingDevelopmentScenario {
     NoOp,
     /// Observe a genuine failing test, repair one identifier, rerun, and verify.
     FailedTestRepair,
+    /// Run the selected repository's verbose unittest discovery through the coordinator.
+    PythonProject,
     /// Execute native-ordered command arguments and retain the genuine nonzero failure.
     NativeCommandFailure,
     /// Hold one cancellable model call so actual signal propagation can be exercised.
@@ -227,6 +229,7 @@ impl CodingDevelopmentScenario {
         match value {
             "no-op" => Some(Self::NoOp),
             "failed-test-repair" => Some(Self::FailedTestRepair),
+            "python-project" => Some(Self::PythonProject),
             "native-command-failure" => Some(Self::NativeCommandFailure),
             "slow-cancel" => Some(Self::SlowCancel),
             "restart-repair" => Some(Self::RestartRepair),
@@ -421,6 +424,9 @@ impl CodingDevelopmentRuntimeFactory {
         model: CodingDevelopmentModel,
         resume_requested: bool,
     ) -> Result<Self, CodingDevelopmentRuntimeError> {
+        if scenario == CodingDevelopmentScenario::PythonProject && !model.is_candidate() {
+            return Err(CodingDevelopmentRuntimeError::Profile);
+        }
         activation
             .revalidate()
             .map_err(|_| CodingDevelopmentRuntimeError::Activation)?;
@@ -607,6 +613,12 @@ impl CodingDevelopmentRuntimeFactory {
             || base_request.session_id != binding.session_id
             || base_request.task.task_id != binding.task_id
             || base_request.task.objective != objective
+            || (self.scenario == CodingDevelopmentScenario::PythonProject)
+                != base_request
+                    .task
+                    .constraints
+                    .iter()
+                    .any(|s| s == "Python project unittest definition selected")
             || base_request.model_profile != *self.profile.model_profile()
             || base_request.workspace_id != *self.profile.write_scope().workspace_id()
             || base_request.workspace_snapshot_sha256 != self.profile.worktree().record_sha256
@@ -738,11 +750,13 @@ fn build_repository_composition(
     // Creation needs the platform's parent identity, not a model-invented tree
     // hash. Observe only the already authorized writable roots. The effect
     // boundary still rebinds the parent/siblings and refuses any later drift.
-    supporting_sources.extend(build_creation_parent_sources(
-        platform,
-        profile,
-        workspace.workspace(),
-    )?);
+    if scenario != CodingDevelopmentScenario::PythonProject {
+        supporting_sources.extend(build_creation_parent_sources(
+            platform,
+            profile,
+            workspace.workspace(),
+        )?);
+    }
     Ok((profile, workspace, supporting_sources))
 }
 
@@ -986,6 +1000,13 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         })
         .map_err(|_| prepare_denied("policy"))?;
         let (acceptance, required_evidence) = match self.scenario {
+            CodingDevelopmentScenario::PythonProject => (
+                vec![
+                    "The exact approved Python project tests pass with positive test counts"
+                        .to_owned(),
+                ],
+                vec![EvidenceKind::Validation],
+            ),
             CodingDevelopmentScenario::NoOp
             | CodingDevelopmentScenario::SlowCancel
             | CodingDevelopmentScenario::Overflow
@@ -1014,6 +1035,13 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             ),
         };
         let mutable_files = match self.scenario {
+            CodingDevelopmentScenario::PythonProject => self
+                .profile
+                .write_scope()
+                .writable_roots()
+                .iter()
+                .map(|path| path.join("/"))
+                .collect(),
             CodingDevelopmentScenario::MultiFile => {
                 vec!["src/calc.py".to_owned(), "src/subtract.py".to_owned()]
             }
@@ -1037,9 +1065,17 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 acceptance_criteria: acceptance,
                 constraints: {
                     let mut constraints = vec![
-                        "Disposable synthetic repository only".to_owned(),
+                        if self.scenario == CodingDevelopmentScenario::PythonProject {
+                            "Explicitly marked disposable Python project only"
+                        } else {
+                            "Disposable synthetic repository only"
+                        }
+                        .to_owned(),
                         "No network, publication, package installation, or commit".to_owned(),
                     ];
+                    if self.scenario == CodingDevelopmentScenario::PythonProject {
+                        constraints.push("Python project unittest definition selected".to_owned());
+                    }
                     if let Some(preauthorization) = &self.preauthorization {
                         constraints.push(format!(
                             "Direct session preauthorization digest: {}",
@@ -1790,32 +1826,48 @@ fn build_profile(
         record_sha256: "0".repeat(64),
     })
     .map_err(|_| CodingDevelopmentRuntimeError::Worktree)?;
-    let command = validation_command()?;
+    let project_paths = if scenario == CodingDevelopmentScenario::PythonProject {
+        python_project_paths(repository_map)?
+    } else {
+        Vec::new()
+    };
+    let command = if scenario == CodingDevelopmentScenario::PythonProject {
+        python_project_command()?
+    } else {
+        validation_command()?
+    };
     let commands = CommandRegistry::build(vec![command.clone()])
         .map_err(|_| CodingDevelopmentRuntimeError::Validation)?;
-    let validation = seal_validation_template(ValidationTemplateInput {
-        validation_id: VALIDATION_ID.to_owned(),
-        kind: ValidationKind::Unit,
-        command,
-        source: ValidationTemplateSource::TrustedProjectConfiguration,
-        source_sha256: file_sha256(&activation.workspace_root().join("tests/run_validation.py"))?,
-        source_path: Some(
-            WorkspacePath::new(workspace_id.clone(), ["tests", "run_validation.py"])
-                .map_err(|_| CodingDevelopmentRuntimeError::Validation)?,
-        ),
-        user_input_approval_sha256: None,
-        execution_scope_sha256: worktree.record_sha256.clone(),
-        parser: ValidationParserKind::AgentMageJsonV1,
-        parser_version: "1.0.0".to_owned(),
-        parser_sha256: sha256(b"agentmage-json-validation-v1"),
-        minimum_test_count: 1,
-        focused: true,
-        fail_fast: true,
-        failed_test_rerun_allowed: true,
-        setup_idempotent: true,
-        expected_artifacts: Vec::new(),
-    })
-    .map_err(|_| CodingDevelopmentRuntimeError::Validation)?;
+    let project = scenario == CodingDevelopmentScenario::PythonProject;
+    let validation = if project {
+        python_project_validation(command, &worktree.record_sha256)?
+    } else {
+        seal_validation_template(ValidationTemplateInput {
+            validation_id: VALIDATION_ID.to_owned(),
+            kind: ValidationKind::Unit,
+            command,
+            source: ValidationTemplateSource::TrustedProjectConfiguration,
+            source_sha256: file_sha256(
+                &activation.workspace_root().join("tests/run_validation.py"),
+            )?,
+            source_path: Some(
+                WorkspacePath::new(workspace_id.clone(), ["tests", "run_validation.py"])
+                    .map_err(|_| CodingDevelopmentRuntimeError::Validation)?,
+            ),
+            user_input_approval_sha256: None,
+            execution_scope_sha256: worktree.record_sha256.clone(),
+            parser: ValidationParserKind::AgentMageJsonV1,
+            parser_version: "1.0.0".to_owned(),
+            parser_sha256: sha256(b"agentmage-json-validation-v1"),
+            minimum_test_count: 1,
+            focused: true,
+            fail_fast: true,
+            failed_test_rerun_allowed: true,
+            setup_idempotent: true,
+            expected_artifacts: Vec::new(),
+        })
+        .map_err(|_| CodingDevelopmentRuntimeError::Validation)?
+    };
     let validations = ValidationTemplateRegistry::build(vec![validation])
         .map_err(|_| CodingDevelopmentRuntimeError::Validation)?;
     let instruction_ledger = build_instruction_ledger(
@@ -1826,10 +1878,29 @@ fn build_profile(
         &BTreeMap::new(),
     )
     .map_err(|_| CodingDevelopmentRuntimeError::Profile)?;
-    let write_scope = CodingWriteScope::new(workspace_id, vec![vec!["src".to_owned()]])
-        .map_err(|_| CodingDevelopmentRuntimeError::Profile)?;
-    let change_plan = build_coding_development_plan_binding(repository_map)
-        .map_err(|_| CodingDevelopmentRuntimeError::Plan)?;
+    let write_scope = if project {
+        CodingWriteScope::exact_files(
+            workspace_id,
+            project_paths
+                .iter()
+                .map(|path| {
+                    path.components()
+                        .iter()
+                        .map(|component| component.as_str().to_owned())
+                        .collect()
+                })
+                .collect(),
+        )
+    } else {
+        CodingWriteScope::new(workspace_id, vec![vec!["src".to_owned()]])
+    }
+    .map_err(|_| CodingDevelopmentRuntimeError::Profile)?;
+    let change_plan = if project {
+        build_coding_project_plan_binding(repository_map, &project_paths)
+    } else {
+        build_coding_development_plan_binding(repository_map)
+    }
+    .map_err(|_| CodingDevelopmentRuntimeError::Plan)?;
     CodingSessionProfile::build(CodingSessionProfileInput {
         profile_id: "coding-development-session-profile-v1".to_owned(),
         tool_catalog_id: ToolCatalogId::from_raw("coding-development-native-tools-v1"),
@@ -1851,6 +1922,101 @@ fn build_profile(
         limits,
     })
     .map_err(|_| CodingDevelopmentRuntimeError::Profile)
+}
+
+fn python_project_validation(
+    command: CommandSpec,
+    scope_sha256: &str,
+) -> Result<
+    agentmage_kernel_engine::validation_template::ValidationTemplate,
+    CodingDevelopmentRuntimeError,
+> {
+    let definition_sha256 = development_sha256(&serde_json::json!({
+        "selection":"python-project", "command":command,
+        "parser":"python_unittest_text_v1", "minimum_test_count":1,
+    }))?;
+    seal_validation_template(ValidationTemplateInput {
+        validation_id: VALIDATION_ID.to_owned(),
+        kind: ValidationKind::Unit,
+        command,
+        source: ValidationTemplateSource::ExplicitUserInput,
+        source_sha256: definition_sha256.clone(),
+        source_path: None,
+        // Explicit startup selects this closed definition, not execution authority.
+        user_input_approval_sha256: Some(definition_sha256),
+        execution_scope_sha256: scope_sha256.to_owned(),
+        parser: ValidationParserKind::PythonUnittestTextV1,
+        parser_version: "1.0.0".to_owned(),
+        parser_sha256: development_sha256(&[
+            sha256(include_bytes!(
+                "../../../kernel/engine/src/validation_result.rs"
+            )),
+            sha256(include_bytes!(
+                "../../../kernel/engine/src/validation_result_text.rs"
+            )),
+        ])?,
+        minimum_test_count: 1,
+        focused: false,
+        fail_fast: false,
+        failed_test_rerun_allowed: true,
+        setup_idempotent: true,
+        expected_artifacts: Vec::new(),
+    })
+    .map_err(|_| CodingDevelopmentRuntimeError::Validation)
+}
+
+fn python_project_paths(
+    map: &RepositoryMap,
+) -> Result<Vec<WorkspacePath>, CodingDevelopmentRuntimeError> {
+    let mut paths = map
+        .files
+        .iter()
+        .filter(|file| {
+            file.content_read
+                && file.object_kind == RepositoryObjectKind::RegularFile
+                && file
+                    .path
+                    .components()
+                    .first()
+                    .is_some_and(|part| part.as_str() == "src")
+                && file
+                    .path
+                    .components()
+                    .last()
+                    .is_some_and(|part| part.as_str().ends_with(".py"))
+                && matches!(file.disposition,
+                agentmage_capability_repository_map::RepositoryEntryDisposition::Parsed
+                | agentmage_capability_repository_map::RepositoryEntryDisposition::ParsedWithErrors)
+        })
+        .map(|file| file.path.clone())
+        .collect::<Vec<_>>();
+    paths.sort();
+    paths.dedup();
+    if paths.is_empty() || paths.len() > 16 {
+        return Err(CodingDevelopmentRuntimeError::Profile);
+    }
+    Ok(paths)
+}
+
+fn python_project_command() -> Result<CommandSpec, CodingDevelopmentRuntimeError> {
+    let fixture = validation_command()?;
+    CommandSpec::seal(
+        "project.python-unittest",
+        "1.0.0",
+        fixture.executable,
+        fixture.executable_sha256,
+        [
+            "-I", "-B", "-m", "unittest", "discover", "-s", "tests", "-t", ".", "-v",
+        ]
+        .into_iter()
+        .map(str::to_owned)
+        .collect(),
+        CommandWorkingDirectory::OwnedWorktree,
+        fixture.environment,
+        CommandRisk::Moderate,
+        fixture.bounds,
+    )
+    .map_err(|_| CodingDevelopmentRuntimeError::Composition)
 }
 
 fn validation_command() -> Result<CommandSpec, CodingDevelopmentRuntimeError> {
@@ -2113,6 +2279,8 @@ fn scripted_steps(
         .map_err(|_| CodingDevelopmentRuntimeError::Composition)
     };
     match scenario {
+        // A real project never silently falls back to scripted repairs.
+        CodingDevelopmentScenario::PythonProject => Err(CodingDevelopmentRuntimeError::Profile),
         CodingDevelopmentScenario::NativeCommandFailure => {
             let command = profile
                 .commands()
@@ -3857,3 +4025,7 @@ mod tests {
         assert!(projected_change_history(&wrong).is_err());
     }
 }
+
+#[cfg(test)]
+#[path = "coding_python_project_tests.rs"]
+mod python_project_tests;

@@ -205,6 +205,10 @@ impl CodingSessionProfile {
             offline_proof_sha256: hex_bytes(input.offline_proof.proof_sha256()),
             session_boundary_sha256: hex_bytes(input.offline_proof.session_boundary_sha256()),
             writable_roots: input.write_scope.writable_roots(),
+            writable_path_interpretation: input
+                .write_scope
+                .is_exact_files()
+                .then_some("exact-existing-files-no-create"),
             change_plan: &input.change_plan,
             instruction_ledger_sha256: &input.instruction_ledger.ledger_sha256,
             effective_guidance_sha256: &effective_guidance.guidance_sha256,
@@ -380,6 +384,8 @@ struct ProfileMaterial<'a> {
     offline_proof_sha256: String,
     session_boundary_sha256: String,
     writable_roots: &'a [Vec<String>],
+    #[serde(skip_serializing_if = "Option::is_none")]
+    writable_path_interpretation: Option<&'static str>,
     change_plan: &'a CodingPlanBinding,
     instruction_ledger_sha256: &'a str,
     effective_guidance_sha256: &'a str,

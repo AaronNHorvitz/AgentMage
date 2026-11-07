@@ -188,11 +188,64 @@ and outcome labels; exact run details remain with the existing canonical owner.
 
 ## Remaining scope
 
-The native composition remains the fixed `failed-test-repair` scenario: only
+The default native composition remains the fixed `failed-test-repair` scenario: only
 `src/calc.py` is mutable, with the synthetic validation acceptance criterion
-reported at startup. It retains its exact profile and workspace restrictions. This transport does not generalize them or
-connect the newer manual strict-edit/test routes to that coordinator. The real
+reported at startup. It retains its exact profile and workspace restrictions. The explicit Python project selection below generalizes the selected source and test layout.
+The newer manual strict-edit/test routes remain separate from that coordinator. The real
 model/host workflow, arbitrary endpoint composition, original-checkout apply,
 approved commit/push, MCP, measured development reruns and row-closing held-out
 scores remain open. Preserve both authority systems while completing that
 composition; do not replace either with a frontend agent loop.
+
+## Python project selection
+
+An explicit final `python-project` startup argument selects the repository's own
+Python tests through the same coordinator, in place of the synthetic repair
+scenario. Omitting that argument preserves `failed-test-repair`. For example,
+inside the same bounded GPU reservation:
+
+```sh
+target/debug/agentmage-local-api serve-runtime-development 127.0.0.1:43129 <private-auth> <state-root> <disposable-root> <marked-workspace> gpt-oss new python-project
+```
+
+The marked disposable repository must have one to sixteen parsed, admitted
+Python files under `src/` and a unittest package under `tests/` (including
+`tests/__init__.py`). All selected source
+paths are exact existing files; tests, other files, descendants of a selected
+file path and file creation are refused. The sealed request shows the mutable
+files. Startup metadata reports the selection rule and leaves `mutable_files`
+null until the host prepares the exact request. Repository text cannot change
+the startup selection. An empty or excessive source selection fails closed.
+
+Startup selects a closed test definition: the verified system Python runs
+`-I -B -m unittest discover -s tests -t . -v`. Isolated startup imports the
+standard runner; discovery then admits the explicit worktree top level for
+project imports. The test directory must be a package. The existing ban on
+inline interpreter code remains intact; no ambient user site or repository
+file replaces the initial runner import. This is definition
+confirmation, not an execution grant. The command inherits no environment,
+network or shell authority and retains the existing 30-second, 256 MiB and
+bounded-output limits. Each invocation needs the existing exact approval.
+Verbose stderr is normalized with `python_unittest_text_v1`; at least one test
+must pass, with no failures, errors or skipped tests. Zero tests never establish
+success. Project tests remain trusted to report their own counts; this is not
+independent evaluation.
+
+The existing native model sees the task, mapped context, strict structured edit
+contracts and test observations; the coordinator owns subsequent turns and
+bounded correction. Its unchanged limits are sixteen turns/model calls/tool
+calls, four repeated tool calls and four turns without progress. There is no
+scripted fallback for this selection. Exact-path semantics are bound into the
+session profile digest, and a resume cannot change between this definition and
+the synthetic scenario. Planning language facts may cite additional Python
+files; those complete facts grant no write authority. The exact scope remains
+the edit boundary.
+
+Use the existing `runtime-run` command to inspect, start, answer individual tool
+challenges and verify the terminal result. This selection still uses only the
+existing exact native development candidate profiles, not the separately
+configured chat endpoint. The current lane refuses native executable trust;
+component and synthetic terminal tests do not establish a working native
+project run. Arbitrary project layouts, source creation, arbitrary endpoints,
+manual strict-proposal composition, original-checkout apply, commit/push, MCP
+and measured parent acceptance remain open.

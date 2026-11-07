@@ -576,10 +576,17 @@ fn driven_steps_with_challenge(
 fn connected_driver_checks_events_asks_exactly_and_reports_a_verified_non_success() {
     let f = Fixture::new();
     let r = driven_request();
-    for allow in [false, true] {
+    for (allow, scenario) in [
+        (false, "failed-test-repair"),
+        (true, "failed-test-repair"),
+        (false, "python-project"),
+        (true, "python-project"),
+    ] {
         let (first, last) = driven_steps(&r, allow);
+        let mut selection = driven_selection(&r);
+        selection["scenario"] = json!(scenario);
         let peer = f.peer(vec![
-            driven_selection(&r),
+            selection,
             json!(r),
             first,
             last,

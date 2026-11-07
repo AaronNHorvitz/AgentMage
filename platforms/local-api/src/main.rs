@@ -65,6 +65,17 @@ fn run() -> Result<(), ()> {
             workspace,
             model,
             continuation,
+        ]
+        | [
+            command,
+            address,
+            directory,
+            state,
+            disposable,
+            workspace,
+            model,
+            continuation,
+            _,
         ] if command == "serve-runtime-development" => {
             let address = address.parse::<SocketAddr>().map_err(|_| ())?;
             if !address.ip().is_loopback() {
@@ -110,6 +121,7 @@ fn run() -> Result<(), ()> {
                     disposable_root: Path::new(disposable),
                     workspace_root: Path::new(workspace),
                     model,
+                    scenario: args.get(8).map_or("failed-test-repair", String::as_str),
                     resume,
                 },
             )
@@ -121,7 +133,7 @@ fn run() -> Result<(), ()> {
         }
         _ => {
             eprintln!(
-                "Usage: agentmage-local-api init-auth <new-private-directory> | serve <loopback-ip:port> <private-directory> | serve-coding <loopback-ip:port> <private-directory> <existing-private-state-root> | serve-runtime-development <loopback-ip:port> <private-directory> <state-root> <disposable-root> <marked-workspace> <muse|gpt-oss> <new|resume>"
+                "Usage: agentmage-local-api init-auth <new-private-directory> | serve <loopback-ip:port> <private-directory> | serve-coding <loopback-ip:port> <private-directory> <existing-private-state-root> | serve-runtime-development <loopback-ip:port> <private-directory> <state-root> <disposable-root> <marked-workspace> <muse|gpt-oss> <new|resume> [failed-test-repair|python-project]"
             );
             Err(())
         }
