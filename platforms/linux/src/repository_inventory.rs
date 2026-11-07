@@ -10,7 +10,7 @@ use crate::repository_safety::{
     LinuxRepositoryCollector, LinuxRepositoryError, LinuxRepositoryErrorKind, LinuxRepositoryScope,
 };
 
-const MAX_INVENTORY_BYTES: usize = 32 * 1024 * 1024;
+pub(super) const MAX_INVENTORY_BYTES: usize = 32 * 1024 * 1024;
 const MAX_INVENTORY_ENTRIES: usize = 100_000;
 
 /// Git index mode retained as an inert object-kind hint.

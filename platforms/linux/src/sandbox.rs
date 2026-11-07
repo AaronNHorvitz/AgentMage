@@ -46,7 +46,7 @@ mod research_resolver;
 mod research_seccomp;
 
 const MAX_RUNTIME_FILES: usize = 16;
-const MAX_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
+pub(super) const MAX_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
 const MAX_DIRECTORY_ENTRIES: usize = 4_096;
 const MAX_DIRECTORY_PROJECTION_BYTES: usize = 1024 * 1024;
 const HASH_BUFFER_BYTES: usize = 64 * 1024;

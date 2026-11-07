@@ -1,0 +1,226 @@
+Commit: 0f560d5f8d405121260733eec52e49e90da9e8b0
+Scope: local-coding-linked-worktree
+
+# Independent core review: linked-worktree development activation (T-303/T-306, same-row prerequisite batch)
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate read-only session. This is a
+same-model review. A cross-model review is still required before any public release. This review
+grants no certification, compliance or legal clearance.
+
+## Commit and scope confirmation
+
+- `git rev-parse 0f560d5f8d405121260733eec52e49e90da9e8b0 HEAD` returned the same sha for both.
+  `git status --short` printed nothing before and after the review. I made no repository change.
+- The diff from base `9008ee386cc44eea8984e64f198dae6769567892` touches exactly 14 paths
+  (+1715/-59). That is the builder audit's `EXPECTED` set. No `Cargo.*`, lockfile, `package*.json`,
+  SBOM, evaluation, held-out, hidden-test, threshold or status-model input changed. The TASKS.md
+  change adds text to the open T-303/T-306 rows only; all row statuses are unchanged.
+- Read: Decision 0157, the evidence file, both guide diffs, the retained prior review, and the
+  complete Rust diff. I also read the surrounding code it relies on:
+  `LinuxRepositoryCollector::collect`/`observe_status`/`observe_inventory_optional`,
+  `collect_inventory_inner`, `LinuxLocalCommitExecutor`/`LinuxCandidateTreeBuilder`,
+  `LinuxRepositoryExecutor::run_plan`, `build_repository_composition`/`build_profile`, the kernel
+  inspection `hardened_environment`, `LinuxAuthorizedWorkspace::reopen_root_directory`, and the
+  shared supervisor `sandbox_supervision::run_owned`/`LaunchOwner::accepts`.
+
+## Methods
+
+1. Line-by-line reading. I traced each linked path from the marker file through
+   `CodingDevelopmentActivation::validate`, `linked_repository_for_marker`,
+   `LinuxLinkedRepository::verify`, `LinuxRepositoryScope::verify_linked_read_only`,
+   `collect_inventory`, `observe_linked_inventory`, `run_read_only`,
+   `linked_inspection_projections` and `sandbox::supervision::run_owned`. I also traced the model
+   tool path, `CodingDevelopmentRuntimeFactory` -> `for_linked_worktree` -> `run` ->
+   `run_read_only`.
+2. A reproduction of the shared supervisor's admission check, run in a scratch copy made with
+   `git archive` outside the repository. The copy has its own target directory
+   (`/lane/state/review-target/scratch-0f560d5f`). I added one test module that calls `run_owned`
+   with a `LaunchOwner::Git` built from inert artifacts. Admission refuses before any process
+   could start. The patch is retained (see artifacts). I then removed the source copy.
+3. A guest Git layout probe. I made a real disposable linked worktree with the host's Git 2.56.0,
+   the same executable the worker mounts as guest Git. Then I ran guest Git under bubblewrap
+   0.13.1 with the product's exact linked layout: workspace at `/work`, per-worktree metadata at
+   `/metadata/worktree`, common metadata at `/metadata/common`, `GIT_COMMON_DIR=/metadata/common`,
+   `--git-dir=/metadata/worktree --work-tree=/work`. This is an approximation. It uses path
+   `--ro-bind` rather than systemd `OpenFile` plus `--ro-bind-fd`, and no seccomp. Neither
+   difference changes how Git resolves paths. This lane cannot run the real native worker: the
+   launchers are not root-owned and the user manager is offline (T-301.1, deferred).
+4. Escape attempts against the binding. I checked in code that relative, aliased, symlinked,
+   `..`-bearing, hardlinked, writable, oversized and multi-line pointers are refused. I also
+   checked that a recreated root or metadata directory, or an identical-bytes pointer replacement,
+   fails revalidation. The new tests cover each of these, and they passed in my runs.
+5. Privacy, IP and evaluation-integrity scans of the added lines and new files.
+
+## Commands and results
+
+Environment: `PATH=/lane/state/tmp/shared-node-v24.15.0/bin:$PATH` (node sha256 `d1de76d8…bd932c`,
+matches); `/tools/build-slot` sha256 `453086eb…ea02ef` (matches);
+`CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4`; toolchain
+1.95.0 from `rust-toolchain.toml`. All Cargo runs used `--locked --offline`.
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `python3 -B scripts/local_agent_fast_gate.py --base 9008ee38… --timeout 3600` | Exit 1, as expected. diff-check, untracked lint, review lint and markdownlint (5 files, 0 issues) PASS. fmt PASS (188.87 s with reservation wait); Clippy `-D warnings` PASS (280.91 s). Complete tests FAIL: **900 passed, 72 failed, 62 ignored, 0 filtered**, the same as the builder. My 72 sorted failure identities are byte-identical to those in the builder's `fast.log` (sha256 `ad9b3979…` for both lists). All nine new methods pass. |
+| 2 | `bash /tools/build-slot cargo test … -p agentmage-platform-linux --lib linked_ -- --nocapture` | Exit 0, 7 passed, 304 filtered. The filter matches six new controls plus one existing `held_directory_samples…` method. |
+| 3 | `bash /tools/build-slot cargo test … -p agentmage-host --lib coding_development_activation::tests:: -- --nocapture` | Exit 0, 2 passed, 586 filtered. `real Git linked activation component: created=1 activated=1 legacy_marker_refused=1 replacement_refused=1 elapsed_us=15955` (the builder measured 9736). Component timing only. |
+| 4 | `bash /tools/build-slot cargo test … -p agentmage-host --test coding_linked_activation -- --nocapture` | Exit 0, 1 passed. |
+| 5 | `python3 -B scripts/local_agent_fast_gate.py --lint-reviews docs/reviews/9008ee386cc4-…txt` | Exit 0. |
+| 6 | `cmp docs/reviews/9008ee386cc4-…txt /lane/reviews/9008ee386cc4-…md` | Exit 0. The prior PASS is retained byte for byte. |
+| 7 | `python3 -B /lane/state/tmp/t306-linked/audit.py` | Exit 0. Totals `[900, 72, 62, 0]`, `new_failure_identities: []`. It rewrote `audit.json` with identical bytes (`6c76a0bf…`). All 11 listed builder artifact hashes I checked match the request. This is the builder's audit, not independent evidence. |
+| 8 | `python3 -B /lane/state/tmp/t306-read-consent/run-policy.py /lane/state/tmp/review-linked-source-0f560d5f8d40` | Exit 0: "Validated 785 Markdown file(s) and all policy invariants." 9034 inputs. My manifest sha256 `9dbbe408…dabf` is **identical** to the builder's `policy-source-final-inputs.json`. I removed only my mirror and kept the manifest. This is not the T-310 long gate. |
+| 9 | `git diff --check 9008ee38… --` | Exit 0. |
+| R1 | Scratch admission reproduction (method 2) | Exit 0, 1 passed. `projections=3 stdout_limit=1024 -> InvalidManifest`; `projections=1 stdout_limit=33554432 -> InvalidManifest`. |
+| R2 | Guest Git layout probe (method 3) | Host, outside the sandbox: `rev-parse --verify HEAD` exit 0. Product layout: `rev-parse --show-object-format` exit 0 (`sha1`); `symbolic-ref --quiet HEAD` exit 0; **`rev-parse --verify HEAD` exit 128** ("Needed a single revision"); **`ls-tree -r -z --full-tree HEAD` exit 128**; `for-each-ref` prints nothing. Alternative layout, `--git-dir=/metadata/common/worktrees/worktree`: `rev-parse --verify HEAD` exit 0 and `ls-tree` lists the tracked file. |
+
+## Verified properties (no finding)
+
+- **Explicit three-path setup; marker before pointer.** The marker is checked first: regular file,
+  owned by the current user, mode `0600`, one link, at most 4096 bytes, opened `O_NOFOLLOW` and
+  matched by dev/ino/mode/len/nlink. Only then does `linked_repository_for_marker` parse it. It
+  requires the exact ordinary prefix plus exactly three fields (`git-metadata=`, `git-common=`, and
+  a 64-hex `metadata-sha256=`). `LinuxLinkedRepository::verify` compares the workspace `.git`
+  pointer with the marker-named path before it opens any external directory. Validation also
+  requires the marker bytes to equal the freshly computed contents, including the identity
+  digest. A forged marker therefore also needs a real metadata directory whose `gitdir` backlink
+  names this workspace.
+- **Old marker and command refuse linked layouts.** A prefix-only marker with a `.git` regular file
+  returns `MarkerDenied` before any external read, including when the metadata is missing (real-Git
+  test). `--coding-development-marker` calls `verify_git_directory` and refuses a `.git` file. The
+  executable test confirms this, with empty stdout and no file created.
+- **Held and revalidated identities.** The digest binds path, dev, ino, uid and mode of the three
+  directories, plus the bytes and object identity of all three pointer files. HEAD contents are
+  deliberately not bound. Revalidation happens before scope creation, before and after every
+  inventory query, before and after every worker run, and through `activation.revalidate()` after
+  inventory. `matches_root` ties the reopened worker root to the held root inode.
+- **Marker inventory exception.** `development_inventory_entry_is_admissible` admits Untracked or
+  Ignored entries only when the activation is linked, the path is exactly `[MARKER_NAME]` and the
+  hint is `WorktreeObject`. Every other path, nested path, kind, staged state or conflicted state
+  refuses, and ordinary activation is unchanged (unit test). The map still denies the same
+  constant. The `refs/heads/agentmage/tasks/` requirement is unchanged in `OwnedWorktreeRecord`
+  (`kernel/engine/src/repository_safety.rs:854,1565`), and the real fixture uses
+  `agentmage/tasks/linked-fixture`. No `.agentmage-development-workspace` file exists in any commit
+  (`git log --all -- '*.agentmage-development-workspace'` is empty).
+- **Early refusal of mutation and preservation.** `collect` returns `PlanDenied` for a linked scope
+  before any Git or filesystem read (test with an inert artifact). `LinuxRepositoryExecutor`
+  returns `linux.git.linked.read-only`. `LinuxLocalCommitExecutor` and `LinuxCandidateTreeBuilder`
+  both call `collect` first, so they also refuse. The host-side `observe_status` is reachable only
+  from `collect`. Every inventory query goes through `observe_inventory_optional`, which sends
+  linked scopes to the worker. No host-side Git process runs against linked metadata.
+- **Confinement.** Both new mounts are `--ro-bind-fd` of `O_RDONLY` descriptors. `--unshare-all`
+  and the existing `RestrictAddressFamilies`, seccomp, memory/task/CPU limits, 15 s deadline and
+  control-group kill are unchanged. The kernel's fixed inspection environment cannot override
+  `GIT_COMMON_DIR` or the `--git-dir`/`--work-tree` arguments, because the linked values come
+  later. Model plans and permits are unchanged, and ordinary activation keeps one projection and
+  host-side inventory. The production manifest uses the same four fixed paths as the existing
+  factory. The inert `LinuxGitArtifact` appears only under `#[cfg(test)]`.
+- **Fails closed.** Each defect below ends in `ObservationFailed`, then
+  `CodingDevelopmentRuntimeError::Repository`, before any model, grant or effect. None widens
+  access.
+- **Privacy, IP, evaluation integrity.** Added lines contain no host-specific path, username,
+  hostname, credential or private project name; only lane-generic `/tools`/`/lane` paths appear,
+  as in prior committed reviews. No other product is named or compared. No held-out, hidden-test,
+  threshold, score or GPU input changed.
+
+## Findings
+
+### H1 (high, correctness): the shared supervisor refuses every linked worker launch
+
+- `platforms/linux/src/repository_safety.rs:1067-1083` (`linked_inspection_projections`) builds 3
+  projections, and `:944` passes them to `run_owned`. But
+  `platforms/linux/src/sandbox_supervision.rs:55` admits `LaunchOwner::Git` only when
+  `projections == 1`. An existing ignored native test,
+  `closed_owners_reject_cross_variant_names_and_projection_cardinalities` (`:1262`), asserts exactly
+  that.
+- Separately, `observe_linked_inventory` (`repository_safety.rs:598-670`) passes `maximum_bytes`
+  as `stdout_limit`. The four `ls-files`/`ls-tree` queries request `MAX_INVENTORY_BYTES` = 32 MiB
+  (`platforms/linux/src/repository_inventory.rs:13,140,146,152,164`). `run_owned` requires
+  `stdout_limit <= MAX_OUTPUT_BYTES` = 4 MiB (`sandbox_supervision.rs:875`, `sandbox.rs:49`), and
+  `run_read_only`'s own 32 MiB precheck does not catch the mismatch.
+- Reproduced (R1): `run_owned` returns `InvalidManifest` for both cases before any process starts.
+  Consequences:
+  - Linked startup inventory cannot complete in any environment, so `build_repository_composition`
+    always returns `Repository` for a linked activation.
+  - Linked model `git` inspection through `for_linked_worktree` is refused too.
+  - The headline capability ("Activate linked worktrees in the existing native coding host";
+    Decision 0157:29; guide lines 3 and 61) is unreachable. The surface fails closed.
+  - The new argv-shape test (`linked_worker_uses_only_read_only_metadata_projections_and_fixed_git_paths`)
+    never passes through admission, so the gate cannot see the defect.
+- Fix:
+  - Admit exactly 3 projections for a Git owner only when that owner carries the linked binding.
+    For example, add a typed `LaunchOwner::LinkedGit` or a flag set only by `for_linked_worktree`,
+    and keep 1 for ordinary inspection.
+  - Update the ignored cardinality test.
+  - Cap linked inventory requests at the supervisor bound and refuse larger repositories
+    explicitly. Alternatively, raise the Git owner's bound under a recorded decision.
+  - Add a non-native regression that runs the real admission check with the linked projection set
+    and every inventory limit.
+
+### H2 (high, correctness): the guest layout cannot resolve HEAD under the pinned Git
+
+- `add_linked_inspection_mounts`/`add_linked_inspection_git_arguments`
+  (`repository_safety.rs:1047-1065`) mount the per-worktree metadata at `/metadata/worktree`,
+  apart from its common directory. They then rely on `GIT_COMMON_DIR=/metadata/common`. Under the
+  worker's own guest Git (2.56.0), that layout reads per-worktree HEAD and the index but resolves
+  no shared refs: `for-each-ref` is empty, and `rev-parse --verify HEAD` and `ls-tree … HEAD` exit
+  128 (R2). The metadata's `commondir` holds `../..`, which in the guest points to `/`, and Git
+  2.56.0's ref resolution does not use the environment override here.
+- Even with H1 fixed, `collect_inventory`'s required `rev-parse --verify HEAD` would return `None`
+  and startup would refuse. Most model inspection (`log`, `show`) would fail as well.
+- Fix: mount only the held common descriptor and pass
+  `--git-dir=/metadata/common/worktrees/<verified-name>`, which the alternative layout in R2
+  confirms. The per-worktree directory is already inside that mount, so the second projection
+  becomes unnecessary; keep the held per-worktree descriptor for revalidation. Otherwise, rebuild
+  the `<common>/worktrees/<name>` nesting in the guest. Add a positive inventory test under the
+  real worker. It may be `#[ignore]` in this lane under T-301.1, but it must exist and be run
+  where native trust is available.
+
+### M1 (medium, honest claims and reachability)
+
+- Decision 0157:29-37, the guide (`docs/guides/coding-linked-worktrees.md:3,54-56,61-73`) and the
+  evidence (`docs/evidence/t306-linked-worktree-activation-2026-11-07.md:37-45`) say the native
+  host "accepts" a linked worktree. They tell the operator to "use the existing native API and
+  terminal workflow" after setup. They also say linked inventory "uses the existing offline Git
+  worker" and "retains its per-query byte caps".
+- In fact every linked startup refuses, and the claimed 32 MiB caps are inadmissible to the
+  worker (H1, H2). The disclosure "no native positive worker" is honest. But the text describes
+  a reachable workflow that is not reachable, and the only evidence for it is synthetic argv
+  strings.
+- Fix: after H1 and H2, either record a real admitted-layout check, or restate the batch as
+  activation and marker plumbing whose inventory path is currently refused.
+
+### L1 (low, backlog): duplicated metadata descriptors lack close-on-exec
+
+- `repository_safety.rs:1078` uses `rustix::io::dup`, which clears `FD_CLOEXEC`. Every other
+  descriptor in this crate is opened with `CLOEXEC`, or duplicated with `fcntl_dupfd_cloexec`
+  (`strict_local.rs:226`).
+- The duplicates live from `linked_inspection_projections` until `run_owned` returns. Any process
+  the host spawns in that window inherits open directory handles to the workspace's per-worktree
+  and common Git metadata. That includes the `systemd-run` client itself and any concurrent host
+  child. Sandboxed units are started by the user manager, so they do not inherit them.
+- Fix: use `fcntl_dupfd_cloexec(fd, 3)`, or reopen `"."` with `CLOEXEC` from the held descriptor,
+  and assert `FD_CLOEXEC` in the projection test.
+
+## Per-row result
+
+- **T-306: batch not accepted (non-closing).** The activation, marker, binding, inventory exception
+  and early mutation refusals are sound and fail closed. But the batch's runtime purpose, linked
+  inventory and inspection through the offline worker, cannot run (H1, H2), and the documents
+  claim otherwise (M1). The row stays OPEN. There is no confinement regression.
+- **T-303: batch not accepted (non-closing).** Same reasons. The row stays OPEN.
+
+## Retained reviewer artifacts (`/lane/state/tmp/review-0f560d5f/`)
+
+- `fast.log` `625c59991cf31d0a0f5f5c6044dd695a9eb75e68031a2b6073a08fc12bdcd47b`
+- `mine.ids` (72 failure identities, identical to `builder.ids`)
+  `ad9b397919b385a389fa9d90bd4ee6193517762afc8b3ac2652206e5aa1342d8`
+- `c2.log` `7fbeb3e00b5c966862f033314ce52d90fda9454ed8b47b2a787c635cb354bae0`
+- `c3.log` `d42b2b1b6a239f49050b9b4de991230cc0c1948faf762e20d808d5b3f5f627b0`
+- `c4.log` `e081a4cd976a68f8e5ed720e28b5c7f62b48e83a6a206829933f739500118a0d`
+- `scratch-repro.log` `fcb39183102be533ea65f572b6580607aca737b97683b1bdc45a9aade0b8a323`
+- `reviewer-supervisor-admission.patch`
+  `057dce99d4f39a9e26e1b01fdf9c056af7b09e59f326589eee5dcabc1152930c`
+- `layout-probe.log` `b2787cc5f0998d9179bb617adb6a20e9e90bfbe71c7e5c2cacc0571b386ba2b5`
+- `/lane/state/tmp/review-linked-source-0f560d5f8d40-inputs.json`
+  `9dbbe408e2fd8dbac22d69f79ef615ba8784b1d6afe9d9ed09bf9ca1edb0aabf`
+
+Verdict: FINDINGS

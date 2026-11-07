@@ -1,8 +1,10 @@
 # Linked worktrees in the development coding host
 
-The existing native coding host accepts an explicitly marked linked Git worktree
-under its private disposable root. This connects the linked layout to the
-existing activation, inventory and offline Git inspection owners. It does not
+The existing native coding host has explicit linked-worktree activation and
+read-only inventory/inspection plumbing under its private disposable root.
+Positive startup through the complete native worker remains unverified in this
+lane (T-301.1); the setup below is a development procedure, not evidence of a
+working coding run. It does not
 adopt the manual API's creation receipt or edit lineage and does not qualify a
 model or a complete coding workflow. T-303 and T-306 remain open. See
 [Decision 0157](../decisions/0157-linked-worktree-development-activation.md).
@@ -51,25 +53,35 @@ The shared root contains the original repository's objects, references and local
 configuration; this is additional read scope. A workspace-only marker refuses
 linked activation. Ordinary-worktree marker bytes stay unchanged.
 
-After setup use the existing [native API and terminal workflow](coding-runtime-api.md)
-and its explicit scenario/model selection. The linked extension does not enable
+Where native trust and the worker are available, the intended next step is the
+existing [native API and terminal workflow](coding-runtime-api.md) with explicit
+scenario/model selection. The complete linked startup has not been observed
+passing in this lane. The linked extension does not enable
 another model or an arbitrary endpoint. Real-model work still uses the GPU slot.
 Each consequential model tool still needs its separate exact approval.
 
 ## Read boundary and recovery
 
-Both linked startup inventory and later Git inspection use the same confined
-offline worker, with the workspace and both metadata roots mounted read-only.
-The worker uses explicit guest Git/common paths; the host's absolute pointer
-targets are not followed inside it.
-The platform adds fixed `--git-dir=/metadata/worktree` and `--work-tree=/work`
-arguments and sets `GIT_COMMON_DIR=/metadata/common`. These namespace mappings
-come from the activated metadata owner, with no path supplied by model output.
+Linked startup inventory and later Git inspection route to the same confined
+offline worker. Its mount plan exposes the workspace at `/work` and the common
+metadata root at `/metadata/common`, both read-only. The per-worktree metadata
+remains inside that common root at `worktrees/<verified-name>`; its held host
+descriptor is retained for revalidation. The platform selects
+`--git-dir=/metadata/common/worktrees/<verified-name>` and `--work-tree=/work`.
+This preserves the metadata's `../..` pointer for shared ref resolution without
+relying on `GIT_COMMON_DIR`. The host's absolute pointers are not followed inside
+the guest. The verified name comes from activation, never model output.
+A separate linked Git launch owner carries the binding and admits exactly two
+projections; the ordinary Git owner continues to require exactly one.
+Duplicated projection descriptors carry close-on-exec.
 Host paths referenced by untrusted config
 includes or object alternates are absent from that mount namespace. System
 runtime mounts remain those of the existing worker. No original source checkout,
-home directory or network is added. Inventory retains its per-query byte caps;
-each linked worker invocation uses the existing 15-second inspection deadline,
+home directory or network is added. Each linked inventory query uses the smaller
+of its original cap and the supervisor's existing 4 MiB output limit. Overflow
+refuses inventory rather than returning a truncated repository map. Ordinary
+inventory caps remain unchanged. Each linked worker invocation uses the existing
+15-second inspection deadline,
 resource bounds and cleanup owner. A slow or oversized inventory refuses startup.
 
 The activation holds directory and pointer-file descriptors and checks their
@@ -88,6 +100,8 @@ collection and mutating Git execution. Approved original application, branch
 commit/push and coordinator/manual-owner composition remain separate work.
 
 In this lane native executable trust still refuses admission (T-301.1, deferred).
-The real-Git setup/activation test and synthetic mount-plan controls do not prove
-a running sandbox, successful inference or an improved coding score. Preserve
+The real-Git setup/activation, precancelled supervisor admission and guest-layout
+component checks do not prove a complete running native worker, successful
+inference or an improved coding score. The explicit native linked inventory and
+inspection test requires a trusted host with a working user service manager. Preserve
 that refusal; do not change executable ownership or root-trust checks.

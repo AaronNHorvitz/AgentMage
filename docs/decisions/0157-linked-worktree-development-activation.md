@@ -27,8 +27,13 @@ and after worker completion, and refuse substitution or drift. This does not
 reconstruct manual service-created ownership or edit lineage from a path.
 
 Run linked startup inventory and later tool inspection through the existing
-offline Git worker. Mount only the selected workspace and the two bound metadata
-roots read-only; select the guest Git/common directories explicitly. Do not run
+offline Git worker. Mount the selected workspace and the bound common metadata
+root read-only. Keep the held per-worktree metadata descriptor for revalidation;
+resolve its verified name under `/metadata/common/worktrees/<name>` so the
+`../..` common-directory pointer retains its meaning. The linked Git launch
+owner carries that binding and admits exactly these two projections; ordinary
+Git inspection still admits exactly one. Cap each linked inventory query at the
+shared supervisor's existing 4 MiB bound and refuse overflow. Do not run
 linked inventory through the ordinary host-side collector, where untrusted local
 config includes or object alternates could reach other host files. Retain pinned
 executable trust, namespaces, seccomp, resource bounds, cancellation and descendant
@@ -43,3 +48,14 @@ This batch adds no grant, auto-approval, frontend loop, model adapter or product
 activation. It changes no evidence binding, hidden input, threshold or release
 gate. Positive native workflow, manual-owner/coordinator composition, configured
 endpoint admission, durable HTTP recovery and parent measurements remain open.
+
+## Review correction, 2026-11-07
+
+The [independent core review](../reviews/0f560d5f8d40-local-coding-linked-worktree.txt)
+found the initial implementation unreachable: three projections were refused by
+ordinary Git admission, 32 MiB inventory limits exceeded the supervisor bound,
+and the detached metadata mount could not resolve shared refs. The same-row
+repair above corrects those paths without raising limits or changing trust.
+Activation and admission controls are component evidence. A successful linked
+inventory through the complete native worker remains unverified in this lane
+under deferred T-301.1; setup instructions do not establish a usable workflow.

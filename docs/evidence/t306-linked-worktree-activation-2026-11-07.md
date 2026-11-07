@@ -7,7 +7,17 @@ there is no new row, sub-row, completion checkbox or model score. The previous
 is retained unchanged. Its low owned-edit read-root binding finding remains
 backlog; it is not silently represented as fixed here.
 
-## Running implementation
+## Review disposition
+
+The [independent core review](../reviews/0f560d5f8d40-local-coding-linked-worktree.txt)
+returned **Verdict: FINDINGS**: H1 supervisor admission/output limits, H2 shared
+ref resolution and M1 unreachable-workflow claims. The initial implementation
+below could not complete linked startup on any host. Its setup, binding and
+argv tests did not demonstrate worker reachability. This historical record's
+measurements remain unchanged; see the [same-row repair](t306-linked-worker-repair-2026-11-07.md)
+for the corrected implementation and current limitations.
+
+## Initial implementation (not accepted)
 
 [Decision 0157](../decisions/0157-linked-worktree-development-activation.md) and
 the [operator guide](../guides/coding-linked-worktrees.md) describe the extension

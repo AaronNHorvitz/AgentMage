@@ -147,10 +147,6 @@ impl LinuxLinkedRepository {
         &self.common.path
     }
 
-    pub(crate) fn git_fd(&self) -> &OwnedFd {
-        &self.git.fd
-    }
-
     pub(crate) fn common_fd(&self) -> &OwnedFd {
         &self.common.fd
     }

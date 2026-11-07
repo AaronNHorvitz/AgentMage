@@ -35,7 +35,9 @@ use sha2::{Digest, Sha256};
 use crate::sandbox::compile_seccomp_policy;
 
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
-const MAX_OBSERVATION_BYTES: usize = 4 * 1024 * 1024;
+// Match the shared supervisor bound; linked inventory refuses larger output
+// rather than truncating or raising that owner's limit.
+const MAX_OBSERVATION_BYTES: usize = crate::sandbox::MAX_OUTPUT_BYTES;
 const MAX_HASHED_FILE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_METADATA_ENTRIES: usize = 16_384;
 const PROCESS_TIMEOUT: Duration = Duration::from_secs(30);
@@ -652,7 +654,7 @@ impl LinuxRepositoryCollector {
             .run_read_only(
                 &arguments,
                 &environment,
-                maximum_bytes,
+                linked_inventory_limit(maximum_bytes),
                 &workspace,
                 cancellation.unwrap_or(&fallback),
             )
@@ -814,7 +816,7 @@ impl LinuxBoundedRepositoryInspectionExecutor {
             || revalidate_git_artifact(&self.manifest.git).is_err()
             || working_directory.revalidate().is_err()
             || stdout_limit == 0
-            || stdout_limit > 32 * 1024 * 1024
+            || stdout_limit > MAX_OBSERVATION_BYTES
         {
             return failed_inspection("linux.git-inspection.preflight.failed");
         }
@@ -875,12 +877,9 @@ impl LinuxBoundedRepositoryInspectionExecutor {
             .arg(format!(
                 "--property=OpenFile={worktree_descriptor}:worktree:read-only"
             ));
-        for (name, fd) in ["git-metadata", "git-common"]
-            .iter()
-            .zip(projections.iter().skip(1))
-        {
+        for fd in projections.iter().skip(1) {
             command.arg(format!(
-                "--property=OpenFile=/proc/{parent_pid}/fd/{}:{name}:read-only",
+                "--property=OpenFile=/proc/{parent_pid}/fd/{}:git-common:read-only",
                 fd.as_raw_fd()
             ));
         }
@@ -928,8 +927,8 @@ impl LinuxBoundedRepositoryInspectionExecutor {
             "--",
             GUEST_GIT_EXECUTABLE,
         ]);
-        if self.linked.is_some() {
-            add_linked_inspection_git_arguments(&mut command);
+        if let Some(linked) = &self.linked {
+            add_linked_inspection_git_arguments(&mut command, linked);
         }
         command
             .args(arguments)
@@ -940,7 +939,13 @@ impl LinuxBoundedRepositoryInspectionExecutor {
         let result = crate::sandbox::supervision::run_owned(
             command,
             crate::sandbox::supervision::Launch {
-                owner: crate::sandbox::supervision::LaunchOwner::Git(self.manifest.clone()),
+                owner: match &self.linked {
+                    Some(linked) => crate::sandbox::supervision::LaunchOwner::LinkedGit(
+                        self.manifest.clone(),
+                        linked.clone(),
+                    ),
+                    None => crate::sandbox::supervision::LaunchOwner::Git(self.manifest.clone()),
+                },
                 projections,
                 unit,
                 deadline,
@@ -1044,24 +1049,36 @@ fn add_inspection_runtime_mounts(command: &mut Command) {
     }
 }
 
+fn linked_inventory_limit(requested: usize) -> usize {
+    requested.min(MAX_OBSERVATION_BYTES)
+}
+
 fn add_linked_inspection_mounts(command: &mut Command) {
+    // Preserve commondir's ../.. layout for shared ref resolution. Holding the
+    // per-worktree descriptor still detects substitution before/after the run.
     command.args([
         "--dir",
         "/metadata",
         "--ro-bind-fd",
         "6",
-        "/metadata/worktree",
-        "--ro-bind-fd",
-        "7",
-        "/metadata/common",
-        "--setenv",
-        "GIT_COMMON_DIR",
         "/metadata/common",
     ]);
 }
 
-fn add_linked_inspection_git_arguments(command: &mut Command) {
-    command.args(["--git-dir=/metadata/worktree", "--work-tree=/work"]);
+fn add_linked_inspection_git_arguments(
+    command: &mut Command,
+    linked: &crate::LinuxLinkedRepository,
+) {
+    // verify() established the exact common/worktrees/<one component> layout.
+    let guest_git = Path::new("/metadata/common/worktrees").join(
+        linked
+            .git_directory()
+            .file_name()
+            .expect("verified metadata name"),
+    );
+    command
+        .arg(format!("--git-dir={}", guest_git.display()))
+        .arg("--work-tree=/work");
 }
 
 fn linked_inspection_projections(
@@ -1073,12 +1090,10 @@ fn linked_inspection_projections(
         if linked.revalidate().is_err() || !linked.matches_root(&projections[0]) {
             return Err(RepositoryInspectionExecutionFailure::ExecutionFailed);
         }
-        for fd in [linked.git_fd(), linked.common_fd()] {
-            projections.push(
-                rustix::io::dup(fd)
-                    .map_err(|_| RepositoryInspectionExecutionFailure::ExecutionFailed)?,
-            );
-        }
+        projections.push(
+            rustix::io::fcntl_dupfd_cloexec(linked.common_fd(), 3)
+                .map_err(|_| RepositoryInspectionExecutionFailure::ExecutionFailed)?,
+        );
     }
     Ok(projections)
 }
@@ -1088,38 +1103,9 @@ mod linked_boundary_tests {
     use super::*;
     use std::os::unix::fs::PermissionsExt;
 
-    #[test]
-    fn linked_worker_uses_only_read_only_metadata_projections_and_fixed_git_paths() {
-        let mut command = Command::new("inert-command-plan");
-        add_linked_inspection_mounts(&mut command);
-        add_linked_inspection_git_arguments(&mut command);
-        let args: Vec<_> = command.get_args().map(|a| a.to_str().unwrap()).collect();
-        assert_eq!(
-            args,
-            [
-                "--dir",
-                "/metadata",
-                "--ro-bind-fd",
-                "6",
-                "/metadata/worktree",
-                "--ro-bind-fd",
-                "7",
-                "/metadata/common",
-                "--setenv",
-                "GIT_COMMON_DIR",
-                "/metadata/common",
-                "--git-dir=/metadata/worktree",
-                "--work-tree=/work"
-            ]
-        );
-    }
-
-    #[test]
-    fn linked_projection_refuses_other_root_stale_metadata_and_mutation_collection() {
-        let base = std::env::temp_dir().join(format!(
-            "agentmage-linked-projections-{}",
-            std::process::id()
-        ));
+    fn fixture(label: &str) -> (PathBuf, crate::LinuxLinkedRepository) {
+        let base =
+            std::env::temp_dir().join(format!("agentmage-linked-{label}-{}", std::process::id()));
         let root = base.join("worktree");
         let git = base.join("original/.git/worktrees/worktree");
         let state = base.join("state");
@@ -1141,17 +1127,44 @@ mod linked_boundary_tests {
             git.parent().unwrap().parent().unwrap(),
         )
         .unwrap();
+        (base, linked)
+    }
+
+    #[test]
+    fn linked_projection_refuses_other_root_stale_metadata_and_mutation_collection() {
+        let (base, linked) = fixture("projections");
+        let root = linked.worktree_root().to_path_buf();
+        let git = linked.git_directory().to_path_buf();
+        let state = base.join("state");
         let flags = OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC;
         let projections = linked_inspection_projections(
             Some(&linked),
             open(&root, flags, Mode::empty()).unwrap(),
         )
         .unwrap();
-        assert_eq!(projections.len(), 3);
-        for (fd, expected) in projections[1..]
-            .iter()
-            .zip([linked.git_fd(), linked.common_fd()])
-        {
+        let mut command = Command::new("inert-command-plan");
+        add_linked_inspection_mounts(&mut command);
+        add_linked_inspection_git_arguments(&mut command, &linked);
+        let args: Vec<_> = command.get_args().map(|a| a.to_str().unwrap()).collect();
+        assert_eq!(
+            args,
+            [
+                "--dir",
+                "/metadata",
+                "--ro-bind-fd",
+                "6",
+                "/metadata/common",
+                "--git-dir=/metadata/common/worktrees/worktree",
+                "--work-tree=/work",
+            ]
+        );
+        assert_eq!(projections.len(), 2);
+        for (fd, expected) in projections[1..].iter().zip([linked.common_fd()]) {
+            assert!(
+                rustix::io::fcntl_getfd(fd)
+                    .unwrap()
+                    .contains(rustix::io::FdFlags::CLOEXEC)
+            );
             let a = fstat(fd).unwrap();
             let b = fstat(expected).unwrap();
             assert_eq!((a.st_dev, a.st_ino), (b.st_dev, b.st_ino));
@@ -1192,6 +1205,148 @@ mod linked_boundary_tests {
                 open(&root, flags, Mode::empty()).unwrap()
             )
             .is_err()
+        );
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    // Exercise real run_owned admission and precancellation, without substituting
+    // executable trust or starting a child. Inert artifacts exist only here.
+    #[test]
+    fn linked_supervisor_admits_exact_owner_projections_and_all_inventory_limits() {
+        use crate::sandbox::supervision::{FilterPipe, Launch, LaunchOwner, run_owned};
+        use crate::sandbox::{
+            LinuxSandboxCancellation, LinuxSandboxErrorKind, SandboxCancellation,
+        };
+        fn inert() -> LinuxGitArtifact {
+            LinuxGitArtifact {
+                descriptor: open("/dev/null", OFlags::RDONLY | OFlags::CLOEXEC, Mode::empty())
+                    .unwrap(),
+                launch_path: PathBuf::from("/nonexistent/must-never-launch"),
+                sha256: "0".repeat(64),
+            }
+        }
+        let (base, linked) = fixture("admission");
+        let manifest = Arc::new(LinuxRepositoryInspectionManifest {
+            systemd_run: inert(),
+            systemctl: inert(),
+            bubblewrap: inert(),
+            git: inert(),
+        });
+        let cancel = LinuxSandboxCancellation::default();
+        cancel.cancel();
+        let unit = "agentmage-git-inspection-0123456789abcdef01234567.service";
+        let attempt = |owner, count, stdout_limit, unit: &str| {
+            let mut projections = linked_inspection_projections(
+                Some(&linked),
+                open(
+                    linked.worktree_root(),
+                    OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
+                    Mode::empty(),
+                )
+                .unwrap(),
+            )
+            .unwrap();
+            if count < projections.len() {
+                projections.truncate(count);
+            }
+            while projections.len() < count {
+                projections.push(
+                    open(
+                        "/",
+                        OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
+                        Mode::empty(),
+                    )
+                    .unwrap(),
+                );
+            }
+            run_owned(
+                Command::new("/nonexistent/must-never-launch"),
+                Launch {
+                    owner,
+                    projections,
+                    unit: unit.to_owned(),
+                    deadline: Instant::now() + Duration::from_secs(1),
+                    stdout_limit,
+                    stderr_limit: MAX_OBSERVATION_BYTES,
+                    filter_pipe: Some(FilterPipe::new().unwrap()),
+                },
+                &[0; 8],
+                &SandboxCancellation::Local(&cancel),
+            )
+        };
+        let owner = || LaunchOwner::LinkedGit(manifest.clone(), linked.clone());
+        for requested in [
+            1_024,
+            crate::repository_inventory::MAX_INVENTORY_BYTES,
+            MAX_OBSERVATION_BYTES,
+        ] {
+            let limit = linked_inventory_limit(requested);
+            assert_eq!(limit, requested.min(crate::sandbox::MAX_OUTPUT_BYTES));
+            let admitted = attempt(owner(), 2, limit, unit).unwrap();
+            assert_eq!(admitted.outcome.unwrap(), OperationOutcome::Cancelled);
+            assert!(admitted.status.is_none());
+            assert!(admitted.output_complete);
+        }
+        for (count, limit, name) in [
+            (0, 1024, unit),
+            (1, 1024, unit),
+            (3, 1024, unit),
+            (2, 0, unit),
+            (2, MAX_OBSERVATION_BYTES + 1, unit),
+            (2, crate::repository_inventory::MAX_INVENTORY_BYTES, unit),
+            (
+                2,
+                1024,
+                "agentmage-command-0123456789abcdef01234567.service",
+            ),
+        ] {
+            assert_eq!(
+                attempt(owner(), count, limit, name).err().unwrap().kind(),
+                LinuxSandboxErrorKind::InvalidManifest
+            );
+        }
+        assert_eq!(
+            attempt(LaunchOwner::Git(manifest.clone()), 2, 1024, unit)
+                .err()
+                .unwrap()
+                .kind(),
+            LinuxSandboxErrorKind::InvalidManifest
+        );
+        assert_eq!(
+            attempt(LaunchOwner::Git(manifest.clone()), 1, 1024, unit)
+                .unwrap()
+                .outcome
+                .unwrap(),
+            OperationOutcome::Cancelled
+        );
+        let projections = linked_inspection_projections(
+            Some(&linked),
+            open(
+                linked.worktree_root(),
+                OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
+                Mode::empty(),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+        fs::write(linked.git_directory().join("commondir"), "../../outside\n").unwrap();
+        let stale = run_owned(
+            Command::new("/nonexistent/must-never-launch"),
+            Launch {
+                owner: owner(),
+                projections,
+                unit: unit.to_owned(),
+                deadline: Instant::now() + Duration::from_secs(1),
+                stdout_limit: 1024,
+                stderr_limit: MAX_OBSERVATION_BYTES,
+                filter_pipe: Some(FilterPipe::new().unwrap()),
+            },
+            &[0; 8],
+            &SandboxCancellation::Local(&cancel),
+        );
+        assert_eq!(
+            stale.err().unwrap().kind(),
+            LinuxSandboxErrorKind::InvalidManifest
         );
         fs::remove_dir_all(base).unwrap();
     }
@@ -2294,6 +2449,90 @@ mod tests {
                 .expect("post-inspection manifest"),
             before
         );
+    }
+
+    #[test]
+    #[ignore = "requires verified native launchers, a Linux user systemd session and Bubblewrap"]
+    fn live_linked_inventory_and_inspection_resolve_shared_head_in_the_offline_worker() {
+        let fixture = Fixture::new();
+        let worktree = fixture.owned.join("linked");
+        run_fixture(
+            &fixture.repository,
+            &[
+                "worktree",
+                "add",
+                "-b",
+                "agentmage/tasks/linked-worker",
+                worktree.to_str().unwrap(),
+            ],
+        );
+        fs::set_permissions(&worktree, fs::Permissions::from_mode(0o700)).unwrap();
+        let linked = crate::LinuxLinkedRepository::verify(
+            &worktree,
+            &fixture.git_directory.join("worktrees/linked"),
+            &fixture.git_directory,
+        )
+        .unwrap();
+        let state = fixture.root.join("state");
+        fs::create_dir(&state).unwrap();
+        let scope = LinuxRepositoryScope::verify_linked_read_only(&linked, &state).unwrap();
+        let inventory = fixture.collector().collect_inventory(&scope).unwrap();
+        assert_eq!(inventory.commit_id, object(&fixture.repository, "HEAD"));
+        assert_eq!(
+            inventory.branch.as_deref(),
+            Some("refs/heads/agentmage/tasks/linked-worker")
+        );
+        assert_eq!(inventory.entries.len(), 1);
+        assert_eq!(inventory.entries[0].path, ["README.md"]);
+        let workspace = crate::authorize_workspace_root(
+            &worktree,
+            WorkspaceId::from_raw("linked-live"),
+            WorkspaceAuthorizationId::from_raw("linked-live"),
+            AdapterInstanceId::from_raw("linked-live"),
+        )
+        .unwrap();
+        let executor = LinuxBoundedRepositoryInspectionExecutor::for_linked_worktree(
+            LinuxRepositoryInspectionManifest::verify(
+                "/usr/bin/systemd-run",
+                "/usr/bin/systemctl",
+                "/usr/bin/bwrap",
+                "/usr/bin/git",
+            )
+            .unwrap(),
+            linked.clone(),
+        )
+        .unwrap();
+        for operation in [
+            RepositoryInspectionOperation::Show,
+            RepositoryInspectionOperation::Ref,
+        ] {
+            let prepared = prepare_repository_inspection(
+                RepositoryInspectionRequest {
+                    schema_version: 1,
+                    operation,
+                    revision: Some("HEAD".to_owned()),
+                    object_id: None,
+                    pathspecs: Vec::new(),
+                    max_records: 32,
+                    max_output_bytes: 4096,
+                },
+                "a".repeat(64),
+                hash(b"linked-live"),
+            )
+            .unwrap();
+            let result = executor
+                .run(&prepared, &workspace, &cancellation("linked-live"))
+                .unwrap();
+            assert_eq!(
+                result.termination,
+                RepositoryInspectionTermination::Exited,
+                "{result:?}"
+            );
+            assert_eq!(result.exit_code, Some(0), "{result:?}");
+            assert!(result.descendants_terminated);
+            assert!(!result.stdout.is_empty());
+        }
+        linked.revalidate().unwrap();
     }
 
     #[test]

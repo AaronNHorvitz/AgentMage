@@ -26,6 +26,10 @@ pub(crate) enum LaunchOwner {
     Read(Arc<LinuxSandboxManifest>),
     Command(Arc<crate::command_runner::LinuxCommandManifest>),
     Git(Arc<crate::repository_safety::LinuxRepositoryInspectionManifest>),
+    LinkedGit(
+        Arc<crate::repository_safety::LinuxRepositoryInspectionManifest>,
+        crate::LinuxLinkedRepository,
+    ),
     #[cfg(feature = "public-research-worker")]
     Research(Arc<super::research::LinuxPublicResearchManifest>),
 }
@@ -42,7 +46,9 @@ impl LaunchOwner {
                     .ok_or_else(failure)
             }
             Self::Command(manifest) => manifest.control_path().map_err(|_| failure()),
-            Self::Git(manifest) => manifest.control_path().map_err(|_| failure()),
+            Self::Git(manifest) | Self::LinkedGit(manifest, _) => {
+                manifest.control_path().map_err(|_| failure())
+            }
             #[cfg(feature = "public-research-worker")]
             Self::Research(manifest) => manifest.control_path(),
         }
@@ -53,6 +59,10 @@ impl LaunchOwner {
             Self::Read(_) => ("agentmage-worker-", (1..=8).contains(&projections)),
             Self::Command(_) => ("agentmage-command-", projections <= 1),
             Self::Git(_) => ("agentmage-git-inspection-", projections == 1),
+            Self::LinkedGit(_, linked) => (
+                "agentmage-git-inspection-",
+                projections == 2 && linked.revalidate().is_ok(),
+            ),
             #[cfg(feature = "public-research-worker")]
             Self::Research(_) => ("agentmage-research-", projections == 3),
         };
@@ -1309,7 +1319,7 @@ mod tests {
         ];
         for (index, owner) in [read, command, git].into_iter().enumerate() {
             for (other, name) in names.iter().enumerate() {
-                for count in [0, 1, 2, 8, 9, usize::MAX] {
+                for count in [0, 1, 2, 3, 8, 9, usize::MAX] {
                     let count_valid = match index {
                         0 => (1..=8).contains(&count),
                         1 => count <= 1,
