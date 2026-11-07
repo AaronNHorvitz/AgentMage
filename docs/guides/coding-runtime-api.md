@@ -316,6 +316,12 @@ beginning with `test`. Initializers can replace subtree discovery through
 `load_tests`; excluding them does not make project output independent grading.
 An older default scope that included initializers has a different profile digest
 and refuses resume; start a new run with fresh consent.
+The [independent initializer-scope review](../reviews/4f73d93ea3ac-local-coding-python-initializer-scope.txt)
+accepts that narrow repair and records another low limit: an explicitly selected
+existing top-level Python file with a standard-library module name can shadow a
+module the runner imports lazily, without being imported by tests. This remains
+backlog in the same row and applies to explicit selection in either layout.
+Only the unchanged frozen scorer supplies independent coding scores.
 
 Omission or null preserves the default selection. An empty array is an error.
 An explicit list never adds other files automatically. Descendant paths, new
@@ -385,7 +391,8 @@ coding score; native positive execution and parent acceptance remain open.
 
 The manual `serve-coding` service can now hand its successfully created worktree
 into the same native coordinator within its own process. The control-only
-`/v1/code/runtime/attach` and `/v1/code/runtime/recover` routes are documented in
+`/v1/code/runtime/attach`, `/v1/code/runtime/owner` and
+`/v1/code/runtime/recover` routes are documented in
 [the ownership guide](coding-owned-runtime.md#http-handoff-in-the-manual-coding-service).
 They never decode creation authority. Attached runtime operations retain this
 page's existing strict requests and individual approvals. The separate-process

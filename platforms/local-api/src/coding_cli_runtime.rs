@@ -104,32 +104,47 @@ fn recover(client: &Client) -> Result<()> {
     if state["version"] != 1 || state["busy"] != false {
         return Err(());
     }
-    let selection = match (
-        state["runtime_attached"].as_bool(),
-        state["runtime_recovery_pending"].as_bool(),
+    if !matches!(
+        (
+            state["runtime_attached"].as_bool(),
+            state["runtime_recovery_pending"].as_bool()
+        ),
+        (Some(true), Some(false)) | (Some(false), Some(true))
     ) {
-        (Some(true), Some(false)) => {
-            let selected = client.json("GET", "/v1/code/runtime", true, None)?;
-            if selected["live_creation_owner"] != true {
-                return Err(());
-            }
-            selected
-        }
-        (Some(false), Some(true)) => Value::Null,
-        _ => return Err(()),
-    };
+        return Err(());
+    }
+    let owner = client.json("GET", "/v1/code/runtime/owner", true, None)?;
+    if owner["version"] != 1
+        || owner["live_creation_owner"] != true
+        || owner["retention"] != "process-only"
+        || owner["apply_approved"] != false
+        || !owner["recovery_pending"].is_boolean()
+    {
+        return Err(());
+    }
+    let root = owner["worktree_root_sha256"]
+        .as_str()
+        .filter(|s| digest(s))
+        .ok_or(())?;
+    let recovery = owner["recovery_sha256"]
+        .as_str()
+        .filter(|s| digest(s))
+        .ok_or(())?;
     confirm(
-        &json!({"service_state":state,"runtime_selection":selection,
-        "warning":"Returns this service's current process-held worktree owner to manual control. Prepared and active runs must already be explicitly released. A pending recovery retries only the same retained live owner. No run is cancelled or released by this command and no original-checkout write is approved. A fresh diff and separate apply approval are still required."}),
-        "recover worktree owner",
+        &json!({"service_state":state,"worktree_owner":owner,
+        "warning":"Returns only the displayed process-held worktree handoff to manual control. Prepared and active runs must already be explicitly released. A changed owner or a new handoff of the same root refuses this consent. No run is cancelled or released by this command and no original-checkout write is approved. A fresh diff and separate apply approval are still required."}),
+        &format!("recover {recovery}"),
     )?;
     let result = client.json(
         "POST",
         "/v1/code/runtime/recover",
         true,
-        Some(json!({"approve_recovery":true})),
+        Some(json!({"expected_worktree_root_sha256":root,
+            "expected_recovery_sha256":recovery,"approve_recovery":true})),
     )?;
-    if result["recovered"] != true
+    if result["worktree_root_sha256"] != root
+        || result["recovery_sha256"] != recovery
+        || result["recovered"] != true
         || result["apply_approved"] != false
         || result["fresh_diff_required"] != true
     {

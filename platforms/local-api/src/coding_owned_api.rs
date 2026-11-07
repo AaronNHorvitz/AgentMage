@@ -51,7 +51,44 @@ impl Attach {
 #[derive(serde::Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Recover {
+    expected_worktree_root_sha256: String,
+    expected_recovery_sha256: String,
     approve_recovery: bool,
+}
+
+fn binding(lease: &LinuxCodingWorktreeLease, pending: bool) -> Value {
+    let (root, recovery) = lease.recovery_binding();
+    json!({"version":1,"live_creation_owner":true,"recovery_pending":pending,
+        "worktree_root_sha256":root,"recovery_sha256":recovery,
+        "retention":"process-only","apply_approved":false})
+}
+
+fn check_binding(lease: &LinuxCodingWorktreeLease, input: &Recover) -> Result<(), Failure> {
+    lease
+        .check_recovery_binding(
+            &input.expected_worktree_root_sha256,
+            &input.expected_recovery_sha256,
+        )
+        .map_err(|error| (409, error.code()))
+}
+
+// Hold the same service lock as attach/recover publication. The immutable lease
+// identity stays readable while its internal owner is busy or poisoned.
+fn inspect_owner(state: &Mutex<State>) -> Result<Value, Failure> {
+    let state = state.lock().map_err(|_| (500, "code.runtime.state"))?;
+    if let Some(lease) = &state.recovering {
+        return Ok(binding(lease, true));
+    }
+    let runtime = state
+        .runtime
+        .as_ref()
+        .ok_or((428, "code.runtime.activation-required"))?;
+    let runtime = runtime.try_lock().map_err(|_| (409, "code.runtime.busy"))?;
+    let lease = runtime
+        .owner
+        .as_ref()
+        .ok_or((409, "code.runtime.not-owned"))?;
+    Ok(binding(lease, false))
 }
 
 fn restore(state: &Mutex<State>, owner: LinuxCodingRepository) -> Result<(), Failure> {
@@ -215,18 +252,32 @@ fn build(
     })
 }
 
-fn recover(state: &Mutex<State>, approve: bool) -> Result<Value, Failure> {
-    if !approve {
+fn recover(state: &Mutex<State>, input: Recover) -> Result<Value, Failure> {
+    if !input.approve_recovery {
         return Err((403, "code.runtime.recovery-consent"));
+    }
+    if [
+        &input.expected_worktree_root_sha256,
+        &input.expected_recovery_sha256,
+    ]
+    .iter()
+    .any(|s| {
+        s.len() != 64
+            || !s
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    }) {
+        return Err((400, "code.runtime.recovery-binding"));
     }
     let runtime = {
         let mut state = state.lock().map_err(|_| (500, "code.runtime.state"))?;
         if state.repository.is_some() {
             return Err((409, "code.runtime.not-owned"));
         }
-        if state.recovering.is_some() {
+        if let Some(lease) = &state.recovering {
+            check_binding(lease, &input)?;
             restore_recovery(&mut state)?;
-            return Ok(recovered());
+            return Ok(recovered(&input));
         }
         let runtime = state
             .runtime
@@ -234,9 +285,11 @@ fn recover(state: &Mutex<State>, approve: bool) -> Result<Value, Failure> {
             .ok_or((428, "code.runtime.activation-required"))?;
         {
             let runtime = runtime.try_lock().map_err(|_| (409, "code.runtime.busy"))?;
-            if runtime.owner.is_none() {
-                return Err((409, "code.runtime.not-owned"));
-            }
+            let lease = runtime
+                .owner
+                .as_ref()
+                .ok_or((409, "code.runtime.not-owned"))?;
+            check_binding(lease, &input)?;
             if !runtime.port.recoverable() {
                 return Err((409, "code.runtime.release-required"));
             }
@@ -257,11 +310,13 @@ fn recover(state: &Mutex<State>, approve: bool) -> Result<Value, Failure> {
     // prepared runs must have been explicitly released; no implicit job stop.
     drop(port);
     restore_lease(state, owner.expect("checked owned runtime"))?;
-    Ok(recovered())
+    Ok(recovered(&input))
 }
 
-fn recovered() -> Value {
-    json!({"recovered":true,"apply_approved":false,"fresh_diff_required":true})
+fn recovered(input: &Recover) -> Value {
+    json!({"recovered":true,"apply_approved":false,"fresh_diff_required":true,
+        "worktree_root_sha256":input.expected_worktree_root_sha256,
+        "recovery_sha256":input.expected_recovery_sha256})
 }
 
 pub(super) fn handle_owned(
@@ -272,6 +327,12 @@ pub(super) fn handle_owned(
 ) -> Result<(), ApiError> {
     if !req.control {
         return error(socket, 403);
+    }
+    if req.method == "GET" && req.path == "/v1/code/runtime/owner" {
+        return match inspect_owner(state) {
+            Ok(body) => response(socket, 200, body),
+            Err((status, code)) => response(socket, status, json!({"error":code})),
+        };
     }
     if req.method != "POST" {
         return error(socket, 404);
@@ -292,7 +353,7 @@ pub(super) fn handle_owned(
         "/v1/code/runtime/recover" => {
             agentmage_host::runtime_transport::decode_exact::<Recover>(&req.body)
                 .ok_or((400, "code.runtime.input"))
-                .and_then(|input| recover(state, input.approve_recovery))
+                .and_then(|input| recover(state, input))
         }
         _ => Err((404, "code.runtime.route")),
     };
@@ -496,18 +557,84 @@ mod tests {
         assert!(state.lock().unwrap().runtime.is_none());
     }
 
+    fn recovery_input(approve: bool) -> Recover {
+        Recover {
+            expected_worktree_root_sha256: "a".repeat(64),
+            expected_recovery_sha256: "b".repeat(64),
+            approve_recovery: approve,
+        }
+    }
+    #[test]
+    fn recovery_input_requires_exact_bound_object() {
+        use agentmage_host::runtime_transport::decode_exact;
+        let value = serde_json::to_value(recovery_input(true)).unwrap();
+        assert!(decode_exact::<Recover>(&serde_json::to_vec(&value).unwrap()).is_some());
+        for field in [
+            "expected_worktree_root_sha256",
+            "expected_recovery_sha256",
+            "approve_recovery",
+        ] {
+            let mut missing = value.clone();
+            missing.as_object_mut().unwrap().remove(field);
+            assert!(decode_exact::<Recover>(&serde_json::to_vec(&missing).unwrap()).is_none());
+        }
+        let mut extra = value.clone();
+        extra["owner"] = json!({});
+        assert!(decode_exact::<Recover>(&serde_json::to_vec(&extra).unwrap()).is_none());
+        let duplicate = format!(
+            "{{\"approve_recovery\":false,{}",
+            &serde_json::to_string(&value).unwrap()[1..]
+        );
+        assert!(decode_exact::<Recover>(duplicate.as_bytes()).is_none());
+        for bytes in [
+            b"[]".as_slice(),
+            b"null",
+            b"true",
+            b"{}",
+            b"[null,null,true]",
+        ] {
+            assert!(decode_exact::<Recover>(bytes).is_none());
+        }
+    }
+
     #[test]
     fn recovery_cannot_adopt_a_manual_owner_or_an_empty_state() {
         let f = Fixture::new();
         let state = f.state();
         assert_eq!(
-            recover(&state, false),
+            recover(&state, recovery_input(false)),
             Err((403, "code.runtime.recovery-consent"))
         );
-        assert_eq!(recover(&state, true), Err((409, "code.runtime.not-owned")));
+        assert_eq!(
+            recover(&state, recovery_input(true)),
+            Err((409, "code.runtime.not-owned"))
+        );
+        let same_owner = state.lock().unwrap().repository.clone().unwrap();
+        for bad in ["", "a", &"A".repeat(64), &"g".repeat(64), &"0".repeat(65)] {
+            for field in ["root", "recovery"] {
+                let mut input = recovery_input(true);
+                if field == "root" {
+                    input.expected_worktree_root_sha256 = bad.into();
+                } else {
+                    input.expected_recovery_sha256 = bad.into();
+                }
+                assert_eq!(
+                    recover(&state, input),
+                    Err((400, "code.runtime.recovery-binding"))
+                );
+            }
+        }
+        assert!(Arc::ptr_eq(
+            &same_owner,
+            state.lock().unwrap().repository.as_ref().unwrap()
+        ));
+        assert_eq!(
+            inspect_owner(&state),
+            Err((428, "code.runtime.activation-required"))
+        );
         let empty = Mutex::new(State::default());
         assert_eq!(
-            recover(&empty, true),
+            recover(&empty, recovery_input(true)),
             Err((428, "code.runtime.activation-required"))
         );
     }
@@ -519,7 +646,7 @@ mod tests {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let address = listener.local_addr().unwrap();
         let stop = AtomicBool::new(false);
-        let call = |route: &str, control: bool, body: Value| {
+        let call = |method: &str, route: &str, control: bool, body: Value| {
             thread::scope(|scope| {
                 let server = scope.spawn(|| {
                     let (mut socket, _) = listener.accept().unwrap();
@@ -529,13 +656,17 @@ mod tests {
                 socket
                     .set_read_timeout(Some(Duration::from_secs(5)))
                     .unwrap();
-                let body = serde_json::to_string(&body).unwrap();
+                let body = if method == "GET" {
+                    String::new()
+                } else {
+                    serde_json::to_string(&body).unwrap()
+                };
                 let token = if control {
                     "2".repeat(64)
                 } else {
                     "1".repeat(64)
                 };
-                write!(&mut socket, "POST {route} HTTP/1.1\r\nHost: {address}\r\nAuthorization: Bearer {token}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
+                write!(&mut socket, "{method} {route} HTTP/1.1\r\nHost: {address}\r\nAuthorization: Bearer {token}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
                 let mut bytes = Vec::new();
                 loop {
                     let mut chunk = [0; 4096];
@@ -563,49 +694,80 @@ mod tests {
         };
         let start = Instant::now();
         let body = serde_json::to_value(input()).unwrap();
-        assert_eq!(call("/v1/code/runtime/attach", false, body.clone()).0, 403);
+        assert_eq!(
+            call("POST", "/v1/code/runtime/attach", false, body.clone()).0,
+            403
+        );
         let mut extra = body.clone();
         extra["resume"] = json!(true);
         assert_eq!(
-            call("/v1/code/runtime/attach", true, extra).1["error"],
+            call("POST", "/v1/code/runtime/attach", true, extra).1["error"],
             "code.runtime.input"
         );
         let mut explicit = body.clone();
         explicit["source_paths"] = json!([["calculator.py"]]);
         assert_eq!(
-            call("/v1/code/runtime/attach", false, explicit.clone()).0,
+            call("POST", "/v1/code/runtime/attach", false, explicit.clone()).0,
             403
         );
         assert_eq!(
-            call("/v1/code/runtime/attach", true, explicit.clone()).1["error"],
+            call("POST", "/v1/code/runtime/attach", true, explicit.clone()).1["error"],
             "code.runtime.worktree-required"
         );
         for path in [json!(["test_calc.py"]), json!(["src", "__init__.py"])] {
             explicit["source_paths"] = json!([path]);
             assert_eq!(
-                call("/v1/code/runtime/attach", true, explicit.clone()).1["error"],
+                call("POST", "/v1/code/runtime/attach", true, explicit.clone()).1["error"],
                 "code.runtime.source-selection"
             );
         }
         assert_eq!(
-            call("/v1/code/runtime/attach", true, body).1["error"],
+            call("POST", "/v1/code/runtime/attach", true, body).1["error"],
             "code.runtime.worktree-required"
         );
         assert_eq!(
             call(
+                "POST",
                 "/v1/code/runtime/recover",
                 true,
-                json!({"approve_recovery":true})
+                serde_json::to_value(recovery_input(true)).unwrap()
             )
             .1["error"],
             "code.runtime.not-owned"
         );
         assert!(state.lock().unwrap().repository.is_some());
+        for (method, control, status, code) in [
+            ("GET", false, 403, "api.forbidden"),
+            ("GET", true, 428, "code.runtime.activation-required"),
+            ("POST", true, 404, "code.runtime.route"),
+        ] {
+            let reply = call(method, "/v1/code/runtime/owner", control, Value::Null);
+            assert_eq!(reply.0, status);
+            if control {
+                assert_eq!(reply.1["error"], code);
+            }
+        }
+        for body in [
+            json!({"approve_recovery":true}),
+            json!({"expected_worktree_root_sha256":"a".repeat(64),"approve_recovery":true}),
+            json!({"expected_recovery_sha256":"b".repeat(64),"approve_recovery":true}),
+            json!(["a".repeat(64), "b".repeat(64), true]),
+        ] {
+            let reply = call("POST", "/v1/code/runtime/recover", true, body);
+            assert_eq!(reply.0, 400);
+            assert_eq!(reply.1["error"], "code.runtime.input");
+        }
+        let mut bad = serde_json::to_value(recovery_input(true)).unwrap();
+        bad["expected_recovery_sha256"] = json!("bad");
+        assert_eq!(
+            call("POST", "/v1/code/runtime/recover", true, bad).1["error"],
+            "code.runtime.recovery-binding"
+        );
         let activity = serde_json::to_string(&state.lock().unwrap().activity).unwrap();
         assert!(!activity.contains("not-opened"));
         assert!(activity.contains("code.runtime.worktree-required"));
         println!(
-            "owned_api_eight_refusal_exchanges_us={}",
+            "owned_api_sixteen_refusal_exchanges_us={}",
             start.elapsed().as_micros()
         );
     }

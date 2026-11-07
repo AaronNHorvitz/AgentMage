@@ -1065,7 +1065,7 @@ fn handle(
     let route = (req.method.as_str(), req.path.as_str());
     if matches!(
         req.path.as_str(),
-        "/v1/code/runtime/attach" | "/v1/code/runtime/recover"
+        "/v1/code/runtime/attach" | "/v1/code/runtime/recover" | "/v1/code/runtime/owner"
     ) {
         return coding_owned_api::handle_owned(socket, &req, state, stop);
     }

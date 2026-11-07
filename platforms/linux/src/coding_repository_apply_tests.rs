@@ -922,6 +922,10 @@ fn runtime_poisoned_owner_recovers_without_creation_authority_or_pending_approva
     let old_preview = f.prepare(&mut owner);
     let lease = runtime_lease(owner);
     let other = lease.clone();
+    let binding = (
+        lease.recovery_binding().0.to_owned(),
+        lease.recovery_binding().1.to_owned(),
+    );
     let root = f.0.join("owned/worktree");
     assert!(
         std::thread::spawn(move || {
@@ -935,6 +939,13 @@ fn runtime_poisoned_owner_recovers_without_creation_authority_or_pending_approva
         .is_err()
     );
     assert!(lease.check_workspace(&f.0.join("owned/worktree")).is_err());
+    assert_eq!(
+        lease.recovery_binding(),
+        (binding.0.as_str(), binding.1.as_str())
+    );
+    lease
+        .check_recovery_binding(&binding.0, &binding.1)
+        .unwrap();
     let mut slot = Some(lease);
     let mut owner = crate::LinuxCodingWorktreeLease::recover_repository(&mut slot).unwrap();
     assert!(slot.is_none());
@@ -1034,6 +1045,66 @@ fn runtime_recovery_slot_retains_busy_owner_and_lineage_until_explicit_retry() {
     f.assert_preserved();
     println!(
         "recovery_slot_native_write_and_apply_us={}",
+        started.elapsed().as_micros()
+    );
+}
+
+#[test]
+fn recovery_identity_survives_busy_retries_and_rejects_same_root_reattachment() {
+    let started = Instant::now();
+    let f = Fixture::new();
+    let lease = runtime_lease(f.owner());
+    let root = lease.recovery_binding().0.to_owned();
+    let first = lease.recovery_binding().1.to_owned();
+    assert_eq!(first.len(), 64);
+    assert!(
+        first
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    );
+    let mut slot = Some(lease.clone());
+    for _ in 0..2 {
+        let held = slot.as_ref().unwrap();
+        assert_eq!(held.recovery_binding(), (root.as_str(), first.as_str()));
+        held.check_recovery_binding(&root, &first).unwrap();
+        assert!(
+            held.check_recovery_binding(&"0".repeat(64), &first)
+                .is_err()
+        );
+        assert!(held.check_recovery_binding(&root, &"0".repeat(64)).is_err());
+        assert_eq!(
+            crate::LinuxCodingWorktreeLease::recover_repository(&mut slot)
+                .err()
+                .unwrap()
+                .code(),
+            "code.runtime.owner-held"
+        );
+    }
+    // Same held creation and root, new handoff. Previous consent cannot target it.
+    drop(lease);
+    let owner = crate::LinuxCodingWorktreeLease::recover_repository(&mut slot).unwrap();
+    assert!(slot.is_none());
+    let lease = runtime_lease(owner);
+    assert_eq!(lease.recovery_binding().0, root);
+    assert_ne!(lease.recovery_binding().1, first);
+    assert_eq!(
+        lease
+            .check_recovery_binding(&root, &first)
+            .unwrap_err()
+            .code(),
+        "code.runtime.recovery-stale"
+    );
+    assert_eq!(lease.recovery_binding(), lease.clone().recovery_binding());
+    let owner = recover_lease(lease);
+    assert!(
+        owner.inspect_apply().unwrap()["available_paths"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    f.assert_preserved();
+    eprintln!(
+        "bound_recovery_same_root_reattachment_us={}",
         started.elapsed().as_micros()
     );
 }

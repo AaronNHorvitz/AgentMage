@@ -16,7 +16,11 @@ use agentmage_kernel_engine::write_transaction::{
 /// with a successfully created worktree can construct it. Clones share one
 /// serialized owner; none can recover manual authority while another is live.
 #[derive(Clone)]
-pub struct LinuxCodingWorktreeLease(Arc<Mutex<LinuxCodingRepository>>);
+pub struct LinuxCodingWorktreeLease {
+    owner: Arc<Mutex<LinuxCodingRepository>>,
+    root_sha256: String,
+    recovery_sha256: String,
+}
 
 impl LinuxCodingRepository {
     /// Transfers this live owner, after explicit handoff consent, to the native
@@ -42,16 +46,47 @@ impl LinuxCodingRepository {
         if let Err(error) = check {
             return Err((self, error));
         }
+        // Mint a fresh identity for this handoff, including reattachment of the
+        // same created root. Randomness failure returns the owner untouched.
+        let mut nonce = [0_u8; 32];
+        if rustix::rand::getrandom(&mut nonce, rustix::rand::GetRandomFlags::empty()) != Ok(32) {
+            return Err((self, err("code.runtime.recovery-identity")));
+        }
+        let root_sha256 = expected_root_sha256.to_owned();
+        let recovery_sha256 = hash(&nonce);
         self.pending = None;
         self.command = None;
         self.validation = None;
         self.edit = None;
         self.apply = None;
-        Ok(LinuxCodingWorktreeLease(Arc::new(Mutex::new(self))))
+        Ok(LinuxCodingWorktreeLease {
+            owner: Arc::new(Mutex::new(self)),
+            root_sha256,
+            recovery_sha256,
+        })
     }
 }
 
 impl LinuxCodingWorktreeLease {
+    /// Content-free identity for explicit recovery consent. Stable across clones
+    /// and busy recovery; changes on every new handoff, even for the same root.
+    /// These digests confer no authority and cannot construct a lease. Available
+    /// without locking the owner so poisoned ownership can still be discarded
+    /// through the ordinary fail-closed recovery path.
+    #[must_use]
+    pub fn recovery_binding(&self) -> (&str, &str) {
+        (&self.root_sha256, &self.recovery_sha256)
+    }
+
+    /// Refuses consent for another owner or an earlier handoff of the same root.
+    /// This only checks identity; it never grants or recovers ownership.
+    pub fn check_recovery_binding(&self, root: &str, recovery: &str) -> Result<()> {
+        if self.recovery_binding() != (root, recovery) {
+            return Err(err("code.runtime.recovery-stale"));
+        }
+        Ok(())
+    }
+
     /// Recovers a held recovery slot without losing its lease on a busy retry.
     /// Only a live creation lease can populate the slot; no path is adopted.
     /// Success consumes the slot, including the ordinary poison invalidation.
@@ -69,7 +104,10 @@ impl LinuxCodingWorktreeLease {
     /// Checks a canonical private runtime state root is separate from the manual
     /// authority store and every held repository root. No store is opened here.
     pub fn check_runtime_state_root(&self, root: &Path) -> Result<()> {
-        let owner = self.0.try_lock().map_err(|_| err("code.runtime.busy"))?;
+        let owner = self
+            .owner
+            .try_lock()
+            .map_err(|_| err("code.runtime.busy"))?;
         let created = owner.verify_created()?;
         if !root.is_absolute()
             || [&owner.state_root, &created.original_path, &created.path]
@@ -84,7 +122,10 @@ impl LinuxCodingWorktreeLease {
     /// Revalidates the exact activation path against held creation authority.
     /// Reads directory metadata only. It never adopts a path or receipt.
     pub fn check_workspace(&self, root: &Path) -> Result<()> {
-        let owner = self.0.try_lock().map_err(|_| err("code.runtime.busy"))?;
+        let owner = self
+            .owner
+            .try_lock()
+            .map_err(|_| err("code.runtime.busy"))?;
         let created = owner
             .created
             .as_ref()
@@ -100,7 +141,7 @@ impl LinuxCodingWorktreeLease {
     /// released. Busy ownership is returned intact for later explicit recovery.
     /// A poisoned owner fails closed; it cannot recover transferable edits.
     pub fn try_into_repository(self) -> std::result::Result<LinuxCodingRepository, Self> {
-        match Arc::try_unwrap(self.0) {
+        match Arc::try_unwrap(self.owner) {
             Ok(mutex) => match mutex.into_inner() {
                 Ok(owner) => Ok(owner),
                 Err(poison) => {
@@ -114,7 +155,11 @@ impl LinuxCodingWorktreeLease {
                     Ok(owner)
                 }
             },
-            Err(shared) => Err(Self(shared)),
+            Err(owner) => Err(Self {
+                owner,
+                root_sha256: self.root_sha256,
+                recovery_sha256: self.recovery_sha256,
+            }),
         }
     }
 
@@ -126,7 +171,10 @@ impl LinuxCodingWorktreeLease {
         workspace: &'a LinuxAuthorizedWorkspace,
         limits: LinuxAtomicWriteDriverLimits,
     ) -> Result<LinuxCodingRuntimeWriteDriver<'a>> {
-        let owner = self.0.try_lock().map_err(|_| err("code.runtime.busy"))?;
+        let owner = self
+            .owner
+            .try_lock()
+            .map_err(|_| err("code.runtime.busy"))?;
         let created = owner.verify_created()?;
         if workspace.root_path_sha256() != created.held.root_path_sha256() {
             return Err(err("code.runtime.scope"));

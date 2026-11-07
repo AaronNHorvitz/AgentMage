@@ -225,8 +225,14 @@ fn attached() -> Value {
 fn ownership_state(pending: bool) -> Value {
     json!({"version":1,"busy":false,"runtime_attached":!pending,"runtime_recovery_pending":pending})
 }
+fn owner_identity(pending: bool) -> Value {
+    json!({"version":1,"live_creation_owner":true,"recovery_pending":pending,
+        "worktree_root_sha256":"a".repeat(64),"recovery_sha256":"b".repeat(64),
+        "retention":"process-only","apply_approved":false})
+}
 fn recovered() -> Value {
-    json!({"recovered":true,"apply_approved":false,"fresh_diff_required":true})
+    json!({"recovered":true,"apply_approved":false,"fresh_diff_required":true,
+        "worktree_root_sha256":"a".repeat(64),"recovery_sha256":"b".repeat(64)})
 }
 
 #[test]
@@ -304,11 +310,11 @@ fn ownership_commands_refuse_pipe_denial_and_invalid_selection_without_sending_c
     assert_ne!(output["status"], 0);
     assert_eq!(output["answered"], 1);
     assert_eq!(peer.finish().len(), 1);
-    let peer = f.peer(vec![ownership_state(true)]);
+    let peer = f.peer(vec![ownership_state(true), owner_identity(true)]);
     let output = f.tty(peer.address, &["runtime-recover"], "decline");
     assert_ne!(output["status"], 0);
     assert_eq!(output["answered"], 1);
-    assert_eq!(peer.finish().len(), 1);
+    assert_eq!(peer.finish().len(), 2);
 
     let base = ownership_args("python-project");
     let mut invalid = Vec::new();
@@ -412,37 +418,33 @@ fn ownership_attach_checks_wire_size_before_requesting_consent() {
 fn ownership_recovery_uses_explicit_consent_for_attached_and_pending_owners() {
     let f = Fixture::new();
     for pending in [false, true] {
-        let selection = json!({"version":1,"live_creation_owner":true,"workspace_root":"/private/disposable/worktree","scenario":"python-root-project","profile_id":"evaluation-only"});
-        let mut replies = vec![ownership_state(pending)];
-        if !pending {
-            replies.push(selection);
-        }
-        replies.push(recovered());
+        let replies = vec![
+            ownership_state(pending),
+            owner_identity(pending),
+            recovered(),
+        ];
         let peer = f.peer(replies);
         let output = f.tty(peer.address, &["runtime-recover"], "approve");
         assert_eq!(output["status"], 0, "{output}");
         assert_eq!(output["answered"], 1);
         let calls = peer.finish();
-        assert_eq!(calls.len(), if pending { 2 } else { 3 });
+        assert_eq!(calls.len(), 3);
         assert_eq!(calls[0]["route"], "GET /v1/status HTTP/1.1");
-        if !pending {
-            assert_eq!(calls[1]["route"], "GET /v1/code/runtime HTTP/1.1");
-        }
+        assert_eq!(calls[1]["route"], "GET /v1/code/runtime/owner HTTP/1.1");
         assert_eq!(
             calls.last().unwrap()["route"],
             "POST /v1/code/runtime/recover HTTP/1.1"
         );
         assert_eq!(
             calls.last().unwrap()["body"],
-            json!({"approve_recovery":true})
+            json!({"expected_worktree_root_sha256":"a".repeat(64),
+                "expected_recovery_sha256":"b".repeat(64),"approve_recovery":true})
         );
         let transcript = output["transcript"].as_str().unwrap();
         assert!(transcript.contains("fresh diff and separate apply approval"));
-        assert!(transcript.contains(if pending {
-            "\"runtime_selection\": null"
-        } else {
-            "/private/disposable/worktree"
-        }));
+        assert!(transcript.contains(&format!("recover {}", "b".repeat(64))));
+        assert!(transcript.contains(&"a".repeat(64)));
+        assert!(transcript.contains("new handoff of the same root refuses"));
     }
 }
 
@@ -472,13 +474,17 @@ fn ownership_recovery_refuses_busy_remote_or_unavailable_state_and_does_not_repl
     for reply in [
         json!({"test_peer_close":true}),
         json!({"test_peer_status":409,"body":{"error":"code.runtime.release-required"}}),
+        json!({"test_peer_status":409,"body":{"error":"code.runtime.recovery-stale"}}),
         json!({"recovered":true,"apply_approved":true,"fresh_diff_required":true}),
+        json!({"recovered":true,"apply_approved":false,"fresh_diff_required":true}),
+        json!({"recovered":true,"apply_approved":false,"fresh_diff_required":true,
+            "worktree_root_sha256":"a".repeat(64),"recovery_sha256":"c".repeat(64)}),
     ] {
-        let peer = f.peer(vec![ownership_state(true), reply]);
+        let peer = f.peer(vec![ownership_state(true), owner_identity(true), reply]);
         let output = f.tty(peer.address, &["runtime-recover"], "approve");
         assert_ne!(output["status"], 0);
         assert_eq!(output["answered"], 1);
-        assert_eq!(peer.finish().len(), 2);
+        assert_eq!(peer.finish().len(), 3);
     }
 }
 
@@ -1321,3 +1327,27 @@ finally:
     if p.poll() is None:os.killpg(p.pid,signal.SIGKILL);p.wait()
     os.close(master)
 "#;
+
+#[test]
+fn recovery_refuses_incomplete_identity_before_confirmation_or_post() {
+    let f = Fixture::new();
+    for field in [
+        "version",
+        "live_creation_owner",
+        "worktree_root_sha256",
+        "recovery_sha256",
+        "recovery_pending",
+        "retention",
+        "apply_approved",
+    ] {
+        for value in [Value::Null, json!("invalid")] {
+            let mut owner = owner_identity(true);
+            owner[field] = value;
+            let peer = f.peer(vec![ownership_state(true), owner]);
+            let output = f.tty(peer.address, &["runtime-recover"], "approve");
+            assert_ne!(output["status"], 0, "{field}: {output}");
+            assert_eq!(output["answered"], 0, "{field}: {output}");
+            assert_eq!(peer.finish().len(), 2);
+        }
+    }
+}

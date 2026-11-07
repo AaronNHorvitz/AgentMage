@@ -106,8 +106,31 @@ request. HTTP input cannot select a peer identity.
 
 Release every prepared or active run with the existing `/v1/code/runtime/release`
 route. Even a terminal run must be explicitly released, closing its canonical
-histories. Then send `POST /v1/code/runtime/recover` with exactly
-`{"approve_recovery":true}`. Busy handlers and unreleased runs refuse. Successful
+histories. Read `GET /v1/code/runtime/owner` using the control credential. It
+returns the held `worktree_root_sha256` and a `recovery_sha256` unique to this
+handoff, for both attached and pending recovery. It reads no source, credential or
+activation path. The identity remains readable if the internal owner is poisoned;
+ordinary recovery still discards poisoned creation authority and pending approvals.
+Display both digests and obtain explicit consent before sending exactly:
+
+```json
+{
+  "expected_worktree_root_sha256": "<displayed-held-root-digest>",
+  "expected_recovery_sha256": "<displayed-handoff-digest>",
+  "approve_recovery": true
+}
+```
+
+Send this body to `POST /v1/code/runtime/recover`. Both digests must be lowercase
+64-character SHA-256 strings. Missing fields, unknown fields, duplicate keys and
+array requests refuse. A mismatched identity returns HTTP 409
+`code.runtime.recovery-stale` before extracting or dropping the current owner,
+service or recovery slot. The comparison holds the same state lock as ownership
+publication. Reattaching the same created root produces a fresh random handoff
+identity; consent for its previous attachment cannot recover it. Clones and busy
+recovery retries retain the same identity. The digests identify consent and confer
+no authority or source-read permission. They cannot construct a live lease.
+Busy handlers and unreleased runs refuse. Successful
 recovery drops the empty coordinator service and returns the original manual
 owner. Inspect `/v1/code/repository/apply`, approve reading the exact roots and
 paths, review a fresh full diff, and provide a new single-use apply decision.
@@ -184,8 +207,12 @@ initializer in a mixed explicit list rather than silently narrowing that list.
 Existing sessions whose default scope included initializers require a fresh run
 and consent; their changed profile digest refuses resume. This addresses the
 narrow hook from the [source-selection review](../reviews/a8bdb80dc506-local-coding-explicit-python-sources.txt),
-pending independent core review. Other imported source can still alter test
-behavior, so only the unchanged frozen scorer supplies independent coding scores.
+accepted by the [independent initializer-scope review](../reviews/4f73d93ea3ac-local-coding-python-initializer-scope.txt).
+Editable source can still alter test behavior. An explicitly selected existing
+top-level file named after a standard-library module can shadow a module the
+runner imports lazily, even when tests do not import that file. This remains low
+backlog in the same row; neither layout's project result is independent grading.
+Only the unchanged frozen scorer supplies independent coding scores.
 See the [repair record](../evidence/t306-python-initializer-scope-2026-11-07.md).
 
 The client reads the held root digest from repository edit status, displays the
@@ -205,13 +232,14 @@ runs. Then use:
 agentmage-code '<loopback-ip:port>' '<private-auth-directory>' runtime-recover
 ```
 
-The client shows service state and the attached runtime selection, or explicitly
-shows a null selection when retrying the service's retained pending owner. It
-requires `recover worktree owner` in the controlling terminal. Busy, unavailable
-or separately launched runtime states refuse. Recovery targets this service's
-current live owner; it does not cancel or release runs or approve original writes.
-The server rechecks lifecycle and live references. After recovery, use `original`
-and a fresh original diff/apply approval as before.
+The client reads service state, then the control-only owner snapshot. It shows
+the held root and handoff digests for attached and pending recovery alike and
+requires `recover <handoff-digest>` in the controlling terminal. It sends those
+exact digests once and checks the echoed identity. A changed handoff refuses;
+inspect again and obtain fresh consent. Busy, unavailable or separately launched
+runtime states refuse. Recovery does not cancel or release runs or approve original
+writes. The server rechecks lifecycle and live references. After recovery, use
+`original` and a fresh original diff/apply approval as before.
 
 Both commands reject piped approvals and make only one ownership POST after a
 matching confirmation. A refused, malformed or lost reply is an error, never an

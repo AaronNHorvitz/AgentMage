@@ -1,0 +1,203 @@
+Commit: 4f73d93ea3ac1b685e0932e2688b8d3f839b815c
+Scope: local-coding-python-initializer-scope
+
+# Independent core review: T-306 (shared T-303) Python initializer write-scope exclusion
+
+Reviewer: a separate, read-only Claude Opus 5.5 session at extra-high effort. This is a same-model
+review with no shared context with the builder. I judged only the pinned commit, in its frozen
+checkout `/lane/review-checkout`, against base `1fde68be241fa33f31b75b255b62f82be9778444`. I did
+not modify the repository. No GPU or model was used. No UI row is in scope, so no browser was needed.
+
+This is a non-closing increment: T-306 and T-303 both stay OPEN. Nothing here is certification,
+compliance or legal clearance.
+
+## Methods
+
+1. Confirmed the commit (`git rev-parse HEAD` = `4f73d93ea3ac1b685e0932e2688b8d3f839b815c`) and
+   read the complete ten-path diff (`git diff --stat` = 10 files, +496/-30). That includes the new
+   evidence file, both guide edits, the older evidence-wording fix, the TASKS.md T-306 line, the
+   retained prior review and all four Rust files.
+2. Read the review helper `verify-review.py`. It only runs `cargo fmt --check`, the three focused
+   test commands and the original fast-gate planner/executor; nothing in it writes to the
+   repository. I also read the gate's `execute_checks`, the policy runner and the builder's
+   `audit.py`.
+3. Read the code the change relies on, not just the diff:
+   - `python_source_path_allowed` and `CodingPythonSourceSelection::new` in
+     `shells/host/src/coding_development_runtime.rs:410-455`;
+   - `python_project_paths` (`:2196-2238`), which is shared by default and explicit selection in
+     both layouts;
+   - `python_project_command` (`:2261-2285`): `-I -B -m unittest discover -s {tests|.} -t . -v`,
+     unchanged;
+   - the resume drift check (`:764-786`), which compares `python_profile_constraints_match` against
+     `profile_sha256`, whose material includes `writable_roots` (`coding_session.rs:207`);
+   - the API attach ordering (`coding_owned_api.rs:72-108`): scenario, then `source_selection()`,
+     then the owner lock and take;
+   - the terminal parser (`coding_cli_runtime.rs:35-63`), which builds `CodingPythonSourceSelection`
+     before any request is sent.
+4. Ran the exact reproduction commands from the request. My own adversarial probes ran with the
+   system interpreter in `mktemp -d` directories outside the repository (see Findings).
+5. Compared every test identity and outcome in my full-gate log against the builder's log and
+   against the retained prior full source-selection gate, using my own parser, not the builder's
+   audit.
+
+## Exact commands and results (all run in `/lane/review-checkout`)
+
+```sh
+sha256sum -c /lane/state/tmp/t306-initializer-scope/review-inputs.sha256      # 16 OK
+sha256sum review-inputs.sha256 audit.json node                                  # b3ae2da7..., b44eba75..., d1de76d8... (all match the request)
+export PATH=/lane/state/tmp/t306-owned-api/node-v24.15.0/bin:$PATH
+export CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+export AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-python-initializers-4f73d93ea3ac
+mkdir -m 700 "$AGENTMAGE_VALIDATION_DIR"
+bash /tools/build-slot python3 -B /lane/state/tmp/t306-initializer-scope/verify-review.py > "$AGENTMAGE_VALIDATION_DIR/focused.log" 2>&1   # EXIT 1 (expected)
+```
+
+Results from my `focused.log` and `fast.log`. Times include compilation and exclude the wait for the
+shared build reservation.
+
+| Check | My result |
+| --- | --- |
+| `cargo fmt --all -- --check` (before the source freeze) | PASS |
+| Host `python_project_tests::` | 14 passed / 0 failed / 0 ignored / 587 filtered; RESULT 0; 43.67 s |
+| API `--lib coding_` | 22 passed / 0 / 0 / 5 filtered; RESULT 0; 12.37 s |
+| Terminal `--test coding_runtime_cli` | 21 passed / 0 / 0 / 0 filtered; RESULT 0; 5.57 s |
+| `root_initializer_hook_probe_us` / `owned_api_eight_refusal_exchanges_us` | 168131 / 3629 |
+| Gate: `git diff --check`, `--lint-untracked`, `--lint-reviews`, markdownlint (5 files) | all exit 0 |
+| Gate: fmt `--check` / Clippy `-D warnings` | exit 0 (0.75 s) / exit 0 (31.47 s) |
+| Gate: `cargo test ... --all-targets --no-fail-fast` | exit 101; 17 targets; **666 passed / 53 failed / 11 ignored / 0 measured / 0 filtered**; 72.79 s |
+| `FAST GATE` / `FAST_GATE_EXIT` | FAIL / 1, as expected |
+
+The panic `synthetic poison` at `coding_owned_api.rs:417` in the API run is deliberate: that test
+poisons a lock inside `catch_unwind`, and the test passes. The builder's log shows the same panic.
+
+Identity comparison, using my parser over `^test (\S+) \.\.\. (ok|FAILED|ignored)`:
+
+- My 730 identities and their outcomes are **exactly equal** to the builder's `fast.log`.
+- My 53 failure identities are **exactly equal** to the retained prior source-selection gate
+  (`/lane/state/tmp/t306-source-selection/fast.log`).
+- My 11 ignored identities are the same set as in that prior gate; this diff adds no `#[ignore]`.
+- Compared with that prior gate, the only removed identity is the renamed
+  `project_sources_exclude_discovery_modules_and_test_directories`.
+- The added identities are its renamed successor, the new
+  `root_discovery_initializer_hook_cannot_enter_the_mutable_scope`, and five `ownership_*` terminal
+  tests from intervening commit `6fd19479`, which was reviewed separately.
+- Every new or expanded method passes unfiltered:
+  - `root_discovery_initializer_hook_cannot_enter_the_mutable_scope`
+  - `project_sources_exclude_discovery_modules_initializers_and_test_directories`
+  - `explicit_project_sources_refuse_unsafe_empty_duplicate_and_test_paths`
+  - `source_selection_is_optional_closed_and_checked_before_owner_extraction`
+  - `consent_closed_selections_busy_stop_and_poison_preserve_repository` (the eight-exchange
+    loopback test)
+  - `ownership_commands_refuse_pipe_denial_and_invalid_selection_without_sending_consent`
+- Failure causes:
+  - 41 × `test sandbox manifest: InvalidManifest`;
+  - 7 × `verified worker manifest: InvalidManifest`;
+  - the rest are the same retained `linux_read` and `linux_repository_map` panics.
+
+  This is the unchanged deferred T-301.1 executable-trust blocker. The Linux crate is not selected
+  and its 19 prior failures remain unresolved; this commit does not repair them.
+
+Follow-up commands:
+
+```sh
+cmp plan-final.json  $V/plan.json                         # identical (10 paths, 7 commands)
+cmp source-freeze.json $V/source-freeze.json              # identical (4 Rust hashes)
+python3 -B .../t306-read-consent/run-policy.py $V/policy-source   # exit 0: "Validated 796 Markdown file(s) and all policy invariants."
+cmp policy-source-inputs.json $V/policy-source-inputs.json        # identical (all 9055 input hashes)
+python3 -B .../t306-initializer-scope/audit.py > $V/builder-audit.json   # exit 0
+cmp audit.json $V/builder-audit.json                      # identical
+cmp docs/reviews/1fde68be241f-local-coding-terminal-ownership.txt /lane/reviews/1fde68be241f-local-coding-terminal-ownership.md   # identical
+git diff --check 1fde68be241fa33f31b75b255b62f82be9778444 --   # exit 0, no output
+git status --short                                         # empty
+```
+
+## Points the request asked me to check
+
+- **Conservative exclusion in both layouts and both selection modes.** The rule is `*name !=
+  "__init__.py"` in `python_source_path_allowed` (`coding_development_runtime.rs:451-453`). One
+  predicate serves both `CodingPythonSourceSelection::new` (explicit selection) and
+  `python_project_paths` (default `src/` selection and re-filtering of explicit paths), and neither
+  depends on the layout. The rule looks only at the basename, so it does not depend on how complete
+  the repository-map test inventory is. Nested initializers (`src/nested/__init__.py`,
+  `package/nested/__init__.py`), the root `__init__.py` and `src/__init__.py` are all covered by
+  tests.
+- **Mixed lists are refused whole.** `new` returns `Profile` on the first inadmissible path. This is
+  tested at the host level, through the API (`[["calculator.py"], ["package","__init__.py"]]`) and
+  in the terminal (`calc.py package/nested/__init__.py`).
+- **Initializer-only default is refused.** `paths.is_empty()` returns `Profile`, asserted by
+  `python_project_paths(&project(&["src/__init__.py"]), None).is_err()`.
+- **API validation happens before owner extraction.** `input.source_selection()?` at
+  `coding_owned_api.rs:83` comes before the owner lock and `take()`. The real loopback test now runs
+  eight refusal exchanges, including `src/__init__.py`, and the repository stays preserved.
+- **Terminal makes zero requests.** All three new initializer cases assert `answered == 0` and
+  `peer.finish().is_empty()`.
+- **Ordinary sources stay writable.** In both selection modes, `scope.resolve(src/calc.py)` is OK,
+  while `src/__init__.py` and `src/test_calc.py` are `Err`.
+- **Interpreter probe.** I reproduced the hook independently: the `load_tests` initializer turns
+  `FAILED (failures=1)` into `Ran 1 test ... OK`, and restoring the initializer brings back the
+  failure. This runs outside native confinement and is not a score; the evidence labels it that way.
+- **Imports, commands and grants are unchanged.** `python_project_command`, the parser,
+  `minimum_test_count`, the registry and the approvals are untouched by the diff.
+- **Resume.** `writable_roots` is part of `ProfileMaterial`, so the narrowed default scope changes
+  `profile_sha256`. The existing `project_resume_binds_the_complete_profile_including_the_default_write_scope`
+  test and the drift check at `:772` refuse a prior broader scope. Nothing is migrated.
+- **Prior-evidence wording.** `t306-explicit-python-sources-2026-11-07.md` lines 7 and 31 now say
+  "partly addresses L1 (see the review note below/above)". The note is the paragraph at lines 10-16,
+  which is below line 7 and above line 31, so both directions are correct. Prior L1 is resolved.
+- **Prior L2 and other lows.** Recovery consent still targets the current owner, not the displayed
+  one. That is correctly recorded as backlog in TASKS.md and in the evidence's Remaining scope, as
+  are the lifecycle/continuation and factory-allocation lows.
+- **Ledger and delivery.** Only the T-306 line changes, there is no new row or sub-row, and both
+  parents stay `[ ]`. No status-model, dependency, SBOM, evaluation, hidden-test, held-out,
+  threshold or ignore change.
+- **Privacy and IP.** My own scan of the added lines found no private host path, username,
+  hostname, credential or personal data. The only `/lane/...` paths are the generic lane paths
+  already used in committed reviews. No other agent product is named, and no trademark is used as
+  branding. The model name appears only as reviewer attribution in the retained review.
+- **Evidence numbers.** The 14/22/21 focused counts (57 methods), 666/53/11/0/0 over 17 targets,
+  the eight exchanges, the ten-path scope and the 796 Markdown files all match my run. Wall-clock
+  times differ, as expected on a shared host, and are presented as observations.
+
+## Findings
+
+No critical, high or medium finding.
+
+**L1 (low, backlog): a top-level source named after a standard-library module can still change the
+trusted project run without being imported by tests.**
+
+- Location: `shells/host/src/coding_development_runtime.rs:446-455`, where `python_source_path_allowed`
+  accepts any top-level `*.py`, and `:2276`, where `unittest discover ... -t .` puts the worktree root
+  at the front of `sys.path`.
+- Reproduction (Python 3.15.0, `-I -B -m unittest discover -s . -t . -v`, in a temp dir with the
+  same `src/calc.py`, `src/__init__.py` and failing `test_calc.py` as the new regression):
+  1. Without extra files the run ends `FAILED (failures=1)`.
+  2. Add a top-level `dataclasses.py` that loads the real stdlib `dataclasses` into `sys.modules`
+     and sets `unittest.TestCase.assertEqual = lambda *a, **k: None`. The run now ends
+     `Ran 1 test ... OK` with exit 0.
+  3. Why it happens: the runner itself imports `dataclasses` lazily, through `_colorize`, after
+     discovery has inserted the root into `sys.path`. Neither the test nor `src/calc.py` imports it.
+
+  `python_source_path_allowed(["dataclasses.py"])` returns true, so an existing file with that name
+  is admissible through an explicit selection in either layout. Default `src/` selection is not
+  affected, because `src/x.py` imports as `src.x`.
+- Why it is low:
+  - it needs an existing top-level file with a stdlib module name and an explicit user selection;
+  - the guides already say other source can alter test behaviour and that only the frozen scorer
+    supplies scores;
+  - no row closes or score is claimed here.
+
+  The new guide rationale, that initializers are special because they run without being imported by
+  tests, applies equally to this case.
+- Fix: also refuse top-level sources whose stem is in `sys.stdlib_module_names`, using a pinned list
+  for the pinned interpreter, or record this limit next to the initializer note in both guides.
+  Track it in this row's backlog before any root-layout success claim.
+
+## Per-row result
+
+- **T-306 (shared T-303), non-closing increment "Python initializer write scope":** accepted. The
+  low initializer-hook finding from the source-selection review and the prior L1 wording finding are
+  resolved. The required runs reproduce exactly, including the expected complete-gate FAIL on the
+  unchanged 53 baseline identities. New L1 is low backlog. T-306 and T-303 remain OPEN; this verdict
+  closes neither.
+
+Verdict: PASS
