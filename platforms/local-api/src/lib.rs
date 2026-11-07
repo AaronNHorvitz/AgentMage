@@ -132,35 +132,45 @@ impl ApiTokens {
     /// Symlink token files, hard links and permissive modes are refused.
     pub fn load(directory: &Path) -> Result<Self, ApiError> {
         let dir = protected_directory(directory)?;
-        let read = |name| -> Result<String, ApiError> {
-            let file = File::from(
-                openat(
-                    &dir,
-                    name,
-                    OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC,
-                    Mode::empty(),
-                )
-                .map_err(|_| ApiError::Configuration)?,
-            );
-            let meta = file.metadata().map_err(|_| ApiError::Io)?;
-            if !meta.is_file()
-                || meta.uid() != rustix::process::geteuid().as_raw()
-                || meta.mode() & 0o7777 != 0o600
-                || meta.nlink() != 1
-                || meta.len() != 64
-            {
-                return Err(ApiError::Configuration);
-            }
-            let mut bytes = Zeroizing::new(String::new());
-            file.take(65)
-                .read_to_string(&mut bytes)
-                .map_err(|_| ApiError::Configuration)?;
-            Ok(std::mem::take(&mut *bytes))
-        };
-        let client = Zeroizing::new(read("client.token")?);
-        let control = Zeroizing::new(read("control.token")?);
+        let client = read_api_token(&dir, "client.token")?;
+        let control = read_api_token(&dir, "control.token")?;
         Self::new(client.to_string(), control.to_string())
     }
+}
+
+// A model-facing bridge loads only the client credential. It must work with a
+// delegated directory containing no control credential at all.
+fn read_api_token(dir: &File, name: &str) -> Result<Zeroizing<String>, ApiError> {
+    let file = File::from(
+        openat(
+            dir,
+            name,
+            OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC,
+            Mode::empty(),
+        )
+        .map_err(|_| ApiError::Configuration)?,
+    );
+    let meta = file.metadata().map_err(|_| ApiError::Io)?;
+    if !meta.is_file()
+        || meta.uid() != rustix::process::geteuid().as_raw()
+        || meta.mode() & 0o7777 != 0o600
+        || meta.nlink() != 1
+        || meta.len() != 64
+    {
+        return Err(ApiError::Configuration);
+    }
+    let mut bytes = Zeroizing::new(String::new());
+    file.take(65)
+        .read_to_string(&mut bytes)
+        .map_err(|_| ApiError::Configuration)?;
+    if bytes.len() != 64
+        || !bytes
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    {
+        return Err(ApiError::Configuration);
+    }
+    Ok(bytes)
 }
 
 fn protected_directory(path: &Path) -> Result<File, ApiError> {
@@ -196,6 +206,7 @@ struct Configuration {
 struct WorkspaceGrant {
     scope: LinuxCodingReadScope,
     model_context_revision: Option<u64>,
+    selection_id: String,
 }
 
 struct PendingChange {
@@ -664,6 +675,7 @@ struct MapRequest {
 #[serde(deny_unknown_fields)]
 struct WorkspaceRead {
     workspace_revision: u64,
+    workspace_selection_id: Option<String>,
     paths: Vec<String>,
 }
 
@@ -671,6 +683,7 @@ struct WorkspaceRead {
 #[serde(deny_unknown_fields)]
 struct WorkspaceSearch {
     workspace_revision: u64,
+    workspace_selection_id: Option<String>,
     paths: Vec<String>,
     query: String,
 }
@@ -679,6 +692,7 @@ struct WorkspaceSearch {
 #[serde(deny_unknown_fields)]
 struct WorkspaceProposal {
     workspace_revision: u64,
+    workspace_selection_id: Option<String>,
     paths: Vec<String>,
     model: String,
     task: String,
@@ -692,6 +706,7 @@ struct WorkspaceProposal {
 #[serde(deny_unknown_fields)]
 struct WorkspaceChange {
     workspace_revision: u64,
+    workspace_selection_id: Option<String>,
     paths: Vec<String>,
     expected_sources: Vec<ExpectedSource>,
     task: String,
@@ -838,6 +853,7 @@ fn workspace_sources(
     revision: u64,
     paths: &[String],
     for_model: bool,
+    selection_id: Option<&str>,
 ) -> Result<Vec<CodingSource>, (u16, &'static str)> {
     let scope = {
         let guard = state.lock().map_err(|_| (500, "code.workspace.state"))?;
@@ -848,6 +864,9 @@ fn workspace_sources(
             .workspace
             .clone()
             .ok_or((428, "code.workspace.choice-required"))?;
+        if selection_id.is_some_and(|id| id != workspace.selection_id) {
+            return Err((409, "code.workspace.selection-stale"));
+        }
         if for_model
             && (workspace.model_context_revision != Some(guard.revision)
                 || guard.configured.is_none())
@@ -1223,8 +1242,13 @@ fn handle(
                 Err(status) => return error(socket, status),
             };
             let prepared = (|| {
-                let sources =
-                    workspace_sources(state, input.workspace_revision, &input.paths, false)?;
+                let sources = workspace_sources(
+                    state,
+                    input.workspace_revision,
+                    &input.paths,
+                    false,
+                    input.workspace_selection_id.as_deref(),
+                )?;
                 let changes = checked_changes(
                     &input.task,
                     &sources,
@@ -1297,6 +1321,7 @@ fn handle(
                 "maximum_records":8,"last_sequence":guard.write_sequence,"history_truncated":guard.write_sequence > 8,
                 "pending":guard.pending_change.as_ref().map(|p| json!({
                     "workspace_revision":p.workspace_revision,"preview":p.write.preview(),
+                    "workspace_selection_id":p.scope.selection_id,
                     "workspace_root_sha256":p.write.workspace_root_sha256(),
                     "expires_at_epoch_ms":p.write.expires_at_epoch_ms(),
                     "applied":false,"tested":false,"isolation_verified":false}))}),
@@ -1415,6 +1440,7 @@ fn handle(
                 socket,
                 200,
                 json!({"workspace_revision":guard.workspace_revision,
+                "workspace_selection_id":guard.workspace.as_ref().map(|w| &w.selection_id),
                 "selected":guard.workspace.is_some(), "authority":"read-only",
                 "paths":guard.workspace.as_ref().map(|w| w.scope.paths()).unwrap_or_default(),
                 "model_context_approved":guard.workspace.as_ref().is_some_and(|w|
@@ -1481,17 +1507,28 @@ fn handle(
                 op.outcome = "code.workspace.cancelled";
                 return response(socket, 409, json!({"error":op.outcome}));
             }
+            let mut random = [0_u8; 32];
+            if rustix::rand::getrandom(&mut random, rustix::rand::GetRandomFlags::empty()) != Ok(32)
+            {
+                return Err(ApiError::Io);
+            }
+            let selection_id = random
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect::<String>();
             guard.pending_change = None;
             guard.workspace_revision += 1;
             guard.workspace = Some(Arc::new(WorkspaceGrant {
                 scope,
                 model_context_revision: input.approve_model_context.then_some(guard.revision),
+                selection_id: selection_id.clone(),
             }));
             op.outcome = "accepted";
             response(
                 socket,
                 200,
                 json!({"selected":true,"workspace_revision":guard.workspace_revision,
+                "workspace_selection_id":selection_id,
                 "authority":"read-only"}),
             )
         }
@@ -1511,19 +1548,29 @@ fn handle(
             )
         }
         ("POST", "/v1/code/workspace/read") | ("POST", "/v1/code/workspace/search") => {
-            let (revision, paths, query) = if req.path.ends_with("/search") {
+            let (revision, selection_id, paths, query) = if req.path.ends_with("/search") {
                 let Ok(input) = object_json::<WorkspaceSearch>(&req.body) else {
                     return error(socket, 400);
                 };
                 if input.query.is_empty() || input.query.len() > 128 || input.query.contains('\0') {
                     return error(socket, 400);
                 }
-                (input.workspace_revision, input.paths, Some(input.query))
+                (
+                    input.workspace_revision,
+                    input.workspace_selection_id,
+                    input.paths,
+                    Some(input.query),
+                )
             } else {
                 let Ok(input) = object_json::<WorkspaceRead>(&req.body) else {
                     return error(socket, 400);
                 };
-                (input.workspace_revision, input.paths, None)
+                (
+                    input.workspace_revision,
+                    input.workspace_selection_id,
+                    input.paths,
+                    None,
+                )
             };
             let (mut op, _) = match begin(
                 state,
@@ -1537,13 +1584,14 @@ fn handle(
                 Ok(operation) => operation,
                 Err(status) => return error(socket, status),
             };
-            let sources = match workspace_sources(state, revision, &paths, false) {
-                Ok(sources) => sources,
-                Err((status, code)) => {
-                    op.outcome = code;
-                    return response(socket, status, json!({"error":code}));
-                }
-            };
+            let sources =
+                match workspace_sources(state, revision, &paths, false, selection_id.as_deref()) {
+                    Ok(sources) => sources,
+                    Err((status, code)) => {
+                        op.outcome = code;
+                        return response(socket, status, json!({"error":code}));
+                    }
+                };
             if op.cancel.is_cancelled() {
                 op.outcome = "code.workspace.cancelled";
                 return response(socket, 409, json!({"error":op.outcome}));
@@ -1583,8 +1631,13 @@ fn handle(
                 Ok(operation) => operation,
                 Err(status) => return error(socket, status),
             };
-            let files = match workspace_sources(state, input.workspace_revision, &input.paths, true)
-            {
+            let files = match workspace_sources(
+                state,
+                input.workspace_revision,
+                &input.paths,
+                true,
+                input.workspace_selection_id.as_deref(),
+            ) {
                 Ok(sources) => sources,
                 Err((status, code)) => {
                     op.outcome = code;

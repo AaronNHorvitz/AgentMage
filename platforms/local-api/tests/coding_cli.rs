@@ -20,6 +20,306 @@ use serde_json::{Value, json};
 static NEXT: AtomicU64 = AtomicU64::new(0);
 const BEFORE: &str = "def add(a, b):\n    return a - b\n";
 
+fn mcp_messages(calls: &[Value]) -> String {
+    let mut messages = vec![
+        json!({"jsonrpc":"2.0","id":"init","method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"synthetic-editor","version":"1"}}}),
+        json!({"jsonrpc":"2.0","method":"notifications/initialized"}),
+    ];
+    messages.extend_from_slice(calls);
+    messages.iter().map(|v| format!("{v}\n")).collect()
+}
+
+fn mcp_call(id: u64, name: &str, arguments: Value) -> Value {
+    json!({"jsonrpc":"2.0","id":id,"method":"tools/call","params":{"name":name,"arguments":arguments}})
+}
+
+fn mcp(f: &Fixture, selected: &Value, calls: &[Value]) -> Output {
+    let delegate = f.root.join("delegate");
+    if !delegate.exists() {
+        fs::create_dir(&delegate).unwrap();
+        fs::set_permissions(&delegate, fs::Permissions::from_mode(0o700)).unwrap();
+        fs::copy(
+            f.root.join("auth/client.token"),
+            delegate.join("client.token"),
+        )
+        .unwrap();
+    }
+    assert!(!delegate.join("control.token").exists());
+    let mut child = Command::new(env!("CARGO_BIN_EXE_agentmage-mcp"))
+        .args([
+            f.address.to_string(),
+            delegate.to_str().unwrap().to_string(),
+            selected["workspace_revision"].as_u64().unwrap().to_string(),
+            selected["workspace_selection_id"]
+                .as_str()
+                .unwrap()
+                .to_string(),
+            "--share-selected-workspace".into(),
+        ])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    child
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(mcp_messages(calls).as_bytes())
+        .unwrap();
+    child.wait_with_output().unwrap()
+}
+
+fn mcp_replies(output: &Output) -> Vec<Value> {
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .map(|s| serde_json::from_str(s).unwrap())
+        .collect()
+}
+
+#[test]
+fn mcp_executable_reads_and_stages_through_real_api_without_control_credentials_or_writes() {
+    let f = Fixture::new();
+    let selected = f.select();
+    let revision = selected["workspace_revision"].as_u64().unwrap();
+    let calls = [
+        mcp_call(1, "workspace_read", json!({"paths":["calc.py"]})),
+        mcp_call(2, "workspace_read", json!({"paths":["untouched.py"]})),
+        mcp_call(
+            3,
+            "workspace_stage",
+            json!({"paths":["calc.py"],"expected_sources":[{"path":"calc.py","sha256":"e1a894022d1a082987b87adecb623438c9e386d86b2b621cff4a5fe7fdf7edc8"}],"task":"Fix add","max_message_bytes":4096,"answer":"{\"edits\":[{\"path\":\"calc.py\",\"old\":\"return a - b\",\"new\":\"return a + b\"}]}"}),
+        ),
+        mcp_call(4, "workspace_diff", json!({})),
+        mcp_call(5, "workspace_apply", json!({"approve":true})),
+        mcp_call(
+            6,
+            "workspace_read",
+            json!({"paths":["calc.py"],"workspace_revision":revision}),
+        ),
+        mcp_call(
+            7,
+            "workspace_propose",
+            json!({"paths":["calc.py"],"model":"fixture","task":"Fix add","max_message_bytes":4096,"max_tokens":64}),
+        ),
+    ];
+    let started = std::time::Instant::now();
+    let output = mcp(&f, &selected, &calls);
+    eprintln!(
+        "MCP real-API component elapsed_us={}",
+        started.elapsed().as_micros()
+    );
+    let replies = mcp_replies(&output);
+    assert_eq!(replies.len(), 8);
+    let text = |i: usize| {
+        serde_json::from_str::<Value>(replies[i]["result"]["content"][0]["text"].as_str().unwrap())
+            .unwrap()
+    };
+    assert_eq!(
+        text(1)["untrusted_api_results"][0]["files"][0]["content"],
+        BEFORE
+    );
+    assert_eq!(replies[2]["result"]["isError"], true);
+    assert_eq!(replies[3]["result"]["isError"], false);
+    assert_eq!(text(3)["untrusted_api_results"][0]["applied"], false);
+    assert_eq!(text(4)["pending"], f.json(&["review"])["pending"]);
+    assert!(text(4).get("records").is_none());
+    assert_eq!(replies[5]["error"]["code"], -32602);
+    assert_eq!(replies[6]["error"]["code"], -32602);
+    // No endpoint or model disclosure was approved. The real API refuses.
+    assert_eq!(replies[7]["result"]["isError"], true);
+    assert_eq!(
+        fs::read_to_string(f.root.join("workspace/calc.py")).unwrap(),
+        BEFORE
+    );
+    assert_eq!(
+        fs::read_to_string(f.root.join("workspace/untouched.py")).unwrap(),
+        "sentinel\n"
+    );
+    let delegate = f.root.join("delegate");
+    fs::set_permissions(
+        delegate.join("client.token"),
+        fs::Permissions::from_mode(0o644),
+    )
+    .unwrap();
+    let refused = mcp(&f, &selected, &[]);
+    assert!(!refused.status.success());
+    assert!(refused.stdout.is_empty());
+    // Approval remains in a distinct, person-facing terminal and uses the
+    // original control directory. The MCP proposal itself wrote nothing.
+    let approved = f.terminal(
+        &["apply", f.root.join("workspace").to_str().unwrap()],
+        "approve",
+    );
+    assert!(approved.status.success());
+    assert_eq!(
+        serde_json::from_slice::<Value>(&approved.stdout).unwrap()["status"],
+        0
+    );
+    assert_eq!(
+        fs::read_to_string(f.root.join("workspace/calc.py")).unwrap(),
+        BEFORE.replace("a - b", "a + b")
+    );
+}
+
+#[test]
+fn mcp_pinned_selection_refuses_reselection_and_never_shares_the_new_scope() {
+    let f = Fixture::new();
+    let selected = f.select();
+    f.json(&[
+        "select",
+        f.root.join("workspace").to_str().unwrap(),
+        "untouched.py",
+    ]);
+    let output = mcp(
+        &f,
+        &selected,
+        &[
+            mcp_call(1, "workspace", json!({})),
+            mcp_call(2, "workspace_read", json!({"paths":["untouched.py"]})),
+        ],
+    );
+    let replies = mcp_replies(&output);
+    assert_eq!(replies[1]["result"]["isError"], true);
+    assert_eq!(replies[2]["result"]["isError"], true);
+    assert!(!String::from_utf8_lossy(&output.stdout).contains("untouched.py"));
+}
+
+#[test]
+fn fresh_service_and_reselection_never_reuse_selection_identity_and_api_checks_it_before_sources() {
+    let old = Fixture::new();
+    let old_selection = old.select();
+    let f = Fixture::new();
+    let selected = f.select();
+    assert_eq!(
+        old_selection["workspace_revision"],
+        selected["workspace_revision"]
+    );
+    assert_ne!(
+        old_selection["workspace_selection_id"],
+        selected["workspace_selection_id"]
+    );
+    let output = mcp(
+        &f,
+        &old_selection,
+        &[mcp_call(1, "workspace_read", json!({"paths":["calc.py"]}))],
+    );
+    assert_eq!(mcp_replies(&output)[1]["result"]["isError"], true);
+    let reselected = f.select();
+    assert_ne!(
+        selected["workspace_selection_id"],
+        reselected["workspace_selection_id"]
+    );
+    assert_eq!(
+        reselected["workspace_selection_id"].as_str().unwrap().len(),
+        64
+    );
+    // Simulate changing service identity between the bridge's GET and POST.
+    // The new revision is correct, but the old session's identity must refuse
+    // at the actual API source owner, even when the paths are identical.
+    let token = fs::read_to_string(f.root.join("auth/client.token")).unwrap();
+    for (route, extra) in [
+        ("read", json!({})),
+        ("search", json!({"query":"add"})),
+        (
+            "proposals",
+            json!({"model":"fixture","task":"Fix add","max_message_bytes":4096,"max_tokens":64}),
+        ),
+        (
+            "changes",
+            json!({"task":"Fix add","max_message_bytes":4096,"answer":"unused","expected_sources":[]}),
+        ),
+    ] {
+        let mut body = json!({"workspace_revision":reselected["workspace_revision"],"workspace_selection_id":selected["workspace_selection_id"],"paths":["calc.py"]});
+        body.as_object_mut()
+            .unwrap()
+            .extend(extra.as_object().unwrap().clone());
+        let body = serde_json::to_vec(&body).unwrap();
+        let mut socket = TcpStream::connect(f.address).unwrap();
+        socket
+            .set_read_timeout(Some(Duration::from_secs(3)))
+            .unwrap();
+        socket
+            .set_write_timeout(Some(Duration::from_secs(2)))
+            .unwrap();
+        socket.write_all(format!("POST /v1/code/workspace/{route} HTTP/1.1\r\nHost: {}\r\nAuthorization: Bearer {token}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", f.address, body.len()).as_bytes()).unwrap();
+        socket.write_all(&body).unwrap();
+        let mut reply = Vec::new();
+        socket.read_to_end(&mut reply).unwrap();
+        assert!(
+            reply.starts_with(b"HTTP/1.1 409 "),
+            "{}",
+            String::from_utf8_lossy(&reply)
+        );
+        let start = reply.windows(4).position(|w| w == b"\r\n\r\n").unwrap() + 4;
+        assert_eq!(
+            serde_json::from_slice::<Value>(&reply[start..]).unwrap()["error"],
+            "code.workspace.selection-stale"
+        );
+    }
+    assert_eq!(
+        fs::read_to_string(f.root.join("workspace/calc.py")).unwrap(),
+        BEFORE
+    );
+    assert_eq!(f.json(&["review"])["pending"], Value::Null);
+}
+
+#[test]
+fn mcp_proposal_uses_only_previously_consented_model_context_and_retains_a_complete_inert_result() {
+    let f = Fixture::new();
+    let answer =
+        "{\"edits\":[{\"path\":\"calc.py\",\"old\":\"return a - b\",\"new\":\"return a + b\"}]}";
+    let (endpoint, worker) = model(answer, "stop");
+    f.api(
+        "PUT",
+        "/v1/settings",
+        json!({"endpoint":endpoint,"key":"synthetic","approve_conversations":true}),
+    );
+    let consent = f.terminal(
+        &[
+            "select-model",
+            f.root.join("workspace").to_str().unwrap(),
+            "calc.py",
+        ],
+        "approve",
+    );
+    assert!(consent.status.success());
+    assert_eq!(
+        serde_json::from_slice::<Value>(&consent.stdout).unwrap()["status"],
+        0
+    );
+    let selected = f.json(&["workspace"]);
+    let output = mcp(
+        &f,
+        &selected,
+        &[mcp_call(
+            1,
+            "workspace_propose",
+            json!({"paths":["calc.py"],"model":"fixture","task":"Fix add","max_message_bytes":4096,"max_tokens":64}),
+        )],
+    );
+    worker.join().unwrap();
+    let replies = mcp_replies(&output);
+    assert_eq!(replies[1]["result"]["isError"], false);
+    let result: Value =
+        serde_json::from_str(replies[1]["result"]["content"][0]["text"].as_str().unwrap()).unwrap();
+    let events = result["untrusted_api_results"].as_array().unwrap();
+    assert_eq!(events[0]["type"], "context");
+    assert_eq!(events.last().unwrap()["type"], "proposal");
+    assert_eq!(events.last().unwrap()["applied"], false);
+    assert_eq!(events.last().unwrap()["tested"], false);
+    assert_eq!(
+        fs::read_to_string(f.root.join("workspace/calc.py")).unwrap(),
+        BEFORE
+    );
+    assert_eq!(f.json(&["review"])["pending"], Value::Null);
+}
+
 #[test]
 fn terminal_cancel_uses_control_authentication_without_an_approval_prompt() {
     let fixture = Fixture::new();

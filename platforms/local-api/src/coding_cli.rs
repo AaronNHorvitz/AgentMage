@@ -19,8 +19,16 @@ const DEADLINE: Duration = Duration::from_secs(180);
 
 #[path = "coding_cli_driver.rs"]
 mod driver;
+#[path = "coding_mcp.rs"]
+mod mcp;
 #[path = "coding_cli_runtime.rs"]
 mod runtime;
+
+/// Runs the bounded stdio MCP bridge with only the ordinary API credential.
+/// The explicit launch arguments pin a person-selected workspace revision.
+pub fn run_mcp(args: &[String]) -> std::result::Result<(), ApiError> {
+    mcp::run(args).map_err(|()| ApiError::Configuration)
+}
 
 type Result<T> = std::result::Result<T, ()>;
 
@@ -49,12 +57,12 @@ impl Client {
     }
 
     fn token(&self, control: bool) -> Result<Zeroizing<String>> {
-        let tokens = ApiTokens::load(&self.auth).map_err(|_| ())?;
-        Ok(if control {
-            tokens.control
+        if control {
+            Ok(ApiTokens::load(&self.auth).map_err(|_| ())?.control)
         } else {
-            tokens.client
-        })
+            let dir = crate::protected_directory(&self.auth).map_err(|_| ())?;
+            crate::read_api_token(&dir, "client.token").map_err(|_| ())
+        }
     }
 
     fn call(

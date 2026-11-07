@@ -133,7 +133,7 @@ fn prepare_repair(
     }
     // Read only paths already approved for source and model disclosure, and
     // independently require this owner's exact held creation provenance.
-    let files = workspace_sources(state, input.workspace_revision, &input.paths, true)?;
+    let files = workspace_sources(state, input.workspace_revision, &input.paths, true, None)?;
     repository
         .select_created_sources(&input.paths)
         .map_err(|e| (409, e.code()))?;

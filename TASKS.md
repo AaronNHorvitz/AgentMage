@@ -13,6 +13,9 @@ below is unchanged. T-301.1 is deferred and blocks nothing. No mission row close
 without an independent exact-commit PASS review retained under docs/reviews/ and
 no open high/medium finding. Evidence belongs under docs/evidence/; core changes
 require core review. The unchanged long documentation gate runs once at T-310.
+The [coding MCP bridge](docs/guides/coding-mcp.md) adds a client-credential-only
+stdio interface to existing selected-workspace tools under Decision 0161; independent
+core review is required, and T-303/T-306 remain open.
 No public release is authorized. One level of sub-rows maximum; each implementation
 sub-row must run end to end and be measured. Never tune on held-out tasks, edit
 hidden tests or weaken thresholds. Desktop UI work is deferred to a separate shell.
