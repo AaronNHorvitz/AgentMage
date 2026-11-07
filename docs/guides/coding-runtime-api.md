@@ -65,6 +65,14 @@ rules. A signal is not a claim that every effect was undone.
 
 ## Terminal workflow
 
+For a worktree created by the manual coding service, use
+`runtime-attach <private-runtime-state> <private-disposable-root> <created-worktree> <model> <scenario> [source-paths...]`
+to transfer its live owner after inspection/handoff confirmation. After explicitly
+releasing every run, `runtime-recover` returns that owner with a separate terminal
+confirmation. See [terminal ownership](coding-owned-runtime.md#terminal-handoff-and-recovery)
+for prerequisites, exact selections and lost-reply handling. These commands use
+the existing owned API; the separate-process launcher keeps its default sources.
+
 Every command starts with:
 
 ```sh

@@ -68,6 +68,7 @@ impl Fixture {
         let address = listener.local_addr().unwrap();
         let stop = Arc::new(AtomicBool::new(false));
         let token = fs::read_to_string(self.root.join("auth/control.token")).unwrap();
+        let client_token = fs::read_to_string(self.root.join("auth/client.token")).unwrap();
         let worker = {
             let stop = stop.clone();
             thread::spawn(move || {
@@ -94,7 +95,14 @@ impl Fixture {
                         assert!(header.len() < 8192);
                     }
                     let header = String::from_utf8(header).unwrap();
-                    assert!(header.contains(&format!("\r\nAuthorization: Bearer {token}\r\n")));
+                    let expected_token = if header.starts_with("GET /v1/status HTTP/1.1\r\n") {
+                        &client_token
+                    } else {
+                        &token
+                    };
+                    assert!(
+                        header.contains(&format!("\r\nAuthorization: Bearer {expected_token}\r\n"))
+                    );
                     let length: usize = header
                         .lines()
                         .find_map(|s| s.strip_prefix("Content-Length: "))
@@ -107,13 +115,18 @@ impl Fixture {
                     if replies.get(observed.len() - 1) == Some(&json!({"test_peer_close":true})) {
                         continue;
                     }
-                    let reply = serde_json::to_vec(
-                        replies
-                            .get(observed.len() - 1)
-                            .unwrap_or(&json!({"unexpected":true})),
-                    )
+                    let value = replies
+                        .get(observed.len() - 1)
+                        .cloned()
+                        .unwrap_or(json!({"unexpected":true}));
+                    let status = value["test_peer_status"].as_u64().unwrap_or(200);
+                    let reply = serde_json::to_vec(if value.get("test_peer_status").is_some() {
+                        &value["body"]
+                    } else {
+                        &value
+                    })
                     .unwrap();
-                    socket.write_all(format!("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",reply.len()).as_bytes()).unwrap();
+                    socket.write_all(format!("HTTP/1.1 {status} Test\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",reply.len()).as_bytes()).unwrap();
                     socket.write_all(&reply).unwrap();
                 }
                 observed
@@ -194,6 +207,278 @@ fn challenge() -> RuntimeApprovalChallenge {
 fn step(approval: Value) -> Value {
     json!({"run_id":"run","request_sha256":"b".repeat(64),"events":[],"artifacts":[],"approval":approval,"outcome":null})
 }
+
+fn ownership_args(scenario: &str) -> Vec<&str> {
+    vec![
+        "runtime-attach",
+        "/private/runtime",
+        "/private/disposable",
+        "/private/disposable/worktree",
+        "gpt-oss",
+        scenario,
+    ]
+}
+fn attached() -> Value {
+    json!({"attached":true,"live_creation_owner":true,"resume":false,
+        "model_and_tools_approved":false,"retention":"process-only"})
+}
+fn ownership_state(pending: bool) -> Value {
+    json!({"version":1,"busy":false,"runtime_attached":!pending,"runtime_recovery_pending":pending})
+}
+fn recovered() -> Value {
+    json!({"recovered":true,"apply_approved":false,"fresh_diff_required":true})
+}
+
+#[test]
+fn ownership_attach_discloses_exact_scope_and_canonical_sources_before_one_request() {
+    let f = Fixture::new();
+    for (scenario, explicit) in [
+        ("python-project", false),
+        ("python-project", true),
+        ("python-root-project", true),
+        ("failed-test-repair", false),
+    ] {
+        let peer = f.peer(vec![
+            json!({"version":1,"worktree_root_sha256":"a".repeat(64)}),
+            attached(),
+        ]);
+        let mut args = ownership_args(scenario);
+        let model = if scenario == "python-root-project" {
+            "muse"
+        } else {
+            "gpt-oss"
+        };
+        args[4] = model;
+        if explicit {
+            args.extend(["package/core.py", "calculator.py"]);
+        }
+        let output = f.tty(peer.address, &args, "approve");
+        assert_eq!(output["status"], 0, "{output}");
+        assert_eq!(output["answered"], 1);
+        let calls = peer.finish();
+        assert_eq!(calls.len(), 2);
+        assert_eq!(calls[0]["route"], "GET /v1/code/repository/edit HTTP/1.1");
+        assert_eq!(calls[1]["route"], "POST /v1/code/runtime/attach HTTP/1.1");
+        let expected = json!({"state_root":"/private/runtime","disposable_root":"/private/disposable",
+            "workspace_root":"/private/disposable/worktree","expected_worktree_root_sha256":"a".repeat(64),
+            "model":model,"scenario":scenario,"source_paths":if explicit { json!([["calculator.py"],["package","core.py"]]) } else { Value::Null },
+            "approve_inspection":true,"approve_handoff":true});
+        assert_eq!(calls[1]["body"], expected);
+        let transcript = output["transcript"].as_str().unwrap();
+        for field in [
+            "state_root",
+            "disposable_root",
+            "workspace_root",
+            "expected_worktree_root_sha256",
+            "model",
+            "scenario",
+            "source_paths",
+            "approve_inspection",
+            "approve_handoff",
+        ] {
+            assert!(
+                transcript.find(field).unwrap() < transcript.find("Type exactly attach ").unwrap()
+            );
+        }
+        assert!(transcript.contains(&format!(
+            "Type exactly attach {} to approve;",
+            "a".repeat(64)
+        )));
+        assert!(transcript.contains("No model call"));
+        assert!(transcript.contains("Pending manual decisions are discarded"));
+    }
+}
+
+#[test]
+fn ownership_commands_refuse_pipe_denial_and_invalid_selection_without_sending_consent() {
+    let f = Fixture::new();
+    for args in [ownership_args("python-project"), vec!["runtime-recover"]] {
+        let peer = f.peer(vec![]);
+        assert!(!f.cli(peer.address, &args).status.success());
+        assert!(peer.finish().is_empty());
+    }
+    let peer = f.peer(vec![
+        json!({"version":1,"worktree_root_sha256":"a".repeat(64)}),
+    ]);
+    let output = f.tty(peer.address, &ownership_args("python-project"), "decline");
+    assert_ne!(output["status"], 0);
+    assert_eq!(output["answered"], 1);
+    assert_eq!(peer.finish().len(), 1);
+    let peer = f.peer(vec![ownership_state(true)]);
+    let output = f.tty(peer.address, &["runtime-recover"], "decline");
+    assert_ne!(output["status"], 0);
+    assert_eq!(output["answered"], 1);
+    assert_eq!(peer.finish().len(), 1);
+
+    let base = ownership_args("python-project");
+    let mut invalid = Vec::new();
+    for (index, value) in [
+        (1, "relative"),
+        (2, "/private/../other"),
+        (3, "relative"),
+        (4, "scripted"),
+        (4, "muse "),
+        (5, "python-project;sh"),
+        (5, "unknown"),
+    ] {
+        let mut args = base.clone();
+        args[index] = value;
+        invalid.push(args);
+    }
+    for paths in [
+        vec!["test_calc.py"],
+        vec!["tests/calc.py"],
+        vec!["src/../calc.py"],
+        vec!["/calc.py"],
+        vec!["src//calc.py"],
+        vec![".hidden/calc.py"],
+        vec!["calc.rs"],
+        vec!["calc.py", "calc.py"],
+        vec!["src/calc.py"; 17],
+    ] {
+        let mut args = base.clone();
+        args.extend(paths);
+        invalid.push(args);
+    }
+    let mut fixture = ownership_args("failed-test-repair");
+    fixture.push("calc.py");
+    invalid.push(fixture);
+    invalid.push(vec!["runtime-attach"]);
+    invalid.push(vec!["runtime-recover", "unexpected"]);
+    for args in invalid {
+        let peer = f.peer(vec![]);
+        let output = f.tty(peer.address, &args, "approve");
+        assert_ne!(output["status"], 0, "{args:?}");
+        assert_eq!(output["answered"], 0);
+        assert!(peer.finish().is_empty());
+    }
+}
+
+#[test]
+fn ownership_attach_refuses_missing_identity_and_never_retries_a_lost_reply() {
+    let f = Fixture::new();
+    for held in [
+        json!({"version":1}),
+        json!({"version":1,"worktree_root_sha256":null}),
+        json!({"version":1,"worktree_root_sha256":"A".repeat(64)}),
+        json!({"worktree_root_sha256":"a".repeat(64)}),
+    ] {
+        let peer = f.peer(vec![held]);
+        let output = f.tty(peer.address, &ownership_args("python-project"), "approve");
+        assert_ne!(output["status"], 0);
+        assert_eq!(output["answered"], 0);
+        assert_eq!(peer.finish().len(), 1);
+    }
+    for reply in [
+        json!({"test_peer_close":true}),
+        json!({"attached":true}),
+        json!({"test_peer_status":409,"body":{"error":"code.runtime.scope"}}),
+    ] {
+        let peer = f.peer(vec![
+            json!({"version":1,"worktree_root_sha256":"a".repeat(64)}),
+            reply,
+        ]);
+        let output = f.tty(peer.address, &ownership_args("python-project"), "approve");
+        assert_ne!(output["status"], 0);
+        assert_eq!(output["answered"], 1);
+        assert_eq!(peer.finish().len(), 2);
+    }
+}
+
+#[test]
+fn ownership_attach_checks_wire_size_before_requesting_consent() {
+    let f = Fixture::new();
+    let peer = f.peer(vec![
+        json!({"version":1,"worktree_root_sha256":"a".repeat(64)}),
+    ]);
+    // Each component/list is individually valid; the complete request exceeds
+    // the unchanged wire ceiling. No path is opened or sent to an editor.
+    let prefix = vec!["x".repeat(240); 220].join("/");
+    let paths = (0..6)
+        .map(|n| format!("{prefix}/calc{n}.py"))
+        .collect::<Vec<_>>();
+    let mut args = ownership_args("python-project");
+    args.extend(paths.iter().map(String::as_str));
+    let output = f.tty(peer.address, &args, "approve");
+    assert_ne!(output["status"], 0);
+    assert_eq!(output["answered"], 0);
+    assert_eq!(peer.finish().len(), 1);
+}
+
+#[test]
+fn ownership_recovery_uses_explicit_consent_for_attached_and_pending_owners() {
+    let f = Fixture::new();
+    for pending in [false, true] {
+        let selection = json!({"version":1,"live_creation_owner":true,"workspace_root":"/private/disposable/worktree","scenario":"python-root-project","profile_id":"evaluation-only"});
+        let mut replies = vec![ownership_state(pending)];
+        if !pending {
+            replies.push(selection);
+        }
+        replies.push(recovered());
+        let peer = f.peer(replies);
+        let output = f.tty(peer.address, &["runtime-recover"], "approve");
+        assert_eq!(output["status"], 0, "{output}");
+        assert_eq!(output["answered"], 1);
+        let calls = peer.finish();
+        assert_eq!(calls.len(), if pending { 2 } else { 3 });
+        assert_eq!(calls[0]["route"], "GET /v1/status HTTP/1.1");
+        if !pending {
+            assert_eq!(calls[1]["route"], "GET /v1/code/runtime HTTP/1.1");
+        }
+        assert_eq!(
+            calls.last().unwrap()["route"],
+            "POST /v1/code/runtime/recover HTTP/1.1"
+        );
+        assert_eq!(
+            calls.last().unwrap()["body"],
+            json!({"approve_recovery":true})
+        );
+        let transcript = output["transcript"].as_str().unwrap();
+        assert!(transcript.contains("fresh diff and separate apply approval"));
+        assert!(transcript.contains(if pending {
+            "\"runtime_selection\": null"
+        } else {
+            "/private/disposable/worktree"
+        }));
+    }
+}
+
+#[test]
+fn ownership_recovery_refuses_busy_remote_or_unavailable_state_and_does_not_replay() {
+    let f = Fixture::new();
+    for state in [
+        json!({"version":1,"busy":true,"runtime_attached":true,"runtime_recovery_pending":false}),
+        json!({"version":1,"busy":false,"runtime_attached":false,"runtime_recovery_pending":false}),
+        json!({"version":1,"busy":false,"runtime_attached":true,"runtime_recovery_pending":true}),
+        json!({"version":1,"busy":false}),
+    ] {
+        let peer = f.peer(vec![state]);
+        let output = f.tty(peer.address, &["runtime-recover"], "approve");
+        assert_ne!(output["status"], 0);
+        assert_eq!(output["answered"], 0);
+        assert_eq!(peer.finish().len(), 1);
+    }
+    let peer = f.peer(vec![
+        ownership_state(false),
+        json!({"live_creation_owner":false}),
+    ]);
+    let output = f.tty(peer.address, &["runtime-recover"], "approve");
+    assert_ne!(output["status"], 0);
+    assert_eq!(output["answered"], 0);
+    assert_eq!(peer.finish().len(), 2);
+    for reply in [
+        json!({"test_peer_close":true}),
+        json!({"test_peer_status":409,"body":{"error":"code.runtime.release-required"}}),
+        json!({"recovered":true,"apply_approved":true,"fresh_diff_required":true}),
+    ] {
+        let peer = f.peer(vec![ownership_state(true), reply]);
+        let output = f.tty(peer.address, &["runtime-recover"], "approve");
+        assert_ne!(output["status"], 0);
+        assert_eq!(output["answered"], 1);
+        assert_eq!(peer.finish().len(), 2);
+    }
+}
+
 #[test]
 fn model_start_requires_a_terminal_and_preserves_the_prepared_request() {
     let f = Fixture::new();

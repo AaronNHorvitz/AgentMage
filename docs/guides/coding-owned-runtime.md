@@ -152,3 +152,55 @@ synthetic creation authority. Host lifecycle tests use a scripted coordinator an
 real worker threads. Neither establishes native Git creation, actual inference,
 a successful full HTTP create/run/apply workflow or a coding score. Those native
 observations remain unavailable under the lane's executable-ownership blocker.
+
+## Terminal handoff and recovery
+
+The same `agentmage-code` terminal client now covers the ownership transitions.
+Create the worktree and set up its explicit linked development activation as
+above first. The service must still run under the GPU reservation whenever it
+can start inference. Replace the quoted placeholders with the selected absolute
+private paths and the service's loopback address:
+
+```sh
+agentmage-code '<loopback-ip:port>' '<private-auth-directory>' runtime-attach \
+  '<private-runtime-state>' '<private-disposable-root>' '<created-worktree>' \
+  gpt-oss python-root-project calculator.py package/core.py
+```
+
+The model is exactly `muse` or `gpt-oss`. Choose `python-project` for packaged
+tests, `python-root-project` for root discovery, or `failed-test-repair` for the
+fixed fixture. Optional trailing relative source paths are available only to the
+two project scenarios. Omit them for the default `src/` selection. They use the
+same one-to-sixteen exact-file admission and exclusions as the HTTP request.
+The client canonicalizes their order without reading files.
+
+The client reads the held root digest from repository edit status, displays the
+complete attach request and its inspection/handoff consent fields, and requires
+`attach <held-root-digest>` in the controlling terminal. The displayed request
+includes that held root, model, scenario and source list; the client sends those
+same values after confirmation. The server independently verifies creation
+ownership and activation. A path or digest
+cannot adopt a worktree. This confirmation discards pending manual decisions and
+allows inspection and ownership transfer; model disclosure and every tool still
+need their ordinary later approvals. Use `runtime` and `runtime-run` afterward.
+
+Release every prepared or active run using `runtime-release`, including terminal
+runs. Then use:
+
+```sh
+agentmage-code '<loopback-ip:port>' '<private-auth-directory>' runtime-recover
+```
+
+The client shows service state and the attached runtime selection, or explicitly
+shows a null selection when retrying the service's retained pending owner. It
+requires `recover worktree owner` in the controlling terminal. Busy, unavailable
+or separately launched runtime states refuse. Recovery targets this service's
+current live owner; it does not cancel or release runs or approve original writes.
+The server rechecks lifecycle and live references. After recovery, use `original`
+and a fresh original diff/apply approval as before.
+
+Both commands reject piped approvals and make only one ownership POST after a
+matching confirmation. A refused, malformed or lost reply is an error, never an
+automatic retry. Inspect `status` and `runtime` before choosing another action.
+The terminal contracts use synthetic HTTP peers and real controlling terminals;
+they are client evidence, not a positive native workflow or model score.

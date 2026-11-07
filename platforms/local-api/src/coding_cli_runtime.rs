@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //! Explicit terminal operations over the canonical host's HTTP projection.
 use super::*;
+use agentmage_host::coding_development_runtime::CodingPythonSourceSelection;
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
     RuntimeApprovalResponse, RuntimeRunRequest,
@@ -8,6 +9,134 @@ use agentmage_kernel_contracts::{
 use agentmage_kernel_engine::runtime_coordinator::{
     verify_runtime_approval_challenge, verify_runtime_run_request,
 };
+
+fn absolute_root(value: &str) -> Result<()> {
+    if value.len() > 4096
+        || value.contains('\0')
+        || !Path::new(value).is_absolute()
+        || Path::new(value).components().any(|part| {
+            matches!(
+                part,
+                std::path::Component::ParentDir | std::path::Component::CurDir
+            )
+        })
+    {
+        return Err(());
+    }
+    Ok(())
+}
+
+// Local parsing performs no filesystem access. The API independently admits the
+// exact live owner and activation after the person consents to inspection.
+fn attach_body(args: &[String]) -> Result<Value> {
+    let [state, disposable, workspace, model, scenario, sources @ ..] = args else {
+        return Err(());
+    };
+    for root in [state, disposable, workspace] {
+        absolute_root(root)?;
+    }
+    if !matches!(model.as_str(), "muse" | "gpt-oss")
+        || !matches!(
+            scenario.as_str(),
+            "failed-test-repair" | "python-project" | "python-root-project"
+        )
+        || (!sources.is_empty() && scenario == "failed-test-repair")
+    {
+        return Err(());
+    }
+    let selected = if sources.is_empty() {
+        None
+    } else {
+        Some(
+            CodingPythonSourceSelection::new(
+                sources
+                    .iter()
+                    .map(|path| path.split('/').map(str::to_owned).collect())
+                    .collect(),
+            )
+            .map_err(|_| ())?,
+        )
+    };
+    Ok(
+        json!({"state_root":state,"disposable_root":disposable,"workspace_root":workspace,
+        "model":model,"scenario":scenario,"source_paths":selected.as_ref().map(|s|s.paths()),
+        "approve_inspection":true,"approve_handoff":true}),
+    )
+}
+
+fn attach(client: &Client, args: &[String]) -> Result<()> {
+    let mut body = attach_body(args)?;
+    if !std::io::stdin().is_terminal() {
+        return Err(());
+    }
+    let held = client.json("GET", "/v1/code/repository/edit", true, None)?;
+    if held["version"] != 1 || !held["worktree_root_sha256"].as_str().is_some_and(digest) {
+        return Err(());
+    }
+    body["expected_worktree_root_sha256"] = held["worktree_root_sha256"].clone();
+    let encoded = serde_json::to_vec(&body).map_err(|_| ())?;
+    if encoded.len() > MAX_REQUEST {
+        return Err(());
+    }
+    let identity = held["worktree_root_sha256"].as_str().ok_or(())?;
+    confirm(
+        &json!({"request":body,"default_sources":if body["source_paths"].is_null() { "Existing src Python sources for project scenarios; fixed fixture otherwise" } else { "Only the listed existing Python files" },
+        "warning":"Inspects the chosen private activation and repository and transfers this service's live created-worktree owner into the native evaluation coordinator. Pending manual decisions are discarded. No model call, transcript retention, tool permission or original-checkout apply is approved. The chat endpoint is not used. Release all runs before recovering the owner; restart loses process-only ownership."}),
+        &format!("attach {identity}"),
+    )?;
+    let result = client.json("POST", "/v1/code/runtime/attach", true, Some(body))?;
+    if result["attached"] != true
+        || result["live_creation_owner"] != true
+        || result["model_and_tools_approved"] != false
+        || result["resume"] != false
+        || result["retention"] != "process-only"
+    {
+        return Err(());
+    }
+    show(&result)
+}
+
+fn recover(client: &Client) -> Result<()> {
+    if !std::io::stdin().is_terminal() {
+        return Err(());
+    }
+    let state = client.json("GET", "/v1/status", false, None)?;
+    if state["version"] != 1 || state["busy"] != false {
+        return Err(());
+    }
+    let selection = match (
+        state["runtime_attached"].as_bool(),
+        state["runtime_recovery_pending"].as_bool(),
+    ) {
+        (Some(true), Some(false)) => {
+            let selected = client.json("GET", "/v1/code/runtime", true, None)?;
+            if selected["live_creation_owner"] != true {
+                return Err(());
+            }
+            selected
+        }
+        (Some(false), Some(true)) => Value::Null,
+        _ => return Err(()),
+    };
+    confirm(
+        &json!({"service_state":state,"runtime_selection":selection,
+        "warning":"Returns this service's current process-held worktree owner to manual control. Prepared and active runs must already be explicitly released. A pending recovery retries only the same retained live owner. No run is cancelled or released by this command and no original-checkout write is approved. A fresh diff and separate apply approval are still required."}),
+        "recover worktree owner",
+    )?;
+    let result = client.json(
+        "POST",
+        "/v1/code/runtime/recover",
+        true,
+        Some(json!({"approve_recovery":true})),
+    )?;
+    if result["recovered"] != true
+        || result["apply_approved"] != false
+        || result["fresh_diff_required"] != true
+    {
+        return Err(());
+    }
+    show(&result)
+}
 
 fn binding(run: &str, digest_value: &str) -> Result<Value> {
     if run.is_empty() || run.len() > 128 || !digest(digest_value) {
@@ -30,6 +159,8 @@ fn check_step(step: &Value, run: &str, hash: &str) -> Result<()> {
 
 pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result<()> {
     match (command, args) {
+        ("runtime-attach", args) => attach(client, args),
+        ("runtime-recover", []) => recover(client),
         ("runtime-run", [seconds, task]) => super::driver::run(client, seconds, task),
         ("runtime", []) => show(&client.json("GET", "/v1/code/runtime", true, None)?),
         ("runtime-prepare", [prompt]) => {
