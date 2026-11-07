@@ -1260,7 +1260,8 @@ fn original_apply_api_requires_control_explicit_read_and_existing_creation_and_e
     let inspect = "/v1/code/repository/apply";
     let prepare = "/v1/code/repository/apply/prepare";
     let decide = "/v1/code/repository/apply/decide";
-    let body = json!({"paths":["sentinel"],"task":"Apply repair","approve_read":true});
+    let body = json!({"paths":["sentinel"],"task":"Apply repair","approve_read":true,
+        "expected_repository_root_sha256":"a".repeat(64),"expected_worktree_root_sha256":"b".repeat(64)});
     assert_eq!(f.call_bytes("GET", inspect, false, b"").0, 403);
     for (path, input) in [
         (prepare, body.clone()),
@@ -1288,6 +1289,34 @@ fn original_apply_api_requires_control_explicit_read_and_existing_creation_and_e
         let mut injected = body.clone();
         injected[extra] = json!("caller supplied");
         assert_eq!(f.call("POST", prepare, true, injected).0, 400);
+    }
+    for field in [
+        "expected_repository_root_sha256",
+        "expected_worktree_root_sha256",
+    ] {
+        let mut missing = body.clone();
+        missing.as_object_mut().unwrap().remove(field);
+        assert_eq!(f.call("POST", prepare, true, missing).0, 400);
+        for value in [
+            Value::Null,
+            json!(1),
+            json!(["digest"]),
+            json!({"digest":"x"}),
+        ] {
+            let mut malformed = body.clone();
+            malformed[field] = value;
+            assert_eq!(f.call("POST", prepare, true, malformed).0, 400);
+        }
+        let encoded = serde_json::to_string(&body).unwrap();
+        let duplicate = encoded.replacen(
+            &format!("\"{field}\":"),
+            &format!("\"{field}\":\"duplicate\",\"{field}\":"),
+            1,
+        );
+        assert_eq!(
+            f.call_bytes("POST", prepare, true, duplicate.as_bytes()).0,
+            400
+        );
     }
     let mut no_read = body.clone();
     no_read["approve_read"] = json!(false);
@@ -1439,7 +1468,8 @@ fn synthetic_original_preparation_discloses_both_roots_and_requires_fresh_read_c
         if answer == "approve" {
             assert_eq!(
                 serde_json::from_slice::<Value>(&requests[1].1).unwrap(),
-                json!({"paths":["sentinel"],"task":"Apply fixture","approve_read":true})
+                json!({"paths":["sentinel"],"task":"Apply fixture","approve_read":true,
+                    "expected_repository_root_sha256":original_id,"expected_worktree_root_sha256":worktree_id})
             );
         }
         assert_eq!(

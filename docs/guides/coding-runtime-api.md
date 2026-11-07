@@ -262,7 +262,10 @@ distinct ASCII words, split at punctuation and underscores; repeating a word
 cannot raise its score. The query uses at most 128 words of 3–64 bytes from the
 first 8 KiB of the objective. Each source scan reads at most 64 KiB. Native repository JSON excerpts are
 decoded before matching their content, so escaped line breaks, tabs and Unicode
-escapes cannot hide source words. Original excerpt bytes remain unchanged.
+escapes cannot hide source words. The decoder accepts the complete serialized
+envelope of an admitted source, including expansion beyond 64 KiB when JSON
+escapes tabs, newlines or control characters. The matching scan still reads only
+the first 64 KiB of decoded content. Original excerpt bytes remain unchanged.
 Plain excerpts retain bounded text matching. This lexical heuristic does not establish semantic relevance;
 it has no multilingual or dependency-graph ranking claim.
 

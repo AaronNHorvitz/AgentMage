@@ -49,6 +49,8 @@ pub(super) struct PrepareValidation {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct PrepareApply {
+    expected_repository_root_sha256: String,
+    expected_worktree_root_sha256: String,
     paths: Vec<String>,
     task: String,
     approve_read: bool,
@@ -203,7 +205,13 @@ pub(super) fn handle_repository(
             if stop.load(Ordering::Relaxed) {
                 return error(socket, 503);
             }
-            repository.prepare_apply(&input.paths, &input.task, clock_ms()?)
+            repository.prepare_apply(
+                &input.paths,
+                &input.task,
+                &input.expected_repository_root_sha256,
+                &input.expected_worktree_root_sha256,
+                clock_ms()?,
+            )
         }
         ("POST", "/v1/code/repository/apply/decide") => {
             let Ok(input) = object_json::<Decide>(&req.body) else {

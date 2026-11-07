@@ -1,0 +1,243 @@
+Commit: 51e166c107ff7b6ab90fb8412421f7c98c140968
+Scope: local-coding-original-apply
+
+# Independent core review: original-checkout apply (T-306, related T-303; non-closing batch)
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate read-only session. This is a
+same-model review. A cross-model review is still required before any public release. This review
+grants no certification, compliance or legal clearance.
+
+## Commit and scope confirmation
+
+- `git rev-parse 51e166c107ff7b6ab90fb8412421f7c98c140968 HEAD` returned the same sha for both.
+  The working tree was clean before and after the review (`git status --short` printed nothing).
+- `git log d6cc0a26..51e166c1` shows one commit. The diff from
+  `d6cc0a26b55adf1e9b622ef09c8b61e6fe9f7f3c` touches exactly 17 paths (+1734/−18). These match
+  the builder's audit list. No `Cargo.lock`, `*.toml`, `package*.json`, evaluation, held-out,
+  hidden-test, threshold, status-model or SBOM input changed.
+- Read: IP-POLICY.md, Decision 0156, the T-303/T-306 rows of TASKS.md (word diff), the new guide
+  `coding-original-apply.md`, the changes to `coding-owned-edits.md` and `coding-runtime-api.md`,
+  the evidence file, the retained prior review, and the complete Rust diff. I also read the
+  surrounding existing boundaries: `coding_workspace.rs` (select/read/verify_root),
+  `coding_workspace_write.rs` (prepare_write/apply, the kernel grant path), `verify_created`,
+  `held_root`/`validate_input`, `prepare_edit`/`decide_edit`, the CLI `safe`/`confirm`/`edit_decide`
+  functions, and `handle_repository`/`object_json`.
+
+## Methods
+
+1. Line-by-line reading of `coding_repository_apply.rs` and the lineage changes in
+   `coding_repository_edit.rs`. I traced every pending/edit/apply state transition for
+   interleavings: edit→apply, apply→edit, repeated edits, a failed or uncertain dispatch on either
+   side, a new creation, and restart.
+2. I ran every requested command myself (table below) and compared the full failure identities
+   (binary + test path) against the builder's log and the batch35 baseline logs.
+3. I ran my own escape and drift probes as ten scratch tests. They were appended to a `git archive`
+   export of the exact commit, outside the repository; the patch is retained. They cover:
+   traversal and non-canonical paths, a directory symlink in the original before preparation, a
+   directory symlink swapped in after preparation, a parent directory replaced with same-byte
+   content, a hardlink added after preparation, a same-byte new inode, a directory at the file
+   path, a worktree symlink swap between prepare and decide, the lineage lock-out, and a failed
+   transfer keeping lineage while the preimage is rechecked.
+4. A Python port of the retrieval `matches`/`body_matches` logic, run on production-shaped
+   envelopes at the upper source bound.
+
+No GPU, model or network was used. I did not modify the repository.
+
+## Exact commands and results
+
+Environment: `PATH=/lane/state/tmp/shared-node-v24.15.0/bin:$PATH` (node v24.15.0, sha256
+`d1de76d8…bd932c`, matches the request); `/tools/build-slot` sha256 `453086eb…ea02ef` (matches);
+`CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4`; toolchain
+pinned to 1.95.0; locked/offline.
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `python3 -B scripts/local_agent_fast_gate.py --base d6cc0a26… --timeout 3600` | Exit 1, `FAST GATE: FAIL` as expected. Markdown lint, review lint, untracked lint and `git diff --check` exit 0. `cargo fmt --check` exit 0. Clippy `--all-targets -D warnings` exit 0. `cargo test` (host, local-api, linux; all targets; `--no-fail-fast`) exit 101 with **888 passed, 72 failed, 62 ignored, 0 filtered** (summed over every `test result` line). The failures are 53 `agentmage_host` lib and 19 `agentmage_platform_linux` lib. The sorted full identities (binary + test path) are **byte-identical** to the builder's `fast-initial.log` and to the union of baseline `batch35-source-2/07.log` + `11.log`. In the same run: all 9 `coding_repository::apply::tests`, all 6 `coding_context::retrieval_tests`, all 13 `tests/coding_worktree.rs` methods passed. Local API 21+10+15+13+35 = 94 passed, 0 failed. |
+| 2 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib coding_repository::apply:: -- --nocapture` | Exit 0, **9 passed**, 294 filtered (filtered on purpose; the full gate above is unfiltered). Component line: `4 approved worktree edits, 2 approved original transfers, 3 transferred file versions; elapsed_us=471239` (the builder measured 326342 µs). This is component latency with real file writes and synthetic creation provenance. It is not native Git creation, not a model or GPU run and not a score. *Procedural note:* my first run of this command reused a test binary that my scratch probe build had written into the shared review target, so it reported 19 tests. Workspace-member artifact hashes do not depend on the source path. I discarded that log (kept as `focused-apply-CONTAMINATED-scratch-binary.log`), deleted only that fingerprint and binary in my review target, and re-ran. The run recompiled from repository sources and is the result reported here. The fast gate in row 1 is unaffected: it uses a different artifact hash and lists exactly 9 apply tests. |
+| 3 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-host --lib coding_context::retrieval_tests:: -- --nocapture` | Exit 0, **6 passed**, 579 filtered. Includes `retrieval_matches_decoded_production_source_lines_and_indentation`. Fixture line `sources=5 supplied_bytes=239608 included_sources=4 omitted_sources=1 packet_bytes=237152 fixture_tokens=59290` (synthetic token counter, not inference). |
+| 4 | `node_modules/.bin/markdownlint-cli2` on the six named Markdown files | Exit 0, 0 issues in 6 files. |
+| 5 | `python3 -B scripts/local_agent_fast_gate.py --lint-reviews docs/reviews/d6cc0a26b55a-local-coding-context-retrieval.txt` | Exit 0. |
+| 6 | `cmp docs/reviews/d6cc0a26b55a-local-coding-context-retrieval.txt /lane/reviews/d6cc0a26b55a-local-coding-context-retrieval.md` | Exit 0; the prior PASS is retained byte for byte. |
+| 7 | `python3 -B /lane/state/tmp/t306-original-apply/audit.py` | Exit 0. Totals `[888, 72, 62, 0]`, 72 failure names, `new_failure_names: []`. The script's sha256 matches `1b300277…`. It rewrote the builder's `audit.json` with identical bytes (sha256 still `d1ded366…ccaaee`). This is the builder's audit, not independent evidence. Its `frozen_…_unchanged: True` flag is hard-coded. Instead I relied on its exact-path-set assertion and my own diff stat. |
+| 8 | `python3 -B /lane/state/tmp/t306-original-apply/run-policy.py /lane/state/tmp/review-original-apply-source-51e166c107ff` | Exit 0: "Validated 781 Markdown file(s) and all policy invariants." 9025 mirrored inputs. My manifest sha256 `04c087aa…a6f685` is **identical** to the builder's `policy-source-final-inputs.json`. I removed only my mirror and kept the manifest. This is not the T-310 long gate. |
+| 9 | `git diff --check d6cc0a26b55adf1e9b622ef09c8b61e6fe9f7f3c --` | Exit 0. |
+| P | Reviewer probes: 10 scratch tests (same toolchain and target) | All 10 passed; see the next section. |
+
+Builder raw artifact hashes verified: `audit.py` `1b300277…`, `audit.json` `d1ded366…`,
+`source-freeze.json` `db5fca75…`, `run-policy.py` `32a882a1…`,
+`policy-source-final-inputs.json` `04c087aa…`, `fast-initial.log` `ae39aa05…`. All match the
+request. `fast-initial.log` is the final gate run (23:09, before the 23:11 commit), despite its name.
+
+## Verification of the requested properties
+
+- **Ownership/no adoption.** `prepare_apply`/`decide_apply` take neither root nor receipt from the
+  caller. Both roots come from `self.created`. That field is set only in the successful-receipt
+  branch of creation (`coding_repository.rs:404-425`), or directly by in-crate tests. The API
+  structs use `deny_unknown_fields` plus `object_json`. The API test shows that injected
+  `root`/`worktree`/`creation_receipt_sha256`/`answer` fields, duplicate keys, positional arrays and
+  wrong types are refused with 400. Restart (`open`) restores no `created`, `apply` or
+  `apply_result`; a test covers this.
+- **Lineage.** Only `decide_edit` with `outcome == "committed"` extends `created.edits`. Lineage
+  keeps the first `before_sha256` and the latest `after_sha256`. Pending paths are removed before
+  dispatch, so an uncertain or failed write leaves no stale postimage. The 16-path cap is checked
+  over the union. Path keys are canonical: `select` refuses `.`/`..`/empty segments, non-
+  `[A-Za-z0-9._/-]` bytes, `.git` in any case, and case aliases. My probe confirmed refusal of
+  `./one.py`, `x/../one.py`, `/one.py`, `one.py/`, a trailing newline or space, and `ONE.py`.
+- **Source/root/receipt drift.** Prepare checks that the worktree bytes hash to the lineage
+  postimage. The native `prepare_write` checks original bytes against the first preimage. Decide
+  rechecks the creation receipt, both held roots (path plus device/inode identity), the lineage
+  entry and the worktree postimage before dispatch, and both roots again after it. The tests cover
+  substitutions of either root or the management directory, and creation-receipt drift.
+- **All original preimages before replacement.** The multi-file test changes `two.py` after
+  preparation. Nothing is written: `one.py` stays `first\n`. The existing transaction resolves and
+  checks every leaf before replacing any of them.
+- **Symlink/hardlink/inode.** My probes, all refused with nothing written outside:
+  - A directory symlink in the original before prepare refused with `code.workspace.boundary`.
+  - A directory symlink swapped in after prepare refused with `code.write.transaction`; the
+    outside and moved bytes are unchanged.
+  - A parent directory replaced with same-byte content refused; both copies are unchanged.
+  - A hardlink added after prepare refused; the outside name is unchanged.
+  - A same-byte new inode refused.
+  - A directory at the file path refused.
+  - A worktree symlink swap refused (`code.workspace.boundary`).
+- **Consumption, denial, expiry, clock rollback.** A foreign digest returns `code.apply.stale` and
+  leaves the preview pending. A matching digest `take()`s the preview before the denial, expiry
+  (`now >= expires`, also a monotonic deadline inside the writer), rollback (`now < created_at`) and
+  drift checks, so every one of them consumes it. A second decide refuses. Tests cover all of
+  these.
+- **Dispatch uncertainty.** `apply_result` becomes `dispatching`/`unknown` before the writer is
+  called. A writer error records `effect: unknown`. The API maps every `/decide` error to
+  `effect: unknown` and no automatic resend exists in the CLI. A failed or uncertain transfer keeps
+  the lineage. This is safe because a retry needs a fresh read consent and preview, and the native
+  first-preimage check refuses a partially or fully written original. My probe confirmed that
+  re-preparation refuses after original drift.
+- **Invalidation both ways.** `decide_edit` clears `self.apply` before dispatch, and `decide_apply`
+  clears `self.edit` before dispatch. A new creation clears both. Tests cover both directions. The
+  command and validation sandboxes mount the worktree read-only (`coding-validation.md:19`,
+  `coding-commands.md:61`), so neither can create untracked drift between edits.
+- **Terminal and API.** Every prompt goes through `safe()`, which escapes all non-ASCII and DEL as
+  `\uXXXX`, while serde escapes C0 controls. The terminal test includes `λ`, U+202E and U+007F.
+  `confirm` requires a tty and an exact line. Prepare checks both chosen roots against the held
+  identities before and after consent; the test covers replacing either root. Decide checks the
+  original root before and after consent and shows the complete preview. All routes require
+  control (403 without it).
+- **Retrieval L1 repair.** The production envelope (`coding_development_runtime.rs:862-868`) has
+  exactly the keys the decoder checks. Rank still changes only `item_id` ordering inside the
+  eligible, non-essential, repository-source tier. Excerpt bytes, authority, provenance and token
+  accounting are unchanged, and the test asserts the excerpt is unchanged. One residual gap: L1
+  below.
+- **Hygiene/IP/claims.** The added lines contain no private host path, username, hostname,
+  credential or personal data. `/lane/...` appears only inside the retained prior review, as in
+  earlier retained reviews. No other agent product is named or compared. Evidence numbers trace
+  to the logs: 888/72/62/0, 72 identities, 94 local-API, 9/6/13 methods, 781 Markdown files.
+  Synthetic provenance, the synthetic terminal peer and component timing are labelled as such. No
+  score, threshold, row or sub-row is added or closed; T-303/T-306 stay `[ ]`.
+
+## Findings
+
+No critical, high or medium findings. Three low findings go to the backlog.
+
+### L1 (low, backlog): the JSON decode cap leaves the original L1 defect for in-bounds native sources
+
+Location: `shells/host/src/coding_context_retrieval.rs:74` (`excerpt.len() <= 65_536`). Related
+claims: `docs/guides/coding-runtime-api.md:263-265`, evidence line 42 ("Its low L1 is fixed here"),
+and the TASKS.md T-303 row ("Low L1 production JSON body matching is repaired").
+
+The producer admits sources up to 64 KiB (`coding_development_runtime.rs:830`). Each newline and
+tab becomes two bytes in the envelope, so legitimate native excerpts often exceed 65,536 bytes.
+Those excerpts skip decoding and fall back to plain matching, which is exactly the pre-repair L1
+behavior: `\trefund` scans as `trefund` and `\nrefund` as `nrefund`. My Python port of
+`matches`/`body_matches` on production-shaped envelopes gave:
+
+| Source | Content | Envelope | Path | Body matches (decoded would be) |
+| --- | --- | --- | --- | --- |
+| Tab-indented Go, `\trefund := 1` | 42,036 B | 66,216 B | plain fallback | 0 (1) |
+| Python, `refund = 2` at column 0 | 63,971 B | 65,787 B | plain fallback | 0 (1) |
+| Small tab-indented Go | 36 B | 216 B | decoded | 1 (1) |
+
+Tab-indented code was the main case of the original L1, so the repair is incomplete and the
+"cannot hide source words" statement is not true for every in-bounds source. This affects ranking
+only; no authority or confinement boundary is involved.
+
+Fix: drop the envelope-length guard, since the excerpt is already bounded by the producer and
+`matches` already scans at most 64 KiB of decoded content. Alternatively, derive the guard from the
+producer bound (worst-case escaping of 64 KiB plus overhead). Add a regression at the source upper
+bound with tab indentation. Resolve before any T-311 measurement attributes a change to this
+ranking.
+
+### L2 (low, backlog): lineage bookkeeping now refuses legitimate worktree edits, and the edit guide does not say so
+
+Location: `platforms/linux/src/coding_repository_edit.rs:49-75` (`code.edit.lineage`,
+`code.edit.lineage-limit`). Guide: `docs/guides/coding-owned-edits.md` (only its last paragraph
+changed).
+
+Before this commit, owned worktree edits had no per-session path cap and no chain requirement.
+Now:
+
+- After 16 distinct committed edited paths, an edit of any new path is refused until the user
+  transfers to the original (builder test `transfer_lineage_is_bounded_across_disjoint_edit_batches`).
+- After any out-of-band change to an edited worktree file, every later edit of that path is
+  refused. My probe shows `code.edit.lineage` with the true preimage and `code.write.input` with the
+  recorded one. The only recovery is restoring the exact prior bytes, or a fresh worktree.
+
+The refusal adds no safety. Transfer eligibility already depends on the lineage, and the native
+writer rechecks original preimages. Commands mount the worktree read-only, so the agent's own test
+step cannot trigger the second case. The 16-path cap, however, is reachable in an ordinary
+multi-file loop that never intends to apply to the original.
+
+Fix: on a chain mismatch or cap overflow, accept the worktree edit and mark those paths
+non-transferable (or drop their lineage). If refusal is kept deliberately, document both codes and
+the recovery in `coding-owned-edits.md`.
+
+### L3 (low, backlog): read consent names root digests that the server does not bind
+
+Location: `platforms/local-api/src/coding_cli.rs:466-495` and
+`platforms/local-api/src/coding_repository_api.rs` (`PrepareApply`).
+
+The terminal asks for `read <original-root-digest> <worktree-root-digest>`, but the POST body
+carries only `paths`/`task`/`approve_read`. The server then reads whatever roots it holds at that
+moment. Suppose another trusted control client completes a separately approved new worktree
+creation during the prompt. The read then covers roots the person did not name. The effect is
+limited to reading eligible files into an inert preview returned to the same trusted caller. The
+write is still bound to the preview's root identity and to the original-root check at
+`original-apply`.
+
+Fix: add the two expected root digests (identities, not paths) to `PrepareApply` and refuse a
+mismatch in `prepare_apply`. This keeps the rule that "the body accepts no root".
+
+### Notes (not findings)
+
+- The prior review's L2 (an identity conflict classified as a resource failure) remains low
+  backlog, unchanged as stated.
+- The native write preview's risk text ("The chosen workspace is not verified as an isolated Git
+  worktree") also appears in original-apply previews. It is accurate there, if generic.
+- Out of scope, pre-existing: the committed file name `docs/guides/codex-coding-implementation-brief.md`
+  contains another product's name. Its content does not use it. Consider renaming it under the
+  "no naming of other agent products" rule.
+- Runtime prerequisites stay OPEN as stated: native Git trusted-executable refusal (T-301.1),
+  coordinator/configured-endpoint/manual-worktree composition, durable HTTP recovery, approved
+  branch commit/push and MCP. No measurement is established.
+
+## Per-row result
+
+- **T-306 (non-closing batch): PASS for this exact commit as a batch.** No high or medium finding.
+  L1–L3 are low backlog. The row stays OPEN. This is not parent acceptance, not a native
+  positive-workflow claim and not a score.
+- **T-303 (related): no change in status.** It stays OPEN. The prior L1 repair is partial (L1
+  above).
+
+## Retained reviewer artifacts (`/lane/state/tmp/review-51e166c107ff/`)
+
+- `fast.log` `ec9b85f64324039581b7fff383a0c2d9936baeac0a32f30c95de20913a7048c9`
+- `fail-review.txt` (72 full identities) `2ea76ffc364805b75a5e49a48dcef91bcade9e94f13697b08dff57e97af38799`
+- `focused-apply.log` `c23bf2345150ce0812cb11a10b8f5fb76df1b050e12da54e607feb3f2be0ae16`
+- `focused-retrieval.log` `413a56286eab3a4d77532809c526d12b7abb7aa191662ad38a74cfa77504b47f`
+- `probe-linux.log` `55b345cf44ffd69ea74bc2283606342060bc51f313b235aff1b08dfe3c9c8f73`
+- `reviewer-probes.patch` `b9286e2867f512d56ea43ef9057a4a5cefcb05424d90a42f8e0065fd310f0000`
+- `retrieval-cap-probe.txt` `025f09c813d1e360f1881b24545698881328d9a353f32d90f728b7fc9d3ad277`
+- `audit.log` `fc8039bff25564f4774b5baaf673c99758f862086b09d2f2d78605382916e111`
+- `policy.log` `6694dcb7ab49f711e12f835c7e339615faef195eb6db3e050a224cc596876a85`
+- `/lane/state/tmp/review-original-apply-source-51e166c107ff-inputs.json`
+  `04c087aabaf9c34f8ffaf06df4434ab3827ce00569bdf4e3219aafc0c2a6f685`
+
+Verdict: PASS

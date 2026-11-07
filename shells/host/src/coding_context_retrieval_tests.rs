@@ -299,3 +299,62 @@ fn retrieval_matches_decoded_production_source_lines_and_indentation() {
             .starts_with("repository-source-128-127-")
     );
 }
+
+#[test]
+fn retrieval_decodes_full_size_native_sources_without_extending_the_scan() {
+    let started = std::time::Instant::now();
+    let mut largest_envelope = 0;
+    // Every source is exactly the native producer's 64 KiB bound. The term is
+    // preceded by an escaped delimiter, so scanning encoded JSON loses it.
+    for padding in ["\t", "\n", "\r", "\0", "x\n"] {
+        let prefix = "x = 1\n\trefund = 2\n";
+        let suffix = "\trefund = 3\n";
+        let remaining = 65_536 - prefix.len() - suffix.len();
+        let content = format!(
+            "{prefix}{}{suffix}",
+            padding.repeat(remaining / padding.len()) + &" ".repeat(remaining % padding.len())
+        );
+        assert_eq!(content.len(), 65_536);
+        let excerpt = serde_json::to_string(&serde_json::json!({
+            "schema_version":1,"untrusted_repository_source":true,
+            "path":"src/helper.py","content_sha256":sha256(content.as_bytes()),"content":content
+        }))
+        .unwrap();
+        assert!(excerpt.len() > 65_536);
+        largest_envelope = largest_envelope.max(excerpt.len());
+        let source = retrieval_source("full-size", "src/helper.py", &excerpt);
+        let ranked = ranked_sources("refund", std::slice::from_ref(&source));
+        assert!(ranked[0].item_id.starts_with("repository-source-128-127-"));
+        let mut restored = ranked[0].clone();
+        restored.item_id.clone_from(&source.item_id);
+        assert_eq!(restored, source, "ranking changed provenance or excerpt");
+    }
+    // Oversized externally supplied excerpts still cannot move the scan bound.
+    for content in [
+        " ".repeat(65_536) + "refund",
+        " ".repeat(65_529) + "refund ",
+    ] {
+        let excerpt = serde_json::to_string(&serde_json::json!({
+            "schema_version":1,"untrusted_repository_source":true,"content":content
+        }))
+        .unwrap();
+        let ranked = ranked_sources(
+            "refund",
+            &[retrieval_source("scan", "src/helper.py", &excerpt)],
+        );
+        let expected = if content.len() == 65_536 {
+            "127"
+        } else {
+            "128"
+        };
+        assert!(
+            ranked[0]
+                .item_id
+                .starts_with(&format!("repository-source-128-{expected}-"))
+        );
+    }
+    eprintln!(
+        "full-size retrieval component: sources=5 source_bytes_each=65536 largest_envelope_bytes={largest_envelope} scan_boundary_controls=2 elapsed_us={}",
+        started.elapsed().as_micros()
+    );
+}

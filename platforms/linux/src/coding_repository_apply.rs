@@ -50,8 +50,27 @@ impl LinuxCodingRepository {
     /// original checkout. Paths must have an uninterrupted chain of successful
     /// edits in this owner's created worktree. Original bytes must still equal
     /// that chain's first preimage; worktree bytes must equal its last postimage.
+    /// Both expected root identities must match the roots displayed for read
+    /// consent. A mismatch refuses before inspecting roots or reading sources,
+    /// leaving any older pending preview intact. Digests cannot adopt roots.
     /// No caller root, patch, receipt or model answer can adopt either side.
-    pub fn prepare_apply(&mut self, paths: &[String], intent: &str, now: u64) -> Result<Value> {
+    pub fn prepare_apply(
+        &mut self,
+        paths: &[String],
+        intent: &str,
+        expected_original_root_sha256: &str,
+        expected_worktree_root_sha256: &str,
+        now: u64,
+    ) -> Result<Value> {
+        let created = self
+            .created
+            .as_ref()
+            .ok_or(err("code.command.worktree-required"))?;
+        if expected_original_root_sha256 != created.original.root_path_sha256()
+            || expected_worktree_root_sha256 != created.held.root_path_sha256()
+        {
+            return Err(err("code.apply.read-scope"));
+        }
         let created = self.verify_apply_roots()?;
         let edits = paths
             .iter()

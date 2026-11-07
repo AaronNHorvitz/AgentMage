@@ -71,8 +71,9 @@ fn matches(query: &BTreeSet<String>, text: &str) -> usize {
 fn body_matches(query: &BTreeSet<String>, excerpt: &str) -> usize {
     // Native sources wrap their text as JSON. Match decoded text so escaped
     // line breaks and indentation cannot become prefixes of identifiers.
-    if excerpt.len() <= 65_536
-        && let Ok(value) = serde_json::from_str::<serde_json::Value>(excerpt)
+    // The producer caps source bytes, not serialized JSON bytes: escaping
+    // expands an otherwise admitted source. The decoded scan remains bounded.
+    if let Ok(value) = serde_json::from_str::<serde_json::Value>(excerpt)
         && value["schema_version"] == 1
         && value["untrusted_repository_source"] == true
         && let Some(content) = value["content"].as_str()

@@ -26,9 +26,14 @@ agentmage-code <loopback-ip:port> <private-auth-directory> original-apply <origi
 
 Preparation verifies both chosen roots against the owner's held identities,
 shows the paths and task, and requires `read <original-root-digest>
-<worktree-root-digest>` as one complete line in the controlling terminal. It
-reads only those existing files on both sides and writes nothing. The complete
-preview carries both root identities, creation receipt digest, kernel diff,
+<worktree-root-digest>` as one complete line in the controlling terminal. The
+request sends those exact two displayed identities. The server refuses
+`code.apply.read-scope` if either differs from its current held pair, before
+inspecting either root or reading a source. A different control client creating
+a worktree during the prompt cannot retarget that read consent. Inspect the
+current pair and give fresh consent after a mismatch; do not automatically retry.
+Preparation reads only those existing files on both sides and writes nothing.
+The complete preview carries both root identities, creation receipt digest, kernel diff,
 change-set and preview digests, and expiry.
 
 Application displays the complete escaped preview and requires
@@ -48,11 +53,15 @@ its own approval.
 | Route | Body and result |
 | --- | --- |
 | `GET /v1/code/repository/apply` | Pending complete preview, latest process result, root identities and eligible paths |
-| `POST /v1/code/repository/apply/prepare` | `paths`, `task`, `approve_read: true`; inert complete original-checkout diff |
+| `POST /v1/code/repository/apply/prepare` | `paths`, `task`, `approve_read: true`, `expected_repository_root_sha256`, `expected_worktree_root_sha256`; inert complete original-checkout diff |
 | `POST /v1/code/repository/apply/decide` | `preview_sha256`, `approve`; consumes one exact decision |
 
-The body accepts no root, patch, model answer or creation receipt. The owner
-selects both roots from its successful creation. A control token authenticates
+Both expected identities are required strings obtained from inspection and bound
+to the caller's read confirmation. They are digests, never filesystem paths.
+Old preparation bodies without them refuse rather than silently selecting the
+current roots. The body accepts no root path, patch, model answer or creation
+receipt. The owner selects both roots from its successful creation; an expected
+identity can only restrict that selection. A control token authenticates
 the trusted caller; it is not a kernel grant. Only the separate approved decision
 can issue and consume the existing exact native write grant.
 

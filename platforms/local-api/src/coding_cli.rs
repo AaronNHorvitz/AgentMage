@@ -483,6 +483,7 @@ fn original_apply_prepare(
     verify()?;
     confirm(
         &json!({"repository":original,"worktree":worktree,"paths":paths,"task":task,
+        "expected_repository_root_sha256":root,"expected_worktree_root_sha256":tree,
         "warning":"Reads the displayed existing files from both roots to prepare the complete original-checkout diff. No writes, model request, command, commit or push."}),
         &format!("read {root} {tree}"),
     )?;
@@ -491,7 +492,8 @@ fn original_apply_prepare(
         "POST",
         "/v1/code/repository/apply/prepare",
         true,
-        Some(json!({"paths":paths,"task":task,"approve_read":true})),
+        Some(json!({"paths":paths,"task":task,"approve_read":true,
+            "expected_repository_root_sha256":root,"expected_worktree_root_sha256":tree})),
     )?)
 }
 

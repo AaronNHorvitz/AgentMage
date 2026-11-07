@@ -89,6 +89,18 @@ existing writer checks selected leaf identities and exact preimages around
 replacement. Symlinks, mount crossings, hardlinks, Git metadata, new files and
 deletions remain refused. Existing selected-file and byte caps apply unchanged.
 
+Transfer lineage deliberately bounds this development edit path as defined in
+Decision 0156. `code.edit.lineage-limit` refuses adding a seventeenth distinct
+untransferred path. Transfer eligible changes with separate original-checkout
+approval to free those entries, or use a fresh approved worktree. It cannot be
+cleared by dropping a preview or restarting: restart loses ownership.
+`code.edit.lineage` refuses a later edit when its current preimage differs from
+that path's last committed postimage, including an out-of-band human change.
+Restore the exact last approved worktree bytes yourself, or choose a fresh
+worktree. The tool never restores them automatically. These limits can refuse
+otherwise valid edits even when no original transfer is intended. Read selection
+and fresh approval cannot bypass them.
+
 A successful preparation replaces only the pending edit. Failed preparation
 preserves it. Denial consumes no write grant. A matching approved decision takes
 the preview before dispatch, even when it later fails. Dispatch invalidates

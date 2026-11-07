@@ -81,7 +81,7 @@ impl Fixture {
     }
     fn prepare(&self, owner: &mut LinuxCodingRepository) -> Value {
         owner
-            .prepare_apply(&["one.py".into()], "Apply fixture repair", NOW)
+            .prepare_current_apply(&["one.py".into()], "Apply fixture repair", NOW)
             .unwrap()
     }
     fn assert_preserved(&self) {
@@ -101,6 +101,24 @@ impl Drop for Fixture {
     }
 }
 
+// Test convenience only: existing tests use the owner's current identities.
+// Production callers must supply the identities displayed before read consent.
+trait CurrentApply {
+    fn prepare_current_apply(&mut self, paths: &[String], intent: &str, now: u64) -> Result<Value>;
+}
+impl CurrentApply for LinuxCodingRepository {
+    fn prepare_current_apply(&mut self, paths: &[String], intent: &str, now: u64) -> Result<Value> {
+        let status = self.inspect_apply()?;
+        self.prepare_apply(
+            paths,
+            intent,
+            status["repository_root_sha256"].as_str().unwrap_or(""),
+            status["worktree_root_sha256"].as_str().unwrap_or(""),
+            now,
+        )
+    }
+}
+
 #[test]
 fn original_apply_transfers_cumulative_exact_edits_once_and_preserves_other_work() {
     let start = Instant::now();
@@ -110,7 +128,7 @@ fn original_apply_transfers_cumulative_exact_edits_once_and_preserves_other_work
     f.edit(&mut owner, "one.py", "revision two\n");
     f.edit(&mut owner, "two.py", "second repaired\n");
     let preview = owner
-        .prepare_apply(
+        .prepare_current_apply(
             &["one.py".into(), "two.py".into()],
             "Apply both repairs",
             NOW,
@@ -149,7 +167,7 @@ fn original_apply_transfers_cumulative_exact_edits_once_and_preserves_other_work
     assert!(owner.decide_apply(digest, true, NOW).is_err());
     assert!(
         owner
-            .prepare_apply(&["one.py".into()], "No replay", NOW)
+            .prepare_current_apply(&["one.py".into()], "No replay", NOW)
             .is_err()
     );
     // A subsequent successful edit starts a fresh original preimage chain.
@@ -178,7 +196,7 @@ fn original_apply_refuses_unowned_unedited_reserved_duplicate_and_drifted_source
     let mut owner = f.open();
     assert!(
         owner
-            .prepare_apply(&["one.py".into()], "Refuse unowned", NOW)
+            .prepare_current_apply(&["one.py".into()], "Refuse unowned", NOW)
             .is_err()
     );
     drop(owner);
@@ -189,7 +207,7 @@ fn original_apply_refuses_unowned_unedited_reserved_duplicate_and_drifted_source
         vec!["../human".into()],
         vec![".git/index".into()],
     ] {
-        assert!(owner.prepare_apply(&paths, "Refuse", NOW).is_err());
+        assert!(owner.prepare_current_apply(&paths, "Refuse", NOW).is_err());
     }
     f.edit(&mut owner, "one.py", "repaired\n");
     let preview = f.prepare(&mut owner);
@@ -197,7 +215,7 @@ fn original_apply_refuses_unowned_unedited_reserved_duplicate_and_drifted_source
         vec!["one.py".into(), "one.py".into()],
         vec!["two.py".into()],
     ] {
-        assert!(owner.prepare_apply(&paths, "Refuse", NOW).is_err());
+        assert!(owner.prepare_current_apply(&paths, "Refuse", NOW).is_err());
         assert_eq!(owner.inspect_apply().unwrap()["pending"], preview);
     }
     fs::write(
@@ -207,7 +225,7 @@ fn original_apply_refuses_unowned_unedited_reserved_duplicate_and_drifted_source
     .unwrap();
     assert_eq!(
         owner
-            .prepare_apply(&["one.py".into()], "Refuse", NOW)
+            .prepare_current_apply(&["one.py".into()], "Refuse", NOW)
             .unwrap_err()
             .code(),
         "code.apply.source-drift"
@@ -320,7 +338,7 @@ fn later_worktree_edit_invalidates_original_consent_and_restart_restores_no_owne
     assert!(owner.inspect_apply().unwrap()["repository_root_sha256"].is_null());
     assert!(
         owner
-            .prepare_apply(&["one.py".into()], "Refuse adoption", NOW)
+            .prepare_current_apply(&["one.py".into()], "Refuse adoption", NOW)
             .is_err()
     );
     assert!(
@@ -338,7 +356,7 @@ fn original_apply_rechecks_all_original_preimages_before_any_multi_file_write() 
     f.edit(&mut owner, "one.py", "repaired one\n");
     f.edit(&mut owner, "two.py", "repaired two\n");
     let preview = owner
-        .prepare_apply(&["one.py".into(), "two.py".into()], "Apply both", NOW)
+        .prepare_current_apply(&["one.py".into(), "two.py".into()], "Apply both", NOW)
         .unwrap();
     fs::write(f.0.join("original/two.py"), b"concurrent human change").unwrap();
     assert!(
@@ -362,7 +380,7 @@ fn original_drift_before_preparation_and_broken_edit_lineage_cannot_be_transferr
     fs::write(f.0.join("original/one.py"), b"human edit\n").unwrap();
     assert!(
         owner
-            .prepare_apply(&["one.py".into()], "Refuse changed original", NOW)
+            .prepare_current_apply(&["one.py".into()], "Refuse changed original", NOW)
             .is_err()
     );
     assert!(owner.inspect_apply().unwrap()["pending"].is_null());
@@ -464,7 +482,7 @@ fn refused_worktree_write_dispatch_removes_old_transfer_lineage() {
     assert_eq!(owner.inspect_apply().unwrap()["available_paths"], json!([]));
     assert!(
         owner
-            .prepare_apply(&["one.py".into()], "Refuse old lineage", NOW)
+            .prepare_current_apply(&["one.py".into()], "Refuse old lineage", NOW)
             .is_err()
     );
     assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
@@ -525,4 +543,105 @@ fn transfer_lineage_is_bounded_across_disjoint_edit_batches() {
         fs::read(f.0.join("owned/worktree").join(&paths[16])).unwrap(),
         b"before\n"
     );
+}
+
+#[test]
+fn original_read_consent_binds_both_roots_before_any_source_or_root_inspection() {
+    let f = Fixture::new();
+    let mut owner = f.owner();
+    f.edit(&mut owner, "one.py", "repair\n");
+    let preview = f.prepare(&mut owner);
+    let status = owner.inspect_apply().unwrap();
+    let original = status["repository_root_sha256"].as_str().unwrap();
+    let tree = status["worktree_root_sha256"].as_str().unwrap();
+    let receipts = owner.inspect().unwrap()["receipts"].clone();
+    // Make the held root unavailable. A stale consent must refuse even before
+    // root inspection (and before the deliberately ineligible source selection).
+    fs::rename(f.0.join("original"), f.0.join("parked")).unwrap();
+    for (expected_original, expected_tree) in [
+        ("", tree.to_owned()),
+        (original, "".into()),
+        ("foreign", tree.to_owned()),
+        (original, "foreign".into()),
+        (tree, original.to_owned()),
+    ] {
+        assert_eq!(
+            owner
+                .prepare_apply(
+                    &["unselected.py".into()],
+                    "Refuse stale consent",
+                    expected_original,
+                    &expected_tree,
+                    NOW
+                )
+                .unwrap_err()
+                .code(),
+            "code.apply.read-scope"
+        );
+        assert_eq!(owner.inspect_apply().unwrap()["pending"], preview);
+        assert!(owner.inspect_apply().unwrap()["latest"].is_null());
+        assert_eq!(owner.inspect().unwrap()["receipts"], receipts);
+        assert_eq!(fs::read(f.0.join("parked/one.py")).unwrap(), b"first\n");
+        assert_eq!(
+            fs::read(f.0.join("owned/worktree/one.py")).unwrap(),
+            b"repair\n"
+        );
+    }
+    fs::rename(f.0.join("parked"), f.0.join("original")).unwrap();
+    assert_eq!(
+        owner
+            .prepare_apply(&["one.py".into()], "Correct consent", original, tree, NOW)
+            .unwrap()["operation"],
+        "apply-to-original"
+    );
+    f.assert_preserved();
+}
+
+#[test]
+fn replacing_the_created_pair_cannot_retarget_an_older_read_consent() {
+    let f = Fixture::new();
+    let other = Fixture::new();
+    let mut owner = f.owner();
+    let mut other_owner = other.owner();
+    f.edit(&mut owner, "one.py", "first repair\n");
+    other.edit(&mut other_owner, "one.py", "other repair\n");
+    let status = owner.inspect_apply().unwrap();
+    // Synthetic success injection stays inside this component test. The public
+    // path can replace these handles only after separate native creation consent.
+    owner.created = other_owner.created.take();
+    let original = status["repository_root_sha256"].as_str().unwrap();
+    let tree = status["worktree_root_sha256"].as_str().unwrap();
+    assert_eq!(
+        owner
+            .prepare_apply(&["one.py".into()], "Older consent", original, tree, NOW)
+            .unwrap_err()
+            .code(),
+        "code.apply.read-scope"
+    );
+    assert!(owner.inspect_apply().unwrap()["pending"].is_null());
+    let fresh = owner.inspect_apply().unwrap();
+    let preview = owner
+        .prepare_apply(
+            &["one.py".into()],
+            "Fresh consent",
+            fresh["repository_root_sha256"].as_str().unwrap(),
+            fresh["worktree_root_sha256"].as_str().unwrap(),
+            NOW,
+        )
+        .unwrap();
+    assert_eq!(
+        preview["repository_root_sha256"],
+        fresh["repository_root_sha256"]
+    );
+    assert_eq!(
+        preview["worktree_root_sha256"],
+        fresh["worktree_root_sha256"]
+    );
+    assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+    assert_eq!(
+        fs::read(other.0.join("original/one.py")).unwrap(),
+        b"first\n"
+    );
+    f.assert_preserved();
+    other.assert_preserved();
 }
