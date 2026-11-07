@@ -399,6 +399,12 @@ impl CodingCoordinatorPort for GatedCoordinator {
         _response: Option<&RuntimeApprovalResponse>,
         _cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<RuntimeCoordinatorStep, CodingClientError> {
+        // An empty stream models a worker delayed before its first event.
+        // Keep it alive until the test releases it, then fail without evidence.
+        if self.events.is_empty() {
+            self.gate.recv().map_err(|_| CodingClientError::Runtime)?;
+            return Err(CodingClientError::Runtime);
+        }
         let mut events = std::mem::take(&mut self.events).into_iter();
         let first = events.next().ok_or(CodingClientError::Runtime)?;
         self.publisher
@@ -3196,4 +3202,56 @@ fn embedded_shutdown_joins_busy_worker_instead_of_detaching() {
         assert!(observed.load(Ordering::SeqCst));
     });
     assert!(service.is_empty());
+}
+
+#[test]
+fn embedded_failed_start_joins_unregistered_worker_before_returning_empty() {
+    use std::sync::mpsc::{RecvTimeoutError, channel};
+    use std::time::{Duration, Instant};
+    let (request, _, outcome, observed) =
+        crate::runtime_read_tests::completed_native_read_fixture();
+    assert!(observed);
+    let store = JobLedgerStore::new("embedded-failed-start");
+    let ledgers = store.try_runtime().unwrap().job_ledgers();
+    let (mut service, gate, input) =
+        gated_live_service(&request, Vec::new(), outcome, ledgers.clone(), None, None);
+    service.prepare(input).unwrap();
+    let started = Instant::now();
+    std::thread::scope(|scope| {
+        let (sent, received) = channel();
+        let service = &mut service;
+        let request = request.clone();
+        let worker = scope.spawn(move || {
+            let result = service.start(request);
+            sent.send((result, service.is_empty())).unwrap();
+        });
+        // START_WAIT is 250ms. Even after that refusal, the service must not
+        // expose an empty registry while its unregistered worker is held.
+        let early = received.recv_timeout(Duration::from_millis(750));
+        let held = matches!(early, Err(RecvTimeoutError::Timeout));
+        let released = gate.send(());
+        let final_result = if held {
+            received.recv_timeout(Duration::from_secs(5))
+        } else {
+            early
+        };
+        worker.join().unwrap();
+        released.unwrap();
+        assert!(held);
+        let (result, empty) = final_result.unwrap();
+        assert_eq!(result, Err(RuntimeTransportError::RuntimeFailed));
+        assert!(empty);
+    });
+    assert!(service.is_empty());
+    // No acknowledged cancellation, terminal outcome or repeat start is minted.
+    assert_eq!(
+        ledgers.observation(request.run_id.as_str()).unwrap().phase,
+        JobPhase::Running
+    );
+    assert_eq!(
+        service.start(request),
+        Err(RuntimeTransportError::RequestDenied)
+    );
+    service.shutdown();
+    println!("failed_start_join_us={}", started.elapsed().as_micros());
 }

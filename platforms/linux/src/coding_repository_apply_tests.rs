@@ -935,7 +935,9 @@ fn runtime_poisoned_owner_recovers_without_creation_authority_or_pending_approva
         .is_err()
     );
     assert!(lease.check_workspace(&f.0.join("owned/worktree")).is_err());
-    let mut owner = recover_lease(lease);
+    let mut slot = Some(lease);
+    let mut owner = crate::LinuxCodingWorktreeLease::recover_repository(&mut slot).unwrap();
+    assert!(slot.is_none());
     assert!(owner.inspect_apply().unwrap()["repository_root_sha256"].is_null());
     assert!(owner.inspect_apply().unwrap()["pending"].is_null());
     assert!(
@@ -983,4 +985,55 @@ fn runtime_refused_handoff_preserves_manual_owner_and_edits_for_retry() {
         b"retained repair\n"
     );
     f.assert_preserved();
+}
+
+#[test]
+fn runtime_recovery_slot_retains_busy_owner_and_lineage_until_explicit_retry() {
+    let started = Instant::now();
+    let f = Fixture::new();
+    let mut owner = f.owner();
+    f.edit(&mut owner, "one.py", "before recovery\n");
+    let old_preview = f.prepare(&mut owner);
+    let live = runtime_lease(owner);
+    let mut slot = Some(live.clone());
+    for _ in 0..2 {
+        assert_eq!(
+            crate::LinuxCodingWorktreeLease::recover_repository(&mut slot)
+                .err()
+                .unwrap()
+                .code(),
+            "code.runtime.owner-held"
+        );
+        assert!(slot.is_some());
+    }
+    runtime_edit(&f, &live, "retained worker repair\n", true);
+    drop(live);
+    let mut owner = crate::LinuxCodingWorktreeLease::recover_repository(&mut slot).unwrap();
+    assert!(slot.is_none());
+    assert_eq!(
+        crate::LinuxCodingWorktreeLease::recover_repository(&mut slot)
+            .err()
+            .unwrap()
+            .code(),
+        "code.runtime.worktree-required"
+    );
+    assert!(
+        owner
+            .decide_apply(old_preview["preview_sha256"].as_str().unwrap(), true, NOW)
+            .is_err()
+    );
+    assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+    let preview = f.prepare(&mut owner);
+    owner
+        .decide_apply(preview["preview_sha256"].as_str().unwrap(), true, NOW)
+        .unwrap();
+    assert_eq!(
+        fs::read(f.0.join("original/one.py")).unwrap(),
+        b"retained worker repair\n"
+    );
+    f.assert_preserved();
+    println!(
+        "recovery_slot_native_write_and_apply_us={}",
+        started.elapsed().as_micros()
+    );
 }

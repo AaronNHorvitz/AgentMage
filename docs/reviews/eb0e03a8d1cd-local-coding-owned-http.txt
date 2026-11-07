@@ -1,0 +1,337 @@
+Commit: eb0e03a8d1cd4d05c4afd56c3abd7035a5a70360
+Scope: local-coding-owned-http
+
+# Independent review: live coding ownership through the local HTTP API (T-306 / T-303, non-closing)
+
+- Reviewer: Claude Opus 5.5, extra-high effort, separate read-only session. No repository file was
+  modified. No GPU, model, held-out task or hidden test was used.
+- Base: `b915775f5bb7cf21301878d8f00d920781c590e7`. Both commits were confirmed with `git rev-parse`.
+  HEAD is `eb0e03a8…` and the working tree is clean.
+- Diff: exactly the 14 requested paths, eight of them Rust sources (+1351/−83). No evaluation, held-out,
+  hidden-test, score, threshold, dependency, `Cargo.lock`, SBOM or status-model path changes.
+- In `TASKS.md`, only the T-303 and T-306 cells change, by appended text. Both rows stay `[ ]`; the
+  audit's `rest(old)==rest(new)` check and the status-column regex both pass.
+
+## Methods
+
+1. I read `IP-POLICY.md`, Decision 0159, the top of `TASKS.md`, the request, the full diff and the
+   surrounding unchanged code:
+   - `LiveCodingRuntimeService::start`, `release`, `continue_from_checkpoint` and
+     `control_job_for_client`;
+   - `LiveCodingSession::{dispatch, start, Drop}` and `SharedCancellation`;
+   - the `CodingDevelopmentRuntimeFactory` fields, `new`, `attach_owned_worktree` and the composition
+     `Box::leak` sites;
+   - `LinuxCodingWorktreeLease`, `LinuxStrictLocalRootInspector::inspect` and
+     `CodingDevelopmentActivation::validate`;
+   - `serve_state`, `handle`, `begin_scoped` and `handle_runtime`;
+   - the separate-process launcher, `spawn_sibling`, and the `--coding-development-host` startup in
+     `shells/host/src/main.rs`.
+2. I checked the requested properties against that code:
+   - no ownership adoption from a marker, path or receipt;
+   - root identity checked before activation is read;
+   - separate manual and runtime stores;
+   - Arc/Mutex exclusivity and poison handling;
+   - recovery ordering;
+   - embedded job-control scope;
+   - shutdown cancellation, drain and join;
+   - honest labelling.
+3. Before running anything, I checked every helper, log and pinned-runtime checksum in the request.
+   All match:
+   - helpers: `audit.py` `4455974f…`, `focused.py` `5a25a363…`, `batch_gate.py` `d8225daf…`,
+     `process.py` `48985541…`;
+   - all eight builder raw logs and manifests;
+   - `node` `d1de76d8…`;
+   - `/tools/build-slot` `453086eb…`.
+   I read all four helpers. `batch_gate.py` verifies the inherited fd 9 against the heavy lock, calls the
+   unchanged `local_agent_fast_gate.py --plan`/`execute`, and only prefixes Cargo argv with `env`. No
+   filter, timeout or check is weakened. My `plan.json` is byte-identical to the builder's.
+4. I ran the exact requested commands with fresh output in
+   `/lane/state/tmp/review-owned-http-eb0e03a8d1cd` (mode 700).
+
+## Exact commands and results
+
+Environment:
+
+```text
+export PATH=/lane/state/tmp/t306-owned-api/node-v24.15.0/bin:$PATH
+export CARGO_TARGET_DIR=/lane/state/review-target
+export CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+```
+
+### Focused tests and full gate
+
+```text
+bash /tools/build-slot env AGENTMAGE_VALIDATION_DIR="$owned_review_out" python3 -B /lane/state/tmp/t306-owned-api/focused.py > "$owned_review_out/focused.log" 2>&1
+```
+
+The run waited for the reservation from 09:54:28 and finished at 10:05:23. It ended with exit 1, as
+expected: `BATCHED_GATE_EXIT 1`.
+
+Focused steps (all exit 0):
+
+| Step | Result | Time |
+| --- | --- | --- |
+| Platform `runtime_` tests | 8 passed / 312 filtered | 21.236 s |
+| Host `embedded_` tests | 2 passed / 588 filtered | 19.727 s |
+| API `coding_owned_api::tests::` | 4 passed / 21 filtered | 12.737 s |
+| API binary build | PASS | 1.908 s |
+| Real `serve-coding` process | status HTTP 200, `runtime_attached:false`, SIGTERM exit 0 | 0.218712 s |
+
+- The API refusal test printed `owned_api_four_refusal_exchanges_us=1550`.
+- The native component test printed `owned_runtime_native_writes_and_original_apply_us=454328`.
+- These are fixture timings only.
+
+Gate steps in my `fast.log`:
+
+| Step | Result |
+| --- | --- |
+| `git diff --check` | 0 |
+| `--lint-untracked` | 0 |
+| `--lint-reviews` | 0 |
+| Markdown, 5 files | 0; no "Missing executable" line appears in my run |
+| `cargo fmt --check` | 0 |
+| Clippy `-D warnings` | 0 (12.97 s) |
+| Full `cargo test --all-targets --no-fail-fast` | 101 (94.56 s); `FAST GATE: FAIL` |
+
+Totals over the 22 test-result lines: **914 passed / 72 failed / 63 ignored / 0 filtered**.
+
+- My 72 failure identities (`mine.ids` `2ea76ffc…`) are set-equal to the builder's `fast.log` and to
+  the prior baseline `/lane/state/tmp/t306-owned-runtime/fast.log`. There are 53 `agentmage_host` and
+  19 `agentmage_platform_linux` unit tests. The `mine.ids` hash is byte-identical to the one retained
+  by the b915775f review.
+- The failure causes are the existing lane refusals: sandbox, worker, command-runner and secret-service
+  `InvalidManifest`, Git `InvalidGitArtifact`, and the same assertion sites. None touches the changed
+  code.
+- All seven new tests appear as `... ok` in the full run.
+
+### Builder audit
+
+```text
+python3 -B /lane/state/tmp/t306-owned-api/audit.py
+```
+
+Exit 0. The script rewrites the builder's `audit.json`, so I copied it first. The rewrite is
+byte-identical to the copy: `5f804ec6…`, the SHA-256 given in the request.
+
+### Source policy
+
+```text
+python3 -B /lane/state/tmp/t306-read-consent/run-policy.py "$owned_review_out/policy-source" > "$owned_review_out/policy.log" 2>&1
+```
+
+- Exit 0: "Validated 791 Markdown file(s) and all policy invariants."
+- 9045 inputs. The manifest `2c69ae3e…` is identical to the builder's, and so is `policy.log`
+  (`bd954e3e…`).
+- I removed only my mirror; the manifest is retained. This is source validation, not the T-310 long
+  gate.
+
+### Prior review and whitespace
+
+```text
+cmp docs/reviews/b915775f5bb7-local-coding-live-owner-bridge.txt /lane/reviews/b915775f5bb7-local-coding-live-owner-bridge.md
+git diff --check b915775f5bb7cf21301878d8f00d920781c590e7 --
+```
+
+`cmp` reports identical files and `git diff --check` exits 0.
+
+### Privacy and trademark scan
+
+I grepped the added lines for host paths, the username, an email address, hostnames and credentials.
+The only hits are the retained review's own sentence saying none are present, and a test-only constant
+`b"synthetic-owner-api-control-secret"`, which is not a credential.
+
+- The model selectors `muse` and `gpt-oss` predate this commit and name models, not branding.
+- No product comparisons appear.
+
+## What I verified by reading
+
+### Attach (`coding_owned_api.rs:47-120`)
+
+Attach requires:
+
+- the control token (`handle_owned` returns 403 without it);
+- a held controlled operation;
+- both consents;
+- the closed model and scenario lists.
+
+Under the state lock it does the following, in order:
+
+1. Refuses on stop, on an attached runtime, on a missing owner and on a poisoned owner. A poisoned owner
+   stays in state.
+2. Refuses with "busy" and puts the Arc back if any other reference exists (`Arc::try_unwrap`).
+3. `into_runtime_worktree` compares the displayed root SHA before `verify_created`, and returns the
+   owner intact on refusal.
+4. `build` calls `check_workspace` (an exact `created.path` match plus a held-identity check) **before**
+   `CodingDevelopmentActivation::validate` opens any activation path.
+5. It then checks the canonical runtime state root against the manual store and both held roots.
+6. `factory.attach_owned_worktree` re-checks the workspace.
+
+Further properties:
+
+- The manual `state_root` passed through `LinuxStrictLocalRootInspector` (absolute, no symlinks, no
+  `.` or `..`), so the component-wise `starts_with` comparison runs on canonical paths on both sides.
+- Every error path in `build` drops the factory before `restore_lease`.
+- Stop after construction drops the empty service before restoring the owner.
+- No resume flag exists.
+- The factory is created with `resume_requested=false`.
+- The response says `model_and_tools_approved:false`, and no grant or approval is minted.
+- I found no marker, path, receipt or decoded-lease adoption.
+
+### Recover (`:176-215`)
+
+Recover requires:
+
+- consent;
+- no manual owner;
+- a runtime that exists, is free (`try_lock`) and is owned;
+- `service.is_empty()`, meaning every prepared and active run has been released;
+- a successful `Arc::try_unwrap`.
+
+It then drops the port (`shutdown` on an empty service, then the factory and its lease clone) before
+`try_into_repository`. It never stops a job implicitly. The response says `apply_approved:false` and
+`fresh_diff_required:true`. The `prepare_apply` path still requires a root-identity match, lineage, a
+full preview and a separate decision.
+
+### Exclusion while attached
+
+`lib.rs:1064` refuses every route except `GET /v1/status` and `GET /v1/activity` while a runtime is
+attached. Runtime routes require the control token. `handle_runtime` holds only an Arc clone, so
+recovery's `try_unwrap` refuses while a handler is in flight. I checked this interleaving by reading.
+
+### Embedded job control (`coding_live_runtime.rs:561-575`)
+
+- The scope is the host-fixed `"embedded-local-control-v1"`. `JobControlRequest` has no scope field.
+- The trait's scope-less `control_job` still returns `JobControlUnavailable`, so a caller cannot
+  impersonate a peer.
+- The same per-session ledger decides each request. The new host test shows `Applied`.
+
+### Shutdown (`:582-588`, `:1059-1102`)
+
+1. A cancellation is sent through the passive probe only, once a correlation ID exists.
+   `SharedCancellation::request` keeps a different earlier signal.
+2. `Stop` is retried until queued, and `results` is drained so a capacity-one publication cannot block.
+3. The worker is joined, then the event pump.
+4. Drained results are discarded, and sessions that are not terminal leave their chains open.
+
+`job_outcome_event` maps a cancellation without an applied request to `Failed`. So no terminal outcome
+or acknowledged cancellation is fabricated. `RuntimePort::Drop` calls `shutdown` only for `Owned`, and
+`serve_state` drops `State` only after the HTTP workers have joined.
+
+### Separate-process launcher and stop signals
+
+- The separate-process launcher is unchanged apart from being wrapped in `RuntimePort::Remote`.
+- `with_stop_signals` is a faithful extraction of the previous registration and unregistration. The
+  manual `serve-coding` now uses it too, which the real SIGTERM run confirmed.
+- The only startup steps the sibling host performs that the embedded path skips are IPC
+  peer-identity and bootstrap steps. They have no meaning in-process, and no sandbox, command, Git or
+  write check moves out of the factory or boundary composition.
+
+### Honest limits
+
+The evidence, guide and decision label the following plainly:
+
+- positive native create, run and apply are UNOBSERVED;
+- the factory attach branch, successful attach, successful recover and the `Owned` drop path are never
+  executed by a test;
+- the scripted coordinator and synthetic creation provenance are distinct from native execution;
+- no model, score or parent-row claim is made.
+
+All seven new tests pass. The evidence's reported numbers (8/2/4, 200/exit 0, 914/72/63/0, the
+Markdown exit-127 history) match my run and the builder logs. Prior review L1 (owner lost on a refused
+handoff) is repaired and regression-tested by `runtime_refused_handoff_preserves_manual_owner_and_edits_for_retry`.
+
+## Findings
+
+No critical, high or medium finding.
+
+### L1 (low, backlog): a worker detached by a failed start escapes the shutdown join and turns recovery into permanent loss of ownership
+
+- **Code involved.**
+  - `LiveCodingSession::Drop` (`shells/host/src/coding_live_runtime.rs:2006-2011`, unchanged) detaches
+    a worker whose `busy` flag is set.
+  - `LiveCodingRuntimeService::start` drops such a session without inserting it into `active`:
+    `session.start()` sets `busy` in `dispatch`, then fails if no event arrives within `START_WAIT`
+    (250 ms) or `refresh` fails (`:711`).
+  - `continue_from_checkpoint` has comparable post-spawn failure exits.
+- **Consequences.**
+  - The new `shutdown()` (`:582`) joins only `active` sessions. A detached worker is therefore neither
+    joined nor cancelled, which contradicts Decision 0159's "join all workers before returning … must
+    not inherit … reliance on process teardown".
+  - `is_empty()` is true, so `recover` proceeds. The detached worker's composition still holds a
+    boundary lease clone, so `try_into_repository` returns `Err(lease)`.
+  - `restore_lease` (`platforms/local-api/src/coding_owned_api.rs:122-125`) discards that lease with
+    `map_err(|_| …)` and answers 500 `code.runtime.owner-held`.
+  - The state then holds neither a repository nor a runtime. Attach returns 428 and recover returns 428
+    until restart.
+  - Creation authority and transferable lineage are lost for good. This contradicts the lease's own
+    documented contract: "Busy ownership is returned intact for later explicit recovery".
+  - Files in the worktree and the original checkout are not touched.
+- **Why low.** The trigger is a rare failure path. The loss is fail-closed and the authority is
+  process-only. It cannot widen confinement.
+- **Fix.**
+  - Have `restore_lease` keep an `Err(lease)` in a `State` slot, for example a held-recovery lease
+    that a later `recover` retries.
+  - In `start` and `continue_from_checkpoint` failure paths (or in an embedded-mode `Drop`), call
+    `shutdown_worker()` instead of detaching.
+  - Add a host test: the start fails with the worker busy, then `is_empty()`, then shutdown joins.
+
+### L2 (low, backlog): each attach leaks a platform adapter, the profile and a held workspace descriptor
+
+- **Where.** `CodingDevelopmentRuntimeFactory::new` and `build_repository_composition` use `Box::leak`
+  (`shells/host/src/coding_development_runtime.rs:438`, `:759`, `:767`). `refresh_repository_composition`
+  (`:492`) leaks again on each refresh.
+- **What leaks.** The leaked `LinuxCodingWorkspace` holds an open worktree root descriptor.
+- **Why this commit makes it worse.** In the separate-process host this was a single leak per process
+  plus one per refresh. The new attach/recover cycle repeats it inside the long-lived `serve-coding`
+  process. N cycles leave N unreachable workspace descriptors and their allocations behind after
+  recovery.
+- **Why low.** The descriptors are unreachable, so no authority can use them. Only an authenticated
+  control client can trigger the cycle.
+- **Fix.** Make the factory own these values (for example `Arc` or owned fields with a self-borrow
+  helper) rather than `'static` leaks. At least count the leak, and disclose it in the guide until then.
+
+### L3 (low, backlog): the "attached" exclusion is checked outside the controlled-operation lock
+
+- **Where.** `handle` (`platforms/local-api/src/lib.rs:1064-1071`) checks `runtime.is_some()` under
+  one lock acquisition. The chat, workspace and repository handlers later call `begin_scoped`
+  (`:786`), which never re-checks `runtime`.
+- **How it can be bypassed.** A request that passed the guard before attach started, and whose thread
+  stays descheduled until attach has published, can begin a manual operation while the coordinator is
+  attached. That is the "simultaneous manual … operations" Decision 0159 excludes.
+- **Why low.** Exploiting it needs the single local control client to race its own requests within a
+  microsecond window spanning the whole of attach. Any manual worktree write still shows in the later
+  full apply diff.
+- **Fix.** Refuse in `begin_scoped` when `guard.runtime.is_some()`, except for the runtime and
+  ownership operations themselves.
+
+## Per-row result
+
+- **T-306: implementation batch accepted (non-closing).** No high or medium finding is open; L1–L3 are
+  backlog.
+  - Verified by execution: the HTTP refusal paths, the platform refusal/retry path, host lifecycle
+    emptiness, embedded control, the shutdown join of a busy worker, and the real-process SIGTERM.
+  - Verified by reading only: successful attach, recover and `Owned` drop ordering.
+  - Still open:
+    - positive native create, run and apply (T-301.1), and the factory attach branch;
+    - durable ownership and new-file transfer;
+    - approved commit and push;
+    - MCP;
+    - model and parent measurements.
+  - The row stays OPEN, as requested.
+- **T-303: implementation batch accepted (non-closing).** Same basis. No coordinator, model or score
+  claim is made, and the row stays OPEN.
+
+This verdict does not certify or claim compliance or legal clearance.
+
+## Retained reviewer artifacts (`/lane/state/tmp/review-owned-http-eb0e03a8d1cd/`)
+
+- `focused.log` `5705387a222f7a4667c204fe9f1c9659ea1e5840b8124f86ba21deea05a17743`
+- `fast.log` `35429a9b4558af6a9c79155f9cc77a2dc7cf5349e832c63c82957babb3696a2b`
+- `plan.json` `6d524b4379a5bf0fbe71b7d4e29405cd6f6c0ffcbe246caaa7d67043ef573133` (identical to builder)
+- `mine.ids` `2ea76ffc364805b75a5e49a48dcef91bcade9e94f13697b08dff57e97af38799`
+- `audit.log` `5f804ec6e90cba9566d77ac0a1f0b75455d498dd2eee01ad90bb0cf17b84287e`
+- `builder-audit.json.before` `5f804ec6e90cba9566d77ac0a1f0b75455d498dd2eee01ad90bb0cf17b84287e`
+- `policy.log` `bd954e3e84c2d929033cfd5cdf0c04c34ddf7fbdc78c9a78bc3e47eda15f688b`
+- `policy-source-inputs.json` `2c69ae3ef84056f32861d58ed679ed36c5f859cf91b1191fceafeb71ef6efe25`
+
+Verdict: PASS

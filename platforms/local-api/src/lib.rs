@@ -207,6 +207,7 @@ struct PendingChange {
 #[derive(Default)]
 struct State {
     runtime: Option<Arc<Mutex<coding_runtime_api::RuntimeSession>>>,
+    recovering: Option<agentmage_platform_linux::LinuxCodingWorktreeLease>,
     repository: Option<Arc<Mutex<LinuxCodingRepository>>>,
     pending_change: Option<PendingChange>,
     write_records: VecDeque<Value>,
@@ -224,7 +225,14 @@ struct State {
 }
 
 impl State {
+    fn runtime_excludes_manual(&self) -> bool {
+        self.runtime.is_some() || self.recovering.is_some()
+    }
+
     fn request_cancel(&mut self, control: bool) -> Result<bool, u16> {
+        if self.runtime_excludes_manual() {
+            return Err(409);
+        }
         if self.active.is_some() && self.active_control_only && !control {
             self.record("cancel", "denied");
             return Err(403);
@@ -796,6 +804,11 @@ fn begin_scoped<'a>(
     if guard.active.is_some() {
         return Err(409);
     }
+    // Serialize admission with attach/recover publication. A request may have
+    // passed the transport's early guard before ownership changed.
+    if guard.runtime_excludes_manual() && !(control_only && action == "code.runtime.ownership") {
+        return Err(409);
+    }
     let cancel = ChatCancellation::default();
     guard.active = Some(cancel.clone());
     guard.active_cancellable = true;
@@ -1061,7 +1074,10 @@ fn handle(
     }
     // The live host owns its workspace and canonical stores. A runtime service
     // never also exposes the independent manual proposal/effect owner.
-    if state.lock().map_err(|_| ApiError::Io)?.runtime.is_some()
+    if state
+        .lock()
+        .map_err(|_| ApiError::Io)?
+        .runtime_excludes_manual()
         && !(req.method == "GET" && matches!(req.path.as_str(), "/v1/status" | "/v1/activity"))
     {
         return response(
@@ -1212,6 +1228,9 @@ fn handle(
         }
         ("GET", "/v1/code/workspace/changes") => {
             let guard = state.lock().map_err(|_| ApiError::Io)?;
+            if guard.runtime_excludes_manual() {
+                return error(socket, 409);
+            }
             response(
                 socket,
                 200,
@@ -1330,6 +1349,9 @@ fn handle(
         }
         ("GET", "/v1/code/workspace") => {
             let guard = state.lock().map_err(|_| ApiError::Io)?;
+            if guard.runtime_excludes_manual() {
+                return error(socket, 409);
+            }
             response(
                 socket,
                 200,
@@ -1416,7 +1438,7 @@ fn handle(
         }
         ("DELETE", "/v1/code/workspace") => {
             let mut guard = state.lock().map_err(|_| ApiError::Io)?;
-            if guard.active.is_some() {
+            if guard.active.is_some() || guard.runtime_excludes_manual() {
                 return error(socket, 409);
             }
             guard.workspace = None;
@@ -1529,7 +1551,7 @@ fn handle(
             response(
                 socket,
                 200,
-                json!({"version":1,"configured":state.configured.is_some(),"settings_revision":state.revision,"busy":state.active.is_some(),"cancellable":state.active_cancellable,"runtime_attached":state.runtime.is_some()}),
+                json!({"version":1,"configured":state.configured.is_some(),"settings_revision":state.revision,"busy":state.active.is_some(),"cancellable":state.active_cancellable,"runtime_attached":state.runtime.is_some(),"runtime_recovery_pending":state.recovering.is_some()}),
             )
         }
         ("GET", "/v1/activity") => {
@@ -1542,6 +1564,9 @@ fn handle(
         }
         ("GET", "/v1/settings") => {
             let state = state.lock().map_err(|_| ApiError::Io)?;
+            if state.runtime_excludes_manual() {
+                return error(socket, 409);
+            }
             response(
                 socket,
                 200,
@@ -1570,7 +1595,7 @@ fn handle(
             let transport = LocalChatTransport::new(endpoint, key, TransportLimits::default())
                 .map_err(|_| ApiError::Configuration)?;
             let mut state = state.lock().map_err(|_| ApiError::Io)?;
-            if state.active.is_some() {
+            if state.active.is_some() || state.runtime_excludes_manual() {
                 return error(socket, 409);
             }
             state.configured = Some(Arc::new(Configuration {
@@ -1585,7 +1610,7 @@ fn handle(
         }
         ("DELETE", "/v1/settings") => {
             let mut state = state.lock().map_err(|_| ApiError::Io)?;
-            if state.active.is_some() {
+            if state.active.is_some() || state.runtime_excludes_manual() {
                 return error(socket, 409);
             }
             state.configured = None;

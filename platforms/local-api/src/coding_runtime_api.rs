@@ -721,6 +721,31 @@ mod tests {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let address = listener.local_addr().unwrap();
         let stop = AtomicBool::new(false);
+        // Model a manual request descheduled after the early HTTP guard, then
+        // resumed after attach has published. Admission must refuse under the
+        // same lock as ownership publication, for both client scopes.
+        for action in [
+            "chat",
+            "probe",
+            "code.map",
+            "code.write.apply",
+            "code.repository",
+            "code.repository.repair",
+        ] {
+            assert!(matches!(begin(&state, &stop, action), Err(409)));
+            assert!(matches!(begin_controlled(&state, &stop, action), Err(409)));
+        }
+        assert!(matches!(
+            begin(&state, &stop, "code.runtime.ownership"),
+            Err(409)
+        ));
+        let (op, _) = begin_controlled(&state, &stop, "code.runtime.ownership").unwrap();
+        assert!(matches!(
+            begin_controlled(&state, &stop, "code.runtime.ownership"),
+            Err(409)
+        ));
+        drop(op);
+        assert!(state.lock().unwrap().active.is_none());
         let call = |method: &str, route: &str, control: bool, body: &str| {
             thread::scope(|scope| {
                 let task = scope.spawn(|| {
@@ -804,6 +829,10 @@ mod tests {
         assert_eq!(
             call("GET", "/v1/status", false, "").1["runtime_attached"],
             true
+        );
+        assert_eq!(
+            call("GET", "/v1/status", false, "").1["runtime_recovery_pending"],
+            false
         );
         let activity = call("GET", "/v1/activity", false, "");
         assert_eq!(activity.0, 200);

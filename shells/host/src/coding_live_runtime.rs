@@ -708,9 +708,16 @@ where
             }
             return Err(error);
         }
-        let step = session.start().inspect_err(|_| {
-            eprintln!("coding.live.start-denied");
-        })?;
+        let step = match session.start() {
+            Ok(step) => step,
+            Err(error) => {
+                eprintln!("coding.live.start-denied");
+                // A refused start never enters `active`, but its worker may
+                // already own a composition. End it before exposing emptiness.
+                session.shutdown_worker();
+                return Err(error);
+            }
+        };
         self.active.insert(key, session);
         Ok(step)
     }
@@ -938,7 +945,11 @@ where
             return Err(RuntimeTransportError::RuntimeEvidenceDenied);
         }
         session.latest_presented_cursor = Some(point.event_cursor);
-        session.continue_job(ledgers, cancellation)?;
+        if let Err(error) = session.continue_job(ledgers, cancellation) {
+            // A failed continuation also has no registry owner to join it.
+            session.shutdown_worker();
+            return Err(error);
+        }
         self.active.insert(key.to_owned(), session);
         Ok(())
     }

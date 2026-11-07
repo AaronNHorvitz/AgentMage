@@ -99,6 +99,21 @@ paths, review a fresh full diff, and provide a new single-use apply decision.
 Recovery itself applies nothing. The separate-process runtime service cannot use
 this recovery route because it holds no creation owner.
 
+If recovery answers HTTP 409 `code.runtime.owner-held`, the service retains the
+same live lease in a recovery slot. `GET /v1/status` reports
+`runtime_recovery_pending:true` and `runtime_attached:false`. Manual operations
+and another attach remain unavailable. Retry the same explicit recovery request
+after the remaining references end; no new path, marker or receipt is accepted.
+Success consumes the slot once and still requires a fresh original diff and apply
+decision. Recovery of a poisoned lease clears creation authority and all pending
+decisions as before. A restart cannot recover this process-only slot.
+
+Manual operation admission checks ownership under the same state lock that
+publishes attach and recovery. Settings/workspace mutations and inspection also
+recheck under that lock, so passing an earlier HTTP route check cannot authorize
+a concurrent manual action. Only control-authenticated ownership transitions may
+acquire their operation lease while attached or awaiting recovery.
+
 The coding service registers interrupt, termination and hangup signals through
 the existing stop flag. On shutdown, the embedded service signals its passive cancellation probe,
 drains results and joins its worker threads before returning. A previously
@@ -106,6 +121,17 @@ accepted cancellation stays authoritative. Shutdown waits for native bounded wor
 to return; it does not claim an acknowledged job-control decision or synthesize a
 successful terminal record. Incomplete histories remain incomplete. Hard process
 termination still loses process-only ownership; restart cannot reconstruct it.
+
+Failed starts and continuations also drain and join their workers before
+discarding sessions that never entered the active-run registry. A startup error can
+therefore wait for an already-running bounded call to return. It cannot report
+an empty service while that discarded session still owns a live worker. No
+acknowledged cancellation or terminal record is invented on this path.
+
+Repeated attach/recover cycles still retain leaked platform/profile/workspace
+allocations and a held workspace descriptor in the existing factory composition.
+Those allocations are unreachable after recovery; this remains a resource-lifetime
+backlog item from the independent HTTP review, not evidence of durable ownership.
 
 The new HTTP tests exercise real socket refusals and owner preservation without
 synthetic creation authority. Host lifecycle tests use a scripted coordinator and

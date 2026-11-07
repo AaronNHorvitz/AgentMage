@@ -35,7 +35,7 @@ struct Recover {
 
 fn restore(state: &Mutex<State>, owner: LinuxCodingRepository) -> Result<(), Failure> {
     let mut state = state.lock().map_err(|_| (500, "code.runtime.state"))?;
-    if state.repository.is_some() || state.runtime.is_some() {
+    if state.repository.is_some() || state.runtime_excludes_manual() {
         return Err((500, "code.runtime.state"));
     }
     state.repository = Some(Arc::new(Mutex::new(owner)));
@@ -64,7 +64,7 @@ fn attach(state: &Mutex<State>, stop: &AtomicBool, input: Attach) -> Result<Valu
         if stop.load(Ordering::Relaxed) {
             return Err((503, "code.runtime.stopped"));
         }
-        if state.runtime.is_some() {
+        if state.runtime_excludes_manual() {
             return Err((409, "code.runtime.attached"));
         }
         let owner = state
@@ -120,10 +120,19 @@ fn attach(state: &Mutex<State>, stop: &AtomicBool, input: Attach) -> Result<Valu
 }
 
 fn restore_lease(state: &Mutex<State>, lease: LinuxCodingWorktreeLease) -> Result<(), Failure> {
-    let owner = lease
-        .try_into_repository()
-        .map_err(|_| (500, "code.runtime.owner-held"))?;
-    restore(state, owner)
+    let mut state = state.lock().map_err(|_| (500, "code.runtime.state"))?;
+    if state.repository.is_some() || state.runtime_excludes_manual() {
+        return Err((500, "code.runtime.state"));
+    }
+    state.recovering = Some(lease);
+    restore_recovery(&mut state)
+}
+
+fn restore_recovery(state: &mut State) -> Result<(), Failure> {
+    let owner = LinuxCodingWorktreeLease::recover_repository(&mut state.recovering)
+        .map_err(|e| (409, e.code()))?;
+    state.repository = Some(Arc::new(Mutex::new(owner)));
+    Ok(())
 }
 
 fn build(
@@ -183,6 +192,10 @@ fn recover(state: &Mutex<State>, approve: bool) -> Result<Value, Failure> {
         if state.repository.is_some() {
             return Err((409, "code.runtime.not-owned"));
         }
+        if state.recovering.is_some() {
+            restore_recovery(&mut state)?;
+            return Ok(recovered());
+        }
         let runtime = state
             .runtime
             .as_ref()
@@ -212,7 +225,11 @@ fn recover(state: &Mutex<State>, approve: bool) -> Result<Value, Failure> {
     // prepared runs must have been explicitly released; no implicit job stop.
     drop(port);
     restore_lease(state, owner.expect("checked owned runtime"))?;
-    Ok(json!({"recovered":true,"apply_approved":false,"fresh_diff_required":true}))
+    Ok(recovered())
+}
+
+fn recovered() -> Value {
+    json!({"recovered":true,"apply_approved":false,"fresh_diff_required":true})
 }
 
 pub(super) fn handle_owned(

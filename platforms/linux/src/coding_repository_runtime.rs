@@ -52,6 +52,20 @@ impl LinuxCodingRepository {
 }
 
 impl LinuxCodingWorktreeLease {
+    /// Recovers a held recovery slot without losing its lease on a busy retry.
+    /// Only a live creation lease can populate the slot; no path is adopted.
+    /// Success consumes the slot, including the ordinary poison invalidation.
+    pub fn recover_repository(slot: &mut Option<Self>) -> Result<LinuxCodingRepository> {
+        let lease = slot.take().ok_or(err("code.runtime.worktree-required"))?;
+        match lease.try_into_repository() {
+            Ok(owner) => Ok(owner),
+            Err(lease) => {
+                *slot = Some(lease);
+                Err(err("code.runtime.owner-held"))
+            }
+        }
+    }
+
     /// Checks a canonical private runtime state root is separate from the manual
     /// authority store and every held repository root. No store is opened here.
     pub fn check_runtime_state_root(&self, root: &Path) -> Result<()> {
