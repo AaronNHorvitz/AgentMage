@@ -228,8 +228,9 @@ network or shell authority and retains the existing 30-second, 256 MiB and
 bounded-output limits. Each invocation needs the existing exact approval.
 Verbose stderr is normalized with `python_unittest_text_v1`; at least one test
 must pass, with no failures, errors or skipped tests. Zero tests never establish
-success. Project tests remain trusted to report their own counts; this is not
-independent evaluation.
+success. Project tests and approved source edits run in the same interpreter and
+can alter the reported outcome. These counts are not independent evaluation;
+scored use requires the separate frozen grading machinery.
 
 The existing native model sees the task, mapped context, strict structured edit
 contracts and test observations; the coordinator owns subsequent turns and
@@ -249,3 +250,35 @@ component and synthetic terminal tests do not establish a working native
 project run. Arbitrary project layouts, source creation, arbitrary endpoints,
 manual strict-proposal composition, original-checkout apply, commit/push, MCP
 and measured parent acceptance remain open.
+
+## Task-aware repository context
+
+The existing native context owner ranks its prepared, nonessential repository
+sources against the sealed task objective before budget allocation. Matching
+path words take priority over matching source words. Matches are case-insensitive,
+distinct ASCII words, split at punctuation and underscores; repeating a word
+cannot raise its score. The query uses at most 128 words of 3–64 bytes from the
+first 8 KiB of the objective. Each source scan reads at most 64 KiB of its existing
+bounded excerpt. This lexical heuristic does not establish semantic relevance;
+it has no multilingual or dependency-graph ranking claim.
+
+Only eligible supporting items with the native repository-source identity shape
+participate. Ranking changes their allocation item IDs, with a deterministic
+original-ID digest as the tie-break. The complete source ID, revision, content
+hash, excerpt, sensitivity and admission remain unchanged. The original source
+list is retained. Duplicate original item IDs still refuse through the existing
+composer. Stale/denied items, essential material, instructions, evidence,
+corrections and other context sources keep their existing treatment. Repository
+words cannot become instructions, tool permissions or grants.
+
+The same composer retains every inclusion/omission record and performs the
+existing budget checks, rendered-token preflight and whole-source reflow.
+Retrieved files remain untrusted snapshots; they do not prove current file
+content or authorize an edit. The context packet and its omission notice show
+what was actually supplied. Tools retain their separate current-source checks
+and exact approvals. No source, evidence input or provenance binding is removed.
+
+This behavior is shared by the existing native coordinator callers, including
+the HTTP/terminal projection. It does not admit the configured chat endpoint as
+a native coding model. The deterministic context fixture is not a local-model
+coding score; native positive execution and parent acceptance remain open.

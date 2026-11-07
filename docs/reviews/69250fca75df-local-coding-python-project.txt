@@ -1,0 +1,118 @@
+Commit: 69250fca75df16f95e97c71fc003da5fdd6a2600
+Scope: local-coding-python-project
+
+# Independent core review — Python project selection through the existing coding coordinator
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only repository access.
+Row: T-303 (related T-306). This is a non-closing implementation batch; both parents stay OPEN.
+Base: `edee9914b1caff3af05de868e91c3f7b73d7c707`. I used no GPU, inference or model.
+
+## Methods
+
+- Confirmed `git rev-parse 69250fca…` = HEAD = the requested commit; working tree clean before and after.
+- Read IP-POLICY.md, the TASKS.md change (a word diff shows one paragraph rewritten; no new row,
+  sub-row, checkbox or closure) and the whole 14-path diff, including the new test module, evidence and guide.
+- Traced every consumer of `CodingWriteScope::resolve`/`writable_roots` (`coding_operation.rs:211-300`
+  for patch, hunk, rollback and create; `linux_coding.rs:363`; `coding_development_runtime.rs:769`),
+  the command sandbox (`platforms/linux/src/command_runner.rs:294-345`), validation-template source
+  rules (`kernel/engine/src/validation_template.rs:392-404`), how Language facts are grouped in planning
+  (`capabilities/repository-map/src/deep_analysis.rs:633-668`, `change_intent.rs:396-404`), and every
+  scenario branch in `coding_development_runtime.rs`.
+- Ran the requested reproduction commands myself and ran my own escape and tampering probes (below).
+
+## Commands and results
+
+Environment: `PATH=/lane/state/tmp/shared-node-v24.15.0/bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target
+CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4`.
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `python3 -B scripts/local_agent_fast_gate.py --base edee9914… --timeout 3600` | Gate exit 1, as the builder expected. `cargo fmt --check` exit 0; `cargo clippy --all-targets -D warnings` exit 0 (24.95 s); scoped tests exit 101 (163.42 s). Summed totals: **871 passed / 72 failed / 62 ignored / 0 measured / 0 filtered**. All 72 failing names appear in `docs/evidence/t301-baseline-failures-2026-10-25.md`, and the name set matches the builder's `fast-final.log`. The 4 new host tests, the new API test and the extended terminal-driver test all report `ok` |
+| 2 | `python3 -B /lane/state/tmp/t303-python-project/audit.py` | exit 0; audit sha `e0f6d55c…1165`; 14 paths, 10 source files, 871/72/62/0/0. This is a builder audit and adds no independent evidence |
+| 3 | `bash /tools/build-slot cargo run --locked --offline --manifest-path …/probe/Cargo.toml -- /lane/state/tmp/t303-python-project` | exit 0. Output is byte-identical to the retained `normalization.json` (sha `d8028f7d…c0b`, matching the evidence). Labelled `actual-standalone-unittest-output-synthetic-authority-receipts-not-native-agent-execution` |
+| 4 | `markdownlint-cli2` on TASKS.md, the guide and the evidence | 0 issues in 3 files |
+| 5 | `--lint-reviews docs/reviews/edee9914b1ca-local-coding-compile-feedback.txt` | exit 0 |
+| 6 | `cmp` of the retained review against `/lane/reviews/edee9914b1ca-local-coding-compile-feedback.md` | identical |
+| 7 | `run-policy.py /lane/state/tmp/review-69250fca75df-python-project-source` | exit 0, "Validated 777 Markdown file(s) and all policy invariants." This is not the T-310 long gate. The input manifest sha `d483a5ef…e8c` matches the binding. I removed the mirror and kept its `-inputs.json` |
+| 8 | `sha256sum` of audit.py, audit.json, observe.py, probe/src/main.rs, run-policy.py and build-slot | all match the request's bindings |
+| 9 | Retained startup logs | scripted+python-project → `coding.development.profile-failed`; gpt-oss → `linux.repository.git_artifact.invalid`. These are refusals only, with no positive native run, as the evidence states |
+
+## Independent checks
+
+- **Directory scopes keep their old meaning and identity.** `CodingWriteScope::new` sets
+  `exact_files_only: false`, and `resolve` keeps the old descendant-only rule (`coding_changes.rs:203-212`).
+  `writable_path_interpretation` is `skip_serializing_if = None` (`coding_session.rs:387-388`), so material
+  for old profiles serializes exactly as before. The new test shows that the same roots produce different
+  profile digests under directory and exact-file interpretation.
+- **Exact files.** `exact_files` refuses empty roots, which in directory mode mean the whole worktree.
+  `resolve` requires `components == root`. The resolve sites for patch, hunk and rollback all go through
+  this check. Creation is refused three times over: in `validate_create`, by argument validation in the
+  registry (tested) and because `build_creation_parent_sources` is skipped for this scenario. `WorkspacePath`
+  and `Vec<String>` order the same way (`kernel/contracts/src/path.rs:116-147`), so the sorted host paths
+  meet the non-overlap and order checks in `new`. Paths come from git-inventory map entries with
+  `RegularFile`, `content_read` and Parsed/ParsedWithErrors, under `src/` with a `.py` suffix, and at most 16.
+  Symlinks are excluded, and too many or zero files fail closed.
+- **Command confinement.** The worktree is mounted with `--ro-bind-fd` at `/work`, with `--unshare-all`,
+  `--clearenv`, cap-drop ALL and seccomp (`command_runner.rs:294-345`). Test code, including model-edited
+  source, therefore cannot write tests, create files or reach the network. The command is closed:
+  `-I -B -m unittest discover -s tests -t . -v`, with `grant_required`, no network and no inherited
+  environment (tested). I ran it on Python 3.15 against a scratch project that had a repository-root
+  `unittest.py` which raises on import. The stdlib runner was loaded, so `-I` blocks that shadowing.
+- **Closed startup choice.** `main.rs` passes only argument 9; `serve_coding_runtime_development` admits only
+  `failed-test-repair|python-project` before any activation work. `scripted` is not an API model choice, and
+  the host factory refuses scripted+project before revalidation. `scripted_steps` returns an error for the
+  project. A prepare body carrying `scenario` is rejected with 400 and makes no host call (tested). The
+  terminal driver accepts only the two scenario labels. The start consent shows the complete request,
+  including `mutable_files`.
+- **Resume marker.** `(scenario == PythonProject) != constraints.contains(marker)` → `resume-profile-drift`
+  (`coding_development_runtime.rs:616-621`). The marker is host-authored. The repository snapshot, tool
+  catalog, visible tools and limits are still compared. The current profile governs authority after a
+  resume in either case.
+- **Grouped planning facts.** These are confirmed to grant no authority: nothing outside `coding_plan.rs`
+  reads `proposed_paths`.
+- **Validation source.** `ExplicitUserInput` with `user_input_approval_sha256 = definition digest` follows
+  the existing reviewed pattern in `platforms/linux/src/coding_repository_validation.rs:179-186`.
+  Execution still needs the separate CommandExecute grant (`coding_operation.rs:290-296`).
+- **Honest labelling, privacy and integrity.** The evidence and guide say plainly that the results are
+  component, transport and standalone fixture runs, that there is no native positive run or score, and that
+  T-301.1 is still refused. The diff adds no private paths, names or credentials; `/lane/…` appears only in
+  the retained prior review, as accepted before. No evaluation, hidden-test, threshold, pin, dependency or
+  lockfile path is touched. The batch adds runnable, tested code and no plan-only sub-row.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog): editable source can falsify "tests pass" from inside the runner process.**
+  `shells/host/src/coding_development_runtime.rs:1927-1965` and `docs/guides/coding-runtime-api.md` (Python
+  project selection, "Project tests remain trusted to report their own counts"). Selected `src/*.py` files
+  are imported into the same interpreter as `unittest`. Reproduction (scratch directory, exact arguments,
+  `env -i`): `src/calc.py` = `import unittest; unittest.TestCase.assertEqual=lambda *a, **k: None` plus a
+  wrong `add`. The run prints `test_add … ok`, `Ran 1 test`, `OK`, exit 0. Each edit still needs exact
+  approval and no score is claimed, so this is not a boundary escape. The guide's wording covers only the
+  tests, though. Fix: say in the guide and evidence that approved source edits run inside the runner and can
+  change the reported outcome. Before any measured or scored use of this path, require an independent check:
+  a frozen runner or hidden tests in a fresh process, or a refusal when edits touch test-framework names.
+- **L2 (low, backlog): planning text contradicts the plan's own paths.** `shells/host/src/coding_plan.rs:320-337`
+  together with `capabilities/repository-map/src/deep_analysis.rs:651-658`. The Python Language fact cites
+  every Python file, so `proposed_paths` also lists `tests/*.py` and `setup.py`, while `option-minimal` says
+  "Change only the selected project sources". No authority follows, and the builder disclosed it. The plan
+  may still steer the model toward test edits that will be refused. Fix: filter citations to the selected
+  paths in the project plan, or relabel the planning text.
+- **L3 (low, backlog): one claim has no direct test.** The cross-scenario resume refusal
+  (`coding_development_runtime.rs:616-621`) is described in the evidence and guide, but no test covers it.
+  Fix: add a refusal test in both directions.
+- **L4 (low, backlog): test flake risk.** The fixture directory in `coding_python_project_tests.rs` is named
+  from `temp_dir()` plus the process id and created with `create_dir`. A directory left behind by an earlier
+  crashed run with the same id fails the test. Fix: use a unique temporary directory.
+
+## Per-row result
+
+- T-303 (non-closing batch `local-coding-python-project`): **PASS** for this exact commit. There is no open
+  high or medium finding; L1-L4 are backlog. The row stays OPEN, and no parent acceptance follows.
+- T-306 (related): no change to its status; it stays OPEN.
+
+Not verified: a positive native project run (the lane refuses native trust, T-301.1), model repair or score,
+and any UI. None of these is claimed by the batch.
+
+Verdict: PASS

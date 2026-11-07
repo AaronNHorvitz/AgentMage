@@ -28,6 +28,13 @@ use crate::{
     coding_verifier::{CODING_COMPLETION_INPUT_SCHEMA_JSON, coding_completion_schema},
 };
 
+#[path = "coding_context_retrieval.rs"]
+mod retrieval;
+
+#[cfg(test)]
+#[path = "coding_context_retrieval_tests.rs"]
+mod retrieval_tests;
+
 const CONTEXT_ITEM_SCHEMA_ID: &str = "agentmage.runtime.coding-context-item";
 const CONTEXT_ITEM_SCHEMA: &[u8] = br#"{"type":"string"}"#;
 const SYSTEM_SOURCE_ID: &str = "agentmage:coding-system-contract";
@@ -546,7 +553,11 @@ where
                 candidates.push(self.candidate(&source)?);
             }
         }
-        for source in self.supporting_sources.clone() {
+        for source in retrieval::rank_sources(
+            &request.task.objective,
+            &self.supporting_sources,
+            &candidates,
+        ) {
             candidates.push(self.candidate(&source)?);
         }
         let selected_write = crate::coding_hunk_selection::hunk_selection_tool_definition();
@@ -1073,7 +1084,7 @@ mod tests {
     use super::*;
     use crate::coding_session::{CodingSessionProfile, tests::input};
 
-    struct FixtureCounter(&'static str);
+    pub(super) struct FixtureCounter(pub(super) &'static str);
 
     impl CodingTokenCounter for FixtureCounter {
         fn counter_id(&self) -> &str {
@@ -2237,7 +2248,7 @@ mod tests {
             .expect("resume context");
     }
 
-    fn request(profile: &CodingSessionProfile) -> RuntimeRunRequest {
+    pub(super) fn request(profile: &CodingSessionProfile) -> RuntimeRunRequest {
         let session_id = SessionId::from_raw("coding-session-0001");
         seal_runtime_run_request(RuntimeRunRequest {
             schema_version: CONTRACT_SCHEMA_VERSION,
