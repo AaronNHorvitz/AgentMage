@@ -30,6 +30,7 @@ fn check_step(step: &Value, run: &str, hash: &str) -> Result<()> {
 
 pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result<()> {
     match (command, args) {
+        ("runtime-run", [seconds, task]) => super::driver::run(client, seconds, task),
         ("runtime", []) => show(&client.json("GET", "/v1/code/runtime", true, None)?),
         ("runtime-prepare", [prompt]) => {
             let selection = client.json("GET", "/v1/code/runtime", true, None)?;

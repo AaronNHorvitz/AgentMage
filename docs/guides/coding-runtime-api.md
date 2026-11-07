@@ -44,6 +44,14 @@ used by this native transport**. Connecting arbitrary configured endpoints to
 the exact-profile coding host remains open; a chat connection does not prove
 native profile or tokenizer admission.
 
+Startup fixes the existing `failed-test-repair` scenario. The mutable file is
+`src/calc.py`, validation runs the existing `tests/run_validation.py`, and the
+acceptance criterion is "The exact synthetic validation passes after the bounded
+repair". The task prompt does not replace these restrictions. `GET /v1/code/runtime`
+reports the scenario, mutable files and criterion. Use the marked disposable
+fixture required by that scenario; this entry point does not admit arbitrary
+repositories or their test definitions.
+
 `new` selects the existing new-run preparation. `resume` selects the host's
 existing durable reconstruction path; it does not invent a checkpoint or replay
 consumed grants. Positive recovery through this new HTTP path remains unmeasured.
@@ -59,6 +67,42 @@ Every command starts with:
 ```sh
 target/debug/agentmage-code 127.0.0.1:43129 <private-auth> <command> <arguments>
 ```
+
+`runtime-run 1800 '<task>'` connects the whole interactive transport in one
+command. It uses the host's existing verified interactive client driver over
+HTTP. It asks separately for inspection and disclosure of the exact sealed
+request, presents verified canonical events, and asks for `allow <digest>` at
+every consequential operation. Anything else declines that operation. It has no
+automatic approval, model loop, tool runner or prompt retry of its own. The host
+owns inference, tools, observations and bounded corrections.
+
+The driver checks the request against the task and startup selection; verifies
+the ordered event chain, pending approval and terminal outcome; and reads every
+retained artifact in bounded pages to verify the complete payload digest. Only
+then does it print `verified-outcome`. A verified refusal is still a refusal:
+only canonical `SUCCESS` or `NO_OP` exits zero. Synthetic transport tests are
+not evidence of native success or coding quality.
+
+The `seconds` argument is 1–3600 and starts before inspection. Waiting for a
+terminal answer is interruptible and deadline-bound. SIGINT, SIGTERM, SIGHUP or
+the deadline requests canonical revision-bound job cancellation at the next
+verified boundary; it never sends the API's generic cancellation route. A
+pending HTTP request retains the existing 180-second response deadline, so this
+argument is not a hard process-lifetime bound. If cancellation does not reach a
+terminal result on the next boundary, the client stops with an error; inspect
+the canonical job before further action. The owned host remains responsible for
+cleanup. This client does not terminate the service or claim effects were undone.
+
+The client prints `run-prepared` with the run ID and request digest before start
+dispatch. A lost response or invalid boundary fails closed without resending the
+start or approval. The existing driver may try to release a prepared or ended
+run; an active run refuses release. Errors do not establish that a dispatched
+effect did not happen. All terminal content is escaped; no transcript or artifact
+file is automatically written. The complete verified result includes artifact
+references and declarations. The underlying records remain owned by the host.
+
+The individual transport commands remain available for explicit inspection and
+recovery:
 
 1. `runtime` displays the startup-bound workspace, entry digest and native model
    profile. No model or repository identity comes from a model response.
@@ -138,8 +182,9 @@ and outcome labels; exact run details remain with the existing canonical owner.
 
 ## Remaining scope
 
-The existing native development composition still has its own source, test,
-profile and workspace restrictions. This transport does not generalize them or
+The native composition remains the fixed `failed-test-repair` scenario: only
+`src/calc.py` is mutable, with the synthetic validation acceptance criterion
+reported at startup. It retains its exact profile and workspace restrictions. This transport does not generalize them or
 connect the newer manual strict-edit/test routes to that coordinator. The real
 model/host workflow, arbitrary endpoint composition, original-checkout apply,
 approved commit/push, MCP, measured development reruns and row-closing held-out

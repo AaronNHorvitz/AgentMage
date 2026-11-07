@@ -1,0 +1,157 @@
+Commit: 21e3e45372beab869ea982fdf231473906948fd7
+Scope: local-coding-runtime-api
+
+# Independent review: existing native coordinator over HTTP and terminal (T-303 / T-306, non-closing batch)
+
+Reviewer: Claude Opus 5.5, separate read-only session. Base `3bd1720d778bbb77c9b37aa433535fa6d4c9fcba`.
+Requested scope: non-closing implementation batch inside open parents T-303 and T-306. No row closure,
+parent acceptance, score, native-positive or model-qualification verdict is requested or given.
+
+## Methods
+
+- Confirmed `git rev-parse 21e3e45372beab869ea982fdf231473906948fd7 HEAD` gives both equal; worktree clean
+  before and after every run (`git status --short` empty).
+- Read IP-POLICY.md, the T-303/T-306 rows and the exact text appended to them, the evidence
+  (`docs/evidence/t303-native-runtime-api-2026-11-06.md`) and the guide (`docs/guides/coding-runtime-api.md`).
+- Read the full diff (13 files, +2030/−18) line by line: `platforms/linux/src/ipc.rs` (frame deadline and
+  poisoning), `platforms/local-api/src/coding_runtime_api.rs` (startup, dispatch, HTTP handler, unit tests),
+  `coding_cli_runtime.rs` (terminal), `lib.rs`/`main.rs` (route isolation, signals), `tests/coding_runtime_cli.rs`,
+  `Cargo.toml`/`Cargo.lock`.
+- Followed the forwarding into unchanged owners to check the claims: `shells/host/src/runtime_ipc.rs`
+  (`LinuxRuntimeIpcClient`, `serve_linux_runtime_ipc`, `client_scope`), `runtime_transport::decode_exact`,
+  `coding_live_runtime.rs` (`advance`/`refresh`/`await_suspension` wait bounds),
+  `coding_development_runtime.rs` (scenario effect on a real-model run), and
+  `platforms/linux/src/development_boundary.rs` (`spawn_sibling`, `terminate_and_reap`, `Drop`).
+- Ran every required command and both optional observations myself, then a live HTTP probe of my own.
+
+## Commands and results
+
+Environment: `PATH=/lane/state/tmp/shared-node-v24.15.0/bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target
+CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4`. My logs are in `/lane/state/tmp/review-21e3e45372be-logs/`.
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `sha256sum /lane/state/tmp/shared-node-v24.15.0/bin/node` | `d1de76d8…c607923a018283b77e9c74bd932c`, as stated |
+| 2 | `python3 -B scripts/local_agent_fast_gate.py --base 3bd1720d… --timeout 3600` | **FAST GATE: FAIL** (expected). The plan selects all eleven crates for fmt, clippy and test. git diff --check, untracked lint, review lint, markdownlint, fmt and clippy all exit 0. Test step exits 101 in 236.82 s. Sums over every `test result:` line: **3109 passed / 72 failed / 78 ignored / 0 measured / 0 filtered** |
+| 2a | Sorted FAILED IDs versus `docs/evidence/t301-baseline-failures-2026-10-25.md` | 72 = 72, identical sets, symmetric difference empty; 53 `agentmage_host` + 19 `agentmage_platform_linux` |
+| 2b | New `ipc::frame_deadline_tests` in that run | 6/6 ok |
+| 3 | `bash /tools/build-slot cargo clippy --locked --offline -p agentmage-local-api --all-targets -- -D warnings` | exit 0, no warnings. This is the API's own selected host feature set (interactive-cli, native-chat) |
+| 4 | `bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api --all-targets --no-fail-fast` | exit 0; 18 + 10 + 5 + 11 + 35 = **79 passed**, 0 failed |
+| 5 | `python3 -B /lane/state/tmp/t303-runtime-api/run-policy.py /lane/state/tmp/review-21e3e45372be-policy-source` (driver sha `32a882a1…`) | exit 0, "Validated 773 Markdown file(s) and all policy invariants". Source-mirror policy check, not T-310 acceptance. Mirror removed afterwards; its input manifest is kept at `/lane/state/tmp/review-21e3e45372be-policy-source-inputs.json` |
+| 6 | `cmp docs/reviews/3bd1720d778b-local-coding-control-repair.txt /lane/reviews/3bd1720d778b-local-coding-control-repair.md` | exit 0, identical; retained review ends `Verdict: PASS` |
+| 7 | `git diff --check 3bd1720d… HEAD` | exit 0 |
+| 8 | `python3 -B /lane/state/tmp/t303-runtime-api/audit.py` | exit 0; paths 13, source files 9, same totals as row 2. The rewritten `audit.json` is **byte-identical** to the builder's copy (sha `343e2633…6be56999`, matches the request) |
+| 9 | `bash /tools/build-slot python3 -B …/check-development-context.py /lane/state/tmp/review-21e3e45372be-development` (driver sha `8e2b1b54…`) | exit 0 after queueing for the shared reservation; tasks 30, matching_contexts 30, 3.03 s; `model_inference`/`held_out_run`/`hidden_tests_run` false, `not_a_model_score` true. My API binary sha is `aab5d37e…`, which differs from the builder's `54bb6751…`, as expected for a separate target directory. This driver exercises the unchanged manual proposal path, not the new runtime routes, so it is a regression check only |
+| 10 | `bash /tools/build-slot python3 -B …/native-refusal.py /lane/state/tmp/review-21e3e45372be-native-startup` (driver sha `61600afe…`) | exit 0: the API `serve-runtime-development … muse new` exits 1 in 0.012 s with stderr `Error: linux.repository.git_artifact.invalid`; sentinel unchanged; no inference. My host sha is `c7016adc…`. This is an expected refusal observation and **not** a native-workflow PASS |
+| 11 | Own live probe: `agentmage-local-api serve 127.0.0.1:43991 <scratch-auth>` with curl `--path-as-is` | Client token, `POST /v1/code/runtime/prepare`: 403. Client token, `POST /v1/code/runtime/../workspace/apply`: 403. Control token on both: 428 `code.runtime.activation-required` (no runtime attached). Named `Host: localhost`: 403. Scratch auth and server removed; no process left |
+| 12 | Own scan of the added lines for private paths, usernames, the hostname, credentials and product names | Nothing private. `/lane/...` paths appear only inside the retained prior review, as in earlier accepted reviews. "OpenAI-style endpoint" is descriptive API compatibility, not branding. No other agent product is named in committed files |
+
+No GPU, model download, held-out task, grader or push was used. No owned process remains.
+
+## Review of the claims
+
+**Dedicated service, production construction.** Production builds only `LinuxRuntimeIpcClient::new(channel)`
+over the authenticated `connect_development()` session (`coding_runtime_api.rs:103-114`). The trait object is
+only used to substitute the synthetic peer in `#[cfg(test)]`; there is no production fake factory. Adding
+`agentmage-host` as a dependency brings in no other defaults, because its features only gate code
+(`shells/host/Cargo.toml [features]` are all `[]` or engine passthroughs that are not selected). Cargo.lock adds
+exactly four dependency edges; the audit confirms registry name, version, source and checksum tuples are equal.
+
+**Fixed selection, exact JSON, no injected authority.** `PrepareRun`, `Start`, `Binding`, `Advance`, `Control`
+and `Artifact` are `deny_unknown_fields`, and every body goes through `decode_exact`. That decoder refuses
+duplicates through `UniqueMembers` and arrays-as-structs through the re-encode comparison. `prepare` hardcodes
+`record_session:false`, `slow_subscriber_probe:false`, `preauthorization:None`, `engineering_session_id:None`
+and `recipe:None`; profile, entry digest, workspace id and root come only from startup selection (`:203-215`).
+Unit tests cover extra `preauthorization` or `workspace_root` members, an array body, a duplicate `prompt` and
+an array job-control request.
+
+**Control-only, route isolation.** `handle_runtime` refuses `!req.control` before anything else (`:287`). In a
+runtime service, `lib.rs` default-denies everything except exact `GET /v1/status` and `GET /v1/activity`
+(`lib.rs:1056-1065`). Combined with exact route matching in `dispatch`, encoded or `..` path variants end in
+404 or 409, never in a manual effect route. My probe (row 11) confirms the ordinary-service side. Activity
+records carry only fixed labels.
+
+**Job control and scope.** HTTP calls only `control_job`; the synthetic peer panics if direct `cancel` or
+`revoke_session_preauthorization` is ever called. The production IPC client refuses `cancel`. The host side
+derives `client_scope` from kernel-observed peer credentials (`runtime_ipc.rs:625-640`), not from the request.
+The terminal sends the observed `revision` and a fresh `getrandom` request ID (`coding_cli_runtime.rs:143-161`).
+
+**Terminal approvals.** The approval challenge is verified by `verify_runtime_approval_challenge` and bound to
+the run. The terminal displays the re-serialized, verified struct plus decoded `arguments_json`, through
+`safe()` (all non-ASCII and control characters escaped) on `/dev/tty`. The typed answer must exactly match
+`allow <challenge_sha256>`. Denial sends `grant_id: null`. A stdin that is not a terminal refuses. PTY tests
+cover approval, denial, a modified challenge, a foreign run and a piped refusal, and check for no ESC bytes.
+Prompt-injected tool arguments therefore cannot run without the host-side exact approval, and cannot hide
+terminal control sequences in the review text.
+
+**Frame deadline.** One `Instant` deadline per frame covers prefix and payload (`ipc.rs:546-562`, `:574-582`).
+Each partial read or write resets the socket timeout to the *remaining* time, so trickle progress cannot renew
+it. EINTR is retried and EOF is MalformedFrame. Any failure with a timeout configured sets `frame_failed` and
+`shutdown(Both)` (`:536-541`), so a late reply cannot be read as the answer to a later request. Default
+sessions (host side, `frame_timeout: None`) keep `read_exact`/`write_all`. A complete host `Error` frame is an
+ordinary frame and does not poison the channel. I checked that the 30 s bound cannot trip during normal host
+work: `advance` waits at most `CONTROL_WAIT` + `START_WAIT` (≈275 ms) per refresh, and suspension waits are
+bounded by `START_WAIT` (`coding_live_runtime.rs:199-201`, `1463-1473`, `1580-1630`).
+
+**Startup, signals and cleanup.** The model must be `muse` or `gpt-oss` (scripted is refused), the address must
+be loopback, the activation is validated before launch, and `read_launch_envelope_cancellable(&stop)` is used.
+`terminate_and_reap` runs on both the error and the orderly path. `LinuxDevelopmentHostProcess::Drop` also
+reaps or quarantines on unwinding. SIGINT, SIGTERM and SIGHUP only set the stop flag; handlers are unregistered
+afterwards. Positive HTTP cleanup and recovery is not claimed, which is accurate.
+
+**Evaluation integrity.** The diff touches no `fixtures/`, `scripts/coding_eval*`, `model-profiles/`, `schemas/`,
+`supply-chain/` or `architecture/` file. The audit asserts this, and I confirmed it from the file list. Test
+content is synthetic (`Fix add`, an existing v5 run-request fixture). No held-out content, score or threshold
+change. TASKS statuses and "Current Implementation Truth" are unchanged (audit), and the appended row text is
+accurate and non-closing. No new row and no plans-only work (delivery rule satisfied).
+
+**Retained errors.** The builder logs keep the initial manifest-alias error, the Node entry-point error, the
+narrow-feature warnings, the aborted root policy scan and the failed first native probe (older prefix). The
+evidence labels each correctly and does not count any of them as a pass.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, labelling).** `platforms/local-api/src/coding_runtime_api.rs:97` hardcodes the host development
+  scenario `failed-test-repair`. For a real model this still fixes the run contract whatever the HTTP prompt:
+  the mutable file set is `["src/calc.py"]` and the only acceptance criterion is "The exact synthetic
+  validation passes after the bounded repair" (`shells/host/src/coding_development_runtime.rs:988-1022`).
+  Neither the guide nor the evidence names this. They only say "its own source, test, profile and workspace
+  restrictions", while the guide's title and workflow read as general task runs.
+  Fix: state the fixed scenario, mutable file and acceptance criterion in the guide's Start and Remaining scope
+  sections, and expose `"scenario":"failed-test-repair"` in `GET /v1/code/runtime`.
+- **L2 (low, test coverage).** The claim "resume asks anew" (`coding_cli_runtime.rs:144-149`) has no test. The
+  only terminal job-control test is cancel (`tests/coding_runtime_cli.rs:303-329`).
+  Fix: add a PTY case where `resume` confirms and sends the revision, and one where a non-matching answer sends
+  nothing.
+- **L3 (low, recovery).** After one bounded-frame failure the channel is permanently closed
+  (`platforms/linux/src/ipc.rs:536-541`), which is correct. However, the service then keeps running with
+  `runtime_attached:true` and answers every runtime route with a generic 409 host code. The sibling host may
+  already have exited. Nothing tells the operator that only a restart can recover.
+  Fix: on a transport-level failure, report a distinct `code.runtime.channel-closed` (or detach the runtime)
+  and stop the service so the owned child is reaped.
+- **L4 (low, shutdown).** The orderly stop path force-terminates the host (`coding_runtime_api.rs:127`). It does
+  not first try the existing `LinuxRuntimeIpcClient::shutdown` exchange (`shells/host/src/runtime_ipc.rs:320`)
+  when no run is active. The guide describes this accurately ("terminate and reap only the owned sibling host").
+  Fix: try a bounded IPC shutdown first, then fall back to `terminate_and_reap`.
+
+Prior low findings L1-L3 from `3bd1720d778b` remain backlog, as the builder states.
+
+Escape attempts (path traversal, symlinks, environment, injected tool calls) against native tools are not
+reachable through this batch in this lane: native startup refuses Git admission (row 10), and this batch adds
+no effect path of its own. The HTTP-route traversal and authority probes (unit tests and row 11) and the
+terminal injection display checks (PTY tests, `safe()`) were exercised. Native confinement stays owned by the
+unchanged host and was not re-established here.
+
+## Per-row result
+
+- **T-303 (non-closing batch, core):** PASS for this exact commit's transport scope. The parent stays open:
+  native positive execution, configured-endpoint/manual-edit composition, durable HTTP recovery and measured
+  acceptance are not established.
+- **T-306 (related, non-closing):** PASS for the same transport scope. The parent stays open: an isolated
+  edit/test/retry workflow, apply, commit, push and MCP are not established.
+
+This review makes no certification, compliance or legal statement.
+
+Verdict: PASS

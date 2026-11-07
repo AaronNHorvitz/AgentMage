@@ -187,7 +187,10 @@ impl RuntimeSession {
         match (method, path) {
             ("GET", "/v1/code/runtime") => Ok(json!({
                 "version":1,"runtime":"existing-live-native-coding-host",
-                "activation":"coding-development-v1","profile_id":self.selection.profile_id,
+                "activation":"coding-development-v1","scenario":"failed-test-repair",
+                "mutable_files":["src/calc.py"],
+                "acceptance_criteria":["The exact synthetic validation passes after the bounded repair"],
+                "profile_id":self.selection.profile_id,
                 "workspace_id":self.selection.workspace_id,"workspace_root":self.selection.workspace_root,
                 "expected_entry_sha256":self.selection.expected_entry_sha256,"resume":self.selection.resume,
                 "requires_control":true,"preauthorization":false,
@@ -481,6 +484,13 @@ mod tests {
     #[test]
     fn prepare_is_bound_to_startup_selection_without_new_authority() {
         let (mut runtime, observed) = fixture();
+        let selection = runtime.dispatch("GET", "/v1/code/runtime", b"").unwrap();
+        assert_eq!(selection["scenario"], "failed-test-repair");
+        assert_eq!(selection["mutable_files"], json!(["src/calc.py"]));
+        assert_eq!(
+            selection["acceptance_criteria"],
+            json!(["The exact synthetic validation passes after the bounded repair"])
+        );
         assert_eq!(
             dispatch(
                 &mut runtime,

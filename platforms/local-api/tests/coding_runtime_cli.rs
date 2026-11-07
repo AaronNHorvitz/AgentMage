@@ -104,6 +104,9 @@ impl Fixture {
                     let mut body = vec![0; length];
                     socket.read_exact(&mut body).unwrap();
                     observed.push(json!({"route":header.lines().next().unwrap(),"body":if body.is_empty(){Value::Null}else{serde_json::from_slice(&body).unwrap()}}));
+                    if replies.get(observed.len() - 1) == Some(&json!({"test_peer_close":true})) {
+                        continue;
+                    }
                     let reply = serde_json::to_vec(
                         replies
                             .get(observed.len() - 1)
@@ -329,6 +332,524 @@ fn cancellation_uses_the_observed_job_revision_without_direct_cancel() {
             .starts_with("terminal-")
     );
 }
+// These are newly constructed synthetic transport records, sealed by the
+// canonical kernel. They are neither native tool execution nor a model score.
+fn driven_request() -> RuntimeRunRequest {
+    let mut request: RuntimeRunRequest = agentmage_host::runtime_transport::decode_exact(
+        include_bytes!("../../../fixtures/runtime-producer/v5/run-request.json"),
+    )
+    .unwrap();
+    request
+        .task
+        .constraints
+        .retain(|s| !s.starts_with("Recipe"));
+    agentmage_kernel_engine::runtime_coordinator::seal_runtime_run_request(request).unwrap()
+}
+fn driven_selection(r: &RuntimeRunRequest) -> Value {
+    json!({"version":1,"activation":"coding-development-v1","scenario":"failed-test-repair",
+        "profile_id":r.model_profile.profile_id,"workspace_id":r.workspace_id,
+        "workspace_root":"/synthetic-disposable","expected_entry_sha256":"a".repeat(64),
+        "resume":false,"requires_control":true,"preauthorization":false,"chat_endpoint_used":false})
+}
+struct Stream {
+    request: RuntimeRunRequest,
+    events: Vec<RuntimeEvent>,
+}
+impl Stream {
+    fn new(request: &RuntimeRunRequest) -> Self {
+        Self {
+            request: request.clone(),
+            events: Vec::new(),
+        }
+    }
+    fn event(
+        &mut self,
+        kind: RuntimeEventKind,
+        turn: Option<&RuntimeTurnId>,
+        operation: Option<&RuntimeOperationId>,
+    ) -> RuntimeEvent {
+        let previous = self.events.last();
+        let event = agentmage_kernel_engine::runtime_event::seal_runtime_event(RuntimeEvent {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            event_id: RuntimeEventId::from_raw(format!("http-event-{}", self.events.len())),
+            run_id: self.request.run_id.clone(),
+            session_id: self.request.session_id.clone(),
+            task_id: self.request.task.task_id.clone(),
+            turn_id: turn.cloned(),
+            operation_id: operation.cloned(),
+            correlation_id: CorrelationId::from_raw("http-correlation"),
+            causation_event_id: previous.map(|e| e.event_id.clone()),
+            sequence: self.events.len() as u64,
+            occurred_at_epoch_ms: 1000 + self.events.len() as u64,
+            sensitivity: ContextSensitivity::Internal,
+            retention: RuntimeEventRetention {
+                kind: RuntimeEventRetentionKind::Ephemeral,
+                expires_at_epoch_ms: None,
+            },
+            persistence: agentmage_kernel_engine::runtime_event::runtime_event_persistence(&kind),
+            policy_id: self.request.policy_id.clone(),
+            payload_reference: if let RuntimeEventKind::ArtifactCreated { artifact_id, .. } = &kind
+            {
+                Some(RuntimePayloadReference {
+                    artifact_id: artifact_id.clone(),
+                    sha256: "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+                        .into(),
+                    byte_size: 2,
+                    media_type: "application/json".into(),
+                })
+            } else {
+                None
+            },
+            kind,
+            previous_event_sha256: previous
+                .map_or_else(|| "0".repeat(64), |e| e.event_sha256.clone()),
+            event_sha256: "0".repeat(64),
+        })
+        .unwrap();
+        self.events.push(event.clone());
+        event
+    }
+    fn terminal(&mut self, state: AgentStateKind) -> Value {
+        let prior = self.events.last().unwrap();
+        let outcome = agentmage_kernel_engine::runtime_coordinator::seal_runtime_outcome(
+            RuntimeOutcome {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                run_id: self.request.run_id.clone(),
+                session_id: self.request.session_id.clone(),
+                task_id: self.request.task.task_id.clone(),
+                request_sha256: self.request.request_sha256.clone(),
+                state,
+                turn_count: 1,
+                model_call_count: 1,
+                tool_call_count: 1,
+                prior_event_id: prior.event_id.clone(),
+                prior_event_sha256: prior.event_sha256.clone(),
+                evidence: if state.is_success() {
+                    vec![EvidenceReference {
+                        schema_version: CONTRACT_SCHEMA_VERSION,
+                        evidence_id: EvidenceId::from_raw("synthetic-evidence"),
+                        kind: EvidenceKind::Observation,
+                        source_id: "synthetic".into(),
+                        object_id: "no-op-observation".into(),
+                        fragment: None,
+                        content_sha256: "a".repeat(64),
+                        observed_revision: None,
+                    }]
+                } else {
+                    Vec::new()
+                },
+                receipt_ids: Vec::new(),
+                unresolved_codes: Vec::new(),
+                output: None,
+                answer_evidence: None,
+                outcome_sha256: "0".repeat(64),
+            },
+            &self.request,
+        )
+        .unwrap();
+        self.event(
+            RuntimeEventKind::RunTerminal {
+                state,
+                outcome_sha256: outcome.outcome_sha256.clone(),
+            },
+            None,
+            None,
+        );
+        json!(outcome)
+    }
+    fn step(
+        &self,
+        events: Vec<RuntimeEvent>,
+        approval: Option<RuntimeApprovalChallenge>,
+        outcome: Value,
+    ) -> Value {
+        json!({"run_id":self.request.run_id,"request_sha256":self.request.request_sha256,"events":events,"approval":approval,"artifacts":[],"outcome":outcome})
+    }
+}
+fn driven_steps(r: &RuntimeRunRequest, allow: bool) -> (Value, Value) {
+    let mut c = challenge();
+    c.run_id = r.run_id.clone();
+    c.task_id = r.task.task_id.clone();
+    let c = seal_runtime_approval_challenge(c).unwrap();
+    let mut s = Stream::new(r);
+    s.event(
+        RuntimeEventKind::RunStarted {
+            request_sha256: r.request_sha256.clone(),
+        },
+        None,
+        None,
+    );
+    s.event(RuntimeEventKind::TurnStarted, Some(&c.turn_id), None);
+    s.event(
+        RuntimeEventKind::ModelRequested {
+            model_run_id: ModelRunId::from_raw("http-model"),
+            request_sha256: "a".repeat(64),
+        },
+        Some(&c.turn_id),
+        None,
+    );
+    s.event(
+        RuntimeEventKind::ModelCompleted {
+            model_run_id: ModelRunId::from_raw("http-model"),
+            result_sha256: "b".repeat(64),
+        },
+        Some(&c.turn_id),
+        None,
+    );
+    s.event(
+        RuntimeEventKind::ToolRequested {
+            tool_call_id: c.tool_call_id.clone(),
+            arguments_sha256: c.presentation.arguments.sha256.clone(),
+        },
+        Some(&c.turn_id),
+        Some(&c.operation_id),
+    );
+    s.event(
+        RuntimeEventKind::PermissionRequested {
+            approval_id: c.approval_id.clone(),
+            operation: c.operation,
+            preview_sha256: c.preview_sha256.clone(),
+            expires_at_epoch_ms: c.expires_at_epoch_ms,
+        },
+        Some(&c.turn_id),
+        Some(&c.operation_id),
+    );
+    let first = s.step(s.events.clone(), Some(c.clone()), Value::Null);
+    let split = s.events.len();
+    s.event(
+        RuntimeEventKind::PermissionDecided {
+            approval_id: c.approval_id.clone(),
+            disposition: if allow {
+                RuntimePermissionDisposition::Allow
+            } else {
+                RuntimePermissionDisposition::Deny
+            },
+            grant_id: allow.then_some(c.proposed_grant_id.clone()),
+            decision_sha256: "d".repeat(64),
+        },
+        Some(&c.turn_id),
+        Some(&c.operation_id),
+    );
+    if allow {
+        s.event(
+            RuntimeEventKind::ToolStarted {
+                tool_call_id: c.tool_call_id.clone(),
+                authority_sha256: "e".repeat(64),
+            },
+            Some(&c.turn_id),
+            Some(&c.operation_id),
+        );
+        s.event(
+            RuntimeEventKind::ToolCompleted {
+                tool_call_id: c.tool_call_id.clone(),
+                receipt_id: ReceiptId::from_raw("synthetic-receipt"),
+                result_sha256: "f".repeat(64),
+            },
+            Some(&c.turn_id),
+            Some(&c.operation_id),
+        );
+    }
+    s.event(
+        RuntimeEventKind::TurnCompleted {
+            outcome_sha256: "1".repeat(64),
+        },
+        Some(&c.turn_id),
+        None,
+    );
+    let outcome = s.terminal(if allow {
+        AgentStateKind::Blocked
+    } else {
+        AgentStateKind::Declined
+    });
+    let last = s.step(s.events[split..].to_vec(), None, outcome);
+    (first, last)
+}
+
+#[test]
+fn connected_driver_checks_events_asks_exactly_and_reports_a_verified_non_success() {
+    let f = Fixture::new();
+    let r = driven_request();
+    for allow in [false, true] {
+        let (first, last) = driven_steps(&r, allow);
+        let peer = f.peer(vec![
+            driven_selection(&r),
+            json!(r),
+            first,
+            last,
+            Value::Null,
+            Value::Null,
+            json!({"released":true}),
+        ]);
+        let output = f.tty(
+            peer.address,
+            &["runtime-run", "30", &r.task.objective],
+            if allow { "approve" } else { "deny-tools" },
+        );
+        assert_ne!(
+            output["status"], 0,
+            "A verified BLOCKED/DECLINED run must not exit successfully: {output}"
+        );
+        assert_eq!(output["answered"], 3, "{output}");
+        let text = output["transcript"].as_str().unwrap();
+        assert!(text.contains("verified-outcome"), "{text}");
+        assert!(
+            text.contains(if allow { "BLOCKED" } else { "DECLINED" }),
+            "{text}"
+        );
+        let calls = peer.finish();
+        assert_eq!(calls.len(), 7, "{calls:?}");
+        assert_eq!(calls[2]["body"]["request"], json!(r));
+        assert_eq!(
+            calls[3]["body"]["response"]["disposition"],
+            if allow { "allow" } else { "deny" }
+        );
+        assert_eq!(
+            calls[3]["body"]["response"]["grant_id"],
+            if allow { json!("grant") } else { Value::Null }
+        );
+        assert_eq!(calls[3]["body"]["after_event_cursor"]["sequence"], 5);
+        assert_eq!(calls[6]["route"], "POST /v1/code/runtime/release HTTP/1.1");
+    }
+}
+#[test]
+fn connected_driver_refuses_event_tampering_and_never_retries_an_uncertain_approval() {
+    let f = Fixture::new();
+    let r = driven_request();
+    let (mut bad, _) = driven_steps(&r, true);
+    bad["events"][0]["event_sha256"] = json!("f".repeat(64));
+    let peer = f.peer(vec![
+        driven_selection(&r),
+        json!(r),
+        bad,
+        json!({"released":true}),
+    ]);
+    let output = f.tty(
+        peer.address,
+        &["runtime-run", "30", &r.task.objective],
+        "approve",
+    );
+    assert_ne!(output["status"], 0);
+    assert_eq!(output["answered"], 2);
+    let calls = peer.finish();
+    assert_eq!(calls.len(), 4);
+    assert!(
+        calls
+            .iter()
+            .all(|c| c["route"] != "POST /v1/code/runtime/advance HTTP/1.1")
+    );
+    let (first, _) = driven_steps(&r, true);
+    let peer = f.peer(vec![
+        driven_selection(&r),
+        json!(r),
+        first,
+        json!({"test_peer_close":true}),
+        json!({"released":true}),
+    ]);
+    let output = f.tty(
+        peer.address,
+        &["runtime-run", "30", &r.task.objective],
+        "approve",
+    );
+    assert_ne!(output["status"], 0);
+    assert_eq!(output["answered"], 3);
+    assert!(
+        !output["transcript"]
+            .as_str()
+            .unwrap()
+            .contains("verified-outcome")
+    );
+    let calls = peer.finish();
+    assert_eq!(calls.len(), 5);
+    assert_eq!(
+        calls
+            .iter()
+            .filter(|c| c["route"] == "POST /v1/code/runtime/advance HTTP/1.1")
+            .count(),
+        1
+    );
+}
+#[test]
+fn connected_driver_refuses_pipes_and_preparation_substitution_before_model_start() {
+    let f = Fixture::new();
+    let r = driven_request();
+    let peer = f.peer(vec![]);
+    assert!(
+        !f.cli(peer.address, &["runtime-run", "30", &r.task.objective])
+            .status
+            .success()
+    );
+    assert!(peer.finish().is_empty());
+    let mut wrong = r.clone();
+    wrong.task.objective = "Different task".into();
+    let wrong =
+        agentmage_kernel_engine::runtime_coordinator::seal_runtime_run_request(wrong).unwrap();
+    let peer = f.peer(vec![
+        driven_selection(&r),
+        json!(wrong),
+        json!({"released":true}),
+    ]);
+    let output = f.tty(
+        peer.address,
+        &["runtime-run", "30", &r.task.objective],
+        "approve",
+    );
+    assert_ne!(output["status"], 0);
+    assert_eq!(output["answered"], 1);
+    let calls = peer.finish();
+    assert_eq!(calls.len(), 3);
+    assert!(
+        calls
+            .iter()
+            .all(|c| c["route"] != "POST /v1/code/runtime/start HTTP/1.1")
+    );
+}
+
+#[test]
+fn connected_driver_interrupt_and_deadline_abort_a_waiting_prompt_without_preparing() {
+    let f = Fixture::new();
+    let r = driven_request();
+    for mode in ["signal", "wait"] {
+        let peer = f.peer(vec![driven_selection(&r)]);
+        let began = Instant::now();
+        let output = f.tty(peer.address, &["runtime-run", "1", &r.task.objective], mode);
+        assert_ne!(output["status"], 0, "{output}");
+        assert_eq!(output["answered"], 1, "{output}");
+        assert!(began.elapsed() < Duration::from_secs(5));
+        let calls = peer.finish();
+        assert_eq!(calls.len(), 1, "{calls:?}");
+        assert_eq!(calls[0]["route"], "GET /v1/code/runtime HTTP/1.1");
+    }
+}
+
+#[test]
+fn connected_driver_reads_complete_artifacts_and_refuses_corrupt_pages_before_success() {
+    let f = Fixture::new();
+    let r = driven_request();
+    let mut stream = Stream::new(&r);
+    stream.event(
+        RuntimeEventKind::RunStarted {
+            request_sha256: r.request_sha256.clone(),
+        },
+        None,
+        None,
+    );
+    let artifact = RuntimeArtifactRef {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        artifact_id: RuntimeArtifactId::from_raw("http-artifact"),
+        manifest_sha256: "a".repeat(64),
+        payload_sha256: "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a".into(),
+        byte_size: 2,
+        media_type: "application/json".into(),
+    };
+    stream.event(
+        RuntimeEventKind::ArtifactCreated {
+            artifact_id: artifact.artifact_id.clone(),
+            manifest_sha256: artifact.manifest_sha256.clone(),
+        },
+        None,
+        None,
+    );
+    let outcome = stream.terminal(AgentStateKind::NoOp);
+    let mut step = stream.step(stream.events.clone(), None, outcome);
+    step["artifacts"] = json!([artifact]);
+    let page = json!({"reference":artifact,"offset":0,"bytes":[123,125],"page_sha256":artifact.payload_sha256,"next_offset":null,"complete":true});
+    for corrupt in [false, true] {
+        let mut response = page.clone();
+        if corrupt {
+            response["bytes"] = json!([91, 93]);
+        }
+        let mut replies = vec![driven_selection(&r), json!(r), step.clone(), response];
+        if !corrupt {
+            replies.extend([Value::Null, Value::Null]);
+        }
+        replies.push(json!({"released":true}));
+        let peer = f.peer(replies);
+        let output = f.tty(
+            peer.address,
+            &["runtime-run", "30", &r.task.objective],
+            "approve",
+        );
+        assert_eq!(output["status"] == 0, !corrupt, "{output}");
+        assert_eq!(output["answered"], 2);
+        let text = output["transcript"].as_str().unwrap();
+        assert_eq!(text.contains("verified-outcome"), !corrupt, "{text}");
+        let calls = peer.finish();
+        assert_eq!(calls[3]["route"], "POST /v1/code/runtime/artifact HTTP/1.1");
+        assert_eq!(calls[3]["body"]["maximum_bytes"], 4096);
+        assert_eq!(calls[3]["body"]["reference"], json!(artifact));
+        assert_eq!(calls.len(), if corrupt { 5 } else { 7 });
+    }
+}
+
+#[test]
+fn connected_driver_interrupt_at_approval_uses_canonical_job_control_and_sends_no_grant() {
+    let f = Fixture::new();
+    let r = driven_request();
+    let (first, _) = driven_steps(&r, true);
+    let mut stream = Stream {
+        request: r.clone(),
+        events: serde_json::from_value(first["events"].clone()).unwrap(),
+    };
+    let split = stream.events.len();
+    stream.event(
+        RuntimeEventKind::CancellationRequested {
+            cancellation_id: CancellationId::from_raw("canonical-cancel"),
+        },
+        None,
+        None,
+    );
+    stream.event(
+        RuntimeEventKind::CancellationObserved {
+            cancellation_id: CancellationId::from_raw("canonical-cancel"),
+        },
+        None,
+        None,
+    );
+    let outcome = stream.terminal(AgentStateKind::Cancelled);
+    let terminal = stream.step(stream.events[split..].to_vec(), None, outcome);
+    let status = json!({"schema_version":1,"run_id":r.run_id,"request_sha256":r.request_sha256,"job":{"job_id":r.run_id,"phase":"running","revision":7,"cancellation_requested":false,"head_sha256":"a".repeat(64)}});
+    let mut cancelling = status.clone();
+    cancelling["job"]["phase"] = json!("cancelling");
+    cancelling["job"]["revision"] = json!(8);
+    cancelling["job"]["cancellation_requested"] = json!(true);
+    let mut cancelled = cancelling.clone();
+    cancelled["job"]["phase"] = json!("cancelled");
+    cancelled["job"]["revision"] = json!(9);
+    let answer = json!({"decision":{"decision":"applied","revision":8,"phase":"cancelling"},"status":cancelling});
+    let peer = f.peer(vec![
+        driven_selection(&r),
+        json!(r),
+        first,
+        status,
+        answer,
+        terminal,
+        Value::Null,
+        cancelled,
+        json!({"released":true}),
+    ]);
+    let output = f.tty(
+        peer.address,
+        &["runtime-run", "30", &r.task.objective],
+        "signal-tool",
+    );
+    assert_ne!(output["status"], 0, "{output}");
+    assert_eq!(output["answered"], 3, "{output}");
+    let text = output["transcript"].as_str().unwrap();
+    assert!(text.contains("verified-outcome"), "{text}");
+    assert!(text.contains("CANCELLED"));
+    assert!(text.contains("verified-job-control"));
+    let calls = peer.finish();
+    assert_eq!(calls.len(), 9, "{calls:?}");
+    assert_eq!(calls[4]["route"], "POST /v1/code/runtime/control HTTP/1.1");
+    assert_eq!(calls[4]["body"]["request"]["action"], "cancel");
+    assert_eq!(calls[4]["body"]["request"]["observed_revision"], 7);
+    assert_eq!(calls[5]["body"]["response"], Value::Null);
+    assert!(
+        calls.iter().all(|c| c["body"]["response"].is_null()),
+        "{calls:?}"
+    );
+}
+
 const PTY: &str = r#"
 import errno,fcntl,json,os,pty,select,signal,subprocess,sys,termios,time
 master,slave=pty.openpty()
@@ -350,7 +871,10 @@ try:
         raw+=chunk
         if raw.count(b'anything else declines:')>answered:
             prompt=raw.split(b'Type exactly ')[-1].split(b' to approve;')[0]
-            os.write(master,(prompt if sys.argv[1]=='approve' else b'no')+b'\n');answered+=1
+            allow = sys.argv[1]=='approve' or (sys.argv[1] in ('deny-tools','signal-tool') and not prompt.startswith(b'allow '))
+            if sys.argv[1]=='signal' or (sys.argv[1]=='signal-tool' and prompt.startswith(b'allow ')):os.kill(p.pid,signal.SIGINT)
+            elif sys.argv[1]!='wait':os.write(master,(prompt if allow else b'no')+b'\n')
+            answered+=1
     status=p.wait(timeout=2)
     assert b'\x1b' not in raw
     print(json.dumps({'status':status,'answered':answered,'transcript':raw.decode()}))

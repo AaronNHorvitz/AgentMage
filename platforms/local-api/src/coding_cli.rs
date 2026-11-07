@@ -17,6 +17,8 @@ const MAX_REPLY: usize = 4 * 1024 * 1024;
 const MAX_REQUEST: usize = 256 * 1024;
 const DEADLINE: Duration = Duration::from_secs(180);
 
+#[path = "coding_cli_driver.rs"]
+mod driver;
 #[path = "coding_cli_runtime.rs"]
 mod runtime;
 
@@ -207,7 +209,8 @@ fn receive(
                 if values.len() == 8192 {
                     return Err(());
                 }
-                let value: Value = serde_json::from_slice(&bytes[..end]).map_err(|_| ())?;
+                let value: Value =
+                    agentmage_host::runtime_transport::decode_exact(&bytes[..end]).ok_or(())?;
                 observe(&value)?;
                 values.push(value);
                 bytes.drain(..=end);
@@ -222,7 +225,7 @@ fn receive(
             return Err(());
         }
     } else {
-        values.push(serde_json::from_slice(&bytes).map_err(|_| ())?);
+        values.push(agentmage_host::runtime_transport::decode_exact(&bytes).ok_or(())?);
     }
     if code != 200 {
         // Never turn a refused or uncertain operation into success or retry it.
@@ -721,7 +724,7 @@ fn execute(args: &[String]) -> Result<()> {
 
 fn usage() {
     eprintln!(
-        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> runtime|runtime-prepare <task>|runtime-start <prepared-request-json>|runtime-step <run-id> <request-digest>|runtime-approve <run-id> <request-digest>|runtime-deny <run-id> <request-digest>|runtime-job <run-id> <request-digest>|runtime-control <run-id> <request-digest> <cancel|suspend|resume>|runtime-declarations <run-id> <request-digest>|runtime-release <run-id> <request-digest>|repair-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|edit|edit-prepare <worktree> <strict-change-json>|edit-apply <worktree>|edit-deny|propose-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|validation|validation-prepare <definition-json>|validation-run <worktree>|validation-deny|command|command-prepare <spec-json>|command-run <worktree>|command-deny|worktree|worktree-prepare <repository> <private-management-directory> <task-id> <base-commit>|worktree-create <repository> <private-management-directory>|worktree-deny|map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
+        "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> runtime|runtime-run <seconds> <task>|runtime-prepare <task>|runtime-start <prepared-request-json>|runtime-step <run-id> <request-digest>|runtime-approve <run-id> <request-digest>|runtime-deny <run-id> <request-digest>|runtime-job <run-id> <request-digest>|runtime-control <run-id> <request-digest> <cancel|suspend|resume>|runtime-declarations <run-id> <request-digest>|runtime-release <run-id> <request-digest>|repair-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|edit|edit-prepare <worktree> <strict-change-json>|edit-apply <worktree>|edit-deny|propose-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|validation|validation-prepare <definition-json>|validation-run <worktree>|validation-deny|command|command-prepare <spec-json>|command-run <worktree>|command-deny|worktree|worktree-prepare <repository> <private-management-directory> <task-id> <base-commit>|worktree-create <repository> <private-management-directory>|worktree-deny|map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
     );
 }
 
@@ -934,5 +937,22 @@ mod tests {
             .is_err()
         );
         assert!(wire(&stream.replace("200", "409"), b"{}\n").is_err());
+    }
+
+    #[test]
+    fn wire_json_refuses_repeated_members_before_value_decoding() {
+        for body in [
+            br#"{"run_id":"first","run_id":"second"}"#.as_slice(),
+            br#"{"nested":{"approve":false,"approve":true}}"#.as_slice(),
+        ] {
+            let header = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+                body.len()
+            );
+            assert!(wire(&header, body).is_err());
+            let mut streamed = body.to_vec();
+            streamed.push(b'\n');
+            assert!(wire("HTTP/1.1 200 OK\r\nContent-Type: application/x-ndjson\r\nConnection: close\r\n\r\n", &streamed).is_err());
+        }
     }
 }
