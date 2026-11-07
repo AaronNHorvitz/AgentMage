@@ -1,0 +1,239 @@
+Commit: a8bdb80dc506603b0a8335013e586214b894be69
+Scope: local-coding-explicit-python-sources
+
+# Independent core review: T-306 (shared T-303) explicit Python source selection
+
+Reviewer: a separate, read-only Claude Opus 5.5 session at extra-high effort. This is a same-model
+review, which is accepted for now; a cross-model review must happen before any public release.
+This review did not change the repository. I wrote only this file, the validation directory below
+and one throwaway probe directory under `/lane/state/tmp`, which I deleted.
+
+Tier: core. Row: T-306, shared with T-303. This is a non-closing increment, and both parents stay
+OPEN. The commit claims no sub-row, score, model admission, native positive workflow or parent
+closure, and this review accepts none.
+
+## Methods
+
+1. **Commit and scope.**
+   - `git rev-parse HEAD` and `git rev-parse a8bdb80dc506603b0a8335013e586214b894be69` both give
+     `a8bdb80dc506603b0a8335013e586214b894be69`. Its parent is `be214302706ac1caee2b7c0e54d2009f7864e8c8`.
+   - `git diff --stat be214302..a8bdb80d` shows exactly 9 paths: 1004 insertions and 55 deletions.
+   - The working tree was clean before and after.
+2. **Input integrity, checked before running anything.**
+   - `sha256sum -c review-inputs.sha256` gives OK for all 15 entries.
+   - The checksum list itself hashes to `086933d1…917a`, as stated.
+   - The Node binary hashes to `d1de76d8…932c`, as stated.
+3. **Helpers, all read before running.**
+   - `verify.py` checks that fd 9 has the same dev/ino as the shared lock, then takes it non-blocking. It runs
+     3 focused cargo commands, then the repository's own `scripts/local_agent_fast_gate.py` planner and
+     `execute()`. The only change is an `env` prefix on cargo commands. It writes only under
+     `$AGENTMAGE_VALIDATION_DIR`.
+   - `audit.py` writes only with `--record`, which I did not pass.
+   - `run-policy.py` (unchanged) mirrors tracked and untracked sources plus the legacy artifact, then runs
+     `scripts/validate_docs.py` in the mirror.
+   - `/tools/build-slot` only takes `flock` on the shared lock.
+4. **Documents.** I read IP-POLICY.md, the full 9-path diff, the new evidence file, both guide changes, the
+   T-306 ledger delta (a single appended sentence pair) and the retained prior review.
+5. **Code tracing.**
+   - Every use of `source_paths`, `selected_source_paths` and `CodingPythonSourceSelection`.
+   - `python_project_paths`, `build_profile`, `refresh_repository_composition`, `load_resume_request` and
+     the constraint construction in `prepare`.
+   - `CodingSessionProfile::build` and its `ProfileMaterial`, to check that the digest is deterministic.
+   - `offline_proof`, which uses only constant inputs.
+   - `WorkspacePath::new` / `validate_component`, which do not normalise and refuse `.`, `..`, separators,
+     NUL, control characters, non-NFC/NFKC text and oversize components.
+   - The owned `attach` / `recover` / `handle_owned` routes, `decode_exact` with `deny_unknown_fields`, and
+     the terminal driver's consent display (`coding_cli_driver.rs:266`), which shows the whole status object.
+6. **Own probe.** I ran a Python 3.15.0 probe with `env -i /usr/bin/python3 -I -B -m unittest discover -s .
+   -t . -v` in a temporary directory. It is not repository code (see L1).
+
+## Exact commands and results
+
+Environment:
+- `PATH=/lane/state/tmp/t306-owned-api/node-v24.15.0/bin:$PATH`
+- `CARGO_TARGET_DIR=/lane/state/review-target`, `CARGO_BUILD_JOBS=2`, `RUST_TEST_THREADS=4`
+- `AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-explicit-python-a8bdb80dc506`, created with `mkdir -m 700`
+
+No GPU, model or benchmark input was used.
+
+**`bash /tools/build-slot python3 -B /lane/state/tmp/t306-source-selection/verify.py > $V/focused.log 2>&1`**
+
+The command exited with 1, as the request expected. It waited about 17 minutes for the shared reservation.
+
+Focused checks:
+
+| Check | Passed | Failed | Ignored | Filtered | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Host `coding_development_runtime::python_project_tests::` | 13 | 0 | 0 | 587 | 43.58 s including compilation |
+| Local-api `--lib coding_` | 22 | 0 | 0 | 5 | |
+| `coding_runtime_cli` connected driver | 1 | 0 | 0 | 14 | |
+
+- `explicit_source_strict_patch_fail_repair_us=674368`; the builder measured 670256.
+- `owned_api_seven_refusal_exchanges_us=2929`.
+
+Fast gate:
+- My `plan.json` is byte-identical to the builder's.
+- The plan covers `agentmage-host` and `agentmage-local-api` only. The untouched Linux crate is correctly
+  not selected.
+- Step exits are `0 0 0 0 0 0 101`: diff-check, untracked lint, review lint, markdownlint on 4 files,
+  `cargo fmt --check`, `cargo clippy -D warnings` (31.30 s) and the complete test run (72.20 s).
+- Complete run: 17 target summaries, 659 passed, 53 failed, 11 ignored, 0 filtered. `FAST GATE: FAIL`.
+- I parsed failures with the audit's own parser. My 53 identities equal the builder's `fast.log` with an
+  empty symmetric difference. They also equal the host subset of the prior batch's
+  `/lane/state/tmp/t306-root-project/fast.log`, again with an empty symmetric difference.
+- All 53 failures are in `agentmage_host[unittests src/lib.rs]`:
+  - 52 panic on `LinuxSandboxError { kind: InvalidManifest }`, the deferred T-301.1 native trust blocker.
+  - 1 (`linux_repository_map::…live_projection…`) panics on `InvalidGitArtifact`, the existing Git trust
+    refusal. It was already in the prior set.
+- Every new or changed test method shows `... ok` in the complete run:
+  - the 6 new host methods plus the changed root method
+  - `project_resume_binds_the_complete_profile…`
+  - `source_selection_is_optional_closed_and_checked_before_owner_extraction`
+  - `explicit_sources_are_disclosed_but_cannot_be_changed_by_prepare`
+- No new failure, ignore, allowlist or threshold change.
+
+**Other commands**
+
+- `python3 -B /lane/state/tmp/t306-read-consent/run-policy.py $V/policy-source`: exit 0, "Validated 794
+  Markdown file(s) and all policy invariants."; `source_count` is 9051.
+- `cmp` of the builder's `policy-source-inputs.json` against mine: identical.
+- `python3 -B /lane/state/tmp/t306-source-selection/audit.py > $V/builder-audit.json`: exit 0. `cmp` against
+  the builder's `audit.json` is identical (SHA-256 `439797f8a466801b1ad72f96b769453375fce5e3fde5af5e7272705e79314792`).
+- `cmp docs/reviews/be214302706a-local-coding-root-python.txt /lane/reviews/be214302706a-local-coding-root-python.md`:
+  identical.
+- `git diff --check be214302706ac1caee2b7c0e54d2009f7864e8c8 --`: clean. `git status --short`: empty.
+- Privacy grep of all added lines: no hit for home-directory paths, the local username or hostname, the
+  private sibling project name, credential or key patterns. The only match is the retained prior review's
+  description of its own privacy grep, which contains no private value.
+
+## Analysis of the requested points
+
+- **Closed optional shape.**
+  - `Attach` keeps `deny_unknown_fields`. `source_paths` is `Option<Vec<Vec<String>>>` with
+    `#[serde(default)]`, so a missing or null value gives the default selection.
+  - A string value fails decoding. An empty array, `..`, test paths and duplicates give
+    `400 code.runtime.source-selection`.
+  - A non-project scenario with `source_paths` refuses.
+  - Selection is validated before the owner lock and extraction (`coding_owned_api.rs:83`). The test checks
+    that the held repository `Arc` and empty runtime are unchanged afterwards.
+  - Consent and control are still required: 403 without control, `handoff-consent` without approval.
+  - `CodingPythonSourceSelection` has private fields and is built only through `new`.
+- **Every selected map entry requirement.**
+  - `python_project_paths` (`coding_development_runtime.rs:2195-2237`) requires all of: `content_read`,
+    `RegularFile`, `python_source_path_allowed`, an exact component match, and disposition `Parsed` or
+    `ParsedWithErrors`.
+  - The result is sorted and deduplicated, and its length must equal the selection's length. The selection
+    is unique and every output entry is drawn from it, so the result is exactly the selection set.
+  - A missing, unread, symlinked or excluded entry refuses. There is no partial fallback; this is tested.
+  - Component validation does not normalise, so a near-equivalent spelling cannot match a different map entry.
+- **Test-path exclusions.**
+  - `python_source_path_allowed` (`:445-453`) refuses any hidden component, any component equal to `test`
+    or `tests`, and basenames starting with `test` or not ending `.py`.
+  - It applies to both the default and explicit modes in both layouts.
+  - This is case-sensitive, which matches unittest's case-sensitive `fnmatch` on POSIX and the literal
+    `-s tests`.
+  - See L1 for the remaining discovery hook.
+- **Immutable refresh.**
+  - The selection is stored once in the factory (`:574`) and passed unchanged to every
+    `build_repository_composition` call (`:622-626`).
+  - `attach_owned_worktree` adds no mutation path.
+- **Exact scope and creation refusal.**
+  - The write scope is `CodingWriteScope::exact_files` of the computed paths. Descendants, absent files and
+    non-selected files are rejected; this is tested.
+  - The creation parent is not added.
+  - The command, limits and grants are unchanged.
+- **Status disclosure.**
+  - `selected_source_paths` comes from the canonical sorted `paths()`. It is null for the default and for
+    the separate-process launcher.
+  - The terminal driver displays the whole status object at inspection consent (`coding_cli_driver.rs:266`).
+  - The prepared work packet lists the actual `writable_roots` (`:1222-1229`).
+- **No prepare override.** `RuntimePrepareInput` rejects `source_paths` with `code.runtime.input`, and the test
+  confirms zero host calls.
+- **Resume digests.**
+  - At prepare, the host appends the project-profile marker and the explicit-selection marker (`:1269-1277`).
+  - `load_resume_request` requires exactly one matching marker of each kind, or none when not applicable
+    (`:767-774`).
+  - User text reaches only `objective`, so it cannot inject a marker.
+  - The profile digest is deterministic for an unchanged composition: `ProfileMaterial` covers only
+    host-derived values, `offline_proof` uses constants, and `coding_session.rs:937` asserts that rebuilds
+    match. Binding it therefore does not break same-snapshot resume.
+  - A snapshot change already refused resume through the existing `workspace_snapshot_sha256` check.
+  - Coverage is at the helper level plus inspection of the wiring. An end-to-end native resume remains
+    blocked by T-301.1, which is consistent with the existing low coverage backlog.
+- **Fresh-consent compatibility boundary.**
+  - The root definition hash changes, and earlier project requests lack the profile marker. Both refuse
+    resume as profile drift.
+  - Nothing is migrated or re-sealed. This matches the guide and evidence and fails closed.
+- **Root label (prior L2).**
+  - The label is now derived from the scenario, and a mismatched scenario/command pair is refused
+    (`:2153-2160`).
+  - The package-layout definition bytes are unchanged.
+  - This is fixed.
+- **Honest labelling.** The interpreter fixture is clearly described as trusted, unconfined component
+  execution. Refusal sockets and PTY peers are described as component contracts. No native, model or
+  workflow evidence is inferred.
+- **Evaluation integrity, delivery and IP.**
+  - No evaluation task, hidden or held-out input, threshold, scorer, dependency or SBOM file is in the
+    audit-enforced 9-path set.
+  - There is no score, product comparison or trademark branding.
+  - No new sub-row is added.
+- **Confinement.**
+  - No sandbox, runner or authority code changed. The selection only narrows which existing map entries
+    enter the exact-file scope, and it is disclosed before consent.
+  - The writable set may now include files outside `src/`. They are still existing, non-hidden, non-test
+    `.py` files in the held disposable worktree, under separately approved native writes.
+  - I found no path in this diff by which a selection reaches outside the worktree.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L1 (low): in the root layout, a writable package `__init__.py` can still hide discovered tests through
+unittest's `load_tests` hook. The prior L1 is therefore only partly addressed.**
+
+- Location: `shells/host/src/coding_development_runtime.rs:445-453` (`python_source_path_allowed`), used by
+  `python_project_paths` (`:2205`), together with the root command `-s . -t .` (`:2265`).
+- Claim affected: the evidence file says this "addresses review L1, including the original
+  `src/test_calc.py` case". TASKS.md says "Both low findings are addressed".
+- Problem: in the root layout, discovery imports every package `__init__.py` on its way to test modules.
+  When that `__init__.py` defines `load_tests`, it replaces discovery for the whole package subtree. Package
+  `__init__.py` files pass the new exclusion. The new test
+  `project_sources_exclude_discovery_modules_and_test_directories` keeps `src/__init__.py` writable on purpose.
+- Reproduction: I used a temporary directory containing `src/__init__.py` (empty), `src/calc.py` with
+  `return a-b`, and `src/test_calc.py` asserting `add(2,3)==5`.
+  1. `env -i /usr/bin/python3 -I -B -m unittest discover -s . -t . -v` gives `FAILED (failures=1)`, exit 1.
+  2. I rewrote only `src/__init__.py` to define a trivial passing `TestCase` and
+     `def load_tests(loader, tests, pattern): return tests`. The same command then gives `Ran 1 test … OK`,
+     exit 0.
+  3. `src/test_calc.py` and `src/calc.py` were never touched.
+- Why it is low:
+  - It is the same class the prior review rated low: the approved runner is trusted and is not independent
+    grading.
+  - Any writable imported module can already monkeypatch `unittest` in either layout.
+  - The frozen scorer, not this transcript, decides coding scores.
+  - Every write is separately approved and visible.
+  - Confinement is unaffected.
+  - The package layout (`-s tests`) is not exposed to this hook, because `tests/**` is excluded.
+- Fix: in the root layout, exclude from `exact_files` (or refuse at startup) every `__init__.py` whose
+  package directory contains, directly or transitively, a module matching `test*.py`. Add the probe above as
+  a test next to the existing root interpreter fixture, and correct the "addresses L1" wording. Resolve this
+  before any root-layout run is cited as coding-success evidence.
+
+Backlog carried forward, not reopened:
+- the prior continuation/API-recovery coverage lows
+- the factory allocation lifetime issue: `Box::leak` on each `refresh_repository_composition`, now also
+  reached with a selection
+- the deferred T-301.1 native trust blocker, which still prevents native positive workflow, end-to-end
+  resume coverage and model measurement
+
+## Per-row result
+
+- **T-306 (non-closing increment): PASS** for this increment at exact commit
+  `a8bdb80dc506603b0a8335013e586214b894be69`.
+  - No open high or medium finding.
+  - L1 goes to the low backlog.
+  - Prior L2 is fixed. Prior L1 is partly fixed; its remainder is this review's L1.
+  - The row stays OPEN.
+- **T-303 (shared, non-closing): PASS** for this increment on the same basis. The row stays OPEN.
+
+Verdict: PASS

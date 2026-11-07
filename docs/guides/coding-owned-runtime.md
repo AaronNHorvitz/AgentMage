@@ -174,6 +174,12 @@ two project scenarios. Omit them for the default `src/` selection. They use the
 same one-to-sixteen exact-file admission and exclusions as the HTTP request.
 The client canonicalizes their order without reading files.
 
+Project unittest output remains a trusted-runner observation, not independent
+grading. In the root layout, a writable package initializer can still change
+discovery through its test-loading hook. This is low backlog from the
+[source-selection review](../reviews/a8bdb80dc506-local-coding-explicit-python-sources.txt)
+and must be resolved before root-layout output is cited as coding-success evidence.
+
 The client reads the held root digest from repository edit status, displays the
 complete attach request and its inspection/handoff consent fields, and requires
 `attach <held-root-digest>` in the controlling terminal. The displayed request

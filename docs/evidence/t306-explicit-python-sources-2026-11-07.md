@@ -7,6 +7,14 @@ is retained unchanged with **Verdict: PASS** for that exact commit and no open
 high/medium finding. This batch addresses its two low findings while adding
 explicit source selection through the existing owned HTTP handoff.
 
+Subsequent [independent core review](../reviews/a8bdb80dc506-local-coding-explicit-python-sources.txt)
+has **Verdict: PASS** for exact commit `a8bdb80dc506603b0a8335013e586214b894be69`,
+with no open high or medium finding. It clarifies that prior L1 is partly fixed:
+a writable package initializer can still alter root discovery through its test
+loading hook. That remainder is low backlog and must be resolved before citing
+root-layout output as coding-success evidence; prior L2 is fixed. The point-in-time
+measurements below are unchanged and close neither parent row.
+
 ## Behavior
 
 The owned attach route and native host factory accept an optional list of one

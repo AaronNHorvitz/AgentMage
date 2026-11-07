@@ -81,8 +81,20 @@ The terminal tests use synthetic HTTP peers and actual controlling terminals.
 They establish request, disclosure, consent and refusal behavior, not native Git
 creation, a positive coordinator fail/repair workflow, inference or a coding score.
 The existing T-301.1 executable-ownership blocker still prevents native acceptance.
-The source-selection predecessor remains a separately reviewed increment; neither
-its component checks nor this client batch close T-303 or T-306.
+The [source-selection core review](../reviews/a8bdb80dc506-local-coding-explicit-python-sources.txt)
+arrived after the terminal implementation commit. It has **Verdict: PASS** for
+exact commit `a8bdb80dc506603b0a8335013e586214b894be69`, with no open high or medium
+finding, and is retained unchanged. Its low L1 records that a writable package
+initializer can use the discovery hook to hide root-layout tests. Prior L1 is
+therefore partly addressed; prior L2 is fixed. This remaining low is backlog,
+not a new row, and must be resolved before citing root-layout tests as coding
+success evidence. Neither that review nor this client batch closes T-303 or T-306.
+
+Retaining the review and recording this limit changes only documentation after
+the terminal implementation commit. The unchanged source snapshot and its
+106-test result remain bound to that implementation. The final documentation
+follow-up has its own selected gate and complete policy check; no source test
+is inferred from documentation lint.
 
 Arbitrary configured coding endpoint composition, durable ownership, new-file
 transfer, approved commit/push, MCP and parent measurements remain open. Native
