@@ -1,0 +1,200 @@
+Commit: 198af125dfdc7a22d46b8905c6a78da5907c0311
+Scope: local-coding-bound-recovery
+
+# Independent core review: bind worktree recovery consent to the live handoff
+
+Reviewer: a separate, read-only Claude Opus 5.5 session at extra-high effort. This is a same-model
+review, which the owner accepts for now; a cross-model review must come before any public release.
+I reviewed only the frozen checkout `/lane/review-checkout` at the exact commit above, against base
+`4f73d93ea3ac1b685e0932e2688b8d3f839b815c`. I did not modify the repository. No GPU or model was used.
+I read no third-party product code or documentation, and I searched for no patents.
+
+Row: T-306, shared with T-303. This is a non-closing same-row increment that repairs low L2 of the
+terminal ownership review (`docs/reviews/1fde68be241f-local-coding-terminal-ownership.txt`):
+the recovery confirmation was a fixed string, and the POST body did not name the owner being recovered.
+
+## Methods
+
+- Confirmed the commit (`git rev-parse HEAD` = `198af125dfdc7a22d46b8905c6a78da5907c0311`). There is
+  one commit on top of the base, the working tree is clean, and the diff has exactly the 11 requested paths.
+- Read IP-POLICY.md, the T-303/T-306 rows, the complete diff, the new evidence file, both guide diffs,
+  the retained predecessor report, the L2 text in the terminal ownership review, and the private
+  helpers `full.py`, `audit.py` and `docs-final.py`.
+- Did a full source review of `coding_owned_api.rs` (attach, recover, restore, restore_lease and
+  restore_recovery), the new lease fields and methods in `coding_repository_runtime.rs`, the terminal
+  `recover` in `coding_cli_runtime.rs`, `confirm`/`digest` in `coding_cli.rs`, and the route dispatch in
+  `lib.rs`.
+- Ran every command in the request and compared the failure identities, ignore identities and totals
+  myself with my own parser, separately from the builder's audit.
+
+## Exact commands and results (all run in `/lane/review-checkout`)
+
+```sh
+sha256sum -c /lane/state/tmp/t306-bound-recovery/review-inputs.sha256      # all OK
+sha256sum review-inputs.sha256 audit.json node                             # 4b2296db…, 7708503c…, d1de76d8… as requested
+export PATH=/lane/state/tmp/t306-owned-api/node-v24.15.0/bin:$PATH
+export CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+export AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-bound-recovery-198af125dfdc
+mkdir -m 700 "$AGENTMAGE_VALIDATION_DIR"
+bash /tools/build-slot bash -c '…three focused cargo tests…; python3 -B …/full.py' > focused.log 2>&1   # EXIT 1 (expected)
+```
+
+- API unit target `coding_owned_api::`: **ok, 6 passed, 0 failed, 0 ignored, 22 filtered**.
+  `owned_api_sixteen_refusal_exchanges_us=6263`. I counted the exchanges in the test body: there are 16.
+  The panic at `coding_owned_api.rs:478` is the existing deliberate `synthetic poison` panic inside
+  `catch_unwind`; the base commit already has it at line 417.
+- Terminal target `coding_runtime_cli`: **ok, 22 passed, 0 failed, 0 ignored, 0 filtered**.
+- Native `coding_repository::apply::tests::`: **ok, 21 passed, 0 failed, 0 ignored, 301 filtered**.
+  `bound_recovery_same_root_reattachment_us=368132`. The panic at `coding_repository_apply_tests.rs:936`
+  is the deliberate poison inside the spawned thread, and its enclosing regression passes.
+- `full.py` (verified held lock descriptor, `cargo fmt --all -- --check`, source freeze, original
+  fast-gate planner/executor):
+  - `git diff --check`, `--lint-untracked`, `--lint-reviews` and markdownlint (4 files, 0 issues)
+    exit 0.
+  - Formatting check (1.00 s) and Clippy `--all-targets -D warnings` (32.66 s) exit 0. No warning or
+    error lines appear.
+  - The complete test command exits 101 and prints `FAST GATE: FAIL`, as expected.
+- My own parse of my `fast.log`:
+  - 22 target summaries, **937 passed / 72 failed / 63 ignored / 0 filtered**.
+  - The 72 failure names equal the retained linked-repair `fast.log` set exactly: 53 host
+    (`linux_coding_runtime`, `linux_read`, `linux_repository_map`) and 19 Linux (`command_runner`,
+    `local_commit`, `repository_safety`, `secret_service`). None of them is in a file this diff changes.
+  - The 63 ignore names equal the same baseline (symmetric difference empty).
+  - All nine new or expanded methods appear as `... ok` in the unfiltered complete run:
+    - `recovery_identity_survives_busy_retries_and_rejects_same_root_reattachment`
+    - `runtime_poisoned_owner_recovers_without_creation_authority_or_pending_approvals`
+    - `recovery_input_requires_exact_bound_object`
+    - `recovery_cannot_adopt_a_manual_owner_or_an_empty_state`
+    - `real_http_handoff_requires_control_exact_input_and_records_content_free_refusals`
+    - `ownership_recovery_uses_explicit_consent_for_attached_and_pending_owners`
+    - `ownership_recovery_refuses_busy_remote_or_unavailable_state_and_does_not_replay`
+    - `recovery_refuses_incomplete_identity_before_confirmation_or_post`
+    - `ownership_commands_refuse_pipe_denial_and_invalid_selection_without_sending_consent`
+
+```sh
+cmp …/plan.json "$D/plan.json"                                   # identical
+cmp …/source-freeze.json "$D/source-freeze.json"                 # identical
+python3 -B …/docs-final.py > "$D/docs-final.log"                 # exit 0, FINAL DOCS CHECKS PASS
+cmp …/plan-final.json "$D/plan-final.json"                       # identical
+python3 -B …/run-policy.py "$D/policy-final"                     # exit 0, "Validated 797 Markdown file(s) and all policy invariants."
+cmp …/policy-final-inputs.json "$D/policy-final-inputs.json"     # identical
+python3 -B …/audit.py > "$D/audit.json"                          # exit 0
+cmp …/audit.json "$D/audit.json"                                 # identical
+cmp docs/reviews/4f73d93ea3ac-…-scope.txt /lane/reviews/4f73d93ea3ac-…-scope.md   # identical
+git diff --check 4f73d93ea3ac… --                                # clean
+git status --short                                               # empty
+```
+
+## Source review
+
+**Identity minting** (`platforms/linux/src/coding_repository_runtime.rs:35-67`).
+- `into_runtime_worktree` first checks that the displayed root digest equals the held root and
+  verifies creation.
+- It then draws 32 bytes from `getrandom`. This is the same rustix idiom the crate already uses at
+  `coding_repository.rs:250`; the workspace already enables the `rand` feature, and no dependency or
+  lockfile changed.
+- Anything short of a full 32-byte read returns `(self, err)` before `pending`, `command`,
+  `validation`, `edit` and `apply` are cleared. So a randomness failure returns the owner intact.
+- `recovery_sha256 = hash(nonce)` is new for every handoff, so a reattachment of the same root gets a
+  different identity. The native test asserts `assert_ne!` and `code.runtime.recovery-stale` for the
+  earlier consent.
+- The struct fields are private. The only constructors are this function and the busy-return branch
+  of `try_into_repository`, which moves the same two strings back. I found no constructor anywhere
+  else in the workspace (`grep "LinuxCodingWorktreeLease *{"`). No decoded value can build a lease,
+  and `check_recovery_binding` only compares; it never grants anything.
+- `#[derive(Clone)]` copies both strings, so clones keep the identity. The lease does not derive
+  Debug or Serialize.
+
+**Poison readability.**
+- `recovery_binding` reads the plain fields without touching `owner`'s mutex.
+- The native poison regression panics while it holds the inner owner. It then asserts that the
+  binding is unchanged and that `check_recovery_binding` succeeds. After that, `recover_repository`
+  goes through the existing fail-closed branch, which strips creation authority and pending approvals.
+
+**API ordering** (`platforms/local-api/src/coding_owned_api.rs:255-314`).
+- Consent and the hex format are checked before any lock is taken. A malformed value gives 400
+  `code.runtime.recovery-binding`.
+- Pending path: `check_binding` runs under the service `State` guard before `restore_recovery`, and
+  `?` returns with `state.recovering` untouched.
+- Attached path: `check_binding` runs under the same `State` guard and the runtime `try_lock`, before
+  the `recoverable()` check and before `state.runtime.take()`. The `State` guard is held from the check
+  through `take`/`try_unwrap`. `RuntimeSession.owner` is assigned only at construction
+  (`coding_runtime_api.rs:178,493`; `coding_owned_api.rs:249`) and is never reassigned. A stale
+  request therefore cannot extract, drop or recover the current owner.
+- The echoed digests in `recovered(&input)` come after a successful equality check, so they equal the
+  lease identity.
+- The existing release (`recoverable`), exclusivity (`try_unwrap`), poison and `restore_lease`
+  invariants are unchanged.
+
+**Owner snapshot** (`coding_owned_api.rs:77-92`, `lib.rs:1068`).
+- The new path is routed to `handle_owned`, which refuses non-control tokens with 403 before
+  dispatch. The HTTP test confirms this, and POST to the path returns 404 `code.runtime.route`.
+- The snapshot returns only fixed fields and the two digests. It opens no path, reads no activation
+  or source, and does not lock the inner owner.
+- A separately launched runtime has `owner == None` and returns 409 `not-owned`, so the terminal
+  refuses.
+
+**Terminal** (`platforms/local-api/src/coding_cli_runtime.rs:100-155`).
+- It reads status, then the owner snapshot. It requires `version`, `live_creation_owner`,
+  `retention`, `apply_approved` and a boolean `recovery_pending`, and both digests must be lowercase
+  64-hex. Otherwise it refuses before confirmation; the new test covers all 7 fields × {null, invalid},
+  with `answered=0` and 2 calls each.
+- The challenge `recover <recovery-digest>` is 72 characters, within the 256-byte TTY read.
+- The client sends the digests once and requires both echoed values. The stale-error, missing-echo
+  and wrong-echo replies each fail after exactly 3 calls, with no replay.
+- Piped stdin is still refused.
+
+**Evidence honesty.**
+- 49 focused methods (6+22+21) is correct, and 16 HTTP exchanges is correct.
+- The evidence says plainly that API recovery after real native creation, native Git creation, the
+  positive workflow and model scores are unobserved, and that the source gate is FAIL.
+- The only TASKS.md change is the T-306 line. It now records the predecessor PASS (the retained report
+  matches `/lane/reviews` byte for byte and ends `Verdict: PASS`) and keeps the predecessor's L1 as
+  backlog in both guides. No status changes.
+- The diff changes no prompt, profile, codec, evaluation input, threshold, ignore, dependency or SBOM.
+
+**Privacy and IP.**
+- Lines added in the diff contain no private home path, username, hostname, credential or sibling
+  project name.
+- The `/lane/...` paths appear only inside the retained predecessor report. They are the generic lane
+  paths that earlier accepted reports already contain.
+- No other product is named or compared.
+
+**Coverage limit (disclosed, not a finding).** The positive branches of `inspect_owner` and the
+API-level success/stale branches of `recover` cannot be exercised in this lane. A live
+`LinuxCodingWorktreeLease` needs native creation, and the synthetic creation used in tests is private
+to the Linux crate's tests. I checked these branches by source review against the native component
+contract, which is tested directly: match, root mismatch, recovery mismatch, same-root reattachment,
+busy retries, clones and poison. The evidence states this limit accurately.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L1 (low, backlog): the terminal does not check that the owner snapshot's `recovery_pending`
+matches the status it just displayed.**
+- Location: `platforms/local-api/src/coding_cli_runtime.rs:121`. It only requires
+  `owner["recovery_pending"].is_boolean()`.
+- Scenario: between the two GETs, another control client changes the state (attached becomes pending,
+  or the reverse). The confirmation then shows a `service_state` that contradicts `worktree_owner`.
+- Why it is low: the server compares the exact root and handoff identity under the publication lock,
+  so consent can only recover the displayed handoff. The person is shown two inconsistent views, but
+  no other owner can be returned.
+- Fix: refuse unless `owner["recovery_pending"] == state["runtime_recovery_pending"]`, and add one
+  mismatch case to `recovery_refuses_incomplete_identity_before_confirmation_or_post`.
+
+Earlier backlog items stay open and unchanged: lifecycle/continuation, factory allocation, and the
+predecessor's standard-library shadowing L1.
+
+## Per-row result
+
+- **T-306 (non-closing increment): PASS.**
+  - L2 of the terminal ownership review is resolved: recovery consent is now tied to the exact live
+    handoff for both attached and pending owners, including same-root reattachment.
+  - All required runs reproduce the stated results.
+  - The complete source gate is still FAIL on the same 72 retained identities, with the same 63
+    ignores.
+  - New L1 is low backlog. T-306 stays OPEN.
+- **T-303 (shared, non-closing): PASS** for this increment on the same basis. T-303 stays OPEN.
+
+Verdict: PASS

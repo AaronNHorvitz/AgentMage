@@ -44,10 +44,13 @@ use crate::{
 mod apply;
 #[path = "coding_repository_command.rs"]
 mod command;
+#[path = "coding_repository_create.rs"]
+mod create;
 #[path = "coding_repository_edit.rs"]
 mod edit;
 #[path = "coding_repository_runtime.rs"]
 mod runtime;
+pub use create::LinuxCodingRuntimeCreateDriver;
 #[path = "coding_repository_validation.rs"]
 mod validation;
 pub use command::LinuxCodingCommandCancellation;
@@ -60,6 +63,9 @@ const TOOL: &str = "local-coding-worktree-create";
 struct AppliedEdit {
     before_sha256: String,
     after_sha256: String,
+    // Some only for a kernel-verified native creation in this live owner.
+    // A zero digest alone never establishes absent-file provenance.
+    created_mode: Option<u32>,
 }
 
 struct CreatedWorktree {

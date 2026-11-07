@@ -14,6 +14,7 @@ use crate::{LinuxAuthorizedWorkspace, LinuxPathAdapter, authorize_workspace_root
 
 #[path = "coding_workspace_write.rs"]
 mod write;
+pub(crate) use write::LinuxCodingPendingCreate;
 pub use write::{LinuxCodingPendingWrite, LinuxCodingReplacement, LinuxCodingWriteError};
 
 const MAX_FILES: usize = 16;
@@ -98,6 +99,17 @@ impl LinuxCodingReadScope {
     /// Later reads resolve afresh beneath the held root through the same native
     /// no-symlink/no-mount-crossing/hardlink-refusing adapter.
     pub fn select(root: &Path, paths: &[String]) -> Result<Self, LinuxCodingReadError> {
+        let scope = Self::select_targets(root, paths)?;
+        scope.read(paths)?;
+        Ok(scope)
+    }
+
+    // Exact path validation and held root for an original-apply creation plan.
+    // No read grant is returned publicly for absent targets.
+    pub(crate) fn select_targets(
+        root: &Path,
+        paths: &[String],
+    ) -> Result<Self, LinuxCodingReadError> {
         if paths.is_empty()
             || paths.len() > MAX_FILES
             || root.as_os_str().len() > 4096
@@ -137,7 +149,6 @@ impl LinuxCodingReadScope {
             adapter: LinuxPathAdapter::new(adapter_id, MAX_BYTES as u64),
             paths: selected,
         };
-        scope.read(paths)?;
         Ok(scope)
     }
 

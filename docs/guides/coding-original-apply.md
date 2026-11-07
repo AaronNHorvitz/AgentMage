@@ -4,7 +4,8 @@ The existing local coding repository owner can prepare a complete diff from its
 successfully edited worktree and apply it to the original checkout after a new,
 exact approval. This is a local API other programs can use, with a terminal
 client over the same routes. T-303 and T-306 remain open. See
-[Decision 0156](../decisions/0156-original-checkout-apply.md).
+[Decision 0156](../decisions/0156-original-checkout-apply.md) and
+[creation transfer](../decisions/0160-created-file-original-transfer.md).
 
 Start `serve-coding`, approve [worktree creation](coding-worktrees.md), and make
 separately approved [owned edits](coding-owned-edits.md). A path becomes eligible
@@ -32,9 +33,13 @@ request sends those exact two displayed identities. The server refuses
 inspecting either root or reading a source. A different control client creating
 a worktree during the prompt cannot retarget that read consent. Inspect the
 current pair and give fresh consent after a mismatch; do not automatically retry.
-Preparation reads only those existing files on both sides and writes nothing.
-The complete preview carries both root identities, creation receipt digest, kernel diff,
-change-set and preview digests, and expiry.
+Preparation reads the selected worktree files and original preimages for edits.
+For verified creations, it instead observes bounded original parent-directory
+names and an absent destination, binding each observed parent identity. The terminal
+read confirmation discloses these observations. Preparation writes nothing.
+The complete preview carries both root identities, creation receipt digest,
+complete kernel diff or creation contents and mode, plan/change-set and preview
+digests, and expiry.
 
 Application displays the complete escaped preview and requires
 `apply-original <outer-preview-digest>`. The client verifies the original root
@@ -52,7 +57,7 @@ its own approval.
 
 | Route | Body and result |
 | --- | --- |
-| `GET /v1/code/repository/apply` | Pending complete preview, latest process result, root identities and eligible paths |
+| `GET /v1/code/repository/apply` | Pending complete preview, latest process result, root identities, eligible paths and `available_changes` (`path`, `kind`, `creation_mode`) |
 | `POST /v1/code/repository/apply/prepare` | `paths`, `task`, `approve_read: true`, `expected_repository_root_sha256`, `expected_worktree_root_sha256`; inert complete original-checkout diff |
 | `POST /v1/code/repository/apply/decide` | `preview_sha256`, `approve`; consumes one exact decision |
 
@@ -78,8 +83,28 @@ resolve the changes yourself before requesting a new diff.
 The owner rechecks creation provenance, both held roots and selected worktree
 postimages at decision time. The native writer rechecks every original preimage
 before any replacement and reconciles partial failures. Symlinks, hardlinks,
-mount crossings, metadata, new files and deletion retain their existing refusals.
+mount crossings, metadata and deletion retain their existing refusals.
 Unrelated original files and the Git index are outside the write scope.
+
+A new file is eligible only after creation through the live coordinator's
+kernel-authorized native creation driver, followed by successful terminal
+publication. A manually added or merely untracked file is ineligible. Later
+successful edits preserve this absent-before provenance and the native creation
+mode. The existing API and terminal commands then show its complete escaped
+contents and mode in a controlled-filesystem preview. Original destinations must
+remain absent, including empty files, directories and case aliases. Parents must
+already exist. The native transaction revalidates all parents, names and absence
+before dispatch and uses its existing no-overwrite creation and reconciliation.
+The normal UTF-8, nonempty, NUL-free and 128 KiB aggregate source limits apply.
+
+Choose either edits or creations in one preview; a mixed selection refuses
+`code.apply.mixed-kinds`. This prevents a partial two-transaction application.
+Use `available_changes` to distinguish the kinds, then prepare and approve them
+separately. Creation previews list `project-tests` as an unexecuted follow-up;
+its result entry explicitly requires a separate command grant. The transfer
+executes no project test. Creations and edits share the sixteen-path lineage
+limit. A transferred creation becomes an ordinary existing-file edit on its next
+successful worktree change.
 
 A foreign digest leaves the preview pending. Denial, expiry, clock rollback,
 matching drift refusal and dispatch consume it. A later worktree edit dispatch
@@ -98,5 +123,5 @@ The native Git trust blocker still prevents actual worktree creation in this
 lane. Tests with synthetic creation provenance exercise real file writes and
 approval boundaries, not native Git creation or a real-model coding workflow.
 `tested` remains false: applying a diff does not prove tests passed. Commit,
-push, durable recovery, coordinator composition and measured parent acceptance
-remain open. No public release is authorized.
+push, durable recovery, configured-endpoint composition and measured parent
+acceptance remain open. No public release is authorized.

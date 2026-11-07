@@ -17,7 +17,7 @@ use agentmage_kernel_engine::write_transaction::{
 /// serialized owner; none can recover manual authority while another is live.
 #[derive(Clone)]
 pub struct LinuxCodingWorktreeLease {
-    owner: Arc<Mutex<LinuxCodingRepository>>,
+    pub(super) owner: Arc<Mutex<LinuxCodingRepository>>,
     root_sha256: String,
     recovery_sha256: String,
 }
@@ -310,6 +310,7 @@ impl AtomicWriteDriver for LinuxCodingRuntimeWriteDriver<'_> {
                                     |p| p.before_sha256.clone(),
                                 ),
                                 after_sha256: change.expected_postimage_sha256().to_owned(),
+                                created_mode: prior.and_then(|p| p.created_mode),
                             },
                         )
                         .is_some()

@@ -484,7 +484,7 @@ fn original_apply_prepare(
     confirm(
         &json!({"repository":original,"worktree":worktree,"paths":paths,"task":task,
         "expected_repository_root_sha256":root,"expected_worktree_root_sha256":tree,
-        "warning":"Reads the displayed existing files from both roots to prepare the complete original-checkout diff. No writes, model request, command, commit or push."}),
+        "warning":"Reads the displayed worktree files, original preimages for edits, and bounded original parent-directory names for new files to prepare the complete original-checkout preview. No writes, model request, command, commit or push."}),
         &format!("read {root} {tree}"),
     )?;
     verify()?;

@@ -82,7 +82,7 @@ use agentmage_kernel_engine::{
 };
 use agentmage_platform_linux::{
     LinuxAtomicWriteDriverLimits, LinuxAuthorityRuntime, LinuxAuthorizedWorkspace,
-    LinuxCodingRuntimeWriteDriver, LinuxCodingWorktreeLease, LinuxControlledFilesystemDriver,
+    LinuxCodingRuntimeCreateDriver, LinuxCodingRuntimeWriteDriver, LinuxCodingWorktreeLease,
     LinuxFilesystemDriverLimits, LinuxReadOnlyToolEffectDriver, LinuxReadOnlyToolInput,
     LinuxSandboxRunner,
 };
@@ -2939,8 +2939,17 @@ where
             &approval.grant,
             resolved_at_epoch_ms,
         )?;
-        let mut driver =
-            LinuxControlledFilesystemDriver::new(workspace, LinuxFilesystemDriverLimits::default());
+        let lease = self.owned_worktree.clone();
+        let mut driver = if let Some(lease) = &lease {
+            lease
+                .create_driver(workspace, LinuxFilesystemDriverLimits::default())
+                .map_err(|_| RuntimePortFailure::Invalid)?
+        } else {
+            LinuxCodingRuntimeCreateDriver::unowned(
+                workspace,
+                LinuxFilesystemDriverLimits::default(),
+            )
+        };
         let policy = self.policy.engine().clone();
         let filesystem_request = FilesystemTransactionRequest {
             transaction_id,
@@ -3055,7 +3064,16 @@ where
                     bytes,
                 });
         }
-        self.finish_specialized_effect_event(execution, event_context, pending, &write_checkpoints)
+        let completed = self.finish_specialized_effect_event(
+            execution,
+            event_context,
+            pending,
+            &write_checkpoints,
+        )?;
+        driver
+            .complete(&result)
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        Ok(completed)
     }
 
     fn controlled_change_execution(

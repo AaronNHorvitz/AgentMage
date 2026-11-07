@@ -35,8 +35,15 @@ after read consent, followed by a separate single-use apply approval. Previous
 manual approvals cannot be reused. Restart cannot recover the lease or lineage.
 Poisoning clears the created ownership and pending decisions before recovery.
 
-New-file transfer is not supported by this bridge. Tests use synthetic creation
-provenance with real held directories, kernel grants and native atomic writes;
+Native controlled-file creation now uses the same live owner lock. Only a
+successful native creation and matching verified transaction after terminal
+publication establish new-file transfer eligibility. Subsequent edits preserve
+that creation's absent-before provenance and native mode. Recover the owner,
+then use the existing [original preview and approval](coding-original-apply.md);
+no original write follows automatically. Mixed edit/creation selections refuse;
+missing parents are not created. Manually added files, caller receipts and
+restart cannot establish provenance. Tests use synthetic worktree-creation
+provenance with real held directories, kernel grants and native file writes;
 they do not prove native Git creation, coordinator execution or inference.
 The complete native host still encounters the deferred executable-ownership
 blocker in this lane. No new coding score or model admission is established.

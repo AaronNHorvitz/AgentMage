@@ -60,6 +60,7 @@ impl LinuxCodingRepository {
                         |p| p.before_sha256.clone(),
                     ),
                     after_sha256: hash(replacement.content.as_bytes()),
+                    created_mode: prior.and_then(|p| p.created_mode),
                 },
             );
         }

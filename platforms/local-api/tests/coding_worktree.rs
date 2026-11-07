@@ -583,10 +583,11 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
         ("validation", false, "python_unittest_text_v1"),
         ("edit", true, "agent_mage_json_v1"),
         ("original", true, "agent_mage_json_v1"),
+        ("original-create", true, "agent_mage_json_v1"),
     ] {
         let validation = kind == "validation";
         let edit = kind == "edit";
-        let original = kind == "original";
+        let original = matches!(kind, "original" | "original-create");
         for response in ["incorrect", "approve", "replace-root"] {
             let mut f = Fixture::new();
             f.stop();
@@ -614,6 +615,11 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
                     "creation_receipt_sha256":"b".repeat(64),
                     "write_preview":{"change_set_sha256":"c".repeat(64),"preview_sha256":"d".repeat(64),
                         "diff":"untrusted-λ\u{202e}\u{7f}","before":"original","after":"replacement"}});
+                if kind == "original-create" {
+                    preview["write_preview"] = json!({"plan_sha256":"c".repeat(64),"preview_sha256":"d".repeat(64),
+                        "operations":[{"kind":"create","destination_path":"new.py","destination_mode":384,
+                            "complete_content_preview":"untrusted-λ\u{202e}\u{7f}"}]});
+                }
                 (
                     "/v1/code/repository/apply",
                     "/v1/code/repository/apply/decide",
@@ -1465,6 +1471,9 @@ fn synthetic_original_preparation_discloses_both_roots_and_requires_fresh_read_c
         assert_eq!(display["worktree"], worktree.to_str().unwrap());
         assert_eq!(display["paths"], json!(["sentinel"]));
         assert_eq!(display["task"], "Apply fixture");
+        let warning = display["warning"].as_str().unwrap();
+        assert!(warning.contains("original preimages for edits"));
+        assert!(warning.contains("bounded original parent-directory names for new files"));
         if answer == "approve" {
             assert_eq!(
                 serde_json::from_slice::<Value>(&requests[1].1).unwrap(),

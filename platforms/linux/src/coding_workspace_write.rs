@@ -29,6 +29,10 @@ use sha2::{Digest, Sha256};
 use super::{LinuxCodingReadScope, MAX_BYTES, MAX_FILES};
 use crate::{LinuxAtomicWriteDriver, LinuxAtomicWriteDriverLimits};
 
+#[path = "coding_workspace_create.rs"]
+mod create;
+pub(crate) use create::LinuxCodingPendingCreate;
+
 const LIFETIME_MS: u64 = 120_000;
 
 /// Stable refusal without source, absolute path or operating-system diagnostics.

@@ -667,13 +667,21 @@ fn runtime_edit(
     content: &str,
     publish: bool,
 ) {
-    let scope =
-        LinuxCodingReadScope::select(&f.0.join("owned/worktree"), &["one.py".into()]).unwrap();
-    let before = hash(&fs::read(f.0.join("owned/worktree/one.py")).unwrap());
+    runtime_edit_at(f, lease, "one.py", content, publish);
+}
+fn runtime_edit_at(
+    f: &Fixture,
+    lease: &crate::LinuxCodingWorktreeLease,
+    path: &str,
+    content: &str,
+    publish: bool,
+) {
+    let scope = LinuxCodingReadScope::select(&f.0.join("owned/worktree"), &[path.into()]).unwrap();
+    let before = hash(&fs::read(f.0.join("owned/worktree").join(path)).unwrap());
     let pending = scope
         .prepare_write(
             &[LinuxCodingReplacement {
-                path: "one.py",
+                path,
                 before_sha256: &before,
                 content,
             }],
@@ -1107,4 +1115,486 @@ fn recovery_identity_survives_busy_retries_and_rejects_same_root_reattachment() 
         "bound_recovery_same_root_reattachment_us={}",
         started.elapsed().as_micros()
     );
+}
+
+fn runtime_create(
+    f: &Fixture,
+    lease: &crate::LinuxCodingWorktreeLease,
+    paths: &[(&str, &str, u32)],
+    publish: bool,
+    alter: Option<
+        fn(&mut agentmage_kernel_engine::filesystem_control::FilesystemTransactionResult),
+    >,
+) -> std::result::Result<(), crate::LinuxCodingWriteError> {
+    let names = paths.iter().map(|p| p.0.to_owned()).collect::<Vec<_>>();
+    let scope = LinuxCodingReadScope::select_targets(&f.0.join("owned/worktree"), &names).unwrap();
+    let pending = scope
+        .prepare_create(paths, "Native creation fixture", NOW)
+        .unwrap();
+    let result = pending.apply_with_owned_driver(&scope, lease, NOW, publish, alter)?;
+    assert_eq!(
+        result.outcome,
+        agentmage_kernel_engine::filesystem_control::FilesystemTransactionOutcome::Committed
+    );
+    Ok(())
+}
+
+#[test]
+fn runtime_new_file_transfer_keeps_native_lineage_across_edits_and_fresh_original_approval() {
+    let start = Instant::now();
+    let f = Fixture::new();
+    let lease = runtime_lease(f.owner());
+    runtime_create(
+        &f,
+        &lease,
+        &[
+            ("new.py", "created\n", 0o640),
+            ("other.py", "other\n", 0o600),
+        ],
+        true,
+        None,
+    )
+    .unwrap();
+    runtime_edit_at(&f, &lease, "new.py", "runtime revised creation\n", true);
+    assert!(!f.0.join("original/new.py").exists());
+    let mut owner = recover_lease(lease);
+    // An ordinary subsequent approved edit retains the absent-before provenance.
+    f.edit(&mut owner, "new.py", "revised creation\n");
+    assert_eq!(
+        owner.inspect_apply().unwrap()["available_changes"],
+        json!([
+            {"path":"new.py","kind":"create","creation_mode":0o640},
+            {"path":"other.py","kind":"create","creation_mode":0o600}
+        ])
+    );
+    let preview = owner
+        .prepare_current_apply(
+            &["new.py".into(), "other.py".into()],
+            "Transfer both new files",
+            NOW,
+        )
+        .unwrap();
+    assert!(preview["write_preview"]["plan_sha256"].is_string());
+    let operations = preview["write_preview"]["operations"].as_array().unwrap();
+    assert_eq!(operations.len(), 2);
+    let text = serde_json::to_string(&operations).unwrap();
+    assert!(text.contains("revised creation") && text.contains("other"));
+    let digest = preview["preview_sha256"].as_str().unwrap();
+    let result = owner.decide_apply(digest, true, NOW).unwrap();
+    assert_eq!(result["outcome"], "committed");
+    assert_eq!(
+        result["write_result"]["verification_requirements"],
+        json!([
+            {"verification_id":"project-tests","executed":false,"requires_separate_command_grant":true}
+        ])
+    );
+    assert_eq!(
+        fs::read(f.0.join("original/new.py")).unwrap(),
+        b"revised creation\n"
+    );
+    assert_eq!(fs::read(f.0.join("original/other.py")).unwrap(), b"other\n");
+    assert_eq!(
+        fs::metadata(f.0.join("original/new.py"))
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777,
+        0o640
+    );
+    assert_eq!(
+        fs::metadata(f.0.join("original/other.py"))
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777,
+        0o600
+    );
+    assert!(
+        owner.inspect_apply().unwrap()["available_paths"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    assert!(owner.decide_apply(digest, true, NOW).is_err());
+    // Once transferred, later changes use the ordinary existing-file path.
+    f.edit(&mut owner, "new.py", "later edit\n");
+    assert_eq!(
+        owner.inspect_apply().unwrap()["available_changes"],
+        json!([
+            {"path":"new.py","kind":"edit","creation_mode":null}
+        ])
+    );
+    let next = owner
+        .prepare_current_apply(&["new.py".into()], "Existing after transfer", NOW)
+        .unwrap();
+    assert!(next["write_preview"]["change_set_sha256"].is_string());
+    f.assert_preserved();
+    println!(
+        "new_file_component_two_creates_edit_transfer_us={}",
+        start.elapsed().as_micros()
+    );
+}
+
+#[test]
+fn runtime_new_file_transfer_refuses_collision_drift_and_links_before_any_write() {
+    for case in [
+        "file",
+        "empty",
+        "directory",
+        "symlink",
+        "hardlink",
+        "sibling",
+        "worktree",
+        "parent",
+        "root",
+    ] {
+        let f = Fixture::new();
+        for root in ["original", "owned/worktree"] {
+            fs::create_dir(f.0.join(root).join("pkg")).unwrap();
+        }
+        let lease = runtime_lease(f.owner());
+        runtime_create(
+            &f,
+            &lease,
+            &[
+                ("pkg/new.py", "created\n", 0o600),
+                ("pkg/other.py", "second\n", 0o600),
+            ],
+            true,
+            None,
+        )
+        .unwrap();
+        let mut owner = recover_lease(lease);
+        let preview = owner
+            .prepare_current_apply(
+                &["pkg/new.py".into(), "pkg/other.py".into()],
+                "Two files",
+                NOW,
+            )
+            .unwrap();
+        // Occupy the later operation: the earlier destination must stay absent.
+        let target = f.0.join("original/pkg/other.py");
+        let outside = f.0.join("outside");
+        fs::write(&outside, b"human outside\n").unwrap();
+        match case {
+            "file" => fs::write(&target, b"human\n").unwrap(),
+            "empty" => fs::write(&target, b"").unwrap(),
+            "directory" => fs::create_dir(&target).unwrap(),
+            "symlink" => symlink(&outside, &target).unwrap(),
+            "hardlink" => fs::hard_link(&outside, &target).unwrap(),
+            "sibling" => fs::write(f.0.join("original/pkg/human"), b"new sibling").unwrap(),
+            "worktree" => fs::write(f.0.join("owned/worktree/pkg/new.py"), b"changed\n").unwrap(),
+            "parent" => {
+                fs::rename(f.0.join("original/pkg"), f.0.join("original/parked")).unwrap();
+                fs::create_dir(f.0.join("original/pkg")).unwrap();
+            }
+            "root" => {
+                fs::rename(f.0.join("original"), f.0.join("saved-original")).unwrap();
+                fs::create_dir(f.0.join("original")).unwrap();
+            }
+            _ => unreachable!(),
+        }
+        let result = owner.decide_apply(preview["preview_sha256"].as_str().unwrap(), true, NOW);
+        assert!(
+            result.is_err() || result.unwrap()["outcome"] != "committed",
+            "{case}"
+        );
+        assert!(!f.0.join("original/pkg/new.py").exists(), "{case}");
+        assert_eq!(fs::read(&outside).unwrap(), b"human outside\n", "{case}");
+        if case == "file" {
+            assert_eq!(fs::read(&target).unwrap(), b"human\n");
+        }
+        if case == "empty" {
+            assert_eq!(fs::read(&target).unwrap(), b"");
+        }
+        assert!(
+            owner
+                .decide_apply(preview["preview_sha256"].as_str().unwrap(), true, NOW)
+                .is_err()
+        );
+        if case != "root" {
+            f.assert_preserved();
+        }
+    }
+}
+
+#[test]
+fn runtime_new_file_requires_publication_and_exact_untampered_transaction() {
+    use agentmage_kernel_engine::filesystem_control::FilesystemTransactionResult;
+    let changes: [Option<fn(&mut FilesystemTransactionResult)>; 5] = [
+        None,
+        Some(|r| r.transaction_id.push_str("foreign")),
+        Some(|r| r.grant_consumption.consumed_grant_sha256 = "a".repeat(64)),
+        Some(|r| r.receipts.last_mut().unwrap().postimage_sha256 = "b".repeat(64)),
+        Some(|r| r.receipts.clear()),
+    ];
+    for (i, alter) in changes.into_iter().enumerate() {
+        let f = Fixture::new();
+        let lease = runtime_lease(f.owner());
+        let result = runtime_create(&f, &lease, &[("new.py", "created\n", 0o600)], i != 0, alter);
+        assert_eq!(result.is_ok(), i == 0);
+        let mut owner = recover_lease(lease);
+        assert!(
+            owner.inspect_apply().unwrap()["available_paths"]
+                .as_array()
+                .unwrap()
+                .is_empty()
+        );
+        assert!(
+            owner
+                .prepare_current_apply(&["new.py".into()], "No forged lineage", NOW)
+                .is_err()
+        );
+        assert!(!f.0.join("original/new.py").exists());
+        f.assert_preserved();
+    }
+}
+
+#[test]
+fn runtime_new_file_selection_refuses_mixed_kinds_manual_files_and_reopened_authority() {
+    let f = Fixture::new();
+    let mut owner = f.owner();
+    f.edit(&mut owner, "one.py", "existing edit\n");
+    let lease = runtime_lease(owner);
+    runtime_create(&f, &lease, &[("new.py", "created\n", 0o600)], true, None).unwrap();
+    let mut owner = recover_lease(lease);
+    fs::write(f.0.join("owned/worktree/manual.py"), b"not native creation").unwrap();
+    assert_eq!(
+        owner
+            .prepare_current_apply(&["one.py".into(), "new.py".into()], "Refuse mixed", NOW)
+            .unwrap_err()
+            .code(),
+        "code.apply.mixed-kinds"
+    );
+    assert!(
+        owner
+            .prepare_current_apply(&["manual.py".into()], "No adoption", NOW)
+            .is_err()
+    );
+    let preview = owner
+        .prepare_current_apply(&["new.py".into()], "Separate creation", NOW)
+        .unwrap();
+    assert_eq!(
+        owner
+            .decide_apply(preview["preview_sha256"].as_str().unwrap(), false, NOW)
+            .unwrap()["outcome"],
+        "denied"
+    );
+    assert!(!f.0.join("original/new.py").exists());
+    assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+    drop(owner);
+    let mut reopened = f.open();
+    assert!(
+        reopened
+            .prepare_current_apply(&["new.py".into()], "No restart adoption", NOW)
+            .is_err()
+    );
+    f.assert_preserved();
+}
+
+#[test]
+fn runtime_new_file_completion_rejects_valid_receipts_for_other_paths_and_modes() {
+    use agentmage_kernel_engine::filesystem_control::{
+        FilesystemTransactionResult, verify_filesystem_receipts,
+    };
+    fn rebind(result: &mut FilesystemTransactionResult, mode: bool) {
+        let mut previous = "0".repeat(64);
+        for receipt in &mut result.receipts {
+            if mode {
+                receipt.destination_mode = Some(0o644);
+            } else {
+                receipt.destination_path = Some("foreign.py".into());
+            }
+            receipt.previous_receipt_sha256 = previous;
+            receipt.receipt_sha256 = "0".repeat(64);
+            receipt.receipt_sha256 = hash(&serde_json::to_vec(&receipt).unwrap());
+            previous = receipt.receipt_sha256.clone();
+        }
+        // A valid hash chain alone cannot bind a different operation to this
+        // driver's actual successful apply. Check the substantive comparison.
+        verify_filesystem_receipts(&result.receipts).unwrap();
+    }
+    for alter in [
+        |r: &mut FilesystemTransactionResult| rebind(r, false),
+        |r: &mut FilesystemTransactionResult| rebind(r, true),
+    ] {
+        let f = Fixture::new();
+        let lease = runtime_lease(f.owner());
+        assert!(
+            runtime_create(
+                &f,
+                &lease,
+                &[("new.py", "created\n", 0o600)],
+                true,
+                Some(alter)
+            )
+            .is_err()
+        );
+        let owner = recover_lease(lease);
+        assert!(
+            owner.inspect_apply().unwrap()["available_paths"]
+                .as_array()
+                .unwrap()
+                .is_empty()
+        );
+        assert_eq!(
+            fs::read(f.0.join("owned/worktree/new.py")).unwrap(),
+            b"created\n"
+        );
+        assert!(!f.0.join("original/new.py").exists());
+    }
+}
+
+#[test]
+fn runtime_new_file_driver_serializes_with_edits_and_refuses_foreign_root() {
+    let f = Fixture::new();
+    let lease = runtime_lease(f.owner());
+    let root = held_root(&f.0.join("owned/worktree")).unwrap();
+    assert!(
+        lease
+            .create_driver(
+                &held_root(&f.0.join("original")).unwrap(),
+                crate::LinuxFilesystemDriverLimits::default()
+            )
+            .is_err()
+    );
+    let driver = lease
+        .create_driver(&root, crate::LinuxFilesystemDriverLimits::default())
+        .unwrap();
+    assert!(
+        lease
+            .write_driver(&root, crate::LinuxAtomicWriteDriverLimits::default())
+            .is_err()
+    );
+    assert!(
+        lease
+            .create_driver(&root, crate::LinuxFilesystemDriverLimits::default())
+            .is_err()
+    );
+    drop(driver);
+    let driver = lease
+        .write_driver(&root, crate::LinuxAtomicWriteDriverLimits::default())
+        .unwrap();
+    assert!(
+        lease
+            .create_driver(&root, crate::LinuxFilesystemDriverLimits::default())
+            .is_err()
+    );
+    drop(driver);
+    let owner = recover_lease(lease);
+    assert!(
+        owner.inspect_apply().unwrap()["available_paths"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
+fn runtime_new_file_scope_limit_includes_existing_lineage_and_refuses_seventeenth() {
+    use agentmage_kernel_engine::filesystem_control::FilesystemTransactionOutcome;
+    let f = Fixture::new();
+    let mut owner = f.owner();
+    f.edit(&mut owner, "one.py", "edited\n");
+    let lease = runtime_lease(owner);
+    for i in 0..15 {
+        runtime_create(
+            &f,
+            &lease,
+            &[(format!("new{i}.py").as_str(), "created\n", 0o600)],
+            true,
+            None,
+        )
+        .unwrap();
+    }
+    let scope =
+        LinuxCodingReadScope::select_targets(&f.0.join("owned/worktree"), &["overflow.py".into()])
+            .unwrap();
+    let pending = scope
+        .prepare_create(
+            &[("overflow.py", "no write\n", 0o600)],
+            "Refuse seventeenth",
+            NOW,
+        )
+        .unwrap();
+    let result = pending
+        .apply_with_owned_driver(&scope, &lease, NOW, true, None)
+        .unwrap();
+    assert_eq!(result.outcome, FilesystemTransactionOutcome::FailedNoChange);
+    assert!(!f.0.join("owned/worktree/overflow.py").exists());
+    let owner = recover_lease(lease);
+    assert_eq!(
+        owner.inspect_apply().unwrap()["available_paths"]
+            .as_array()
+            .unwrap()
+            .len(),
+        16
+    );
+    assert!(
+        owner.inspect_apply().unwrap()["available_paths"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("one.py"))
+    );
+    f.assert_preserved();
+}
+
+#[test]
+fn runtime_new_file_preview_decisions_are_exact_expiring_and_never_adopt_existing_files() {
+    for case in [
+        "occupied-before",
+        "case-alias",
+        "expired",
+        "clock-rollback",
+        "denied",
+        "wrong-digest",
+    ] {
+        let f = Fixture::new();
+        let lease = runtime_lease(f.owner());
+        runtime_create(&f, &lease, &[("new.py", "created\n", 0o600)], true, None).unwrap();
+        let mut owner = recover_lease(lease);
+        if case == "occupied-before" {
+            fs::write(f.0.join("original/new.py"), b"created\n").unwrap();
+        }
+        if case == "case-alias" {
+            fs::write(f.0.join("original/NEW.py"), b"human\n").unwrap();
+        }
+        let prepared = owner.prepare_current_apply(&["new.py".into()], "Creation decision", NOW);
+        if matches!(case, "occupied-before" | "case-alias") {
+            assert!(prepared.is_err(), "{case}");
+        } else {
+            let preview = prepared.unwrap();
+            let hash = preview["preview_sha256"].as_str().unwrap();
+            let now = match case {
+                "expired" => NOW + LIFETIME_MS,
+                "clock-rollback" => NOW - 1,
+                _ => NOW,
+            };
+            let result = owner.decide_apply(
+                if case == "wrong-digest" {
+                    "foreign"
+                } else {
+                    hash
+                },
+                case != "denied",
+                now,
+            );
+            if case == "denied" {
+                assert_eq!(result.unwrap()["outcome"], "denied");
+            } else {
+                assert!(result.is_err());
+            }
+            assert!(!f.0.join("original/new.py").exists());
+            if case == "wrong-digest" {
+                assert_eq!(owner.inspect_apply().unwrap()["pending"], preview);
+                assert_eq!(
+                    owner.decide_apply(hash, true, NOW).unwrap()["outcome"],
+                    "committed"
+                );
+            } else {
+                assert!(owner.decide_apply(hash, true, NOW).is_err());
+            }
+        }
+        f.assert_preserved();
+    }
 }
