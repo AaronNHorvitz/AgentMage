@@ -328,6 +328,9 @@ fn ownership_commands_refuse_pipe_denial_and_invalid_selection_without_sending_c
     for paths in [
         vec!["test_calc.py"],
         vec!["tests/calc.py"],
+        vec!["__init__.py"],
+        vec!["src/__init__.py"],
+        vec!["calc.py", "package/nested/__init__.py"],
         vec!["src/../calc.py"],
         vec!["/calc.py"],
         vec!["src//calc.py"],

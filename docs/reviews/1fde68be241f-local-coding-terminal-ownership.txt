@@ -1,0 +1,244 @@
+Commit: 1fde68be241fa33f31b75b255b62f82be9778444
+Scope: local-coding-terminal-ownership
+
+# Independent core review: T-306 (shared T-303) terminal worktree handoff and recovery
+
+Reviewer: a separate, read-only Claude Opus 5.5 session at extra-high effort. This is a same-model
+review, which is accepted for now; a cross-model review must happen before any public release.
+
+I did not change the repository. I wrote this file and the validation directory
+`/lane/state/tmp/review-terminal-ownership-1fde68be241f`, which includes a probe subdirectory. I deleted
+the probe's synthetic auth tokens afterwards.
+
+Disclosure: while sorting test identities, one of my commands wrote a derived file,
+`fast.log.ids.t306-ownership-cli`, into the builder's scratch directory `/lane/state/tmp/t306-ownership-cli`.
+It was not one of the listed inputs. I deleted it immediately. I then re-ran `sha256sum -c` on the input
+list, and all 17 entries were still OK.
+
+Tier: core. Row: T-306, shared with T-303. This is a non-closing increment, and both parents stay OPEN.
+The commit claims no new sub-row, score, model qualification, native workflow or parent closure, and I
+found none.
+
+## Scope reviewed
+
+The chain from `a8bdb80dc506603b0a8335013e586214b894be69` to HEAD changes nine paths.
+
+- `6fd19479e22c` changes the terminal source and tests:
+  - `coding_cli.rs`: usage string only
+  - `coding_cli_runtime.rs`: +131 lines, `attach_body`, `attach` and `recover`
+  - `tests/coding_runtime_cli.rs`: six new methods, plus a peer that can send a status code and checks
+    the credential on every request
+  - the new evidence file, two guides and the TASKS.md row
+- `1fde68be241f` changes documentation only (5 paths):
+  - retains the prior review byte-for-byte
+  - records its low L1
+  - touches no Rust: `git diff --stat 6fd19479 HEAD` lists no `.rs` file
+
+I read:
+- IP-POLICY.md
+- the complete diff
+- both guides and both evidence files
+- the retained prior review
+- every private helper before running it: `verify.py`, `audit.py`, `run-policy.py` and the fast gate's
+  `plan`/`execute_checks`
+
+I also read the server code the client depends on:
+- `coding_owned_api.rs`: `Attach`/`Recover` use `deny_unknown_fields`; consent is checked; also `attach`,
+  `recover` and `restore_lease`
+- the `/v1/status` fields in `lib.rs:1554`
+- `inspect_edit`, which returns `worktree_root_sha256`
+- the `/v1/code/runtime` selection, which includes `live_creation_owner`
+- `CodingPythonSourceSelection::new` and `python_project_paths`; the default source selection is `src/`
+  for both project scenarios, so the disclosure text is accurate
+- `private_canonical_directory` and `check_workspace`
+
+## Exact commands and results
+
+All commands ran in `/lane/review-checkout`, with
+`PATH=/lane/state/tmp/t306-owned-api/node-v24.15.0/bin:$PATH`, `CARGO_TARGET_DIR=/lane/state/review-target`,
+`CARGO_BUILD_JOBS=2`, `RUST_TEST_THREADS=4` and
+`AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-terminal-ownership-1fde68be241f` (created with `mkdir -m 700`).
+
+1. `git rev-parse HEAD`, then `git rev-parse 1fde68be…`. Both give
+   `1fde68be241fa33f31b75b255b62f82be9778444`. `git status --short` is empty.
+2. `sha256sum -c /lane/state/tmp/t306-ownership-cli/review-inputs.sha256`:
+   - every entry is OK
+   - the list's own SHA-256 is `813cec63…8aa2`, as stated
+   - the Node binary is `d1de76d8…932c`, as stated
+   - `audit.json` is `16f8bd18…e1dc`, as stated; the request calls this "Audit SHA256", and it is the
+     JSON output, not `audit.py`
+3. `bash /tools/build-slot python3 -B /lane/state/tmp/t306-ownership-cli/verify.py > $V/fast.log 2>&1`:
+   **exit 0, `FAST GATE: PASS`**, after a long wait for the reservation.
+   - My plan (`$V/plan.json`) is byte-identical to the builder's `final-plan.json`: nine paths, seven
+     commands. The commands are:
+     - `git diff --check`
+     - `--lint-untracked`
+     - `--lint-reviews` on the retained review
+     - markdownlint over five Markdown files
+     - `cargo fmt`, `cargo clippy -D warnings` and `cargo test --all-targets --no-fail-fast`, each with
+       `-p agentmage-local-api`
+   - No `--skip` and no filter.
+   - All 7 commands exited 0. Clippy took 28.75 s and the test step 53.02 s, including compilation.
+   - There were 7 target summaries: 27 + 0 + 0 + 10 + 21 + 13 + 35 = **106 passed**, with 0 failed,
+     0 ignored and 0 filtered out.
+   - The sorted list of `test … ok` identities (106) has an empty diff against the builder's original
+     `fast.log`.
+   - All six new `ownership_*` methods pass in this unfiltered run.
+   - `verify.py` does what it claims:
+     - it checks that fd 9 is the same inode as the heavy lock and re-flocks it non-blocking (the same
+       open file description)
+     - it calls the gate's own planner and `execute`
+     - the `env` prefix only stops `execute_checks` from wrapping Cargo in a second, nested `build-slot`
+     - `execute_checks` still forces 2 jobs and 4 threads
+4. `python3 -B /lane/state/tmp/t306-read-consent/run-policy.py $V/policy-source > $V/policy.log 2>&1`:
+   exit 0, "Validated 795 Markdown file(s) and all policy invariants". The manifest lists 9053 sources.
+   `cmp` against the builder's `policy-source-inputs.json` shows no difference.
+5. `python3 -B /lane/state/tmp/t306-ownership-cli/audit.py > $V/builder-audit.json`:
+   - exit 0, and I did not pass `--record`
+   - `cmp` against the builder's `audit.json` shows no difference
+   - the audit checks the exact nine paths, TASKS.md unchanged outside the T-306 row, unchanged
+     row-status markers, unchanged `#[ignore]` sets, a privacy regex over added lines, Rust hashes equal
+     to the source freeze, the builder logs, and every policy-input hash
+6. `cmp docs/reviews/a8bdb80dc506-local-coding-explicit-python-sources.txt /lane/reviews/a8bdb80dc506-local-coding-explicit-python-sources.md`:
+   identical.
+7. `git diff --check a8bdb80dc506603b0a8335013e586214b894be69 --`: exit 0. `git status --short`: empty.
+8. I traced the builder's numbers to its raw logs:
+   - `fast.log`: six RESULT lines summing to 29.04 s; fmt 0.20 s, Clippy 8.56 s, test 18.98 s
+   - `pilot.log`: 6 passed, 15 filtered, 0.48 s, after a 3.39 s compile; this filter is only the pilot
+   - `docs-followup.log`: four commands, no Cargo, 0.10 + 0.10 + 0.10 + 1.20 = 1.50 s, against `6fd19479`
+   - The evidence table matches these logs.
+9. I ran my own adversarial probe (`$V/probe/probe.py`) of the built `agentmage-code`. It used a real
+   pty as the controlling terminal and a raw-socket loopback HTTP peer. Results:
+   - **Escape injection.** I put `ESC ] 0;PWN BEL` and U+202E into `workspace_root`. They are displayed
+     only as `\u001b`/`‮` escapes; no raw ESC or bidi byte reached the tty. The POST sends the same
+     displayed value.
+   - **Bidi source path.** `src/a‮.py` is refused locally, with zero requests.
+   - **Inflated or missing grant fields.** A reply with no `model_and_tools_approved` exits 1. So does a
+     reply with `resume:true`. In both cases exactly one POST was sent and there was no retry.
+   - **Malformed held digest.** A held digest of 63 hex characters plus ESC is refused after the single
+     GET, with no prompt and no POST.
+   - **Recovery when the selection read fails.** A 409 on `GET /v1/code/runtime` gives no prompt and no
+     POST.
+   - **Hostile selection on recovery.** A selection containing `ESC[2J` is displayed escaped, and the
+     POST body is exactly `{"approve_recovery":true}`.
+   - **Declined recovery.** A wrong answer sends only the status GET.
+   - **Interior `.` in a root.** `/s/./x` passes the client and is sent verbatim, as displayed. For
+     absolute paths, `Path::components` removes interior `.`, so the client's `CurDir` arm can never
+     fire. The server's `private_canonical_directory` compares `canonicalize()` by components and
+     refuses symlinks, so the path still names the same canonical directory. I record this as
+     informational only.
+
+This is not a UI or browser row, so there were no screens to open. I used no GPU, model, benchmark, or
+hidden or held-out input.
+
+## Analysis of the requested points
+
+- **Complete disclosure before the single attach POST.**
+  - `attach` parses, refuses non-tty stdin, reads the held root (control token), and adds
+    `expected_worktree_root_sha256`.
+  - It checks the encoded size against `MAX_REQUEST` and then confirms. The confirmation shows the whole
+    `request` object plus the default-source text and the warning, and the challenge is
+    `attach <held digest>`.
+  - The POST sends that same `body` once.
+  - The test checks that every field appears before the challenge, and checks the exact POST body for
+    four scenario/model/source combinations.
+  - The server's `Attach` struct matches these field names and has `deny_unknown_fields`.
+- **Canonical sources, no filesystem inspection.**
+  - `attach_body` only splits strings and calls `CodingPythonSourceSelection::new`, which is
+    `WorkspacePath::new` plus string predicates. It never opens a file.
+  - The canonical sorted order is both displayed and sent; the test sends
+    `[["calculator.py"],["package","core.py"]]`.
+  - Source paths are refused for `failed-test-repair` on both client and server.
+- **Closed model, scenario and path validation.** Models are exactly `muse`/`gpt-oss`. Scenarios are
+  the three labels. Roots must be absolute with no `..`. Every invalid case in the test asserts zero
+  prompts and zero requests.
+- **Wire-size refusal before confirmation.** The size test is discriminating. Every path is individually
+  valid: it reaches the GET (one call), but the request is refused before any prompt (`answered == 0`).
+- **Piped or declined consent.** A pipe sends no request for either command. A declined attach sends
+  only the GET. A declined recovery sends only the status read.
+- **Recovery for attached and pending owners.**
+  - Attached (`(true,false)`) requires `live_creation_owner == true` from the selection.
+  - Pending (`(false,true)`) explicitly shows `runtime_selection: null`.
+  - Busy, unavailable, contradictory, missing-field and separate-process (non-owner) states are refused
+    before any prompt.
+  - The server, not the client, still enforces release and exclusive references (`recoverable()`,
+    `Arc::try_unwrap`).
+- **Separate client and control credentials.** The peer asserts the client token on `GET /v1/status`
+  and the control token on every other route. A wrong token panics the worker thread, and
+  `finish().join().unwrap()` then fails the test.
+- **Genuine 409, malformed or lost replies.** A real `HTTP/1.1 409` goes through the unchanged strict
+  `receive` path. A 409, a closed peer or a malformed success each give exit ≠ 0, with the request count
+  fixed at 2. There is no retry.
+- **Truthful no-extra-grant checks.**
+  - Attach requires `attached`, `live_creation_owner`, `model_and_tools_approved == false`,
+    `resume == false` and `retention == "process-only"`.
+  - Recover requires `apply_approved == false` and `fresh_diff_required == true`.
+  - Both test and probe exercise these checks.
+- **Ownership stays with the server.** The client adds no authority. Creation, activation, model and tool
+  approvals, release and the original-checkout apply remain separate server steps, and the warnings say
+  so accurately.
+- **Confinement.** The client opens only the auth directory and `/dev/tty`, and talks only to a loopback
+  `SocketAddr` over fixed literal routes. The diff adds no path to the worktree, sandbox or network. I
+  found no escape through this surface.
+- **Honest claims.**
+  - The evidence and guides say these are synthetic-peer terminal contracts, not native creation, a
+    positive workflow or a score.
+  - They state that the host-53 and Linux-19 baseline failures were not selected and are not repaired.
+  - The prior review's L1 is carried as low backlog that blocks root-layout success claims.
+- **Integrity.**
+  - TASKS.md changes only the T-306 row text, and its status stays `[ ]`.
+  - There is no sub-row, and no T-311, task, hidden, held-out or threshold change.
+  - No dependency or Cargo.lock change, and no added private path, name or product comparison.
+  - The `/lane` and `/tools` paths inside the retained review are generic environment paths already
+    used in earlier committed reviews; no username or hostname is added.
+  - The commit author metadata is the owner's own identity.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L1 (low, documentation): the source-selection evidence file still says the prior low findings are
+"addressed".**
+- Location: `docs/evidence/t306-explicit-python-sources-2026-11-07.md`, lines 7 ("This batch addresses
+  its two low findings") and 30 ("This addresses review L1, including the original `src/test_calc.py`
+  case").
+- Problem: the paragraph added at lines 10-16 correctly says prior L1 is only partly fixed, and TASKS.md
+  was corrected. The older sentences still overstate it.
+- Why it is low: the correction sits a few lines above them in the same file, and no row closes on them.
+- Fix: reword both sentences to "addresses L2 and partly addresses L1 (see the review note above)".
+
+**L2 (low): the recovery confirmation is not tied to the owner it displays.**
+- Location: `platforms/local-api/src/coding_cli_runtime.rs:100-133`.
+- Problem:
+  - The challenge is the fixed string `recover worktree owner`; every other consequential confirmation
+    in this client uses a fresh digest.
+  - The POST body is only `{"approve_recovery":true}`.
+- Scenario: another control-token client recovers and re-attaches a different created worktree between
+  the person's review and their answer. The person's consent then returns that other owner.
+- Why it is low:
+  - Recovery only returns process-held ownership to manual control.
+  - The server still requires every run to be released and the references to be exclusive.
+  - It approves no write or apply, it is reversible by a new attach, and it needs the same control
+    credential.
+  - The guide accurately says it targets "this service's current owner".
+- Fix: have the API accept `expected_worktree_root_sha256` (or the selection's
+  `expected_entry_sha256`) in `Recover`. Have the client bind it into the challenge, as attach does.
+
+Note (no finding): the `CurDir` arm in `absolute_root` is dead code for absolute paths (probe item 9).
+
+Backlog carried forward, not reopened:
+- prior review L1, the root-layout package-initializer `load_tests` hook, which must be resolved before
+  root-layout output is cited as coding success
+- the prior lifecycle/continuation and factory-allocation (`Box::leak`) lows
+- the T-301.1 native trust blocker
+
+## Per-row result
+
+- **T-306 (non-closing increment): PASS** for this increment at exact commit
+  `1fde68be241fa33f31b75b255b62f82be9778444`.
+  - No open high or medium finding.
+  - L1 and L2 go to the low backlog.
+  - The row stays OPEN.
+- **T-303 (shared, non-closing): PASS** for this increment on the same basis. The row stays OPEN.
+
+Verdict: PASS

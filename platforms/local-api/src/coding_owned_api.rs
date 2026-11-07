@@ -454,6 +454,9 @@ mod tests {
             json!([["..", "a.py"]]),
             json!([["test_calc.py"]]),
             json!([["tests", "helper.py"]]),
+            json!([["__init__.py"]]),
+            json!([["src", "__init__.py"]]),
+            json!([["calculator.py"], ["package", "__init__.py"]]),
             json!([["a.py"], ["a.py"]]),
         ] {
             value["source_paths"] = paths;
@@ -577,11 +580,13 @@ mod tests {
             call("/v1/code/runtime/attach", true, explicit.clone()).1["error"],
             "code.runtime.worktree-required"
         );
-        explicit["source_paths"] = json!([["test_calc.py"]]);
-        assert_eq!(
-            call("/v1/code/runtime/attach", true, explicit).1["error"],
-            "code.runtime.source-selection"
-        );
+        for path in [json!(["test_calc.py"]), json!(["src", "__init__.py"])] {
+            explicit["source_paths"] = json!([path]);
+            assert_eq!(
+                call("/v1/code/runtime/attach", true, explicit.clone()).1["error"],
+                "code.runtime.source-selection"
+            );
+        }
         assert_eq!(
             call("/v1/code/runtime/attach", true, body).1["error"],
             "code.runtime.worktree-required"
@@ -600,7 +605,7 @@ mod tests {
         assert!(!activity.contains("not-opened"));
         assert!(activity.contains("code.runtime.worktree-required"));
         println!(
-            "owned_api_seven_refusal_exchanges_us={}",
+            "owned_api_eight_refusal_exchanges_us={}",
             start.elapsed().as_micros()
         );
     }

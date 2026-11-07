@@ -457,10 +457,11 @@ fn selected(names: &[&str]) -> CodingPythonSourceSelection {
 }
 
 #[test]
-fn project_sources_exclude_discovery_modules_and_test_directories() {
+fn project_sources_exclude_discovery_modules_initializers_and_test_directories() {
     let map = project(&[
         "src/calc.py",
         "src/__init__.py",
+        "src/nested/__init__.py",
         "src/test_calc.py",
         "src/nested/testHelpers.py",
         "src/tests/helper.py",
@@ -481,8 +482,10 @@ fn project_sources_exclude_discovery_modules_and_test_directories() {
             .collect(),
     )
     .unwrap();
-    assert_eq!(paths.len(), 2);
+    assert_eq!(paths.len(), 1);
     for path in [
+        vec!["src", "__init__.py"],
+        vec!["src", "nested", "__init__.py"],
         vec!["src", "test_calc.py"],
         vec!["src", "nested", "testHelpers.py"],
         vec!["src", "tests", "helper.py"],
@@ -496,6 +499,7 @@ fn project_sources_exclude_discovery_modules_and_test_directories() {
         );
     }
     assert!(python_project_paths(&project(&["src/test_calc.py"]), None).is_err());
+    assert!(python_project_paths(&project(&["src/__init__.py"]), None).is_err());
 }
 
 #[test]
@@ -547,6 +551,105 @@ fn explicit_project_sources_are_canonical_exact_and_all_must_be_admissible() {
 }
 
 #[test]
+fn root_discovery_initializer_hook_cannot_enter_the_mutable_scope() {
+    // Reproduce the review's actual discovery hook with a trusted interpreter,
+    // then reject that edit through both default and explicit source selection.
+    // This runs outside native confinement and supplies no coding score.
+    let started = std::time::Instant::now();
+    let root = std::env::temp_dir().join(format!(
+        "agentmage-python-discovery-hook-{}",
+        std::process::id()
+    ));
+    fs::create_dir(&root).unwrap();
+    fs::create_dir(root.join("src")).unwrap();
+    let source = "def add(a, b):\n    return a - b\n";
+    let tests = "import unittest\nfrom src.calc import add\nclass Calc(unittest.TestCase):\n    def test_add(self):\n        self.assertEqual(add(2, 3), 5)\n";
+    let hook = "import unittest\nclass Decoy(unittest.TestCase):\n    def test_decoy(self):\n        pass\ndef load_tests(loader, tests, pattern):\n    return tests\n";
+    fs::write(root.join("src/__init__.py"), "").unwrap();
+    fs::write(root.join("src/calc.py"), source).unwrap();
+    fs::write(root.join("src/test_calc.py"), tests).unwrap();
+    let spec = python_project_command(CodingDevelopmentScenario::PythonRootProject).unwrap();
+    let run = || {
+        std::process::Command::new(&spec.executable)
+            .args(&spec.arguments)
+            .current_dir(&root)
+            .env_clear()
+            .envs(&spec.environment)
+            .output()
+            .unwrap()
+    };
+    let failure = run();
+    assert_eq!(failure.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&failure.stderr).contains("FAILED (failures=1)"));
+    fs::write(root.join("src/__init__.py"), hook).unwrap();
+    let hidden = run();
+    assert!(hidden.status.success());
+    assert!(String::from_utf8_lossy(&hidden.stderr).contains("Ran 1 test"));
+    assert!(hidden.stderr.ends_with(b"OK\n"));
+    assert_eq!(
+        fs::read_to_string(root.join("src/calc.py")).unwrap(),
+        source
+    );
+    assert_eq!(
+        fs::read_to_string(root.join("src/test_calc.py")).unwrap(),
+        tests
+    );
+
+    let map = project_inputs(&[
+        ("src/__init__.py", b""),
+        ("src/calc.py", source.as_bytes()),
+        ("src/test_calc.py", tests.as_bytes()),
+    ]);
+    let explicit = selected(&["src/calc.py"]);
+    for selection in [None, Some(&explicit)] {
+        let paths = python_project_paths(&map, selection).unwrap();
+        assert_eq!(paths.len(), 1);
+        let scope = CodingWriteScope::exact_files(
+            map.workspace_id.clone(),
+            paths
+                .iter()
+                .map(|path| {
+                    path.components()
+                        .iter()
+                        .map(|p| p.as_str().to_owned())
+                        .collect()
+                })
+                .collect(),
+        )
+        .unwrap();
+        assert!(scope.resolve(&["src".into(), "calc.py".into()]).is_ok());
+        assert!(
+            scope
+                .resolve(&["src".into(), "__init__.py".into()])
+                .is_err()
+        );
+        assert!(
+            scope
+                .resolve(&["src".into(), "test_calc.py".into()])
+                .is_err()
+        );
+    }
+    // Reject the entire mixed selection instead of silently dropping the hook.
+    assert!(
+        CodingPythonSourceSelection::new(vec![
+            vec!["src".into(), "calc.py".into()],
+            vec!["src".into(), "__init__.py".into()],
+        ])
+        .is_err()
+    );
+
+    fs::write(root.join("src/__init__.py"), "").unwrap();
+    let restored = run();
+    assert_eq!(restored.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&restored.stderr).contains("FAILED (failures=1)"));
+    fs::remove_dir_all(root).unwrap();
+    eprintln!(
+        "root_initializer_hook_probe_us={}",
+        started.elapsed().as_micros()
+    );
+}
+
+#[test]
 fn explicit_project_sources_refuse_unsafe_empty_duplicate_and_test_paths() {
     for names in [
         vec![],
@@ -561,6 +664,9 @@ fn explicit_project_sources_refuse_unsafe_empty_duplicate_and_test_paths() {
         vec!["test.py"],
         vec!["tests/helper.py"],
         vec!["package/test/helper.py"],
+        vec!["__init__.py"],
+        vec!["src/__init__.py"],
+        vec!["package/nested/__init__.py"],
         vec![".git/config.py"],
         vec![".hidden/a.py"],
         vec!["src//a.py"],

@@ -225,9 +225,9 @@ target/debug/agentmage-local-api serve-runtime-development 127.0.0.1:43129 <priv
 By default, the marked disposable repository must have one to sixteen parsed,
 admitted Python source files under `src/` and a unittest package under `tests/`
 (including `tests/__init__.py`). Discovery modules whose basename starts with
-`test`, directories named `test` or `tests`, and hidden components are excluded
-from writes in both layouts. All selected source
-paths are exact existing files; tests, other files, descendants of a selected
+`test`, package initializers named `__init__.py`, directories named `test` or
+`tests`, and hidden components are excluded from writes in both layouts.
+All selected source paths are exact existing files; tests, other files, descendants of a selected
 file path and file creation are refused. The sealed request shows the mutable
 files. Startup metadata reports the selection rule and leaves `mutable_files`
 null until the host prepares the exact request. Repository text cannot change
@@ -309,9 +309,13 @@ array of components, never an absolute path or a slash-separated string.
 One to sixteen unique paths are required. The host sorts them before sealing.
 Every selected file must be an admitted, read, parsed regular Python file in
 the repository map; a missing, excluded, unread or symlink input refuses the
-whole selection. Discovery test modules (`test*.py`), any `test` or `tests`
-directory and hidden path components are refused. The conservative test-name
-rule also excludes ordinary source modules beginning with `test`.
+whole selection. Discovery test modules (`test*.py`), package initializers
+(`__init__.py`), any `test` or `tests` directory and hidden path components are
+refused. The conservative test-name rule also excludes ordinary source modules
+beginning with `test`. Initializers can replace subtree discovery through
+`load_tests`; excluding them does not make project output independent grading.
+An older default scope that included initializers has a different profile digest
+and refuses resume; start a new run with fresh consent.
 
 Omission or null preserves the default selection. An empty array is an error.
 An explicit list never adds other files automatically. Descendant paths, new

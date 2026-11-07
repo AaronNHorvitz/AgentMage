@@ -72,9 +72,10 @@ This chooses one to sixteen exact existing Python source files, including files
 outside `src/`. Component arrays are relative to the held worktree. The list
 is canonicalized and frozen at startup; empty, duplicate, unsafe, missing or
 inadmissible paths refuse the attachment. Discovery modules whose basename
-starts with `test`, directories named `test` or `tests`, and hidden components
-are excluded. Omitting the field or setting it to null keeps the default
-`src/` selection with the same exclusions. An explicit list replaces the
+starts with `test`, package initializers named `__init__.py`, directories named
+`test` or `tests`, and hidden components are excluded. Omitting the field or
+setting it to null keeps the default `src/` selection with the same exclusions.
+An explicit list replaces the
 default; it never adds the remaining `src/` files. Other scenarios refuse it.
 The runtime status exposes `selected_source_paths`; the prepared request shows
 the actual mutable files. A prepare body cannot supply a new selection.
@@ -175,10 +176,17 @@ same one-to-sixteen exact-file admission and exclusions as the HTTP request.
 The client canonicalizes their order without reading files.
 
 Project unittest output remains a trusted-runner observation, not independent
-grading. In the root layout, a writable package initializer can still change
-discovery through its test-loading hook. This is low backlog from the
-[source-selection review](../reviews/a8bdb80dc506-local-coding-explicit-python-sources.txt)
-and must be resolved before root-layout output is cited as coding-success evidence.
+grading. Package initializers are excluded from both default and explicit mutable
+sources in both layouts: an initializer can replace subtree discovery through
+its `load_tests` hook. This conservative rule does not depend on whether the
+repository map happens to include every descendant test. It also refuses an
+initializer in a mixed explicit list rather than silently narrowing that list.
+Existing sessions whose default scope included initializers require a fresh run
+and consent; their changed profile digest refuses resume. This addresses the
+narrow hook from the [source-selection review](../reviews/a8bdb80dc506-local-coding-explicit-python-sources.txt),
+pending independent core review. Other imported source can still alter test
+behavior, so only the unchanged frozen scorer supplies independent coding scores.
+See the [repair record](../evidence/t306-python-initializer-scope-2026-11-07.md).
 
 The client reads the held root digest from repository edit status, displays the
 complete attach request and its inspection/handoff consent fields, and requires

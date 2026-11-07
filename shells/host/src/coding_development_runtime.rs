@@ -409,7 +409,8 @@ pub struct CodingPythonSourceSelection {
 
 impl CodingPythonSourceSelection {
     /// Accepts one to sixteen unique relative component paths. Discovery test
-    /// modules and test directories are never writable project sources.
+    /// modules, test directories and package initializers are never writable
+    /// project sources. Initializers can replace unittest subtree discovery.
     pub fn new(mut paths: Vec<Vec<String>>) -> Result<Self, CodingDevelopmentRuntimeError> {
         if paths.is_empty() || paths.len() > 16 {
             return Err(CodingDevelopmentRuntimeError::Profile);
@@ -447,9 +448,9 @@ fn python_source_path_allowed<'a>(parts: impl Iterator<Item = &'a str>) -> bool 
     !parts
         .iter()
         .any(|part| part.starts_with('.') || matches!(*part, "tests" | "test"))
-        && parts
-            .last()
-            .is_some_and(|name| name.ends_with(".py") && !name.starts_with("test"))
+        && parts.last().is_some_and(|name| {
+            name.ends_with(".py") && !name.starts_with("test") && *name != "__init__.py"
+        })
 }
 
 fn python_source_constraints_match(

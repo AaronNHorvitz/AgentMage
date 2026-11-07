@@ -4,8 +4,8 @@ Base: `be214302706ac1caee2b7c0e54d2009f7864e8c8`. Same-row implementation
 under the accepted coding mission; both parents remain open. The preceding
 [root-selection core review](../reviews/be214302706a-local-coding-root-python.txt)
 is retained unchanged with **Verdict: PASS** for that exact commit and no open
-high/medium finding. This batch addresses its two low findings while adding
-explicit source selection through the existing owned HTTP handoff.
+high/medium finding. This batch addresses L2 and partly addresses L1 (see the review note below)
+while adding explicit source selection through the existing owned HTTP handoff.
 
 Subsequent [independent core review](../reviews/a8bdb80dc506-local-coding-explicit-python-sources.txt)
 has **Verdict: PASS** for exact commit `a8bdb80dc506603b0a8335013e586214b894be69`,
@@ -27,8 +27,8 @@ handoff consent remain separate from subsequent model and tool approvals.
 
 Both project layouts now exclude discovery modules matching `test*.py`, test
 directories named `test` or `tests`, and hidden components from their writable
-sources. This addresses review L1, including the original `src/test_calc.py`
-case. A conservative refusal also covers ordinary source modules starting
+sources. This partly addresses review L1, including the original `src/test_calc.py`
+case (see the review note above). A conservative refusal also covers ordinary source modules starting
 with `test`. Exact-file write scope, strict patch planning, creation refusal,
 command confinement, bounds and positive-test minimum are unchanged.
 
