@@ -1,0 +1,135 @@
+Commit: 3de442f11ce0030bd72c685f74116dcda65f53d8
+Scope: local-coding-http-driver
+
+# Independent core review: T-303 / T-306 verified HTTP driver batch (non-closing)
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate session with read-only use of the repository.
+Base `21e3e45372beab869ea982fdf231473906948fd7`. Tier: core. No row or sub-row closure was requested,
+and none is granted here. This is same-model review; a cross-model review must precede any public release.
+
+## Methods
+
+- Confirmed the commit, a clean tree and the Node runtime hash. Read IP-POLICY.md, the T-303/T-306 rows,
+  the evidence `docs/evidence/t303-http-driver-2026-11-06.md`, the guide diff and the complete code diff (9 paths).
+- Read the new adapter `platforms/local-api/src/coding_cli_driver.rs` in full. Read the unchanged host driver
+  it delegates to (`shells/host/src/cli_runtime.rs`: `drive_interactive_cli_runtime`, `cancel_run`,
+  `request_job_control`, `verify_complete_artifacts`), `runtime_transport::decode_exact`, and the kernel
+  approval-challenge verifier.
+- Checked that the new scenario disclosure matches the host. `coding_runtime_api.rs` launches the sibling host
+  with the constant `"failed-test-repair"`. `coding_development_runtime.rs:988-1021` maps that scenario to the
+  mutable file `src/calc.py` and to exactly "The exact synthetic validation passes after the bounded repair".
+  The disclosure is truthful.
+- Checked that host tool consumers decode argument bytes into typed structures (`coding_dispatch.rs:181-244`).
+  The approval display's `serde_json::from_slice` into a `Value` therefore cannot show a different value than a
+  duplicate-key-refusing consumer would execute. This matches the earlier accepted manual approve path.
+- Ran every required command and both optional observations myself. I also reproduced a terminal failure
+  against the actual `agentmage-code` binary (see M1). The repository was not modified. My logs are in
+  `/lane/state/tmp/review-3de442f11ce0-logs/`.
+
+Environment: `PATH=/lane/state/tmp/shared-node-v24.15.0/bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target
+CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4`. Heavy work went through the shared reservation. No GPU was used.
+
+## Commands and results
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `git status --short`; `git rev-parse HEAD`; `sha256sum …/node` | clean; `3de442f11ce0030bd72c685f74116dcda65f53d8`; `d1de76d8…bd932c` as stated |
+| 2 | `python3 -B scripts/local_agent_fast_gate.py --base 21e3e453… --timeout 3600` | **FAST GATE: PASS**. The plan has 9 paths: the API crate only (all targets) plus 3 Markdown lints and the retained-review lint. Markdown 0 issues; fmt exit 0 in 0.20 s; Clippy `-D warnings` exit 0 in 1.25 s; tests exit 0 in 102.35 s, including the reservation wait. Totals 20+10+11+11+35 = **87 passed / 0 failed / 0 ignored / 0 filtered**. All 6 `connected_driver_*` tests, `wire_json_refuses_repeated_members_before_value_decoding` and `stop_is_latched_…` pass |
+| 3 | `python3 -B /lane/state/tmp/t303-runtime-api/run-policy.py /lane/state/tmp/review-3de442f11ce0-policy-source` (driver `32a882a1…`, matches) | exit 0, "Validated 774 Markdown file(s) and all policy invariants", 8.8 s. This is a source-policy check, not the T-310 long gate. The mirror was removed; its input manifest `review-3de442f11ce0-policy-source-inputs.json` is kept |
+| 4 | `cmp docs/reviews/21e3e45372be-local-coding-runtime-api.txt /lane/reviews/21e3e45372be-local-coding-runtime-api.md` | exit 0, byte-identical |
+| 5 | `git diff --check 21e3e453… HEAD` | exit 0 |
+| 6 | `python3 -B /lane/state/tmp/t303-http-driver/audit.py` | exit 0; 9 paths, 5 frozen files, 87/0/0/0/0. The rewritten `audit.json` has sha `2636bcf2…0339a8bb`, byte-identical to the builder's. The script itself hashes `9d181d1f…`; the quoted digest is of its output. This is a builder audit and adds no independent evidence |
+| 7 | `bash /tools/build-slot python3 -B …/check-development-context.py /lane/state/tmp/review-3de442f11ce0-development` (driver `8e2b1b54…`) | exit 0; 30/30 matching contexts in 2.96 s; no inference, hidden tests or held-out run. It exercises the unchanged manual proposal path only |
+| 8 | `bash /tools/build-slot python3 -B …/native-refusal.py /lane/state/tmp/review-3de442f11ce0-native-startup` (driver `61600afe…`) | exit 0. The actual service exits 1 in 0.012 s with `linux.repository.git_artifact.invalid`, before any inference; the sentinel is unchanged. Host sha `c7016adc…` matches the builder. My rebuilt API sha is `90623adf…`, not the builder's `9443bb73…`, as expected for a separate debug build. This is not a native positive result |
+| 9 | Own pty write experiment and actual-binary reproduction (M1) | see M1 |
+| 10 | Own scan of added lines for private paths, usernames, the hostname, credentials and product names; dependency diff | Nothing private. `/lane/…` appears only inside the retained prior review, as in previously accepted batches. No Cargo or lockfile change. No other agent product is named |
+
+## Findings
+
+### M1 (medium): consent prompts are written to a non-blocking tty, so large prompts fail and an unseen tool approval is sent as a person's Deny
+
+Location: `platforms/local-api/src/coding_cli_driver.rs:58-77` (`Signals::confirm` opens `/dev/tty` with
+`O_NONBLOCK`, then `writeln!(tty, …).and_then(flush)`), together with `:175-181` (`Presentation::decide`
+maps every `confirm` error to `Ok(RuntimeApprovalDisposition::Deny)`).
+
+`O_NONBLOCK` was added so the answer read can be interrupted. It also applies to the prompt write. When the
+pty output queue fills, `write_all` gets `WouldBlock` and does not retry. `confirm` then returns `Err` after
+printing a truncated review without the "Type exactly …" line.
+
+Reproduction 1 (Python, independent of the binary). Open a pty slave with `O_RDWR|O_NONBLOCK` and write
+complete buffers while a reader drains the master 4 KiB at a time:
+
+- 16 KiB with a 1 ms reader delay: EAGAIN at 16,383 bytes.
+- 64 KiB: EAGAIN at 26,624 bytes even with no delay.
+
+Reproduction 2 (actual `agentmage-code` from this commit). Script:
+`/lane/state/tmp/review-3de442f11ce0-logs/ttyrepro/repro.py`. A loopback fake peer answers
+`GET /v1/code/runtime` with a valid selection. A pty harness reads 4 KiB per `select` and answers the
+prompt when it appears. The command is `runtime-run 30 <task>`:
+
+- Tasks of 3,000–13,000 bytes: the prompt is complete and `POST /v1/code/runtime/prepare` is sent.
+- Tasks of 15,000 and 16,000 bytes, both inside the client's accepted 16 KiB task bound: the prompt stops
+  after about 12–16 KB with no "Type exactly" line. The client exits 1 having made only the GET, so the
+  person is never asked.
+
+Practical impact on the claimed path:
+
+- The start disclosure prints the entire pretty-printed request; the producer fixture alone is about 13.4 KB.
+- Each approval prints the whole challenge. Its `presentation.arguments.bytes` is a JSON number array at about
+  12 output bytes per payload byte, plus `arguments_json`.
+- So ordinary tasks and edit or command approvals with more than roughly 1 KB of arguments can cross the
+  threshold, depending on how fast the terminal drains.
+
+The failures differ by step:
+
+- **Inspection or start:** the run is refused. This fails closed, but the feature is unusable.
+- **Tool approval:** `decide` returns `Deny`. The driver sends that through `advance` as an exact canonical
+  decision, so the durable record shows the operation declined by the person, who never saw it. The run
+  then continues on that false decision.
+
+No unauthorised effect results, so this is not high. But the batch's central claim is that "every
+consequential tool" gets "a fresh controlling-terminal decision". For realistic prompt sizes that claim is
+not reliable, and the tests do not cover it: all tests use small prompts and a 64 KiB `select` reader.
+
+Concrete fix:
+
+1. Write the prompt with a blocking descriptor, or keep `O_NONBLOCK` and loop on `WouldBlock` with `poll(POLLOUT)`
+   while checking `stopped()` and the deadline. Only the read needs to be interruptible.
+2. Map a terminal I/O failure in `decide` (open, write, EOF) to `Err(CodingClientError::Approval)`, so no
+   decision is sent, rather than to `Deny`. Reserve `Deny` for a line the person actually typed.
+3. Add an executable pty test with a prompt of at least 64 KiB and a slowly draining reader, covering the
+   inspection, start and tool-approval prompts.
+
+### L1 (low, backlog): typed-ahead input can decline the next operation before it is shown
+
+`Signals::confirm` (`coding_cli_driver.rs:78-99`) reads from the existing tty input queue without flushing it.
+It also leaves the remainder of an overlong line (`line.len() == 256`) queued. In one connected run, a stray
+extra Enter, or a paste with a trailing newline followed by Enter, is consumed by the next prompt and declines
+it immediately. A typed-ahead line cannot approve, because each challenge digest is fresh. Fix: run
+`tcflush(TCIFLUSH)` after writing each prompt and before reading, and discard the queued line on overflow.
+
+### L2 (low, backlog): all HTTP failures collapse to `RuntimeFailed`
+
+`HttpRuntime::post` and `release` (`coding_cli_driver.rs:194-205, 316-329`) map every client error to
+`RuntimeTransportError::RuntimeFailed`. So the shared driver's `RunUnavailable` path, the "released
+suspended run" notice in `request_job_control`, is unreachable over HTTP. A host-released suspended run
+ends with a generic `cli.runtime.unavailable` error instead of the specific notice. This fails closed. Fix:
+carry the API's typed refusal code through to the matching `RuntimeTransportError` variant.
+
+No other high or medium finding. Confinement is unchanged by this batch. The adapter mints no grant, has no
+tool, model or filesystem authority and never calls the generic cancel route; `cancel` returns
+`RequestDenied` and cancellation uses the revision-bound job ledger (test-verified). There is no
+approval resend after a lost reply (test-verified). Terminal text is escaped through `safe`. Evaluation
+integrity is untouched: no held-out content, hidden test, fixture, threshold, score or dependency changed.
+Prior L2 (resume terminal coverage), L3 (closed-channel recovery) and L4 (graceful shutdown) remain backlog,
+as the evidence states. Prior L1 (scenario disclosure) is addressed truthfully.
+
+## Per-row result
+
+- T-303: batch **not accepted** at this commit; medium M1 is open. The row stays open; no closure was requested.
+- T-306: batch **not accepted** at this commit for the same reason. The row stays open.
+
+The required runs all pass. The verdict rests on M1, which should be fixed in this row, without a new
+sub-row, and then reviewed again.
+
+Verdict: FINDINGS

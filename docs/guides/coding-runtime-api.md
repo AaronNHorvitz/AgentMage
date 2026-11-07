@@ -83,8 +83,14 @@ then does it print `verified-outcome`. A verified refusal is still a refusal:
 only canonical `SUCCESS` or `NO_OP` exits zero. Synthetic transport tests are
 not evidence of native success or coding quality.
 
-The `seconds` argument is 1–3600 and starts before inspection. Waiting for a
-terminal answer is interruptible and deadline-bound. SIGINT, SIGTERM, SIGHUP or
+The `seconds` argument is 1–3600 and starts before inspection.
+Writing the complete review and waiting for a
+terminal answer are interruptible and deadline-bound. Large reviews retain
+partial write progress while the terminal drains. EOF, terminal I/O failures and
+overlong answers abort without sending an approval or a denial; only a complete
+answer line records the person's decision. A stop signal or deadline instead
+returns control to the existing canonical cancellation path. SIGINT, SIGTERM,
+SIGHUP or
 the deadline requests canonical revision-bound job cancellation at the next
 verified boundary; it never sends the API's generic cancellation route. A
 pending HTTP request retains the existing 180-second response deadline, so this

@@ -27,6 +27,12 @@ use std::sync::{
 
 type TransportResult<T> = std::result::Result<T, RuntimeTransportError>;
 
+enum Confirmation {
+    Allow,
+    Deny,
+    Stopped,
+}
+
 struct Signals {
     stop: Arc<AtomicBool>,
     registered: Vec<signal_hook::SigId>,
@@ -52,8 +58,11 @@ impl Signals {
         }
         Ok(signals)
     }
-    fn confirm(&self, review: &Value, challenge: &str) -> Result<()> {
-        if !std::io::stdin().is_terminal() || self.stopped() {
+    fn confirm(&self, review: &Value, challenge: &str) -> Result<Confirmation> {
+        if self.stopped() {
+            return Ok(Confirmation::Stopped);
+        }
+        if !std::io::stdin().is_terminal() {
             return Err(());
         }
         let mut tty = OpenOptions::new()
@@ -67,16 +76,33 @@ impl Signals {
             )
             .open("/dev/tty")
             .map_err(|_| ())?;
-        writeln!(
-            tty,
+        let prompt = format!(
             "{}\nType exactly {challenge} to approve; anything else declines:",
             safe(review)?
-        )
-        .and_then(|()| tty.flush())
-        .map_err(|_| ())?;
+        ) + "\n";
+        // NONBLOCK applies to writes as well as reads. Keep partial progress
+        // while the terminal drains; never turn a truncated review into a vote.
+        let mut remaining = prompt.as_bytes();
+        while !remaining.is_empty() {
+            if self.stopped() {
+                return Ok(Confirmation::Stopped);
+            }
+            match tty.write(remaining) {
+                Ok(0) => return Err(()),
+                Ok(n) => remaining = &remaining[n..],
+                Err(e) if e.kind() == std::io::ErrorKind::Interrupted => (),
+                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                    std::thread::sleep(Duration::from_millis(10));
+                }
+                Err(_) => return Err(()),
+            }
+        }
         let mut line = Vec::new();
         loop {
-            if self.stopped() || line.len() == 256 {
+            if self.stopped() {
+                return Ok(Confirmation::Stopped);
+            }
+            if line.len() == 256 {
                 return Err(());
             }
             let mut byte = [0];
@@ -97,10 +123,14 @@ impl Signals {
         if line.last() == Some(&b'\r') {
             line.pop();
         }
-        if self.stopped() || line != challenge.as_bytes() {
-            return Err(());
+        if self.stopped() {
+            return Ok(Confirmation::Stopped);
         }
-        Ok(())
+        Ok(if line == challenge.as_bytes() {
+            Confirmation::Allow
+        } else {
+            Confirmation::Deny
+        })
     }
 
     fn stopped(&self) -> bool {
@@ -172,12 +202,14 @@ impl CodingApprovalPort for Presentation<'_> {
         }
         let arguments: Value = serde_json::from_slice(&challenge.presentation.arguments.bytes)
             .map_err(|_| CodingClientError::Approval)?;
-        if self.0.confirm(&json!({"challenge":challenge,"arguments_json":arguments,
+        match self.0.confirm(&json!({"challenge":challenge,"arguments_json":arguments,
             "warning":"Approves only this exact host-bound operation. Every later operation needs a new decision. A lost reply is uncertain; inspect the run before taking another action."}),
-            &format!("allow {}", challenge.challenge_sha256)).is_ok() && !self.0.stopped() {
-            Ok(RuntimeApprovalDisposition::Allow)
-        } else {
-            Ok(RuntimeApprovalDisposition::Deny)
+            &format!("allow {}", challenge.challenge_sha256)).map_err(|_| CodingClientError::Approval)? {
+            Confirmation::Allow => Ok(RuntimeApprovalDisposition::Allow),
+            Confirmation::Deny => Ok(RuntimeApprovalDisposition::Deny),
+            // The shared driver polls the latched stop before dispatching any
+            // response, and uses canonical job control instead of this value.
+            Confirmation::Stopped => Ok(RuntimeApprovalDisposition::Deny),
         }
     }
 }
@@ -206,10 +238,11 @@ impl HttpRuntime<'_> {
         if self.controls.stopped() {
             return Err(RuntimeTransportError::RequestDenied);
         }
-        self.controls
+        let answer = self
+            .controls
             .confirm(review, text)
             .map_err(|_| RuntimeTransportError::RequestDenied)?;
-        if self.controls.stopped() {
+        if !matches!(answer, Confirmation::Allow) || self.controls.stopped() {
             return Err(RuntimeTransportError::RequestDenied);
         }
         Ok(())

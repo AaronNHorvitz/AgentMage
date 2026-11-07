@@ -468,9 +468,16 @@ impl Stream {
 }
 fn driven_steps(r: &RuntimeRunRequest, allow: bool) -> (Value, Value) {
     let mut c = challenge();
+    driven_steps_with_challenge(r, allow, &mut c)
+}
+fn driven_steps_with_challenge(
+    r: &RuntimeRunRequest,
+    allow: bool,
+    c: &mut RuntimeApprovalChallenge,
+) -> (Value, Value) {
     c.run_id = r.run_id.clone();
     c.task_id = r.task.task_id.clone();
-    let c = seal_runtime_approval_challenge(c).unwrap();
+    let c = seal_runtime_approval_challenge(c.clone()).unwrap();
     let mut s = Stream::new(r);
     s.event(
         RuntimeEventKind::RunStarted {
@@ -611,6 +618,130 @@ fn connected_driver_checks_events_asks_exactly_and_reports_a_verified_non_succes
         assert_eq!(calls[6]["route"], "POST /v1/code/runtime/release HTTP/1.1");
     }
 }
+
+#[test]
+fn connected_driver_drains_large_inspection_before_accepting_a_typed_refusal() {
+    let f = Fixture::new();
+    let r = driven_request();
+    let task = "\u{1}".repeat(16 * 1024);
+    let peer = f.peer(vec![driven_selection(&r)]);
+    let output = f.tty(peer.address, &["runtime-run", "30", &task], "slow-deny");
+    assert_ne!(output["status"], 0, "{output}");
+    assert_eq!(output["answered"], 1);
+    assert!(output["prompt_bytes"][0].as_u64().unwrap() >= 64 * 1024);
+    assert_eq!(peer.finish().len(), 1);
+}
+
+#[test]
+fn connected_driver_drains_large_start_and_tool_reviews_before_exact_decisions() {
+    let f = Fixture::new();
+    let mut r = driven_request();
+    r.task.constraints.extend(vec!["S".repeat(4096); 16]);
+    let r = agentmage_kernel_engine::runtime_coordinator::seal_runtime_run_request(r).unwrap();
+    let mut c = challenge();
+    // Original synthetic JSON string, with its independently calculated digest.
+    c.presentation.arguments.bytes = format!("\"{}\"", "T".repeat(8192)).into_bytes();
+    c.presentation.arguments.sha256 =
+        "cd1a2f6baf0c0464a3c8fccde1361e3715148e3022a0cf16846045b20c86cd30".into();
+    for allow in [false, true] {
+        let (first, last) = driven_steps_with_challenge(&r, allow, &mut c);
+        let peer = f.peer(vec![
+            driven_selection(&r),
+            json!(r),
+            first,
+            last,
+            Value::Null,
+            Value::Null,
+            json!({"released":true}),
+        ]);
+        let output = f.tty(
+            peer.address,
+            &["runtime-run", "30", &r.task.objective],
+            if allow {
+                "slow-approve"
+            } else {
+                "slow-deny-tools"
+            },
+        );
+        assert_ne!(output["status"], 0);
+        assert_eq!(output["answered"], 3, "{output}");
+        for index in [1, 2] {
+            assert!(output["prompt_bytes"][index].as_u64().unwrap() >= 64 * 1024);
+        }
+        assert!(
+            output["transcript"]
+                .as_str()
+                .unwrap()
+                .contains("verified-outcome")
+        );
+        let calls = peer.finish();
+        assert_eq!(calls.len(), 7);
+        assert_eq!(calls[2]["body"]["request"], json!(r));
+        assert_eq!(
+            calls[3]["body"]["response"]["disposition"],
+            if allow { "allow" } else { "deny" }
+        );
+    }
+}
+
+#[test]
+fn connected_driver_terminal_eof_and_overflow_send_no_decision() {
+    let f = Fixture::new();
+    let r = driven_request();
+    for mode in ["eof-inspect", "eof-start", "eof-tool", "overflow-tool"] {
+        let (first, _) = driven_steps(&r, true);
+        let replies = match mode {
+            "eof-inspect" => vec![driven_selection(&r)],
+            "eof-start" => vec![driven_selection(&r), json!(r), json!({"released":true})],
+            _ => vec![
+                driven_selection(&r),
+                json!(r),
+                first,
+                json!({"released":true}),
+            ],
+        };
+        let expected_calls = replies.len();
+        let peer = f.peer(replies);
+        let output = f.tty(
+            peer.address,
+            &["runtime-run", "30", &r.task.objective],
+            mode,
+        );
+        assert_ne!(output["status"], 0, "{output}");
+        let calls = peer.finish();
+        assert_eq!(calls.len(), expected_calls, "{calls:?}");
+        assert!(
+            calls
+                .iter()
+                .all(|c| c["route"] != "POST /v1/code/runtime/advance HTTP/1.1")
+        );
+        if mode.ends_with("tool") {
+            assert!(
+                output["transcript"]
+                    .as_str()
+                    .unwrap()
+                    .contains("cli.runtime.approval_unavailable")
+            );
+        }
+    }
+}
+
+#[test]
+fn connected_driver_stop_interrupts_backpressured_prompt_writes() {
+    let f = Fixture::new();
+    let r = driven_request();
+    let task = "\u{1}".repeat(16 * 1024);
+    for mode in ["stalled-signal", "stalled-deadline"] {
+        let peer = f.peer(vec![driven_selection(&r)]);
+        let began = Instant::now();
+        let output = f.tty(peer.address, &["runtime-run", "1", &task], mode);
+        assert_ne!(output["status"], 0, "{output}");
+        assert_eq!(output["answered"], 0);
+        assert!(began.elapsed() < Duration::from_secs(5));
+        assert_eq!(peer.finish().len(), 1);
+    }
+}
+
 #[test]
 fn connected_driver_refuses_event_tampering_and_never_retries_an_uncertain_approval() {
     let f = Fixture::new();
@@ -856,28 +987,39 @@ master,slave=pty.openpty()
 def session():
     os.setsid();fcntl.ioctl(0,termios.TIOCSCTTY,0)
 p=subprocess.Popen(sys.argv[2:],stdin=slave,stdout=slave,stderr=slave,preexec_fn=session)
-os.close(slave);raw=b'';answered=0;started=time.monotonic()
+os.close(slave);raw=b'';answered=0;started=time.monotonic();prompt_bytes=[];review_start=0
 try:
+    if sys.argv[1].startswith('stalled-'):
+        # Do not drain output: the review exceeds the tty output queue.
+        assert select.select([master],[],[],2)[0],'no review output'
+        raw+=os.read(master,1)
+        time.sleep(.2 if sys.argv[1]=='stalled-signal' else 1.2)
+        if sys.argv[1]=='stalled-signal':os.kill(p.pid,signal.SIGINT)
     while True:
         assert time.monotonic()-started<10,'terminal timeout'
         if not select.select([master],[],[],.05)[0]:
             if p.poll() is not None:break
             continue
-        try:chunk=os.read(master,65536)
+        try:chunk=os.read(master,1024 if sys.argv[1].startswith('slow-') else 65536)
         except OSError as e:
             if e.errno==errno.EIO:break
             raise
         if not chunk:break
         raw+=chunk
+        if sys.argv[1].startswith('slow-'):time.sleep(.005)
         if raw.count(b'anything else declines:')>answered:
+            prompt_bytes.append(len(raw)-review_start);review_start=len(raw)
             prompt=raw.split(b'Type exactly ')[-1].split(b' to approve;')[0]
-            allow = sys.argv[1]=='approve' or (sys.argv[1] in ('deny-tools','signal-tool') and not prompt.startswith(b'allow '))
+            mode=sys.argv[1];tool=prompt.startswith(b'allow ')
+            allow = mode in ('approve','slow-approve') or (mode in ('deny-tools','slow-deny-tools','signal-tool','eof-start','eof-tool','overflow-tool') and not tool)
             if sys.argv[1]=='signal' or (sys.argv[1]=='signal-tool' and prompt.startswith(b'allow ')):os.kill(p.pid,signal.SIGINT)
+            elif (mode=='eof-inspect' or (mode=='eof-start' and prompt.startswith(b'start ')) or (mode=='eof-tool' and tool)):os.write(master,b'\x04')
+            elif mode=='overflow-tool' and tool:os.write(master,b'x'*257+b'\n')
             elif sys.argv[1]!='wait':os.write(master,(prompt if allow else b'no')+b'\n')
             answered+=1
     status=p.wait(timeout=2)
     assert b'\x1b' not in raw
-    print(json.dumps({'status':status,'answered':answered,'transcript':raw.decode()}))
+    print(json.dumps({'status':status,'answered':answered,'prompt_bytes':prompt_bytes,'transcript':raw.decode()}))
 finally:
     if p.poll() is None:os.killpg(p.pid,signal.SIGKILL);p.wait()
     os.close(master)
