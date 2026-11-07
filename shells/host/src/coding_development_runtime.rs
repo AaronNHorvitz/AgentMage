@@ -383,6 +383,7 @@ const fn stored_chain_start(resumed: bool, after_restart: bool) -> StoredChainSt
 
 /// Factory that composes the real coordinator only for one explicit disposable activation.
 pub struct CodingDevelopmentRuntimeFactory {
+    owned_worktree: Option<agentmage_platform_linux::LinuxCodingWorktreeLease>,
     activation: CodingDevelopmentActivation,
     scenario: CodingDevelopmentScenario,
     model: CodingDevelopmentModel,
@@ -445,6 +446,7 @@ impl CodingDevelopmentRuntimeFactory {
         let (profile, workspace, supporting_sources) =
             build_repository_composition(&activation, platform, scenario, model)?;
         Ok(Self {
+            owned_worktree: None,
             activation,
             scenario,
             model,
@@ -467,7 +469,32 @@ impl CodingDevelopmentRuntimeFactory {
         })
     }
 
+    /// Attaches live service-created ownership before preparing any session.
+    /// A validated marker alone cannot supply it. The caller retains a lease
+    /// for explicit manual recovery after all coordinators and this factory end.
+    pub fn attach_owned_worktree(
+        &mut self,
+        lease: &agentmage_platform_linux::LinuxCodingWorktreeLease,
+    ) -> Result<(), CodingDevelopmentRuntimeError> {
+        if self.session_id.is_some() || !self.prepared.is_empty() || self.owned_worktree.is_some() {
+            return Err(CodingDevelopmentRuntimeError::Composition);
+        }
+        lease
+            .check_workspace(self.activation.workspace_root())
+            .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
+        self.activation
+            .revalidate()
+            .map_err(|_| CodingDevelopmentRuntimeError::Activation)?;
+        self.owned_worktree = Some(lease.clone());
+        Ok(())
+    }
+
     fn refresh_repository_composition(&mut self) -> Result<(), CodingDevelopmentRuntimeError> {
+        if let Some(lease) = &self.owned_worktree {
+            lease
+                .check_workspace(self.activation.workspace_root())
+                .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
+        }
         let (profile, workspace, supporting_sources) = build_repository_composition(
             &self.activation,
             self.platform,
@@ -916,6 +943,11 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         &mut self,
         input: &RuntimePrepareInput,
     ) -> Result<agentmage_kernel_contracts::RuntimeRunRequest, NativeChatRuntimeError> {
+        if let Some(lease) = &self.owned_worktree {
+            lease
+                .check_workspace(self.activation.workspace_root())
+                .map_err(|_| prepare_denied("owned-worktree"))?;
+        }
         self.activation
             .revalidate()
             .map_err(|_| prepare_denied("activation"))?;
@@ -1155,6 +1187,11 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         self.activation
             .revalidate()
             .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
+        if let Some(lease) = &self.owned_worktree {
+            lease
+                .check_workspace(self.activation.workspace_root())
+                .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
+        }
         let prepared = self
             .prepared
             .remove(request.run_id.as_str())
@@ -1390,6 +1427,12 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             NativeChatRuntimeError::RuntimeFailed
         })?;
         let mut boundary = boundary;
+        if let Some(lease) = &self.owned_worktree {
+            boundary.attach_owned_worktree(lease.clone()).map_err(|_| {
+                close_unused_chain();
+                NativeChatRuntimeError::RequestDenied
+            })?;
+        }
         boundary.persist_action_history(effects_chain);
         if let Some(chain) = effect_chain.clone() {
             boundary.persist_run_effects(chain);

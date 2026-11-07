@@ -20,7 +20,8 @@ use agentmage_kernel_engine::write_approval::{
     issue_write_grant, render_write_preview,
 };
 use agentmage_kernel_engine::write_transaction::{
-    WriteTransactionOutcome, WriteTransactionRequest, execute_write_transaction,
+    AtomicWriteDriver, WriteTransactionOutcome, WriteTransactionRequest, WriteTransactionResult,
+    execute_write_transaction,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -280,12 +281,44 @@ impl LinuxCodingPendingWrite {
     /// Once dispatched, the bounded transaction completes/reconciles; it cannot
     /// be cancelled halfway through. No command or syntax success is implied.
     pub fn apply(
-        mut self,
+        self,
         scope: &LinuxCodingReadScope,
         change_set_sha256: &str,
         preview_sha256: &str,
         now_epoch_ms: u64,
     ) -> Result<Value, LinuxCodingWriteError> {
+        let mut driver = LinuxAtomicWriteDriver::new(
+            &scope.workspace,
+            LinuxAtomicWriteDriverLimits {
+                maximum_operations: MAX_FILES,
+                maximum_file_bytes: MAX_BYTES as u64,
+                maximum_transaction_bytes: (MAX_BYTES * 2) as u64,
+            },
+        );
+        let result = self.execute(
+            scope,
+            change_set_sha256,
+            preview_sha256,
+            now_epoch_ms,
+            &mut driver,
+        )?;
+        Ok(json!({"outcome":match result.outcome {
+            WriteTransactionOutcome::Committed => "committed",
+            WriteTransactionOutcome::FailedNoChange => "failed_no_change",
+            WriteTransactionOutcome::Restored => "restored",
+            WriteTransactionOutcome::Uncertain => "uncertain",
+        }, "receipts":result.receipts, "consumed_grant_sha256":result.grant_consumption.consumed_grant_sha256,
+        "tested":false,"isolation_verified":false,"retention":"process-only"}))
+    }
+
+    fn execute<D: AtomicWriteDriver>(
+        mut self,
+        scope: &LinuxCodingReadScope,
+        change_set_sha256: &str,
+        preview_sha256: &str,
+        now_epoch_ms: u64,
+        driver: &mut D,
+    ) -> Result<WriteTransactionResult, LinuxCodingWriteError> {
         use LinuxCodingWriteError::{Approval, Transaction};
         if now_epoch_ms >= self.expires_at_epoch_ms
             || Instant::now() >= self.deadline
@@ -319,15 +352,7 @@ impl LinuxCodingPendingWrite {
             },
         )
         .map_err(|_| Approval)?;
-        let mut driver = LinuxAtomicWriteDriver::new(
-            &scope.workspace,
-            LinuxAtomicWriteDriverLimits {
-                maximum_operations: MAX_FILES,
-                maximum_file_bytes: MAX_BYTES as u64,
-                maximum_transaction_bytes: (MAX_BYTES * 2) as u64,
-            },
-        );
-        let result = execute_write_transaction(
+        execute_write_transaction(
             &mut self.issuer,
             &self.policy,
             &self.change_set,
@@ -336,15 +361,34 @@ impl LinuxCodingPendingWrite {
                 transaction_id: format!("transaction-{id}"),
                 now_epoch_ms,
             },
-            &mut driver,
+            driver,
         )
-        .map_err(|_| Transaction)?;
-        Ok(json!({"outcome":match result.outcome {
-            WriteTransactionOutcome::Committed => "committed",
-            WriteTransactionOutcome::FailedNoChange => "failed_no_change",
-            WriteTransactionOutcome::Restored => "restored",
-            WriteTransactionOutcome::Uncertain => "uncertain",
-        }, "receipts":result.receipts, "consumed_grant_sha256":result.grant_consumption.consumed_grant_sha256,
-        "tested":false,"isolation_verified":false,"retention":"process-only"}))
+        .map_err(|_| Transaction)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn apply_with_owned_driver(
+        self,
+        scope: &LinuxCodingReadScope,
+        lease: &crate::LinuxCodingWorktreeLease,
+        now: u64,
+        publish: bool,
+        alter_result: Option<fn(&mut WriteTransactionResult)>,
+    ) -> Result<WriteTransactionResult, LinuxCodingWriteError> {
+        let hash = self.change_set.change_set_sha256().to_owned();
+        let preview_hash = self.preview.preview_sha256.clone();
+        let mut driver = lease
+            .write_driver(&scope.workspace, LinuxAtomicWriteDriverLimits::default())
+            .map_err(|_| LinuxCodingWriteError::Boundary)?;
+        let mut result = self.execute(scope, &hash, &preview_hash, now, &mut driver)?;
+        if let Some(alter) = alter_result {
+            alter(&mut result);
+        }
+        if publish {
+            driver
+                .complete(&result)
+                .map_err(|_| LinuxCodingWriteError::Transaction)?;
+        }
+        Ok(result)
     }
 }

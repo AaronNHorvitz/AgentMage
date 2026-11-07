@@ -645,3 +645,303 @@ fn replacing_the_created_pair_cannot_retarget_an_older_read_consent() {
     f.assert_preserved();
     other.assert_preserved();
 }
+
+fn runtime_lease(owner: LinuxCodingRepository) -> crate::LinuxCodingWorktreeLease {
+    let identity = owner.inspect_edit().unwrap()["worktree_root_sha256"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    owner.into_runtime_worktree(&identity).unwrap()
+}
+fn recover_lease(lease: crate::LinuxCodingWorktreeLease) -> LinuxCodingRepository {
+    match lease.try_into_repository() {
+        Ok(owner) => owner,
+        Err(_) => panic!("runtime references remain"),
+    }
+}
+fn runtime_edit(
+    f: &Fixture,
+    lease: &crate::LinuxCodingWorktreeLease,
+    content: &str,
+    publish: bool,
+) {
+    let scope =
+        LinuxCodingReadScope::select(&f.0.join("owned/worktree"), &["one.py".into()]).unwrap();
+    let before = hash(&fs::read(f.0.join("owned/worktree/one.py")).unwrap());
+    let pending = scope
+        .prepare_write(
+            &[LinuxCodingReplacement {
+                path: "one.py",
+                before_sha256: &before,
+                content,
+            }],
+            "Native runtime fixture edit",
+            NOW,
+        )
+        .unwrap();
+    let result = pending
+        .apply_with_owned_driver(&scope, lease, NOW, publish, None)
+        .unwrap();
+    assert_eq!(
+        result.outcome,
+        agentmage_kernel_engine::write_transaction::WriteTransactionOutcome::Committed
+    );
+}
+
+#[test]
+fn runtime_handoff_preserves_native_edit_lineage_and_separate_original_approval() {
+    let started = Instant::now();
+    let f = Fixture::new();
+    let mut owner = f.owner();
+    f.edit(&mut owner, "one.py", "manual first revision\n");
+    let old_apply = f.prepare(&mut owner);
+    let lease = runtime_lease(owner);
+    lease.check_workspace(&f.0.join("owned/worktree")).unwrap();
+    assert!(lease.check_workspace(&f.0.join("original")).is_err());
+    let live = lease.clone();
+    let lease = match lease.try_into_repository() {
+        Err(lease) => lease,
+        Ok(_) => panic!("adopted live runtime"),
+    };
+    runtime_edit(&f, &live, "runtime second revision\n", true);
+    runtime_edit(&f, &live, "runtime final revision\n", true);
+    assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+    drop(live);
+    let mut owner = recover_lease(lease);
+    assert!(
+        owner
+            .decide_apply(old_apply["preview_sha256"].as_str().unwrap(), true, NOW)
+            .is_err()
+    );
+    assert!(owner.inspect_apply().unwrap()["pending"].is_null());
+    let preview = f.prepare(&mut owner);
+    assert!(
+        preview["write_preview"]["complete_diffs"][0]
+            .as_str()
+            .unwrap()
+            .contains("first")
+    );
+    let digest = preview["preview_sha256"].as_str().unwrap();
+    assert_eq!(
+        owner.decide_apply(digest, true, NOW).unwrap()["outcome"],
+        "committed"
+    );
+    assert!(owner.decide_apply(digest, true, NOW).is_err());
+    assert_eq!(
+        fs::read(f.0.join("original/one.py")).unwrap(),
+        b"runtime final revision\n"
+    );
+    assert!(
+        owner.inspect_apply().unwrap()["available_paths"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    f.assert_preserved();
+    eprintln!(
+        "owned_runtime_native_writes_and_original_apply_us={}",
+        started.elapsed().as_micros()
+    );
+}
+
+#[test]
+fn runtime_handoff_cannot_adopt_reopened_owner_wrong_root_or_substituted_worktree() {
+    let f = Fixture::new();
+    assert!(f.open().into_runtime_worktree(&"0".repeat(64)).is_err());
+    assert!(f.owner().into_runtime_worktree(&"0".repeat(64)).is_err());
+    let lease = runtime_lease(f.owner());
+    let root = f.0.join("owned/worktree");
+    fs::rename(&root, f.0.join("owned/old-worktree")).unwrap();
+    fs::create_dir(&root).unwrap();
+    fs::set_permissions(&root, fs::Permissions::from_mode(0o700)).unwrap();
+    assert!(lease.check_workspace(&root).is_err());
+    let mut owner = recover_lease(lease);
+    assert!(
+        owner
+            .prepare_current_apply(&["one.py".into()], "Refuse replacement", NOW)
+            .is_err()
+    );
+    assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+}
+
+#[test]
+fn runtime_native_write_without_terminal_publication_clears_transfer_lineage() {
+    let f = Fixture::new();
+    let mut owner = f.owner();
+    f.edit(&mut owner, "one.py", "manual revision\n");
+    let lease = runtime_lease(owner);
+    runtime_edit(&f, &lease, "unpublished runtime revision\n", false);
+    let mut owner = recover_lease(lease);
+    assert_eq!(
+        fs::read(f.0.join("owned/worktree/one.py")).unwrap(),
+        b"unpublished runtime revision\n"
+    );
+    assert!(
+        owner
+            .prepare_current_apply(&["one.py".into()], "Refuse unknown publication", NOW)
+            .is_err()
+    );
+    assert!(
+        owner.inspect_apply().unwrap()["available_paths"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    f.assert_preserved();
+}
+
+#[test]
+fn runtime_driver_refuses_foreign_root_and_concurrent_write_owner() {
+    let f = Fixture::new();
+    let lease = runtime_lease(f.owner());
+    assert!(
+        lease
+            .write_driver(
+                &held_root(&f.0.join("original")).unwrap(),
+                crate::LinuxAtomicWriteDriverLimits::default()
+            )
+            .is_err()
+    );
+    let root = held_root(&f.0.join("owned/worktree")).unwrap();
+    let driver = lease
+        .write_driver(&root, crate::LinuxAtomicWriteDriverLimits::default())
+        .unwrap();
+    assert!(
+        lease
+            .write_driver(&root, crate::LinuxAtomicWriteDriverLimits::default())
+            .is_err()
+    );
+    assert!(lease.check_workspace(&f.0.join("owned/worktree")).is_err());
+    drop(driver);
+    lease.check_workspace(&f.0.join("owned/worktree")).unwrap();
+    let owner = recover_lease(lease);
+    assert!(
+        owner.inspect_apply().unwrap()["available_paths"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
+fn runtime_native_write_refuses_broken_lineage_and_preserves_foreign_bytes() {
+    let f = Fixture::new();
+    let mut owner = f.owner();
+    f.edit(&mut owner, "one.py", "manual revision\n");
+    let lease = runtime_lease(owner);
+    fs::write(f.0.join("owned/worktree/one.py"), b"foreign edit\n").unwrap();
+    let scope =
+        LinuxCodingReadScope::select(&f.0.join("owned/worktree"), &["one.py".into()]).unwrap();
+    let pending = scope
+        .prepare_write(
+            &[LinuxCodingReplacement {
+                path: "one.py",
+                before_sha256: &hash(b"foreign edit\n"),
+                content: "must not write\n",
+            }],
+            "Refuse foreign lineage",
+            NOW,
+        )
+        .unwrap();
+    let result = pending
+        .apply_with_owned_driver(&scope, &lease, NOW, true, None)
+        .unwrap();
+    assert_eq!(
+        result.outcome,
+        agentmage_kernel_engine::write_transaction::WriteTransactionOutcome::FailedNoChange
+    );
+    assert_eq!(
+        fs::read(f.0.join("owned/worktree/one.py")).unwrap(),
+        b"foreign edit\n"
+    );
+    let mut owner = recover_lease(lease);
+    assert!(
+        owner
+            .prepare_current_apply(&["one.py".into()], "Refuse foreign transfer", NOW)
+            .is_err()
+    );
+    f.assert_preserved();
+}
+
+#[test]
+fn runtime_completion_refuses_other_transaction_grant_and_receipt_chain() {
+    use agentmage_kernel_engine::write_transaction::WriteTransactionResult;
+    let corruptions: [fn(&mut WriteTransactionResult); 3] = [
+        |r| r.transaction_id = "foreign-transaction".into(),
+        |r| r.grant_consumption.consumed_grant_sha256 = "0".repeat(64),
+        |r| r.receipts.last_mut().unwrap().receipt_sha256 = "0".repeat(64),
+    ];
+    for corrupt in corruptions {
+        let f = Fixture::new();
+        let lease = runtime_lease(f.owner());
+        let scope =
+            LinuxCodingReadScope::select(&f.0.join("owned/worktree"), &["one.py".into()]).unwrap();
+        let pending = scope
+            .prepare_write(
+                &[LinuxCodingReplacement {
+                    path: "one.py",
+                    before_sha256: &hash(b"first\n"),
+                    content: "actual native postimage\n",
+                }],
+                "Refuse unrelated completion",
+                NOW,
+            )
+            .unwrap();
+        assert!(
+            pending
+                .apply_with_owned_driver(&scope, &lease, NOW, true, Some(corrupt))
+                .is_err()
+        );
+        assert_eq!(
+            fs::read(f.0.join("owned/worktree/one.py")).unwrap(),
+            b"actual native postimage\n"
+        );
+        let mut owner = recover_lease(lease);
+        assert!(
+            owner
+                .prepare_current_apply(&["one.py".into()], "Refuse altered completion", NOW)
+                .is_err()
+        );
+        assert!(
+            owner.inspect_apply().unwrap()["available_paths"]
+                .as_array()
+                .unwrap()
+                .is_empty()
+        );
+        assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+    }
+}
+
+#[test]
+fn runtime_poisoned_owner_recovers_without_creation_authority_or_pending_approvals() {
+    let f = Fixture::new();
+    let mut owner = f.owner();
+    f.edit(&mut owner, "one.py", "manual revision\n");
+    let old_preview = f.prepare(&mut owner);
+    let lease = runtime_lease(owner);
+    let other = lease.clone();
+    let root = f.0.join("owned/worktree");
+    assert!(
+        std::thread::spawn(move || {
+            let held = held_root(&root).unwrap();
+            let _driver = other
+                .write_driver(&held, crate::LinuxAtomicWriteDriverLimits::default())
+                .unwrap();
+            panic!("synthetic native execution panic while ownership held");
+        })
+        .join()
+        .is_err()
+    );
+    assert!(lease.check_workspace(&f.0.join("owned/worktree")).is_err());
+    let mut owner = recover_lease(lease);
+    assert!(owner.inspect_apply().unwrap()["repository_root_sha256"].is_null());
+    assert!(owner.inspect_apply().unwrap()["pending"].is_null());
+    assert!(
+        owner
+            .decide_apply(old_preview["preview_sha256"].as_str().unwrap(), true, NOW)
+            .is_err()
+    );
+    assert!(owner.select_created_sources(&["one.py".into()]).is_err());
+    assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+    f.assert_preserved();
+}

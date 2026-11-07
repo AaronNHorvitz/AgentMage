@@ -81,9 +81,10 @@ use agentmage_kernel_engine::{
     write_transaction::{WriteTransactionOutcome, WriteTransactionRequest, verify_write_receipts},
 };
 use agentmage_platform_linux::{
-    LinuxAtomicWriteDriver, LinuxAtomicWriteDriverLimits, LinuxAuthorityRuntime,
-    LinuxAuthorizedWorkspace, LinuxControlledFilesystemDriver, LinuxFilesystemDriverLimits,
-    LinuxReadOnlyToolEffectDriver, LinuxReadOnlyToolInput, LinuxSandboxRunner,
+    LinuxAtomicWriteDriverLimits, LinuxAuthorityRuntime, LinuxAuthorizedWorkspace,
+    LinuxCodingRuntimeWriteDriver, LinuxCodingWorktreeLease, LinuxControlledFilesystemDriver,
+    LinuxFilesystemDriverLimits, LinuxReadOnlyToolEffectDriver, LinuxReadOnlyToolInput,
+    LinuxSandboxRunner,
 };
 use rustix::rand::{GetRandomFlags, getrandom};
 use serde::Serialize;
@@ -566,6 +567,7 @@ where
     /// The run's action history: one entry for each call whose grant this
     /// boundary consumed and each call a person refused (Decision 0127).
     action_history: RunActionRecorder,
+    owned_worktree: Option<LinuxCodingWorktreeLease>,
 }
 
 /// One proposed write a run's recipe plan refused (Decision 0133).
@@ -819,6 +821,7 @@ where
             pending_write_completion: None,
             run_effects: RunEffectRecorder::new(),
             action_history: RunActionRecorder::new(),
+            owned_worktree: None,
         })
     }
 
@@ -827,6 +830,27 @@ where
     /// kept only in memory.
     pub fn persist_action_history(&mut self, chain: PersistedRunChain) {
         self.action_history = RunActionRecorder::persisted(chain);
+    }
+
+    /// Carries the live manual creation owner into subsequent native writes.
+    /// Does not adopt old edits, issue grants or change the model/tool catalog.
+    pub fn attach_owned_worktree(
+        &mut self,
+        lease: LinuxCodingWorktreeLease,
+    ) -> Result<(), LinuxCodingRuntimeError> {
+        if self.owned_worktree.is_some() || !self.pending.is_empty() || !self.issued.is_empty() {
+            return Err(LinuxCodingRuntimeError::BindingDenied);
+        }
+        {
+            let _checked = lease
+                .write_driver(
+                    self.workspace.workspace(),
+                    LinuxAtomicWriteDriverLimits::default(),
+                )
+                .map_err(|_| LinuxCodingRuntimeError::BindingDenied)?;
+        }
+        self.owned_worktree = Some(lease);
+        Ok(())
     }
 
     /// Also appends every execution and change record of this run's effect
@@ -2610,6 +2634,11 @@ where
         issued: IssuedCodingOperation<'workspace>,
         mut event_context: Option<RuntimeEffectEventContext<'_>>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
+        // Owned lineage needs the coordinator's atomic tool-terminal commit.
+        // The legacy direct boundary path has no such publication owner.
+        if self.owned_worktree.is_some() && event_context.is_none() {
+            return Err(RuntimePortFailure::Invalid);
+        }
         let IssuedCodingOperation {
             authority:
                 IssuedCodingAuthority::StructuredWrite {
@@ -2693,8 +2722,17 @@ where
             &approval.grant,
             resolved_at_epoch_ms,
         )?;
-        let mut driver =
-            LinuxAtomicWriteDriver::new(workspace, LinuxAtomicWriteDriverLimits::default());
+        let lease = self.owned_worktree.clone();
+        let mut driver = if let Some(lease) = &lease {
+            lease
+                .write_driver(workspace, LinuxAtomicWriteDriverLimits::default())
+                .map_err(|_| RuntimePortFailure::Invalid)?
+        } else {
+            LinuxCodingRuntimeWriteDriver::unowned(
+                workspace,
+                LinuxAtomicWriteDriverLimits::default(),
+            )
+        };
         let policy = self.policy.engine().clone();
         let write_request = WriteTransactionRequest {
             transaction_id,
@@ -2827,7 +2865,16 @@ where
                     bytes: record_bytes,
                 });
         }
-        self.finish_specialized_effect_event(execution, event_context, pending, &write_checkpoints)
+        let completed = self.finish_specialized_effect_event(
+            execution,
+            event_context,
+            pending,
+            &write_checkpoints,
+        )?;
+        driver
+            .complete(&result)
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        Ok(completed)
     }
 
     fn execute_prepared_controlled_create(

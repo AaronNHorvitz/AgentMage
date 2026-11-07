@@ -1,0 +1,216 @@
+Commit: 637cffbc78460d5dfbcd0cd14fc21f97617c7277
+Scope: local-coding-linked-worker-repair
+
+# Independent core re-review: linked Git worker admission and shared-ref repair (T-303/T-306, same-row, non-closing)
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate read-only session. This is a
+same-model review. A cross-model review is still required before any public release. This review
+grants no certification, compliance or legal clearance. It closes no row.
+
+## Commit and scope confirmation
+
+- `git rev-parse 637cffbc78460d5dfbcd0cd14fc21f97617c7277` and `HEAD` return the same sha.
+  `git status --short` printed nothing before and after the review. I made no repository change.
+- The diff from base `0f560d5f8d405121260733eec52e49e90da9e8b0` touches exactly 11 paths
+  (+709/-91). They are the builder audit's `EXPECTED` set: five Rust sources in
+  `platforms/linux/src/`, TASKS.md, Decision 0157, the guide, both evidence records, and the
+  retained prior review.
+- No `Cargo.*`, lockfile, `package*.json`, SBOM, evaluation, held-out, hidden-test, threshold,
+  score, GPU or status-model input changed. TASKS.md adds one sentence to each of the open T-303
+  and T-306 rows. Every `| [ ] |`/`| [x] |` status is unchanged.
+- `cmp docs/reviews/0f560d5f8d40-local-coding-linked-worktree.txt /lane/reviews/0f560d5f8d40-local-coding-linked-worktree.md`
+  exits 0: my prior FINDINGS report is retained byte for byte.
+- Read in full:
+  - the Rust diff;
+  - the Decision 0157 diff;
+  - the guide diff;
+  - both evidence records (new repair record, amended activation record);
+  - the TASKS.md change.
+- Also re-read the code the repair relies on:
+  - `LaunchOwner::accepts`/`control_path` and the head of `run_owned`, from admission through
+    the precancellation return;
+  - `LinuxBoundedRepositoryInspectionExecutor::run`/`run_read_only` and the order of its
+    `OpenFile` descriptors;
+  - `observe_linked_inventory`, `run_inventory_process`, and the supervisor's
+    output-limit/`output_complete` handling;
+  - `LinuxLinkedRepository::verify`/`revalidate`, including the `worktrees/<name>`, `commondir`
+    and `gitdir` checks.
+
+## Methods
+
+1. **Line-by-line reading** of each fix against the finding it answers, including the descriptor
+   numbering systemd passes to Bubblewrap (git=3, seccomp=4, worktree=5, git-common=6).
+2. **All requested commands**, with my own target directory and logs.
+3. **The builder's guest-layout probe**, copied unchanged to reviewer-owned scratch with only its
+   output root changed (the diff shows exactly one changed line), then run through the build slot.
+4. **An independent escape probe** (`/lane/state/tmp/review-637cffbc/escape-probe.py`), using the
+   repaired product layout with actual Git 2.56.0 and Bubblewrap 0.13.1:
+   - workspace fd at `/work`;
+   - common fd at `/metadata/common`;
+   - `--git-dir=/metadata/common/worktrees/worktree --work-tree=/work`;
+   - cleared environment, all namespaces unshared.
+
+   I planted three hostile items in the common metadata:
+   - a `[include] path = <absolute host file>` entry;
+   - an `objects/info/alternates` entry naming an absolute host object store holding an object
+     found nowhere else;
+   - an absolute symlink.
+
+   I then compared host and guest behaviour, and attempted a ref write from the guest. Like the
+   builder's probe, this uses path `--ro-bind` for the Git executable and has no systemd
+   `OpenFile`, supervisor or seccomp. It tests guest path resolution and confinement only, not
+   native admission.
+5. **Privacy, IP and evaluation-integrity scans** of every added line.
+
+## Commands and results
+
+Environment:
+- `PATH=/lane/state/tmp/shared-node-v24.15.0/bin:$PATH`; node sha256 `d1de76d8…bd932c` matches.
+- `/tools/build-slot` sha256 `453086eb…ea02ef` matches.
+- `CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4`.
+- All Cargo runs used `--locked --offline`. All heavy runs waited for the shared reservation.
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `python3 -B scripts/local_agent_fast_gate.py --base 0f560d5f… --timeout 3600` | Exit 1, as expected. diff-check, untracked lint, review lint and markdownlint (5 files, 0 issues) PASS. fmt PASS (2821.81 s including reservation wait). Clippy `-D warnings` PASS (542.38 s). Complete tests FAIL, **900 passed, 72 failed, 63 ignored, 0 filtered**, identical to the builder. My 72 sorted failure identities (53 host, 19 Linux) are byte-identical to those in the builder's `fast.log` (sha256 `75c11eb4…` for both). After normalizing the `test` prefix they equal the 72 identities I recorded at base `9008ee38` in my prior review: no new failure. Both unignored linked methods pass. The new native method is listed as ignored. |
+| 2 | `bash /tools/build-slot cargo test … -p agentmage-platform-linux --lib linked_boundary_tests:: -- --nocapture` | Exit 0: 2 passed, 310 filtered. |
+| 3 | `bash /tools/build-slot cargo test … --lib repository_safety::tests::live_linked_inventory_and_inspection_resolve_shared_head_in_the_offline_worker -- --ignored --exact --nocapture` | Exit 101. It panics at `repository_safety.rs:2312:58`, `git artifact: InvalidGitArtifact`, inside `Fixture::collector()`. This comes after the real `git worktree add`, `LinuxLinkedRepository::verify` and `verify_linked_read_only` succeed, and before any linked worker code runs. This is the T-301.1 trust refusal, as disclosed. It is not a pass. |
+| 4 | `python3 -B /lane/state/tmp/t306-linked-repair/audit.py` | Exit 0. `new_failure_identities: []`, totals `[900, 72, 63, 0]`. It rewrote `audit.json` and `source-freeze.json` with identical bytes (`d8ee4c48…`, `ef0dd0ab…`). All 11 artifact hashes listed in the request match the files. This is the builder's audit, not independent evidence. |
+| 5 | `cmp docs/reviews/0f560d5f8d40-…txt /lane/reviews/0f560d5f8d40-…md` | Exit 0. |
+| 6 | `python3 -B /lane/state/tmp/t306-read-consent/run-policy.py /lane/state/tmp/review-linked-repair-637cffbc7846-source` | Exit 0: "Validated 786 Markdown file(s) and all policy invariants." 9036 inputs. My manifest sha256 `869a13e4…ddbce` is **identical** to the builder's `policy-source-final-inputs.json`. I removed only my mirror and kept the manifest. This is not the T-310 long gate. |
+| 7 | `git diff --check 0f560d5f… --` | Exit 0. |
+| P1 | Reviewer copy of the builder's layout probe | Exit 0, Git 2.56.0, bubblewrap 0.13.1. All 9 queries exit 0. `rev-parse --verify HEAD` equals the host fixture HEAD. `symbolic-ref` gives `refs/heads/agentmage/tasks/layout`. `ls-tree` lists `a.txt`. Untracked lists `.gitignore`/`untracked.txt` and ignored lists `ignored.txt`. `for-each-ref` shows the shared ref. Setup plus queries took 51,302 µs (builder: 44,922 µs). This is component timing only. At base, with the old detached layout, these same HEAD queries exited 128. |
+| P2 | Reviewer escape probe | On the host, the include resolves (`LEAKED`) and the alternate object exists (exit 0). In the guest, HEAD and branch resolve (exit 0) and `HEAD:a.txt` reads. The include value is absent (exit 1, empty). The alternate is unresolvable ("unable to normalize alternate object path", `cat-file -e` exit 1). `update-ref` fails with "cannot lock ref" (exit 128), and the ref does not exist on the host afterwards. The read-only mounts and empty namespace hold under the repaired layout. |
+
+## Disposition of prior findings
+
+### H1 (high): resolved
+
+- **Admission.** `LaunchOwner` gains a closed `LinkedGit(manifest, LinuxLinkedRepository)`
+  variant (`sandbox_supervision.rs:29-32`). It admits only `agentmage-git-inspection-` units with
+  exactly 2 projections, and only after `linked.revalidate()` succeeds (`:62-65`).
+- **Ordinary Git and other owners.** Ordinary `Git` stays at exactly 1 (`:61`). Every
+  `LaunchOwner` match is exhaustive, and no other owner changed.
+- **Reachability.** Only `for_linked_worktree` sets `self.linked`, so only linked executors reach
+  `LinkedGit` (`repository_safety.rs:942-948`).
+- **Output limits.** `linked_inventory_limit` caps each linked query at
+  `min(requested, sandbox::MAX_OUTPUT_BYTES)` = 4 MiB (`repository_safety.rs:1052-1054`, `:657`).
+  `MAX_OBSERVATION_BYTES` is now defined as that same constant, with its value unchanged.
+  `run_read_only` now prechecks against it (`:819`), so it can no longer accept a limit that
+  `run_owned` refuses. Ordinary inventory keeps 32 MiB on its host-side path.
+- **Overflow refuses.** `OutputLimitExceeded` maps to `OutputLimit` termination, or an incomplete
+  stream maps to `ExecutionFailed`. Either way `observe_linked_inventory` returns
+  `ObservationFailed` (`:661-664`), so no truncated map is published.
+- **Regression.** `linked_supervisor_admits_exact_owner_projections_and_all_inventory_limits`
+  calls the real `run_owned` with real projection descriptors from a verified binding. It passes
+  in the complete gate and the focused run. It covers:
+  - precancellation after admission for 1 KiB, the 32 MiB request (capped) and 4 MiB;
+  - refusal of counts 0/1/3;
+  - refusal of limit 0, of 4 MiB+1 and of the uncapped 32 MiB;
+  - refusal of a command-prefixed unit;
+  - refusal of ordinary `Git` with 2 projections, and acceptance of ordinary `Git` with 1;
+  - refusal of a stale binding (rewritten `commondir`).
+
+  Its inert artifacts are `#[cfg(test)]` only, and the command path is
+  `/nonexistent/must-never-launch`. It starts no process.
+
+### H2 (high): resolved at component level
+
+- **New layout.** The worker now mounts only the held common descriptor at `/metadata/common`
+  (fd 6 = the `git-common` `OpenFile`; `repository_safety.rs:880-885`, `:1056-1066`). It selects
+  `--git-dir=/metadata/common/worktrees/<name>` (`:1068-1082`). `GIT_COMMON_DIR` is gone.
+- **Name source.** `<name>` is the final component of the held per-worktree path. `verify()`
+  requires that path to be exactly `<common>/worktrees/<name>` with `commondir` = `../..\n`
+  (`linked_repository.rs:62-79`), so the `expect` cannot fire and no model input reaches it.
+- **Revalidation.** The per-worktree descriptor is still held, and revalidation runs before
+  projection, at admission, and after the run.
+- **Probe results.** P1 shows guest Git 2.56.0 resolving shared HEAD, refs, the tree and all
+  inventory classes under this exact layout. P2 shows the extra items the shared root contains
+  (config includes, alternates, symlinks) staying inside the namespace.
+- **What remains unverified.** A complete native-worker positive is not established in this
+  lane. The new ignored native test exists and compiles, but stops at the T-301.1 trust refusal
+  (command 3). This is disclosed and stays open.
+
+### M1 (medium): resolved
+
+- Decision 0157's correction section states the earlier batch was unreachable and that native
+  linked inventory remains unverified.
+- The guide's opening states "Positive startup through the complete native worker remains
+  unverified… not evidence of a working coding run". Its native-API paragraph is now conditional
+  and says the path "has not been observed passing". Its read-boundary text matches the code:
+  two projections, nested git-dir, 4 MiB cap, overflow refuses, close-on-exec.
+- The old evidence record is retitled "Initial implementation (not accepted)" and states the
+  FINDINGS disposition, with its measurements unchanged.
+- The new record labels the probe "not full native admission, coordinator execution, inference
+  or a coding score". It reports the native attempt as a failure, not a pass.
+- Every number I could trace (gate totals, identities, policy count, probe exit codes) matches my
+  runs. I found no remaining claim of a reachable workflow.
+
+### L1 (low): resolved
+
+The projection duplicate now uses `rustix::io::fcntl_dupfd_cloexec(common_fd, 3)`
+(`repository_safety.rs:1093-1096`). The boundary test asserts `FD_CLOEXEC`, read-only access mode
+and the held inode.
+
+## Verified properties (no new finding)
+
+- **Confinement unchanged or narrowed.**
+  - The guest sees only `/work` and `/metadata/common`, both read-only. This is one mount fewer
+    than at base. The per-worktree directory was already inside the consented common root.
+  - Unchanged: `--unshare-all`, `RestrictAddressFamilies`, seccomp, memory/task/CPU limits, the
+    15 s deadline and control-group kill.
+  - No network, home directory or original checkout is added.
+  - Mutating collection and execution still refuse linked scopes before any Git process (boundary
+    test asserts `PlanDenied`).
+- **Path-resolution window.** Inside the guest, the per-worktree metadata is now resolved by path
+  under the common mount, not through its own descriptor. A mid-run substitution of
+  `worktrees/<name>` can only point within the already-exposed read-only common root, or inside
+  the empty guest namespace. Revalidation after the run then turns it into `CleanupUncertain`.
+  This adds no read scope beyond the explicit activation consent, and Decision 0157 records it.
+- **Delivery and integrity.**
+  - No new row or sub-row. No status change.
+  - No held-out, hidden-test, threshold, score, GPU, dependency or SBOM change.
+  - The ignored-method set grows by exactly the one new native test, and no existing method was
+    newly ignored (the audit checks this, and the gate shows 62 to 63).
+- **Privacy and IP.** Added lines contain no host-specific path, username, hostname, credential,
+  personal data or private project name. Only lane-generic `/lane`/`/tools` paths appear, in the
+  retained review. No other product is named or compared.
+
+## Findings
+
+### L2 (low, backlog): `LinkedGit` admission checks count and binding freshness, not projection identity
+
+- `sandbox_supervision.rs:62-65` accepts any two descriptors once `linked.revalidate()` succeeds.
+  It does not check that `projections[0]` is the held root (`matches_root`) or that
+  `projections[1]` is the held common inode.
+- Today the only caller, `linked_inspection_projections`, enforces both
+  (`repository_safety.rs:1086-1097`), so this is not reachable. But the owner-bound admission is
+  meant to be the last closed check before launch.
+- Fix: in `accepts` (or in `run_owned` for `LinkedGit`), compare the dev/ino of the two
+  projections with the binding's held root and common descriptors. Add the wrong-descriptor case
+  to the admission regression.
+
+## Per-row result
+
+- **T-306: repair accepted (non-closing).** H1, H2, M1 and L1 from
+  `0f560d5f8d40-local-coding-linked-worktree` are resolved at the level this lane can verify, and
+  no high or medium finding is open. A positive complete native-worker linked startup remains
+  unverified (T-301.1 deferred). The row stays OPEN, as requested.
+- **T-303: repair accepted (non-closing).** Same reasons. The row stays OPEN.
+
+## Retained reviewer artifacts
+
+- `/lane/state/tmp/review-637cffbc/fast.log` `856e4c937764524748231085fc4b64eca12ae11a4fff13f9803d43b5a333b747`
+- `/lane/state/tmp/review-637cffbc/mine.ids` `75c11eb40950e01f29283419742c9cfeb51c8cda7673f7b3129efd084d2dfe98`
+- `/lane/state/tmp/review-637cffbc/focused.log` `a96fb23b6e4c9e788c53a9bf77123541e348e78e19389e062f2bff2d99f26ddf`
+- `/lane/state/tmp/review-637cffbc/native-attempt.log` `decdbccb57d8da77151082b99d396366ca1ea8158b446306b2d43ac246a86d2a`
+- `/lane/state/tmp/review-637cffbc/policy.log` `56c1df4a24555cd05c3236cd1b9fb6e53e60ea8bf5c18a17600bfade245c1d9a`
+- `/lane/state/tmp/review-linked-repair-637cffbc7846-source-inputs.json` `869a13e47c1d4809c20415f9158fcb8b4cbc92c5ce56966224e81e59e56ddbce`
+- `/lane/state/tmp/review-637cffbc/audit.log` `60c641dbe32159db667ad97e3764cf4aa5dddcb6a4f1f641e0f62cba9d7cdd06`
+- `/lane/state/tmp/review-637cffbc7846-layout/layout-probe.py` `996135ba11c7685cfc002c537bc03540db781c4ee39fe2723a9e8c57884bc586`
+- `/lane/state/tmp/review-637cffbc7846-layout/layout-probe.json` `a8900e971930050694540839a2985fd9edf1b7a641168f00f77cc2124fe21ce6`
+- `/lane/state/tmp/review-637cffbc7846-layout/layout-probe.log` `050a2770c0c7c66bb0c7a181f0a05c67524def676520b05e5020f6a0e3a8e495`
+- `/lane/state/tmp/review-637cffbc/escape-probe.py` `6e9118503df3b00c1368f2eed74cb1ae8de17983c67c5e99bf55c44808b56fae`
+- `/lane/state/tmp/review-637cffbc/escape-probe.json` `af9edc8c4abd2a4e726aa4b1b6bce8b5895e58c0004c6fe72d443a8eb54d3ca5`
+
+Verdict: PASS

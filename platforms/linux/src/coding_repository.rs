@@ -46,9 +46,12 @@ mod apply;
 mod command;
 #[path = "coding_repository_edit.rs"]
 mod edit;
+#[path = "coding_repository_runtime.rs"]
+mod runtime;
 #[path = "coding_repository_validation.rs"]
 mod validation;
 pub use command::LinuxCodingCommandCancellation;
+pub use runtime::{LinuxCodingRuntimeWriteDriver, LinuxCodingWorktreeLease};
 pub use validation::LinuxCodingTestFormat;
 
 const TOOL: &str = "local-coding-worktree-create";
