@@ -226,6 +226,10 @@ pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result
             let request = checked_selection(client, run, hash, true)?;
             show(&event_page(client, &request, after, true)?)
         }
+        ("endpoint-record", [run, hash]) => {
+            let request = checked_selection(client, run, hash, true)?;
+            super::record::export(client, request)
+        }
         ("endpoint-cancel", [run, hash]) => {
             // Cancellation itself discloses nothing to a model and needs no
             // terminal. The original owner checks this exact binding.
@@ -258,7 +262,7 @@ pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result
         }
         _ => {
             eprintln!(
-                "Endpoint commands: endpoint | endpoint-step <run-id> <request-digest> | endpoint-approve|endpoint-deny <run-id> <request-digest> <challenge-json> | endpoint-events <run-id> <request-digest> <index> | endpoint-cancel|endpoint-release <run-id> <request-digest>"
+                "Endpoint commands: endpoint | endpoint-step <run-id> <request-digest> | endpoint-approve|endpoint-deny <run-id> <request-digest> <challenge-json> | endpoint-events <run-id> <request-digest> <index> | endpoint-record <run-id> <request-digest> | endpoint-cancel|endpoint-release <run-id> <request-digest>. Offline: agentmage-code endpoint-replay < record.json"
             );
             Err(())
         }

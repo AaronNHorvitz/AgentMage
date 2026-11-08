@@ -2,6 +2,20 @@
 
 ## Active queue: local agent mission
 
+The development worker's [independent core review](docs/reviews/ea856c414862-local-coding-endpoint-worker.txt)
+has **Verdict: PASS** for exact commit
+`ea856c414862031771d36818fdc5db4c61a076a9`, with no high/medium finding.
+Low L1 (executable selector-refusal discrimination) and L2 (displaying the
+selected trust rule at startup) remain same-row backlog. Earlier lows remain
+backlog. Both parent rows stay open; native/model success remains unobserved.
+
+The [terminal event-record increment](docs/evidence/t303-endpoint-record-2026-11-08.md)
+exports a complete request-bound canonical event chain through the original
+API and replays it offline through the terminal client. It requires independent
+core review. It establishes event consistency only; native execution, full
+payload retention, execution recovery, edit/test/retry, approved Git and parent
+measurements remain open. T-303/T-306 stay open; no row is added or closed.
+
 The launch increment's [independent core review](docs/reviews/7aacd4261581-local-coding-endpoint-launch.txt)
 has **Verdict: PASS** for exact commit
 `7aacd4261581a5d61fc1508af9dfe0beac22e255`, with no high/medium finding.

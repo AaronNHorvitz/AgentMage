@@ -818,3 +818,46 @@ No root install or policy relaxation is authorized by this guide. Successful
 native service/model execution remains unobserved, as do edits, tests, retries
 and parent acceptance. See
 [Decision 0163](../decisions/0163-native-endpoint-read-development-launch.md).
+
+## Export and replay a terminal event record
+
+Before releasing a terminal run, explicitly export its request and complete
+canonical event envelopes through the same authenticated API:
+
+```sh
+umask 077
+agentmage-code <loopback-ip:port> <private-auth-directory> \
+  endpoint-record <run-id> <request-digest> > <private-record.json>
+agentmage-code endpoint-replay < <private-record.json>
+```
+
+Export prints JSON on stdout; the caller chooses its destination and filesystem
+permissions. The command itself writes no file. Treat the record as private:
+the task, endpoint address and event metadata can identify sensitive work.
+It contains no API token, endpoint key, source-context excerpts or original
+tool-result bodies. It retains event payload references without fetching them.
+The version-1 record has exactly `version`, `request` and `events` members.
+
+Export uses the control credential and only the existing request/event routes.
+It never advances the run, sends context to a model, approves a tool, cancels or
+releases anything. It refuses empty, changing, incomplete or invalid event
+histories and records exceeding 4096 events or the run's own event ceiling.
+Collection shares a 180-second socket deadline. Aggregate serialized content
+and the final escaped output are bounded to 4 MiB. Refusal emits no record on
+stdout; shell redirection may already have created an empty destination file.
+Export before release: the service does not retain events after releasing them.
+
+Offline replay needs no service, address, credentials or model. It reads at most
+4 MiB plus one oversize-detection byte from explicitly supplied stdin, rejects
+duplicate/unknown members and positional objects, and checks the original
+request seal, exact start digest, scope, complete hash chain, causation, legal
+transitions and terminal ordering using the existing kernel event verifier.
+It prints the original record and deterministic inspection fields. Recorded
+text stays escaped for terminal display.
+
+`canonical-event-chain-only` is a consistency result. Digests do not authenticate
+the original writer, verify referenced payloads, prove a model's claims or
+independently certify the recorded terminal state. Those limits appear in the
+replay output. No grant, pending approval, live port, budget, payload or execution
+cursor is reconstructed. Execution recovery, full tool-output retention and
+durable service storage remain open under T-303/T-306.

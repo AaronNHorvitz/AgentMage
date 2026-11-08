@@ -23,6 +23,8 @@ mod driver;
 mod endpoint;
 #[path = "coding_mcp.rs"]
 mod mcp;
+#[path = "coding_cli_record.rs"]
+mod record;
 #[path = "coding_cli_runtime.rs"]
 mod runtime;
 
@@ -44,6 +46,7 @@ pub fn run(args: &[String]) -> std::result::Result<(), ApiError> {
 struct Client {
     address: SocketAddr,
     auth: std::path::PathBuf,
+    deadline: Option<Instant>,
 }
 
 impl Client {
@@ -55,6 +58,7 @@ impl Client {
         Ok(Self {
             address,
             auth: auth.into(),
+            deadline: None,
         })
     }
 
@@ -77,6 +81,8 @@ impl Client {
     ) -> Result<Vec<Value>> {
         // All callers use fixed literal methods and routes. Never follow a URL,
         // redirect, proxy setting, repository instruction or model-selected route.
+        let deadline = self.deadline.unwrap_or_else(|| Instant::now() + DEADLINE);
+        let remaining = deadline.checked_duration_since(Instant::now()).ok_or(())?;
         let token = self.token(control)?;
         let body = Zeroizing::new(
             value
@@ -89,12 +95,13 @@ impl Client {
             return Err(());
         }
         let mut socket =
-            TcpStream::connect_timeout(&self.address, Duration::from_secs(2)).map_err(|_| ())?;
+            TcpStream::connect_timeout(&self.address, remaining.min(Duration::from_secs(2)))
+                .map_err(|_| ())?;
         socket
             .set_read_timeout(Some(Duration::from_millis(100)))
             .map_err(|_| ())?;
         socket
-            .set_write_timeout(Some(Duration::from_secs(2)))
+            .set_write_timeout(Some(remaining.min(Duration::from_secs(2))))
             .map_err(|_| ())?;
         let header = Zeroizing::new(format!(
             "{method} {path} HTTP/1.1\r\nHost: {}\r\nAuthorization: Bearer {}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
@@ -106,7 +113,7 @@ impl Client {
             .write_all(header.as_bytes())
             .and_then(|()| socket.write_all(&body))
             .map_err(|_| ())?;
-        receive(socket, &mut observe)
+        receive_before(socket, &mut observe, deadline)
     }
 
     fn json(&self, method: &str, path: &str, control: bool, body: Option<Value>) -> Result<Value> {
@@ -132,11 +139,19 @@ impl Client {
     }
 }
 
+#[cfg(test)]
 fn receive(
-    mut socket: TcpStream,
+    socket: TcpStream,
     observe: &mut impl FnMut(&Value) -> Result<()>,
 ) -> Result<Vec<Value>> {
-    let deadline = Instant::now() + DEADLINE;
+    receive_before(socket, observe, Instant::now() + DEADLINE)
+}
+
+fn receive_before(
+    mut socket: TcpStream,
+    observe: &mut impl FnMut(&Value) -> Result<()>,
+    deadline: Instant,
+) -> Result<Vec<Value>> {
     let mut header = Zeroizing::new(Vec::new());
     while !header.ends_with(b"\r\n\r\n") {
         if header.len() == 8192 {
@@ -639,6 +654,9 @@ fn apply(client: &Client, root: Option<&str>) -> Result<()> {
 }
 
 fn execute(args: &[String]) -> Result<()> {
+    if args == ["endpoint-replay"] {
+        return record::replay();
+    }
     let [address, auth, command, tail @ ..] = args else {
         usage();
         return Err(());

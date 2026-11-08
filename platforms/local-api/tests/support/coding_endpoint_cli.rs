@@ -370,6 +370,108 @@ fn endpoint_terminal_events_are_inspection_only_and_refuse_inconsistent_paging()
 }
 
 #[test]
+fn endpoint_record_uses_only_observation_routes_and_refuses_unstable_or_partial_histories() {
+    use agentmage_kernel_engine::runtime_event::{RuntimeEventSequence, seal_runtime_event};
+    let f = Fixture::new();
+    let mut r = request();
+    r.task.objective = "Synthetic record with escaped \u{202e} and \u{1f600}".into();
+    let r = seal_runtime_endpoint_run_request(r).unwrap();
+    // First-party synthetic event envelopes, not a runtime/model outcome.
+    let start = seal_runtime_event(RuntimeEvent {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        event_id: RuntimeEventId::from_raw("synthetic-start"),
+        run_id: r.run_id.clone(),
+        session_id: r.session_id.clone(),
+        task_id: r.task.task_id.clone(),
+        turn_id: None,
+        operation_id: None,
+        correlation_id: CorrelationId::from_raw("synthetic-record-correlation"),
+        causation_event_id: None,
+        sequence: 0,
+        occurred_at_epoch_ms: 1000,
+        sensitivity: ContextSensitivity::Internal,
+        retention: RuntimeEventRetention {
+            kind: RuntimeEventRetentionKind::Ephemeral,
+            expires_at_epoch_ms: None,
+        },
+        persistence: RuntimeEventPersistenceClass::Correctness,
+        policy_id: r.policy_id.clone(),
+        payload_reference: None,
+        kind: RuntimeEventKind::RunStarted {
+            request_sha256: r.request_sha256.clone(),
+        },
+        previous_event_sha256: "0".repeat(64),
+        event_sha256: "0".repeat(64),
+    })
+    .unwrap();
+    let mut terminal = start.clone();
+    terminal.event_id = RuntimeEventId::from_raw("synthetic-terminal");
+    terminal.sequence = 1;
+    terminal.causation_event_id = Some(start.event_id.clone());
+    terminal.previous_event_sha256 = start.event_sha256.clone();
+    terminal.kind = RuntimeEventKind::RunTerminal {
+        state: AgentStateKind::Failed,
+        outcome_sha256: "f".repeat(64),
+    };
+    let terminal = seal_runtime_event(terminal).unwrap();
+    let mut sequence = RuntimeEventSequence::new();
+    sequence.push(&start).unwrap();
+    sequence.push(&terminal).unwrap();
+    assert!(sequence.is_terminal());
+    let page = |event: &RuntimeEvent, next: u64, total: u64| json!({"events":[event],"next":next,"total":total,"retention":"process-only"});
+    let peer = f.peer(vec![
+        selection(&r),
+        page(&start, 1, 2),
+        page(&terminal, 2, 2),
+    ]);
+    let output = f.cli(peer.address, &["endpoint-record", "run", &r.request_sha256]);
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(output.stdout.is_ascii());
+    assert_eq!(
+        serde_json::from_slice::<Value>(&output.stdout).unwrap(),
+        json!({"version":1,"request":r,"events":[start,terminal]})
+    );
+    let calls = peer.finish();
+    assert_eq!(calls.len(), 3);
+    assert_eq!(calls[0]["route"], "GET /v1/code/endpoint/request HTTP/1.1");
+    for (index, call) in calls[1..].iter().enumerate() {
+        assert_eq!(call["route"], "POST /v1/code/endpoint/events HTTP/1.1");
+        assert_eq!(
+            call["body"],
+            json!({"run_id":"run","request_sha256":r.request_sha256,"after":index})
+        );
+    }
+    for pages in [
+        vec![json!({"events":[],"next":0,"total":0,"retention":"process-only"})],
+        vec![page(&start, 1, 1)],
+        vec![page(&start, 1, 4097)],
+        vec![page(&start, 1, u64::from(r.limits.max_events) + 1)],
+        vec![page(&start, 1, 3), page(&terminal, 2, 2)],
+        vec![page(&start, 1, 2), json!({"test_peer_close":true})],
+    ] {
+        let expected = 1 + pages.len();
+        let mut replies = vec![selection(&r)];
+        replies.extend(pages);
+        let peer = f.peer(replies);
+        let output = f.cli(peer.address, &["endpoint-record", "run", &r.request_sha256]);
+        assert!(!output.status.success());
+        assert!(output.stdout.is_empty());
+        // No effect route, retry or automatic cancellation after refusal/loss.
+        let calls = peer.finish();
+        assert_eq!(calls.len(), expected);
+        assert!(
+            calls[1..]
+                .iter()
+                .all(|c| c["route"] == "POST /v1/code/endpoint/events HTTP/1.1")
+        );
+    }
+}
+
+#[test]
 fn endpoint_terminal_terminal_envelope_is_preserved_without_an_independent_success_claim() {
     let f = Fixture::new();
     let r = request();

@@ -5,7 +5,11 @@
 streaming [strict proposals](coding-proposals.md), preview preparation and
 [exact approved writes](coding-writes.md). It starts no shell, Git, test runner
 or model process. T-303 and T-306 remain open: worktree isolation, confined tests,
-retries, durable runs, resume/replay, Git operations and MCP are still required.
+retries, durable runs, execution recovery, Git operations and MCP are still required.
+The retained endpoint commands additionally support explicit
+[terminal event-record export and offline replay](runtime-endpoint-runs.md#export-and-replay-a-terminal-event-record).
+This replays event envelopes without restoring execution or verifying referenced
+tool-result bodies.
 
 The separate [approved worktree path](coding-worktrees.md) adds `worktree`,
 `worktree-prepare`, `worktree-create` and `worktree-deny` through this same API.

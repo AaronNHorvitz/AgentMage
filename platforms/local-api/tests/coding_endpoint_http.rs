@@ -17,6 +17,8 @@ use agentmage_local_api::{
 
 #[path = "support/coding_endpoint_mcp.rs"]
 mod endpoint_mcp;
+#[path = "support/coding_endpoint_record.rs"]
+mod endpoint_record;
 use agentmage_platform_linux_inference::{
     local_chat::LocalChatEndpoint,
     local_chat_transport::{LocalChatApproval, LocalChatTransport, TransportLimits},
