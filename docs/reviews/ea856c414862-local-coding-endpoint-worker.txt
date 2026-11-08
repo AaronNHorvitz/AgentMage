@@ -1,0 +1,229 @@
+Commit: ea856c414862031771d36818fdc5db4c61a076a9
+Scope: local-coding-endpoint-worker
+
+# Independent core review: explicit sealed-sibling development worker for the endpoint launch
+
+Reviewer: separate Claude Opus 5.5 session. Read-only on the repository. Tier: core.
+Rows: T-303 / T-306. This is a non-closing increment, and both parents stay OPEN.
+I reviewed the full ten-file increment over its immutable predecessor
+7aacd4261581a5d61fc1508af9dfe0beac22e255.
+
+## Methods
+
+- Commit identity: in /lane/review-checkout, `git rev-parse HEAD` printed
+  ea856c414862031771d36818fdc5db4c61a076a9, and `git rev-parse` of the predecessor resolved to itself.
+  - `git log` shows 3364efa9 (retention) and then ea856c41 (source), both above 7aacd426.
+  - `git diff --stat` lists exactly the ten claimed files: +574/−32.
+- I read IP-POLICY.md, the new TASKS.md paragraphs, the Decision 0163 addendum, the guide changes, the new evidence
+  file and the complete source diff. I also read the surrounding unchanged code:
+  - `development_worker_artifact_kind`;
+  - `verify_artifact`;
+  - `with_verified_worker`;
+  - `load`, `private_bytes`, `object_json` and `admit`;
+  - the `serve-endpoint-read-development` branch of main.rs.
+- I reproduced the selector's behaviour myself on the real `agentmage-local-api` binary, using a reviewer-only probe
+  kept outside the checkout (details under command 8).
+- I read no other product's code or documentation and did no patent searches.
+
+## Commands and results (all run in /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t303-endpoint-worker/review-inputs.sha256`: exit 0.
+   - The manifest has 47 lines and SHA-256 0fc22425f416e708dca6fa2cc745c0935c256092cef19d6c0953339f1a98625f, which
+     matches the request.
+   - Its repo-relative entries cover all ten changed files plus the related unchanged sources, and all of them match
+     the checkout.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-endpoint-worker/review.py /lane/state/tmp/review-endpoint-worker-ea856c414862`
+   - Exit 1. Console: `ORDINARY_GATE_EXIT 1 BASELINE_COMPARISON_EXIT 1 CURRENT_HYGIENE_EXIT 1`.
+   - Per-command exits:
+
+     | Command | Exit | Seconds (my cold separate target) |
+     |---|---|---|
+     | diff-check | 0 | 0.10 |
+     | lint-untracked | 0 | 0.10 |
+     | lint-reviews | 0 | 0.10 |
+     | markdownlint | **127** | 0.05 |
+     | fmt | 0 | 137.53 |
+     | strict Clippy | 0 | 86.44 |
+     | cargo test | 101 | 151.75 |
+
+   - Node is not installed here. Nothing is on PATH and /lane/state/tooling does not exist, and I downloaded nothing.
+     So markdownlint exited 127.
+     - I make **no markdown-lint pass claim**. This stays a documentation-check failure in my run.
+     - The builder's retained final log shows markdownlint-cli2 exit 0 on the four authored documents.
+     - I read the changed markdown by hand. The L3 blank line before
+       `## Explicit native read-only development launch` is present, and the new table row and code fence are well
+       formed.
+   - Tests, parsed by me from the raw log with the builder's parse.py:
+     - 25 targets: **1046 passed / 72 failed / 63 ignored / 0 filtered**. The builder's baseline is 1042/72/63/0.
+     - Exactly four identities are new, all passing:
+       - `sandbox::tests::development_read_launcher_pins_only_its_exact_sibling_snapshot`;
+       - `sandbox::tests::development_endpoint_worker_rejects_missing_unsafe_and_alias_siblings`;
+       - `coding_endpoint_launch::tests::launch_worker_trust_is_explicit_closed_and_root_owned_by_default`;
+       - `executable_sealed_sibling_selection_refuses_an_arbitrary_worker_before_effects`.
+     - No baseline pass is missing.
+     - The 72 failing identities are 53 in agentmage_host and 19 in agentmage_platform_linux. They and every
+       normalized failure diagnostic equal the baseline.
+     - My per-target records are identical to the builder's validation-final/fast.log.
+     - I spot-read the platform failures. They are pre-existing environment failures: command_runner,
+       repository_safety, local_commit and secret_service under this lane's non-root system executables. None touches
+       the new selector.
+     - `SOURCE_FREEZE_UNCHANGED` was printed.
+   - audit.py stopped with an AssertionError at its line 43, `all(code==0 for code in codes[:-3])`, on
+     `[0,0,0,127,0,0,101]`. That is the Node 127 alone. Every earlier assertion passed:
+     - identity sets and summaries, plus exactly the four added tests;
+     - diagnostic equality and the source-freeze hashes;
+     - `verify` and the `with_verified_worker` → `development_worker_artifact` region are byte-identical with the
+       predecessor;
+     - the snapshot constructor up to the tests is byte-identical;
+     - existing API test files are prefix-preserved;
+     - main.rs equals the predecessor with exactly one `println!` → `eprintln!` replacement;
+     - the retained review is byte-identical, the TASKS.md table rows are unchanged, and the last three exits are
+       `[0,0,101]`.
+   - final.py:
+     - reports `CURRENT_HYGIENE_FAILURES` with only the markdownlint 127;
+     - prints `ALLOWED_PATHS_AND_PRIVACY_PASS`, with the exact ten-path set asserted;
+     - finds no private home path, lane path, username or private sibling project name in the added lines;
+     - finds no private home path, username or project name in the retained report.
+3. `cmp …/validation-final/source-freeze.json …/review-endpoint-worker-ea856c414862/source-freeze.json`: exit 0
+   (identical).
+4. `CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot cargo build --locked --offline -p agentmage-local-api -p agentmage-capability-read-only --bin agentmage-local-api --bin agentmage-read-only-worker`:
+   exit 0 (Finished in 12.26 s, warm). This is build evidence only, and no worker was executed.
+5. `cmp docs/reviews/7aacd4261581-local-coding-endpoint-launch.txt /lane/reviews/7aacd4261581-local-coding-endpoint-launch.md`:
+   exit 0. The retained predecessor PASS is unedited.
+6. `git diff --check 7aacd4261581a5d61fc1508af9dfe0beac22e255 --`: exit 0, no output.
+7. `git status --short`: empty, before and after all my work.
+8. Reviewer selector probe (my own reproduction):
+   - **Setup.** I built a scratch crate under a fresh /tmp/ewf-probe-* directory, outside the checkout.
+     - It includes the repository's own `tests/support/endpoint_launch.rs` fixture through `#[path]` and only sets the
+       `worker` and `worker_trust` fields.
+     - It was built with `bash /tools/build-slot cargo build --offline` and `CARGO_TARGET_DIR=/lane/state/review-target`.
+     - I copied the real `agentmage-local-api` from the gate build into private 0700 directories, under the names
+       `agentmage-local-api` or `agentmage-host`.
+     - Beside each copy I placed a first-party synthetic, non-ELF `agentmage-read-only-worker`.
+     - I ran `serve-endpoint-read-development 127.0.0.1:0 <auth> <launch> --approve-workspace-state-and-endpoint`.
+   - **Why inotify.** Every refusal in this lane prints the same `linux.sandbox.manifest.invalid` code, because the
+     system executables are not root-owned. So I watched the directories with inotify (IN_OPEN/IN_ACCESS). An open of
+     the candidate file means it got past the selector, canonicality and ancestry checks.
+   - **Common results.** Every case exited 1, wrote **0 stdout bytes**, created **0 state entries** and contacted no
+     model.
+   - Cases with the expected outcome:
+     - **Admitted to snapshotting (worker opened and read):**
+       - (1) `sealed_sibling_development` with the exact canonical sibling;
+       - (14) the launcher invoked through a symlinked directory, with `worker` set to the canonical sibling;
+       - (16) the sibling as a same-UID hard link. That is acceptable, because the bytes are snapshotted and the
+         trust is the same user.
+     - (19) A 0600 non-executable sibling was opened but **not read**: it was refused at fstat.
+     - **Never opened:**
+       - (2) `worker_trust` absent and (3) `root_owned`: the original root-owned ancestry check refuses first, so
+         there is no fallback;
+       - (4) `/./` alias, (5) `/../` alias, (6) `//`, (7) a trailing slash;
+       - (8) the same basename in another directory;
+       - (9) a relative path;
+       - (10) the sealed selection under an `agentmage-host`-named launcher;
+       - (11) the object form `{"sealed_sibling_development":null}` and (12) `"SealedSiblingDevelopment"`. Both were
+         refused at load, before any admission diagnostic;
+       - (13) a symlinked-directory alias for `worker`;
+       - (15) the sibling as a symlink;
+       - (17) a group-writable parent and (18) a group-writable worker.
+   - **Cleanup.**
+     - I removed my gate's recorded namespace /tmp/ewf-tpeez0nb, which held 11 leftover test directories from
+       pre-existing tests, after its processes had exited.
+     - I removed my probe directory.
+     - No owned API, worker, fixture or test processes remain. The scratch fixture binary remains only in
+       /lane/state/review-target.
+
+## Assessment
+
+### Confinement and trust boundary
+
+- **Who controls the choice.** `worker_trust` comes only from the private launch document, which is read through
+  `private_bytes`. That requires:
+  - an absolute path with a canonical parent;
+  - `O_NOFOLLOW`;
+  - the effective UID as owner, mode 0600 and one link;
+  - a size of at most 1 MiB.
+
+  The document is not an HTTP, model or tool argument. A model output, document or web page cannot select it.
+  - The typed enum plus the shape guard at `coding_endpoint_launch.rs:119-121` accept only the two snake_case
+    strings.
+  - Duplicate keys fail typed deserialization.
+  - The probe confirms that the object, null and wrong-case forms refuse.
+- **Who can exploit it.** Development trust admits a worker that its owner can write. Exploiting that requires the
+  same UID, which could equally rewrite the 0600 launch file. So it adds no new attacker. The worker still runs only
+  from a sealed memfd snapshot inside the unchanged bwrap/seccomp/offline runner, and the guide labels it honestly as
+  not production authentication.
+- **The selector** (`sandbox.rs:1381-1398`):
+  - It is a closed compiled mapping on the canonical `current_exe` basename.
+  - Its byte-exact `as_os_str` equality runs before any filesystem access.
+  - The original `development_worker_artifact_kind` then applies:
+    - canonicality;
+    - no symlinked, foreign-UID or group/world-writable ancestor;
+    - an `O_NOFOLLOW` regular file owned by the UID, executable, with 0 < size ≤ 256 MiB;
+    - bounded copy, fstat drift and rehash checks;
+    - an fchmod 0500 sealed snapshot.
+- **Host path unchanged.** The host path `verify_development_read_only_worker` → `(Host, None)` keeps the exact
+  predecessor semantics: the name check, then the sibling snapshot.
+- **Ordering.** The default `RootOwned` arm is the predecessor's code re-indented. Both arms run before credential
+  reads and authority creation. The `WorkerTrust::SealedSiblingDevelopment` arm (`coding_endpoint_launch.rs:226`)
+  still requires `LinuxDevelopmentPlatformAdapter::activate` with the development marker. Fixed system executables
+  and libraries keep `verify_artifact` root-owned checks.
+- **No bypass.** I found no traversal, symlink, alias or fallback bypass.
+
+### Secrets and logging
+
+The refusal prints only `LinuxSandboxError` codes. The new integration test checks that the credential path does not
+appear and that stdout is empty. Moving the endpoint banner to stderr (`main.rs:69`) is documented in the guide. No
+in-repository consumer parses that banner: I grepped `*.rs`, `*.py`, `*.mjs`, `*.js`, `*.md` and `*.sh`.
+
+### Evidence integrity and claims
+
+- My independent run reproduces every claimed number: 25 targets, 1046/72/63/0, the four new tests, and unchanged
+  failure identities and diagnostics.
+- The builder's 134.51 s is the sum of the seven RESULT lines in its final log. Its initial log shows 1045/73/63/0,
+  with the new stdout assertion failing at line 124, as disclosed.
+- No native success, model, score or parent acceptance is claimed.
+
+### Scope and integrity checks
+
+- The diff touches no eval, hidden, held-out, scorer, threshold, Cargo, lock or SBOM file.
+- No row is added or closed, and the TASKS.md table rows are unchanged.
+- There is no new dependency.
+- The only committed lane strings are inside the byte-identical retained review, as generic container references.
+  There is no private host path, username, credential or sibling project name.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test strength).** `platforms/local-api/tests/coding_endpoint_launch.rs:93-122` cannot tell selector
+  refusal apart from the lane's system-executable ownership refusal.
+  - Both produce `code.endpoint.native-admission: linux.sandbox.manifest.invalid`.
+  - The test would still pass if the path-equality check at `platforms/linux/src/sandbox.rs:1394` were deleted,
+    because the later root-owned system checks fail in this lane anyway.
+  - The selector is covered by the direct component tests, and my inotify probe above discriminates the two cases.
+  - Fix: in the integration test, make the arbitrary `worker` a FIFO or watch it, and assert it is never opened. Or
+    give selector refusal its own content-free code.
+- **L2 (low, visibility).** The startup consent line at `platforms/local-api/src/main.rs:67` is identical whether
+  `root_owned` or `sealed_sibling_development` is in effect.
+  - The selection is a relaxation of the trusted-component ownership rule, configured in a private same-user file. So
+    this is not a bypass.
+  - Fix: print a content-free `worker_trust` value, for example
+    `worker trust: sealed sibling development (not production)`, to stderr before admission.
+- **Process note (not a finding).** Markdownlint could not run in my environment (exit 127, Node absent), so
+  documentation lint rests on the builder's retained log and my manual read. This review needs no code change for it.
+
+## Per-row result
+
+- **T-303 / T-306, non-closing increment "explicit sealed-sibling development worker selection": accepted.**
+  - Its "done when" scope for this increment is met at this exact commit:
+    - an explicit closed selection, root-owned by default;
+    - no fallback;
+    - only the exact canonical sibling is selectable;
+    - the original snapshot, system admission and supervision are byte-identical;
+    - refusal comes before credentials, state and model;
+    - the evidence is honest and reproducible.
+  - L1 and L2 are same-row backlog.
+- **Both parent rows remain OPEN.** Native worker/model success, edit/test/retry, durable recovery, approved Git and
+  parent measurements are unobserved. This PASS does not close T-303 or T-306.
+
+Verdict: PASS
