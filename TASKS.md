@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [explicit native endpoint read launch](docs/evidence/t303-endpoint-launch-2026-11-08.md)
+connects trusted preparation and exact observation acceptance to the existing
+authenticated retained HTTP owner. The executable requires explicit startup
+consent and preserves native manifest admission and per-action approvals.
+Independent core review is required. Native success remains blocked by the
+lane's original executable-ownership admission; no model or worker success is
+claimed. Edit/test/retry, durable recovery, approved Git and parent measurements
+remain open. T-303/T-306 stay open; no row or sub-row is added or closed.
+
 The startup increment's [independent core review](docs/reviews/1b0a9321e267-local-coding-endpoint-startup.txt)
 has **Verdict: PASS** for exact commit
 `1b0a9321e2674cce92c4edf258e58ab1f213e797`, with no high/medium finding.

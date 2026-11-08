@@ -7,6 +7,8 @@
 /// Terminal client over this service's versioned coding routes.
 pub mod coding_cli;
 mod coding_endpoint_api;
+mod coding_endpoint_launch;
+pub use coding_endpoint_launch::serve_coding_endpoint_read_development;
 mod coding_owned_api;
 pub use coding_endpoint_api::{
     CodingEndpointHttpRun, CodingEndpointObservationAccess, serve_coding_endpoint,

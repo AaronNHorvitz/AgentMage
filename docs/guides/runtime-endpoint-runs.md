@@ -734,3 +734,64 @@ bytes and failure for different bytes through the original canonical terminal
 path. This does not demonstrate native admission, a real model or an executable
 coding workflow. Activation, edit/test/retry, recovery, approved Git and parent
 measurements remain open.
+## Explicit native read-only development launch
+
+The local API executable now offers this narrowly supported launch:
+
+```sh
+agentmage-local-api serve-endpoint-read-development 127.0.0.1:8787 \
+  <private-auth-directory> <absolute-private-launch.json> \
+  --approve-workspace-state-and-endpoint
+```
+
+Initialize API credentials with the existing `init-auth` command. The launch
+document and optional endpoint credential must be absolute paths in canonical,
+owner-only directories (mode `0700`), with regular, singly linked, owner-only
+files (mode `0600`). Symlinks, device files and oversized input refuse. The
+launch document is capped at 1 MiB; a credential is capped at 4096 bytes, with
+the original bearer-key syntax and no trailing newline. No endpoint key appears
+on the command line or inline in the document.
+
+A trusted caller prepares this closed version-1 JSON object:
+
+| Field | Value |
+| --- | --- |
+| `version` | Integer `1` |
+| `state_root` | Existing private development state directory |
+| `disposable_root` | Existing private disposable parent, separate from state |
+| `workspace_root` | Its existing private Git worktree with the original explicit development marker |
+| `worker` | Absolute native read-only worker path admitted by the original root-owned manifest |
+| `credential_file` | Optional private endpoint-key path, or `null` |
+| `request` | Original sealed `RuntimeEndpointRunRequest`, using the exact original file-read catalog |
+| `instructions` | Verified `InstructionEvidenceLedger` for that request's workspace snapshot |
+| `checks` | Objects with canonical `path` components, full `byte_len` and lowercase `content_sha256` |
+
+This is a trusted preparation interface, not a command that turns arbitrary
+task prose into verified acceptance. Each check's generated criterion must
+already appear, in order, in both the task acceptance criteria and work packet.
+The preparer owns the prior consent and accuracy of snapshot/provenance metadata.
+Startup does not silently discover instructions or read source files to invent
+checks. Required validations or broader semantics refuse. Source excerpts are
+empty; later exact reads go through the worker. Template run/session/task/packet
+identities are replaced with fresh service identities and the request is sealed
+again before original narrowing and policy binding.
+
+The startup flag authorizes configuration/key reads, workspace selection and
+private authority state. It does not dispatch the model or grant a tool read.
+After successful admission, use the existing `agentmage-code` endpoint commands
+against the printed loopback address. Every advance needs fresh model-disclosure
+consent; every read requires its exact challenge response. The original endpoint
+controls, events, cancellation and release operate on this same retained owner.
+MCP observation delegation is off for this launch. Retention is process-only;
+restarting creates a fresh run and does not restore prior approvals or budgets.
+
+Native admission remains mandatory. The launch verifies the fixed system
+executables, the worker and the fixed runtime libraries before opening the
+endpoint key or canonical state. A refusal prints the content-free
+`code.endpoint.native-admission` diagnostic and the original sandbox code.
+The current lane's system executables fail the original ownership checks.
+A user-owned worker also refuses; this launch does not implement the separate
+sealed-sibling development worker path. No root install or policy relaxation is
+authorized by this guide. Successful native service/model execution remains
+unobserved, as do edits, tests, retries and parent acceptance. See
+[Decision 0163](../decisions/0163-native-endpoint-read-development-launch.md).

@@ -6,7 +6,8 @@ use std::path::Path;
 use std::sync::{Arc, atomic::AtomicBool};
 
 use agentmage_local_api::{
-    ApiTokens, CodingRuntimeDevelopment, serve, serve_coding, serve_coding_runtime_development,
+    ApiTokens, CodingRuntimeDevelopment, serve, serve_coding,
+    serve_coding_endpoint_read_development, serve_coding_runtime_development,
 };
 
 fn main() {
@@ -50,6 +51,28 @@ fn run() -> Result<(), ()> {
             );
             with_stop_signals(|stop| {
                 serve_coding(listener, tokens, stop, Path::new(state_root)).map_err(|_| ())
+            })
+        }
+        [command, address, directory, launch, approval]
+            if command == "serve-endpoint-read-development"
+                && approval == "--approve-workspace-state-and-endpoint" =>
+        {
+            let address = address.parse::<SocketAddr>().map_err(|_| ())?;
+            if !address.ip().is_loopback() {
+                return Err(());
+            }
+            let tokens = ApiTokens::load(Path::new(directory)).map_err(|_| ())?;
+            let listener = TcpListener::bind(address).map_err(|_| ())?;
+            eprintln!(
+                "Starting a disposable read-only endpoint run: read private configuration and key, select the marked workspace and create private state. Each model disclosure and file read needs separate approval. Native admission must succeed."
+            );
+            println!(
+                "AgentMage endpoint API starting on {}",
+                listener.local_addr().map_err(|_| ())?
+            );
+            with_stop_signals(|stop| {
+                serve_coding_endpoint_read_development(listener, tokens, stop, Path::new(launch))
+                    .map_err(|_| ())
             })
         }
         [
@@ -110,7 +133,7 @@ fn run() -> Result<(), ()> {
         }
         _ => {
             eprintln!(
-                "Usage: agentmage-local-api init-auth <new-private-directory> | serve <loopback-ip:port> <private-directory> | serve-coding <loopback-ip:port> <private-directory> <existing-private-state-root> | serve-runtime-development <loopback-ip:port> <private-directory> <state-root> <disposable-root> <marked-workspace> <muse|gpt-oss> <new|resume> [failed-test-repair|python-project|python-root-project]"
+                "Usage: agentmage-local-api init-auth <new-private-directory> | serve <loopback-ip:port> <private-directory> | serve-coding <loopback-ip:port> <private-directory> <existing-private-state-root> | serve-endpoint-read-development <loopback-ip:port> <private-directory> <private-launch.json> --approve-workspace-state-and-endpoint | serve-runtime-development <loopback-ip:port> <private-directory> <state-root> <disposable-root> <marked-workspace> <muse|gpt-oss> <new|resume> [failed-test-repair|python-project|python-root-project]"
             );
             Err(())
         }

@@ -170,6 +170,52 @@ where
     V: RuntimeVerifierPort + Send + 'static,
     C: RuntimeClock + Send + 'static,
 {
+    serve_admitted_coding_endpoint(
+        listener,
+        tokens,
+        stop,
+        access,
+        |run_id, session_id, runs| {
+            let input = factory(run_id.clone(), session_id.clone())?;
+            if input.request.run_id != run_id || input.request.session_id != session_id {
+                return Err(ApiError::Configuration);
+            }
+            let request = input.request;
+            runs.admit(CodingEndpointAdmission {
+                request: request.clone(),
+                connection: input.connection,
+                registry: input.registry,
+                sources: &input.sources,
+                source_budget: input.source_budget,
+                include_usage: input.include_usage,
+                tool_boundary: input.tool_boundary,
+                verifier: input.verifier,
+                clock: input.clock,
+            })
+            .map_err(|_| ApiError::Configuration)?;
+            Ok(request)
+        },
+    )
+}
+
+// Trusted startup may consume its held native preparation directly into the
+// very same owner served here. No extraction or reconstruction of live ports.
+pub(crate) fn serve_admitted_coding_endpoint<T, V, C>(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    access: CodingEndpointObservationAccess,
+    factory: impl FnOnce(
+        RuntimeRunId,
+        SessionId,
+        &mut CodingEndpointRuns<'static, T, V, C>,
+    ) -> Result<RuntimeEndpointRunRequest, ApiError>,
+) -> Result<(), ApiError>
+where
+    T: RuntimeToolBoundary + Send + 'static,
+    V: RuntimeVerifierPort + Send + 'static,
+    C: RuntimeClock + Send + 'static,
+{
     if stop.load(Ordering::Acquire)
         || !listener
             .local_addr()
@@ -181,25 +227,11 @@ where
     }
     let run_id = RuntimeRunId::from_raw(identity("endpoint-run")?);
     let session_id = SessionId::from_raw(identity("endpoint-session")?);
-    let input = factory(run_id.clone(), session_id.clone())?;
-    if input.request.run_id != run_id || input.request.session_id != session_id {
+    let mut runs = CodingEndpointRuns::default();
+    let request = factory(run_id.clone(), session_id.clone(), &mut runs)?;
+    if request.run_id != run_id || request.session_id != session_id {
         return Err(ApiError::Configuration);
     }
-    let request = input.request;
-    let mut runs = CodingEndpointRuns::default();
-    runs.admit(CodingEndpointAdmission {
-        request: request.clone(),
-        connection: input.connection,
-        registry: input.registry,
-        sources: &input.sources,
-        source_budget: input.source_budget,
-        include_usage: input.include_usage,
-        tool_boundary: input.tool_boundary,
-        verifier: input.verifier,
-        clock: input.clock,
-    })
-    .map_err(|_| ApiError::Configuration)?;
-    drop(input.sources);
     let correlation_id = runs
         .correlation_id(&request)
         .map_err(|_| ApiError::Configuration)?
