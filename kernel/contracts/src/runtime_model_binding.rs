@@ -62,6 +62,12 @@ pub struct EndpointTokenAccounting {
 }
 
 impl EndpointTokenAccounting {
+    /// Optional provider observation, never verified local accounting.
+    #[must_use]
+    pub const fn provider_reported(&self) -> Option<ProviderTokenUsage> {
+        self.provider_reported
+    }
+
     /// Describes optional counts from a completed response. Callers must not
     /// supply counts from partial, cancelled or malformed responses. This
     /// constructor performs no admission and establishes no verified counts.

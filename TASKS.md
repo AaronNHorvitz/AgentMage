@@ -68,6 +68,18 @@ request. API socket fixtures also check SHA-256 against the raw received body.
 See the [builder record](docs/evidence/t303-repair-preparation-2026-11-07.md).
 This addresses endpoint-binding review lows L1/L2 in these same parent rows;
 independent core review is required and both parents remain open.
+The [repair-preparation core review](docs/reviews/f92cea7f3183-local-coding-repair-preparation.txt)
+has **Verdict: PASS** for exact commit `f92cea7f3183433161157294e0f1f033446bf958`,
+with no open high/medium finding; both parents remain open. Low L1 (a route-level
+preparation-refusal test with a native failed-test receipt) remains backlog in
+these rows. The report accepts its pinned increment only.
+The [endpoint exchange batch](docs/evidence/t303-endpoint-exchange-2026-11-07.md)
+shares the prepared request, JSON-message context and completed-response records
+across contracts, transport and proposal API. It records actual decoded-text
+digests and local dispatch time; server memory and verified token counts remain
+unknown. It changes no native admission or model prompt. Independent core review
+is required. Coordinator endpoint admission, its resource-ledger integration,
+native edit/test/retry execution, measurements and both parents remain open.
 No public release is authorized. One level of sub-rows maximum; each implementation
 sub-row must run end to end and be measured. Never tune on held-out tasks, edit
 hidden tests or weaken thresholds. Desktop UI work is deferred to a separate shell.

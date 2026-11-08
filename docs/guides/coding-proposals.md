@@ -147,11 +147,37 @@ describes provisional coding output; it can be true after completed inference.
 A completed length finish or invalid edit therefore retains inference accounting
 while still refusing a candidate, even when its error has `partial: true`.
 
+The request binding now uses the shared `EndpointModelRequest` contract. Its
+additive `context` describes the exact ordered JSON message array: message
+count, serialized byte length and SHA-256. This includes roles and JSON escaping;
+it is distinct from the existing `message_bytes` content budget and from the
+server's unknown rendered prompt. Repair arrays include the feedback message.
+The historical transport name `EndpointChatBinding` remains an alias.
+
+A completed terminal event additionally carries `runtime_model_result`, using
+the shared `EndpointModelResult` contract. Its `request` equals the context and
+terminal `model_binding`, including selection and all bounds. It records the
+SHA-256 and UTF-8 byte length of concatenated decoded response text, excluding
+HTTP and stream framing. It retains completed inference on strict-edit refusal
+and `finish: "output_token_limit"`, while neither produces an accepted proposal.
+An ordinary provider stop is `finish: "stop"`; this says nothing about task
+correctness. No result is emitted for malformed, incomplete or cancelled streams.
+
+`resources.dispatch_elapsed` is a locally measured monotonic duration, represented
+as `{ "secs": ..., "nanos": ... }`. It starts at dispatch entry and ends after
+complete HTTP and codec EOF. It includes synchronous text callbacks and socket
+waiting, excludes preparation and approval, and is neither GPU time nor server
+inference time. `resident_memory_bytes` and `accelerator_memory_bytes` remain
+null. Result `token_accounting` contains the same optional provider report and
+null verified counts as the terminal observation. Unknown resources never become
+zero or a native resource report. These records are inspectable descriptions,
+without deserialization, credentials, approvals or native execution authority.
+
 Native runtime ports use the distinct `exact_profile` binding variant. Their
 complete native profile comparison and exact token/resource checks remain
 mandatory. A selected endpoint cannot satisfy native admission even if its
-model name equals the profile identifier. This shared vocabulary does not yet
-provide endpoint-specific coordinator requests, contexts, results or execution.
+model name equals the profile identifier. Shared endpoint exchange records do
+not yet admit endpoint execution to that coordinator or its resource ledger.
 
 The credential-owning transport prepares an immutable request without connecting.
 Its single-use execution sends those same body bytes through that original

@@ -12,8 +12,10 @@ use std::sync::{
 };
 use std::time::{Duration, Instant};
 
-use agentmage_kernel_contracts::RuntimeModelBinding;
-use serde::Serialize;
+use agentmage_kernel_contracts::{
+    EndpointModelBody, EndpointModelContext, EndpointModelFinish, EndpointModelLimits,
+    EndpointModelRequest, EndpointModelResult, EndpointModelSelection,
+};
 use sha2::{Digest, Sha256};
 use zeroize::{Zeroize, Zeroizing};
 
@@ -226,42 +228,9 @@ pub struct ChatCompletion {
     pub usage: Option<ChatUsage>,
 }
 
-/// Inspectable request binding, without credentials or conversation bytes.
-/// This records a selected endpoint and requested model, not verified weights,
-/// tokenizer, server process or hardware. It grants no inference/tool authority,
-/// is not an approval token and cannot be decoded into an executable request.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-pub struct EndpointChatBinding {
-    version: u16,
-    identity_kind: &'static str,
-    endpoint: String,
-    model: String,
-    request_body_sha256: String,
-    request_body_bytes: usize,
-    requested_max_output_tokens: u32,
-    provider_usage_requested: bool,
-    // Exact durations avoid rounding a valid sub-millisecond limit to zero.
-    total_timeout: Duration,
-    idle_timeout: Duration,
-    response_wire_limit_bytes: usize,
-    response_body_limit_bytes: usize,
-    response_text_limit_bytes: usize,
-    // A request fingerprint and provider usage cannot establish this count.
-    verified_input_tokens: Option<u64>,
-}
-
-impl EndpointChatBinding {
-    /// Uses the shared runtime vocabulary without claiming an exact native
-    /// profile. This is inspection data only; the prepared request continues to
-    /// borrow its original credential-owning transport and exact approval.
-    #[must_use]
-    pub fn runtime_model_binding(&self) -> RuntimeModelBinding<'_> {
-        RuntimeModelBinding::SelectedEndpoint {
-            endpoint: &self.endpoint,
-            model: &self.model,
-        }
-    }
-}
+/// Shared selected-endpoint request observations, without credentials or authority.
+/// The historical name remains an alias for existing transport consumers.
+pub type EndpointChatBinding = EndpointModelRequest;
 
 /// An inert, single-use chat request bound to its credential-owning transport.
 /// No Debug, Clone or deserialization can expose/reconstruct the private body.
@@ -288,16 +257,59 @@ impl PreparedEndpointChat<'_> {
         cancel: &ChatCancellation,
         text: impl FnMut(&str),
     ) -> Result<ChatCompletion, TransportError> {
+        self.execute_recorded(cancel, text)
+            .map(|result| ChatCompletion {
+                finish: match result.finish {
+                    EndpointModelFinish::Stop => ChatFinish::Stop,
+                    EndpointModelFinish::OutputTokenLimit => ChatFinish::Length,
+                },
+                usage: result.token_accounting.provider_reported(),
+            })
+    }
+
+    /// Sends the same single-use request and records a completed endpoint exchange.
+    /// Only valid HTTP and codec EOF produce a result. Text callbacks remain
+    /// provisional; failures, cancellation and malformed streams return no result.
+    /// Time is local dispatch time, not server/GPU time. No memory is inferred.
+    pub fn execute_recorded(
+        self,
+        cancel: &ChatCancellation,
+        mut text: impl FnMut(&str),
+    ) -> Result<EndpointModelResult, TransportError> {
+        let started = Instant::now();
         cancel.check()?;
-        self.transport.chat_encoded(
-            &self.binding.model,
+        let mut response_hash = Sha256::new();
+        let mut response_bytes = 0;
+        let completion = self.transport.chat_encoded(
+            self.binding.model(),
             &self.body,
             self.binding
+                .limits()
                 .provider_usage_requested
-                .then_some(self.binding.requested_max_output_tokens),
+                .then_some(self.binding.limits().requested_max_output_tokens),
             cancel,
-            text,
-        )
+            |fragment| {
+                response_hash.update(fragment.as_bytes());
+                response_bytes += fragment.len(); // Codec enforces its text-byte ceiling.
+                text(fragment);
+            },
+        )?;
+        let elapsed = started.elapsed();
+        Ok(EndpointModelResult::from_completed_response(
+            self.binding,
+            match completion.finish {
+                ChatFinish::Stop => EndpointModelFinish::Stop,
+                ChatFinish::Length => EndpointModelFinish::OutputTokenLimit,
+            },
+            response_hash
+                .finalize()
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect(),
+            response_bytes,
+            elapsed,
+            completion.usage,
+        ))
     }
 }
 
@@ -342,25 +354,41 @@ impl LocalChatTransport {
         } else {
             encode_chat(model, messages, max_tokens)?
         });
-        let binding = EndpointChatBinding {
-            version: 1,
-            identity_kind: "selected_endpoint_unverified_model",
-            endpoint: self.endpoint.base_url(),
-            model: model.to_owned(),
-            request_body_sha256: Sha256::digest(&*body)
-                .iter()
-                .map(|byte| format!("{byte:02x}"))
-                .collect(),
-            request_body_bytes: body.len(),
-            requested_max_output_tokens: max_tokens,
-            provider_usage_requested: include_usage,
-            total_timeout: self.limits.total,
-            idle_timeout: self.limits.idle,
-            response_wire_limit_bytes: MAX_WIRE,
-            response_body_limit_bytes: MAX_STREAM_BYTES,
-            response_text_limit_bytes: MAX_TEXT_BYTES,
-            verified_input_tokens: None,
-        };
+        // Use the same serde message-array encoding as the frozen body. This
+        // observes JSON bytes and roles, never a server's rendered prompt tokens.
+        let message_bytes = Zeroizing::new(
+            serde_json::to_vec(messages).map_err(|_| TransportError::Chat(ChatError::Request))?,
+        );
+        let binding = EndpointModelRequest::from_prepared_body(
+            EndpointModelSelection {
+                endpoint: self.endpoint.base_url(),
+                model: model.to_owned(),
+            },
+            EndpointModelContext {
+                message_count: messages.len(),
+                serialized_messages_bytes: message_bytes.len(),
+                serialized_messages_sha256: Sha256::digest(&*message_bytes)
+                    .iter()
+                    .map(|byte| format!("{byte:02x}"))
+                    .collect(),
+            },
+            EndpointModelBody {
+                request_body_sha256: Sha256::digest(&*body)
+                    .iter()
+                    .map(|byte| format!("{byte:02x}"))
+                    .collect(),
+                request_body_bytes: body.len(),
+            },
+            EndpointModelLimits {
+                requested_max_output_tokens: max_tokens,
+                provider_usage_requested: include_usage,
+                total_timeout: self.limits.total,
+                idle_timeout: self.limits.idle,
+                response_wire_limit_bytes: MAX_WIRE,
+                response_body_limit_bytes: MAX_STREAM_BYTES,
+                response_text_limit_bytes: MAX_TEXT_BYTES,
+            },
+        );
         Ok(PreparedEndpointChat {
             transport: self,
             binding,

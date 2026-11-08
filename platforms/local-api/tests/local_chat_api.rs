@@ -206,7 +206,34 @@ fn assert_endpoint_runtime_observation(rows: &[Value]) {
     assert_eq!(first["runtime_model_binding"], expected);
     assert_eq!(terminal["runtime_model_binding"], expected);
     assert!(first.get("token_accounting").is_none());
+    assert!(first.get("runtime_model_result").is_none());
     if terminal["response_complete"] == true {
+        let result = &terminal["runtime_model_result"];
+        assert_eq!(result["version"], 1);
+        assert_eq!(result["request"], first["model_binding"]);
+        assert_eq!(result["request"], terminal["model_binding"]);
+        let text: String = rows
+            .iter()
+            .filter(|r| r["type"] == "text")
+            .map(|r| r["text"].as_str().unwrap())
+            .collect();
+        assert_eq!(result["response_text_bytes"], text.len());
+        assert_eq!(
+            result["response_text_sha256"],
+            Sha256::digest(text.as_bytes())
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect::<String>()
+        );
+        assert_eq!(result["resources"]["resident_memory_bytes"], Value::Null);
+        assert_eq!(result["resources"]["accelerator_memory_bytes"], Value::Null);
+        let elapsed: Duration =
+            serde_json::from_value(result["resources"]["dispatch_elapsed"].clone()).unwrap();
+        assert!(!elapsed.is_zero());
+        assert_eq!(
+            result["token_accounting"],
+            terminal["token_accounting"]["observation"]
+        );
         let accounting = &terminal["token_accounting"];
         assert_eq!(accounting["kind"], "selected_endpoint");
         assert_eq!(
@@ -227,6 +254,7 @@ fn assert_endpoint_runtime_observation(rows: &[Value]) {
                 .is_none()
         );
     } else {
+        assert!(terminal.get("runtime_model_result").is_none());
         assert!(terminal.get("token_accounting").is_none());
         assert!(terminal.get("usage").is_none());
     }
@@ -254,7 +282,22 @@ fn coding_proposal_streams_selected_context_and_returns_only_an_unapplied_change
             .iter()
             .map(|byte| format!("{byte:02x}"))
             .collect();
-        tx.send((raw[start..].len(), digest, request.clone()))
+        let array_start = raw[start..]
+            .windows(b"\"messages\":".len())
+            .position(|w| w == b"\"messages\":")
+            .unwrap()
+            + start
+            + b"\"messages\":".len();
+        let array_end = raw
+            .windows(b",\"stream\":true".len())
+            .rposition(|w| w == b",\"stream\":true")
+            .unwrap();
+        let array = &raw[array_start..array_end];
+        assert!(array.starts_with(b"[") && array.ends_with(b"]"));
+        let context = json!({"message_count":request["messages"].as_array().unwrap().len(),
+            "serialized_messages_bytes":array.len(), "serialized_messages_sha256":
+            Sha256::digest(array).iter().map(|b| format!("{b:02x}")).collect::<String>()});
+        tx.send((raw[start..].len(), digest, request.clone(), context))
             .unwrap();
         assert_eq!(request["max_tokens"], 512);
         assert!(request.get("tools").is_none());
@@ -283,7 +326,8 @@ fn coding_proposal_streams_selected_context_and_returns_only_an_unapplied_change
     assert!(events[0]["message_bytes"].as_u64().unwrap() <= 4096);
     assert_eq!(events[1]["type"], "text");
     let proposal = events.last().unwrap();
-    let (body_bytes, body_sha256, sent) = rx.recv_timeout(Duration::from_secs(3)).unwrap();
+    let (body_bytes, body_sha256, sent, observed_context) =
+        rx.recv_timeout(Duration::from_secs(3)).unwrap();
     // Independently reconstruct the binding from the upstream's observed body.
     // The transport's socket tests also hash those actual bytes independently.
     use agentmage_platform_linux_inference::local_chat::{
@@ -319,6 +363,7 @@ fn coding_proposal_streams_selected_context_and_returns_only_an_unapplied_change
     assert_eq!(proposal["model_binding"], expected);
     assert_eq!(expected["request_body_bytes"], body_bytes);
     assert_eq!(expected["request_body_sha256"], body_sha256);
+    assert_eq!(expected["context"], observed_context);
     assert_eq!(expected["verified_input_tokens"], Value::Null);
     assert!(!String::from_utf8_lossy(&body).contains("synthetic-key"));
     assert_eq!(proposal["response_complete"], true);

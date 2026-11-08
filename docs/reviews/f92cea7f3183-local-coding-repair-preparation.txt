@@ -1,0 +1,188 @@
+Commit: f92cea7f3183433161157294e0f1f033446bf958
+Scope: local-coding-repair-preparation
+
+# Independent core review: repair preparation before disclosure-consent consumption
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate session with read-only access to a pinned
+checkout. Tier: core. Rows: T-303 / T-306. This is a non-closing follow-up and both parents remain OPEN.
+
+## Methods
+
+- Confirmed the commit. `git rev-parse HEAD` in the pinned checkout gives
+  `f92cea7f3183433161157294e0f1f033446bf958`. The predecessor `e5cb5c53a4ad588ba55784bd24ec73c3259dfff3`
+  resolves, and `git status --short` is clean before and after the runs.
+- Read IP-POLICY.md, the top of TASKS.md, the complete ten-path diff above the predecessor, the evidence
+  record, both guide changes and the retained predecessor review.
+- Read run.py, audit.py and final.py in full before running them. They write only to the validation
+  directory and do not modify the repository.
+- Inspected the transport the change depends on (`PreparedEndpointChat`, `prepare_chat`, `execute`) in
+  `platforms/linux-inference/src/local_chat_transport.rs`. I also read the repository receipt consumer
+  `consume_repair_feedback` (`platforms/linux/src/coding_repository_validation.rs:387`) and the existing
+  route-level repair refusal test (`platforms/local-api/tests/coding_worktree.rs:990`).
+- Ran the complete source gate and the final light checks myself, in a new private validation directory
+  (`/lane/state/tmp/review-repair-preparation-f92cea7f3183`). I used no GPU and started no model.
+
+## Commands and results
+
+```sh
+sha256sum -c /lane/state/tmp/t303-repair-preparation/review-inputs.sha256   # 14 x OK
+sha256sum /lane/state/tmp/t303-repair-preparation/review-inputs.sha256     # 0958731e...c188c (matches)
+sha256sum /lane/state/tmp/t306-owned-api/node-v24.15.0/bin/node            # d1de76d8...d932c (matches)
+export PATH=/lane/state/tmp/t306-owned-api/node-v24.15.0/bin:$PATH
+export CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+export AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-repair-preparation-f92cea7f3183
+mkdir -m 700 "$AGENTMAGE_VALIDATION_DIR"                                    # new; did not exist
+bash /tools/build-slot python3 -B /lane/state/tmp/t303-repair-preparation/run.py > .../fast.log 2>&1
+                                                                            # exit 1 (expected), 940 s wall incl. queue
+python3 -B /lane/state/tmp/t303-repair-preparation/final.py > .../final.log 2>&1   # exit 0
+cmp builder/source-freeze.json reviewer/source-freeze.json                  # identical
+cmp builder/plan-final.json reviewer/plan-final.json                        # identical
+python3 COMPARE (as in the request)                                         # AUDIT_MATCH, 77 targets, [3233,72,79,0]
+cmp docs/reviews/e5cb5c53a4ad-local-coding-runtime-model-binding.txt \
+    /lane/reviews/e5cb5c53a4ad-local-coding-runtime-model-binding.md        # identical
+git diff --check e5cb5c53a4ad588ba55784bd24ec73c3259dfff3 --                # clean
+git status --short                                                          # empty
+```
+
+Reviewer source gate, seven commands:
+
+- Results: `RESULT exit=0` for six commands (0.10, 0.10, 0.10, 1.15, 2.50 and 55.84 s). The complete
+  all-target test command returned `exit=101` in 327.28 s. The gate printed `FAST GATE: FAIL` and then
+  `SOURCE_FREEZE_UNCHANGED`.
+- Clippy took 55.84 s here because it compiled cold in the review target directory. The builder's 1.60 s
+  was warm.
+- Totals: 77 test targets, 3,233 passed, 72 failed, 79 ignored, 0 filtered.
+- The audit asserts that the failure identities, the normalized failure diagnostics and the ignore
+  identities all equal the retained predecessor witness. Apart from the expected extra command exit code,
+  the builder and reviewer audits are field-for-field identical.
+- I checked the failures independently: 53 are in `agentmage_host` and 19 in `agentmage_platform_linux`.
+  Neither crate is touched by this diff, and no `agentmage_local_api` target fails.
+- In the touched crate, the lib unit tests give 34 passed / 0 failed, `coding_worktree` 13 / 0 and
+  `local_chat_api` 37 / 0, with nothing filtered.
+- The two new methods pass unfiltered:
+  - `coding_repair_api::tests::repair_preparation_refusals_and_cancellation_do_not_consume_or_connect`
+  - `coding_repair_api::tests::admitted_repair_transport_failure_or_late_cancellation_still_spends_one_attempt`
+- These also pass:
+  - `synthetic_feedback_uses_existing_stream_and_strict_edit_checker_with_a_bounded_prompt`
+  - `coding_proposal_streams_selected_context_and_returns_only_an_unapplied_change`
+  - `repair_api_requires_control_exact_object_disclosure_and_owned_failure`
+
+final.py:
+
+- The plan's paths are exactly the ten expected paths.
+- The source freeze is unchanged, and the retained review is byte-identical.
+- In the parsed lockfile, removing `sha2` from the `agentmage-local-api` dependency list makes the new lock
+  equal to the old one. So no package or version changed, and `sha2` was already a pinned workspace package.
+- The privacy and no-new-`#[ignore]` scans of added lines pass.
+- The light checks pass: diff whitespace, untracked lint, retained-review format lint, and markdownlint over
+  four files with 0 issues.
+- The `cargo` command list is identical between the source plan and the final plan.
+
+## Review of the change
+
+Ordering and single use (`platforms/local-api/src/coding_repair_api.rs:65-86`, `:92-103`, `:105-157`):
+
+- `prepare_repair` runs all of the following before anything can be consumed:
+  - the disclosure, settings, scope and receipt-identity checks;
+  - `workspace_sources` and `select_created_sources`;
+  - `repair_prompt` and `prepare_coding_proposal`;
+  - `prepare_endpoint_coding_proposal`, which contains message validation, the token range
+    (`1..=4096`), the full encoder and `prepare_chat`'s exact-approval check.
+- Only on `Ok` does `admit_repair_proposal` look at the cancelled/stop flag. That flag is evaluated after
+  preparation returns, because arguments are evaluated in order.
+- Only after that does it call `consume_repair_feedback`. A consumption error drops the prepared request
+  and produces a 409.
+- The same `PreparedCodingProposal` then goes to `dispatch_coding_proposal`. Nothing rebuilds the context,
+  the messages or the body after consumption. `PreparedEndpointChat` has no Clone or Debug, and `execute`
+  takes `self`, so the request can run once only.
+- `execute` rechecks cancellation before connecting (`local_chat_transport.rs:286-301`). So the guide's
+  statement that late cancellation spends the attempt but opens no connection holds.
+
+Credential and approval binding:
+
+- The prepared request borrows the `Configuration` Arc obtained by `begin_controlled`.
+- The settings-revision/endpoint check compares against that same Arc. So the approval checked, the
+  credential used and the endpoint compared are one object.
+- This is slightly stronger than the predecessor, which re-derived the request from the Arc after
+  consumption.
+
+Shared path (`platforms/local-api/src/lib.rs:1000-1077`):
+
+- Snapshot and workspace proposals go through the same `prepare_endpoint_coding_proposal` and
+  `dispatch_coding_proposal`.
+- Status and refusal ordering is unchanged: message validation gives 400, then a missing endpoint gives
+  428, then transport preparation gives 400 with the code only in the outcome.
+- `message_bytes` is computed exactly as before and is only emitted when feedback is present.
+- The repair fixture checks it against the sum of the actually received message bytes.
+
+Tests:
+
+- The refusal test uses a nonblocking listener and a final `accept()` → `WouldBlock`. It covers:
+  - missing endpoint, approval mismatch, and 0 and 4097 tokens;
+  - pre-consumption cancellation;
+  - a stale receipt after successful preparation.
+  The callback is never called, and no connection is made.
+- The dispatch test covers two cases and makes no second connection in either:
+  - In the backend-503 case, the upstream asserts exactly one consumption before it reads the request.
+  - In the late-cancellation case, no connection is accepted.
+  Both terminals are `error` events with `response_complete:false`, no `token_accounting` and no proposal,
+  and their `model_binding` equals the binding in the context event.
+- Both API fixtures now hash the raw received body bytes. These are `incoming()` in `local_chat_api.rs`,
+  which reads exactly Content-Length bytes, and the repair fixture's `read_exact`. The tests compare those
+  hashes with `request_body_sha256`. This addresses endpoint-binding L1.
+- The four-case repair fixture (valid/invalid edit × usage on/off) keeps the strict edit, usage and
+  accounting assertions.
+
+Guide wording:
+
+- I checked `docs/guides/coding-proposals.md` against `dispatch_coding_proposal`. A `Length` finish or an
+  invalid edit gives `completion = Some`, so `token_accounting` is present while the error carries
+  `partial:true`. Transport errors and cancellation give `None`, so it is absent. The L2 clarification is
+  accurate.
+- `docs/guides/coding-model-repair.md` matches the code ordering described above.
+
+Integrity, licences and privacy:
+
+- No hidden, held-out, scorer, threshold, ignore, SBOM, status or ledger-row edits. audit.py verified the
+  ledger rows are unchanged.
+- No dependency or version change beyond a dev-only use of an already pinned workspace crate.
+- Added lines contain no private host path, username, hostname, credential, personal data or trademark
+  branding.
+- The evidence labels the consumption callback as synthetic and claims no native receipt, route admission,
+  model, GPU or score. Every number in the evidence traces to the builder logs, and my run reproduces the
+  same counts and identities.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test strength; backlog in T-303/T-306).** Reproduction and reasoning:
+  - `platforms/local-api/src/coding_repair_api.rs:65-75`: the route wires `prepare_repair` → cancel/stop
+    check → `consume_repair_feedback`, and that wiring is verified only by inspection.
+  - The new tests call `admit_repair_proposal` directly with a synthetic callback.
+  - The existing route test (`tests/coding_worktree.rs:990`) stops at refusals that happen before any
+    receipt exists.
+  - So a later refactor that moved consumption ahead of `prepare_repair` inside `handle_repair` would not
+    fail any test.
+  Fix: when a native failed-test receipt fixture is available, add a route-level case. A reachable
+  preparation refusal (for example `max_tokens: 0` or `4097`) should leave `repair_feedback()` unconsumed,
+  and the identical corrected request should then succeed once and only once. The builder already states
+  this limitation honestly, so it is not a claim defect.
+
+The predecessor's L1 (native accounting wrapper test strength) remains backlog. Its L2 is addressed by the
+guide wording verified above. The endpoint-binding review's L1 (raw-body digests) and L2 (preparation before
+receipt consumption) are addressed in-row by this commit.
+
+## Per-row result
+
+- **T-303 (non-closing).** Accepted: complete immutable, credential-bound repair request preparation before
+  one-use disclosure consumption, no rebuild after consumption, and spending on later failure or
+  cancellation. The parent stays OPEN. Native configured-endpoint coordinator execution and measurements
+  remain open.
+- **T-306 (non-closing).** Accepted: shared prepared dispatch for snapshot, workspace and repair proposals,
+  raw-body digest assertions, and accurate completion/accounting guide wording. The parent stays OPEN.
+  Durable ownership, approved commit/push and owner-test readiness remain open.
+- The source gate still FAILS on exactly the 72 retained baseline identities and diagnostics, all in
+  untouched crates, and the evidence reports this honestly. No row closes from this review.
+
+Verdict: PASS

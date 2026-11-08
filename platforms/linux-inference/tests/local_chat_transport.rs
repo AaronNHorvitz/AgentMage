@@ -923,11 +923,44 @@ fn prepared_endpoint_request_sends_the_exact_frozen_body_and_redacts_private_inp
             );
         });
         let mut text = String::new();
+        let execution_started = Instant::now();
         let completion = request
-            .execute(&ChatCancellation::default(), |s| text.push_str(s))
+            .execute_recorded(&ChatCancellation::default(), |s| text.push_str(s))
             .unwrap();
-        assert_eq!(completion.finish, ChatFinish::Stop);
-        assert_eq!(completion.usage, None); // Missing usage is never a measured zero.
+        assert_eq!(
+            completion.finish,
+            agentmage_kernel_contracts::EndpointModelFinish::Stop
+        );
+        assert_eq!(completion.token_accounting.provider_reported(), None);
+        assert!(completion.resources.dispatch_elapsed <= execution_started.elapsed());
+        let observation = serde_json::to_value(&completion).unwrap();
+        assert_eq!(observation["request"], binding);
+        assert_eq!(observation["response_text_bytes"], 6);
+        assert_eq!(
+            observation["response_text_sha256"],
+            Sha256::digest(b"answer")
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect::<String>()
+        );
+        assert_eq!(
+            observation["resources"]["resident_memory_bytes"],
+            Value::Null
+        );
+        assert_eq!(
+            observation["resources"]["accelerator_memory_bytes"],
+            Value::Null
+        );
+        assert_eq!(
+            observation["token_accounting"]["verified_input_tokens"],
+            Value::Null
+        );
+        assert_eq!(
+            observation["token_accounting"]["verified_output_tokens"],
+            Value::Null
+        );
+        assert!(!observation.to_string().contains("synthetic-key"));
+        assert!(!observation.to_string().contains("private synthetic prompt"));
         assert_eq!(text, "answer");
         let body = rx.recv_timeout(Duration::from_secs(3)).unwrap();
         assert_eq!(
@@ -938,11 +971,163 @@ fn prepared_endpoint_request_sends_the_exact_frozen_body_and_redacts_private_inp
                 .collect::<String>()
         );
         assert_eq!(binding["request_body_bytes"], body.len());
+        let message_array = format!(
+            "[{{\"role\":\"user\",\"content\":{}}}]",
+            serde_json::to_string(&original).unwrap()
+        );
+        assert_eq!(
+            body.windows(message_array.len())
+                .filter(|w| *w == message_array.as_bytes())
+                .count(),
+            1
+        );
+        assert_eq!(binding["context"]["message_count"], 1);
+        assert_eq!(
+            binding["context"]["serialized_messages_bytes"],
+            message_array.len()
+        );
+        assert_eq!(
+            binding["context"]["serialized_messages_sha256"],
+            Sha256::digest(message_array.as_bytes())
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect::<String>()
+        );
         let wire: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(wire["messages"][0]["content"], original);
         assert_eq!(wire["max_tokens"], 16);
         assert_eq!(wire.get("stream_options").is_some(), include_usage);
         task.join().unwrap();
+    }
+}
+
+#[test]
+fn recorded_endpoint_exchanges_keep_completion_usage_time_and_failures_distinct() {
+    use agentmage_kernel_contracts::EndpointModelFinish;
+    use serde_json::{Value, json};
+    use sha2::{Digest, Sha256};
+
+    for mode in [
+        "report",
+        "zero",
+        "missing",
+        "length",
+        "bad-usage",
+        "truncated",
+        "late",
+        "cancelled",
+        "status",
+    ] {
+        let (endpoint, worker) = server(move |mut socket| {
+            if mode == "status" {
+                socket
+                    .write_all(b"HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n")
+                    .unwrap();
+                return;
+            }
+            let mut body = [text_frame("界\n"), text_frame("\"\\answer")].concat();
+            let finish = ending(if mode == "length" { "length" } else { "stop" });
+            let cutoff = finish
+                .windows(b"data: [DONE]".len())
+                .position(|w| w == b"data: [DONE]")
+                .unwrap();
+            body.extend_from_slice(&finish[..cutoff]);
+            if mode != "missing" {
+                let (prompt, output, total) = match mode {
+                    "zero" => (0, 0, 0),
+                    "bad-usage" => (12, 4, 17),
+                    _ => (12, 4, 16),
+                };
+                body.extend_from_slice(format!("data: {}\n\n", json!({"model":"test-model","choices":[],
+                    "usage":{"prompt_tokens":prompt,"completion_tokens":output,"total_tokens":total}})).as_bytes());
+            }
+            if mode != "truncated" {
+                body.extend_from_slice(b"data: [DONE]\n\n");
+            }
+            if mode == "late" {
+                body.extend_from_slice(b"late");
+            }
+            let sent = socket.write_all(&response("text/event-stream", &body));
+            if mode != "cancelled" {
+                sent.unwrap();
+            }
+        });
+        let (transport, approval) = connection(endpoint, limits());
+        let request = transport
+            .prepare_chat(
+                &approval,
+                "test-model",
+                &[ChatMessage {
+                    role: ChatRole::User,
+                    content: "synthetic task",
+                }],
+                16,
+                true,
+            )
+            .unwrap();
+        let expected = request.binding().clone();
+        let cancel = ChatCancellation::default();
+        let mut text = String::new();
+        let mut callback_time = Duration::ZERO;
+        let started = Instant::now();
+        let result = request.execute_recorded(&cancel, |fragment| {
+            let entered = Instant::now();
+            text.push_str(fragment);
+            // Time includes the synchronous consumer, without claiming GPU time.
+            thread::sleep(Duration::from_millis(2));
+            if mode == "cancelled" {
+                cancel.cancel();
+            }
+            callback_time += entered.elapsed();
+        });
+        match mode {
+            "report" | "zero" | "missing" | "length" => {
+                let result = result.unwrap();
+                assert_eq!(result.request, expected);
+                assert_eq!(
+                    result.finish,
+                    if mode == "length" {
+                        EndpointModelFinish::OutputTokenLimit
+                    } else {
+                        EndpointModelFinish::Stop
+                    }
+                );
+                assert_eq!(text, "界\n\"\\answer");
+                assert_eq!(result.response_text_bytes, text.len());
+                assert_eq!(
+                    result.response_text_sha256,
+                    Sha256::digest(text.as_bytes())
+                        .iter()
+                        .map(|b| format!("{b:02x}"))
+                        .collect::<String>()
+                );
+                assert!(result.resources.dispatch_elapsed >= callback_time);
+                assert!(result.resources.dispatch_elapsed <= started.elapsed());
+                let value = serde_json::to_value(result).unwrap();
+                assert_eq!(
+                    value["token_accounting"]["provider_reported"],
+                    match mode {
+                        "missing" => Value::Null,
+                        "zero" => json!({"prompt_tokens":0,"completion_tokens":0,"total_tokens":0}),
+                        _ => json!({"prompt_tokens":12,"completion_tokens":4,"total_tokens":16}),
+                    }
+                );
+                for field in ["verified_input_tokens", "verified_output_tokens"] {
+                    assert_eq!(value["token_accounting"][field], Value::Null);
+                }
+                for field in ["resident_memory_bytes", "accelerator_memory_bytes"] {
+                    assert_eq!(value["resources"][field], Value::Null);
+                }
+            }
+            "status" => assert_eq!(result, Err(TransportError::Status)),
+            "cancelled" => assert_eq!(result, Err(TransportError::Cancelled)),
+            "truncated" => assert_eq!(result, Err(TransportError::Chat(ChatError::Incomplete))),
+            "bad-usage" | "late" => {
+                assert_eq!(result, Err(TransportError::Chat(ChatError::Protocol)))
+            }
+            _ => unreachable!(),
+        }
+        worker.join().unwrap();
     }
 }
 

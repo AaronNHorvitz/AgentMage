@@ -17,6 +17,7 @@ mod conversation;
 mod diagnostics;
 mod display_link;
 mod document_control;
+mod endpoint_model;
 mod engineering;
 mod engineering_records;
 mod evidence;
@@ -105,6 +106,10 @@ pub use document_control::{
     DocumentLifecycleState, DocumentNamedParty, DocumentRegister, DocumentRegisterAttachment,
     DocumentRegisterEntry, DocumentRegisterKind, DocumentRegisterStatement, DocumentStatementClass,
     DocumentWorkflowKind, DocumentWorkflowReport,
+};
+pub use endpoint_model::{
+    EndpointModelBody, EndpointModelContext, EndpointModelFinish, EndpointModelLimits,
+    EndpointModelRequest, EndpointModelResources, EndpointModelResult, EndpointModelSelection,
 };
 pub use engineering::{
     AgentLease, AgentLeaseState, ArtifactCaptureDisposition, ArtifactCaptureResult,

@@ -357,6 +357,7 @@ mod tests {
             );
             assert_eq!(terminal["response_complete"], false);
             assert_eq!(terminal["model_binding"], events[0]["model_binding"]);
+            assert!(terminal.get("runtime_model_result").is_none());
             assert!(terminal.get("token_accounting").is_none());
             assert!(!events.iter().any(|e| e["type"] == "proposal"));
         }
@@ -506,7 +507,20 @@ mod tests {
                     .iter()
                     .map(|byte| format!("{byte:02x}"))
                     .collect();
-                (actual_bytes, bytes.len(), digest)
+                let array_start = bytes
+                    .windows(b"\"messages\":".len())
+                    .position(|w| w == b"\"messages\":")
+                    .unwrap()
+                    + b"\"messages\":".len();
+                let array_end = bytes
+                    .windows(b",\"stream\":true".len())
+                    .rposition(|w| w == b",\"stream\":true")
+                    .unwrap();
+                let array = &bytes[array_start..array_end];
+                assert!(array.starts_with(b"[") && array.ends_with(b"]"));
+                let context = json!({"message_count":3,"serialized_messages_bytes":array.len(),
+                    "serialized_messages_sha256":Sha256::digest(array).iter().map(|b| format!("{b:02x}")).collect::<String>()});
+                (actual_bytes, bytes.len(), digest, context)
             });
             let config = Arc::new(Configuration {
                 endpoint: "synthetic".into(),
@@ -550,7 +564,8 @@ mod tests {
             let mut reply = String::new();
             client.read_to_string(&mut reply).unwrap();
             worker.join().unwrap();
-            let (actual_bytes, body_bytes, body_sha256) = upstream_worker.join().unwrap();
+            let (actual_bytes, body_bytes, body_sha256, observed_context) =
+                upstream_worker.join().unwrap();
             let body = reply.split_once("\r\n\r\n").unwrap().1;
             let events = body
                 .lines()
@@ -577,6 +592,28 @@ mod tests {
                 Value::Null
             );
             assert_eq!(terminal["response_complete"], true);
+            assert_eq!(terminal["model_binding"]["context"], observed_context);
+            let result = &terminal["runtime_model_result"];
+            assert_eq!(result["request"], terminal["model_binding"]);
+            let text: String = events
+                .iter()
+                .filter(|e| e["type"] == "text")
+                .map(|e| e["text"].as_str().unwrap())
+                .collect();
+            assert_eq!(result["response_text_bytes"], text.len());
+            assert_eq!(
+                result["response_text_sha256"],
+                Sha256::digest(text.as_bytes())
+                    .iter()
+                    .map(|b| format!("{b:02x}"))
+                    .collect::<String>()
+            );
+            assert_eq!(result["resources"]["resident_memory_bytes"], Value::Null);
+            assert_eq!(result["resources"]["accelerator_memory_bytes"], Value::Null);
+            assert_eq!(
+                result["token_accounting"],
+                terminal["token_accounting"]["observation"]
+            );
             assert_eq!(
                 terminal["runtime_model_binding"],
                 events[0]["runtime_model_binding"]

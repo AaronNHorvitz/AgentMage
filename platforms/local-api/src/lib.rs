@@ -35,7 +35,9 @@ use agentmage_capability_repository_map::coding_proposal::{
     CODING_PROPOSAL_INSTRUCTION, CodingProposalContext, CodingProposedChange, CodingSource,
     check_coding_proposal, prepare_coding_proposal,
 };
-use agentmage_kernel_contracts::{EndpointTokenAccounting, RuntimeModelTokenAccounting};
+use agentmage_kernel_contracts::{
+    EndpointModelFinish, EndpointModelResult, RuntimeModelTokenAccounting,
+};
 
 use agentmage_platform_linux::{
     LinuxCodingCommandCancellation, LinuxCodingPendingWrite, LinuxCodingReadScope,
@@ -979,19 +981,20 @@ fn proposal_observation(
     mut value: Value,
     binding: &EndpointChatBinding,
     requested: bool,
-    completion: Option<ChatCompletion>,
+    completion: Option<&EndpointModelResult>,
 ) -> Value {
     value["model_binding"] = json!(binding);
     value["runtime_model_binding"] = json!(binding.runtime_model_binding());
     // This confirms wire/codec completion only, never a successful coding task.
     value["response_complete"] = json!(completion.is_some());
     if let Some(completion) = completion {
+        value["runtime_model_result"] = json!(completion);
         value["token_accounting"] = json!(RuntimeModelTokenAccounting::SelectedEndpoint(
-            EndpointTokenAccounting::from_completed_provider_report(completion.usage),
+            completion.token_accounting,
         ));
     }
     if requested && let Some(completion) = completion {
-        value["usage"] = json!(completion.usage);
+        value["usage"] = json!(completion.token_accounting.provider_reported());
         value["usage_source"] = json!("provider-reported");
     }
     value
@@ -1117,22 +1120,22 @@ fn dispatch_coding_proposal(
             }
         }
     };
-    let result = request.execute(&op.cancel, display_text);
+    let result = request.execute_recorded(&op.cancel, display_text);
     if !writable {
         op.outcome = "api.client-disconnected";
         return Err(ApiError::Io);
     }
-    let completion = result.as_ref().ok().copied();
+    let completion = result.as_ref().ok();
     let refused = if oversized {
         Some("code.proposal.limit")
     } else {
-        match result {
-            Ok(ChatCompletion {
-                finish: ChatFinish::Stop,
+        match &result {
+            Ok(EndpointModelResult {
+                finish: EndpointModelFinish::Stop,
                 ..
             }) => None,
-            Ok(ChatCompletion {
-                finish: ChatFinish::Length,
+            Ok(EndpointModelResult {
+                finish: EndpointModelFinish::OutputTokenLimit,
                 ..
             }) => Some("code.proposal.incomplete"),
             Err(e) => Some(e.code()),
