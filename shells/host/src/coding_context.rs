@@ -587,22 +587,9 @@ where
             let mut projection =
                 serde_json::to_value(result).map_err(|_| RuntimePortFailure::Invalid)?;
             if let Some(output) = &result.output {
-                if output.sha256 != sha256(&output.bytes) {
-                    return Err(RuntimePortFailure::Invalid);
-                }
                 // The stored contract remains byte-exact. The model gets verified UTF-8
                 // instead of a decimal byte array, with the same schema and content hash.
-                let content =
-                    std::str::from_utf8(&output.bytes).map_err(|_| RuntimePortFailure::Invalid)?;
-                let content = if output.media_type == "application/json" {
-                    serde_json::from_str(content).map_err(|_| RuntimePortFailure::Invalid)?
-                } else {
-                    serde_json::Value::String(content.to_owned())
-                };
-                projection["output"] = serde_json::json!({
-                    "schema": output.schema, "media_type": output.media_type,
-                    "sha256": output.sha256, "content": content,
-                });
+                projection["output"] = project_verified_coding_payload(output)?;
             }
             let content = if person_selected {
                 // Only a successful derived write may be described as written;
@@ -1022,6 +1009,25 @@ fn message_role(item: &ContextItemCandidate) -> ModelMessageRole {
         | ContextItemKind::ExpectedOutput
         | ContextItemKind::Supporting => ModelMessageRole::User,
     }
+}
+
+/// Model-visible projection only; the authoritative byte contract is unchanged.
+pub(crate) fn project_verified_coding_payload(
+    payload: &ContractPayload,
+) -> Result<serde_json::Value, RuntimePortFailure> {
+    if payload.sha256 != sha256(&payload.bytes) {
+        return Err(RuntimePortFailure::Invalid);
+    }
+    let text = std::str::from_utf8(&payload.bytes).map_err(|_| RuntimePortFailure::Invalid)?;
+    let content = if payload.media_type == "application/json" {
+        serde_json::from_str(text).map_err(|_| RuntimePortFailure::Invalid)?
+    } else {
+        serde_json::Value::String(text.to_owned())
+    };
+    Ok(serde_json::json!({
+        "schema": payload.schema, "media_type": payload.media_type,
+        "sha256": payload.sha256, "content": content,
+    }))
 }
 
 fn payload(bytes: Vec<u8>) -> ContractPayload {

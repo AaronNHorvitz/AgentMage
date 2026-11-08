@@ -1,0 +1,229 @@
+Commit: aa1705bf758ae91e65f8421ea74802f1c7e6b4f5
+Scope: local-coding-context-composition
+
+# Independent core review: concrete endpoint coding context (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate read-only session. I judged the pinned
+checkout `/lane/review-checkout` at the commit above only. The diff is the eight-file change over
+the immutable predecessor `f1ac4d326c42b9614c0bc148e2bbcf2af0ba1d3a`. I made no repository edits,
+did not edit either independent report and did not use the GPU.
+
+## Methods
+
+1. I confirmed the commit. `git rev-parse HEAD` returns `aa1705bf758ae91e65f8421ea74802f1c7e6b4f5`.
+   `git diff --stat` over the predecessor shows exactly the eight claimed paths (993 added lines,
+   1 deleted).
+2. I read IP-POLICY.md, the new TASKS paragraph, the evidence record, the guide addition and all
+   changed Rust. That covers `coding_endpoint_context.rs`, its tests, and the visibility and
+   module edits in `coding_endpoint.rs`, `coding_endpoint_tests.rs` and `lib.rs`.
+3. I read the kernel code the context depends on:
+   - `RuntimeEndpointPreparationInput` and the endpoint turn path in
+     `kernel/engine/src/runtime_loop/coordinator_endpoint.rs` (turn ordinal, single `prepare` per
+     turn, terminal on preparation failure);
+   - the paired call/result pushes in `runtime_loop.rs:4112-4113`;
+   - `RuntimeEndpointContextPacket::from_messages`;
+   - `model_visible_coding_tools`, `runtime_tool_references` and `prepare_coding_proposal`;
+   - the existing native coding context, `shells/host/src/coding_context.rs`.
+4. I read every private helper before running anything: README, run.py, parse.py, audit.py,
+   final.py and baseline-targets.json.
+   - parse.py is byte-identical to `t303-configured-endpoint/parse.py` (`cmp` PASS).
+   - `predecessor.log` has SHA-256 `5ab8ff00…bfd169`, identical to the predecessor's
+     `validation-final/fast.log`.
+   - final.py runs only the non-Cargo plan commands, plus a `--plan` metadata call.
+5. I ran the requested gate in a new private directory, with no outer build-slot reservation.
+6. I ran my own probe of the payload wire form, out of tree, through `/tools/build-slot`.
+7. I attempted escapes against the paths this commit touches (see Confinement).
+
+## Commands and results
+
+```text
+sha256sum review-inputs.sha256      -> 8746979dbfa9c63785debce63b6e9b1206f1ba43f75192723dcc8893bf271f76 (matches request; 30 lines)
+sha256sum -c review-inputs.sha256   -> 30/30 OK
+export PATH=/lane/state/tmp/t306-owned-api/node-v24.15.0/bin:$PATH
+export CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+export AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-coding-context-aa1705bf758a   (new, mode 700)
+python3 -B .../run.py > fast.log    -> exit 1 (expected source-gate FAIL); wall 626 s incl. queueing
+rg -Fx 'FAST GATE: FAIL'            -> present
+rg -Fx 'SOURCE_FREEZE_UNCHANGED'    -> present
+python3 -B .../final.py > final.log -> exit 0; "FINAL_LIGHT_PASS; ORIGINAL_NATIVE_TESTS_AND_TRANSPORT_UNCHANGED; SOURCE_GATE_FAIL"
+cmp builder source-freeze.json mine -> identical (all five Rust hashes)
+git diff --check f1ac4d32… --      -> clean
+git status --short                  -> empty
+```
+
+My audit.json reports:
+
+- Totals 709 passed, 53 failed, 11 ignored, 0 filtered, across 18 targets. These match the
+  baseline target list exactly.
+- Every old passing identity is preserved.
+- Failed and ignored identities, and their normalized diagnostics, are identical to the
+  predecessor's.
+- Command exit codes were `[0,0,0,0,0,101]`, with durations `0.45, 0.15, 1.80, 387.20, 39.79,
+  195.71` seconds. The format time is mostly reservation wait.
+- Format and strict Clippy PASS.
+- There are exactly seven new passing methods, all in
+  `runtime_read_tests::coding_endpoint_tests::context_tests`:
+  - `endpoint_context_drives_two_socket_turns_through_existing_approval_and_verification`
+  - `endpoint_context_enforces_exact_utf8_content_and_encoded_message_ceilings_and_stops`
+  - `endpoint_context_includes_all_current_results_and_refusals_or_refuses_whole_context`
+  - `endpoint_context_overflow_terminates_before_socket_or_permission_entry`
+  - `endpoint_context_preserves_original_schema_source_ranges_and_untrusted_roles`
+  - `endpoint_context_refuses_foreign_sealed_run_repeated_skipped_and_mutated_turns`
+  - `endpoint_context_rejects_catalog_source_and_message_count_mismatches_before_preparation`
+
+The builder's count claims reproduce exactly. The source gate remains FAIL on the deferred T-301.1
+baseline.
+
+### Payload wire-form probe (reviewer-authored, out of tree)
+
+The probe crate lives at `/lane/state/tmp/review-coding-context-aa1705bf758a/probe`. It depends by
+path on `kernel/contracts` and pins `serde_json =1.0.151`.
+
+```text
+CARGO_TARGET_DIR=/lane/state/review-target/probe bash /tools/build-slot cargo run --offline -q
+{"schema":{…},"media_type":"application/json","bytes":[123,34,116,101,120,116,34,58,34,112,117,98,32,102,110,32,102,40,41,32,123,125,34,125],"sha256":""}
+raw_len=24 serialized_bytes_field_len=86
+```
+
+`ContractPayload.bytes: Vec<u8>` (`kernel/contracts/src/common.rs:32`) has no serde attribute, so
+default serialization emits a decimal integer array.
+
+## Review
+
+### Run binding, turn sequencing and latching
+
+- `new` re-verifies the sealed request. It also requires all of the following:
+  - `EphemeralReadOnly` mode;
+  - no event cursor;
+  - `max_messages >= 2`;
+  - a source budget of 2048–32768 bytes;
+  - `runtime_tool_references(registry) == request.visible_tools`.
+- Shared input schemas are keyed by `schema_sha256`. A conflicting body refuses.
+  `model_visible_coding_tools` already checks each schema digest against its static JSON.
+- `prepare_context` takes `next_turn` first, so any refusal latches closed. It requires the exact
+  expected turn, re-verifies the request, requires an identical `request_sha256` and checks
+  call/result count and ID/correlation pairing.
+- This matches the coordinator, which calls `prepare_endpoint` once per turn with `turn_count`
+  starting at 1 and ends the run terminally on any preparation error. Calls and results are pushed
+  pairwise (`runtime_loop.rs:4112-4113`), so the pairing check never refuses a legitimate run.
+- The tests cover foreign, unsealed, turn 0, turn 2 and repeated turn 1, each followed by a latched
+  retry. PASS.
+
+### Bounds
+
+- The system message is bounded at construction. The user message is written through
+  `BoundedContext`, with capacity `max_content_bytes - system.len()`.
+- The serialized message-array size is checked against `max_serialized_messages_bytes` after the
+  kernel's `from_messages`, which has its own 256 KiB ceiling with escaping included.
+- The exact-limit pass and the −1 content and −1 encoded refusals are tested. Overflow returns
+  `ResourceExhausted` with no truncation; the socket test confirms the run ends Exhausted with no
+  connection.
+- The borrowed control is checked before and after; all four stop classes are tested and latch.
+  PASS.
+
+### Untrusted input and confinement
+
+- Source text, tool results and refusals are placed only in the user message. They are
+  JSON-escaped by serde (the fixture includes `\"`, a newline and `é`).
+- The model's reply is still parsed by the coordinator's `deny_unknown_fields`
+  `EndpointToolProposal`.
+- The prompt-injection line in the fixture source ("ignore all permissions") does not change
+  approval. The socket test reaches `AwaitingApproval` with zero executions before the explicit
+  `Allow`.
+- Source paths `../outside.rs`, `/absolute.rs`, `.git/config` and `src/lib.rs/../x` are refused by
+  the unchanged selector. The builder opens no file or socket, so symlink and environment escape
+  attempts do not apply to this code. No credential or endpoint address reaches the context; the
+  test asserts that `127.0.0.1` is absent.
+- The catalog is still the read-only endpoint catalog, and write, command and network confinement
+  are unchanged. Escape testing against a live filesystem boundary remains impossible until the
+  open rows compose one.
+
+### Claims, hygiene and evaluation integrity
+
+- The evidence, guide and TASKS prose label the socket, permission, snapshot and verifier fixtures
+  as synthetic. They claim no score, add or close no row, and state that the source gate FAILs.
+- The changed lines contain no private path, username, hostname, credential, product or trademark
+  name. final.py's hygiene check also PASSes.
+- No evaluation, hidden or held-out, scorer, threshold, dependency or SBOM file changed. The new
+  instruction is generic and contains no task content.
+- Original native test bodies and transport code are unchanged; audit.py checks this exactly. One
+  exception to the claims' accuracy is recorded as M1.
+
+## Findings
+
+### M1 (medium, correctness of the model-visible context): tool payloads reach the model as decimal byte arrays
+
+**Where.** `shells/host/src/coding_endpoint_context.rs:192-195` and the `CurrentContext` fields at
+`:249-252`.
+
+**Problem.** `actual_completed_calls`, `untrusted_tool_results` and `pre_effect_refusals` serialize
+raw `ToolCall`, `ToolResult` and `RuntimeToolRejection`. Their `ContractPayload.bytes` therefore
+becomes `[123,34,…]` on the wire (reproduced above).
+
+The existing native coding context already handles this case explicitly. At
+`shells/host/src/coding_context.rs:583-604` it verifies each payload's digest and decodes arguments
+and outputs into JSON or UTF-8 content. Its own comment says "The model gets verified UTF-8 instead
+of a decimal byte array". The new production context regresses that established projection. It
+also skips the per-payload `sha256` check performed at `coding_context.rs:572` and `:590`.
+
+**Failure scenario.** In the claimed two-turn loop, turn 1 approves `read_text` on `src/lib.rs`.
+Turn 2's user message then carries the file content the model asked for only as decimal codes, and
+the model's own prior arguments the same way. A real local model cannot reliably read source from
+this, so the read tool, which is the only useful tool in the read-only catalog, does not deliver
+information through the surface it claims.
+
+The encoding also inflates each payload about 3.6 times (24 bytes become 86). A single 32 KiB read
+alone takes about 115 KiB of the 256 KiB kernel ceiling. Because overflow is a whole-run
+`Exhausted` refusal by design, runs end after a few reads.
+
+The tests cannot detect this. They compare the context to `serde_json::to_value(&results)`, the
+same raw form (`coding_endpoint_context_tests.rs:265-276`), and the socket model ignores the
+content. The guide's "Tool records retain their original payload bytes" is literally true but
+hides that the model cannot use them.
+
+**Fix.**
+1. Project calls, results and refusals as the native context does:
+   - verify `payload.sha256 == sha256(bytes)`;
+   - decode UTF-8, and parse it as JSON when the media type is `application/json`;
+   - emit `{schema, media_type, sha256, content}` in place of `bytes`;
+   - refuse with `Invalid` on any mismatch or non-UTF-8 payload;
+   - keep the bounded streaming writer.
+
+   Reusing the existing `coding_context.rs` projection helper is preferable to a second copy.
+2. Update the context test so it asserts readable content, for example the read result's `text`
+   containing `fixture()`, and a refusal on a digest mismatch.
+3. Have the turn-2 socket assertion check that the result content is readable source.
+
+### L1 (low, backlog): the overflow test does not directly assert that permission and model request never started
+
+**Where.** `coding_endpoint_context_tests.rs:520-529`.
+
+**Problem.** The README and test name claim "no permission entry". The test asserts zero
+executions, no accepted connection and no `ModelCompleted`, but not the absence of
+`PermissionRequested`, `PermissionDecided` or `ModelRequested`. The behavior holds by construction,
+because preparation fails before any proposal. This is the same pattern as predecessor L3.
+
+**Fix.** Add a `matches!` over `coordinator.events()` that excludes those three kinds.
+
+### Carried, unchanged
+
+Predecessor L1 to L3 (unsealed `RuntimeCoordinatorModelPort`, no direct read-only catalog-authority
+regression, no direct "no permission evaluation" assertion) remain low backlog. This commit does
+not touch them.
+
+## Per-row result
+
+- **T-303 (non-closing increment): FINDINGS, M1 medium.** The binding, latching, bounds, the
+  untrusted-role layout and the gate evidence are sound and reproduce exactly. However, the concrete
+  context gives the model unusable tool-call and tool-result payloads, which regresses the native
+  context's verified UTF-8 projection. T-303 stays OPEN. Exclusive live ownership, native grants,
+  endpoint HTTP/CLI/MCP projection, edit/test/retry, durable recovery, approved Git and measurements
+  also remain open.
+- **T-306 (non-closing increment): FINDINGS**, on the same basis. T-306 stays OPEN.
+- **Evaluation integrity:** not affected. No evaluation, hidden or held-out, scorer, threshold or
+  task change was made, and no held-out content appears in the instruction.
+- **Source gate:** FAIL on the deferred T-301.1 baseline (53 failed, 11 ignored, unchanged). Format
+  and strict Clippy PASS.
+- **Backlog:** L1 (new), plus predecessor L1 to L3.
+
+Verdict: FINDINGS

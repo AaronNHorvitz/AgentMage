@@ -2,6 +2,26 @@
 
 ## Active queue: local agent mission
 
+The retained endpoint owner's [independent core review](docs/reviews/92c919078ec1-local-coding-endpoint-owner.txt)
+has **Verdict: PASS** for exact commit
+`92c919078ec131c6074e081d4c05137b59943834`, with no high/medium finding.
+Low L1 (owner reuse after a caught panic), L2 (terminal envelope invariant errors
+not latching the owner) and L3 (direct faulted-slot capacity coverage) remain
+backlog in these same rows. This accepts the in-process ownership increment
+only; neither parent closes. HTTP integration must preserve these boundaries.
+
+The concrete endpoint-context [independent core review](docs/reviews/aa1705bf758a-local-coding-context-composition.txt)
+returned **Verdict: FINDINGS** for exact commit
+`aa1705bf758ae91e65f8421ea74802f1c7e6b4f5`. Its medium M1 (opaque tool
+payloads projected as decimal byte arrays) is addressed by sharing the native
+verified UTF-8/JSON projection across endpoint calls, results and refusals.
+The original byte contracts remain unchanged. Low L1's direct no-dispatch/no-
+permission event assertions are also added. See the
+[repair record](docs/evidence/t303-readable-endpoint-context-2026-11-08.md).
+Independent re-review is required; this FINDINGS report closes neither parent.
+No row is added or closed. T-303/T-306 and the retained owner's HTTP/native
+filesystem integration, edit/test/retry, approved Git and measurements stay open.
+
 The in-process endpoint run owner now retains complete configured coordinators
 across approval and terminal reads, with bounded slots and spent identities
 that survive release. See the [ownership record](docs/evidence/t303-endpoint-owner-2026-11-08.md).

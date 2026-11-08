@@ -44,8 +44,15 @@ coding completion schema. The endpoint wire instruction asks for a plain JSON
 tool request or completion claim. Repository excerpts remain in the user data
 message. Each turn includes the original task and objective digest, selected
 coverage/ranges, all current coordinator calls/results/evidence and pre-effect
-refusals. Tool records retain their original payload bytes and metadata; no
-successful check or grant is inferred from model prose. Shell-only definitions
+refusals. Stored tool contracts retain their original bytes. For model context,
+calls, result outputs and refused calls verify each payload digest and decode
+UTF-8, parsing `application/json` as JSON. Each projected payload contains its
+original schema, media type and digest plus readable `content` instead of a
+`bytes` array; missing outputs stay null. Invalid digests, invalid UTF-8 or
+malformed JSON refuse the whole preparation and latch it closed. Projection
+streams one observation at a time into the same bounded writer; it never drops
+history. Each raw payload must also fit the remaining content capacity before
+JSON decoding allocates its temporary value tree. Oversize refuses first. No successful check or grant is inferred from model prose. Shell-only definitions
 remain excluded by the original model-visible catalog projection.
 
 The mutable context pins the complete sealed request digest and accepts only

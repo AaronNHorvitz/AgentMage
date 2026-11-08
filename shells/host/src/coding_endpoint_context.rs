@@ -24,9 +24,11 @@ use agentmage_kernel_engine::{
 };
 use agentmage_platform_linux_inference::local_chat::{ChatMessage, ChatRole};
 use serde::Serialize;
+use serde::ser::{Error as _, SerializeSeq};
 use sha2::{Digest, Sha256};
 
 use crate::{
+    coding_context::project_verified_coding_payload,
     coding_endpoint::{CodingEndpointContextPort, control_failure},
     coding_tools::model_visible_coding_tools,
     coding_verifier::{CODING_COMPLETION_INPUT_SCHEMA_JSON, coding_completion_schema},
@@ -171,6 +173,28 @@ impl CodingEndpointContext {
             .map_err(|_| RuntimePortFailure::Invalid)?
             .checked_sub(self.system.len())
             .ok_or(RuntimePortFailure::ResourceExhausted)?;
+        // Bound the temporary decoded observation as well as its written form.
+        // Oversize payloads refuse before JSON decoding allocates a value tree.
+        if input
+            .completed_tool_calls
+            .iter()
+            .map(|call| &call.arguments)
+            .chain(
+                input
+                    .tool_results
+                    .iter()
+                    .filter_map(|result| result.output.as_ref()),
+            )
+            .chain(
+                input
+                    .rejected_tool_calls
+                    .iter()
+                    .map(|rejection| &rejection.call.arguments),
+            )
+            .any(|payload| payload.bytes.len() > capacity)
+        {
+            return Err(RuntimePortFailure::ResourceExhausted);
+        }
         // Serialize borrowed observations directly into the bounded buffer. No
         // complete temporary copy, prefix truncation or silent history omission.
         encode_bounded(
@@ -189,10 +213,10 @@ impl CodingEndpointContext {
                     .as_ref()
                     .map(|s| s.excerpts())
                     .unwrap_or(&[]),
-                actual_completed_calls: input.completed_tool_calls,
-                untrusted_tool_results: input.tool_results,
+                actual_completed_calls: Projected(input.completed_tool_calls),
+                untrusted_tool_results: Projected(input.tool_results),
                 actual_evidence: input.evidence,
-                pre_effect_refusals: input.rejected_tool_calls,
+                pre_effect_refusals: Projected(input.rejected_tool_calls),
             },
         )?;
         let messages = [
@@ -246,10 +270,64 @@ struct CurrentContext<'a> {
     turn: u32,
     source_coverage: &'a [CodingOutline],
     untrusted_source_excerpts: &'a [CodingExcerpt],
-    actual_completed_calls: &'a [ToolCall],
-    untrusted_tool_results: &'a [ToolResult],
+    actual_completed_calls: Projected<'a, ToolCall>,
+    untrusted_tool_results: Projected<'a, ToolResult>,
     actual_evidence: &'a [EvidenceReference],
-    pre_effect_refusals: &'a [RuntimeToolRejection],
+    pre_effect_refusals: Projected<'a, RuntimeToolRejection>,
+}
+
+// Project one observation at a time into the bounded writer, never build a
+// second history or serialize opaque payload bytes as integer arrays. Every
+// metadata field remains present; only the payload's bytes become content.
+struct Projected<'a, T>(&'a [T]);
+trait ProjectObservation {
+    fn project(&self) -> Result<serde_json::Value, RuntimePortFailure>;
+}
+impl<T: ProjectObservation> Serialize for Projected<'_, T> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut sequence = serializer.serialize_seq(Some(self.0.len()))?;
+        for record in self.0 {
+            let projected = record
+                .project()
+                .map_err(|_| S::Error::custom("invalid coding payload"))?;
+            sequence.serialize_element(&projected)?;
+        }
+        sequence.end()
+    }
+}
+impl ProjectObservation for ToolCall {
+    fn project(&self) -> Result<serde_json::Value, RuntimePortFailure> {
+        Ok(serde_json::json!({
+            "schema_version": self.schema_version,
+            "tool_call_id": self.tool_call_id,
+            "correlation_id": self.correlation_id,
+            "action_id": self.action_id,
+            "tool_id": self.tool_id,
+            "tool_version": self.tool_version,
+            "arguments": project_verified_coding_payload(&self.arguments)?,
+        }))
+    }
+}
+impl ProjectObservation for ToolResult {
+    fn project(&self) -> Result<serde_json::Value, RuntimePortFailure> {
+        Ok(serde_json::json!({
+            "schema_version": self.schema_version,
+            "tool_call_id": self.tool_call_id,
+            "correlation_id": self.correlation_id,
+            "outcome": self.outcome,
+            "output": self.output.as_ref().map(project_verified_coding_payload).transpose()?,
+            "validation_issues": self.validation_issues,
+            "evidence": self.evidence,
+            "error": self.error,
+            "elapsed_ms": self.elapsed_ms,
+            "state_change": self.state_change,
+        }))
+    }
+}
+impl ProjectObservation for RuntimeToolRejection {
+    fn project(&self) -> Result<serde_json::Value, RuntimePortFailure> {
+        Ok(serde_json::json!({"call": self.call.project()?, "reason": self.reason}))
+    }
 }
 
 struct BoundedContext<'a> {
@@ -280,5 +358,11 @@ fn encode_bounded<T: Serialize>(
         },
         value,
     )
-    .map_err(|_| RuntimePortFailure::ResourceExhausted)
+    .map_err(|error| {
+        if error.is_io() {
+            RuntimePortFailure::ResourceExhausted
+        } else {
+            RuntimePortFailure::Invalid
+        }
+    })
 }

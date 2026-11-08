@@ -1,0 +1,180 @@
+Commit: 92c919078ec131c6074e081d4c05137b59943834
+Scope: local-coding-endpoint-owner
+
+# Independent core review: retained configured-endpoint run owner
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Same-model review;
+a cross-model review is still required before any public release. Tier: core. Rows T-303 / T-306,
+non-closing. Both parents remain OPEN. No row or sub-row was added or closed. This verdict covers
+only this increment over the immutable predecessor `aa1705bf758ae91e65f8421ea74802f1c7e6b4f5`.
+
+## Methods
+
+- `git rev-parse HEAD` in the pinned checkout printed `92c919078ec131c6074e081d4c05137b59943834`.
+  `git status --short` was empty before and after all runs. The repository was not modified.
+- I read IP-POLICY.md, the TASKS.md head, the new evidence record, the guide diff, the whole
+  nine-file diff and the retained `f1ac4d326c42` report. `diff` shows the committed `.txt` is
+  byte-identical to `/lane/reviews/f1ac4d326c42-local-coding-configured-endpoint.md`. Its verdict
+  is PASS and it lists L1/L2/L3 as low backlog, as TASKS.md states.
+- I read the private README, run.py, parse.py, audit.py and final.py before running anything.
+  They write only into `AGENTMAGE_VALIDATION_DIR`. run.py runs the ordinary fast gate, which owns
+  its own per-Cargo slots. I did not use an outer reservation.
+- I read the kernel code the owner relies on:
+  - `run_until_boundary_impl` (runtime_loop.rs:2113-2157). Before `advance_until_boundary` it
+    only checks the challenge, reads the clock and verifies the response. Any error after that
+    point sets `correctness_reconciliation_required` (runtime_loop.rs:2153).
+  - `run_endpoint_until_boundary` (coordinator_endpoint.rs:268-294).
+  - `verify_runtime_endpoint_run_request` (runtime_coordinator/endpoint.rs:20-31). It
+    recomputes the canonical digest over the whole request.
+  - `compose` / `new_endpoint`. A cursor on an ephemeral read-only request is refused by the
+    common shape check (runtime_coordinator.rs:341), so admission cannot restore a checkpoint.
+  - `endpoint_outcome()`, which returns a value only after terminal publication.
+
+## Commands and results
+
+Run from `/lane/review-checkout` with `CARGO_TARGET_DIR=/lane/state/review-target`,
+`CARGO_BUILD_JOBS=2`, `RUST_TEST_THREADS=4`, node v24.15.0 on PATH, and a new reviewer directory
+`AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-endpoint-owner-92c919078ec1` (mode 700).
+Builder logs were left untouched.
+
+```text
+sha256sum --quiet -c .../t303-endpoint-owner/review-inputs.sha256          -> exit 0 (36 lines)
+sha256sum review-inputs.sha256 -> 0c40454df93be5614f63eacf0f8894343597eb1a14714315b4b790f5d38c5989 (matches request)
+python3 -B .../run.py > fast.log                                           -> exit 1 (expected)
+rg -Fx 'FAST GATE: FAIL' fast.log                                          -> found
+rg -Fx 'SOURCE_FREEZE_UNCHANGED' fast.log                                  -> found
+python3 -B .../final.py > final.log                                        -> exit 0
+  final.log: markdownlint 0 issues in 3 files;
+  FINAL_LIGHT_PASS; ORIGINAL_NATIVE_TESTS_AND_TRANSPORT_UNCHANGED; SOURCE_GATE_FAIL
+cmp builder validation-final/source-freeze.json reviewer source-freeze.json -> identical
+git diff --check aa1705bf758a... --                                        -> exit 0, no output
+git status --short                                                         -> empty
+```
+
+Results of the reviewer gate (from audit.json and my own re-parse of fast.log):
+
+- 4 crates and 43 targets. Totals: 2601 passed, 72 failed, 71 ignored, 0 filtered. These match
+  the builder's totals.
+- Command exit codes were `[0,0,0,0,0,0,101]`: git diff --check, untracked lint, review lint,
+  markdownlint, `cargo fmt --check` and strict `cargo clippy --all-targets -D warnings` all
+  passed, and `cargo test --no-fail-fast` exited 101.
+- Durations in my run were 0.10, 0.10, 0.10, 1.20, 4.11, 44.09 and 330.81 s. The builder's
+  durations differ because its build cache was in a different state. That is expected.
+- The audit confirmed:
+  - every prior passing identity is preserved;
+  - exactly 5 new passes, all `...context_tests::owner_tests::endpoint_owner_*`;
+  - failed and ignored identities are identical to the baseline;
+  - normalized failure diagnostics are identical;
+  - the 5 Rust source hashes stayed fixed;
+  - the ledger table rows are unchanged;
+  - the original transport/context sources and test bodies are unchanged;
+  - with the getter removed, the kernel file is byte-identical to the original.
+- The 72 failures are in `agentmage_host[unittests src/lib.rs]` (53) and
+  `agentmage_platform_linux[unittests src/lib.rs]` (19). These are the deferred T-301.1
+  baseline. None of the failing names contains `endpoint` or `owner`.
+- The builder's `validation-final/fast.log` SHA-256 is `3b0951492a48...c6ae3c`, which matches
+  the evidence. My raw log is `a87869e9...25b5854`; a different hash is expected because timings
+  differ.
+- `development.log` shows the 8 compile errors described (generic bounds, missing imports).
+  `development-fixed.log` shows 5 new tests plus 1 old control passing in a filtered run. The
+  evidence correctly says that this run does not qualify the final source.
+
+## Review of claims
+
+- **Exact sealed lookup** (`coding_endpoint_owner.rs` `entry`). It re-verifies the digest, then
+  requires the same `run_id` and the stored `request_sha256`.
+  - An unsealed edit is refused as `Invalid`.
+  - A resealed edit or a foreign id is refused as `NotHeld`.
+  - Re-admitting the same id is refused as `AlreadyAdmitted`.
+  - The retained coordinator uses its own original request, never the lookup argument.
+  - Tested without mutation, with no socket accept and no tool execution.
+  - The digest is unkeyed, so anyone who knows the whole request can drive the run.
+    Authentication is explicitly out of scope and documented as such.
+- **Inert admission.** Only validation and context construction happen before insertion. The
+  context and the coordinator are built from the same admission request and registry, so the
+  caller cannot mismatch them. A failure consumes no identity. Tested with an invalid source
+  budget followed by a correct admission.
+- **Approval handling.**
+  - A response with a wrong challenge digest fails inside `verify_runtime_approval_response`
+    before advancement. The latch stays false, the challenge and events are unchanged, and a
+    later correct approval completes the run.
+  - A stateful verifier fault after the approved read latches the entry `Faulted` before the
+    call returns. Later advances return `Faulted`, and the listener shows no further connection.
+  - Both behaviours are tested.
+- **Capacity.**
+  - The four-slot limit counts every non-released entry, including completed and faulted ones.
+  - The 256-identity limit counts all entries, including tombstones.
+  - Release refuses an entry that is running or waiting for approval (`endpoint_outcome()` is
+    `None`), keeps the digest, and drops the coordinator together with its context and ports.
+  - Tested: 4 held, the 5th refused, release, admissions up to 256, the 257th refused, and a
+    spent id refused.
+- **Confinement.** The change adds no new tool, permission, grant, network path or dependency.
+  Tool execution still goes only through the original approval and boundary: `executions` stays
+  0 before consent and is 1 after it. The escape surface of the predecessor composition was
+  covered by the retained PASS. This owner gives no way to swap ports, extract a coordinator or
+  re-select context, because no method exposes them.
+- **Honest labelling.** The evidence, guide and TASKS consistently say:
+  - this is synchronous in-process library ownership;
+  - it has no HTTP/CLI/MCP projection, authentication, durable recovery, native grants,
+    edit/test/retry or Git;
+  - the sockets, sources, tools, permissions and verifiers are synthetic;
+  - there is no model score, and the parents remain open.
+
+  I found no overclaim.
+- **Evaluation integrity.** None of the nine changed files is an evaluation, task, hidden test,
+  prompt, scorer, threshold, scoreboard, SBOM or dependency file. No measurement is claimed.
+- **Delivery.** The change adds running, measured code with no plan-only content and no new row.
+- **Public hygiene.**
+  - No host home path, username, hostname, credential, personal data, private sibling name or
+    trademark branding appears in the added lines.
+  - The only `/lane/...` paths are inside the retained review `.txt`. That follows the
+    repository's existing convention (106 of 114 committed review files contain them).
+  - final.py's own scan excludes that file. I scanned it myself.
+- **IP and licensing.** I found no third-party code or text and no dependency or licence change.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, robustness/backlog).** `shells/host/src/coding_endpoint_owner.rs:199`.
+  - Problem: the closed-entry latch relies only on the kernel's error latch, which is set on
+    `Err` (runtime_loop.rs:2153). If a tool boundary, verifier or transport panics inside
+    `advance`, the stack unwinds past both latches. The entry stays `Running` with partially
+    advanced state.
+  - Failure scenario: a future service keeps the owner after catching the unwind, for example
+    behind a non-poisoning lock or `catch_unwind(AssertUnwindSafe(..))`. It could then advance
+    again after an effect may already have been committed.
+  - Not reachable in this increment, because nothing projects the owner into a service.
+  - Fix: before calling, swap the entry into an "advancing/faulted" state and restore `Running`
+    only on `Ok` or on an unlatched error (a drop guard works). Otherwise, document that an owner
+    must be discarded after any panic during `advance`.
+- **L2 (low, correctness/backlog).** `kernel/engine/src/runtime_loop/coordinator_endpoint.rs:283-288`,
+  together with owner lines 201 and 234.
+  - Problem: after an inner `Complete`, `run_endpoint_until_boundary` can return
+    `InvalidBoundaryResult` (endpoint envelope missing or mismatched) without setting the
+    reconciliation latch. The owner then leaves the entry `Running` instead of `Faulted`.
+  - Consequence: no dispatch is possible, because the outcome is already set. But if the
+    envelope is missing, `release` returns `StillRunning` forever and one of the four slots is
+    permanently consumed. This needs a broken kernel invariant to happen.
+  - Fix: in the owner, also latch `Faulted` when an error is returned and the events already
+    contain `RunTerminal`.
+- **L3 (low, test coverage/backlog).** `shells/host/src/coding_endpoint_owner_tests.rs:284`.
+  - Gap: the capacity test shows that completed entries hold a slot. Nothing asserts that a
+    `Faulted` entry also counts toward the four-slot limit and frees its slot only on release.
+    The code does this at line 144, but no regression test pins it.
+  - Fix: add the check to the existing latch test, with no new sub-row.
+
+Retained backlog from the f1ac4d326c42 report (L1/L2/L3, low) is unchanged and is not
+re-reviewed here.
+
+## Per-row result
+
+- T-303 (non-closing increment, local-coding-endpoint-owner): increment accepted. The row
+  remains OPEN.
+- T-306 (non-closing increment, local-coding-endpoint-owner): increment accepted. The row
+  remains OPEN.
+- Source gate: FAIL on the unchanged deferred T-301.1 baseline (53 host-library plus 19
+  Linux-library failures). Format and strict Clippy PASS.
+- Backlog: L1, L2 and L3, all low.
+
+Verdict: PASS
