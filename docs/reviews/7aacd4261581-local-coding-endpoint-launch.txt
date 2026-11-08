@@ -1,0 +1,160 @@
+Commit: 7aacd4261581a5d61fc1508af9dfe0beac22e255
+Scope: local-coding-endpoint-launch
+
+# Independent core review: explicit native endpoint read development launch (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only checkout. Same-model review.
+Increment under review: the 12 files changed over immutable predecessor
+983524c26b4170a839abf82b2eb0968a15caf3f3. That is source commit 4d8ebc7e7a46fd62ff7b5491ba3c66086b57a4ea,
+then the docs-only retention commit 7aacd4261581a5d61fc1508af9dfe0beac22e255.
+
+## Methods
+
+- In /lane/review-checkout, `git rev-parse HEAD` and `git rev-parse 7aacd4261581a5d61fc1508af9dfe0beac22e255` both
+  print 7aacd4261581a5d61fc1508af9dfe0beac22e255. The parent chain is 7aacd426 -> 4d8ebc7e -> 983524c2. No ancestor
+  was rewritten.
+- `git diff --stat 983524c2 7aacd426` lists exactly 12 files: TASKS.md, Decision 0163, the evidence file, the guide,
+  the retained predecessor review, and seven local-api Rust files. `git diff --stat 4d8ebc7e 7aacd426` touches only
+  TASKS.md, the evidence file, the guide and the retained review, so the second commit is documentation only. No
+  evaluation, hidden or held-out file, scorer, threshold, dependency, Cargo manifest, lockfile, model, SBOM, status or
+  scoreboard file changed. No TASKS.md table row changed (audit.py asserts this, and I read the diff).
+- I read every changed line, plus the unchanged code each new call depends on:
+  - `CodingEndpointStartup::prepare/read_verifier/admit` (shells/host/src/coding_endpoint_startup.rs);
+  - `LinuxSandboxManifest::verify` / `verify_artifact` (platforms/linux/src/sandbox.rs:382, :1321);
+  - `LocalChatEndpoint::parse` (platforms/linux-inference/src/local_chat.rs:65);
+  - `BearerKey::new`;
+  - `protected_directory` / `object_json` (platforms/local-api/src/lib.rs:194, :784);
+  - the activation validate/key-provider ordering;
+  - the mode checks in coding_endpoint_context.rs:119 and coding_endpoint_files.rs:163.
+- I read the actual successful admission path (`admit` -> `prepared.admit` -> `CodingEndpointFiles::new` ->
+  `runs.admit` -> the shared HTTP owner) through, because it cannot execute in this lane. I confirmed this order in
+  platforms/local-api/src/coding_endpoint_launch.rs:140-263:
+  1. activation validation;
+  2. workspace selection;
+  3. original-seal check, then identity rebinding and resealing;
+  4. original `prepare` (narrowing and policy binding);
+  5. read verifier;
+  6. loopback endpoint parse;
+  7. root-owned manifest admission (worker first, then systemd-run, systemctl, env, bwrap and runtime libraries);
+  8. revalidation;
+  9. only then the credential read and the key-provider/authority creation;
+  10. revalidation, then admission.
+- Startup grants nothing:
+  - `sources` is empty and observation access is `ControlOnly`.
+  - Every advance still requires `approve_model_context`.
+  - The HTTP routing/control suffix after admission is byte-identical to the predecessor (I compared it via audit.py
+    and by reading the diff).
+  - The public factories still check run/session identity before `runs.admit`.
+- Model endpoint: `LocalChatEndpoint::parse` accepts only `http://` loopback IP literals or `localhost`, with no DNS
+  lookup. A credential therefore can only go to a loopback destination. The key is read through a held 0700 parent
+  with `O_NOFOLLOW`, checked as 0600, single link, owner, ≤4096 bytes, and kept in `Zeroizing` buffers up to
+  `BearerKey`. It never appears on the command line. The diagnostic prints only `LinuxSandboxError::code()`.
+
+## Commands and results (all in /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t303-endpoint-launch/review-inputs.sha256`: exit 0. The manifest has 43
+   lines and SHA-256 526bdd8816e5bf9489dd3c2df88dab6a7a04396213d7fb8978f49193554e0a46, matching the request.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-endpoint-launch/review.py /lane/state/tmp/review-endpoint-launch-7aacd4261581`
+   - Exit 1, which is expected nonzero. Console: `ORDINARY_API_GATE_EXIT 1 AUDIT_EXIT 1 CURRENT_HYGIENE_EXIT 1`.
+   - Per-command exits: diff-check 2, lint-untracked 0, lint-reviews 1, markdownlint 127, fmt 0, strict Clippy
+     (`-D warnings`, all targets) 0, cargo test 0.
+   - `cargo test -p agentmage-local-api --all-targets --no-fail-fast` ran 10 targets: **145 passed / 0 failed /
+     0 ignored / 0 filtered**. I summed the raw `test result:` lines myself: 39+0+0+0+14+9+3+30+13+37.
+   - audit.json:
+     - all 138 predecessor API passing identities are preserved;
+     - exactly 4 new unit tests and 3 new integration tests were added;
+     - `http_routing_suffix_byte_identical: true`;
+     - the seven Rust hashes match the request;
+     - `SOURCE_FREEZE_UNCHANGED` was printed.
+   - diff-check and lint-reviews fail only on the two whitespace-only lines (108 and 121) of the retained,
+     byte-identical predecessor review. That matches the disclosed disposition.
+   - Node is not installed in my environment (none on PATH, no /lane/state/tooling; nothing was downloaded), so
+     markdownlint exited 127. I make no markdown-lint pass claim. The builder's retained final log shows
+     markdownlint-cli2 "0 issues" on the four authored files. That is consistent with the repository config, which
+     disables MD013/MD022/MD024/MD060.
+   - final.py: `ALLOWED_PATHS_AND_NO_PRIVATE_CONTENT_PASS`, with the exact 12-path set asserted.
+   - My timings (fmt/clippy/test 0.20/41.33/67.32 s) differ from the builder's 25.49 s total, because I built cold in
+     a separate target directory. I do not rely on the timings.
+3. `cmp .../validation-final/source-freeze.json .../review-endpoint-launch-7aacd4261581/source-freeze.json`: identical.
+4. `cmp docs/reviews/983524c26b41-local-coding-endpoint-read-verifier.txt /lane/reviews/983524c26b41-local-coding-endpoint-read-verifier.md`:
+   identical, so the retained review is unedited.
+5. `git diff --check 983524c26b4170a839abf82b2eb0968a15caf3f3 --`: exit 2, only the retained review's lines 108 and
+   121. With that file excluded (`-- . ':!docs/reviews/983524c26b41-local-coding-endpoint-read-verifier.txt'`) it
+   exits 0.
+6. `git status --short`: empty, before and after my runs.
+7. Privacy: I scanned the added lines and the retained review for home paths, the owner's username/email, hostnames
+   and the private sibling project name. The only `/lane/...` strings are inside the retained review report, as in
+   earlier accepted retained reviews. No credential, personal data or trademark branding was found.
+8. Reviewer probes. These were 4 throwaway unit tests added to a `git archive` export of 7aacd426 at
+   /lane/state/tmp/reviewer-probe-7aacd4261581, outside the checkout. I ran them with
+   `TMPDIR=$(mktemp -d /tmp/rv-XXXX) CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api --lib reviewer_probe -- --nocapture --test-threads=1`,
+   with stderr visible, so I could tell whether a refusal happened before or at native admission.
+   - Refused before native admission (no `code.endpoint.native-admission` line was printed):
+     - check paths `[".."]`, `["a/b"]`, `["","x"]`, `["/etc"]`, `[".git","HEAD"]`, and `["other"]` (not in the
+       criteria);
+     - empty `checks`;
+     - an uppercase digest;
+     - endpoints `http://10.0.0.1:80/v1`, `http://example.invalid:80/v1`, `https://127.0.0.1:1/v1` and
+       `http://[::ffff:127.0.0.1]:80/v1`;
+     - an unmarked workspace;
+     - `workspace_root` set to the state root;
+     - `state_root` set to the disposable root;
+     - a symlinked workspace root.
+   - Refused at native admission (`linux.sandbox.manifest.invalid`): `worker` set to `/usr/bin/env`.
+   - Sealing a request with no visible tools is itself refused.
+   - Rebinding an already-bound request is accepted as a template. This is harmless because the document is trusted
+     and private.
+   - Relabelling `workspace_id` reaches native admission. The id is a label bound to whichever marked disposable root
+     is selected; content binding is the preparer's snapshot digest, as documented. This is not an escape.
+   - My nested-array probe was malformed (wrong positional order), so it proves nothing either way. Nested positional
+     forms would produce the identical sealed value in any case.
+   - Cleanup: I removed the export, my two empty /tmp/rv-* directories and my gate's empty fixture namespace
+     /tmp/el-2d8l8g37. All raw logs remain in the validation directory.
+   - Not run: a successful native admission or model/worker execution. This is impossible here: lane system files
+     are owned by `nfsnobody`, not root, and I used no GPU. Prompt-injected tool calls from documents or model output
+     still go through the unchanged, previously reviewed coordinator, read-only catalog and exact per-read grants. I
+     checked that path by reading only.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, test strength).** platforms/local-api/tests/coding_endpoint_launch.rs:206-220. The
+  `endpoint_launch_listener_and_stop_checks_precede_private_configuration_access` test passes `/missing-launch`.
+  Reading configuration first would also produce `ApiError::Configuration`, so the test would pass even if the order
+  were reversed. The code is correct, and I verified it by reading: `serve_admitted_coding_endpoint` checks stop and
+  loopback before calling the factory, coding_endpoint_api.rs:219-229. Fix: point the test at a valid fixture launch,
+  run it in a child process, and assert that no `code.endpoint.native-admission` diagnostic appears and the state is
+  untouched.
+- **L2 (low, test naming/coverage).** platforms/local-api/src/coding_endpoint_launch_tests.rs:164-184. The unit test
+  named `..._before_credential_read_or_state_creation` uses `credential_file: null` and asserts only
+  `Err(Configuration)`. It does not show that the refusal happened at manifest admission or before a credential read.
+  The executable test (tests/coding_endpoint_launch.rs:165-203, with its absent `must-not-read` credential and the
+  exact diagnostic) does establish the ordering. Fix: give the unit test an absent credential path and assert that a
+  direct `LinuxSandboxManifest::verify` returns `InvalidManifest`, or rename it.
+- **L3 (low, cosmetic).** docs/guides/runtime-endpoint-runs.md:737. The new `##` heading directly follows a
+  paragraph, with no blank line. It renders correctly, and MD022 is disabled in the repository's markdownlint
+  config. Fix: add a blank line.
+- **Gate-tooling backlog (not a defect in this increment).** The disclosed FAIL of diff-check and review lint comes
+  only from the byte-identical retained review. Editing reviews is prohibited, so a future retention-aware hygiene
+  check belongs in tooling backlog. No exception was added and none is implied here.
+
+## Claims versus evidence
+
+- Explicit consent: verified. main.rs requires the exact fifth argument and refuses non-loopback addresses before
+  loading tokens; the integration test shows that a missing flag prints Usage with no stdout.
+- Same retained owner, no second loop/verifier/executor/permission system: verified by reading. The original
+  `prepare`/`read_verifier`/`admit` path and the shared HTTP suffix are used.
+- Native admission before credential/state, no relaxation: verified by reading, the executable test and my probes.
+  Native success, worker/model execution, edit/test/retry, durable recovery, approved Git and parent measurements are
+  correctly labelled as unobserved/open.
+- Fixtures: labelled synthetic and first-party. The native profile is stripped. There is no synthetic authority or
+  model response.
+- No coding score, quality claim or parent acceptance is made, and none is supported.
+
+## Per-row result
+
+- T-303 / T-306 (this non-closing increment): **PASS**. No high/medium finding; L1–L3 go to same-row backlog. Both
+  parent rows remain OPEN. No row or sub-row is added or closed, and there is no excessive splitting.
+
+Verdict: PASS
