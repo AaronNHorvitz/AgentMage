@@ -6,6 +6,7 @@ use std::collections::BTreeSet;
 mod artifact_preparation;
 /// Controlled selected-endpoint model phases using the shared resource ledger.
 pub mod endpoint;
+mod event_frame;
 use artifact_preparation::{PreparedToolArtifact, ToolCompletionBuilder};
 
 use agentmage_kernel_contracts::{
@@ -4604,41 +4605,21 @@ where
             return Err(RuntimeLoopError::InvalidBoundaryResult);
         }
         let sequence = self.events.len() as u64;
-        let event = seal_runtime_event(RuntimeEvent {
-            schema_version: CONTRACT_SCHEMA_VERSION,
-            event_id: RuntimeEventId::from_raw(derived_id(
-                "event",
-                self.request.run_id.as_str(),
-                sequence,
-            )),
-            run_id: self.request.run_id.clone(),
-            session_id: self.request.session_id.clone(),
-            task_id: self.request.task.task_id.clone(),
-            turn_id: turn_id.cloned(),
-            operation_id: operation_id.cloned(),
-            correlation_id: self.correlation_id.clone(),
-            causation_event_id: self.events.last().map(|event| event.event_id.clone()),
+        let event = event_frame::RuntimeEventScope::native(&self.request).seal(
+            &self.correlation_id,
             sequence,
+            self.events.last(),
             occurred_at_epoch_ms,
-            sensitivity: runtime_sensitivity(&self.request),
-            retention: RuntimeEventRetention {
-                kind: if self.journal.is_some() {
-                    RuntimeEventRetentionKind::Session
-                } else {
-                    RuntimeEventRetentionKind::Ephemeral
-                },
-                expires_at_epoch_ms: None,
-            },
-            persistence: runtime_event_persistence(&kind),
-            policy_id: self.request.policy_id.clone(),
-            payload_reference,
             kind,
-            previous_event_sha256: self.events.last().map_or_else(
-                || ZERO_SHA256.to_owned(),
-                |event| event.event_sha256.clone(),
-            ),
-            event_sha256: ZERO_SHA256.to_owned(),
-        })?;
+            turn_id,
+            operation_id,
+            payload_reference,
+            if self.journal.is_some() {
+                RuntimeEventRetentionKind::Session
+            } else {
+                RuntimeEventRetentionKind::Ephemeral
+            },
+        )?;
         let event_bytes = to_canonical_json(&event)
             .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?
             .len();
@@ -6116,18 +6097,7 @@ fn map_model_error(error: ModelRuntimeGateError) -> RuntimePortFailure {
 fn runtime_sensitivity(
     request: &RuntimeRunRequest,
 ) -> agentmage_kernel_contracts::ContextSensitivity {
-    match request.work_packet.sensitivity {
-        agentmage_kernel_contracts::DataSensitivity::Ephemeral => {
-            agentmage_kernel_contracts::ContextSensitivity::Private
-        }
-        agentmage_kernel_contracts::DataSensitivity::Operational
-        | agentmage_kernel_contracts::DataSensitivity::Durable => {
-            agentmage_kernel_contracts::ContextSensitivity::Internal
-        }
-        agentmage_kernel_contracts::DataSensitivity::Restricted => {
-            agentmage_kernel_contracts::ContextSensitivity::Restricted
-        }
-    }
+    event_frame::event_sensitivity(request.work_packet.sensitivity)
 }
 
 fn contract_sha256<T: agentmage_kernel_contracts::VersionedContract>(

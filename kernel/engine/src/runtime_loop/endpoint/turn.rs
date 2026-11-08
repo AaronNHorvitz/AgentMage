@@ -6,12 +6,17 @@ use std::cell::Cell;
 
 use agentmage_kernel_contracts::{
     BudgetResource, CancellationSignal, CorrelationId, EndpointModelRequest, EndpointModelResult,
-    ModelCancellationProbe, RuntimeEndpointRunRequest, RuntimeSessionMode, RuntimeTurnId,
+    ModelCancellationProbe, ModelRunId, RuntimeEndpointRunRequest, RuntimeEvent,
+    RuntimeEventCursor, RuntimeEventKind, RuntimeSessionMode, RuntimeTurnId,
 };
 
+use super::turn_events::{EndpointEventFrame, RuntimeEndpointTurnEvents};
 use super::{
     RuntimeEndpointContextPacket, RuntimeEndpointModelPhase, RuntimeEndpointModelPort,
     RuntimeEndpointPhaseFailure, RuntimeEndpointRunBinding,
+};
+use crate::runtime_event::{
+    RuntimeEventBatch, RuntimeEventBatchLimits, RuntimeEventError, RuntimeEventSubscription,
 };
 use crate::runtime_hardening::RuntimeResourceLedger;
 use crate::runtime_loop::{
@@ -31,7 +36,7 @@ pub enum RuntimeEndpointTurnFailure<E> {
 /// Accepted model completion bound to exactly one run, turn and original
 /// context. This is model output, never an approved tool or verified answer.
 /// Private fields and no deserializer prevent construction from wire claims.
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 pub struct RuntimeEndpointTurnResult {
     run: RuntimeEndpointRunBinding,
     turn_id: RuntimeTurnId,
@@ -72,13 +77,18 @@ pub struct RuntimeEndpointTurnsUsage {
     pub accepted_response_text_bytes: u64,
     /// Sum of rounded-up dispatch durations in accepted completions only.
     pub accepted_dispatch_elapsed_ms: u64,
+    /// Canonical event envelopes retained in this in-memory run prefix.
+    pub recorded_events: u32,
+    /// Actual canonical bytes retained in those envelopes, without payload text.
+    pub canonical_event_bytes: u64,
 }
 
 /// Coordinator model-turn component with a single cumulative ledger and the
 /// existing runtime's monotonic clock/cancellation control. The caller supplies
 /// each prepared turn explicitly; this component never selects the next action.
 /// Initially restricted to ephemeral read-only runs without a resume cursor.
-/// It emits no runtime events and cannot replace the full coordinator.
+/// It records model-turn events through the existing runtime publisher and
+/// cannot replace the full coordinator or claim a terminal task outcome.
 pub struct RuntimeEndpointTurns<C> {
     request: RuntimeEndpointRunRequest,
     resources: RuntimeResourceLedger,
@@ -89,6 +99,7 @@ pub struct RuntimeEndpointTurns<C> {
     turns: u32,
     closed: bool,
     cancellation: Option<CancellationSignal>,
+    events: RuntimeEndpointTurnEvents,
 }
 
 impl<C: RuntimeClock> RuntimeEndpointTurns<C> {
@@ -103,7 +114,7 @@ impl<C: RuntimeClock> RuntimeEndpointTurns<C> {
         if request.mode != RuntimeSessionMode::EphemeralReadOnly || request.event_cursor.is_some() {
             return Err(RuntimePortFailure::Invalid);
         }
-        let resources = RuntimeResourceLedger::for_endpoint_run(&request)
+        let mut resources = RuntimeResourceLedger::for_endpoint_run(&request)
             .map_err(|_| RuntimePortFailure::Invalid)?;
         let started_at = clock.now_epoch_ms()?;
         if started_at == 0 {
@@ -111,6 +122,14 @@ impl<C: RuntimeClock> RuntimeEndpointTurns<C> {
         }
         let correlation_id =
             CorrelationId::from_raw(derived_id("correlation", request.run_id.as_str(), 0));
+        let events = RuntimeEndpointTurnEvents::new(
+            &EndpointEventFrame {
+                request: &request,
+                correlation: &correlation_id,
+            },
+            &mut resources,
+            started_at,
+        )?;
         Ok(Self {
             request,
             resources,
@@ -121,6 +140,7 @@ impl<C: RuntimeClock> RuntimeEndpointTurns<C> {
             turns: 0,
             closed: false,
             cancellation: None,
+            events,
         })
     }
 
@@ -142,6 +162,35 @@ impl<C: RuntimeClock> RuntimeEndpointTurns<C> {
     #[must_use]
     pub const fn is_closed(&self) -> bool {
         self.closed
+    }
+
+    /// Ordered, content-free, hash-chained model observations. An open prefix
+    /// after unwinding is not proof of completion, cancellation or task success.
+    #[must_use]
+    pub fn events(&self) -> &[RuntimeEvent] {
+        self.events.events()
+    }
+
+    /// Bounded future delivery using the coordinator's existing publisher.
+    /// Replay supplies the already recorded prefix, including RunStarted.
+    pub fn subscribe_events(
+        &self,
+        capacity: usize,
+    ) -> Result<RuntimeEventSubscription, RuntimeEventError> {
+        self.resources
+            .validate_subscription_capacity(capacity)
+            .map_err(|_| RuntimeEventError::SubscriberLimit)?;
+        self.events.subscribe(capacity)
+    }
+
+    /// Replays recorded events without invoking a model or consuming authority.
+    /// This is in-memory event replay, never durable resume or model re-execution.
+    pub fn replay_events(
+        &self,
+        after: Option<&RuntimeEventCursor>,
+        limits: RuntimeEventBatchLimits,
+    ) -> Result<RuntimeEventBatch, RuntimeEventError> {
+        self.events.replay(after, limits)
     }
 
     /// Observes the original remaining wall time for preparing the next request.
@@ -259,15 +308,55 @@ impl<C: RuntimeClock> RuntimeEndpointTurns<C> {
                 .consume(resource, amount)
                 .map_err(|_| Admission(RuntimePortFailure::ResourceExhausted))?;
         }
+        let turn_id = RuntimeTurnId::from_raw(derived_id(
+            "turn",
+            self.request.run_id.as_str(),
+            u64::from(self.turns + 1),
+        ));
+        let model_run_id = ModelRunId::from_raw(derived_id(
+            "model-run",
+            self.request.run_id.as_str(),
+            u64::from(self.turns + 1),
+        ));
+        let request_sha256 = observation_sha256(request).map_err(Admission)?;
+        let frame = EndpointEventFrame {
+            request: &self.request,
+            correlation: &self.correlation_id,
+        };
+        self.events
+            .preflight(&frame, &admitted, &turn_id, &model_run_id, &request_sha256)
+            .map_err(Admission)?;
+        // Publish intent before entering the credential-owning dependency. An
+        // event cannot prove that a socket was opened or an attempt completed.
+        self.resources = planned;
+        for kind in [
+            RuntimeEventKind::TurnStarted,
+            RuntimeEventKind::ModelRequested {
+                model_run_id: model_run_id.clone(),
+                request_sha256,
+            },
+        ] {
+            let bytes = self
+                .events
+                .append(
+                    &frame,
+                    &mut self.resources,
+                    self.last_observed_at.get(),
+                    kind,
+                    Some(&turn_id),
+                )
+                .map_err(Admission)?;
+            // Keep the identical canonical recording counters in both the
+            // attempted and pre-attempt rollback ledgers.
+            admitted
+                .admit_event(bytes)
+                .map_err(|_| Admission(RuntimePortFailure::ResourceExhausted))?;
+        }
+        let planned = self.resources.clone();
         // Keep the reservation spent even if a dependency unwinds and its
         // caller catches the panic. This component was closed before entry.
         self.resources = admitted;
         self.turns += 1;
-        let turn_id = RuntimeTurnId::from_raw(derived_id(
-            "turn",
-            self.request.run_id.as_str(),
-            u64::from(self.turns),
-        ));
         let result = phase.execute(&control, port, text);
         let stop = control.into_stop();
         // Admission was reserved above, but a second control observation can
@@ -279,7 +368,35 @@ impl<C: RuntimeClock> RuntimeEndpointTurns<C> {
         if let Some(stop) = stop {
             self.latch_stop(stop);
         }
-        let result = result.map_err(Dispatch)?;
+        let result = match result {
+            Ok(result) => result,
+            Err(error) => {
+                let frame = EndpointEventFrame {
+                    request: &self.request,
+                    correlation: &self.correlation_id,
+                };
+                for kind in [
+                    RuntimeEventKind::ModelFailed {
+                        model_run_id,
+                        failure_code: "runtime.model.incomplete.unknown".to_owned(),
+                    },
+                    RuntimeEventKind::TurnCompleted {
+                        outcome_sha256: super::super::sha256(b"runtime.model.incomplete.unknown"),
+                    },
+                ] {
+                    self.events
+                        .append(
+                            &frame,
+                            &mut self.resources,
+                            self.last_observed_at.get(),
+                            kind,
+                            Some(&turn_id),
+                        )
+                        .map_err(Admission)?;
+                }
+                return Err(Dispatch(error));
+            }
+        };
         let usage = phase.usage();
         let mut completed = self.resources.clone();
         for (resource, amount) in [
@@ -304,13 +421,37 @@ impl<C: RuntimeClock> RuntimeEndpointTurns<C> {
             .run_binding()
             .cloned()
             .ok_or(Admission(RuntimePortFailure::Invalid))?;
-        self.resources = completed;
-        self.closed = false;
-        Ok(RuntimeEndpointTurnResult {
+        let accepted = RuntimeEndpointTurnResult {
             run,
             turn_id,
             result,
-        })
+        };
+        self.resources = completed;
+        let frame = EndpointEventFrame {
+            request: &self.request,
+            correlation: &self.correlation_id,
+        };
+        for kind in [
+            RuntimeEventKind::ModelCompleted {
+                model_run_id,
+                result_sha256: observation_sha256(&accepted.result).map_err(Admission)?,
+            },
+            RuntimeEventKind::TurnCompleted {
+                outcome_sha256: observation_sha256(&accepted).map_err(Admission)?,
+            },
+        ] {
+            self.events
+                .append(
+                    &frame,
+                    &mut self.resources,
+                    self.last_observed_at.get(),
+                    kind,
+                    Some(&accepted.turn_id),
+                )
+                .map_err(Admission)?;
+        }
+        self.closed = false;
+        Ok(accepted)
     }
 
     /// Inspects cumulative known model observations without native-only zeros.
@@ -323,6 +464,8 @@ impl<C: RuntimeClock> RuntimeEndpointTurns<C> {
             prepared_body_bytes: usage.input_bytes,
             accepted_response_text_bytes: usage.output_bytes,
             accepted_dispatch_elapsed_ms: usage.elapsed_ms,
+            recorded_events: usage.event_count,
+            canonical_event_bytes: usage.event_bytes,
         }
     }
 
@@ -332,4 +475,12 @@ impl<C: RuntimeClock> RuntimeEndpointTurns<C> {
             self.cancellation = Some(signal);
         }
     }
+}
+
+fn observation_sha256(value: &impl serde::Serialize) -> Result<String, RuntimePortFailure> {
+    let bytes = serde_json::to_vec(value).map_err(|_| RuntimePortFailure::Invalid)?;
+    if bytes.len() > agentmage_kernel_contracts::MAX_CONTRACT_JSON_BYTES {
+        return Err(RuntimePortFailure::Invalid);
+    }
+    Ok(super::super::sha256(&bytes))
 }

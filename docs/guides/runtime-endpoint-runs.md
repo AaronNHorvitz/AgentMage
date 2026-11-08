@@ -54,9 +54,12 @@ only the immutable run/session/task identifiers and full request digest as
 `run_binding`; the ordinary proposal-only constructor leaves that value absent.
 
 `runtime_loop::endpoint::RuntimeEndpointTurns` now supplies explicit model-turn
-admission for eventual coordinator composition. It accepts only a sealed
+admission and event recording for eventual full coordinator composition. It accepts only a sealed
 ephemeral read-only request without a resume cursor. Its constructor starts one
-run clock. `remaining_ms` and every dispatch borrow the existing coordinator's
+run clock. Constructing another instance for the same sealed run is not prevented
+here; its fresh local ledger/clock gives no new run budget, and the eventual
+coordinator must prevent it through exclusive run ownership. `remaining_ms`
+and every dispatch borrow the existing coordinator's
 clock/cancellation implementation: time cannot restart between turns, regress,
 or continue past the deadline. Cancellation must match the original task and
 derived correlation identity. The exact observed signal remains inspectable;
@@ -81,13 +84,49 @@ Failed dispatches retain their admitted call/input usage. A control stop before
 the phase admits an attempt counts no model call or input bytes. Any refusal or
 failed turn closes this component; it cannot retry or renew its ledger. Streamed
 text remains provisional until completion is accepted. The containing
-coordinator must decide what to do with accepted results and record events.
+coordinator must decide what to do with accepted results.
 If a dependency unwinds and its caller catches the panic, the component stays
 closed with its reservation spent; that reservation proves no remote execution
 or process exit.
 
-This component emits no runtime events, interprets no proposals, and executes
-no orchestration loop, tool, grant, edit, command or retry. It is not yet wired
-into the full coordinator or any live API route. Durable ownership, recovery,
-effect authority and task verification remain there; a cursor alone establishes
-no resumability. No new model prompt or consent mechanism is added.
+The component now records its model observations with the same event framing,
+hash chaining, bounded publisher, subscriptions and replay implementation used
+by the native coordinator. Construction records `RunStarted`; each admitted
+explicit turn records `TurnStarted`, `ModelRequested`, either `ModelCompleted`
+or `ModelFailed`, and `TurnCompleted`. Request and result digests bind complete
+endpoint descriptors; the completed-turn digest additionally binds run and turn.
+No source, model text, address, requested model name or credential is in these
+event envelopes. Sensitivity, policy, run/session/task and correlation identities
+come from the sealed run. Retention is explicitly ephemeral.
+
+Before publishing turn intent or entering the model port, the entire four-event
+completion envelope must fit the shared run ledger. Preflight uses the largest
+legal timestamp encoding and both accepted/failed model-event shapes. Only
+actual canonical count and bytes are committed. `recorded_events` and
+`canonical_event_bytes` expose those known cumulative observations. A run with
+space for its initial event but no complete turn refuses dispatch. Capacity is
+never silently enlarged.
+
+`events`, `subscribe_events` and `replay_events` expose the existing event
+interfaces. Subscriptions deliver future events; replay supplies the prefix
+already recorded. A full queue disconnects that subscriber without blocking
+inference; reconnect by the exact retained cursor. Replay invokes no model and
+consumes no tool authority. Wrong-run or altered cursors and invalid batch bounds
+are refused by the existing implementation.
+
+`ModelRequested` records admitted intent, not proof of socket entry. A normal
+phase stop before the attempt can therefore have a failed intent record with
+zero dispatch usage. A failed model turn records only a stable diagnostic code,
+never dependency text. If a dependency panics, the retained prefix stays open
+at its model intent and reservations stay spent. Recording uses the last trusted
+clock observation; it does not invent a newer timestamp after clock failure.
+Neither a closed turn nor accepted model output asserts task success. This
+component emits no `RunTerminal`, cancellation acknowledgement or exit receipt.
+
+It interprets no proposals and executes no orchestration loop, tool, grant,
+edit, command or retry. The shared event framing is integrated with the native
+coordinator; endpoint turns are not yet accepted by its native-only tool and
+verifier interfaces or any live runtime API route. Full coordinator composition,
+durable ownership, recovery, effect authority and task verification remain open;
+a cursor alone establishes no resumability. No new model prompt or consent
+mechanism is added.

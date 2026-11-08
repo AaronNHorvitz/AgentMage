@@ -2,11 +2,23 @@
 
 ## Active queue: local agent mission
 
+The [endpoint event-recording increment](docs/evidence/t303-endpoint-events-2026-11-08.md)
+connects explicit endpoint turns to the native coordinator's shared event framing,
+bounded publication and replay machinery. Complete turn-record capacity is checked
+before dispatch; recorded model observations never assert task success. Independent
+core review is required. Full endpoint coordinator/tool/verifier composition,
+native edit/test/retry and both T-303/T-306 remain open; no row is added or closed.
+
 The [endpoint turn component](docs/evidence/t303-endpoint-turns-2026-11-08.md)
 adds explicit turn/result binding, cumulative model budgets and the existing
 coordinator's clock/cancellation checks without another orchestration loop.
-It needs independent core review. Full coordinator wiring, native edit/test/retry,
-durable ownership, approved Git and T-303/T-306 remain open; no row is added.
+Its [independent core review](docs/reviews/2164c8b71f60-local-coding-endpoint-turns.txt)
+has **Verdict: PASS** for exact commit `2164c8b71f6042caa4c5a6b766337b6a5b3f5184`,
+with no high/medium finding. Low L1 (fresh-instance ownership wording) is addressed
+in the current guide edit, pending review; L2 (live coordinator/API wiring and
+scoreboard measurement) remains backlog with earlier lows. Full coordinator
+wiring, native edit/test/retry, durable ownership, approved Git and T-303/T-306
+remain open; no row is added.
 
 The [endpoint run-admission increment](docs/evidence/t303-endpoint-run-admission-2026-11-08.md)
 adds static endpoint run framing with the shared task, scope, policy, catalog

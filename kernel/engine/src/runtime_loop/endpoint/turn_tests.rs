@@ -580,6 +580,9 @@ fn endpoint_turns_latch_only_exact_runtime_cancellation_before_and_during_dispat
 
 struct SequenceClock(VecDeque<u64>);
 
+#[path = "turn_event_tests.rs"]
+mod event_tests;
+
 #[test]
 fn endpoint_turns_keep_reservations_spent_when_a_dependency_unwinds() {
     let mut turns = run(request(), clock());

@@ -1,0 +1,152 @@
+Commit: 2164c8b71f6042caa4c5a6b766337b6a5b3f5184
+Scope: local-coding-endpoint-turns
+
+# Independent core review: endpoint model turns (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate session, read-only checkout at /lane/review-checkout.
+This is a same-model review, so a cross-model review is still required before any release.
+Diff reviewed: complete `7e7b2c2a9c699613048695cd9e15119124401e70..2164c8b71f6042caa4c5a6b766337b6a5b3f5184`
+(10 files, +1400/-17). No parent closure or new sub-row requested, and none made.
+
+## Methods
+
+1. Confirmed the commit, the predecessor and a clean checkout. Read IP-POLICY.md, Decisions 0153/0154,
+   the top of TASKS.md, the evidence note, the guide diff and the builder's validation scripts
+   (run.py, audit.py, final.py, README.txt) before running them.
+2. Read all changed source line by line: `runtime_loop/endpoint/turn.rs` (new), `turn_tests.rs` (new),
+   the `RuntimePhaseControl` refactor in `runtime_loop.rs`, `RuntimeResourceLedger::for_endpoint_run`
+   in `runtime_hardening.rs`, and the module/test wiring. Also read the existing
+   `RuntimeEndpointModelPhase::{for_run, execute, usage}`, `RuntimeResourceLedger::consume`,
+   `validate_common_run_shape`, `work_packet::validate_budgets` and the coordinator's
+   `run_turn`/`derived_id`.
+3. Ran the full scoped source gate myself under the shared reservation, then the light checks, then
+   compared the outputs with the builder's.
+4. Computed the expected correlation and turn IDs independently with `sha256sum`.
+5. Cross-checked every number in the evidence note against the builder's raw logs.
+
+## Commands and results
+
+```text
+git rev-parse HEAD                                    -> 2164c8b71f6042caa4c5a6b766337b6a5b3f5184
+sha256sum -c .../t303-endpoint-turns/review-inputs.sha256  -> 49/49 OK
+sha256sum .../review-inputs.sha256                    -> 3b9bae72e7723e0d3cca66627af95a0b63256e465cd0cd222ddd64f7a62c3613 (matches)
+sha256sum .../node-v24.15.0/bin/node                  -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches)
+PATH=<pinned node> CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-endpoint-turns-2164c8b71f60 (new, mode 700)
+bash /tools/build-slot python3 -B .../run.py > fast.log   -> exit 1 (expected; FAST GATE: FAIL)
+   git diff --check 0 | lint-untracked 0 | lint-reviews 0 | markdownlint 0 (0 issues)
+   cargo fmt --check 0 (2.10 s) | clippy -D warnings 0 (43.98 s) | cargo test 101 (309.70 s)
+   SOURCE_FREEZE_UNCHANGED
+python3 -B .../final.py > final.log                   -> exit 0, FINAL_LIGHT_CHECKS_PASS; SOURCE_GATE_REMAINS_FAIL
+cmp validation-3/source-freeze.json <mine>            -> identical
+cmp validation-3/plan-final.json    <mine>            -> identical
+cmp validation-3/audit.json         <mine>            -> identical
+git diff --check 7e7b2c2a… --                          -> clean
+git status --short                                    -> clean
+```
+
+My audit: 43 targets, **2546 passed / 72 failed / 71 ignored / 0 filtered**. Every predecessor pass
+is preserved, plus exactly the 12 new `endpoint_turns_*` methods, all passing. The failure identities,
+normalized diagnostics and ignores match the predecessor. All 72 failures are baseline cases in
+`agentmage_host` (53) and `agentmage_platform_linux` (19), under the deferred T-301.1. No engine test
+fails. The source gate stays FAIL, and the evidence says so.
+
+Independent ID check: `printf 'runtime-run-0001:N' | sha256sum | cut -c1-32` gives `d751581d…` (N=0,
+correlation), `d150adce…` (N=1, turn) and `a77d6acf…` (N=2, turn). These match the test constants, so
+the constants were not copied from the code under test. The coordinator's `run_turn`
+(`runtime_loop.rs:2261-2274`) also consumes one PlanStep and derives `turn` from the run ID and a
+1-based `turn_count`. The component (`turn.rs:220-270`) does the same.
+
+Evidence numbers: the builder's validation-3 sums to 303.43 s (0.10+0.10+0.10+1.15+2.00+18.93+281.05),
+with fmt 2.00, Clippy 18.93 and tests 281.05. Validation-2 had 6 commands, Clippy 26.24 and tests
+303.63, matching the "first corrected" paragraph. fast-1 failed with Clippy/test 101 at compile time,
+matching the "initial gate" paragraph. All ten committed paths are byte-identical to
+`committed-source/`. The six frozen Rust hashes match the commit. The retained predecessor review
+`docs/reviews/7e7b2c2a9c69-…txt` is byte-identical to `/lane/reviews/7e7b2c2a9c69-…md`.
+
+## Analysis
+
+**Run framing.** `new` re-verifies the sealed request digest/shape (`turn.rs:101`). It refuses any mode
+other than `EphemeralReadOnly` and any cursor (`turn.rs:103`), and it refuses a zero or failing clock.
+The tests cover model drift, durable mode and a resume cursor.
+
+**Control refactor.** `RuntimePhaseControl::new` now delegates to `for_run_limits` with exactly
+`&request.task.task_id` and `request.limits.max_elapsed_ms` (`runtime_loop.rs:160-171`). `observe`
+compares the same values (`runtime_loop.rs:202, 222`). Monotonic regression, zero start, exact
+schema/task/correlation cancellation matching and stop latching are unchanged. Every `observe` error
+latches a stop, so `remaining_ms` closes the component on any failed observation, including clock
+failure (test 6).
+
+**Close-first discipline.** `execute_turn` sets `closed = true` before any fallible step
+(`turn.rs:191`) and reopens only on full success (`turn.rs:308`). I traced every `?`/early return
+between those lines: each leaves the component closed. Re-entry after a failure returns before
+touching the port. The tests confirm that the call counters stay unchanged.
+
+**Ledger.** `for_endpoint_run` inserts finite defaults for PlanSteps, ModelCalls, InputBytes
+(`max_request_body_bytes × max_context_refreshes`, overflow-checked), OutputBytes and
+ElapsedMilliseconds. It takes `min` with any declared packet budget. Duplicate packet budgets, which
+would otherwise make `BTreeMap::collect` keep the later and possibly broader value, are already
+refused by `work_packet::validate_budgets` (`work_packet.rs:563-570`) inside `validate_common_run_shape`.
+Read-only `consume` on an absent budget is unbounded, but all five accounted resources are always
+present, so this is not reachable for these resources.
+
+**Envelope before dispatch.** Admission is a clone: planned (+1 PlanStep), then admitted (+input, +1
+call), then envelope (+`response_text_limit_bytes`, +`total_timeout` rounded up). The envelope is never
+committed. The phase bounds streamed bytes by `response_text_limit_bytes`
+(`endpoint.rs:220-223`) and accepted `dispatch_elapsed` by `total_timeout` (`endpoint.rs:240`), so
+the post-acceptance `completed.consume` cannot exceed what the envelope proved. The reserved maxima are
+not spent (test 5 demonstrates exact 2×50 B / 2×2 ms acceptance at the ceiling).
+
+**Spent vs. rolled back.** `self.resources = admitted` is set before `phase.execute`. It is reset to
+`planned` only when the phase reports `dispatch_attempts == 0`, which happens only on a phase-entry
+control stop. A failed dispatch (dependency error, bad digest, oversize stream, callback deadline)
+keeps the call and input spent (tests 4 and 8). A caught panic keeps them spent and closed (test 12).
+A panic inside the phase's own pre-attempt control observation would also keep the reservation. That
+is conservative over-counting, and the guide already says a reservation proves no remote execution.
+
+**Results.** `RuntimeEndpointTurnResult` has private fields and no `Deserialize`/`Clone`, so it cannot
+be built from wire claims. The run binding comes from the phase's own `for_run` framing.
+
+**Scope.** No tool, write, network socket, credential, event, prompt or proposal interpretation is
+added. `grep` shows `RuntimeEndpointTurns` is not used outside its tests, which matches the "not wired"
+labelling. The diff touches no evaluation task, hidden test, scorer, threshold, held-out content,
+Cargo manifest/lockfile, `#[ignore]`, SBOM or release path.
+
+**Public hygiene.** The added lines contain no home path, username, hostname, credential or private
+sibling-project name. The only `/lane/...` sandbox paths are inside the retained predecessor review,
+which follows the accepted precedent.
+
+**Confinement.** This increment adds no tool-execution or filesystem/network surface. No traversal,
+symlink or environment-leak escape attempt applies to it. Confinement boundaries are unchanged.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, documentation): the guide no longer says that a second instance gets a fresh budget.**
+  Location: `docs/guides/runtime-endpoint-runs.md:56-92`, `kernel/engine/src/runtime_loop/endpoint/turn.rs:97`.
+  Nothing prevents a caller from constructing a second `RuntimeEndpointTurns` from the same sealed
+  request. That instance gets a fresh clock and ledger and repeats the same correlation and turn IDs.
+  The previous guide said explicitly, "Creating a second phase does not establish a fresh run budget."
+  The replacement text says only that the component "cannot retry or renew its ledger" and leaves
+  exclusive ownership open.
+  Fix: add one sentence saying that constructing another instance for the same run is not prevented
+  here, gives no fresh run budget, and must be excluded by the eventual coordinator's exclusive
+  ownership. Not exploitable today because nothing outside the tests constructs the type.
+- **L2 (low, delivery backlog): the endpoint turn path is still not reachable from any surface.**
+  Location: `TASKS.md:5-9`.
+  Context admission, run admission and now turns are all unwired kernel components. They are
+  correctly labelled non-closing, no sub-row is added, and the component runs and is tested. The next
+  increment should wire it into the existing coordinator and a live surface, with a development
+  scoreboard entry, rather than adding another standalone component.
+- The predecessor's L1/L2 and earlier lows remain backlog as the builder states.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing increment "endpoint model turns"):** PASS for this increment at exact
+  commit 2164c8b71f6042caa4c5a6b766337b6a5b3f5184. No high or medium finding. L1 and L2 are backlog.
+- **Parents:** both T-303 and T-306 remain OPEN. Coordinator wiring, tool execution, edit/test/retry,
+  exclusive/durable ownership, approved Git and scoreboard runs are not done. This verdict implies no
+  parent completion.
+
+Verdict: PASS
