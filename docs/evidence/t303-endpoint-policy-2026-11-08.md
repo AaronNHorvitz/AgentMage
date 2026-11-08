@@ -93,3 +93,17 @@ source copies and hashes remain private. Current documentation, report and
 hygiene checks run after this measured record is added, without repeating Rust
 verification. The independent report is retained unchanged, and every ledger
 table row remains unchanged. No independent self-approval or parent closure.
+
+## Independent review
+
+The [independent core report](../reviews/4fe1b48698e9-local-coding-endpoint-policy.txt)
+has **Verdict: PASS** for exact commit
+`4fe1b48698e927d9fa6c164836fe04822fd34927`, with no high/medium finding.
+The report is retained unchanged. Its reviewer reproduced Rust format, strict
+Clippy and all 19 targets at 739/53/11/0, preserving the original failures.
+Markdown lint could not be reproduced because Node was absent in that lane;
+this is not a reviewer lint pass or a waived source failure. Low L1 (zero-call
+policy pair) and L2 (guidance narrowing at activation) remain same-row backlog.
+The later native file/grant owner rejects zero-call policies. The endpoint binder
+itself still relies on its trusted caller for guidance exclusions, disabled
+tools and budget caps; no guidance is inferred here. Neither parent closes.

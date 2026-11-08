@@ -1,0 +1,188 @@
+Commit: 4fe1b48698e927d9fa6c164836fe04822fd34927
+Scope: local-coding-endpoint-policy
+
+# Independent core review: endpoint binding to the kernel coding policy (T-303 / T-306, non-closing)
+
+Reviewer: separate Claude Opus 5.5 session at extra-high effort, read-only. I reviewed only the frozen
+checkout `/lane/review-checkout`. Tier: core. Immutable predecessor:
+`974505fb1f2d2b8bbebdfefa5348239cb603cc74`. Neither parent row closes on this increment, and none is
+requested to.
+
+## Methods
+
+- `git rev-parse HEAD` gives `4fe1b48698e927d9fa6c164836fe04822fd34927`. The predecessor resolves to
+  `974505fb1f2d2b8bbebdfefa5348239cb603cc74`. The diff covers exactly eight files (1070+/2-): TASKS.md,
+  two evidence records, the endpoint guide, the retained predecessor review,
+  `shells/host/src/coding_authority.rs`, the new `coding_endpoint_authority.rs` and
+  `coding_endpoint_authority_tests.rs`.
+- I read IP-POLICY.md, decisions 0160–0162, the top of TASKS.md (including T-301/T-301.1), the whole
+  production diff, the whole new test module and the evidence and guide text. I also traced every
+  kernel function the binder relies on: `verify/seal_runtime_endpoint_run_request`,
+  `validate_common_run_shape`, `validate_runtime_run_limits`, `runtime_tool_references`,
+  `runtime_tool_catalog_sha256`, `PolicyEngine::new`/`validate_document`/`ScopeRules::allows`,
+  `OperationBinding`/`GrantOperation`, `ToolDefinition`, `CodingRuntimePolicy::binds_run`, and the
+  guidance derivation in `coding_guidance.rs`.
+- I read the builder's README.md, run.py, parse.py, audit.py, final.py and review.py before running
+  them. They contain no network access, no download and no repository writes.
+- I checked the builder's baseline independently: each of the 19 `baseline-targets.json` entries
+  equals, field for field, the same target parsed from `predecessor-host.log` (10 host targets) or
+  `predecessor-api.log` (all 9 API targets). Totals are 734 passed, 53 failed, 11 ignored, 0 filtered.
+  The selection does not depend on outcome.
+
+## Commands and results
+
+```text
+sha256sum --quiet -c /lane/state/tmp/t303-endpoint-policy/review-inputs.sha256   -> exit 0 (40 entries;
+    manifest sha256 dc68ef582bc275b3aff9e804b8bbf150b00e1fd284fcddfa7f72cea399375a40, as stated)
+CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-endpoint-policy/review.py \
+    /lane/state/tmp/review-endpoint-policy-4fe1b48698e9                            -> exit 1
+  "No installed Node found; record the documentation failure separately. No download."
+  ORDINARY_SOURCE_GATE_EXIT 1 AUDIT_AND_LIGHT_EXIT 1
+  fast.log command exits: diff-check 0, lint-untracked 0, lint-reviews 0, markdownlint 127 (node missing),
+    cargo fmt --check 0 (395.30 s incl. reservation wait), strict clippy -D warnings 0 (52.75 s),
+    cargo test --all-targets --no-fail-fast 101 (155.92 s); "FAST GATE: FAIL"; SOURCE_FREEZE_UNCHANGED
+  final.log: audit.py AssertionError at line 39 on exit codes [0,0,0,127,0,0,101], only because Node is
+    absent. Its earlier per-target identity, failure and diagnostic assertions had already passed.
+cmp .../validation-final/source-freeze.json .../review-endpoint-policy-4fe1b48698e9/source-freeze.json -> 0
+git diff --check 974505fb1f2d2b8bbebdfefa5348239cb603cc74 --                       -> exit 0, no output
+git status --short                                                                -> empty
+```
+
+Missing Node made audit.py stop early, so I completed the audit from reviewer-owned copies in
+`/lane/state/tmp/review-endpoint-policy-4fe1b48698e9/reviewer/`. Nothing in the repository was
+modified.
+
+- `audit_node_absent.py` changes one line, the exit-code assertion: it accepts exactly
+  `[0,0,0,127,0,0]` before the final 101. It ran with exit 0. Results: 19 targets,
+  **739 passed / 53 failed / 11 ignored / 0 filtered**; all 734 predecessor passes are present plus
+  exactly the five new `coding_authority::endpoint::tests::*` methods; every failed and ignored
+  identity and every normalized failure diagnostic is unchanged. Both cargo commands select only
+  `agentmage-host` and `agentmage-local-api`. All three Rust hashes are unchanged from the freeze. The
+  original native test module is byte-identical. The shared envelope equals the old body except for the
+  extracted profile-exclusion lines. Host sources from 7defa427 to the predecessor are unchanged, and
+  TASKS.md table rows are unchanged.
+- `final_node_absent.py --committed` skips only the `node` command (cargo was already skipped in the
+  original) and ran with exit 0, printing `FINAL_LIGHT_PASS`. It covers the exact eight-path scope, the
+  prohibited-string scan of added content, a retained review byte-identical to
+  `/lane/reviews/974505fb1f2d-local-coding-endpoint-mcp.md` (I also checked this with `cmp`: identical),
+  and the 8 committed Git blobs equal to the frozen inputs.
+- In my fast.log all five new tests show `... ok`. Summed `test result:` lines give 739 / 53 / 11. The
+  53 failures are 42 `linux_coding_runtime`, 10 `linux_read` and 1 `linux_repository_map`: the native
+  Linux tests that belong to the deferred T-301.1 environment blocker, unchanged. The source gate is
+  FAIL. I do not waive it, and no Rust regression appears.
+- **Markdown lint was not reproduced.** No Node binary is installed in this reviewer lane, so
+  `markdownlint-cli2` exited 127. As a substitute I checked by hand against `.markdownlint-cli2.jsonc`
+  (MD013/MD022/MD024/MD060 disabled): headings, lists, code spans and the trailing newline look
+  correct, and `git diff --check` is clean. This is not a reproduced lint pass.
+
+No GPU, model, network, HTTP service or outer build-slot was used. The ordinary gate made its own
+per-Cargo reservations.
+
+## Review analysis
+
+**Native entry preserved.** `build_coding_runtime_policy` (`coding_authority.rs:368-393`) still runs
+every original check: profile write-scope workspace, worktree task, `maximum_tool_calls == 0`, and
+empty registry. It then merges the profile guidance exclusions with the caller's exclusions before
+calling the private `build_runtime_policy_envelope`. The only change in order is that the infallible
+exclusion merge now happens before the fallible parent-scope construction. Results and error mapping
+are identical, as I confirmed by reading the code and as the audit body comparison shows. Native
+approval, grant derivation, consumption and the native-profile boundary admission are untouched; the
+diff has no other hunks.
+
+**Endpoint binder** (`coding_endpoint_authority.rs:48-87`):
+
+- **Seal and identity.** `verify_runtime_endpoint_run_request` enforces the schema version, a valid
+  shape (task/session/packet consistency, budgets, endpoint string guard) and the exact whole-request
+  digest. The binder then requires `EphemeralReadOnly`, no cursor, request `workspace_id` equal to the
+  held handle's, a non-empty registry, ordered references equal to `visible_tools`, and a recomputed
+  catalog digest. `runtime_tool_references` hashes each full `ToolDefinition`, so any substituted
+  definition (display name, schema, effects, grant template) is refused. The test checks this with a
+  changed display name.
+- **Read-only.** Every definition's `required_grant.operation` and every `declared_effects` entry must
+  be `WorkspaceRead`. `OperationBinding` carries only taxonomy version, operation and the derived
+  authority class, and `ToolDefinition` has no other capability field. No command, network, Git,
+  delete or publish operation can enter. The envelope's network, credential and publication scopes are
+  still `deny_all`.
+- **Output.** Only `policy_id`, `policy_sha256` and (through `seal_runtime_endpoint_run_request`) the
+  whole-request seal change. The sealer's `schema_version` assignment is a no-op because verify already
+  required the current version. The first test asserts equality with the original request after only
+  those substitutions, plus idempotent rebinding.
+- **Policy content.** Exact actor and task; actions `runtime_action_id(run, 1..=max_tool_calls)`,
+  bounded by the kernel's `MAX_TOOL_CALLS` (65 536), the same bound native profiles have; exact tool
+  bindings; the authorization-bound workspace parent target; and every supplied exclusion, sorted and
+  de-duplicated. A foreign-workspace exclusion fails closed in `GrantTarget::workspace_scope`.
+- **No new effects.** The binder reads no path, issues no grant, records no consent, starts no
+  coordinator, model or service, and accepts no model-originated input. Nothing new needs
+  prompt-injection, path-traversal or symlink escape tests at this layer. Path resolution and
+  revalidation remain in the unchanged platform adapter, which the component test exercises through
+  real descriptors (`LinuxPathAdapter::resolve` + `revalidate`).
+
+**Tests.** I checked each claim against the code. The tampered seal, foreign workspace (resealed),
+DurableReadOnly and ControlledWrite (resealed with complete budgets), wrong catalog digest (sealer and
+binder both refuse), altered definition digest (resealed), substituted registry, empty registry and
+cursor cases each produce refusals. A non-read catalog is refused even when its digest is exact. The
+excluded native target `private/secret.txt` is refused at protected preview rendering. Deny,
+foreign-grant and wrong-challenge responses are refused. There are exactly twelve policy-evaluation
+probes (action 5, actor, session, arguments, expiry, excluded target, preimages, network, credential,
+publication, task, tool version), and the grant stays `Issued` after each. Consumption succeeds once,
+then reuse is refused (`Consumed`). A failed consumption latches `Invalidated` and refuses a later
+valid retry. The source file is unchanged. The test-only `select_test_linux_workspace` selector and the
+in-memory `GrantIssuer` are labelled honestly in the evidence and guide as component evidence, not
+durable authority, activation or a coding outcome.
+
+**Claims and integrity.** The evidence and TASKS text say the increment is inert library composition
+and non-closing, list what stays open, and record the fixture mistakes and corrections. The diff
+touches no evaluation, hidden or held-out task, scorer, threshold, ignore, dependency, Cargo.lock,
+SBOM, status, scoreboard or release file. No row or sub-row is added or closed. Every number in the
+evidence (19 targets, 739/53/11/0, 734 + 5, fmt and clippy pass) matches my run. The 136.56 s timing
+is the builder's own measurement; mine differs only through reservation waits.
+
+**Hygiene and IP.** The added content contains no private host path, username, email, hostname,
+credential, personal data, private sibling-project name or trademark branding. `/lane/...` sandbox
+paths appear only inside the byte-identical retained review, which matches established precedent
+(114 of 122 committed reviews). I found no copied third-party code or text and no licence issue.
+
+Observation, not a finding: `work_packet.protected_files` (here `["private"]`) does not feed policy
+exclusions in either the native or the endpoint path. That predates this commit and is unchanged by it.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low): the binder accepts a zero tool-call budget, which the native path refuses.**
+  `shells/host/src/coding_endpoint_authority.rs:55`. `validate_runtime_run_limits` allows
+  `limits.max_tool_calls == 0`. For such a request the binder returns `Ok` with an empty action set.
+  The native entry refuses that case (`coding_authority.rs:377`), and the returned policy's own
+  `CodingRuntimePolicy::binds_run` requires `maximum_tool_calls > 0` (`coding_authority.rs:200`), so
+  the binder produces a pair its own policy type will not bind. The result fails closed (no action is
+  ever admitted), so this is not an escape. Fix: add `|| request.limits.max_tool_calls == 0` to the
+  guard and add a refusal case to the mode/tampering test.
+- **L2 (low, backlog for the activation step): endpoint binding applies no repository guidance
+  narrowing, and the guide does not say so.** `coding_endpoint_authority.rs:28` and
+  `docs/guides/runtime-endpoint-runs.md:587-599`. On the native path, `CodingSessionProfile` supplies
+  trusted guidance exclusions, disabled tools, confirmation-required tools and budget caps
+  (`coding_guidance.rs:188-233`). The endpoint binder uses only the caller's exclusions and registry.
+  This is safe as inert composition with no caller, but the eventual trusted factory could silently
+  bind a broader policy than a native run over the same workspace would get. Fix: state in the guide
+  and doc comment that no guidance narrowing is applied here. When the factory is wired, derive
+  `excluded_scopes` and the registry from the same verified `CodingGuidancePolicy`, and test that a
+  guidance-excluded path and a disabled tool are refused.
+
+Earlier lows (endpoint MCP L1, owner-lock occupancy by delegated event readers, and the earlier parent
+lows) remain backlog as recorded. The previous L2 (shell Node fallback in the private request) is
+resolved: review.py uses a Python `shutil.which` lookup with empty PATH elements removed and no shell
+or download.
+
+## Per-row result
+
+- **T-303 (OPEN):** this increment PASSES as non-closing policy-binding composition at exact commit
+  4fe1b486. The row stays open for native tool and grant-owner composition, executable activation,
+  edit/test/retry, durable recovery, approved Git and measured outcomes.
+- **T-306 (OPEN):** same result and same remaining work. No closure is requested or granted.
+- No new row or sub-row: compliant.
+
+Reproduction limit: Markdown lint could not run (no Node in this lane). All Rust format, strict-lint
+and test results reproduce and agree with the builder's evidence. The source gate stays FAIL only on
+the deferred T-301.1 native failures, unchanged and not waived.
+
+Verdict: PASS

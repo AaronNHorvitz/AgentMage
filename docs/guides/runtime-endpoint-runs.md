@@ -607,3 +607,47 @@ through the existing test-only workspace selector and kernel grants in memory;
 they establish neither production platform admission nor a running coding agent.
 Executable endpoint activation, native tool/grant composition, edit/test/retry,
 durable recovery, approved Git and parent measurements remain open.
+
+## Native file and grant composition
+
+Trusted hosts can compose `coding_endpoint_files::CodingEndpointFiles` as the
+retained endpoint coordinator's `RuntimeToolBoundary`. This currently accepts
+only the original text file-read contract from
+`runtime_tools::workspace_file_read_runtime_registry`. It requires the original
+sealed request and matching kernel policy, a continuously held authorized Linux
+workspace, privately rooted durable authority and the actual admitted offline
+Linux sandbox runner. Constructing it performs no model call, source read or
+grant issuance. Native model admission is not synthesized or bypassed.
+
+Select the workspace and obtain permission to inspect its files before composing
+this boundary. Source snapshots and endpoint disclosure require their existing
+separate consent. Each model tool call still requires a fresh exact protected
+decision. Exclusions are checked before path resolution. A path is resolved
+under the held root without following symbolic links, with the existing bounded
+native preimage hashing; the held regular file and exact preimage enter the
+protected preview. Revalidate after approval and before consumption. Concurrent
+replacement refuses. A denial cannot become an allow; a used action cannot
+receive fresh authority. Only one pending or issued operation is held at a time.
+
+Approved reads derive the original single-use durable kernel grant and pass it
+through the original authority transaction and offline native worker. Borrowed
+cancellation retains the original task and correlation. An uncertain transaction
+or cleanup latches this boundary closed. Output uses the same verified read
+result, sensitive-text filtering, byte ceiling and receipt-disposition handling
+as the native coordinator. Durable grants and receipts do not establish durable
+coordinator recovery. No command, edit, network, credential, commit or push tool
+is exposed by this catalog.
+
+This is a library composition increment. The lane's native executable ownership
+check remains unavailable; successful native reads and executable service
+activation have not been demonstrated. Descriptor/grant component tests use the
+ordinary private grant owner and explicitly synthetic effect observations;
+they supply no replacement runner and cannot satisfy native admission. Both
+T-303/T-306 and their model measurements remain open.
+
+The endpoint policy binder and this file boundary do not discover repository
+guidance or narrow its catalog/budgets automatically. Before executable
+activation, trusted startup must derive exclusions, disabled tools and budget
+caps from the verified repository-guidance policy. Supplying a broader catalog
+is not permission to ignore that guidance. The zero-call policy-binding edge
+case remains low backlog in the binder; the native file/grant owner refuses it.

@@ -112,6 +112,19 @@ pub fn register_read_only_runtime_tools(
     register_read_only_runtime_tools_with_features(registry, NativeRuntimeFeatures::all_enabled())
 }
 
+/// Builds the original validated single-file text contract for endpoint runs.
+/// This catalog contains no executor, grant or model-admission authority.
+pub fn workspace_file_read_runtime_registry() -> Result<ToolRegistry, NativeToolCatalogError> {
+    let mut registry = ToolRegistry::new();
+    registry
+        .register_tool(Box::new(RegisteredReadOnlyTool {
+            definition: read_only_tool_definition(ReadOnlyToolKind::ReadText),
+            kind: ReadOnlyToolKind::ReadText,
+        }))
+        .map_err(|_| NativeToolCatalogError::RegistrationDenied)?;
+    Ok(registry)
+}
+
 /// Explicit registration flags for independently removable native runtime capabilities.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct NativeRuntimeFeatures {

@@ -3903,7 +3903,7 @@ fn uncertain_command_projection(
     })
 }
 
-fn failed_read_projection(
+pub(crate) fn failed_read_projection(
     receipt: &agentmage_kernel_contracts::Receipt,
     call: &ToolCall,
     code: &str,
@@ -3961,7 +3961,9 @@ fn read_result_contains_sensitive_text(result: &ReadOnlyResult) -> bool {
     })
 }
 
-fn serialize_read_result_for_model(result: &ReadOnlyResult) -> Result<Vec<u8>, &'static str> {
+pub(crate) fn serialize_read_result_for_model(
+    result: &ReadOnlyResult,
+) -> Result<Vec<u8>, &'static str> {
     if read_result_contains_sensitive_text(result) {
         return Err("runtime.tool.output-sensitive");
     }
@@ -4773,7 +4775,7 @@ where
         .map_err(|_| RuntimePortFailure::Invalid)
 }
 
-const fn read_outcome(outcome: ReadOnlyOutcome) -> OperationOutcome {
+pub(crate) const fn read_outcome(outcome: ReadOnlyOutcome) -> OperationOutcome {
     match outcome {
         ReadOnlyOutcome::Succeeded
         | ReadOnlyOutcome::NoResult

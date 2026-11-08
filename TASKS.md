@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The policy-binding predecessor's [independent core review](docs/reviews/4fe1b48698e9-local-coding-endpoint-policy.txt)
+has **Verdict: PASS** for exact commit
+`4fe1b48698e927d9fa6c164836fe04822fd34927`, with no high/medium finding.
+Low L1 (zero-tool-budget binding) and L2 (trusted repository-guidance narrowing
+at activation) remain backlog in these same rows. The new file/grant owner
+already refuses zero-call policies. Its caller must still supply verified
+guidance exclusions, catalog narrowing and budget caps before activation.
+Neither parent closes on this increment; earlier lows remain backlog.
+
+The [endpoint native-file increment](docs/evidence/t303-endpoint-files-2026-11-08.md)
+adds a descriptor/grant owner and a production adapter to the original offline
+Linux file worker. It requires independent core review. Component evidence
+cannot establish native manifest admission or a successful worker/model run.
+Executable service activation, edit/test/retry, durable coordinator recovery,
+approved Git and parent measurements remain open. No row or sub-row is added
+or closed; T-303/T-306 remain open.
+
 The endpoint MCP increment's [independent core review](docs/reviews/974505fb1f2d-local-coding-endpoint-mcp.txt)
 has **Verdict: PASS** for exact commit
 `974505fb1f2d2b8bbebdfefa5348239cb603cc74`, with no high/medium finding.
