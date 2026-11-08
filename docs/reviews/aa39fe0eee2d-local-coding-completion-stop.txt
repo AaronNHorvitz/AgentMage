@@ -1,0 +1,149 @@
+Commit: aa39fe0eee2de8f8cb73cb5432474c2a286c2b7d
+Scope: local-coding-completion-stop
+
+# Independent core review: reject token-limited endpoint completion claims
+
+Reviewer: independent Claude Opus 5.5 session (extra-high effort), read-only, pinned
+checkout `/lane/review-checkout`. Same-model review; a cross-model review is still
+required before any public release.
+
+Row context: T-303 / T-306, non-closing. Both parents remain OPEN; no row is added or
+closed by this commit, and none is closed by this review.
+
+## Methods
+
+1. Confirmed the commit identities: `git rev-parse HEAD` gives
+   `aa39fe0eee2de8f8cb73cb5432474c2a286c2b7d`. The predecessor
+   `2d5fb5c47185f559124caa55d83c4c6fe45491b2` resolves and is the direct parent.
+   The checkout was clean before and after the review.
+2. Read IP-POLICY.md, the decisions referenced by the record (0153, 0154), the top of
+   TASKS.md and the full diff over the predecessor. Five files changed: TASKS.md, a new
+   evidence record, the coding runtime API guide, `completion_claim.rs` and
+   `coding_verifier.rs`.
+3. Read the private README, run.py, final.py and audit.py before running them. They write
+   only to `$AGENTMAGE_VALIDATION_DIR`. final.py runs only the non-Cargo plan commands, the
+   audit and read-only `git` and `diff` checks.
+4. Ran the requested validation in a new private directory
+   `/lane/state/tmp/review-completion-stop-aa39fe0eee2d`. I did not take an outer
+   build-slot reservation; the gate took its own for each Cargo command.
+5. Ran an independent fail-before check. I extracted the exact commit with `git archive`
+   into a scratch copy outside the repository, put back only the predecessor
+   `completion_claim.rs`, and ran the two new tests through `/tools/build-slot`.
+6. Code reasoning on the confinement and identity boundary (below).
+
+## Exact commands and results
+
+```text
+sha256sum -c /lane/state/tmp/t303-completion-stop/review-inputs.sha256   -> all 23 OK
+(manifest sha256 ebc531a7d186bc7d05f1e52920f7c7a953b652f6260dd5ebe12f9b264971d35a, matches request)
+PATH=<pinned node v24.15.0>:$PATH CARGO_TARGET_DIR=/lane/state/review-target
+CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 AGENTMAGE_VALIDATION_DIR=<new dir, mode 700>
+python3 -B .../run.py > fast.log 2>&1      -> exit 1 (expected; cargo test 101)
+  git diff --check            exit=0
+  --lint-untracked            exit=0
+  markdownlint-cli2 (3 files) exit=0
+  cargo fmt --check           exit=0
+  cargo clippy -D warnings    exit=0  (44.73 s)
+  cargo test --all-targets --no-fail-fast  exit=101 (327.88 s)
+  SOURCE_FREEZE_UNCHANGED
+python3 -B .../final.py > final.log 2>&1   -> exit 0
+  FINAL_LIGHT_PASS; ORIGINAL_TEST_BODIES_AND_VERIFIER_PREDICATES_PRESERVED; SOURCE_GATE_FAIL
+  audit.json: totals [2566 passed, 72 failed, 71 ignored, 0 filtered], 43 targets,
+  exactly the two new host tests added, failure/ignore identities unchanged,
+  normalized diagnostics match predecessor, exit codes [0,0,0,0,0,101],
+  ledger table rows unchanged
+cmp builder source-freeze.json vs mine    -> identical
+git diff --check 2d5fb5c4... --           -> clean
+git status --short                        -> empty
+```
+
+Both new tests pass in my full-gate log:
+`endpoint_completion_refuses_token_limit_even_with_valid_complete_claim_json ... ok` and
+`endpoint_completion_registry_refuses_candidates_from_other_runs_and_native_family ... ok`.
+
+Independent fail-before on the scratch copy with only the predecessor constructor restored:
+
+```text
+cargo test --locked --offline -p agentmage-host --lib -- coding_verifier::tests::endpoint_completion
+  endpoint_completion_refuses_token_limit_even_with_valid_complete_claim_json ... FAILED
+    panicked at shells/host/src/coding_verifier.rs:1100:25:
+    assertion failed: matches!(claim, Err(RuntimePortFailure::Invalid))
+  endpoint_completion_registry_refuses_candidates_from_other_runs_and_native_family ... ok
+  test result: FAILED. 1 passed; 1 failed
+```
+
+This matches the builder's regression.log. The registry test passes on old code as
+expected: it tests an identity boundary that this commit does not change, and the commit
+does not claim to fix it.
+
+The timing figures in the evidence (456.51 s total, including slot waits) are the
+builder's. My own run took 2.05 s for formatting, 44.73 s for Clippy and 327.88 s for
+tests. Durations are published measurements, not gates, and the difference is consistent
+with build-cache and slot-wait variance.
+
+## Code review
+
+- `kernel/engine/src/runtime_loop/completion_claim.rs:108`: the new
+  `result.finish != EndpointModelFinish::Stop` check comes before every other binding
+  check and refuses with `Invalid`. `EndpointModelFinish` (contracts `endpoint_model.rs:126`)
+  has exactly `Stop` and `OutputTokenLimit`. The inequality form is fail-closed for any
+  variant added later.
+- `Claim::Endpoint` is a private enum variant, and `RuntimeCompletionClaim::endpoint` is its
+  only constructor (grep over `kernel/` and `shells/`). No other production path turns
+  endpoint text into a completion proposal, so the stop requirement cannot be bypassed
+  through a sibling constructor. No production caller yet invokes
+  `RuntimeCompletionClaim::endpoint`. That is consistent with the record's statement that
+  full endpoint coordinator/API wiring is still open.
+- Native parity: the native path already refuses incomplete finishes
+  (`model_runtime.rs:1066`, `!finish_reason.is_complete()`; covered by
+  `coding_incomplete_model_output_cannot_enter_protocol_recovery`). The endpoint path is
+  now consistent with it.
+- Transport observation is unchanged: the test asserts that `turn.result().finish` keeps
+  both values for identical bytes. Only claim construction differs.
+- Registry test: `VerifierRegistry::verify` (`agent_verifier`, lines 109–114) compares
+  task, proposal, snapshot and revision. The three candidates share task, snapshot and
+  revision, so the six `ContextMismatch` refusals come from proposal identity alone. That
+  identity is the SHA-256 of the serialized turn, which carries the run binding, plus the
+  payload. Each candidate's own registry accepts it, which rules out a vacuous refusal. The
+  test asserts disposition `NoOp` and a passing postcondition for each candidate.
+- Test-helper change in `coding_verifier.rs`: the only removed line is the hard-coded
+  `EndpointModelFinish::Stop` literal, now parameterized. `completion_turn` still passes
+  `Stop`, so existing test bodies behave the same. final.py proves this textually, and the
+  audit shows all predecessor passes are retained.
+- No change to native admission, model dispatch, turn recording, verifier predicates,
+  registry rules, effect authority, tool confinement, the sandbox, network or Git push. No
+  new confinement surface, so no escape attempt applies to this diff. The previously
+  reviewed boundaries are unchanged by the diff.
+- Evaluation integrity: no frozen-task, hidden, held-out, scorer, threshold, ignore or
+  prompt content is touched, and no score or model number is claimed.
+- Supply chain: no dependency, lockfile or SBOM change.
+
+## Claims and public hygiene
+
+- The evidence record, guide section and TASKS prose match what I ran and read. The
+  2566/72/71/0 totals, 43 targets, two new methods, unchanged failure identities and
+  diagnostics, fmt/Clippy PASS and source gate FAIL were all reproduced. Labelling is
+  honest: synthetic boundary tests, no executable endpoint coding workflow, no score, and
+  both parents open.
+- Scan of added lines: no private host path, username, hostname, credential, personal data
+  or private sibling-project name, and no third-party product or trademark naming.
+  Repository-relative links only.
+- Delivery: no new row or sub-row, and no row that only adds plans.
+
+## Findings
+
+High: none.
+Medium: none.
+Low: none new. Earlier backlog lows are unaffected. Prior low L1 (candidate admission bound
+to the owning request/family in full composition) is now partly covered at the identity
+level by the new registry test. As the record says, live coordinator selection of the
+correct registry is still open, so L1 stays in the backlog until that composition lands.
+
+## Per-row result
+
+- T-303: this increment PASSES as a non-closing fix; the row stays OPEN.
+- T-306: this increment PASSES as a non-closing fix; the row stays OPEN.
+
+No row closure is approved or implied.
+
+Verdict: PASS

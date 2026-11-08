@@ -215,3 +215,46 @@ fields. Endpoint tool-proposal admission, the containing coordinator's exclusive
 run ownership and model/context orchestration, answer-evidence provenance and
 live HTTP/CLI/MCP composition still require implementation. This increment
 provides no endpoint coding workflow, durable continuation or new model score.
+
+## Terminal framing and endpoint answer provenance
+
+The coordinator's existing native outcome validator now shares its identity,
+terminal-state, counter, evidence, receipt, diagnostic and bounded-output
+predicates with endpoint terminal framing. Native sealing, serialization and
+answer-evidence validation retain their original behavior and exact model
+manifest requirements.
+
+`seal_runtime_endpoint_outcome` and `verify_runtime_endpoint_outcome` use the
+distinct `RuntimeEndpointOutcome` envelope. Its `outcome` contains the common
+terminal observations; its outer `answer_evidence` binds an endpoint completion
+claim and the complete ordered current evidence. The nested native
+`outcome.answer_evidence` must be null. An endpoint model observation never
+becomes a native manifest, token count or evidence-state assignment.
+
+Successful rendered output requires the owning `RuntimeCompletionClaim` at
+both sealing and verification. Its original accepted turn, ordinary model stop,
+request/response descriptors, complete sealed run and exact schema-bound bytes
+remain bound by the claim digest. The output must equal that claim's complete
+inline payload, including its schema, media type and digest. Decoding recorded
+metadata cannot reconstruct the accepted claim. The nonzero turn count must
+identify that claim's actual turn, with an equal model-call count. Missing or
+foreign claims, changed output and native answer evidence refuse. Shape and
+size validation precede citation hashing. Failures carry no answer
+provenance or supplied completion claim. Shared shape validation still permits
+success without rendered output, with evidence, just as native outcomes do;
+that grants no task-success authority.
+
+`outcome.outcome_sha256` hashes the **whole endpoint envelope**, with that
+nested digest set to zero. A future coordinator terminal event must reference
+this whole-envelope digest, never a hash of just the nested outcome. The wire
+form is closed and versioned through the nested outcome; outer answer evidence
+must be explicitly present or null. It is distinct from native outcome JSON.
+
+Only ephemeral read-only endpoint framing without a resume cursor is admitted.
+No durable, artifact-backed or controlled-write endpoint mode is enabled here.
+These functions frame an already decided result; they never verify a coding
+task, inspect a repository, select a proposal, emit a terminal event or run a
+loop. The containing coordinator must obtain its own current tool observations,
+receipts and state revision and pass its exact verifier registry before deciding
+success. Full endpoint coordinator and API wiring, exclusive ownership,
+edit/test/retry and measured coding acceptance remain open.

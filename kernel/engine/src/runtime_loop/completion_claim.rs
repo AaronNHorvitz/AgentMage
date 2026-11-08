@@ -164,6 +164,13 @@ impl<'a> RuntimeCompletionClaim<'a> {
         }
     }
 
+    pub(crate) const fn endpoint_turn(&self) -> Option<&'a RuntimeEndpointTurnResult> {
+        match self.0 {
+            Claim::Endpoint { turn, .. } => Some(turn),
+            Claim::Native(_) => None,
+        }
+    }
+
     /// Checks the request family and exact model/run binding before verifier
     /// entry. This is identity binding, never proposal or effect admission.
     #[must_use]

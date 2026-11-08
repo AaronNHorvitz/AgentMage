@@ -18,6 +18,11 @@ use crate::runtime_answer::verify_runtime_answer_evidence;
 use crate::runtime_hardening::RuntimeHardeningLimits;
 
 pub use endpoint::{seal_runtime_endpoint_run_request, verify_runtime_endpoint_run_request};
+mod endpoint_outcome;
+pub use endpoint_outcome::{
+    RuntimeEndpointAnswerEvidence, RuntimeEndpointOutcome, seal_runtime_endpoint_outcome,
+    verify_runtime_endpoint_outcome,
+};
 
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const MAX_IDENTIFIER_BYTES: usize = 128;
@@ -479,31 +484,11 @@ fn validate_runtime_outcome_shape(
     outcome: &RuntimeOutcome,
     request: &RuntimeRunRequest,
 ) -> Result<(), RuntimeCoordinatorError> {
-    if outcome.schema_version != CONTRACT_SCHEMA_VERSION {
-        return Err(RuntimeCoordinatorError::VersionMismatch);
-    }
-    if outcome.run_id != request.run_id
-        || outcome.session_id != request.session_id
-        || outcome.task_id != request.task.task_id
-        || outcome.request_sha256 != request.request_sha256
-    {
-        return Err(RuntimeCoordinatorError::BindingMismatch);
-    }
-    if !outcome.state.is_terminal()
-        || outcome.turn_count > request.limits.max_turns
-        || outcome.model_call_count > request.limits.max_model_calls
-        || outcome.tool_call_count > request.limits.max_tool_calls
-        || !valid_identifier(outcome.prior_event_id.as_str())
-        || !valid_sha256(&outcome.prior_event_sha256)
-        || !valid_sha256(&outcome.outcome_sha256)
-        || !valid_evidence(&outcome.evidence)
-        || !unique_identifiers(outcome.receipt_ids.iter().map(|value| value.as_str()))
-        || !valid_codes(&outcome.unresolved_codes)
-        || !valid_output(outcome.output.as_ref(), request)?
-        || (outcome.state.is_success() && outcome.evidence.is_empty())
-    {
-        return Err(RuntimeCoordinatorError::OutcomeDenied);
-    }
+    validate_common_runtime_outcome_shape(
+        outcome,
+        &RuntimeRunShape::from(request),
+        &request.limits,
+    )?;
     match (&outcome.answer_evidence, &outcome.output) {
         (Some(answer), Some(output)) if outcome.state.is_success() => {
             if !verify_runtime_answer_evidence(answer, request, output, &outcome.evidence) {
@@ -515,6 +500,43 @@ fn validate_runtime_outcome_shape(
         }
         (None, _) => {}
         (Some(_), _) => return Err(RuntimeCoordinatorError::OutcomeDenied),
+    }
+    Ok(())
+}
+
+fn validate_common_runtime_outcome_shape(
+    outcome: &RuntimeOutcome,
+    request: &RuntimeRunShape<'_>,
+    limits: &RuntimeRunLimits,
+) -> Result<(), RuntimeCoordinatorError> {
+    if outcome.schema_version != CONTRACT_SCHEMA_VERSION {
+        return Err(RuntimeCoordinatorError::VersionMismatch);
+    }
+    if &outcome.run_id != request.run_id
+        || &outcome.session_id != request.session_id
+        || outcome.task_id != request.task.task_id
+        || outcome.request_sha256 != request.request_sha256
+    {
+        return Err(RuntimeCoordinatorError::BindingMismatch);
+    }
+    if !outcome.state.is_terminal()
+        || outcome.turn_count > limits.max_turns
+        || outcome.model_call_count > limits.max_model_calls
+        || outcome.tool_call_count > limits.max_tool_calls
+        || !valid_identifier(outcome.prior_event_id.as_str())
+        || !valid_sha256(&outcome.prior_event_sha256)
+        || !valid_sha256(&outcome.outcome_sha256)
+        || !valid_evidence(&outcome.evidence)
+        || !unique_identifiers(outcome.receipt_ids.iter().map(|value| value.as_str()))
+        || !valid_codes(&outcome.unresolved_codes)
+        || !valid_output(
+            outcome.output.as_ref(),
+            request.mode,
+            limits.max_output_bytes,
+        )?
+        || (outcome.state.is_success() && outcome.evidence.is_empty())
+    {
+        return Err(RuntimeCoordinatorError::OutcomeDenied);
     }
     Ok(())
 }
@@ -572,29 +594,30 @@ fn valid_evidence(evidence: &[EvidenceReference]) -> bool {
 
 fn valid_output(
     output: Option<&RuntimeOutput>,
-    request: &RuntimeRunRequest,
+    mode: RuntimeSessionMode,
+    max_output_bytes: u64,
 ) -> Result<bool, RuntimeCoordinatorError> {
     Ok(match output {
         None => true,
-        Some(RuntimeOutput::Inline { payload }) => valid_payload(payload, request),
+        Some(RuntimeOutput::Inline { payload }) => valid_payload(payload, max_output_bytes),
         Some(RuntimeOutput::Artifact { reference }) => {
-            request.mode != RuntimeSessionMode::EphemeralReadOnly
+            mode != RuntimeSessionMode::EphemeralReadOnly
                 && valid_identifier(reference.artifact_id.as_str())
                 && valid_sha256(&reference.sha256)
                 && reference.byte_size > 0
-                && reference.byte_size <= request.limits.max_output_bytes
+                && reference.byte_size <= max_output_bytes
                 && valid_media_type(&reference.media_type)
         }
     })
 }
 
-fn valid_payload(payload: &ContractPayload, request: &RuntimeRunRequest) -> bool {
+fn valid_payload(payload: &ContractPayload, max_output_bytes: u64) -> bool {
     valid_identifier(payload.schema.schema_id.as_str())
         && payload.schema.schema_version > 0
         && valid_sha256(&payload.schema.schema_sha256)
         && valid_media_type(&payload.media_type)
         && u64::try_from(payload.bytes.len())
-            .is_ok_and(|bytes| bytes > 0 && bytes <= request.limits.max_output_bytes)
+            .is_ok_and(|bytes| bytes > 0 && bytes <= max_output_bytes)
         && payload.sha256 == sha256(&payload.bytes)
 }
 

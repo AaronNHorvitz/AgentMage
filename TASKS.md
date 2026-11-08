@@ -2,19 +2,35 @@
 
 ## Active queue: local agent mission
 
+Endpoint terminal framing now uses the native coordinator's shared outcome
+predicates and a distinct envelope bound to the exact accepted endpoint
+completion, current turn and ordered evidence. No native model provenance is
+invented. See the [terminal framing record](docs/evidence/t303-endpoint-outcomes-2026-11-08.md).
+Independent core review is required. This is a composition prerequisite, not
+an executable endpoint coding workflow; full coordinator/API wiring, native
+edit/test/retry and T-303/T-306 remain open. No row is added or closed.
+
 Endpoint completion claims now require an ordinary model stop; output-token-limit
 responses remain transport observations even when their JSON is complete. New
 registry tests check candidate substitution between endpoint runs and the native
 family. See the [completion safety record](docs/evidence/t303-completion-stop-2026-11-08.md).
-Independent core review is required; T-303/T-306 remain open, with no new row.
+Its [independent core review](docs/reviews/aa39fe0eee2d-local-coding-completion-stop.txt)
+has **Verdict: PASS** for exact commit `aa39fe0eee2de8f8cb73cb5432474c2a286c2b7d`,
+with no high/medium or new low finding. Full coordinator selection of the
+owning verifier registry remains backlog. T-303/T-306 stay open; no new row.
 
 The existing coordinator now selects a model-independent completion-verifier
 entry point. Native-only ports retain the exact original native proposal;
 endpoint claims bind accepted explicit turns and exact stream bytes without a
 native profile or codec. The coding verifier uses the same deterministic checks
 for both forms. See the [completion boundary record](docs/evidence/t303-completion-claims-2026-11-08.md).
-Independent core review is required. Full endpoint orchestration/API wiring,
-native edit/test/retry and both T-303/T-306 remain open; no row is added or closed.
+Its [independent core review](docs/reviews/2d5fb5c47185-local-coding-completion-claims.txt)
+has **Verdict: PASS** for exact commit `2d5fb5c47185f559124caa55d83c4c6fe45491b2`,
+with no high/medium finding. Low L1 (private review helper lock detection and
+gate-failure discrimination) remains backlog with earlier lows; this batch's
+runner uses the gate's own reservations and checks actual gate completion.
+Full endpoint orchestration/API wiring, native edit/test/retry and both
+T-303/T-306 remain open; no row is added or closed.
 
 The coordinator now calls scoped non-transactional tool and verifier entry points
 that preserve the complete original request family. The existing coding verifier

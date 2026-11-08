@@ -6266,7 +6266,7 @@ const DERIVED_CALL_ID_KIND: &str = "selected-call";
 /// Call identities under this prefix are reserved for derived calls.
 const DERIVED_CALL_ID_PREFIX: &str = "selected-call:";
 
-fn derived_id(prefix: &str, run_id: &str, sequence: u64) -> String {
+pub(crate) fn derived_id(prefix: &str, run_id: &str, sequence: u64) -> String {
     format!(
         "{prefix}:{}",
         &sha256(format!("{run_id}:{sequence}").as_bytes())[..32]

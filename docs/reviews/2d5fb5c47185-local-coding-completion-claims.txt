@@ -1,0 +1,208 @@
+Commit: 2d5fb5c47185f559124caa55d83c4c6fe45491b2
+Scope: local-coding-completion-claims
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Pinned checkout
+`/lane/review-checkout`; `git rev-parse HEAD` = `2d5fb5c47185f559124caa55d83c4c6fe45491b2`.
+Immutable predecessor: `155621ea5260bbbc2c7e4037a4b44b6eccec98f5`. Rows: T-303 / T-306,
+non-closing increment. Both parents remain OPEN. No row is added or closed.
+
+## Methods
+
+- Read IP-POLICY.md, the TASKS.md active-queue prose, the new evidence record
+  `docs/evidence/t303-completion-claims-2026-11-08.md`, the guide section added to
+  `docs/guides/runtime-endpoint-runs.md` and the committed predecessor review copy.
+- Read the complete Rust diff against the predecessor: `runtime_loop.rs`, new
+  `runtime_loop/completion_claim.rs`, `runtime_loop/endpoint.rs`, `runtime_loop_scope_tests.rs`
+  and `shells/host/src/coding_verifier.rs`. I also read the supporting code it depends on:
+  `run_scope.rs` (scope constructors verify the full sealed request digest),
+  `endpoint/turn.rs` (`RuntimeEndpointTurnResult` has private fields, derives only
+  Debug/Serialize, has no Clone or Deserialize, and has a single constructor on the accepted-turn
+  path), `valid_output_payload`, and the coding verifier's `parse_candidate`, `evaluate` and
+  `required_evidence_present`.
+- Read the private README, `run.py`, `final.py` and `audit.py` before running them. They write
+  only under `AGENTMAGE_VALIDATION_DIR`.
+- Ran the full scoped gate and the final light checks myself (see below). I did not use the GPU.
+  No model run applies to this increment.
+
+## Commands and results
+
+```text
+sha256sum -c /lane/state/tmp/t303-completion-claims/review-inputs.sha256      -> 36/36 OK
+sha256sum review-inputs.sha256 -> c2655deb2d9066986e9f7572bce5ea7448803be70c2c51ec8dfd8eca67053251 (matches request)
+sha256sum node-v24.15.0/bin/node -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches request)
+```
+
+Attempt 1 used the requested commands unchanged, with
+`AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-completion-claims-2d5fb5c47185`, a new directory
+with mode 700. `run.py` stopped at line 6 with `OSError: [Errno 9] Bad file descriptor` before
+any plan, freeze or Cargo step. The current `/tools/build-slot` takes `heavy.lock` *or*
+`heavy2.lock` on a dynamically assigned descriptor (`exec {fd}<>`), not descriptor 9. The
+requested shell snippet treats any exit 1 as the expected gate failure, so it accepted this crash.
+`final.py` then failed because `plan.json` was missing. I kept this directory as a record. Its
+results are not used.
+
+Attempt 2 used `AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-completion-claims-2d5fb5c47185-2`,
+another new directory with mode 700. It ran a reviewer copy of `run.py`
+(`/lane/state/tmp/review-completion-claims-2d5fb5c47185-runner/run_adapted.py`, SHA-256
+`26f814e5f03b59305e8b46537bb1e4eb2d3f939d25bdaf384cab3b8b4976e5a5`). I changed only lines 6–8,
+the descriptor-9 lock assertion. The copy instead finds every inherited descriptor whose
+device/inode matches `/shared/heavy.lock` or `/shared/heavy2.lock`, asserts at least one, and
+applies the same `flock(LOCK_EX|LOCK_NB)` to it. The plan, freeze, source copy, `env` prefix,
+`gate.execute` and freeze recheck are byte-identical. All other commands match the request.
+
+```text
+bash /tools/build-slot python3 -B .../run_adapted.py > fast.log  -> exit 1, wall 561 s incl. queue
+  HELD_LOCK ['/shared/heavy2.lock']
+  RESULT exits 0,0,0,0,0,0,101   (7-command review plan: diff-check, lint-untracked,
+                                  lint-reviews, markdownlint, fmt 2.25 s, clippy -D warnings
+                                  75.35 s, test 399.76 s)
+  FAST GATE: FAIL; SOURCE_FREEZE_UNCHANGED
+python3 -B final.py > final.log                                  -> exit 0
+  markdownlint 3 files, 0 issues; FINAL_LIGHT_CHECKS_PASS; ORIGINAL_TESTS_PRESERVED;
+  SOURCE_GATE_REMAINS_FAIL
+cmp validation-3/source-freeze.json  <mine>/source-freeze.json   -> identical
+cmp validation-3/plan-final.json     <mine>/plan-final.json      -> identical
+git diff --check 155621ea…                                       -> clean
+git status --short                                               -> empty
+```
+
+My `audit.json` against the builder's `validation-3/audit.json`:
+
+- These fields are equal: `passed_failed_ignored_filtered` = [2564, 72, 71, 0],
+  `test_targets` = 43, all 72 failure identities, all 71 ignored identities, `new_methods`, the
+  five `source_sha256` values, `normalized_diagnostics_match_predecessor` and
+  `ledger_rows_unchanged`.
+- `audit.py` independently compares against the predecessor's raw log
+  (`t303-run-scope/validation-1/fast.log`). Every predecessor pass is preserved plus exactly six
+  additions, all six pass:
+  - `coding_verifier::tests::completion_claim_{accepted_endpoint_refuses_legacy_verifier_before_entry, endpoint_refuses_stream_run_schema_and_family_substitution, endpoint_requires_current_receipts_validation_and_snapshot, endpoint_verifies_accepted_stream_without_native_profile_or_codec}`
+  - `runtime_loop::tests::scope_tests::completion_claim_{existing_coordinator_calls_model_independent_verifier_with_original_native_proposal, native_preserves_model_binding_and_refuses_endpoint_scope}`
+- The exit arrays differ in length (builder 6, mine 7) only because of the `--lint-reviews`
+  command, as disclosed. The three Cargo commands are identical, which `final.py` asserts.
+- The builder's timings sum exactly to the claimed 370.66 s (0.10 + 0.10 + 1.20 + 2.11 + 29.72 +
+  337.43).
+- The gate is a FAIL that matches the T-301.1 baseline. It is not a green gate, and the evidence
+  says so.
+
+Other checks:
+
+- `cmp docs/reviews/155621ea5260-local-coding-coordinator-scope.txt
+  /lane/reviews/155621ea5260-local-coding-coordinator-scope.md`: identical.
+- `git diff --stat` of Cargo.lock, Cargo.toml, scripts, fixtures, architecture and evals: empty.
+- I scanned the added lines for private paths, usernames, the user's email, hostnames,
+  credentials and other agent or product names. The only matches are `/lane/...`, `/tools/...` and
+  the reviewer model name, all inside the byte-identical committed predecessor review copy. That
+  follows existing practice (101 of 109 committed reviews contain the same sandbox paths), and
+  none of them is a user, host or credential.
+
+## Analysis
+
+**Coordinator entry.**
+- `runtime_loop.rs:2949` now calls `verify_completion(...into_completion())`.
+  `into_completion` wraps the same `&ClosedModelProposal` and moves every other field unchanged.
+- Native model/proposal admission, approval, state transitions and `registry.verify(&candidate)`
+  are untouched.
+- The test `completion_claim_existing_coordinator_calls_model_independent_verifier_with_original_native_proposal`
+  shows three things:
+  - The verifier's `verify` and `verify_scoped` both panic and are never reached.
+  - Pointer identity holds for the proposal id and payload.
+  - A tampered approval digest is refused before any effect (executions = 0, calls = 0), and the
+    run still completes after a correct approval.
+
+**Default adapter** (`runtime_loop.rs:1192-1213`).
+- The order of checks is: `matches_scope` (native profile and codec equal the run's),
+  `native_request()?`, then `native_proposal()`, and only then does it delegate to the existing
+  `verify_scoped` override.
+- Endpoint claims fail at step 1 or step 3 before either legacy method. The panicking
+  `LegacyCompletionVerifier` and `NativeOnly` tests prove this.
+- Existing `verify_scoped` overrides are still reached through the coordinator. The predecessor's
+  scoped coordinator test still passes unchanged.
+
+**Endpoint claim** (`completion_claim.rs:96-160`).
+- Construction requires an endpoint `RuntimeRunScope`. That scope's constructor re-verifies the
+  complete sealed digest, so binding through `request_sha256` covers the objective, policy and
+  limits.
+- It also requires all of the following:
+  - The turn's private `RuntimeEndpointRunBinding` matches the run id, session, task and digest.
+  - The selected endpoint and model are equal.
+  - The response length equals the accepted length. This is checked before hashing, so
+    caller-supplied text is never hashed unbounded.
+  - SHA-256 equality with the accepted response.
+  - Text that is non-empty and within `max_output_bytes`.
+  - A valid schema reference.
+  - `valid_output_payload`.
+- The claim `kind` is fixed to `CompletionCandidate` with `has_tool_call` false. Model text can't
+  pick the schema, the kind or a tool call, and it is never parsed as instructions.
+- `serde_json::to_vec` of the full turn, schema and payload produces the claim digest, and the
+  proposal id derives from that digest. The tests check that it is deterministic and
+  schema-sensitive.
+- `RuntimeEndpointTurnResult` has no public constructor, Clone or Deserialize, so a wire claim
+  can't forge an accepted turn.
+- `matches_scope` re-binds the claim when it is used. Tests show refusal for changed run id,
+  model, `policy_sha256` and objective, each resealed; for a native scope; and for stream text
+  with an extra byte or the same length but altered content.
+- The prompt-injection surface is limited to the model writing candidate JSON. `parse_candidate`
+  still requires the exact coding schema, `application/json`, a payload hash, the objective
+  SHA-256 and bounded fields. Success still requires caller-supplied current receipts, ordered
+  validation and repository inspection, and the registry. A text-only claim gets `Failed`, as the
+  mutation test shows.
+
+**Coding verifier.**
+- `verify_completion` checks `matches_scope` and then runs the same `verify_claim` that
+  `verify_scoped` uses.
+- `final.py` statically proves that the candidate construction, `evaluate`, `parse_candidate`
+  predicates and evidence selection differ only by accessor syntax, and that every original test
+  body is preserved.
+- The new negative fixture has a passing control (`Success`, postcondition passed). Its five
+  one-condition mutations (missing receipt, duplicate receipt, stale evidence, missing validation,
+  wrong snapshot) each yield `Failed`.
+
+**Recorded source transformations.** `final.py` confirms that the two transformations between
+`validation-1` and the final sources are exactly the ones described:
+- the serializer call and its unused import, with digest fields unchanged;
+- the fixture receipt plus control.
+
+`validation-2` has no source freeze and only the cancellation note.
+
+**Evaluation integrity, safety and claims.**
+- No frozen, hidden or held-out task, scorer, threshold, ignore, dependency, SBOM, status or
+  prompt file changed.
+- No score or real-model claim is made.
+- No effect path, tool confinement, network, Git or push code changed in this increment, so I ran
+  no new confinement escape probes. The tool boundaries are unchanged from the predecessor's
+  reviewed state.
+- The prose labels the gate FAIL and keeps both parents OPEN. It also lists full endpoint
+  orchestration, API wiring, edit/test/retry and Git as open.
+- There are no sub-rows.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, process, private tooling, not in the repository):**
+  `/lane/state/tmp/t303-completion-claims/run.py:6-8` hard-codes descriptor 9 and
+  `/shared/heavy.lock`. The current two-slot `/tools/build-slot` holds either lock on a dynamic
+  descriptor, so the requested reproduction fails before the gate. The requested
+  `test "$?" -eq 1` also can't tell that crash from the expected gate failure: attempt 1 above
+  "passed" that check with no gate run.
+  - **Fix:** in future helpers, locate the held lock by inode across both lock files, as my
+    adapted copy does.
+  - **Fix:** have the request snippet require `FAST GATE: FAIL` and `SOURCE_FREEZE_UNCHANGED` in
+    `fast.log`, not just exit 1. Note that `audit.py` already enforces both, and `final.py` would
+    have failed.
+- **Carried lows from the predecessor (backlog, unchanged):**
+  - **L1:** registry candidate admission is not yet bound to the owning run and request family in
+    full composition. Tool results and receipts given to the verifier are still caller-supplied.
+  - **L2:** scope verification is repeated.
+  - `CodingCompletionVerifier::verify_scoped` still accepts an endpoint scope with a native-shaped
+    proposal without `matches_scope`. This is documented as legacy compatibility. The coordinator
+    now uses `verify_completion`, and the guide says endpoint composition must use the claim
+    entry.
+
+## Per-row result
+
+- **T-303 (non-closing increment):** PASS for this boundary increment. The parent stays OPEN.
+- **T-306 (non-closing increment):** PASS for this boundary increment. The parent stays OPEN.
+- No row closure is requested, and none is granted.
+
+Verdict: PASS
