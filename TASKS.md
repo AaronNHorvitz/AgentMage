@@ -2,12 +2,24 @@
 
 ## Active queue: local agent mission
 
+The [endpoint context admission](docs/evidence/t303-endpoint-context-2026-11-08.md)
+now derives bounded ordered-message observations in the kernel before preparing
+live snapshot, workspace and repair dispatches. The phase requires exact
+agreement with that context; metadata contains no source text or token estimate.
+This non-closing T-303/T-306 increment needs independent core review. Full
+endpoint coordinator composition, native edit/test/retry and both parents
+remain open.
+
 The [streaming endpoint model port](docs/evidence/t303-endpoint-port-2026-11-08.md)
 now dispatches the existing proposal API through a prepared-request port. The
 kernel independently binds complete response descriptors to delivered text,
 checks byte limits before delivery and latches callback control stops. This is
-a non-closing T-303/T-306 increment; independent core review is required.
-Full endpoint coordinator composition and both parents remain open.
+a non-closing T-303/T-306 increment. Its [independent core review](docs/reviews/f97b5d3351aa-local-coding-endpoint-port.txt)
+has **Verdict: PASS** for exact commit `f97b5d3351aabcba511f0accb6e9ccb2110f1d28`,
+with no high/medium finding. Low L1 (overflow-latch test discrimination) and L2
+(pre-dispatch mismatch diagnostic wording) remain backlog alongside retained
+lows. This accepts only that streaming port; full endpoint coordinator
+composition and both parents remain open.
 
 The [endpoint-phase independent core review](docs/reviews/b56d936d7147-local-coding-endpoint-phase.txt)
 has **Verdict: PASS** for exact commit `b56d936d71473cdeb3cc80ff3c640b25b58d5087`,

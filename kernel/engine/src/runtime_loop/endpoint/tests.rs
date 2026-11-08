@@ -6,8 +6,8 @@ use std::num::NonZeroU64;
 use std::time::Duration;
 
 use agentmage_kernel_contracts::{
-    EndpointModelBody, EndpointModelContext, EndpointModelFinish, EndpointModelLimits,
-    EndpointModelSelection, ProviderTokenUsage,
+    EndpointModelBody, EndpointModelFinish, EndpointModelLimits, EndpointModelSelection,
+    ProviderTokenUsage,
 };
 
 use super::*;
@@ -21,17 +21,26 @@ impl ModelOperationControl for Control {
 fn live() -> Control {
     Control(Cell::new(Ok(NonZeroU64::new(100).unwrap())))
 }
+fn context() -> RuntimeEndpointContextPacket {
+    RuntimeEndpointContextPacket::from_messages(&[
+        RuntimeEndpointMessage {
+            role: RuntimeEndpointMessageRole::System,
+            content: "instructions",
+        },
+        RuntimeEndpointMessage {
+            role: RuntimeEndpointMessageRole::User,
+            content: "task",
+        },
+    ])
+    .unwrap()
+}
 fn request() -> EndpointModelRequest {
     EndpointModelRequest::from_prepared_body(
         EndpointModelSelection {
             endpoint: "http://127.0.0.1:1234/v1".into(),
             model: "synthetic".into(),
         },
-        EndpointModelContext {
-            message_count: 2,
-            serialized_messages_bytes: 100,
-            serialized_messages_sha256: "a".repeat(64),
-        },
+        context().messages().clone(),
         EndpointModelBody {
             request_body_bytes: 200,
             request_body_sha256: "b".repeat(64),
@@ -118,7 +127,7 @@ fn endpoint_phase_accounts_one_frozen_dispatch_without_native_tokens_or_memory()
             EndpointModelFinish::OutputTokenLimit,
         ] {
             let request = request();
-            let mut phase = RuntimeEndpointModelPhase::new(&request).unwrap();
+            let mut phase = RuntimeEndpointModelPhase::new(&request, context()).unwrap();
             assert_eq!(phase.usage().dispatch_attempts, 0);
             assert_eq!(phase.usage().completed_response_text_bytes, None);
             let result = EndpointModelResult::from_completed_response(
@@ -172,7 +181,7 @@ fn endpoint_phase_stops_before_dispatch_and_never_reopens_a_spent_phase() {
         ModelOperationStop::Unavailable,
         ModelOperationStop::Invalid,
     ] {
-        let mut phase = RuntimeEndpointModelPhase::new(&request()).unwrap();
+        let mut phase = RuntimeEndpointModelPhase::new(&request(), context()).unwrap();
         let calls = Cell::new(0);
         let control = Control(Cell::new(Err(stop)));
         assert_eq!(
@@ -211,7 +220,7 @@ fn endpoint_phase_retains_failed_attempts_and_refuses_late_completions() {
         Some(ModelOperationStop::TimedOut),
         Some(ModelOperationStop::Cancelled),
     ] {
-        let mut phase = RuntimeEndpointModelPhase::new(&request()).unwrap();
+        let mut phase = RuntimeEndpointModelPhase::new(&request(), context()).unwrap();
         let control = live();
         let result = run_phase(&mut phase, &control, |_| {
             if let Some(stop) = stop {
@@ -247,7 +256,7 @@ fn endpoint_phase_retains_failed_attempts_and_refuses_late_completions() {
 #[test]
 fn endpoint_phase_rejects_mismatched_result_bindings_and_bounds_atomically() {
     for case in 0..9 {
-        let mut phase = RuntimeEndpointModelPhase::new(&request()).unwrap();
+        let mut phase = RuntimeEndpointModelPhase::new(&request(), context()).unwrap();
         let mut result = completion(request());
         match case {
             0 => result.request.context.serialized_messages_sha256 = "d".repeat(64),
@@ -313,7 +322,7 @@ fn endpoint_phase_rejects_mismatched_result_bindings_and_bounds_atomically() {
 
 #[test]
 fn endpoint_phase_rounds_observed_time_and_preserves_zero_length_completions() {
-    let mut phase = RuntimeEndpointModelPhase::new(&request()).unwrap();
+    let mut phase = RuntimeEndpointModelPhase::new(&request(), context()).unwrap();
     let mut result = completion(request());
     result.response_text_bytes = 0;
     result.response_text_sha256 = text_hash("");
@@ -358,7 +367,7 @@ fn endpoint_phase_refuses_malformed_context_and_resource_envelopes_before_dispat
             limits,
         );
         assert!(matches!(
-            RuntimeEndpointModelPhase::new(&malformed),
+            RuntimeEndpointModelPhase::new(&malformed, self::context()),
             Err(RuntimePortFailure::Invalid)
         ));
     }
@@ -404,7 +413,7 @@ fn endpoint_port_binds_unicode_streams_independently_of_fragmentation_and_finish
             EndpointModelFinish::Stop,
             EndpointModelFinish::OutputTokenLimit,
         ] {
-            let mut phase = RuntimeEndpointModelPhase::new(&request()).unwrap();
+            let mut phase = RuntimeEndpointModelPhase::new(&request(), context()).unwrap();
             let mut result = streamed_result(&expected);
             result.finish = finish;
             let expected_result = result.clone();
@@ -437,7 +446,7 @@ fn endpoint_port_binds_unicode_streams_independently_of_fragmentation_and_finish
 #[test]
 fn endpoint_port_refuses_stream_descriptor_disagreement_without_completed_accounting() {
     for case in 0..5 {
-        let mut phase = RuntimeEndpointModelPhase::new(&request()).unwrap();
+        let mut phase = RuntimeEndpointModelPhase::new(&request(), context()).unwrap();
         let mut result = streamed_result("éwater");
         match case {
             0 => result.response_text_sha256 = text_hash("éwaTer"),
@@ -482,7 +491,7 @@ fn endpoint_port_refuses_stream_descriptor_disagreement_without_completed_accoun
 #[test]
 fn endpoint_port_refuses_a_different_prepared_request_before_dispatch_and_spends_phase() {
     for case in 0..4 {
-        let mut phase = RuntimeEndpointModelPhase::new(&request()).unwrap();
+        let mut phase = RuntimeEndpointModelPhase::new(&request(), context()).unwrap();
         let mut other = request();
         let mut body = other.body().clone();
         let mut limits = other.limits().clone();
@@ -527,7 +536,7 @@ fn endpoint_port_refuses_a_different_prepared_request_before_dispatch_and_spends
 #[test]
 fn endpoint_port_caps_text_before_delivery_and_latches_overflow_across_later_fragments() {
     for exact in [true, false] {
-        let mut phase = RuntimeEndpointModelPhase::new(&request()).unwrap();
+        let mut phase = RuntimeEndpointModelPhase::new(&request(), context()).unwrap();
         let prefix = "x".repeat(if exact { 98 } else { 99 });
         let full = format!("{prefix}é");
         let mut delivered = String::new();
@@ -571,7 +580,7 @@ fn endpoint_port_latches_control_stops_before_and_after_callbacks_even_if_port_r
     ] {
         for before in [true, false] {
             let control = live();
-            let mut phase = RuntimeEndpointModelPhase::new(&request()).unwrap();
+            let mut phase = RuntimeEndpointModelPhase::new(&request(), context()).unwrap();
             let mut delivered = Vec::new();
             let output = phase.execute(
                 &control,
@@ -605,7 +614,7 @@ fn endpoint_port_latches_control_stops_before_and_after_callbacks_even_if_port_r
 
 #[test]
 fn endpoint_port_dependency_failure_keeps_only_provisional_text_and_cannot_retry() {
-    let mut phase = RuntimeEndpointModelPhase::new(&request()).unwrap();
+    let mut phase = RuntimeEndpointModelPhase::new(&request(), context()).unwrap();
     let mut delivered = String::new();
     let output = phase.execute(
         &live(),
@@ -634,4 +643,196 @@ fn endpoint_port_dependency_failure_keeps_only_provisional_text_and_cannot_retry
             RuntimeEndpointPhaseFailure::ResourceExhausted
         )
     );
+}
+
+#[test]
+fn endpoint_context_binds_original_roles_order_escaping_and_utf8_without_retaining_text() {
+    let private = "private source: λ\n\"quoted\"\\\t".to_owned();
+    let messages = [
+        RuntimeEndpointMessage {
+            role: RuntimeEndpointMessageRole::System,
+            content: "instructions",
+        },
+        RuntimeEndpointMessage {
+            role: RuntimeEndpointMessageRole::Assistant,
+            content: "untrusted history",
+        },
+        RuntimeEndpointMessage {
+            role: RuntimeEndpointMessageRole::User,
+            content: &private,
+        },
+    ];
+    let packet = RuntimeEndpointContextPacket::from_messages(&messages).unwrap();
+    let wire = "[{\"role\":\"system\",\"content\":\"instructions\"},{\"role\":\"assistant\",\"content\":\"untrusted history\"},{\"role\":\"user\",\"content\":\"private source: λ\\n\\\"quoted\\\"\\\\\\t\"}]";
+    assert_eq!(packet.messages().message_count, 3);
+    assert_eq!(packet.messages().serialized_messages_bytes, wire.len());
+    assert_eq!(
+        packet.messages().serialized_messages_sha256,
+        text_hash(wire)
+    );
+    assert_eq!(
+        packet.content_bytes(),
+        "instructions".len() + "untrusted history".len() + private.len()
+    );
+    drop(private);
+    let value = serde_json::to_value(&packet).unwrap();
+    assert_eq!(value["version"], 1);
+    assert_eq!(
+        value["messages"],
+        serde_json::to_value(packet.messages()).unwrap()
+    );
+    assert_eq!(value["content_bytes"], packet.content_bytes());
+    assert!(!value.to_string().contains("private source"));
+    assert!(!format!("{packet:?}").contains("private source"));
+    for absent in [
+        "profile_id",
+        "manifest_sha256",
+        "input_tokens",
+        "verified_input_tokens",
+        "authority",
+    ] {
+        assert!(value.get(absent).is_none(), "{absent}");
+    }
+}
+
+#[test]
+fn endpoint_context_refuses_empty_messages_invalid_end_roles_and_excess_message_count() {
+    assert_eq!(
+        RuntimeEndpointContextPacket::from_messages(&[]),
+        Err(RuntimePortFailure::Invalid)
+    );
+    for role in [
+        RuntimeEndpointMessageRole::System,
+        RuntimeEndpointMessageRole::Assistant,
+    ] {
+        assert_eq!(
+            RuntimeEndpointContextPacket::from_messages(&[RuntimeEndpointMessage {
+                role,
+                content: "text"
+            }]),
+            Err(RuntimePortFailure::Invalid)
+        );
+    }
+    for empty in [0, 1] {
+        let mut messages = [
+            RuntimeEndpointMessage {
+                role: RuntimeEndpointMessageRole::System,
+                content: "text",
+            },
+            RuntimeEndpointMessage {
+                role: RuntimeEndpointMessageRole::User,
+                content: "text",
+            },
+        ];
+        messages[empty].content = "";
+        assert_eq!(
+            RuntimeEndpointContextPacket::from_messages(&messages),
+            Err(RuntimePortFailure::Invalid)
+        );
+    }
+    let mut messages = (0..256)
+        .map(|_| RuntimeEndpointMessage {
+            role: RuntimeEndpointMessageRole::User,
+            content: "x",
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        RuntimeEndpointContextPacket::from_messages(&messages)
+            .unwrap()
+            .messages()
+            .message_count,
+        256
+    );
+    messages.push(RuntimeEndpointMessage {
+        role: RuntimeEndpointMessageRole::User,
+        content: "x",
+    });
+    assert_eq!(
+        RuntimeEndpointContextPacket::from_messages(&messages),
+        Err(RuntimePortFailure::Invalid)
+    );
+}
+
+#[test]
+fn endpoint_context_enforces_exact_serialized_byte_boundary_including_escaping() {
+    let cap = 256 * 1024;
+    let overhead = "[{\"role\":\"user\",\"content\":\"\"}]".len();
+    let exact = "x".repeat(cap - overhead);
+    fn make(text: &str) -> Result<RuntimeEndpointContextPacket, RuntimePortFailure> {
+        RuntimeEndpointContextPacket::from_messages(&[RuntimeEndpointMessage {
+            role: RuntimeEndpointMessageRole::User,
+            content: text,
+        }])
+    }
+    let packet = make(&exact).unwrap();
+    assert_eq!(packet.messages().serialized_messages_bytes, cap);
+    assert_eq!(packet.content_bytes(), cap - overhead);
+    assert_eq!(
+        make(&(exact + "x")),
+        Err(RuntimePortFailure::ResourceExhausted)
+    );
+    // Content fits, but JSON escaping alone crosses the serialized bound.
+    assert_eq!(
+        make(&"\n".repeat(cap / 2)),
+        Err(RuntimePortFailure::ResourceExhausted)
+    );
+    // Multibyte content counts UTF-8 bytes rather than characters.
+    assert_eq!(
+        make(&"λ".repeat(cap / 2)),
+        Err(RuntimePortFailure::ResourceExhausted)
+    );
+    assert_eq!(
+        make(&"x".repeat(cap + 1)),
+        Err(RuntimePortFailure::ResourceExhausted)
+    );
+}
+
+#[test]
+fn endpoint_context_mismatch_refuses_phase_before_any_port_or_resource_admission() {
+    let original = context();
+    for case in 0..6 {
+        let mut request = request();
+        match case {
+            0 => request.context.message_count += 1,
+            1 => request.context.serialized_messages_bytes += 1,
+            2 => request.context.serialized_messages_sha256 = "d".repeat(64),
+            3..=5 => {
+                let mut messages = [
+                    RuntimeEndpointMessage {
+                        role: RuntimeEndpointMessageRole::System,
+                        content: "instructions",
+                    },
+                    RuntimeEndpointMessage {
+                        role: RuntimeEndpointMessageRole::User,
+                        content: "task",
+                    },
+                ];
+                match case {
+                    3 => messages[0].role = RuntimeEndpointMessageRole::Assistant,
+                    4 => messages[0].content = "instructionS",
+                    5 => {
+                        messages[0].content = "task";
+                        messages[1].content = "instructions";
+                    }
+                    _ => unreachable!(),
+                }
+                request.context = RuntimeEndpointContextPacket::from_messages(&messages)
+                    .unwrap()
+                    .messages()
+                    .clone();
+            }
+            _ => unreachable!(),
+        }
+        assert!(
+            matches!(
+                RuntimeEndpointModelPhase::new(&request, original.clone()),
+                Err(RuntimePortFailure::Invalid)
+            ),
+            "{case}"
+        );
+    }
+    let phase = RuntimeEndpointModelPhase::new(&request(), original.clone()).unwrap();
+    assert_eq!(phase.context(), &original);
+    assert_eq!(phase.usage().dispatch_attempts, 0);
+    assert_eq!(phase.usage().prepared_body_bytes, 0);
 }

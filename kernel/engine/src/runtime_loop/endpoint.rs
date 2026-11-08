@@ -11,6 +11,11 @@ use crate::runtime_hardening::RuntimeResourceLedger;
 
 use super::{RuntimePortFailure, valid_sha256};
 
+mod context;
+pub use context::{
+    RuntimeEndpointContextPacket, RuntimeEndpointMessage, RuntimeEndpointMessageRole,
+};
+
 /// A single prepared endpoint dispatch. The implementation retains its original
 /// credentials, body and disclosure approval; the kernel owns no socket or key.
 /// Text is provisional until the complete result and delivered stream agree.
@@ -63,17 +68,22 @@ pub struct RuntimeEndpointPhaseUsage {
 /// The caller retains disclosure approval and all subsequent effect boundaries.
 pub struct RuntimeEndpointModelPhase {
     request: EndpointModelRequest,
+    context: RuntimeEndpointContextPacket,
     resources: RuntimeResourceLedger,
     attempted: bool,
     completed: bool,
 }
 
 impl RuntimeEndpointModelPhase {
-    /// Frames one prepared request; this does not validate a destination or
-    /// approve disclosure. No placeholder native model is created or admitted.
-    pub fn new(request: &EndpointModelRequest) -> Result<Self, RuntimePortFailure> {
+    /// Frames one prepared request against independently admitted original
+    /// messages. This validates no destination and approves no disclosure.
+    pub fn new(
+        request: &EndpointModelRequest,
+        context: RuntimeEndpointContextPacket,
+    ) -> Result<Self, RuntimePortFailure> {
         let limits = request.limits();
-        if !valid_sha256(&request.body().request_body_sha256)
+        if &request.context != context.messages()
+            || !valid_sha256(&request.body().request_body_sha256)
             || !valid_sha256(&request.context.serialized_messages_sha256)
             || request.context.message_count == 0
             || request.context.serialized_messages_bytes == 0
@@ -90,10 +100,17 @@ impl RuntimeEndpointModelPhase {
             .map_err(|_| RuntimePortFailure::Invalid)?;
         Ok(Self {
             request: request.clone(),
+            context,
             resources,
             attempted: false,
             completed: false,
         })
+    }
+
+    /// Independently checked context facts, without source text or token claims.
+    #[must_use]
+    pub const fn context(&self) -> &RuntimeEndpointContextPacket {
+        &self.context
     }
 
     /// Invokes the supplied single-use model port under the original borrowed

@@ -1,0 +1,164 @@
+Commit: f97b5d3351aabcba511f0accb6e9ccb2110f1d28
+Scope: local-coding-endpoint-port
+
+Reviewer: independent Claude Opus 5.5 session (extra-high effort), read-only, pinned checkout
+/lane/review-checkout. Same-model review; a cross-model review is still required before any release.
+Rows: T-303 / T-306, non-closing increment. Both parents stay OPEN; no closure was requested or is granted.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = f97b5d3351aabcba511f0accb6e9ccb2110f1d28, and that the predecessor
+  b56d936d71473cdeb3cc80ff3c640b25b58d5087 is its parent. Read IP-POLICY.md, the TASKS.md diff, the
+  evidence note `docs/evidence/t303-endpoint-port-2026-11-08.md`, the guide diff
+  (`docs/guides/coding-proposals.md`) and the retained predecessor review.
+- Read the complete diff above b56d936d (7 files, +683/-29). Read in full
+  `kernel/engine/src/runtime_loop/endpoint.rs`, the API adapter and `dispatch_coding_proposal`
+  (`platforms/local-api/src/lib.rs:1042-1260`), the repair route's admission order
+  (`platforms/local-api/src/coding_repair_api.rs:55-86`, unchanged), `PreparedEndpointChat`/`prepare_chat`
+  and `chat_encoded` control polling (`platforms/linux-inference/src/local_chat_transport.rs:255-470,550-610`),
+  `EndpointModelRequest`/`EndpointModelResult` equality (`kernel/contracts/src/endpoint_model.rs`) and
+  `RuntimeResourceLedger::for_endpoint_model`.
+- Read the validation helpers (run.py, audit.py, final.py, README) before running them.
+- Wrote and ran my own out-of-tree adversarial port harness (outside the repository, path dependencies
+  on the pinned kernel crates) to reproduce latch, precedence and mismatch behaviour independently.
+- No GPU, model, network download, push or repository change.
+
+## Commands and results
+
+```
+sha256sum -c /lane/state/tmp/t303-endpoint-port/review-inputs.sha256          -> all 17 OK
+sha256sum review-inputs.sha256 -> 75b7768e08cbddafa59414b335050a27aa8d99e7cde499e6a47ce4448dc05df5 (matches request)
+sha256sum <pinned node>/bin/node -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches)
+PATH=<pinned node v24.15.0> CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-endpoint-port-f97b5d3351aa (new, mode 700)
+bash /tools/build-slot python3 -B .../run.py > fast.log   -> exit 1 (expected FAIL)
+  seven commands: exit 0,0,0,0,0 (fmt 2.00s), 0 (clippy -Dwarnings 42.67s), 101 (tests 301.82s)
+  "FAST GATE: FAIL", "SOURCE_FREEZE_UNCHANGED"
+python3 -B .../final.py > final.log                     -> exit 0; markdown lint 0 issues;
+  "FINAL_LIGHT_CHECKS_PASS; SOURCE_GATE_REMAINS_FAIL"
+audit.json: 43 targets, passed/failed/ignored/filtered [2524, 72, 71, 0];
+  predecessor same targets [2518, 72, 71, 0]; cargo exits [0, 0, 101]; 72 failure / 71 ignore identities
+cmp validation-1/source-freeze.json  mine  -> identical
+cmp validation-1/plan-final.json     mine  -> identical
+cmp validation-1/audit.json          mine  -> identical
+git diff --check b56d936d... --                          -> clean
+git status --short                                        -> empty (also empty after the harness run)
+cmp docs/reviews/b56d936d7147-local-coding-endpoint-phase.txt /lane/reviews/b56d936d7147-local-coding-endpoint-phase.md
+                                                          -> identical
+```
+
+My timings differ from the builder's (Clippy 42.67s vs 19.48s, tests 301.82s vs 284.29s) because of a
+different incremental build state; the counts, identities and normalized diagnostics match exactly
+according to the audit. All six new `runtime_loop::endpoint::tests::endpoint_port_*` methods report `ok`
+in my fast.log. All twenty methods that audit.py requires pass unfiltered. The 72 failures are the
+predecessor's unchanged 53 host and 19 Linux-platform library failures, with identical normalized
+diagnostics. The source gate remains FAIL, as the evidence says.
+
+Independent harness (`cargo run --offline` through build-slot, separate target subdir), text limit 8 bytes:
+
+```
+1 overflow: fragments "1234567","水","","a" -> Err(ResourceExhausted), delivered=["1234567"], no completed usage
+  ("a" would fit at exactly 8 bytes, so only the latch can suppress it; confirmed it does)
+2 precedence: stop latched in consumer, port returns Err -> Err(Dependency(..)), attempts 1, no completion
+3 uppercase hex digest of the correct text -> Err(InvalidResult), no completion
+4 port request matches but result names a different request -> Err(InvalidResult)
+5 control already stopped + mismatched port -> Err(Stopped(TimedOut)), attempts 0, port not called
+6 exact 8-byte multibyte stream ("12","水é","a") -> Ok(8); re-entry -> Err(ResourceExhausted), port not called
+```
+
+## Review
+
+Model port and request binding. `execute` latches single use, checks control, then compares the port's
+complete `EndpointModelRequest` (derived `PartialEq` over version, identity kind, selection, context, body
+fingerprint, limits and verified tokens). Only after that does it consume InputBytes/ModelCalls
+(`endpoint.rs:108-125`). A mismatch spends the phase with zero admitted calls; the committed test and
+harness case 5 confirm this. The production adapter (`lib.rs:1054-1076`) moves the original
+`PreparedEndpointChat`, whose private, immutable `binding` is computed in `prepare_chat` from the exact
+encoded body (`local_chat_transport.rs:401-465`). The phase is framed from that same binding
+(`lib.rs:1108`), so the comparison is sound for the real route. The adapter has no Debug/Clone. It reads
+no credential, rebuilds no body and only borrows `op.cancel`. All three routes (live snapshot, workspace,
+repair) reach the single `dispatch_coding_proposal` call site. In the unchanged repair route,
+`prepare_repair` still runs before `consume_repair_feedback` (`coding_repair_api.rs:65-75`).
+
+Stream binding. The kernel hashes and counts each fragment at the consumer boundary. It checks the
+cumulative byte ceiling before delivery and polls control before and after each callback. Any refusal
+latches and suppresses later callbacks (`endpoint.rs:129-158`). Once dispatch finishes, it requires the
+descriptor's byte count and lowercase SHA-256 to equal its own (`endpoint.rs:168-177`). Result accounting
+is still committed atomically on a ledger clone, only on success. It stores no plaintext buffer. The real
+transport polls cancel/control before and after each text event (`local_chat_transport.rs:575-582`), so it
+meets the trait's cooperative obligations. The transport codec enforces the same `MAX_TEXT_BYTES` that the
+binding carries, so the kernel's overflow latch is defense-in-depth on the production path. A
+dependency error takes precedence over a latched stream refusal; this is documented in the guide and was
+confirmed by harness case 2. Every refused outcome maps to an error terminal event in the API and never
+reaches `check_coding_proposal`, so provisional text never becomes a proposal.
+
+Earlier tests. The six descriptor methods now go through `ClosurePort`, which emits
+`"x" * response_text_bytes` after the closure returns. Their hashes were updated to match that synthetic
+text. Every previous negative case still asserts the same refusal variant. Case 5 (101 bytes) is now
+refused by the stream latch instead of the OutputBytes ledger. The ledger's ceiling equals the same
+`response_text_limit_bytes`, so no boundary was weakened. The stronger check simply comes earlier.
+
+Mutation reasoning on the new tests:
+- Removing the pre-callback poll, the post-callback poll, the latch (for control), the before-delivery
+  byte check, the digest comparison, the length comparison, or moving the request comparison after
+  accounting: each makes a committed assertion fail.
+- The one exception is the overflow latch (see L1).
+
+Claims vs evidence:
+- The API contract tests (`platforms/local-api/tests/local_chat_api.rs:218-250`) recompute the digest and
+  byte count of the streamed text against `runtime_model_result` over a real socket to a synthetic peer,
+  so "actual API-to-synthetic-peer contracts exercise the production adapter" is supported.
+- The evidence labels everything synthetic. It claims no real model, native workflow, score or parent
+  closure, and keeps endpoint coordinator composition, native edit/test/retry, durable ownership and
+  approved commit/push OPEN.
+- TASKS.md changes only prose above the ledger table; audit.py confirms the table rows are unchanged.
+- No new sub-row, prompt, tool permission, command, retry, persistence or Git authority was added.
+
+Confinement and evaluation integrity:
+- No path, sandbox, network-enable or Git-publication code changed. The tool-confinement boundary is
+  untouched by this diff.
+- No frozen, hidden or held-out task, scorer, threshold, ignore, SBOM, Cargo.toml or Cargo.lock change
+  (final.py asserts an empty Cargo.lock/Cargo.toml diff).
+- There is no scoreboard number to trace.
+
+Public-repository hygiene. In the added lines I found no private host path, username, hostname,
+credential, personal data or private sibling-project name. The `/lane/...` sandbox paths and the
+reviewer-model attribution appear only inside the retained review, as in earlier accepted retentions. I
+found no trademark used as branding, and no comparison with or naming of other agent products. No new
+dependency: `sha2` was already a dependency of kernel-engine. No IP-policy concern was observed.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, test coverage)**: `kernel/engine/src/runtime_loop/endpoint/tests.rs:525-560`
+  (`endpoint_port_caps_text_before_delivery_and_latches_overflow_across_later_fragments`). The fragments
+  after the overflow are `""` (invisible in the pushed `String`) and a 22-byte string that would overflow
+  by itself. So a non-latching implementation that rechecks each fragment would pass this test too. The
+  latch is the same `stream_failure.is_some()` guard that the control-stop test does prove, and my harness
+  case 1 shows the overflow latch suppressing a fragment that would otherwise fit. Fix: after the
+  overflowing fragment, emit a fragment that fits the remaining budget (for example
+  `"x".repeat(98)` + `"é"` (refused) + `"x"`), and record deliveries as a `Vec<String>` so empty fragments
+  are visible.
+- **L2 (low, diagnostics)**: `kernel/engine/src/runtime_loop/endpoint.rs:116-118`. A prepared-request
+  mismatch before dispatch returns `InvalidResult`, which the API reports as `runtime.model.result_invalid`
+  (`platforms/local-api/src/lib.rs:1199`), although no result exists. This cannot happen on the
+  production route (the port and the phase share one binding), so it has no security effect. Fix: add a
+  distinct pre-dispatch variant (for example `RequestMismatch`) or document that `InvalidResult` covers
+  request binding.
+
+Backlog carried forward unchanged: predecessor L1 (workspace/repair terminal phase-usage assertions and
+API-level pre-dispatch zero-attempt coverage) and the earlier retained lows.
+
+## Per-row result
+
+- T-303 (non-closing increment, local-coding-endpoint-port): increment accepted. No high/medium. L1 and
+  L2 go to backlog. The parent stays OPEN.
+- T-306 (non-closing increment, local-coding-endpoint-port): increment accepted. No high/medium. The
+  parent stays OPEN.
+
+This verdict covers only the streaming endpoint model port in exact commit f97b5d3351aa. It does not cover
+endpoint coordinator admission, native edit/test/retry, durable ownership, approved commit/push, parent
+scores, or either parent row's closure. It is not a certification, compliance or legal statement.
+
+Verdict: PASS

@@ -41,6 +41,7 @@ use agentmage_kernel_contracts::{
 };
 
 use agentmage_kernel_engine::runtime_loop::endpoint::{
+    RuntimeEndpointContextPacket, RuntimeEndpointMessage, RuntimeEndpointMessageRole,
     RuntimeEndpointModelPhase, RuntimeEndpointModelPort, RuntimeEndpointPhaseFailure,
     RuntimeEndpointPhaseUsage,
 };
@@ -1094,6 +1095,20 @@ fn prepare_endpoint_coding_proposal<'a>(
             .as_ref()
             .map_or(0, |s| s.len() + REPAIR_INSTRUCTION.len());
     let messages = prepared.messages(&context);
+    let endpoint_context = RuntimeEndpointContextPacket::from_messages(
+        &messages
+            .iter()
+            .map(|message| RuntimeEndpointMessage {
+                role: match message.role {
+                    ChatRole::System => RuntimeEndpointMessageRole::System,
+                    ChatRole::User => RuntimeEndpointMessageRole::User,
+                    ChatRole::Assistant => RuntimeEndpointMessageRole::Assistant,
+                },
+                content: message.content,
+            })
+            .collect::<Vec<_>>(),
+    )
+    .map_err(|e| (400, e.code()))?;
     let config = config.ok_or((428, "api.endpoint-choice-required"))?;
     let request = config
         .transport
@@ -1105,7 +1120,8 @@ fn prepare_endpoint_coding_proposal<'a>(
             input.include_usage,
         )
         .map_err(|e| (400, e.code()))?;
-    let phase = RuntimeEndpointModelPhase::new(request.binding()).map_err(|e| (400, e.code()))?;
+    let phase = RuntimeEndpointModelPhase::new(request.binding(), endpoint_context)
+        .map_err(|e| (400, e.code()))?;
     Ok(PreparedCodingProposal {
         input,
         context,
@@ -1163,6 +1179,7 @@ fn dispatch_coding_proposal(
         "excerpts":context.excerpts(), "authority":"proposal-only","workspace_revision":workspace_revision,
         "model_binding":binding});
     context_event["runtime_model_binding"] = json!(binding.runtime_model_binding());
+    context_event["runtime_endpoint_context"] = json!(phase.context());
     if let Some(feedback) = &feedback {
         context_event["message_bytes"] = json!(message_bytes);
         context_event["source_message_bytes"] = json!(input.max_message_bytes);

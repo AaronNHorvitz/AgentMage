@@ -207,6 +207,18 @@ fn assert_endpoint_runtime_observation(rows: &[Value]) {
     assert_eq!(terminal["runtime_model_binding"], expected);
     assert!(first.get("token_accounting").is_none());
     assert!(first.get("runtime_model_result").is_none());
+    let context = &first["runtime_endpoint_context"];
+    assert_eq!(context["version"], 1);
+    assert_eq!(context["messages"], first["model_binding"]["context"]);
+    assert!(context["content_bytes"].as_u64().unwrap() > 0);
+    assert!(
+        context["content_bytes"].as_u64().unwrap()
+            < context["messages"]["serialized_messages_bytes"]
+                .as_u64()
+                .unwrap()
+    );
+    assert!(context.get("input_tokens").is_none());
+    assert!(context.get("authority").is_none());
     let phase = &terminal["endpoint_phase_usage"];
     assert_eq!(phase["dispatch_attempts"], 1);
     assert_eq!(
@@ -1338,6 +1350,7 @@ fn workspace_file_to_model_to_checked_proposal_is_read_only_and_recorded() {
     );
     assert_eq!(status, 200);
     let rows = events(&bytes);
+    assert_endpoint_runtime_observation(&rows);
     let proposal = rows.last().unwrap();
     assert_eq!(rows[0]["workspace_revision"], revision);
     assert_eq!(proposal["type"], "proposal");

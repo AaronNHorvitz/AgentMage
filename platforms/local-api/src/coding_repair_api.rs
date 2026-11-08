@@ -593,6 +593,15 @@ mod tests {
             );
             assert_eq!(terminal["response_complete"], true);
             assert_eq!(terminal["model_binding"]["context"], observed_context);
+            assert_eq!(
+                events[0]["runtime_endpoint_context"],
+                json!({"version":1,"messages":observed_context,"content_bytes":actual_bytes})
+            );
+            assert_eq!(terminal["endpoint_phase_usage"]["dispatch_attempts"], 1);
+            assert_eq!(
+                terminal["endpoint_phase_usage"]["prepared_body_bytes"],
+                body_bytes
+            );
             let result = &terminal["runtime_model_result"];
             assert_eq!(result["request"], terminal["model_binding"]);
             let text: String = events
@@ -601,6 +610,10 @@ mod tests {
                 .map(|e| e["text"].as_str().unwrap())
                 .collect();
             assert_eq!(result["response_text_bytes"], text.len());
+            assert_eq!(
+                terminal["endpoint_phase_usage"]["completed_response_text_bytes"],
+                text.len()
+            );
             assert_eq!(
                 result["response_text_sha256"],
                 Sha256::digest(text.as_bytes())

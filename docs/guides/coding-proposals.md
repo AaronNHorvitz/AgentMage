@@ -252,8 +252,11 @@ tests, addressing the baseline review's L1 prerequisite for future reuse.
 ## Shared endpoint model phase
 
 The snapshot, workspace and repair proposal routes frame their frozen request
-with `runtime_loop::endpoint::RuntimeEndpointModelPhase` before dispatch. Repair
-framing happens before consuming its single-use disclosure receipt. The phase
+with `runtime_loop::endpoint::RuntimeEndpointModelPhase` before dispatch. Its
+constructor also requires `RuntimeEndpointContextPacket`, derived independently
+by the kernel from the original borrowed ordered messages before preparing the
+transport. Both context admission and phase framing precede consumption of a
+repair disclosure receipt. The phase
 uses the existing runtime resource ledger with one model-call allowance, the
 prepared body length, the transport's decoded-text ceiling and total deadline.
 It borrows the same operation control before and after the credential-owning
@@ -299,3 +302,27 @@ It adds no native profile, second agent loop, tool admission, persistence or
 retry. The full coordinator still requires its exact native run/context/result
 contracts. Configured-endpoint edit/test/retry composition and parent scores
 remain open.
+
+## Endpoint context admission
+
+The kernel accepts the closed system, user and assistant text roles, with
+1–256 nonempty messages ending in a user message. Each role remains descriptive;
+source excerpts and previous responses are untrusted. Both total UTF-8 content
+and the serialized JSON array must fit 256 KiB. JSON escaping, punctuation and
+roles count toward the array limit. This does not enlarge the transport's
+existing complete request-body limit.
+
+Admission streams the exact ordered array through a bounded hash writer. It
+retains a digest and byte counts, without another plaintext buffer. The phase
+constructor requires the transport descriptor's message count, serialized size
+and digest to match that admitted packet. There is no descriptor-only phase
+constructor. Role, order, content or count drift refuses before dispatch and
+before repair consent is consumed. The transport still owns and attests to the
+encoded body; this comparison does not independently parse that private body.
+
+The initial context event includes `runtime_endpoint_context`: version 1,
+`messages` (the exact array observations) and `content_bytes` (original content
+only). JSON bytes are not rendered prompt tokens, and this record grants no
+disclosure or effect authority. It is process-local metadata, not a durable run
+or native context. The full coordinator's native contracts remain unchanged;
+endpoint run/turn composition and measured coding workflows remain open.
