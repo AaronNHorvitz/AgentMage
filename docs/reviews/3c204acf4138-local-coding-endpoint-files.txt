@@ -1,0 +1,258 @@
+Commit: 3c204acf4138f8e790a2f31efe7b2b958ddf2e7e
+Scope: local-coding-endpoint-files
+
+Reviewer: separate Claude Opus 5.5 session at extra-high effort, read-only. I reviewed only the frozen
+checkout `/lane/review-checkout` (HEAD confirmed `3c204acf4138f8e790a2f31efe7b2b958ddf2e7e` with
+`git rev-parse`). Tier: core. Immutable predecessor: `4fe1b48698e927d9fa6c164836fe04822fd34927`.
+Rows: T-303 / T-306, non-closing increment; both parents stay OPEN. Nothing in the repository was
+modified or approved.
+
+## Methods
+
+1. Read IP-POLICY.md, the newest decisions list, the top of TASKS.md, the request, the builder's README
+   and run.py/parse.py/audit.py/final.py/review.py. I confirmed the scripts write only to the validation
+   directory and do not modify the repository.
+2. Read the complete ten-file diff over the predecessor, including the new module
+   `shells/host/src/coding_endpoint_files.rs` and its tests line by line. I also read the platform code it
+   depends on:
+   - `LinuxPathAdapter::resolve` and `admitted_kind` (`platforms/linux/src/lib.rs:761-940`, `:1084-1110`)
+   - `WorkspacePath` component validation (`kernel/contracts/src/path.rs:308-345`)
+   - `GrantTarget::held_object` (`kernel/contracts/src/grant.rs:93-104`)
+   - worker `file_projection` (`platforms/linux/src/sandbox.rs:1548-1585`)
+   - the original native boundary's execution-time handling (`linux_coding_runtime.rs:3374-3387`)
+   - `CodingRuntimePolicy::binds_run` / `admits_action` (`coding_authority.rs:190-212`)
+3. Ran the requested commands with a fresh output directory and the reviewer target. I independently
+   completed the structural audit that review.py could not finish without Node.
+4. Reproduced escape attempts myself. I exported the exact commit with `git archive` into a scratch tree
+   `/lane/state/tmp/probe-3c204acf` (no `.git`, outside the repository) and appended four reviewer probe
+   tests against the real descriptor/durable-authority owner. They ran through `/tools/build-slot`.
+5. Cross-checked my test identities and diagnostics against the *predecessor reviewer's* independent log
+   (`/lane/state/tmp/review-endpoint-policy-4fe1b48698e9/fast.log`), not only against the builder's
+   baseline.
+
+No GPU was used. This row has no UI surface, so no browser or theme check applies.
+
+## Commands and results
+
+```text
+sha256sum --quiet -c /lane/state/tmp/t303-endpoint-files/review-inputs.sha256       -> exit 0
+sha256sum review-inputs.sha256 -> 9e443f1a5bc99d1b9e2b379aa1ff9edf4b36fc2b7978d256e95289b8d7ad8f15 (64 lines; matches request)
+
+CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-endpoint-files/review.py \
+    /lane/state/tmp/review-endpoint-files-3c204acf4138                              -> exit 1 (expected nonzero)
+  "No installed Node found; record the documentation failure separately. No download."
+  ORDINARY_SOURCE_GATE_EXIT 1 AUDIT_AND_LIGHT_EXIT 1
+  fast.log: FAST GATE: FAIL; SOURCE_FREEZE_UNCHANGED
+  per-command exits [0, 0, 0, 127, 0, 0, 101]; seconds [0.10, 0.10, 0.10, 0.05, 101.13, 43.03, 133.91]
+    cmd 4 = node markdownlint-cli2 -> 127 (Node absent)
+    cmd 5 = cargo fmt check -> 0; cmd 6 = strict clippy -> 0; cmd 7 = cargo test -> 101
+  final.log: audit.py AssertionError on exit codes [0,0,0,127,0,0,101] (the Node lint exit only)
+
+cmp .../t303-endpoint-files/validation-final/source-freeze.json \
+    .../review-endpoint-files-3c204acf4138/source-freeze.json                       -> exit 0 (identical)
+git diff --check 4fe1b48698e927d9fa6c164836fe04822fd34927 --                        -> exit 0, no output
+git status --short                                                                 -> empty (clean)
+```
+
+### Reviewer completion of the structural audit (Node absent)
+
+Copies in `.../review-endpoint-files-3c204acf4138/reviewer/` make exactly two changes, shown by `diff`
+against the builder's scripts:
+
+- `audit_reviewer.py` accepts exit 127 *only* at plan index 3, after asserting that index 3 is the `node`
+  markdownlint command. Every other command must still exit 0 and the last must exit 101.
+- `final_reviewer.py` prints `NODE ABSENT, NOT RUN` instead of running that command.
+
+All other assertions are unchanged. Result `rc=0`:
+
+- 19 targets; totals **745 passed / 53 failed / 11 ignored / 0 filtered**
+- all 739 predecessor passing identities preserved, plus exactly the six new
+  `coding_endpoint_files::tests::*` methods (each `... ok` in my fast.log)
+- every failed/ignored identity and every normalized failure diagnostic equals predecessor.log
+- original native boundary `linux_coding_runtime.rs` byte-identical to the predecessor after reversing
+  only the three `pub(crate)` changes and the one signature wrap
+- TASKS.md table rows unchanged
+- five Rust source hashes frozen through the run
+- changed path set equals the allowed ten files
+- no `/var/home/`, `/home/`, `/lane/`, username or sibling-project name in added non-review lines
+- retained `docs/reviews/4fe1b48698e9-local-coding-endpoint-policy.txt` byte-identical to
+  `/lane/reviews/4fe1b48698e9-local-coding-endpoint-policy.md` (also checked with `cmp`)
+- committed inputs equal the `git show 3c204acf:<path>` blobs for all 10 files
+- printed `FINAL_LIGHT_PASS; ORIGINAL_NATIVE_BOUNDARY_PRESERVED; SOURCE_GATE_FAIL`
+
+Independent cross-checks (my own Python, using the builder's `parse.records`/`diagnostics`):
+
+- `baseline-targets.json == records(predecessor.log)`: True.
+- The predecessor reviewer's own log gives 739/53/11/0. My identities minus the six new methods equal it
+  in every target (True), and normalized diagnostics are identical (True). So the baseline was not
+  selected by outcome, and no failure cause changed.
+
+Markdown lint: **NOT reproduced** (Node absent). This is not a lint pass. I ran structural checks over the
+four changed Markdown files instead:
+
+- MD001, MD012, MD025, MD031, MD032, MD047, trailing whitespace, tabs, and resolution of every relative
+  link: all clean.
+- The only hit is a second H1 in TASKS.md at line 16518, which already exists at the predecessor.
+- `.markdownlint-cli2.jsonc` disables MD013 (line length).
+
+Temp hygiene: my gate's private namespace `/tmp/af-akzcgo5w` held 11 leftover directories, all from
+pre-existing legacy `agentmage-host-*` setups. None came from the new `agentmage-endpoint-files-*`
+fixtures, whose `Drop` cleanup works. I removed my own temp namespaces after recording this.
+
+### Reviewer escape probes (scratch copy only)
+
+```text
+cd /lane/state/tmp/probe-3c204acf && TMPDIR=$(mktemp -d /tmp/rv-XXXX) CARGO_TARGET_DIR=/lane/state/review-target \
+  CARGO_BUILD_JOBS=2 bash /tools/build-slot cargo test -p agentmage-host --lib --offline --locked \
+  coding_endpoint_files::tests:: -- --nocapture                -> 10 passed (6 builder + 4 probes), 0 failed
+(rerun with positive controls and instrumentation: coding_endpoint_files::tests::probe -> 4 passed)
+```
+
+The first probe invocation reused a stale binary: dep-info is workspace-relative and my edit predated the
+gate's compile. After `touch` it showed `Compiling agentmage-host (/lane/state/tmp/probe-3c204acf/...)`.
+
+**Probe 1: refused before any durable state.** The run ends with `spent` empty, no pending operation and
+no receipts. A positive control on the same fixture then gets `Ask` for `src/lib.rs`. Refused inputs:
+
+- relative intermediate-directory symlink `src/alias -> ../private`, read as `src/alias/secret`
+- absolute intermediate symlink to the excluded directory
+- hard link `src/hard.rs` to `private/secret` (adapter `link_count > 1`)
+- FIFO (`O_NONBLOCK`; no hang)
+- the excluded directory itself
+- `src/../private/secret`; the single component `src/../private/secret`
+- `private/./secret`; `./private`; an empty component
+- `%2e%2e`; U+2215 separator look-alike; trailing-dot `private.`
+
+**Probe 2: refused argument shapes.** A positive control afterwards evaluates:
+
+- two paths (one excluded)
+- `call_depth` 2 above the limit of 1
+- a stale argument digest over injected `private/secret` bytes (a prompt-injected argument swap)
+- an unknown `network: true` field
+
+**Probe 3: refused swaps.**
+
+- After `Ask`, the `src` directory is renamed and replaced by a symlink to `private`. Resolve refuses and
+  the pending operation is dropped.
+- After `Allow`, `lib.rs` is rewritten in place with the same size. `prepare_execution` refuses with zero
+  receipts.
+
+**Probe 4: an issued grant cannot authorize a different call.**
+
+- A foreign call presented with the real `Allow` evaluation is refused and does not consume the issued
+  operation.
+- A forged transaction reusing the issued grant id for another action and arguments gets a durable
+  `Denied` receipt.
+- The genuine transaction then consumes once with `Succeeded`, via a synthetic completed observation.
+- A replay of the same transaction gets `Err(Transaction(InvalidIdentity))`.
+
+I could not reproduce worker-level environment and network escapes. `LinuxSandboxRunner` cannot pass the
+unchanged ownership admission in this lane (the same `InvalidManifest` the builder reports). That runner
+and its projection are unchanged by this commit. The worker's `file_projection` re-hashes against the
+approved preimage and revalidates (`sandbox.rs:1548-1585`), which closes the remaining window between
+the last host revalidation and the read.
+
+## Assessment
+
+**Authorization and binding.** The constructor (`coding_endpoint_files.rs:153-189`) binds:
+
+- `EphemeralReadOnly` mode with no cursor
+- the workspace id
+- a registry of exactly the one ReadText definition, with catalog references equal to `visible_tools`
+- policy id and hash
+- `binds_run` for actor, task, run and `max_tool_calls`; this already refuses zero calls
+- a single root parent target
+- non-operation exclusions contained in that root
+
+It then revalidates the workspace and authority roots. `check` (`:211-231`) re-binds:
+
+- the exact sealed request through `RuntimeRunScope`
+- the registry definition
+- the admitted action
+- argument validation
+- workspace and authority revalidation
+
+Native unscoped entry points refuse (`:640-672`). One pending or issued operation is held at a time;
+`spent` is inserted before the first durable mutation (`:277`), so failures cannot renew an action.
+
+**Resolve.** `resolve_file` (`:352-422`) compares every challenge field against the retained approval
+and the exact call, and refuses Narrow. It verifies the sealed response, and Deny cannot become Allow.
+Revalidation re-resolves the original path and compares the full `GrantTarget`: path, object identity
+and preimage (`:326-350`). That closes the inode-retained-after-rename gap the builder found.
+
+**Execution.** `prepare_execution` retires the issued operation before any effect attempt.
+`execute_file` latches `faulted` before the effect and keeps it latched on transaction error, root
+revalidation failure or an `Uncertain` receipt. Output reuses the original verified-result,
+sensitive-text, byte-ceiling and receipt helpers.
+
+**Native boundary and catalog.** The native boundary change is only crate-private visibility (verified
+byte-for-byte). The new registry function registers only the original ReadText tool with no executor.
+
+**Honest claims.** The guide and evidence call this a library composition increment. They state that no
+native read, activation, model workflow or score was demonstrated, and label the synthetic effect
+observation. `CodingEndpointFiles` is not wired into any API or UI in this commit
+(`grep` finds no caller), which matches the claims. No row or sub-row is added or closed.
+
+**Unchanged areas.** No evaluation, hidden or held-out task, scorer, threshold, dependency
+(`Cargo.toml`/`Cargo.lock` untouched), SBOM, model, GPU, scoreboard, push or release change.
+The new files carry SPDX Apache-2.0 headers.
+
+**Hygiene and IP.** The added content contains no private host path, username, email, hostname,
+credential, personal data, private sibling-project name or trademark branding. The `/lane/...` sandbox
+paths and the reviewer-model attribution appear only inside the byte-identical retained review. 114
+earlier retained reviews set the same precedent, and these paths contain no username. No other agent
+product is named.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog).** `shells/host/src/coding_endpoint_files.rs:489-600`: no test reaches
+  `CodingEndpointFiles::execute_file`, not even a synthetic one. That leaves untested:
+  - sandbox take/restore
+  - the `faulted` latch: set at `:516`, reset only for a non-Uncertain receipt at `:531`
+  - mapping of worker error, invalid output, the sensitive-text filter and the output ceiling
+  - evidence construction
+
+  The guide's claim "An uncertain transaction or cleanup latches this boundary closed"
+  (`docs/guides/runtime-endpoint-runs.md`, native-file section) is reasoned, not tested. It is disclosed
+  as open, and the kernel's single-use grant independently refuses replay (probe 4), so this is low.
+
+  Fix: move the post-receipt mapping and latch into a function taking `(receipt result, driver output,
+  driver error)` and test it with synthetic receipts (Uncertain, Err, Cancelled, oversized, sensitive).
+  Or add the test when native admission is available.
+
+- **L2 (low, backlog).** `coding_endpoint_files.rs:253-260`: exclusions are matched as case-sensitive
+  component prefixes before resolution. The worker's directory projection uses the same convention. On a
+  case-insensitive or casefolded directory (vfat/exfat mount, ext4 `+F`), `PRIVATE/secret` resolves to the
+  excluded object without matching the exclusion. Per-call exact approval still shows the spelled path,
+  and Kinoite's default btrfs is case-sensitive, so this is low.
+
+  Fix: refuse case-insensitive workspaces at selection, or resolve exclusion scopes to held directory
+  identities at startup and refuse any resolution whose intermediate or final identity matches one.
+
+- **L3 (low, inherited backlog).** `coding_endpoint_files.rs:461,473-474`: the execution-time policy
+  context uses `resolved_at`, not the actual execution time. The scoped execute port carries no clock, so
+  the 30-second preview expiry is not re-evaluated when the effect runs. This mirrors the original
+  boundary (`linux_coding_runtime.rs:3374-3387`), and re-resolution plus worker preimage re-hashing still
+  bound content drift.
+
+  Fix: pass a trusted clock to the scoped execute path and refuse execution after
+  `expires_at_epoch_ms`.
+
+The predecessor lows (L1 zero-call binder, L2 guidance narrowing before activation) and earlier parent
+lows remain open as stated. They are not re-raised.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing increment `local-coding-endpoint-files`): PASS** for exact commit
+  `3c204acf4138f8e790a2f31efe7b2b958ddf2e7e`, with no open high or medium finding. L1-L3 are backlog.
+- Both parents remain **OPEN**. Native worker success, service activation, independent completion
+  composition, edit/test/retry, durable coordinator recovery, approved Git and parent measurements are
+  unverified.
+- The source gate remains **FAIL** on the 53 unchanged prior failures (deferred T-301.1). Nothing is
+  waived.
+- Markdown lint was not reproduced (Node absent). I completed and passed structural documentation checks
+  instead; this is not a lint pass.
+
+Verdict: PASS

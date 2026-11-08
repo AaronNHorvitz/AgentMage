@@ -5,6 +5,8 @@ use super::*;
 
 #[path = "coding_endpoint_owner_tests.rs"]
 mod owner_tests;
+#[path = "coding_endpoint_read_socket_tests.rs"]
+mod read_socket_tests;
 use crate::{
     coding_endpoint_context::CodingEndpointContext,
     coding_tools::model_visible_coding_tools,

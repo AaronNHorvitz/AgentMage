@@ -1,0 +1,232 @@
+Commit: 1b0a9321e2674cce92c4edf258e58ab1f213e797
+Scope: local-coding-endpoint-startup
+
+# Independent core review: trusted endpoint startup composition (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only access to the repository.
+Pinned checkout: /lane/review-checkout at the commit above (`git rev-parse HEAD` matches).
+Predecessor: 3c204acf4138f8e790a2f31efe7b2b958ddf2e7e. Its own file/grant review is separate and is
+not judged here. No parent row or sub-row closes because of this review.
+
+## Scope reviewed
+
+Seven files changed over the predecessor (910 lines added, 2 removed):
+`shells/host/src/coding_endpoint_startup.rs` (new), `coding_endpoint_startup_tests.rs` (new),
+`coding_guidance.rs` (refactored to share one compiler), `lib.rs` (module declaration),
+`TASKS.md` (prose note only; no table rows changed), `docs/guides/runtime-endpoint-runs.md` and
+`docs/evidence/t303-endpoint-startup-2026-11-08.md`.
+
+To judge the boundary I also read the code this increment depends on:
+`coding_endpoint_authority.rs` (`bind_endpoint_coding_policy`), `coding_endpoint_files.rs`
+(`CodingEndpointFiles::new` / `EndpointFileGrants::new` and the Ask→Allow approval flow),
+`coding_endpoint_owner.rs` (`CodingEndpointRuns::admit`), and `kernel/contracts/src/path.rs`
+(`WorkspacePath::new`, `validate_component`, `contains_path`).
+
+## Methods and exact commands
+
+All commands were run in /lane/review-checkout with `CARGO_TARGET_DIR=/lane/state/review-target`.
+
+1. `sha256sum --quiet -c /lane/state/tmp/t303-endpoint-startup/review-inputs.sha256`: OK.
+   The manifest has 29 lines and SHA-256 66d17795191e24dce17a9dffceab9d738d804e47ee48d6bf11e5f8d612bd3ab4, as stated.
+2. `python3 -B /lane/state/tmp/t303-endpoint-startup/review.py /lane/state/tmp/review-endpoint-startup-1b0a9321e267`
+   printed `ORDINARY_SOURCE_GATE_EXIT 1 AUDIT_AND_LIGHT_EXIT 1`.
+   - Command exit codes: `[0, 0, 127, 0, 0, 101]`. The run was git diff --check, lint-untracked,
+     markdownlint, fmt, strict clippy, then cargo test.
+   - **Markdown lint was NOT reproduced.** No `node` exists in this review environment (no
+     `/lane/state/tooling`, none on PATH), so the markdownlint command exited 127. Nothing was
+     downloaded. This is a missing tool in the environment, not a pass.
+     - The builder's retained log (`validation-final/fast.log:73-78`) shows markdownlint-cli2 with
+       "0 issues". I did not re-run it.
+     - The repository config disables MD013 (line length). I checked the added lines by hand and
+       found no tabs or trailing whitespace.
+   - `cargo fmt --check` passed (exit 0).
+   - Strict `cargo clippy --all-targets -D warnings` for agentmage-host and agentmage-local-api
+     passed (exit 0, 38.22 s).
+   - `cargo test`, all 19 targets, unfiltered: 752 passed / 53 failed / 11 ignored / 0 filtered,
+     exit 101. The source gate is FAIL, as expected.
+   - The source freeze was unchanged.
+   - `audit.py` stopped at its exit-code assertion (it expects markdownlint to exit 0), so its
+     comparison never ran.
+     - I copied it to `.../reviewer-audit.py` in my validation directory. The only change is that
+       the expected codes become `[0, 0, 127, 0, 0, 101]`. All other comparisons stayed as written,
+       and it passed. Results:
+       - All 19 targets present.
+       - All 745 predecessor passes kept, plus exactly the 7 new tests.
+       - Failed and ignored identities identical to the predecessor's.
+       - Normalized diagnostics identical.
+       - The original compiler body is identical apart from the `.templates` slice change.
+       - The four Rust source hashes match the freeze.
+       - The TASKS.md table rows are unchanged.
+   - I ran the rest of `final.py --committed` the same way, skipping only `node` and the audit
+     re-run. It printed `FINAL_LIGHT_PASS`. That covers:
+     - lint-untracked;
+     - the allowed path set equal to exactly these 7 files;
+     - no `/home/`, `/var/home/`, `/lane/`, username or sibling-project string in the added text;
+     - the seven committed blobs byte-identical to the retained inputs.
+3. `cmp .../validation-final/source-freeze.json .../review-endpoint-startup-1b0a9321e267/source-freeze.json`:
+   identical.
+4. `git diff --check 3c204acf4138f8e790a2f31efe7b2b958ddf2e7e --`: exit 0.
+5. `git status --short`: empty.
+6. **Independent predecessor baseline.** I did not rely only on the builder's `predecessor.log`.
+   - I exported 3c204acf with `git archive` into /lane/state/tmp/reviewer-pred-3c204acf4138 and ran
+     `bash /tools/build-slot cargo test --locked --offline -p agentmage-host -p agentmage-local-api --all-targets --no-fail-fast`
+     with a fresh short TMPDIR.
+   - Result: 745 passed / 53 failed / 11 ignored.
+   - A sorted test-by-test diff against this commit's run shows only the 7 new
+     `coding_endpoint_startup::tests::*` lines, all passing.
+   - The 53 failures are 42 in `linux_coding_runtime`, 10 in `linux_read` and 1 in
+     `linux_repository_map`. Their normalized causes are `LinuxSandboxError { kind: InvalidManifest }`
+     (52) and `LinuxRepositoryError { kind: InvalidGitArtifact }` (1). That is the deferred T-301.1
+     native-admission state.
+   - No test in `coding_guidance`, `coding_endpoint*` or `coding_authority` fails.
+7. **Reviewer escape probes.**
+   - Six probe tests were appended to the test file in a scratch `git archive` copy at
+     /lane/state/tmp/reviewer-probe-1b0a9321e267. The repository was not modified.
+   - Command: `bash /tools/build-slot cargo test --locked --offline -p agentmage-host --lib -- coding_endpoint_startup::tests::reviewer_probe --nocapture`.
+   - Result: 6 passed. Log: `.../reviewer-probes.log`.
+   - Source paths, checked with `private` excluded:
+     - Refused: `private\secret`, `./private/secret`, `private/./secret`, `private/`, the empty
+       path, `pri<U+200B>vate/x`, `private:x`, `private%2fsecret`, `private.`, `private ` and
+       `private/../private/secret`.
+     - Accepted: `Private/secret`. That is a different path on Fedora's case-sensitive filesystems
+       (see the notes below).
+   - A root-scope exclusion makes preparation succeed with one excluded target, and every source is
+     then refused. This fails closed.
+   - A trust decision scoped to a foreign workspace is refused with `Guidance(SourceDenied)`.
+   - A ledger built for another snapshot is refused with `Instructions`.
+   - A `KeepUntrusted` decision applies no narrowing. Untrusted repository text gains no effect.
+   - Re-preparing the final request succeeds and appends a second digest line (L1 below).
+
+## Security and correctness analysis
+
+### Provenance before narrowing
+`prepare` checks, in order:
+- the original seal (`verify_runtime_endpoint_run_request`);
+- the workspace identity;
+- the exact visible-tool references;
+- ledger snapshot equal to the request snapshot;
+- `effective_guidance` (seal, conflicts, stale reads).
+
+Only then does it compile guidance (`coding_endpoint_startup.rs:104-127`). The compiler also refuses
+decisions whose scope belongs to another workspace (`coding_guidance.rs:236-241`); my probe confirmed
+this. The tests cover corrupt, foreign-snapshot, stale and conflicting ledgers.
+
+### Budget caps before action binding
+- `apply_budget_cap` refuses widening and zero values.
+- `request.limits` is replaced before `bind_endpoint_coding_policy`, so `build_runtime_policy_envelope`
+  binds `maximum_tool_calls` to the reduced value (`:134`, `:145-152`).
+- The test shows that `binds_run(..., 2)` holds and `binds_run(..., 4)` does not.
+
+### Disabled tools, stop and validation
+- Disabling the sole tool gives `NoTools`.
+- A request with `max_tool_calls = 0` gives `NoTools`.
+- `Stop` gives `StopRequested`.
+- `RequireVerification` gives `ConstraintDenied`, because the file-only entry passes an empty
+  template slice (`coding_guidance.rs:185-193`). No synthetic validation registry is built.
+- The shared compiler body is unchanged apart from the slice access. The audit asserts this, and a
+  new test compares the result to `compile_coding_guidance` with a test validation registry.
+
+### Exclusions
+- The excluded scopes reach both the kernel policy (`excluded_scopes` → `excluded_targets`) and
+  the source check.
+- `check_sources` runs before `CodingEndpointFiles::new` and before `runs.admit` (`:205`).
+- It refuses the whole admission. Nothing is filtered out silently.
+- Path canonicalization is strict, and the probes above found no bypass.
+- The file boundary separately refuses excluded paths, symlinks and `..` at read time; I read its
+  test (`coding_endpoint_files_tests.rs:431-445`).
+
+### Confirmation
+- Guidance `RequireUserConfirmation` is compiled but not consumed by the boundary.
+- I checked the claim that every read already requires exact approval:
+  - `EndpointFileGrants::evaluate_file` returns `Ask` (`coding_endpoint_files.rs:312`).
+  - `Allow` is produced only inside approval resolution, after a non-Deny response, target
+    revalidation and `derive_approved_coding_grant` (`:380-420`).
+- So the claim holds for this catalog (see L3).
+
+### Catalog and registry
+- `admit` passes a fresh unrestricted `workspace_file_read_runtime_registry()` to
+  `CodingEndpointFiles`, and the narrowed registry to the owner.
+- This is safe: preparation refuses an empty narrowed catalog, and `EndpointFileGrants::new`
+  requires `registry.list_tools() == [ReadText]` and `tools == request.visible_tools` (`:163-183`).
+
+### Re-sealing
+- After narrowing, the request is resealed; after binding it is resealed again.
+- The owner re-verifies the seal, and `EndpointFileGrants::new` re-checks policy id and digest
+  against the request.
+- The narrowing digest is pushed into `task.constraints` before the seal. The test checks the exact
+  final request equals the expected reseal.
+
+### No effects at preparation or admission
+- Preparation performs no I/O on the workspace; the test asserts the directory and sentinel file
+  are unchanged.
+- Admission issues no grant and dispatches nothing. It constructs the boundary (which revalidates the
+  workspace and authority root), builds the endpoint context, and the coordinator then stores the
+  run.
+
+### Other checks
+- Secrets and logging: error variants carry no content, nothing in the new module logs, and no
+  credentials are handled.
+- Supply chain: no dependency, Cargo.lock or licence changes.
+- Evaluation integrity: no eval, hidden, held-out, scorer, threshold, ignore or scoreboard paths are
+  touched; the allowed-path assertion confirms this.
+- Public-repository hygiene: no private paths, hostnames, usernames, sibling-project names or
+  trademarks used as branding in the added content. The only personal data is the commit author
+  metadata.
+
+### Honest claims
+- The guide and the evidence document say plainly that `admit` is not exercised by any test.
+  There is no concrete acceptance verifier, no native admission and no executable activation.
+- The numbers in the evidence document (752 / 53 / 11 / 0; 745 + 7) match my reproduction and my
+  independent predecessor run.
+- I did not reproduce the timings (125.33 s). My runs took different times under build slots
+  (clippy 38.22 s, tests 137.23 s), which is expected.
+- No surface is claimed to reach this library code. That is consistent with the row being
+  non-closing.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low): re-preparing stacks a second digest line** —
+  `shells/host/src/coding_endpoint_startup.rs:140-144`.
+  - `prepare` accepts a request it already prepared. That request still has a valid seal, a matching
+    workspace and the same tools, so `prepare` appends another
+    `Trusted repository narrowing policy SHA-256:` line. My probe saw 2 lines.
+  - Each preparation rebinds policy from its own ledger, so no authority is widened. However, the
+    "complete narrowing identity" in the sealed constraints becomes ambiguous.
+  - Fix: refuse any request whose constraints already contain that prefix, or require the unbound
+    placeholder policy id.
+- **L2 (low, test coverage): `admit` has no executed test** —
+  `coding_endpoint_startup.rs:198-235`.
+  - The order (source check, then native boundary, then owner) and the error mapping are verified
+    only by reading the code. This is because `LinuxSandboxRunner` cannot be constructed in
+    component tests, which the documentation acknowledges.
+  - Fix: add a refusal-path admission test once a test-constructible admitted runner exists.
+- **L3 (low, latent): confirmation constraints are not enforced by the boundary itself** —
+  `coding_endpoint_startup.rs:140-142`, `coding_endpoint_files.rs:312`.
+  - `guidance.requires_confirmation` is never consulted. Today this is safe only because every file
+    read returns `Ask`.
+  - If a later catalog or boundary ever allows reads without approval, the trusted confirmation
+    constraint would be dropped silently.
+  - Fix: at composition, assert that every tool requiring confirmation is served by a boundary that
+    always asks, or pass the confirmation set to the boundary.
+
+Notes, not findings:
+- Exclusion matching is exact and case-sensitive (`Private/secret` is accepted when `private` is
+  excluded). That is correct on Fedora's default case-sensitive btrfs/ext4. Casefolded directories
+  (ext4 `+F`) would need inode-level checks, which the file boundary already does at read time.
+- Earlier lows remain same-row backlog, as the request states.
+
+## Per-row result
+
+- T-303 / T-306, local-coding-endpoint-startup increment (non-closing): **PASS** for this exact
+  commit. There are no high or medium findings. L1–L3 go to same-row backlog.
+  - Both parents remain OPEN.
+  - Native edit/test/retry, durable recovery, the concrete acceptance verifier, executable
+    activation, approved Git, parent acceptance and scores are not established by this commit, and
+    this review does not claim them.
+  - Markdown lint was not reproduced here (no installed Node). This is recorded as an environment
+    gap, not counted as a pass. Formatting, strict Clippy, the full test-identity comparison, the
+    hygiene checks and the committed-blob checks were reproduced.
+
+Verdict: PASS

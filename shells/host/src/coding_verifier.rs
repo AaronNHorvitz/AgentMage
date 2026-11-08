@@ -349,7 +349,7 @@ impl CodingCompletionVerifier {
     }
 }
 
-fn parse_candidate(
+pub(crate) fn parse_candidate(
     proposal: &impl RuntimeCompletionProposal,
     objective: &str,
 ) -> Option<CodingCompletionCandidate> {

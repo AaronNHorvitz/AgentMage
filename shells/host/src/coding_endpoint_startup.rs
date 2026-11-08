@@ -29,6 +29,7 @@ use crate::{
     coding_endpoint_owner::{
         CodingEndpointAdmission, CodingEndpointOwnerError, CodingEndpointRuns,
     },
+    coding_endpoint_read_verifier::{CodingEndpointReadCheck, CodingEndpointReadVerifier},
     coding_guidance::{CodingGuidanceError, CodingGuidancePolicy, compile_coding_read_guidance},
     linux_coding_runtime::CodingIdentitySource,
     runtime_tools::workspace_file_read_runtime_registry,
@@ -47,6 +48,8 @@ pub enum CodingEndpointStartupError {
     NoTools,
     /// A supplied source path is malformed or falls within an excluded scope.
     Source,
+    /// Exact file-observation checks are excluded or do not cover this request.
+    Acceptance,
     /// Original native file/grant dependencies failed their admission.
     Native,
     /// The original retained coordinator owner refused admission.
@@ -172,6 +175,26 @@ impl CodingEndpointStartup {
     #[must_use]
     pub const fn guidance(&self) -> &CodingGuidancePolicy {
         &self.guidance
+    }
+
+    /// Select the concrete full-file observation verifier for this final sealed
+    /// request. Every check must already be in the task/work packet and outside
+    /// compiled exclusions. This does not verify arbitrary task prose or read a
+    /// file; the trusted caller supplies previously consented snapshot identities.
+    pub fn read_verifier(
+        &self,
+        checks: Vec<CodingEndpointReadCheck>,
+    ) -> Result<CodingEndpointReadVerifier, CodingEndpointStartupError> {
+        if checks.iter().any(|check| {
+            self.guidance
+                .excluded_scopes()
+                .iter()
+                .any(|scope| scope.contains_path(check.path()))
+        }) {
+            return Err(CodingEndpointStartupError::Acceptance);
+        }
+        CodingEndpointReadVerifier::for_request(self.request(), checks)
+            .map_err(|_| CodingEndpointStartupError::Acceptance)
     }
 
     fn check_sources(&self, sources: &[CodingSource]) -> Result<(), CodingEndpointStartupError> {

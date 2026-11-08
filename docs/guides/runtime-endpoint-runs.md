@@ -682,9 +682,55 @@ retains the native file boundary, model context and verifier across advances.
 Admission executes neither model nor tool and issues no grant.
 
 This factory accepts a verifier from trusted code; it does not qualify arbitrary
-checks or provide a concrete file-only acceptance verifier. That verifier and
-executable activation remain prerequisites to a usable endpoint workflow.
+checks. The exact file-observation verifier below is available for its supported
+criteria. Executable activation and successful native admission remain open.
 There is no native-model profile fabrication, worker admission exception,
 durable recovery, edit/test/retry or new measured coding result. Tests of
 held-root preparation and provenance do not establish successful worker
 execution or a model workflow. Both parent rows remain open.
+
+## Exact file-observation acceptance
+
+`coding_endpoint_read_verifier::CodingEndpointReadCheck` represents a complete
+UTF-8 file observation: a canonical workspace path, byte length and lowercase
+SHA-256 of the full consented snapshot. Its `criterion()` returns the complete
+supported acceptance text. Trusted startup puts those exact criteria, in order,
+in both the task and work packet **before sealing and preparation**. Do not
+replace a person's arbitrary acceptance text with these narrower checks.
+Obtaining file identities requires prior workspace-read consent; constructing
+checks opens no path and creates no read or disclosure permission.
+
+After preparation, call `prepared.read_verifier(checks)`. This refuses excluded
+paths and binds the concrete verifier to the entire final sealed request. Pass
+it as the existing `CodingEndpointStartInput.verifier` when consuming
+preparation. The supported request is ephemeral read-only, with the exact
+single-file text catalog, observation authority, no mutable files or initial
+authoritative evidence, and ToolOutput as its sole required evidence kind.
+Unknown/free-text criteria, required validations, duplicate file checks and
+foreign workspace paths refuse. A different run, policy, snapshot, endpoint or
+postcondition cannot reuse the verifier. No model profile is manufactured.
+
+Successful completion requires a valid no-op candidate for the exact objective
+and a complete successful read for every selected file. Native output schema,
+payload/result digests, complete byte ranges, full content hash, unchanged
+state, unique calls/receipts and the exact current native evidence references
+are checked. Evidence for each postcondition comes only from that file's
+matching results. A good earlier read cannot conceal a later conflicting read.
+Partial/truncated results, missing or stale evidence and a model assertion of
+changed state or unrun checks cannot establish success. Native-family verifier
+entry refuses; the original coding verifier remains unchanged.
+
+The no-op disposition means **the selected file observations completed without
+changing state**. It does not verify the meaning of the model's summary, prove
+repository correctness, certify any tests or promise that a file stayed unchanged
+after the observed read. Broader tasks need their own deterministic acceptance
+checks. Constructor inputs are a trusted host responsibility, never model choices.
+
+Component tests use direct synthetic endpoint completions and pure snapshot
+reads. The socket test exercises the production retained owner, context,
+transport and concrete verifier, with a synthetic endpoint and explicitly
+synthetic approval/effect/receipt boundary. It records success for matching
+bytes and failure for different bytes through the original canonical terminal
+path. This does not demonstrate native admission, a real model or an executable
+coding workflow. Activation, edit/test/retry, recovery, approved Git and parent
+measurements remain open.

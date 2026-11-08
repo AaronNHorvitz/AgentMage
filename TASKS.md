@@ -2,6 +2,28 @@
 
 ## Active queue: local agent mission
 
+The startup increment's [independent core review](docs/reviews/1b0a9321e267-local-coding-endpoint-startup.txt)
+has **Verdict: PASS** for exact commit
+`1b0a9321e2674cce92c4edf258e58ab1f213e797`, with no high/medium finding.
+Low L1 (repeated preparation appends another guidance digest), L2 (native
+admission-path test coverage) and L3 (future catalogs must preserve confirmation
+constraints) remain backlog in these same rows. Both parent rows remain open.
+
+The endpoint native-file [independent core review](docs/reviews/3c204acf4138-local-coding-endpoint-files.txt)
+has **Verdict: PASS** for exact commit
+`3c204acf4138f8e790a2f31efe7b2b958ddf2e7e`, with no high/medium finding.
+Low L1 (execution/latch mapping coverage), L2 (case-insensitive filesystem
+exclusions) and L3 (execution-time preview expiry) remain backlog in these same
+rows. Neither parent closes; earlier lows remain backlog.
+
+The [exact endpoint read verifier](docs/evidence/t303-endpoint-read-verifier-2026-11-08.md)
+binds supported file-observation criteria to the final sealed task and checks
+complete native-shaped read results and evidence. It requires independent core
+review. It does not certify the model summary or repository correctness.
+Executable activation/native admission, edit/test/retry, durable recovery,
+approved Git and parent measurements remain open. T-303/T-306 remain open;
+no row or sub-row is added or closed.
+
 The [trusted endpoint startup increment](docs/evidence/t303-endpoint-startup-2026-11-08.md)
 compiles verified repository narrowing before policy binding and transfers the
 held workspace, native file/grant boundary and trusted verifier port into the
