@@ -15,6 +15,9 @@ use std::sync::{
 use std::thread;
 use std::time::{Duration, Instant};
 
+#[path = "support/coding_guided_service.rs"]
+mod guided_service;
+
 static NEXT: AtomicU64 = AtomicU64::new(0);
 struct Fixture {
     root: PathBuf,

@@ -998,3 +998,64 @@ fn guided_default_command_uses_the_same_latched_stop_without_dispatch() {
         routes[..stop_at]
     );
 }
+
+#[test]
+fn guided_client_checks_original_edit_scope_before_inspecting_or_approving_it() {
+    let t = template();
+    for repair in [false, true] {
+        for field in [
+            "operation",
+            "worktree_root_sha256",
+            "creation_receipt_sha256",
+        ] {
+            let f = Fixture::new();
+            let mut script = Script::new(&f);
+            script.start(&t);
+            let prior = script.attempt(&t, 1, None, "assertion_failed");
+            script.attempt(&t, 2, Some(&prior), "passed");
+            let prepare = script
+                .routes
+                .iter()
+                .enumerate()
+                .filter(|(_, r)| *r == "POST /v1/code/repository/edit/prepare HTTP/1.1")
+                .nth(usize::from(repair))
+                .unwrap()
+                .0;
+            assert_eq!(script.replies[prepare]["operation"], "edit-worktree");
+            let replacement = if field == "operation" {
+                json!("different-operation")
+            } else {
+                json!("9".repeat(64))
+            };
+            // A stable replacement, including BOTH pending inspections, must
+            // fail the original prepare binding even though equality would pass.
+            script.replies[prepare][field] = replacement.clone();
+            script.replies[prepare + 1]["pending"][field] = replacement.clone();
+            script.replies[prepare + 2]["pending"][field] = replacement;
+            let (out, calls, routes) = script.run(&f, &t, "approve");
+            assert_eq!(out["status"], 1, "repair={repair}, field={field}: {out}");
+            assert_eq!(calls.len(), prepare + 1, "{out}");
+            assert_eq!(out["answered"], if repair { 5 } else { 1 }, "{out}");
+            assert_eq!(
+                calls
+                    .iter()
+                    .map(|c| c["route"].as_str().unwrap().to_owned())
+                    .collect::<Vec<_>>(),
+                routes[..calls.len()]
+            );
+            for route in [
+                "POST /v1/code/repository/edit/decide HTTP/1.1",
+                "POST /v1/code/repository/validation/decide HTTP/1.1",
+            ] {
+                assert_eq!(
+                    calls.iter().filter(|c| c["route"] == route).count(),
+                    usize::from(repair)
+                );
+            }
+            assert_eq!(
+                fs::read(f.root.join("tree/calc.py")).unwrap(),
+                b"return a - b\n"
+            );
+        }
+    }
+}

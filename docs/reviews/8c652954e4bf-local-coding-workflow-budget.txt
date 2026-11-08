@@ -1,0 +1,143 @@
+Commit: 8c652954e4bf73eafc7220cb8ff2bcdcb6d831ff
+Scope: local-coding-workflow-budget
+
+# Independent core review — guided workflow shared budget and latched stop
+
+Reviewer: Claude Opus 5.5, separate session, read-only, extra-high effort. Pinned checkout
+`/lane/review-checkout`; `git rev-parse HEAD` = `8c652954e4bf73eafc7220cb8ff2bcdcb6d831ff`;
+predecessor `42949c642a5eeeeb0f2c336b17617a0e108df664` resolves and is the direct parent. Builds
+used `CARGO_TARGET_DIR=/lane/state/review-target`. The repository was not modified; `git status
+--short` is empty after all runs. Rows: T-303 / T-306, non-closing (both remain OPEN).
+
+## Methods
+
+1. Read IP-POLICY.md, decision 0164 (diff), the top of TASKS.md, the builder README and every
+   helper (`run.py`, `audit.py`, `final.py`, `parse.py`, `regression.py`, provenance files) and the
+   builder's raw logs (baseline, focused, regression-before, validation-final, identity audit, both
+   final-check logs).
+2. Line-by-line review of the complete twelve-file diff over the predecessor: four production files
+   (`coding_cli.rs`, `coding_cli_driver.rs`, `coding_cli_record.rs`, `coding_cli_workflow.rs`), two
+   test files, four documents and two retained review copies.
+3. Re-ran the requested command list in a fresh output directory and a separate Cargo target.
+4. Independent behavioural probe of the built `agentmage-code` binary, outside the test harness, in
+   my own scratch directory: a private pseudo-terminal as the controlling terminal, freshly
+   generated owner-only random fixture tokens (deleted afterwards), and a loopback listener that
+   records connections and request lines. This covered (a) every invalid budget with complete
+   argument lists, (b) a stalled response header with a 1-second budget, and (c) SIGTERM during a
+   stalled header for both `code-worktree-bounded 30` and the default `code-worktree`.
+
+## Commands and results (all exits retained)
+
+| # | Command | Exit | Result |
+|---|---|---|---|
+| 1 | `sha256sum --quiet -c /lane/state/tmp/t303-workflow-budget/review-inputs.sha256` | 0 | Manifest has 41 lines; its SHA-256 is `9248f3cd…c70`, matching the request. |
+| 2 | `PATH=…/tooling:$PATH node --version` | 0 | `v24.15.0`. `tooling/node` SHA-256 `d1de76d8…932c` and `tooling/LICENSE` `4573185d…4d18` match `tooling-provenance.json`. Both have link count 2, consistent with hard links. I could not see the original inode because `/lane/state/tooling` is not visible to this session, so "same inode" rests on the link count only. |
+| 3 | `PATH=… CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-workflow-budget-8c652954e4bf` | 0 | Seven commands, all `RESULT exit=0`. Markdownlint ran (4 files, 0 issues) because Node was available. `FAST GATE: PASS`. `SOURCE_FREEZE_UNCHANGED True`. 266.29 s including reservations (most of it waiting for a shared slot). |
+| 4 | `python3 -B …/audit.py <same-output>` | 0 | Baseline 10 targets `[162,0,0,0]`; final 10 targets `[166,0,0,0]`. All 162 baseline identities are retained, plus exactly the four named new methods. Command exits `[0×7]`; 6 frozen inputs. |
+| 5 | `PATH=… python3 -B …/final.py` | 0 | Scope equals the 12 expected paths. Freeze holds. Both retained review copies are byte-identical to `/lane/reviews/*.md`. Ledger `| [` rows are unchanged. Added-line privacy check passes. Four non-cargo checks exit 0. |
+| 6 | `cmp …/validation-final/source-freeze.json <same-output>/source-freeze.json` | 0 | Identical. The six hashes also equal `sha256sum` of the committed files. |
+| 7 | `git diff --check 42949c64… --` | 0 | Clean. |
+| 8 | `git status --short` | 0 | Empty. |
+| — | Namespace | — | `run.py` recorded `/tmp/wb-birubzer`. After all jobs exited it held 0 entries and was removed with `rmdir`. Nothing else was touched. |
+| — | Independent `cmp` of both `docs/reviews/*.txt` with `/lane/reviews/*.md` | 0 | Byte-identical. |
+| — | Own diff privacy grep (`/home/`, `/var/home`, `/Users/`, username, e-mail, bearer/api-key patterns) over all added lines | — | No match. The only `/home/` in TASKS.md (line 2130) is inherited prose ("absolute/home/traversal"), not a path. |
+
+Probe results (built binary from this gate, mtime after the gate rebuild):
+
+- `code-worktree-bounded S <full valid arguments>` with S in `0`, `3601`, `-1`, `1.5`, `x` and
+  `18446744073709551616`: exit 1, 0 connections, and no "Guided workflow stopped" message. Each
+  refuses before the workflow starts. With a valid definition, `3601` makes 0 connections, while
+  `3600` reaches exactly `GET /v1/code/workspace`. The production range and parse checks are
+  therefore effective. `+60` is accepted as 60 (Rust `u64` parse), which is harmless.
+- 1-second budget with a stalled header: exit 1 after 1.05 s. The peer saw a clean EOF at 1.04 s
+  and only one request was made.
+- SIGTERM at about 0.5 s during a stalled header, for both the bounded (30 s) and default command:
+  handled exit 1 (not -15). The peer saw EOF at 0.50 s, there was no second request, and the
+  inspection warning was printed.
+
+## Review of the claims
+
+- **One deadline.** `workflow::run` builds a single `driver::Signals` and sets
+  `Client.deadline = controls.deadline()`. Every guided request goes through `Client::call`, which
+  uses `min(now+180 s, overall)` and checks the latch before token load, before connect, before
+  the header write and before the body write. `read_until` polls the latch every 100 ms read
+  timeout. `idle()` goes through `json()` and is therefore covered. Retries reuse the same `Client`,
+  so a new attempt cannot renew the deadline. Confirmed.
+- **All four approval kinds.** `share-failure` (coding_cli.rs:469), `read` (:557), `edit` (:676) and
+  `test` (:1082) now use `Client::confirm`, which delegates to the original driver's nonblocking
+  `/dev/tty` confirm when controls are present. Allow is followed by a re-check of the latch;
+  `Deny` and `Stopped` both return `Err` and never send `approve:false`. Callers that still use the
+  global `confirm` (original-apply, workspace-apply, runtime and endpoint commands) are not
+  reachable from `run_steps`. `coding_cli_record::export` builds its own client with `controls:
+  None` and is not reachable from the guided path. Confirmed.
+- **No new owner or permission path.** The diff only widens visibility of the existing driver's
+  `Signals` and `Confirmation` and adds a `deadline()` accessor. No server, kernel, grant, sandbox
+  or preview check changed. Stop never becomes an approval, denial, cancellation, release or
+  retry. The new tests assert an exact request prefix (`routes[..stop_at]` or `[..=index]`), and my
+  probe saw no extra dispatch. Confirmed.
+- **Honest limits.** The guide, decision and evidence state that a stop is not cancellation, that
+  connect and write calls can take up to 2 s, and that output backpressure and filesystem stalls
+  are not bounded. This matches the code: `show()` to stdout and `verify_root` do not poll the
+  latch. All model, write and test observations are labelled synthetic, and no native, model,
+  GPU or score claim is made.
+- **Regression.** `regression-before.log` shows the new default-command test failing original
+  production at status -15 against an expected 1, on the existing `code-worktree` command. The
+  restored hashes in `regression-fixed-hashes.json` equal the committed sources.
+- **Evaluation integrity and scope.** No evaluation, hidden or held-out task, scorer, threshold,
+  dependency, Cargo.lock, SBOM, scoreboard, release or push change. No row added or closed, no
+  review verdict edited, history linear (predecessor is the parent). No other agent products
+  named and no trademark used as branding.
+- **Confinement.** This increment does not touch the server-side workspace, worktree, sandbox or
+  network boundaries (no server or kernel file in the diff). Those were reproduced in earlier
+  reviews and are unchanged here. The client-side consent boundary is the one this diff touches,
+  and it was exercised directly: an interrupted or expired prompt never converts into a vote or a
+  dispatch.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test coverage)** — `platforms/local-api/tests/support/coding_workflow.rs:928`. The
+  six invalid-budget cases pass only `["code-worktree-bounded", seconds]`. With an empty tail,
+  `run_steps` refuses at its argument destructuring even if the 1..3600 range check or parse were
+  deleted. So status 1, zero answers and zero requests would still hold, and the test does not
+  discriminate the claim "invalid budgets refuse before requests". My probe shows the production
+  check works.
+  Fix: pass the complete argument list with a valid definition for each invalid budget, and
+  assert both no request and the absence of the "Guided workflow stopped" message, which is
+  printed only after `run` passes validation.
+- **L2 (low, robustness)** — `platforms/local-api/src/coding_cli_driver.rs:57`. While the guided
+  command is running, SIGINT, SIGTERM and SIGHUP only set a flag and never escalate. If the client
+  is blocked where the latch is not polled (stdout backpressure in `show`, or `verify_root` on a
+  stalled filesystem), repeated Ctrl-C or SIGTERM no longer terminates it, unlike the predecessor
+  where the default action applied. Only SIGKILL remains. This is disclosed as "not an OS
+  watchdog".
+  Fix (backlog): consider second-signal escalation, for example by also registering
+  `signal_hook::flag::register_conditional_shutdown` on the same signals.
+- **L3 (low, wording)** — `coding_cli_driver.rs:141` and `coding_cli_workflow.rs:173`. On Linux,
+  `Instant` is `CLOCK_MONOTONIC`, which excludes system suspend, but the transcript field and
+  documents call this a "wall" or "elapsed" budget. After a suspend, more real time can pass than
+  the budget shows.
+  Fix: describe the budget as monotonic running time excluding suspend, or use a boot-time clock.
+- **L4 (low, evidence traceability)** — `docs/evidence/t303-workflow-budget-2026-11-08.md:58`.
+  The private `focused-inputs.json` records different hashes for `coding_cli.rs`,
+  `coding_cli_workflow.rs` and both test files than the committed sources (for example
+  `8e9b787d…` against `15d99150…`). The "focused 13 PASS" result and "passed the focused
+  fixed-code run" therefore cannot be traced to the committed sources. In substance this is
+  covered: the final gate, both the builder's and mine, runs all 13 workflow methods on the frozen
+  committed sources.
+  Fix: record focused inputs at the time of the run, or cite the final-gate identities instead.
+
+Carried same-row backlog, not re-judged here: L2 from the earlier reviews (an actual-service
+guided or repair consumer test) and L3 from the 42949c64 review (direct coverage of the original
+prepared reply's root and creation pins).
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing increment, local-coding-workflow-budget).** PASS for this increment:
+  the shared deadline, latched stop and claimed limits are implemented, tested and independently
+  reproduced, with no high or medium finding. Both parent rows remain OPEN. Native execution,
+  actual-service and model evidence, autonomous composition, durable recovery, approved Git and
+  parent measurements are still outstanding. This review closes nothing.
+
+Verdict: PASS

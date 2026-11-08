@@ -2,12 +2,26 @@
 
 ## Active queue: local agent mission
 
+The [actual-service consumer batch](docs/evidence/t303-guided-service-2026-11-08.md)
+checks guided ownership refusal, repair refusal before failure disclosure, and
+streamed worktree proposals through the original API with a synthetic upstream.
+It also directly checks each original prepared edit's operation, root and
+creation binding. This adds tests only; successful native edit/test/repair,
+durable recovery, approved Git and measurements remain open. Independent core
+review is required. T-303/T-306 remain open; no row is added or closed.
+
 The guided terminal now has a shared elapsed-time budget across proposals,
 repairs, approval waits and API reads, with latched interruption handling.
 The default is 3600 seconds; `code-worktree-bounded` selects 1 through 3600.
 Stopping sends no cancellation or retry; a sent effect requires inspection.
 See the [budget record](docs/evidence/t303-workflow-budget-2026-11-08.md).
-Independent core review is required; T-303/T-306 remain open.
+Its [independent core review](docs/reviews/8c652954e4bf-local-coding-workflow-budget.txt)
+has **Verdict: PASS** for exact commit
+`8c652954e4bf73eafc7220cb8ff2bcdcb6d831ff`, with no high/medium finding.
+Low L1 (complete invalid-budget test arguments), L2 (second-signal escalation),
+L3 (monotonic-clock wording) and L4 (focused-run hash traceability) remain
+same-row backlog. The final frozen gate independently reproduced all workflow
+methods. Both parents remain open; no row is added or closed.
 
 The proposal-binding [independent core review](docs/reviews/d78e31e5734f-local-coding-proposal-binding.txt)
 has **Verdict: PASS** for exact commit

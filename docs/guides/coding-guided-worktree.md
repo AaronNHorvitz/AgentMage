@@ -35,7 +35,8 @@ the same arguments after an explicit number of seconds (1 through 3600):
 target/debug/agentmage-code <loopback-ip:port> <private-auth-directory> code-worktree-bounded 300 <absolute-worktree> <model> 16384 2048 '<task>' '<complete-test-definition-json>'
 ```
 
-One clock covers preparation, model requests, every approval wait, tests and
+The clock is monotonic running time and excludes system suspend. One clock
+covers preparation, model requests, every approval wait, tests and
 repairs; a new attempt never renews it. SIGINT, SIGTERM and SIGHUP latch a stop.
 After expiry or interruption, the terminal stops sending further requests and
 closes a pending API read. Prompt waits poll for a stop; socket reads retain
@@ -111,6 +112,16 @@ ownership or retry capacity. Per-request socket deadlines retain the existing
 waits share that same guided budget.
 
 ## Current evidence and limits
+
+Actual API-service consumer tests cover both guided commands refusing a
+directory without held worktree ownership, including after restarting the
+service. They also cover repair refusal without an owned failed receipt, and
+the individual `propose-worktree` command consuming complete or truncated
+streams from a synthetic upstream through the original service. Complete
+generation still cannot adopt that directory or prepare an edit. These are
+refusal and protocol observations; a successful native edit/test/repair cycle
+through the actual service remains unverified. See the
+[service-consumer record](../evidence/t303-guided-service-2026-11-08.md).
 
 Executable tests drive this terminal through a recording synthetic HTTP peer,
 including failure, repair and success, all approvals, three-attempt exhaustion,
