@@ -2,6 +2,22 @@
 
 ## Active queue: local agent mission
 
+The terminal client's [independent core review](docs/reviews/c73c5f9f8b42-local-coding-endpoint-terminal.txt)
+has **Verdict: PASS** for exact commit
+`c73c5f9f8b4255286773d216df31d90bbf309279`, with no high/medium finding.
+Low L1 (post-cancellation finalization without disclosure consent) and L2
+(exact readable numeric argument text) stay backlog in these same rows,
+alongside the prior HTTP regression-coverage low. No row closes on this
+increment; T-303/T-306 remain open.
+
+The endpoint MCP bridge can now observe one explicitly shared, pinned run:
+its sealed request and canonical event pages. HTTP delegation requires an
+explicit trusted startup policy; the original service stays control-only.
+See the [observation record](docs/evidence/t303-endpoint-mcp-2026-11-08.md).
+Independent core review is required; T-303/T-306 remain open. Native filesystem
+and grants, executable service activation, edit/test/retry, durable recovery,
+approved Git and parent measurements remain open. No row is added or closed.
+
 The terminal client now addresses the retained endpoint HTTP owner: inspect,
 advance with fresh model-disclosure consent, respond to an exact tool challenge,
 inspect event pages, cancel and separately confirm release. See the

@@ -45,6 +45,17 @@ pub struct CodingEndpointHttpRun<T, V, C> {
     pub clock: C,
 }
 
+/// Trusted service-startup delegation policy. Wire input cannot change it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CodingEndpointObservationAccess {
+    /// Only the person-facing control credential may inspect the run.
+    ControlOnly,
+    /// The ordinary client credential may inspect the request and event pages.
+    /// This shares potentially sensitive task and tool observations, never
+    /// advancement, disclosure consent, approvals, cancellation or release.
+    DelegateObservations,
+}
+
 struct Session<T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock> {
     runs: CodingEndpointRuns<'static, T, V, C>,
 }
@@ -134,6 +145,31 @@ where
     V: RuntimeVerifierPort + Send + 'static,
     C: RuntimeClock + Send + 'static,
 {
+    serve_coding_endpoint_with_observation_access(
+        listener,
+        tokens,
+        stop,
+        CodingEndpointObservationAccess::ControlOnly,
+        factory,
+    )
+}
+
+/// Hosts the same retained coordinator with an explicit startup observation
+/// policy. Delegation shares task/catalog metadata and canonical tool events
+/// with holders of the ordinary client credential. It grants no model/tool
+/// execution or control authority. The default entry point remains control-only.
+pub fn serve_coding_endpoint_with_observation_access<T, V, C>(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    access: CodingEndpointObservationAccess,
+    factory: impl FnOnce(RuntimeRunId, SessionId) -> Result<CodingEndpointHttpRun<T, V, C>, ApiError>,
+) -> Result<(), ApiError>
+where
+    T: RuntimeToolBoundary + Send + 'static,
+    V: RuntimeVerifierPort + Send + 'static,
+    C: RuntimeClock + Send + 'static,
+{
     if stop.load(Ordering::Acquire)
         || !listener
             .local_addr()
@@ -178,7 +214,13 @@ where
                 Ok(req) => req,
                 Err(status) => return error(socket, status),
             };
-            if !req.control {
+            let observation = matches!(
+                (req.method.as_str(), req.path.as_str()),
+                ("GET", "/v1/code/endpoint/request") | ("POST", "/v1/code/endpoint/events")
+            );
+            if !(req.control
+                || access == CodingEndpointObservationAccess::DelegateObservations && observation)
+            {
                 return error(socket, 403);
             }
             let binding_matches = |id: &RuntimeRunId, digest: &str| {

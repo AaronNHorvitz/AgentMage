@@ -8,7 +8,10 @@
 pub mod coding_cli;
 mod coding_endpoint_api;
 mod coding_owned_api;
-pub use coding_endpoint_api::{CodingEndpointHttpRun, serve_coding_endpoint};
+pub use coding_endpoint_api::{
+    CodingEndpointHttpRun, CodingEndpointObservationAccess, serve_coding_endpoint,
+    serve_coding_endpoint_with_observation_access,
+};
 mod coding_repair_api;
 mod coding_repository_api;
 mod coding_runtime_api;

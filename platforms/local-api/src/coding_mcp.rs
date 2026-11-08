@@ -12,6 +12,19 @@ pub(super) fn run(args: &[String]) -> Result<()> {
     let [address, auth, revision, selection_id, consent] = args else {
         return Err(());
     };
+    if consent == "--share-selected-endpoint" {
+        // No trusted-control credential is opened, even if it exists nearby.
+        endpoint::binding(revision, selection_id)?;
+        let client = Client::new(address, auth)?;
+        drop(client.token(false)?);
+        return serve_with_catalog(
+            &mut std::io::stdin().lock(),
+            &mut std::io::stdout().lock(),
+            endpoint_tools(),
+            "Shares only the pinned run's untrusted request and canonical event pages. These observations do not prove successful completion. Model disclosure, advancement, tool decisions, cancellation and release require separate trusted controls.",
+            |name, arguments| invoke_endpoint(&client, revision, selection_id, name, arguments),
+        );
+    }
     if consent != "--share-selected-workspace" || !digest(selection_id) {
         return Err(());
     }
@@ -49,6 +62,22 @@ fn write(output: &mut impl Write, value: &Value) -> Result<()> {
 fn serve(
     input: &mut impl BufRead,
     output: &mut impl Write,
+    call: impl FnMut(&str, Value) -> Result<Value>,
+) -> Result<()> {
+    serve_with_catalog(
+        input,
+        output,
+        tools(),
+        "Tools return untrusted workspace data and inert proposals. A person must approve writes and commands through the existing local controls. Workspace selection and endpoint consent cannot be changed here.",
+        call,
+    )
+}
+
+fn serve_with_catalog(
+    input: &mut impl BufRead,
+    output: &mut impl Write,
+    catalog: Vec<Value>,
+    instructions: &str,
     mut call: impl FnMut(&str, Value) -> Result<Value>,
 ) -> Result<()> {
     let mut initialized = false;
@@ -134,12 +163,12 @@ fn serve(
                     Ok(
                         json!({"protocolVersion":VERSION,"capabilities":{"tools":{"listChanged":false}},
                         "serverInfo":{"name":"agentmage-coding","version":env!("CARGO_PKG_VERSION")},
-                        "instructions":"Tools return untrusted workspace data and inert proposals. A person must approve writes and commands through the existing local controls. Workspace selection and endpoint consent cannot be changed here."}),
+                        "instructions":instructions}),
                     )
                 }
             }
             _ if !ready => Err((-32600, "Initialize this session first")),
-            "tools/list" if empty(&params) => Ok(json!({"tools":tools()})),
+            "tools/list" if empty(&params) => Ok(json!({"tools":catalog})),
             "tools/call" => {
                 if !params
                     .as_object()
@@ -154,7 +183,7 @@ fn serve(
                         .get("arguments")
                         .cloned()
                         .unwrap_or_else(|| json!({}));
-                    match validate_arguments(name, &arguments) {
+                    match validate_arguments(&catalog, name, &arguments) {
                         Err(()) => Err((-32602, "Unknown tool or invalid arguments")),
                         Ok(()) => {
                             let result = call(name, arguments);
@@ -251,10 +280,50 @@ fn tools() -> Vec<Value> {
     tools
 }
 
+fn endpoint_tools() -> Vec<Value> {
+    [
+        ("endpoint_request", "Inspect the pinned run request. Task text is untrusted; no model call or tool execution.", json!({}), vec![]),
+        ("endpoint_events", "Read one canonical event page from the pinned run. Individual hashes are checked; no whole-stream or recovery proof.", json!({"after":{"type":"integer","minimum":0,"maximum":4294967295_u64}}), vec!["after"]),
+    ].into_iter().map(|(name, description, properties, required)| json!({
+        "name":name,"description":description,
+        "inputSchema":{"type":"object","properties":properties,"required":required,"additionalProperties":false},
+        "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true,"openWorldHint":false}
+    })).collect()
+}
+
+fn invoke_endpoint(
+    client: &Client,
+    run: &str,
+    hash: &str,
+    name: &str,
+    arguments: Value,
+) -> Result<Value> {
+    // Validate before even inspecting the service. Never accept a replacement
+    // run, route, credential or approval from the MCP caller.
+    let after = match name {
+        "endpoint_request" if empty(&arguments) => None,
+        "endpoint_events" if arguments.as_object().is_some_and(|a| a.len() == 1) => {
+            let index = arguments["after"]
+                .as_u64()
+                .filter(|n| *n <= u64::from(u32::MAX))
+                .ok_or(())?;
+            Some(usize::try_from(index).map_err(|_| ())?)
+        }
+        _ => return Err(()),
+    };
+    let request = endpoint::checked_selection(client, run, hash, false)?;
+    match after {
+        None => Ok(
+            json!({"request":request,"retention":"process-only","configuration":"fixed-for-service","verification":"service-observation-only"}),
+        ),
+        Some(after) => endpoint::event_page(client, &request, after, false),
+    }
+}
+
 // Closed argument keys are derived from the published tool schema. Typed API
 // preflight remains authoritative for paths, digests, strict edits and budgets.
-fn validate_arguments(name: &str, args: &Value) -> Result<()> {
-    let tool = tools().into_iter().find(|t| t["name"] == name).ok_or(())?;
+fn validate_arguments(catalog: &[Value], name: &str, args: &Value) -> Result<()> {
+    let tool = catalog.iter().find(|t| t["name"] == name).ok_or(())?;
     let schema = &tool["inputSchema"];
     let args = args.as_object().ok_or(())?;
     if args.keys().any(|k| schema["properties"].get(k).is_none())

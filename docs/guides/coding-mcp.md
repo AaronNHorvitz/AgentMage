@@ -89,3 +89,48 @@ The specification project's [licensing notice](https://raw.githubusercontent.com
 checked on 2026-11-07, records a transition from MIT to Apache-2.0, with remaining
 MIT contributions and CC-BY-4.0 for general documentation. This change uses
 protocol facts and includes no copied prose, examples or implementation.
+
+## Observe a retained endpoint run
+
+A trusted host can explicitly enable observation delegation when starting the
+retained endpoint service. Use
+`serve_coding_endpoint_with_observation_access` with
+`CodingEndpointObservationAccess::DelegateObservations`. The original
+`serve_coding_endpoint` entry point keeps every route control-only. There is
+currently no executable launcher for this service; this policy is a host
+library choice, not an HTTP setting. See [Decision 0162](../decisions/0162-endpoint-mcp-observation-delegation.md).
+
+Inspect the run through the trusted terminal controls:
+
+```sh
+agentmage-code <loopback-ip:port> <control-auth-directory> endpoint
+```
+
+Review the exact request, including its task, selected model and visible tools.
+Choose a trusted calling program and its destination for received text. Supply
+the displayed `run_id` and `request_sha256` to a separate MCP launch:
+
+```sh
+agentmage-mcp <loopback-ip:port> <client-auth-directory> <run-id> <request-digest> --share-selected-endpoint
+```
+
+This selection advertises only `endpoint_request` (no arguments) and
+`endpoint_events` (one required integer `after`, between zero and 4,294,967,295).
+The first returns the original sealed request with a service-observation label.
+The second returns one original canonical event page, with individual event
+hashes, run/session/task/policy identities, sequence and page bounds checked.
+`after` is the event index; start at zero, explicitly request the returned
+`next` index, and stop when `next` equals `total`. It is not a resume cursor.
+A prefix observed during an active run may grow. These pages do not prove a
+complete stream or independently verified task completion.
+
+Every call rechecks the launch pin. A replaced service, changed request or
+foreign run refuses rather than sharing a new scope. Released event records
+are unavailable; export needed pages before release. The bridge uses only
+`client.token` and has no model-disclosure, advance, tool approval, cancellation
+or release operation. Use the existing trusted terminal commands for those
+controls. Enabling HTTP observation delegation alone does not consent to send
+text to any model. The explicit MCP launch flag shares the pinned task and
+tool observations with the calling program, whose subsequent handling of them
+is outside the bridge's control. The existing workspace launch and tools keep
+their separate selection and permissions.

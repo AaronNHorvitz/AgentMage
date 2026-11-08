@@ -1,0 +1,256 @@
+Commit: c73c5f9f8b4255286773d216df31d90bbf309279
+Scope: local-coding-endpoint-terminal
+
+# Independent core review: retained endpoint terminal client
+
+Reviewer: Claude Opus 5.5 (extra-high effort). Separate session, read-only frozen checkout at
+`/lane/review-checkout`. Tier: core. Immutable predecessor: `7defa427d3179554920086b1b5f3e8c2875aa7e5`.
+Rows: T-303 / T-306. Neither closes with this increment; both parents remain OPEN.
+
+## Methods
+
+- I confirmed the commit: `git rev-parse HEAD` = `c73c5f9f8b4255286773d216df31d90bbf309279`, with a
+  clean tree. The predecessor resolves to `7defa427d3179554920086b1b5f3e8c2875aa7e5`.
+  `git diff --stat` shows exactly the nine claimed files: +1159/-1.
+- I read IP-POLICY.md, the new TASKS.md preamble, the guide addition
+  (`docs/guides/runtime-endpoint-runs.md:3-57`), the evidence record and the builder's README, run.py,
+  parse.py, audit.py and final.py.
+- I read all new and changed code line by line:
+  - `platforms/local-api/src/coding_cli_endpoint.rs` (all 250 lines);
+  - the dispatch hook in `coding_cli.rs:647-649`;
+  - the shared bounded client: `Client::call`, `receive`, `safe` and `confirm` (`coding_cli.rs:44-326`);
+  - the server it addresses (`coding_endpoint_api.rs`, unchanged);
+  - the owner `release` semantics (`shells/host/src/coding_endpoint_owner.rs:239-256`);
+  - `decode_exact` (`shells/host/src/runtime_transport.rs:189-204`);
+  - `verify_runtime_approval_challenge` and `verify_runtime_approval_response`
+    (`kernel/engine/src/runtime_coordinator.rs:95-135`);
+  - endpoint outcome sealing (`kernel/engine/src/runtime_coordinator/endpoint_outcome.rs`).
+- I read all eight new test methods and the one-line PTY helper extension in
+  `tests/coding_runtime_cli.rs:1320`. That extension adds the mode `allow-tool-only`; existing modes
+  are unchanged.
+- I reran the builder's commands, with one substitution recorded below. I also ran my own escape and
+  refusal probes against the actual built binary, using a recording loopback peer and real PTYs.
+
+## Commands and results
+
+All commands ran in `/lane/review-checkout` with `CARGO_TARGET_DIR=/lane/state/review-target`,
+`CARGO_BUILD_JOBS=2` and `RUST_TEST_THREADS=4`. The fresh validation directory was
+`/lane/state/tmp/review-endpoint-terminal-c73c5f9f8b42`. Builder logs were not touched.
+
+```text
+sha256sum --quiet -c .../review-inputs.sha256      # OK; manifest sha256 9ea133ca…76f0c6, 30 lines
+python3 -B .../run.py > fast.log 2>&1               # gate: every Cargo step exit 0
+  git diff --check                 exit 0
+  --lint-untracked                 exit 0
+  --lint-reviews (retained review) exit 0
+  node markdownlint-cli2           exit 127 "Missing executable: node; no automatic download"
+  cargo fmt --check                exit 0
+  cargo clippy -D warnings         exit 0 (42.49 s)
+  cargo test --all-targets         exit 0 (69.65 s): 35+0+0+0+14+6+30+13+37 = 135 passed,
+                                   0 failed, 0 ignored, 0 filtered
+  FAST GATE: FAIL   (only because of the missing Node executable)
+  SOURCE_FREEZE_UNCHANGED
+cmp validation-final/source-freeze.json <mine>/source-freeze.json   # identical
+audit.py (copy; two assertions changed, see below)  rc 0: 9 targets, totals [135,0,0,0],
+                                   127 old passes, exactly the 8 named new methods
+final.py --committed (copy; node step skipped)      rc 0: FINAL_LIGHT_PASS; nine-file scope,
+                                   privacy, ledger table rows unchanged, retained review identity,
+                                   committed blobs, clean status
+cmp builder final-inputs.json <mine>/final-inputs.json                # identical
+git diff --check 7defa427… --       # clean
+git status --short                  # clean
+```
+
+Further checks:
+
+- `#[test]` counts across `platforms/local-api`: 127 at the predecessor and 135 at HEAD. This matches
+  the audit independently of the builder's `predecessor.log`.
+- The five frozen Rust hashes in the evidence table equal `sha256sum` of the committed files.
+- `docs/reviews/7defa427d317-local-coding-endpoint-http.txt` is byte-identical (`cmp`) to
+  `/lane/reviews/7defa427d317-local-coding-endpoint-http.md`.
+
+### Environment substitution (stated plainly)
+
+- This reviewer sandbox has no Node executable anywhere. I searched `find / -xdev` and every candidate
+  path in the request. So I could not run markdownlint myself. I downloaded nothing.
+- The request's own fallback loop is defective: `export PATH=":$PATH"` drops the candidate's
+  directory. It could not have helped even if a candidate had existed.
+- In my copy of audit.py I changed exactly two assertions:
+  - `FAST GATE: PASS` became `FAST GATE: FAIL`;
+  - "all exit codes zero" became "the only non-zero code is index 3, which is exit 127 from the
+    `node` command".
+- In my copy of final.py I skipped only the `node` command. Diffs of both copies against the
+  originals are in the validation directory.
+- The three Markdown files are byte-identical to the builder's linted `final-inputs`. The builder's
+  retained log shows `markdownlint-cli2 v0.23.2 … Summary: 0 issues in 0 files`.
+- My own Python spot check found no trailing whitespace, tabs, double blank lines, missing final
+  newline or inconsistent table column counts.
+- Markdown lint is documentation hygiene and bears on no claim under review. I therefore do not treat
+  its absence as making this review inconclusive. I record that I did not reproduce it.
+
+### Reviewer escape and refusal probes (actual binary, `probe/probe.py`, `probe/probe.log`)
+
+| Attempt | Result |
+| --- | --- |
+| `endpoint-step`, `-release`, `-approve` and `-deny` with piped stdin | exit 1; **zero connections** |
+| Non-loopback address `192.0.2.1:9` | refused before connecting |
+| Challenge with a repeated top-level member, on a real PTY | refused; zero connections; no prompt |
+| Cancel reply with an extra member, or a repeated member | exit 1 (exact-shape check; `decode_exact`) |
+| Cancel answered with `302` and a `Location` header | exit 1; one request only; redirect not followed |
+| `409` body containing ESC `[2J`, U+202E and BEL | stderr shows the literal escapes `\u001b`, `\u202e` and `\u0007`; no raw control bytes |
+| Run id containing `../` plus ESC, 129 bytes long, uppercase digest or 63-hex digest | refused before connecting |
+| Unsealed fetched request in `endpoint` | refused after one GET; nothing printed |
+| Event index `-1`, `0x0` or `2^64` | refused before connecting |
+| Every request | carried the control credential, never the client one |
+
+## Review against the claims
+
+**Authorization and consent (the confinement boundary at this layer).**
+
+- Every route uses `control=true` (`coding_cli_endpoint.rs:37,102,184,217,234`). Fixed literal routes
+  go through the shared bounded loopback client. It sends no redirect, proxy or model-chosen URL
+  (`coding_cli.rs:78-79,151-154`).
+- `endpoint-step` / `-approve` / `-deny` / `-release` check `stdin().is_terminal()` before any
+  connection (lines 126, 133, 221). `confirm` reads only from `/dev/tty`, takes at most 256 bytes and
+  requires an exact typed match.
+- Tool allow (`allow <challenge_sha256>`) and disclosure (`share <request_sha256>`) are distinct
+  prompts in that order. The POST happens only after both (lines 151-155 and 92-96).
+- Deny needs disclosure consent only. That is correct: the advance can send observations upstream.
+  The server also refuses `approve_model_context:false` unless cancellation is latched
+  (`coding_endpoint_api.rs:215`).
+- Tests assert two prompts for allow, one for deny, no POST after an allow-only answer, and no POST
+  after a declined disclosure.
+
+**Challenge integrity.**
+
+- The user-supplied challenge is decoded with `decode_exact`. Unknown or repeated members are refused.
+- `verify_runtime_approval_challenge` recomputes the digest over the whole challenge, including the
+  presentation and argument bytes.
+- The client then checks run, task and a visible tool id/version from the freshly fetched, verified
+  and pinned request (`check_challenge`, lines 69-84).
+- The host compares `challenge_sha256`, `approval_id`, grant and expiry against the original pending
+  challenge. So what the user reviewed is hash-bound to what the coordinator will execute.
+- The readable projection decodes arguments with `decode_exact` and refuses repeated members. The
+  test covers this even with a valid presentation seal.
+
+**Request pinning.**
+
+- `selected` verifies the seal, `process-only`, `fixed-for-service`, `EphemeralReadOnly` and no
+  cursor.
+- `checked_selection` requires the caller's exact run id and digest. It never repins to a newly
+  fetched identity. Tests cover a foreign run, a foreign digest, a substituted model and a tampered
+  digest.
+
+**Untrusted reply parsing.**
+
+- Steps are a tagged enum with `deny_unknown_fields`.
+- A terminal outcome is checked for schema, run, session, task, digest, terminal state and an empty
+  inner `answer_evidence`. The inner field is always `None` for endpoint outcomes
+  (`endpoint_outcome.rs:120`).
+- An awaiting-approval reply is checked against the pinned request.
+- The step is shown under `verification: service-observation-only`. It does not attempt or claim
+  claim-based verification, and that wording is accurate.
+- Event pages are checked as follows:
+  - at most one event per page;
+  - `after <= total`;
+  - `next == after + len`;
+  - `next <= total`;
+  - an empty page means `next == total`;
+  - `retention == process-only`;
+  - per-event `verify_runtime_event` plus run, session, task, policy and sequence equal to `after`.
+- The page is labelled `individual-event-hashes-only` and `index_is_resume_cursor: false`. All output
+  goes through `safe()`.
+
+**Recovery and interruption.**
+
+- A lost reply (peer close), a 409 refusal and a malformed terminal reply each produce exactly one
+  advance POST and no retry, cancel or release (test `..._never_retried_or_auto_cancelled`).
+- The guide tells users to inspect events after an uncertain reply.
+
+**Secrets and logging.** No new logging. Tokens stay in `Zeroizing`. Refusal bodies are limited to
+4096 bytes and escaped.
+
+**Prior L1 from 7defa427.**
+
+- The guide states that one consented advance may make several model turns up to the next approval
+  boundary or terminal observation, within the original budgets (`runtime-endpoint-runs.md:31-33`).
+- The disclosure prompt's warning says the same (`coding_cli_endpoint.rs:94`).
+- I consider L1 resolved. L2 (HTTP dependency-fault and Host/Origin socket tests) remains backlog, as
+  stated.
+
+**Honest labelling and scope.**
+
+- The evidence and guide state plainly what remains open: the native filesystem/grant composition,
+  executable service activation, MCP, edit/test/retry, durable recovery and approved Git.
+- They also say the tests use synthetic peers and are not scores.
+- The eighth method drives the actual binary against the actual retained HTTP owner. It asserts
+  `executions == 0` and that the model listener never received a connection (`WouldBlock`).
+
+**Evaluation integrity.** No eval, hidden, held-out, scorer, threshold or scoreboard file is touched.
+The diff touches only local-api sources/tests and the docs.
+
+**Delivery.** No row or sub-row is added or closed; the TASKS.md table rows are unchanged. The
+increment ends in something that runs and is measured.
+
+**Public hygiene and IP.**
+
+- The diff has no private host path, username, email or hostname.
+- `/lane/...` paths appear only inside the byte-identical retained review, which matches the
+  established convention of 112 retained reviews.
+- No product names or trademarks appear as branding. "Claude Opus 5.5" appears only as reviewer
+  attribution in the retained review. "cursor" is used generically.
+- No dependency or licence change.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, consent wording / reachability): `platforms/local-api/src/coding_cli_endpoint.rs:86-96`.**
+  - After `endpoint-cancel`, the owner keeps the run `StillRunning` until one more advance
+    (`coding_endpoint_owner.rs:245-249`). So `endpoint-release` cannot succeed before that.
+  - The host already permits that post-cancellation advance with `approve_model_context:false`
+    (`coding_endpoint_api.rs:215`). The terminal's only advance path, however, demands typed
+    disclosure consent (`share <digest>`), and its warning says the run's task and observations will
+    be shared.
+  - A user who cancelled specifically to avoid further disclosure must therefore grant disclosure
+    consent to reach a releasable state, or stop the service.
+  - This errs toward over-consent rather than under-consent. The latched cancellation probe means no
+    model call should follow, so this is not a boundary escape.
+  - Fix: add a cancelled-run finalization path. One option is an `endpoint-step` variant used only
+    after a successful `endpoint-cancel`. It would send `approve_model_context:false` and need no
+    disclosure prompt; the host already rejects it unless cancellation is latched. Then cover
+    cancel → finalize → release in the actual-HTTP method.
+- **L2 (low, review fidelity): `platforms/local-api/src/coding_cli_endpoint.rs:146-153`.**
+  - `arguments_json` is a `serde_json::Value` projection. The workspace does not enable
+    `arbitrary_precision`, so integers beyond u64/i64 and decimals beyond f64 precision are shown
+    normalised. For example, `9007199254740993.0` shows as `9007199254740992.0`.
+  - Meanwhile `presentation.arguments.bytes` is shown only as a numeric byte array, so the exact text
+    is not readable side by side.
+  - The approved bytes stay hash-bound, so this is a display gap only. Typed tool schemas mostly make
+    it moot.
+  - Fix: also show the exact UTF-8 argument text as an escaped string (`safe()` already escapes it),
+    or refuse a projection whose numbers do not round-trip to their source text.
+
+Backlog notes outside this diff, not findings against this commit:
+
+- The older `runtime-approve` path decodes its readable arguments with plain `serde_json::from_slice`
+  (`coding_cli_runtime.rs:236-237`). It therefore still collapses repeated members silently, which
+  this increment correctly refuses. Align it with `decode_exact`.
+- The reviewer sandbox has no Node at all, and the request's fallback loop sets `PATH=":$PATH"`. Fix
+  the loop (`PATH="$(dirname "$node_candidate"):$PATH"`), or keep shipping the builder's lint output
+  as the stated substitute.
+- Pre-existing design: the CLI sends the control bearer to whatever process listens on the given
+  loopback port. The server is not authenticated to the client. Consider this before release.
+
+## Per-row result
+
+- **T-303 (non-closing increment): PASS for this exact increment.** It has no open high/medium
+  finding. L1 and L2 here, plus L2 carried from 7defa427, go to the backlog in this row. The row stays
+  OPEN.
+- **T-306 (non-closing increment): PASS for this exact increment.** It has no open high/medium
+  finding. The row stays OPEN.
+
+This review closes no row, approves nothing in the repository, and claims no certification,
+compliance or legal clearance.
+
+Verdict: PASS

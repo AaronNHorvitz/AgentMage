@@ -32,9 +32,9 @@ enum Step {
     Terminal { outcome: RuntimeEndpointOutcome },
 }
 
-fn selected(client: &Client) -> Result<RuntimeEndpointRunRequest> {
+fn selected(client: &Client, control: bool) -> Result<RuntimeEndpointRunRequest> {
     let selection: Selection =
-        serde_json::from_value(client.json("GET", "/v1/code/endpoint/request", true, None)?)
+        serde_json::from_value(client.json("GET", "/v1/code/endpoint/request", control, None)?)
             .map_err(|_| ())?;
     verify_runtime_endpoint_run_request(&selection.request).map_err(|_| ())?;
     if selection.retention != "process-only"
@@ -47,7 +47,7 @@ fn selected(client: &Client) -> Result<RuntimeEndpointRunRequest> {
     Ok(selection.request)
 }
 
-fn binding(run: &str, hash: &str) -> Result<Value> {
+pub(super) fn binding(run: &str, hash: &str) -> Result<Value> {
     if run.is_empty()
         || run.len() > 128
         || run.bytes().any(|b| !b.is_ascii_graphic())
@@ -58,9 +58,14 @@ fn binding(run: &str, hash: &str) -> Result<Value> {
     Ok(json!({"run_id":run,"request_sha256":hash}))
 }
 
-fn checked_selection(client: &Client, run: &str, hash: &str) -> Result<RuntimeEndpointRunRequest> {
+pub(super) fn checked_selection(
+    client: &Client,
+    run: &str,
+    hash: &str,
+    control: bool,
+) -> Result<RuntimeEndpointRunRequest> {
     binding(run, hash)?;
-    let request = selected(client)?;
+    let request = selected(client, control)?;
     if request.run_id.as_str() != run || request.request_sha256 != hash {
         return Err(());
     }
@@ -121,16 +126,56 @@ fn advance(
     show(&json!({"step":observed,"verification":"service-observation-only"}))
 }
 
+/// Fetches and checks one canonical page. This proves individual event hashes
+/// and scope only; a wire page cannot establish whole-stream completeness.
+pub(super) fn event_page(
+    client: &Client,
+    request: &RuntimeEndpointRunRequest,
+    after: usize,
+    control: bool,
+) -> Result<Value> {
+    let mut body = binding(request.run_id.as_str(), &request.request_sha256)?;
+    body["after"] = json!(after);
+    let page = client.json("POST", "/v1/code/endpoint/events", control, Some(body))?;
+    let events: Vec<RuntimeEvent> =
+        serde_json::from_value(page["events"].clone()).map_err(|_| ())?;
+    let total = page["total"].as_u64().ok_or(())?;
+    let next = page["next"].as_u64().ok_or(())?;
+    if events.len() > 1
+        || after as u64 > total
+        || Some(next) != (after as u64).checked_add(events.len() as u64)
+        || next > total
+        || (events.is_empty() && next != total)
+        || page["retention"] != "process-only"
+    {
+        return Err(());
+    }
+    for event in &events {
+        verify_runtime_event(event).map_err(|_| ())?;
+        if event.run_id != request.run_id
+            || event.session_id != request.session_id
+            || event.task_id != request.task.task_id
+            || event.policy_id != request.policy_id
+            || event.sequence != after as u64
+        {
+            return Err(());
+        }
+    }
+    Ok(
+        json!({"page":page,"verification":"individual-event-hashes-only","index_is_resume_cursor":false}),
+    )
+}
+
 pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result<()> {
     match (command, args) {
         ("endpoint", []) => show(
-            &json!({"request":selected(client)?,"retention":"process-only","configuration":"fixed-for-service"}),
+            &json!({"request":selected(client, true)?,"retention":"process-only","configuration":"fixed-for-service"}),
         ),
         ("endpoint-step", [run, hash]) => {
             if !std::io::stdin().is_terminal() {
                 return Err(());
             }
-            let request = checked_selection(client, run, hash)?;
+            let request = checked_selection(client, run, hash, true)?;
             advance(client, &request, None)
         }
         ("endpoint-approve" | "endpoint-deny", [run, hash, input]) => {
@@ -144,7 +189,7 @@ pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result
             if challenge.run_id.as_str() != run {
                 return Err(());
             }
-            let request = checked_selection(client, run, hash)?;
+            let request = checked_selection(client, run, hash, true)?;
             check_challenge(&request, &challenge)?;
             let allow = command == "endpoint-approve";
             if allow {
@@ -177,38 +222,9 @@ pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result
             advance(client, &request, Some(response))
         }
         ("endpoint-events", [run, hash, index]) => {
-            let mut body = binding(run, hash)?;
             let after = index.parse::<usize>().map_err(|_| ())?;
-            let request = checked_selection(client, run, hash)?;
-            body["after"] = json!(after);
-            let page = client.json("POST", "/v1/code/endpoint/events", true, Some(body))?;
-            let events: Vec<RuntimeEvent> =
-                serde_json::from_value(page["events"].clone()).map_err(|_| ())?;
-            let total = page["total"].as_u64().ok_or(())?;
-            let next = page["next"].as_u64().ok_or(())?;
-            if events.len() > 1
-                || after as u64 > total
-                || Some(next) != (after as u64).checked_add(events.len() as u64)
-                || next > total
-                || (events.is_empty() && next != total)
-                || page["retention"] != "process-only"
-            {
-                return Err(());
-            }
-            for event in &events {
-                verify_runtime_event(event).map_err(|_| ())?;
-                if event.run_id != request.run_id
-                    || event.session_id != request.session_id
-                    || event.task_id != request.task.task_id
-                    || event.policy_id != request.policy_id
-                    || event.sequence != after as u64
-                {
-                    return Err(());
-                }
-            }
-            show(
-                &json!({"page":page,"verification":"individual-event-hashes-only","index_is_resume_cursor":false}),
-            )
+            let request = checked_selection(client, run, hash, true)?;
+            show(&event_page(client, &request, after, true)?)
         }
         ("endpoint-cancel", [run, hash]) => {
             // Cancellation itself discloses nothing to a model and needs no
@@ -224,7 +240,7 @@ pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result
             if !std::io::stdin().is_terminal() {
                 return Err(());
             }
-            let request = checked_selection(client, run, hash)?;
+            let request = checked_selection(client, run, hash, true)?;
             confirm(
                 &json!({"request":request,"warning":"Drops this run's process-only context, ports and event record after terminal completion or a fault. Export needed events first. The identity stays spent; this cannot resume or reset budgets."}),
                 &format!("release {}", request.request_sha256),

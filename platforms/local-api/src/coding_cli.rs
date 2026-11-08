@@ -27,7 +27,7 @@ mod mcp;
 mod runtime;
 
 /// Runs the bounded stdio MCP bridge with only the ordinary API credential.
-/// The explicit launch arguments pin a person-selected workspace revision.
+/// Explicit launch arguments pin a person-selected workspace or endpoint run.
 pub fn run_mcp(args: &[String]) -> std::result::Result<(), ApiError> {
     mcp::run(args).map_err(|()| ApiError::Configuration)
 }

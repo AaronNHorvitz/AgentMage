@@ -10,7 +10,13 @@ use agentmage_kernel_engine::{
     runtime_coordinator::{runtime_tool_catalog_sha256, seal_runtime_endpoint_run_request},
     runtime_loop::*,
 };
-use agentmage_local_api::{ApiError, ApiTokens, CodingEndpointHttpRun, serve_coding_endpoint};
+use agentmage_local_api::{
+    ApiError, ApiTokens, CodingEndpointHttpRun, CodingEndpointObservationAccess,
+    serve_coding_endpoint, serve_coding_endpoint_with_observation_access,
+};
+
+#[path = "support/coding_endpoint_mcp.rs"]
+mod endpoint_mcp;
 use agentmage_platform_linux_inference::{
     local_chat::LocalChatEndpoint,
     local_chat_transport::{LocalChatApproval, LocalChatTransport, TransportLimits},
@@ -339,17 +345,27 @@ struct Api {
 }
 impl Api {
     fn new(endpoint: LocalChatEndpoint, executions: Arc<AtomicUsize>) -> Self {
+        Self::start(endpoint, executions, false)
+    }
+    fn start(endpoint: LocalChatEndpoint, executions: Arc<AtomicUsize>, delegate: bool) -> Self {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let address = listener.local_addr().unwrap();
         let stop = Arc::new(AtomicBool::new(false));
         let worker_stop = stop.clone();
         let worker = thread::spawn(move || {
-            serve_coding_endpoint(
-                listener,
-                ApiTokens::new(CLIENT.into(), CONTROL.into()).unwrap(),
-                worker_stop,
-                |id, session| Ok(compose(id, session, endpoint, executions)),
-            )
+            let tokens = ApiTokens::new(CLIENT.into(), CONTROL.into()).unwrap();
+            let factory = |id, session| Ok(compose(id, session, endpoint, executions));
+            if delegate {
+                serve_coding_endpoint_with_observation_access(
+                    listener,
+                    tokens,
+                    worker_stop,
+                    CodingEndpointObservationAccess::DelegateObservations,
+                    factory,
+                )
+            } else {
+                serve_coding_endpoint(listener, tokens, worker_stop, factory)
+            }
         });
         Self {
             address,
