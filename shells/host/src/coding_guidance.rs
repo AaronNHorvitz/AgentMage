@@ -13,7 +13,7 @@ use agentmage_kernel_engine::{
     },
     runtime_coordinator::validate_runtime_run_limits,
     tooling::ToolRegistry,
-    validation_template::ValidationTemplateRegistry,
+    validation_template::{ValidationTemplate, ValidationTemplateRegistry},
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -170,6 +170,37 @@ pub fn compile_coding_guidance(
     validations: &ValidationTemplateRegistry,
     limits: &RuntimeRunLimits,
 ) -> Result<CodingGuidancePolicy, CodingGuidanceError> {
+    compile_guidance(
+        workspace_id,
+        ledger,
+        guidance,
+        registry,
+        &validations.templates,
+        limits,
+    )
+}
+
+/// Compiles the same trusted narrowing for a file-only composition. With no
+/// validation worker registered, every RequireVerification constraint refuses;
+/// an invalid or synthetic validation registry is never constructed.
+pub fn compile_coding_read_guidance(
+    workspace_id: &WorkspaceId,
+    ledger: &InstructionEvidenceLedger,
+    guidance: &EffectiveGuidance,
+    registry: &ToolRegistry,
+    limits: &RuntimeRunLimits,
+) -> Result<CodingGuidancePolicy, CodingGuidanceError> {
+    compile_guidance(workspace_id, ledger, guidance, registry, &[], limits)
+}
+
+fn compile_guidance(
+    workspace_id: &WorkspaceId,
+    ledger: &InstructionEvidenceLedger,
+    guidance: &EffectiveGuidance,
+    registry: &ToolRegistry,
+    validations: &[ValidationTemplate],
+    limits: &RuntimeRunLimits,
+) -> Result<CodingGuidancePolicy, CodingGuidanceError> {
     if effective_guidance(ledger).as_ref() != Ok(guidance)
         || validate_runtime_run_limits(limits).is_err()
     {
@@ -218,7 +249,6 @@ pub fn compile_coding_guidance(
                 GuidanceConstraintKind::RequireVerification => {
                     if !valid_identifier(&constraint.target)
                         || !validations
-                            .templates
                             .iter()
                             .any(|template| template.validation_id == constraint.target)
                     {

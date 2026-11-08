@@ -52,6 +52,9 @@ pub mod coding_endpoint_files;
 #[cfg(target_os = "linux")]
 /// Exclusive retained ownership for configured-endpoint coding runs.
 pub mod coding_endpoint_owner;
+#[cfg(target_os = "linux")]
+/// Trusted guidance and native dependency composition for endpoint runs.
+pub mod coding_endpoint_startup;
 /// Extensions and their revocation lists through the development catalog
 /// host.
 pub mod coding_extensions;

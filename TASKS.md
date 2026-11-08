@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [trusted endpoint startup increment](docs/evidence/t303-endpoint-startup-2026-11-08.md)
+compiles verified repository narrowing before policy binding and transfers the
+held workspace, native file/grant boundary and trusted verifier port into the
+existing retained owner. It requires independent core review. Native admission,
+executable activation, a concrete endpoint acceptance verifier, edit/test/retry,
+durable recovery, approved Git and parent measurements remain open. T-303/T-306
+remain open; no row or sub-row is added or closed.
+
 The policy-binding predecessor's [independent core review](docs/reviews/4fe1b48698e9-local-coding-endpoint-policy.txt)
 has **Verdict: PASS** for exact commit
 `4fe1b48698e927d9fa6c164836fe04822fd34927`, with no high/medium finding.

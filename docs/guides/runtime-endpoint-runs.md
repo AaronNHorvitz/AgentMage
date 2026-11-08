@@ -651,3 +651,40 @@ activation, trusted startup must derive exclusions, disabled tools and budget
 caps from the verified repository-guidance policy. Supplying a broader catalog
 is not permission to ignore that guidance. The zero-call policy-binding edge
 case remains low backlog in the binder; the native file/grant owner refuses it.
+
+## Trusted startup composition
+
+`coding_endpoint_startup::CodingEndpointStartup` connects that narrowing step
+to the original retained coordinator owner. Trusted startup supplies the sealed
+read-file selection, a continuously held authorized workspace, the actor and
+the complete current instruction ledger. Its snapshot must match the request.
+The original provenance verifier refuses corrupt, conflicting or stale ledgers;
+the original guidance compiler applies explicit trust decisions. Missing
+provenance is not interpreted as an empty ledger. The host remains responsible
+for actual selection/read consent and fresh capture: hashes cannot supply either.
+
+Budget reductions precede kernel action binding. Disabled tools are removed;
+removal of this catalog's only tool or a zero-call ceiling refuses startup.
+Stop constraints refuse. Required validations also refuse because no validation
+worker is registered by this file-only composition. Confirmation constraints
+retain the existing exact approval on every read. No constraint creates grants.
+The complete compiled guidance digest enters the final sealed task constraints.
+Use the final request for client pinning; this replaces the preliminary seal.
+
+Admission consumes preparation and requires the real admitted offline worker,
+privately rooted durable authority, original configured endpoint connection,
+trusted identities and clock, and an independent deterministic verifier port.
+Supplied source snapshots still require their prior read/disclosure consent.
+An excluded or malformed source path refuses the whole admission before context
+construction; sources are not silently omitted. The original context validates
+the remaining source bounds, catalog and endpoint selection. The same owner
+retains the native file boundary, model context and verifier across advances.
+Admission executes neither model nor tool and issues no grant.
+
+This factory accepts a verifier from trusted code; it does not qualify arbitrary
+checks or provide a concrete file-only acceptance verifier. That verifier and
+executable activation remain prerequisites to a usable endpoint workflow.
+There is no native-model profile fabrication, worker admission exception,
+durable recovery, edit/test/retry or new measured coding result. Tests of
+held-root preparation and provenance do not establish successful worker
+execution or a model workflow. Both parent rows remain open.
