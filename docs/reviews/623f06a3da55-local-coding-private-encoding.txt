@@ -1,0 +1,123 @@
+Commit: 623f06a3da55b702516884718f5333783350cd43
+Scope: local-coding-private-encoding
+
+Reviewer: independent Claude Opus 5.5 session (extra-high effort), read-only, pinned checkout
+`/lane/review-checkout`. Tier: core. Rows: T-303 / T-306, non-closing increment; both parents stay OPEN.
+No row closure is claimed or granted.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `623f06a3da55b702516884718f5333783350cd43`; reviewed the complete
+  ten-path diff above immutable predecessor `3642273c2711c1346d692ad8cd8774574c2534c4`.
+- Read IP-POLICY.md, the TASKS.md T-303/T-306 prose change, the evidence file
+  `docs/evidence/t303-private-encoding-2026-11-07.md`, the transport guide addition and the
+  endpoint-exchange review (`docs/reviews/6bee4c9d55be-...txt`) L1/L2 that this batch addresses.
+- Read `run.py`, `audit.py`, `final.py` and `README` before running them. They write only under
+  `$AGENTMAGE_VALIDATION_DIR`, run the unmodified `scripts/local_agent_fast_gate.py --plan` commands
+  (Cargo commands prefixed by `env` only), freeze the six Rust/TOML inputs before and after, and never
+  edit source. The privacy regex in `final.py` lives outside the repository and is not committed.
+- Source review of every changed line, with reasoning about the writer boundary, serde chunking,
+  allocation growth, zeroization, all production callers of `encode_chat*`, and the new assertions.
+- Checked `zeroize` 1.9.0 (Cargo.lock) `Zeroize for Vec<Z>`: it zeroes initialized elements and the
+  full spare capacity, so the reserved-but-unused tail of the request allocation is also erased.
+
+## Commands and results
+
+```sh
+sha256sum -c /lane/state/tmp/t303-private-encoding/review-inputs.sha256      # 15 x OK
+sha256sum /lane/state/tmp/t303-private-encoding/review-inputs.sha256        # bfdd8aa5...c495ce0 (matches)
+sha256sum /lane/state/tmp/t306-owned-api/node-v24.15.0/bin/node             # d1de76d8...bd932c (matches)
+export PATH=/lane/state/tmp/t306-owned-api/node-v24.15.0/bin:$PATH
+export CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+export AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-private-encoding-623f06a3da55  # new, mode 700
+bash /tools/build-slot python3 -B /lane/state/tmp/t303-private-encoding/run.py > .../fast.log 2>&1
+                                     # exit 1 (expected); 577 s wall incl. reservation wait
+python3 -B /lane/state/tmp/t303-private-encoding/final.py > .../final.log 2>&1   # exit 0
+cmp validation-1/source-freeze.json  <mine>/source-freeze.json   # identical
+cmp validation-1/plan-final.json     <mine>/plan-final.json      # identical
+cmp validation-1/audit.json          <mine>/audit.json           # identical
+git diff --check 3642273c2711c1346d692ad8cd8774574c2534c4 --       # exit 0, no output
+git status --short                                                 # clean
+cmp docs/reviews/3642273c2711-local-coding-endpoint-control.txt \
+    /lane/reviews/3642273c2711-local-coding-endpoint-control.md    # identical
+```
+
+My fast.log: seven commands (the plan now includes the retained-review lint, as the evidence
+explains), exits `0,0,0,0,0,0,101`; fmt 0.90 s, Clippy `-D warnings` 32.25 s, tests 129.74 s;
+`FAST GATE: FAIL`, `SOURCE_FREEZE_UNCHANGED`. Audit: 27 targets, 904 passed / 53 failed / 19 ignored
+/ 0 filtered; all 53 failures in `agentmage_host[unittests src/lib.rs]`, identities and normalized
+diagnostics identical to the predecessor gate; one added passing method. My timings differ from the
+builder's (different load); the counts and every artefact match byte for byte. final.log ends
+`Summary: 0 issues in 0 files` (markdownlint) and `FINAL_LIGHT_CHECKS_PASS; SOURCE_GATE_REMAINS_FAIL`.
+
+Each required method passed unfiltered in my run, including
+`private_request_writer_keeps_one_allocation_and_refuses_overflow_atomically`,
+`requests_bound_messages_tokens_and_encoded_size`,
+`prepared_endpoint_request_sends_the_exact_frozen_body_and_redacts_private_inputs`,
+`coding_truncated_or_incomplete_generations_never_become_valid_edits`,
+`coding_proposal_streams_selected_context_and_returns_only_an_unapplied_change` and
+`controlled_endpoint_success_keeps_frozen_request_usage_and_unknown_resources`.
+
+## Source analysis
+
+- `local_chat.rs:222-264` `PrivateRequestWriter`: `Vec::with_capacity(MAX_REQUEST_BYTES)` followed by
+  `extend_from_slice` only when `len + chunk <= MAX` can never reallocate. The refusal condition
+  `chunk > MAX.saturating_sub(len)` accepts exactly the totals the old post-hoc `len > MAX` check
+  accepted, so the wire contract is unchanged: exactly 256 KiB passes, one byte more fails (now
+  tested with and without `stream_options`). A refused write appends nothing (atomic). serde_json
+  calls `write_all`, and `write` always reports a full write or an error, so no short-write path
+  exists. On error the `Zeroizing` owner drops and erases the whole capacity; on success
+  `mem::take` moves the same allocation out and leaves an empty `Vec` behind.
+- All production callers wrap the result: transport `prepare_chat` (`local_chat_transport.rs:410`)
+  and both API preflights (`local-api/src/lib.rs:957-961`, `:1901-1906`). The remaining callers
+  are tests (`coding_repair_api.rs:376/389`, `local_chat/tests.rs`).
+- `local_chat_transport.rs:34-55,417-433` `MessageFingerprint`: `serde_json::to_writer` over the
+  same `&[ChatMessage]` with the compact formatter produces the bytes `to_vec` would, so the
+  hash and byte count match the old values with no second serialized message buffer. The socket
+  fixture now uses a ~17 KB escaped/Unicode/NUL prompt, which forces many writer chunks, and
+  independently recomputes the message-array string from the original text. It finds that string
+  exactly once in the transmitted body and matches both digests and lengths after the caller's
+  buffer has been cleared. The endpoint-exchange L1 is resolved.
+- `local_chat_api.rs:213-220`: the shared observation helper now asserts the serialized
+  `runtime_model_result.finish` string on every completed response. The length case
+  (`code.proposal.incomplete`, mapped at `lib.rs:1165-1168`) requires `"output_token_limit"`; the
+  success and invalid-edit cases require `"stop"`. A serde rename or casing change of either
+  variant, or a change to the code mapping, would make the assertion fail. The endpoint-exchange L2
+  is resolved.
+- The claims are honest and narrow. The guide and evidence state that only these owned buffers are
+  covered, not conversation copies or hash state, and they disclose the fixed 256 KiB reservation per
+  active encoding. No endpoint, credential, permission, prompt, wire field, resource ceiling,
+  evaluation input, hidden test, frozen task or score changed. Cargo.toml/Cargo.lock are unchanged
+  and no `#[ignore]` was added. Confinement boundaries are not touched by this diff.
+- Privacy/IP: the added lines contain no private host path, username, hostname, credential, personal
+  data, sibling-project name, trademark branding or comparison with another product. The retained
+  predecessor review cites `/lane/...` sandbox paths, the same convention as 93 of the 97 committed
+  review files. They carry no host identity.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, backlog), `platforms/linux-inference/src/local_chat.rs:167-183,241`:** the public
+  `encode_chat` / `encode_chat_with_usage` still return a bare `Vec<u8>`, so erasure after a
+  successful encoding depends on each caller remembering `Zeroizing::new`. All current production
+  callers do, but a future caller (or a `?`-early-return between encode and wrap) would silently
+  free private request bytes unerased. Fix: return `Zeroizing<Vec<u8>>` from both public functions
+  so the type enforces the guide's stated contract.
+
+Carried backlog, unchanged by this commit: controlled-dispatch lows L1 (route-level control-stop
+fixture), L2 (connect-expiry labelling) and L3 (per-byte owner polling), and the earlier native
+failed-test receipt fixture. The source gate remains FAIL because of the 53 pre-existing host-library
+failures (deferred executable-trust owner action). This commit does not change them.
+
+## Per-row result
+
+- T-303 (non-closing increment): PASS for this increment. Endpoint-exchange L1/L2 are resolved;
+  the new L1 goes to backlog. The row stays OPEN: native coordinator endpoint admission, run/context/
+  resource integration, native fail/repair, durable ownership, approved commit/push and the parent
+  scores remain open.
+- T-306 (non-closing increment): PASS for this increment. The row stays OPEN for the same reasons.
+- This verdict accepts the pinned increment only. It is not a native workflow, model, GPU or coding
+  score measurement, and not a row closure.
+
+Verdict: PASS

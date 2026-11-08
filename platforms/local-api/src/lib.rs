@@ -40,6 +40,10 @@ use agentmage_kernel_contracts::{
     RuntimeModelTokenAccounting,
 };
 
+use agentmage_kernel_engine::runtime_loop::endpoint::{
+    RuntimeEndpointModelPhase, RuntimeEndpointPhaseFailure, RuntimeEndpointPhaseUsage,
+};
+
 use agentmage_platform_linux::{
     LinuxCodingCommandCancellation, LinuxCodingPendingWrite, LinuxCodingReadScope,
     LinuxCodingReplacement, LinuxCodingRepository, discover_linux_coding_map,
@@ -984,7 +988,9 @@ fn proposal_observation(
     binding: &EndpointChatBinding,
     requested: bool,
     completion: Option<&EndpointModelResult>,
+    phase_usage: &RuntimeEndpointPhaseUsage,
 ) -> Value {
+    value["endpoint_phase_usage"] = json!(phase_usage);
     value["model_binding"] = json!(binding);
     value["runtime_model_binding"] = json!(binding.runtime_model_binding());
     // This confirms wire/codec completion only, never a successful coding task.
@@ -1040,6 +1046,7 @@ struct PreparedCodingProposal<'a> {
     feedback: Option<Value>,
     message_bytes: usize,
     request: PreparedEndpointChat<'a>,
+    phase: RuntimeEndpointModelPhase,
 }
 
 fn prepare_endpoint_coding_proposal<'a>(
@@ -1072,12 +1079,14 @@ fn prepare_endpoint_coding_proposal<'a>(
             input.include_usage,
         )
         .map_err(|e| (400, e.code()))?;
+    let phase = RuntimeEndpointModelPhase::new(request.binding()).map_err(|e| (400, e.code()))?;
     Ok(PreparedCodingProposal {
         input,
         context,
         feedback,
         message_bytes,
         request,
+        phase,
     })
 }
 
@@ -1115,6 +1124,7 @@ fn dispatch_coding_proposal(
         feedback,
         message_bytes,
         request,
+        mut phase,
     } = prepared;
     let binding = request.binding().clone();
     let control = ProposalDispatchControl {
@@ -1148,7 +1158,17 @@ fn dispatch_coding_proposal(
             }
         }
     };
-    let result = request.execute_recorded_controlled(&op.cancel, &control, display_text);
+    let result = phase
+        .execute(&control, |control| {
+            request.execute_recorded_controlled(&op.cancel, control, display_text)
+        })
+        .map_err(|error| match error {
+            RuntimeEndpointPhaseFailure::Stopped(stop) => stop.code(),
+            RuntimeEndpointPhaseFailure::Dependency(error) => error.code(),
+            RuntimeEndpointPhaseFailure::InvalidResult => "runtime.model.result_invalid",
+            RuntimeEndpointPhaseFailure::ResourceExhausted => "runtime.budget.exhausted",
+        });
+    let phase_usage = phase.usage();
     if !writable {
         op.outcome = "api.client-disconnected";
         return Err(ApiError::Io);
@@ -1166,7 +1186,7 @@ fn dispatch_coding_proposal(
                 finish: EndpointModelFinish::OutputTokenLimit,
                 ..
             }) => Some("code.proposal.incomplete"),
-            Err(e) => Some(e.code()),
+            Err(code) => Some(*code),
         }
     };
     if let Some(code) = refused {
@@ -1178,6 +1198,7 @@ fn dispatch_coding_proposal(
                 &binding,
                 input.include_usage,
                 completion,
+                &phase_usage,
             ),
         );
     }
@@ -1188,7 +1209,13 @@ fn dispatch_coding_proposal(
                 "applied":false,"tested":false,"authority":"proposal-only","workspace_revision":workspace_revision});
             event(
                 socket,
-                proposal_observation(proposal, &binding, input.include_usage, completion),
+                proposal_observation(
+                    proposal,
+                    &binding,
+                    input.include_usage,
+                    completion,
+                    &phase_usage,
+                ),
             )
         }
         Err(e) => {
@@ -1200,6 +1227,7 @@ fn dispatch_coding_proposal(
                     &binding,
                     input.include_usage,
                     completion,
+                    &phase_usage,
                 ),
             )
         }

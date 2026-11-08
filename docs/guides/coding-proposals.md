@@ -247,3 +247,33 @@ single-turn snapshot-proposal measurement, not execution of the native agent loo
 The frozen baseline parser is not reused by this product path. The new native
 typed parser and measurement event parser have explicit deep-nesting refusal
 tests, addressing the baseline review's L1 prerequisite for future reuse.
+
+## Shared endpoint model phase
+
+The snapshot, workspace and repair proposal routes frame their frozen request
+with `runtime_loop::endpoint::RuntimeEndpointModelPhase` before dispatch. Repair
+framing happens before consuming its single-use disclosure receipt. The phase
+uses the existing runtime resource ledger with one model-call allowance, the
+prepared body length, the transport's decoded-text ceiling and total deadline.
+It borrows the same operation control before and after the credential-owning
+transport. It accepts only a result naming the complete original selection,
+context, body and limits, within those byte/time bounds. A failed or stopped
+phase cannot dispatch again. The phase owns no credential or effect boundary.
+
+Terminal events include `endpoint_phase_usage`: `dispatch_attempts` counts
+admitted calls to the transport, including failed attempts, and
+`prepared_body_bytes` counts their frozen request bytes. These are neither
+socket-byte measurements nor model-token estimates. A refusal before dispatch
+has zero attempts and bytes. `completed_response_text_bytes` and
+`completed_dispatch_elapsed_ms` are null without an accepted complete response;
+a complete zero-length response has zero bytes. Time is the transport's local
+observation through HTTP/codec EOF, rounded up to milliseconds. Unknown memory
+and tokens are not projected from empty native counters. Completed length
+refusals and invalid strict edits retain their completed model observations;
+they still do not establish a successful coding task.
+
+This phase is an effect-free execution component used by the live proposal API.
+It adds no native profile, second agent loop, tool admission, persistence or
+retry. The full coordinator still requires its exact native run/context/result
+contracts. Configured-endpoint edit/test/retry composition and parent scores
+remain open.

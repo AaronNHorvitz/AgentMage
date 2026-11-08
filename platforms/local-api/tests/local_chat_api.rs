@@ -207,6 +207,14 @@ fn assert_endpoint_runtime_observation(rows: &[Value]) {
     assert_eq!(terminal["runtime_model_binding"], expected);
     assert!(first.get("token_accounting").is_none());
     assert!(first.get("runtime_model_result").is_none());
+    let phase = &terminal["endpoint_phase_usage"];
+    assert_eq!(phase["dispatch_attempts"], 1);
+    assert_eq!(
+        phase["prepared_body_bytes"],
+        first["model_binding"]["request_body_bytes"]
+    );
+    assert!(phase.get("input_tokens").is_none());
+    assert!(phase.get("peak_memory_bytes").is_none());
     if terminal["response_complete"] == true {
         let result = &terminal["runtime_model_result"];
         assert_eq!(result["version"], 1);
@@ -238,6 +246,11 @@ fn assert_endpoint_runtime_observation(rows: &[Value]) {
         let elapsed: Duration =
             serde_json::from_value(result["resources"]["dispatch_elapsed"].clone()).unwrap();
         assert!(!elapsed.is_zero());
+        assert_eq!(phase["completed_response_text_bytes"], text.len());
+        assert_eq!(
+            phase["completed_dispatch_elapsed_ms"],
+            u64::try_from(elapsed.as_nanos().div_ceil(1_000_000)).unwrap()
+        );
         assert_eq!(
             result["token_accounting"],
             terminal["token_accounting"]["observation"]
@@ -262,6 +275,8 @@ fn assert_endpoint_runtime_observation(rows: &[Value]) {
                 .is_none()
         );
     } else {
+        assert_eq!(phase["completed_response_text_bytes"], Value::Null);
+        assert_eq!(phase["completed_dispatch_elapsed_ms"], Value::Null);
         assert!(terminal.get("runtime_model_result").is_none());
         assert!(terminal.get("token_accounting").is_none());
         assert!(terminal.get("usage").is_none());

@@ -3,7 +3,8 @@
 use std::collections::BTreeMap;
 
 use agentmage_kernel_contracts::{
-    BudgetResource, RuntimeResourceUsage, RuntimeRunRequest, RuntimeSessionMode,
+    BudgetResource, EndpointModelRequest, RuntimeResourceUsage, RuntimeRunRequest,
+    RuntimeSessionMode,
 };
 
 /// Maximum event envelopes retained by one client queue.
@@ -195,6 +196,46 @@ impl RuntimeResourceLedger {
                 .map(|budget| (budget.resource, budget.limit))
                 .collect(),
             limits,
+            snapshot: RuntimeResourceSnapshot::default(),
+        })
+    }
+
+    /// Creates the same ledger for one inert endpoint proposal phase, without a
+    /// fabricated native profile. Its prepared request bounds one dispatch and
+    /// decoded text; it admits no event queue, artifact, tool, retry or write.
+    pub(crate) fn for_endpoint_model(
+        request: &EndpointModelRequest,
+    ) -> Result<Self, RuntimeHardeningError> {
+        let limits = request.limits();
+        let input = u64::try_from(request.body().request_body_bytes)
+            .map_err(|_| RuntimeHardeningError::InvalidLimits)?;
+        let output = u64::try_from(limits.response_text_limit_bytes)
+            .map_err(|_| RuntimeHardeningError::InvalidLimits)?;
+        let elapsed = u64::try_from(limits.total_timeout.as_nanos().div_ceil(1_000_000))
+            .map_err(|_| RuntimeHardeningError::InvalidLimits)?;
+        if input == 0 || output == 0 || elapsed == 0 {
+            return Err(RuntimeHardeningError::InvalidLimits);
+        }
+        Ok(Self {
+            mode: RuntimeSessionMode::EphemeralReadOnly,
+            budgets: BTreeMap::from([
+                (BudgetResource::ModelCalls, 1),
+                (BudgetResource::InputBytes, input),
+                (BudgetResource::OutputBytes, output),
+                (BudgetResource::ElapsedMilliseconds, elapsed),
+            ]),
+            limits: RuntimeHardeningLimits {
+                run_events: 0,
+                client_queue_events: 0,
+                client_queue_bytes: 0,
+                event_envelope_bytes: 0,
+                artifact_count: 0,
+                artifact_bytes: 0,
+                artifact_page_bytes: 0,
+                retry_attempts: 0,
+                denials: 0,
+                parser_failures: 0,
+            },
             snapshot: RuntimeResourceSnapshot::default(),
         })
     }

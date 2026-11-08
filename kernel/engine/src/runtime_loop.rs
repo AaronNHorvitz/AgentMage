@@ -4,6 +4,8 @@ use std::cell::{Cell, RefCell};
 use std::collections::BTreeSet;
 
 mod artifact_preparation;
+/// Controlled selected-endpoint model phases using the shared resource ledger.
+pub mod endpoint;
 use artifact_preparation::{PreparedToolArtifact, ToolCompletionBuilder};
 
 use agentmage_kernel_contracts::{

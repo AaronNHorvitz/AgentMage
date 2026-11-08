@@ -2,6 +2,19 @@
 
 ## Active queue: local agent mission
 
+The [private-encoding independent review](docs/reviews/623f06a3da55-local-coding-private-encoding.txt)
+has **Verdict: PASS** for exact commit `623f06a3da55b702516884718f5333783350cd43`,
+with no open high/medium finding. Its low L1 (type-enforced zeroization of public
+encoder return values) remains backlog in T-303/T-306, with earlier control-stop,
+connect-expiry, owner-polling and native failed-test receipt coverage lows.
+This verdict accepts that pinned increment only; both parents remain open.
+The [endpoint model phase](docs/evidence/t303-endpoint-phase-2026-11-08.md)
+now frames the frozen snapshot/workspace/repair request over the shared runtime
+resource ledger before dispatch and exposes single-attempt byte/time usage.
+It admits no native profile, tool, write or retry; full endpoint coordinator
+composition and T-303/T-306 remain open pending their own evidence and independent
+review. No new sub-row or closure is introduced.
+
 [Decision 0151](docs/decisions/0151-local-agent-mission.md) starts the mission;
 [Decision 0153](docs/decisions/0153-engine-and-local-coding-priority.md) records the
 owner's engine-only direction and 2026-11-02 coding priority.
