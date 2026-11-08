@@ -3,6 +3,7 @@
 //! endpoint parsing, model output and endpoint discovery confer no authority.
 //! This text-only path neither activates qualified gateway routes nor runs tools.
 
+use std::cell::Cell;
 use std::collections::BTreeSet;
 use std::io::{Read, Write};
 use std::net::{Shutdown, TcpStream};
@@ -14,7 +15,8 @@ use std::time::{Duration, Instant};
 
 use agentmage_kernel_contracts::{
     EndpointModelBody, EndpointModelContext, EndpointModelFinish, EndpointModelLimits,
-    EndpointModelRequest, EndpointModelResult, EndpointModelSelection,
+    EndpointModelRequest, EndpointModelResult, EndpointModelSelection, ModelOperationControl,
+    ModelOperationStop,
 };
 use sha2::{Digest, Sha256};
 use zeroize::{Zeroize, Zeroizing};
@@ -34,6 +36,8 @@ const MAX_MODELS_BODY: usize = 256 * 1024;
 pub enum TransportError {
     /// Invalid credential, limit or discovery configuration.
     Configuration,
+    /// The borrowed run owner stopped this operation; never an acknowledgement.
+    OperationStopped(ModelOperationStop),
     /// Approval does not name this exact address and API base path.
     Approval,
     /// The caller cancelled the operation, including from a streaming callback.
@@ -62,6 +66,7 @@ impl TransportError {
     pub const fn code(self) -> &'static str {
         match self {
             Self::Configuration => "chat.transport.configuration",
+            Self::OperationStopped(stop) => stop.code(),
             Self::Approval => "chat.transport.approval",
             Self::Cancelled => "chat.transport.cancelled",
             Self::Timeout => "chat.transport.timeout",
@@ -80,6 +85,9 @@ impl TransportError {
     pub const fn message(self) -> &'static str {
         match self {
             Self::Configuration => "Check the key and connection limits.",
+            Self::OperationStopped(_) => {
+                "The run stopped this connection. Any earlier text is partial."
+            }
             Self::Approval => "Approve this exact local endpoint before connecting.",
             Self::Cancelled => "The connection was cancelled. Any earlier text is partial.",
             Self::Timeout => "The local server took too long. Any earlier text is partial.",
@@ -274,10 +282,34 @@ impl PreparedEndpointChat<'_> {
     pub fn execute_recorded(
         self,
         cancel: &ChatCancellation,
+        text: impl FnMut(&str),
+    ) -> Result<EndpointModelResult, TransportError> {
+        self.execute_inner(cancel, None, text)
+    }
+
+    /// Dispatches under the existing run owner's cooperative control as well as
+    /// the transport's original deadlines and cancellation. A stop yields no
+    /// completed observation or cancellation acknowledgement. Control is checked
+    /// before connecting, between socket waits and fragments, and after EOF.
+    /// It cannot change the frozen body, transport, credentials or approval.
+    pub fn execute_recorded_controlled(
+        self,
+        cancel: &ChatCancellation,
+        control: &dyn ModelOperationControl,
+        text: impl FnMut(&str),
+    ) -> Result<EndpointModelResult, TransportError> {
+        self.execute_inner(cancel, Some(control), text)
+    }
+
+    fn execute_inner(
+        self,
+        cancel: &ChatCancellation,
+        control: Option<&dyn ModelOperationControl>,
         mut text: impl FnMut(&str),
     ) -> Result<EndpointModelResult, TransportError> {
         let started = Instant::now();
         cancel.check()?;
+        let control = DispatchControl::new(control)?;
         let mut response_hash = Sha256::new();
         let mut response_bytes = 0;
         let completion = self.transport.chat_encoded(
@@ -288,12 +320,15 @@ impl PreparedEndpointChat<'_> {
                 .provider_usage_requested
                 .then_some(self.binding.limits().requested_max_output_tokens),
             cancel,
+            &control,
             |fragment| {
                 response_hash.update(fragment.as_bytes());
                 response_bytes += fragment.len(); // Codec enforces its text-byte ceiling.
                 text(fragment);
             },
         )?;
+        cancel.check()?;
+        control.remaining()?;
         let elapsed = started.elapsed();
         Ok(EndpointModelResult::from_completed_response(
             self.binding,
@@ -405,12 +440,14 @@ impl LocalChatTransport {
         cancel: &ChatCancellation,
     ) -> Result<Vec<String>, TransportError> {
         self.authorized(approval)?;
+        let control = DispatchControl::uncontrolled();
         let mut wire = self.request(
             "GET",
             &self.endpoint.models_path(),
             "application/json",
             &[],
             cancel,
+            &control,
         )?;
         let framing = wire.headers("application/json")?;
         let mut body = Zeroizing::new(Vec::new());
@@ -491,6 +528,7 @@ impl LocalChatTransport {
         body: &[u8],
         usage_limit: Option<u32>,
         cancel: &ChatCancellation,
+        control: &DispatchControl<'_>,
         mut text: impl FnMut(&str),
     ) -> Result<ChatCompletion, TransportError> {
         let mut codec = match usage_limit {
@@ -503,16 +541,20 @@ impl LocalChatTransport {
             "text/event-stream",
             body,
             cancel,
+            control,
         )?;
         let framing = wire.headers("text/event-stream")?;
         let mut finish = None;
         wire.body(framing, MAX_STREAM_BYTES, |bytes| {
             for event in codec.feed(bytes)? {
+                cancel.check()?;
+                control.remaining()?;
                 match event {
                     ChatEvent::Text(value) => text(&value),
                     ChatEvent::Finished(reason) => finish = Some(reason),
                 }
                 cancel.check()?;
+                control.remaining()?;
             }
             Ok(())
         })?;
@@ -531,15 +573,17 @@ impl LocalChatTransport {
         accept: &str,
         body: &[u8],
         cancel: &'a ChatCancellation,
+        control: &'a DispatchControl<'a>,
     ) -> Result<Wire<'a>, TransportError> {
         let started = Instant::now();
         cancel.check()?;
-        let stream =
-            TcpStream::connect_timeout(&self.endpoint.address(), IO_TICK.min(self.limits.total))
-                .map_err(|e| io_error(&e))?;
+        let connect_time = IO_TICK.min(self.limits.total).min(control.remaining()?);
+        let stream = TcpStream::connect_timeout(&self.endpoint.address(), connect_time)
+            .map_err(|e| io_error(&e))?;
         let mut wire = Wire {
             stream,
             cancel,
+            control,
             limits: self.limits,
             started,
             progress: Instant::now(),
@@ -638,6 +682,61 @@ fn io_error(error: &std::io::Error) -> TransportError {
     }
 }
 
+// The borrowed control can narrow or stop dispatch, never renew any previously
+// observed positive budget. The original transport deadline remains independent.
+struct DispatchControl<'a> {
+    owner: Option<&'a dyn ModelOperationControl>,
+    remaining: Cell<Option<(Instant, Duration)>>,
+}
+
+impl<'a> DispatchControl<'a> {
+    fn uncontrolled() -> Self {
+        Self {
+            owner: None,
+            remaining: Cell::new(None),
+        }
+    }
+
+    fn new(owner: Option<&'a dyn ModelOperationControl>) -> Result<Self, TransportError> {
+        let started = Instant::now();
+        let initial = owner
+            .map(|owner| {
+                owner
+                    .remaining_ms()
+                    .map(|ms| (started, Duration::from_millis(ms.get())))
+                    .map_err(TransportError::OperationStopped)
+            })
+            .transpose()?;
+        Ok(Self {
+            owner,
+            remaining: Cell::new(initial),
+        })
+    }
+
+    fn remaining(&self) -> Result<Duration, TransportError> {
+        let Some(owner) = self.owner else {
+            return Ok(Duration::MAX);
+        };
+        let remaining = Duration::from_millis(
+            owner
+                .remaining_ms()
+                .map_err(TransportError::OperationStopped)?
+                .get(),
+        );
+        let now = Instant::now();
+        let (started, previous) = self.remaining.get().ok_or(TransportError::Configuration)?;
+        let local = previous
+            .checked_sub(now.duration_since(started))
+            .filter(|d| !d.is_zero())
+            .ok_or(TransportError::OperationStopped(
+                ModelOperationStop::TimedOut,
+            ))?;
+        let bounded = remaining.min(local);
+        self.remaining.set(Some((now, bounded)));
+        Ok(bounded)
+    }
+}
+
 enum Framing {
     Close,
     Length(usize),
@@ -647,6 +746,7 @@ enum Framing {
 struct Wire<'a> {
     stream: TcpStream,
     cancel: &'a ChatCancellation,
+    control: &'a DispatchControl<'a>,
     limits: TransportLimits,
     started: Instant,
     progress: Instant,
@@ -666,6 +766,7 @@ impl Drop for Wire<'_> {
 impl Wire<'_> {
     fn check(&self) -> Result<Duration, TransportError> {
         self.cancel.check()?;
+        let run_remaining = self.control.remaining()?;
         let total = self
             .limits
             .total
@@ -679,6 +780,7 @@ impl Wire<'_> {
         Ok(total
             .ok_or(TransportError::Timeout)?
             .min(idle.ok_or(TransportError::Timeout)?)
+            .min(run_remaining)
             .min(IO_TICK))
     }
 

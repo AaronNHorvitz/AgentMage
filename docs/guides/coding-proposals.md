@@ -188,6 +188,36 @@ can display these additive event fields. This does not connect arbitrary
 endpoints to the native coordinator's exact-profile contract; that work remains
 open alongside native edit/test/retry execution and its measurements.
 
+## Cooperative dispatch deadlines
+
+Snapshot, workspace and repair proposals use the transport's controlled dispatch
+entry point. A local monotonic deadline starts immediately before context-event
+publication; model dispatch does not restart that allowance. The allowance is
+the prepared request's original `total_timeout`. Preparation and approval are
+outside it. The original socket total and idle deadlines still apply.
+
+`PreparedEndpointChat::execute_recorded_controlled` also accepts the existing
+`ModelOperationControl` contract for a future coordinator composition. It polls
+before connection, between socket waits and decoded fragments, after callbacks
+and after complete HTTP/codec EOF. Every socket timeout is bounded by the run's
+remaining time, the original transport deadlines and the existing I/O tick.
+Each positive control observation can narrow the locally retained deadline;
+subsequent observations cannot renew it. The immutable body and its binding
+remain unchanged. Millisecond run observations round up a positive fractional
+millisecond; exact transport durations remain independently enforced.
+
+Owner stops return their existing `model.operation.*` codes and no completed
+result, usage or proposal. They neither set the separate chat cancellation flag
+nor acknowledge a runtime cancellation. Ordinary chat cancellation retains its
+existing transport code. A synchronous callback must return promptly: control
+cannot preempt caller code, and its first observation after return refuses late
+completion. Operating-system scheduling can also delay polling. The transport
+starts no worker, child process or retry.
+
+This connects cooperative control to actual proposal dispatch, but does not admit
+configured endpoints to the native coordinator's exact-profile run contract or
+resource ledger. No native edit/test/retry or durable-run acceptance follows.
+
 ## Development measurement
 
 The new collector is separate from the unchanged, frozen chat-only baseline:

@@ -1280,3 +1280,352 @@ fn endpoint_binding_separates_request_identity_from_credentials_and_unverified_s
     );
     assert_ne!(changed, original);
 }
+
+struct RunControl {
+    stop: std::sync::Arc<std::sync::Mutex<Option<agentmage_kernel_contracts::ModelOperationStop>>>,
+    milliseconds: u64,
+}
+
+impl agentmage_kernel_contracts::ModelOperationControl for RunControl {
+    fn remaining_ms(
+        &self,
+    ) -> Result<std::num::NonZeroU64, agentmage_kernel_contracts::ModelOperationStop> {
+        match *self.stop.lock().unwrap() {
+            Some(stop) => Err(stop),
+            // Deliberately renews its report. Transport must independently cap
+            // dispatch at the first observed budget, even for a broken owner.
+            None => Ok(std::num::NonZeroU64::new(self.milliseconds).unwrap()),
+        }
+    }
+}
+
+fn run_control(milliseconds: u64) -> RunControl {
+    RunControl {
+        stop: Default::default(),
+        milliseconds,
+    }
+}
+
+#[test]
+fn controlled_endpoint_refuses_every_owner_stop_before_connecting() {
+    use agentmage_kernel_contracts::{ModelOperationControl, ModelOperationStop};
+    use std::cell::Cell;
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let endpoint =
+        LocalChatEndpoint::parse(&format!("http://{}/v1", listener.local_addr().unwrap())).unwrap();
+    let (transport, approval) = connection(endpoint, limits());
+    for stop in [
+        ModelOperationStop::Cancelled,
+        ModelOperationStop::TimedOut,
+        ModelOperationStop::Unavailable,
+        ModelOperationStop::Invalid,
+    ] {
+        // Both initial refusal and refusal on the next pre-connect observation.
+        for positive_observations in [0, 1] {
+            struct StopAfter {
+                seen: Cell<u32>,
+                positives: u32,
+                stop: ModelOperationStop,
+            }
+            impl ModelOperationControl for StopAfter {
+                fn remaining_ms(&self) -> Result<std::num::NonZeroU64, ModelOperationStop> {
+                    let seen = self.seen.get();
+                    self.seen.set(seen + 1);
+                    if seen < self.positives {
+                        Ok(std::num::NonZeroU64::new(1000).unwrap())
+                    } else {
+                        Err(self.stop)
+                    }
+                }
+            }
+            let control = StopAfter {
+                seen: Cell::new(0),
+                positives: positive_observations,
+                stop,
+            };
+            let request = transport
+                .prepare_chat(
+                    &approval,
+                    "test-model",
+                    &[ChatMessage {
+                        role: ChatRole::User,
+                        content: "synthetic",
+                    }],
+                    16,
+                    false,
+                )
+                .unwrap();
+            let mut emitted = false;
+            let cancel = ChatCancellation::default();
+            assert_eq!(
+                request.execute_recorded_controlled(&cancel, &control, |_| emitted = true),
+                Err(TransportError::OperationStopped(stop))
+            );
+            assert!(!emitted);
+            assert!(
+                !cancel.is_cancelled(),
+                "stop observations never acknowledge or set cancellation"
+            );
+            assert!(
+                matches!(listener.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock)
+            );
+            assert_eq!(TransportError::OperationStopped(stop).code(), stop.code());
+            assert!(!TransportError::OperationStopped(stop).message().is_empty());
+        }
+    }
+}
+
+#[test]
+fn controlled_endpoint_stops_stalled_headers_bodies_and_eof_without_completion() {
+    use agentmage_kernel_contracts::ModelOperationStop;
+    for stage in ["headers", "body", "eof"] {
+        for stop in [
+            ModelOperationStop::Cancelled,
+            ModelOperationStop::TimedOut,
+            ModelOperationStop::Unavailable,
+            ModelOperationStop::Invalid,
+        ] {
+            let control = run_control(3000);
+            let state = control.stop.clone();
+            let (endpoint, worker) = server(move |mut socket| {
+                let body = [text_frame("provisional"), ending("stop")].concat();
+                let bytes = match stage {
+                    "headers" => b"HTTP/1.1 200 OK\r\nContent-Type:".to_vec(),
+                    "body" => response("text/event-stream", &body)
+                        [..response("text/event-stream", &body).len() - 10]
+                        .to_vec(),
+                    "eof" => response("text/event-stream", &body),
+                    _ => unreachable!(),
+                };
+                socket.write_all(&bytes).unwrap();
+                *state.lock().unwrap() = Some(stop);
+                socket
+                    .set_read_timeout(Some(Duration::from_secs(2)))
+                    .unwrap();
+                // Completion must not depend on a cooperative peer closing.
+                let mut byte = [0];
+                assert_eq!(socket.read(&mut byte).unwrap(), 0);
+            });
+            let (transport, approval) = connection(endpoint, limits());
+            let request = transport
+                .prepare_chat(
+                    &approval,
+                    "test-model",
+                    &[ChatMessage {
+                        role: ChatRole::User,
+                        content: "synthetic",
+                    }],
+                    16,
+                    true,
+                )
+                .unwrap();
+            let cancel = ChatCancellation::default();
+            assert_eq!(
+                request.execute_recorded_controlled(&cancel, &control, |_| {}),
+                Err(TransportError::OperationStopped(stop)),
+                "{stage}"
+            );
+            assert!(!cancel.is_cancelled());
+            worker.join().unwrap();
+        }
+    }
+}
+
+#[test]
+fn controlled_endpoint_does_not_renew_deadlines_or_complete_after_a_slow_callback() {
+    use agentmage_kernel_contracts::ModelOperationStop;
+    for slow_callback in [false, true] {
+        let (endpoint, worker) = server(move |mut socket| {
+            if slow_callback {
+                let body = [text_frame("provisional"), ending("stop")].concat();
+                socket
+                    .write_all(&response("text/event-stream", &body))
+                    .unwrap();
+            } else {
+                socket
+                    .set_read_timeout(Some(Duration::from_secs(2)))
+                    .unwrap();
+                assert_eq!(socket.read(&mut [0]).unwrap(), 0);
+            }
+        });
+        let (transport, approval) = connection(endpoint, limits());
+        let request = transport
+            .prepare_chat(
+                &approval,
+                "test-model",
+                &[ChatMessage {
+                    role: ChatRole::User,
+                    content: "synthetic",
+                }],
+                16,
+                false,
+            )
+            .unwrap();
+        let control = run_control(100);
+        let started = Instant::now();
+        let mut fragments = 0;
+        let result =
+            request.execute_recorded_controlled(&ChatCancellation::default(), &control, |_| {
+                fragments += 1;
+                thread::sleep(Duration::from_millis(150));
+            });
+        assert_eq!(
+            result,
+            Err(TransportError::OperationStopped(
+                ModelOperationStop::TimedOut
+            ))
+        );
+        assert!(started.elapsed() >= Duration::from_millis(100));
+        assert!(started.elapsed() < Duration::from_secs(2));
+        assert_eq!(fragments, usize::from(slow_callback));
+        worker.join().unwrap();
+    }
+    // The original transport limit is still enforced even if the owner allows longer.
+    let (endpoint, worker) = server(|mut socket| {
+        socket
+            .set_read_timeout(Some(Duration::from_secs(2)))
+            .unwrap();
+        assert_eq!(socket.read(&mut [0]).unwrap(), 0);
+    });
+    let (transport, approval) = connection(
+        endpoint,
+        TransportLimits {
+            total: Duration::from_millis(100),
+            idle: Duration::from_millis(100),
+        },
+    );
+    let request = transport
+        .prepare_chat(
+            &approval,
+            "test-model",
+            &[ChatMessage {
+                role: ChatRole::User,
+                content: "synthetic",
+            }],
+            16,
+            false,
+        )
+        .unwrap();
+    assert_eq!(
+        request.execute_recorded_controlled(
+            &ChatCancellation::default(),
+            &run_control(3000),
+            |_| {}
+        ),
+        Err(TransportError::Timeout)
+    );
+    worker.join().unwrap();
+}
+
+#[test]
+fn controlled_endpoint_retains_a_later_narrowed_budget_even_if_owner_renews_it() {
+    use agentmage_kernel_contracts::{ModelOperationControl, ModelOperationStop};
+    use std::cell::Cell;
+    struct NarrowOnce(Cell<u32>);
+    impl ModelOperationControl for NarrowOnce {
+        fn remaining_ms(&self) -> Result<std::num::NonZeroU64, ModelOperationStop> {
+            let seen = self.0.get();
+            self.0.set(seen + 1);
+            Ok(std::num::NonZeroU64::new(if seen == 1 { 100 } else { 3000 }).unwrap())
+        }
+    }
+    let (endpoint, worker) = server(|mut socket| {
+        socket
+            .set_read_timeout(Some(Duration::from_secs(2)))
+            .unwrap();
+        assert_eq!(socket.read(&mut [0]).unwrap(), 0);
+    });
+    let (transport, approval) = connection(endpoint, limits());
+    let request = transport
+        .prepare_chat(
+            &approval,
+            "test-model",
+            &[ChatMessage {
+                role: ChatRole::User,
+                content: "synthetic",
+            }],
+            16,
+            false,
+        )
+        .unwrap();
+    let started = Instant::now();
+    let control = NarrowOnce(Cell::new(0));
+    assert_eq!(
+        request.execute_recorded_controlled(&ChatCancellation::default(), &control, |_| {}),
+        Err(TransportError::OperationStopped(
+            ModelOperationStop::TimedOut
+        ))
+    );
+    assert!(control.0.get() > 2);
+    assert!(started.elapsed() >= Duration::from_millis(100));
+    assert!(started.elapsed() < Duration::from_secs(2));
+    worker.join().unwrap();
+}
+
+#[test]
+fn controlled_endpoint_success_keeps_frozen_request_usage_and_unknown_resources() {
+    use sha2::{Digest, Sha256};
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let endpoint =
+        LocalChatEndpoint::parse(&format!("http://{}/v1", listener.local_addr().unwrap())).unwrap();
+    let (sent, received) = mpsc::channel();
+    let worker = thread::spawn(move || {
+        let (mut socket, _) = listener.accept().unwrap();
+        let raw = read_request(&mut socket);
+        let end = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
+        sent.send(raw[end..].to_vec()).unwrap();
+        let body = [text_frame("héllo"), ending("stop")].concat();
+        socket
+            .write_all(&response("text/event-stream", &body))
+            .unwrap();
+    });
+    let (transport, approval) = connection(endpoint, limits());
+    let request = transport
+        .prepare_chat(
+            &approval,
+            "test-model",
+            &[ChatMessage {
+                role: ChatRole::User,
+                content: "escaped\n\"synthetic\"",
+            }],
+            16,
+            true,
+        )
+        .unwrap();
+    let expected = request.binding().clone();
+    let mut text = String::new();
+    let cancel = ChatCancellation::default();
+    let result = request
+        .execute_recorded_controlled(&cancel, &run_control(3000), |fragment| {
+            text.push_str(fragment)
+        })
+        .unwrap();
+    assert_eq!(result.request, expected);
+    assert_eq!(result.response_text_bytes, text.len());
+    assert_eq!(text, "héllo");
+    assert_eq!(
+        result.response_text_sha256,
+        Sha256::digest(text.as_bytes())
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>()
+    );
+    let body = received.recv_timeout(Duration::from_secs(2)).unwrap();
+    assert_eq!(expected.body().request_body_bytes, body.len());
+    assert_eq!(
+        expected.body().request_body_sha256,
+        Sha256::digest(body)
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>()
+    );
+    let value = serde_json::to_value(result).unwrap();
+    assert!(value["token_accounting"]["provider_reported"].is_null());
+    assert!(value["token_accounting"]["verified_input_tokens"].is_null());
+    assert!(value["token_accounting"]["verified_output_tokens"].is_null());
+    assert!(value["resources"]["resident_memory_bytes"].is_null());
+    assert!(value["resources"]["accelerator_memory_bytes"].is_null());
+    assert!(!cancel.is_cancelled());
+    worker.join().unwrap();
+}

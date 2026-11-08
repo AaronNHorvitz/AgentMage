@@ -36,7 +36,8 @@ use agentmage_capability_repository_map::coding_proposal::{
     check_coding_proposal, prepare_coding_proposal,
 };
 use agentmage_kernel_contracts::{
-    EndpointModelFinish, EndpointModelResult, RuntimeModelTokenAccounting,
+    EndpointModelFinish, EndpointModelResult, ModelOperationControl, ModelOperationStop,
+    RuntimeModelTokenAccounting,
 };
 
 use agentmage_platform_linux::{
@@ -1079,6 +1080,28 @@ fn prepare_endpoint_coding_proposal<'a>(
     })
 }
 
+// The same deadline covers context publication and model dispatch. It cannot
+// renew when the transport begins, nor when a streaming callback returns.
+struct ProposalDispatchControl {
+    started: Instant,
+    total: Duration,
+}
+
+impl ModelOperationControl for ProposalDispatchControl {
+    fn remaining_ms(&self) -> Result<std::num::NonZeroU64, ModelOperationStop> {
+        let remaining = self
+            .total
+            .checked_sub(self.started.elapsed())
+            .filter(|d| !d.is_zero())
+            .ok_or(ModelOperationStop::TimedOut)?;
+        // Round up a fractional millisecond, retaining a positive final slice.
+        // The transport separately retains its exact Duration deadlines.
+        let ms = u64::try_from(remaining.as_nanos().div_ceil(1_000_000))
+            .map_err(|_| ModelOperationStop::Invalid)?;
+        std::num::NonZeroU64::new(ms).ok_or(ModelOperationStop::TimedOut)
+    }
+}
+
 fn dispatch_coding_proposal(
     socket: &mut TcpStream,
     prepared: PreparedCodingProposal<'_>,
@@ -1093,6 +1116,10 @@ fn dispatch_coding_proposal(
         request,
     } = prepared;
     let binding = request.binding().clone();
+    let control = ProposalDispatchControl {
+        started: Instant::now(),
+        total: binding.limits().total_timeout,
+    };
     headers(socket, 200, "application/x-ndjson", None)?;
     let mut context_event = json!({"type":"context", "version":1,
         "message_bytes":context.message_bytes(), "files":context.outlines(),
@@ -1120,7 +1147,7 @@ fn dispatch_coding_proposal(
             }
         }
     };
-    let result = request.execute_recorded(&op.cancel, display_text);
+    let result = request.execute_recorded_controlled(&op.cancel, &control, display_text);
     if !writable {
         op.outcome = "api.client-disconnected";
         return Err(ApiError::Io);
@@ -1994,6 +2021,24 @@ mod operation_tests {
             worker.join().unwrap();
         });
         drop(operation);
+    }
+
+    #[test]
+    fn coding_dispatch_control_preserves_an_elapsed_deadline_and_positive_remaining_time() {
+        let control = ProposalDispatchControl {
+            started: Instant::now().checked_sub(Duration::from_secs(2)).unwrap(),
+            total: Duration::from_secs(1),
+        };
+        assert_eq!(control.remaining_ms(), Err(ModelOperationStop::TimedOut));
+        assert_eq!(control.remaining_ms(), Err(ModelOperationStop::TimedOut));
+        let control = ProposalDispatchControl {
+            started: Instant::now(),
+            total: Duration::from_secs(3),
+        };
+        let first = control.remaining_ms().unwrap().get();
+        let second = control.remaining_ms().unwrap().get();
+        assert!(first > 0 && first <= 3000);
+        assert!(second > 0 && second <= first);
     }
 
     #[test]

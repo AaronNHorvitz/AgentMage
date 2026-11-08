@@ -1,0 +1,143 @@
+Commit: 6bee4c9d55be4120721ff29b5c0cea002953e380
+Scope: local-coding-endpoint-exchange
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate session with read-only access to the
+pinned checkout `/lane/review-checkout`. Tier: core. Rows: T-303 / T-306, non-closing increment; both
+parents remain OPEN. I used no GPU, started no model, downloaded nothing and modified no repository file.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `6bee4c9d55be4120721ff29b5c0cea002953e380` in the pinned checkout;
+  working tree clean before and after.
+- Read IP-POLICY.md, the TASKS.md prose change and the complete twelve-path diff above immutable
+  predecessor `f92cea7f3183433161157294e0f1f033446bf958`: `kernel/contracts/src/endpoint_model.rs` (new),
+  `kernel/contracts/src/{lib,runtime_model_binding}.rs`,
+  `platforms/linux-inference/src/local_chat_transport.rs` and its socket tests,
+  `platforms/local-api/src/{lib,coding_repair_api}.rs`, `platforms/local-api/tests/local_chat_api.rs`,
+  the guide, the evidence record and the retained predecessor review.
+- Read `run.py`, `audit.py`, `final.py` and README in `/lane/state/tmp/t303-endpoint-exchange/` before
+  executing them. run.py asserts it holds the outer heavy lock on fd 9, runs the unmodified fast-gate
+  plan (only `env` prefixes on Cargo commands), and freezes source hashes before and after. audit.py
+  requires exact failure/ignore identities and normalized diagnostics against the predecessor's full
+  log, 76 targets / 3230-72-79-0, the listed methods passing unfiltered, and the final exit 101.
+  final.py proves path scope, unchanged Cargo inputs/source hashes/Cargo commands, added-line privacy
+  and no added `#[ignore]`, and runs only light checks. None of them converts a failure into a pass.
+- Independently traced: the message-array fingerprint (same `serde_json` compact serializer of the same
+  `&[ChatMessage]` that `encode_chat_request` embeds, computed after request validation); result
+  construction (only after `chat_encoded` returns `Ok`, i.e. after body EOF, `codec.end()` and
+  `wire.check()`); legacy `execute`/`chat`/`chat_with_usage` mapping (finish and
+  `provider_reported()` equal the previous `ChatCompletion`); API dispatch for snapshot, workspace and
+  repair (single `dispatch_coding_proposal`; oversized display cancels and therefore yields `Err`, so no
+  result; length finish and strict-edit refusal keep `runtime_model_result`/accounting with no proposal;
+  client disconnect returns before any terminal event, no retry or refund).
+- Checked authority surfaces: `EndpointModelRequest`/`EndpointModelResult` derive `Serialize` only (no
+  `Deserialize`); `PreparedEndpointChat` keeps transport, binding and zeroized body private and exposes
+  the binding only by shared reference; the only consumers of the new types serialize them into NDJSON
+  events. Nothing treats a result as admission, approval or a native profile. Serialized records
+  contain the canonical base URL and model name only; transport tests assert the credential and prompt
+  are absent.
+- Privacy/branding: grepped all added lines for host paths, usernames, e-mail, credentials and agent or
+  model-server product names; only lane-infrastructure paths in the retained review (same convention as
+  the other 99 committed reviews). No trademark branding.
+- Evaluation integrity: no held-out, hidden-test, frozen-base, scorer, threshold, ignore, dependency,
+  sandbox or ledger-row change in the twelve paths (audit.py and final.py confirm ledger rows and Cargo
+  inputs unchanged).
+
+## Commands and results
+
+```sh
+sha256sum -c /lane/state/tmp/t303-endpoint-exchange/review-inputs.sha256      # 14 x OK
+sha256sum /lane/state/tmp/t303-endpoint-exchange/review-inputs.sha256        # 66bc969f...4d0c (matches)
+sha256sum /lane/state/tmp/t306-owned-api/node-v24.15.0/bin/node               # d1de76d8...d932c (matches)
+export PATH=/lane/state/tmp/t306-owned-api/node-v24.15.0/bin:$PATH
+export CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+export AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-endpoint-exchange-6bee4c9d55be   # new, mode 700
+bash /tools/build-slot python3 -B /lane/state/tmp/t303-endpoint-exchange/run.py > .../fast.log 2>&1
+                                                                              # exit 1 (expected)
+python3 -B /lane/state/tmp/t303-endpoint-exchange/final.py > .../final.log 2>&1   # exit 0
+cmp .../validation-1/source-freeze.json $AGENTMAGE_VALIDATION_DIR/source-freeze.json   # identical
+cmp .../validation-1/plan-final.json    $AGENTMAGE_VALIDATION_DIR/plan-final.json      # identical
+python3 audit comparison (command_exit_codes removed)                                # equal
+cmp docs/reviews/f92cea7f3183-local-coding-repair-preparation.txt \
+    /lane/reviews/f92cea7f3183-local-coding-repair-preparation.md                    # identical
+git diff --check f92cea7f3183433161157294e0f1f033446bf958 --                         # clean
+git status --short                                                                   # empty
+```
+
+Reviewer source gate: seven commands (the builder's six plus the retained review's `--lint-reviews`
+check, as the request explains): diff check, untracked lint, review lint, markdownlint 1.15 s, fmt
+2.50 s, Clippy `-D warnings` 52.25 s exit 0, complete all-target tests 330.99 s exit 101.
+`FAST GATE: FAIL`, `SOURCE_FREEZE_UNCHANGED`. Exit codes `[0,0,0,0,0,0,101]` vs builder `[0,0,0,0,0,101]`.
+
+Test totals: 76 targets, 3230 passed, 72 failed, 79 ignored, 0 filtered, identical to the builder.
+All 72 failures are pre-existing baseline identities with matching normalized diagnostics:
+53 `agentmage_host`, 19 `agentmage_platform_linux`. No failure is in `agentmage_kernel_contracts`,
+`agentmage_platform_linux_inference` or `agentmage_local_api`. All 79 ignores match the predecessor;
+the five inference-related ignores are pre-existing environment/child-process helpers, none in the
+changed test files. Predecessor 3233 over 77 targets minus the deselected build-tool crate (4 tests,
+1 target) plus one new method = 3230 over 76, as the evidence states.
+
+Required methods passed unfiltered, among them
+`recorded_endpoint_exchanges_keep_completion_usage_time_and_failures_distinct`,
+`prepared_endpoint_request_sends_the_exact_frozen_body_and_redacts_private_inputs`,
+`prepared_endpoint_request_refuses_invalid_approval_and_cancellation_without_connecting`,
+`coding_truncated_or_incomplete_generations_never_become_valid_edits`,
+`coding_cancellation_remains_available_and_inert`,
+`proposal_usage_uses_the_same_validated_stream_without_authorizing_edits`,
+`coding_proposal_streams_selected_context_and_returns_only_an_unapplied_change` and the four
+`coding_repair_api::tests` methods in audit.py.
+
+## Assessment of claims
+
+- Shared request contract and alias: correct. Old field names and values serialize unchanged through
+  `#[serde(flatten)]`; the transport fixture asserts every old field; `context` is additive.
+- Context fingerprint over the exact ordered message array: correct by construction (same serializer
+  and input as the body). It is independently verified at the transport fixture (single exact substring
+  of the raw received body) and at both API fixtures (array sliced from the raw upstream bytes, including
+  the repair fixture's three-message array with escaped diagnostic feedback).
+- Result only after HTTP/codec EOF: correct. The nine-case socket regression covers report/zero/missing
+  usage, length finish, malformed usage, truncation, late bytes, cancellation and HTTP status; failures
+  return `Err` with no result. The text hash/length is over the concatenated decoded fragments delivered
+  to the callback, so it does not depend on fragmentation. Verified-token and memory fields are null.
+- Timing: `started` is taken at dispatch entry and `elapsed` after a successful return. It includes
+  callbacks and socket waits and excludes preparation and approval. The test bounds it between the
+  measured callback time and the caller's interval. Labelled not GPU/server time.
+- Confinement and authority: no change to approval, endpoint validation, sandbox, tools, prompts or
+  request limits. No new deserialization path; nothing new reaches the native coordinator.
+- Evidence: every number I could check (targets, counts, failure split, exit codes, path count, seven
+  vs six commands) matches my run. Synthetic peers are labelled; no score, model or GPU claim is made.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, backlog), `platforms/linux-inference/src/local_chat_transport.rs:359-361`:** the new
+  `Zeroizing::new(serde_json::to_vec(messages)...)` only zeroizes the final allocation. `to_vec`
+  starts at a small capacity and reallocates as it grows, so every earlier buffer holding private
+  conversation content is freed without being erased. The evidence and guide wording ("the temporary
+  message encoding is zeroized on drop") holds only for the last buffer. The body encoder already does
+  the same (`platforms/linux-inference/src/local_chat.rs:221`), and this change adds a second copy.
+  Fix: compute the context with `serde_json::to_writer` into a small writer that updates `Sha256` and
+  counts bytes, which needs no buffer. Alternatively, serialize into a `Zeroizing<Vec<u8>>` pre-reserved
+  to `body.len()`; the array is strictly shorter than the body, so it never reallocates.
+- **L2 (low, backlog), `platforms/local-api/tests/local_chat_api.rs:196-260` and `:495-531`:** the guide
+  documents the wire values `finish: "stop"` and `finish: "output_token_limit"` for
+  `runtime_model_result` (`docs/guides/coding-proposals.md:162`), but no API test reads
+  `runtime_model_result.finish`. The transport test compares the enum value, not its serialized string,
+  so renaming the variant or its serde casing would silently change the documented API. Fix: in
+  `assert_endpoint_runtime_observation`, or in the length case of the truncated-generation test, assert
+  `result["finish"] == "output_token_limit"` for the length suffix and `"stop"` on the success fixture.
+
+Carried backlog: predecessor low L1 (a route-level preparation-refusal test with a native failed-test
+receipt) is unchanged by this increment.
+
+## Per-row result
+
+- T-303 (non-closing increment): PASS for this increment. No high/medium finding; L1 and L2 to backlog.
+  The row stays OPEN. Coordinator endpoint admission, resource-ledger integration, native
+  edit/test/retry execution, durable ownership, approved commit/push and parent measurements remain open.
+- T-306 (non-closing increment): PASS for this increment on the same basis. The row stays OPEN.
+- The source gate remains FAIL on the 72 pre-existing baseline failures. This review accepts the pinned
+  increment only, closes no row, and makes no certification or compliance claim.
+
+Verdict: PASS

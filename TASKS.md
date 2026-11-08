@@ -80,6 +80,19 @@ digests and local dispatch time; server memory and verified token counts remain
 unknown. It changes no native admission or model prompt. Independent core review
 is required. Coordinator endpoint admission, its resource-ledger integration,
 native edit/test/retry execution, measurements and both parents remain open.
+The [endpoint exchange independent core review](docs/reviews/6bee4c9d55be-local-coding-endpoint-exchange.txt)
+has **Verdict: PASS** for exact commit `6bee4c9d55be4120721ff29b5c0cea002953e380`,
+with no open high/medium finding. Both parents remain open. Low L1 (erasing
+reallocated temporary serialization buffers) and L2 (API finish-string assertions)
+remain backlog in these rows; the native failed-test receipt route fixture also
+remains backlog. This report accepts its pinned increment only.
+The [controlled endpoint dispatch batch](docs/evidence/t303-endpoint-control-2026-11-07.md)
+polls the existing run-control contract while connecting, streaming and waiting
+for EOF. Snapshot, workspace and repair proposals share a local deadline from
+context publication through dispatch; it never renews on model entry. Stops
+retain no completed inference or proposal and do not acknowledge cancellation.
+This non-closing increment requires independent core review. Endpoint admission
+to the native coordinator, resource integration and both parents remain open.
 No public release is authorized. One level of sub-rows maximum; each implementation
 sub-row must run end to end and be measured. Never tune on held-out tasks, edit
 hidden tests or weaken thresholds. Desktop UI work is deferred to a separate shell.
