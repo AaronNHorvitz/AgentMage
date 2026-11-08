@@ -68,6 +68,7 @@ pub(super) fn export(client: &Client, request: RuntimeEndpointRunRequest) -> Res
         address: client.address,
         auth: client.auth.clone(),
         deadline: Some(Instant::now() + DEADLINE),
+        controls: None,
     };
     let mut record = Record {
         version: 1,

@@ -27,20 +27,20 @@ use std::sync::{
 
 type TransportResult<T> = std::result::Result<T, RuntimeTransportError>;
 
-enum Confirmation {
+pub(super) enum Confirmation {
     Allow,
     Deny,
     Stopped,
 }
 
-struct Signals {
+pub(super) struct Signals {
     stop: Arc<AtomicBool>,
     registered: Vec<signal_hook::SigId>,
     started: Instant,
     limit: Duration,
 }
 impl Signals {
-    fn new(seconds: u64) -> Result<Self> {
+    pub(super) fn new(seconds: u64) -> Result<Self> {
         let mut signals = Self {
             stop: Arc::new(AtomicBool::new(false)),
             registered: Vec::new(),
@@ -58,7 +58,7 @@ impl Signals {
         }
         Ok(signals)
     }
-    fn confirm(&self, review: &Value, challenge: &str) -> Result<Confirmation> {
+    pub(super) fn confirm(&self, review: &Value, challenge: &str) -> Result<Confirmation> {
         if self.stopped() {
             return Ok(Confirmation::Stopped);
         }
@@ -133,7 +133,11 @@ impl Signals {
         })
     }
 
-    fn stopped(&self) -> bool {
+    pub(super) fn deadline(&self) -> Instant {
+        self.started + self.limit
+    }
+
+    pub(super) fn stopped(&self) -> bool {
         self.stop.load(Ordering::Relaxed) || self.started.elapsed() >= self.limit
     }
 }

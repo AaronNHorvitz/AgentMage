@@ -49,6 +49,7 @@ struct Client {
     address: SocketAddr,
     auth: std::path::PathBuf,
     deadline: Option<Instant>,
+    controls: Option<driver::Signals>,
 }
 
 impl Client {
@@ -61,7 +62,25 @@ impl Client {
             address,
             auth: auth.into(),
             deadline: None,
+            controls: None,
         })
+    }
+
+    fn check_running(&self) -> Result<()> {
+        if self.controls.as_ref().is_some_and(driver::Signals::stopped) {
+            return Err(());
+        }
+        Ok(())
+    }
+
+    fn confirm(&self, review: &Value, challenge: &str) -> Result<()> {
+        if let Some(controls) = &self.controls {
+            return match controls.confirm(review, challenge)? {
+                driver::Confirmation::Allow => self.check_running(),
+                driver::Confirmation::Deny | driver::Confirmation::Stopped => Err(()),
+            };
+        }
+        confirm(review, challenge)
     }
 
     fn token(&self, control: bool) -> Result<Zeroizing<String>> {
@@ -83,7 +102,11 @@ impl Client {
     ) -> Result<Vec<Value>> {
         // All callers use fixed literal methods and routes. Never follow a URL,
         // redirect, proxy setting, repository instruction or model-selected route.
-        let deadline = self.deadline.unwrap_or_else(|| Instant::now() + DEADLINE);
+        self.check_running()?;
+        let request_deadline = Instant::now() + DEADLINE;
+        let deadline = self
+            .deadline
+            .map_or(request_deadline, |d| d.min(request_deadline));
         let remaining = deadline.checked_duration_since(Instant::now()).ok_or(())?;
         let token = self.token(control)?;
         let body = Zeroizing::new(
@@ -96,6 +119,7 @@ impl Client {
         if body.len() > MAX_REQUEST {
             return Err(());
         }
+        self.check_running()?;
         let mut socket =
             TcpStream::connect_timeout(&self.address, remaining.min(Duration::from_secs(2)))
                 .map_err(|_| ())?;
@@ -111,11 +135,11 @@ impl Client {
             &**token,
             body.len()
         ));
-        socket
-            .write_all(header.as_bytes())
-            .and_then(|()| socket.write_all(&body))
-            .map_err(|_| ())?;
-        receive_before(socket, &mut observe, deadline)
+        self.check_running()?;
+        socket.write_all(header.as_bytes()).map_err(|_| ())?;
+        self.check_running()?;
+        socket.write_all(&body).map_err(|_| ())?;
+        receive_before(socket, &mut observe, deadline, self.controls.as_ref())
     }
 
     fn json(&self, method: &str, path: &str, control: bool, body: Option<Value>) -> Result<Value> {
@@ -146,13 +170,14 @@ fn receive(
     socket: TcpStream,
     observe: &mut impl FnMut(&Value) -> Result<()>,
 ) -> Result<Vec<Value>> {
-    receive_before(socket, observe, Instant::now() + DEADLINE)
+    receive_before(socket, observe, Instant::now() + DEADLINE, None)
 }
 
 fn receive_before(
     mut socket: TcpStream,
     observe: &mut impl FnMut(&Value) -> Result<()>,
     deadline: Instant,
+    controls: Option<&driver::Signals>,
 ) -> Result<Vec<Value>> {
     let mut header = Zeroizing::new(Vec::new());
     while !header.ends_with(b"\r\n\r\n") {
@@ -160,7 +185,7 @@ fn receive_before(
             return Err(());
         }
         let mut byte = [0];
-        if read_until(&mut socket, &mut byte, deadline)? != 1 {
+        if read_until(&mut socket, &mut byte, deadline, controls)? != 1 {
             return Err(());
         }
         header.push(byte[0]);
@@ -222,7 +247,7 @@ fn receive_before(
     let mut values = Vec::new();
     loop {
         let mut chunk = [0; 4096];
-        let n = read_until(&mut socket, &mut chunk, deadline)?;
+        let n = read_until(&mut socket, &mut chunk, deadline, controls)?;
         if n == 0 {
             break;
         }
@@ -263,9 +288,14 @@ fn receive_before(
     Ok(values)
 }
 
-fn read_until(socket: &mut TcpStream, bytes: &mut [u8], deadline: Instant) -> Result<usize> {
+fn read_until(
+    socket: &mut TcpStream,
+    bytes: &mut [u8],
+    deadline: Instant,
+    controls: Option<&driver::Signals>,
+) -> Result<usize> {
     loop {
-        if Instant::now() >= deadline {
+        if Instant::now() >= deadline || controls.is_some_and(driver::Signals::stopped) {
             return Err(());
         }
         match socket.read(bytes) {
@@ -436,7 +466,7 @@ fn propose(
         let revision = settings["settings_revision"].as_u64().ok_or(())?;
         let endpoint = settings["endpoint"].as_str().ok_or(())?;
         LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ())?;
-        confirm(
+        client.confirm(
             &json!({"feedback":feedback,"settings":settings,"selection":selected,
             "model":model,"task":task,"max_message_bytes":message_bytes,"max_tokens":tokens,
             "warning":"Sends the displayed untrusted failure excerpts and selected source to this endpoint. Output can contain sensitive text. Spends one proposal request for this failed receipt even on error or cancellation. Writes and tests need separate consent."}),
@@ -524,7 +554,7 @@ fn edit_prepare(client: &Client, root: &str, body: Value) -> Result<Value> {
         .ok_or(())?;
     let verify = || LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ());
     verify()?;
-    confirm(
+    client.confirm(
         &json!({"worktree":root,"worktree_root_sha256":identity,"request":body,
         "warning":"Reads only the displayed source paths in the held service-created worktree to prepare an inert diff. No model request, write, command, commit or push. Writing needs separate exact diff approval."}),
         &format!("read {identity}"),
@@ -643,7 +673,7 @@ fn edit_decide_bound(client: &Client, root: Option<&str>, expected: Option<&Valu
         let verify =
             || LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ());
         verify()?;
-        confirm(
+        client.confirm(
             &json!({"worktree":root,"preview":preview,
             "warning":"Writes the exact displayed diff in the held service-created worktree. No tests, original-repository apply, commit or push. Process-only records: inspect disk after a lost reply; never resend approval."}),
             &format!("edit {hash}"),
@@ -725,7 +755,13 @@ fn execute(args: &[String]) -> Result<()> {
         return runtime::execute(&client, command, tail);
     }
     if command == "code-worktree" {
-        return workflow::run(&client, tail);
+        return workflow::run(&client, tail, 3600);
+    }
+    if command == "code-worktree-bounded" {
+        let [seconds, rest @ ..] = tail else {
+            return Err(());
+        };
+        return workflow::run(&client, rest, seconds.parse().map_err(|_| ())?);
     }
     match (command.as_str(), tail) {
         ("edit", []) => show(&client.json("GET", "/v1/code/repository/edit", true, None)?),
@@ -932,7 +968,7 @@ fn execute(args: &[String]) -> Result<()> {
 
 fn usage() {
     eprintln!(
-        "Guided coding: agentmage-code <loopback-ip:port> <private-auth-directory> code-worktree <worktree> <model> <message-bytes> <output-tokens> <task> <definition-json>"
+        "Guided coding: agentmage-code <loopback-ip:port> <private-auth-directory> code-worktree <worktree> <model> <message-bytes> <output-tokens> <task> <definition-json> (3600 seconds); code-worktree-bounded <seconds> <same arguments>"
     );
     eprintln!(
         "Retained endpoint commands: endpoint | endpoint-step <run-id> <request-digest> | endpoint-approve|endpoint-deny <run-id> <request-digest> <challenge-json> | endpoint-events <run-id> <request-digest> <index> | endpoint-cancel|endpoint-release <run-id> <request-digest>"
@@ -1043,7 +1079,7 @@ fn command_decide_observed(
         } else {
             "Runs the exact command offline in the read-only created worktree. Output is untrusted. Exit zero does not verify a test suite. After a lost reply inspect receipts; never resend approval."
         };
-        confirm(
+        client.confirm(
             &json!({"worktree":root,"preview":preview,"warning":warning}),
             &format!("{challenge} {hash}"),
         )?;

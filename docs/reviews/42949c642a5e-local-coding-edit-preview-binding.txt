@@ -1,0 +1,172 @@
+Commit: 42949c642a5eeeeb0f2c336b17617a0e108df664
+Scope: local-coding-edit-preview-binding
+
+# Independent core review: guided client binds edit approval to the original prepared edit
+
+Reviewer: Claude Opus 5.5, separate session, read-only. Pinned checkout `/lane/review-checkout`.
+`git rev-parse HEAD` = `42949c642a5eeeeb0f2c336b17617a0e108df664`. The predecessor is
+`d78e31e5734fede78cf0e81f9068871d20e42aaa`; its review is now on file with `Verdict: PASS`.
+Rows: T-303 / T-306. This is a non-closing increment; both parent rows remain OPEN.
+
+## Methods
+
+1. I read IP-POLICY.md, the TASKS.md head, Decision 0164's new paragraph, the guide hunk, the new evidence
+   record and the builder's README, run.py, audit.py, final.py and parse.py.
+2. I read the full seven-file diff and the code paths it touches:
+   - `propose` and `edit_prepare`, `edit_decide_bound`, `Client::json/call` (`coding_cli.rs`);
+   - the guided `run` loop (`coding_cli_workflow.rs`);
+   - the native prepare and inspect code that builds the replies: `prepare_edit`, `inspect_edit` and
+     `decide_edit` (`platforms/linux/src/coding_repository_edit.rs:40-140`), and their API routes
+     (`coding_repository_api.rs:225-252, 354-371`);
+   - the test fixture `Script::attempt` and the existing guided tests.
+3. I ran the requested commands myself, plus a before-fix reproduction and a mutation probe in scratch
+   copies outside the repository. I used no GPU, downloaded nothing and modified nothing in the
+   repository.
+
+## Commands and results
+
+| # | Command | Exit | Result |
+|---|---------|------|--------|
+| 1 | `sha256sum --quiet -c …/review-inputs.sha256` | 0 | 30 entries. The manifest itself hashes to `0ee1193c…2fc89`, as stated. |
+| 2 | `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-edit-preview-binding-42949c642a5e` | **1** | Only failure is markdownlint **127** (see below). `SOURCE_FREEZE_UNCHANGED True`. 87.04 s including reservations. |
+| 3 | `python3 -B …/audit.py <same dir>` | **1** | Full comparison printed, then fails only on `command_exits [0,0,127,0,0,0]`. |
+| 4 | `python3 -B …/final.py` | **1** | `NON_CARGO_FAILURES` holds only the markdownlint 127; then `SCOPE_PRIVACY_SOURCE_FREEZE_PASS`. |
+| 5 | `cmp …/validation-final/source-freeze.json <my dir>/source-freeze.json` | 0 | Identical. |
+| 6 | `git diff --check d78e31e5734fede78cf0e81f9068871d20e42aaa --` | 0 | No output. |
+| 7 | `git status --short` | 0 | Empty before and after every run. |
+
+Gate detail from my `fast.log` (step 2):
+
+- **Command exits, in order:**
+  - `git diff --check`: 0
+  - `--lint-untracked`: 0
+  - markdownlint: **127**
+  - `cargo fmt --check`: 0
+  - strict clippy `--all-targets -D warnings`: 0
+  - `cargo test --all-targets --no-fail-fast`: 0
+- **Test totals:** 10 targets, **162 passed, 0 failed, 0 ignored, 0 filtered**.
+- **Audit results:**
+  - Baseline: 10 targets with 160/0/0/0. All 160 baseline identities are preserved.
+  - The additions are exactly the two `workflow::guided_client_refuses_edit_replacement_before_*` methods.
+  - The three-file source freeze matches.
+  - The TASKS.md ledger table rows are unchanged.
+- **Markdownlint 127:** `node` is not on PATH and `/lane/state/tooling` does not exist. Nothing was
+  downloaded. This is recorded as an actual documentation-lint failure in my run and is **not waived**.
+- **Runtime namespace:** `/tmp/ep-cnfnqy31`, recorded in `runtime-tmp-path`. It was empty after all jobs
+  exited, and no gate process remained. I removed only that directory.
+
+The builder's baseline hashes (`baseline-source.sha256`) equal the `d78e31e5` blobs of the three Rust
+files, which I recomputed with `git show`. The 160-test baseline matches the predecessor review's final
+160/0/0/0. The builder's `validation-final/result.json` shows exit 0 and 70.64 s, matching the evidence.
+
+**Documentation in place of the missing lint.**
+- The builder's retained `final-hygiene.log` and `validation-final/fast.log` show markdownlint-cli2
+  v0.23.2: "Linting: 4 files", "Summary: 0 issues in 0 files", exit 0.
+- I read the four document hunks by hand. A scripted check found that every relative link in the three
+  new or changed documents, and in the head of TASKS.md, resolves. The changed files have no trailing
+  whitespace, and MD013 is disabled in the repository's configuration.
+
+**Before-fix reproduction (independent).**
+- Setup: a `git archive` of 42949c64, with the two production files replaced by their `d78e31e5` blobs
+  (hash-checked). It ran under `bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api
+  --test coding_runtime_cli -- refuses_edit_replacement`.
+- Result: exit 101.
+  - `…before_the_first_inspection` **FAILED** at `coding_workflow.rs:292`: the workflow accepted the stable
+    replacement and exited 0.
+  - `…before_the_approval_inspection` passed.
+- This matches the builder's `regression-before.log` and the evidence claim exactly.
+
+**Mutation probe (independent).**
+- Setup: a `git archive` of 42949c64 with the new
+  `prepared_edit["operation"|"worktree_root_sha256"|"creation_receipt_sha256"]` check deleted
+  (`coding_cli_workflow.rs:197-202`). Then `cargo test … --test coding_runtime_cli -- workflow::`.
+- Result: **exit 0, 9 passed**. See finding L3.
+- I deleted both scratch copies afterwards.
+
+## Review
+
+**Correctness of the binding.**
+- On the actual service, the edit-prepare reply and the later `pending` are the same object. Native
+  `prepare_edit` builds `preview`, stores `preview.clone()` in `PendingEdit` and returns it
+  (`coding_repository_edit.rs:80-97`). `inspect_edit` returns `self.edit.preview` unchanged (`:103-113`).
+  The API passes the value through unwrapped (`coding_repository_api.rs:354-371`).
+- So `edit["pending"] != prepared_edit` (`coding_cli_workflow.rs:203-206`) holds for every legitimate run.
+  It cannot spuriously refuse, because nothing in the service mutates the stored preview between prepare
+  and decide.
+- Errors fail closed. A 409 body would lack `"operation":"edit-worktree"` and is refused at `:197`.
+- `edit_decide_bound` now receives `&prepared_edit`. Its own GET is compared by full equality (`:629-636`),
+  so the person is prompted only with the original reply.
+- A replacement after that last inspection still fails natively. `decide_edit` compares the original
+  `preview_sha256` the client sends against the stored hash (`coding_repository_edit.rs:118-121`), then
+  checks expiry, scope and creation. Native digest and preimage authority are unchanged.
+- The standalone `edit-prepare`, `propose` and `propose-worktree` commands only add `.map(|_| ())`, so
+  their output is unchanged.
+
+**Tests.**
+- The eight scenarios (two windows × initial/repair × digest/diff) assert:
+  - a non-zero exit;
+  - the exact stop position, `calls.len() == index + 1`;
+  - `answered` of 1 or 5, which proves no edit prompt for the replaced preview;
+  - no extra edit or test decide;
+  - the replacement diff text is absent from the transcript;
+  - the fixture file is unchanged.
+- I checked the index arithmetic against `Script::attempt`: prepare+1 is the guided GET and prepare+2 is
+  the helper's GET.
+- All peer replies are synthetic, and the evidence labels them so. No native worker, model, project test
+  or GPU claim is made.
+
+**Confinement and authority.** No write path, sandbox, grant, network, transport or approval surface is
+added or relaxed. The change only narrows what the client will put in front of a person.
+
+**Evaluation integrity.** No eval, hidden or held-out task, scorer, threshold or scoreboard file is
+touched. The only "held-out" text in the diff is the evidence record's disclaimer.
+
+**Privacy and IP.**
+- `final.py`'s privacy check passed, and my own grep of all seven committed blobs found no host path,
+  username, hostname, credential or private project name in the added lines.
+- Pre-existing TASKS.md text outside this diff (the owner's authorship statement, roadmap service names)
+  is out of scope.
+- No other agent product is named.
+
+**Claims.** Every number in the evidence (160 / 162, two methods, 70.64 s, three frozen hashes, the
+one-pass/one-fail before-fix run) traces to retained logs, and I reproduced each one except the lint.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L3 (low, backlog): the original prepare reply's creation and root pin is no longer covered by any test.**
+  - **Location:** `platforms/local-api/src/coding_cli_workflow.rs:197-202`, and the `new-creation` case in
+    `tests/support/coding_workflow.rs:762-771`.
+  - **Cause:** Before this commit, `new-creation` changed only the first pending GET's
+    `creation_receipt_sha256`, and the per-field check caught it. Now the full-equality check at `:204`
+    catches that case first.
+  - **Evidence:** In my mutation probe, deleting the operation/root/creation check on `prepared_edit` left
+    all nine guided workflow tests passing.
+  - **Impact:** The code is correct today. The native owner still rejects a creation or scope change at
+    `decide_edit`, and `verify_root` re-checks the root locally. But a later edit could drop the client's
+    binding to the preflight creation without any test failing. The guide's claim that the terminal
+    "verifies its worktree root and creation binding" is unpinned.
+  - **Fix:** Add a case where the edit-prepare reply and both following pending GETs consistently carry a
+    different `creation_receipt_sha256`, and another for `worktree_root_sha256`. Assert a stop at
+    `calls.len() == prepare + 1`, `answered == 1`, and no edit decide.
+- **L2 (low, carried backlog):** there is still no guided-command test against the actual service. This
+  commit's correctness against the real prepare/inspect shapes rests on the source reading above.
+- **Environment (not a code finding):** markdownlint could not run here (exit 127, no Node). It is
+  recorded as a failure and not waived. My manual and link checks are above, and the builder's retained
+  lint shows 0 issues on the same four files.
+
+## Per-row result
+
+- **T-303 / T-306, edit-preview binding increment:** accepted for exact commit
+  `42949c642a5eeeeb0f2c336b17617a0e108df664` as a non-closing scoped API/client increment.
+  - It addresses guided low L1: both replacement windows are bound to the original prepare reply and
+    tested.
+  - No high or medium finding. L3 and L2 join same-row backlog.
+- **Not established:** native admission (system-executable ownership), autonomous endpoint edit/test
+  composition, durable recovery, approved Git, native or model execution and parent measurements. They
+  remain OPEN.
+- **Parent rows:** T-303 and T-306 both remain OPEN. No row is added or closed.
+- **Deferred host/Linux T-301.1 gates:** not rerun and not waived. This is not a whole-workspace pass.
+
+Verdict: PASS

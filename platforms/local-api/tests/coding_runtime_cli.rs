@@ -74,6 +74,10 @@ impl Fixture {
         let stop = Arc::new(AtomicBool::new(false));
         let token = fs::read_to_string(self.root.join("auth/control.token")).unwrap();
         let client_token = fs::read_to_string(self.root.join("auth/client.token")).unwrap();
+        let stall_ready = replies
+            .iter()
+            .any(|v| v.get("test_peer_stall").is_some())
+            .then(|| self.root.join("stall-ready"));
         let worker = {
             let stop = stop.clone();
             thread::spawn(move || {
@@ -127,6 +131,22 @@ impl Fixture {
                         .get(observed.len() - 1)
                         .cloned()
                         .unwrap_or(json!({"unexpected":true}));
+                    if let Some(stage) = value["test_peer_stall"].as_str() {
+                        if stage == "body" {
+                            socket.write_all(b"HTTP/1.1 200 Test\r\nContent-Type: application/json\r\nContent-Length: 100\r\nConnection: close\r\n\r\n{").unwrap();
+                        } else if stage == "stream" {
+                            socket.write_all(b"HTTP/1.1 200 Test\r\nContent-Type: application/x-ndjson\r\nConnection: close\r\n\r\n{\"type\":\"context\"}\n").unwrap();
+                        } else {
+                            assert_eq!(stage, "header");
+                        }
+                        fs::write(stall_ready.as_ref().unwrap(), b"ready").unwrap();
+                        let mut byte = [0];
+                        // The client must close its one uncertain request rather
+                        // than wait for a reply or dispatch a cancellation/retry.
+                        assert_eq!(socket.read(&mut byte).unwrap(), 0);
+                        observed.last_mut().unwrap()["test_peer_disconnected"] = json!(true);
+                        continue;
+                    }
                     if let Some(events) = value["test_peer_stream"].as_array() {
                         socket.write_all(b"HTTP/1.1 200 Test\r\nContent-Type: application/x-ndjson\r\nConnection: close\r\n\r\n").unwrap();
                         for event in events {
@@ -1313,7 +1333,12 @@ try:
         raw+=os.read(master,1)
         time.sleep(.2 if sys.argv[1]=='stalled-signal' else 1.2)
         if sys.argv[1]=='stalled-signal':os.kill(p.pid,signal.SIGINT)
+    socket_stopped=False
     while True:
+        if sys.argv[1].startswith('workflow-socket:') and not socket_stopped:
+            from pathlib import Path
+            if (Path(sys.argv[4]).parent/'stall-ready').exists():
+                os.kill(p.pid,getattr(signal,sys.argv[1].split(':')[1]));socket_stopped=True
         assert time.monotonic()-started<10,'terminal timeout'
         if not select.select([master],[],[],.05)[0]:
             if p.poll() is not None:break
@@ -1329,7 +1354,13 @@ try:
             prompt_bytes.append(len(raw)-review_start);review_start=len(raw)
             prompt=raw.split(b'Type exactly ')[-1].split(b' to approve;')[0]
             mode=sys.argv[1];tool=prompt.startswith(b'allow ')
-            allow = mode in ('approve','slow-approve') or (mode in ('deny-tools','slow-deny-tools','signal-tool','eof-start','eof-tool','overflow-tool') and not tool) or (mode=='allow-tool-only' and tool)
+            allow = mode.startswith('workflow-socket:') or mode in ('approve','slow-approve') or (mode in ('deny-tools','slow-deny-tools','signal-tool','eof-start','eof-tool','overflow-tool') and not tool) or (mode=='allow-tool-only' and tool)
+            if mode.startswith('workflow-stop:'):
+                _,index,action=mode.split(':');target=answered==int(index)
+                if target:
+                    if action!='wait':os.kill(p.pid,getattr(signal,action))
+                else:os.write(master,prompt+b'\n')
+                answered+=1;continue
             if mode.startswith('deny-at-'):allow=answered!=int(mode.removeprefix('deny-at-'))
             if sys.argv[1]=='signal' or (sys.argv[1]=='signal-tool' and prompt.startswith(b'allow ')):os.kill(p.pid,signal.SIGINT)
             elif (mode=='eof-inspect' or (mode=='eof-start' and prompt.startswith(b'start ')) or (mode=='eof-tool' and tool)):os.write(master,b'\x04')

@@ -104,7 +104,27 @@ fn observed_receipt(
 
 /// Uses an already selected/disclosed source set and already created worktree.
 /// A clean validation series is required; interrupted work is inspected manually.
-pub(super) fn run(client: &Client, args: &[String]) -> Result<()> {
+pub(super) fn run(client: &Client, args: &[String], seconds: u64) -> Result<()> {
+    if !std::io::stdin().is_terminal() || !(1..=3600).contains(&seconds) {
+        return Err(());
+    }
+    let controls = driver::Signals::new(seconds)?;
+    let client = Client {
+        address: client.address,
+        auth: client.auth.clone(),
+        deadline: Some(controls.deadline()),
+        controls: Some(controls),
+    };
+    let result = run_steps(&client, args, seconds);
+    if result.is_err() {
+        eprintln!(
+            "Guided workflow stopped; inspect service records and disk before continuing. A sent operation may still be running; no cancellation or retry was sent."
+        );
+    }
+    result
+}
+
+fn run_steps(client: &Client, args: &[String], seconds: u64) -> Result<()> {
     let [root, model, bytes, tokens, task, text] = args else {
         return Err(());
     };
@@ -150,8 +170,8 @@ pub(super) fn run(client: &Client, args: &[String]) -> Result<()> {
     show(
         &json!({"workflow":"guided-worktree","model":model,"task":task,
         "worktree_root_sha256":identity,"selection":selected,"settings":settings,
-        "definition":body,"maximum_test_attempts":MAX_ATTEMPTS,
-        "warning":"Each read, edit, failure disclosure and test still needs its own exact terminal approval. A lost reply stops this command; inspect the service and disk before continuing. Receipts describe approved-command tests, not an independent task grade. Workflow state is process-only."}),
+        "definition":body,"maximum_test_attempts":MAX_ATTEMPTS,"maximum_wall_seconds":seconds,
+        "warning":"Each read, edit, failure disclosure and test still needs its own exact terminal approval. A lost reply stops this command; inspect the service and disk before continuing. Receipts describe approved-command tests, not an independent task grade. Workflow state is process-only. The wall budget includes approvals and socket waits; interruption stops further dispatch but does not cancel a sent operation."}),
     )?;
     // Admit the exact native command before any model request. This is only
     // preparation; an edit invalidates it and every execution is prepared anew.
@@ -225,6 +245,7 @@ pub(super) fn run(client: &Client, args: &[String]) -> Result<()> {
             "approved_command_tests_passed":receipt.is_full_pass(),
             "independent_task_grade":false,"current_workspace_verified":false}))?;
         if receipt.is_full_pass() {
+            client.check_running()?;
             return Ok(());
         }
         // Reuse the kernel's closed eligibility rules. Never interpret model

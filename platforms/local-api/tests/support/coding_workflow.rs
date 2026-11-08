@@ -217,7 +217,11 @@ fn guided_client_refuses_replacement_during_the_proposal_helpers_fresh_reads() {
             .position(|r| r == "GET /v1/code/repository/repair HTTP/1.1")
             .unwrap();
         let index = match case {
-            "first-selection" => 7,
+            "first-selection" => {
+                let index = 7;
+                assert_eq!(script.routes[index], "GET /v1/code/workspace HTTP/1.1");
+                index
+            }
             "repair-selection" => repair - 1,
             "repair-settings" => repair + 1,
             "repair-root" => repair,
@@ -795,4 +799,202 @@ fn guided_client_pins_clean_series_command_scope_and_exact_failure_before_disclo
             assert_eq!(out["answered"], 1, "{out}");
         }
     }
+}
+
+#[test]
+fn guided_wall_budget_and_signals_stop_each_approval_without_dispatch() {
+    let t = template();
+    for prompt in 0..4 {
+        for action in ["wait", "SIGINT", "SIGTERM", "SIGHUP"] {
+            let f = Fixture::new();
+            let mut script = Script::new(&f);
+            script.start(&t);
+            let prior = script.attempt(&t, 1, None, "assertion_failed");
+            script.attempt(&t, 2, Some(&prior), "passed");
+            let next_route = [
+                "POST /v1/code/repository/edit/prepare HTTP/1.1",
+                "POST /v1/code/repository/edit/decide HTTP/1.1",
+                "POST /v1/code/repository/validation/decide HTTP/1.1",
+                "POST /v1/code/repository/repair/proposals HTTP/1.1",
+            ][prompt];
+            let stop_at = script.routes.iter().position(|r| r == next_route).unwrap();
+            let peer = f.peer(script.replies);
+            let started = Instant::now();
+            let output = f.tty(
+                peer.address,
+                &[
+                    "code-worktree-bounded",
+                    if action == "wait" { "1" } else { "30" },
+                    f.root.join("tree").to_str().unwrap(),
+                    "synthetic-model",
+                    "4096",
+                    "128",
+                    "Fix addition",
+                    &definition(&t),
+                ],
+                &format!("workflow-stop:{prompt}:{action}"),
+            );
+            assert_eq!(output["status"], 1, "{prompt}/{action}: {output}");
+            assert_eq!(output["answered"], prompt + 1, "{output}");
+            assert!(started.elapsed() < Duration::from_secs(4));
+            assert!(
+                output["transcript"]
+                    .as_str()
+                    .unwrap()
+                    .contains("A sent operation may still be running")
+            );
+            let calls = peer.finish();
+            assert_eq!(calls.len(), stop_at, "{prompt}/{action}: {calls:?}");
+            assert_eq!(
+                calls
+                    .iter()
+                    .map(|c| c["route"].as_str().unwrap().to_owned())
+                    .collect::<Vec<_>>(),
+                script.routes[..stop_at]
+            );
+            assert_eq!(
+                fs::read(f.root.join("tree/calc.py")).unwrap(),
+                b"return a - b\n"
+            );
+        }
+    }
+}
+
+#[test]
+fn guided_wall_budget_and_signals_close_uncertain_socket_without_further_actions() {
+    let t = template();
+    for route in [
+        "POST /v1/code/workspace/proposals HTTP/1.1",
+        "POST /v1/code/repository/edit/decide HTTP/1.1",
+        "POST /v1/code/repository/validation/decide HTTP/1.1",
+    ] {
+        for stage in ["header", "body", "stream"] {
+            for action in ["wait", "SIGTERM"] {
+                let f = Fixture::new();
+                let mut script = Script::new(&f);
+                script.start(&t);
+                script.attempt(&t, 1, None, "passed");
+                let index = script.routes.iter().position(|r| r == route).unwrap();
+                script.replies[index] = json!({"test_peer_stall":stage});
+                let peer = f.peer(script.replies);
+                let started = Instant::now();
+                let output = f.tty(
+                    peer.address,
+                    &[
+                        "code-worktree-bounded",
+                        if action == "wait" { "1" } else { "30" },
+                        f.root.join("tree").to_str().unwrap(),
+                        "synthetic-model",
+                        "4096",
+                        "128",
+                        "Fix addition",
+                        &definition(&t),
+                    ],
+                    if action == "wait" {
+                        "approve"
+                    } else {
+                        "workflow-socket:SIGTERM"
+                    },
+                );
+                assert_eq!(output["status"], 1, "{route}/{stage}/{action}: {output}");
+                assert!(started.elapsed() < Duration::from_secs(4));
+                let calls = peer.finish();
+                assert_eq!(
+                    calls.len(),
+                    index + 1,
+                    "{route}/{stage}/{action}: {calls:?}"
+                );
+                assert_eq!(calls[index]["test_peer_disconnected"], true);
+                assert_eq!(
+                    calls
+                        .iter()
+                        .map(|c| c["route"].as_str().unwrap().to_owned())
+                        .collect::<Vec<_>>(),
+                    script.routes[..=index]
+                );
+                assert_eq!(
+                    fs::read(f.root.join("tree/calc.py")).unwrap(),
+                    b"return a - b\n"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn guided_bounded_command_validates_budget_before_requests_and_keeps_successful_receipts() {
+    let f = Fixture::new();
+    let t = template();
+    for seconds in ["0", "3601", "-1", "1.5", "bad", "18446744073709551616"] {
+        let peer = f.peer(vec![]);
+        let output = f.tty(peer.address, &["code-worktree-bounded", seconds], "approve");
+        assert_eq!(output["status"], 1);
+        assert_eq!(output["answered"], 0);
+        assert!(peer.finish().is_empty());
+    }
+    let mut script = Script::new(&f);
+    script.start(&t);
+    let prior = script.attempt(&t, 1, None, "assertion_failed");
+    script.attempt(&t, 2, Some(&prior), "passed");
+    let peer = f.peer(script.replies);
+    let root = f.root.join("tree");
+    let definition = definition(&t);
+    let args = [
+        "code-worktree-bounded",
+        "30",
+        root.to_str().unwrap(),
+        "synthetic-model",
+        "4096",
+        "128",
+        "Fix addition",
+        &definition,
+    ];
+    assert!(!f.cli(peer.address, &args).status.success());
+    let output = f.tty(peer.address, &args, "approve");
+    assert_eq!(output["status"], 0, "{output}");
+    assert_eq!(output["answered"], 7);
+    assert!(
+        output["transcript"]
+            .as_str()
+            .unwrap()
+            .contains("\"maximum_wall_seconds\": 30")
+    );
+    let calls = peer.finish();
+    assert_eq!(
+        calls
+            .iter()
+            .map(|c| c["route"].as_str().unwrap().to_owned())
+            .collect::<Vec<_>>(),
+        script.routes
+    );
+}
+
+#[test]
+fn guided_default_command_uses_the_same_latched_stop_without_dispatch() {
+    let f = Fixture::new();
+    let t = template();
+    let mut script = Script::new(&f);
+    script.start(&t);
+    script.attempt(&t, 1, None, "passed");
+    let stop_at = script
+        .routes
+        .iter()
+        .position(|r| r == "POST /v1/code/repository/edit/prepare HTTP/1.1")
+        .unwrap();
+    let (out, calls, routes) = script.run(&f, &t, "workflow-stop:0:SIGTERM");
+    assert_eq!(out["status"], 1, "{out}");
+    assert_eq!(out["answered"], 1);
+    assert!(
+        out["transcript"]
+            .as_str()
+            .unwrap()
+            .contains("\"maximum_wall_seconds\": 3600")
+    );
+    assert_eq!(
+        calls
+            .iter()
+            .map(|c| c["route"].as_str().unwrap().to_owned())
+            .collect::<Vec<_>>(),
+        routes[..stop_at]
+    );
 }

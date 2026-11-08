@@ -2,27 +2,50 @@
 
 ## Active queue: local agent mission
 
+The guided terminal now has a shared elapsed-time budget across proposals,
+repairs, approval waits and API reads, with latched interruption handling.
+The default is 3600 seconds; `code-worktree-bounded` selects 1 through 3600.
+Stopping sends no cancellation or retry; a sent effect requires inspection.
+See the [budget record](docs/evidence/t303-workflow-budget-2026-11-08.md).
+Independent core review is required; T-303/T-306 remain open.
+
+The proposal-binding [independent core review](docs/reviews/d78e31e5734f-local-coding-proposal-binding.txt)
+has **Verdict: PASS** for exact commit
+`d78e31e5734fede78cf0e81f9068871d20e42aaa`, with no high/medium finding.
+Low L1's literal-index regression now asserts its target route; L2 actual-service
+repair/guided-consumer coverage remains same-row backlog. Earlier lows remain.
+The reviewer's documentation-lint exit 127 remains a recorded failure.
+Both parent rows remain open; no row is added or closed.
+
+The prepared-edit [independent core review](docs/reviews/42949c642a5e-local-coding-edit-preview-binding.txt)
+has **Verdict: PASS** for exact commit
+`42949c642a5eeeeb0f2c336b17617a0e108df664`, with no high/medium finding.
+L3 (direct coverage of the original prepared reply's root/creation pins) and
+carried L2 (actual-service guided consumer) remain same-row backlog. Its
+Node-related documentation-lint exit 127 remains recorded without a waiver.
+Both parent rows remain open; no row is added or closed.
+
 The guided client now retains each original edit-prepare reply and binds both
 pending-edit inspections and the approval helper to that complete preview.
 Replacement stops before edit consent even with unchanged root and ownership.
 See the [preview binding record](docs/evidence/t303-edit-preview-binding-2026-11-08.md).
-Independent core review is required. T-303/T-306 remain open; no row is added
-or closed. Native execution, recovery, approved Git and measurements remain open.
+Independent core review is recorded above. T-303/T-306 remain open; no row is
+added or closed. Native execution, recovery, approved Git and measurements remain open.
 
 The guided worktree proposal path now binds each initial and repair request to
 its original selection identity, endpoint/settings revision and held worktree
 root. The original API checks these pins before source reads or model dispatch;
 fresh helper reads cannot replace them. See the
 [binding record](docs/evidence/t303-proposal-binding-2026-11-08.md).
-Independent core review is required. T-303/T-306 remain open; no row is added
-or closed. Native execution, durable recovery, approved Git and parent
+Independent core review is recorded above. T-303/T-306 remain open; no row is
+added or closed. Native execution, durable recovery, approved Git and parent
 measurements remain open.
 
 The guided command's [independent core review](docs/reviews/ec1f3ee1d934-local-coding-guided-worktree.txt)
 has **Verdict: PASS** for exact commit
 `ec1f3ee1d934d40a633e8aaa14c9ab3de7f3c000`, with no high/medium finding.
 Low L1 (binding the original prepared edit preview and testing both replacement
-windows) is addressed by the pending increment above. L2 (a guided command test
+windows) is addressed by the independently accepted increment above. L2 (a guided command test
 against the actual service) remains same-row backlog. The guide describes the
 current preview binding. Earlier lows remain backlog; both parent rows remain open. The reviewer's
 documentation-lint exit 127 is retained as a failure, without a waiver.

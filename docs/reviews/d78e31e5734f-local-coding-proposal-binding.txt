@@ -1,0 +1,158 @@
+Commit: d78e31e5734fede78cf0e81f9068871d20e42aaa
+Scope: local-coding-proposal-binding
+
+# Independent core review: guided proposal binding (T-303 / T-306, non-closing)
+
+Reviewer: separate read-only session, Claude Opus 5.5 (extra-high effort). Same-model review;
+a cross-model review is still required before any public release.
+Checkout: pinned frozen copy `/lane/review-checkout`; `git rev-parse HEAD` =
+`d78e31e5734fede78cf0e81f9068871d20e42aaa`; immutable predecessor
+`ec1f3ee1d934d40a633e8aaa14c9ab3de7f3c000` confirmed as the direct parent. Reviewer Cargo target
+`/lane/state/review-target`. The repository was not modified.
+
+## Methods
+
+1. Read IP-POLICY.md, the top of TASKS.md, Decision 0164 and the request. Read the complete
+   diff over the predecessor (14 files, +803/−27): the four production files (`coding_cli.rs`,
+   `coding_cli_workflow.rs`, `coding_repair_api.rs`, `lib.rs`), three test files, three guides,
+   the decision, the evidence record and the retained predecessor review.
+2. Traced the authority path independently:
+   - `begin_scoped` sets `guard.active` and returns `guard.configured`. `PUT/DELETE /v1/settings`
+     and `DELETE /v1/code/workspace` refuse while `active` is set, and `PUT /v1/code/workspace`
+     needs its own lease. So the two separate locks in `workspace_proposal_sources`
+     (`lib.rs:895-933`, pins first, then `workspace_sources`) cannot be split by a replacement.
+     The `config` used for the endpoint comparison is the one used for dispatch.
+   - The pins only add refusals. `(None, None)` keeps the old contract, and a partial pair returns
+     400. Revision, endpoint and root are compared before any `scope.read`. The existing
+     revision, selection-ID and disclosure-revision checks still run afterwards. Neither
+     `WorkspaceProposal` nor `Repair` (`deny_unknown_fields`) gains any field that grants
+     authority.
+   - Repair (`coding_repair_api.rs:118-161`): the selection and root pins are checked under the
+     state lock before `repair_feedback()`. The existing `feedback root == selected root` check,
+     settings check, disclosure approval and created-source ownership check are unchanged.
+     `admit_repair_proposal` consumes the one-use failure only after preparation succeeds, so a
+     stale pin cannot spend a failure.
+   - Client (`coding_cli.rs:372-456`, `coding_cli_workflow.rs:120-193`): the workflow now refuses a
+     missing or empty selection ID. The helper compares its fresh selection, fresh repair feedback
+     root and fresh repair settings with the initial binding before any confirmation prompt or
+     POST. Every guided request carries the initial selection ID, settings revision, endpoint and
+     held worktree root. Model output never feeds a pin. The upstream model request does not
+     contain the pins (asserted in `exactly_bound_workspace_proposal_uses_the_original_endpoint_and_read_path`).
+   - Root identity is `LinuxAuthorizedWorkspace::root_path_sha256()`, documented as a canonical
+     path/device/inode binding (`platforms/linux/src/coding_workspace.rs:65-69`). That matches
+     the docs' "directory identity, not a content snapshot or creation proof". The documented
+     guided preparation selects source inside the created worktree
+     (`coding-guided-worktree.md:12-15`), and the repair path already required the selected root
+     to equal the worktree root. The new initial root pin is consistent with both.
+3. Checked that the regression is real: the builder's `regression-before.log` shows
+   `guided_client_refuses_replacement_during_the_proposal_helpers_fresh_reads` failing on the
+   original production code (`first-selection`: status 0, both synthetic attempts completed). In
+   the fixture, reply index 7 is the helper's selection read (start uses replies 0–4, then the
+   workflow re-reads selection and settings at 5–6). The `repair-*` indices point at the helper's
+   selection, feedback and settings reads as claimed.
+4. Ran the requested commands myself with fresh output (exits below).
+5. My own adversarial probes: I appended one test to a **scratch extraction**
+   (`git archive d78e31e5 | tar -x` under `/tmp`, outside the repository), built it with a
+   separate reviewer target and ran it through `/tools/build-slot`. Everything ran against the
+   real API server over a socket, with a non-blocking listener standing in for the model
+   endpoint. The scratch copy, its target directory and my recorded `/tmp/pb-*` namespace were
+   removed after all jobs exited.
+6. Privacy, trademark and IP: `final.py` checks for private paths, the username and the private
+   sibling-project name, and passed. My manual diff read found no host path, hostname,
+   credential, personal data, other-product name or patent reference in the committed files. No
+   evaluation, hidden-test, held-out, scorer, threshold, dependency, GPU, SBOM, status,
+   scoreboard or release file changed.
+
+## Exact commands and results
+
+```text
+sha256sum --quiet -c /lane/state/tmp/t303-proposal-binding/review-inputs.sha256      exit 0
+  (manifest 45 lines, SHA-256 2e4232ba98c0fb77adbd9823a179de883e7d8a50e07e445a7c30920914c82807, matches request)
+CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py \
+  /lane/state/tmp/review-proposal-binding-d78e31e5734f                              exit 1
+  per-command: diff --check 0; --lint-untracked 0; --lint-reviews 0;
+  markdownlint 127 ("Missing executable: node; no automatic download");
+  cargo fmt --check 0 (334.21 s, mostly reservation wait); cargo clippy -D warnings 0 (102.37 s);
+  cargo test 0 (56.54 s); SOURCE_FREEZE_UNCHANGED True
+python3 -B .../audit.py /lane/state/tmp/review-proposal-binding-d78e31e5734f       exit 1
+  10 targets baseline [155,0,0,0] -> final [160,0,0,0]; all 155 baseline identities preserved;
+  exactly 5 new methods; 7 source hashes frozen; ledger table rows unchanged;
+  fails only on command_exits [0,0,0,127,0,0,0]
+python3 -B .../final.py                                                             exit 1
+  NON_CARGO_FAILURES = markdownlint 127 only; SCOPE_PRIVACY_SOURCE_FREEZE_PASS
+  (exact scope, privacy, source hashes, retained predecessor report byte-identical)
+cmp .../validation-final/source-freeze.json .../review-proposal-binding-d78e31e5734f/source-freeze.json   exit 0
+git diff --check ec1f3ee1d934d40a633e8aaa14c9ab3de7f3c000 --                        exit 0
+git status --short                                                                  exit 0, empty
+cmp docs/reviews/ec1f3ee1d934-local-coding-guided-worktree.txt /lane/reviews/ec1f3ee1d934-local-coding-guided-worktree.md   exit 0
+reviewer probe (scratch copy): bash /tools/build-slot cargo test --locked --offline \
+  -p agentmage-local-api --test local_chat_api -- reviewer_probe --nocapture        exit 0, 1 passed
+```
+
+Node is not installed here (`command -v node` fails and there is no `/lane/state/tooling`), and no
+download was attempted. I could not reproduce markdownlint. It remains a recorded exit-127
+documentation-lint failure, and I am not waiving it. As a partial substitute I checked the six
+changed documents for doubled blank lines, untagged code fences, trailing spaces and tabs,
+heading jumps and final newlines: no issues. The builder's raw `validation-final/fast.log` shows
+markdownlint-cli2 v0.23.2 with "Summary: 0 issues in 0 files", exit 0. That documentation-only
+gap does not block this non-closing core increment, but it is not a reviewer PASS of markdownlint.
+
+Reviewer probe results (every refusal was followed by an assertion that the upstream listener
+saw no connection):
+
+| Probe | Result |
+| --- | --- |
+| P1 real root digest of a different unselected directory | 409 `code.workspace.root-stale` |
+| P2 endpoint spelling variant (trailing `/`) | 409 `code.workspace.settings-stale` |
+| P3 near-miss unknown field `expected_root` | 400 `api.request` (closed object) |
+| P4 `settings_revision` as a string | 400 `api.request` |
+| P5 selected directory renamed away and a same-path replacement created; pin the replacement's root | 409 `code.workspace.root-stale` |
+| P6 settings revoked after selection, full pins | 409 `code.workspace.settings-stale` |
+| P7 same, legacy request without pins | 403 `code.workspace.disclosure-required` |
+| P8 endpoint re-approved, selection revoked, root pin present | 428 `code.workspace.choice-required` |
+
+No pin, alone or combined, reached source reads or the model endpoint once the binding no longer
+matched. Correct pins never stood in for a selection, a disclosure or settings.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test robustness)**, `platforms/local-api/tests/support/coding_workflow.rs:220`. The
+  `first-selection` case targets reply index `7` by a literal. If the workflow's route order
+  changes, the literal could silently move to a different reply. The `routes[..calls.len()]`
+  assertion would not catch that, because it checks the recorded order, not the target route.
+  Fix: find the index by position, as the `repair-*` cases do, for example the second
+  `GET /v1/code/workspace` after `POST /v1/code/repository/validation/prepare`, or assert
+  `script.routes[index]`.
+- **L2 (low, coverage; carries predecessor L2)**,
+  `platforms/local-api/tests/coding_worktree.rs:1105-1164`. The actual-API repair pin test
+  reaches only `code.command.worktree-required`. No test sends a correctly pinned repair
+  proposal through the real service with an owned failed receipt, and no guided command runs
+  against the actual service. Fix: cover this when native or actual-service guided consumer
+  evidence lands. It belongs to the existing same-row backlog; it is not a new sub-row.
+- **Informational.** The repair route returns `409 code.repair.scope` for a root-pin mismatch,
+  while the workspace route returns `409 code.workspace.root-stale`. Both are documented
+  (`coding-model-repair.md`, `coding-workspace.md`), so this is not a defect.
+- **Carried, not fixed by this commit (as the evidence states):** predecessor L1 (the prepare
+  reply is not bound to the first edit inspection) remains open backlog. The guide now describes
+  the narrower check accurately (`coding-guided-worktree.md:60-66`).
+
+## Evidence and claims
+
+The claims in TASKS.md, Decision 0164, the evidence record and the guides match the code and my
+runs: 160/0/0/0 across ten targets, five named additions, 155 identities preserved, a real
+original-code regression, synthetic fixtures labelled as synthetic, and no native, model,
+project-test, GPU or score claim. Root identity is described as directory identity only. No row
+is added or closed, both parent rows stay OPEN, and no self-approval appears. Deferred host/Linux
+T-301.1 gates were neither rerun nor waived; this is not a whole-workspace pass. Delivery: no new
+sub-row was added.
+
+## Per-row result
+
+- **T-303 (OPEN):** this increment PASSes as a non-closing core increment. The row stays open:
+  native admission, autonomous endpoint edit/test composition, durable recovery, approved Git
+  and parent measurements remain outstanding.
+- **T-306 (OPEN):** same as T-303. Non-closing increment PASS; the row stays open.
+
+Verdict: PASS

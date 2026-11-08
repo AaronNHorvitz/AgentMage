@@ -34,6 +34,16 @@ the original worktree root and creation binding. Neither a new digest nor a
 changed preview body may become this attempt's edit. The native owner's exact
 digest, strict preimages and per-effect approval remain authoritative.
 
+Use the original terminal driver's latched signal handling and interruptible
+controlling-terminal confirmation for guided approvals. Carry one elapsed-time
+deadline across every request and repair; keep the original per-request socket
+ceiling. Default to 3600 seconds, with an explicit 1 through 3600 second command.
+Expiry or SIGINT, SIGTERM or SIGHUP prevents further requests and closes pending
+socket reads. It does not certify cancellation of an already sent operation;
+never send an implicit cancellation, denial, release or retry. Records and disk
+must be inspected. Output consumers must keep draining presentation output;
+this cooperative deadline is not an operating-system process watchdog.
+
 This is client scheduling over existing product operations, not another runtime
 coordinator, model transport, sandbox, permission system or persistence format.
 The retained endpoint coordinator remains read-only. Per-operation records
