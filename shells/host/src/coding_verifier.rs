@@ -13,7 +13,10 @@ use agentmage_kernel_contracts::{
     VerifierDisposition, VerifierId, VerifierRecordId, VerifierSource,
 };
 use agentmage_kernel_engine::{
-    runtime_loop::{RuntimePortFailure, RuntimeVerificationInput, RuntimeVerifierPort},
+    runtime_loop::{
+        RuntimePortFailure, RuntimeScopedVerificationInput, RuntimeVerificationInput,
+        RuntimeVerifierPort,
+    },
     validation_result::ValidationReceipt,
 };
 use serde::{Deserialize, Serialize};
@@ -107,10 +110,10 @@ impl CodingCompletionVerifier {
         }
     }
 
-    fn evaluate(&self, input: &RuntimeVerificationInput<'_>) -> Option<VerifierDisposition> {
-        let candidate = parse_candidate(input.proposal, &input.request.task.objective)?;
-        if input.request.workspace_snapshot_sha256 != self.workspace_snapshot_sha256
-            || input.request.repository_snapshot_sha256 != self.repository_snapshot_sha256
+    fn evaluate(&self, input: &RuntimeScopedVerificationInput<'_>) -> Option<VerifierDisposition> {
+        let candidate = parse_candidate(input.proposal, &input.request.task().objective)?;
+        if input.request.workspace_snapshot_sha256() != self.workspace_snapshot_sha256
+            || input.request.repository_snapshot_sha256() != self.repository_snapshot_sha256
             || input.tool_results.is_empty()
             || input.receipt_ids.len() != input.tool_results.len()
             || input
@@ -175,7 +178,7 @@ impl CodingCompletionVerifier {
 
         let validation_required = input
             .request
-            .work_packet
+            .work_packet()
             .required_evidence
             .contains(&EvidenceKind::Validation);
         let completed_validation_ids = validations
@@ -284,9 +287,18 @@ impl RuntimeVerifierPort for CodingCompletionVerifier {
         &mut self,
         input: RuntimeVerificationInput<'_>,
     ) -> Result<VerifierCandidate, RuntimePortFailure> {
+        self.verify_scoped(input.into_scoped()?)
+    }
+
+    fn verify_scoped(
+        &mut self,
+        input: RuntimeScopedVerificationInput<'_>,
+    ) -> Result<VerifierCandidate, RuntimePortFailure> {
         let disposition = self.evaluate(&input).unwrap_or(VerifierDisposition::Failed);
-        let selected_evidence =
-            select_evidence(input.evidence, &input.request.work_packet.required_evidence);
+        let selected_evidence = select_evidence(
+            input.evidence,
+            &input.request.work_packet().required_evidence,
+        );
         let passed = disposition != VerifierDisposition::Failed && !selected_evidence.is_empty();
         Ok(VerifierCandidate {
             schema_version: CONTRACT_SCHEMA_VERSION,
@@ -295,9 +307,9 @@ impl RuntimeVerifierPort for CodingCompletionVerifier {
                 &sha256(input.proposal.proposal_sha256.as_bytes())[..24]
             )),
             verifier_id: self.verifier_id.clone(),
-            task_id: input.request.task.task_id.clone(),
+            task_id: input.request.task().task_id.clone(),
             proposal_id: input.proposal.proposal_id.clone(),
-            repository_snapshot_id: input.request.repository_snapshot_id.clone(),
+            repository_snapshot_id: input.request.repository_snapshot_id().clone(),
             state_revision: input.state_revision,
             source: VerifierSource::DeterministicPostcondition,
             disposition,
@@ -342,16 +354,16 @@ fn parse_candidate(
         })
 }
 
-fn required_evidence_present(input: &RuntimeVerificationInput<'_>) -> bool {
+fn required_evidence_present(input: &RuntimeScopedVerificationInput<'_>) -> bool {
     input
         .request
-        .work_packet
+        .work_packet()
         .required_evidence
         .iter()
         .all(|kind| input.evidence.iter().any(|evidence| &evidence.kind == kind))
         && input.evidence.iter().all(|evidence| {
             evidence.observed_revision.as_deref()
-                == Some(input.request.repository_snapshot_id.as_str())
+                == Some(input.request.repository_snapshot_id().as_str())
         })
 }
 
@@ -563,6 +575,175 @@ mod tests {
             })
             .expect("failed candidate");
         assert_eq!(candidate.disposition, VerifierDisposition::Failed);
+    }
+
+    fn endpoint_request(
+        native: &agentmage_kernel_contracts::RuntimeRunRequest,
+    ) -> agentmage_kernel_contracts::RuntimeEndpointRunRequest {
+        use agentmage_kernel_contracts::{
+            EndpointModelSelection, RuntimeEndpointContextBudget, RuntimeEndpointRunRequest,
+        };
+        agentmage_kernel_engine::runtime_coordinator::seal_runtime_endpoint_run_request(
+            RuntimeEndpointRunRequest {
+                schema_version: native.schema_version,
+                run_id: native.run_id.clone(),
+                session_id: native.session_id.clone(),
+                mode: native.mode,
+                task: native.task.clone(),
+                work_packet: native.work_packet.clone(),
+                workspace_id: native.workspace_id.clone(),
+                workspace_snapshot_sha256: native.workspace_snapshot_sha256.clone(),
+                repository_snapshot_id: native.repository_snapshot_id.clone(),
+                repository_snapshot_sha256: native.repository_snapshot_sha256.clone(),
+                model_selection: EndpointModelSelection {
+                    endpoint: "http://127.0.0.1:1234/v1".into(),
+                    model: "synthetic".into(),
+                },
+                context_budget: RuntimeEndpointContextBudget {
+                    max_messages: 2,
+                    max_content_bytes: 128,
+                    max_serialized_messages_bytes: 256,
+                    max_request_body_bytes: 512,
+                },
+                max_output_tokens: 16,
+                tool_catalog_id: native.tool_catalog_id.clone(),
+                tool_catalog_sha256: native.tool_catalog_sha256.clone(),
+                visible_tools: native.visible_tools.clone(),
+                policy_id: native.policy_id.clone(),
+                policy_sha256: native.policy_sha256.clone(),
+                limits: native.limits.clone(),
+                event_cursor: None,
+                request_sha256: "0".repeat(64),
+            },
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn scoped_coding_verifier_preserves_native_and_endpoint_deterministic_results() {
+        use agentmage_kernel_engine::runtime_loop::RuntimeRunScope;
+        let (profile, native) = fixture_profile_and_request();
+        let endpoint = endpoint_request(&native);
+        let mut verifier = CodingCompletionVerifier::for_profile(&profile);
+        for claim in [CodingTerminalClaim::Changed, CodingTerminalClaim::NoOp] {
+            let proposal = proposal(&native, claim);
+            let mut results = Vec::new();
+            let mut evidence = Vec::new();
+            if claim == CodingTerminalClaim::Changed {
+                results.push(write_result(&native, "write-call"));
+                evidence.push(self::evidence(
+                    &native,
+                    "write-evidence",
+                    EvidenceKind::Receipt,
+                ));
+            }
+            results.extend([
+                validation_result(&profile, &native, "validation-call"),
+                git_result(&native, "git-call", false),
+            ]);
+            evidence.extend([
+                self::evidence(&native, "validation-evidence", EvidenceKind::Validation),
+                self::evidence(&native, "git-evidence", EvidenceKind::Observation),
+            ]);
+            let postconditions = [PostconditionId::from_raw("postcondition-fixture")];
+            let receipts = receipts(results.len());
+            let expected = verifier
+                .verify(RuntimeVerificationInput {
+                    request: &native,
+                    proposal: &proposal,
+                    state_revision: 8,
+                    postconditions: &postconditions,
+                    evidence: &evidence,
+                    tool_results: &results,
+                    receipt_ids: &receipts,
+                })
+                .unwrap();
+            assert_eq!(
+                expected.disposition,
+                if claim == CodingTerminalClaim::Changed {
+                    VerifierDisposition::Success
+                } else {
+                    VerifierDisposition::NoOp
+                }
+            );
+            let actual = verifier
+                .verify_scoped(RuntimeVerificationInput {
+                    request: RuntimeRunScope::endpoint(&endpoint).unwrap(),
+                    proposal: &proposal,
+                    state_revision: 8,
+                    postconditions: &postconditions,
+                    evidence: &evidence,
+                    tool_results: &results,
+                    receipt_ids: &receipts,
+                })
+                .unwrap();
+            assert_eq!(actual, expected);
+        }
+    }
+
+    #[test]
+    fn scoped_coding_verifier_rejects_missing_receipts_stale_evidence_and_wrong_snapshot() {
+        use agentmage_kernel_engine::runtime_loop::RuntimeRunScope;
+        let (profile, native) = fixture_profile_and_request();
+        let mut verifier = CodingCompletionVerifier::for_profile(&profile);
+        let proposal = proposal(&native, CodingTerminalClaim::Changed);
+        let original_results = vec![
+            write_result(&native, "write-call"),
+            validation_result(&profile, &native, "validation-call"),
+            git_result(&native, "git-call", false),
+        ];
+        let original_evidence = vec![
+            evidence(&native, "validation-evidence", EvidenceKind::Validation),
+            evidence(&native, "git-evidence", EvidenceKind::Observation),
+        ];
+        for mutation in 0..5 {
+            let mut request = endpoint_request(&native);
+            let mut results = original_results.clone();
+            let mut evidence = original_evidence.clone();
+            let mut receipts = receipts(results.len());
+            match mutation {
+                0 => {
+                    receipts.pop();
+                }
+                1 => {
+                    evidence[0].observed_revision = Some("stale-snapshot".into());
+                }
+                2 => {
+                    request.workspace_snapshot_sha256 = "d".repeat(64);
+                }
+                3 => {
+                    request.repository_snapshot_sha256 = "d".repeat(64);
+                }
+                4 => {
+                    results.remove(1);
+                    receipts.pop();
+                }
+                _ => unreachable!(),
+            }
+            request =
+                agentmage_kernel_engine::runtime_coordinator::seal_runtime_endpoint_run_request(
+                    request,
+                )
+                .unwrap();
+            let postconditions = [PostconditionId::from_raw("postcondition-fixture")];
+            let candidate = verifier
+                .verify_scoped(RuntimeVerificationInput {
+                    request: RuntimeRunScope::endpoint(&request).unwrap(),
+                    proposal: &proposal,
+                    state_revision: 8,
+                    postconditions: &postconditions,
+                    evidence: &evidence,
+                    tool_results: &results,
+                    receipt_ids: &receipts,
+                })
+                .unwrap();
+            assert_eq!(
+                candidate.disposition,
+                VerifierDisposition::Failed,
+                "mutation {mutation}"
+            );
+            assert!(!candidate.postconditions[0].passed);
+        }
     }
 
     fn proposal(

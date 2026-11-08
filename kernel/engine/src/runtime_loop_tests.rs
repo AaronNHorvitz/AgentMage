@@ -73,6 +73,9 @@ use crate::source_preparation::{
 use crate::source_runtime_context::PreparedSourceRuntimeContext;
 use crate::tooling::{Tool, ToolRegistry};
 
+#[path = "runtime_loop_scope_tests.rs"]
+mod scope_tests;
+
 #[path = "runtime_loop_artifact_preparation_tests.rs"]
 mod artifact_preparation_tests;
 #[path = "runtime_loop_research_admission_tests.rs"]

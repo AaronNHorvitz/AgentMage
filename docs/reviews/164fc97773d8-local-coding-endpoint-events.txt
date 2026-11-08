@@ -1,0 +1,138 @@
+Commit: 164fc97773d8ab82820dd04af504302950ad23f5
+Scope: local-coding-endpoint-events
+
+Reviewer: Claude Opus 5.5, separate session, read-only pinned checkout at /lane/review-checkout.
+Tier: core. Rows: T-303 / T-306 (non-closing increment; both parents remain OPEN; no row added or closed).
+Diff reviewed: complete diff from immutable predecessor 2164c8b71f6042caa4c5a6b766337b6a5b3f5184.
+
+## Identity and inputs
+
+- `git rev-parse HEAD` = `git rev-parse 164fc977…` = 164fc97773d8ab82820dd04af504302950ad23f5;
+  predecessor resolves to 2164c8b71f6042caa4c5a6b766337b6a5b3f5184. `git status --short` empty
+  before and after all runs.
+- `sha256sum -c review-inputs.sha256`: all 49 entries OK. Manifest SHA-256
+  d055eb7a46e90073380653b6d60bac340ed70160f99a8d1d6fb0fff33124498f (matches request).
+- Pinned node binary SHA-256 d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches).
+- Read: IP-POLICY.md, TASKS.md top, the newest decisions listing, all changed Rust
+  (`runtime_loop.rs`, `runtime_loop/event_frame.rs`, `endpoint.rs`, `endpoint/turn.rs`,
+  `endpoint/turn_events.rs`, `endpoint/turn_event_tests.rs`, `endpoint/turn_tests.rs`), the
+  evidence doc, the guide diff and the retained predecessor review. I also read the existing
+  publisher, sequence verifier and replay (`runtime_event.rs`) and the ledger event/subscription
+  admission (`runtime_hardening.rs`) to check the claims against them.
+
+## Commands and results
+
+```
+export PATH=<pinned node>:$PATH CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-endpoint-events-164fc97773d8 (new, mode 700)
+bash /tools/build-slot python3 -B .../run.py > fast.log      -> exit 1 (expected; FAST GATE: FAIL, SOURCE_FREEZE_UNCHANGED)
+  git diff --check / lint-untracked / lint-reviews / markdownlint (3 files, 0 issues): exit 0
+  cargo fmt --check (4 packages): exit 0, 2.15 s
+  cargo clippy --locked --offline --all-targets -D warnings: exit 0, 62.16 s (shared machine; builder reported 19.43 s)
+  cargo test --locked --offline --all-targets --no-fail-fast: exit 101, 312.78 s
+    my tally of every "test result:" line: 43 targets, 2552 passed, 72 failed, 71 ignored, 0 filtered
+    failures: 53 in agentmage-host lib, 19 in agentmage-platform-linux lib (linux_coding_runtime 42,
+    repository_safety 13, linux_read 10, command_runner 2, local_commit 2, secret_service 2,
+    linux_repository_map 1); none in kernel engine
+    all 6 new runtime_coordinator::endpoint::tests::turns::event_tests::endpoint_events_* methods: ok
+python3 -B .../final.py > final.log                            -> exit 0, FINAL_LIGHT_CHECKS_PASS; SOURCE_GATE_REMAINS_FAIL
+cmp validation-2/source-freeze.json  <mine>                    -> identical
+cmp validation-2/plan-final.json     <mine>                    -> identical
+cmp validation-2/audit.json          <mine>                    -> identical
+git diff --check 2164c8b7… --                                  -> clean
+git status --short                                             -> empty
+cmp docs/reviews/2164c8b71f60-local-coding-endpoint-turns.txt /lane/reviews/2164c8b71f60-local-coding-endpoint-turns.md -> identical
+```
+
+The identical audit.json shows the predecessor's passing identities are preserved, the six
+methods are added, and failure identities, normalized diagnostics and ignores match exactly. The
+gate is a matching baseline, not a green gate, as the evidence says. My run reproduces the
+evidence totals.
+
+## Review
+
+**Native extraction (`runtime_loop.rs:4608`, `event_frame.rs`).** I compared the new
+`RuntimeEventScope::seal` with the removed initializer field by field. Event id derivation,
+run/session/task/policy, turn/operation, correlation, causation from `events.last()`, sequence,
+timestamp, `runtime_event_persistence(&kind)` (evaluated before `kind` moves), payload reference,
+previous hash, zero placeholder and `seal_runtime_event` are all identical. Native retention still
+comes from `journal.is_some()`. `event_sensitivity` is the same four-way mapping, and
+`runtime_sensitivity` delegates to it. No native admission, tool, verifier or effect code changed.
+No native tuple is fabricated: `RuntimeEventScope::endpoint` borrows only identity fields from the
+sealed endpoint request.
+
+**Preflight (`turn_events.rs:50-103`, `turn.rs:325-327`).** Preflight runs on a clone of
+`admitted` before the ledger or publisher changes, so a refusal returns `ResourceExhausted` with no
+model call and no event. It seals all four prospective events at their real sequence numbers with
+`u64::MAX` (the longest encoding) and keeps the larger of ModelCompleted and ModelFailed as the
+predecessor of TurnCompleted. Digests are fixed 64-hex placeholders, the same length as real
+digests, and the failure code is the same literal used later. Every event the success,
+dispatch-failure and pre-attempt-stop paths can publish after dispatch is therefore covered.
+
+The intent events are counted in both `planned` and `admitted` (`turn.rs:330-354`), so the
+`dispatch_attempts == 0` rollback keeps identical event counters. Ledger counters are committed
+only after a successful `publish`. I found no reachable post-dispatch append failure that would
+turn a Dispatch error into an Admission error or drop an accepted result. Only mutex poisoning
+could cause one, and no code under the lock panics.
+
+**Verifier and lifecycle.** The existing `RuntimeEventSequence` accepts every recorded path:
+TurnStarted, ModelRequested, then either ModelCompleted or ModelFailed, then TurnCompleted. A
+caught panic leaves an open prefix at ModelRequested with the component closed and the reservation
+spent (test `…caught_dependency_panic`). No RunTerminal, cancellation acknowledgement or exit is
+emitted. Timestamps come from `last_observed_at`, which is monotonic and starts at `started_at`.
+
+**Subscribers.** `subscribe_events` checks `validate_subscription_capacity` (per-run queue count
+and count × 64 KiB envelope ≤ queue bytes) before the publisher's global `MAX_SUBSCRIBER_CAPACITY`
+and `MAX_SUBSCRIBERS`. A full queue is dropped with `try_send`, never blocking. Exact-cursor
+replay reads only the stored events and has no path to a port.
+
+**Privacy.** `EndpointModelRequest` and `EndpointModelResult` hold only descriptors and digests,
+no body or response text. Envelopes carry only their SHA-256 digests. The test confirms that the
+endpoint address, the model name "synthetic", the text and dependency diagnostics are absent from
+the serialized events. The diff adds no logging, fs, net, process, env or `unsafe` use.
+Retention is fixed to Ephemeral.
+
+**Confinement.** No tool, path, command, network or approval boundary is touched, and no model or
+document output is interpreted. Escape reproductions (traversal, symlink, environment, injected
+tool calls) do not apply to this diff.
+
+**Evaluation integrity and scope.** No Cargo, lockfile, evaluation, hidden or held-out, scorer,
+threshold, SBOM or status file changed (checked with `git diff --name-only`). No score or model
+claim is made. TASKS.md changes only queue prose; row text is unchanged. The evidence and guide
+claims match the code and the run, including the honest first-gate failure and the four-literal
+correction.
+
+**Public hygiene.** The diff has no private host path, username, hostname, credential, personal
+data or trademark branding. The only `/lane/...` sandbox paths sit inside the retained predecessor
+review, as in earlier accepted reviews. The `127.0.0.1` test endpoint was already present.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog), `turn.rs:234-266` and `turn.rs:325-327`.** Refusals before preflight (the
+  closed or invalid phase, port mismatch, turn/call limits, control check) and the event-capacity
+  refusal close the component without recording any event. The retained prefix can therefore end
+  at a completed turn with no record that the component closed or why. Nothing here claims
+  otherwise. Fix: when the full coordinator is composed, have it record the closure diagnostic or
+  terminal, and cover that with a test.
+- **L2 (low, backlog), `turn.rs:480-486`, `turn.rs:378-382` and `turn.rs:448`.**
+  1. `observation_sha256` hashes `serde_json::to_vec` of in-process Serialize shapes, not the
+     canonical contract JSON. External verifiers can recompute these digests only by reproducing
+     those shapes.
+  2. The failed-turn `outcome_sha256` is a constant digest of the failure code; the turn is bound
+     only through the envelope `turn_id`.
+  3. Completion events carry the last pre-completion clock observation, not a completion time.
+
+  Fix: document the digest input shape, or switch to `to_canonical_json`. Consider binding the
+  failure outcome to the run/turn the way the success outcome is.
+- Earlier retained lows (predecessor L2 live coordinator/API wiring and measurement, plus earlier
+  backlog) remain backlog. Predecessor L1 is addressed by the guide edit (fresh-instance and
+  exclusive-ownership wording at `docs/guides/runtime-endpoint-runs.md:60-62`).
+
+## Per-row result
+
+- T-303 / T-306, scope local-coding-endpoint-events: increment accepted. No high or medium finding;
+  L1 and L2 are backlog. Both parents remain OPEN; this verdict closes no row.
+
+Verdict: PASS

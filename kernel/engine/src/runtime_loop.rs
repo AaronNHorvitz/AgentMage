@@ -7,7 +7,9 @@ mod artifact_preparation;
 /// Controlled selected-endpoint model phases using the shared resource ledger.
 pub mod endpoint;
 mod event_frame;
+mod run_scope;
 use artifact_preparation::{PreparedToolArtifact, ToolCompletionBuilder};
+pub use run_scope::RuntimeRunScope;
 
 use agentmage_kernel_contracts::{
     ActionId, AgentProposal, AgentStateKind, ApprovalId, BudgetResource, CONTRACT_SCHEMA_VERSION,
@@ -618,6 +620,64 @@ pub struct RuntimeToolExecution {
 
 /// Trusted grant, policy, and worker boundary used only after registry validation.
 pub trait RuntimeToolBoundary {
+    /// Model-independent entry point. Existing boundaries retain their exact
+    /// native request and refuse endpoint runs unless they explicitly opt in.
+    fn evaluate_scoped(
+        &mut self,
+        scope: RuntimeRunScope<'_>,
+        operation_id: &RuntimeOperationId,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        now_epoch_ms: u64,
+    ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
+        self.evaluate(
+            scope.native_request()?,
+            operation_id,
+            definition,
+            call,
+            now_epoch_ms,
+        )
+    }
+
+    /// Resolves the original scope through an explicitly supporting boundary.
+    fn resolve_scoped(
+        &mut self,
+        scope: RuntimeRunScope<'_>,
+        challenge: &RuntimeApprovalChallenge,
+        response: &RuntimeApprovalResponse,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        now_epoch_ms: u64,
+    ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
+        self.resolve(
+            scope.native_request()?,
+            challenge,
+            response,
+            definition,
+            call,
+            now_epoch_ms,
+        )
+    }
+
+    /// Executes only at a boundary that supports this original request family.
+    /// This adapter adds no approval or authority and never retries.
+    fn execute_scoped(
+        &mut self,
+        scope: RuntimeRunScope<'_>,
+        evaluation: &RuntimePermissionEvaluation,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        self.execute(
+            scope.native_request()?,
+            evaluation,
+            definition,
+            call,
+            cancellation,
+        )
+    }
+
     /// Evaluates one exact validated call without launching a worker.
     fn evaluate(
         &mut self,
@@ -1060,9 +1120,9 @@ pub trait RuntimeCheckpointPort {
 }
 
 /// Exact deterministic completion input exposed to a verifier implementation.
-pub struct RuntimeVerificationInput<'a> {
+pub struct RuntimeVerificationInput<'a, R = &'a RuntimeRunRequest> {
     /// Owning runtime request.
-    pub request: &'a RuntimeRunRequest,
+    pub request: R,
     /// Exact inert model proposal under review.
     pub proposal: &'a ClosedModelProposal,
     /// Current state revision to which a proof must bind.
@@ -1077,8 +1137,42 @@ pub struct RuntimeVerificationInput<'a> {
     pub receipt_ids: &'a [ReceiptId],
 }
 
+/// Deterministic verification input that preserves the original request family.
+pub type RuntimeScopedVerificationInput<'a> = RuntimeVerificationInput<'a, RuntimeRunScope<'a>>;
+
+impl<'a> RuntimeVerificationInput<'a> {
+    /// Reframes the same borrowed observations with the verified original run.
+    pub fn into_scoped(self) -> Result<RuntimeScopedVerificationInput<'a>, RuntimePortFailure> {
+        let request = RuntimeRunScope::native(self.request)?;
+        Ok(self.with_request(request))
+    }
+}
+
+impl<'a, R> RuntimeVerificationInput<'a, R> {
+    fn with_request<S>(self, request: S) -> RuntimeVerificationInput<'a, S> {
+        RuntimeVerificationInput {
+            request,
+            proposal: self.proposal,
+            state_revision: self.state_revision,
+            postconditions: self.postconditions,
+            evidence: self.evidence,
+            tool_results: self.tool_results,
+            receipt_ids: self.receipt_ids,
+        }
+    }
+}
+
 /// Deterministic verifier boundary; model prose and client claims remain ineligible.
 pub trait RuntimeVerifierPort {
+    /// Model-independent entry point. Native-only implementations refuse endpoint
+    /// scopes before verification; supporting verifiers must opt in explicitly.
+    fn verify_scoped(
+        &mut self,
+        input: RuntimeScopedVerificationInput<'_>,
+    ) -> Result<VerifierCandidate, RuntimePortFailure> {
+        let request = input.request.native_request()?;
+        self.verify(input.with_request(request))
+    }
     /// Returns the exact registered verifier identity.
     fn verifier_id(&self) -> &VerifierId;
 
@@ -2805,8 +2899,9 @@ where
             .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
         let candidate = self
             .verifier
-            .verify(RuntimeVerificationInput {
-                request: &self.request,
+            .verify_scoped(RuntimeVerificationInput {
+                request: RuntimeRunScope::native(&self.request)
+                    .map_err(RuntimeLoopError::Dependency)?,
                 proposal: &proposal,
                 state_revision: self.state.revision(),
                 postconditions: &postconditions,
@@ -3172,89 +3267,91 @@ where
             .now_epoch_ms()
             .map_err(RuntimeLoopError::Dependency)?;
         let mut permission_request_emitted = false;
-        let evaluation = if let Some(evaluate) =
-            self.correctness.as_ref().map(|hooks| hooks.evaluate)
-        {
-            let request = self.request.clone();
-            let correlation_id = self.correlation_id.clone();
-            let prior = self.events.last().cloned();
-            let mut resources = self.resources.clone();
-            let mut built = None;
-            let mut build_attempts = 0_u8;
-            let mut observed_evaluation = None;
-            let mut build_event = |evaluation: &RuntimePermissionEvaluation| {
-                build_attempts = build_attempts.saturating_add(1);
-                if build_attempts != 1 {
-                    return Err(RuntimePortFailure::Invalid);
-                }
-                let challenge = permission_challenge(
-                    &request,
-                    &turn_id,
+        let evaluation =
+            if let Some(evaluate) = self.correctness.as_ref().map(|hooks| hooks.evaluate) {
+                let request = self.request.clone();
+                let correlation_id = self.correlation_id.clone();
+                let prior = self.events.last().cloned();
+                let mut resources = self.resources.clone();
+                let mut built = None;
+                let mut build_attempts = 0_u8;
+                let mut observed_evaluation = None;
+                let mut build_event = |evaluation: &RuntimePermissionEvaluation| {
+                    build_attempts = build_attempts.saturating_add(1);
+                    if build_attempts != 1 {
+                        return Err(RuntimePortFailure::Invalid);
+                    }
+                    let challenge = permission_challenge(
+                        &request,
+                        &turn_id,
+                        &operation_id,
+                        &definition,
+                        &call,
+                        evaluation,
+                    )
+                    .map_err(|_| RuntimePortFailure::Invalid)?;
+                    let event = prepare_runtime_event(
+                        &request,
+                        &correlation_id,
+                        prior.as_ref(),
+                        now,
+                        RuntimeEventKind::PermissionRequested {
+                            approval_id: challenge.approval_id,
+                            operation: challenge.operation,
+                            preview_sha256: challenge.preview_sha256,
+                            expires_at_epoch_ms: challenge.expires_at_epoch_ms,
+                        },
+                        Some(&turn_id),
+                        Some(&operation_id),
+                        true,
+                        &mut resources,
+                    )?;
+                    observed_evaluation = Some(evaluation.clone());
+                    built = Some(event.clone());
+                    Ok(event)
+                };
+                let evaluated = evaluate(
+                    &mut self.tool_boundary,
+                    &self.request,
                     &operation_id,
                     &definition,
                     &call,
-                    evaluation,
-                )
-                .map_err(|_| RuntimePortFailure::Invalid)?;
-                let event = prepare_runtime_event(
-                    &request,
-                    &correlation_id,
-                    prior.as_ref(),
                     now,
-                    RuntimeEventKind::PermissionRequested {
-                        approval_id: challenge.approval_id,
-                        operation: challenge.operation,
-                        preview_sha256: challenge.preview_sha256,
-                        expires_at_epoch_ms: challenge.expires_at_epoch_ms,
-                    },
-                    Some(&turn_id),
-                    Some(&operation_id),
-                    true,
-                    &mut resources,
-                )?;
-                observed_evaluation = Some(evaluation.clone());
-                built = Some(event.clone());
-                Ok(event)
-            };
-            let evaluated = evaluate(
-                &mut self.tool_boundary,
-                &self.request,
-                &operation_id,
-                &definition,
-                &call,
-                now,
-                &mut build_event,
-            );
-            if matches!(
-                evaluated,
-                Err(RuntimePortFailure::ReadProjectionUnavailable)
-            ) && built.is_none()
-                && build_attempts == 0
-            {
-                return self.reject_read_projection(call, turn_id, operation_id);
-            }
-            let (evaluation, event) = evaluated.map_err(RuntimeLoopError::Dependency)?;
-            if build_attempts != 1
-                || observed_evaluation.as_ref() != Some(&evaluation)
-                || built.as_ref() != Some(&event)
-            {
-                self.correctness_reconciliation_required = true;
-                return Err(RuntimeLoopError::InvalidBoundaryResult);
-            }
-            self.accept_committed_events(vec![event], resources)?;
-            permission_request_emitted = true;
-            evaluation
-        } else {
-            match self
-                .tool_boundary
-                .evaluate(&self.request, &operation_id, &definition, &call, now)
-            {
-                Err(RuntimePortFailure::ReadProjectionUnavailable) => {
+                    &mut build_event,
+                );
+                if matches!(
+                    evaluated,
+                    Err(RuntimePortFailure::ReadProjectionUnavailable)
+                ) && built.is_none()
+                    && build_attempts == 0
+                {
                     return self.reject_read_projection(call, turn_id, operation_id);
                 }
-                result => result.map_err(RuntimeLoopError::Dependency)?,
-            }
-        };
+                let (evaluation, event) = evaluated.map_err(RuntimeLoopError::Dependency)?;
+                if build_attempts != 1
+                    || observed_evaluation.as_ref() != Some(&evaluation)
+                    || built.as_ref() != Some(&event)
+                {
+                    self.correctness_reconciliation_required = true;
+                    return Err(RuntimeLoopError::InvalidBoundaryResult);
+                }
+                self.accept_committed_events(vec![event], resources)?;
+                permission_request_emitted = true;
+                evaluation
+            } else {
+                match self.tool_boundary.evaluate_scoped(
+                    RuntimeRunScope::native(&self.request).map_err(RuntimeLoopError::Dependency)?,
+                    &operation_id,
+                    &definition,
+                    &call,
+                    now,
+                ) {
+                    Err(RuntimePortFailure::ReadProjectionUnavailable) => {
+                        return self.reject_read_projection(call, turn_id, operation_id);
+                    }
+                    result => result.map_err(RuntimeLoopError::Dependency)?,
+                }
+            };
         self.process_permission(
             evaluation,
             definition,
@@ -3608,7 +3705,14 @@ where
                     )?;
                     let execution = self
                         .tool_boundary
-                        .execute(&self.request, &evaluation, &definition, &call, cancellation)
+                        .execute_scoped(
+                            RuntimeRunScope::native(&self.request)
+                                .map_err(RuntimeLoopError::Dependency)?,
+                            &evaluation,
+                            &definition,
+                            &call,
+                            cancellation,
+                        )
                         .map_err(RuntimeLoopError::Dependency)?;
                     self.complete_tool(
                         execution,
@@ -3716,8 +3820,8 @@ where
             evaluation
         } else {
             self.tool_boundary
-                .resolve(
-                    &self.request,
+                .resolve_scoped(
+                    RuntimeRunScope::native(&self.request).map_err(RuntimeLoopError::Dependency)?,
                     &pending.challenge,
                     response,
                     &pending.definition,

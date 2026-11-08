@@ -125,8 +125,49 @@ component emits no `RunTerminal`, cancellation acknowledgement or exit receipt.
 
 It interprets no proposals and executes no orchestration loop, tool, grant,
 edit, command or retry. The shared event framing is integrated with the native
-coordinator; endpoint turns are not yet accepted by its native-only tool and
-verifier interfaces or any live runtime API route. Full coordinator composition,
+coordinator; endpoint turns are not yet composed into its orchestration loop
+or any live runtime API route. The scope interfaces below remove the native-only request
+requirement at explicitly supporting boundaries. Full coordinator composition,
 durable ownership, recovery, effect authority and task verification remain open;
 a cursor alone establishes no resumability. No new model prompt or consent
 mechanism is added.
+
+## Coordinator tool and verifier scope
+
+The existing coordinator now calls `RuntimeToolBoundary::evaluate_scoped`,
+`resolve_scoped` and `execute_scoped` on its non-transactional tool path, and
+`RuntimeVerifierPort::verify_scoped` for deterministic completion. Its native
+model admission and orchestration loop are unchanged. Transactional effects,
+journals, checkpoints, recovery, artifact and research hooks still require their
+original native request; no endpoint execution is enabled through those hooks.
+
+`RuntimeRunScope::native` and `RuntimeRunScope::endpoint` verify the original
+sealed request's complete shape and digest, then retain an immutable borrow.
+The scope exposes common task, work-packet, workspace, repository, tool-catalog,
+policy and limit observations, plus the complete request digest and its distinct
+model binding. It has no deserializer or mutable field access. It does not
+convert an endpoint selection into a native profile, token count or permission.
+`native_request` refuses an endpoint scope. `endpoint_request` returns the
+original endpoint request only for that family.
+
+Existing tool and verifier implementations inherit adapters that forward the
+original native request and all arguments unchanged. An endpoint scope returns
+`RuntimePortFailure::Invalid` before invoking a native-only implementation.
+An explicitly supporting implementation must override the scoped entry point;
+there is no fallback profile, retry or broader grant. These methods do not
+replace registry validation, exact approvals, effect authority or the verifier
+registry's proof checks.
+
+The existing coding completion verifier explicitly supports both request
+families through the same deterministic checks: objective, workspace/repository
+snapshots, ordered writes and later validations, clean repository inspection,
+current evidence and complete distinct receipts. Native input is reframed with
+the same checked scope. A successful standalone verifier candidate is inert;
+the containing coordinator still owns proposal admission and proof validation.
+Synthetic endpoint verifier fixtures establish no actual endpoint tool effects
+or measured coding result.
+
+This integrates request scope into the existing coordinator and coding verifier.
+The coordinator still admits native runs only. Connecting endpoint turns to its
+model/context/proposal loop and the live API remains required before any
+configured-endpoint edit/test/retry workflow is claimed.

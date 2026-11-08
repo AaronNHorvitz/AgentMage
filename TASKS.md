@@ -2,11 +2,24 @@
 
 ## Active queue: local agent mission
 
+The coordinator now calls scoped non-transactional tool and verifier entry points
+that preserve the complete original request family. The existing coding verifier
+uses that scope for deterministic receipt, snapshot and validation checks;
+native-only boundaries refuse endpoint scopes before entry. See the
+[boundary integration record](docs/evidence/t303-coordinator-scope-2026-11-08.md).
+Independent core review is required. Full endpoint orchestration/API wiring,
+native edit/test/retry and both T-303/T-306 remain open; no row is added or closed.
+
 The [endpoint event-recording increment](docs/evidence/t303-endpoint-events-2026-11-08.md)
 connects explicit endpoint turns to the native coordinator's shared event framing,
 bounded publication and replay machinery. Complete turn-record capacity is checked
-before dispatch; recorded model observations never assert task success. Independent
-core review is required. Full endpoint coordinator/tool/verifier composition,
+before dispatch; recorded model observations never assert task success. Its
+[independent core review](docs/reviews/164fc97773d8-local-coding-endpoint-events.txt)
+has **Verdict: PASS** for exact commit `164fc97773d8ab82820dd04af504302950ad23f5`,
+with no high/medium finding. Low L1 (record preflight/refusal closure at full
+coordinator composition) and L2 (digest-shape documentation, failure-turn binding
+and completion-clock observations) remain backlog with earlier lows. Full
+endpoint coordinator/tool/verifier composition,
 native edit/test/retry and both T-303/T-306 remain open; no row is added or closed.
 
 The [endpoint turn component](docs/evidence/t303-endpoint-turns-2026-11-08.md)
@@ -14,8 +27,8 @@ adds explicit turn/result binding, cumulative model budgets and the existing
 coordinator's clock/cancellation checks without another orchestration loop.
 Its [independent core review](docs/reviews/2164c8b71f60-local-coding-endpoint-turns.txt)
 has **Verdict: PASS** for exact commit `2164c8b71f6042caa4c5a6b766337b6a5b3f5184`,
-with no high/medium finding. Low L1 (fresh-instance ownership wording) is addressed
-in the current guide edit, pending review; L2 (live coordinator/API wiring and
+with no high/medium finding. Low L1 (fresh-instance ownership wording) was
+accepted in the endpoint-event review above; L2 (live coordinator/API wiring and
 scoreboard measurement) remains backlog with earlier lows. Full coordinator
 wiring, native edit/test/retry, durable ownership, approved Git and T-303/T-306
 remain open; no row is added.
