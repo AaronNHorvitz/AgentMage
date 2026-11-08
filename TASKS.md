@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The endpoint owner can now retain its original approved connection independently
+of service settings through shared immutable ownership. Frozen requests retain
+the exact credential-owning transport; approval, encoding, control and dispatch
+still use the original path. See the [configuration ownership record](docs/evidence/t303-shared-endpoint-configuration-2026-11-08.md).
+Independent core review is required. This removes a configuration lifetime
+prerequisite only; authenticated HTTP ownership, service-issued run identities,
+actual scoped filesystem/grants, edit/test/retry, durable recovery, approved Git
+and parent measurements remain open. No row is added or closed.
+
 The retained endpoint owner's [independent core review](docs/reviews/92c919078ec1-local-coding-endpoint-owner.txt)
 has **Verdict: PASS** for exact commit
 `92c919078ec131c6074e081d4c05137b59943834`, with no high/medium finding.

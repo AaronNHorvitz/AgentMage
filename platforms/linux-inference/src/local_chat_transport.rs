@@ -267,9 +267,27 @@ pub type EndpointChatBinding = EndpointModelRequest;
 /// No Debug, Clone or deserialization can expose/reconstruct the private body.
 /// Preparing it performs no network I/O; dropping it erases the encoded body.
 pub struct PreparedEndpointChat<'a> {
-    transport: &'a LocalChatTransport,
+    transport: PreparedTransport<'a>,
     binding: EndpointChatBinding,
     body: Zeroizing<Vec<u8>>,
+}
+
+// Preparation either borrows the original configuration or retains that exact
+// immutable instance. Neither variant clones credentials or resolves settings.
+enum PreparedTransport<'a> {
+    Borrowed(&'a LocalChatTransport),
+    Shared(Arc<LocalChatTransport>),
+}
+
+impl std::ops::Deref for PreparedTransport<'_> {
+    type Target = LocalChatTransport;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Borrowed(transport) => transport,
+            Self::Shared(transport) => transport,
+        }
+    }
 }
 
 impl PreparedEndpointChat<'_> {
@@ -458,7 +476,28 @@ impl LocalChatTransport {
             },
         );
         Ok(PreparedEndpointChat {
-            transport: self,
+            transport: PreparedTransport::Borrowed(self),
+            binding,
+            body,
+        })
+    }
+
+    /// Prepares the same single-use request while retaining this exact immutable
+    /// credential owner. Approval, encoding and limits use the ordinary path;
+    /// the returned request can outlive the caller's settings reference. No
+    /// credential copy, socket, background worker or retry is introduced.
+    pub fn prepare_chat_shared(
+        self: Arc<Self>,
+        approval: &LocalChatApproval,
+        model: &str,
+        messages: &[ChatMessage<'_>],
+        max_tokens: u32,
+        include_usage: bool,
+    ) -> Result<PreparedEndpointChat<'static>, TransportError> {
+        let PreparedEndpointChat { binding, body, .. } =
+            self.prepare_chat(approval, model, messages, max_tokens, include_usage)?;
+        Ok(PreparedEndpointChat {
+            transport: PreparedTransport::Shared(self),
             binding,
             body,
         })

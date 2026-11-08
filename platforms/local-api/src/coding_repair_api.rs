@@ -198,13 +198,15 @@ mod tests {
                 .unwrap();
         let mut config = Configuration {
             endpoint: endpoint.base_url(),
-            transport: LocalChatTransport::new(endpoint.clone(), None, TransportLimits::default())
-                .unwrap(),
+            transport: Arc::new(
+                LocalChatTransport::new(endpoint.clone(), None, TransportLimits::default())
+                    .unwrap(),
+            ),
             // Deliberately inconsistent private configuration reaches the
             // transport-only rejection that ordinary settings cannot produce.
-            approval: LocalChatApproval::for_endpoint(
+            approval: Arc::new(LocalChatApproval::for_endpoint(
                 LocalChatEndpoint::parse("http://127.0.0.1:1/other").unwrap(),
-            ),
+            )),
         };
         let spent = std::cell::Cell::new(0);
         for (selected, max_tokens, expected) in [
@@ -224,7 +226,7 @@ mod tests {
             );
             assert_eq!(spent.get(), 0);
         }
-        config.approval = LocalChatApproval::for_endpoint(endpoint);
+        config.approval = Arc::new(LocalChatApproval::for_endpoint(endpoint));
         assert_eq!(
             admit_repair_proposal(prepare_test_repair(Some(&config), 128), true, || {
                 spent.set(spent.get() + 1);
@@ -256,9 +258,10 @@ mod tests {
                     .unwrap();
             let config = Configuration {
                 endpoint: endpoint.base_url(),
-                approval: LocalChatApproval::for_endpoint(endpoint.clone()),
-                transport: LocalChatTransport::new(endpoint, None, TransportLimits::default())
-                    .unwrap(),
+                approval: Arc::new(LocalChatApproval::for_endpoint(endpoint.clone())),
+                transport: Arc::new(
+                    LocalChatTransport::new(endpoint, None, TransportLimits::default()).unwrap(),
+                ),
             };
             let downstream = TcpListener::bind("127.0.0.1:0").unwrap();
             let mut client = TcpStream::connect(downstream.local_addr().unwrap()).unwrap();
@@ -524,9 +527,10 @@ mod tests {
             });
             let config = Arc::new(Configuration {
                 endpoint: "synthetic".into(),
-                approval: LocalChatApproval::for_endpoint(endpoint.clone()),
-                transport: LocalChatTransport::new(endpoint, None, TransportLimits::default())
-                    .unwrap(),
+                approval: Arc::new(LocalChatApproval::for_endpoint(endpoint.clone())),
+                transport: Arc::new(
+                    LocalChatTransport::new(endpoint, None, TransportLimits::default()).unwrap(),
+                ),
             });
             let downstream = TcpListener::bind("127.0.0.1:0").unwrap();
             let mut client = TcpStream::connect(downstream.local_addr().unwrap()).unwrap();

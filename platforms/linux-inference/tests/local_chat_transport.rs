@@ -1629,3 +1629,183 @@ fn controlled_endpoint_success_keeps_frozen_request_usage_and_unknown_resources(
     assert!(!cancel.is_cancelled());
     worker.join().unwrap();
 }
+
+#[test]
+fn shared_prepared_request_retains_exact_transport_body_key_and_releases_after_dispatch() {
+    use sha2::{Digest, Sha256};
+    use std::sync::Arc;
+    for include_usage in [false, true] {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        listener.set_nonblocking(true).unwrap();
+        let endpoint =
+            LocalChatEndpoint::parse(&format!("http://{}/api/v1", listener.local_addr().unwrap()))
+                .unwrap();
+        let approval = LocalChatApproval::for_endpoint(endpoint.clone());
+        let transport = Arc::new(
+            LocalChatTransport::new(
+                endpoint,
+                Some(BearerKey::new("synthetic-retained-key".into()).unwrap()),
+                limits(),
+            )
+            .unwrap(),
+        );
+        let weak = Arc::downgrade(&transport);
+        let mut prompt = "synthetic private source: é \n\"".to_owned();
+        let messages = [ChatMessage {
+            role: ChatRole::User,
+            content: &prompt,
+        }];
+        let ordinary = transport
+            .prepare_chat(&approval, "test-model", &messages, 16, include_usage)
+            .unwrap();
+        let binding = ordinary.binding().clone();
+        drop(ordinary);
+        let prepared = Arc::clone(&transport)
+            .prepare_chat_shared(&approval, "test-model", &messages, 16, include_usage)
+            .unwrap();
+        assert_eq!(prepared.binding(), &binding);
+        let expected: serde_json::Value = serde_json::from_slice(&if include_usage {
+            agentmage_platform_linux_inference::local_chat::encode_chat_with_usage(
+                "test-model",
+                &messages,
+                16,
+            )
+            .unwrap()
+        } else {
+            agentmage_platform_linux_inference::local_chat::encode_chat("test-model", &messages, 16)
+                .unwrap()
+        })
+        .unwrap();
+        prompt.clear();
+        drop(approval);
+        drop(transport);
+        assert_eq!(weak.strong_count(), 1);
+        assert_eq!(
+            listener.accept().unwrap_err().kind(),
+            std::io::ErrorKind::WouldBlock
+        );
+        let worker = thread::spawn(move || {
+            let start = Instant::now();
+            let mut socket = loop {
+                match listener.accept() {
+                    Ok((socket, _)) => break socket,
+                    Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                        assert!(start.elapsed() < Duration::from_secs(4));
+                        thread::sleep(Duration::from_millis(2));
+                    }
+                    Err(e) => panic!("{e}"),
+                }
+            };
+            let request = read_request(&mut socket);
+            let offset = request.windows(4).position(|w| w == b"\r\n\r\n").unwrap() + 4;
+            let headers = std::str::from_utf8(&request[..offset]).unwrap();
+            assert!(headers.starts_with("POST /api/v1/chat/completions HTTP/1.1\r\n"));
+            assert!(headers.contains("Authorization: Bearer synthetic-retained-key\r\n"));
+            assert_eq!(
+                serde_json::from_slice::<serde_json::Value>(&request[offset..]).unwrap(),
+                expected
+            );
+            let digest = Sha256::digest(&request[offset..])
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect::<String>();
+            socket
+                .write_all(&response(
+                    "text/event-stream",
+                    &[text_frame("answer"), ending("stop")].concat(),
+                ))
+                .unwrap();
+            socket.shutdown(Shutdown::Write).unwrap();
+            assert_eq!(
+                listener.accept().unwrap_err().kind(),
+                std::io::ErrorKind::WouldBlock
+            );
+            digest
+        });
+        // The frozen request is movable to another worker with no settings borrow.
+        let completion =
+            thread::spawn(move || prepared.execute_recorded(&ChatCancellation::default(), |_| {}))
+                .join()
+                .unwrap()
+                .unwrap();
+        assert_eq!(&completion.request, &binding);
+        let observation = serde_json::to_value(&completion).unwrap();
+        assert_eq!(
+            observation["request"]["request_body_sha256"],
+            worker.join().unwrap()
+        );
+        assert!(!observation.to_string().contains("synthetic-retained-key"));
+        assert!(!observation.to_string().contains("synthetic private source"));
+        assert!(weak.upgrade().is_none());
+    }
+}
+
+#[test]
+fn shared_preparation_preserves_refusal_control_and_drop_without_connection() {
+    use agentmage_kernel_contracts::ModelOperationStop;
+    use std::sync::Arc;
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let endpoint =
+        LocalChatEndpoint::parse(&format!("http://{}/v1", listener.local_addr().unwrap())).unwrap();
+    let (transport, approval) = connection(endpoint, limits());
+    let transport = Arc::new(transport);
+    let weak = Arc::downgrade(&transport);
+    let messages = [ChatMessage {
+        role: ChatRole::User,
+        content: "synthetic",
+    }];
+    let wrong = LocalChatApproval::for_endpoint(
+        LocalChatEndpoint::parse(&format!("http://{}/other", listener.local_addr().unwrap()))
+            .unwrap(),
+    );
+    assert!(matches!(
+        Arc::clone(&transport).prepare_chat_shared(&wrong, "test-model", &messages, 16, false),
+        Err(TransportError::Approval)
+    ));
+    for (model, tokens) in [("", 16), ("test-model", 0), ("test-model", 65537)] {
+        assert!(matches!(
+            Arc::clone(&transport).prepare_chat_shared(&approval, model, &messages, tokens, true),
+            Err(TransportError::Chat(ChatError::Request))
+        ));
+    }
+    assert_eq!(weak.strong_count(), 1);
+    let prepare = || {
+        Arc::clone(&transport)
+            .prepare_chat_shared(&approval, "test-model", &messages, 16, true)
+            .unwrap()
+    };
+    drop(prepare());
+    for stop in [
+        ModelOperationStop::Cancelled,
+        ModelOperationStop::TimedOut,
+        ModelOperationStop::Unavailable,
+        ModelOperationStop::Invalid,
+    ] {
+        let control = run_control(1000);
+        *control.stop.lock().unwrap() = Some(stop);
+        assert_eq!(
+            prepare().execute_recorded_controlled(
+                &ChatCancellation::default(),
+                &control,
+                |_| panic!("no text")
+            ),
+            Err(TransportError::OperationStopped(stop))
+        );
+        assert_eq!(weak.strong_count(), 1);
+    }
+    let prepared = prepare();
+    drop(transport);
+    assert_eq!(weak.strong_count(), 1);
+    let cancel = ChatCancellation::default();
+    cancel.cancel();
+    assert_eq!(
+        prepared.execute(&cancel, |_| panic!("no text")),
+        Err(TransportError::Cancelled)
+    );
+    assert!(weak.upgrade().is_none());
+    assert_eq!(
+        listener.accept().unwrap_err().kind(),
+        std::io::ErrorKind::WouldBlock
+    );
+}

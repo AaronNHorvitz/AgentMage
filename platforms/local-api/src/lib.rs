@@ -210,8 +210,10 @@ fn equal(a: &str, b: &str) -> bool {
 
 struct Configuration {
     endpoint: String,
-    transport: LocalChatTransport,
-    approval: LocalChatApproval,
+    // Runs can retain these exact immutable instances without borrowing mutable
+    // settings or copying credentials. Operation/revocation rules stay here.
+    transport: Arc<LocalChatTransport>,
+    approval: Arc<LocalChatApproval>,
 }
 
 struct WorkspaceGrant {
@@ -1866,8 +1868,8 @@ fn handle(
             }
             state.configured = Some(Arc::new(Configuration {
                 endpoint: input.endpoint,
-                transport,
-                approval,
+                transport: Arc::new(transport),
+                approval: Arc::new(approval),
             }));
             state.pending_change = None;
             state.revision += 1;

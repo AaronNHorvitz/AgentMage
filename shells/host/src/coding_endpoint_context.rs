@@ -62,12 +62,38 @@ impl<'config> crate::coding_endpoint::ConfiguredCodingEndpoint<'config, CodingEn
         source_budget: usize,
         include_usage: bool,
     ) -> Result<Self, RuntimePortFailure> {
-        if request.model_selection != transport.model_selection(&request.model_selection.model) {
+        Self::for_coding_run_with_connection(
+            crate::coding_endpoint::CodingEndpointConnection::Borrowed {
+                transport,
+                approval,
+            },
+            request,
+            registry,
+            sources,
+            source_budget,
+            include_usage,
+        )
+    }
+
+    /// Builds the same run-bound context with borrowed or shared original
+    /// configuration. No configuration is recovered from request metadata.
+    pub fn for_coding_run_with_connection(
+        connection: crate::coding_endpoint::CodingEndpointConnection<'config>,
+        request: &RuntimeEndpointRunRequest,
+        registry: &ToolRegistry,
+        sources: &[CodingSource],
+        source_budget: usize,
+        include_usage: bool,
+    ) -> Result<Self, RuntimePortFailure> {
+        if request.model_selection
+            != connection
+                .transport()
+                .model_selection(&request.model_selection.model)
+        {
             return Err(RuntimePortFailure::Invalid);
         }
-        Self::new(
-            transport,
-            approval,
+        Self::with_connection(
+            connection,
             &request.model_selection.model,
             request.max_output_tokens,
             include_usage,

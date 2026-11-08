@@ -5,6 +5,8 @@
 //! This adapter never reads files, chooses tools, grants permissions or restores
 //! run ownership. The coordinator alone admits turns, tools and completion.
 
+use std::sync::Arc;
+
 use agentmage_kernel_contracts::{
     EndpointModelRequest, EndpointModelResult, EndpointModelSelection, ModelOperationControl,
     ModelOperationStop, RuntimeModelBinding, SchemaReference,
@@ -41,12 +43,40 @@ pub trait CodingEndpointContextPort {
     ) -> Result<Vec<ChatMessage<'_>>, RuntimePortFailure>;
 }
 
-/// Borrowed credential-owning transport plus the original destination approval.
+/// Original transport and destination approval, either borrowed or retained.
+/// Shared ownership keeps exactly these immutable instances alive; it grants
+/// no disclosure, endpoint selection, tool or resume authority.
+pub enum CodingEndpointConnection<'config> {
+    /// Configuration held by the caller for the run's entire lifetime.
+    Borrowed {
+        /// Original credential-owning transport.
+        transport: &'config LocalChatTransport,
+        /// Original exact destination consent.
+        approval: &'config LocalChatApproval,
+    },
+    /// Configuration retained independently of later settings replacements.
+    Shared {
+        /// Original credential-owning transport; credentials are never copied.
+        transport: Arc<LocalChatTransport>,
+        /// Original exact destination consent, rechecked each preparation.
+        approval: Arc<LocalChatApproval>,
+    },
+}
+
+impl CodingEndpointConnection<'_> {
+    pub(super) fn transport(&self) -> &LocalChatTransport {
+        match self {
+            Self::Borrowed { transport, .. } => transport,
+            Self::Shared { transport, .. } => transport,
+        }
+    }
+}
+
+/// Credential-owning connection plus the original destination approval.
 /// Construction is inert. Keep this inside the run's exclusive live owner; its
 /// metadata cannot restore a run, renew budgets or admit a native model.
 pub struct ConfiguredCodingEndpoint<'config, X> {
-    transport: &'config LocalChatTransport,
-    approval: &'config LocalChatApproval,
+    connection: CodingEndpointConnection<'config>,
     selection: EndpointModelSelection,
     max_output_tokens: u32,
     include_usage: bool,
@@ -67,6 +97,30 @@ impl<'config, X: CodingEndpointContextPort> ConfiguredCodingEndpoint<'config, X>
         completion_schema: SchemaReference,
         context: X,
     ) -> Result<Self, RuntimePortFailure> {
+        Self::with_connection(
+            CodingEndpointConnection::Borrowed {
+                transport,
+                approval,
+            },
+            model,
+            max_output_tokens,
+            include_usage,
+            completion_schema,
+            context,
+        )
+    }
+
+    /// Retains the original approved connection without borrowing service
+    /// settings. The ordinary preparation path still checks exact approval on
+    /// every turn, and a prepared request retains its original transport.
+    pub fn with_connection(
+        connection: CodingEndpointConnection<'config>,
+        model: &str,
+        max_output_tokens: u32,
+        include_usage: bool,
+        completion_schema: SchemaReference,
+        context: X,
+    ) -> Result<Self, RuntimePortFailure> {
         if !(1..=32_768).contains(&max_output_tokens)
             || model.is_empty()
             || model.len() > 256
@@ -76,9 +130,8 @@ impl<'config, X: CodingEndpointContextPort> ConfiguredCodingEndpoint<'config, X>
             return Err(RuntimePortFailure::Invalid);
         }
         Ok(Self {
-            transport,
-            approval,
-            selection: transport.model_selection(model),
+            selection: connection.transport().model_selection(model),
+            connection,
             max_output_tokens,
             include_usage,
             completion_schema,
@@ -87,8 +140,8 @@ impl<'config, X: CodingEndpointContextPort> ConfiguredCodingEndpoint<'config, X>
     }
 }
 
-// The sole prepared object borrows only externally owned configuration. It
-// retains the exact encoded body after the temporary context borrow has ended.
+// The sole prepared object borrows external configuration or retains its exact
+// shared transport. Encoded bytes outlive the temporary context borrow.
 // Neither dispatch nor a callback can rebuild context or resolve new credentials.
 struct ConfiguredDispatch<'config> {
     prepared: PreparedEndpointChat<'config>,
@@ -148,16 +201,29 @@ impl<X: CodingEndpointContextPort> RuntimeEndpointTurnPort for ConfiguredCodingE
             })
             .collect();
         let context = RuntimeEndpointContextPacket::from_messages(&messages)?;
-        let prepared = self
-            .transport
-            .prepare_chat(
-                self.approval,
+        let prepared = match &self.connection {
+            CodingEndpointConnection::Borrowed {
+                transport,
+                approval,
+            } => transport.prepare_chat(
+                approval,
                 &self.selection.model,
                 &original,
                 self.max_output_tokens,
                 self.include_usage,
-            )
-            .map_err(transport_failure)?;
+            ),
+            CodingEndpointConnection::Shared {
+                transport,
+                approval,
+            } => Arc::clone(transport).prepare_chat_shared(
+                approval,
+                &self.selection.model,
+                &original,
+                self.max_output_tokens,
+                self.include_usage,
+            ),
+        }
+        .map_err(transport_failure)?;
         control.remaining_ms().map_err(control_failure)?;
         Ok(RuntimePreparedEndpointTurn::new(
             context,

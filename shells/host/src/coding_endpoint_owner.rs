@@ -21,12 +21,10 @@ use agentmage_kernel_engine::{
     },
     tooling::ToolRegistry,
 };
-use agentmage_platform_linux_inference::local_chat_transport::{
-    LocalChatApproval, LocalChatTransport,
-};
 
 use crate::{
-    coding_endpoint::ConfiguredCodingEndpoint, coding_endpoint_context::CodingEndpointContext,
+    coding_endpoint::{CodingEndpointConnection, ConfiguredCodingEndpoint},
+    coding_endpoint_context::CodingEndpointContext,
 };
 
 const MAX_HELD_RUNS: usize = 4;
@@ -46,10 +44,9 @@ type Coordinator<'config, T, V, C> = ReusableRuntimeCoordinator<
 pub struct CodingEndpointAdmission<'config, 'source, T, V, C> {
     /// Original sealed request. No cursor or native profile is accepted.
     pub request: RuntimeEndpointRunRequest,
-    /// Original credential owner, borrowed for the entire retained run.
-    pub transport: &'config LocalChatTransport,
-    /// Original disclosure approval, rechecked at every dispatch.
-    pub approval: &'config LocalChatApproval,
+    /// Original configuration, borrowed or retained independently of settings.
+    /// Destination approval is rechecked at every dispatch.
+    pub connection: CodingEndpointConnection<'config>,
     /// Exact model-visible catalog, handed to the original coordinator.
     pub registry: ToolRegistry,
     /// Already consented and freshly captured source snapshots.
@@ -149,9 +146,8 @@ impl<'config, T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock>
         {
             return Err(CodingEndpointOwnerError::Capacity);
         }
-        let port = ConfiguredCodingEndpoint::for_coding_run(
-            input.transport,
-            input.approval,
+        let port = ConfiguredCodingEndpoint::for_coding_run_with_connection(
+            input.connection,
             &input.request,
             &input.registry,
             input.sources,

@@ -443,3 +443,28 @@ remain open. Synthetic coordinator tests establish no real-model coding score.
 The generic resource snapshot is a ledger diagnostic, including unused counters;
 it is not endpoint token or memory telemetry. Endpoint memory and locally
 verified input/output token counts remain unknown.
+
+## Retaining configuration independently of settings
+
+Trusted composition can pass `CodingEndpointConnection::Shared` to
+`CodingEndpointAdmission`. It retains the exact original immutable transport
+and exact destination approval through `Arc`; the borrowed alternative remains
+available. The local API now holds those two objects through `Arc` as well.
+No credential or approval is decoded from a run request. Replacing a settings
+reference cannot redirect a retained coordinator, replace its key, reconstruct
+its context or renew its budget. This ownership primitive is not a settings
+revocation policy; the eventual service composition must still enforce its
+existing consent, selection and cancellation rules before dispatch.
+
+`LocalChatTransport::prepare_chat_shared` uses the same approval validation,
+encoding and binding as ordinary preparation. Its single-use request owns the
+original transport and zeroizing encoded body, so it can outlive the caller's
+settings and context references. Dispatch uses the existing controlled socket
+path. It creates no worker, global allocation, cloned credential or retry.
+Dropping or consuming the prepared request releases its transport reference;
+releasing a terminal or faulted retained run drops that run's configuration
+references. Other legitimate holders can still retain their own references.
+
+This remains in-process configuration ownership. No configured-endpoint HTTP
+route, native filesystem/grant composition, persistent recovery, write/test/retry
+workflow, model score or parent closure is established by these socket tests.

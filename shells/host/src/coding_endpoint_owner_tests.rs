@@ -20,8 +20,10 @@ fn admission<'a, 'source>(
 ) -> CodingEndpointAdmission<'a, 'source, ReadBoundary, ContextVerifier, TestClock> {
     CodingEndpointAdmission {
         request,
-        transport,
-        approval,
+        connection: crate::coding_endpoint::CodingEndpointConnection::Borrowed {
+            transport,
+            approval,
+        },
         registry: registry(),
         sources: &[],
         source_budget: 2048,
@@ -235,8 +237,10 @@ fn endpoint_owner_latches_boundary_errors_and_preserves_events_without_redispatc
     let mut runs = CodingEndpointRuns::default();
     runs.admit(CodingEndpointAdmission {
         request: request.clone(),
-        transport: &transport,
-        approval: &approval,
+        connection: crate::coding_endpoint::CodingEndpointConnection::Borrowed {
+            transport: &transport,
+            approval: &approval,
+        },
         registry: registry(),
         sources: &[],
         source_budget: 2048,
@@ -274,8 +278,10 @@ fn endpoint_owner_latches_boundary_errors_and_preserves_events_without_redispatc
     assert_eq!(runs.events(&request).unwrap(), events);
     let inert = |request| CodingEndpointAdmission {
         request,
-        transport: &transport,
-        approval: &approval,
+        connection: crate::coding_endpoint::CodingEndpointConnection::Borrowed {
+            transport: &transport,
+            approval: &approval,
+        },
         registry: registry(),
         sources: &[],
         source_budget: 2048,
@@ -372,8 +378,10 @@ fn endpoint_owner_caught_clock_and_verifier_panics_keep_events_but_never_advance
         let mut runs = CodingEndpointRuns::default();
         runs.admit(CodingEndpointAdmission {
             request: request.clone(),
-            transport: &transport,
-            approval: &approval,
+            connection: crate::coding_endpoint::CodingEndpointConnection::Borrowed {
+                transport: &transport,
+                approval: &approval,
+            },
             registry: registry(),
             sources: &[],
             source_budget: 2048,
@@ -572,6 +580,103 @@ fn endpoint_owner_failed_admission_is_inert_and_original_cancellation_is_termina
     assert_eq!(executions.load(Ordering::SeqCst), 0);
     assert_eq!(
         listener.accept().unwrap_err().kind(),
+        std::io::ErrorKind::WouldBlock
+    );
+}
+
+#[test]
+fn shared_endpoint_owner_keeps_original_config_across_settings_drop_and_releases_it() {
+    use crate::coding_endpoint::CodingEndpointConnection;
+    let (listener, endpoint) = listener();
+    let transport = Arc::new(transport(endpoint.clone()));
+    let approval = Arc::new(LocalChatApproval::for_endpoint(endpoint));
+    let transport_weak = Arc::downgrade(&transport);
+    let approval_weak = Arc::downgrade(&approval);
+    let request = selected_request(&transport, "shared-owner-run");
+    let objective = sha256(request.task.objective.as_bytes());
+    let worker = thread::spawn(move || {
+        for turn in 1..=2 {
+            let mut socket = accept(&listener);
+            let body = read_context_request(&mut socket);
+            let user: serde_json::Value =
+                serde_json::from_str(body["messages"][1]["content"].as_str().unwrap()).unwrap();
+            assert_eq!(user["turn"], turn);
+            if turn == 1 {
+                respond(&mut socket, &read_proposal(), "stop", true);
+            } else {
+                assert_eq!(user["untrusted_tool_results"].as_array().unwrap().len(), 1);
+                let claim = serde_json::to_string(&CodingCompletionCandidate {
+                    schema_version: 1,
+                    objective_sha256: objective.clone(),
+                    terminal_claim: CodingTerminalClaim::NoOp,
+                    summary: "fixture function returns 42".into(),
+                    checks_not_run: vec!["project tests".into()],
+                    residual_risks: vec![],
+                })
+                .unwrap();
+                respond(&mut socket, &claim, "stop", true);
+            }
+        }
+        listener
+    });
+    let executions = Arc::new(AtomicUsize::new(0));
+    // This service-owned registry is genuinely independent of caller lifetimes.
+    let mut runs: Runs<'static> = Runs::default();
+    runs.admit(CodingEndpointAdmission {
+        request: request.clone(),
+        connection: CodingEndpointConnection::Shared {
+            transport: Arc::clone(&transport),
+            approval: Arc::clone(&approval),
+        },
+        registry: registry(),
+        sources: &sources(),
+        source_budget: 2048,
+        include_usage: true,
+        tool_boundary: ReadBoundary(executions.clone()),
+        verifier: ContextVerifier(VerifierId::from_raw("context-verifier")),
+        clock: TestClock(1000),
+    })
+    .unwrap();
+    drop(transport);
+    drop(approval);
+    assert_eq!(transport_weak.strong_count(), 1);
+    assert_eq!(approval_weak.strong_count(), 1);
+    let first = runs.advance(&request, None, None).unwrap();
+    let RuntimeEndpointCoordinatorStep::AwaitingApproval { challenge } = &first else {
+        panic!("approval expected")
+    };
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    let events = runs.events(&request).unwrap().to_vec();
+    // A newly configured destination cannot reseal this retained run's identity.
+    let (replacement_listener, replacement_endpoint) = super::listener();
+    let replacement = super::transport(replacement_endpoint);
+    let foreign = selected_request(&replacement, request.run_id.as_str());
+    assert_eq!(runs.advance(&foreign, None, None), Err(Error::NotHeld));
+    assert_eq!(runs.events(&request).unwrap(), events);
+    assert_eq!(runs.advance(&request, None, None).unwrap(), first);
+    let terminal = runs
+        .advance(&request, Some(&allow(challenge)), None)
+        .unwrap();
+    let RuntimeEndpointCoordinatorStep::Complete { outcome } = &terminal else {
+        panic!("terminal expected")
+    };
+    assert_eq!(outcome.outcome.state, AgentStateKind::NoOp);
+    assert_eq!(outcome.outcome.model_call_count, 2);
+    assert_eq!(outcome.outcome.tool_call_count, 1);
+    assert!(outcome.answer_evidence.is_some());
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    assert_eq!(runs.advance(&request, None, None).unwrap(), terminal);
+    assert_eq!(transport_weak.strong_count(), 1);
+    runs.release(&request).unwrap();
+    assert!(transport_weak.upgrade().is_none());
+    assert!(approval_weak.upgrade().is_none());
+    assert_eq!(runs.advance(&request, None, None), Err(Error::NotHeld));
+    assert_eq!(
+        replacement_listener.accept().unwrap_err().kind(),
+        std::io::ErrorKind::WouldBlock
+    );
+    assert_eq!(
+        worker.join().unwrap().accept().unwrap_err().kind(),
         std::io::ErrorKind::WouldBlock
     );
 }
