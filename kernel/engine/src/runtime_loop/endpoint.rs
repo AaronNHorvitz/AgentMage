@@ -80,6 +80,15 @@ pub struct RuntimeEndpointRunBinding {
     request_sha256: String,
 }
 
+impl RuntimeEndpointRunBinding {
+    pub(super) fn binds(&self, run: &RuntimeEndpointRunRequest) -> bool {
+        self.run_id == run.run_id
+            && self.session_id == run.session_id
+            && self.task_id == run.task.task_id
+            && self.request_sha256 == run.request_sha256
+    }
+}
+
 /// Kernel-owned single-use phase over an already approved, frozen transport
 /// request. It owns no credential, socket, source path, grant or native profile.
 /// The caller retains disclosure approval and all subsequent effect boundaries.

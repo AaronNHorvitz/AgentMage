@@ -4,6 +4,8 @@ use std::cell::{Cell, RefCell};
 use std::collections::BTreeSet;
 
 mod artifact_preparation;
+mod completion_claim;
+pub use completion_claim::{RuntimeCompletionClaim, RuntimeCompletionProposal};
 /// Controlled selected-endpoint model phases using the shared resource ledger.
 pub mod endpoint;
 mod event_frame;
@@ -1120,11 +1122,11 @@ pub trait RuntimeCheckpointPort {
 }
 
 /// Exact deterministic completion input exposed to a verifier implementation.
-pub struct RuntimeVerificationInput<'a, R = &'a RuntimeRunRequest> {
+pub struct RuntimeVerificationInput<'a, R = &'a RuntimeRunRequest, P = &'a ClosedModelProposal> {
     /// Owning runtime request.
     pub request: R,
     /// Exact inert model proposal under review.
-    pub proposal: &'a ClosedModelProposal,
+    pub proposal: P,
     /// Current state revision to which a proof must bind.
     pub state_revision: u64,
     /// Ordered deterministic postconditions derived from acceptance criteria.
@@ -1140,6 +1142,26 @@ pub struct RuntimeVerificationInput<'a, R = &'a RuntimeRunRequest> {
 /// Deterministic verification input that preserves the original request family.
 pub type RuntimeScopedVerificationInput<'a> = RuntimeVerificationInput<'a, RuntimeRunScope<'a>>;
 
+/// Original run and model-independent inert claim, without a fabricated native profile.
+pub type RuntimeCompletionVerificationInput<'a> =
+    RuntimeVerificationInput<'a, RuntimeRunScope<'a>, RuntimeCompletionClaim<'a>>;
+
+impl<'a> RuntimeScopedVerificationInput<'a> {
+    /// Retains the exact native proposal at the model-independent verifier boundary.
+    #[must_use]
+    pub fn into_completion(self) -> RuntimeCompletionVerificationInput<'a> {
+        RuntimeVerificationInput {
+            request: self.request,
+            proposal: RuntimeCompletionClaim::native(self.proposal),
+            state_revision: self.state_revision,
+            postconditions: self.postconditions,
+            evidence: self.evidence,
+            tool_results: self.tool_results,
+            receipt_ids: self.receipt_ids,
+        }
+    }
+}
+
 impl<'a> RuntimeVerificationInput<'a> {
     /// Reframes the same borrowed observations with the verified original run.
     pub fn into_scoped(self) -> Result<RuntimeScopedVerificationInput<'a>, RuntimePortFailure> {
@@ -1148,8 +1170,8 @@ impl<'a> RuntimeVerificationInput<'a> {
     }
 }
 
-impl<'a, R> RuntimeVerificationInput<'a, R> {
-    fn with_request<S>(self, request: S) -> RuntimeVerificationInput<'a, S> {
+impl<'a, R, P> RuntimeVerificationInput<'a, R, P> {
+    fn with_request<S>(self, request: S) -> RuntimeVerificationInput<'a, S, P> {
         RuntimeVerificationInput {
             request,
             proposal: self.proposal,
@@ -1164,6 +1186,31 @@ impl<'a, R> RuntimeVerificationInput<'a, R> {
 
 /// Deterministic verifier boundary; model prose and client claims remain ineligible.
 pub trait RuntimeVerifierPort {
+    /// Verifies an inert claim without requiring native profile or codec fields.
+    /// Legacy ports receive only the original native request and proposal;
+    /// endpoint input refuses before calling their existing entry points.
+    fn verify_completion(
+        &mut self,
+        input: RuntimeCompletionVerificationInput<'_>,
+    ) -> Result<VerifierCandidate, RuntimePortFailure> {
+        if !input.proposal.matches_scope(input.request) {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        input.request.native_request()?;
+        let proposal = input
+            .proposal
+            .native_proposal()
+            .ok_or(RuntimePortFailure::Invalid)?;
+        self.verify_scoped(RuntimeVerificationInput {
+            request: input.request,
+            proposal,
+            state_revision: input.state_revision,
+            postconditions: input.postconditions,
+            evidence: input.evidence,
+            tool_results: input.tool_results,
+            receipt_ids: input.receipt_ids,
+        })
+    }
     /// Model-independent entry point. Native-only implementations refuse endpoint
     /// scopes before verification; supporting verifiers must opt in explicitly.
     fn verify_scoped(
@@ -2899,16 +2946,19 @@ where
             .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
         let candidate = self
             .verifier
-            .verify_scoped(RuntimeVerificationInput {
-                request: RuntimeRunScope::native(&self.request)
-                    .map_err(RuntimeLoopError::Dependency)?,
-                proposal: &proposal,
-                state_revision: self.state.revision(),
-                postconditions: &postconditions,
-                evidence: &self.evidence,
-                tool_results: &self.tool_results,
-                receipt_ids: &self.receipt_ids,
-            })
+            .verify_completion(
+                RuntimeVerificationInput {
+                    request: RuntimeRunScope::native(&self.request)
+                        .map_err(RuntimeLoopError::Dependency)?,
+                    proposal: &proposal,
+                    state_revision: self.state.revision(),
+                    postconditions: &postconditions,
+                    evidence: &self.evidence,
+                    tool_results: &self.tool_results,
+                    receipt_ids: &self.receipt_ids,
+                }
+                .into_completion(),
+            )
             .map_err(RuntimeLoopError::Dependency)?;
         let completion = match registry.verify(&candidate) {
             Ok(completion) => completion,

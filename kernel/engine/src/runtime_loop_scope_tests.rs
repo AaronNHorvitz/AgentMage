@@ -424,3 +424,158 @@ fn run_scope_existing_coordinator_uses_scoped_approval_execution_and_verificatio
         sequence.push(event).unwrap();
     }
 }
+
+struct CompletionVerifier {
+    inner: FakeVerifier,
+    calls: Arc<AtomicUsize>,
+}
+impl RuntimeVerifierPort for CompletionVerifier {
+    fn verifier_id(&self) -> &VerifierId {
+        self.inner.verifier_id()
+    }
+    fn verify(
+        &mut self,
+        _: RuntimeVerificationInput<'_>,
+    ) -> Result<VerifierCandidate, RuntimePortFailure> {
+        panic!("coordinator must enter model-independent verification")
+    }
+    fn verify_scoped(
+        &mut self,
+        _: RuntimeScopedVerificationInput<'_>,
+    ) -> Result<VerifierCandidate, RuntimePortFailure> {
+        panic!("coordinator must enter model-independent verification")
+    }
+    fn verify_completion(
+        &mut self,
+        input: crate::runtime_loop::RuntimeCompletionVerificationInput<'_>,
+    ) -> Result<VerifierCandidate, RuntimePortFailure> {
+        use crate::runtime_loop::RuntimeCompletionProposal;
+        self.calls.fetch_add(1, Ordering::SeqCst);
+        assert!(input.proposal.matches_scope(input.request));
+        let proposal = input.proposal.native_proposal().unwrap();
+        assert!(std::ptr::eq(
+            input.proposal.proposal_id(),
+            &proposal.proposal_id
+        ));
+        assert!(std::ptr::eq(
+            input.proposal.payload().unwrap(),
+            proposal.payload.as_ref().unwrap()
+        ));
+        assert_eq!(input.proposal.proposal_sha256(), proposal.proposal_sha256);
+        assert_eq!(input.proposal.kind(), proposal.kind);
+        assert_eq!(input.proposal.has_tool_call(), proposal.tool_call.is_some());
+        self.inner.verify(RuntimeVerificationInput {
+            request: input.request.native_request()?,
+            proposal,
+            state_revision: input.state_revision,
+            postconditions: input.postconditions,
+            evidence: input.evidence,
+            tool_results: input.tool_results,
+            receipt_ids: input.receipt_ids,
+        })
+    }
+}
+
+#[test]
+fn completion_claim_existing_coordinator_calls_model_independent_verifier_with_original_native_proposal()
+ {
+    let (original, executions) = coordinator(
+        [ModelScript::Tool, ModelScript::Completion],
+        PermissionScript::Ask,
+        true,
+    );
+    let calls = Arc::new(AtomicUsize::new(0));
+    let mut runtime = ReusableRuntimeCoordinator::new(
+        original.request,
+        original.model,
+        original.context,
+        original.registry,
+        original.tool_boundary,
+        CompletionVerifier {
+            inner: original.verifier,
+            calls: calls.clone(),
+        },
+        original.clock,
+    )
+    .unwrap();
+    let RuntimeCoordinatorStep::AwaitingApproval { challenge } =
+        runtime.run_until_boundary(None, None).unwrap()
+    else {
+        panic!("approval")
+    };
+    assert_eq!(calls.load(Ordering::SeqCst), 0);
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    let mut response = decide(&challenge, RuntimeApprovalDisposition::Allow);
+    response.challenge_sha256 = "f".repeat(64);
+    assert!(runtime.run_until_boundary(Some(&response), None).is_err());
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    assert_eq!(calls.load(Ordering::SeqCst), 0);
+    let response = decide(&challenge, RuntimeApprovalDisposition::Allow);
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        runtime.run_until_boundary(Some(&response), None).unwrap()
+    else {
+        panic!("complete")
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert_eq!(calls.load(Ordering::SeqCst), 1);
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    let mut sequence = RuntimeEventSequence::new();
+    for event in runtime.events() {
+        sequence.push(event).unwrap();
+    }
+    crate::runtime_coordinator::verify_runtime_outcome(&outcome, &runtime.request).unwrap();
+}
+
+#[test]
+fn completion_claim_native_preserves_model_binding_and_refuses_endpoint_scope() {
+    use crate::runtime_loop::{RuntimeCompletionClaim, RuntimeCompletionProposal};
+    let (mut runtime, _) = coordinator([ModelScript::Completion], PermissionScript::Allow, true);
+    runtime.run_until_boundary(None, None).unwrap();
+    // Build a separate inert candidate using the original native fixture codec.
+    let request = &runtime.request;
+    let proposal = ClosedModelProposal {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        proposal_id: agentmage_kernel_contracts::ProposalId::from_raw("completion-proposal"),
+        model_run_id: ModelRunId::from_raw("completion-model"),
+        context_packet_id: ContextPacketId::from_raw("completion-context"),
+        profile_id: request.model_profile.profile_id.clone(),
+        codec_id: request.model_profile.codec.codec_id.clone(),
+        correlation_id: CorrelationId::from_raw("completion-correlation"),
+        kind: ModelProposalKind::CompletionCandidate,
+        payload: None,
+        tool_call: None,
+        proposal_sha256: "e".repeat(64),
+    };
+    let claim = RuntimeCompletionClaim::native(&proposal);
+    assert!(std::ptr::eq(claim.native_proposal().unwrap(), &proposal));
+    assert_eq!(claim.proposal_id(), &proposal.proposal_id);
+    assert!(claim.matches_scope(RuntimeRunScope::native(request).unwrap()));
+    let endpoint = endpoint(request);
+    assert!(!claim.matches_scope(RuntimeRunScope::endpoint(&endpoint).unwrap()));
+    let mut drifted = proposal.clone();
+    drifted.profile_id = agentmage_kernel_contracts::ModelProfileId::from_raw("different-profile");
+    assert!(
+        !RuntimeCompletionClaim::native(&drifted)
+            .matches_scope(RuntimeRunScope::native(request).unwrap())
+    );
+    let mut drifted = proposal.clone();
+    drifted.codec_id = agentmage_kernel_contracts::ModelCodecId::from_raw("different-codec");
+    assert!(
+        !RuntimeCompletionClaim::native(&drifted)
+            .matches_scope(RuntimeRunScope::native(request).unwrap())
+    );
+    let input = RuntimeVerificationInput {
+        request: RuntimeRunScope::endpoint(&endpoint).unwrap(),
+        proposal: &proposal,
+        state_revision: 1,
+        postconditions: &[],
+        evidence: &[],
+        tool_results: &[],
+        receipt_ids: &[],
+    }
+    .into_completion();
+    assert_eq!(
+        NativeOnly.verify_completion(input),
+        Err(RuntimePortFailure::Invalid)
+    );
+}

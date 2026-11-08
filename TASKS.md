@@ -2,13 +2,26 @@
 
 ## Active queue: local agent mission
 
+The existing coordinator now selects a model-independent completion-verifier
+entry point. Native-only ports retain the exact original native proposal;
+endpoint claims bind accepted explicit turns and exact stream bytes without a
+native profile or codec. The coding verifier uses the same deterministic checks
+for both forms. See the [completion boundary record](docs/evidence/t303-completion-claims-2026-11-08.md).
+Independent core review is required. Full endpoint orchestration/API wiring,
+native edit/test/retry and both T-303/T-306 remain open; no row is added or closed.
+
 The coordinator now calls scoped non-transactional tool and verifier entry points
 that preserve the complete original request family. The existing coding verifier
 uses that scope for deterministic receipt, snapshot and validation checks;
 native-only boundaries refuse endpoint scopes before entry. See the
 [boundary integration record](docs/evidence/t303-coordinator-scope-2026-11-08.md).
-Independent core review is required. Full endpoint orchestration/API wiring,
-native edit/test/retry and both T-303/T-306 remain open; no row is added or closed.
+Its [independent core review](docs/reviews/155621ea5260-local-coding-coordinator-scope.txt)
+has **Verdict: PASS** for exact commit `155621ea5260bbbc2c7e4037a4b44b6eccec98f5`,
+with no high/medium finding. Low L1 (candidate admission bound to the owning
+request/family in full composition) and L2 (repeated scope verification) remain
+backlog with earlier lows. This accepts that boundary increment only. Full
+endpoint orchestration/API wiring, native edit/test/retry and both T-303/T-306
+remain open; no row is added or closed.
 
 The [endpoint event-recording increment](docs/evidence/t303-endpoint-events-2026-11-08.md)
 connects explicit endpoint turns to the native coordinator's shared event framing,

@@ -1,0 +1,144 @@
+Commit: 155621ea5260bbbc2c7e4037a4b44b6eccec98f5
+Scope: local-coding-coordinator-scope
+
+# Independent core review: coordinator tool and verifier request scope (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Pinned checkout
+`/lane/review-checkout`; `git rev-parse HEAD` = `155621ea5260bbbc2c7e4037a4b44b6eccec98f5`;
+predecessor `164fc97773d8ab82820dd04af504302950ad23f5` confirmed as the immutable base. Tier: core.
+
+## Methods
+
+- Read IP-POLICY.md, the openings of Decisions 0153–0156 (no conflict with this increment), the top of TASKS.md, the new evidence record,
+  the guide edit, and the complete Rust diff above the predecessor (9 files, +1213/−103):
+  `runtime_loop.rs`, new `runtime_loop/run_scope.rs`, new `runtime_loop_scope_tests.rs`, the
+  3-line `runtime_loop_tests.rs` module hook, and `shells/host/src/coding_verifier.rs`.
+- Read the builder's `run.py`, `audit.py`, `final.py` and README before executing them. They write
+  only into the validation directory and never into the repository.
+- Enumerated every `RuntimeToolBoundary` and `RuntimeVerifierPort` implementation in the workspace
+  and every call to a scoped or legacy entry point.
+- Ran the requested gate in a new private directory, the final light checks and the comparisons.
+- Wrote two independent adversarial probe tests in a scratch export
+  (`git archive` of the exact commit into `/lane/state/tmp/review-coordinator-scope-probe-155621ea5260`,
+  so the repository was never modified) and ran them through the build slot.
+- No GPU or model was used. There is no UI surface in this scope.
+
+## Commands and results
+
+```text
+sha256sum -c /lane/state/tmp/t303-run-scope/review-inputs.sha256        -> 27/27 OK
+sha256sum review-inputs.sha256 -> 5a1ef6463434a1ad0bace2f86eb5164cd4e0beaaecf773e7402df3eca8851944 (matches)
+sha256sum node-v24.15.0/bin/node -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches)
+AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-coordinator-scope-155621ea5260 (new, mode 700)
+bash /tools/build-slot python3 -B .../run.py > fast.log 2>&1             -> exit 1 (expected FAIL), 768 s incl. queue
+  RESULT exits: 0,0,0,0,0,0,101 (7 commands: diff-check, lint-untracked, lint-reviews, markdownlint,
+  fmt 2.00 s, clippy -D warnings 43.42 s, tests 315.65 s); FAST GATE: FAIL; SOURCE_FREEZE_UNCHANGED
+python3 -B .../final.py > final.log 2>&1                                -> exit 0
+  FINAL_LIGHT_CHECKS_PASS; ORIGINAL_TESTS_PRESERVED; SOURCE_GATE_REMAINS_FAIL
+audit.json: 43 targets, passed/failed/ignored/filtered = 2558/72/71/0
+  every field except command_exit_codes equals the builder's validation-1/audit.json
+  (base, new_methods, failure_identities, ignored_identities, normalized diagnostics, source_sha256,
+  ledger_rows_unchanged). Failures: 53 agentmage_host lib + 19 agentmage_platform_linux lib (T-301.1).
+cmp validation-1/source-freeze.json <mine>/source-freeze.json             -> identical
+cmp validation-1/plan-final.json   <mine>/plan-final.json                 -> identical
+git diff --check 164fc977... --                                           -> clean
+git status --short                                                        -> clean
+cmp docs/reviews/164fc97773d8-local-coding-endpoint-events.txt /lane/reviews/164fc97773d8-...md -> identical
+git diff --stat 164fc977 -- Cargo.lock '*/Cargo.toml' scripts fixtures evaluation supply-chain
+  architecture/status-model.json                                          -> empty
+```
+
+The builder's own logs agree with its evidence: its six exit codes are 0,0,0,0,0,101, and the
+timings 0.10+0.10+1.15+2.10+30.31+326.36 sum to 360.12 s, as claimed.
+
+Reviewer probes, run from the scratch export with `CARGO_TARGET_DIR=/lane/state/review-target`
+through `/tools/build-slot`:
+
+```text
+cargo test --locked --offline -p agentmage-kernel-engine --lib reviewer_probe -> 1 passed
+  reviewer_probe_endpoint_scope_never_reaches_counting_boundary_and_replay_refused:
+  the default resolve_scoped/execute_scoped adapters on the real FakeToolBoundary refuse an endpoint
+  scope with Invalid and the execution counter stays 0; a forged approval_id is refused with no
+  effect; the genuine approval executes exactly once; replaying the consumed approval after
+  completion produces no second execution.
+cargo test --locked --offline -p agentmage-host --lib reviewer_probe -> 1 passed
+  reviewer_probe_scoped_verifier_objective_and_stale_native: an endpoint scope resealed with an
+  altered objective -> Failed; an endpoint request mutated after sealing -> scope refused; native
+  verify() with a stale digest -> Err(Invalid) (fails closed); a duplicate receipt id -> Failed;
+  the unmodified control -> Success.
+```
+
+## Analysis
+
+**Confinement and authority.** `RuntimeRunScope` is a tuple struct with a private enum field, so
+external code can only build it through `native`/`endpoint`, which run the full shape and digest
+verification (`verify_runtime_run_request` / `verify_runtime_endpoint_run_request`). It has no
+deserializer or mutable access. The default `evaluate_scoped`/`resolve_scoped`/`execute_scoped`/
+`verify_scoped` adapters call `scope.native_request()?` before the legacy method, so an endpoint
+scope returns `Invalid` before entry. No production `RuntimeToolBoundary` overrides a scoped method
+(the only overrides are the test `ScopedBoundary`/`ScopedVerifier`), so every production tool path
+still reaches only the native implementation with the original request. The coordinator builds
+scopes only from its private, construction-verified `self.request` (`runtime_loop.rs:1703`), which
+is never reassigned, so no endpoint request can reach a tool effect through this commit. The
+transactional branches (correctness evaluate/execute/resolve hooks, artifact read/release,
+journal/checkpoint/research) still pass `&self.request` natively, as documented. Exact approval
+checking is unchanged: the new coordinator test and my probe both show an altered approval gets no
+resolution and no effect. The `final.py` whitespace-normalised check confirms the correctness
+evaluation branch is unchanged apart from formatting.
+
+**Verifier.** `CodingCompletionVerifier::evaluate` reads only the task objective, workspace and
+repository snapshots, work packet and repository snapshot id, all of which the scope exposes. No
+model-profile field was used before, so endpoint support adds no weaker path. Native `verify` now
+also re-verifies the request digest, which is stricter. Its only production user is the coordinator
+harness (`coding_harness.rs`), whose request is already verified, so behaviour is unchanged there.
+The candidate is not admitted by any endpoint path in this commit.
+
+**Tests.** The four kernel and two host tests are meaningful, not vacuous. `NativeOnly` and the
+`ScopedBoundary`/`ScopedVerifier` legacy methods panic if entered, so a forwarding or selection
+regression would fail them. Old test bodies are byte-preserved: `final.py` diffs the predecessor
+`runtime_loop_tests.rs` minus the 3-line module hook, and the host test module minus the inserted
+helper/tests.
+
+**Evaluation integrity and claims.** No frozen task, hidden or held-out content, scorer, threshold,
+ignore, prompt, dependency, SBOM or status file is touched. The evidence states that the tests are
+synthetic and that no model run or coding score exists. The numbers I could trace match my run.
+No other product is named and nothing claims certification.
+
+**Delivery.** No row is added, split or closed, and the increment ships running, tested code. Both
+parents correctly stay OPEN.
+
+**Public hygiene.** The added text has no personal path, username, hostname, credential or personal
+data. The lane paths in the retained review follow the established practice in 99 earlier committed
+reviews. There is no trademark branding and no IP-policy concern.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, backlog), `shells/host/src/coding_verifier.rs:303` and test assertion `:680`.** The
+  scope keeps the distinct model binding and request digest, but the `VerifierCandidate` it produces
+  carries neither. The host test asserts that native and endpoint candidates are byte-equal. That is
+  harmless while no endpoint run admits a candidate. Fix: before endpoint candidates reach the
+  verifier registry in full composition, make the coordinator or registry bind admission to the
+  owning run's request digest or model binding (for example through the proposal's run binding),
+  and add a test that a candidate from one request family is refused for the other.
+- **L2 (low, backlog), `kernel/engine/src/runtime_loop.rs:2903`, `:3343`, `:3709`, `:3824`.** Every
+  scoped call re-runs full request verification (clone plus canonical-JSON SHA-256) on a private
+  request that was already verified at construction (`:1703`), so the error branch cannot be
+  reached. On the execute path (`:3709`) that branch would also sit after `ToolStarted` was emitted
+  (`:3699`). Fix: build the scope once from the construction-verified request (for example with a
+  crate-private pre-verified constructor) or before emitting `ToolStarted`.
+- The predecessor's L1 (preflight/refusal closure) and L2 (digest-shape/failure-binding/completion
+  clocks) and earlier lows remain backlog as stated. The TASKS and evidence summaries of that review
+  are faithful to its text.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing increment, `local-coding-coordinator-scope`):** the claims are
+  supported by code, tests and a reproduced gate that matches the failed baseline exactly. The
+  source gate itself remains **FAIL** (72 baseline failures under deferred T-301.1), and this verdict
+  does not call it green. No high/medium finding, so the increment is accepted. Both parents remain
+  **OPEN**. Full endpoint orchestration, live API composition, native edit/test/retry and scoreboard
+  runs are still required, and this verdict closes no row.
+
+Verdict: PASS

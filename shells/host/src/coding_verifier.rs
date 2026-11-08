@@ -8,13 +8,14 @@ use agentmage_capability_read_only::{
     GitInspectionResult,
 };
 use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, ClosedModelProposal, ContractPayload, EvidenceKind, EvidenceReference,
-    ModelProposalKind, OperationOutcome, PostconditionResult, StateChange, VerifierCandidate,
-    VerifierDisposition, VerifierId, VerifierRecordId, VerifierSource,
+    CONTRACT_SCHEMA_VERSION, ContractPayload, EvidenceKind, EvidenceReference, ModelProposalKind,
+    OperationOutcome, PostconditionResult, StateChange, VerifierCandidate, VerifierDisposition,
+    VerifierId, VerifierRecordId, VerifierSource,
 };
 use agentmage_kernel_engine::{
     runtime_loop::{
-        RuntimePortFailure, RuntimeScopedVerificationInput, RuntimeVerificationInput,
+        RuntimeCompletionProposal, RuntimeCompletionVerificationInput, RuntimePortFailure,
+        RuntimeRunScope, RuntimeScopedVerificationInput, RuntimeVerificationInput,
         RuntimeVerifierPort,
     },
     validation_result::ValidationReceipt,
@@ -110,8 +111,11 @@ impl CodingCompletionVerifier {
         }
     }
 
-    fn evaluate(&self, input: &RuntimeScopedVerificationInput<'_>) -> Option<VerifierDisposition> {
-        let candidate = parse_candidate(input.proposal, &input.request.task().objective)?;
+    fn evaluate<P: RuntimeCompletionProposal>(
+        &self,
+        input: &RuntimeVerificationInput<'_, RuntimeRunScope<'_>, P>,
+    ) -> Option<VerifierDisposition> {
+        let candidate = parse_candidate(&input.proposal, &input.request.task().objective)?;
         if input.request.workspace_snapshot_sha256() != self.workspace_snapshot_sha256
             || input.request.repository_snapshot_sha256() != self.repository_snapshot_sha256
             || input.tool_results.is_empty()
@@ -294,6 +298,25 @@ impl RuntimeVerifierPort for CodingCompletionVerifier {
         &mut self,
         input: RuntimeScopedVerificationInput<'_>,
     ) -> Result<VerifierCandidate, RuntimePortFailure> {
+        self.verify_claim(input)
+    }
+
+    fn verify_completion(
+        &mut self,
+        input: RuntimeCompletionVerificationInput<'_>,
+    ) -> Result<VerifierCandidate, RuntimePortFailure> {
+        if !input.proposal.matches_scope(input.request) {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        self.verify_claim(input)
+    }
+}
+
+impl CodingCompletionVerifier {
+    fn verify_claim<P: RuntimeCompletionProposal>(
+        &self,
+        input: RuntimeVerificationInput<'_, RuntimeRunScope<'_>, P>,
+    ) -> Result<VerifierCandidate, RuntimePortFailure> {
         let disposition = self.evaluate(&input).unwrap_or(VerifierDisposition::Failed);
         let selected_evidence = select_evidence(
             input.evidence,
@@ -304,11 +327,11 @@ impl RuntimeVerifierPort for CodingCompletionVerifier {
             schema_version: CONTRACT_SCHEMA_VERSION,
             verifier_record_id: VerifierRecordId::from_raw(format!(
                 "coding-verification:{}",
-                &sha256(input.proposal.proposal_sha256.as_bytes())[..24]
+                &sha256(input.proposal.proposal_sha256().as_bytes())[..24]
             )),
             verifier_id: self.verifier_id.clone(),
             task_id: input.request.task().task_id.clone(),
-            proposal_id: input.proposal.proposal_id.clone(),
+            proposal_id: input.proposal.proposal_id().clone(),
             repository_snapshot_id: input.request.repository_snapshot_id().clone(),
             state_revision: input.state_revision,
             source: VerifierSource::DeterministicPostcondition,
@@ -327,13 +350,13 @@ impl RuntimeVerifierPort for CodingCompletionVerifier {
 }
 
 fn parse_candidate(
-    proposal: &ClosedModelProposal,
+    proposal: &impl RuntimeCompletionProposal,
     objective: &str,
 ) -> Option<CodingCompletionCandidate> {
-    if proposal.kind != ModelProposalKind::CompletionCandidate || proposal.tool_call.is_some() {
+    if proposal.kind() != ModelProposalKind::CompletionCandidate || proposal.has_tool_call() {
         return None;
     }
-    let payload = proposal.payload.as_ref()?;
+    let payload = proposal.payload()?;
     if payload.schema.schema_id.as_str() != CODING_COMPLETION_INPUT_SCHEMA_ID
         || payload.schema.schema_version != 1
         || payload.schema.schema_sha256 != sha256(CODING_COMPLETION_INPUT_SCHEMA_JSON.as_bytes())
@@ -354,7 +377,9 @@ fn parse_candidate(
         })
 }
 
-fn required_evidence_present(input: &RuntimeScopedVerificationInput<'_>) -> bool {
+fn required_evidence_present<P>(
+    input: &RuntimeVerificationInput<'_, RuntimeRunScope<'_>, P>,
+) -> bool {
     input
         .request
         .work_packet()
@@ -446,6 +471,7 @@ fn sha256(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use agentmage_capability_read_only::{GitInspectionRequest, parse_git_inspection};
+    use agentmage_kernel_contracts::ClosedModelProposal;
     use agentmage_kernel_contracts::{
         CorrelationId, EvidenceId, ModelCodecId, ModelProfileId, ModelRunId, PostconditionId,
         ProposalId, ReceiptId, SchemaId, SchemaReference, ToolCallId, ToolResult,
@@ -730,6 +756,423 @@ mod tests {
                 .verify_scoped(RuntimeVerificationInput {
                     request: RuntimeRunScope::endpoint(&request).unwrap(),
                     proposal: &proposal,
+                    state_revision: 8,
+                    postconditions: &postconditions,
+                    evidence: &evidence,
+                    tool_results: &results,
+                    receipt_ids: &receipts,
+                })
+                .unwrap();
+            assert_eq!(
+                candidate.disposition,
+                VerifierDisposition::Failed,
+                "mutation {mutation}"
+            );
+            assert!(!candidate.postconditions[0].passed);
+        }
+    }
+
+    struct CompletionClock;
+    impl agentmage_kernel_engine::runtime_loop::RuntimeClock for CompletionClock {
+        fn now_epoch_ms(&mut self) -> Result<u64, RuntimePortFailure> {
+            Ok(1000)
+        }
+    }
+
+    struct CompletionPort<'a> {
+        request: agentmage_kernel_contracts::EndpointModelRequest,
+        text: &'a str,
+    }
+    impl agentmage_kernel_engine::runtime_loop::endpoint::RuntimeEndpointModelPort
+        for CompletionPort<'_>
+    {
+        type Error = RuntimePortFailure;
+        fn request(&self) -> &agentmage_kernel_contracts::EndpointModelRequest {
+            &self.request
+        }
+        fn dispatch(
+            self,
+            control: &dyn agentmage_kernel_contracts::ModelOperationControl,
+            text: &mut dyn FnMut(&str),
+        ) -> Result<agentmage_kernel_contracts::EndpointModelResult, Self::Error> {
+            control
+                .remaining_ms()
+                .map_err(|_| RuntimePortFailure::Invalid)?;
+            text(self.text);
+            Ok(
+                agentmage_kernel_contracts::EndpointModelResult::from_completed_response(
+                    self.request,
+                    agentmage_kernel_contracts::EndpointModelFinish::Stop,
+                    sha256(self.text.as_bytes()),
+                    self.text.len(),
+                    std::time::Duration::from_millis(1),
+                    None,
+                ),
+            )
+        }
+    }
+
+    fn completion_turn(
+        native: &agentmage_kernel_contracts::RuntimeRunRequest,
+        text: &str,
+    ) -> (
+        agentmage_kernel_contracts::RuntimeEndpointRunRequest,
+        agentmage_kernel_engine::runtime_loop::endpoint::RuntimeEndpointTurnResult,
+    ) {
+        use agentmage_kernel_contracts::{
+            EndpointModelBody, EndpointModelLimits, EndpointModelRequest, EndpointModelSelection,
+            RuntimeSessionMode,
+        };
+        use agentmage_kernel_engine::runtime_loop::endpoint::{
+            RuntimeEndpointContextPacket, RuntimeEndpointMessage, RuntimeEndpointMessageRole,
+            RuntimeEndpointTurns,
+        };
+        use std::time::Duration;
+        let mut run = endpoint_request(native);
+        run.mode = RuntimeSessionMode::EphemeralReadOnly;
+        run.limits.max_output_bytes = run.limits.max_output_bytes.max(4096);
+        run = agentmage_kernel_engine::runtime_coordinator::seal_runtime_endpoint_run_request(run)
+            .unwrap();
+        let context = RuntimeEndpointContextPacket::from_messages(&[RuntimeEndpointMessage {
+            role: RuntimeEndpointMessageRole::User,
+            content: "synthetic completion request",
+        }])
+        .unwrap();
+        let request = EndpointModelRequest::from_prepared_body(
+            EndpointModelSelection {
+                endpoint: run.model_selection.endpoint.clone(),
+                model: run.model_selection.model.clone(),
+            },
+            context.messages().clone(),
+            EndpointModelBody {
+                request_body_bytes: 200,
+                request_body_sha256: "b".repeat(64),
+            },
+            EndpointModelLimits {
+                requested_max_output_tokens: 16,
+                provider_usage_requested: false,
+                total_timeout: Duration::from_millis(100),
+                idle_timeout: Duration::from_millis(50),
+                response_wire_limit_bytes: 8192,
+                response_body_limit_bytes: 8192,
+                response_text_limit_bytes: 4096,
+            },
+        );
+        let mut turns = RuntimeEndpointTurns::new(run.clone(), CompletionClock).unwrap();
+        let turn = turns
+            .execute_turn(
+                &request,
+                context,
+                CompletionPort {
+                    request: request.clone(),
+                    text,
+                },
+                None,
+                |_| {},
+            )
+            .unwrap();
+        assert_eq!(turn.result().response_text_sha256, sha256(text.as_bytes()));
+        (run, turn)
+    }
+
+    #[test]
+    fn completion_claim_endpoint_verifies_accepted_stream_without_native_profile_or_codec() {
+        use agentmage_kernel_engine::runtime_loop::{
+            RuntimeCompletionClaim, RuntimeCompletionProposal,
+        };
+        let (profile, native) = fixture_profile_and_request();
+        let mut verifier = CodingCompletionVerifier::for_profile(&profile);
+        for terminal_claim in [CodingTerminalClaim::Changed, CodingTerminalClaim::NoOp] {
+            let native_proposal = proposal(&native, terminal_claim);
+            let payload = native_proposal.payload.as_ref().unwrap();
+            let text = std::str::from_utf8(&payload.bytes).unwrap();
+            let (run, turn) = completion_turn(&native, text);
+            let scope = RuntimeRunScope::endpoint(&run).unwrap();
+            let mut results = Vec::new();
+            let mut evidence = Vec::new();
+            if terminal_claim == CodingTerminalClaim::Changed {
+                results.push(write_result(&native, "write-call"));
+                evidence.push(self::evidence(
+                    &native,
+                    "write-evidence",
+                    EvidenceKind::Receipt,
+                ));
+            }
+            results.extend([
+                validation_result(&profile, &native, "validation-call"),
+                git_result(&native, "git-call", false),
+            ]);
+            evidence.extend([
+                self::evidence(&native, "validation-evidence", EvidenceKind::Validation),
+                self::evidence(&native, "git-evidence", EvidenceKind::Observation),
+            ]);
+            let postconditions = [PostconditionId::from_raw("completion-postcondition")];
+            let receipts = receipts(results.len());
+            let claim =
+                RuntimeCompletionClaim::endpoint(scope, &turn, text, coding_completion_schema())
+                    .unwrap();
+            assert!(claim.native_proposal().is_none());
+            assert!(claim.matches_scope(scope));
+            assert_eq!(claim.payload().unwrap(), payload);
+            let proposal_id = claim.proposal_id().clone();
+            let candidate = verifier
+                .verify_completion(RuntimeVerificationInput {
+                    request: scope,
+                    proposal: claim,
+                    state_revision: 8,
+                    postconditions: &postconditions,
+                    evidence: &evidence,
+                    tool_results: &results,
+                    receipt_ids: &receipts,
+                })
+                .unwrap();
+            assert_eq!(candidate.proposal_id, proposal_id);
+            assert_eq!(
+                candidate.disposition,
+                if terminal_claim == CodingTerminalClaim::Changed {
+                    VerifierDisposition::Success
+                } else {
+                    VerifierDisposition::NoOp
+                }
+            );
+            assert!(candidate.postconditions[0].passed);
+            assert_eq!(candidate.postconditions[0].evidence.len(), evidence.len());
+            // The candidate remains inert until the coordinator's registry verifies it.
+            let registry = agentmage_kernel_engine::agent_verifier::VerifierRegistry::new(
+                agentmage_kernel_engine::agent_verifier::VerifierContext {
+                    verifier_id: verifier.verifier_id().clone(),
+                    task_id: native.task.task_id.clone(),
+                    proposal_id,
+                    repository_snapshot_id: native.repository_snapshot_id.clone(),
+                    state_revision: 8,
+                    postconditions: postconditions.to_vec(),
+                },
+            )
+            .unwrap();
+            registry.verify(&candidate).unwrap();
+        }
+    }
+
+    #[test]
+    fn completion_claim_endpoint_refuses_stream_run_schema_and_family_substitution() {
+        use agentmage_kernel_engine::runtime_loop::{
+            RuntimeCompletionClaim, RuntimeCompletionProposal,
+        };
+        let (profile, native) = fixture_profile_and_request();
+        let payload = proposal(&native, CodingTerminalClaim::NoOp)
+            .payload
+            .unwrap();
+        let text = std::str::from_utf8(&payload.bytes).unwrap();
+        let (run, turn) = completion_turn(&native, text);
+        let scope = RuntimeRunScope::endpoint(&run).unwrap();
+        assert!(
+            RuntimeCompletionClaim::endpoint(
+                scope,
+                &turn,
+                &format!("{text} "),
+                coding_completion_schema()
+            )
+            .is_err()
+        );
+        let changed_text = text.replacen("bounded", "altered", 1);
+        assert_eq!(changed_text.len(), text.len());
+        assert!(
+            RuntimeCompletionClaim::endpoint(
+                scope,
+                &turn,
+                &changed_text,
+                coding_completion_schema()
+            )
+            .is_err()
+        );
+        assert!(
+            RuntimeCompletionClaim::endpoint(
+                RuntimeRunScope::native(&native).unwrap(),
+                &turn,
+                text,
+                coding_completion_schema()
+            )
+            .is_err()
+        );
+        for mutation in 0..4 {
+            let mut changed = run.clone();
+            match mutation {
+                0 => {
+                    changed.run_id = agentmage_kernel_contracts::RuntimeRunId::from_raw("other-run")
+                }
+                1 => changed.model_selection.model = "other-model".into(),
+                2 => changed.policy_sha256 = "d".repeat(64),
+                3 => changed.task.objective.push_str(" changed"),
+                _ => unreachable!(),
+            }
+            changed =
+                agentmage_kernel_engine::runtime_coordinator::seal_runtime_endpoint_run_request(
+                    changed,
+                )
+                .unwrap();
+            let wrong = RuntimeRunScope::endpoint(&changed).unwrap();
+            assert!(
+                RuntimeCompletionClaim::endpoint(wrong, &turn, text, coding_completion_schema())
+                    .is_err()
+            );
+            let claim =
+                RuntimeCompletionClaim::endpoint(scope, &turn, text, coding_completion_schema())
+                    .unwrap();
+            assert!(!claim.matches_scope(wrong));
+            let mut verifier = CodingCompletionVerifier::for_profile(&profile);
+            assert_eq!(
+                verifier.verify_completion(RuntimeVerificationInput {
+                    request: wrong,
+                    proposal: claim,
+                    state_revision: 8,
+                    postconditions: &[],
+                    evidence: &[],
+                    tool_results: &[],
+                    receipt_ids: &[],
+                }),
+                Err(RuntimePortFailure::Invalid)
+            );
+        }
+        let claim =
+            RuntimeCompletionClaim::endpoint(scope, &turn, text, coding_completion_schema())
+                .unwrap();
+        let again =
+            RuntimeCompletionClaim::endpoint(scope, &turn, text, coding_completion_schema())
+                .unwrap();
+        assert_eq!(claim.proposal_sha256(), again.proposal_sha256());
+        assert_eq!(claim.proposal_id(), again.proposal_id());
+        let mut schema = coding_completion_schema();
+        schema.schema_version = 0;
+        assert!(RuntimeCompletionClaim::endpoint(scope, &turn, text, schema).is_err());
+        let mut schema = coding_completion_schema();
+        schema.schema_sha256 = "bad".into();
+        assert!(RuntimeCompletionClaim::endpoint(scope, &turn, text, schema).is_err());
+        // Schema choice is trusted host input and part of the complete claim digest.
+        let mut schema = coding_completion_schema();
+        schema.schema_version += 1;
+        let alternate = RuntimeCompletionClaim::endpoint(scope, &turn, text, schema).unwrap();
+        assert_ne!(claim.proposal_sha256(), alternate.proposal_sha256());
+        assert_ne!(claim.proposal_id(), alternate.proposal_id());
+    }
+
+    struct LegacyCompletionVerifier(VerifierId);
+    impl RuntimeVerifierPort for LegacyCompletionVerifier {
+        fn verifier_id(&self) -> &VerifierId {
+            &self.0
+        }
+        fn verify(
+            &mut self,
+            _: RuntimeVerificationInput<'_>,
+        ) -> Result<VerifierCandidate, RuntimePortFailure> {
+            panic!("endpoint must refuse before legacy verifier entry")
+        }
+        fn verify_scoped(
+            &mut self,
+            _: RuntimeScopedVerificationInput<'_>,
+        ) -> Result<VerifierCandidate, RuntimePortFailure> {
+            panic!("endpoint must refuse before scoped legacy verifier entry")
+        }
+    }
+
+    #[test]
+    fn completion_claim_accepted_endpoint_refuses_legacy_verifier_before_entry() {
+        use agentmage_kernel_engine::runtime_loop::RuntimeCompletionClaim;
+        let (_, native) = fixture_profile_and_request();
+        let payload = proposal(&native, CodingTerminalClaim::NoOp)
+            .payload
+            .unwrap();
+        let text = std::str::from_utf8(&payload.bytes).unwrap();
+        let (run, turn) = completion_turn(&native, text);
+        let scope = RuntimeRunScope::endpoint(&run).unwrap();
+        let mut verifier = LegacyCompletionVerifier(VerifierId::from_raw("legacy-verifier"));
+        let claim =
+            RuntimeCompletionClaim::endpoint(scope, &turn, text, coding_completion_schema())
+                .unwrap();
+        assert!(claim.native_proposal().is_none());
+        assert_eq!(
+            verifier.verify_completion(RuntimeVerificationInput {
+                request: scope,
+                proposal: claim,
+                state_revision: 1,
+                postconditions: &[],
+                evidence: &[],
+                tool_results: &[],
+                receipt_ids: &[],
+            }),
+            Err(RuntimePortFailure::Invalid)
+        );
+    }
+
+    #[test]
+    fn completion_claim_endpoint_requires_current_receipts_validation_and_snapshot() {
+        use agentmage_kernel_engine::runtime_loop::RuntimeCompletionClaim;
+        let (profile, native) = fixture_profile_and_request();
+        let payload = proposal(&native, CodingTerminalClaim::Changed)
+            .payload
+            .unwrap();
+        let text = std::str::from_utf8(&payload.bytes).unwrap();
+        let (run, turn) = completion_turn(&native, text);
+        let scope = RuntimeRunScope::endpoint(&run).unwrap();
+        let original_results = vec![
+            write_result(&native, "write"),
+            validation_result(&profile, &native, "validation"),
+            git_result(&native, "git", false),
+        ];
+        let original_evidence = vec![
+            evidence(&native, "write-evidence", EvidenceKind::Receipt),
+            evidence(&native, "validation-evidence", EvidenceKind::Validation),
+            evidence(&native, "git-evidence", EvidenceKind::Observation),
+        ];
+        let postconditions = [PostconditionId::from_raw("completion-postcondition")];
+        let original_receipts = receipts(original_results.len());
+        let mut verifier = CodingCompletionVerifier::for_profile(&profile);
+        let control = verifier
+            .verify_completion(RuntimeVerificationInput {
+                request: scope,
+                proposal: RuntimeCompletionClaim::endpoint(
+                    scope,
+                    &turn,
+                    text,
+                    coding_completion_schema(),
+                )
+                .unwrap(),
+                state_revision: 8,
+                postconditions: &postconditions,
+                evidence: &original_evidence,
+                tool_results: &original_results,
+                receipt_ids: &original_receipts,
+            })
+            .unwrap();
+        assert_eq!(control.disposition, VerifierDisposition::Success);
+        assert!(control.postconditions[0].passed);
+        for mutation in 0..5 {
+            let mut verifier = CodingCompletionVerifier::for_profile(&profile);
+            let mut results = original_results.clone();
+            let mut evidence = original_evidence.clone();
+            let mut receipts = receipts(results.len());
+            match mutation {
+                0 => {
+                    receipts.pop();
+                }
+                1 => receipts[1] = receipts[0].clone(),
+                2 => evidence[0].observed_revision = Some("stale-snapshot".into()),
+                3 => {
+                    results.remove(1);
+                    receipts.pop();
+                }
+                4 => verifier.workspace_snapshot_sha256 = "d".repeat(64),
+                _ => unreachable!(),
+            }
+            let candidate = verifier
+                .verify_completion(RuntimeVerificationInput {
+                    request: scope,
+                    proposal: RuntimeCompletionClaim::endpoint(
+                        scope,
+                        &turn,
+                        text,
+                        coding_completion_schema(),
+                    )
+                    .unwrap(),
                     state_revision: 8,
                     postconditions: &postconditions,
                     evidence: &evidence,

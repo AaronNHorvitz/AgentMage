@@ -171,3 +171,47 @@ This integrates request scope into the existing coordinator and coding verifier.
 The coordinator still admits native runs only. Connecting endpoint turns to its
 model/context/proposal loop and the live API remains required before any
 configured-endpoint edit/test/retry workflow is claimed.
+
+## Completion verification without a native proposal
+
+The existing coordinator now calls `RuntimeVerifierPort::verify_completion`.
+`RuntimeCompletionVerificationInput` retains the original request scope and
+all evidence, ordered tool results, receipts, postconditions and state revision.
+Its claim carries either the original native proposal or an endpoint completion;
+no endpoint profile or codec identity is invented. Native model/proposal
+admission, the state controller and verifier registry remain unchanged.
+
+The default adapter requires the original native request and proposal, checks
+matching native profile and codec identities, and forwards all observations to
+`verify_scoped`. Endpoint claims refuse before either legacy verifier method.
+Existing scoped overrides keep receiving their original native arguments.
+
+`RuntimeCompletionClaim::endpoint` requires an accepted `RuntimeEndpointTurnResult`
+and the complete original decoded response text. It checks the sealed run,
+selection and exact response length and SHA-256 before copying bounded text.
+The caller supplies the trusted payload schema; the model cannot choose it.
+The resulting payload is JSON text for deterministic parsing by its verifier.
+Its claim digest binds the complete accepted turn (including request, response,
+run and turn identities), schema and payload. Proposal identity derives from
+that digest. No native proposal, profile, codec, token or memory observation is
+created. Claims have no deserializer and cannot reconstruct an accepted turn
+from wire metadata. Rechecking scope refuses a valid claim moved to another run,
+request revision or request family.
+
+`CodingCompletionVerifier` explicitly supports this entry point. It parses the
+same completion-candidate schema and applies the same objective, snapshot,
+ordered validation, repository inspection, current-evidence and distinct receipt
+checks. Its returned candidate is inert until the existing verifier registry
+checks the exact proposal identity, state revision and postconditions. Neither
+accepted model text nor a standalone candidate proves a coding task succeeded.
+The older `verify_scoped` API retains its native-shaped descriptive input for
+compatibility; synthetic use of that API with an endpoint request never proves
+endpoint model/proposal admission. Endpoint composition must use the new claim
+entry point, not construct a native-shaped proposal.
+
+The native coordinator is connected to this completion entry point. Endpoint
+turns can now feed the actual coding verifier without fabricated native model
+fields. Endpoint tool-proposal admission, the containing coordinator's exclusive
+run ownership and model/context orchestration, answer-evidence provenance and
+live HTTP/CLI/MCP composition still require implementation. This increment
+provides no endpoint coding workflow, durable continuation or new model score.
