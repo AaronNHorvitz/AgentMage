@@ -40,6 +40,9 @@ pub mod coding_development_runtime;
 pub mod coding_dispatch;
 /// Documentation packs through the development catalog host.
 pub mod coding_doc_packs;
+#[cfg(target_os = "linux")]
+/// Configured local endpoint transport for the existing reusable coordinator.
+pub mod coding_endpoint;
 /// Extensions and their revocation lists through the development catalog
 /// host.
 pub mod coding_extensions;

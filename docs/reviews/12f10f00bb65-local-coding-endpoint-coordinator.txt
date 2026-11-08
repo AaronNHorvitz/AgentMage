@@ -1,0 +1,206 @@
+Commit: 12f10f00bb6537c8da3389abdc4e637f435432f7
+Scope: local-coding-endpoint-coordinator
+
+# Independent core review: read-only endpoint runs through the reusable coordinator
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. This is a same-model
+review; a cross-model review must come before any public release. Tier: core. Rows: T-303 / T-306,
+non-closing; both parents stay OPEN. Immutable predecessor:
+7787712561cee9338555fa9bf0dc37fa4e141fc0.
+
+## Methods
+
+- `git rev-parse HEAD` in the pinned checkout `/lane/review-checkout` printed
+  `12f10f00bb6537c8da3389abdc4e637f435432f7`, and `git rev-parse 7787712561ce...` resolved the
+  predecessor. `git status --short` was empty before and after the review.
+- Read IP-POLICY.md, the new TASKS prose, the new evidence record
+  `docs/evidence/t303-endpoint-coordinator-2026-11-08.md`, the guide diff
+  (`docs/guides/runtime-endpoint-runs.md`) and the private README. Before running anything I read
+  every helper: run.py, audit.py, final.py, native-check.py, capture.py and manifest.py. They write
+  only to the validation directory, and the manifest helpers are builder-only.
+- Read the whole Rust diff (13 files, +2290/-176): the new `coordinator_endpoint.rs`, the new
+  `coordinator_request.rs`, the `endpoint/turn.rs` addition, every `runtime_loop.rs` hunk, the new
+  test file and all native-test adaptations. I also read the native paths they must match:
+  `run_turn`, `process_proposal`, `verify_completion`, `propose_tool`, `request_tool`,
+  `route_runtime_output`, `catalog_admitted`, `RuntimeToolBoundary::*_scoped`,
+  `RuntimeEndpointModelPhase::execute`, `RuntimeCompletionClaim::endpoint` and
+  `ToolRegistry::validate_argument_envelope`.
+- Wrote my own probe tests in a private scratch copy made with `git archive HEAD`
+  (`/lane/state/tmp/review-probe-12f10f00bb65`). The repository was not modified.
+
+## Commands and results
+
+```text
+sha256sum -c /lane/state/tmp/t303-endpoint-coordinator/review-inputs.sha256   -> 57/57 OK
+sha256sum review-inputs.sha256 -> 690906bfb9649a86985acded5328634376be316d005b4aa52447b10b5bef8582 (matches request)
+sha256sum node-v24.15.0/bin/node -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches)
+PATH=<node v24.15.0>:$PATH CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-endpoint-coordinator-12f10f00bb65  (new, mode 700)
+python3 -B .../run.py > fast.log 2>&1        -> exit 1 (expected), wall 419 s, no outer slot
+rg -Fx 'FAST GATE: FAIL' fast.log            -> match
+rg -Fx 'SOURCE_FREEZE_UNCHANGED' fast.log    -> match
+python3 -B .../final.py > final.log 2>&1     -> exit 0;
+    NATIVE_DISPATCH_COMPLETION_PERMISSION_AND_ADVANCEMENT_PREDICATES_PRESERVED;
+    FINAL_LIGHT_PASS; NATIVE_TEST_ASSERTIONS_PRESERVED; SOURCE_GATE_FAIL
+cmp validation-final/source-freeze.json <mine>/source-freeze.json -> identical
+git diff --check 7787712561cee9338555fa9bf0dc37fa4e141fc0 --       -> clean
+git status --short                                                -> empty
+```
+
+Results from my audit.json:
+
+- 43 targets, totals 2582 passed / 72 failed / 71 ignored / 0 filtered.
+- Exit codes `[0,0,0,0,0,0,101]`: diff check, untracked lint, review lint, markdownlint, `cargo fmt --check`
+  and strict `cargo clippy -D warnings` all pass, and `cargo test` returns 101 because of the known
+  baseline failures.
+- Exactly ten new passing identities, all
+  `runtime_loop::tests::endpoint_coordinator_tests::endpoint_coordinator_*`.
+- Every predecessor pass is retained. Failed and ignored identities and normalized diagnostics are
+  unchanged against the predecessor baseline log. The nine Rust hashes are fixed and the ledger rows
+  are unchanged.
+- My command times were 0.20, 0.10, 0.10, 1.15, 2.00, 62.10 and 352.50 s.
+
+The builder's figures check out against their own logs. validation-final/ sums to 730.83 s
+(light checks 1.75, fmt 376.40, clippy 31.16, tests 321.52) and validation/ sums to 508.49 s, as
+claimed. The diff adds no `allow(`/`expect(clippy` lint suppression; the `allow()` hits are fixture
+function names. No Cargo, lock, eval, hidden, held-out, scorer, SBOM or dependency file is touched.
+The only private-looking paths in the diff are the generic `/lane/...` lane paths inside the retained
+predecessor review copy, which was already accepted. The retained report is byte-identical to
+`/lane/reviews/7787712561ce-local-coding-endpoint-outcomes.md`; final.py asserts this.
+
+I compiled my probe tests in the scratch copy:
+
+```text
+cd /lane/state/tmp/review-probe-12f10f00bb65
+bash /tools/build-slot cargo test -p agentmage-kernel-engine --lib review_probe -- --nocapture  -> 3 passed
+```
+
+- **Write, command and network catalogs.** Each of a WorkspaceWrite, a CommandExecute and a
+  NetworkAccess tool in an otherwise exact, sealed EphemeralReadOnly endpoint catalog gives
+  `ToolCatalogBinding` at `new_endpoint`. Writes, commands and network access stay refused for
+  endpoint runs.
+- **Unoffered tool injected by the model.** The model names `fixture.write` with a `../../etc/passwd`
+  argument. Result: terminal `Failed` with `runtime.proposal.tool-not-offered` and 0 executions.
+- **Caller-chosen call identity.** The model adds a `tool_call_id: "selected-call:x"` field. The
+  closed `deny_unknown_fields` form does not parse as a tool call, so no tool runs. The text becomes
+  an inert completion candidate, and the run ends terminal `Failed` with `runtime.verification.failed`
+  and 0 executions.
+- **Bad argument envelope.** The model proposes the offered tool with a wrong `arguments.sha256` or a
+  wrong `arguments.schema`. Result: `Err(InvalidBoundaryResult)` and the events stop at
+  `[RunStarted, TurnStarted, ModelRequested, ModelCompleted]`. There is no TurnClosed or
+  RunTerminal, `outcome()` and `endpoint_outcome()` both stay `None`, and there are 0 executions.
+  This is finding M1.
+
+## Assessment
+
+The parts below hold.
+
+- **No second loop.** Endpoint turns go through `run_until_boundary_impl` and
+  `advance_until_boundary`, which native-check.py proves mechanically unchanged. There is no nested
+  `RuntimeEndpointTurns` and no second orchestration loop.
+- **Sealed request.** `CoordinatorRequest` keeps the original sealed request private, and its common
+  fields are exposed only through `Deref`, so they are read-only. Every persistence, correctness,
+  research and artifact hook still requires `native()?` and refuses endpoint runs. Native admission
+  keeps the exact profile and binding checks and the `ModelBinding` category. An endpoint request
+  requires EphemeralReadOnly, no cursor, an equal model binding and a port with no native side.
+- **Shared clock and ledger.** One clock and `RuntimePhaseControl` bound both preparation and
+  dispatch. Input, call, output and time envelopes are checked against a clone before any spend.
+  Actual input and calls are spent after `ModelRequested`, and are rolled back only when the phase
+  reports zero dispatch attempts. Single use is latched by `RuntimeEndpointModelPhase::execute`,
+  which also re-checks `port.request()` against the admitted descriptor.
+- **Tool calls.** Model tool calls go through the unchanged `is_model_proposable`, `request_tool`,
+  attempt guard, permission challenge and scoped boundary. No production boundary implements endpoint
+  scopes, and default `*_scoped` refuses before any legacy entry. So no real workspace tool can run
+  under endpoint composition yet, and the evidence honestly records that native tool authority
+  remains open.
+- **Completion.** Completion builds this coordinator's own `VerifierRegistry` from the current task,
+  claim, repository, state revision and postconditions, and passes its own results, receipts and
+  evidence.
+- **Terminal and accessors.** The terminal seals the whole endpoint envelope. `outcome()` is `None`
+  for endpoint instances, and `endpoint_outcome()` requires terminal publication. Native advancement
+  refuses endpoint instances and the endpoint method refuses native ones. Errors latch
+  `correctness_reconciliation_required`.
+- **Rows and claims.** No row is added or closed, no row only adds plans, and there is no score or
+  product comparison. Synthetic tests are labelled as synthetic.
+
+## Findings
+
+### M1 (medium, untrusted model output): a bad argument envelope leaves the run without a terminal
+
+**Where.** `kernel/engine/src/runtime_loop/coordinator_endpoint.rs:542-568` passes the parsed
+`EndpointToolProposal` arguments straight into `request_tool`. There,
+`kernel/engine/src/runtime_loop.rs:3289-3292` maps any `validate_argument_envelope` failure to
+`RuntimeLoopError::InvalidBoundaryResult`. `ToolRegistry::validate_argument_envelope` and
+`validate_call_shape` (`kernel/engine/src/tooling.rs:218-239, 617-660`) fail on a schema mismatch, a
+non-JSON media type, oversize bytes or a wrong digest. The new test codifies the behaviour:
+`runtime_loop_endpoint_coordinator_tests.rs:720-724` asserts `is_err()` twice.
+
+**Why it matters.** In the native path, a trusted family decoder builds `ClosedModelProposal`, so the
+model never authors the envelope. Envelope errors there really are boundary faults, and schema-invalid
+arguments get a correctable `ArgumentsInvalid` rejection. In the endpoint path, the untrusted
+response text itself supplies `arguments.{schema, media_type, bytes, sha256}`. Any model output, or
+document or web content the model repeats, can name an offered tool with a wrong digest or schema.
+That turns an ordinary model mistake into an engine-fault error. The turn is left open, no
+RunTerminal is published and the envelope is never available. An ephemeral endpoint run has no
+reconciliation path, so the run is simply dead with no canonical record.
+
+**Reachability.** A real model cannot reasonably compute SHA-256 over a byte array it must also emit
+as JSON integers. So on a real endpoint this is the most likely result of any tool attempt. The
+guide's claim that the coordinator "checks the offered registry and argument envelope" holds only in
+the fail-closed sense.
+
+**What is not affected.** No effect occurs (0 executions), so this is not a confinement escape.
+
+**Reproduction.** Run the existing `endpoint_coordinator_denial_and_malformed_tool_never_execute`
+test, or my `review_probe_model_controlled_envelope_errors` probe above.
+
+**Concrete fix.** In `run_endpoint_turn`, after the `is_model_proposable` check and before
+`request_tool`, give model-authored envelope defects a canonical refusal.
+
+- Preferred: have the model supply only a JSON `arguments` value. The coordinator then builds the
+  `ContractPayload` itself from the registered definition's `input_schema`, `application/json`, the
+  exact bytes and its own SHA-256. That makes the envelope coordinator-owned and inert, and real
+  models can reach it.
+- At minimum: compare the supplied schema with the definition's `input_schema` and check the media
+  type, size and digest. On failure, call
+  `finish_refused_proposal(&turn_id, "runtime.proposal.arguments-envelope-invalid")`, or reuse the
+  correctable `ArgumentsInvalid` rejection.
+
+Change the test to require a terminal non-success `RuntimeEndpointOutcome` whose RunTerminal hashes
+the whole envelope, with 0 executions and no further dispatch. Keep `InvalidBoundaryResult` for
+genuine trusted-port faults.
+
+### L1 (low, backlog): `RuntimeCoordinatorModelPort` is public and unsealed
+
+`coordinator_endpoint.rs:112-130`. Previously `M: RuntimeModelPort` meant the exact-profile check in
+`compose` and the dispatch in `run_turn` used the same object by construction. Now an external
+implementer can return different objects from `native()`, which is checked at `runtime_loop.rs:1816`,
+and `native_mut()`, which is used at `runtime_loop.rs:2513, 2670`. The composer is trusted, so this
+is a weakened type-level guarantee rather than an exploitable boundary.
+
+Fix: seal the trait with a private supertrait, so that only the blanket native impl and
+`RuntimeEndpointDriver<P>` exist.
+
+### L2 (low, backlog): endpoint read-only catalog refusal is not tested directly
+
+The ten new tests cover non-read-only modes and catalog drift, but not a write, command or network
+tool inside an otherwise exact EphemeralReadOnly endpoint catalog. Refusal currently rests on the
+shared `catalog_admitted`; my probe confirms `ToolCatalogBinding` for all three. Fix: add that case
+to `endpoint_coordinator_refuses_authority_modes_catalog_drift_and_native_entry`.
+
+Predecessor low L1 (pure framing sees supplied counts) remains backlog; the guide now states the
+limit.
+
+## Per-row result
+
+- **T-303 (non-closing increment): FINDINGS.** Endpoint composition, confinement and verification
+  are otherwise sound and the gate evidence reproduces exactly. M1 must be fixed in this increment:
+  untrusted model output reaching an unterminated engine-error path is a medium finding. T-303 stays
+  OPEN.
+- **T-306 (non-closing increment): FINDINGS**, for the same reason; M1 affects the shared endpoint
+  coordinator. T-306 stays OPEN.
+- Evaluation integrity: not affected. No eval, hidden, held-out, scorer, threshold or prompt change.
+- Source gate: FAIL on the deferred T-301.1 baseline (53 host-library and 19 Linux-library failures),
+  unchanged. Format and strict Clippy PASS.
+
+Verdict: FINDINGS

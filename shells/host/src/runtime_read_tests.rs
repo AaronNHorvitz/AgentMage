@@ -64,6 +64,10 @@ use crate::workflow_supervisor::{
 
 use crate::runtime_tools::read_only_runtime_registry;
 
+#[cfg(target_os = "linux")]
+#[path = "coding_endpoint_tests.rs"]
+mod coding_endpoint_tests;
+
 const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const SNAPSHOT_ID: &str = "snapshot-native-read-0001";
 

@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+Configured local transport can now supply turns to the reusable read-only
+endpoint coordinator through its original destination approval and borrowed
+trusted context. Socket tests exercise read approval, actual snapshot tool
+observations and completion verification. See the
+[transport composition record](docs/evidence/t303-configured-endpoint-2026-11-08.md).
+Independent core review is required. This is library composition; exclusive live
+HTTP ownership, scoped filesystem/grant wiring, edit/test/retry, approved Git and
+T-303/T-306 remain open. No row is added or closed; synthetic endpoints are not
+model scores.
+
+The preceding coordinator [independent core review](docs/reviews/12f10f00bb65-local-coding-endpoint-coordinator.txt)
+returned **Verdict: FINDINGS** for exact commit `12f10f00bb6537c8da3389abdc4e637f435432f7`.
+Its medium M1 (model-authored envelopes leaving a run unterminated) is addressed
+in this batch: the coordinator owns tool argument encoding/schema/digest and
+publishes terminal refusals for invalid model arguments. Re-review is required;
+the report is retained unchanged. Low L1 (sealing the model-port family trait)
+and L2 (direct catalog-authority regression coverage) remain backlog in these
+same rows. No row closes on this FINDINGS report.
+
 The reusable coordinator now composes ephemeral read-only endpoint turns with
 its existing approval, tool-observation, completion-verifier and terminal cycle.
 The result retains the distinct whole endpoint envelope; native advancement

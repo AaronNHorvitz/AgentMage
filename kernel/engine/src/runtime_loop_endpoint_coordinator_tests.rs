@@ -25,6 +25,7 @@ enum Response {
     Limited,
     WrongDigest,
     MalformedTool,
+    BadArguments(u8),
     Failure,
     Overflow,
 }
@@ -68,9 +69,28 @@ impl RuntimeEndpointModelPort for Dispatch {
                 if matches!(self.response, Response::MalformedTool) {
                     args.sha256 = "0".repeat(64);
                 }
-                serde_json::json!({"tool_call": {"tool_id":"fixture.read", "tool_version":"1.0.0", "arguments":args}}).to_string()
+                let arguments = if matches!(self.response, Response::MalformedTool) {
+                    serde_json::to_value(args).unwrap()
+                } else {
+                    serde_json::from_slice::<serde_json::Value>(&args.bytes).unwrap()
+                };
+                serde_json::json!({"tool_call": {"tool_id":"fixture.read", "tool_version":"1.0.0", "arguments":arguments}}).to_string()
             }
             Response::Overflow => "x".repeat(self.request.limits().response_text_limit_bytes + 1),
+            Response::BadArguments(kind) => match kind {
+                0 => r#"{"tool_call":{"tool_id":"fixture.read","tool_version":"1.0.0","arguments":{"path":"fixture.txt","path":"elsewhere"}}}"#.into(),
+                1 => r#"{"tool_call":{"tool_id":"fixture.read","tool_version":"1.0.0","arguments":{"path":"fixture.txt"},"tool_call_id":"chosen"}}"#.into(),
+                2 => r#"{"tool_call":{"tool_id":"fixture.read","tool_version":"1.0.0","arguments":{"path":7}}}"#.into(),
+                3 => r#"{"tool_call":{"tool_id":"fixture.read","tool_version":"1.0.0"}}"#.into(),
+                4 => r#"{"tool_call":{"tool_id":"fixture.read","tool_version":"1.0.0","arguments":{"path":"fixture.txt"}},"grant_id":"chosen"}"#.into(),
+                _ => {
+                    let mut arguments = payload("fixture.input", br#"{"path":"fixture.txt"}"#);
+                    if kind == 5 { arguments.schema = schema("foreign.input"); }
+                    else if kind == 6 { arguments.media_type = "text/plain".into(); }
+                    else { arguments.sha256 = "a".repeat(64); }
+                    serde_json::json!({"tool_call":{"tool_id":"fixture.read","tool_version":"1.0.0","arguments":arguments}}).to_string()
+                }
+            },
             _ => "{\"answer\":\"done\"}".into(),
         };
         emit(&text);
@@ -719,11 +739,49 @@ fn endpoint_coordinator_denial_and_malformed_tool_never_execute() {
     assert!(!outcome.outcome.state.is_success());
     assert_eq!(c.tool_boundary.executions.load(Ordering::SeqCst), 0);
     let mut c = coordinator([Response::MalformedTool, Response::Answer], false);
-    assert!(c.run_endpoint_until_boundary(None, None).is_err());
+    let outcome = terminal(&mut c);
+    assert_eq!(outcome.outcome.state, AgentStateKind::Failed);
+    assert_eq!(
+        outcome.outcome.unresolved_codes,
+        ["runtime.proposal.arguments-invalid"]
+    );
+    assert!(outcome.answer_evidence.is_none());
+    assert!(outcome.outcome.output.is_none());
+    assert_eq!(c.endpoint_outcome(), Some(&outcome));
+    assert!(
+        matches!(&c.events().last().unwrap().kind, RuntimeEventKind::RunTerminal { outcome_sha256, .. } if outcome_sha256 == &outcome.outcome.outcome_sha256)
+    );
     assert_eq!(c.tool_boundary.executions.load(Ordering::SeqCst), 0);
     assert_eq!(c.model.0.calls.load(Ordering::SeqCst), 1);
-    assert!(c.run_endpoint_until_boundary(None, None).is_err());
+    assert_eq!(terminal(&mut c), outcome);
     assert_eq!(c.model.0.calls.load(Ordering::SeqCst), 1);
+}
+
+#[test]
+fn endpoint_coordinator_model_argument_defects_publish_terminal_refusal_without_dispatching_again()
+{
+    for kind in 0..8 {
+        let mut c = coordinator([Response::BadArguments(kind), Response::Read], false);
+        let outcome = terminal(&mut c);
+        assert_eq!(outcome.outcome.state, AgentStateKind::Failed, "case {kind}");
+        assert_eq!(
+            outcome.outcome.unresolved_codes,
+            ["runtime.proposal.arguments-invalid"]
+        );
+        assert!(outcome.outcome.output.is_none());
+        assert!(outcome.answer_evidence.is_none());
+        assert_eq!(c.tool_boundary.executions.load(Ordering::SeqCst), 0);
+        assert_eq!(c.model.0.calls.load(Ordering::SeqCst), 1);
+        assert!(
+            matches!(&c.events().last().unwrap().kind, RuntimeEventKind::RunTerminal { outcome_sha256, .. } if outcome_sha256 == &outcome.outcome.outcome_sha256)
+        );
+        let mut sequence = RuntimeEventSequence::new();
+        for event in c.events() {
+            sequence.push(event).unwrap();
+        }
+        assert_eq!(terminal(&mut c), outcome);
+        assert_eq!(c.model.0.calls.load(Ordering::SeqCst), 1);
+    }
 }
 
 #[test]

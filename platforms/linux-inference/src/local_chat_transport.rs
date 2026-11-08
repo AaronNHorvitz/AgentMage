@@ -372,6 +372,17 @@ impl PreparedEndpointChat<'_> {
 }
 
 impl LocalChatTransport {
+    /// Describes this transport's actual destination and a requested model.
+    /// This inert selection contains no credential, approval or model admission.
+    /// Preparation still validates the model and exact destination approval.
+    #[must_use]
+    pub fn model_selection(&self, model: &str) -> EndpointModelSelection {
+        EndpointModelSelection {
+            endpoint: self.endpoint.base_url(),
+            model: model.to_owned(),
+        }
+    }
+
     /// Configures an explicit local endpoint. Credentials belong to this exact
     /// instance; replacing the destination requires a new transport and approval.
     pub fn new(
@@ -418,10 +429,7 @@ impl LocalChatTransport {
         serde_json::to_writer(&mut fingerprint, messages)
             .map_err(|_| TransportError::Chat(ChatError::Request))?;
         let binding = EndpointModelRequest::from_prepared_body(
-            EndpointModelSelection {
-                endpoint: self.endpoint.base_url(),
-                model: model.to_owned(),
-            },
+            self.model_selection(model),
             EndpointModelContext {
                 message_count: messages.len(),
                 serialized_messages_bytes: fingerprint.bytes,

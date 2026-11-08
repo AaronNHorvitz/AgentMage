@@ -731,6 +731,12 @@ fn is_semver(value: &str) -> bool {
 
 struct ClosedJson;
 
+/// Uses the ordinary tool-envelope JSON check before an endpoint value can be
+/// re-encoded. In particular, duplicate object keys must not be normalized away.
+pub(crate) fn is_closed_json(bytes: &[u8]) -> bool {
+    serde_json::from_slice::<ClosedJson>(bytes).is_ok()
+}
+
 impl<'de> Deserialize<'de> for ClosedJson {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where

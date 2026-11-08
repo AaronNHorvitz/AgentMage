@@ -1,5 +1,43 @@
 # Endpoint run framing
 
+The host's `coding_endpoint::ConfiguredCodingEndpoint` now joins the configured
+local chat transport to `ReusableRuntimeCoordinator::new_endpoint`. It borrows
+the credential-owning transport and original exact destination approval. Its
+selection comes from that actual transport; no caller-supplied address can
+replace it. Construction performs no probe or dispatch and admits no native
+model profile.
+
+The trusted `CodingEndpointContextPort` receives the original sealed run and
+the coordinator's current calls, tool results, evidence and pre-effect refusals.
+It returns borrowed original messages once per turn. It owns source selection,
+read/disclosure consent, treatment of untrusted text and private-text retention.
+The adapter independently admits those same ordered messages, then freezes them
+through the original transport. Only that single-use encoded body reaches the
+socket; no callback reconstructs context or resolves another credential.
+The transport erases its frozen body on drop; the context owner remains
+responsible for erasing its own retained text.
+
+The original run control bounds preparation and all transport waits. A stopped
+or mismatched selection refuses before entering context. Invalid context or
+destination approval refuses before connecting. Failed/incomplete streams,
+output-token limits and ungrounded answers cannot establish task completion.
+There is no retry in this adapter. Model output still goes through the existing
+coordinator's exact tool catalog, separate permission approval and owning
+completion verifier. Source text and model prose never grant authority.
+
+The unchanged transport advertises a 1 MiB decoded-text ceiling per dispatch.
+The coordinator requires that entire ceiling to fit the remaining cumulative
+output budget before each call. Plan that allowance explicitly for multiple
+turns; the adapter never raises the sealed run's limits or silently narrows a
+descriptor while retaining a larger socket allowance.
+
+Socket tests compose this adapter with a synthetic endpoint, a test-only
+permission owner and the native read-only snapshot operation. They are not a
+real-model coding result or the live filesystem/grant boundary. The live HTTP
+service still needs exclusive endpoint run ownership, a concrete scoped context
+and tool composition, and its distinct endpoint result projection. Endpoint
+edit/test/retry, durable recovery, approved Git and measurements remain open.
+
 The engine can statically seal and verify a `RuntimeEndpointRunRequest` without
 constructing an `ExactModelProfile`. The reusable coordinator also accepts this request for ephemeral read-only
 library execution under T-303/T-306. The local HTTP coding runtime, CLI and MCP
@@ -283,10 +321,14 @@ text bytes and digest before using the response. Count, full prepared input,
 output and dispatch-time envelopes must fit the cumulative run budget.
 
 A tool response is a closed JSON object with exactly `tool_call`, whose object
-contains `tool_id`, `tool_version` and schema-bound `arguments`. It carries no
-model-authored call identity, run, grant, approval or receipt. The coordinator
-derives the call identity, checks the offered registry and argument envelope,
-and invokes the existing scoped permission and tool boundaries. Every effect
+contains `tool_id`, `tool_version` and a plain JSON `arguments` value. It carries
+no model-authored schema, digest, call identity, run, grant, approval or receipt.
+The coordinator rejects duplicate keys, derives the call identity, encodes the
+arguments and builds their schema-bound envelope from the exact registry. It
+checks that complete envelope and tool-specific arguments before requesting a
+tool. A malformed tool representation or invalid argument value produces a
+canonical terminal refusal, with no permission evaluation or execution. Valid
+calls invoke the existing scoped permission and tool boundaries. Every effect
 still needs the boundary's own valid authority. Endpoint composition admits
 only the existing ephemeral read-only catalog; writes, commands, network tools,
 durable state and resume cursors remain refused.

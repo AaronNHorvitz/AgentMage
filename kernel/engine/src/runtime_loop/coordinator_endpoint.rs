@@ -7,8 +7,8 @@ use super::endpoint::{
 };
 use super::*;
 use agentmage_kernel_contracts::{
-    EndpointModelFinish, EndpointModelRequest, EndpointModelResult, ModelToolCallWireCandidate,
-    RuntimeEndpointRunRequest, SchemaReference,
+    EndpointModelFinish, EndpointModelRequest, EndpointModelResult, RuntimeEndpointRunRequest,
+    SchemaReference,
 };
 
 /// Current coordinator observations used to prepare an approved endpoint request.
@@ -243,7 +243,15 @@ pub enum RuntimeEndpointCoordinatorStep {
 #[derive(serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 struct EndpointToolProposal {
-    tool_call: ModelToolCallWireCandidate,
+    tool_call: EndpointToolArguments,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct EndpointToolArguments {
+    tool_id: ToolId,
+    tool_version: String,
+    arguments: serde_json::Value,
 }
 
 impl<
@@ -540,6 +548,10 @@ impl<
             .transition(AgentStateKind::Validation)
             .map_err(|_| RuntimeLoopError::State)?;
         if let Ok(tool) = serde_json::from_str::<EndpointToolProposal>(&text) {
+            if !crate::tooling::is_closed_json(text.as_bytes()) {
+                return self
+                    .finish_refused_proposal(&turn_id, "runtime.proposal.arguments-invalid");
+            }
             let closing_sha256 = observation_sha256(&accepted)?;
             if self.tool_budget_exhausted(&turn_id, &closing_sha256)? {
                 return Ok(());
@@ -550,22 +562,56 @@ impl<
             {
                 return self.finish_refused_proposal(&turn_id, "runtime.proposal.tool-not-offered");
             }
+            // Only argument values are model-authored. The exact registry owns
+            // the schema and the coordinator owns the encoded bytes and digest.
+            // Model errors never reach request_tool's trusted-envelope fault.
+            let definition = self
+                .registry
+                .get_tool(&tool.tool_call.tool_id, &tool.tool_call.tool_version)
+                .ok_or(RuntimeLoopError::InvalidBoundaryResult)?;
+            let bytes = serde_json::to_vec(&tool.tool_call.arguments)
+                .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+            let arguments = ContractPayload {
+                schema: definition.input_schema.clone(),
+                media_type: "application/json".into(),
+                sha256: sha256(&bytes),
+                bytes,
+            };
+            let tool_call_id = ToolCallId::from_raw(derived_id(
+                "endpoint-call",
+                request.run_id.as_str(),
+                u64::from(self.turn_count),
+            ));
+            let checked = ToolCall {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                tool_call_id: tool_call_id.clone(),
+                correlation_id: self.correlation_id.clone(),
+                action_id: runtime_action_id(&request.run_id, self.tool_call_count + 1),
+                tool_id: tool.tool_call.tool_id.clone(),
+                tool_version: tool.tool_call.tool_version.clone(),
+                arguments: arguments.clone(),
+            };
+            if self.registry.validate_arguments(&checked).is_err() {
+                return self
+                    .finish_refused_proposal(&turn_id, "runtime.proposal.arguments-invalid");
+            }
             return self.request_tool(
                 turn_id,
                 RequestedToolCall {
-                    tool_call_id: ToolCallId::from_raw(derived_id(
-                        "endpoint-call",
-                        request.run_id.as_str(),
-                        u64::from(self.turn_count),
-                    )),
+                    tool_call_id,
                     tool_id: tool.tool_call.tool_id,
                     tool_version: tool.tool_call.tool_version,
-                    arguments: tool.tool_call.arguments,
+                    arguments,
                     origin: ProposalOrigin::Model,
                     closing_sha256,
                 },
                 cancellation,
             );
+        }
+        if serde_json::from_str::<serde_json::Value>(&text)
+            .is_ok_and(|value| value.get("tool_call").is_some())
+        {
+            return self.finish_refused_proposal(&turn_id, "runtime.proposal.arguments-invalid");
         }
         let owned = OwnedEndpointClaim {
             turn: accepted,
