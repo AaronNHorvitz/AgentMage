@@ -2,13 +2,29 @@
 
 ## Active queue: local agent mission
 
+The native `runtime-run` terminal now shares its original deadline and signal
+latch with HTTP reads. The original driver's release and cancellation
+reconciliation use one bounded grace period. See the
+[runtime guide](docs/guides/coding-runtime-api.md) and
+[builder record](docs/evidence/t303-runtime-budget-2026-11-08.md).
+Independent core review is required. T-303/T-306 remain open; no row is added
+or closed. Native success, autonomous endpoint edit/test, durable recovery,
+approved Git and parent measurements remain open.
+
+The transfer increment's [independent core review](docs/reviews/ae0edbd912b2-local-coding-guided-original-transfer.txt)
+has **Verdict: PASS** for exact commit
+`ae0edbd912b24d5739521d5bab7baa299f83b8b3`, with no high/medium finding.
+Low L1 (created/mixed-kind transfer usability) and L2 (additional refusal and
+stop coverage) remain same-row backlog, along with earlier lows. Both parent
+rows remain open; no row is added or closed.
+
 The explicit `code-repository-apply` variant connects the guided coding cycle to
 the existing original-checkout transfer. A full passing worktree test receipt
 precedes separate original read and complete-diff approvals, with original
 root/creation/preview bindings and the same setup deadline. See the
 [transfer record](docs/evidence/t303-guided-original-transfer-2026-11-08.md) and
 [guide](docs/guides/coding-guided-worktree.md). Independent core review is
-required. Native execution, autonomous endpoint composition, durable recovery,
+recorded above. Native execution, autonomous endpoint composition, durable recovery,
 approved Git and measurements remain open. T-303/T-306 remain open; no row is
 added or closed.
 

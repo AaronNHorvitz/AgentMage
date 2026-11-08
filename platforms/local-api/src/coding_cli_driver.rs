@@ -40,6 +40,17 @@ pub(super) struct Signals {
     limit: Duration,
 }
 impl Signals {
+    // Share the original clock and latch with HTTP reads without registering
+    // another signal handler or giving this observer ownership of registrations.
+    fn observer(&self) -> Self {
+        Self {
+            stop: self.stop.clone(),
+            registered: Vec::new(),
+            started: self.started,
+            limit: self.limit,
+        }
+    }
+
     pub(super) fn new(seconds: u64) -> Result<Self> {
         let mut signals = Self {
             stop: Arc::new(AtomicBool::new(false)),
@@ -222,17 +233,52 @@ struct HttpRuntime<'a> {
     client: &'a Client,
     selection: Value,
     controls: &'a Signals,
+    reconciliation_deadline: std::cell::Cell<Option<Instant>>,
+    cancellation_sent: bool,
+    release_sent: bool,
 }
 impl HttpRuntime<'_> {
+    fn request(&self, route: &str, body: Value) -> TransportResult<Value> {
+        // The original driver may reconcile/release an exact run after stopping.
+        // Give that finite sequence one short shared grace period. It cannot
+        // prepare/start a model request, renew a run, or approve another tool.
+        let cleanup = route == "/v1/code/runtime/release"
+            || (self.controls.stopped()
+                && (matches!(
+                    route,
+                    "/v1/code/runtime/job"
+                        | "/v1/code/runtime/declarations"
+                        | "/v1/code/runtime/artifact"
+                ) || (route == "/v1/code/runtime/control"
+                    && body["request"]["action"] == "cancel")
+                    || (route == "/v1/code/runtime/advance"
+                        && self.cancellation_sent
+                        && body["response"].is_null())));
+        if cleanup {
+            let deadline = self.reconciliation_deadline.get().unwrap_or_else(|| {
+                let deadline = Instant::now() + Duration::from_secs(2);
+                self.reconciliation_deadline.set(Some(deadline));
+                deadline
+            });
+            let client = Client {
+                address: self.client.address,
+                auth: self.client.auth.clone(),
+                deadline: Some(deadline),
+                controls: None,
+            };
+            client.json("POST", route, true, Some(body))
+        } else {
+            self.client.json("POST", route, true, Some(body))
+        }
+        .map_err(|_| RuntimeTransportError::RuntimeFailed)
+    }
+
     fn post<T: serde::de::DeserializeOwned + serde::Serialize>(
         &self,
         route: &str,
         body: Value,
     ) -> TransportResult<T> {
-        let value = self
-            .client
-            .json("POST", route, true, Some(body))
-            .map_err(|_| RuntimeTransportError::RuntimeFailed)?;
+        let value = self.request(route, body)?;
         let bytes =
             serde_json::to_vec(&value).map_err(|_| RuntimeTransportError::RuntimeEvidenceDenied)?;
         agentmage_host::runtime_transport::decode_exact(&bytes)
@@ -341,19 +387,31 @@ impl RuntimeTransportPort for HttpRuntime<'_> {
         request_sha256: &str,
         request: &JobControlRequest,
     ) -> TransportResult<RuntimeJobControl> {
-        self.post(
+        let result = self.post(
             "/v1/code/runtime/control",
             json!({"run_id":run_id,"request_sha256":request_sha256,"request":request}),
-        )
+        );
+        // Only the original driver's cancellation reconciliation can advance
+        // after stopping, and only without an approval response. That driver
+        // still checks the revision-bound answer before requesting the advance.
+        if result.is_ok()
+            && request.action == agentmage_kernel_engine::job_control::JobControlAction::Cancel
+        {
+            self.cancellation_sent = true;
+        }
+        result
     }
     fn release(&mut self, run_id: &RuntimeRunId, request_sha256: &str) -> TransportResult<()> {
+        // The shared driver may call best-effort release after a failed release.
+        // Its first reply can be lost after dispatch; never send it twice here.
+        if self.release_sent {
+            return Err(RuntimeTransportError::RequestDenied);
+        }
+        self.release_sent = true;
         let reply = self
-            .client
-            .json(
-                "POST",
+            .request(
                 "/v1/code/runtime/release",
-                true,
-                Some(json!({"run_id":run_id,"request_sha256":request_sha256})),
+                json!({"run_id":run_id,"request_sha256":request_sha256}),
             )
             .map_err(|_| RuntimeTransportError::RuntimeFailed)?;
         if reply != json!({"released":true}) {
@@ -373,6 +431,12 @@ pub(super) fn run(client: &Client, seconds: &str, task: &str) -> Result<()> {
         return Err(());
     }
     let controls = Signals::new(seconds)?;
+    let client = Client {
+        address: client.address,
+        auth: client.auth.clone(),
+        deadline: Some(controls.deadline()),
+        controls: Some(controls.observer()),
+    };
     let selection = client.json("GET", "/v1/code/runtime", true, None)?;
     if selection["version"] != 1
         || selection["activation"] != "coding-development-v1"
@@ -405,9 +469,12 @@ pub(super) fn run(client: &Client, seconds: &str, task: &str) -> Result<()> {
         prompt: task.to_owned(),
     };
     let mut runtime = HttpRuntime {
-        client,
+        client: &client,
         selection,
         controls: &controls,
+        reconciliation_deadline: std::cell::Cell::new(None),
+        cancellation_sent: false,
+        release_sent: false,
     };
     let result = drive_interactive_cli_runtime(
         &mut runtime,
@@ -426,6 +493,12 @@ pub(super) fn run(client: &Client, seconds: &str, task: &str) -> Result<()> {
         );
     })?;
     let succeeded = result.outcome.state.is_success();
+    if succeeded && controls.stopped() {
+        eprintln!(
+            "Runtime stopped before the final success report; inspect canonical run state before further action"
+        );
+        return Err(());
+    }
     show(
         &json!({"type":"verified-outcome","request":result.request,"outcome":result.outcome,
         "artifacts":result.artifacts,"presented_events":result.presented_events,

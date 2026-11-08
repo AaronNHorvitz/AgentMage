@@ -94,7 +94,10 @@ then does it print `verified-outcome`. A verified refusal is still a refusal:
 only canonical `SUCCESS` or `NO_OP` exits zero. Synthetic transport tests are
 not evidence of native success or coding quality.
 
-The `seconds` argument is 1–3600 and starts before inspection.
+The `seconds` argument is 1–3600 monotonic running seconds and starts before
+the initial selection request. System suspend is excluded. One clock and stop
+latch cover selection, inspection, model start, advances, artifact reads and
+approval waits; a new HTTP request never renews the clock.
 Writing the complete review and waiting for a
 terminal answer are interruptible and deadline-bound. Large reviews retain
 partial write progress while the terminal drains. EOF, terminal I/O failures and
@@ -104,8 +107,25 @@ returns control to the existing canonical cancellation path. SIGINT, SIGTERM,
 SIGHUP or
 the deadline requests canonical revision-bound job cancellation at the next
 verified boundary; it never sends the API's generic cancellation route. A
-pending HTTP request retains the existing 180-second response deadline, so this
-argument is not a hard process-lifetime bound. If cancellation does not reach a
+pending HTTP read now closes on that same stop latch or deadline, with the
+existing short read polling timeout. Its per-request ceiling remains 180
+seconds, capped by the remaining run budget. A stopped request has an uncertain
+outcome: the client never resends a start, tool approval or model advance.
+
+The existing driver's release and cancellation reconciliation have one shared
+two-second grace period, starting at their first request and never renewed.
+After stopping, that path may inspect the bound job, request its original
+revision-bound cancellation, read its next boundary without a tool approval,
+read terminal evidence and attempt release. It cannot prepare or start another
+run. A stalled ordinary request instead exits through the existing error path;
+it does not infer a verified boundary or invent cancellation authority. A
+prepared run may still receive the original driver's one release attempt.
+Active runs can refuse release, and a lost release reply is also uncertain.
+This terminal sends at most one release request, including error cleanup.
+
+This is cooperative stopping, not a hard process-lifetime bound: connect/write
+system calls retain their existing two-second ceiling, and output consumers
+must keep draining terminal output. If cancellation does not reach a
 terminal result on the next boundary, the client stops with an error; inspect
 the canonical job before further action. The owned host remains responsible for
 cleanup. This client does not terminate the service or claim effects were undone.

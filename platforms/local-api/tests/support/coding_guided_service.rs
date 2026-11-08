@@ -73,6 +73,38 @@ fn repository_transfer_actual_service_stops_at_original_native_inspection_refusa
     repository_setup_refusal("code-repository-apply");
 }
 
+#[test]
+fn native_driver_actual_service_refuses_absent_runtime_without_effects_or_disclosure() {
+    let f = Fixture::new();
+    let upstream = TcpListener::bind("127.0.0.1:0").unwrap();
+    upstream.set_nonblocking(true).unwrap();
+    configure(
+        &f,
+        &format!("http://{}/v1", upstream.local_addr().unwrap()),
+        false,
+    );
+    let before = states(&f);
+    let (status, refusal) = f.call_bytes("GET", "/v1/code/runtime", true, b"");
+    assert_eq!(status, 428);
+    assert_eq!(refusal["error"], "code.runtime.activation-required");
+    let out = f.terminal(
+        &["runtime-run", "1", "Inspect the selected worktree"],
+        "approve-all",
+    );
+    assert_eq!(out["status"], 1, "{out}");
+    let text = out["transcript"].as_str().unwrap();
+    assert!(text.contains(refusal["error"].as_str().unwrap()), "{out}");
+    assert!(
+        !text.contains("Type exactly ") && !text.contains("verified-outcome"),
+        "{out}"
+    );
+    assert_preserved(&f, &before);
+    assert_eq!(
+        upstream.accept().unwrap_err().kind(),
+        std::io::ErrorKind::WouldBlock
+    );
+}
+
 fn repository_setup_refusal(command: &str) {
     let f = Fixture::new();
     let upstream = TcpListener::bind("127.0.0.1:0").unwrap();

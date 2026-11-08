@@ -20,6 +20,8 @@ use std::{
 
 #[path = "support/coding_endpoint_cli.rs"]
 mod endpoint;
+#[path = "support/coding_runtime_budget.rs"]
+mod runtime_budget;
 #[path = "support/coding_workflow.rs"]
 mod workflow;
 
@@ -131,6 +133,10 @@ impl Fixture {
                         .get(observed.len() - 1)
                         .cloned()
                         .unwrap_or(json!({"unexpected":true}));
+                    if let Some(delay) = value["test_peer_delay_ms"].as_u64() {
+                        assert!(delay <= 1000);
+                        thread::sleep(Duration::from_millis(delay));
+                    }
                     if let Some(stage) = value["test_peer_stall"].as_str() {
                         if stage == "body" {
                             socket.write_all(b"HTTP/1.1 200 Test\r\nContent-Type: application/json\r\nContent-Length: 100\r\nConnection: close\r\n\r\n{").unwrap();
@@ -141,8 +147,8 @@ impl Fixture {
                         }
                         fs::write(stall_ready.as_ref().unwrap(), b"ready").unwrap();
                         let mut byte = [0];
-                        // The client must close its one uncertain request rather
-                        // than wait for a reply or dispatch a cancellation/retry.
+                        // The client must close its one uncertain request. A
+                        // prepared native run may subsequently try exact release.
                         assert_eq!(socket.read(&mut byte).unwrap(), 0);
                         observed.last_mut().unwrap()["test_peer_disconnected"] = json!(true);
                         continue;
@@ -155,11 +161,15 @@ impl Fixture {
                         continue;
                     }
                     let status = value["test_peer_status"].as_u64().unwrap_or(200);
-                    let reply = serde_json::to_vec(if value.get("test_peer_status").is_some() {
-                        &value["body"]
-                    } else {
-                        &value
-                    })
+                    let reply = serde_json::to_vec(
+                        if value.get("test_peer_status").is_some()
+                            || value.get("test_peer_delay_ms").is_some()
+                        {
+                            &value["body"]
+                        } else {
+                            &value
+                        },
+                    )
                     .unwrap();
                     socket.write_all(format!("HTTP/1.1 {status} Test\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",reply.len()).as_bytes()).unwrap();
                     socket.write_all(&reply).unwrap();
@@ -1354,6 +1364,9 @@ try:
             prompt_bytes.append(len(raw)-review_start);review_start=len(raw)
             prompt=raw.split(b'Type exactly ')[-1].split(b' to approve;')[0]
             mode=sys.argv[1];tool=prompt.startswith(b'allow ')
+            if mode=='runtime-clock':
+                if answered==0:time.sleep(.7);os.write(master,prompt+b'\n')
+                answered+=1;continue
             if mode in ('repository-clock','transfer-clock'):
                 if answered==0:time.sleep(.9)
                 if answered!=(4 if mode=='repository-clock' else 7):os.write(master,prompt+b'\n')

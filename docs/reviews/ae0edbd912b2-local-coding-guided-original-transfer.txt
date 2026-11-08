@@ -1,0 +1,137 @@
+Commit: ae0edbd912b24d5739521d5bab7baa299f83b8b3
+Scope: local-coding-guided-original-transfer
+
+# Independent core review: guided original-checkout transfer (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate read-only session.
+Checkout: /lane/review-checkout; `git rev-parse HEAD` = ae0edbd912b24d5739521d5bab7baa299f83b8b3.
+Base: c53ed1742a51a7827a70e65a26c2fcdce70180ff. I reviewed the complete eleven-file diff (723+/18-).
+
+## Methods
+
+- Read IP-POLICY.md, the new TASKS.md text, the guide change, the new evidence record, and the
+  helper README, run.py, audit.py and final.py before running anything.
+- Read every line of the three production Rust changes (`coding_cli.rs`,
+  `coding_cli_repository.rs`, new `coding_cli_transfer.rs`) and the four Rust test inputs
+  (new `coding_transfer_workflow.rs`, `coding_repository_workflow.rs`,
+  `coding_guided_service.rs`, `coding_runtime_cli.rs` tty driver).
+- Traced the surrounding code the transfer relies on: `workflow::run_steps`
+  (`coding_cli_workflow.rs:144-298`), `Client::confirm/idle/check_running` (`coding_cli.rs:73-170`),
+  driver confirmation (`coding_cli_driver.rs:61`), terminal escaping `safe()` (`coding_cli.rs:327`),
+  and the native owner `inspect_apply`/`prepare_apply` (`platforms/linux/src/coding_repository_apply.rs:66-200`).
+- Ran the exact requested commands, a privacy/hostname scan of the diff, and compared the retained
+  predecessor review byte for byte.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-original-transfer/review-inputs.sha256` | exit 0; manifest file SHA256 `88c48d5d…6f50f97` matches the request |
+| `PATH=…/tooling:$PATH node --version` | `v24.15.0`, exit 0 (binary hash in the manifest matches `d1de76d8…bd932c`) |
+| `PATH=…/tooling:$PATH CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-original-transfer-ae0edbd912b2` | `GATE_EXIT 0`; seven `RESULT exit=0`; `FAST GATE: PASS`; `SOURCE_FREEZE_UNCHANGED True`; 151.0 s including reservations (not wrapped in build-slot) |
+| `python3 -B …/audit.py <out>` | exit 0; baseline 10 targets `[179,0,0,0]`, final 10 targets `[188,0,0,0]`; all 179 prior identities kept; exactly the 9 expected new methods; command exits `[0,0,0,0,0,0,0]`; 7 frozen inputs |
+| `PATH=…/tooling:$PATH python3 -B …/final.py` | exit 0; scope is exactly the 11 files; ledger rows unchanged; privacy patterns absent; retained review is byte-identical to `/lane/reviews/c53ed1742a51-local-coding-repository-setup.md`; four light checks exit 0 (markdownlint: 0 issues in 3 files); `SCOPE_PRIVACY_UNCHANGED_LEDGER_SOURCE_FREEZE_PASS` |
+| `cmp …/validation-final/source-freeze.json <out>/source-freeze.json` | exit 0 (identical) |
+| `git diff --check c53ed174… --` | exit 0 |
+| `git status --short` | empty, exit 0 |
+| Namespace cleanup | `/tmp/tr-*` recorded in `<out>/runtime-tmp-path` was empty; `rmdir` exit 0. Nothing else touched. |
+| Diff scan for username, home paths and host name | no matches |
+
+Timing note: my gate took 151 s including shared reservations, against the builder's 35.65 s.
+The time went to Clippy and test compilation in a separate target directory. This is a
+measurement only, not a finding.
+
+## Analysis
+
+**Gate before transfer.** `transfer::run` is called only after `workflow::run_steps(...)?`
+returns Ok (`coding_cli_repository.rs:190-193`). `run_steps` returns Ok only on
+`receipt.is_full_pass()` followed by `check_running()` (`coding_cli_workflow.rs:274-277`).
+Exhausted, zero-test and flaky receipts return Err. The test
+`transfer_requires_a_full_passing_worktree_receipt` confirms that no `/repository/apply` route
+is called in those cases.
+
+**Votes.** Both votes go through `client.confirm`, which reads only the controlling terminal and
+refuses piped stdin. It returns Err on Deny or Stopped and checks the stop latch after Allow.
+With no controls it falls back to the unchanged free `confirm`, so the standalone `apply` and
+`apply-decide` commands behave exactly as before.
+
+**What each vote shows.** The challenges are `read <root> <tree>` and `apply-original <preview hash>`.
+The second vote displays the complete preview. `safe()` JSON-escapes control characters and
+`\u`-escapes all non-ASCII, so diff text written by the model cannot inject terminal escapes into
+the review.
+
+**Bindings.** These checks are in place:
+
+- Setup original root equals status root, and the worktree identity equals the status worktree
+  root. A pending preview must be absent.
+- Paths number 1 to 16, are strictly sorted and unique, and are all inside the approved selection.
+- Status roots are compared again inside prepare (`expected_roots`).
+- The prepare reply must keep its operation, both roots and the creation receipt, and carry a
+  valid digest.
+- The pending preview must equal the prepare reply in full (`expected != preview`).
+- The result must match the preview digest and creation receipt, and the outcome must be
+  `committed`.
+- The stop latch is checked again before the success report.
+
+The 15 changed-binding cases, 5 lost or substituted reply cases, both denials, expiry and the
+three stop signals at each new vote, and the cumulative clock all exercise these checks. The
+`assert_prefix` calls show that no further request is sent after a refusal.
+
+**Native authority.** The native owner (`prepare_apply`) is unchanged. It still requires the
+expected roots, the lineage of each path, source-drift equality with the last postimage, and
+single-kind transactions. The CLI adds checks but can adopt nothing.
+
+**No implicit effects.** A denial or refusal sends no denial, cancellation or cleanup request.
+The server-side pending preview can remain after a stop, as the guide and evidence say. There is
+no Git commit or push path. The final report says `original_checkout_tested:false`,
+`current_workspace_verified:false` and `git_commit_created:false`.
+
+**Honest labelling.** The evidence and guide say the terminal methods use a recording synthetic
+peer, that the fixture worktree preexists, and that the actual-service method shows only the
+unchanged native inspection refusal (setup stops before any transfer code). They state that
+native creation, model, edit, test and transfer success are unobserved. Every numeric claim I
+checked matches my runs: 188/0/0/0, 179 retained identities plus 9 new, 15 binding cases, three
+substituted results, and the 0.9 s / 2 s clock case. The builder's timings are their own
+measurement.
+
+**Integrity and IP.** The diff contains no evaluation, hidden, held-out, scorer, threshold,
+model, dependency or SBOM change, and no other product names. The privacy scan is clean.
+
+**Delivery.** No row or sub-row is added or closed. The increment runs and is tested.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low L1 (usability, fails closed).** `platforms/local-api/src/coding_cli_transfer.rs:32-47`
+  sends every `available_paths` entry. The native owner refuses selections that mix created
+  and edited files (`platforms/linux/src/coding_repository_apply.rs:133-140`,
+  `code.apply.mixed-kinds`). It also cannot know created paths in advance, because created files
+  are normally outside the approved source selection and so fail the subset check.
+  - Impact: a workflow that both edits and creates files gets the read vote and then a refusal
+    instead of a transfer. It also cannot transfer a creation-only result unless the selection
+    already lists those paths. Nothing is written.
+  - Fix: read `available_changes` and refuse, or split by kind, before the read vote. Document
+    that created files must be transferred with the manual `apply` command.
+- **Low L2 (test coverage).** Some new refusals and checks are not exercised:
+  - unsorted but non-duplicate paths (`["b","a"]`), more than 16 paths, and non-string entries
+    (`coding_cli_transfer.rs:33-47`);
+  - on-disk root drift while the status reply still matches (`verify_root` at
+    `coding_cli_transfer.rs:23-24`);
+  - `idle()` busy timeout at entry (`:17`);
+  - a stop signal arriving between a committed decide reply and the report (`check_running`
+    at `:63`).
+
+  Fix: add these cases to `transfer_refuses_changed_roots_paths_creation_and_original_preview`
+  and the signal test. These are same-row backlog.
+- Earlier lows, including the predecessor L1 on creation-reply root/outcome coverage, remain
+  backlog as the builder states.
+
+## Per-row result
+
+- T-303 (non-closing increment): PASS for this commit. The row stays OPEN; native success,
+  autonomous endpoint composition, durable recovery, approved Git and measurements are still
+  outstanding.
+- T-306 (non-closing increment): PASS for this commit. The row stays OPEN for the same reasons.
+
+Verdict: PASS
