@@ -11,8 +11,8 @@ use serde_json::Value;
 
 const MAX_REQUEST_BYTES: usize = 256 * 1024;
 const MAX_EVENT_BYTES: usize = 64 * 1024;
-const MAX_STREAM_BYTES: usize = 4 * 1024 * 1024;
-const MAX_TEXT_BYTES: usize = 1024 * 1024;
+pub(super) const MAX_STREAM_BYTES: usize = 4 * 1024 * 1024;
+pub(super) const MAX_TEXT_BYTES: usize = 1024 * 1024;
 
 /// Content-free connection or protocol error, safe to display without upstream bytes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

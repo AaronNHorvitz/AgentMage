@@ -34,8 +34,19 @@ with no open high/medium finding; both parents remain open. Its low L1/L2
 remain backlog in these rows.
 The [runtime resource-lifetime batch](docs/evidence/t306-runtime-lifetimes-2026-11-07.md)
 replaces permanent factory allocations with shared ownership and keeps exact
-worktree descriptors alive through pending operations. Independent core review
-is required; no parent, native workflow or model-score acceptance follows.
+worktree descriptors alive through pending operations. Its
+[independent core review](docs/reviews/7a007e7aa1f4-local-coding-runtime-lifetimes.txt)
+has **Verdict: PASS** for exact commit `7a007e7aa1f4e9b594f2eda96789ee1269de7bd8`,
+with no open high/medium finding; neither parent closes. Low L1 (boundary tests
+stop at manifest verification before reaching changed paths) and L2 (wrong-root
+refusal test strength/naming) remain backlog in these rows. No native workflow
+or model-score acceptance follows.
+The [endpoint request-binding batch](docs/evidence/t303-endpoint-binding-2026-11-07.md)
+binds immutable coding requests to the actual credential-owning transport and
+exposes exact body fingerprints, selected endpoint/model, limits and honest
+response completion. It does not provide verified native model identity or
+token accounting, nor connect configured endpoints to the native coordinator.
+Independent core review is required; T-303/T-306 remain open.
 No public release is authorized. One level of sub-rows maximum; each implementation
 sub-row must run end to end and be measured. Never tune on held-out tasks, edit
 hidden tests or weaken thresholds. Desktop UI work is deferred to a separate shell.

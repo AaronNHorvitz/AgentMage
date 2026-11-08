@@ -45,8 +45,8 @@ use agentmage_platform_linux_inference::local_chat::{
     ChatFinish, ChatMessage, ChatRole, LocalChatEndpoint, encode_chat, encode_chat_with_usage,
 };
 use agentmage_platform_linux_inference::local_chat_transport::{
-    BearerKey, ChatCancellation, ChatCompletion, LocalChatApproval, LocalChatTransport,
-    LocalProbeApproval, TransportLimits, probe_endpoints,
+    BearerKey, ChatCancellation, ChatCompletion, EndpointChatBinding, LocalChatApproval,
+    LocalChatTransport, LocalProbeApproval, TransportLimits, probe_endpoints,
 };
 
 const MAX_HEADER: usize = 8192;
@@ -974,7 +974,15 @@ fn repair_prompt(feedback: &Value, budget: usize) -> Result<(String, usize), (u1
 // A rejected strict edit still consumed a completed inference. Preserve its
 // optional counts for attempt accounting, without promoting it to a proposal.
 // Transport failures and partial generations provide no completed observation.
-fn proposal_usage(mut value: Value, requested: bool, completion: Option<ChatCompletion>) -> Value {
+fn proposal_observation(
+    mut value: Value,
+    binding: &EndpointChatBinding,
+    requested: bool,
+    completion: Option<ChatCompletion>,
+) -> Value {
+    value["model_binding"] = json!(binding);
+    // This confirms wire/codec completion only, never a successful coding task.
+    value["response_complete"] = json!(completion.is_some());
     if requested && let Some(completion) = completion {
         value["usage"] = json!(completion.usage);
         value["usage_source"] = json!("provider-reported");
@@ -1018,10 +1026,25 @@ fn coding_proposal_with_feedback(
         op.outcome = "api.endpoint-choice-required";
         return error(socket, 428);
     };
+    let request = match config.transport.prepare_chat(
+        &config.approval,
+        &input.model,
+        &messages,
+        input.max_tokens,
+        input.include_usage,
+    ) {
+        Ok(request) => request,
+        Err(e) => {
+            op.outcome = e.code();
+            return error(socket, 400);
+        }
+    };
+    let binding = request.binding().clone();
     headers(socket, 200, "application/x-ndjson", None)?;
     let mut context_event = json!({"type":"context", "version":1,
         "message_bytes":context.message_bytes(), "files":context.outlines(),
-        "excerpts":context.excerpts(), "authority":"proposal-only","workspace_revision":workspace_revision});
+        "excerpts":context.excerpts(), "authority":"proposal-only","workspace_revision":workspace_revision,
+        "model_binding":binding});
     if let Some(feedback) = &feedback {
         context_event["message_bytes"] = json!(
             context.message_bytes()
@@ -1049,31 +1072,7 @@ fn coding_proposal_with_feedback(
             }
         }
     };
-    let result = if input.include_usage {
-        config.transport.chat_with_usage(
-            &config.approval,
-            &input.model,
-            &messages,
-            input.max_tokens,
-            &op.cancel,
-            display_text,
-        )
-    } else {
-        config
-            .transport
-            .chat(
-                &config.approval,
-                &input.model,
-                &messages,
-                input.max_tokens,
-                &op.cancel,
-                display_text,
-            )
-            .map(|finish| ChatCompletion {
-                finish,
-                usage: None,
-            })
-    };
+    let result = request.execute(&op.cancel, display_text);
     if !writable {
         op.outcome = "api.client-disconnected";
         return Err(ApiError::Io);
@@ -1098,8 +1097,9 @@ fn coding_proposal_with_feedback(
         op.outcome = code;
         return event(
             socket,
-            proposal_usage(
+            proposal_observation(
                 json!({"type":"error","code":code,"partial":true}),
+                &binding,
                 input.include_usage,
                 completion,
             ),
@@ -1112,15 +1112,16 @@ fn coding_proposal_with_feedback(
                 "applied":false,"tested":false,"authority":"proposal-only","workspace_revision":workspace_revision});
             event(
                 socket,
-                proposal_usage(proposal, input.include_usage, completion),
+                proposal_observation(proposal, &binding, input.include_usage, completion),
             )
         }
         Err(e) => {
             op.outcome = e.code();
             event(
                 socket,
-                proposal_usage(
+                proposal_observation(
                     json!({"type":"error","code":e.code(),"partial":true}),
+                    &binding,
                     input.include_usage,
                     completion,
                 ),

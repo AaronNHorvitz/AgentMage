@@ -1,0 +1,171 @@
+Commit: 7a007e7aa1f4e9b594f2eda96789ee1269de7bd8
+Scope: local-coding-runtime-lifetimes
+
+# Independent core review: runtime resource lifetimes (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), working in a separate read-only session on the pinned
+checkout `/lane/review-checkout`. `git rev-parse HEAD` returned
+`7a007e7aa1f4e9b594f2eda96789ee1269de7bd8`. The parent is `b716ab5d34f18f804b9da26cb7052387e0f11fb3`.
+The repository was not modified. No GPU was used and no closure is requested.
+
+## Methods
+
+- Read IP-POLICY.md, the top of TASKS.md, the complete eight-path diff above b716ab5d, the new
+  evidence record, the guide change, the retained approval-clarity report, and the three private
+  helpers (verify.py, final.py, audit.py), plus `/tools/build-slot`.
+- Statically traced each changed path:
+  - factory construction, failed construction, refresh and coordinator composition
+    (`coding_development_runtime.rs`);
+  - `bind_owned_development`, `CodingProfile`, `LinuxCodingPlatform::OwnedDevelopment`,
+    `LinuxCodingWorkspaceHandle` and the now borrow-free `PreparedLinuxCodingOperation`
+    (`linux_coding.rs`);
+  - the boundary's `prepare`, the five `bound_workspace` registry borrows, every `into_parts`
+    consumer, and the write/create driver roots (`linux_coding_runtime.rs`);
+  - the four new lifetime tests and the modified fixture.
+- Checked the generic driver bounds (`H: Borrow<E::WorkingDirectory>`,
+  kernel/engine/src/command_runner.rs:842 and repository_inspection.rs:494). They confirm that
+  command and inspection drivers use the same `Arc<LinuxAuthorizedWorkspace>` through std's
+  `Borrow` for `Arc<T>`. The write and create drivers deref `&Arc` to the same root.
+  `LinuxCodingWorktreeLease::write_driver` (platforms/linux/src/coding_repository_runtime.rs:169) still
+  compares `root_path_sha256` with the lease's held created root and revalidates it.
+- Checked reverse dependents: only `platforms/local-api` depends on `agentmage-host`, so the gate
+  selection (host + local-api) is complete for this Rust interface change.
+- Ran the pinned command sequence exactly (below), then inspected all 53 failures independently.
+- Scanned the added lines for privacy, credential, trademark and `unsafe`. Checked that `Box::leak`
+  is gone from the factory, and checked for new `#[ignore]`.
+
+## Commands and results (all run in /lane/review-checkout)
+
+```text
+sha256sum -c /lane/state/tmp/t306-runtime-lifetimes/review-inputs.sha256      -> all 27 OK
+sha256sum .../node-v24.15.0/bin/node -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches)
+sha256sum review-inputs.sha256       -> fd2237a0006b873dbb3f5f58a7463d4cd2e621ef1e6dfdf86a8adefefe417264 (matches)
+PATH=<node v24.15.0>:$PATH CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-runtime-lifetimes-7a007e7aa1f4 (new, mkdir -m 700; absent before)
+bash /tools/build-slot python3 -B .../verify.py > verification.log 2>&1      -> exit 1 (expected; test "$?" -eq 1 OK)
+  wall time 2621 s, mostly waiting for the shared reservation held by another lane
+  git diff --check                 exit 0   0.35 s
+  --lint-untracked                 exit 0   0.10 s
+  --lint-reviews (retained report) exit 0   0.10 s
+  markdownlint (3 changed docs)    exit 0   1.15 s
+  cargo fmt --check                exit 0   0.80 s
+  cargo clippy -D warnings         exit 0  32.35 s
+  cargo test --no-fail-fast        exit 101 124.85 s
+  FAST GATE: FAIL; FAST_GATE_EXIT 1
+  18 test targets: 685 passed / 53 failed / 11 ignored / 0 filtered (summed independently)
+  all four linux_coding::lifetime_tests::* methods "... ok", unfiltered
+python3 -B .../final.py > final.log 2>&1                                      -> exit 0, FINAL_AUDIT_PASS
+cmp validation-final/plan-final.json   <mine>                                 -> 0
+cmp validation-final/source-freeze.json <mine>                                -> 0
+cmp validation-final/audit.json        <mine>                                 -> 0
+cmp docs/reviews/b716ab5d34f1-local-coding-approval-clarity.txt /lane/reviews/b716ab5d34f1-local-coding-approval-clarity.md -> 0
+git diff --check b716ab5d34f18f804b9da26cb7052387e0f11fb3 --                 -> 0, no output
+git status --short                                                           -> clean
+```
+
+The helpers pass no test filter, skip or failure allowlist. The gate runs
+`cargo test ... --all-targets --no-fail-fast` unmodified, and its exit code is returned as is.
+`audit.py` only compares identities and messages with the retained witness and asserts that the
+gate stayed FAIL. It never changes the result.
+
+## Independent failure inspection
+
+I grouped every `---- ... stdout ----` block myself:
+
+- 42 in `linux_coding_runtime::tests` panic with `test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }`
+  at `sandbox()` (shells/host/src/linux_coding_runtime.rs:11304).
+- 10 in `linux_read` panic with `verified worker manifest: LinuxSandboxError { kind: InvalidManifest }`.
+- 1 in `linux_repository_map` panics with `Git verifies: LinuxRepositoryError { kind: InvalidGitArtifact }`.
+
+All 53 come from host trust in this lane: system executables and ancestors appear under the
+overflow UID. They match the host part of the retained created-file-transfer witness by identity
+and by normalized message (audit.py, re-run here). The 42 boundary failures are in a changed file,
+but each one panics at sandbox-manifest construction, before any changed code runs (see L1). The
+11 ignores are unchanged. I accept no native trust
+result.
+
+## Assessment of the claimed properties
+
+- **Factory:** `Box::leak` is gone from coding_development_runtime.rs (the only remaining one is the
+  test fixture's profile at linux_coding_runtime.rs:5950, as disclosed). The platform, profile and
+  workspace are `Arc`s.
+  - Failed construction uses `?` on owned values and drops them normally.
+  - `refresh_repository_composition` (coding_development_runtime.rs:620-641) replaces the factory's
+    `Arc`s. A live boundary keeps its own clone (`Arc::clone(&self.workspace).into()`, line 1569),
+    so a run's binding is never swapped. This matches the previous behaviour with leaked `&'static`
+    references.
+- **Owned binding:** `bind_owned_development` (linux_coding.rs:369) runs the unchanged
+  `bind_development` checks on the exact `Arc` targets (path hash, projection,
+  `select_development_linux_workspace`, revalidate, `held_workspace_root`). It then keeps those
+  same `Arc`s. `OwnedDevelopment` resolves through the same
+  `resolve_development_linux_workspace_object` as `Development` (line 472), and that is the only
+  `match` on the platform. No check is skipped or relaxed.
+- **Prepared operations:** `prepare` stores `Arc::clone(&self.workspace)`, which is the binding's
+  already-held root. Nothing reopens a path or constructs a lease. `revalidate` still checks the
+  root, then the binding, then the root again. Write and create still need the live
+  `owned_worktree` lease driver or the unowned path, exactly as before. The approval, grant,
+  terminal-publication and ownership code is untouched.
+- **Five registry borrows** (linux_coding_runtime.rs:1937, 2082, 2159, 2325, 2470):
+  `self.workspace.clone()` is a reference copy (Borrowed) or an `Arc` clone (Shared) of the
+  boundary's own handle. It cannot pick another binding or registry, and it lives through the
+  `execute_effect_authority` call. The policy, transaction and driver arguments are unchanged.
+- **Fixture:** the workspace is now an `Arc` and the profile stays the leaked static test profile,
+  stored explicitly. `profile_for_test` returns that same object. The four captures
+  (7415/7870/8214/8477) now `clone()` the handle.
+- **New tests** (linux_coding_lifetime_tests.rs):
+  - The weak-reference checks are specific. The profile and platform stay alive while only the
+    owned binding holds them and die after it drops. The root stays alive and the descriptors stay
+    above 0 while only the prepared read holds them, then both drop to zero.
+  - Plan equivalence compares `plan_sha256` of borrowed and owned preparations of the same call.
+  - Test 2's `assert_ne!` compares `GrantTarget` values, whose equality covers identity and
+    preimage, not descriptor numbers. So it shows a real observation change, and the old operation
+    refuses with `TargetDenied`.
+  - The descriptor count is limited to the test's own unique directory (`/proc/self/fd` readlink
+    prefix).
+  - The test uses a real worker thread.
+- **Privacy, IP and trademarks:** the added lines contain no private host path, username,
+  credential or product branding. `/lane/...` paths appear only in the retained report, as in
+  previously accepted reports. There is no new dependency and no `unsafe`, and the SBOM is
+  unchanged.
+- **Ledger:** TASKS.md rows are unchanged (audit). The prose adds only the retained PASS and a
+  non-closing note.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, evidence precision): the changed boundary paths have no executed test in this lane.**
+  - Location: shells/host/src/linux_coding_runtime.rs:6010-6012, :11304.
+  - The native-boundary fixture panics at `sandbox()` (line 6010) before it builds the handle at
+    line 6012. So every boundary test that would exercise the changed code is among the 42 baseline
+    failures. That covers `prepare` via the handle, the five registry clones, `into_parts`
+    consumers, the write/create driver roots, and all four modified captures
+    (`story_22_1_long_native_session_blocks_drift_and_preserves_exact_history`, and the three
+    `story_22_2_linux_restart_*` tests at 7870/8214/8477).
+  - Those changes are therefore checked only by compilation and Clippy plus static reasoning. The
+    reasoning is sound: they are mechanical type changes, the borrow checker enforces them, and
+    they change no authority logic.
+  - The evidence does not say this. It describes the failures only as the unchanged baseline, and
+    the factory-level release claim in the guide (coding-owned-runtime.md:176-181) is not observed.
+  - Fix: state in the evidence that these boundary tests fail at sandbox-manifest construction
+    before reaching the changed code. When a host that passes manifest verification is available,
+    run the boundary suite there.
+- **L2 (low, test strength/naming): the wrong-root refusal doesn't exercise partial-construction release.**
+  - Location: shells/host/src/linux_coding_lifetime_tests.rs:250-268.
+  - The wrong-root refusal fails at `verify_worktree_path` (linux_coding.rs:345) before any
+    descriptor is opened. So it doesn't show that a partly built held workspace is released; Rust
+    drop semantics are what guarantee that.
+  - The test name says "refresh", but the loop does no refresh.
+  - Fix: rename the test, or add a refusal after the descriptor is selected.
+
+Both are backlog notes in the T-303/T-306 rows, not new rows.
+
+## Per-row result
+
+- T-303 / T-306, runtime resource-lifetimes batch: the component increment is accepted at exact
+  commit 7a007e7aa1f4e9b594f2eda96789ee1269de7bd8 with no open high/medium finding. Neither parent
+  closes. No native workflow, durable ownership, model score or release is accepted. The source
+  gate is still FAIL on the unchanged 53-failure environmental baseline, and that is a failure, not
+  a pass.
+
+Verdict: PASS

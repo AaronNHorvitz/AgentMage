@@ -205,10 +205,12 @@ fn coding_answer() -> String {
 #[test]
 fn coding_proposal_streams_selected_context_and_returns_only_an_unapplied_change() {
     let api = Api::new();
-    let (endpoint, task) = upstream(|mut socket| {
+    let (tx, rx) = mpsc::channel();
+    let (endpoint, task) = upstream(move |mut socket| {
         let raw = incoming(&mut socket);
         let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
         let request: Value = serde_json::from_slice(&raw[start..]).unwrap();
+        tx.send((raw[start..].len(), request.clone())).unwrap();
         assert_eq!(request["max_tokens"], 512);
         assert!(request.get("tools").is_none());
         let context: Value =
@@ -236,6 +238,44 @@ fn coding_proposal_streams_selected_context_and_returns_only_an_unapplied_change
     assert!(events[0]["message_bytes"].as_u64().unwrap() <= 4096);
     assert_eq!(events[1]["type"], "text");
     let proposal = events.last().unwrap();
+    let (body_bytes, sent) = rx.recv_timeout(Duration::from_secs(3)).unwrap();
+    // Independently reconstruct the binding from the upstream's observed body.
+    // The transport's socket tests also hash those actual bytes independently.
+    use agentmage_platform_linux_inference::local_chat::{
+        ChatMessage, ChatRole, LocalChatEndpoint,
+    };
+    use agentmage_platform_linux_inference::local_chat_transport::{
+        LocalChatApproval, LocalChatTransport, TransportLimits,
+    };
+    let peer = LocalChatEndpoint::parse(&endpoint).unwrap();
+    let transport =
+        LocalChatTransport::new(peer.clone(), None, TransportLimits::default()).unwrap();
+    let messages = [
+        ChatMessage {
+            role: ChatRole::System,
+            content: sent["messages"][0]["content"].as_str().unwrap(),
+        },
+        ChatMessage {
+            role: ChatRole::User,
+            content: sent["messages"][1]["content"].as_str().unwrap(),
+        },
+    ];
+    let prepared = transport
+        .prepare_chat(
+            &LocalChatApproval::for_endpoint(peer),
+            "fixture",
+            &messages,
+            512,
+            false,
+        )
+        .unwrap();
+    let expected = serde_json::to_value(prepared.binding()).unwrap();
+    assert_eq!(events[0]["model_binding"], expected);
+    assert_eq!(proposal["model_binding"], expected);
+    assert_eq!(expected["request_body_bytes"], body_bytes);
+    assert_eq!(expected["verified_input_tokens"], Value::Null);
+    assert!(!String::from_utf8_lossy(&body).contains("synthetic-key"));
+    assert_eq!(proposal["response_complete"], true);
     assert_eq!(proposal["type"], "proposal");
     assert_eq!(proposal["applied"], false);
     assert_eq!(proposal["tested"], false);
@@ -362,7 +402,11 @@ fn coding_nested_ambiguous_and_out_of_scope_model_edits_never_produce_a_proposal
 #[test]
 fn coding_truncated_or_incomplete_generations_never_become_valid_edits() {
     let length_end = end().replace("\"stop\"", "\"length\"");
-    for suffix in [length_end, String::new(), format!("{}late", end())] {
+    for (suffix, response_complete) in [
+        (length_end, true),
+        (String::new(), false),
+        (format!("{}late", end()), false),
+    ] {
         let api = Api::new();
         let (endpoint, task) = upstream(move |mut s| {
             incoming(&mut s);
@@ -379,6 +423,18 @@ fn coding_truncated_or_incomplete_generations_never_become_valid_edits() {
         );
         assert!(!events.iter().any(|e| e["type"] == "proposal"));
         assert_eq!(events.last().unwrap()["type"], "error");
+        assert_eq!(
+            events.last().unwrap()["response_complete"],
+            response_complete
+        );
+        assert_eq!(
+            events.last().unwrap()["model_binding"],
+            events[0]["model_binding"]
+        );
+        assert_eq!(
+            events[0]["model_binding"]["verified_input_tokens"],
+            Value::Null
+        );
         task.join().unwrap();
     }
 }
@@ -428,6 +484,11 @@ fn coding_cancellation_remains_available_and_inert() {
     socket.read_to_end(&mut bytes).unwrap();
     let events = events(&split(bytes).1);
     assert_eq!(events.last().unwrap()["code"], "chat.transport.cancelled");
+    assert_eq!(events.last().unwrap()["response_complete"], false);
+    assert_eq!(
+        events.last().unwrap()["model_binding"],
+        events[0]["model_binding"]
+    );
     assert!(!events.iter().any(|e| e["type"] == "proposal"));
     task.join().unwrap();
 }
@@ -2099,6 +2160,10 @@ fn proposal_usage_uses_the_same_validated_stream_without_authorizing_edits() {
         assert_eq!(status, 200);
         let rows = events(&body);
         let last = rows.last().unwrap();
+        assert_eq!(last["model_binding"], rows[0]["model_binding"]);
+        assert_eq!(last["model_binding"]["provider_usage_requested"], true);
+        assert_eq!(last["model_binding"]["verified_input_tokens"], Value::Null);
+        assert_eq!(last["response_complete"], mode != "bad");
         if matches!(mode, "bad" | "invalid-edit") {
             assert_eq!(last["type"], "error");
             if mode == "bad" {

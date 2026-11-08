@@ -816,3 +816,267 @@ fn usage_transport_keeps_exact_approval_and_reports_only_valid_eof() {
         task.join().unwrap();
     }
 }
+
+#[test]
+fn prepared_endpoint_request_sends_the_exact_frozen_body_and_redacts_private_inputs() {
+    use serde_json::{Value, json};
+    use sha2::{Digest, Sha256};
+    for include_usage in [false, true] {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        listener.set_nonblocking(true).unwrap();
+        let endpoint = LocalChatEndpoint::parse(&format!(
+            "http://localhost:{}/api/v1/",
+            listener.local_addr().unwrap().port()
+        ))
+        .unwrap();
+        let approval = LocalChatApproval::for_endpoint(endpoint.clone());
+        let transport = LocalChatTransport::new(
+            endpoint.clone(),
+            Some(BearerKey::new("synthetic-key".into()).unwrap()),
+            limits(),
+        )
+        .unwrap();
+        let mut prompt = String::from("private synthetic prompt: 界\0\n\"\\");
+        let original = prompt.clone();
+        let request = transport
+            .prepare_chat(
+                &approval,
+                "test-model",
+                &[ChatMessage {
+                    role: ChatRole::User,
+                    content: &prompt,
+                }],
+                16,
+                include_usage,
+            )
+            .unwrap();
+        let binding = serde_json::to_value(request.binding()).unwrap();
+        prompt.clear(); // Execute cannot re-encode caller-owned, subsequently changed text.
+        assert_eq!(
+            listener.accept().unwrap_err().kind(),
+            std::io::ErrorKind::WouldBlock
+        );
+        let printed = binding.to_string();
+        assert!(!printed.contains("synthetic-key"));
+        assert!(!printed.contains("private synthetic prompt"));
+        assert_eq!(
+            binding["identity_kind"],
+            "selected_endpoint_unverified_model"
+        );
+        assert_eq!(binding["verified_input_tokens"], Value::Null);
+        assert_eq!(binding["endpoint"], endpoint.base_url());
+        assert_eq!(binding["model"], "test-model");
+        assert_eq!(binding["provider_usage_requested"], include_usage);
+        assert_eq!(binding["requested_max_output_tokens"], 16);
+        assert_eq!(binding["total_timeout"], json!({"secs":3,"nanos":0}));
+        assert_eq!(binding["idle_timeout"], json!({"secs":1,"nanos":0}));
+        assert_eq!(binding["response_wire_limit_bytes"], 5 * 1024 * 1024);
+        assert_eq!(binding["response_body_limit_bytes"], 4 * 1024 * 1024);
+        assert_eq!(binding["response_text_limit_bytes"], 1024 * 1024);
+        let (tx, rx) = mpsc::channel();
+        let task = thread::spawn(move || {
+            let start = Instant::now();
+            let mut socket = loop {
+                match listener.accept() {
+                    Ok((s, _)) => break s,
+                    Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                        assert!(start.elapsed() < Duration::from_secs(4));
+                        thread::sleep(Duration::from_millis(2));
+                    }
+                    Err(e) => panic!("{e}"),
+                }
+            };
+            socket
+                .set_write_timeout(Some(Duration::from_secs(2)))
+                .unwrap();
+            let bytes = read_request(&mut socket);
+            let offset = bytes.windows(4).position(|w| w == b"\r\n\r\n").unwrap() + 4;
+            let headers = std::str::from_utf8(&bytes[..offset]).unwrap();
+            assert!(headers.starts_with("POST /api/v1/chat/completions HTTP/1.1"));
+            assert!(headers.contains("Authorization: Bearer synthetic-key\r\n"));
+            tx.send(bytes[offset..].to_vec()).unwrap();
+            socket
+                .write_all(&response(
+                    "text/event-stream",
+                    &[text_frame("answer"), ending("stop")].concat(),
+                ))
+                .unwrap();
+            socket.shutdown(Shutdown::Write).unwrap();
+            assert_eq!(
+                listener.accept().unwrap_err().kind(),
+                std::io::ErrorKind::WouldBlock
+            );
+        });
+        let mut text = String::new();
+        let completion = request
+            .execute(&ChatCancellation::default(), |s| text.push_str(s))
+            .unwrap();
+        assert_eq!(completion.finish, ChatFinish::Stop);
+        assert_eq!(completion.usage, None); // Missing usage is never a measured zero.
+        assert_eq!(text, "answer");
+        let body = rx.recv_timeout(Duration::from_secs(3)).unwrap();
+        assert_eq!(
+            binding["request_body_sha256"],
+            Sha256::digest(&body)
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect::<String>()
+        );
+        assert_eq!(binding["request_body_bytes"], body.len());
+        let wire: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(wire["messages"][0]["content"], original);
+        assert_eq!(wire["max_tokens"], 16);
+        assert_eq!(wire.get("stream_options").is_some(), include_usage);
+        task.join().unwrap();
+    }
+}
+
+#[test]
+fn prepared_endpoint_request_refuses_invalid_approval_and_cancellation_without_connecting() {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let endpoint =
+        LocalChatEndpoint::parse(&format!("http://{}/v1", listener.local_addr().unwrap())).unwrap();
+    let (transport, approval) = connection(endpoint, limits());
+    let wrong = LocalChatApproval::for_endpoint(
+        LocalChatEndpoint::parse(&format!("http://{}/other", listener.local_addr().unwrap()))
+            .unwrap(),
+    );
+    let messages = [ChatMessage {
+        role: ChatRole::User,
+        content: "synthetic",
+    }];
+    assert!(matches!(
+        transport.prepare_chat(&wrong, "test-model", &messages, 16, false),
+        Err(TransportError::Approval)
+    ));
+    for (model, tokens) in [("", 16), ("test-model", 0), ("test-model", 65537)] {
+        assert!(matches!(
+            transport.prepare_chat(&approval, model, &messages, tokens, true),
+            Err(TransportError::Chat(ChatError::Request))
+        ));
+    }
+    let oversized = "x".repeat(256 * 1024);
+    assert!(matches!(
+        transport.prepare_chat(
+            &approval,
+            "test-model",
+            &[ChatMessage {
+                role: ChatRole::User,
+                content: &oversized,
+            }],
+            16,
+            false
+        ),
+        Err(TransportError::Chat(ChatError::Request))
+    ));
+    let prepared = transport
+        .prepare_chat(&approval, "test-model", &messages, 16, true)
+        .unwrap();
+    let cancel = ChatCancellation::default();
+    cancel.cancel();
+    assert_eq!(
+        prepared.execute(&cancel, |_| panic!("no text allowed")),
+        Err(TransportError::Cancelled)
+    );
+    drop(
+        transport
+            .prepare_chat(&approval, "test-model", &messages, 16, false)
+            .unwrap(),
+    );
+    assert_eq!(
+        listener.accept().unwrap_err().kind(),
+        std::io::ErrorKind::WouldBlock
+    );
+}
+
+#[test]
+fn endpoint_binding_separates_request_identity_from_credentials_and_unverified_server_identity() {
+    use serde_json::{Value, json};
+    let endpoint = LocalChatEndpoint::parse("http://127.0.0.1:1/v1").unwrap();
+    let (transport, approval) = connection(endpoint.clone(), limits());
+    let messages = [ChatMessage {
+        role: ChatRole::User,
+        content: "synthetic",
+    }];
+    let describe = |transport: &LocalChatTransport,
+                    approval: &LocalChatApproval,
+                    model,
+                    messages: &[ChatMessage<'_>],
+                    tokens,
+                    usage| {
+        serde_json::to_value(
+            transport
+                .prepare_chat(approval, model, messages, tokens, usage)
+                .unwrap()
+                .binding(),
+        )
+        .unwrap()
+    };
+    let original = describe(&transport, &approval, "test-model", &messages, 16, false);
+    let with_key = LocalChatTransport::new(
+        endpoint.clone(),
+        Some(BearerKey::new("another-key".into()).unwrap()),
+        limits(),
+    )
+    .unwrap();
+    assert_eq!(
+        describe(&with_key, &approval, "test-model", &messages, 16, false),
+        original
+    );
+    for changed in [
+        describe(&transport, &approval, "other-model", &messages, 16, false),
+        describe(&transport, &approval, "test-model", &messages, 17, false),
+        describe(&transport, &approval, "test-model", &messages, 16, true),
+        describe(
+            &transport,
+            &approval,
+            "test-model",
+            &[ChatMessage {
+                role: ChatRole::User,
+                content: "changed",
+            }],
+            16,
+            false,
+        ),
+    ] {
+        assert_ne!(
+            changed["request_body_sha256"],
+            original["request_body_sha256"]
+        );
+        assert_eq!(changed["verified_input_tokens"], Value::Null);
+    }
+    let (other_path, other_approval) = connection(
+        LocalChatEndpoint::parse("http://127.0.0.1:1/other").unwrap(),
+        limits(),
+    );
+    let changed = describe(
+        &other_path,
+        &other_approval,
+        "test-model",
+        &messages,
+        16,
+        false,
+    );
+    assert_ne!(changed["endpoint"], original["endpoint"]);
+    assert_eq!(
+        changed["request_body_sha256"],
+        original["request_body_sha256"]
+    );
+    // The fingerprint is explicitly of the body, not an approval or server identity.
+    let (short, _) = connection(
+        endpoint,
+        TransportLimits {
+            total: Duration::from_nanos(50),
+            idle: Duration::from_nanos(25),
+        },
+    );
+    let changed = describe(&short, &approval, "test-model", &messages, 16, false);
+    assert_eq!(changed["total_timeout"], json!({"secs":0,"nanos":50}));
+    assert_eq!(changed["idle_timeout"], json!({"secs":0,"nanos":25}));
+    assert_eq!(
+        changed["request_body_sha256"],
+        original["request_body_sha256"]
+    );
+    assert_ne!(changed, original);
+}

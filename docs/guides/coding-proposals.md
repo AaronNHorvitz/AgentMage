@@ -101,6 +101,43 @@ remain available. Disconnect detection and the existing transport time/byte
 limits remain in force. Events have process-only retention; this endpoint adds
 no durable run, interruption recovery or replay claim.
 
+## Endpoint request binding
+
+The context event and terminal proposal/error now include the same
+`model_binding`. Its version 1 identity kind is
+`selected_endpoint_unverified_model`: the canonical local endpoint and requested
+model identify the person's selection, not the server process, weights,
+tokenizer or hardware. `request_body_sha256` and `request_body_bytes` describe
+the frozen JSON prepared for transmission, including all messages and the
+optional usage request. Successful execution sends those exact bytes. On
+failure, none or only part may have been sent; the binding alone does not prove
+server receipt. HTTP headers and credentials are excluded. The digest is neither an
+approval nor a replay token; identical bodies sent to different endpoints have
+the same body digest. Compare the complete binding when inspecting an attempt.
+
+The binding records `requested_max_output_tokens`, `provider_usage_requested`,
+the exact `total_timeout` and `idle_timeout` as `{ "secs": ..., "nanos": ... }`,
+and the transport's response wire, body and text byte ceilings. The coding
+proposal consumer additionally caps answer text at 64 KiB. The token ceiling
+is a request to the server, not an independently measured token budget.
+`verified_input_tokens` remains null; provider counts never fill it.
+
+Terminal `response_complete` confirms only valid HTTP and stream-codec EOF.
+It can be true on an invalid strict edit or a length finish, both of which still
+refuse a candidate. Transport, malformed-stream and cancellation errors set it
+false. Existing optional `usage` is emitted only for completed responses when
+requested, labelled `provider-reported`; missing usage stays null. No completion
+or counts are fabricated after disconnect.
+
+The credential-owning transport prepares an immutable request without connecting.
+Its single-use execution sends those same body bytes through that original
+transport, with cancellation rechecked before connecting. Source/model disclosure
+consent and every tool approval remain separate. Snapshot, selected-workspace
+and failed-test repair proposals share this path. The terminal and MCP clients
+can display these additive event fields. This does not connect arbitrary
+endpoints to the native coordinator's exact-profile contract; that work remains
+open alongside native edit/test/retry execution and its measurements.
+
 ## Development measurement
 
 The new collector is separate from the unchanged, frozen chat-only baseline:

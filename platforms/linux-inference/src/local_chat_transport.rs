@@ -12,11 +12,13 @@ use std::sync::{
 };
 use std::time::{Duration, Instant};
 
+use serde::Serialize;
+use sha2::{Digest, Sha256};
 use zeroize::{Zeroize, Zeroizing};
 
 use crate::local_chat::{
     ChatError, ChatEvent, ChatFinish, ChatMessage, ChatStream, ChatUsage, LocalChatEndpoint,
-    encode_chat, encode_chat_with_usage,
+    MAX_STREAM_BYTES, MAX_TEXT_BYTES, encode_chat, encode_chat_with_usage,
 };
 
 const IO_TICK: Duration = Duration::from_millis(50);
@@ -223,6 +225,68 @@ pub struct ChatCompletion {
     pub usage: Option<ChatUsage>,
 }
 
+/// Inspectable request binding, without credentials or conversation bytes.
+/// This records a selected endpoint and requested model, not verified weights,
+/// tokenizer, server process or hardware. It grants no inference/tool authority,
+/// is not an approval token and cannot be decoded into an executable request.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct EndpointChatBinding {
+    version: u16,
+    identity_kind: &'static str,
+    endpoint: String,
+    model: String,
+    request_body_sha256: String,
+    request_body_bytes: usize,
+    requested_max_output_tokens: u32,
+    provider_usage_requested: bool,
+    // Exact durations avoid rounding a valid sub-millisecond limit to zero.
+    total_timeout: Duration,
+    idle_timeout: Duration,
+    response_wire_limit_bytes: usize,
+    response_body_limit_bytes: usize,
+    response_text_limit_bytes: usize,
+    // A request fingerprint and provider usage cannot establish this count.
+    verified_input_tokens: Option<u64>,
+}
+
+/// An inert, single-use chat request bound to its credential-owning transport.
+/// No Debug, Clone or deserialization can expose/reconstruct the private body.
+/// Preparing it performs no network I/O; dropping it erases the encoded body.
+pub struct PreparedEndpointChat<'a> {
+    transport: &'a LocalChatTransport,
+    binding: EndpointChatBinding,
+    body: Zeroizing<Vec<u8>>,
+}
+
+impl PreparedEndpointChat<'_> {
+    /// Describes exactly the immutable JSON body that execute will send.
+    #[must_use]
+    pub const fn binding(&self) -> &EndpointChatBinding {
+        &self.binding
+    }
+
+    /// Sends this request once, through its original transport and approval.
+    /// Text remains partial until valid HTTP and codec EOF. Failure never yields
+    /// a completed usage observation and never retries. Cancellation is rechecked
+    /// before connecting, including when requested after preparation.
+    pub fn execute(
+        self,
+        cancel: &ChatCancellation,
+        text: impl FnMut(&str),
+    ) -> Result<ChatCompletion, TransportError> {
+        cancel.check()?;
+        self.transport.chat_encoded(
+            &self.binding.model,
+            &self.body,
+            self.binding
+                .provider_usage_requested
+                .then_some(self.binding.requested_max_output_tokens),
+            cancel,
+            text,
+        )
+    }
+}
+
 impl LocalChatTransport {
     /// Configures an explicit local endpoint. Credentials belong to this exact
     /// instance; replacing the destination requires a new transport and approval.
@@ -244,6 +308,50 @@ impl LocalChatTransport {
             return Err(TransportError::Approval);
         }
         Ok(())
+    }
+
+    /// Validates exact endpoint approval and encodes an immutable bounded request.
+    /// The binding hashes the actual JSON body, excluding HTTP headers/credentials.
+    /// The token ceiling is a server request, not a measured tokenizer budget;
+    /// optional provider counts remain unverified even after valid completion.
+    pub fn prepare_chat(
+        &self,
+        approval: &LocalChatApproval,
+        model: &str,
+        messages: &[ChatMessage<'_>],
+        max_tokens: u32,
+        include_usage: bool,
+    ) -> Result<PreparedEndpointChat<'_>, TransportError> {
+        self.authorized(approval)?;
+        let body = Zeroizing::new(if include_usage {
+            encode_chat_with_usage(model, messages, max_tokens)?
+        } else {
+            encode_chat(model, messages, max_tokens)?
+        });
+        let binding = EndpointChatBinding {
+            version: 1,
+            identity_kind: "selected_endpoint_unverified_model",
+            endpoint: self.endpoint.base_url(),
+            model: model.to_owned(),
+            request_body_sha256: Sha256::digest(&*body)
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect(),
+            request_body_bytes: body.len(),
+            requested_max_output_tokens: max_tokens,
+            provider_usage_requested: include_usage,
+            total_timeout: self.limits.total,
+            idle_timeout: self.limits.idle,
+            response_wire_limit_bytes: MAX_WIRE,
+            response_body_limit_bytes: MAX_STREAM_BYTES,
+            response_text_limit_bytes: MAX_TEXT_BYTES,
+            verified_input_tokens: None,
+        };
+        Ok(PreparedEndpointChat {
+            transport: self,
+            binding,
+            body,
+        })
     }
 
     /// First-run connection test and model listing for the configured endpoint.
@@ -312,8 +420,8 @@ impl LocalChatTransport {
     ) -> Result<ChatFinish, TransportError> {
         self.authorized(approval)?;
         cancel.check()?;
-        let body = Zeroizing::new(encode_chat(model, messages, max_tokens)?);
-        self.chat_encoded(model, &body, None, cancel, text)
+        self.prepare_chat(approval, model, messages, max_tokens, false)?
+            .execute(cancel, text)
             .map(|r| r.finish)
     }
 
@@ -331,8 +439,8 @@ impl LocalChatTransport {
     ) -> Result<ChatCompletion, TransportError> {
         self.authorized(approval)?;
         cancel.check()?;
-        let body = Zeroizing::new(encode_chat_with_usage(model, messages, max_tokens)?);
-        self.chat_encoded(model, &body, Some(max_tokens), cancel, text)
+        self.prepare_chat(approval, model, messages, max_tokens, true)?
+            .execute(cancel, text)
     }
 
     fn chat_encoded(
@@ -356,7 +464,7 @@ impl LocalChatTransport {
         )?;
         let framing = wire.headers("text/event-stream")?;
         let mut finish = None;
-        wire.body(framing, 4 * 1024 * 1024, |bytes| {
+        wire.body(framing, MAX_STREAM_BYTES, |bytes| {
             for event in codec.feed(bytes)? {
                 match event {
                     ChatEvent::Text(value) => text(&value),
