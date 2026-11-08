@@ -1,0 +1,132 @@
+Commit: 0d8557509e74293cdd62c5986ff908b1a74f23f2
+Scope: local-coding-guided-service
+
+# Independent core review — actual-service coding consumers (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate session, read-only. Pinned checkout `/lane/review-checkout`,
+`git rev-parse HEAD` = `0d8557509e74293cdd62c5986ff908b1a74f23f2`. Predecessor
+`8c652954e4bf73eafc7220cb8ff2bcdcb6d831ff`. Working tree clean before and after.
+
+## Scope reviewed
+
+The complete seven-file diff over the predecessor (687 insertions, 2 deletions):
+`TASKS.md` (prose only), `docs/guides/coding-guided-worktree.md`,
+`docs/evidence/t303-guided-service-2026-11-08.md`,
+`docs/reviews/8c652954e4bf-local-coding-workflow-budget.txt` (retained predecessor review),
+`platforms/local-api/tests/coding_worktree.rs` (+3 lines: module include),
+`platforms/local-api/tests/support/coding_guided_service.rs` (new, 337 lines),
+`platforms/local-api/tests/support/coding_workflow.rs` (+61 lines: one method).
+`git diff 8c652954 -- platforms/local-api/src` is empty, so there is no production source change.
+No evaluation, hidden, held-out, scorer, threshold, dependency, SBOM, status or scoreboard file is touched.
+
+## Methods and exact commands (all run from /lane/review-checkout)
+
+| # | Command | Exit | Result |
+|---|---------|------|--------|
+| 1 | `sha256sum --quiet -c /lane/state/tmp/t303-guided-service/review-inputs.sha256` | 0 | All 35 entries match. Manifest file SHA256 `57f6e5bc…cd53ccbd287f`, as stated. |
+| 2 | `PATH=…/tooling:$PATH node --version` | 0 | `v24.15.0`; node SHA256 `d1de76d8…c74bd932c`, as stated. Link count 3 (hard link, not a copy). |
+| 3 | `PATH=…/tooling:$PATH CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-guided-service-0d8557509e74` | 0 | `FAST GATE: PASS`, `SOURCE_FREEZE_UNCHANGED True`, 357.0 s including reservations. Not wrapped in build-slot. Seven commands each exited 0: diff-check, lint-untracked, lint-reviews, markdownlint (0 issues), `cargo fmt --check`, `cargo clippy --all-targets -D warnings`, `cargo test --all-targets --no-fail-fast`. |
+| 4 | `python3 -B …/audit.py /lane/state/tmp/review-guided-service-0d8557509e74` | 0 | Baseline 10 targets 166/0/0/0. Fresh run 10 targets **170/0/0/0**. All 166 old passing identities still pass, plus exactly the four new methods. 3 Rust inputs unchanged. |
+| 5 | `PATH=…/tooling:$PATH python3 -B …/final.py` | 0 | Exact seven-file scope, no `src` diff, unchanged ledger rows, privacy patterns clear, retained review byte-identical to `/lane/reviews/8c652954e4bf-local-coding-workflow-budget.md`, four lightweight checks exit 0. |
+| 6 | `cmp …/validation-final/source-freeze.json /lane/state/tmp/review-guided-service-0d8557509e74/source-freeze.json` | 0 | The source freeze is identical to the builder's. |
+| 7 | `git diff --check 8c652954e4bf73eafc7220cb8ff2bcdcb6d831ff --` | 0 | Clean. |
+| 8 | `git status --short` | 0 | Empty. |
+| 9 | `python3 -B …/audit.py …/validation-final` (builder's retained gate) | 0 | 170/0/0/0 and six exits of 0. `result.json` shows 502.13 s and the fmt RESULT shows 462.70 s, both matching the evidence. |
+
+Namespace: run.py recorded `/tmp/gs-tw0nc9oq`. After all jobs exited it held 0 entries, and I removed it
+with `rmdir`. No other resource was touched.
+
+Raw evidence I inspected but did not rerun (the brief forbids the mutation script):
+- `focused-first-0.log`: all 3 service methods fail at `coding_guided_service.rs:25` (the PUT reply
+  lacks `model_context_approved`). The corrected helper reads it back through GET and binds the
+  selection id and revision to the PUT reply. This does not weaken anything.
+- `focused-0.log`: guided observations take 34,598–41,505 µs and proposal observations 51,136–53,945 µs.
+  Both ranges match the evidence text exactly.
+- `mutation-results.json` and the two mutation logs: removing the `worktree_root_sha256` guard or the
+  `creation_receipt_sha256` guard (`coding_cli_workflow.rs:218-219`) makes the new workflow method fail
+  with `0 passed; 1 failed`, exit 101. The current SHA256 of `coding_cli_workflow.rs` is
+  `67804779…68b33bc77b`, which equals the recorded `original_production_sha256`, so the bytes were restored.
+
+Independent request-trace probe, written outside the repository (`/tmp`, since deleted). It runs the
+gate-built `agentmage-local-api serve-coding` and `agentmage-code`, through a logging loopback proxy
+that rewrites `Host` to the API address:
+- `code-worktree`, model-context consent granted: the requests are `GET /v1/code/workspace`,
+  `GET /v1/settings`, `GET /v1/code/repository/edit`, then a stop. The service reports
+  `worktree_root_sha256: null`, so the client refuses at the ownership check. Exit 1, no prompt.
+- `code-worktree`, consent withheld: the only request is `GET /v1/code/workspace`, then a stop. The refusal
+  is the client consent check (`coding_cli_workflow.rs:141`) and never reaches the ownership check.
+- My first attempt, without the Host rewrite, was refused by the service ("Use trusted controls…").
+  This incidentally confirms the API's Host-header check.
+
+## Review notes
+
+- **Confinement / safety of the loop.** The tests only add consumers. All fixtures use loopback only,
+  roots under the per-process temp directory, and `Drop` stops the child service and removes the root.
+  Each test asserts that the source sentinel, the excluded sentinel, the empty owned directory and all
+  five state inspections are unchanged. The synthetic upstream bounds header size (8 KiB), body size
+  (32 KiB), socket timeouts (2 s) and lifetime (10 s), and its panics surface through `join().unwrap()`.
+  The guided and repair tests prove the absence of an upstream connection with a nonblocking accept
+  that returns `WouldBlock` after the terminal has exited. That is sound, because any connection
+  attempt would still be queued.
+- **Repair test.** It pins the server error `code.command.worktree-required` both in the terminal
+  transcript and in two direct POSTs per lifetime that carry correct selection, root and endpoint pins
+  plus claimed disclosure consent. This is a discriminating server-side refusal.
+- **Proposal test.** It counts requests exactly: 0 without consent and 1 with consent. It checks model,
+  `stream`, `max_tokens`, message count, selected content present and excluded marker absent. It covers
+  complete (`proposal`) and output-limited (`error`) streams. Labelling is honest: the evidence, guide
+  and module doc say generation is SYNTHETIC and that no successful native edit/test/repair is claimed.
+- **Original-prepare pin method.** I checked its route indexing against the script:
+  `calls.len() == prepare + 1` proves the run stopped immediately after the prepare reply, with
+  0 or 1 edit/validation decisions for the initial and repair attempts, and the tree file unchanged.
+  The mutation logs show that two of the three guards are discriminated.
+- **Claims and evidence.** Every number in the evidence traces to a retained log I read: 166, 170,
+  the µs ranges, 502.13 s and 462.70 s. My fresh gate reproduces the test counts. The TASKS.md edit is
+  prose only; final.py and the diff confirm no row was added, closed or changed. The retained predecessor
+  review is byte-identical to the original.
+- **Privacy / IP.** No committed private path, username, hostname, credential or product name is in the
+  added lines. My own grep of the diff found only inherited prose. No third-party code or text.
+- **Delivery.** This is a single non-closing test increment that runs and is measured. It adds no
+  sub-row or plan-only row.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L1 (low) — the guided-refusal method does not pin the refusal reason, and half its "ownership refusal"
+cases are consent refusals.**
+`platforms/local-api/tests/support/coding_guided_service.rs:66-116`. The test is named
+`guided_actual_service_refuses_unowned_workspace_…`, and the evidence and TASKS describe eight
+guided ownership refusals "with and without model-context consent". The `eprintln!` label at
+`:111` reads "guided ownership refusal". But the only reason assertion is the generic
+`"Guided workflow stopped"` message, which `coding_cli_workflow.rs:121` prints for any `Err`. My trace
+shows the four `disclose=false` cases stop at the consent check (`coding_cli_workflow.rs:141`)
+after one request, so they never reach the ownership check (`:152-156`). The four `disclose=true` cases
+do stop at ownership: the trace ends at `GET /v1/code/repository/edit` with a null identity. The behaviour
+fails closed and the "no generation, no prompt, no effect" claims hold. However, a regression that let
+guided runs continue past a missing owner identity in the no-consent configuration, or that moved the
+refusal to an earlier unrelated guard, would not be detected.
+Fix: in the consent-granted cases, assert a reason-specific observation. For example, make the terminal
+emit a stable reason code for the guided stop, or count the API routes the way the synthetic-peer tests
+do. Relabel the no-consent cases as consent refusals in the observation line and the evidence.
+
+**L2 (low) — the `operation` substitution case has no discrimination probe.**
+`coding_workflow.rs:1003-1060` substitutes `operation` alongside the root and creation pins, and
+the evidence presents all three as directly tested original-prepare pins. The mutation probes removed
+only the `worktree_root_sha256` and `creation_receipt_sha256` guards. Because both pending inspections
+are also substituted, the guard at `coding_cli_workflow.rs:217` is probably the only thing that stops
+that case. I infer this from the code and did not run a mutation, as the brief forbids it.
+Fix: add the `operation` guard to the builder's discrimination probe set and retain its log.
+
+The earlier same-row lows (L1–L4 of the predecessor review) remain backlog, as recorded.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing increment):** PASS for this increment. Within its stated scope (refusal
+  and protocol coverage through the actual service with a synthetic upstream, plus direct coverage of the
+  original prepare pins), the increment is correct, honestly labelled and independently reproduced,
+  with no high or medium finding. Both parent rows remain OPEN. Successful native/model
+  edit/test/repair through the actual service, native executable-ownership admission, autonomous
+  endpoint composition, durable recovery, approved Git and the parent measurements are still unobserved
+  and open. Deferred T-301.1 is not waived. This review does not approve anything in the repository.
+
+Verdict: PASS

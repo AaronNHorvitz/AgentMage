@@ -9,6 +9,46 @@ recoverable run. T-303/T-306 remain open.
 
 ## Prepare
 
+To start from a repository in one command, supply an immutable base commit, a
+unique task identifier, an existing empty private management directory outside
+the repository and state, a lexical source-path query, and the complete test
+definition described below:
+
+```sh
+target/debug/agentmage-code <loopback-ip:port> <private-auth-directory> code-repository 300 <absolute-repository> <absolute-management-directory> <task-id> <base-commit> '<source-query>' <model> 16384 2048 '<task>' '<complete-test-definition-json>'
+```
+
+This command asks separately for `inspect <base-commit>` (hardened local Git
+inspection and complete original-tree reads, including ignored/untracked work),
+`create <preview-sha256>` (the displayed task branch and isolated worktree),
+`discover <worktree-root-sha256>` (bounded worktree name discovery), and
+`share <settings-revision>` (reading and disclosing the exact displayed source
+selection to the displayed endpoint). Each needs a controlling terminal. There
+is no automatic approval option. Source selection replaces the service's previous
+selection only after that share decision.
+
+Discovery reads names only. The complete map is displayed; up to sixteen paths
+with positive lexical-query scores are selected, then sorted for the source
+allowlist. An empty selection refuses. Ranking is lexical path matching, not
+semantic analysis or Git ignore handling. The original API validates and reads
+selected files after source consent. No file content is read by the setup client.
+
+Setup retains the original creation preview and checks the kernel plan, task
+branch, immutable base, repository and management-directory bindings. The
+creation result must match that repository and plan. Before generation the
+original guided workflow must still hold the same created worktree, creation
+receipt, selected source identity/revision/paths and endpoint settings. A
+replacement stops the workflow rather than becoming its new input.
+
+One budget of 1 through 3600 monotonic running seconds covers setup, every
+approval and the entire edit/test/repair cycle below. Setup never renews the
+clock at handoff. A declined approval or failed/lost reply leaves any completed
+creation or selection in place. There is no automatic cleanup, repeated effect,
+original-checkout transfer, commit or push. Inspect service records and disk
+before continuing manually. Native executable admission remains mandatory.
+
+For an already prepared worktree, use the original command:
+
 Create the isolated worktree through the running service as described in
 [worktree ownership](coding-worktrees.md). Select its exact source files and
 approve disclosure to the configured endpoint with `select-model` or

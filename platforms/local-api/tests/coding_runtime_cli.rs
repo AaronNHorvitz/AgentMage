@@ -1354,6 +1354,10 @@ try:
             prompt_bytes.append(len(raw)-review_start);review_start=len(raw)
             prompt=raw.split(b'Type exactly ')[-1].split(b' to approve;')[0]
             mode=sys.argv[1];tool=prompt.startswith(b'allow ')
+            if mode=='repository-clock':
+                if answered==0:time.sleep(.9)
+                if answered!=4:os.write(master,prompt+b'\n')
+                answered+=1;continue
             allow = mode.startswith('workflow-socket:') or mode in ('approve','slow-approve') or (mode in ('deny-tools','slow-deny-tools','signal-tool','eof-start','eof-tool','overflow-tool') and not tool) or (mode=='allow-tool-only' and tool)
             if mode.startswith('workflow-stop:'):
                 _,index,action=mode.split(':');target=answered==int(index)
@@ -1369,7 +1373,7 @@ try:
             answered+=1
     status=p.wait(timeout=2)
     assert b'\x1b' not in raw
-    print(json.dumps({'status':status,'answered':answered,'prompt_bytes':prompt_bytes,'transcript':raw.decode()}))
+    print(json.dumps({'status':status,'answered':answered,'prompt_bytes':prompt_bytes,'seconds':time.monotonic()-started,'transcript':raw.decode()}))
 finally:
     if p.poll() is None:os.killpg(p.pid,signal.SIGKILL);p.wait()
     os.close(master)

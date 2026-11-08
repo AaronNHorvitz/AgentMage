@@ -63,6 +63,82 @@ fn assert_preserved(f: &Fixture, before: &[Value]) {
 }
 
 #[test]
+fn repository_setup_actual_service_stops_at_original_native_inspection_refusal() {
+    let f = Fixture::new();
+    let upstream = TcpListener::bind("127.0.0.1:0").unwrap();
+    upstream.set_nonblocking(true).unwrap();
+    configure(
+        &f,
+        &format!("http://{}/v1", upstream.local_addr().unwrap()),
+        false,
+    );
+    let before = states(&f);
+    let (status, refusal) = f.call("POST", "/v1/code/repository/prepare", true, f.prepare());
+    assert_eq!(status, 409);
+    let definition = json!({"command":synthetic_command_spec(),"kind":"unit",
+        "minimum_test_count":1,"approve_definition":true})
+    .to_string();
+    let event_count = f.call_bytes("GET", "/v1/activity", true, b"").1["events"]
+        .as_array()
+        .unwrap()
+        .len();
+    let started = Instant::now();
+    let out = f.terminal(
+        &[
+            "code-repository",
+            "30",
+            f.root.join("repo").to_str().unwrap(),
+            f.root.join("owned").to_str().unwrap(),
+            "fixture",
+            &"1".repeat(40),
+            "sentinel",
+            "synthetic-model",
+            "4096",
+            "128",
+            "Inspect sentinel",
+            &definition,
+        ],
+        "approve-all",
+    );
+    assert_eq!(out["status"], 1, "{out}");
+    let transcript = out["transcript"].as_str().unwrap();
+    assert!(transcript.contains("Type exactly inspect "), "{out}");
+    assert!(
+        transcript.contains(refusal["error"].as_str().unwrap()),
+        "{out}"
+    );
+    for denied in [
+        "Type exactly create ",
+        "Type exactly discover ",
+        "Type exactly share ",
+    ] {
+        assert!(!transcript.contains(denied), "{out}");
+    }
+    assert_eq!(
+        upstream.accept().unwrap_err().kind(),
+        std::io::ErrorKind::WouldBlock
+    );
+    assert_preserved(&f, &before);
+    let events = f.call_bytes("GET", "/v1/activity", true, b"").1["events"]
+        .as_array()
+        .unwrap()
+        .clone();
+    assert!(!events[event_count..].iter().any(|event| matches!(
+        event["action"].as_str(),
+        Some(
+            "code.map"
+                | "code.workspace.proposal"
+                | "code.workspace.select"
+                | "code.repository.repair"
+        )
+    )));
+    eprintln!(
+        "actual API repository-setup native refusal elapsed_us={}",
+        started.elapsed().as_micros()
+    );
+}
+
+#[test]
 fn guided_actual_service_refuses_unowned_workspace_without_generation_or_effects() {
     for disclose in [false, true] {
         let mut f = Fixture::new();

@@ -17,6 +17,9 @@ use agentmage_kernel_engine::{
 use agentmage_platform_linux::LinuxCodingReadScope;
 use sha2::{Digest, Sha256};
 
+#[path = "coding_repository_workflow.rs"]
+mod repository;
+
 fn hash(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()
@@ -341,10 +344,12 @@ fn guided_client_refuses_edit_replacement_before_the_approval_inspection() {
 
 impl Script {
     fn new(f: &Fixture) -> Self {
-        fs::create_dir(f.root.join("tree")).unwrap();
-        fs::write(f.root.join("tree/calc.py"), "return a - b\n").unwrap();
-        let scope =
-            LinuxCodingReadScope::select(&f.root.join("tree"), &["calc.py".into()]).unwrap();
+        Self::new_at(&f.root.join("tree"))
+    }
+    fn new_at(root: &std::path::Path) -> Self {
+        fs::create_dir(root).unwrap();
+        fs::write(root.join("calc.py"), "return a - b\n").unwrap();
+        let scope = LinuxCodingReadScope::select(root, &["calc.py".into()]).unwrap();
         Self {
             replies: vec![],
             routes: vec![],

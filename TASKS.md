@@ -2,8 +2,26 @@
 
 ## Active queue: local agent mission
 
+The [repository setup command](docs/guides/coding-guided-worktree.md) connects
+approved original-repository inspection, exact worktree creation, bounded path
+discovery and source disclosure to the existing guided edit/test/repair workflow.
+One monotonic running-time budget and original creation/selection/settings pins
+span setup and execution. See the [builder record](docs/evidence/t303-repository-setup-2026-11-08.md).
+Independent core review is required. Native execution, autonomous endpoint
+composition, durable recovery, approved Git and measurements remain open.
+T-303/T-306 remain open; no row is added or closed.
+
+The service-consumer [independent core review](docs/reviews/0d8557509e74-local-coding-guided-service.txt)
+has **Verdict: PASS** for exact commit
+`0d8557509e74293cdd62c5986ff908b1a74f23f2`, with no high/medium finding.
+Low L1 (reason-specific guided refusal coverage) and L2 (operation-guard
+discrimination probe) remain same-row backlog. Of the eight earlier guided
+refusal cases, four withheld-consent cases stop before checking ownership; the
+four consent-granted cases reach ownership refusal. Generation, prompts and
+effects are absent in all eight. Earlier lows remain; both parents stay open.
+
 The [actual-service consumer batch](docs/evidence/t303-guided-service-2026-11-08.md)
-checks guided ownership refusal, repair refusal before failure disclosure, and
+checks guided consent/ownership refusal, repair refusal before failure disclosure, and
 streamed worktree proposals through the original API with a synthetic upstream.
 It also directly checks each original prepared edit's operation, root and
 creation binding. This adds tests only; successful native edit/test/repair,

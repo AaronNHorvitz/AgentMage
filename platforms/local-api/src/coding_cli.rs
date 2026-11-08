@@ -25,6 +25,8 @@ mod endpoint;
 mod mcp;
 #[path = "coding_cli_record.rs"]
 mod record;
+#[path = "coding_cli_repository.rs"]
+mod repository;
 #[path = "coding_cli_runtime.rs"]
 mod runtime;
 #[path = "coding_cli_workflow.rs"]
@@ -763,6 +765,12 @@ fn execute(args: &[String]) -> Result<()> {
         };
         return workflow::run(&client, rest, seconds.parse().map_err(|_| ())?);
     }
+    if command == "code-repository" {
+        let [seconds, rest @ ..] = tail else {
+            return Err(());
+        };
+        return repository::run(&client, rest, seconds.parse().map_err(|_| ())?);
+    }
     match (command.as_str(), tail) {
         ("edit", []) => show(&client.json("GET", "/v1/code/repository/edit", true, None)?),
         ("edit-prepare", [root, request]) => {
@@ -968,6 +976,9 @@ fn execute(args: &[String]) -> Result<()> {
 
 fn usage() {
     eprintln!(
+        "Repository workflow: agentmage-code <loopback-ip:port> <private-auth-directory> code-repository <seconds> <repository> <private-management-directory> <task-id> <base-commit> <source-query> <model> <message-bytes> <output-tokens> <task> <complete-test-definition-json>"
+    );
+    eprintln!(
         "Guided coding: agentmage-code <loopback-ip:port> <private-auth-directory> code-worktree <worktree> <model> <message-bytes> <output-tokens> <task> <definition-json> (3600 seconds); code-worktree-bounded <seconds> <same arguments>"
     );
     eprintln!(
@@ -979,8 +990,19 @@ fn usage() {
 }
 
 fn worktree_decide(client: &Client, roots: Option<(&String, &String)>) -> Result<()> {
+    worktree_decide_observed(client, roots, None).map(|_| ())
+}
+
+fn worktree_decide_observed(
+    client: &Client,
+    roots: Option<(&String, &String)>,
+    expected: Option<&Value>,
+) -> Result<Value> {
     let status = client.json("GET", "/v1/code/repository", true, None)?;
     let preview = &status["pending"];
+    if expected.is_some_and(|expected| expected != preview) {
+        return Err(());
+    }
     let hash = preview["preview_sha256"]
         .as_str()
         .filter(|s| digest(s))
@@ -994,7 +1016,7 @@ fn worktree_decide(client: &Client, roots: Option<(&String, &String)>) -> Result
             LinuxCodingReadScope::verify_root(Path::new(owned), owned_identity).map_err(|_| ())
         };
         verify()?;
-        confirm(
+        client.confirm(
             &json!({"repository":root,"management_directory":owned,"preview":preview,
             "warning":"Creates the displayed task branch and management_directory/worktree. Does not select source, run tests, commit, push or delete. After a lost reply inspect the canonical receipts and disk; never resend an approval."}),
             &format!("create {hash}"),
@@ -1019,7 +1041,7 @@ fn worktree_decide(client: &Client, roots: Option<(&String, &String)>) -> Result
     {
         return Err(());
     }
-    Ok(())
+    Ok(result)
 }
 
 fn command_decide(client: &Client, root: Option<&String>, validation: bool) -> Result<()> {

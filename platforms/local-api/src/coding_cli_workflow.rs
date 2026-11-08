@@ -13,7 +13,7 @@ use agentmage_kernel_engine::{
 
 const MAX_ATTEMPTS: u64 = 3;
 
-fn definition(text: &str) -> Result<Value> {
+pub(super) fn definition(text: &str) -> Result<Value> {
     if text.len() > MAX_REQUEST {
         return Err(());
     }
@@ -105,6 +105,16 @@ fn observed_receipt(
 /// Uses an already selected/disclosed source set and already created worktree.
 /// A clean validation series is required; interrupted work is inspected manually.
 pub(super) fn run(client: &Client, args: &[String], seconds: u64) -> Result<()> {
+    bounded(client, seconds, |client| {
+        run_steps(client, args, seconds, None)
+    })
+}
+
+pub(super) fn bounded(
+    client: &Client,
+    seconds: u64,
+    steps: impl FnOnce(&Client) -> Result<()>,
+) -> Result<()> {
     if !std::io::stdin().is_terminal() || !(1..=3600).contains(&seconds) {
         return Err(());
     }
@@ -115,7 +125,7 @@ pub(super) fn run(client: &Client, args: &[String], seconds: u64) -> Result<()> 
         deadline: Some(controls.deadline()),
         controls: Some(controls),
     };
-    let result = run_steps(&client, args, seconds);
+    let result = steps(&client);
     if result.is_err() {
         eprintln!(
             "Guided workflow stopped; inspect service records and disk before continuing. A sent operation may still be running; no cancellation or retry was sent."
@@ -124,7 +134,19 @@ pub(super) fn run(client: &Client, args: &[String], seconds: u64) -> Result<()> 
     result
 }
 
-fn run_steps(client: &Client, args: &[String], seconds: u64) -> Result<()> {
+pub(super) struct Origin {
+    pub(super) root: String,
+    pub(super) creation: Value,
+    pub(super) selected: Value,
+    pub(super) settings: Value,
+}
+
+pub(super) fn run_steps(
+    client: &Client,
+    args: &[String],
+    seconds: u64,
+    origin: Option<&Origin>,
+) -> Result<()> {
     let [root, model, bytes, tokens, task, text] = args else {
         return Err(());
     };
@@ -150,13 +172,16 @@ fn run_steps(client: &Client, args: &[String], seconds: u64) -> Result<()> {
     if settings["settings_revision"].as_u64().is_none() || settings["endpoint"].as_str().is_none() {
         return Err(());
     }
+    if origin.is_some_and(|o| o.selected != selected || o.settings != settings) {
+        return Err(());
+    }
     let owner = client.json("GET", "/v1/code/repository/edit", true, None)?;
     let identity = owner["worktree_root_sha256"]
         .as_str()
         .filter(|s| digest(s))
         .ok_or(())?;
     LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ())?;
-    if !owner["pending"].is_null() {
+    if !owner["pending"].is_null() || origin.is_some_and(|o| o.root != identity) {
         return Err(());
     }
     let state = client.json("GET", "/v1/code/repository/validation", true, None)?;
@@ -183,6 +208,9 @@ fn run_steps(client: &Client, args: &[String], seconds: u64) -> Result<()> {
     )?;
     let template = check_preview(&preflight, &body, identity, 1, None)?;
     let creation = preflight["creation_receipt_sha256"].clone();
+    if origin.is_some_and(|o| o.creation != creation) {
+        return Err(());
+    }
     let mut prior: Option<String> = None;
     for attempt in 1..=MAX_ATTEMPTS {
         LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ())?;
