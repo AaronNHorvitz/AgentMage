@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The read verifier's [independent core review](docs/reviews/983524c26b41-local-coding-endpoint-read-verifier.txt)
+has **Verdict: PASS** for exact commit
+`983524c26b4170a839abf82b2eb0968a15caf3f3`, with no high/medium finding.
+Low L1 (any unsuccessful read fails acceptance) is now explicit in the guide;
+L2 (the direct verifier constructor skips compiled exclusions) and L3 (some
+checks exceed the run's possible output budget) remain same-row backlog.
+Earlier lows remain backlog. Both parent rows stay open.
+
 The [explicit native endpoint read launch](docs/evidence/t303-endpoint-launch-2026-11-08.md)
 connects trusted preparation and exact observation acceptance to the existing
 authenticated retained HTTP owner. The executable requires explicit startup

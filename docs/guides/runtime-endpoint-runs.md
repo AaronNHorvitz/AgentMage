@@ -769,6 +769,8 @@ A trusted caller prepares this closed version-1 JSON object:
 This is a trusted preparation interface, not a command that turns arbitrary
 task prose into verified acceptance. Each check's generated criterion must
 already appear, in order, in both the task acceptance criteria and work packet.
+Any unsuccessful, truncated, multi-item or insufficiently evidenced read in
+the run fails acceptance, even if a later read matches every declared check.
 The preparer owns the prior consent and accuracy of snapshot/provenance metadata.
 Startup does not silently discover instructions or read source files to invent
 checks. Required validations or broader semantics refuse. Source excerpts are

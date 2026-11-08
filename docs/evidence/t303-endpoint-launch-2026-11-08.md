@@ -3,6 +3,10 @@
 Date: 2026-11-08. Tier: core. Immutable predecessor:
 `983524c26b4170a839abf82b2eb0968a15caf3f3`.
 Its independent read-verifier review remains in flight at session start.
+Before this session's review request, that independent review arrived with
+**Verdict: PASS** and no high/medium findings. Its report is retained unchanged.
+Its low L1 now has an explicit guide clarification; L2/L3 and earlier lows
+remain same-row backlog. This accepts only the exact predecessor increment.
 No parent or sub-row closes; no row is added. Independent core review is
 required for this increment.
 
@@ -85,3 +89,17 @@ The source gate is **PASS for this affected API package**. The unchanged host
 package's deferred T-301.1 failures were not rerun or waived; no whole-workspace
 pass is claimed. This establishes executable refusal and source-level native
 composition, not successful native execution, model quality or a coding score.
+
+## Subsequent immutable review retention
+
+The predecessor PASS report arrived after the code commit and is retained
+byte-for-byte. It has two whitespace-only lines containing trailing spaces
+(lines 108 and 121). The owner requires that reviews never be edited. The
+untracked-file check initially failed on those lines; after staging, the diff
+whitespace and retained-review text checks fail on the same bytes. Those
+nonzero results are retained, with no lint exception or threshold change.
+Current authored Markdown still passes. The current complete gate disposition
+is therefore **FAIL on retained-review whitespace**, while the unchanged Rust
+inputs retain the measured 145 passing tests and strict Clippy/format results.
+No source rerun is needed for this documentation-only retention commit. This
+does not revoke or extend the independent PASS for its exact predecessor.

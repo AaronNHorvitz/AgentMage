@@ -1,0 +1,183 @@
+Commit: 983524c26b4170a839abf82b2eb0968a15caf3f3
+Scope: local-coding-endpoint-read-verifier
+
+Reviewer: independent session, Claude Opus 5.5 (extra-high effort), read-only, no shared context with
+the builder. Same-model review; a cross-model review is still required before any public release.
+Tier: core. Rows: T-303 / T-306 (non-closing; both parents remain OPEN). Predecessor:
+1b0a9321e2674cce92c4edf258e58ab1f213e797.
+
+## Methods
+
+- Pinned checkout /lane/review-checkout; `git rev-parse HEAD` and `git rev-parse <sha>` both print
+  983524c26b4170a839abf82b2eb0968a15caf3f3. `git status --short` is empty before and after the review.
+- I read the full 13-file diff over the predecessor (1928 insertions, 3 deletions), including all new
+  production code (`coding_endpoint_read_verifier.rs`, the `read_verifier` addition to
+  `coding_endpoint_startup.rs`, the `parse_candidate` visibility change, lib.rs) and all three new or
+  changed test files.
+- I traced the verifier inputs to their production sources:
+  - Postcondition ids: `runtime_postconditions_from_task`, kernel/engine/src/runtime_loop.rs:5862.
+    The derivation (`postcondition:{index}:{sha256[..16]}`) matches
+    coding_endpoint_read_verifier.rs:145-154.
+  - The endpoint coordinator's call to `verify_completion`: runtime_loop/coordinator_endpoint.rs:636-655.
+  - The production native evidence shape: `CodingEndpointFiles`, coding_endpoint_files.rs:563-575.
+    It sets `source_id` to `native:<tool>@<version>`, `object_id` to the call id, `content_sha256` to
+    `result_sha256` and `observed_revision` to `repository_snapshot_id`, which is exactly what the
+    verifier requires.
+  - Output bytes: `serialize_read_result_for_model` (linux_coding_runtime.rs:3964). It is a plain
+    `serde_json::to_vec(ReadOnlyResult)`, so the verifier's deserialisation matches production.
+  - `ReadOnlyItem::Text.file_sha256` is documented as the hash of the complete file
+    (capabilities/read-only/src/protocol.rs:131). Because the verifier also requires
+    `hash(content) == file_sha256`, `byte_start == 0` and `content.len() == byte_end`, any range or
+    prefix read is refused.
+  - `workspace_file_read_runtime_registry` contains only ReadText (runtime_tools.rs:117-126).
+- I checked public-repository hygiene in the added lines. The only `/lane/...` strings are inside the two
+  retained review reports. I compared those with `cmp` against /lane/reviews/*.md and they are
+  byte-identical. The same pattern is in 115 already-committed review files. The diff adds no
+  username, hostname, credential, personal data, sibling-project name or trademark branding.
+- Evaluation integrity: no file under the evaluation suite, hidden tests, held-out tasks, scorer,
+  thresholds, ignore lists, dependencies (Cargo.lock untouched), model/GPU, SBOM or scoreboard is
+  changed. No push or release.
+- Delivery: the TASKS.md change is prose only. No row or sub-row is added or closed.
+
+## Commands and results (all in /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t303-endpoint-read-verifier/review-inputs.sha256`: exit 0.
+   The manifest itself has 39 lines and SHA-256
+   cd29ad346b66b5b1bb6cb6dcbf41a946235e736337255a9633e8440a46059eaf, matching the request.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-endpoint-read-verifier/review.py /lane/state/tmp/review-endpoint-read-verifier-983524c26b41`
+   - Overall exit: 1 (expected nonzero). Console: `ORDINARY_SOURCE_GATE_EXIT 1 AUDIT_AND_LIGHT_EXIT 1`.
+   - Per-command exits: diff-check 0, lint-untracked 0, lint-reviews 0, markdownlint 127, fmt 0,
+     strict Clippy (`-D warnings`, all targets) 0, cargo test 101.
+   - Node is not installed (none on PATH or under /lane/state/tooling, and nothing was downloaded), so
+     markdownlint exited 127. final.py reports this as `CURRENT_DOCUMENTATION_FAILURES`. No
+     markdown-lint pass is claimed by me.
+   - `cargo test`, 19 targets, unfiltered: **758 passed / 53 failed / 11 ignored / 0 filtered**. I summed
+     the 19 `test result:` lines in the raw fast.log myself rather than relying on parse.py.
+   - My own sorted-name diff against the builder's predecessor.log:
+     - the FAILED set and the ignored set are identical;
+     - the ok set adds exactly the six new tests and loses none (752 + 6).
+   - Failure causes:
+     - 42 "test sandbox manifest: InvalidManifest" (linux_coding_runtime);
+     - 10 "verified worker manifest: InvalidManifest" (linux_read);
+     - 1 repository-map Git artifact failure.
+   - These match the independent startup review's predecessor reproduction (752/53/11/0; the 42/10/1
+     breakdown), the deferred T-301.1 sandbox-manifest work. The source gate is FAIL as the builder
+     states. No waiver is implied.
+   - audit.json shows that all old identities and normalized failures are preserved, and that the parser,
+     startup methods and tests are preserved; eight source hashes are recorded. `SOURCE_FREEZE_UNCHANGED`
+     printed. final.py: `STRUCTURAL_COMPARISON_AND_HYGIENE_PASS; SOURCE_GATE_FAIL`.
+   - My timings differ from the builder's 128.57 s because of slot waits (fmt 379 s, most of it spent
+     waiting for a reservation). The timings are not a claim I rely on.
+3. `cmp .../validation-final/source-freeze.json .../review-endpoint-read-verifier-983524c26b41/source-freeze.json`:
+   identical.
+4. `git diff --check 1b0a9321e2674cce92c4edf258e58ab1f213e797 --`: exit 0, no output.
+5. `git status --short`: empty.
+6. Reviewer probes:
+   - Setup: a `git archive` export of 983524c2 at /lane/state/tmp/reviewer-probe-983524c26b41, outside
+     the repository, with one appended test in the export only. Run with
+     `TMPDIR=$(mktemp -d /tmp/rv-XXXX) CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot cargo test --locked --offline -p agentmage-host --lib reviewer_probe -- --nocapture`.
+     Result: 1 passed.
+   - A. A correct full read plus an extra successful read of an unrelated file gives NoOp (acceptable;
+     extra observation does not weaken the checks).
+   - B. An unrelated *failed* read before the correct read gives Failed for the whole run (fails
+     closed; see L1).
+   - C. A single call reading two paths is Denied by the read-only capability. As a tool result it
+     gives Failed.
+   - D. `CodingEndpointReadVerifier::for_request` called directly with a check inside a compiled
+     exclusion scope is `Ok`. `prepared.read_verifier` refuses it (`Acceptance`). See L2.
+   - E. With the fixture limit `max_output_bytes = 4096`, a check for a 4097-byte file is accepted
+     at construction even though it can never pass. See L3.
+   - Cleanup: removed the export, my /tmp/rv-* directories and my gate's fixture namespace
+     /tmp/av-li6qw3fh. That namespace held about 11 leftover test directories from the fixture tests,
+     all created by my own run. The validation output directory with raw logs is retained.
+
+## Assessment against the request's claims
+
+- **Construction is inert.** `CodingEndpointReadCheck::new` validates the length bound and a lowercase
+  64-hex digest. `for_request` and `read_verifier` read no file, issue no grant, dispatch nothing and
+  admit nothing.
+- **for_request binding.** It re-verifies the seal and requires all of the following, otherwise it
+  refuses:
+  - ephemeral read-only mode and no event cursor;
+  - one to `max_tool_calls` checks, all in the request's workspace, with no duplicate paths;
+  - criteria equal to both `task.acceptance_criteria` and `work_packet.acceptance_checks`, exactly
+    and in order;
+  - required evidence exactly `[ToolOutput]` and the Observe capability class;
+  - no mutable files and no authoritative evidence;
+  - visible tools equal to the exact original read-file catalog.
+  
+  Free text such as "The code is correct" refuses (test mutation 0). The model cannot select checks.
+- **Completion.** Native-family `verify` refuses. `verify_completion` checks:
+  - the seal again, the stored request hash (so a foreign run, snapshot, policy or model refuses;
+    tested, with an assertion that the seal changed), the proposal scope and exact ordered
+    postconditions;
+  - the original `parse_candidate`, requiring NoOp and an empty `checks_not_run`;
+  - unique non-empty receipts, unique call ids and unique evidence ids, with counts equal to the number
+    of results;
+  - for each result: success, NotChanged, no error or issues, the original output schema and media
+    type, the payload hash, `ReadOnlyResult::verify`, not truncated, exactly one file and one item,
+    a canonical path, full range and content hash, and one native-shaped evidence item bound to the
+    call id, `result_sha256` and the snapshot id, present in the coordinator ledger.
+  
+  Object-id binding plus unique call ids makes result-to-evidence a bijection. Each postcondition
+  passes only if every read of its path matches, so a later conflicting read defeats an earlier good
+  one (tested). Its evidence comes only from that path's results.
+- **I found no way to obtain NoOp without a coordinator-produced, successful, complete read whose bytes
+  equal the trusted digest.** Model output can only affect the claim, and a false claim yields Failed
+  (tested). Content from a prompt-injected file cannot change the verifier's decision, because the
+  decision depends only on bytes and digests.
+- **The production path is reachable.** The socket test drives the production retained owner,
+  context, transport and verifier through an exact approval to canonical NoOp (matching bytes) and
+  Failed (different bytes), with terminal rereads that do not re-execute, events present, and release.
+  Its effect, permission and receipt boundary is a labelled SYNTHETIC wrapper that rewrites evidence to
+  the production shape. I confirmed above that this shape matches `CodingEndpointFiles`. Honest
+  labelling holds: the guide, evidence document and TASKS.md say there is no native admission, real
+  model, worker success or score, and that the verifier does not certify summary meaning, correctness,
+  tests or post-read freshness.
+- **The confinement surface is unchanged.** The native file, grant and worker code and the guidance
+  compiler have no diff. The new code adds no write, command or network path.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low): an unrelated failed read fails the whole run, and the docs do not say so.**
+  - Location: coding_endpoint_read_verifier.rs:209-212 and 271. Any result that is unsuccessful,
+    truncated, multi-item or missing evidence makes `grounded_reads` return `None`, and then every
+    postcondition fails (probe B).
+  - Effect: this fails closed, so it is safe. But a real model that first tries a wrong path and then
+    reads the right file will get Failed. docs/guides/runtime-endpoint-runs.md only says that every
+    *selected* file needs a complete successful read.
+  - Fix: either state in the guide that any unsuccessful read in the run fails acceptance, or ignore
+    unsuccessful results for paths that no check covers. If you choose the second, keep refusing
+    unsuccessful reads of checked paths.
+- **L2 (low): `for_request` is public and skips the exclusion check.**
+  - Location: coding_endpoint_read_verifier.rs:101. A trusted caller can construct a verifier for an
+    excluded path by calling `for_request` directly (probe D). Only `read_verifier` checks the
+    compiled exclusions.
+  - Effect: this is not exploitable for disclosure, because the native file boundary still refuses
+    excluded paths, so such a check can only fail. It does contradict the documented single entry
+    point.
+  - Fix: make `for_request` `pub(crate)` (tests are in-crate), or have the startup selector be the only
+    constructor.
+- **L3 (low): checks that can never pass are accepted at construction.**
+  - Location: coding_endpoint_read_verifier.rs:101-142. A check whose `byte_len`, plus JSON overhead,
+    exceeds `request.limits.max_output_bytes` is accepted (probe E: limit 4096, a 4097-byte file),
+    but completion can only ever be Failed.
+  - Fix: refuse such checks in `for_request` (for example `byte_len > max_output_bytes`) so that a
+    trusted caller learns at selection time rather than after a model run.
+- Earlier same-row lows (startup L1–L3, files L1–L3) are unchanged and remain backlog. Case-insensitive
+  exclusion matching (files L2) applies equally to the new `read_verifier` exclusion check.
+
+## Per-row result
+
+- **T-303 / T-306, increment "local-coding-endpoint-read-verifier":** PASS for this exact commit, with no
+  high or medium finding. L1–L3 are same-row backlog.
+- The increment is non-closing. Both parents remain OPEN: executable activation and native admission,
+  edit/test/retry, durable recovery, approved Git and parent measurements are not established.
+- The ordinary source gate remains FAIL on deferred T-301.1, unchanged from the predecessor. This is not
+  a waiver.
+- Markdown lint could not be run because Node is not installed (exit 127). I treat it as a documentation
+  check I could not perform, not as a pass. The other hygiene and structural checks passed.
+
+Verdict: PASS
