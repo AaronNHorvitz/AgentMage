@@ -100,11 +100,16 @@ attempt. Edits cannot reset it. A fresh separately approved failed test attempt
 can make the next request eligible, within the unchanged three-test-attempt
 series. A third failure has no remaining repair/rerun budget.
 
-Preflight encodes the complete three-message request before consuming repair
-consent: additional system instructions, selected source context and serialized
-diagnostics. Dispatch uses the same message constructor and encoder limits.
-Malformed model identities, invalid token reserves and oversized encoded requests
-therefore refuse before consumption or network admission.
+Preflight prepares the complete immutable transport request before consuming
+repair consent: additional system instructions, selected source context,
+serialized diagnostics and the optional usage request. It checks the exact
+endpoint approval and retains the original credential-owning transport.
+Dispatch consumes that same prepared request without rebuilding the context,
+messages or body after receipt consumption. Malformed model identities, invalid
+token reserves, oversized encoded requests and transport preparation refusals
+therefore preserve the receipt and open no connection. Cancellation observed
+before consumption also preserves it; cancellation after consumption still
+spends the attempt and is rechecked before connecting.
 
 Generation shares the existing operation lease, status and cancellation. Settings,
 scope replacement, writes and commands cannot race it through the API. Source

@@ -57,8 +57,17 @@ introduces distinct shared exact-profile and selected-endpoint identity and toke
 provenance types. Native admission retains its complete original profile check;
 endpoint proposal events expose selected identity and optional provider-only
 accounting with null verified counts. Endpoint coordinator request/context/result
-support and execution remain open. Independent core review is required; neither
-parent closes and no new row is introduced.
+support and execution remain open. Its [independent core review](docs/reviews/e5cb5c53a4ad-local-coding-runtime-model-binding.txt)
+has **Verdict: PASS** for exact commit `e5cb5c53a4ad588ba55784bd24ec73c3259dfff3`,
+with no open high/medium finding; neither parent closes. Low L1 (native accounting
+wrapper test strength) remains backlog in these rows. The repair-preparation
+follow-up clarifies the guide's completion/accounting wording for low L2.
+The repair-preparation follow-up freezes the complete credential-bound request
+before consuming one-use failed-test disclosure consent and dispatches that same
+request. API socket fixtures also check SHA-256 against the raw received body.
+See the [builder record](docs/evidence/t303-repair-preparation-2026-11-07.md).
+This addresses endpoint-binding review lows L1/L2 in these same parent rows;
+independent core review is required and both parents remain open.
 No public release is authorized. One level of sub-rows maximum; each implementation
 sub-row must run end to end and be measured. Never tune on held-out tasks, edit
 hidden tests or weaken thresholds. Desktop UI work is deferred to a separate shell.

@@ -1,0 +1,155 @@
+Commit: e5cb5c53a4ad588ba55784bd24ec73c3259dfff3
+Scope: local-coding-runtime-model-binding
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate read-only session on the pinned checkout
+`/lane/review-checkout`. Same-model review; a cross-model review is still required before any public release.
+Rows: T-303 / T-306, non-closing batch. Both parents stay OPEN; this review closes no row.
+
+## Methods
+
+- Ran `git rev-parse HEAD` in the checkout. It returns e5cb5c53a4ad588ba55784bd24ec73c3259dfff3, and the
+  checkout was clean before and after the runs.
+- Read IP-POLICY.md, the whole fourteen-path diff from immutable base 0e5ed222cc36c44bc2d62a8030c18a22b6e3444d,
+  the evidence file, the guide section, the TASKS.md paragraph and the retained predecessor review.
+- Read verify.py, audit.py, final.py and audit-before-engine-ignore-proof.py. I diffed the preserved helper
+  against audit.py. The only changes are the eight-engine-ignore proof and the stricter totals assertion,
+  which changed from `filtered == 0` to an exact `[3227, 72, 79, 0]` over 76 targets. The correction tightens
+  the audit and loosens nothing.
+- Read the code:
+  - `RuntimeModelBinding`, `ProviderTokenUsage`, `RuntimeModelTokenAccounting` and `EndpointTokenAccounting`.
+  - The coordinator check at kernel/engine/src/runtime_loop.rs:1623-1629 and the trait default at :355-361.
+  - `EndpointChatBinding::runtime_model_binding`.
+  - `proposal_observation` and the context event in platforms/local-api/src/lib.rs:978-1140.
+  - The `ChatUsage` re-export and parser in platforms/linux-inference/src/local_chat.rs:247-270 and :508-516.
+  - The endpoint canonicaliser in local_chat.rs:64-124.
+- Checked the admission boundary by reasoning about the code. I did not write extra probes because the
+  checkout is read-only.
+  - `||` short-circuits, so a `SelectedEndpoint` binding returns `ModelBinding` before `exact_profile()` is
+    ever called. The new test proves this with a panicking accessor.
+  - `exact_profile()` has no other call site in runtime_loop.rs after construction. Line 1626 is the only
+    coordinator use, so a later identity switch is no new attack surface.
+  - `ExactModelProfile` derives `PartialEq` (kernel/contracts/src/model.rs:336). The whole tuple is therefore
+    compared, not identifiers or hashes alone.
+  - Both contradiction directions are refused: declared matches but actual differs, and the reverse.
+  - The only non-test `RuntimeModelPort` implementation, `LocalModelController`, keeps the default
+    ExactProfile binding.
+- Checked whether the new fields expose private data.
+  - `endpoint` comes from `LocalChatEndpoint::base_url()`. That value is built from a parsed loopback
+    `SocketAddr` plus validated path segments, so it can carry no user info, query or credentials.
+  - `model` was already serialised in `model_binding`.
+  - The transport test asserts that the new descriptor contains neither the key nor the prompt.
+- Checked provider usage. It is only collected when `usage_limit` is set, meaning usage was requested
+  (local_chat.rs:509). Without a request, `token_accounting.provider_reported` is therefore null rather than a
+  provider value that was never asked for. The parser's checked sum and output ceiling are unchanged.
+  `ProviderTokenUsage` has no `Deserialize` and keeps the same field names, so the wire JSON is unchanged.
+- Scanned every added line for private paths, usernames, hostnames, credentials and trademark branding. The
+  only match is the retained review's reviewer-attribution line, which is accurate attribution and not
+  branding. Decisions 0153 and 0154 exist.
+- Evaluation integrity: none of the fourteen paths touches evaluation tasks, held-out content, hidden tests,
+  scorers, thresholds or ignores. No `#[ignore]` was added (audit.py checks this, and I confirmed it).
+- Confinement: no tool, grant, sandbox, write-scope, network or push surface changed. No new escape surface
+  exists. The admission boundary that did change is covered above.
+- Inspected the retained failing first attempt (validation-1). It failed with E0599 on
+  `AgentStateKind::Succeeded`, and its freeze differs only in kernel/engine/src/runtime_loop_tests.rs. This
+  matches the evidence.
+- Inspected the 72 failures myself.
+  - All are in crates this diff does not touch: 53 in `agentmage_host` and 19 in `agentmage_platform_linux`.
+  - Failures by panic site:
+    - 42 at linux_coding_runtime.rs:11304, `test sandbox manifest: InvalidManifest`.
+    - 13 at repository_safety.rs:2312, `InvalidGitArtifact`.
+    - 10 at linux_read.rs:2345, `verified worker manifest: InvalidManifest`.
+    - One or two each in secret_service, local_commit, command_runner, linux_repository_map and one other
+      linux_coding_runtime.rs line.
+  - Every one is a fail-closed refusal caused by the host executable/manifest digest blocker the evidence
+    discloses. None is a failure that opens a boundary.
+
+## Commands and results
+
+All commands ran in /lane/review-checkout with `CARGO_TARGET_DIR=/lane/state/review-target`,
+`CARGO_BUILD_JOBS=2`, `RUST_TEST_THREADS=4`, PATH prefixed with the pinned Node, and the new private
+`AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-runtime-model-binding-e5cb5c53a4ad`. That directory did not
+exist beforehand and was created with mode 700.
+
+| Command | Result |
+| --- | --- |
+| `sha256sum -c .../review-inputs.sha256` | all 52 OK |
+| `sha256sum` of the manifest | f7292be62cf9fa695f6158ca71c7f4a6198f14cb4225ca1c9691ee917731e3f3 (matches) |
+| `sha256sum` of node | d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches) |
+| `bash /tools/build-slot python3 -B .../verify.py` (no `--format`) | exit 1, `FAST_GATE_EXIT 1` |
+| `python3 -B .../final.py` | exit 0, `FINAL_AUDIT_PASS` |
+| `cmp` source-freeze.json against builder validation-2 | identical |
+| `cmp` plan-final.json against builder validation-2 | identical |
+| COMPARE script (only `command_exit_codes` may differ) | passes |
+| `cmp` retained review .txt against /lane/reviews/0e5ed222cc36-local-coding-endpoint-binding.md | identical |
+| `git diff --check 0e5ed222... --` | exit 0 |
+| `git status --short` | empty |
+
+- verify.py queued for about 39 minutes waiting for the shared reservation. Its seven commands then gave:
+  - `git diff --check`: 0, 0.10 s.
+  - `--lint-untracked`: 0, 0.10 s.
+  - `--lint-reviews` on the retained review: 0, 0.10 s.
+  - markdownlint: 0, 1.10 s.
+  - `cargo fmt --check`: 0, 2.55 s.
+  - `cargo clippy -D warnings`: 0, 53.58 s.
+  - `cargo test --all-targets --no-fail-fast`: 101, 329.46 s.
+- The gate reports `FAST GATE: FAIL`. The extra review-text lint is the only reason the reviewer gate has
+  seven commands to the builder's six.
+- The COMPARE script confirms builder codes `[0,0,0,0,0,101]` and reviewer codes `[0,0,0,0,0,0,101]`. Every
+  other audit field is equal: paths, source SHA-256s, 76 targets, `[3227, 72, 79, 0]`, the 72 failure
+  identities, the 79 ignore identities and the normalised diagnostics.
+- All ten required methods appear as `... ok` in my unfiltered log:
+  - the four new regressions;
+  - the strengthened transport test;
+  - the four strengthened API tests;
+  - the repair test.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test strength). kernel/engine/src/runtime_loop_tests.rs:4046-4058.**
+  `runtime_model_binding_preserves_the_complete_native_tuple_and_accounting` checks `ExactNative` accounting
+  by serialising a hand-built `ModelTokenUsage`. It does not use the usage the fixture run actually produced.
+  The assertion therefore proves only the serde wrapper, not that native accounting is "preserved" through a
+  run, as the name and evidence suggest. The admission checks are still sound.
+  - Fix: assert against the `ModelTokenUsage` taken from the completed run's model result or terminal event,
+    or rename the test to match what it checks.
+- **L2 (low, API wording). platforms/local-api/src/lib.rs:1103-1112 and docs/guides/coding-proposals.md:142-144.**
+  Every refused terminal event carries the literal `"partial":true`. That includes length finishes, rejected
+  strict edits and display-limit refusals whose stream completed with `Ok`. Those events now also carry
+  `token_accounting`. The guide says "Partial ... responses carry no `token_accounting`". The guide means an
+  incomplete transport response, but a client reading the JSON `partial` flag will see accounting on
+  `partial:true` events. This is an inspection-only ambiguity and grants no authority.
+  - Fix: in the guide, state that `response_complete`, not `partial`, controls whether `token_accounting` is
+    present.
+- **Observation, not a finding.** `EndpointTokenAccounting::from_completed_provider_report` is public, and
+  its "completed response only" precondition is enforced only by its doc comment. The brief and the evidence
+  both say this wrapper is inspection-only and verifies nothing. The one current caller passes only `Ok`
+  completions. Keep that in mind when an endpoint port is admitted later.
+
+The predecessor's low findings L1 (API raw-byte digest assertion strength) and L2 (preparing transport before
+repair receipt consumption) remain backlog. This batch does not change them.
+
+## Per-row result
+
+- **T-303 (non-closing batch).**
+  - Accepted: the shared exact-profile and selected-endpoint vocabulary, and the coordinator's
+    dual-condition model-binding admission.
+  - The endpoint refuses before fallback or any context/model/tool work. A contradicting override cannot
+    bypass the original check, and the whole tuple is compared.
+  - No executable endpoint port, endpoint coordinator request/context/result, or endpoint execution is
+    claimed or implemented.
+  - The parent stays OPEN.
+- **T-306 (non-closing batch).**
+  - Accepted: API context and terminal events expose the selected-endpoint descriptor next to the unchanged
+    prepared-body binding.
+  - Completed responses carry provider-only accounting with null verified counts. Partial and cancelled
+    responses carry none, and wire parsing is unchanged.
+  - The tests use real loopback sockets with synthetic peers. No real inference, GPU work, task score,
+    held-out run or qualification is claimed.
+  - The parent stays OPEN.
+- The complete source gate still fails, and the batch reports that honestly. It fails on exactly the 72
+  retained pre-existing identities and diagnostics, all in untouched crates. The 79 ignores are accounted
+  for. Nothing is filtered or skipped.
+
+Verdict: PASS

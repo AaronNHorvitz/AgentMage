@@ -47,7 +47,7 @@ use agentmage_platform_linux_inference::local_chat::{
 };
 use agentmage_platform_linux_inference::local_chat_transport::{
     BearerKey, ChatCancellation, ChatCompletion, EndpointChatBinding, LocalChatApproval,
-    LocalChatTransport, LocalProbeApproval, TransportLimits, probe_endpoints,
+    LocalChatTransport, LocalProbeApproval, PreparedEndpointChat, TransportLimits, probe_endpoints,
 };
 
 const MAX_HEADER: usize = 8192;
@@ -1015,37 +1015,80 @@ fn coding_proposal_with_feedback(
             return response(socket, 400, json!({"error":e.code()}));
         }
     };
-    let prepared = match prepare_proposal_messages(
+    let prepared =
+        match prepare_endpoint_coding_proposal(input, context, config.as_deref(), feedback) {
+            Ok(prepared) => prepared,
+            Err((status, code)) => {
+                op.outcome = code;
+                return error(socket, status);
+            }
+        };
+    dispatch_coding_proposal(socket, prepared, op, workspace_revision)
+}
+
+// Own the checked source snapshot and the exact encoded request together. The
+// request borrows only its credential-owning configuration, never the temporary
+// messages. Dispatch cannot rebuild it after a one-use repair receipt is spent.
+struct PreparedCodingProposal<'a> {
+    input: CodingProposalRequest,
+    context: CodingProposalContext,
+    feedback: Option<Value>,
+    message_bytes: usize,
+    request: PreparedEndpointChat<'a>,
+}
+
+fn prepare_endpoint_coding_proposal<'a>(
+    input: CodingProposalRequest,
+    context: CodingProposalContext,
+    config: Option<&'a Configuration>,
+    feedback: Option<Value>,
+) -> Result<PreparedCodingProposal<'a>, (u16, &'static str)> {
+    let prepared = prepare_proposal_messages(
         &input.model,
         input.max_tokens,
         &context,
         feedback.as_ref(),
         input.include_usage,
-    ) {
-        Ok(prepared) => prepared,
-        Err((status, code)) => {
-            op.outcome = code;
-            return error(socket, status);
-        }
-    };
+    )?;
+    let message_bytes = context.message_bytes()
+        + prepared
+            .feedback_text
+            .as_ref()
+            .map_or(0, |s| s.len() + REPAIR_INSTRUCTION.len());
     let messages = prepared.messages(&context);
-    let Some(config) = config else {
-        op.outcome = "api.endpoint-choice-required";
-        return error(socket, 428);
-    };
-    let request = match config.transport.prepare_chat(
-        &config.approval,
-        &input.model,
-        &messages,
-        input.max_tokens,
-        input.include_usage,
-    ) {
-        Ok(request) => request,
-        Err(e) => {
-            op.outcome = e.code();
-            return error(socket, 400);
-        }
-    };
+    let config = config.ok_or((428, "api.endpoint-choice-required"))?;
+    let request = config
+        .transport
+        .prepare_chat(
+            &config.approval,
+            &input.model,
+            &messages,
+            input.max_tokens,
+            input.include_usage,
+        )
+        .map_err(|e| (400, e.code()))?;
+    Ok(PreparedCodingProposal {
+        input,
+        context,
+        feedback,
+        message_bytes,
+        request,
+    })
+}
+
+fn dispatch_coding_proposal(
+    socket: &mut TcpStream,
+    prepared: PreparedCodingProposal<'_>,
+    mut op: Operation<'_>,
+    workspace_revision: Option<u64>,
+) -> Result<(), ApiError> {
+    let PreparedCodingProposal {
+        input,
+        context,
+        feedback,
+        message_bytes,
+        request,
+    } = prepared;
     let binding = request.binding().clone();
     headers(socket, 200, "application/x-ndjson", None)?;
     let mut context_event = json!({"type":"context", "version":1,
@@ -1054,13 +1097,7 @@ fn coding_proposal_with_feedback(
         "model_binding":binding});
     context_event["runtime_model_binding"] = json!(binding.runtime_model_binding());
     if let Some(feedback) = &feedback {
-        context_event["message_bytes"] = json!(
-            context.message_bytes()
-                + prepared
-                    .feedback_text
-                    .as_ref()
-                    .map_or(0, |s| s.len() + REPAIR_INSTRUCTION.len())
-        );
+        context_event["message_bytes"] = json!(message_bytes);
         context_event["source_message_bytes"] = json!(input.max_message_bytes);
         context_event["repair_feedback"] = feedback.clone();
     }

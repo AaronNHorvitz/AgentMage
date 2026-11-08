@@ -140,9 +140,12 @@ Completed responses additionally carry `token_accounting`, with
 structurally checked usage report. `verified_input_tokens` and
 `verified_output_tokens` always remain null. Missing reports remain null;
 reported zero counts remain explicit zero counts. No exact prompt count,
-remaining token capacity or hardware observation is inferred. Partial,
-cancelled and malformed responses carry no `token_accounting`. A completed
-invalid edit still has accounting for its inference attempt.
+remaining token capacity or hardware observation is inferred. `response_complete`
+controls whether `token_accounting` is present. Incomplete transport responses,
+cancellation and malformed streams carry none. The legacy error flag `partial`
+describes provisional coding output; it can be true after completed inference.
+A completed length finish or invalid edit therefore retains inference accounting
+while still refusing a candidate, even when its error has `partial: true`.
 
 Native runtime ports use the distinct `exact_profile` binding variant. Their
 complete native profile comparison and exact token/resource checks remain

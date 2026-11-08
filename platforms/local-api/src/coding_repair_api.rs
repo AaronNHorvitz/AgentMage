@@ -62,52 +62,52 @@ pub(super) fn handle_repair(
         Ok(input) => input,
         Err(()) => return error(socket, 400),
     };
-    let prepared = prepare_repair(state, &repository, &input, config.as_ref());
-    let (files, feedback, source_budget) = match prepared {
+    let prepared = prepare_repair(state, &repository, &input, config.as_deref());
+    let prepared = admit_repair_proposal(
+        prepared,
+        op.cancel.is_cancelled() || stop.load(Ordering::Relaxed),
+        || {
+            repository
+                .consume_repair_feedback(&input.receipt_sha256, &input.feedback_sha256)
+                .map(|_| ())
+                .map_err(|e| (409, e.code()))
+        },
+    );
+    let prepared = match prepared {
         Ok(prepared) => prepared,
         Err((status, code)) => {
             op.outcome = code;
             return response(socket, status, json!({"error":code}));
         }
     };
-    if op.cancel.is_cancelled() || stop.load(Ordering::Relaxed) {
-        op.outcome = "code.repair.cancelled";
-        return response(socket, 409, json!({"error":op.outcome}));
-    }
-    // Consume before model admission, including transport failure and lost
-    // replies. Only a fresh failed test attempt can permit another request.
-    if let Err(e) =
-        repository.consume_repair_feedback(&input.receipt_sha256, &input.feedback_sha256)
-    {
-        op.outcome = e.code();
-        return response(socket, 409, json!({"error":e.code()}));
-    }
     // Keep the held owner locked across generation; the operation lease forbids
     // API edits, commands, selection or settings changes. Status/cancel need only
     // the independent service-state mutex and remain available.
-    coding_proposal_with_feedback(
-        socket,
-        CodingProposalRequest {
-            model: input.model,
-            task: input.task,
-            files,
-            max_message_bytes: source_budget,
-            max_tokens: input.max_tokens,
-            include_usage: input.include_usage,
-        },
-        op,
-        config,
-        Some(input.workspace_revision),
-        Some(feedback),
-    )
+    dispatch_coding_proposal(socket, prepared, op, Some(input.workspace_revision))
 }
 
-fn prepare_repair(
+// Preparation is inert and must finish before the one-use receipt is spent.
+// Once admitted, dispatch failures and lost replies still consume the attempt;
+// only a fresh failed test can authorize another disclosure.
+fn admit_repair_proposal<'a>(
+    prepared: Result<PreparedCodingProposal<'a>, (u16, &'static str)>,
+    cancelled: bool,
+    consume: impl FnOnce() -> Result<(), (u16, &'static str)>,
+) -> Result<PreparedCodingProposal<'a>, (u16, &'static str)> {
+    let prepared = prepared?;
+    if cancelled {
+        return Err((409, "code.repair.cancelled"));
+    }
+    consume()?;
+    Ok(prepared)
+}
+
+fn prepare_repair<'a>(
     state: &Mutex<State>,
     repository: &LinuxCodingRepository,
     input: &Repair,
-    config: Option<&Arc<Configuration>>,
-) -> Result<(Vec<CodingSource>, Value, usize), (u16, &'static str)> {
+    config: Option<&'a Configuration>,
+) -> Result<PreparedCodingProposal<'a>, (u16, &'static str)> {
     if !input.approve_failure_disclosure {
         return Err((403, "code.repair.disclosure-required"));
     }
@@ -140,19 +140,227 @@ fn prepare_repair(
     let (_, source_budget) = repair_prompt(&feedback, input.max_message_bytes)?;
     let context =
         prepare_coding_proposal(&input.task, &files, source_budget).map_err(|e| (400, e.code()))?;
-    prepare_proposal_messages(
-        &input.model,
-        input.max_tokens,
-        &context,
-        Some(&feedback),
-        input.include_usage,
-    )?;
-    Ok((files, feedback, source_budget))
+    prepare_endpoint_coding_proposal(
+        CodingProposalRequest {
+            model: input.model.clone(),
+            task: input.task.clone(),
+            files,
+            max_message_bytes: source_budget,
+            max_tokens: input.max_tokens,
+            include_usage: input.include_usage,
+        },
+        context,
+        Some(config),
+        Some(feedback),
+    )
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sha2::{Digest, Sha256};
+
+    fn repair_input(max_tokens: u32) -> CodingProposalRequest {
+        CodingProposalRequest {
+            model: "synthetic-model".into(),
+            task: "Fix add".into(),
+            files: vec![CodingSource {
+                path: "calc.py".into(),
+                content: "def add(a, b):\n    return a - b\n".into(),
+            }],
+            max_message_bytes: 4096,
+            max_tokens,
+            include_usage: true,
+        }
+    }
+
+    fn prepare_test_repair(
+        config: Option<&Configuration>,
+        max_tokens: u32,
+    ) -> Result<PreparedCodingProposal<'_>, (u16, &'static str)> {
+        let input = repair_input(max_tokens);
+        let context =
+            prepare_coding_proposal(&input.task, &input.files, input.max_message_bytes).unwrap();
+        prepare_endpoint_coding_proposal(
+            input,
+            context,
+            config,
+            Some(json!({"authority":"untrusted","stderr":"AssertionError: add failed"})),
+        )
+    }
+
+    #[test]
+    fn repair_preparation_refusals_and_cancellation_do_not_consume_or_connect() {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        listener.set_nonblocking(true).unwrap();
+        let endpoint =
+            LocalChatEndpoint::parse(&format!("http://{}/v1", listener.local_addr().unwrap()))
+                .unwrap();
+        let mut config = Configuration {
+            endpoint: endpoint.base_url(),
+            transport: LocalChatTransport::new(endpoint.clone(), None, TransportLimits::default())
+                .unwrap(),
+            // Deliberately inconsistent private configuration reaches the
+            // transport-only rejection that ordinary settings cannot produce.
+            approval: LocalChatApproval::for_endpoint(
+                LocalChatEndpoint::parse("http://127.0.0.1:1/other").unwrap(),
+            ),
+        };
+        let spent = std::cell::Cell::new(0);
+        for (selected, max_tokens, expected) in [
+            (None, 128, (428, "api.endpoint-choice-required")),
+            (Some(&config), 128, (400, "chat.transport.approval")),
+            (Some(&config), 0, (400, "api.request")),
+            (Some(&config), 4097, (400, "api.request")),
+        ] {
+            let prepared = prepare_test_repair(selected, max_tokens);
+            assert_eq!(
+                admit_repair_proposal(prepared, false, || {
+                    spent.set(spent.get() + 1);
+                    Ok(())
+                })
+                .err(),
+                Some(expected)
+            );
+            assert_eq!(spent.get(), 0);
+        }
+        config.approval = LocalChatApproval::for_endpoint(endpoint);
+        assert_eq!(
+            admit_repair_proposal(prepare_test_repair(Some(&config), 128), true, || {
+                spent.set(spent.get() + 1);
+                Ok(())
+            })
+            .err(),
+            Some((409, "code.repair.cancelled"))
+        );
+        assert_eq!(spent.get(), 0);
+        // A stale receipt refuses after successful preparation and before I/O.
+        assert_eq!(
+            admit_repair_proposal(prepare_test_repair(Some(&config), 128), false, || {
+                Err((409, "code.repair.stale"))
+            })
+            .err(),
+            Some((409, "code.repair.stale"))
+        );
+        assert!(matches!(listener.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock));
+    }
+
+    #[test]
+    fn admitted_repair_transport_failure_or_late_cancellation_still_spends_one_attempt() {
+        // The callback models only receipt consumption order, not native
+        // ownership/admission. Dispatch uses the real socket implementation.
+        for late_cancel in [false, true] {
+            let upstream = TcpListener::bind("127.0.0.1:0").unwrap();
+            let endpoint =
+                LocalChatEndpoint::parse(&format!("http://{}/v1", upstream.local_addr().unwrap()))
+                    .unwrap();
+            let config = Configuration {
+                endpoint: endpoint.base_url(),
+                approval: LocalChatApproval::for_endpoint(endpoint.clone()),
+                transport: LocalChatTransport::new(endpoint, None, TransportLimits::default())
+                    .unwrap(),
+            };
+            let downstream = TcpListener::bind("127.0.0.1:0").unwrap();
+            let mut client = TcpStream::connect(downstream.local_addr().unwrap()).unwrap();
+            client
+                .set_read_timeout(Some(Duration::from_secs(5)))
+                .unwrap();
+            let spent = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let upstream_worker = if late_cancel {
+                None
+            } else {
+                let listener = upstream.try_clone().unwrap();
+                let spent = spent.clone();
+                Some(thread::spawn(move || {
+                    listener.set_nonblocking(true).unwrap();
+                    let start = Instant::now();
+                    let mut socket = loop {
+                        match listener.accept() {
+                            Ok((socket, _)) => break socket,
+                            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                                assert!(start.elapsed() < Duration::from_secs(5));
+                                thread::sleep(Duration::from_millis(2));
+                            }
+                            Err(e) => panic!("{e}"),
+                        }
+                    };
+                    assert_eq!(spent.load(Ordering::SeqCst), 1);
+                    socket
+                        .set_read_timeout(Some(Duration::from_secs(3)))
+                        .unwrap();
+                    let mut headers = Vec::new();
+                    while !headers.ends_with(b"\r\n\r\n") {
+                        let mut byte = [0];
+                        socket.read_exact(&mut byte).unwrap();
+                        headers.push(byte[0]);
+                        assert!(headers.len() < MAX_HEADER);
+                    }
+                    let length: usize = std::str::from_utf8(&headers)
+                        .unwrap()
+                        .lines()
+                        .find_map(|l| l.strip_prefix("Content-Length: "))
+                        .unwrap()
+                        .parse()
+                        .unwrap();
+                    assert!(length < MAX_BODY);
+                    socket.read_exact(&mut vec![0; length]).unwrap();
+                    socket
+                        .write_all(b"HTTP/1.1 503 Unavailable\r\nContent-Length: 0\r\n\r\n")
+                        .unwrap();
+                }))
+            };
+            let observed = spent.clone();
+            let worker = thread::spawn(move || {
+                let (mut socket, _) = downstream.accept().unwrap();
+                let state = Mutex::new(State::default());
+                let stop = AtomicBool::new(false);
+                let (op, _) = begin(&state, &stop, "code.repository.repair").unwrap();
+                let prepared =
+                    admit_repair_proposal(prepare_test_repair(Some(&config), 128), false, || {
+                        assert_eq!(spent.fetch_add(1, Ordering::SeqCst), 0);
+                        Ok(())
+                    })
+                    .unwrap();
+                if late_cancel {
+                    op.cancel.cancel();
+                }
+                dispatch_coding_proposal(&mut socket, prepared, op, Some(7)).unwrap();
+                assert!(state.lock().unwrap().active.is_none());
+            });
+            let mut reply = String::new();
+            client.read_to_string(&mut reply).unwrap();
+            worker.join().unwrap();
+            if let Some(worker) = upstream_worker {
+                worker.join().unwrap();
+            }
+            upstream.set_nonblocking(true).unwrap();
+            assert!(
+                matches!(upstream.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock)
+            );
+            assert_eq!(observed.load(Ordering::SeqCst), 1);
+            let events = reply
+                .split_once("\r\n\r\n")
+                .unwrap()
+                .1
+                .lines()
+                .map(|s| serde_json::from_str::<Value>(s).unwrap())
+                .collect::<Vec<_>>();
+            let terminal = events.last().unwrap();
+            assert_eq!(terminal["type"], "error");
+            assert_eq!(
+                terminal["code"],
+                if late_cancel {
+                    "chat.transport.cancelled"
+                } else {
+                    "chat.transport.status"
+                }
+            );
+            assert_eq!(terminal["response_complete"], false);
+            assert_eq!(terminal["model_binding"], events[0]["model_binding"]);
+            assert!(terminal.get("token_accounting").is_none());
+            assert!(!events.iter().any(|e| e["type"] == "proposal"));
+        }
+    }
 
     #[test]
     fn repair_preflight_encodes_the_exact_combined_messages_and_refuses_wire_overflow() {
@@ -294,7 +502,11 @@ mod tests {
                 };
                 let body = format!("data: {chunk}\n\ndata: {end}\n\n{usage}data: [DONE]\n\n");
                 socket.write_all(format!("HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).as_bytes()).unwrap();
-                (actual_bytes, bytes.len())
+                let digest: String = Sha256::digest(&bytes)
+                    .iter()
+                    .map(|byte| format!("{byte:02x}"))
+                    .collect();
+                (actual_bytes, bytes.len(), digest)
             });
             let config = Arc::new(Configuration {
                 endpoint: "synthetic".into(),
@@ -338,7 +550,7 @@ mod tests {
             let mut reply = String::new();
             client.read_to_string(&mut reply).unwrap();
             worker.join().unwrap();
-            let (actual_bytes, body_bytes) = upstream_worker.join().unwrap();
+            let (actual_bytes, body_bytes, body_sha256) = upstream_worker.join().unwrap();
             let body = reply.split_once("\r\n\r\n").unwrap().1;
             let events = body
                 .lines()
@@ -352,6 +564,10 @@ mod tests {
             assert_eq!(terminal["model_binding"]["endpoint"], expected_endpoint);
             assert_eq!(terminal["model_binding"]["model"], "synthetic-model");
             assert_eq!(terminal["model_binding"]["request_body_bytes"], body_bytes);
+            assert_eq!(
+                terminal["model_binding"]["request_body_sha256"],
+                body_sha256
+            );
             assert_eq!(
                 terminal["model_binding"]["provider_usage_requested"],
                 include_usage

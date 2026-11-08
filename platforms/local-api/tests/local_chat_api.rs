@@ -16,6 +16,7 @@ use std::time::{Duration, Instant};
 
 use agentmage_local_api::{ApiError, ApiTokens, serve};
 use serde_json::{Value, json};
+use sha2::{Digest, Sha256};
 
 const CLIENT: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const CONTROL: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
@@ -249,7 +250,12 @@ fn coding_proposal_streams_selected_context_and_returns_only_an_unapplied_change
         let raw = incoming(&mut socket);
         let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
         let request: Value = serde_json::from_slice(&raw[start..]).unwrap();
-        tx.send((raw[start..].len(), request.clone())).unwrap();
+        let digest: String = Sha256::digest(&raw[start..])
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect();
+        tx.send((raw[start..].len(), digest, request.clone()))
+            .unwrap();
         assert_eq!(request["max_tokens"], 512);
         assert!(request.get("tools").is_none());
         let context: Value =
@@ -277,7 +283,7 @@ fn coding_proposal_streams_selected_context_and_returns_only_an_unapplied_change
     assert!(events[0]["message_bytes"].as_u64().unwrap() <= 4096);
     assert_eq!(events[1]["type"], "text");
     let proposal = events.last().unwrap();
-    let (body_bytes, sent) = rx.recv_timeout(Duration::from_secs(3)).unwrap();
+    let (body_bytes, body_sha256, sent) = rx.recv_timeout(Duration::from_secs(3)).unwrap();
     // Independently reconstruct the binding from the upstream's observed body.
     // The transport's socket tests also hash those actual bytes independently.
     use agentmage_platform_linux_inference::local_chat::{
@@ -312,6 +318,7 @@ fn coding_proposal_streams_selected_context_and_returns_only_an_unapplied_change
     assert_eq!(events[0]["model_binding"], expected);
     assert_eq!(proposal["model_binding"], expected);
     assert_eq!(expected["request_body_bytes"], body_bytes);
+    assert_eq!(expected["request_body_sha256"], body_sha256);
     assert_eq!(expected["verified_input_tokens"], Value::Null);
     assert!(!String::from_utf8_lossy(&body).contains("synthetic-key"));
     assert_eq!(proposal["response_complete"], true);
