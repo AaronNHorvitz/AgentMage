@@ -851,6 +851,21 @@ fn prepared_endpoint_request_sends_the_exact_frozen_body_and_redacts_private_inp
             )
             .unwrap();
         let binding = serde_json::to_value(request.binding()).unwrap();
+        let runtime_binding =
+            serde_json::to_value(request.binding().runtime_model_binding()).unwrap();
+        assert_eq!(
+            runtime_binding,
+            json!({
+                "kind":"selected_endpoint",
+                "identity":{"endpoint":endpoint.base_url(),"model":"test-model"}
+            })
+        );
+        assert!(!runtime_binding.to_string().contains("synthetic-key"));
+        assert!(
+            !runtime_binding
+                .to_string()
+                .contains("private synthetic prompt")
+        );
         prompt.clear(); // Execute cannot re-encode caller-owned, subsequently changed text.
         assert_eq!(
             listener.accept().unwrap_err().kind(),

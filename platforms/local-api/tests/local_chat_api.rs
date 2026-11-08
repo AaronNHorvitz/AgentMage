@@ -192,6 +192,45 @@ fn events(body: &[u8]) -> Vec<Value> {
         .collect()
 }
 
+fn assert_endpoint_runtime_observation(rows: &[Value]) {
+    let first = &rows[0];
+    let terminal = rows.last().unwrap();
+    let expected = json!({
+        "kind":"selected_endpoint",
+        "identity":{
+            "endpoint":first["model_binding"]["endpoint"],
+            "model":first["model_binding"]["model"]
+        }
+    });
+    assert_eq!(first["runtime_model_binding"], expected);
+    assert_eq!(terminal["runtime_model_binding"], expected);
+    assert!(first.get("token_accounting").is_none());
+    if terminal["response_complete"] == true {
+        let accounting = &terminal["token_accounting"];
+        assert_eq!(accounting["kind"], "selected_endpoint");
+        assert_eq!(
+            accounting["observation"]["verified_input_tokens"],
+            Value::Null
+        );
+        assert_eq!(
+            accounting["observation"]["verified_output_tokens"],
+            Value::Null
+        );
+        assert_eq!(
+            accounting["observation"]["provider_reported"],
+            terminal["usage"]
+        );
+        assert!(
+            accounting["observation"]
+                .get("rendered_prompt_tokens")
+                .is_none()
+        );
+    } else {
+        assert!(terminal.get("token_accounting").is_none());
+        assert!(terminal.get("usage").is_none());
+    }
+}
+
 fn coding_request() -> Value {
     json!({"model":"fixture", "task":"Fix add so it adds the numbers",
         "files":[{"path":"calc.py","content":"def add(a, b):\n    return a - b\n"}],
@@ -276,6 +315,7 @@ fn coding_proposal_streams_selected_context_and_returns_only_an_unapplied_change
     assert_eq!(expected["verified_input_tokens"], Value::Null);
     assert!(!String::from_utf8_lossy(&body).contains("synthetic-key"));
     assert_eq!(proposal["response_complete"], true);
+    assert_endpoint_runtime_observation(&events);
     assert_eq!(proposal["type"], "proposal");
     assert_eq!(proposal["applied"], false);
     assert_eq!(proposal["tested"], false);
@@ -435,6 +475,7 @@ fn coding_truncated_or_incomplete_generations_never_become_valid_edits() {
             events[0]["model_binding"]["verified_input_tokens"],
             Value::Null
         );
+        assert_endpoint_runtime_observation(&events);
         task.join().unwrap();
     }
 }
@@ -485,6 +526,7 @@ fn coding_cancellation_remains_available_and_inert() {
     let events = events(&split(bytes).1);
     assert_eq!(events.last().unwrap()["code"], "chat.transport.cancelled");
     assert_eq!(events.last().unwrap()["response_complete"], false);
+    assert_endpoint_runtime_observation(&events);
     assert_eq!(
         events.last().unwrap()["model_binding"],
         events[0]["model_binding"]
@@ -2164,6 +2206,7 @@ fn proposal_usage_uses_the_same_validated_stream_without_authorizing_edits() {
         assert_eq!(last["model_binding"]["provider_usage_requested"], true);
         assert_eq!(last["model_binding"]["verified_input_tokens"], Value::Null);
         assert_eq!(last["response_complete"], mode != "bad");
+        assert_endpoint_runtime_observation(&rows);
         if matches!(mode, "bad" | "invalid-edit") {
             assert_eq!(last["type"], "error");
             if mode == "bad" {

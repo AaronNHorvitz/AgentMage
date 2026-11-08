@@ -46,7 +46,19 @@ binds immutable coding requests to the actual credential-owning transport and
 exposes exact body fingerprints, selected endpoint/model, limits and honest
 response completion. It does not provide verified native model identity or
 token accounting, nor connect configured endpoints to the native coordinator.
-Independent core review is required; T-303/T-306 remain open.
+Its [independent core review](docs/reviews/0e5ed222cc36-local-coding-endpoint-binding.txt)
+has **Verdict: PASS** for exact commit `0e5ed222cc36c44bc2d62a8030c18a22b6e3444d`,
+with no open high/medium finding; T-303/T-306 remain open. Low L1 (API fixture
+raw-body digest checks) and L2 (transport preparation before repair-receipt
+consumption) remain backlog in these rows. This does not accept the new shared
+runtime model-binding batch or endpoint coordinator execution.
+The [runtime model-binding batch](docs/evidence/t303-runtime-model-binding-2026-11-07.md)
+introduces distinct shared exact-profile and selected-endpoint identity and token
+provenance types. Native admission retains its complete original profile check;
+endpoint proposal events expose selected identity and optional provider-only
+accounting with null verified counts. Endpoint coordinator request/context/result
+support and execution remain open. Independent core review is required; neither
+parent closes and no new row is introduced.
 No public release is authorized. One level of sub-rows maximum; each implementation
 sub-row must run end to end and be measured. Never tune on held-out tasks, edit
 hidden tests or weaken thresholds. Desktop UI work is deferred to a separate shell.

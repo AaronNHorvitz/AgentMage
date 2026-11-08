@@ -3977,6 +3977,134 @@ fn context_token_binding_precedes_model_dispatch_and_effects() {
 }
 
 #[test]
+fn selected_endpoint_binding_cannot_satisfy_native_runtime_admission() {
+    // Even a selected model named exactly like the admitted profile is not a
+    // native tuple. Every other port is a real fixture from an admitted run;
+    // no native-profile fallback or model operation may be attempted here.
+    struct EndpointOnly(String);
+    impl RuntimeModelPort for EndpointOnly {
+        fn exact_profile(&self) -> &ExactModelProfile {
+            panic!("an endpoint selection has no native profile")
+        }
+        fn model_binding(&self) -> agentmage_kernel_contracts::RuntimeModelBinding<'_> {
+            agentmage_kernel_contracts::RuntimeModelBinding::SelectedEndpoint {
+                endpoint: "http://127.0.0.1:12345/v1",
+                model: &self.0,
+            }
+        }
+        fn run_model(
+            &mut self,
+            _: &ModelRunRequest,
+            _: &ModelContextPacket,
+            _: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
+        ) -> Result<ModelRunResult, RuntimePortFailure> {
+            panic!("unadmitted endpoint must never run")
+        }
+    }
+    let (initial, executions) = coordinator([ModelScript::Tool], PermissionScript::Allow, true);
+    let selected = initial.request.model_profile.profile_id.as_str().to_owned();
+    let result = ReusableRuntimeCoordinator::new(
+        initial.request,
+        EndpointOnly(selected),
+        initial.context,
+        initial.registry,
+        initial.tool_boundary,
+        initial.verifier,
+        initial.clock,
+    );
+    assert!(matches!(result, Err(RuntimeLoopError::ModelBinding)));
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+}
+
+#[test]
+fn runtime_model_binding_preserves_the_complete_native_tuple_and_accounting() {
+    use agentmage_kernel_contracts::{RuntimeModelBinding, RuntimeModelTokenAccounting};
+
+    let (initial, _) = coordinator([ModelScript::Completion], PermissionScript::Allow, false);
+    let expected = &initial.request.model_profile;
+    let binding = initial.model.model_binding();
+    assert!(binding.matches_exact_profile(expected));
+    let mut changed = expected.clone();
+    changed.runtime.runtime_sha256 = "b".repeat(64);
+    assert!(!binding.matches_exact_profile(&changed));
+    let mut changed = expected.clone();
+    changed.manifest_sha256 = "b".repeat(64);
+    assert!(!binding.matches_exact_profile(&changed));
+    let mut changed = expected.clone();
+    changed.decoding.max_output_tokens += 1;
+    assert!(!binding.matches_exact_profile(&changed));
+    assert!(matches!(binding, RuntimeModelBinding::ExactProfile(actual) if actual == expected));
+
+    let mut coordinator = initial;
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        coordinator.run_until_boundary(None, None).unwrap()
+    else {
+        panic!("unchanged native fixture must complete")
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    // This shared inspection vocabulary does not change native result bytes or
+    // remove the exact usage/resource checks that produced this fixture result.
+    let usage = ModelTokenUsage {
+        rendered_prompt_tokens: 7,
+        cached_input_tokens: None,
+        evaluated_input_tokens: None,
+        generated_output_tokens: 3,
+        reasoning_output_tokens: None,
+        output_token_reserve: 8,
+        remaining_capacity_tokens: Some(20),
+    };
+    let value = serde_json::to_value(RuntimeModelTokenAccounting::ExactNative(&usage)).unwrap();
+    assert_eq!(value["kind"], "exact_native");
+    assert_eq!(value["observation"], serde_json::to_value(&usage).unwrap());
+    assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn declared_model_binding_cannot_override_the_existing_native_profile_check() {
+    struct ContradictingModel {
+        actual: ExactModelProfile,
+        declared: ExactModelProfile,
+    }
+    impl RuntimeModelPort for ContradictingModel {
+        fn exact_profile(&self) -> &ExactModelProfile {
+            &self.actual
+        }
+        fn model_binding(&self) -> agentmage_kernel_contracts::RuntimeModelBinding<'_> {
+            agentmage_kernel_contracts::RuntimeModelBinding::ExactProfile(&self.declared)
+        }
+        fn run_model(
+            &mut self,
+            _: &ModelRunRequest,
+            _: &ModelContextPacket,
+            _: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
+        ) -> Result<ModelRunResult, RuntimePortFailure> {
+            panic!("contradicting native model must never run")
+        }
+    }
+    let (initial, executions) = coordinator([ModelScript::Tool], PermissionScript::Allow, true);
+    let declared = initial.request.model_profile.clone();
+    let mut actual = declared.clone();
+    actual.runtime.runtime_sha256 = "b".repeat(64);
+    let model = ContradictingModel { actual, declared };
+    assert!(
+        model
+            .model_binding()
+            .matches_exact_profile(&initial.request.model_profile)
+    );
+    let result = ReusableRuntimeCoordinator::new(
+        initial.request,
+        model,
+        initial.context,
+        initial.registry,
+        initial.tool_boundary,
+        initial.verifier,
+        initial.clock,
+    );
+    assert!(matches!(result, Err(RuntimeLoopError::ModelBinding)));
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+}
+
+#[test]
 fn story_23_4_model_dependency_failures_close_without_effect_or_retry() {
     for (failure, state) in [
         (RuntimePortFailure::Invalid, AgentStateKind::Failed),

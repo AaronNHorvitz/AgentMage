@@ -246,37 +246,27 @@ pub enum ChatFinish {
 
 /// Untrusted provider counts, structurally checked but never local tokenizer,
 /// memory, hardware or model-identity evidence. Missing reports stay absent.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
-pub struct ChatUsage {
-    /// Reported input tokens, including any cached tokens.
-    pub prompt_tokens: u32,
-    /// Reported output tokens, including any reasoning tokens.
-    pub completion_tokens: u32,
-    /// Checked sum of reported input and output tokens.
-    pub total_tokens: u32,
-}
+pub use agentmage_kernel_contracts::ProviderTokenUsage as ChatUsage;
 
-impl ChatUsage {
-    fn parse(value: &Value, max_tokens: u32) -> Result<Self, ChatError> {
-        let count = |name| {
-            value
-                .get(name)
-                .and_then(Value::as_u64)
-                .and_then(|n| u32::try_from(n).ok())
-                .ok_or(ChatError::Protocol)
-        };
-        let usage = Self {
-            prompt_tokens: count("prompt_tokens")?,
-            completion_tokens: count("completion_tokens")?,
-            total_tokens: count("total_tokens")?,
-        };
-        if usage.prompt_tokens.checked_add(usage.completion_tokens) != Some(usage.total_tokens)
-            || usage.completion_tokens > max_tokens
-        {
-            return Err(ChatError::Protocol);
-        }
-        Ok(usage)
+fn parse_chat_usage(value: &Value, max_tokens: u32) -> Result<ChatUsage, ChatError> {
+    let count = |name| {
+        value
+            .get(name)
+            .and_then(Value::as_u64)
+            .and_then(|n| u32::try_from(n).ok())
+            .ok_or(ChatError::Protocol)
+    };
+    let usage = ChatUsage {
+        prompt_tokens: count("prompt_tokens")?,
+        completion_tokens: count("completion_tokens")?,
+        total_tokens: count("total_tokens")?,
+    };
+    if usage.prompt_tokens.checked_add(usage.completion_tokens) != Some(usage.total_tokens)
+        || usage.completion_tokens > max_tokens
+    {
+        return Err(ChatError::Protocol);
     }
+    Ok(usage)
 }
 
 /// Incremental untrusted text, or a completion marker pending transport EOF.
@@ -522,7 +512,7 @@ impl ChatStream {
             if self.finish_reason.is_none() || self.usage.is_some() {
                 return Err(ChatError::Protocol);
             }
-            self.usage = Some(ChatUsage::parse(value, limit)?);
+            self.usage = Some(parse_chat_usage(value, limit)?);
         }
         Ok(())
     }

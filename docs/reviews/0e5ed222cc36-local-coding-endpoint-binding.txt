@@ -1,0 +1,181 @@
+Commit: 0e5ed222cc36c44bc2d62a8030c18a22b6e3444d
+Scope: local-coding-endpoint-binding
+
+# Independent core review: configured endpoint request binding (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate read-only session on the pinned checkout
+`/lane/review-checkout`. `git rev-parse HEAD` and `git rev-parse 0e5ed222cc36c44bc2d62a8030c18a22b6e3444d`
+both returned `0e5ed222cc36c44bc2d62a8030c18a22b6e3444d`; the base
+`7a007e7aa1f4e9b594f2eda96789ee1269de7bd8` resolves. `git status --short` was empty before and after.
+The repository was not modified. Probe tests ran only in an out-of-repository scratch export.
+
+## Methods
+
+Read IP-POLICY.md, the TASKS.md diff and top section, the complete ten-path diff, the guide section,
+the evidence note and the retained runtime-lifetimes review. Read all helpers (verify.py, final.py,
+audit.py, plus setup_checks.py, which generated them, and focus.py, which was not run). Then read the
+code each claim depends on: `LocalChatEndpoint::parse/base_url`, `encode_chat_request`, the codec
+stream/text limits, `Wire::body/fill/write_all`, `request()` header framing,
+`coding_proposal_with_feedback`, the repair route's receipt consumption order, and the CLI, MCP and
+measurement consumers of proposal events.
+
+## Commands and results (all run in /lane/review-checkout)
+
+```text
+sha256sum -c /lane/state/tmp/t303-endpoint-binding/review-inputs.sha256   -> 28 lines, all OK
+sha256sum review-inputs.sha256 -> bc052d1fa927c8be86c110632e718ee31c15353b3675e7398c4f457256bffaca (matches)
+sha256sum node                 -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches)
+AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-endpoint-binding-0e5ed222cc36 (new, mkdir -m 700; absent before)
+bash /tools/build-slot python3 -B .../verify.py > verification.log   -> exit 1 (expected); FAST_GATE_EXIT 1
+  git diff --check                  exit 0
+  --lint-untracked                  exit 0
+  --lint-reviews <retained review>  exit 0
+  markdownlint (3 touched docs)     exit 0
+  cargo fmt ... -- --check          exit 0  (0.95 s)
+  cargo clippy ... -D warnings      exit 0  (32.14 s here; builder 11.37 s, cache-dependent)
+  cargo test ... --all-targets --no-fail-fast  exit 101 (129.21 s)
+python3 -B .../final.py > final.log -> exit 0; FINAL_AUDIT_PASS
+cmp validation-2/plan-final.json   <mine>  -> identical
+cmp validation-2/source-freeze.json <mine> -> identical
+cmp validation-2/audit.json        <mine>  -> identical
+cmp docs/reviews/7a007e7aa1f4-local-coding-runtime-lifetimes.txt /lane/reviews/7a007e7aa1f4-...md -> identical
+git diff --check 7a007e7a... --    -> exit 0
+git status --short                 -> empty
+```
+
+I tallied the test log myself rather than relying on audit.py. It has 27 targets: 894 passed,
+53 failed, 19 ignored, 0 filtered. Per target: host lib 545/53/9, host main 15, coding_linked_activation 1,
+native_read_cancellation 0/0/2, standalone_evidence_process 5, local-api lib 32, coding_cli 14,
+coding_runtime_cli 23, coding_worktree 13, local_chat_api 37, linux-inference lib 178/0/4,
+local_chat_transport 21, muse_live_evaluation 1/0/1, muse_live_install 0/0/3, process_boundary 9.
+The remaining targets are empty bins and examples, including the `agentmage-mcp` bin target. All three
+new transport methods pass. So do the four strengthened `local_chat_api` methods and
+`coding_repair_api::tests::synthetic_feedback_uses_existing_stream_and_strict_edit_checker_with_a_bounded_prompt`,
+all unfiltered.
+
+I inspected all 53 failures myself. Every one is in `shells/host`, and this diff does not touch
+`shells/` (`git diff --stat` is empty there):
+
+- 41 × `linux_coding_runtime` panic "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+- 10 × `linux_read` panic "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+- 1 × `linux_repository_map` panic "Git verifies: LinuxRepositoryError { kind: InvalidGitArtifact }"
+- 1 × `story_39_1_native_write_checkpoint_process_matrix_recovers_without_replay`: it asserts the child's
+  exit code (left Some(101), right Some(93)). The child itself panicked on the same test-sandbox
+  manifest refusal.
+
+All of them are the inherited host-binary trust/ownership blocker. The audit also confirms identical
+failure identities, normalized diagnostics and the 19 ignore identities against the retained
+provider-usage witness. The audit never converts this failure into a pass. `FAST GATE: FAIL` remains.
+
+Focus logs: `focus.log` shows the original reserved attempt. Formatting passed (0.258 s). The
+transport test then failed to compile with `E0277 ... Array<u8, ...>: LowerHex` and exited 101.
+`focus-2.log` shows transport 21 passed and API 37 passed, with 0 failed, 0 ignored and 0 filtered.
+Both match the request.
+
+## Independent reproduction (scratch export via `git archive HEAD`, same target dir, through build-slot)
+
+I added three probe tests to a scratch copy of `tests/local_chat_transport.rs`. All 24 tests passed,
+including mine:
+
+- `reviewer_probe_ipv6_usage_raw_bytes_and_nonzero_provider_counts`: endpoint `http://[::1]:P/v1/`
+  gives binding endpoint `http://[::1]:P/v1`. A ~100 KB system+user request with emoji, `<script>` and a
+  tab, usage on and `max_tokens` 4096 was sent with a bearer key. The server read the raw body and
+  answered with chunked framing in 7-byte chunks, plus provider usage of 999/4/1003. The binding's SHA-256
+  and length equal my own hash and length of the received bytes. Usage surfaces as provider-reported
+  (1003), `verified_input_tokens` stays null, and the binding JSON does not contain the key.
+- `reviewer_probe_truncated_and_callback_cancel_never_complete`: a Content-Length overshoot (truncated),
+  a cancel from the text callback, and late bytes after a valid end all return `Err`, never a completion.
+- `reviewer_probe_legacy_chat_wire_bytes_equal_prepared_body`: for both `chat` and `chat_with_usage`, the
+  received body equals the `encode_chat` / `encode_chat_with_usage` output byte for byte, and equals
+  the hash of a separately prepared binding. This shows the legacy wire bytes are unchanged.
+
+Compile-fail probes, each in its own scratch test target:
+
+- `serde_json::from_str::<EndpointChatBinding>` fails with E0277 (no Deserialize).
+- `Clone::clone(&owned PreparedEndpointChat)` fails with E0277 (no Clone). My first attempt with
+  `p.clone()` on `&PreparedEndpointChat` compiled only because it cloned the reference, which is
+  harmless.
+- `{:?}` on `PreparedEndpointChat` fails with E0277 (no Debug).
+- A second `execute` on the same prepared request fails with E0382 (single use).
+
+Private fields mean there is no external constructor for either type.
+
+## Review of claims
+
+- **Body binding:** `prepare_chat` (local_chat_transport.rs:317-355) hashes the same
+  `Zeroizing<Vec<u8>>` that `execute` passes to `chat_encoded`. `request()` writes the headers, then
+  `write_all(body)` with `Content-Length: body.len()`, and applies no transformation. Headers and
+  credentials are excluded. Model, usage option and ceiling come from the binding, so `execute` has no
+  way to vary them. The borrow checker enforces that the request is independent of the caller's
+  messages: the builder's test clears the prompt after preparation and still compiles.
+- **Endpoint:** `parse` accepts only `is_loopback()` IP literals, or `localhost` pinned to 127.0.0.1.
+  It requires an explicit non-zero port and brackets for IPv6, and refuses traversal and encoded paths.
+  `base_url` formats the numeric `SocketAddr`, so the endpoint is canonical.
+- **Limits:**
+  - `response_wire_limit_bytes` = `MAX_WIRE` (5 MiB, `Wire::fill`).
+  - `response_body_limit_bytes` = `MAX_STREAM_BYTES` (4 MiB). This is now the same constant for
+    `wire.body` and the codec (local_chat.rs:390); it was a literal of the same value before.
+  - `response_text_limit_bytes` = `MAX_TEXT_BYTES` (1 MiB, codec local_chat.rs:500).
+  - The values are unchanged; only the visibility changed to `pub(super)`.
+  - `Duration` serializes as `{secs,nanos}`; the 50 ns / 25 ns test confirms there is no rounding.
+- **Ordering:** `chat` and `chat_with_usage` still check approval, then cancellation, then encoding,
+  before any connection. `execute` and `request()` check cancellation again. Return types are
+  unchanged.
+- **API:** `coding_proposal_with_feedback` (lib.rs:1029-1075) prepares once. It clones the binding into
+  the context event and into every terminal event through `proposal_observation`.
+  - `response_complete = completion.is_some()`, and `completion` exists only for `Ok` transport
+    results.
+  - An oversized answer cancels the transport, so it yields `Err(Cancelled)` and false.
+  - Length finishes and invalid strict edits keep `true` and still refuse, as documented.
+  - A disconnect (`!writable`) returns before writing any terminal record.
+  - Usage is attached only when requested and completed.
+  - Snapshot, workspace (lib.rs:900) and repair (coding_repair_api.rs:88) all reach this single path.
+    General chat (lib.rs:1843) is unchanged and out of scope.
+  - I found no second loop, retry, write or tool grant.
+- **Consumers:** the CLI (coding_cli.rs:396), MCP (coding_mcp.rs:341) and measurement collector
+  (coding_proposal_measurement.py) check individual fields rather than exact key sets, so the
+  additive fields break none of them.
+- **Integrity, privacy, IP:**
+  - The ten paths match exactly. No evaluation, hidden-test, scorer, threshold, dependency or ledger
+    row changes (audit.py confirms the ledger rows are unchanged).
+  - No new `#[ignore]`.
+  - The added text contains no home path, username, hostname, credential or private sibling name.
+  - The `/lane/...` paths occur only in the retained review, as in 87 earlier committed reviews.
+  - No third-party product is named or compared; the reviewer attribution is not branding.
+- **Delivery:** no new sub-row. The batch adds a working, tested increment reachable through the API,
+  CLI and MCP surfaces. The parents remain open.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test strength):** platforms/local-api/tests/local_chat_api.rs:241-276 and
+  platforms/local-api/src/coding_repair_api.rs:254-276,354.
+  - The API-level tests check the binding's `request_body_bytes` against the observed body length.
+  - The snapshot test compares the full binding by re-encoding the observed messages. It does not hash
+    the raw received bytes, and the repair fixture does not check the digest at all.
+  - The raw-byte hash is proven at the transport layer, by the builder's test and my probe. The API
+    path uses that same `execute`, so I see no defect.
+  - Fix: hash `raw[start..]` and `bytes` directly with `sha2` in both fixtures and compare the hash
+    with `model_binding.request_body_sha256`.
+- **L2 (low, robustness):** platforms/local-api/src/lib.rs:1029-1040.
+  - A `prepare_chat` error returns a bare 400 with a transport code. In the repair route this happens
+    after `consume_repair_feedback` (coding_repair_api.rs:77-83).
+  - It is unreachable today. `prepare_proposal_messages` already runs the identical
+    `encode_chat[_with_usage]` with the same inputs. `Configuration` mints its approval from the same
+    endpoint as its transport (lib.rs:1708-1710).
+  - No test covers the branch.
+  - Fix: prepare the transport request during preflight, before receipt consumption, or document and
+    test the branch as unreachable.
+
+## Per-row result
+
+- T-303 (endpoint request-binding increment): accepted. There is no open high or medium finding, and
+  the row stays OPEN as claimed. L1 and L2 go to backlog in this row.
+- T-306 (shared repair/proposal path): accepted. There is no open high or medium finding, and the row
+  stays OPEN as claimed.
+
+This review does not accept native model identity, token accounting, exact-profile admission, native
+sandbox trust, real inference, scores or parent closure.
+
+Verdict: PASS

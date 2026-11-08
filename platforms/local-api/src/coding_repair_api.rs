@@ -361,6 +361,30 @@ mod tests {
                 Value::Null
             );
             assert_eq!(terminal["response_complete"], true);
+            assert_eq!(
+                terminal["runtime_model_binding"],
+                events[0]["runtime_model_binding"]
+            );
+            assert_eq!(
+                terminal["runtime_model_binding"],
+                json!({
+                    "kind":"selected_endpoint",
+                    "identity":{"endpoint":expected_endpoint,"model":"synthetic-model"}
+                })
+            );
+            assert_eq!(terminal["token_accounting"]["kind"], "selected_endpoint");
+            assert_eq!(
+                terminal["token_accounting"]["observation"]["verified_input_tokens"],
+                Value::Null
+            );
+            assert_eq!(
+                terminal["token_accounting"]["observation"]["verified_output_tokens"],
+                Value::Null
+            );
+            assert_eq!(
+                terminal["token_accounting"]["observation"]["provider_reported"],
+                terminal["usage"]
+            );
             if valid {
                 assert_eq!(terminal["type"], "proposal", "{terminal}");
                 assert_eq!(terminal["applied"], false);

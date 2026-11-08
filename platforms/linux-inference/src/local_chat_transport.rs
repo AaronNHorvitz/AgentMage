@@ -12,6 +12,7 @@ use std::sync::{
 };
 use std::time::{Duration, Instant};
 
+use agentmage_kernel_contracts::RuntimeModelBinding;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use zeroize::{Zeroize, Zeroizing};
@@ -247,6 +248,19 @@ pub struct EndpointChatBinding {
     response_text_limit_bytes: usize,
     // A request fingerprint and provider usage cannot establish this count.
     verified_input_tokens: Option<u64>,
+}
+
+impl EndpointChatBinding {
+    /// Uses the shared runtime vocabulary without claiming an exact native
+    /// profile. This is inspection data only; the prepared request continues to
+    /// borrow its original credential-owning transport and exact approval.
+    #[must_use]
+    pub fn runtime_model_binding(&self) -> RuntimeModelBinding<'_> {
+        RuntimeModelBinding::SelectedEndpoint {
+            endpoint: &self.endpoint,
+            model: &self.model,
+        }
+    }
 }
 
 /// An inert, single-use chat request bound to its credential-owning transport.

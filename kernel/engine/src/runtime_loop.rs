@@ -17,12 +17,12 @@ use agentmage_kernel_contracts::{
     RuntimeArtifactId, RuntimeArtifactIntegrityState, RuntimeArtifactKind, RuntimeArtifactManifest,
     RuntimeArtifactPreview, RuntimeArtifactRef, RuntimeContinuationState, RuntimeEvent,
     RuntimeEventCursor, RuntimeEventId, RuntimeEventKind, RuntimeEventRetention,
-    RuntimeEventRetentionKind, RuntimeOperationId, RuntimeOutcome, RuntimeOutput,
-    RuntimePayloadReference, RuntimePermissionDisposition, RuntimeResumeBinding, RuntimeRunRequest,
-    RuntimeSessionMode, RuntimeToolAttemptState, RuntimeToolReference, RuntimeToolRejection,
-    RuntimeToolRejectionReason, RuntimeTurnId, SessionCheckpoint, SessionCheckpointId, StateChange,
-    ToolCall, ToolCallId, ToolDefinition, ToolId, ToolResult, VerifierCandidate, VerifierId,
-    to_canonical_json,
+    RuntimeEventRetentionKind, RuntimeModelBinding, RuntimeOperationId, RuntimeOutcome,
+    RuntimeOutput, RuntimePayloadReference, RuntimePermissionDisposition, RuntimeResumeBinding,
+    RuntimeRunRequest, RuntimeSessionMode, RuntimeToolAttemptState, RuntimeToolReference,
+    RuntimeToolRejection, RuntimeToolRejectionReason, RuntimeTurnId, SessionCheckpoint,
+    SessionCheckpointId, StateChange, ToolCall, ToolCallId, ToolDefinition, ToolId, ToolResult,
+    VerifierCandidate, VerifierId, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -351,6 +351,14 @@ impl<C: RuntimeClock> RuntimePhaseControl<'_, C> {
 pub trait RuntimeModelPort {
     /// Returns the exact profile already admitted by the model controller.
     fn exact_profile(&self) -> &ExactModelProfile;
+
+    /// Describes the identity available at this boundary. The default preserves
+    /// exact native ports. The current request/context/result contracts still
+    /// require a complete native profile; a selected endpoint is refused before
+    /// any context, model, verifier or tool operation. This is not admission.
+    fn model_binding(&self) -> RuntimeModelBinding<'_> {
+        RuntimeModelBinding::ExactProfile(self.exact_profile())
+    }
 
     /// Binds exact rendered tokens before context retention; no generation or authority.
     /// Ports with already-exact context accounting need no additional binding.
@@ -1612,7 +1620,11 @@ where
         if request.event_cursor.is_some() && checkpoint.is_none() {
             return Err(RuntimeLoopError::UnsupportedMode);
         }
-        if model.exact_profile() != &request.model_profile {
+        if !model
+            .model_binding()
+            .matches_exact_profile(&request.model_profile)
+            || model.exact_profile() != &request.model_profile
+        {
             return Err(RuntimeLoopError::ModelBinding);
         }
         let registry_tools = runtime_tool_references(&registry)?;

@@ -39,6 +39,7 @@ mod prompt;
 mod reasoning;
 mod runtime_artifact;
 mod runtime_event;
+mod runtime_model_binding;
 mod runtime_run;
 mod serialization;
 mod structured_source;
@@ -236,6 +237,9 @@ pub use runtime_event::{
     RuntimeEvent, RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,
     RuntimeEventRetentionKind, RuntimePayloadReference, RuntimePermissionDisposition,
     RuntimeSafeNextAction,
+};
+pub use runtime_model_binding::{
+    EndpointTokenAccounting, ProviderTokenUsage, RuntimeModelBinding, RuntimeModelTokenAccounting,
 };
 pub use runtime_run::{
     RuntimeAnswerEvidence, RuntimeApprovalChallenge, RuntimeApprovalDisposition,

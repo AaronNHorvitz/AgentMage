@@ -35,6 +35,7 @@ use agentmage_capability_repository_map::coding_proposal::{
     CODING_PROPOSAL_INSTRUCTION, CodingProposalContext, CodingProposedChange, CodingSource,
     check_coding_proposal, prepare_coding_proposal,
 };
+use agentmage_kernel_contracts::{EndpointTokenAccounting, RuntimeModelTokenAccounting};
 
 use agentmage_platform_linux::{
     LinuxCodingCommandCancellation, LinuxCodingPendingWrite, LinuxCodingReadScope,
@@ -981,8 +982,14 @@ fn proposal_observation(
     completion: Option<ChatCompletion>,
 ) -> Value {
     value["model_binding"] = json!(binding);
+    value["runtime_model_binding"] = json!(binding.runtime_model_binding());
     // This confirms wire/codec completion only, never a successful coding task.
     value["response_complete"] = json!(completion.is_some());
+    if let Some(completion) = completion {
+        value["token_accounting"] = json!(RuntimeModelTokenAccounting::SelectedEndpoint(
+            EndpointTokenAccounting::from_completed_provider_report(completion.usage),
+        ));
+    }
     if requested && let Some(completion) = completion {
         value["usage"] = json!(completion.usage);
         value["usage_source"] = json!("provider-reported");
@@ -1045,6 +1052,7 @@ fn coding_proposal_with_feedback(
         "message_bytes":context.message_bytes(), "files":context.outlines(),
         "excerpts":context.excerpts(), "authority":"proposal-only","workspace_revision":workspace_revision,
         "model_binding":binding});
+    context_event["runtime_model_binding"] = json!(binding.runtime_model_binding());
     if let Some(feedback) = &feedback {
         context_event["message_bytes"] = json!(
             context.message_bytes()

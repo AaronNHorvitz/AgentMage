@@ -129,6 +129,27 @@ false. Existing optional `usage` is emitted only for completed responses when
 requested, labelled `provider-reported`; missing usage stays null. No completion
 or counts are fabricated after disconnect.
 
+Context and terminal events also expose `runtime_model_binding`, using the
+shared runtime vocabulary: `kind: "selected_endpoint"` and an `identity` object
+with the canonical `endpoint` and requested `model`. It describes selection;
+the complete `model_binding` above still identifies the prepared body and limits.
+Neither value contains credentials or grants inference or tool authority.
+
+Completed responses additionally carry `token_accounting`, with
+`kind: "selected_endpoint"`. Its `observation.provider_reported` is the optional
+structurally checked usage report. `verified_input_tokens` and
+`verified_output_tokens` always remain null. Missing reports remain null;
+reported zero counts remain explicit zero counts. No exact prompt count,
+remaining token capacity or hardware observation is inferred. Partial,
+cancelled and malformed responses carry no `token_accounting`. A completed
+invalid edit still has accounting for its inference attempt.
+
+Native runtime ports use the distinct `exact_profile` binding variant. Their
+complete native profile comparison and exact token/resource checks remain
+mandatory. A selected endpoint cannot satisfy native admission even if its
+model name equals the profile identifier. This shared vocabulary does not yet
+provide endpoint-specific coordinator requests, contexts, results or execution.
+
 The credential-owning transport prepares an immutable request without connecting.
 Its single-use execution sends those same body bytes through that original
 transport, with cancellation rechecked before connecting. Source/model disclosure
