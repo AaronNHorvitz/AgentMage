@@ -19,6 +19,8 @@ const DEADLINE: Duration = Duration::from_secs(180);
 
 #[path = "coding_cli_driver.rs"]
 mod driver;
+#[path = "coding_cli_endpoint.rs"]
+mod endpoint;
 #[path = "coding_mcp.rs"]
 mod mcp;
 #[path = "coding_cli_runtime.rs"]
@@ -642,6 +644,9 @@ fn execute(args: &[String]) -> Result<()> {
         return Err(());
     };
     let client = Client::new(address, auth)?;
+    if command == "endpoint" || command.starts_with("endpoint-") {
+        return endpoint::execute(&client, command, tail);
+    }
     if command == "runtime" || command.starts_with("runtime-") {
         return runtime::execute(&client, command, tail);
     }
@@ -824,6 +829,9 @@ fn execute(args: &[String]) -> Result<()> {
 }
 
 fn usage() {
+    eprintln!(
+        "Retained endpoint commands: endpoint | endpoint-step <run-id> <request-digest> | endpoint-approve|endpoint-deny <run-id> <request-digest> <challenge-json> | endpoint-events <run-id> <request-digest> <index> | endpoint-cancel|endpoint-release <run-id> <request-digest>"
+    );
     eprintln!(
         "Usage: agentmage-code <loopback-ip:port> <private-auth-directory> original|original-prepare <repository> <worktree> <task> <paths...>|original-apply <repository>|original-deny|runtime-attach <private-runtime-state> <private-disposable-root> <created-worktree> <muse|gpt-oss> <python-project|python-root-project|failed-test-repair> [source-paths...]|runtime-recover|runtime|runtime-run <seconds> <task>|runtime-prepare <task>|runtime-start <prepared-request-json>|runtime-step <run-id> <request-digest>|runtime-approve <run-id> <request-digest>|runtime-deny <run-id> <request-digest>|runtime-job <run-id> <request-digest>|runtime-control <run-id> <request-digest> <cancel|suspend|resume>|runtime-declarations <run-id> <request-digest>|runtime-release <run-id> <request-digest>|repair-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|edit|edit-prepare <worktree> <strict-change-json>|edit-apply <worktree>|edit-deny|propose-worktree <worktree> <model> <message-bytes> <output-tokens> <task>|validation|validation-prepare <definition-json>|validation-run <worktree>|validation-deny|command|command-prepare <spec-json>|command-run <worktree>|command-deny|worktree|worktree-prepare <repository> <private-management-directory> <task-id> <base-commit>|worktree-create <repository> <private-management-directory>|worktree-deny|map <absolute-root> <query>|map-select <absolute-root> <query>|status|workspace|select <absolute-root> <paths...>|select-model <absolute-root> <paths...>|read|search <literal>|propose <model> <message-bytes> <output-tokens> <task>|review|apply <absolute-root>|deny|revoke|cancel"
     );

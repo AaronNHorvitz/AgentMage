@@ -31,6 +31,80 @@ use std::{
 
 const CLIENT: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const CONTROL: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
+#[test]
+fn endpoint_terminal_inspects_cancels_and_pages_the_actual_retained_http_owner() {
+    use std::{
+        fs,
+        process::{Command, Stdio},
+    };
+    let executions = Arc::new(AtomicUsize::new(0));
+    let model = TcpListener::bind("127.0.0.1:0").unwrap();
+    model.set_nonblocking(true).unwrap();
+    let endpoint =
+        LocalChatEndpoint::parse(&format!("http://{}/v1", model.local_addr().unwrap())).unwrap();
+    let api = Api::new(endpoint, executions.clone());
+    // Fresh private auth directory; only synthetic fixed tokens go in it.
+    let root = std::env::temp_dir().join(format!(
+        "agentmage-endpoint-terminal-http-{}",
+        std::process::id()
+    ));
+    ApiTokens::initialize(&root).unwrap();
+    struct Cleanup(std::path::PathBuf);
+    impl Drop for Cleanup {
+        fn drop(&mut self) {
+            fs::remove_dir_all(&self.0).unwrap();
+        }
+    }
+    let _cleanup = Cleanup(root.clone());
+    fs::write(root.join("client.token"), CLIENT).unwrap();
+    fs::write(root.join("control.token"), CONTROL).unwrap();
+    let cli = |args: &[&str]| {
+        let output = Command::new(env!("CARGO_BIN_EXE_agentmage-code"))
+            .arg(api.address.to_string())
+            .arg(&root)
+            .args(args)
+            .stdin(Stdio::null())
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        serde_json::from_slice::<Value>(&output.stdout).unwrap()
+    };
+    let selected = cli(&["endpoint"]);
+    let r = selected["request"].clone();
+    let run = r["run_id"].as_str().unwrap();
+    let hash = r["request_sha256"].as_str().unwrap();
+    assert_eq!(selected["retention"], "process-only");
+    assert_eq!(
+        cli(&["endpoint-events", run, hash, "0"])["page"]["total"],
+        0
+    );
+    assert_eq!(
+        cli(&["endpoint-cancel", run, hash]),
+        json!({"cancellation":"requested"})
+    );
+    assert_eq!(api.advance(&r, Value::Null, false).0, 200);
+    let mut after = 0;
+    loop {
+        let observed = cli(&["endpoint-events", run, hash, &after.to_string()]);
+        let page = &observed["page"];
+        assert_eq!(observed["index_is_resume_cursor"], false);
+        assert_eq!(page["events"].as_array().unwrap().len(), 1);
+        assert_eq!(page["events"][0]["run_id"], run);
+        after = page["next"].as_u64().unwrap();
+        if page["next"] == page["total"] {
+            break;
+        }
+    }
+    assert!(after > 0);
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    assert!(matches!(model.accept(),Err(e) if e.kind()==std::io::ErrorKind::WouldBlock));
+}
+
 fn digest(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()

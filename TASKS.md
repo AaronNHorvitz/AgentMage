@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The terminal client now addresses the retained endpoint HTTP owner: inspect,
+advance with fresh model-disclosure consent, respond to an exact tool challenge,
+inspect event pages, cancel and separately confirm release. See the
+[terminal ownership record](docs/evidence/t303-endpoint-terminal-2026-11-08.md).
+Independent core review is required; T-303/T-306 remain open. Native filesystem
+and grant composition, service executable activation, MCP, edit/test/retry,
+durable recovery, approved Git and parent measurements remain open. No row is
+added or closed.
+
+The endpoint HTTP [independent core review](docs/reviews/7defa427d317-local-coding-endpoint-http.txt)
+has **Verdict: PASS** for exact commit
+`7defa427d3179554920086b1b5f3e8c2875aa7e5`, with no high/medium finding.
+Its low L1 (the extent of per-advance disclosure consent) is clarified in the
+terminal guide, pending review of this increment. Low L2 (HTTP dependency-fault
+and explicit Host/Origin regression coverage) stays backlog in these same rows.
+This accepts only the immutable HTTP increment; neither parent closes.
+
 The dedicated endpoint HTTP adapter now projects one retained coordinator through
 fresh service-issued run/session identities, exact approval responses,
 cancellation, paged canonical events and release. See the

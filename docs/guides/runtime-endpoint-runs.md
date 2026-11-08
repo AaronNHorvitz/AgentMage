@@ -1,5 +1,62 @@
 # Endpoint run framing
 
+## Terminal access to a retained endpoint service
+
+`agentmage-code <loopback-ip:port> <private-auth-directory>` now supports the
+following commands against the dedicated endpoint service described below.
+Every endpoint route requires the control credential. This uses the existing
+bounded HTTP client; it never follows a model-supplied URL or redirects.
+
+| Command | Action |
+| --- | --- |
+| `endpoint` | Inspect the original sealed request and fixed configuration |
+| `endpoint-step <run-id> <request-digest>` | Confirm model disclosure, then advance the retained coordinator |
+| `endpoint-approve <run-id> <request-digest> <challenge-json>` | Review and approve the exact challenge, separately confirm model disclosure, then send that one response |
+| `endpoint-deny <run-id> <request-digest> <challenge-json>` | Deny that exact challenge after confirming disclosure needed to continue the run |
+| `endpoint-events <run-id> <request-digest> <index>` | Inspect one canonical event page, starting at zero |
+| `endpoint-cancel <run-id> <request-digest>` | Latch cancellation without model disclosure |
+| `endpoint-release <run-id> <request-digest>` | Separately confirm dropping a terminal or faulted run's process-only record |
+
+Use the run identity and full request digest returned by `endpoint`. Copy the
+complete `step.challenge` JSON from an approval-waiting response when approving
+or denying it. These arguments identify an existing owner; they never construct
+a new run, change settings, select files or reset a budget. JSON arguments are
+bounded by the client and the operating system's command-line limit.
+
+Before advancing, the terminal fetches and verifies the service's sealed
+request and checks its exact run identity and digest. Its complete request,
+endpoint, model and limits appear in the disclosure review. Tool approval also
+shows the exact protected presentation and readable JSON arguments; the service
+still validates the original pending challenge. Declining either operation or
+disclosure consent posts no approval. Each new advance needs new disclosure
+consent, including after a tool denial. The same coordinator may make several
+model turns within one advance, up to its next approval boundary or terminal
+observation and within the original budgets. No automatic tool approval or
+session authority is added. Consequential consent and release require a real
+controlling terminal; piped input is refused. Terminal text is escaped.
+
+The command prints the original step under `step`, labelled
+`verification: service-observation-only`. It checks identity and response shape
+but cannot recreate the coordinator's accepted completion claim from wire
+metadata. It does not independently certify task success. Event pages check
+each event's canonical digest, sequence and run/session/task/policy binding;
+the label `individual-event-hashes-only` does not claim whole-stream replay or
+completion verification. `next` is an inspection index, never a recovery cursor.
+Export pages before release or shutdown. Cancellation acknowledges a request;
+it does not declare the model or tools stopped. Release cannot reopen a run.
+
+A refusal, disconnect or timeout is reported without retrying, cancelling or
+releasing automatically. Inspect events after an uncertain reply before taking
+another action. There is no automatic driver or durable recovery here.
+
+This connects an executable terminal client to the HTTP library entry point.
+The service still needs trusted native filesystem/grant composition and an
+executable activation. It is not yet an installable configured-endpoint coding
+workflow. The native evaluation runtime commands remain separate. Endpoint MCP,
+edit/test/retry, approved Git and measured T-303/T-306 acceptance remain open.
+
+## Retained coordinator ownership
+
 `coding_endpoint_owner::CodingEndpointRuns` retains up to four complete configured
 endpoint coordinators under one non-cloneable in-process owner. Keep that same
 owner in the hosting service. Admission takes trusted original configuration,

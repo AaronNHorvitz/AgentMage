@@ -1,0 +1,208 @@
+Commit: 7defa427d3179554920086b1b5f3e8c2875aa7e5
+Scope: local-coding-endpoint-http
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only frozen checkout at
+`/lane/review-checkout`. Tier: core. Immutable predecessor: `77eeb69607dfe2147b9275c9b7b0a40d7b4aa30b`.
+Rows: T-303 / T-306, non-closing. Both parents stay OPEN; no row or sub-row is added or closed.
+
+## Methods
+
+- Confirmed the commit: `git rev-parse HEAD` = `7defa427d3179554920086b1b5f3e8c2875aa7e5`.
+  `git diff --stat 77eeb696..HEAD` lists exactly nine files (+1326/−12): TASKS.md, the evidence
+  record, the guide, the retained predecessor review, `kernel/engine/src/runtime_loop.rs`,
+  `platforms/local-api/src/{coding_endpoint_api.rs,lib.rs}`,
+  `platforms/local-api/tests/coding_endpoint_http.rs` and `shells/host/src/coding_endpoint_owner.rs`.
+  No Cargo.toml, Cargo.lock, dependency, evaluation, held-out, hidden-test, scorer, threshold,
+  ignore, SBOM, scoreboard or status file changed.
+- Read every changed line. Traced the code paths the adapter relies on:
+  - the owner's `admit`/`advance`/`release`/`entry`;
+  - kernel `run_until_boundary_impl` and `advance_until_boundary`, `run_endpoint_turn`;
+  - `verify_runtime_endpoint_run_request` and the endpoint-address shape guard;
+  - the shared HTTP `request()` parser (Host, auth, Origin, Sec-Fetch, Cookie, forwarding headers,
+    Transfer-Encoding, Upgrade, content type, body bound);
+  - the refactored `serve_connections` worker lifecycle for both services.
+- Read README.md, run.py, parse.py, audit.py and final.py.
+- Wrote and ran an out-of-repository adversarial probe crate (path dependencies on the frozen
+  checkout; nothing written to the repository).
+
+## Commands and results
+
+All commands ran from `/lane/review-checkout` with `CARGO_TARGET_DIR=/lane/state/review-target`,
+`CARGO_BUILD_JOBS=2` and `RUST_TEST_THREADS=4`. Fresh validation directory:
+`/lane/state/tmp/review-endpoint-http-7defa427d317`. The builder's rawlogs and copies were not touched.
+
+```text
+sha256sum --quiet -c review-inputs.sha256               # OK; manifest sha256 569be5cb...c9e83 matches
+python3 -B run.py > fast.log                            # rc=1 (expected); FAST GATE: FAIL; SOURCE_FREEZE_UNCHANGED
+  RESULT exits: 0,0,0,127,0,0,101                       # fmt 0, strict clippy 0, tests 101 (baseline failures)
+grep -Fx 'FAST GATE: FAIL' / 'SOURCE_FREEZE_UNCHANGED'  # both present (rg is not installed here; grep -Fx is equivalent)
+python3 -B final.py --committed > final.log             # rc=1: FileNotFoundError 'node' (see environment note)
+cmp validation-final/source-freeze.json source-freeze.json   # identical
+git diff --check 77eeb696... --                         # clean
+git status --short                                      # clean
+```
+
+Environment note:
+- In this reviewer sandbox, the brief's durable Node path (`/lane/state/tooling/node-v24.15.0-linux-x64/bin`)
+  does not exist, and neither does `.tools`. So the plan's markdownlint command returned 127 in my
+  run too, exactly as in the builder's initial run.
+- To still run the documentation check, I copied my own fast.log, plan.json, source-freeze.json and
+  source copies into `substitute-node/`. I re-ran `final.py --committed` there with the only Node
+  binary on the host (v24.19.0, system-installed; no download) prepended to PATH. Result:
+  - rc=0, `FINAL_LIGHT_PASS; SOURCE_GATE_FAIL; NO_ROW_CLOSED`;
+  - markdownlint-cli2 v0.23.2 reports "0 issues" on the three Markdown files;
+  - lint-untracked, lint-reviews and diff-check report 0;
+  - the exact nine-file scope, public-hygiene and committed-blob checks pass;
+  - audit.py passes on *my* raw log: 44 targets, totals 2611 passed / 72 failed / 71 ignored /
+    0 filtered, 2606 prior passes plus exactly the five new methods.
+- This substitutes a different patch version of Node for the brief's path. I judge markdownlint's
+  result independent of that difference, and I record the substitution here.
+
+Independent consistency checks:
+- `parse.records` of my fast.log equals the builder's `fast-final.log` (44 = 44 targets, identical
+  pass/fail/ignore identities).
+- The normalized diagnostics of all 72 failures are identical too.
+- The 72 failures are 56 `LinuxSandboxError { kind: InvalidManifest }` and 16 Git-artifact/signer
+  admission refusals in host/platform-linux tests: the deferred T-301.1 blocker. None touch changed
+  code. Nothing is waived.
+- The builder's seven RESULT timings sum to 342.85 s, as claimed.
+- The retained `docs/reviews/77eeb69607df-local-coding-shared-config.txt` is byte-identical to
+  `/lane/reviews/77eeb69607df-local-coding-shared-config.md` (`cmp`).
+- TASKS.md ledger rows (`|` lines) are unchanged.
+
+Flakiness: I ran the prebuilt `coding_endpoint_http` target directly 15 times (4 threads):
+**15/15 passed** (5 passed each run).
+
+Reviewer probes, out of repository (`probe/tests/probe.rs`; build-slot `cargo test --offline`):
+**3 passed, 0 failed**. All requests went to the real `serve_coding_endpoint` over real sockets.
+
+- `reviewer_probe_http_protections_do_not_latch_cancel`: each probe was a POST
+  `/v1/code/endpoint/cancel` with a valid binding body, sent under one attack condition. Results:
+
+  | Condition | Status |
+  | --- | --- |
+  | Host `localhost:<port>` or `attacker.example` | 403 |
+  | `Origin` (cross-site and `null`), `Sec-Fetch-Site`, `Cookie`, `X-Forwarded-For` | 403 |
+  | `text/plain` or form content type | 415 |
+  | Client token | 403 |
+  | No token, or a 63-character token prefix | 401 |
+  | Duplicate Authorization header | 400 |
+  | Chunked body or Upgrade header | 403 |
+  | Path variants (trailing slash, `//`, query, `%63`, `..`, `/V1`) and methods PUT/GET/DELETE/lower-case | 400/404 |
+  | `after` of `-1`, `1e30`, 2^64, string, null or 0.5 | 400 |
+  | `after` = u64::MAX | 409 |
+  | Duplicate JSON `run_id` key | 400 |
+  | Consent as `"true"` or `1`, or a missing consent field | 400 |
+  | Pipelined second request on one connection | not processed |
+
+  After all of these, an unconsented advance still returned 403, so no refused request latched
+  cancellation. Zero tool executions and zero upstream connections.
+- `reviewer_probe_cancel_then_unconsented_approval_never_executes_or_dispatches`: the run reached a
+  real approval challenge for a model-proposed read. I then sent cancel, then advance with a *valid*
+  allow-approval and `approve_model_context:false`. The result was terminal CANCELLED with
+  `receipt_ids: []`, zero tool executions and exactly one upstream model request (no second
+  dispatch). This confirms the cancelled-consent exemption cannot be used to execute a tool or
+  disclose context. The kernel checks `stop_before_phase` before resuming a pending approval and
+  before every turn (`runtime_loop.rs` advance_until_boundary; `coordinator_endpoint.rs`
+  `control.check()` before `prepare_endpoint`).
+- `reviewer_probe_prompt_injected_tool_calls_get_no_authority`: the model returned four injected
+  tool calls:
+  1. an unregistered `agentmage.shell.exec` call with a `curl | sh` command;
+  2. a read-file call with smuggled `grant_id` and `approved` fields;
+  3. a read-file call with a `..`/`..`/etc/passwd path;
+  4. a read-file call with an `/etc/passwd` absolute component.
+
+  Each ended terminal FAILED after one model request, with **zero permission evaluations and zero
+  executions**.
+
+The probes exercise HTTP-layer and kernel admission only. The tool and permission ports are still
+synthetic in this increment, so no native filesystem confinement is exercised or claimed. That
+matches the commit's own claims.
+
+## Analysis of the change
+
+- **Identity and admission.**
+  - `serve_coding_endpoint` refuses a non-loopback listener or a pre-set stop.
+  - It draws 32 bytes each from `getrandom` for the run and session ids, calls the trusted factory
+    once and refuses any other identities before admission (tested, `Configuration`).
+  - The sealed request is re-verified by the owner, and source snapshots are dropped after
+    admission.
+  - No wire input reaches the factory, ports, registry, sources or configuration.
+- **Authentication.**
+  - Every route goes through the shared `request()` parser and then `req.control` (403 for the
+    client token), including GET `/request`.
+  - Routing happens only after authentication, so unauthenticated callers see 401/403, never
+    404 path probing.
+- **Binding.** Every POST uses `deny_unknown_fields` and exact run-id/digest equality. Mismatches
+  return 409 before any lock or advance.
+- **Consent.**
+  - `approve_model_context` is a required JSON bool. A missing field or a non-bool value returns
+    400.
+  - Refusal is checked before taking the lock and dispatches nothing. Rejected approval input does
+    not consume the challenge, because `run_until_boundary_impl` verifies the response before
+    `advance_until_boundary` and does not set the reconciliation flag.
+- **Cancellation.**
+  - The latch is an `AtomicBool` that never clears. The cancel route takes no lock, and the probe
+    observes it with Acquire ordering.
+  - It uses the coordinator's original `correlation_id` (new read-only accessor) and task id.
+    Shutdown maps to `CancellationReason::Shutdown` through the same probe.
+- **Ownership.** `try_lock` returns 409 for concurrent advance/events/release (tested while
+  dispatch is in flight). A poisoned mutex returns 500, and the panicking worker stops the service
+  (fail-closed).
+- **Events.** At most one event per page. `after <= len` is checked before slicing, `after+1` uses
+  `saturating_add`, and an out-of-range index returns 409 without panicking.
+- **Errors.** `owner_error` emits only fixed codes. No dependency diagnostics, source text or
+  credential reaches the response. The request route exposes the sealed request, whose endpoint
+  address cannot contain `@`, `?` or `#` (`validate_endpoint_shape`), so no userinfo credential can
+  leak.
+- **Worker refactor.** `serve_connections` keeps the four-worker, loopback-peer, stop-on-exit
+  behaviour. It now joins workers even if the manual service's `cancel_active` fails, where it
+  previously returned early. That is a strict improvement. The manual service's ~2,600 existing
+  tests are unchanged and pass identically.
+- **Claims.** The evidence and guide state accurately that this is a library entry point with no
+  executable, synthetic ports, a deliberately rejecting verifier, no native filesystem or grant
+  composition and no model score. No product naming or comparison, no private host path or
+  username. The only `/lane/` paths are inside the byte-identical retained predecessor review.
+- **Delivery.** No new row or sub-row. The increment runs and is measured by five socket tests.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, documentation precision): `docs/guides/runtime-endpoint-runs.md:490`** ("Each advance
+  requires `approve_model_context: true`") **and `docs/evidence/t303-endpoint-http-2026-11-08.md:26`.**
+  - Consent is checked once per HTTP advance (`platforms/local-api/src/coding_endpoint_api.rs:215`).
+    But one advance runs the coordinator until the next approval boundary or terminal, which can
+    include several model turns that disclose new tool results. The builder's own approval test
+    performs the second model turn inside the consented approval advance.
+  - This is consistent with "per-advance" and is not a bypass: tool effects still need their own
+    permission evaluation or approval.
+  - Fix: state in the guide/evidence that one consented advance covers every model turn up to the
+    next approval challenge or terminal state, so a host UI can word its consent prompt correctly.
+- **L2 (low, test coverage): `platforms/local-api/tests/coding_endpoint_http.rs`.**
+  - No socket test drives a dependency fault (for example an upstream that refuses the connection
+    or returns a malformed stream). So the HTTP mapping of `Coordinator` to `code.endpoint.refused`,
+    then `Faulted` to `code.endpoint.faulted`, and "release of faulted private state" (claimed in
+    the guide table, line 507) are not asserted at the HTTP layer. The owner-level tests do cover
+    them.
+  - The new target also has no Host/Origin assertions of its own. They hold by construction through
+    the shared `request()` parser, and my probe confirmed them.
+  - Fix: add one socket method where the upstream closes without a response, asserting
+    advance=409/refused, then faulted, release=200, then not-held, with zero tool executions.
+
+Backlog notes for the builder, outside this row and not findings against the commit:
+- The reviewer sandbox has no `/lane/state/tooling` directory and no `rg`. Future review commands
+  should either use a Node path that exists in the reviewer environment or not require one, and use
+  `grep -Fx` instead of `rg -Fx`.
+
+## Per-row result
+
+- **T-303 (non-closing increment): PASS for this exact increment.** It has no open high/medium
+  finding; L1 and L2 go to the backlog in this row. The row stays OPEN.
+- **T-306 (non-closing increment): PASS for this exact increment.** It has no open high/medium
+  finding. The row stays OPEN.
+
+This review does not close any row, approve anything in the repository, or claim certification,
+compliance or legal clearance.
+
+Verdict: PASS

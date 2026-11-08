@@ -18,6 +18,9 @@ use std::{
     time::{Duration, Instant},
 };
 
+#[path = "support/coding_endpoint_cli.rs"]
+mod endpoint;
+
 static NEXT: AtomicU64 = AtomicU64::new(0);
 struct Fixture {
     root: PathBuf,
@@ -1314,7 +1317,7 @@ try:
             prompt_bytes.append(len(raw)-review_start);review_start=len(raw)
             prompt=raw.split(b'Type exactly ')[-1].split(b' to approve;')[0]
             mode=sys.argv[1];tool=prompt.startswith(b'allow ')
-            allow = mode in ('approve','slow-approve') or (mode in ('deny-tools','slow-deny-tools','signal-tool','eof-start','eof-tool','overflow-tool') and not tool)
+            allow = mode in ('approve','slow-approve') or (mode in ('deny-tools','slow-deny-tools','signal-tool','eof-start','eof-tool','overflow-tool') and not tool) or (mode=='allow-tool-only' and tool)
             if sys.argv[1]=='signal' or (sys.argv[1]=='signal-tool' and prompt.startswith(b'allow ')):os.kill(p.pid,signal.SIGINT)
             elif (mode=='eof-inspect' or (mode=='eof-start' and prompt.startswith(b'start ')) or (mode=='eof-tool' and tool)):os.write(master,b'\x04')
             elif mode=='overflow-tool' and tool:os.write(master,b'x'*257+b'\n')
