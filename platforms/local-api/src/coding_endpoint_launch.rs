@@ -38,6 +38,14 @@ struct ReadCheck {
     content_sha256: String,
 }
 
+#[derive(Debug, Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum WorkerTrust {
+    #[default]
+    RootOwned,
+    SealedSiblingDevelopment,
+}
+
 // A trusted, private startup document, never an HTTP/model tool argument. It
 // contains metadata only: no source contents or inline endpoint credentials.
 #[derive(Deserialize)]
@@ -52,6 +60,8 @@ struct Launch {
     request: RuntimeEndpointRunRequest,
     instructions: InstructionEvidenceLedger,
     checks: Vec<ReadCheck>,
+    #[serde(default)]
+    worker_trust: WorkerTrust,
 }
 
 type Runs = CodingEndpointRuns<
@@ -106,6 +116,9 @@ fn load(path: &Path) -> Result<Launch, ApiError> {
     let shape: Value = serde_json::from_slice(&bytes).map_err(|_| ApiError::Configuration)?;
     if !shape["request"].is_object()
         || !shape["instructions"].is_object()
+        || shape
+            .get("worker_trust")
+            .is_some_and(|selection| !selection.is_string())
         || !shape["checks"]
             .as_array()
             .is_some_and(|checks| checks.iter().all(Value::is_object))
@@ -188,24 +201,35 @@ fn admit(
     let endpoint = LocalChatEndpoint::parse(&prepared.request().model_selection.endpoint)
         .map_err(|_| ApiError::Configuration)?;
 
-    // Preserve original root-owned launch/worker admission, including all
-    // ancestry, descriptor, hash and offline seccomp checks. No fallback.
-    let runtime_files = ["libgcc_s.so.1", "libc.so.6", "ld-linux-x86-64.so.2"]
-        .into_iter()
-        .map(|name| {
-            Ok(LinuxWorkerRuntimeFile::new(
-                std::fs::canonicalize(Path::new("/usr/lib64").join(name))
-                    .map_err(|_| ApiError::Configuration)?,
-                Path::new("/lib64").join(name),
-            ))
-        })
-        .collect::<Result<Vec<_>, ApiError>>()?;
-    let manifest = LinuxSandboxManifest::verify(
-        "/usr/bin/systemd-run",
-        "/usr/bin/bwrap",
-        &launch.worker,
-        &runtime_files,
-    )
+    // The root-owned selection stays the default. The separate development
+    // selection seals only this running API binary's exact sibling worker;
+    // neither branch falls back to the other. System trust is unchanged.
+    let manifest = match launch.worker_trust {
+        WorkerTrust::RootOwned => {
+            let runtime_files = ["libgcc_s.so.1", "libc.so.6", "ld-linux-x86-64.so.2"]
+                .into_iter()
+                .map(|name| {
+                    Ok(LinuxWorkerRuntimeFile::new(
+                        std::fs::canonicalize(Path::new("/usr/lib64").join(name))
+                            .map_err(|_| ApiError::Configuration)?,
+                        Path::new("/lib64").join(name),
+                    ))
+                })
+                .collect::<Result<Vec<_>, ApiError>>()?;
+            LinuxSandboxManifest::verify(
+                "/usr/bin/systemd-run",
+                "/usr/bin/bwrap",
+                &launch.worker,
+                &runtime_files,
+            )
+        }
+        WorkerTrust::SealedSiblingDevelopment => {
+            LinuxSandboxManifest::verify_development_endpoint_read_only_worker(
+                &platform,
+                &launch.worker,
+            )
+        }
+    }
     .map_err(|error| {
         eprintln!("code.endpoint.native-admission: {error}");
         ApiError::Configuration

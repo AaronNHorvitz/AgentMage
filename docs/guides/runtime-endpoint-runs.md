@@ -734,6 +734,7 @@ bytes and failure for different bytes through the original canonical terminal
 path. This does not demonstrate native admission, a real model or an executable
 coding workflow. Activation, edit/test/retry, recovery, approved Git and parent
 measurements remain open.
+
 ## Explicit native read-only development launch
 
 The local API executable now offers this narrowly supported launch:
@@ -760,7 +761,8 @@ A trusted caller prepares this closed version-1 JSON object:
 | `state_root` | Existing private development state directory |
 | `disposable_root` | Existing private disposable parent, separate from state |
 | `workspace_root` | Its existing private Git worktree with the original explicit development marker |
-| `worker` | Absolute native read-only worker path admitted by the original root-owned manifest |
+| `worker` | Absolute native read-only worker path, subject to the selected trust rule below |
+| `worker_trust` | Optional `root_owned` (the default) or explicit `sealed_sibling_development` |
 | `credential_file` | Optional private endpoint-key path, or `null` |
 | `request` | Original sealed `RuntimeEndpointRunRequest`, using the exact original file-read catalog |
 | `instructions` | Verified `InstructionEvidenceLedger` for that request's workspace snapshot |
@@ -784,6 +786,9 @@ After successful admission, use the existing `agentmage-code` endpoint commands
 against the printed loopback address. Every advance needs fresh model-disclosure
 consent; every read requires its exact challenge response. The original endpoint
 controls, events, cancellation and release operate on this same retained owner.
+Startup diagnostics and the bound address are printed on stderr. A refused
+launch emits no service output on stdout. Select `worker_trust` with a JSON
+string; object representations refuse.
 MCP observation delegation is off for this launch. Retention is process-only;
 restarting creates a fresh run and does not restore prior approvals or budgets.
 
@@ -792,8 +797,24 @@ executables, the worker and the fixed runtime libraries before opening the
 endpoint key or canonical state. A refusal prints the content-free
 `code.endpoint.native-admission` diagnostic and the original sandbox code.
 The current lane's system executables fail the original ownership checks.
-A user-owned worker also refuses; this launch does not implement the separate
-sealed-sibling development worker path. No root install or policy relaxation is
-authorized by this guide. Successful native service/model execution remains
-unobserved, as do edits, tests, retries and parent acceptance. See
+With the default `root_owned` selection, a user-owned worker also refuses.
+An explicit `sealed_sibling_development` selection uses the existing development
+snapshot mechanism: `worker` must name exactly `agentmage-read-only-worker`
+beside the canonical running `agentmage-local-api` executable. Other paths,
+aliases, missing files, unsafe ownership/modes and non-executables refuse.
+The worker bytes are copied into a sealed descriptor before native launch;
+subsequent pathname edits cannot change that snapshot. This does not authenticate
+a development build as a production package. Build both binaries together:
+
+```sh
+cargo build --locked --offline -p agentmage-local-api \
+  -p agentmage-capability-read-only \
+  --bin agentmage-local-api --bin agentmage-read-only-worker
+```
+
+There is no automatic fallback between selections. Both keep the fixed system
+executables, libraries, namespaces, seccomp, limits and per-action approvals.
+No root install or policy relaxation is authorized by this guide. Successful
+native service/model execution remains unobserved, as do edits, tests, retries
+and parent acceptance. See
 [Decision 0163](../decisions/0163-native-endpoint-read-development-launch.md).

@@ -29,15 +29,32 @@ startup narrowing and policy binding. All other request content is preserved;
 original seals are checked before identity binding. No resume is implied.
 
 Use the existing disposable activation marker and Linux development adapter.
-The worker and fixed system executables/libraries must pass the original
-root-owned manifest admission. Unavailable native resources refuse before
+By default, the worker and fixed system executables/libraries must pass the
+original root-owned manifest admission. Unavailable native resources refuse before
 opening endpoint credentials or creating authority state. This launch does not
 relax worker ownership, impersonate a qualified native model profile, or claim
 production/package activation. An installed user-owned worker is insufficient
-for this entry point under the current manifest policy.
+under this default; the explicit development selection below changes only
+worker sourcing.
 
 The concrete verifier certifies only the declared complete UTF-8 observations,
 not summary meaning or repository correctness. Native success is unobserved in
 the builder lane. Edit/test/retry, durable coordinator recovery, approved Git,
 parent measurements and T-303/T-306 closure remain open. No row is added or
 closed; independent core review is required.
+
+## Explicit development worker selection, 2026-11-08
+
+The private launch document may explicitly select `sealed_sibling_development`
+for `worker_trust`. Omission keeps the original `root_owned` selection. Reuse
+the existing development worker snapshot mechanism with a closed launcher
+mapping: only the running canonical local API executable's exact sibling
+`agentmage-read-only-worker` is selectable. Retain original owner/mode/ancestry,
+bounded-copy, drift and immutable descriptor checks. The existing host launcher
+continues to select its own sibling through the same mechanism.
+
+Neither selection falls back to the other. Fixed system executables and runtime
+libraries still require original root-owned admission; runner, supervision,
+offline confinement, credentials/state ordering and exact grants are unchanged.
+This removes a worker-selection prerequisite only. Positive native execution
+and model measurements remain unobserved in this lane; parent rows remain open.

@@ -2,6 +2,20 @@
 
 ## Active queue: local agent mission
 
+The launch increment's [independent core review](docs/reviews/7aacd4261581-local-coding-endpoint-launch.txt)
+has **Verdict: PASS** for exact commit
+`7aacd4261581a5d61fc1508af9dfe0beac22e255`, with no high/medium finding.
+Low L1 (listener/stop ordering test strength) and L2 (unit refusal test scope)
+remain same-row backlog; L3 (heading spacing) is corrected here. Earlier lows
+and retention-aware hygiene tooling remain backlog. Both parent rows stay open.
+
+The [explicit development worker selection](docs/evidence/t303-endpoint-worker-2026-11-08.md)
+connects the existing sealed-sibling worker mechanism to the endpoint launcher
+as an explicit private startup choice. Root-owned admission remains the default;
+fixed system trust and per-action approvals remain mandatory. Native/model
+success remains unobserved. Independent core review is required; T-303/T-306
+remain open, with no row added or closed.
+
 The read verifier's [independent core review](docs/reviews/983524c26b41-local-coding-endpoint-read-verifier.txt)
 has **Verdict: PASS** for exact commit
 `983524c26b4170a839abf82b2eb0968a15caf3f3`, with no high/medium finding.

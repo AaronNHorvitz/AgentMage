@@ -66,7 +66,7 @@ fn run() -> Result<(), ()> {
             eprintln!(
                 "Starting a disposable read-only endpoint run: read private configuration and key, select the marked workspace and create private state. Each model disclosure and file read needs separate approval. Native admission must succeed."
             );
-            println!(
+            eprintln!(
                 "AgentMage endpoint API starting on {}",
                 listener.local_addr().map_err(|_| ())?
             );

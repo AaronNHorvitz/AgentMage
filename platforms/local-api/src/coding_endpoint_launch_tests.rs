@@ -182,3 +182,38 @@ fn launch_refuses_actual_native_admission_before_credential_read_or_state_creati
         b"synthetic source\n"
     );
 }
+
+#[test]
+fn launch_worker_trust_is_explicit_closed_and_root_owned_by_default() {
+    let mut f = Fixture::new();
+    assert_eq!(
+        load(&f.write()).unwrap().worker_trust,
+        WorkerTrust::RootOwned
+    );
+    f.launch["worker_trust"] = json!("root_owned");
+    assert_eq!(
+        load(&f.write()).unwrap().worker_trust,
+        WorkerTrust::RootOwned
+    );
+    f.launch["worker_trust"] = json!("sealed_sibling_development");
+    assert_eq!(
+        load(&f.write()).unwrap().worker_trust,
+        WorkerTrust::SealedSiblingDevelopment
+    );
+    // Serde's unit-variant map form must not bypass this configuration's
+    // documented string-only choice. Prove the outer shape guard is needed.
+    f.launch["worker_trust"] = json!({"sealed_sibling_development":null});
+    assert!(serde_json::from_value::<Launch>(f.launch.clone()).is_ok());
+    assert!(load(&f.write()).is_err());
+    for invalid in [
+        json!("development"),
+        json!("SealedSiblingDevelopment"),
+        json!(null),
+        json!(true),
+        json!([]),
+        json!({"sealed_sibling_development":true}),
+    ] {
+        f.launch["worker_trust"] = invalid;
+        assert!(load(&f.write()).is_err());
+    }
+}

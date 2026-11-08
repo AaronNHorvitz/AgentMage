@@ -401,14 +401,31 @@ impl LinuxSandboxManifest {
     pub fn verify_development_read_only_worker(
         _platform: &crate::LinuxDevelopmentPlatformAdapter,
     ) -> Result<Self, LinuxSandboxError> {
+        Self::verify_development_read_launcher(DevelopmentReadLauncher::Host, None)
+    }
+
+    /// Pins only the exact sibling read worker of the running local API binary.
+    /// This is a separate disposable development selection, never a fallback
+    /// from production admission. The supplied path must name that exact sibling.
+    /// System executables and runtime libraries retain their root-owned checks.
+    pub fn verify_development_endpoint_read_only_worker(
+        _platform: &crate::LinuxDevelopmentPlatformAdapter,
+        selected_worker: impl AsRef<Path>,
+    ) -> Result<Self, LinuxSandboxError> {
+        Self::verify_development_read_launcher(
+            DevelopmentReadLauncher::LocalApi,
+            Some(selected_worker.as_ref()),
+        )
+    }
+
+    fn verify_development_read_launcher(
+        launcher: DevelopmentReadLauncher,
+        selected_worker: Option<&Path>,
+    ) -> Result<Self, LinuxSandboxError> {
         let current = std::env::current_exe()
             .and_then(std::fs::canonicalize)
             .map_err(|_| error(LinuxSandboxErrorKind::InvalidManifest))?;
-        if current.file_name().and_then(|name| name.to_str()) != Some("agentmage-host") {
-            return Err(error(LinuxSandboxErrorKind::InvalidManifest));
-        }
-        let worker =
-            development_worker_artifact(&current.with_file_name("agentmage-read-only-worker"))?;
+        let worker = development_read_launcher_worker(&current, launcher, selected_worker)?;
         let runtime_files = ["libgcc_s.so.1", "libc.so.6", "ld-linux-x86-64.so.2"]
             .into_iter()
             .map(|name| {
@@ -1354,6 +1371,32 @@ fn verify_artifact(
     })
 }
 
+// A closed mapping owned by the compiled launcher. Neither startup metadata nor
+// a model can supply another launcher name or select an arbitrary executable.
+enum DevelopmentReadLauncher {
+    Host,
+    LocalApi,
+}
+
+fn development_read_launcher_worker(
+    current: &Path,
+    launcher: DevelopmentReadLauncher,
+    selected_worker: Option<&Path>,
+) -> Result<VerifiedArtifact, LinuxSandboxError> {
+    let expected = match launcher {
+        DevelopmentReadLauncher::Host => "agentmage-host",
+        DevelopmentReadLauncher::LocalApi => "agentmage-local-api",
+    };
+    if current.file_name().and_then(|name| name.to_str()) != Some(expected) {
+        return Err(error(LinuxSandboxErrorKind::InvalidManifest));
+    }
+    let sibling = current.with_file_name("agentmage-read-only-worker");
+    if selected_worker.is_some_and(|path| path.as_os_str() != sibling.as_os_str()) {
+        return Err(error(LinuxSandboxErrorKind::InvalidManifest));
+    }
+    development_worker_artifact(&sibling)
+}
+
 fn development_worker_artifact(path: &Path) -> Result<VerifiedArtifact, LinuxSandboxError> {
     development_worker_artifact_kind(path, DevelopmentWorkerKind::ReadOnly)
 }
@@ -2001,6 +2044,111 @@ mod tests {
         fs::remove_file(&worker).unwrap();
         symlink("/usr/bin/true", &worker).unwrap();
         assert!(super::development_worker_artifact(&worker).is_err());
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn development_read_launcher_pins_only_its_exact_sibling_snapshot() {
+        use super::{DevelopmentReadLauncher, development_read_launcher_worker};
+        use std::os::unix::fs::PermissionsExt;
+        let root = temp_directory("endpoint-worker-selection");
+        fs::set_permissions(&root, fs::Permissions::from_mode(0o700)).unwrap();
+        let worker = root.join("agentmage-read-only-worker");
+        fs::write(&worker, b"first-party synthetic worker bytes").unwrap();
+        fs::set_permissions(&worker, fs::Permissions::from_mode(0o700)).unwrap();
+        // Direct selector components, not running launchers or executable workers.
+        let api = root.join("agentmage-local-api");
+        let host = root.join("agentmage-host");
+        let api_held = development_read_launcher_worker(
+            &api,
+            DevelopmentReadLauncher::LocalApi,
+            Some(&worker),
+        )
+        .unwrap();
+        let host_held =
+            development_read_launcher_worker(&host, DevelopmentReadLauncher::Host, None).unwrap();
+        assert!(api_held.sealed_snapshot && host_held.sealed_snapshot);
+        assert_eq!(
+            api_held.guest_path.as_deref(),
+            Some(Path::new("/app/agentmage-read-only-worker"))
+        );
+        assert!(api_held.launch_path.is_none());
+        fs::write(&worker, b"changed pathname bytes").unwrap();
+        for held in [&api_held, &host_held] {
+            assert_eq!(
+                descriptor_bytes(&held.descriptor),
+                b"first-party synthetic worker bytes"
+            );
+            assert!(rustix::io::write(&held.descriptor, b"mutate").is_err());
+        }
+        assert!(
+            development_read_launcher_worker(
+                &host,
+                DevelopmentReadLauncher::LocalApi,
+                Some(&worker),
+            )
+            .is_err()
+        );
+        assert!(
+            development_read_launcher_worker(&api, DevelopmentReadLauncher::Host, None,).is_err()
+        );
+        for wrong in [
+            root.join("other-worker"),
+            root.join("other/agentmage-read-only-worker"),
+            root.join("./agentmage-read-only-worker"),
+            PathBuf::from("agentmage-read-only-worker"),
+        ] {
+            assert!(
+                development_read_launcher_worker(
+                    &api,
+                    DevelopmentReadLauncher::LocalApi,
+                    Some(&wrong),
+                )
+                .is_err()
+            );
+        }
+        // The development snapshot must not make the mutable source admissible
+        // to the unchanged production root-owned manifest.
+        assert!(
+            super::verify_artifact(
+                &worker,
+                Some(Path::new("/app/agentmage-read-only-worker")),
+                false
+            )
+            .is_err()
+        );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn development_endpoint_worker_rejects_missing_unsafe_and_alias_siblings() {
+        use super::{DevelopmentReadLauncher, development_read_launcher_worker};
+        use std::os::unix::fs::{PermissionsExt, symlink};
+        let root = temp_directory("endpoint-worker-refusals");
+        fs::set_permissions(&root, fs::Permissions::from_mode(0o700)).unwrap();
+        let api = root.join("agentmage-local-api");
+        let worker = root.join("agentmage-read-only-worker");
+        let select = || {
+            development_read_launcher_worker(&api, DevelopmentReadLauncher::LocalApi, Some(&worker))
+        };
+        assert!(select().is_err());
+        fs::write(&worker, b"first-party synthetic worker bytes").unwrap();
+        fs::set_permissions(&worker, fs::Permissions::from_mode(0o600)).unwrap();
+        assert!(select().is_err());
+        fs::set_permissions(&worker, fs::Permissions::from_mode(0o700)).unwrap();
+        assert!(select().is_ok());
+        fs::set_permissions(&root, fs::Permissions::from_mode(0o722)).unwrap();
+        assert!(select().is_err());
+        fs::set_permissions(&root, fs::Permissions::from_mode(0o700)).unwrap();
+        fs::remove_file(&worker).unwrap();
+        let target = root.join("other-worker");
+        fs::write(&target, b"first-party synthetic worker bytes").unwrap();
+        fs::set_permissions(&target, fs::Permissions::from_mode(0o700)).unwrap();
+        symlink(&target, &worker).unwrap();
+        assert!(select().is_err());
+        fs::remove_file(&worker).unwrap();
+        fs::create_dir(&worker).unwrap();
+        assert!(select().is_err());
         fs::remove_dir_all(root).unwrap();
     }
 
