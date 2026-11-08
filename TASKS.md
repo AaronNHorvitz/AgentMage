@@ -2,13 +2,22 @@
 
 ## Active queue: local agent mission
 
+The [endpoint run-admission increment](docs/evidence/t303-endpoint-run-admission-2026-11-08.md)
+adds static endpoint run framing with the shared task, scope, policy, catalog
+and resource checks, plus a run-bound single model phase. Native profile and
+tokenizer admission stay intact. This needs independent core review; endpoint
+coordinator turn/result composition, edit/test/retry and T-303/T-306 remain open.
+No new sub-row or closure is introduced.
+
 The [endpoint context admission](docs/evidence/t303-endpoint-context-2026-11-08.md)
 now derives bounded ordered-message observations in the kernel before preparing
 live snapshot, workspace and repair dispatches. The phase requires exact
 agreement with that context; metadata contains no source text or token estimate.
-This non-closing T-303/T-306 increment needs independent core review. Full
-endpoint coordinator composition, native edit/test/retry and both parents
-remain open.
+Its [independent core review](docs/reviews/3f573cca96d5-local-coding-endpoint-context.txt)
+has **Verdict: PASS** for exact commit `3f573cca96d5e3cecbc849a844b3b549d7fe437a`,
+with no new findings. Earlier low findings remain backlog. This accepts that
+context-admission increment only; full endpoint coordinator composition,
+native edit/test/retry and both parents remain open.
 
 The [streaming endpoint model port](docs/evidence/t303-endpoint-port-2026-11-08.md)
 now dispatches the existing proposal API through a prepared-request port. The

@@ -6,7 +6,8 @@ use std::time::Duration;
 use crate::{EndpointTokenAccounting, ProviderTokenUsage, RuntimeModelBinding};
 
 /// The person's selected address and requested name, never verified weights.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct EndpointModelSelection {
     /// Canonical address supplied by the credential-owning transport.
     pub endpoint: String,

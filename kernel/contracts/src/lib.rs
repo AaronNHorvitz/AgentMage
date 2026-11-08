@@ -39,6 +39,7 @@ mod platform_path;
 mod prompt;
 mod reasoning;
 mod runtime_artifact;
+mod runtime_endpoint_run;
 mod runtime_event;
 mod runtime_model_binding;
 mod runtime_run;
@@ -238,6 +239,7 @@ pub use runtime_artifact::{
     RuntimeResumeBinding, RuntimeToolAttemptState, RuntimeToolRejection,
     RuntimeToolRejectionReason,
 };
+pub use runtime_endpoint_run::{RuntimeEndpointContextBudget, RuntimeEndpointRunRequest};
 pub use runtime_event::{
     RuntimeEvent, RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,
     RuntimeEventRetentionKind, RuntimePayloadReference, RuntimePermissionDisposition,

@@ -3,7 +3,8 @@
 
 use agentmage_kernel_contracts::{
     BudgetResource, EndpointModelRequest, EndpointModelResult, ModelOperationControl,
-    ModelOperationStop,
+    ModelOperationStop, RuntimeEndpointRunRequest, RuntimeModelBinding, RuntimeRunId, SessionId,
+    TaskId,
 };
 use sha2::{Digest, Sha256};
 
@@ -63,6 +64,16 @@ pub struct RuntimeEndpointPhaseUsage {
     pub completed_dispatch_elapsed_ms: Option<u64>,
 }
 
+/// Content-free identity of a statically verified endpoint run. This records
+/// binding only; it is neither disclosure consent nor a tool grant.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+pub struct RuntimeEndpointRunBinding {
+    run_id: RuntimeRunId,
+    session_id: SessionId,
+    task_id: TaskId,
+    request_sha256: String,
+}
+
 /// Kernel-owned single-use phase over an already approved, frozen transport
 /// request. It owns no credential, socket, source path, grant or native profile.
 /// The caller retains disclosure approval and all subsequent effect boundaries.
@@ -72,6 +83,7 @@ pub struct RuntimeEndpointModelPhase {
     resources: RuntimeResourceLedger,
     attempted: bool,
     completed: bool,
+    run_binding: Option<RuntimeEndpointRunBinding>,
 }
 
 impl RuntimeEndpointModelPhase {
@@ -104,7 +116,56 @@ impl RuntimeEndpointModelPhase {
             resources,
             attempted: false,
             completed: false,
+            run_binding: None,
         })
+    }
+
+    /// Frames this single phase against a sealed endpoint run and its byte,
+    /// requested-token, output and time ceilings. The existing run owner must
+    /// still enforce cumulative budgets, turn identities, consent and recovery.
+    /// This never converts an endpoint selection to a native model profile.
+    pub fn for_run(
+        run: &RuntimeEndpointRunRequest,
+        request: &EndpointModelRequest,
+        context: RuntimeEndpointContextPacket,
+    ) -> Result<Self, RuntimePortFailure> {
+        crate::runtime_coordinator::verify_runtime_endpoint_run_request(run)
+            .map_err(|_| RuntimePortFailure::Invalid)?;
+        if request.runtime_model_binding()
+            != (RuntimeModelBinding::SelectedEndpoint {
+                endpoint: &run.model_selection.endpoint,
+                model: &run.model_selection.model,
+            })
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        let budget = &run.context_budget;
+        if context.messages().message_count as u64 > u64::from(budget.max_messages)
+            || context.content_bytes() as u64 > budget.max_content_bytes
+            || context.messages().serialized_messages_bytes as u64
+                > budget.max_serialized_messages_bytes
+            || request.body().request_body_bytes as u64 > budget.max_request_body_bytes
+            || request.limits().requested_max_output_tokens > run.max_output_tokens
+            || request.limits().response_text_limit_bytes as u64 > run.limits.max_output_bytes
+            || request.limits().total_timeout
+                > std::time::Duration::from_millis(run.limits.max_elapsed_ms)
+        {
+            return Err(RuntimePortFailure::ResourceExhausted);
+        }
+        let mut phase = Self::new(request, context)?;
+        phase.run_binding = Some(RuntimeEndpointRunBinding {
+            run_id: run.run_id.clone(),
+            session_id: run.session_id.clone(),
+            task_id: run.task.task_id.clone(),
+            request_sha256: run.request_sha256.clone(),
+        });
+        Ok(phase)
+    }
+
+    /// The verified run identity when framed with `for_run`, otherwise absent.
+    #[must_use]
+    pub const fn run_binding(&self) -> Option<&RuntimeEndpointRunBinding> {
+        self.run_binding.as_ref()
     }
 
     /// Independently checked context facts, without source text or token claims.

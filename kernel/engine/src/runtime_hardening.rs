@@ -3,8 +3,8 @@
 use std::collections::BTreeMap;
 
 use agentmage_kernel_contracts::{
-    BudgetResource, EndpointModelRequest, RuntimeResourceUsage, RuntimeRunRequest,
-    RuntimeSessionMode,
+    BudgetResource, EndpointModelRequest, RuntimeEndpointRunRequest, RuntimeResourceUsage,
+    RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode, WorkPacket,
 };
 
 /// Maximum event envelopes retained by one client queue.
@@ -93,20 +93,43 @@ pub struct RuntimeHardeningLimits {
 impl RuntimeHardeningLimits {
     /// Derives exact hardening ceilings and verifies controlled-write budget coverage.
     pub fn from_request(request: &RuntimeRunRequest) -> Result<Self, RuntimeHardeningError> {
-        let budgets = request
-            .work_packet
+        Self::from_parts(
+            request.mode,
+            &request.work_packet,
+            &request.limits,
+            request.context_budget.max_input_bytes,
+        )
+    }
+
+    /// Derives the same ceilings for endpoint runs. Full prepared body bytes,
+    /// including JSON overhead, determine controlled-write input coverage.
+    pub fn from_endpoint_request(
+        request: &RuntimeEndpointRunRequest,
+    ) -> Result<Self, RuntimeHardeningError> {
+        Self::from_parts(
+            request.mode,
+            &request.work_packet,
+            &request.limits,
+            request.context_budget.max_request_body_bytes,
+        )
+    }
+
+    fn from_parts(
+        mode: RuntimeSessionMode,
+        work_packet: &WorkPacket,
+        limits: &RuntimeRunLimits,
+        max_input_bytes: u64,
+    ) -> Result<Self, RuntimeHardeningError> {
+        let budgets = work_packet
             .budgets
             .iter()
             .map(|budget| (budget.resource, budget.limit))
             .collect::<BTreeMap<_, _>>();
-        if request.mode == RuntimeSessionMode::ControlledWrite {
-            validate_controlled_write_budgets(request, &budgets)?;
+        if mode == RuntimeSessionMode::ControlledWrite {
+            validate_controlled_write_budgets(limits, max_input_bytes, &budgets)?;
         }
 
-        let client_queue_events = request
-            .limits
-            .max_events
-            .min(MAX_RUNTIME_CLIENT_QUEUE_EVENTS);
+        let client_queue_events = limits.max_events.min(MAX_RUNTIME_CLIENT_QUEUE_EVENTS);
         let client_queue_bytes = u64::from(client_queue_events)
             .checked_mul(MAX_RUNTIME_EVENT_ENVELOPE_BYTES)
             .ok_or(RuntimeHardeningError::InvalidLimits)?
@@ -116,28 +139,27 @@ impl RuntimeHardeningLimits {
         // the existing per-tool payload allowance, plus the initial request and
         // final answer. Extra tool streams share this bounded allowance; neither
         // the fixed count cap nor the separately bound disk budget is enlarged.
-        let artifact_count = request
-            .limits
+        let artifact_count = limits
             .max_turns
             .checked_mul(3)
-            .and_then(|value| value.checked_add(request.limits.max_tool_calls))
+            .and_then(|value| value.checked_add(limits.max_tool_calls))
             .and_then(|value| value.checked_add(2))
             .ok_or(RuntimeHardeningError::InvalidLimits)?
             .clamp(1, MAX_RUNTIME_ARTIFACT_COUNT);
         let artifact_bytes = budgets
             .get(&BudgetResource::DiskBytes)
             .copied()
-            .unwrap_or(request.limits.max_output_bytes)
+            .unwrap_or(limits.max_output_bytes)
             .min(MAX_RUNTIME_ARTIFACT_BYTES);
         if client_queue_events == 0
             || client_queue_bytes == 0
             || artifact_bytes == 0
-            || request.limits.max_output_bytes == 0
+            || limits.max_output_bytes == 0
         {
             return Err(RuntimeHardeningError::InvalidLimits);
         }
         Ok(Self {
-            run_events: request.limits.max_events,
+            run_events: limits.max_events,
             client_queue_events,
             client_queue_bytes,
             event_envelope_bytes: MAX_RUNTIME_EVENT_ENVELOPE_BYTES,
@@ -532,42 +554,32 @@ impl RuntimeResourceLedger {
 }
 
 fn validate_controlled_write_budgets(
-    request: &RuntimeRunRequest,
+    limits: &RuntimeRunLimits,
+    max_input_bytes: u64,
     budgets: &BTreeMap<BudgetResource, u64>,
 ) -> Result<(), RuntimeHardeningError> {
-    let cumulative_input = request
-        .context_budget
-        .max_input_bytes
-        .checked_mul(u64::from(request.limits.max_context_refreshes))
+    let cumulative_input = max_input_bytes
+        .checked_mul(u64::from(limits.max_context_refreshes))
         .ok_or(RuntimeHardeningError::InvalidLimits)?;
     let required = [
-        (
-            BudgetResource::PlanSteps,
-            u64::from(request.limits.max_turns),
-        ),
+        (BudgetResource::PlanSteps, u64::from(limits.max_turns)),
         (
             BudgetResource::ToolCallDepth,
-            u64::from(request.limits.max_tool_call_depth),
+            u64::from(limits.max_tool_call_depth),
         ),
         (
             BudgetResource::ModelCalls,
-            u64::from(request.limits.max_model_calls),
+            u64::from(limits.max_model_calls),
         ),
-        (
-            BudgetResource::ToolCalls,
-            u64::from(request.limits.max_tool_calls),
-        ),
+        (BudgetResource::ToolCalls, u64::from(limits.max_tool_calls)),
         (BudgetResource::InputBytes, cumulative_input),
-        (BudgetResource::OutputBytes, request.limits.max_output_bytes),
-        (
-            BudgetResource::ElapsedMilliseconds,
-            request.limits.max_elapsed_ms,
-        ),
+        (BudgetResource::OutputBytes, limits.max_output_bytes),
+        (BudgetResource::ElapsedMilliseconds, limits.max_elapsed_ms),
         (BudgetResource::MemoryBytes, 1),
-        (BudgetResource::DiskBytes, request.limits.max_output_bytes),
+        (BudgetResource::DiskBytes, limits.max_output_bytes),
         (
             BudgetResource::ProcessCount,
-            u64::from(request.limits.max_tool_calls.min(1)),
+            u64::from(limits.max_tool_calls.min(1)),
         ),
     ];
     for (resource, minimum) in required {

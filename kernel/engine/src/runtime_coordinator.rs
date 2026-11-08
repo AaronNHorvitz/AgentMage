@@ -4,9 +4,11 @@ use std::collections::BTreeSet;
 
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, ContractPayload, EvidenceReference, MAX_CONTRACT_JSON_BYTES,
-    ModelRuntimeKind, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
-    RuntimeApprovalResponse, RuntimeHunkSelection, RuntimeOutcome, RuntimeOutput, RuntimeRunLimits,
-    RuntimeRunRequest, RuntimeSessionMode, RuntimeToolReference, TaskStatus, WorkPacketState,
+    ModelRuntimeKind, PolicyId, RepositorySnapshotId, RuntimeApprovalChallenge,
+    RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeEndpointRunRequest,
+    RuntimeEventCursor, RuntimeHunkSelection, RuntimeOutcome, RuntimeOutput, RuntimeRunId,
+    RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode, RuntimeToolReference, SessionId, Task,
+    TaskStatus, ToolCatalogId, WorkPacket, WorkPacketState, WorkspaceId,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -14,6 +16,8 @@ use sha2::{Digest, Sha256};
 use crate::model_runtime::{ModelAdmissionCatalog, ModelUsePurpose};
 use crate::runtime_answer::verify_runtime_answer_evidence;
 use crate::runtime_hardening::RuntimeHardeningLimits;
+
+pub use endpoint::{seal_runtime_endpoint_run_request, verify_runtime_endpoint_run_request};
 
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const MAX_IDENTIFIER_BYTES: usize = 128;
@@ -218,8 +222,91 @@ pub fn runtime_tool_catalog_sha256(
     })
 }
 
+// Borrow only the shared authority/task fields. Endpoint selection is never
+// projected into an ExactModelProfile, and native bytes/schema stay unchanged.
+struct RuntimeRunShape<'a> {
+    schema_version: u16,
+    run_id: &'a RuntimeRunId,
+    session_id: &'a SessionId,
+    mode: RuntimeSessionMode,
+    task: &'a Task,
+    work_packet: &'a WorkPacket,
+    workspace_id: &'a WorkspaceId,
+    workspace_snapshot_sha256: &'a str,
+    repository_snapshot_id: &'a RepositorySnapshotId,
+    repository_snapshot_sha256: &'a str,
+    tool_catalog_id: &'a ToolCatalogId,
+    tool_catalog_sha256: &'a str,
+    visible_tools: &'a [RuntimeToolReference],
+    policy_id: &'a PolicyId,
+    policy_sha256: &'a str,
+    request_sha256: &'a str,
+    event_cursor: Option<&'a RuntimeEventCursor>,
+}
+
+impl<'a> From<&'a RuntimeRunRequest> for RuntimeRunShape<'a> {
+    fn from(request: &'a RuntimeRunRequest) -> Self {
+        Self {
+            schema_version: request.schema_version,
+            run_id: &request.run_id,
+            session_id: &request.session_id,
+            mode: request.mode,
+            task: &request.task,
+            work_packet: &request.work_packet,
+            workspace_id: &request.workspace_id,
+            workspace_snapshot_sha256: &request.workspace_snapshot_sha256,
+            repository_snapshot_id: &request.repository_snapshot_id,
+            repository_snapshot_sha256: &request.repository_snapshot_sha256,
+            tool_catalog_id: &request.tool_catalog_id,
+            tool_catalog_sha256: &request.tool_catalog_sha256,
+            visible_tools: &request.visible_tools,
+            policy_id: &request.policy_id,
+            policy_sha256: &request.policy_sha256,
+            request_sha256: &request.request_sha256,
+            event_cursor: request.event_cursor.as_ref(),
+        }
+    }
+}
+
+impl<'a> From<&'a RuntimeEndpointRunRequest> for RuntimeRunShape<'a> {
+    fn from(request: &'a RuntimeEndpointRunRequest) -> Self {
+        Self {
+            schema_version: request.schema_version,
+            run_id: &request.run_id,
+            session_id: &request.session_id,
+            mode: request.mode,
+            task: &request.task,
+            work_packet: &request.work_packet,
+            workspace_id: &request.workspace_id,
+            workspace_snapshot_sha256: &request.workspace_snapshot_sha256,
+            repository_snapshot_id: &request.repository_snapshot_id,
+            repository_snapshot_sha256: &request.repository_snapshot_sha256,
+            tool_catalog_id: &request.tool_catalog_id,
+            tool_catalog_sha256: &request.tool_catalog_sha256,
+            visible_tools: &request.visible_tools,
+            policy_id: &request.policy_id,
+            policy_sha256: &request.policy_sha256,
+            request_sha256: &request.request_sha256,
+            event_cursor: request.event_cursor.as_ref(),
+        }
+    }
+}
+
 fn validate_runtime_run_request_shape(
     request: &RuntimeRunRequest,
+) -> Result<(), RuntimeCoordinatorError> {
+    validate_common_run_shape(&RuntimeRunShape::from(request), || {
+        validate_profile_and_context(request)?;
+        validate_runtime_run_limits(&request.limits)?;
+        RuntimeHardeningLimits::from_request(request)
+            .map_err(|_| RuntimeCoordinatorError::InvalidLimits)?;
+        Ok(())
+    })
+}
+
+fn validate_common_run_shape(
+    request: &RuntimeRunShape<'_>,
+    validate_model_and_resources: impl FnOnce() -> Result<(), RuntimeCoordinatorError>,
 ) -> Result<(), RuntimeCoordinatorError> {
     if request.schema_version != CONTRACT_SCHEMA_VERSION {
         return Err(RuntimeCoordinatorError::VersionMismatch);
@@ -230,27 +317,27 @@ fn validate_runtime_run_request_shape(
         || !valid_identifier(request.repository_snapshot_id.as_str())
         || !valid_identifier(request.tool_catalog_id.as_str())
         || !valid_identifier(request.policy_id.as_str())
-        || !valid_sha256(&request.workspace_snapshot_sha256)
-        || !valid_sha256(&request.repository_snapshot_sha256)
-        || !valid_sha256(&request.tool_catalog_sha256)
-        || !valid_sha256(&request.policy_sha256)
-        || !valid_sha256(&request.request_sha256)
-        || !valid_task(request)
-        || !valid_visible_tools(&request.visible_tools)
+        || !valid_sha256(request.workspace_snapshot_sha256)
+        || !valid_sha256(request.repository_snapshot_sha256)
+        || !valid_sha256(request.tool_catalog_sha256)
+        || !valid_sha256(request.policy_sha256)
+        || !valid_sha256(request.request_sha256)
+        || !valid_task(request.task)
+        || !valid_visible_tools(request.visible_tools)
     {
         return Err(RuntimeCoordinatorError::InvalidValue);
     }
-    if request.task.session_id != request.session_id
+    if &request.task.session_id != request.session_id
         || request.work_packet.task_id != request.task.task_id
         || request
             .event_cursor
             .as_ref()
-            .is_some_and(|cursor| cursor.run_id != request.run_id)
+            .is_some_and(|cursor| &cursor.run_id != request.run_id)
         || (request.mode == RuntimeSessionMode::EphemeralReadOnly && request.event_cursor.is_some())
     {
         return Err(RuntimeCoordinatorError::BindingMismatch);
     }
-    if !crate::work_packet::validate_packet(&request.work_packet).is_empty()
+    if !crate::work_packet::validate_packet(request.work_packet).is_empty()
         || !matches!(
             request.work_packet.state,
             WorkPacketState::Validated | WorkPacketState::Planned | WorkPacketState::Active
@@ -258,12 +345,9 @@ fn validate_runtime_run_request_shape(
     {
         return Err(RuntimeCoordinatorError::WorkPacketDenied);
     }
-    validate_profile_and_context(request)?;
-    validate_limits(request)?;
-    RuntimeHardeningLimits::from_request(request)
-        .map_err(|_| RuntimeCoordinatorError::InvalidLimits)?;
+    validate_model_and_resources()?;
     if request.tool_catalog_sha256
-        != runtime_tool_catalog_sha256(&request.tool_catalog_id, &request.visible_tools)?
+        != runtime_tool_catalog_sha256(request.tool_catalog_id, request.visible_tools)?
     {
         return Err(RuntimeCoordinatorError::BindingMismatch);
     }
@@ -359,10 +443,6 @@ fn validate_profile_and_context(
     Ok(())
 }
 
-fn validate_limits(request: &RuntimeRunRequest) -> Result<(), RuntimeCoordinatorError> {
-    validate_runtime_run_limits(&request.limits)
-}
-
 /// Validates reusable-runtime ceilings independently before a complete run is framed.
 pub fn validate_runtime_run_limits(
     limits: &RuntimeRunLimits,
@@ -439,8 +519,7 @@ fn validate_runtime_outcome_shape(
     Ok(())
 }
 
-fn valid_task(request: &RuntimeRunRequest) -> bool {
-    let task = &request.task;
+fn valid_task(task: &Task) -> bool {
     task.schema_version == CONTRACT_SCHEMA_VERSION
         && valid_identifier(task.task_id.as_str())
         && valid_identifier(task.session_id.as_str())
@@ -684,7 +763,7 @@ mod tests {
         }
     }
 
-    fn request() -> RuntimeRunRequest {
+    pub(super) fn request() -> RuntimeRunRequest {
         let model_profile = crate::model_codec::tests_support::profile("runtime");
         let tool_catalog_id = ToolCatalogId::from_raw("catalog-0001");
         let visible_tools = Vec::new();
@@ -1090,3 +1169,5 @@ mod tests {
         );
     }
 }
+
+mod endpoint;

@@ -1,0 +1,157 @@
+Commit: 3f573cca96d5e3cecbc849a844b3b549d7fe437a
+Scope: local-coding-endpoint-context
+
+# Independent core review — T-303 / T-306 endpoint context admission (non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only checkout at
+/lane/review-checkout. Same-model review; a cross-model review is still required before any release.
+Judged only the pinned commit above, against the immutable predecessor
+f97b5d3351aabcba511f0accb6e9ccb2110f1d28. This review closes no row. Both parents remain open.
+
+## Methods
+
+1. Confirmed the SHAs with `git rev-parse`: HEAD, 3f573cca… and f97b5d33… all resolve, and HEAD is
+   3f573cca96d5e3cecbc849a844b3b549d7fe437a. The working tree is clean.
+2. Read IP-POLICY.md, the top of TASKS.md, the full source diff (10 paths, +695/−28), the new evidence
+   file `docs/evidence/t303-endpoint-context-2026-11-08.md`, the guide diff in
+   `docs/guides/coding-proposals.md` and the retained predecessor review.
+3. Traced every caller of `RuntimeEndpointModelPhase::new`, `RuntimeEndpointContextPacket`,
+   `prepare_endpoint_coding_proposal` and `LocalChatTransport::prepare_chat`. I also read the
+   transport's own message fingerprint (`platforms/linux-inference/src/local_chat_transport.rs:401-445`)
+   and the `ChatMessage`/`ChatRole` serde shapes (`platforms/linux-inference/src/local_chat.rs:140-159`).
+4. Verified that the committed-source copies in the review-input manifest are byte-identical to
+   `git show HEAD:<path>` for all six Rust files. Read run.py, audit.py and final.py before running them.
+5. Ran the requested command block in a new private validation directory. Results are below.
+
+## Commands and results
+
+```
+sha256sum -c /lane/state/tmp/t303-endpoint-context/review-inputs.sha256      -> all 23 OK
+sha256sum review-inputs.sha256 -> 23979c7c8639653fa0d0ea2d9867176efb38f5577b47dab21cc032f719b71eda (matches request)
+sha256sum <pinned node>/bin/node -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches request)
+PATH=<pinned node v24.15.0> CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-endpoint-context-3f573cca96d5 (new, mode 700)
+bash /tools/build-slot python3 -B .../run.py > fast.log  -> exit 1 (expected; FAST GATE: FAIL)
+  RESULT exit codes: 0 0 0 0 0 0(clippy -D warnings, 42.57s) 101(tests, 301.84s); SOURCE_FREEZE_UNCHANGED
+python3 -B .../final.py > final.log                     -> exit 0; FINAL_LIGHT_CHECKS_PASS; SOURCE_GATE_REMAINS_FAIL
+cmp validation-2/source-freeze.json <mine>               -> identical
+cmp validation-2/plan-final.json    <mine>               -> identical
+cmp validation-2/audit.json         <mine>               -> identical
+git diff --check f97b5d33… --                            -> clean (exit 0)
+git status --short                                       -> empty
+```
+
+My audit output: 43 test targets, 2528 passed / 72 failed / 71 ignored / 0 filtered. The predecessor
+had 2524 passes on the same targets. The four new `endpoint_context_*` methods pass. All 24 required
+methods pass unfiltered. The failure identities, normalized diagnostics and ignores match f97b exactly.
+The 72 failures are 53 in `agentmage_host[unittests]` and 19 in `agentmage_platform_linux[unittests]`.
+They are the pre-existing baseline under deferred executable ownership, for example the
+`linux_coding_runtime.rs:11304` panics. None are in the engine or local-api crates. The source gate is
+honestly reported as FAIL, and my timings are consistent with the builder's.
+
+## Analysis
+
+**Context admission**
+- File: `kernel/engine/src/runtime_loop/endpoint/context.rs:46-87`.
+- Roles are a closed three-variant enum.
+- Admission refuses an empty list, more than 256 messages, a list that does not end with a user
+  message, and any empty content (`Invalid`).
+- The content-byte sum is capped at 256 KiB with checked addition before serialization.
+- The JSON array goes through `ContextFingerprint`. Its `write` (`:107-117`) checks the cumulative
+  ceiling before `hash.update`, so no byte beyond 256 KiB is hashed.
+- No plaintext buffer is retained. `serde_json::to_writer` streams escaped slices.
+  `RuntimeEndpointMessage` derives neither Debug nor Deserialize.
+- The packet's fields are private, and it has no Default and no Deserialize. The module is private,
+  and only the re-exported types are public, so `from_messages` is the only constructor.
+
+**Phase binding**
+- File: `endpoint.rs:79-108`.
+- `new` now requires the packet, and it compares the whole `EndpointModelContext` (count, bytes, digest)
+  before any resource framing. The descriptor-only constructor is gone. I confirmed by grep that every
+  caller passes a packet.
+
+**Equivalence with the transport**
+- The transport fingerprints `serde_json::to_writer(messages)` over `ChatMessage { role, content }`
+  with lowercase roles.
+- The kernel serializes `RuntimeEndpointMessage { role, content }` with the same field order and the
+  same lowercase role names, so their bytes are identical.
+- Any future divergence, such as an added field, fails closed: the phase refuses before dispatch.
+- The synthetic repair upstream test (`coding_repair_api.rs:510-523, 596-599`) extracts the actual
+  received `"messages"` array from the wire body. It checks that the array's length and SHA-256 equal
+  the kernel packet, and that `content_bytes` equals the independently measured content size. This is
+  real end-to-end discrimination, not a tautology.
+
+**Live call sites**
+- All three routes (snapshot, workspace, repair) go through `prepare_endpoint_coding_proposal`
+  (`lib.rs:1079-1134`).
+- That function builds the packet from the same `messages` vector later passed to `prepare_chat`.
+  Only references are copied into the role-mapped vector.
+- In the repair route, `prepare_repair` returns before `admit_repair_proposal` calls
+  `consume_repair_feedback` (`coding_repair_api.rs:65-75, 91-103`). Context admission therefore
+  precedes receipt consumption, as claimed.
+
+**Ordering change**
+- Context admission now runs before the `428 api.endpoint-choice-required` check.
+- Proposal messages are always nonempty and end with a user message. Upstream bounds also apply:
+  `max_message_bytes ≤ 32768`, the repair budget is ≤ 32768, and the transport limits the whole request
+  body to 256 KiB (`MAX_REQUEST_BYTES`).
+- So no request that was previously valid can now be refused, and the existing 428 test still passes.
+- The 256 KiB ceiling does not enlarge any existing limit, as the guide says.
+
+**Tests**
+- The four new methods discriminate the claims:
+  - Exact wire bytes, with escapes and `λ`.
+  - The exact-cap boundary at `cap - overhead`, and `+1` refusal by the writer.
+  - Escape-only overflow: `"\n" × cap/2` is under the content limit but over the JSON limit.
+  - UTF-8 byte counting: `"λ" × cap/2` would pass if characters were counted.
+  - 256/257 messages.
+  - Count, length, digest, role, content and order drift, all refused before phase admission.
+- All twelve previous phase/stream methods keep their cases and now take an admitted context.
+- The workspace API test now also calls `assert_endpoint_runtime_observation`.
+
+**Disclosure and logging**
+- `runtime_endpoint_context` publishes only the version, message count, serialized bytes, digest and
+  content byte count, on the local client's own event stream.
+- The same digest was already present in `model_binding.context`, so nothing private is newly exposed.
+- No source text, roles or token claims are retained. The test asserts that neither the Debug nor the
+  JSON output contains source text.
+
+**Confinement, network, tools and evaluation**
+- No tool, command, write, permission, sandbox or network-policy code changed. No prompt text changed.
+  There is no new prompt-injection surface, because roles stay descriptive and no role confers
+  authority.
+- No eval, frozen, hidden, held-out, scorer, threshold, Cargo.lock/Cargo.toml or SBOM changes.
+  final.py asserts the Cargo files have no diff.
+- TASKS ledger `|` rows are unchanged (audited). No new sub-row and no parent closure.
+
+**Honest claims, IP and privacy**
+- The evidence and guide disclaim tokenizer, native-profile, erasure and full-coordinator claims.
+  They label the API tests as synthetic. Every number I could check matches my run.
+- No third-party product is named or compared. No trademark is used as branding.
+- No private host path, username, hostname, credential or personal data appears in the added lines.
+  The `/lane/...` sandbox paths in the retained review follow the established precedent: 96 of the 104
+  retained reviews contain them, and no user identity appears.
+- The retained predecessor review is byte-identical to `/lane/reviews/f97b5d3351aa-local-coding-endpoint-port.md`.
+
+## Findings
+
+No critical, high or medium findings.
+
+No new low findings. I saw two minor points and judged neither to be a defect:
+- The API-level `assert_endpoint_runtime_observation` checks `content_bytes` only as a range, but the
+  repair upstream test checks the exact value.
+- The "refuse before hashing beyond the ceiling" property is verified by reading the code rather than
+  by an observable test. The ordering at `context.rs:108-114` is unambiguous.
+
+Backlog lows from earlier reviews remain as stated by the builder: f97b L1/L2, b56d L1 API
+pre-dispatch zero-attempt coverage, and the earlier ones.
+
+## Per-row result
+
+- T-303: this non-closing endpoint-context-admission increment is accepted. The row stays OPEN.
+- T-306: this non-closing increment is accepted. The row stays OPEN.
+
+This verdict accepts only the context-admission increment at this exact commit. It does not accept
+coordinator run/turn admission, native edit/test/retry, or any parent closure.
+
+Verdict: PASS
