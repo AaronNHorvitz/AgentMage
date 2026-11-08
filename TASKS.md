@@ -2,6 +2,16 @@
 
 ## Active queue: local agent mission
 
+The configured endpoint now has a concrete run-bound context builder over
+consented source snapshots, complete original tool schemas and current
+coordinator observations. It reuses deterministic source selection and refuses
+overflow rather than omitting history. See the
+[context composition record](docs/evidence/t303-endpoint-coding-context-2026-11-08.md).
+Independent core review is required; exclusive live ownership, actual scoped
+filesystem/grant composition and endpoint API projection remain open alongside
+edit/test/retry, approved Git and both T-303/T-306. No row is added or closed;
+synthetic socket results are not model scores.
+
 Configured local transport can now supply turns to the reusable read-only
 endpoint coordinator through its original destination approval and borrowed
 trusted context. Socket tests exercise read approval, actual snapshot tool

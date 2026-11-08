@@ -1,5 +1,42 @@
 # Endpoint run framing
 
+`ConfiguredCodingEndpoint::for_coding_run` now supplies a concrete
+`CodingEndpointContext`. The trusted caller first obtains source-read and
+endpoint-disclosure consent, then supplies already authorized snapshots. The
+constructor checks the sealed read-only run, actual transport selection and
+complete registered catalog. It uses the existing deterministic source selector
+with its unchanged 2–32 KiB allocation. Every supplied file has a whole-content
+digest and byte count; only retained exact UTF-8 byte ranges are visible source.
+The builder opens no path and refreshes no snapshot itself.
+
+The system message contains the exact original model-visible tool definitions
+and complete input schemas, with shared schemas written once, plus the existing
+coding completion schema. The endpoint wire instruction asks for a plain JSON
+tool request or completion claim. Repository excerpts remain in the user data
+message. Each turn includes the original task and objective digest, selected
+coverage/ranges, all current coordinator calls/results/evidence and pre-effect
+refusals. Tool records retain their original payload bytes and metadata; no
+successful check or grant is inferred from model prose. Shell-only definitions
+remain excluded by the original model-visible catalog projection.
+
+The mutable context pins the complete sealed request digest and accepts only
+consecutive turns starting at one. A refused preparation latches closed. It
+checks the same borrowed control before and after work. A bounded writer refuses
+the whole message when current observations exceed the content ceiling; the
+independent kernel context admission also checks complete escaped message-array
+bytes. It never drops history or truncates a result to make it fit. Prepared
+body and cumulative run limits remain enforced by the original adapter and
+coordinator. These are byte bounds, not native tokens or proof of server capacity.
+
+Context and excerpts are transient process memory, with no disk transcript here;
+no secure-erasure guarantee is made for those ordinary application buffers.
+The original transport still erases its own frozen body on drop. Construction
+of a new context is not exclusive run admission, recovery or a new budget.
+The service owner still needs to prevent duplicate runs and connect its actual
+filesystem/permission owner and distinct endpoint API projection. Synthetic
+socket tests of context, snapshot reads and a fixture verifier establish no
+real-model result or native filesystem authority. T-303/T-306 remain open.
+
 The host's `coding_endpoint::ConfiguredCodingEndpoint` now joins the configured
 local chat transport to `ReusableRuntimeCoordinator::new_endpoint`. It borrows
 the credential-owning transport and original exact destination approval. Its

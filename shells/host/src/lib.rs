@@ -43,6 +43,9 @@ pub mod coding_doc_packs;
 #[cfg(target_os = "linux")]
 /// Configured local endpoint transport for the existing reusable coordinator.
 pub mod coding_endpoint;
+#[cfg(target_os = "linux")]
+/// Run-bound context over consented sources and current endpoint observations.
+pub mod coding_endpoint_context;
 /// Extensions and their revocation lists through the development catalog
 /// host.
 pub mod coding_extensions;

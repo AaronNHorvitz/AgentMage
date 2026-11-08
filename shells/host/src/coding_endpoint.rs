@@ -167,7 +167,7 @@ impl<X: CodingEndpointContextPort> RuntimeEndpointTurnPort for ConfiguredCodingE
     }
 }
 
-fn control_failure(stop: ModelOperationStop) -> RuntimePortFailure {
+pub(super) fn control_failure(stop: ModelOperationStop) -> RuntimePortFailure {
     match stop {
         ModelOperationStop::Cancelled => RuntimePortFailure::Cancelled,
         ModelOperationStop::TimedOut => RuntimePortFailure::TimedOut,
