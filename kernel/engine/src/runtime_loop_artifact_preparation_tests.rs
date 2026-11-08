@@ -270,7 +270,13 @@ fn builder_inputs() -> (
             .map(|_| RuntimeArtifactKind::Report),
         artifact_candidates: vec![candidate(b"prepared")],
     };
-    (runtime.request, definition, call, started, execution)
+    (
+        runtime.request.native().unwrap().clone(),
+        definition,
+        call,
+        started,
+        execution,
+    )
 }
 
 #[test]
@@ -590,7 +596,7 @@ fn prepared_non_success_retains_audit_bytes_without_successful_tool_evidence() {
 #[test]
 fn prepared_ordinals_precede_large_output_without_double_accounting() {
     let (initial, executions) = callback_fixture(PermissionScript::PrepareArtifacts(19));
-    let mut request = initial.request;
+    let mut request = initial.request.native().unwrap().clone();
     request.limits.max_output_bytes = (MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1) as u64;
     request.request_sha256 = "0".repeat(64);
     let mut runtime = ReusableRuntimeCoordinator::new_with_durable_state(

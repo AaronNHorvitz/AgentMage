@@ -2,12 +2,24 @@
 
 ## Active queue: local agent mission
 
+The reusable coordinator now composes ephemeral read-only endpoint turns with
+its existing approval, tool-observation, completion-verifier and terminal cycle.
+The result retains the distinct whole endpoint envelope; native advancement
+refuses endpoint instances. See the [coordinator record](docs/evidence/t303-endpoint-coordinator-2026-11-08.md).
+Independent core review is required. This library execution is not the live
+HTTP coding workflow: endpoint API wiring, exclusive live ownership, controlled
+writes, native edit/test/retry, approved Git and T-303/T-306 remain open.
+No row is added or closed; synthetic tests are not a model score.
+
 Endpoint terminal framing now uses the native coordinator's shared outcome
 predicates and a distinct envelope bound to the exact accepted endpoint
 completion, current turn and ordered evidence. No native model provenance is
 invented. See the [terminal framing record](docs/evidence/t303-endpoint-outcomes-2026-11-08.md).
-Independent core review is required. This is a composition prerequisite, not
-an executable endpoint coding workflow; full coordinator/API wiring, native
+Its [independent core review](docs/reviews/7787712561ce-local-coding-endpoint-outcomes.txt)
+has **Verdict: PASS** for exact commit `7787712561cee9338555fa9bf0dc37fa4e141fc0`,
+with no high/medium finding. Low L1 (pure framing sees supplied turn counts,
+not a live ledger) remains backlog; the guide now makes that limit explicit.
+This accepts terminal framing only. Full endpoint API wiring, native
 edit/test/retry and T-303/T-306 remain open. No row is added or closed.
 
 Endpoint completion claims now require an ordinary model stop; output-token-limit

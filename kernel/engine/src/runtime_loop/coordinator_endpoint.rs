@@ -1,0 +1,670 @@
+// SPDX-License-Identifier: Apache-2.0
+//! Endpoint model dispatch inside the existing coordinator and its authority boundaries.
+
+use super::endpoint::{
+    RuntimeEndpointContextPacket, RuntimeEndpointModelPhase, RuntimeEndpointModelPort,
+    RuntimeEndpointPhaseFailure, RuntimeEndpointTurnResult,
+};
+use super::*;
+use agentmage_kernel_contracts::{
+    EndpointModelFinish, EndpointModelRequest, EndpointModelResult, ModelToolCallWireCandidate,
+    RuntimeEndpointRunRequest, SchemaReference,
+};
+
+/// Current coordinator observations used to prepare an approved endpoint request.
+/// Preparing context grants no disclosure or tool authority.
+pub struct RuntimeEndpointPreparationInput<'a> {
+    /// Original sealed endpoint run, never a substituted native request.
+    pub request: &'a RuntimeEndpointRunRequest,
+    /// Current turn ordinal under the coordinator's exclusive mutable owner.
+    pub turn: u32,
+    /// Successful calls actually observed by this coordinator.
+    pub completed_tool_calls: &'a [ToolCall],
+    /// Actual tool results, separate from untrusted model text.
+    pub tool_results: &'a [ToolResult],
+    /// Current grounded evidence.
+    pub evidence: &'a [EvidenceReference],
+    /// Pre-effect refusals; these are neither receipts nor successful results.
+    pub rejected_tool_calls: &'a [RuntimeToolRejection],
+}
+
+trait PreparedDispatch {
+    fn request(&self) -> &EndpointModelRequest;
+    fn dispatch(
+        self: Box<Self>,
+        control: &dyn ModelOperationControl,
+        text: &mut dyn FnMut(&str),
+    ) -> Result<EndpointModelResult, RuntimePortFailure>;
+}
+struct Prepared<P>(P);
+impl<P: RuntimeEndpointModelPort<Error = RuntimePortFailure>> PreparedDispatch for Prepared<P> {
+    fn request(&self) -> &EndpointModelRequest {
+        self.0.request()
+    }
+    fn dispatch(
+        self: Box<Self>,
+        control: &dyn ModelOperationControl,
+        text: &mut dyn FnMut(&str),
+    ) -> Result<EndpointModelResult, RuntimePortFailure> {
+        self.0.dispatch(control, text)
+    }
+}
+impl RuntimeEndpointModelPort for Box<dyn PreparedDispatch + '_> {
+    type Error = RuntimePortFailure;
+    fn request(&self) -> &EndpointModelRequest {
+        self.as_ref().request()
+    }
+    fn dispatch(
+        self,
+        control: &dyn ModelOperationControl,
+        text: &mut dyn FnMut(&str),
+    ) -> Result<EndpointModelResult, Self::Error> {
+        PreparedDispatch::dispatch(self, control, text)
+    }
+}
+
+/// One immutable credential-owning request and independently admitted original context.
+/// The transport retains its credentials and disclosure approval; the kernel
+/// never constructs or reads either. The trusted context owner fixes the
+/// completion payload schema before dispatch.
+pub struct RuntimePreparedEndpointTurn<'a> {
+    context: RuntimeEndpointContextPacket,
+    port: Box<dyn PreparedDispatch + 'a>,
+    completion_schema: SchemaReference,
+}
+impl<'a> RuntimePreparedEndpointTurn<'a> {
+    /// Retains a single-use prepared transport, with no dispatch or authority grant.
+    pub fn new<P: RuntimeEndpointModelPort<Error = RuntimePortFailure> + 'a>(
+        context: RuntimeEndpointContextPacket,
+        port: P,
+        completion_schema: SchemaReference,
+    ) -> Self {
+        Self {
+            context,
+            port: Box::new(Prepared(port)),
+            completion_schema,
+        }
+    }
+}
+
+/// Context and credential owner for each endpoint turn. The same borrowed
+/// control must bound preparation and later dispatch. A prepared port is owned
+/// and single-use, so no request can be replaced between framing and dispatch.
+pub trait RuntimeEndpointTurnPort {
+    /// The actual selected transport/model, without native provenance.
+    fn model_binding(&self) -> RuntimeModelBinding<'_>;
+    /// Prepare original messages and the exact disclosure-approved request.
+    fn prepare<'a>(
+        &mut self,
+        input: RuntimeEndpointPreparationInput<'_>,
+        control: &dyn ModelOperationControl,
+    ) -> Result<RuntimePreparedEndpointTurn<'a>, RuntimePortFailure>
+    where
+        Self: 'a;
+}
+
+/// Explicit endpoint family adapter. It contains no native profile or fallback.
+pub struct RuntimeEndpointDriver<P>(pub P);
+
+/// Family boundary used by the reusable coordinator. Existing native ports
+/// retain their full exact-profile contract through the blanket implementation.
+/// Endpoint implementations opt in through `RuntimeEndpointDriver`.
+pub trait RuntimeCoordinatorModelPort {
+    /// Identity available at the actual model boundary.
+    fn model_binding(&self) -> RuntimeModelBinding<'_>;
+    /// Original native port, or refusal without entering one.
+    fn native(&self) -> Result<&dyn RuntimeModelPort, RuntimeLoopError>;
+    /// Original mutable native port, or refusal without entering one.
+    fn native_mut(&mut self) -> Result<&mut dyn RuntimeModelPort, RuntimeLoopError>;
+    /// Endpoint request preparation; native ports refuse before context dispatch.
+    fn prepare_endpoint<'a>(
+        &mut self,
+        _input: RuntimeEndpointPreparationInput<'_>,
+        _control: &dyn ModelOperationControl,
+    ) -> Result<RuntimePreparedEndpointTurn<'a>, RuntimePortFailure>
+    where
+        Self: 'a,
+    {
+        Err(RuntimePortFailure::Invalid)
+    }
+}
+impl<M: RuntimeModelPort> RuntimeCoordinatorModelPort for M {
+    fn model_binding(&self) -> RuntimeModelBinding<'_> {
+        RuntimeModelPort::model_binding(self)
+    }
+    fn native(&self) -> Result<&dyn RuntimeModelPort, RuntimeLoopError> {
+        Ok(self)
+    }
+    fn native_mut(&mut self) -> Result<&mut dyn RuntimeModelPort, RuntimeLoopError> {
+        Ok(self)
+    }
+}
+impl<P: RuntimeEndpointTurnPort> RuntimeCoordinatorModelPort for RuntimeEndpointDriver<P> {
+    fn model_binding(&self) -> RuntimeModelBinding<'_> {
+        self.0.model_binding()
+    }
+    fn native(&self) -> Result<&dyn RuntimeModelPort, RuntimeLoopError> {
+        Err(RuntimeLoopError::ModelBinding)
+    }
+    fn native_mut(&mut self) -> Result<&mut dyn RuntimeModelPort, RuntimeLoopError> {
+        Err(RuntimeLoopError::ModelBinding)
+    }
+    fn prepare_endpoint<'a>(
+        &mut self,
+        input: RuntimeEndpointPreparationInput<'_>,
+        control: &dyn ModelOperationControl,
+    ) -> Result<RuntimePreparedEndpointTurn<'a>, RuntimePortFailure>
+    where
+        Self: 'a,
+    {
+        self.0.prepare(input, control)
+    }
+}
+
+/// Unavailable native context for endpoint composition; never invents a native packet.
+pub struct RuntimeNoNativeContext;
+impl RuntimeContextPort for RuntimeNoNativeContext {
+    fn build_context(
+        &mut self,
+        _: &RuntimeRunRequest,
+        _: ContextPacketId,
+        _: u32,
+        _: &[ToolCall],
+        _: &[ToolResult],
+        _: &[EvidenceReference],
+    ) -> Result<ModelContextPacket, RuntimePortFailure> {
+        Err(RuntimePortFailure::Invalid)
+    }
+}
+
+pub(super) struct OwnedEndpointClaim {
+    turn: RuntimeEndpointTurnResult,
+    text: String,
+    schema: SchemaReference,
+}
+impl OwnedEndpointClaim {
+    pub(super) fn claim(
+        &self,
+        scope: RuntimeRunScope<'_>,
+    ) -> Result<RuntimeCompletionClaim<'_>, RuntimePortFailure> {
+        RuntimeCompletionClaim::endpoint(scope, &self.turn, &self.text, self.schema.clone())
+    }
+}
+
+impl<P: RuntimeEndpointTurnPort, T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock>
+    ReusableRuntimeCoordinator<RuntimeEndpointDriver<P>, RuntimeNoNativeContext, T, V, C>
+{
+    /// Composes one read-only endpoint run through the existing coordinator.
+    /// The owner must keep one instance for this run; no path or wire metadata
+    /// restores its clock, accepted turns or authority after destruction.
+    pub fn new_endpoint(
+        request: RuntimeEndpointRunRequest,
+        port: P,
+        registry: ToolRegistry,
+        tool_boundary: T,
+        verifier: V,
+        clock: C,
+    ) -> Result<Self, RuntimeLoopError> {
+        Self::compose(
+            request.into(),
+            RuntimeEndpointDriver(port),
+            RuntimeNoNativeContext,
+            registry,
+            tool_boundary,
+            verifier,
+            clock,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
+    }
+}
+
+/// Endpoint boundary retaining its complete terminal envelope. Native boundary
+/// types and their concrete layout remain unchanged.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum RuntimeEndpointCoordinatorStep {
+    /// The existing permission challenge, awaiting an exact user decision.
+    AwaitingApproval {
+        /// Immutable challenge to display and bind into the response.
+        challenge: RuntimeApprovalChallenge,
+    },
+    /// Whole endpoint outcome after verifier checks and terminal publication.
+    Complete {
+        /// Distinct provenance; never a native model assignment.
+        outcome: crate::runtime_coordinator::RuntimeEndpointOutcome,
+    },
+}
+
+// This wire form contains only an inert tool request. The coordinator derives
+// its call identity; model text cannot select a run, grant, policy or receipt.
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct EndpointToolProposal {
+    tool_call: ModelToolCallWireCandidate,
+}
+
+impl<
+    M: RuntimeCoordinatorModelPort,
+    X: RuntimeContextPort,
+    T: RuntimeToolBoundary,
+    V: RuntimeVerifierPort,
+    C: RuntimeClock,
+> ReusableRuntimeCoordinator<M, X, T, V, C>
+{
+    /// Advances the SAME approval/turn/tool/verifier loop with an endpoint
+    /// terminal envelope. Native APIs refuse endpoint instances so they cannot
+    /// accidentally discard or mislabel endpoint answer provenance.
+    pub fn run_endpoint_until_boundary(
+        &mut self,
+        response: Option<&RuntimeApprovalResponse>,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+    ) -> Result<RuntimeEndpointCoordinatorStep, RuntimeLoopError> {
+        if self.request.endpoint().is_none() {
+            return Err(RuntimeLoopError::UnsupportedMode);
+        }
+        match self.run_until_boundary_impl(response, cancellation, None)? {
+            RuntimeSuspendableStep::Boundary(RuntimeCoordinatorStep::AwaitingApproval {
+                challenge,
+            }) => Ok(RuntimeEndpointCoordinatorStep::AwaitingApproval { challenge }),
+            RuntimeSuspendableStep::Boundary(RuntimeCoordinatorStep::Complete { outcome }) => {
+                let endpoint = self
+                    .endpoint_outcome
+                    .as_ref()
+                    .ok_or(RuntimeLoopError::InvalidBoundaryResult)?;
+                if endpoint.outcome != outcome {
+                    return Err(RuntimeLoopError::InvalidBoundaryResult);
+                }
+                Ok(RuntimeEndpointCoordinatorStep::Complete {
+                    outcome: endpoint.clone(),
+                })
+            }
+            RuntimeSuspendableStep::Suspended { .. } => Err(RuntimeLoopError::UnsupportedMode),
+        }
+    }
+
+    pub(super) fn run_endpoint_turn(
+        &mut self,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+    ) -> Result<(), RuntimeLoopError> {
+        let request = self
+            .request
+            .endpoint()
+            .ok_or(RuntimeLoopError::UnsupportedMode)?
+            .clone();
+        // Full turn closure, verifier and terminal space is reserved before any
+        // external preparation or dispatch. Tool admission has its own reserve.
+        if self.remaining_events() < 7 {
+            self.transition_terminal(AgentStateKind::Exhausted)?;
+            return self.finish_terminal(
+                AgentStateKind::Exhausted,
+                vec!["runtime.budget.exhausted".into()],
+                None,
+            );
+        }
+        if self
+            .resources
+            .consume(BudgetResource::PlanSteps, 1)
+            .is_err()
+        {
+            self.transition_terminal(AgentStateKind::Exhausted)?;
+            return self.finish_terminal(
+                AgentStateKind::Exhausted,
+                vec!["runtime.budget.exhausted".into()],
+                None,
+            );
+        }
+        self.turn_count += 1;
+        self.context_refresh_count += 1;
+        let turn_id = RuntimeTurnId::from_raw(derived_id(
+            "turn",
+            request.run_id.as_str(),
+            u64::from(self.turn_count),
+        ));
+        self.active_turn = Some(turn_id.clone());
+        self.emit(RuntimeEventKind::TurnStarted, Some(&turn_id), None)?;
+        let (prepared, stop) = {
+            let control = RuntimePhaseControl::for_run_limits(
+                &mut self.clock,
+                &request.task.task_id,
+                request.limits.max_elapsed_ms,
+                &self.correlation_id,
+                self.started_at_epoch_ms
+                    .ok_or(RuntimeLoopError::InvalidBoundaryResult)?,
+                self.events
+                    .last()
+                    .map_or(0, |event| event.occurred_at_epoch_ms),
+                &self.last_phase_observed_at,
+                cancellation,
+            );
+            let prepared = control.check().and_then(|_| {
+                self.model.prepare_endpoint(
+                    RuntimeEndpointPreparationInput {
+                        request: &request,
+                        turn: self.turn_count,
+                        completed_tool_calls: &self.completed_tool_calls,
+                        tool_results: &self.tool_results,
+                        evidence: &self.evidence,
+                        rejected_tool_calls: &self.rejected_tool_calls,
+                    },
+                    &control,
+                )
+            });
+            if prepared.is_ok() {
+                let _ = control.check();
+            }
+            (prepared, control.into_stop())
+        };
+        self.latch_phase_cancellation(stop.as_ref());
+        if let Some(stop) = stop {
+            if let Err(error) = &prepared
+                && *error != stop.port_failure()
+            {
+                return self.finish_model_failure(&turn_id, *error);
+            }
+            return self.finish_phase_stop(stop, false);
+        }
+        let prepared = match prepared {
+            Ok(value) => value,
+            Err(error) => return self.finish_model_failure(&turn_id, error),
+        };
+        let RuntimePreparedEndpointTurn {
+            context,
+            port,
+            completion_schema,
+        } = prepared;
+        let descriptor = port.request().clone();
+        let mut phase = match RuntimeEndpointModelPhase::for_run(&request, &descriptor, context) {
+            Ok(phase) => phase,
+            Err(error) => return self.finish_model_failure(&turn_id, error),
+        };
+        let mut admitted = self.resources.clone();
+        for (resource, amount) in [
+            (
+                BudgetResource::InputBytes,
+                descriptor.body().request_body_bytes as u64,
+            ),
+            (BudgetResource::ModelCalls, 1),
+        ] {
+            if admitted.consume(resource, amount).is_err() {
+                return self.finish_budget_exhaustion(&turn_id);
+            }
+        }
+        let mut envelope = admitted.clone();
+        for (resource, amount) in [
+            (
+                BudgetResource::OutputBytes,
+                descriptor.limits().response_text_limit_bytes as u64,
+            ),
+            (
+                BudgetResource::ElapsedMilliseconds,
+                u64::try_from(
+                    descriptor
+                        .limits()
+                        .total_timeout
+                        .as_nanos()
+                        .div_ceil(1_000_000),
+                )
+                .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?,
+            ),
+        ] {
+            if envelope.consume(resource, amount).is_err() {
+                return self.finish_budget_exhaustion(&turn_id);
+            }
+        }
+        // The static phase bound is not a renewed deadline. The original clock
+        // remains borrowed during dispatch and all synchronous text callbacks.
+        if self.stop_before_phase(cancellation, false)? {
+            return Ok(());
+        }
+        let model_run_id = ModelRunId::from_raw(derived_id(
+            "model-run",
+            request.run_id.as_str(),
+            u64::from(self.turn_count),
+        ));
+        self.emit(
+            RuntimeEventKind::ModelRequested {
+                model_run_id: model_run_id.clone(),
+                request_sha256: observation_sha256(&descriptor)?,
+            },
+            Some(&turn_id),
+            None,
+        )?;
+        // Event admission above changes this SAME ledger; spend only the actual
+        // model attempt/input below, without replacing its event observations.
+        let before_attempt = self.resources.clone();
+        self.resources
+            .consume(
+                BudgetResource::InputBytes,
+                descriptor.body().request_body_bytes as u64,
+            )
+            .and_then(|()| self.resources.consume(BudgetResource::ModelCalls, 1))
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        self.model_call_count += 1;
+        let mut text = String::new();
+        let (accepted, stop) = {
+            let control = RuntimePhaseControl::for_run_limits(
+                &mut self.clock,
+                &request.task.task_id,
+                request.limits.max_elapsed_ms,
+                &self.correlation_id,
+                self.started_at_epoch_ms
+                    .ok_or(RuntimeLoopError::InvalidBoundaryResult)?,
+                self.events
+                    .last()
+                    .map_or(0, |event| event.occurred_at_epoch_ms),
+                &self.last_phase_observed_at,
+                cancellation,
+            );
+            let result = RuntimeEndpointTurnResult::execute_phase(
+                &mut phase,
+                turn_id.clone(),
+                &control,
+                port,
+                |part| text.push_str(part),
+            );
+            (result, control.into_stop())
+        };
+        if phase.usage().dispatch_attempts == 0 {
+            self.resources = before_attempt;
+            self.model_call_count -= 1;
+        }
+        self.latch_phase_cancellation(stop.as_ref());
+        let accepted = match accepted {
+            Ok(value) => value,
+            Err(error) => {
+                self.emit(
+                    RuntimeEventKind::ModelFailed {
+                        model_run_id,
+                        failure_code: "runtime.model.incomplete.unknown".into(),
+                    },
+                    Some(&turn_id),
+                    None,
+                )?;
+                if let Some(stop) = stop {
+                    if let RuntimeEndpointPhaseFailure::Dependency(error) = &error
+                        && *error != stop.port_failure()
+                    {
+                        return self.finish_model_failure(&turn_id, *error);
+                    }
+                    return self.finish_phase_stop(stop, false);
+                }
+                let failure = match error {
+                    RuntimeEndpointPhaseFailure::Dependency(error) => error,
+                    RuntimeEndpointPhaseFailure::ResourceExhausted => {
+                        RuntimePortFailure::ResourceExhausted
+                    }
+                    RuntimeEndpointPhaseFailure::Stopped(_) => RuntimePortFailure::Cancelled,
+                    RuntimeEndpointPhaseFailure::InvalidResult => RuntimePortFailure::Invalid,
+                };
+                return self.finish_model_failure(&turn_id, failure);
+            }
+        };
+        for (resource, amount) in [
+            (
+                BudgetResource::OutputBytes,
+                accepted.result().response_text_bytes as u64,
+            ),
+            (
+                BudgetResource::ElapsedMilliseconds,
+                phase
+                    .usage()
+                    .completed_dispatch_elapsed_ms
+                    .ok_or(RuntimeLoopError::InvalidBoundaryResult)?,
+            ),
+        ] {
+            self.resources
+                .consume(resource, amount)
+                .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        }
+        self.emit(
+            RuntimeEventKind::ModelCompleted {
+                model_run_id,
+                result_sha256: observation_sha256(accepted.result())?,
+            },
+            Some(&turn_id),
+            None,
+        )?;
+        if accepted.result().finish != EndpointModelFinish::Stop {
+            return self.finish_model_failure(&turn_id, RuntimePortFailure::Invalid);
+        }
+        if self.stop_before_phase(cancellation, false)? {
+            return Ok(());
+        }
+        self.state
+            .transition(AgentStateKind::Proposal)
+            .map_err(|_| RuntimeLoopError::State)?;
+        self.state
+            .transition(AgentStateKind::Validation)
+            .map_err(|_| RuntimeLoopError::State)?;
+        if let Ok(tool) = serde_json::from_str::<EndpointToolProposal>(&text) {
+            let closing_sha256 = observation_sha256(&accepted)?;
+            if self.tool_budget_exhausted(&turn_id, &closing_sha256)? {
+                return Ok(());
+            }
+            if !self
+                .registry
+                .is_model_proposable(&tool.tool_call.tool_id, &tool.tool_call.tool_version)
+            {
+                return self.finish_refused_proposal(&turn_id, "runtime.proposal.tool-not-offered");
+            }
+            return self.request_tool(
+                turn_id,
+                RequestedToolCall {
+                    tool_call_id: ToolCallId::from_raw(derived_id(
+                        "endpoint-call",
+                        request.run_id.as_str(),
+                        u64::from(self.turn_count),
+                    )),
+                    tool_id: tool.tool_call.tool_id,
+                    tool_version: tool.tool_call.tool_version,
+                    arguments: tool.tool_call.arguments,
+                    origin: ProposalOrigin::Model,
+                    closing_sha256,
+                },
+                cancellation,
+            );
+        }
+        let owned = OwnedEndpointClaim {
+            turn: accepted,
+            text,
+            schema: completion_schema,
+        };
+        let claim = match owned.claim(self.request.scope()?) {
+            Ok(claim) => claim,
+            Err(_) => return self.finish_invalid_proposal(&turn_id),
+        };
+        for state in [
+            AgentStateKind::Approval,
+            AgentStateKind::Execution,
+            AgentStateKind::Verification,
+        ] {
+            self.state
+                .transition(state)
+                .map_err(|_| RuntimeLoopError::State)?;
+        }
+        let postconditions = runtime_postconditions_from_task(&request.task);
+        let registry = VerifierRegistry::new(VerifierContext {
+            verifier_id: self.verifier.verifier_id().clone(),
+            task_id: request.task.task_id.clone(),
+            proposal_id: claim.proposal_id().clone(),
+            repository_snapshot_id: request.repository_snapshot_id.clone(),
+            state_revision: self.state.revision(),
+            postconditions: postconditions.clone(),
+        })
+        .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        let candidate = self
+            .verifier
+            .verify_completion(RuntimeVerificationInput {
+                request: self.request.scope()?,
+                proposal: claim,
+                state_revision: self.state.revision(),
+                postconditions: &postconditions,
+                evidence: &self.evidence,
+                tool_results: &self.tool_results,
+                receipt_ids: &self.receipt_ids,
+            })
+            .map_err(RuntimeLoopError::Dependency)?;
+        let completion = match registry.verify(&candidate) {
+            Ok(value) => value,
+            Err(_) => {
+                self.transition_terminal(AgentStateKind::Failed)?;
+                self.close_turn(&turn_id, observation_sha256(&owned.turn)?)?;
+                return self.finish_terminal(
+                    AgentStateKind::Failed,
+                    vec!["runtime.verification.failed".into()],
+                    None,
+                );
+            }
+        };
+        if self.stop_before_phase(cancellation, false)? {
+            return Ok(());
+        }
+        for item in candidate
+            .postconditions
+            .iter()
+            .flat_map(|result| &result.evidence)
+        {
+            if !self
+                .evidence
+                .iter()
+                .any(|old| old.evidence_id == item.evidence_id)
+            {
+                self.evidence.push(item.clone());
+            }
+        }
+        self.evidence
+            .sort_by(|a, b| a.evidence_id.as_str().cmp(b.evidence_id.as_str()));
+        let claim = owned
+            .claim(self.request.scope()?)
+            .map_err(RuntimeLoopError::Dependency)?;
+        let payload = claim
+            .payload()
+            .ok_or(RuntimeLoopError::InvalidBoundaryResult)?
+            .clone();
+        let closing_sha256 = claim.proposal_sha256().to_owned();
+        if self.stop_before_phase(cancellation, false)? {
+            return Ok(());
+        }
+        self.state
+            .complete(&completion)
+            .map_err(|_| RuntimeLoopError::State)?;
+        self.endpoint_claim = Some(owned);
+        self.close_turn(&turn_id, closing_sha256)?;
+        self.finish_terminal(
+            self.state.current(),
+            Vec::new(),
+            Some(RuntimeOutput::Inline { payload }),
+        )
+    }
+}
+
+fn observation_sha256(value: &impl serde::Serialize) -> Result<String, RuntimeLoopError> {
+    let bytes = serde_json::to_vec(value).map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+    if bytes.len() > agentmage_kernel_contracts::MAX_CONTRACT_JSON_BYTES {
+        return Err(RuntimeLoopError::InvalidBoundaryResult);
+    }
+    Ok(sha256(&bytes))
+}

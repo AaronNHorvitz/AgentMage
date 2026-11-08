@@ -1765,7 +1765,7 @@ fn a_report_draft_is_accepted_only_as_an_exact_admitted_completion() {
     reset_budget(BudgetAnswer::Exact);
     let (template, _) = coordinator([ModelScript::Completion], PermissionScript::Allow, true);
     let mut ordinary = ReusableRuntimeCoordinator::new(
-        template.request.clone(),
+        template.request.native().unwrap().clone(),
         ReportModel {
             inner: FakeModel::new(template.model.profile.clone(), [ModelScript::Completion]),
             draft,

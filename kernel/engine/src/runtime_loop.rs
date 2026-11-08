@@ -5,7 +5,15 @@ use std::collections::BTreeSet;
 
 mod artifact_preparation;
 mod completion_claim;
+mod coordinator_endpoint;
+mod coordinator_request;
 pub use completion_claim::{RuntimeCompletionClaim, RuntimeCompletionProposal};
+pub use coordinator_endpoint::{
+    RuntimeCoordinatorModelPort, RuntimeEndpointCoordinatorStep, RuntimeEndpointDriver,
+    RuntimeEndpointPreparationInput, RuntimeEndpointTurnPort, RuntimeNoNativeContext,
+    RuntimePreparedEndpointTurn,
+};
+use coordinator_request::CoordinatorRequest;
 /// Controlled selected-endpoint model phases using the shared resource ledger.
 pub mod endpoint;
 mod event_frame;
@@ -53,7 +61,6 @@ use crate::runtime_artifact::{
 use crate::runtime_coordinator::{
     RuntimeCoordinatorError, runtime_tool_catalog_sha256, seal_runtime_approval_challenge,
     seal_runtime_outcome, seal_runtime_run_request, verify_runtime_approval_response,
-    verify_runtime_run_request,
 };
 use crate::runtime_event::{
     RuntimeEventBatch, RuntimeEventBatchLimits, RuntimeEventDelivery, RuntimeEventError,
@@ -1476,13 +1483,13 @@ fn publish_research_report<T: RuntimeResearchBudgetPort>(
 /// One reusable, interface-neutral runtime coordinator.
 pub struct ReusableRuntimeCoordinator<M, X, T, V, C>
 where
-    M: RuntimeModelPort,
+    M: RuntimeCoordinatorModelPort,
     X: RuntimeContextPort,
     T: RuntimeToolBoundary,
     V: RuntimeVerifierPort,
     C: RuntimeClock,
 {
-    request: RuntimeRunRequest,
+    request: CoordinatorRequest,
     model: M,
     context: X,
     registry: ToolRegistry,
@@ -1510,6 +1517,8 @@ where
     tool_attempts: Vec<RuntimeToolAttemptState>,
     pending: Option<PendingApproval>,
     outcome: Option<RuntimeOutcome>,
+    endpoint_outcome: Option<crate::runtime_coordinator::RuntimeEndpointOutcome>,
+    endpoint_claim: Option<coordinator_endpoint::OwnedEndpointClaim>,
     answer_evidence: Option<Box<agentmage_kernel_contracts::RuntimeAnswerEvidence>>,
     active_turn: Option<RuntimeTurnId>,
     correlation_id: agentmage_kernel_contracts::CorrelationId,
@@ -1535,7 +1544,7 @@ where
 
 impl<M, X, T, V, C> ReusableRuntimeCoordinator<M, X, T, V, C>
 where
-    M: RuntimeModelPort,
+    M: RuntimeCoordinatorModelPort,
     X: RuntimeContextPort,
     T: RuntimeToolBoundary,
     V: RuntimeVerifierPort,
@@ -1552,7 +1561,7 @@ where
         clock: C,
     ) -> Result<Self, RuntimeLoopError> {
         Self::compose(
-            request,
+            request.into(),
             model,
             context,
             registry,
@@ -1581,7 +1590,7 @@ where
         T: RuntimeJournalPort + RuntimeCorrectnessTransactionPort,
     {
         Self::compose(
-            request,
+            request.into(),
             model,
             context,
             registry,
@@ -1614,7 +1623,7 @@ where
         T: RuntimeJournalPort + RuntimeArtifactPort + RuntimeCorrectnessTransactionPort,
     {
         Self::compose(
-            request,
+            request.into(),
             model,
             context,
             registry,
@@ -1653,7 +1662,7 @@ where
             + RuntimeCorrectnessTransactionPort,
     {
         Self::compose(
-            request,
+            request.into(),
             model,
             context,
             registry,
@@ -1701,7 +1710,7 @@ where
             + RuntimeResearchBudgetPort,
     {
         Self::compose(
-            request,
+            request.into(),
             model,
             context,
             registry,
@@ -1734,7 +1743,7 @@ where
 
     #[allow(clippy::too_many_arguments)]
     fn compose(
-        request: RuntimeRunRequest,
+        request: CoordinatorRequest,
         model: M,
         context: X,
         registry: ToolRegistry,
@@ -1747,19 +1756,28 @@ where
         correctness: Option<RuntimeCorrectnessHooks<T>>,
         research: Option<RuntimeResearchRun<T>>,
     ) -> Result<Self, RuntimeLoopError> {
-        verify_runtime_run_request(&request)?;
+        request.verify()?;
         // Decision 0137: a request names a research admission exactly when it
         // is composed with that admission, and only as a durable read-only new
         // run of the admission's own context. The one constructor that passes
         // an admission also passes every durable hook.
-        let admission_lines = research_admission_lines(&request);
+        let admission_lines = match request.native() {
+            Ok(native) => research_admission_lines(native),
+            Err(_) => request
+                .task
+                .constraints
+                .iter()
+                .filter(|line| line.starts_with(RESEARCH_ADMISSION_CONSTRAINT_PREFIX))
+                .map(String::as_str)
+                .collect::<Vec<_>>(),
+        };
         match &research {
             None if !admission_lines.is_empty() => return Err(RuntimeLoopError::UnsupportedMode),
             Some(run)
                 if admission_lines != [run.admission.constraint().as_str()]
                     || request.mode != RuntimeSessionMode::DurableReadOnly
                     || request.event_cursor.is_some()
-                    || !run.admission.binds(&request) =>
+                    || !run.admission.binds(request.native()?) =>
             {
                 return Err(RuntimeLoopError::UnsupportedMode);
             }
@@ -1785,12 +1803,25 @@ where
         if request.event_cursor.is_some() && checkpoint.is_none() {
             return Err(RuntimeLoopError::UnsupportedMode);
         }
-        if !model
-            .model_binding()
-            .matches_exact_profile(&request.model_profile)
-            || model.exact_profile() != &request.model_profile
-        {
-            return Err(RuntimeLoopError::ModelBinding);
+        if let Some(endpoint) = request.endpoint() {
+            if endpoint.mode != RuntimeSessionMode::EphemeralReadOnly
+                || endpoint.event_cursor.is_some()
+            {
+                return Err(RuntimeLoopError::UnsupportedMode);
+            }
+            if model.model_binding() != request.scope()?.model_binding() || model.native().is_ok() {
+                return Err(RuntimeLoopError::ModelBinding);
+            }
+        } else {
+            let native = request.native()?;
+            let port = model.native()?;
+            if !port
+                .model_binding()
+                .matches_exact_profile(&native.model_profile)
+                || port.exact_profile() != &native.model_profile
+            {
+                return Err(RuntimeLoopError::ModelBinding);
+            }
         }
         let registry_tools = runtime_tool_references(&registry)?;
         if registry_tools != request.visible_tools
@@ -1815,8 +1846,11 @@ where
             request.limits.max_tool_call_depth,
         )
         .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
-        let resources = RuntimeResourceLedger::new(&request)
-            .map_err(|_| RuntimeLoopError::Contract(RuntimeCoordinatorError::InvalidLimits))?;
+        let resources = match request.endpoint() {
+            Some(endpoint) => RuntimeResourceLedger::for_endpoint_run(endpoint),
+            None => RuntimeResourceLedger::new(request.native()?),
+        }
+        .map_err(|_| RuntimeLoopError::Contract(RuntimeCoordinatorError::InvalidLimits))?;
         let correlation_id =
             CorrelationId::from_raw(derived_id("correlation", request.run_id.as_str(), 0));
         let evidence = request.work_packet.authoritative_evidence.clone();
@@ -1848,6 +1882,8 @@ where
             tool_attempts: Vec::new(),
             pending: None,
             outcome: None,
+            endpoint_outcome: None,
+            endpoint_claim: None,
             answer_evidence: None,
             active_turn: None,
             correlation_id,
@@ -1899,10 +1935,27 @@ where
         &self.events
     }
 
-    /// Returns the canonical outcome after terminal completion.
+    /// Returns the native canonical outcome after terminal publication.
+    /// Endpoint runs expose their complete, distinct envelope instead.
     #[must_use]
     pub const fn outcome(&self) -> Option<&RuntimeOutcome> {
-        self.outcome.as_ref()
+        if self.endpoint_outcome.is_some() {
+            None
+        } else {
+            self.outcome.as_ref()
+        }
+    }
+
+    /// Returns the whole endpoint envelope only after terminal publication.
+    #[must_use]
+    pub const fn endpoint_outcome(
+        &self,
+    ) -> Option<&crate::runtime_coordinator::RuntimeEndpointOutcome> {
+        if self.outcome.is_some() {
+            self.endpoint_outcome.as_ref()
+        } else {
+            None
+        }
     }
 
     /// Returns exact verified artifacts published by this invocation in creation order.
@@ -1956,7 +2009,7 @@ where
             .map_err(RuntimeLoopError::Dependency)?;
         self.tool_boundary
             .read_runtime_artifact_page(
-                &self.request,
+                self.request.native()?,
                 reference,
                 offset,
                 maximum_bytes,
@@ -1986,7 +2039,7 @@ where
             .now_epoch_ms()
             .map_err(RuntimeLoopError::Dependency)?;
         self.tool_boundary
-            .release_runtime_artifact(&self.request, reference, now_epoch_ms)
+            .release_runtime_artifact(self.request.native()?, reference, now_epoch_ms)
             .map_err(RuntimeLoopError::Dependency)
     }
 
@@ -2038,6 +2091,18 @@ where
     /// A coordinator without checkpoint ports commits no boundary, so it never
     /// stops for a suspension.
     pub fn run_until_boundary_or_suspension(
+        &mut self,
+        response: Option<&RuntimeApprovalResponse>,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+        suspension: Option<&dyn RuntimeSuspensionProbe>,
+    ) -> Result<RuntimeSuspendableStep, RuntimeLoopError> {
+        if self.request.endpoint().is_some() {
+            return Err(RuntimeLoopError::UnsupportedMode);
+        }
+        self.run_until_boundary_impl(response, cancellation, suspension)
+    }
+
+    fn run_until_boundary_impl(
         &mut self,
         response: Option<&RuntimeApprovalResponse>,
         cancellation: Option<&dyn ModelCancellationProbe>,
@@ -2201,7 +2266,7 @@ where
         {
             // The canonical store must know the run owner before accepting a bound artifact.
             (journal.flush)(&mut self.tool_boundary).map_err(RuntimeLoopError::Dependency)?;
-            let request_bytes = to_canonical_json(&self.request)
+            let request_bytes = to_canonical_json(self.request.native()?)
                 .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
             self.resources
                 .admit_artifact(
@@ -2263,7 +2328,7 @@ where
             .ok_or(RuntimeLoopError::UnsupportedMode)?;
         let state = (run.open_budget)(
             &mut self.tool_boundary,
-            &self.request,
+            self.request.native()?,
             run.admission.context(),
             &plan,
             run.admission.scope(),
@@ -2306,7 +2371,7 @@ where
         }
         let confirmed = (run.cancel_budget)(
             &mut self.tool_boundary,
-            &self.request,
+            self.request.native().ok()?,
             run.admission.context(),
         )
         .is_ok_and(|state| {
@@ -2341,7 +2406,7 @@ where
             .now_epoch_ms()
             .map_err(RuntimeLoopError::Dependency)?;
         let manifest = artifact_preparation::prepare_artifact_manifest(
-            &self.request,
+            self.request.native()?,
             self.artifact_references.len() as u64 + 1,
             created_at_epoch_ms,
             &payload.bytes,
@@ -2367,7 +2432,7 @@ where
             .ok_or(RuntimeLoopError::UnsupportedMode)?;
         let reference = match (run.publish_report)(
             &mut self.tool_boundary,
-            &self.request,
+            self.request.native()?,
             run.admission.context(),
             &manifest,
             &payload.bytes,
@@ -2404,6 +2469,10 @@ where
         &mut self,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<(), RuntimeLoopError> {
+        if self.request.endpoint().is_some() {
+            return self.run_endpoint_turn(cancellation);
+        }
+        let request = self.request.native()?.clone();
         self.resources
             .consume(BudgetResource::PlanSteps, 1)
             .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
@@ -2411,7 +2480,7 @@ where
         self.context_refresh_count += 1;
         let turn_id = RuntimeTurnId::from_raw(derived_id(
             "turn",
-            self.request.run_id.as_str(),
+            request.run_id.as_str(),
             u64::from(self.turn_count),
         ));
         self.active_turn = Some(turn_id.clone());
@@ -2419,7 +2488,7 @@ where
 
         let context_packet_id = ContextPacketId::from_raw(derived_id(
             "context",
-            self.request.run_id.as_str(),
+            request.run_id.as_str(),
             u64::from(self.context_refresh_count),
         ));
         self.context
@@ -2431,7 +2500,7 @@ where
         let (context, stop, dependency) = {
             let control = RuntimePhaseControl::new(
                 &mut self.clock,
-                &self.request,
+                &request,
                 &self.correlation_id,
                 self.started_at_epoch_ms
                     .ok_or(RuntimeLoopError::InvalidBoundaryResult)?,
@@ -2444,11 +2513,13 @@ where
             let dependency = Cell::new(None);
             let context = control.check().and_then(|_| {
                 self.model
+                    .native_mut()
+                    .map_err(|_| RuntimePortFailure::Invalid)?
                     .prepare_model_controlled(&control)
                     .map_err(|error| control.classify_model_failure(error, &dependency))?;
                 control.check()?;
                 self.context.build_context_with_token_binding(
-                    &self.request,
+                    &request,
                     context_packet_id,
                     self.turn_count,
                     &self.completed_tool_calls,
@@ -2457,6 +2528,8 @@ where
                     &|packet| {
                         control.check()?;
                         self.model
+                            .native()
+                            .map_err(|_| RuntimePortFailure::Invalid)?
                             .bind_context_tokens_controlled(packet, &control)
                             .map_err(|error| control.classify_model_failure(error, &dependency))?;
                         control.check().map(|_| ())
@@ -2483,7 +2556,7 @@ where
             return self.finish_phase_stop(stop, false);
         }
         let context = match context {
-            Ok(context) if valid_context_packet(&context, &self.request) => context,
+            Ok(context) if valid_context_packet(&context, &request) => context,
             _ => {
                 self.transition_terminal(AgentStateKind::Failed)?;
                 self.close_turn(&turn_id, sha256(b"runtime.context.failed"))?;
@@ -2537,9 +2610,7 @@ where
         // durable recovery can reconstruct the exact remaining-time digest.
         let requested_at = self
             .started_at_epoch_ms
-            .and_then(|started| {
-                started.checked_add(self.request.limits.max_elapsed_ms - timeout_ms)
-            })
+            .and_then(|started| started.checked_add(request.limits.max_elapsed_ms - timeout_ms))
             .ok_or(RuntimeLoopError::InvalidBoundaryResult)?;
         self.resources
             .consume(BudgetResource::ModelCalls, 1)
@@ -2547,7 +2618,7 @@ where
         self.model_call_count += 1;
         let model_run_id = ModelRunId::from_raw(derived_id(
             "model-run",
-            self.request.run_id.as_str(),
+            request.run_id.as_str(),
             u64::from(self.model_call_count),
         ));
         let model_request = ModelRunRequest {
@@ -2555,11 +2626,11 @@ where
             model_run_id: model_run_id.clone(),
             correlation_id: self.correlation_id.clone(),
             context_packet_id: context.context_packet_id.clone(),
-            profile_id: self.request.model_profile.profile_id.clone(),
-            manifest_sha256: self.request.model_profile.manifest_sha256.clone(),
-            adapter_id: self.request.model_profile.runtime.adapter_id.clone(),
-            decoding_profile_id: self.request.model_profile.decoding.profile_id.clone(),
-            max_output_tokens: self.request.model_profile.decoding.max_output_tokens,
+            profile_id: request.model_profile.profile_id.clone(),
+            manifest_sha256: request.model_profile.manifest_sha256.clone(),
+            adapter_id: request.model_profile.runtime.adapter_id.clone(),
+            decoding_profile_id: request.model_profile.decoding.profile_id.clone(),
+            max_output_tokens: request.model_profile.decoding.max_output_tokens,
             timeout_ms,
         };
         let request_sha256 = contract_sha256(&model_request)?;
@@ -2586,7 +2657,7 @@ where
         let (result, mut dispatch_stop, dependency) = {
             let control = RuntimePhaseControl::new(
                 &mut self.clock,
-                &self.request,
+                &request,
                 &self.correlation_id,
                 self.started_at_epoch_ms
                     .ok_or(RuntimeLoopError::InvalidBoundaryResult)?,
@@ -2599,6 +2670,7 @@ where
             let dependency = Cell::new(None);
             let result = self
                 .model
+                .native_mut()?
                 .run_model_controlled(&model_request, &context, cancellation, &control)
                 .map_err(|error| control.classify_model_failure(error, &dependency));
             (result, control.into_stop(), dependency.get())
@@ -2824,28 +2896,29 @@ where
         response_sha256: String,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<(), RuntimeLoopError> {
+        let request = self.request.native()?.clone();
         let expected = ExpectedProposalContext {
-            session_id: self.request.session_id.clone(),
-            task_id: self.request.task.task_id.clone(),
+            session_id: request.session_id.clone(),
+            task_id: request.task.task_id.clone(),
             turn: u64::from(self.turn_count),
             model_run_id: proposal.model_run_id.clone(),
             context_packet_id: context.context_packet_id,
-            repository_snapshot_id: self.request.repository_snapshot_id.clone(),
-            tool_catalog_id: self.request.tool_catalog_id.clone(),
-            policy_id: self.request.policy_id.clone(),
+            repository_snapshot_id: request.repository_snapshot_id.clone(),
+            tool_catalog_id: request.tool_catalog_id.clone(),
+            policy_id: request.policy_id.clone(),
             correlation_id: self.correlation_id.clone(),
         };
         let candidate = AgentProposal {
             schema_version: CONTRACT_SCHEMA_VERSION,
             proposal_id: proposal.proposal_id.clone(),
-            session_id: self.request.session_id.clone(),
-            task_id: self.request.task.task_id.clone(),
+            session_id: request.session_id.clone(),
+            task_id: request.task.task_id.clone(),
             turn: u64::from(self.turn_count),
             model_run_id: proposal.model_run_id.clone(),
             context_packet_id: proposal.context_packet_id.clone(),
-            repository_snapshot_id: self.request.repository_snapshot_id.clone(),
-            tool_catalog_id: self.request.tool_catalog_id.clone(),
-            policy_id: self.request.policy_id.clone(),
+            repository_snapshot_id: request.repository_snapshot_id.clone(),
+            tool_catalog_id: request.tool_catalog_id.clone(),
+            policy_id: request.policy_id.clone(),
             correlation_id: proposal.correlation_id.clone(),
             proposal_sha256: proposal.proposal_sha256.clone(),
         };
@@ -2908,13 +2981,14 @@ where
         response_sha256: String,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<(), RuntimeLoopError> {
+        let request = self.request.native()?.clone();
         if self.stop_before_phase(cancellation, false)? {
             return Ok(());
         }
         let Some(payload) = proposal.payload.clone() else {
             return self.finish_invalid_proposal(&turn_id);
         };
-        if !valid_output_payload(&payload, self.request.limits.max_output_bytes) {
+        if !valid_output_payload(&payload, request.limits.max_output_bytes) {
             return self.finish_invalid_proposal(&turn_id);
         }
         // Decision 0142: a report draft is accepted only as an admitted run's
@@ -2933,12 +3007,12 @@ where
         self.state
             .transition(AgentStateKind::Verification)
             .map_err(|_| RuntimeLoopError::State)?;
-        let postconditions = runtime_postconditions(&self.request);
+        let postconditions = runtime_postconditions(&request);
         let verifier_context = VerifierContext {
             verifier_id: self.verifier.verifier_id().clone(),
-            task_id: self.request.task.task_id.clone(),
+            task_id: request.task.task_id.clone(),
             proposal_id: proposal.proposal_id.clone(),
-            repository_snapshot_id: self.request.repository_snapshot_id.clone(),
+            repository_snapshot_id: request.repository_snapshot_id.clone(),
             state_revision: self.state.revision(),
             postconditions: postconditions.clone(),
         };
@@ -2948,7 +3022,7 @@ where
             .verifier
             .verify_completion(
                 RuntimeVerificationInput {
-                    request: RuntimeRunScope::native(&self.request)
+                    request: RuntimeRunScope::native(&request)
                         .map_err(RuntimeLoopError::Dependency)?,
                     proposal: &proposal,
                     state_revision: self.state.revision(),
@@ -3009,7 +3083,7 @@ where
         self.evidence
             .sort_by(|left, right| left.evidence_id.as_str().cmp(right.evidence_id.as_str()));
         let answer_evidence = compose_inferred_runtime_answer(
-            &self.request,
+            &request,
             proposal.model_run_id.clone(),
             response_sha256,
             payload.sha256.clone(),
@@ -3319,7 +3393,7 @@ where
         let mut permission_request_emitted = false;
         let evaluation =
             if let Some(evaluate) = self.correctness.as_ref().map(|hooks| hooks.evaluate) {
-                let request = self.request.clone();
+                let request = self.request.native()?.clone();
                 let correlation_id = self.correlation_id.clone();
                 let prior = self.events.last().cloned();
                 let mut resources = self.resources.clone();
@@ -3331,8 +3405,8 @@ where
                     if build_attempts != 1 {
                         return Err(RuntimePortFailure::Invalid);
                     }
-                    let challenge = permission_challenge(
-                        &request,
+                    let challenge = permission_challenge_for_run(
+                        &CoordinatorRequest::from(request.clone()),
                         &turn_id,
                         &operation_id,
                         &definition,
@@ -3362,7 +3436,7 @@ where
                 };
                 let evaluated = evaluate(
                     &mut self.tool_boundary,
-                    &self.request,
+                    self.request.native()?,
                     &operation_id,
                     &definition,
                     &call,
@@ -3390,7 +3464,7 @@ where
                 evaluation
             } else {
                 match self.tool_boundary.evaluate_scoped(
-                    RuntimeRunScope::native(&self.request).map_err(RuntimeLoopError::Dependency)?,
+                    self.request.scope()?,
                     &operation_id,
                     &definition,
                     &call,
@@ -3534,7 +3608,7 @@ where
         {
             return Ok(());
         }
-        let challenge = permission_challenge(
+        let challenge = permission_challenge_for_run(
             &self.request,
             &turn_id,
             &operation_id,
@@ -3657,7 +3731,7 @@ where
                         .clock
                         .now_epoch_ms()
                         .map_err(RuntimeLoopError::Dependency)?;
-                    let request = self.request.clone();
+                    let request = self.request.native()?.clone();
                     let correlation_id = self.correlation_id.clone();
                     let prior = self.events.last().cloned();
                     let mut resources = self.resources.clone();
@@ -3710,7 +3784,7 @@ where
                     );
                     let commit = execute(
                         &mut self.tool_boundary,
-                        &self.request,
+                        self.request.native()?,
                         &evaluation,
                         &definition,
                         &call,
@@ -3756,8 +3830,7 @@ where
                     let execution = self
                         .tool_boundary
                         .execute_scoped(
-                            RuntimeRunScope::native(&self.request)
-                                .map_err(RuntimeLoopError::Dependency)?,
+                            self.request.scope()?,
                             &evaluation,
                             &definition,
                             &call,
@@ -3789,7 +3862,7 @@ where
         let mut permission_decision_emitted = false;
         let evaluation = if let Some(resolve) = self.correctness.as_ref().map(|hooks| hooks.resolve)
         {
-            let request = self.request.clone();
+            let request = self.request.native()?.clone();
             let correlation_id = self.correlation_id.clone();
             let prior = self.events.last().cloned();
             let mut resources = self.resources.clone();
@@ -3849,7 +3922,7 @@ where
             };
             let (evaluation, event) = resolve(
                 &mut self.tool_boundary,
-                &self.request,
+                self.request.native()?,
                 &pending.challenge,
                 response,
                 &pending.definition,
@@ -3871,7 +3944,7 @@ where
         } else {
             self.tool_boundary
                 .resolve_scoped(
-                    RuntimeRunScope::native(&self.request).map_err(RuntimeLoopError::Dependency)?,
+                    self.request.scope()?,
                     &pending.challenge,
                     response,
                     &pending.definition,
@@ -3880,7 +3953,7 @@ where
                 )
                 .map_err(RuntimeLoopError::Dependency)?
         };
-        let resolved_challenge = permission_challenge(
+        let resolved_challenge = permission_challenge_for_run(
             &self.request,
             &pending.turn_id,
             &pending.operation_id,
@@ -3944,7 +4017,15 @@ where
         // An admitted run always executes through the borrowed builder, which
         // refuses an admitted success it did not prepare (Decision 0137).
         let research = self.research.as_ref().map(|run| &run.admission);
-        if !valid_tool_execution(&execution, &definition, &call, &self.request, research) {
+        if !valid_tool_execution_shape(
+            &execution,
+            &definition,
+            &call,
+            self.request.mode,
+            &self.request.limits,
+            &self.request.repository_snapshot_id,
+            research,
+        ) {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
         }
         if let Some(prepared) = &prepared_artifacts {
@@ -4142,7 +4223,7 @@ where
         );
         let continuation = seal_runtime_continuation_state(RuntimeContinuationState {
             schema_version: CONTRACT_SCHEMA_VERSION,
-            request_sha256: runtime_base_request_sha256(&self.request)?,
+            request_sha256: runtime_base_request_sha256(self.request.native()?)?,
             run_id: self.request.run_id.clone(),
             session_id: self.request.session_id.clone(),
             task_id: self.request.task.task_id.clone(),
@@ -4201,7 +4282,7 @@ where
         let mut artifacts = self.artifact_references.clone();
         artifacts.sort_by(|left, right| left.artifact_id.as_str().cmp(right.artifact_id.as_str()));
         let input = RuntimeCheckpointCommit {
-            request: &self.request,
+            request: self.request.native()?,
             continuation: &continuation,
             continuation_artifact: &continuation_artifact,
             event_cursor: &event_cursor,
@@ -4215,7 +4296,7 @@ where
                 .clock
                 .now_epoch_ms()
                 .map_err(RuntimeLoopError::Dependency)?;
-            let request = self.request.clone();
+            let request = self.request.native()?.clone();
             let correlation_id = self.correlation_id.clone();
             let prior = self.events.last().cloned();
             let mut resources = self.resources.clone();
@@ -4263,7 +4344,7 @@ where
             )
         };
         validate_runtime_checkpoint_publication(
-            &self.request,
+            self.request.native()?,
             &continuation,
             &continuation_artifact,
             &event_cursor,
@@ -4318,10 +4399,15 @@ where
             .ok_or(RuntimeLoopError::UnsupportedMode)?;
         let events = (journal.load)(&mut self.tool_boundary, &self.request.run_id)
             .map_err(RuntimeLoopError::Dependency)?;
-        let snapshot = (checkpoint.load)(&mut self.tool_boundary, &self.request)
+        let snapshot = (checkpoint.load)(&mut self.tool_boundary, self.request.native()?)
             .map_err(RuntimeLoopError::Dependency)?
             .ok_or(RuntimeLoopError::UnsupportedMode)?;
-        validate_runtime_resume_snapshot(&self.request, &requested_cursor, &events, &snapshot)?;
+        validate_runtime_resume_snapshot(
+            self.request.native()?,
+            &requested_cursor,
+            &events,
+            &snapshot,
+        )?;
 
         let mut restored_state = AgentStateController::new();
         for expected in &snapshot.continuation.state_transitions {
@@ -4338,9 +4424,11 @@ where
             &snapshot.continuation.tool_attempts,
         )
         .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
-        let mut restored_resources =
-            RuntimeResourceLedger::restore(&self.request, &snapshot.continuation.resources)
-                .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        let mut restored_resources = RuntimeResourceLedger::restore(
+            self.request.native()?,
+            &snapshot.continuation.resources,
+        )
+        .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
         let event_bytes = events.iter().try_fold(0_u64, |total, event| {
             let bytes = to_canonical_json(event)
                 .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?
@@ -4681,28 +4769,48 @@ where
         } else {
             None
         };
-        let outcome = seal_runtime_outcome(
-            RuntimeOutcome {
-                schema_version: CONTRACT_SCHEMA_VERSION,
-                run_id: self.request.run_id.clone(),
-                session_id: self.request.session_id.clone(),
-                task_id: self.request.task.task_id.clone(),
-                request_sha256: self.request.request_sha256.clone(),
-                state,
-                turn_count: self.turn_count,
-                model_call_count: self.model_call_count,
-                tool_call_count: self.tool_call_count,
-                prior_event_id: prior.event_id.clone(),
-                prior_event_sha256: prior.event_sha256.clone(),
-                evidence: self.evidence.clone(),
-                receipt_ids: self.receipt_ids.clone(),
-                unresolved_codes,
-                output,
-                answer_evidence,
-                outcome_sha256: ZERO_SHA256.to_owned(),
-            },
-            &self.request,
-        )?;
+        let raw_outcome = RuntimeOutcome {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            run_id: self.request.run_id.clone(),
+            session_id: self.request.session_id.clone(),
+            task_id: self.request.task.task_id.clone(),
+            request_sha256: self.request.request_sha256.clone(),
+            state,
+            turn_count: self.turn_count,
+            model_call_count: self.model_call_count,
+            tool_call_count: self.tool_call_count,
+            prior_event_id: prior.event_id.clone(),
+            prior_event_sha256: prior.event_sha256.clone(),
+            evidence: self.evidence.clone(),
+            receipt_ids: self.receipt_ids.clone(),
+            unresolved_codes,
+            output,
+            answer_evidence,
+            outcome_sha256: ZERO_SHA256.to_owned(),
+        };
+        let outcome = if let Some(request) = self.request.endpoint() {
+            let claim = if state.is_success() && raw_outcome.output.is_some() {
+                Some(
+                    self.endpoint_claim
+                        .as_ref()
+                        .ok_or(RuntimeLoopError::InvalidBoundaryResult)?
+                        .claim(self.request.scope()?)
+                        .map_err(RuntimeLoopError::Dependency)?,
+                )
+            } else {
+                None
+            };
+            let envelope = crate::runtime_coordinator::seal_runtime_endpoint_outcome(
+                raw_outcome,
+                request,
+                claim.as_ref(),
+            )?;
+            let outcome = envelope.outcome.clone();
+            self.endpoint_outcome = Some(envelope);
+            outcome
+        } else {
+            seal_runtime_outcome(raw_outcome, self.request.native()?)?
+        };
         self.emit(
             RuntimeEventKind::RunTerminal {
                 state,
@@ -4759,7 +4867,7 @@ where
             return Err(RuntimeLoopError::InvalidBoundaryResult);
         }
         let sequence = self.events.len() as u64;
-        let event = event_frame::RuntimeEventScope::native(&self.request).seal(
+        let event = self.request.event_scope().seal(
             &self.correlation_id,
             sequence,
             self.events.last(),
@@ -4904,7 +5012,7 @@ where
             .now_epoch_ms()
             .map_err(RuntimeLoopError::Dependency)?;
         let manifest = artifact_preparation::prepare_artifact_manifest(
-            &self.request,
+            self.request.native()?,
             self.artifact_references.len() as u64 + 1,
             created_at_epoch_ms,
             bytes,
@@ -4988,9 +5096,10 @@ where
         let started = self.started_at_epoch_ms.ok_or(RuntimePhaseStop::Failed(
             RuntimeLoopError::InvalidBoundaryResult,
         ))?;
-        let control = RuntimePhaseControl::new(
+        let control = RuntimePhaseControl::for_run_limits(
             &mut self.clock,
-            &self.request,
+            &self.request.task.task_id,
+            self.request.limits.max_elapsed_ms,
             &self.correlation_id,
             started,
             self.events
@@ -5667,8 +5776,8 @@ pub fn runtime_action_id(
     ActionId::from_raw(derived_id("action", run_id.as_str(), u64::from(sequence)))
 }
 
-fn permission_challenge(
-    request: &RuntimeRunRequest,
+fn permission_challenge_for_run(
+    request: &coordinator_request::CommonRunFields,
     turn_id: &RuntimeTurnId,
     operation_id: &RuntimeOperationId,
     definition: &ToolDefinition,
@@ -5732,9 +5841,13 @@ fn permission_challenge(
 }
 
 fn runtime_postconditions(request: &RuntimeRunRequest) -> Vec<PostconditionId> {
-    request
-        .task
-        .acceptance_criteria
+    runtime_postconditions_from_task(&request.task)
+}
+
+fn runtime_postconditions_from_task(
+    task: &agentmage_kernel_contracts::Task,
+) -> Vec<PostconditionId> {
+    task.acceptance_criteria
         .iter()
         .enumerate()
         .map(|(index, value)| {
@@ -5929,6 +6042,26 @@ fn valid_tool_execution(
     request: &RuntimeRunRequest,
     research: Option<&RuntimeResearchAdmission>,
 ) -> bool {
+    valid_tool_execution_shape(
+        execution,
+        definition,
+        call,
+        request.mode,
+        &request.limits,
+        &request.repository_snapshot_id,
+        research,
+    )
+}
+
+fn valid_tool_execution_shape(
+    execution: &RuntimeToolExecution,
+    definition: &ToolDefinition,
+    call: &ToolCall,
+    mode: RuntimeSessionMode,
+    limits: &agentmage_kernel_contracts::RuntimeRunLimits,
+    repository_snapshot_id: &agentmage_kernel_contracts::RepositorySnapshotId,
+    research: Option<&RuntimeResearchAdmission>,
+) -> bool {
     let result = &execution.result;
     let mut evidence_ids = BTreeSet::new();
     let admitted = research.is_some_and(|admission| admission.admits(definition));
@@ -5941,7 +6074,7 @@ fn valid_tool_execution(
             valid_admitted_network_execution(execution)
         } else {
             valid_runtime_state_change(
-                request.mode,
+                mode,
                 definition.required_grant.operation.operation(),
                 result.outcome,
                 result.state_change,
@@ -5965,19 +6098,19 @@ fn valid_tool_execution(
             candidate.kind != RuntimeArtifactKind::ModelOutput
                 && valid_media_type(&candidate.media_type)
                 && u64::try_from(candidate.bytes.len())
-                    .is_ok_and(|bytes| bytes > 0 && bytes <= request.limits.max_output_bytes)
+                    .is_ok_and(|bytes| bytes > 0 && bytes <= limits.max_output_bytes)
         })
         && result
             .output
             .as_ref()
-            .is_none_or(|payload| valid_output_payload(payload, request.limits.max_output_bytes))
+            .is_none_or(|payload| valid_output_payload(payload, limits.max_output_bytes))
         && result.evidence.iter().all(|evidence| {
             evidence.schema_version == CONTRACT_SCHEMA_VERSION
                 && valid_identifier(evidence.evidence_id.as_str())
                 && evidence_ids.insert(evidence.evidence_id.as_str())
                 && valid_sha256(&evidence.content_sha256)
                 && evidence.observed_revision.as_deref()
-                    == Some(request.repository_snapshot_id.as_str())
+                    == Some(repository_snapshot_id.as_str())
         })
 }
 

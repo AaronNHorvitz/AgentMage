@@ -1,10 +1,10 @@
 # Endpoint run framing
 
 The engine can statically seal and verify a `RuntimeEndpointRunRequest` without
-constructing an `ExactModelProfile`. This is a crate API prerequisite for
-configured-endpoint coordinator composition under T-303/T-306. It is not yet
-accepted by the local HTTP coding runtime, CLI or MCP runtime interface, and
-does not enable an endpoint edit/test/retry workflow.
+constructing an `ExactModelProfile`. The reusable coordinator also accepts this request for ephemeral read-only
+library execution under T-303/T-306. The local HTTP coding runtime, CLI and MCP
+runtime interface do not yet expose that composition. An endpoint
+edit/test/retry workflow remains open.
 
 `runtime_coordinator::seal_runtime_endpoint_run_request` sets the contract
 version and computes the canonical request digest. Its corresponding
@@ -54,11 +54,11 @@ only the immutable run/session/task identifiers and full request digest as
 `run_binding`; the ordinary proposal-only constructor leaves that value absent.
 
 `runtime_loop::endpoint::RuntimeEndpointTurns` now supplies explicit model-turn
-admission and event recording for eventual full coordinator composition. It accepts only a sealed
+admission and event recording for independently supplied model turns. It accepts only a sealed
 ephemeral read-only request without a resume cursor. Its constructor starts one
 run clock. Constructing another instance for the same sealed run is not prevented
-here; its fresh local ledger/clock gives no new run budget, and the eventual
-coordinator must prevent it through exclusive run ownership. `remaining_ms`
+here; its fresh local ledger/clock gives no new run budget, and the live
+run owner must prevent it through exclusive run ownership. `remaining_ms`
 and every dispatch borrow the existing coordinator's
 clock/cancellation implementation: time cannot restart between turns, regress,
 or continue past the deadline. Cancellation must match the original task and
@@ -124,11 +124,12 @@ Neither a closed turn nor accepted model output asserts task success. This
 component emits no `RunTerminal`, cancellation acknowledgement or exit receipt.
 
 It interprets no proposals and executes no orchestration loop, tool, grant,
-edit, command or retry. The shared event framing is integrated with the native
-coordinator; endpoint turns are not yet composed into its orchestration loop
-or any live runtime API route. The scope interfaces below remove the native-only request
-requirement at explicitly supporting boundaries. Full coordinator composition,
-durable ownership, recovery, effect authority and task verification remain open;
+edit, command or retry. The shared event framing and underlying model phase
+also serve the read-only coordinator described below; that coordinator owns
+proposal interpretation, tools and task verification. No live runtime API route
+yet exposes endpoint coordination. The scope interfaces below remove the native
+request requirement at explicitly supporting boundaries. Controlled writes,
+durable ownership, recovery and coding workflow acceptance remain open;
 a cursor alone establishes no resumability. No new model prompt or consent
 mechanism is added.
 
@@ -168,9 +169,9 @@ Synthetic endpoint verifier fixtures establish no actual endpoint tool effects
 or measured coding result.
 
 This integrates request scope into the existing coordinator and coding verifier.
-The coordinator still admits native runs only. Connecting endpoint turns to its
-model/context/proposal loop and the live API remains required before any
-configured-endpoint edit/test/retry workflow is claimed.
+The coordinator admits read-only endpoint runs through its explicit endpoint
+constructor below. Connecting the live API and native controlled tools remains
+required before any configured-endpoint edit/test/retry workflow is claimed.
 
 ## Completion verification without a native proposal
 
@@ -236,8 +237,9 @@ both sealing and verification. Its original accepted turn, ordinary model stop,
 request/response descriptors, complete sealed run and exact schema-bound bytes
 remain bound by the claim digest. The output must equal that claim's complete
 inline payload, including its schema, media type and digest. Decoding recorded
-metadata cannot reconstruct the accepted claim. The nonzero turn count must
-identify that claim's actual turn, with an equal model-call count. Missing or
+metadata cannot reconstruct the accepted claim. The accepted claim's turn must match
+the supplied nonzero turn count, with an equal model-call count. This pure sealer
+cannot inspect the live ledger or determine whether a later turn exists. Missing or
 foreign claims, changed output and native answer evidence refuse. Shape and
 size validation precede citation hashing. Failures carry no answer
 provenance or supplied completion claim. Shared shape validation still permits
@@ -245,8 +247,8 @@ success without rendered output, with evidence, just as native outcomes do;
 that grants no task-success authority.
 
 `outcome.outcome_sha256` hashes the **whole endpoint envelope**, with that
-nested digest set to zero. A future coordinator terminal event must reference
-this whole-envelope digest, never a hash of just the nested outcome. The wire
+nested digest set to zero. The endpoint coordinator terminal event references
+this whole-envelope digest. Hashing only the nested outcome is insufficient. The wire
 form is closed and versioned through the nested outcome; outer answer evidence
 must be explicitly present or null. It is distinct from native outcome JSON.
 
@@ -258,3 +260,63 @@ loop. The containing coordinator must obtain its own current tool observations,
 receipts and state revision and pass its exact verifier registry before deciding
 success. Full endpoint coordinator and API wiring, exclusive ownership,
 edit/test/retry and measured coding acceptance remain open.
+
+## Read-only coordinator execution
+
+`ReusableRuntimeCoordinator::new_endpoint` composes a `RuntimeEndpointTurnPort`,
+the exact sealed endpoint request, its exact read-only tool registry, a scoped
+tool boundary, a completion verifier and the original run clock. This uses the
+existing coordinator's advancement loop, permission challenges, tool attempts,
+observations, resource ledger, event publisher and replay. It creates no second
+agent loop or native model profile. The explicit model-turn component described
+above remains separately usable and is not nested inside this coordinator.
+
+Each preparation receives the original run, current turn, actual completed calls,
+tool results, current evidence and pre-effect rejections. The transport owner
+must derive context from these observations and obtain the existing disclosure
+approval. It returns the single-use frozen transport, independently admitted
+original-message context and a trusted completion schema. Prepared transports
+may borrow externally owned configuration; no permanent allocation is required.
+The same run control bounds preparation, dispatch and callbacks. The kernel
+checks exact selection, request/context agreement, ordinary stream completion,
+text bytes and digest before using the response. Count, full prepared input,
+output and dispatch-time envelopes must fit the cumulative run budget.
+
+A tool response is a closed JSON object with exactly `tool_call`, whose object
+contains `tool_id`, `tool_version` and schema-bound `arguments`. It carries no
+model-authored call identity, run, grant, approval or receipt. The coordinator
+derives the call identity, checks the offered registry and argument envelope,
+and invokes the existing scoped permission and tool boundaries. Every effect
+still needs the boundary's own valid authority. Endpoint composition admits
+only the existing ephemeral read-only catalog; writes, commands, network tools,
+durable state and resume cursors remain refused.
+
+Other response text is an inert completion payload under the schema fixed
+before dispatch. The owning coordinator constructs the exact verifier registry
+from the current task, claim, repository, state revision and ordered acceptance
+criteria, and supplies its own tool results, receipts and evidence. Model prose,
+foreign candidates and advisory verifiers cannot complete the task. Native-only
+tool/verifier ports refuse endpoint scopes before their legacy entry points.
+
+Call `run_endpoint_until_boundary` to obtain a concrete
+`RuntimeEndpointCoordinatorStep`: an approval or the complete
+`RuntimeEndpointOutcome`. Native advancement methods refuse an endpoint
+instance, and the endpoint method refuses a native instance before starting.
+Terminal publication binds the whole endpoint envelope digest, including its
+separate answer provenance. `endpoint_outcome()` exposes that envelope only after
+terminal publication; the native `outcome()` accessor remains absent. The nested native answer evidence remains null.
+Repeated terminal reads run no model or tool. Advancement errors latch the
+existing reconciliation refusal; rejected approval input leaves its challenge
+intact. Event replay replays observations without re-executing operations.
+
+Keep one mutable coordinator as the owning instance for a run. Constructing a
+second instance with the same request cannot resume the first or grant a fresh
+budget; this library constructor is not a global identity registry. The live
+API still needs to enforce exclusive run ownership and connect its real
+credential-owning transport and native tool authority. Controlled writes,
+native edit/test/retry, durable ownership, approved Git and parent measurements
+remain open. Synthetic coordinator tests establish no real-model coding score.
+
+The generic resource snapshot is a ledger diagnostic, including unused counters;
+it is not endpoint token or memory telemetry. Endpoint memory and locally
+verified input/output token counts remain unknown.

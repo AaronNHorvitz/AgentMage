@@ -76,6 +76,9 @@ use crate::tooling::{Tool, ToolRegistry};
 #[path = "runtime_loop_scope_tests.rs"]
 mod scope_tests;
 
+#[path = "runtime_loop_endpoint_coordinator_tests.rs"]
+mod endpoint_coordinator_tests;
+
 #[path = "runtime_loop_artifact_preparation_tests.rs"]
 mod artifact_preparation_tests;
 #[path = "runtime_loop_research_admission_tests.rs"]
@@ -1918,7 +1921,7 @@ fn assert_valid_terminal_stream<M, X, T, V, C>(
     assert_eq!(sequence.event_count(), coordinator.events().len() as u64);
     verify_runtime_outcome(
         coordinator.outcome().expect("terminal outcome exists"),
-        &coordinator.request,
+        coordinator.request.native().unwrap(),
     )
     .expect("outcome remains request-bound");
 }
@@ -1995,7 +1998,7 @@ fn story_23_4_direct_answer_is_verifier_backed_and_streamed_in_exact_order() {
         .collect();
     let claim_ledger = compose_runtime_answer_claim_ledger(
         answer_evidence,
-        &coordinator.request,
+        coordinator.request.native().unwrap(),
         outcome.output.as_ref().expect("successful output exists"),
         citations,
     )
@@ -2319,7 +2322,7 @@ fn coding_write_cannot_use_read_rejection_recovery() {
 fn coding_read_rejection_resumes_from_canonical_checkpoint_without_replay() {
     let (initial, executions) =
         coordinator([ModelScript::Tool], PermissionScript::RejectRead, true);
-    let mut request = initial.request.clone();
+    let mut request = initial.request.native().unwrap().clone();
     request.mode = RuntimeSessionMode::DurableReadOnly;
     request.request_sha256 = "0".repeat(64);
     let request = seal_runtime_run_request(request).unwrap();
@@ -2388,7 +2391,7 @@ fn coding_parser_rejection_resume_preserves_failure_budget_and_never_replays() {
     ] {
         for second_rejection in [false, true] {
             let (initial, executions) = coordinator([first_script], PermissionScript::Allow, true);
-            let mut request = initial.request.clone();
+            let mut request = initial.request.native().unwrap().clone();
             request.mode = RuntimeSessionMode::DurableReadOnly;
             request.request_sha256 = "0".repeat(64);
             let request = seal_runtime_run_request(request).unwrap();
@@ -2698,7 +2701,7 @@ fn story_21_2_durable_model_progress_and_cancellation_survive_delayed_sqlcipher(
     }
     assert!(sequence.is_terminal());
     assert_eq!(sequence.event_count(), coordinator.events().len() as u64);
-    verify_runtime_outcome(&outcome, &coordinator.request)
+    verify_runtime_outcome(&outcome, coordinator.request.native().unwrap())
         .expect("pressure outcome remains request-bound");
 
     println!(
@@ -2876,7 +2879,7 @@ fn callback_fixture(script: PermissionScript) -> (FixtureCoordinator, Arc<Atomic
     let (initial, executions) =
         durable_fault_coordinator([ModelScript::Tool, ModelScript::Completion], script);
     let runtime = ReusableRuntimeCoordinator::new_with_durable_state(
-        initial.request,
+        initial.request.native().unwrap().clone(),
         initial.model,
         initial.context,
         initial.registry,
@@ -4005,9 +4008,16 @@ fn selected_endpoint_binding_cannot_satisfy_native_runtime_admission() {
         }
     }
     let (initial, executions) = coordinator([ModelScript::Tool], PermissionScript::Allow, true);
-    let selected = initial.request.model_profile.profile_id.as_str().to_owned();
+    let selected = initial
+        .request
+        .native()
+        .unwrap()
+        .model_profile
+        .profile_id
+        .as_str()
+        .to_owned();
     let result = ReusableRuntimeCoordinator::new(
-        initial.request,
+        initial.request.native().unwrap().clone(),
         EndpointOnly(selected),
         initial.context,
         initial.registry,
@@ -4024,7 +4034,7 @@ fn runtime_model_binding_preserves_the_complete_native_tuple_and_accounting() {
     use agentmage_kernel_contracts::{RuntimeModelBinding, RuntimeModelTokenAccounting};
 
     let (initial, _) = coordinator([ModelScript::Completion], PermissionScript::Allow, false);
-    let expected = &initial.request.model_profile;
+    let expected = &initial.request.native().unwrap().model_profile;
     let binding = initial.model.model_binding();
     assert!(binding.matches_exact_profile(expected));
     let mut changed = expected.clone();
@@ -4085,17 +4095,17 @@ fn declared_model_binding_cannot_override_the_existing_native_profile_check() {
         }
     }
     let (initial, executions) = coordinator([ModelScript::Tool], PermissionScript::Allow, true);
-    let declared = initial.request.model_profile.clone();
+    let declared = initial.request.native().unwrap().model_profile.clone();
     let mut actual = declared.clone();
     actual.runtime.runtime_sha256 = "b".repeat(64);
     let model = ContradictingModel { actual, declared };
     assert!(
         model
             .model_binding()
-            .matches_exact_profile(&initial.request.model_profile)
+            .matches_exact_profile(&initial.request.native().unwrap().model_profile)
     );
     let result = ReusableRuntimeCoordinator::new(
-        initial.request,
+        initial.request.native().unwrap().clone(),
         model,
         initial.context,
         initial.registry,
@@ -4197,7 +4207,7 @@ fn uncertain_read_closes_all_admitted_modes_without_output_or_hidden_retry() {
         RuntimeSessionMode::ControlledWrite,
     ] {
         let (initial, executions) = coordinator([ModelScript::Tool], PermissionScript::Allow, true);
-        let mut request = initial.request.clone();
+        let mut request = initial.request.native().unwrap().clone();
         request.mode = mode;
         request.request_sha256 = "0".repeat(64);
         let request = seal_runtime_run_request(request).unwrap();
@@ -4342,10 +4352,22 @@ fn uncertain_read_boundary_rejects_output_artifacts_and_identity_drift() {
     let permission = coordinator.tool_boundary.evaluation(None, None, 1_000);
     let execution = coordinator
         .tool_boundary
-        .execute(&coordinator.request, &permission, &definition, &call, None)
+        .execute(
+            coordinator.request.native().unwrap(),
+            &permission,
+            &definition,
+            &call,
+            None,
+        )
         .unwrap();
     let valid = |value: &RuntimeToolExecution| {
-        super::valid_tool_execution(value, &definition, &call, &coordinator.request, None)
+        super::valid_tool_execution(
+            value,
+            &definition,
+            &call,
+            coordinator.request.native().unwrap(),
+            None,
+        )
     };
     assert!(valid(&execution));
     for mutation in 0..7 {
@@ -4403,7 +4425,7 @@ fn cancelled_tool_fixture(
     AfterToolCancellationProbe,
 ) {
     let (initial, executions) = coordinator([ModelScript::Tool], PermissionScript::Allow, true);
-    let mut request = initial.request.clone();
+    let mut request = initial.request.native().unwrap().clone();
     request.mode = mode;
     if let Some(maximum) = maximum_events {
         request.limits.max_events = maximum;
@@ -6638,7 +6660,7 @@ mod run_phase_deadline_tests {
             }),
         };
         let coordinator = ReusableRuntimeCoordinator::new(
-            base.request,
+            base.request.native().unwrap().clone(),
             PhaseModel {
                 inner: base.model,
                 clock: clock.clone(),
@@ -6791,7 +6813,7 @@ mod run_phase_deadline_tests {
             |request| request.limits.max_elapsed_ms = 500,
         )
         .unwrap();
-        let mut request = initial.request;
+        let mut request = initial.request.native().unwrap().clone();
         request.mode = RuntimeSessionMode::DurableReadOnly;
         request.request_sha256 = "0".repeat(64);
         let mut first = ReusableRuntimeCoordinator::new_with_durable_state(
@@ -6808,7 +6830,7 @@ mod run_phase_deadline_tests {
         first.run_turn(None).unwrap();
         let history = first.events().to_vec();
         assert_eq!(first.rejected_model_results.len(), 1);
-        let mut request = first.request.clone();
+        let mut request = first.request.native().unwrap().clone();
         request.event_cursor = Some(runtime_event_cursor(history.last().unwrap()));
         request.request_sha256 = "0".repeat(64);
         let mut resumed = ReusableRuntimeCoordinator::new_with_durable_state(
@@ -6905,7 +6927,7 @@ mod run_phase_deadline_tests {
         if !durable {
             return (base, executions);
         }
-        let mut request = base.request;
+        let mut request = base.request.native().unwrap().clone();
         request.mode = RuntimeSessionMode::DurableReadOnly;
         request.request_sha256 = "0".repeat(64);
         let request = seal_runtime_run_request(request).unwrap();
@@ -7500,7 +7522,7 @@ mod run_phase_deadline_tests {
             };
             (
                 ReusableRuntimeCoordinator::new(
-                    base.request,
+                    base.request.native().unwrap().clone(),
                     model,
                     base.context,
                     base.registry,
@@ -7849,7 +7871,7 @@ mod suspension_tests {
         permission: PermissionScript,
     ) -> (FixtureCoordinator, Arc<AtomicUsize>) {
         let (initial, executions) = coordinator(scripts, permission, true);
-        let mut request = initial.request.clone();
+        let mut request = initial.request.native().unwrap().clone();
         request.mode = RuntimeSessionMode::DurableReadOnly;
         request.request_sha256 = "0".repeat(64);
         let request = seal_runtime_run_request(request).unwrap();
@@ -7908,7 +7930,7 @@ mod suspension_tests {
 
         // A new composition bound to the boundary's cursor continues the run
         // without repeating the effect.
-        let mut resumed_request = first.request.clone();
+        let mut resumed_request = first.request.native().unwrap().clone();
         resumed_request.event_cursor = Some(point.event_cursor.clone());
         resumed_request.request_sha256 = "0".repeat(64);
         let resumed_request = seal_runtime_run_request(resumed_request).unwrap();

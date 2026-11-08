@@ -44,6 +44,27 @@ pub struct RuntimeEndpointTurnResult {
 }
 
 impl RuntimeEndpointTurnResult {
+    // Only the containing coordinator can create an accepted turn, and only
+    // by executing the original single-use phase through its validation path.
+    pub(in crate::runtime_loop) fn execute_phase<P: RuntimeEndpointModelPort>(
+        phase: &mut RuntimeEndpointModelPhase,
+        turn_id: RuntimeTurnId,
+        control: &dyn agentmage_kernel_contracts::ModelOperationControl,
+        port: P,
+        text: impl FnMut(&str),
+    ) -> Result<Self, RuntimeEndpointPhaseFailure<P::Error>> {
+        let run = phase
+            .run_binding()
+            .cloned()
+            .ok_or(RuntimeEndpointPhaseFailure::InvalidResult)?;
+        let result = phase.execute(control, port, text)?;
+        Ok(Self {
+            run,
+            turn_id,
+            result,
+        })
+    }
+
     /// Immutable sealed run identity.
     #[must_use]
     pub const fn run(&self) -> &RuntimeEndpointRunBinding {

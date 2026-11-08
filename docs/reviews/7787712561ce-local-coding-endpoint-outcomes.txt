@@ -1,0 +1,151 @@
+Commit: 7787712561cee9338555fa9bf0dc37fa4e141fc0
+Scope: local-coding-endpoint-outcomes
+
+# Independent core review: endpoint terminal framing (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Same-model review; a
+cross-model review is still required before any public release. This report certifies nothing and
+grants no closure: T-303 and T-306 remain OPEN.
+
+## Methods
+
+- Ran `git rev-parse HEAD` in the pinned checkout `/lane/review-checkout`. Result:
+  `7787712561cee9338555fa9bf0dc37fa4e141fc0`. Predecessor `aa39fe0eee2de8f8cb73cb5432474c2a286c2b7d`
+  resolves. Working tree clean before and after the review.
+- Read IP-POLICY.md, the top of TASKS.md, the newest decision list, and the full diff over the
+  predecessor (11 files, +1084/-28): `runtime_coordinator.rs`, the new `endpoint_outcome.rs`,
+  `endpoint/outcome_tests.rs`, `endpoint/tests.rs`, `runtime_loop.rs`, `completion_claim.rs`, the
+  evidence record, the guide section, the TASKS prose and two retained review copies.
+- Read the supporting code needed to judge the new checks:
+  - `RuntimeEndpointTurnResult` has private fields, `Serialize` only and no deserializer.
+  - `RuntimeEndpointRunBinding::binds` compares run, session, task and request digest.
+  - Turn ids are derived from `derived_id("turn", run_id, turns+1)`.
+  - `execute_turn` closes on entry and reopens only after success, so a failed turn cannot be
+    followed by an accepted one.
+  - `RuntimeCompletionClaim::endpoint` requires an ordinary `Stop` finish and the exact stream digest
+    and length, and builds its proposal digest from the turn and payload.
+  - `canonical_sha256` is size-bounded serde JSON.
+- Read the private README, `run.py`, `audit.py`, `final.py`, `capture.py` and `manifest.py` before
+  running them. They write only under `AGENTMAGE_VALIDATION_DIR`, apart from the builder-only
+  capture and manifest helpers, which I did not run. `run.py` runs the unchanged gate plan, and each
+  Cargo command takes its own `/tools/build-slot` reservation. I took no outer reservation.
+- Wrote reviewer probes in a scratch `git archive` copy of the exact commit at
+  `/lane/state/tmp/review-probe-7787712561ce`. The repository was not modified.
+
+## Commands and results
+
+```text
+sha256sum -c /lane/state/tmp/t303-endpoint-outcomes/review-inputs.sha256   -> 49/49 OK
+sha256sum review-inputs.sha256 -> a2f94d4f05b57766ee47191cd8d67355113c319d7154f429fa8bd9a52b11f7fe (matches request)
+sha256sum node-v24.15.0/bin/node -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches)
+PATH=<node v24.15.0>:$PATH CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-endpoint-outcomes-7787712561ce  (new, mode 700)
+python3 -B .../run.py > fast.log            -> exit 1 (expected), 'FAST GATE: FAIL', 'SOURCE_FREEZE_UNCHANGED'
+  git diff --check 0 (0.10s); lint-untracked 0 (0.10s); lint-reviews 0 (0.10s); markdownlint 0 (1.15s)
+  cargo fmt --check 0 (243.75s incl. slot wait); cargo clippy -D warnings 0 (45.44s)
+  cargo test --all-targets --no-fail-fast 101 (338.48s)
+python3 -B .../final.py > final.log          -> exit 0, 'FINAL_LIGHT_PASS; ORIGINAL_TEST_BODIES_AND_NATIVE_OUTCOME_PREDICATES_PRESERVED; SOURCE_GATE_FAIL'
+audit.json: totals [2572 passed, 72 failed, 71 ignored, 0 filtered], 43 targets,
+  exit codes [0,0,0,0,0,0,101], exactly 6 new passing tests (all outcome_tests::endpoint_outcome_*),
+  failed/ignored identities and normalized diagnostics identical to predecessor, ledger rows unchanged
+Failures by target: agentmage_host lib 53, agentmage_platform_linux lib 19 (the deferred T-301.1 baseline)
+cmp validation-final/source-freeze.json <mine>/source-freeze.json -> identical (6 Rust hashes)
+git diff --check aa39fe0e... --   -> clean;  git status --short -> empty
+```
+
+My gate run reproduces the builder's final counts exactly. My durations differ from the builder's
+339.46 seconds only because of shared-slot waits.
+
+### Reviewer probes (scratch copy, focused filter, `bash /tools/build-slot cargo test --locked --offline -p agentmage-kernel-engine --lib review_probe`)
+
+Result: 2 passed, 0 failed.
+
+- `review_probe_multi_turn_identity` runs two accepted turns in one run.
+  - With counts 2/2, the turn-2 claim seals and verifies.
+  - With counts 2/2, the turn-1 claim is refused for both sealing and verification.
+  - With counts 1/1, the turn-2 claim is refused.
+  - With counts 1/1, the turn-1 claim **seals** even though turn 2 exists. See L1.
+- `review_probe_schema_native_artifact_and_digest` checks the following:
+  - A claim on the same turn under another schema is refused for both sealing and verification.
+  - Artifact output in ephemeral mode is refused.
+  - A digest over only the nested outcome gives `DigestMismatch`.
+  - Success with evidence and no output seals without a claim and with no answer evidence. This
+    behaviour is disclosed, and supplying a claim in that case is refused.
+
+## Assessment
+
+- **Native preservation.** `final.py` proves mechanically that the native outcome shape predicates
+  are the old body split into a common helper plus the unchanged answer-evidence match. It also
+  proves the following are byte-identical to the predecessor:
+  - `seal_runtime_outcome` and `verify_runtime_outcome`;
+  - the coordinator `#[cfg(test)]` region;
+  - the whole files other than the exact one-line `derived_id` visibility change, the exact
+    `endpoint_turn` accessor and the exact module registration.
+
+  Reading the diff confirms this.
+- **Endpoint envelope.**
+  - `validate_base` runs before any claim processing or citation hashing in both sealing and
+    verification. It refuses any mode other than `EphemeralReadOnly`, any event cursor, and nested
+    native `answer_evidence`.
+  - Successful rendered output requires all of the following:
+    - an endpoint (not native) claim;
+    - `matches_scope` to the sealed request (run, session, task, request digest and model binding);
+    - exact `ContractPayload` equality, including schema;
+    - inline output;
+    - a nonzero turn count equal to the model-call count;
+    - the claim's turn id equal to the derived id for that turn count.
+  - Failure and non-rendered outcomes refuse a supplied claim.
+  - The `outcome_sha256` preimage is the whole envelope with that field zeroed. It is structurally
+    distinct from native outcome JSON. The test confirms that `from_json::<RuntimeOutcome>` refuses
+    the envelope and that native seal/verify refuse the nested outcome.
+  - `answer_evidence` is a required, explicitly nullable field, and unknown or duplicate fields are
+    refused.
+- **Authority.** Neither function grants success, effects, persistence, publication or network
+  access. The turn result cannot be deserialized, so wire metadata cannot recreate a claim. The prose
+  in the guide, evidence and TASKS matches this, and records full coordinator/API wiring as open.
+- **Confinement.** No tool, sandbox, filesystem, network or command surface changed. No escape
+  surface was added, so there was no new boundary to attack. Prompt-injection relevance: model text
+  becomes inert payload bytes only, and the trusted caller chooses the schema.
+- **Evaluation integrity.**
+  - No change to eval, held-out or hidden tasks, scorer, thresholds, ignores, prompts, GPU or model
+    files.
+  - No score is claimed, and the tests are labelled synthetic.
+  - Failures are counted (72), not dropped.
+- **Public hygiene and IP.**
+  - The added lines contain no private host path, username, e-mail address or private sibling
+    project name.
+  - The `/lane/...` sandbox paths inside the retained review copies are the same generic lane paths
+    accepted in earlier reviews.
+  - Both retained reviews are byte-identical to `/lane/reviews/*.md`.
+  - No other product is named and no trademark is used as branding.
+  - New files carry SPDX headers. Cargo.toml, Cargo.lock and the SBOM are unchanged.
+- **Delivery.** No row was added or closed. The increment runs and is tested. Nothing is split
+  excessively and no row only adds plans.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog): "current turn" means only the supplied ordinal.**
+  - Location: `kernel/engine/src/runtime_coordinator/endpoint_outcome.rs:150-161`, prose at
+    `docs/evidence/t303-endpoint-outcomes-2026-11-08.md` ("the claim's actual current turn") and
+    `docs/guides/runtime-endpoint-runs.md` ("must identify that claim's actual turn").
+  - The check binds the claim's turn id to the caller-supplied `turn_count`. It cannot see the
+    `RuntimeEndpointTurns` ledger, so it cannot establish that the claim is the latest accepted turn.
+  - Reproduction: the reviewer probe above shows that, after two accepted turns, a turn-1 claim with
+    counts 1/1 seals.
+  - No authority is granted, because the coordinator still decides, so this is not a boundary
+    defect.
+  - Fix at full coordinator composition: derive `turn_count` and `model_call_count` from the owning
+    turns component (or pass it), and add a test with a stale claim after a later turn. Until then,
+    reword the prose to "the turn identified by the supplied turn count".
+- The redundant `citations_sha256` is already covered by `outcome_sha256`. This is harmless and not
+  a finding.
+
+## Per-row result
+
+- T-303 / T-306 terminal framing increment (non-closing): PASS for this increment at the exact
+  commit. No high or medium finding; L1 goes to backlog. Both parent rows remain OPEN. This review
+  grants no parent closure.
+
+Verdict: PASS

@@ -8,7 +8,7 @@ use agentmage_kernel_contracts::{
     RuntimeEndpointRunRequest, RuntimeModelBinding,
 };
 
-fn endpoint(native: &RuntimeRunRequest) -> RuntimeEndpointRunRequest {
+pub(super) fn endpoint(native: &RuntimeRunRequest) -> RuntimeEndpointRunRequest {
     crate::runtime_coordinator::seal_runtime_endpoint_run_request(RuntimeEndpointRunRequest {
         schema_version: native.schema_version,
         run_id: native.run_id.clone(),
@@ -46,7 +46,7 @@ fn endpoint(native: &RuntimeRunRequest) -> RuntimeEndpointRunRequest {
 #[test]
 fn run_scope_preserves_complete_request_family_and_common_observations() {
     let (coordinator, _) = coordinator([], PermissionScript::Allow, true);
-    let native = &coordinator.request;
+    let native = coordinator.request.native().unwrap();
     let endpoint = endpoint(native);
     for scope in [
         RuntimeRunScope::native(native).unwrap(),
@@ -102,7 +102,7 @@ fn run_scope_preserves_complete_request_family_and_common_observations() {
 #[test]
 fn run_scope_refuses_drift_and_resealed_invalid_native_admission() {
     let (coordinator, _) = coordinator([], PermissionScript::Allow, true);
-    let native = coordinator.request;
+    let native = coordinator.request.native().unwrap().clone();
     let original_endpoint = endpoint(&native);
     let mut bad = original_endpoint.clone();
     bad.policy_sha256 = "d".repeat(64);
@@ -209,7 +209,7 @@ fn run_scope_legacy_tool_and_verifier_ports_refuse_endpoint_before_entry() {
     else {
         panic!("approval")
     };
-    let endpoint = endpoint(&coordinator.request);
+    let endpoint = endpoint(coordinator.request.native().unwrap());
     let scope = RuntimeRunScope::endpoint(&endpoint).unwrap();
     let pending = coordinator.pending.as_ref().unwrap();
     let response = decide(&challenge, RuntimeApprovalDisposition::Allow);
@@ -245,7 +245,7 @@ fn run_scope_legacy_tool_and_verifier_ports_refuse_endpoint_before_entry() {
         legacy.execute_scoped(scope, &evaluation, &pending.definition, &pending.call, None),
         Err(RuntimePortFailure::Invalid)
     );
-    let proposal = completion(&coordinator.request);
+    let proposal = completion(coordinator.request.native().unwrap());
     assert_eq!(
         legacy.verify_scoped(RuntimeVerificationInput {
             request: scope,
@@ -381,7 +381,7 @@ fn run_scope_existing_coordinator_uses_scoped_approval_execution_and_verificatio
     );
     let calls = Arc::new(Mutex::new(Vec::new()));
     let mut runtime = ReusableRuntimeCoordinator::new(
-        original.request,
+        original.request.native().unwrap().clone(),
         original.model,
         original.context,
         original.registry,
@@ -486,7 +486,7 @@ fn completion_claim_existing_coordinator_calls_model_independent_verifier_with_o
     );
     let calls = Arc::new(AtomicUsize::new(0));
     let mut runtime = ReusableRuntimeCoordinator::new(
-        original.request,
+        original.request.native().unwrap().clone(),
         original.model,
         original.context,
         original.registry,
@@ -523,7 +523,8 @@ fn completion_claim_existing_coordinator_calls_model_independent_verifier_with_o
     for event in runtime.events() {
         sequence.push(event).unwrap();
     }
-    crate::runtime_coordinator::verify_runtime_outcome(&outcome, &runtime.request).unwrap();
+    crate::runtime_coordinator::verify_runtime_outcome(&outcome, runtime.request.native().unwrap())
+        .unwrap();
 }
 
 #[test]
@@ -532,7 +533,7 @@ fn completion_claim_native_preserves_model_binding_and_refuses_endpoint_scope() 
     let (mut runtime, _) = coordinator([ModelScript::Completion], PermissionScript::Allow, true);
     runtime.run_until_boundary(None, None).unwrap();
     // Build a separate inert candidate using the original native fixture codec.
-    let request = &runtime.request;
+    let request = runtime.request.native().unwrap();
     let proposal = ClosedModelProposal {
         schema_version: CONTRACT_SCHEMA_VERSION,
         proposal_id: agentmage_kernel_contracts::ProposalId::from_raw("completion-proposal"),
