@@ -3,8 +3,11 @@
 Date: 2026-11-08. Tier: core. Predecessor:
 `08a82f80297130cce0fc201b702a0749b518a563`.
 Both mission parents remain open; no row or sub-row is added or closed.
-The predecessor is under independent review; this increment neither rewrites
-it nor supplies an independent verdict.
+The predecessor's [independent core review](../reviews/08a82f802971-local-coding-owner-faults.txt)
+arrived after the configuration increment was committed. It has **Verdict:
+PASS**, with no findings, for that exact predecessor. The report is retained
+unchanged in a follow-up documentation commit; neither parent closes. The new
+configuration increment still requires independent review.
 
 ## Change
 
@@ -92,3 +95,11 @@ admission, ignore, model, GPU, scoreboard, SBOM, status or release change.
 Existing evidence remains bound to its historical inputs. No supply-chain
 regeneration occurs during this source batch. Independent core review of the
 exact final commit is required; implementation tests cannot close either row.
+
+The predecessor report arrived immediately before writing the next review
+request. The follow-up changes only the report, ledger and this evidence;
+all eight tested Rust inputs remain identical to configuration commit
+`77d6a946f4244ec8b4b05457ce7afa46703fd24c`. Current report lint, documentation,
+hygiene, unchanged command-plan/source comparisons and exact-blob checks are
+run without repeating the unchanged source gate. The independent request pins
+the follow-up commit and covers the complete combined diff over the predecessor.

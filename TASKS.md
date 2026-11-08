@@ -14,12 +14,14 @@ and parent measurements remain open. No row is added or closed.
 The retained endpoint owner's [independent core review](docs/reviews/92c919078ec1-local-coding-endpoint-owner.txt)
 has **Verdict: PASS** for exact commit
 `92c919078ec131c6074e081d4c05137b59943834`, with no high/medium finding.
-Low L1 (owner reuse after a caught panic), L2 (terminal envelope invariant errors
-not latching the owner) and L3 (direct faulted-slot capacity coverage) are
-addressed in these same rows by the [fault-handling increment](docs/evidence/t303-endpoint-owner-faults-2026-11-08.md).
-Independent core review of that increment is required. The earlier PASS accepts
-the original in-process ownership increment only; neither parent closes. HTTP
-integration must preserve these boundaries. No row is added or closed.
+The subsequent fault-handling [independent core review](docs/reviews/08a82f802971-local-coding-owner-faults.txt)
+has **Verdict: PASS** for exact commit
+`08a82f80297130cce0fc201b702a0749b518a563`, with no findings. It accepts
+resolution of owner low L1 (reuse after a caught panic), L2 (terminal envelope
+invariant latching) and L3 (faulted-slot capacity coverage) in these same rows.
+See the [fault-handling increment](docs/evidence/t303-endpoint-owner-faults-2026-11-08.md).
+This accepts only the fault-handling increment; neither parent closes.
+HTTP integration must preserve these boundaries. No row is added or closed.
 
 The concrete endpoint-context [independent core review](docs/reviews/aa1705bf758a-local-coding-context-composition.txt)
 returned **Verdict: FINDINGS** for exact commit

@@ -1,0 +1,166 @@
+Commit: 08a82f80297130cce0fc201b702a0749b518a563
+Scope: local-coding-owner-faults
+
+# Independent core review — T-303 / T-306 endpoint owner fault handling (non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Same-model review
+(accepted for now; a cross-model review precedes any public release).
+Pinned checkout: `/lane/review-checkout`; `git rev-parse HEAD` = `08a82f80297130cce0fc201b702a0749b518a563`.
+Immutable predecessor: `cdb63cad1c5cd6f3924f72c65c64377d69c1d8e4` (parent of HEAD, unchanged).
+
+## Methods
+
+1. Read IP-POLICY.md, the TASKS.md header change, the evidence record
+   `docs/evidence/t303-endpoint-owner-faults-2026-11-08.md`, the guide change, the retained report,
+   the private README and all four helpers (`run.py`, `parse.py`, `audit.py`, `final.py`) before running anything.
+2. Read the complete eight-file diff. The changed paths are exactly: TASKS.md, the evidence record,
+   `docs/guides/runtime-endpoint-runs.md`, `docs/reviews/cdb63cad1c5c-local-coding-readable-context.txt`,
+   `kernel/engine/src/runtime_loop/coordinator_endpoint.rs`,
+   `kernel/engine/src/runtime_loop_endpoint_coordinator_tests.rs`,
+   `shells/host/src/coding_endpoint_owner.rs` and `shells/host/src/coding_endpoint_owner_tests.rs`.
+   I also read the kernel reconciliation latch (`kernel/engine/src/runtime_loop.rs:2060-2157`)
+   to see how the owner relies on it.
+3. Ran the full ordinary unfiltered gate myself, in a new validation directory, with the reviewer target.
+   I did not add an outer build slot: the gate takes its own per-Cargo reservations.
+4. Ran mutation checks in a scratch export outside the repository
+   (`/lane/state/tmp/review-owner-faults-08a82f802971-mutant`, from `git archive` of the commit):
+   I reverted the owner premark and the two kernel latch assignments, then ran each new test,
+   isolating every sub-case.
+5. Hygiene: scanned the added lines and the retained report for private paths, usernames, hostnames,
+   credentials and sibling-project names.
+
+## Exact commands and results
+
+```sh
+sha256sum review-inputs.sha256      # 3e7215d850086ca9a5c652ebecc37fd055d5bff7837501cbba21e0ce18f7edc6 (matches request)
+sha256sum --quiet -c /lane/state/tmp/t303-owner-faults/review-inputs.sha256   # OK
+export PATH=/lane/state/tmp/t306-owned-api/node-v24.15.0/bin:$PATH
+export CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+export AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-owner-faults-08a82f802971   # new, mode 700
+python3 -B /lane/state/tmp/t303-owner-faults/run.py > $AGENTMAGE_VALIDATION_DIR/fast.log 2>&1   # rc=1 (expected)
+rg -Fx 'FAST GATE: FAIL' fast.log            # found
+rg -Fx 'SOURCE_FREEZE_UNCHANGED' fast.log    # found
+python3 -B /lane/state/tmp/t303-owner-faults/final.py > final.log 2>&1   # rc=0
+#   FINAL_LIGHT_PASS; CONTEXT_TRANSPORT_NATIVE_TESTS_AND_LEDGER_UNCHANGED; SOURCE_GATE_FAIL
+cmp <builder>/validation-final/source-freeze.json $AGENTMAGE_VALIDATION_DIR/source-freeze.json   # identical
+git diff --check cdb63cad1c5cd6f3924f72c65c64377d69c1d8e4 --   # clean
+git status --short                                             # empty
+```
+
+Reviewer gate results (`audit.json`):
+
+- 43 targets. 2,605 passed, 72 failed, 71 ignored, 0 filtered.
+- Every prior passing, failed and ignored identity is preserved, and the normalized failure
+  diagnostics are identical. The added passes are exactly the two new methods:
+  - `runtime_loop::tests::endpoint_coordinator_tests::endpoint_coordinator_terminal_envelope_faults_latch_even_after_the_envelope_is_restored`
+  - `runtime_read_tests::coding_endpoint_tests::context_tests::owner_tests::endpoint_owner_caught_clock_and_verifier_panics_keep_events_but_never_advance_again`
+- The gate failure is only the deferred T-301.1 baseline, in the host lib and platform-linux lib
+  targets, with failure identities unchanged.
+- Seven commands ran: git diff --check, untracked lint, the extra review-report lint (expected
+  because the retained report is present), markdownlint, cargo fmt --check, strict Clippy and
+  the test suite. Exit codes were `[0,0,0,0,0,0,101]`.
+- Durations were 0.40, 0.10, 0.10, 1.20, 64.23, 44.83 and 356.26 s (467.12 s in total, including
+  shared reservations). Format and strict Clippy PASS.
+- All four Rust hashes stayed frozen and are identical to the builder's.
+
+I also checked the builder's evidence for internal consistency:
+
+- The raw log SHA-256 is `dc001a6418068d0718e810a714a01f31b32cd9c3241e8abef82e238b0c2203a9`,
+  matching the evidence record.
+- The builder's six durations sum to 444.71 s, as claimed.
+- The builder's `final.log` and `postcommit.log` both PASS.
+- `commit` names this exact SHA.
+- The retained report `docs/reviews/cdb63cad1c5c-local-coding-readable-context.txt` is byte-identical
+  to `/lane/reviews/cdb63cad1c5c-local-coding-readable-context.md` (cmp).
+
+Mutation checks (scratch copy only, same reviewer target, through `bash /tools/build-slot`):
+
+| Mutation | Test / sub-case | Result |
+| --- | --- | --- |
+| Removed `*faulted = true;` premark (`coding_endpoint_owner.rs:210`) | host panic test, clock case | FAILED at `_tests.rs:427` (retry returned `Ok(AwaitingApproval)`, expected `Err(Faulted)`) |
+| same, loop narrowed to the verifier case | host panic test, verifier case | FAILED at `_tests.rs:427` (retry advanced) |
+| Removed both kernel latch assignments (`coordinator_endpoint.rs:282,286`) | kernel envelope test, missing case | FAILED at `_tests.rs:780` (latch not set) |
+| same, loop narrowed to the mismatched case | kernel envelope test, mismatch case | FAILED at `_tests.rs:780` |
+| (same mutants) | rejected-approval, repeat-terminal, capacity and old fault controls | ok |
+
+All four new sub-cases discriminate the fix. The controls still pass, so rejected approval input
+still preserves the challenge and the premark is cleared on unlatched errors.
+
+## Review notes
+
+**Owner (L1).** `advance` (`shells/host/src/coding_endpoint_owner.rs:193-214`):
+
+- It refuses `Faulted` before touching the coordinator.
+- It sets `faulted = true` before `run_endpoint_until_boundary`.
+- On normal return it sets `faulted = result.is_err() && coordinator.requires_reconciliation()`.
+
+This means a caught unwind from any dependency (model transport, tool boundary, verifier, clock)
+leaves the entry closed. No other method reaches the coordinator mutably. `events` only borrows,
+and `release` drops the coordinator.
+
+`release` (`:231-247`) allows a faulted entry, even without a terminal outcome. The identity stays
+spent, the capacity slot is freed and admission of the same identity is refused, as the extended
+old test shows. Production code adds no `catch_unwind`, synthetic terminal, replacement coordinator
+or budget renewal; the only `catch_unwind` is in the test.
+
+Faulting on a panic before any effect (the clock panic inside approval validation) is deliberately
+conservative and documented. It loses the challenge but cannot reopen a run.
+
+**Kernel (L2).** In `coordinator_endpoint.rs:280-288`, a missing or mismatched endpoint envelope
+after a shared `Complete` now sets the original `correctness_reconciliation_required` latch.
+`run_until_boundary_impl` (`runtime_loop.rs:2122`) then refuses every later call before any
+dependency, so restoring the metadata cannot reopen the run. That is what the test shows: events
+unchanged, one model call, zero tool executions.
+
+The only other unlatched post-dispatch arm in that function is `Suspended`, which returns
+`UnsupportedMode`. It is unreachable for endpoint runs: the function always passes
+`suspension = None`, and the suspension branch (`runtime_loop.rs:2231`) requires a probe. This is
+not a finding.
+
+**L3.** The extended old fault test fills the three other slots while keeping the faulted entry,
+then checks in order:
+
+1. A fifth admission is refused with `Capacity`.
+2. The events are unchanged.
+3. Release frees the slot and the fifth run is admitted.
+4. The original identity remains `AlreadyAdmitted` and `NotHeld`.
+5. The executions count is still 1.
+6. There is no extra socket connection.
+
+No original assertion is removed; the diff is additions only.
+
+**Confinement and authority.** The tool boundary, permission challenge, transport approval and
+workspace scope are unchanged. No change touches network enablement, the sandbox or paths. The
+fault latch only removes the ability to advance.
+
+**Claims and labelling.** The evidence and guide describe synthetic socket fixtures,
+in-process synchronous ownership only, no HTTP, no native filesystem or grant acceptance, no model
+score and no recovery claim. These match the code. TASKS.md says L1/L2/L3 are "addressed" and that
+independent review is required. No table row changed (audit-verified) and no row or sub-row was
+added or closed. The two new context lows from the cdb63cad1c5c re-review are listed as backlog,
+not marked resolved.
+
+**Evaluation integrity.** No evaluation, held-out, hidden-test, prompt, scorer, threshold, ignore,
+dependency, SBOM, status, scoreboard, GPU or model path is in the diff. Delivery is one
+non-closing increment that runs and is measured; it adds no sub-row and does not split the work further.
+
+**Hygiene.** The added lines contain no home path, username, hostname, credential, personal data,
+private sibling-project name or third-party trademark branding. The only `/lane/...` sandbox paths
+are inside the retained review report, which follows existing practice across `docs/reviews/`.
+That report contains no host username or hostname; I scanned it myself because `final.py`
+excludes it. The builder's private `fast.log` contains a host home path, but it is not committed.
+No other product is named or compared.
+
+## Findings
+
+None at critical, high, medium or low.
+
+## Per-row result
+
+- T-303 / T-306 owner fault-handling increment (closes owner low L1/L2/L3 from the 92c919078ec1
+  review): **PASS** for exact commit `08a82f80297130cce0fc201b702a0749b518a563`.
+  This is non-closing; both parents remain OPEN. HTTP/native filesystem integration, edit/test/retry,
+  durable recovery, approved Git and measurements are still open. The context lows L1/L2 from the
+  cdb63cad1c5c re-review remain backlog.
+
+Verdict: PASS
