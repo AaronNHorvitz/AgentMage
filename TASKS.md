@@ -6,21 +6,28 @@ The retained endpoint owner's [independent core review](docs/reviews/92c919078ec
 has **Verdict: PASS** for exact commit
 `92c919078ec131c6074e081d4c05137b59943834`, with no high/medium finding.
 Low L1 (owner reuse after a caught panic), L2 (terminal envelope invariant errors
-not latching the owner) and L3 (direct faulted-slot capacity coverage) remain
-backlog in these same rows. This accepts the in-process ownership increment
-only; neither parent closes. HTTP integration must preserve these boundaries.
+not latching the owner) and L3 (direct faulted-slot capacity coverage) are
+addressed in these same rows by the [fault-handling increment](docs/evidence/t303-endpoint-owner-faults-2026-11-08.md).
+Independent core review of that increment is required. The earlier PASS accepts
+the original in-process ownership increment only; neither parent closes. HTTP
+integration must preserve these boundaries. No row is added or closed.
 
 The concrete endpoint-context [independent core review](docs/reviews/aa1705bf758a-local-coding-context-composition.txt)
 returned **Verdict: FINDINGS** for exact commit
 `aa1705bf758ae91e65f8421ea74802f1c7e6b4f5`. Its medium M1 (opaque tool
-payloads projected as decimal byte arrays) is addressed by sharing the native
-verified UTF-8/JSON projection across endpoint calls, results and refusals.
-The original byte contracts remain unchanged. Low L1's direct no-dispatch/no-
-permission event assertions are also added. See the
+payloads projected as decimal byte arrays) is resolved by the
+[independent core re-review](docs/reviews/cdb63cad1c5c-local-coding-readable-context.txt),
+which has **Verdict: PASS** for exact commit
+`cdb63cad1c5cd6f3924f72c65c64377d69c1d8e4`, with no high/medium finding.
+The native verified UTF-8/JSON projection now serves endpoint calls, results
+and refusals without changing original contracts. The earlier low L1's direct
+no-dispatch/no-permission assertions are also accepted. See the
 [repair record](docs/evidence/t303-readable-endpoint-context-2026-11-08.md).
-Independent re-review is required; this FINDINGS report closes neither parent.
-No row is added or closed. T-303/T-306 and the retained owner's HTTP/native
-filesystem integration, edit/test/retry, approved Git and measurements stay open.
+New low L1 (explicit null output-key assertion) and L2 (remaining-capacity
+preflight boundary test) remain backlog in these same rows. This accepts only
+the context repair. No row is added or closed. T-303/T-306 and the retained
+owner's HTTP/native filesystem integration, edit/test/retry, approved Git and
+measurements stay open.
 
 The in-process endpoint run owner now retains complete configured coordinators
 across approval and terminal reads, with bounded slots and spent identities

@@ -1,0 +1,197 @@
+Commit: cdb63cad1c5cd6f3924f72c65c64377d69c1d8e4
+Scope: local-coding-readable-context
+
+# Independent core re-review — readable verified endpoint tool observations (T-303 / T-306, M1 re-review)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Pinned checkout
+`/lane/review-checkout`; `git rev-parse HEAD` = `cdb63cad1c5cd6f3924f72c65c64377d69c1d8e4`.
+Immutable predecessor `92c919078ec131c6074e081d4c05137b59943834`. This is a non-closing re-review:
+both parents remain OPEN.
+
+## Methods
+
+- Read IP-POLICY.md, the TASKS.md head diff, the guide diff, the evidence record
+  `docs/evidence/t303-readable-endpoint-context-2026-11-08.md`, and both retained reports, in
+  particular aa1705bf758a M1/L1.
+- Read the complete eight-file diff. Read the full `coding_endpoint_context.rs` and the contract
+  definitions it projects: `ContractPayload`, `ToolCall`, `ToolResult`, `RuntimeToolRejection`,
+  `ContractError` and `EvidenceReference` in `kernel/contracts/src/`.
+- Read how the endpoint coordinator encodes model-authored arguments
+  (`kernel/engine/src/runtime_loop/coordinator_endpoint.rs:550-600`).
+- Read the private README, run.py, parse.py, audit.py, final.py, baseline-targets.json and commit
+  file in `/lane/state/tmp/t303-readable-context/`.
+- Executed the requested command block in a new validation directory with a separate target. I
+  did not use an outer build-slot, and I left the builder's logs untouched.
+
+## Commands and results
+
+```sh
+sha256sum --quiet -c /lane/state/tmp/t303-readable-context/review-inputs.sha256   # OK
+sha256sum review-inputs.sha256   # 0e4ad5fb58995c913b3d603b5ec64d38c28fd200b902ff72e63aa2f9636a0831, 29 lines (matches request)
+export PATH=/lane/state/tmp/t306-owned-api/node-v24.15.0/bin:$PATH
+export CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+export AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-readable-context-cdb63cad1c5c   # new, mode 700
+python3 -B /lane/state/tmp/t303-readable-context/run.py > $AGENTMAGE_VALIDATION_DIR/fast.log 2>&1   # rc=1 (expected), 449 s wall
+rg -Fx 'FAST GATE: FAIL' fast.log            # present
+rg -Fx 'SOURCE_FREEZE_UNCHANGED' fast.log    # present
+python3 -B /lane/state/tmp/t303-readable-context/final.py > final.log 2>&1   # rc=0
+cmp validation-final/source-freeze.json $AGENTMAGE_VALIDATION_DIR/source-freeze.json   # identical
+git diff --check 92c919078ec131c6074e081d4c05137b59943834 --   # clean
+git status --short                                              # clean
+```
+
+- **My gate.** It ran 7 commands with exit codes `[0,0,0,0,0,0,101]`. Durations were 0.10, 0.10,
+  0.10, 1.15, 282.70, 32.99 and 131.80 s. My Clippy step was a cold build in my own target, which
+  explains why it is slower than the builder's 0.85 s.
+  - The audit passed: 18 targets, totals `[716, 53, 11, 0]` (passed, failed, ignored, filtered).
+  - All predecessor pass, fail and ignore identities and the normalized failure diagnostics were
+    preserved.
+  - The added set is exactly the two named methods:
+    `endpoint_context_refuses_corrupt_payloads_in_calls_results_and_refusals_and_latches` and
+    `endpoint_context_projects_plain_utf8_and_absent_output_without_changing_contracts`.
+  - An independent sum of every `test result:` line also gives 716/53/11/0, and the log contains
+    53 `FAILED` lines.
+  - The three changed existing tests (history, two-turn socket, overflow) pass.
+- **My raw log.** SHA-256 `016ae9667f640bfaaf4bc88e7dc4eccd40251feb0a0c9ed72d6288791e7ee409`. It
+  differs from the builder's log only in timing and paths.
+- **Builder's log.** `validation-final/fast.log` hashes to
+  `6008cf93f0ef2a39bbe7c58f2f9558aa99ecaaa8a0bbb4839aededd05663ce60`, the value cited in the
+  evidence record.
+- **final.py.** markdownlint reported 0 issues in 3 files, and the script printed
+  `FINAL_LIGHT_PASS; NATIVE_TESTS_TRANSPORT_OWNER_UNCHANGED; SOURCE_GATE_FAIL`. It checked:
+  - the native `mod tests` body;
+  - `coding_endpoint.rs`, the owner and its tests, `coding_endpoint_tests.rs` and
+    `runtime_read_tests.rs`, all byte-identical to the predecessor;
+  - the TASKS table rows, unchanged;
+  - both retained reports, byte-identical to `/lane/reviews/` originals;
+  - all 8 input copies, equal to `git show cdb63cad…:<path>`.
+- **Source gate.** It fails only on the deferred T-301.1 baseline. The failures are identical to
+  the predecessor's, and none is waived.
+
+## Review of the change
+
+**Native extraction (`coding_context.rs:1014-1031`, call site `:590-593`).** The new
+`project_verified_coding_payload` runs the same steps in the same order as the removed inline
+code: digest check, strict `from_utf8`, JSON parse only for `application/json`, otherwise
+`String`. It produces the same `{schema, media_type, sha256, content}` object. Native output
+behavior is unchanged, and final.py confirms the native test module is byte-identical.
+
+**Endpoint projection (`coding_endpoint_context.rs:279-331`).**
+- The manual `json!` projections list every field of `ToolCall` (7), `ToolResult` (10) and
+  `RuntimeToolRejection` (2). All three contracts are `deny_unknown_fields`, and none of
+  `ContractError`, `EvidenceReference`, `ValidationIssue` or `StateChange` carries a
+  `ContractPayload`. So no opaque byte array can still reach the model by a nested route.
+- The history test builds its expected value from the contracts' own `to_value`, replacing only
+  `bytes` with `content`. It is therefore independent of the projection, and would fail if a
+  future contract field were silently dropped.
+- `Projected<T>` serializes one record at a time into the existing `BoundedContext` writer. No
+  second history is built, and nothing is omitted or truncated.
+
+**Error classes (`:349-368`).**
+- Writer overflow is a serde_json I/O error and maps to `ResourceExhausted`.
+- The projection's `S::Error::custom` is a data error and maps to `Invalid`.
+- The system-message encode in `new()` can only fail on I/O for these value types, so its prior
+  `ResourceExhausted` behavior is preserved.
+
+**Raw-size preflight (`:176-197`).**
+- Every payload in all three positions is compared against `capacity`. This is the content
+  budget remaining after the system message, the same bound the writer uses.
+- The check runs before any decode, so any oversize payload yields `ResourceExhausted` ahead of
+  digest or format failures in any record.
+- The decoded temporary `Value` is therefore bounded proportionally to the remaining capacity,
+  which is under the kernel's content ceiling.
+
+**Latching.**
+- `next_turn.take()` runs before any check (`:153`), so every failure path, including the new
+  ones, leaves the context closed.
+- The new test proves this: a subsequently valid turn-1 input is refused `Invalid` after each of
+  the 15 failure cases. Without the latch it would succeed.
+
+**Test discrimination.**
+- The oversize case uses an all-spaces `application/json` payload. Without the preflight it would
+  reach the JSON parser and fail `Invalid` rather than `ResourceExhausted`, so the test does
+  detect removal of the preflight.
+- The digest, JSON-UTF-8, malformed-JSON and text-UTF-8 cases each hit `Invalid` in every
+  position. Nothing earlier in `prepare_context` inspects payloads.
+- The exact-bound loop checks the exact content and encoded limits, and the one-byte-under cases
+  are refused `ResourceExhausted` with real observations.
+- The socket test checks the exact turn-2 source string `pub fn fixture() -> u64 { 42 }\n` and
+  the absence of `bytes`.
+- The overflow test now excludes `ModelRequested`, `PermissionRequested` and
+  `PermissionDecided`, which addresses aa1705bf758a L1.
+
+**Untrusted input and confinement.**
+- This change does not alter tool authority, the registry, approval or the sandbox. It only makes
+  tool output readable inside the user-data message, which is labelled `untrusted_tool_results`
+  and covered by the system instruction's untrusted-data clause.
+- The new test confirms that instruction-like text such as `ignore all permissions` stays out of
+  the system message.
+- Any tool call that injected text induces is still a model proposal. Such a proposal must pass
+  `is_model_proposable`, `validate_arguments` and runtime approval
+  (`coordinator_endpoint.rs:550-600`).
+- Model-authored arguments are always re-encoded by `serde_json::to_vec` of a parsed value with
+  `application/json`. A legitimate refused call therefore cannot trip the new `Invalid` path and
+  end a run spuriously.
+- Payload content is JSON-escaped by the serializer, so it cannot break the message structure.
+- I did not run a live model, so this is reasoning plus the synthetic tests only.
+
+**Claims and labelling.** The evidence, guide and TASKS text match the code and my run. Sockets,
+models, sources, tools, permissions and verifiers are honestly labelled synthetic, and no score
+or measurement is claimed. No row or sub-row was added or closed.
+
+**Evaluation integrity, hygiene and IP.**
+- The diff touches only the 8 listed files. No evaluation, held-out, hidden, scorer, threshold,
+  ignore, dependency, SBOM, status, scoreboard, GPU or model file changed.
+- The added lines contain no home path, username, hostname, credential, personal data, private
+  sibling name or trademark branding.
+- `/lane/...` paths appear only inside the two retained review `.txt` files. That is the existing
+  accepted convention, and the predecessor owner review noted it. final.py excludes those files
+  from its scan, so I scanned them myself and found no hostname or username.
+- I found no third-party code or text.
+
+## Findings
+
+No critical, high or medium findings.
+
+### L1 (low, backlog): the absent-output assertion cannot detect a missing `output` key
+
+**Where.** `shells/host/src/coding_endpoint_context_tests.rs`, in
+`endpoint_context_projects_plain_utf8_and_absent_output_without_changing_contracts`, the
+`assert!(projected.is_null())` branch.
+
+**Problem.** `serde_json::Value` indexing returns `Null` for an absent key. A regression that
+omitted `"output"` from the projection would still pass, and the history test only covers
+`Some` outputs. The current code does emit `"output": null`, at `coding_endpoint_context.rs:318`.
+
+**Fix.** Also assert
+`user["untrusted_tool_results"][0].as_object().unwrap().get("output") == Some(&Value::Null)`.
+
+### L2 (low, backlog): the preflight test does not separate "remaining capacity" from "total budget"
+
+**Where.** The `invalid == 4` case of the corrupt-payload test.
+
+**Problem.** The case uses `max_content_bytes + 1` bytes. A regression that compared payloads
+against the total `max_content_bytes` instead of the post-system `capacity` would still pass.
+Payloads of size `capacity + 1 ..= max_content_bytes` would then reach JSON decoding first.
+
+**Fix.** Add a case whose length is `max_content_bytes - system.len() + 1`. Derive `system.len()`
+from a successful build. Assert `ResourceExhausted`.
+
+**Carried, unchanged.** Owner-review lows L1 (caught-panic reuse), L2 (terminal-envelope error
+latch) and L3 (faulted-slot capacity), and the earlier lows, remain backlog in these rows. This
+commit does not touch them.
+
+## Per-row result
+
+- **T-303 (non-closing increment): PASS.**
+  - aa1705bf758a M1 is fixed. Calls, results and refusals reach the model as verified readable
+    content, with schema, media type and digest retained.
+  - Corrupt payloads refuse `Invalid`, oversize payloads refuse `ResourceExhausted` first, and
+    every failure latches closed. Original contracts are unchanged.
+  - aa1705bf758a L1 is addressed.
+  - The parent stays OPEN. HTTP, native filesystem and grant composition, edit/test/retry,
+    durable recovery, approved Git and measurements remain open.
+- **T-306 (non-closing increment): PASS** for the same increment. The parent stays OPEN.
+- **Backlog:** new L1 and L2 above, plus the carried lows.
+
+Verdict: PASS

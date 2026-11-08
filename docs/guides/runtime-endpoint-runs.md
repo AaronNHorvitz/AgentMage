@@ -18,6 +18,14 @@ approval input from errors after stateful advancement. A rejected approval
 preserves the challenge. A stateful error latches the entry closed; its event
 prefix remains readable and no further dispatch is allowed. Such a prefix is
 not a terminal or a recovery declaration.
+The owner marks a retained run faulted before entering the coordinator. A normal
+return clears that mark only on success or an error that the kernel identifies
+as preceding stateful advancement. If a dependency panics and the hosting service
+catches the unwind, that run stays faulted: events remain inspectable, release
+is allowed, and another advance invokes no dependency. The owner does not catch
+panics, manufacture terminal events or declare recovery. Missing or mismatched
+endpoint envelopes after terminal publication also set the kernel's original
+reconciliation latch. Restoring envelope metadata does not reopen the run.
 Export required events before release. Ordinary context buffers make no
 secure-erasure claim.
 

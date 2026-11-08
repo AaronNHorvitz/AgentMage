@@ -80,7 +80,7 @@ pub enum CodingEndpointOwnerError {
     NotHeld,
     /// Release was requested while the coordinator can still advance.
     StillRunning,
-    /// A prior coordinator error prevents all further dispatch for this entry.
+    /// A prior coordinator error or unwind prevents further dispatch.
     Faulted,
     /// Original context construction failed without admission or dispatch.
     Context(RuntimePortFailure),
@@ -89,8 +89,10 @@ pub enum CodingEndpointOwnerError {
 }
 
 enum Held<'config, T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock> {
-    Running(Box<Coordinator<'config, T, V, C>>),
-    Faulted(Box<Coordinator<'config, T, V, C>>),
+    Retained {
+        coordinator: Box<Coordinator<'config, T, V, C>>,
+        faulted: bool,
+    },
     Released,
 }
 
@@ -172,7 +174,10 @@ impl<'config, T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock>
             id,
             Entry {
                 request_sha256,
-                held: Held::Running(Box::new(coordinator)),
+                held: Held::Retained {
+                    coordinator: Box::new(coordinator),
+                    faulted: false,
+                },
             },
         );
         Ok(())
@@ -182,7 +187,9 @@ impl<'config, T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock>
     /// validation, cumulative budgets, cancellation and idempotent terminal reads.
     /// Rejected approval input preserves the original challenge. On a stateful
     /// boundary error retain events, but never try again; the original kernel
-    /// reconciliation state decides this, never an error-code guess.
+    /// reconciliation state decides this, never an error-code guess. Mark the
+    /// entry faulted before entering dependencies so a caught unwind cannot
+    /// make partially advanced state reusable.
     pub fn advance(
         &mut self,
         request: &RuntimeEndpointRunRequest,
@@ -190,24 +197,20 @@ impl<'config, T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock>
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<RuntimeEndpointCoordinatorStep, CodingEndpointOwnerError> {
         let entry = self.entry(request)?;
-        let Held::Running(coordinator) = &mut entry.held else {
-            return Err(match entry.held {
-                Held::Faulted(_) => CodingEndpointOwnerError::Faulted,
-                _ => CodingEndpointOwnerError::NotHeld,
-            });
+        let Held::Retained {
+            coordinator,
+            faulted,
+        } = &mut entry.held
+        else {
+            return Err(CodingEndpointOwnerError::NotHeld);
         };
-        match coordinator.run_endpoint_until_boundary(response, cancellation) {
-            Ok(step) => Ok(step),
-            Err(error) if coordinator.requires_reconciliation() => {
-                let Held::Running(coordinator) = std::mem::replace(&mut entry.held, Held::Released)
-                else {
-                    unreachable!("exclusive mutable owner retains running entry")
-                };
-                entry.held = Held::Faulted(coordinator);
-                Err(CodingEndpointOwnerError::Coordinator(error))
-            }
-            Err(error) => Err(CodingEndpointOwnerError::Coordinator(error)),
+        if *faulted {
+            return Err(CodingEndpointOwnerError::Faulted);
         }
+        *faulted = true;
+        let result = coordinator.run_endpoint_until_boundary(response, cancellation);
+        *faulted = result.is_err() && coordinator.requires_reconciliation();
+        result.map_err(CodingEndpointOwnerError::Coordinator)
     }
 
     /// Borrows complete retained canonical events, including a faulted run's
@@ -217,7 +220,7 @@ impl<'config, T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock>
         request: &RuntimeEndpointRunRequest,
     ) -> Result<&[RuntimeEvent], CodingEndpointOwnerError> {
         match &self.entry(request)?.held {
-            Held::Running(coordinator) | Held::Faulted(coordinator) => Ok(coordinator.events()),
+            Held::Retained { coordinator, .. } => Ok(coordinator.events()),
             Held::Released => Err(CodingEndpointOwnerError::NotHeld),
         }
     }
@@ -231,7 +234,10 @@ impl<'config, T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock>
     ) -> Result<(), CodingEndpointOwnerError> {
         let entry = self.entry(request)?;
         match &entry.held {
-            Held::Running(coordinator) if coordinator.endpoint_outcome().is_none() => {
+            Held::Retained {
+                coordinator,
+                faulted: false,
+            } if coordinator.endpoint_outcome().is_none() => {
                 return Err(CodingEndpointOwnerError::StillRunning);
             }
             Held::Released => return Err(CodingEndpointOwnerError::NotHeld),

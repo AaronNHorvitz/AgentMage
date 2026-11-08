@@ -278,11 +278,12 @@ impl<
                 challenge,
             }) => Ok(RuntimeEndpointCoordinatorStep::AwaitingApproval { challenge }),
             RuntimeSuspendableStep::Boundary(RuntimeCoordinatorStep::Complete { outcome }) => {
-                let endpoint = self
-                    .endpoint_outcome
-                    .as_ref()
-                    .ok_or(RuntimeLoopError::InvalidBoundaryResult)?;
+                let Some(endpoint) = self.endpoint_outcome.as_ref() else {
+                    self.correctness_reconciliation_required = true;
+                    return Err(RuntimeLoopError::InvalidBoundaryResult);
+                };
                 if endpoint.outcome != outcome {
+                    self.correctness_reconciliation_required = true;
                     return Err(RuntimeLoopError::InvalidBoundaryResult);
                 }
                 Ok(RuntimeEndpointCoordinatorStep::Complete {

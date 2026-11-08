@@ -758,6 +758,39 @@ fn endpoint_coordinator_denial_and_malformed_tool_never_execute() {
 }
 
 #[test]
+fn endpoint_coordinator_terminal_envelope_faults_latch_even_after_the_envelope_is_restored() {
+    for missing in [true, false] {
+        let mut c = coordinator([Response::MalformedTool], false);
+        let original = terminal(&mut c);
+        let events = c.events().to_vec();
+        assert!(!c.requires_reconciliation());
+        if missing {
+            c.endpoint_outcome = None;
+        } else {
+            c.endpoint_outcome
+                .as_mut()
+                .unwrap()
+                .outcome
+                .model_call_count += 1;
+        }
+        assert_eq!(
+            c.run_endpoint_until_boundary(None, None),
+            Err(RuntimeLoopError::InvalidBoundaryResult)
+        );
+        assert!(c.requires_reconciliation());
+        // Repairing metadata cannot authorize another advance after a fault.
+        c.endpoint_outcome = Some(original);
+        assert_eq!(
+            c.run_endpoint_until_boundary(None, None),
+            Err(RuntimeLoopError::InvalidBoundaryResult)
+        );
+        assert_eq!(c.events(), events);
+        assert_eq!(c.model.0.calls.load(Ordering::SeqCst), 1);
+        assert_eq!(c.tool_boundary.executions.load(Ordering::SeqCst), 0);
+    }
+}
+
+#[test]
 fn endpoint_coordinator_model_argument_defects_publish_terminal_refusal_without_dispatching_again()
 {
     for kind in 0..8 {

@@ -272,12 +272,172 @@ fn endpoint_owner_latches_boundary_errors_and_preserves_events_without_redispatc
         Err(Error::Faulted)
     );
     assert_eq!(runs.events(&request).unwrap(), events);
+    let inert = |request| CodingEndpointAdmission {
+        request,
+        transport: &transport,
+        approval: &approval,
+        registry: registry(),
+        sources: &[],
+        source_budget: 2048,
+        include_usage: true,
+        tool_boundary: ReadBoundary(executions.clone()),
+        verifier: UnavailableVerifier(VerifierId::from_raw("unavailable-verifier")),
+        clock: TestClock(1000),
+    };
+    for i in 0..3 {
+        runs.admit(inert(selected_request(
+            &transport,
+            &format!("beside-faulted-run-{i}"),
+        )))
+        .unwrap();
+    }
+    let fifth = selected_request(&transport, "after-faulted-release");
+    assert_eq!(runs.admit(inert(fifth.clone())), Err(Error::Capacity));
+    assert_eq!(runs.events(&request).unwrap(), events);
     runs.release(&request).unwrap();
+    runs.admit(inert(fifth.clone())).unwrap();
+    assert!(runs.events(&fifth).unwrap().is_empty());
+    assert_eq!(
+        runs.admit(inert(request.clone())),
+        Err(Error::AlreadyAdmitted)
+    );
     assert_eq!(runs.advance(&request, None, None), Err(Error::NotHeld));
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
     assert_eq!(
         worker.join().unwrap().accept().unwrap_err().kind(),
         std::io::ErrorKind::WouldBlock
     );
+}
+
+#[test]
+fn endpoint_owner_caught_clock_and_verifier_panics_keep_events_but_never_advance_again() {
+    use std::panic::{AssertUnwindSafe, catch_unwind};
+    use std::sync::atomic::AtomicBool;
+
+    struct PanicClock {
+        inner: TestClock,
+        armed: Arc<AtomicBool>,
+        calls: Arc<AtomicUsize>,
+    }
+    impl RuntimeClock for PanicClock {
+        fn now_epoch_ms(&mut self) -> Result<u64, RuntimePortFailure> {
+            self.calls.fetch_add(1, Ordering::SeqCst);
+            assert!(
+                !self.armed.load(Ordering::SeqCst),
+                "owner fixture clock panic"
+            );
+            self.inner.now_epoch_ms()
+        }
+    }
+    struct PanicVerifier(VerifierId, Arc<AtomicUsize>);
+    impl RuntimeVerifierPort for PanicVerifier {
+        fn verifier_id(&self) -> &VerifierId {
+            &self.0
+        }
+        fn verify(
+            &mut self,
+            _: RuntimeVerificationInput<'_>,
+        ) -> Result<VerifierCandidate, RuntimePortFailure> {
+            panic!("native family")
+        }
+        fn verify_completion(
+            &mut self,
+            _: RuntimeCompletionVerificationInput<'_>,
+        ) -> Result<VerifierCandidate, RuntimePortFailure> {
+            self.1.fetch_add(1, Ordering::SeqCst);
+            panic!("owner fixture verifier panic")
+        }
+    }
+    for panic_in_clock in [true, false] {
+        let (listener, endpoint) = listener();
+        let transport = transport(endpoint.clone());
+        let approval = LocalChatApproval::for_endpoint(endpoint);
+        let worker = thread::spawn(move || {
+            let mut socket = accept(&listener);
+            read_context_request(&mut socket);
+            respond(&mut socket, &read_proposal(), "stop", true);
+            drop(socket);
+            if !panic_in_clock {
+                let mut socket = accept(&listener);
+                read_context_request(&mut socket);
+                respond(&mut socket, "fixture completion", "stop", true);
+            }
+            listener
+        });
+        let executions = Arc::new(AtomicUsize::new(0));
+        let clock_armed = Arc::new(AtomicBool::new(false));
+        let clock_calls = Arc::new(AtomicUsize::new(0));
+        let verifier_calls = Arc::new(AtomicUsize::new(0));
+        let request = selected_request(&transport, "panicking-owner-run");
+        let mut runs = CodingEndpointRuns::default();
+        runs.admit(CodingEndpointAdmission {
+            request: request.clone(),
+            transport: &transport,
+            approval: &approval,
+            registry: registry(),
+            sources: &[],
+            source_budget: 2048,
+            include_usage: true,
+            tool_boundary: ReadBoundary(executions.clone()),
+            verifier: PanicVerifier(
+                VerifierId::from_raw("panic-verifier"),
+                verifier_calls.clone(),
+            ),
+            clock: PanicClock {
+                inner: TestClock(1000),
+                armed: clock_armed.clone(),
+                calls: clock_calls.clone(),
+            },
+        })
+        .unwrap();
+        let RuntimeEndpointCoordinatorStep::AwaitingApproval { challenge } =
+            runs.advance(&request, None, None).unwrap()
+        else {
+            panic!("approval expected")
+        };
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        clock_armed.store(panic_in_clock, Ordering::SeqCst);
+        let response = allow(&challenge);
+        let caught = catch_unwind(AssertUnwindSafe(|| {
+            runs.advance(&request, Some(&response), None)
+        }))
+        .unwrap_err();
+        let message = caught
+            .downcast_ref::<String>()
+            .map(String::as_str)
+            .or_else(|| caught.downcast_ref::<&str>().copied());
+        assert_eq!(
+            message,
+            Some(if panic_in_clock {
+                "owner fixture clock panic"
+            } else {
+                "owner fixture verifier panic"
+            })
+        );
+        // Disarm the dependency: refusal must come from the retained owner.
+        clock_armed.store(false, Ordering::SeqCst);
+        let events = runs.events(&request).unwrap().to_vec();
+        let clock_count = clock_calls.load(Ordering::SeqCst);
+        assert!(
+            !events
+                .iter()
+                .any(|event| matches!(event.kind, RuntimeEventKind::RunTerminal { .. }))
+        );
+        for response in [None, Some(&response)] {
+            assert_eq!(runs.advance(&request, response, None), Err(Error::Faulted));
+            assert_eq!(runs.events(&request).unwrap(), events);
+        }
+        assert_eq!(clock_calls.load(Ordering::SeqCst), clock_count);
+        let expected_executions = usize::from(!panic_in_clock);
+        assert_eq!(executions.load(Ordering::SeqCst), expected_executions);
+        assert_eq!(verifier_calls.load(Ordering::SeqCst), expected_executions);
+        runs.release(&request).unwrap();
+        assert_eq!(runs.advance(&request, None, None), Err(Error::NotHeld));
+        assert_eq!(
+            worker.join().unwrap().accept().unwrap_err().kind(),
+            std::io::ErrorKind::WouldBlock
+        );
+    }
 }
 
 #[test]
