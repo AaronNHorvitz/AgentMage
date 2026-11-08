@@ -7,6 +7,7 @@ use std::fmt::Write as _;
 use std::fs;
 use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use agentmage_capability_read_only::{
@@ -489,9 +490,9 @@ pub struct CodingDevelopmentRuntimeFactory {
     scenario: CodingDevelopmentScenario,
     model: CodingDevelopmentModel,
     source_selection: Option<CodingPythonSourceSelection>,
-    platform: &'static LinuxDevelopmentPlatformAdapter,
-    profile: &'static CodingSessionProfile,
-    workspace: &'static LinuxCodingWorkspace<'static, 'static>,
+    platform: Arc<LinuxDevelopmentPlatformAdapter>,
+    profile: Arc<CodingSessionProfile>,
+    workspace: Arc<LinuxCodingWorkspace<'static, 'static>>,
     supporting_sources: Vec<CodingContextSource>,
     session_id: Option<SessionId>,
     preauthorization: Option<LinuxCodingSessionPreauthorization>,
@@ -552,17 +553,21 @@ impl CodingDevelopmentRuntimeFactory {
             "coding-development-{}",
             &activation.marker_sha256()[..24]
         ));
-        let platform = Box::leak(Box::new(
+        let platform = Arc::new(
             LinuxDevelopmentPlatformAdapter::activate(
                 CODING_DEVELOPMENT_ACTIVATION,
                 activation.marker_sha256().to_owned(),
                 adapter_id,
             )
             .map_err(|_| CodingDevelopmentRuntimeError::Platform)?,
-        ));
-        let (profile, workspace, supporting_sources) = build_repository_composition(
+        );
+        let DevelopmentRepositoryComposition {
+            profile,
+            workspace,
+            supporting_sources,
+        } = build_repository_composition(
             &activation,
-            platform,
+            Arc::clone(&platform),
             scenario,
             model,
             source_selection.as_ref(),
@@ -618,9 +623,13 @@ impl CodingDevelopmentRuntimeFactory {
                 .check_workspace(self.activation.workspace_root())
                 .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
         }
-        let (profile, workspace, supporting_sources) = build_repository_composition(
+        let DevelopmentRepositoryComposition {
+            profile,
+            workspace,
+            supporting_sources,
+        } = build_repository_composition(
             &self.activation,
-            self.platform,
+            Arc::clone(&self.platform),
             self.scenario,
             self.model,
             self.source_selection.as_ref(),
@@ -685,7 +694,7 @@ impl CodingDevelopmentRuntimeFactory {
         let mut key = CodingDevelopmentKeyProvider::open(&self.activation)
             .map_err(|_| prepare_denied("resume-key"))?;
         let authority = open_linux_development_authority(
-            self.platform,
+            &self.platform,
             self.activation.state_root(),
             &mut key,
             now_epoch_ms().map_err(|_| prepare_denied("resume-time"))?,
@@ -770,7 +779,9 @@ impl CodingDevelopmentRuntimeFactory {
                 &base_request.task.constraints,
             )
             || !python_profile_constraints_match(
-                self.scenario.is_python_project().then_some(self.profile),
+                self.scenario
+                    .is_python_project()
+                    .then_some(self.profile.as_ref()),
                 &base_request.task.constraints,
             )
             || base_request.model_profile != *self.profile.model_profile()
@@ -790,7 +801,7 @@ impl CodingDevelopmentRuntimeFactory {
             task_id: &base_request.task.task_id,
             run_id: &base_request.run_id,
             workspace: self.workspace.workspace(),
-            profile: self.profile,
+            profile: &self.profile,
             excluded_scopes: Vec::new(),
         })
         .map_err(|_| prepare_denied("resume-policy"))?;
@@ -816,26 +827,25 @@ impl CodingDevelopmentRuntimeFactory {
     }
 }
 
+struct DevelopmentRepositoryComposition {
+    profile: Arc<CodingSessionProfile>,
+    workspace: Arc<LinuxCodingWorkspace<'static, 'static>>,
+    supporting_sources: Vec<CodingContextSource>,
+}
+
 fn build_repository_composition(
     activation: &CodingDevelopmentActivation,
-    platform: &'static LinuxDevelopmentPlatformAdapter,
+    platform: Arc<LinuxDevelopmentPlatformAdapter>,
     scenario: CodingDevelopmentScenario,
     model: CodingDevelopmentModel,
     source_selection: Option<&CodingPythonSourceSelection>,
-) -> Result<
-    (
-        &'static CodingSessionProfile,
-        &'static LinuxCodingWorkspace<'static, 'static>,
-        Vec<CodingContextSource>,
-    ),
-    CodingDevelopmentRuntimeError,
-> {
+) -> Result<DevelopmentRepositoryComposition, CodingDevelopmentRuntimeError> {
     let workspace_id = WorkspaceId::from_raw(format!(
         "coding-development-{}",
         &activation.marker_sha256()[..24]
     ));
     let selected = select_development_linux_workspace(
-        platform,
+        &platform,
         activation.workspace_root(),
         workspace_id.clone(),
         WorkspaceAuthorizationId::from_raw("coding-development-inventory"),
@@ -879,12 +889,12 @@ fn build_repository_composition(
     )
     .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
     let repository_map =
-        build_development_linux_repository_map(platform, &selected, inventory.clone(), &policy)
+        build_development_linux_repository_map(&platform, &selected, inventory.clone(), &policy)
             .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
     let mut supporting_sources =
-        build_repository_context_sources(platform, &selected, &repository_map)?;
+        build_repository_context_sources(&platform, &selected, &repository_map)?;
     drop(selected);
-    let profile = Box::leak(Box::new(build_profile(
+    let profile = Arc::new(build_profile(
         activation,
         workspace_id,
         &inventory,
@@ -892,28 +902,32 @@ fn build_repository_composition(
         scenario,
         model,
         source_selection,
-    )?));
-    let workspace = Box::leak(Box::new(
-        LinuxCodingWorkspace::bind_development(
-            platform,
-            profile,
+    )?);
+    let workspace = Arc::new(
+        LinuxCodingWorkspace::bind_owned_development(
+            Arc::clone(&platform),
+            Arc::clone(&profile),
             repository_map,
             activation.workspace_root(),
             WorkspaceAuthorizationId::from_raw("coding-development-runtime"),
         )
         .map_err(|_| CodingDevelopmentRuntimeError::Repository)?,
-    ));
+    );
     // Creation needs the platform's parent identity, not a model-invented tree
     // hash. Observe only the already authorized writable roots. The effect
     // boundary still rebinds the parent/siblings and refuses any later drift.
     if !scenario.is_python_project() {
         supporting_sources.extend(build_creation_parent_sources(
-            platform,
-            profile,
+            &platform,
+            &profile,
             workspace.workspace(),
         )?);
     }
-    Ok((profile, workspace, supporting_sources))
+    Ok(DevelopmentRepositoryComposition {
+        profile,
+        workspace,
+        supporting_sources,
+    })
 }
 
 fn development_inventory_entry_is_admissible(
@@ -1164,8 +1178,8 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 .ok_or_else(|| prepare_denied("continuity-run-absent"))?;
             Some(build_follow_up_continuity(
                 &self.activation,
-                self.platform,
-                self.profile,
+                &self.platform,
+                &self.profile,
                 &session_id,
                 prior_run_id,
             )?)
@@ -1179,7 +1193,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             task_id: &task_id,
             run_id: &run_id,
             workspace: self.workspace.workspace(),
-            profile: self.profile,
+            profile: &self.profile,
             excluded_scopes: Vec::new(),
         })
         .map_err(|_| prepare_denied("policy"))?;
@@ -1234,7 +1248,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             _ => vec!["src/calc.py".to_owned()],
         };
         let packet = development_work_packet(
-            self.profile,
+            &self.profile,
             &task_id,
             &input.prompt,
             &acceptance,
@@ -1243,7 +1257,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             self.scenario,
         );
         let request = build_ephemeral_coding_run_request(
-            self.profile,
+            &self.profile,
             CodingRunRequestInput {
                 run_id,
                 session_id,
@@ -1359,7 +1373,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         let mut key = CodingDevelopmentKeyProvider::open(&self.activation)
             .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
         let authority = open_linux_development_authority(
-            self.platform,
+            &self.platform,
             self.activation.state_root(),
             &mut key,
             now_epoch_ms().map_err(|_| NativeChatRuntimeError::RuntimeFailed)?,
@@ -1430,10 +1444,10 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             CodingDevelopmentModel::Scripted => {
                 let mut steps = scripted_steps(
                     self.scenario,
-                    self.profile,
+                    &self.profile,
                     request,
                     self.activation.workspace_root(),
-                    self.platform,
+                    &self.platform,
                     self.workspace.workspace(),
                 )
                 .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
@@ -1462,14 +1476,14 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             }
             candidate => construct_candidate_model(
                 candidate,
-                self.profile,
+                &self.profile,
                 self.activation.state_root(),
                 prepared.record_session,
             )
             .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?,
         };
         let mut context = CodingContextPort::for_profile(
-            self.profile,
+            &self.profile,
             self.supporting_sources.clone(),
             DevelopmentTokenCounter::new(
                 self.profile.model_profile().context.token_counter.clone(),
@@ -1514,7 +1528,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         .map_err(CodingDevelopmentRuntimeError::from)
         .map_err(CodingDevelopmentRuntimeError::report_composition_failure)?;
         let sandbox_manifest =
-            LinuxSandboxManifest::verify_development_read_only_worker(self.platform)
+            LinuxSandboxManifest::verify_development_read_only_worker(&self.platform)
                 .map_err(CodingDevelopmentRuntimeError::from)
                 .map_err(CodingDevelopmentRuntimeError::report_composition_failure)?;
         let sandbox = LinuxSandboxRunner::new(sandbox_manifest, LinuxSandboxLimits::default())
@@ -1552,7 +1566,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             }
         };
         let boundary = LinuxCodingRuntimeBoundary::new(LinuxCodingRuntimeBoundaryInput {
-            workspace: self.workspace,
+            workspace: Arc::clone(&self.workspace).into(),
             authority,
             sandbox,
             command_executor,
@@ -1583,7 +1597,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             boundary.persist_run_effects(chain);
         }
         let coordinator = compose_durable_coding_coordinator(
-            self.profile,
+            &self.profile,
             request.clone(),
             model,
             context,
@@ -1746,7 +1760,7 @@ fn next_development_identity(prefix: &str) -> Result<String, NativeChatRuntimeEr
 
 fn build_follow_up_continuity(
     activation: &CodingDevelopmentActivation,
-    platform: &'static LinuxDevelopmentPlatformAdapter,
+    platform: &LinuxDevelopmentPlatformAdapter,
     profile: &CodingSessionProfile,
     session_id: &SessionId,
     prior_run_id: &RuntimeRunId,

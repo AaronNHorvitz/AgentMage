@@ -173,10 +173,20 @@ therefore wait for an already-running bounded call to return. It cannot report
 an empty service while that discarded session still owns a live worker. No
 acknowledged cancellation or terminal record is invented on this path.
 
-Repeated attach/recover cycles still retain leaked platform/profile/workspace
-allocations and a held workspace descriptor in the existing factory composition.
-Those allocations are unreachable after recovery; this remains a resource-lifetime
-backlog item from the independent HTTP review, not evidence of durable ownership.
+The development factory now shares ownership of its platform, immutable profile
+and descriptor-bound workspace with its coordinators. Refreshing the repository
+composition releases the previous binding when no run retains it. Releasing runs
+and recovering the manual owner drops the embedded factory's references; the last
+owner releases the foundation. These three objects no longer use permanent
+factory allocations.
+A pending operation retains its exact original root descriptor independently,
+without reopening a path, and rechecks its held targets before use. Sharing a
+binding supplies neither creation authority nor an approval. This lifetime change
+does not make worktree ownership durable across process termination.
+
+The [resource-lifetime record](../evidence/t306-runtime-lifetimes-2026-11-07.md)
+distinguishes actual descriptor checks from the still-unobserved full native
+attach/run/recover workflow. The native host trust blocker remains unchanged.
 
 The new HTTP tests exercise real socket refusals and owner preservation without
 synthetic creation authority. Host lifecycle tests use a scripted coordinator and

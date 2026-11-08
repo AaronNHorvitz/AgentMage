@@ -27,7 +27,15 @@ as a non-closing component increment. T-303/T-306 remain open. Low L2
 (strict usage validation can discard an opted-in answer) remains backlog.
 The [approval clarity batch](docs/evidence/t306-approval-clarity-2026-11-07.md)
 addresses the prior creation-wording and recovery-snapshot consistency lows
-in-row; independent core review is required. No new row or closure follows.
+in-row. Its [independent core review](docs/reviews/b716ab5d34f1-local-coding-approval-clarity.txt)
+has **Verdict: PASS** for exact commit `b716ab5d34f18f804b9da26cb7052387e0f11fb3`,
+with no open high/medium finding; both parents remain open. Its low L1/L2
+(creation-warning flag checks and a realistic existing-file preview fixture)
+remain backlog in these rows.
+The [runtime resource-lifetime batch](docs/evidence/t306-runtime-lifetimes-2026-11-07.md)
+replaces permanent factory allocations with shared ownership and keeps exact
+worktree descriptors alive through pending operations. Independent core review
+is required; no parent, native workflow or model-score acceptance follows.
 No public release is authorized. One level of sub-rows maximum; each implementation
 sub-row must run end to end and be measured. Never tune on held-out tasks, edit
 hidden tests or weaken thresholds. Desktop UI work is deferred to a separate shell.

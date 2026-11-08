@@ -1,7 +1,9 @@
 //! Linux descriptor binding for one immutable native coding-session profile.
 
 use std::fmt::Write;
+use std::ops::Deref;
 use std::path::Path;
+use std::sync::Arc;
 
 use agentmage_capability_repository_map::{RepositoryMap, StructuredFileChangePlan};
 use agentmage_kernel_contracts::{
@@ -152,14 +154,14 @@ impl LinuxCodingTargetBinding {
 
 /// One profile-bound native operation with all required Linux descriptors held open.
 #[derive(Debug)]
-pub struct PreparedLinuxCodingOperation<'workspace> {
+pub struct PreparedLinuxCodingOperation {
     operation: PreparedNativeCodingOperation,
     binding: LinuxCodingTargetBinding,
     write_draft: Option<LinuxCodingWriteDraft>,
-    workspace: &'workspace LinuxAuthorizedWorkspace,
+    workspace: Arc<LinuxAuthorizedWorkspace>,
 }
 
-impl<'workspace> PreparedLinuxCodingOperation<'workspace> {
+impl PreparedLinuxCodingOperation {
     /// Returns the profile-bound authority-free operation plan.
     #[must_use]
     pub const fn operation(&self) -> &PreparedNativeCodingOperation {
@@ -180,8 +182,8 @@ impl<'workspace> PreparedLinuxCodingOperation<'workspace> {
 
     /// Returns the continuously held worktree root that owns every relative binding.
     #[must_use]
-    pub const fn workspace(&self) -> &LinuxAuthorizedWorkspace {
-        self.workspace
+    pub fn workspace(&self) -> &LinuxAuthorizedWorkspace {
+        &self.workspace
     }
 
     /// Revalidates every held target and exact directory observation before authority use.
@@ -189,7 +191,7 @@ impl<'workspace> PreparedLinuxCodingOperation<'workspace> {
         self.workspace
             .revalidate()
             .map_err(|_| LinuxCodingBindingError::TargetDenied)?;
-        revalidate_binding(self.workspace, &self.binding)?;
+        revalidate_binding(&self.workspace, &self.binding)?;
         self.workspace
             .revalidate()
             .map_err(|_| LinuxCodingBindingError::TargetDenied)
@@ -202,7 +204,7 @@ impl<'workspace> PreparedLinuxCodingOperation<'workspace> {
         PreparedNativeCodingOperation,
         LinuxCodingTargetBinding,
         Option<LinuxCodingWriteDraft>,
-        &'workspace LinuxAuthorizedWorkspace,
+        Arc<LinuxAuthorizedWorkspace>,
     ) {
         (
             self.operation,
@@ -216,16 +218,71 @@ impl<'workspace> PreparedLinuxCodingOperation<'workspace> {
 /// One verified Linux owned-worktree projection for an immutable coding profile.
 pub struct LinuxCodingWorkspace<'session, 'platform> {
     platform: LinuxCodingPlatform<'platform>,
-    profile: &'session CodingSessionProfile,
+    profile: CodingProfile<'session>,
     projection: CodingRepositoryProjection,
-    workspace: LinuxAuthorizedWorkspace,
+    workspace: Arc<LinuxAuthorizedWorkspace>,
 }
 
 enum LinuxCodingPlatform<'platform> {
     Verified(&'platform VerifiedPlatformAdapter<LinuxPlatformAdapter>),
     Development(&'platform LinuxDevelopmentPlatformAdapter),
+    OwnedDevelopment(Arc<LinuxDevelopmentPlatformAdapter>),
     #[cfg(test)]
     Test(AdapterInstanceId),
+}
+
+// Borrowed bindings stay available to existing callers. Owned development
+// compositions retain their foundation only as long as a factory or run uses it.
+enum CodingProfile<'session> {
+    Borrowed(&'session CodingSessionProfile),
+    Owned(Arc<CodingSessionProfile>),
+}
+
+impl Deref for CodingProfile<'_> {
+    type Target = CodingSessionProfile;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Borrowed(profile) => profile,
+            Self::Owned(profile) => profile,
+        }
+    }
+}
+
+/// Retains one exact binding for a runtime, without extending a borrow or leaking it.
+#[derive(Clone)]
+pub enum LinuxCodingWorkspaceHandle<'workspace, 'session, 'platform> {
+    /// Binding whose lifetime is managed by the caller.
+    Borrowed(&'workspace LinuxCodingWorkspace<'session, 'platform>),
+    /// Binding shared by its factory and active coordinators.
+    Shared(Arc<LinuxCodingWorkspace<'session, 'platform>>),
+}
+
+impl<'workspace, 'session, 'platform> From<&'workspace LinuxCodingWorkspace<'session, 'platform>>
+    for LinuxCodingWorkspaceHandle<'workspace, 'session, 'platform>
+{
+    fn from(workspace: &'workspace LinuxCodingWorkspace<'session, 'platform>) -> Self {
+        Self::Borrowed(workspace)
+    }
+}
+
+impl<'workspace, 'session, 'platform> From<Arc<LinuxCodingWorkspace<'session, 'platform>>>
+    for LinuxCodingWorkspaceHandle<'workspace, 'session, 'platform>
+{
+    fn from(workspace: Arc<LinuxCodingWorkspace<'session, 'platform>>) -> Self {
+        Self::Shared(workspace)
+    }
+}
+
+impl<'session, 'platform> Deref for LinuxCodingWorkspaceHandle<'_, 'session, 'platform> {
+    type Target = LinuxCodingWorkspace<'session, 'platform>;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Borrowed(workspace) => workspace,
+            Self::Shared(workspace) => workspace,
+        }
+    }
 }
 
 impl std::fmt::Debug for LinuxCodingWorkspace<'_, '_> {
@@ -268,9 +325,9 @@ impl<'session, 'platform> LinuxCodingWorkspace<'session, 'platform> {
             .map_err(|_| LinuxCodingBindingError::WorktreeDenied)?;
         Ok(Self {
             platform: LinuxCodingPlatform::Verified(platform),
-            profile,
+            profile: CodingProfile::Borrowed(profile),
             projection,
-            workspace,
+            workspace: Arc::new(workspace),
         })
     }
 
@@ -302,7 +359,35 @@ impl<'session, 'platform> LinuxCodingWorkspace<'session, 'platform> {
             .map_err(|_| LinuxCodingBindingError::WorktreeDenied)?;
         Ok(Self {
             platform: LinuxCodingPlatform::Development(platform),
-            profile,
+            profile: CodingProfile::Borrowed(profile),
+            projection,
+            workspace: Arc::new(workspace),
+        })
+    }
+
+    /// Holds the development platform and profile for exactly this binding's lifetime.
+    pub fn bind_owned_development(
+        platform: Arc<LinuxDevelopmentPlatformAdapter>,
+        profile: Arc<CodingSessionProfile>,
+        repository_map: RepositoryMap,
+        worktree_root: &Path,
+        authorization_id: WorkspaceAuthorizationId,
+    ) -> Result<LinuxCodingWorkspace<'static, 'static>, LinuxCodingBindingError> {
+        let bound = LinuxCodingWorkspace::bind_development(
+            &platform,
+            &profile,
+            repository_map,
+            worktree_root,
+            authorization_id,
+        )?;
+        let LinuxCodingWorkspace {
+            projection,
+            workspace,
+            ..
+        } = bound;
+        Ok(LinuxCodingWorkspace {
+            platform: LinuxCodingPlatform::OwnedDevelopment(platform),
+            profile: CodingProfile::Owned(profile),
             projection,
             workspace,
         })
@@ -336,21 +421,21 @@ impl<'session, 'platform> LinuxCodingWorkspace<'session, 'platform> {
             .map_err(|_| LinuxCodingBindingError::WorktreeDenied)?;
         Ok(Self {
             platform: LinuxCodingPlatform::Test(adapter_instance_id),
-            profile,
+            profile: CodingProfile::Borrowed(profile),
             projection,
-            workspace,
+            workspace: Arc::new(workspace),
         })
     }
 
     /// Returns the immutable profile whose repository and tool identities are held here.
     #[must_use]
-    pub const fn profile(&self) -> &CodingSessionProfile {
-        self.profile
+    pub fn profile(&self) -> &CodingSessionProfile {
+        &self.profile
     }
 
     /// Returns the continuously held exact worktree root without granting its use.
     #[must_use]
-    pub const fn workspace(&self) -> &LinuxAuthorizedWorkspace {
+    pub fn workspace(&self) -> &LinuxAuthorizedWorkspace {
         &self.workspace
     }
 
@@ -384,6 +469,9 @@ impl<'session, 'platform> LinuxCodingWorkspace<'session, 'platform> {
             LinuxCodingPlatform::Development(platform) => {
                 resolve_development_linux_workspace_object(platform, &self.workspace, path, intent)
             }
+            LinuxCodingPlatform::OwnedDevelopment(platform) => {
+                resolve_development_linux_workspace_object(platform, &self.workspace, path, intent)
+            }
             #[cfg(test)]
             LinuxCodingPlatform::Test(adapter_instance_id) => {
                 agentmage_platform_linux::resolve_test_linux_workspace_object(
@@ -400,11 +488,11 @@ impl<'session, 'platform> LinuxCodingWorkspace<'session, 'platform> {
     pub fn prepare(
         &self,
         call: &agentmage_kernel_contracts::ToolCall,
-    ) -> Result<PreparedLinuxCodingOperation<'_>, LinuxCodingBindingError> {
+    ) -> Result<PreparedLinuxCodingOperation, LinuxCodingBindingError> {
         self.workspace
             .revalidate()
             .map_err(|_| LinuxCodingBindingError::WorktreeDenied)?;
-        let operation = NativeCodingOperationPlanner::new(self.profile, &self.projection)
+        let operation = NativeCodingOperationPlanner::new(&self.profile, &self.projection)
             .prepare(call)
             .map_err(|error| match error {
                 crate::coding_operation::NativeCodingOperationError::ReadProjectionUnavailable => {
@@ -425,7 +513,7 @@ impl<'session, 'platform> LinuxCodingWorkspace<'session, 'platform> {
             operation,
             binding,
             write_draft,
-            workspace: &self.workspace,
+            workspace: Arc::clone(&self.workspace),
         };
         prepared.revalidate()?;
         Ok(prepared)
@@ -1071,3 +1159,7 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "linux_coding_lifetime_tests.rs"]
+mod lifetime_tests;

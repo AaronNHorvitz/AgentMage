@@ -1,0 +1,140 @@
+Commit: b716ab5d34f18f804b9da26cb7052387e0f11fb3
+Scope: local-coding-approval-clarity
+
+Independent core review of the ten-path batch `3ee8285e595a208fb1e354d46ab95e56d24c2bae..b716ab5d34f18f804b9da26cb7052387e0f11fb3`
+(T-303 / T-306, non-closing). The reviewer is Claude Opus 5.5 in a separate read-only session. It
+used the pinned checkout `/lane/review-checkout` (`git rev-parse HEAD` = the commit above, and
+`git status --short` was empty before and after).
+
+## Methods
+
+- I read IP-POLICY.md, the Decision 0159-0161 list, the TASKS.md header, the complete source,
+  test, guide and evidence diff, both private helpers (`verify.py`, `final.py`), and the retained
+  MCP and publication/usage reports.
+- I traced both changed client decisions to their real server producers:
+  - `owner["recovery_pending"]` comes from `platforms/local-api/src/coding_owned_api.rs:61`.
+  - `runtime_recovery_pending` comes from `platforms/local-api/src/lib.rs:1667`.
+  - `write_preview.operations[].kind` comes from the kernel `FilesystemPreviewEntry.kind`
+    (`kernel/engine/src/filesystem_control.rs:468`, a `snake_case` enum, so `Create` serializes as
+    `"create"`). That preview is emitted by `ApplyWrite::Create` in
+    `platforms/linux/src/coding_repository_apply.rs:16`.
+  - The existing-file `WriteApprovalPreview.operations` is `Vec<String>`
+    (`kernel/engine/src/write_approval.rs:461`). Indexing a string with `["kind"]` yields null, so
+    the existing-file wording is retained.
+- I ran the builder's verification in a new private validation directory and inspected the raw
+  `fast.log` independently of `audit.json`.
+- I ran a mutation check in a private `git archive` copy (not a worktree, so the repository was
+  untouched). I removed the new recovery-flag comparison and forced the creation branch off, then
+  ran both changed terminal targets.
+- I scanned the full diff, including both retained reports, for privacy, trademark, ignore and
+  held-out content.
+
+## Exact commands and results
+
+```text
+sha256sum review-inputs.sha256       -> 86b919dc994b6683bc89875d5df28568842e0714fcff55a1675c66ed7b2b37a5 (matches)
+sha256sum -c review-inputs.sha256    -> 17/17 OK, exit 0
+sha256sum node-v24.15.0/bin/node     -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches)
+AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-approval-clarity-b716ab5d34f1 (new, mode 700)
+CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+bash /tools/build-slot python3 -B .../verify.py   -> exit 0, "FAST_GATE_EXIT 0"
+cmp plan-final.json  <mine>/plan.json             -> 0
+cmp source-freeze.json <mine>/source-freeze.json  -> 0
+python3 -B .../final.py                           -> exit 0, "FAST GATE: PASS",
+   {"paths":10,"source_files":4,"targets":8,"passed":119,"failed":0,"ignored":0,"filtered":0,...all true}
+cmp plan-final.json <mine>/plan-final.json        -> 0
+cmp audit.json <mine>/audit.json                  -> 0
+cmp docs/reviews/6c73f38048d7-...txt /lane/reviews/6c73f38048d7-...md -> 0
+cmp docs/reviews/3ee8285e595a-...txt /lane/reviews/3ee8285e595a-...md -> 0 (extra check)
+git diff --check 3ee8285e... --                   -> exit 0
+git status --short                                -> empty
+```
+
+My raw `fast.log` has seven `RESULT exit=0` lines: diff check, untracked lint, review lint,
+markdownlint, `cargo fmt --check`, Clippy `-D warnings` and the complete `cargo test --all-targets`.
+The per-target counts are lib 32, three bins 0, coding_cli 14, coding_runtime_cli 23,
+coding_worktree 13 and local_chat_api 37, for 119 passed with 0 failed, ignored or filtered.
+`recovery_refuses_inconsistent_lifecycle_snapshots_before_confirmation_or_post ... ok` and
+`synthetic_api_command_preview_needs_exact_tty_consent_and_current_root ... ok` ran unfiltered. My
+times (Clippy 29.80 s, tests 55.01 s) differ from the builder's because of cache state. No timing
+threshold is claimed.
+
+The builder's raw log sums to exactly 25.92 s (0.10 + 0.10 + 0.10 + 1.10 + 0.20 + 1.15 + 23.17),
+matching the evidence breakdown (formatting 0.20, Clippy 1.15, tests 23.17). The builder's source
+gate lint-reviewed one report (nine paths). My `final.py` run re-executed the non-Cargo checks over
+ten paths, including both retained reports, and asserted identical Cargo selection and the four
+unchanged source hashes.
+
+Mutation check (private copy, `bash /tools/build-slot cargo test --locked --offline -p
+agentmage-local-api --test coding_runtime_cli --test coding_worktree --no-fail-fast`): exit 101.
+
+- Without the new comparison, the recovery test fails at `coding_runtime_cli.rs:1362`. The
+  inconsistent pair (attached state, pending owner) reached the `Type exactly recover ...`
+  confirmation (`answered: 1`).
+- Without the creation branch, the worktree matrix fails at `coding_worktree.rs:749`
+  (`Creates the displayed absent files`).
+
+Both new assertions therefore discriminate the fix.
+
+## Assessment
+
+- **Recovery consistency** (`coding_cli_runtime.rs:122`): both values are already proven boolean
+  (the `matches!` on state and `is_boolean` on owner), so the strict inequality refuses exactly the
+  two mismatched directions. The check runs before `confirm` and before the POST.
+  - The test covers both directions and asserts a nonzero exit, no answer, no `Type exactly`,
+    exactly two requests and GET-only routes.
+  - The matching attached/pending cases (line 422) still confirm and POST.
+  - No retry, release, cancellation or adoption is added.
+  - The guide and evidence correctly state that the two reads are not atomic and that the server's
+    lifecycle and exact binding checks remain mandatory.
+- **Creation wording** (`coding_cli.rs:523-531`): the branch is taken only for a nonempty array
+  whose entries all have `kind == "create"`, so the vacuous empty `all()` case is excluded. The
+  server refuses mixed kinds (`code.apply.mixed-kinds`).
+  - The wording matches the kernel invariants: `overwrite_allowed` is always refusal,
+    `implicit_parent_creation` is never set, and the destination mode and complete content are
+    displayed.
+  - The displayed preview, both `verify_root` calls, the challenge `apply-original <hash>` and the
+    single decision body `{"preview_sha256":..,"approve":true}` are unchanged and asserted for both
+    kinds, wrong consent and root replacement.
+  - No plan, digest, permission, native write or verification path is changed.
+- **Claims and labelling**: the evidence labels the peers as synthetic, claims no native Git
+  workflow, real-model run, GPU use or score, and keeps both parents open. The TASKS.md status
+  table is unchanged (asserted by `final.py`, and I confirmed the diff touches only the header
+  prose). No sub-row is added.
+  - The summaries of the retained MCP lows (four) and the publication/usage L2 match those reports.
+- **Integrity, privacy and IP**: no hidden or held-out input, eval path, threshold, ignore,
+  dependency or SBOM is touched. No private home path, username, hostname, credential or
+  third-party product name is added.
+  - The retained reports contain only `/lane/...` lane-sandbox paths, which carry no user identity.
+    The same paths already appear in 84 retained reviews at the base commit.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog)** at `platforms/local-api/src/coding_cli.rs:523-527`: the creation-only
+  warning asserts "Existing destinations refuse; parent directories must already exist" based only
+  on `kind == "create"`. It does not check the displayed `overwrite_allowed == false` and
+  `implicit_parent_creation == false` on each entry. Today the kernel guarantees both, and the
+  complete preview is displayed, so nothing is wrongly granted. However, a future kernel or service
+  change could make the terminal wording contradict the displayed preview.
+  - Fix: require those two fields to be `false` on every entry before choosing the creation
+    wording. Otherwise refuse, or fall back to a neutral wording.
+- **L2 (low, backlog)** at `platforms/local-api/tests/coding_worktree.rs:613-617`: the synthetic
+  existing-file `original` preview has no `operations` field, but the real `WriteApprovalPreview`
+  serializes `operations` as an array of strings. Existing-file wording is still correct for the
+  real shape (indexing a string with `["kind"]` is null), but no test pins it.
+  - Fix: add `"operations":["op-1"]` to the synthetic existing-file preview so the matrix exercises
+    the production shape.
+
+## Per-row result
+
+- **T-303**: this batch's approval-clarity increments pass for this exact commit, with no open high
+  or medium finding. The row remains OPEN; this verdict closes nothing.
+- **T-306**: this batch's approval-clarity increments pass for this exact commit, with no open high
+  or medium finding. The row remains OPEN; this verdict closes nothing.
+- The retained MCP and publication/usage PASS reports are byte-identical and are not re-reviewed
+  here. The deferred native-host trust blocker is unchanged and was not assessed. No UI screen is
+  in scope, so no browser run was needed.
+
+Verdict: PASS

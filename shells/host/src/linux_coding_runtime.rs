@@ -120,7 +120,7 @@ use crate::{
         MAX_CHANGE_RECORD_READ_BYTES, PersistedRunEffects, declare_session_recoverability,
     },
     linux_coding::{
-        LinuxCodingTargetBinding, LinuxCodingWorkspace, LinuxCodingWriteDraft,
+        LinuxCodingTargetBinding, LinuxCodingWorkspaceHandle, LinuxCodingWriteDraft,
         PreparedLinuxCodingOperation,
     },
     runtime_transport::RuntimeSessionPreauthorization,
@@ -235,7 +235,7 @@ impl PendingCodingAuthority {
 fn build_pending_coding_authority(
     parent: &agentmage_kernel_contracts::CapabilityGrant,
     registry: &agentmage_kernel_engine::tooling::ToolRegistry,
-    prepared: &PreparedLinuxCodingOperation<'_>,
+    prepared: &PreparedLinuxCodingOperation,
     call: &ToolCall,
     operation_id: &RuntimeOperationId,
     approval_id: ApprovalId,
@@ -340,7 +340,7 @@ fn build_pending_coding_authority(
 /// held file again so a concurrent edit refuses the selection.
 fn narrowed_call(
     scope: &CodingWriteScope,
-    pending: &PendingCodingOperation<'_>,
+    pending: &PendingCodingOperation,
     response: &RuntimeApprovalResponse,
 ) -> Result<RuntimeDerivedToolCall, HunkSelectionError> {
     derive_narrowed_write(
@@ -390,13 +390,13 @@ fn derive_narrowed_write(
     )
 }
 
-struct PendingCodingOperation<'workspace> {
+struct PendingCodingOperation {
     operation_id: RuntimeOperationId,
     operation: GrantOperation,
     tool_call: ToolCall,
     expires_at_epoch_ms: u64,
     authority: PendingCodingAuthority,
-    prepared: PreparedLinuxCodingOperation<'workspace>,
+    prepared: PreparedLinuxCodingOperation,
 }
 
 enum IssuedCodingAuthority {
@@ -420,12 +420,12 @@ enum IssuedCodingAuthority {
     },
 }
 
-struct IssuedCodingOperation<'workspace> {
+struct IssuedCodingOperation {
     operation_id: RuntimeOperationId,
     tool_call: ToolCall,
     expires_at_epoch_ms: u64,
     authority: IssuedCodingAuthority,
-    prepared: PreparedLinuxCodingOperation<'workspace>,
+    prepared: PreparedLinuxCodingOperation,
     resolved_at_epoch_ms: u64,
     /// Whether a person approved the call or the session preauthorization
     /// covered it, for the run's action history (Decision 0127).
@@ -441,7 +441,7 @@ struct RuntimeEffectEventContext<'builder> {
 type PermissionEventBuilder<'a> =
     dyn FnMut(&RuntimePermissionEvaluation) -> Result<RuntimeEvent, RuntimePortFailure> + 'a;
 
-impl IssuedCodingOperation<'_> {
+impl IssuedCodingOperation {
     fn approval_id(&self) -> &ApprovalId {
         match &self.authority {
             IssuedCodingAuthority::Generic { approval, .. } => &approval.approval_id,
@@ -508,7 +508,7 @@ where
     G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
 {
     /// Descriptor-bound owned worktree and immutable coding profile.
-    pub workspace: &'workspace LinuxCodingWorkspace<'session, 'platform>,
+    pub workspace: LinuxCodingWorkspaceHandle<'workspace, 'session, 'platform>,
     /// Durable authority store under its continuously held private root.
     pub authority: LinuxAuthorityRuntime,
     /// Verified offline Linux worker sandbox.
@@ -543,7 +543,7 @@ where
     E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
     G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
 {
-    workspace: &'workspace LinuxCodingWorkspace<'session, 'platform>,
+    workspace: LinuxCodingWorkspaceHandle<'workspace, 'session, 'platform>,
     authority: LinuxAuthorityRuntime,
     sandbox: Option<LinuxSandboxRunner>,
     command_executor: Option<E>,
@@ -558,8 +558,8 @@ where
     /// Each write outside this plan is refused before any approval is asked
     /// (Decision 0133).
     recipe: Option<crate::coding_recipe::SharedRecipeScope>,
-    pending: BTreeMap<String, PendingCodingOperation<'workspace>>,
-    issued: BTreeMap<String, IssuedCodingOperation<'workspace>>,
+    pending: BTreeMap<String, PendingCodingOperation>,
+    issued: BTreeMap<String, IssuedCodingOperation>,
     pending_write_completion: Option<PendingWriteCheckpointCompletion>,
     /// How each executed call of this run ended and the change records this
     /// boundary published, for the run's recoverability declaration.
@@ -900,8 +900,7 @@ where
         self.authority
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Unavailable)?;
-        let workspace: &'workspace LinuxCodingWorkspace<'session, 'platform> = self.workspace;
-        let prepared = workspace.prepare(call).map_err(|error| match error {
+        let prepared = self.workspace.prepare(call).map_err(|error| match error {
             crate::linux_coding::LinuxCodingBindingError::ReadProjectionUnavailable => {
                 RuntimePortFailure::ReadProjectionUnavailable
             }
@@ -1075,7 +1074,7 @@ where
 
     fn issue_preauthorized_operation(
         &mut self,
-        pending: PendingCodingOperation<'workspace>,
+        pending: PendingCodingOperation,
         preauthorization_sha256: &str,
         now_epoch_ms: u64,
         mut build_event: Option<&mut PermissionEventBuilder<'_>>,
@@ -1691,7 +1690,7 @@ where
     fn record_refusal(
         &mut self,
         request: &RuntimeRunRequest,
-        pending: &PendingCodingOperation<'_>,
+        pending: &PendingCodingOperation,
         decision_sha256: &str,
         reason_code: &str,
         now_epoch_ms: u64,
@@ -1904,7 +1903,7 @@ where
         request: &RuntimeRunRequest,
         definition: &ToolDefinition,
         call: &ToolCall,
-        issued: IssuedCodingOperation<'workspace>,
+        issued: IssuedCodingOperation,
         mut event_context: Option<RuntimeEffectEventContext<'_>>,
         cancellation: Option<&dyn EffectCancellationObservation>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
@@ -1935,8 +1934,9 @@ where
             }
             None => LinuxReadOnlyToolEffectDriver::new(runner, worker_input),
         };
+        let bound_workspace = self.workspace.clone();
         let receipt_result = self.execute_effect_authority(
-            self.workspace.profile().registry(),
+            bound_workspace.profile().registry(),
             &policy,
             transaction,
             &mut driver,
@@ -2039,7 +2039,7 @@ where
         request: &RuntimeRunRequest,
         definition: &ToolDefinition,
         call: &ToolCall,
-        issued: IssuedCodingOperation<'workspace>,
+        issued: IssuedCodingOperation,
         mut event_context: Option<RuntimeEffectEventContext<'_>>,
         cancellation: Option<&dyn EffectCancellationObservation>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
@@ -2079,8 +2079,9 @@ where
             cancellation,
             wrapper,
         );
+        let bound_workspace = self.workspace.clone();
         let receipt_result = self.execute_effect_authority(
-            self.workspace.profile().registry(),
+            bound_workspace.profile().registry(),
             &policy,
             transaction,
             &mut driver,
@@ -2117,7 +2118,7 @@ where
         request: &RuntimeRunRequest,
         definition: &ToolDefinition,
         call: &ToolCall,
-        issued: IssuedCodingOperation<'workspace>,
+        issued: IssuedCodingOperation,
         mut event_context: Option<RuntimeEffectEventContext<'_>>,
         cancellation: Option<&dyn EffectCancellationObservation>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
@@ -2155,8 +2156,9 @@ where
             .ok_or(RuntimePortFailure::Unavailable)?;
         let mut driver =
             RepositoryInspectionEffectDriver::new(executor, workspace, prepared, cancellation);
+        let bound_workspace = self.workspace.clone();
         let receipt_result = self.execute_effect_authority(
-            self.workspace.profile().registry(),
+            bound_workspace.profile().registry(),
             &policy,
             transaction,
             &mut driver,
@@ -2244,7 +2246,7 @@ where
         request: &RuntimeRunRequest,
         definition: &ToolDefinition,
         call: &ToolCall,
-        issued: IssuedCodingOperation<'workspace>,
+        issued: IssuedCodingOperation,
         mut event_context: Option<RuntimeEffectEventContext<'_>>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let policy = issued.generic_authority()?.1.policy.clone();
@@ -2320,8 +2322,9 @@ where
         }
         let mut driver =
             CompletedObservationEffectDriver::new(output.result_sha256.as_bytes().to_vec());
+        let bound_workspace = self.workspace.clone();
         let (receipt, pending) = self.execute_effect_authority(
-            self.workspace.profile().registry(),
+            bound_workspace.profile().registry(),
             &policy,
             transaction,
             &mut driver,
@@ -2417,7 +2420,7 @@ where
         request: &RuntimeRunRequest,
         definition: &ToolDefinition,
         call: &ToolCall,
-        issued: IssuedCodingOperation<'workspace>,
+        issued: IssuedCodingOperation,
         mut event_context: Option<RuntimeEffectEventContext<'_>>,
         cancellation: Option<&dyn EffectCancellationObservation>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
@@ -2464,8 +2467,9 @@ where
             cancellation,
             wrapper,
         );
+        let bound_workspace = self.workspace.clone();
         let receipt_result = self.execute_effect_authority(
-            self.workspace.profile().registry(),
+            bound_workspace.profile().registry(),
             &policy,
             transaction,
             &mut driver,
@@ -2648,7 +2652,7 @@ where
         request: &RuntimeRunRequest,
         definition: &ToolDefinition,
         call: &ToolCall,
-        issued: IssuedCodingOperation<'workspace>,
+        issued: IssuedCodingOperation,
         mut event_context: Option<RuntimeEffectEventContext<'_>>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         // Owned lineage needs the coordinator's atomic tool-terminal commit.
@@ -2742,11 +2746,11 @@ where
         let lease = self.owned_worktree.clone();
         let mut driver = if let Some(lease) = &lease {
             lease
-                .write_driver(workspace, LinuxAtomicWriteDriverLimits::default())
+                .write_driver(&workspace, LinuxAtomicWriteDriverLimits::default())
                 .map_err(|_| RuntimePortFailure::Invalid)?
         } else {
             LinuxCodingRuntimeWriteDriver::unowned(
-                workspace,
+                &workspace,
                 LinuxAtomicWriteDriverLimits::default(),
             )
         };
@@ -2899,7 +2903,7 @@ where
         request: &RuntimeRunRequest,
         definition: &ToolDefinition,
         call: &ToolCall,
-        issued: IssuedCodingOperation<'workspace>,
+        issued: IssuedCodingOperation,
         event_context: Option<RuntimeEffectEventContext<'_>>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         // Like owned structured writes, owned creations require the
@@ -2925,7 +2929,7 @@ where
         request: &RuntimeRunRequest,
         definition: &ToolDefinition,
         call: &ToolCall,
-        issued: IssuedCodingOperation<'workspace>,
+        issued: IssuedCodingOperation,
         mut event_context: Option<RuntimeEffectEventContext<'_>>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let IssuedCodingOperation {
@@ -2985,11 +2989,11 @@ where
         let lease = self.owned_worktree.clone();
         let mut driver = if let Some(lease) = &lease {
             lease
-                .create_driver(workspace, LinuxFilesystemDriverLimits::default())
+                .create_driver(&workspace, LinuxFilesystemDriverLimits::default())
                 .map_err(|_| RuntimePortFailure::Invalid)?
         } else {
             LinuxCodingRuntimeCreateDriver::unowned(
-                workspace,
+                &workspace,
                 LinuxFilesystemDriverLimits::default(),
             )
         };
@@ -3343,7 +3347,7 @@ where
     fn authority_transaction(
         &mut self,
         call: &ToolCall,
-        issued: &IssuedCodingOperation<'workspace>,
+        issued: &IssuedCodingOperation,
     ) -> Result<AuthorityTransactionRequest, RuntimePortFailure> {
         let (approval, approved) = issued.generic_authority()?;
         let grant = &approved.grant;
@@ -4715,7 +4719,7 @@ fn specialized_receipt_id(kind: &str, receipt_sha256: &str) -> String {
 fn challenge_matches(
     request: &RuntimeRunRequest,
     challenge: &RuntimeApprovalChallenge,
-    pending: &PendingCodingOperation<'_>,
+    pending: &PendingCodingOperation,
     call: &ToolCall,
 ) -> bool {
     challenge.run_id == request.run_id
@@ -5837,6 +5841,7 @@ mod tests {
         G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
     {
         root: TempRoot,
+        profile: &'static crate::coding_session::CodingSessionProfile,
         request: RuntimeRunRequest,
         definition: ToolDefinition,
         call: ToolCall,
@@ -5945,7 +5950,7 @@ mod tests {
         let profile = Box::leak(Box::new(
             CodingSessionProfile::build(profile_input).expect("coding profile"),
         ));
-        let workspace = Box::leak(Box::new(
+        let workspace = Arc::new(
             LinuxCodingWorkspace::bind_test(
                 profile,
                 repository_map,
@@ -5954,7 +5959,7 @@ mod tests {
                 agentmage_kernel_contracts::AdapterInstanceId::from_raw("adapter-coding-runtime"),
             )
             .expect("Linux coding workspace"),
-        ));
+        );
         let actor_id = ActorId::from_raw("actor-coding-runtime");
         let session_id = SessionId::from_raw("session-coding-runtime");
         let task_id = TaskId::from_raw(profile.worktree().task_id.clone());
@@ -6004,7 +6009,7 @@ mod tests {
             open_test_linux_authority(&state_root, &mut key, now_epoch_ms).expect("test authority");
         let sandbox = sandbox();
         let boundary = LinuxCodingRuntimeBoundary::new(LinuxCodingRuntimeBoundaryInput {
-            workspace,
+            workspace: workspace.into(),
             authority,
             sandbox,
             command_executor: FakeCommandExecutor::default(),
@@ -6024,6 +6029,7 @@ mod tests {
         .expect("coding runtime boundary");
         Fixture {
             root,
+            profile,
             request,
             definition,
             call,
@@ -7409,7 +7415,7 @@ mod tests {
         fixture.request =
             seal_runtime_run_request(fixture.request.clone()).expect("long-session requirement");
         let profile = fixture.profile_for_test();
-        let workspace = fixture.boundary.workspace;
+        let workspace = fixture.boundary.workspace.clone();
         let state_root = fixture.root.join("state");
         let base_candidate = scripted_call(&fixture.call);
         let completion = coding_completion_payload(&CodingCompletionCandidate {
@@ -7864,7 +7870,7 @@ mod tests {
             .expect("large-artifact validation requirement");
 
         let profile = fixture.profile_for_test();
-        let workspace = fixture.boundary.workspace;
+        let workspace = fixture.boundary.workspace.clone();
         let state_root = fixture.root.join("state");
         let completion = coding_completion_payload(&CodingCompletionCandidate {
             schema_version: 1,
@@ -8208,7 +8214,7 @@ mod tests {
             seal_runtime_run_request(fixture.request.clone()).expect("resume evidence requirement");
 
         let profile = fixture.profile_for_test();
-        let workspace = fixture.boundary.workspace;
+        let workspace = fixture.boundary.workspace.clone();
         let state_root = fixture.root.join("state");
         let completion = coding_completion_payload(&CodingCompletionCandidate {
             schema_version: 1,
@@ -8471,7 +8477,7 @@ mod tests {
                 .expect("lost-continuation evidence requirement");
 
             let profile = fixture.profile_for_test();
-            let workspace = fixture.boundary.workspace;
+            let workspace = fixture.boundary.workspace.clone();
             let state_root = fixture.root.join("state");
             let model = ScriptedCodingModel {
                 profile: profile.model_profile().clone(),
@@ -11284,7 +11290,7 @@ mod tests {
         G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
     {
         fn profile_for_test(&self) -> &'static CodingSessionProfile {
-            self.boundary.workspace.profile()
+            self.profile
         }
     }
 
