@@ -46,6 +46,9 @@ pub mod coding_endpoint;
 #[cfg(target_os = "linux")]
 /// Run-bound context over consented sources and current endpoint observations.
 pub mod coding_endpoint_context;
+#[cfg(target_os = "linux")]
+/// Exclusive retained ownership for configured-endpoint coding runs.
+pub mod coding_endpoint_owner;
 /// Extensions and their revocation lists through the development catalog
 /// host.
 pub mod coding_extensions;

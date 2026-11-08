@@ -2,6 +2,20 @@
 
 ## Active queue: local agent mission
 
+The in-process endpoint run owner now retains complete configured coordinators
+across approval and terminal reads, with bounded slots and spent identities
+that survive release. See the [ownership record](docs/evidence/t303-endpoint-owner-2026-11-08.md).
+Independent core review is required. This synchronous owner is not yet attached
+to the HTTP service; actual scoped filesystem/grants, endpoint API projection,
+edit/test/retry, approved Git and T-303/T-306 remain open. No row is added or closed.
+
+The configured transport [independent core re-review](docs/reviews/f1ac4d326c42-local-coding-configured-endpoint.txt)
+has **Verdict: PASS** for exact commit `f1ac4d326c42b9614c0bc148e2bbcf2af0ba1d3a`,
+with no high/medium finding. Predecessor M1 is resolved. Low L1 (unsealed family
+port), L2 (direct catalog-authority regression) and L3 (direct assertion of no
+permission evaluation on invalid arguments) remain backlog in these same rows.
+This accepts the non-closing library composition only; neither parent closes.
+
 The configured endpoint now has a concrete run-bound context builder over
 consented source snapshots, complete original tool schemas and current
 coordinator observations. It reuses deterministic source selection and refuses

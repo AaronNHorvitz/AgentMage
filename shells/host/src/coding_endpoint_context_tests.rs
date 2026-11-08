@@ -2,6 +2,9 @@
 //! Context boundaries and socket composition, using synthetic source/model/authority fixtures.
 
 use super::*;
+
+#[path = "coding_endpoint_owner_tests.rs"]
+mod owner_tests;
 use crate::{
     coding_endpoint_context::CodingEndpointContext,
     coding_tools::model_visible_coding_tools,

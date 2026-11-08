@@ -2057,6 +2057,14 @@ where
         self.resources.snapshot()
     }
 
+    /// Whether advancement failed after entering the stateful loop. Such a run
+    /// must not dispatch again without canonical reconciliation. Rejected
+    /// approval input leaves this false and the original challenge intact.
+    #[must_use]
+    pub const fn requires_reconciliation(&self) -> bool {
+        self.correctness_reconciliation_required
+    }
+
     /// Replays one verified bounded event page after an exact client reconnect cursor.
     pub fn replay_events(
         &self,

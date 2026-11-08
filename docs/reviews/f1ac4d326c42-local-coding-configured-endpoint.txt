@@ -1,0 +1,246 @@
+Commit: f1ac4d326c42b9614c0bc148e2bbcf2af0ba1d3a
+Scope: local-coding-configured-endpoint
+
+# Independent core re-review: M1 repair and configured endpoint transport composition
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. This is a same-model
+review; a cross-model review must come before any public release. Tier: core. Rows: T-303 / T-306,
+non-closing; both parents stay OPEN. Immutable predecessor:
+12f10f00bb6537c8da3389abdc4e637f435432f7.
+
+## Methods
+
+- `git rev-parse HEAD` in the pinned checkout `/lane/review-checkout` printed
+  `f1ac4d326c42b9614c0bc148e2bbcf2af0ba1d3a`. `git status --short` was empty before and after.
+- Read IP-POLICY.md, the retained predecessor FINDINGS report, the TASKS prose, the new evidence
+  record `docs/evidence/t303-configured-endpoint-2026-11-08.md`, the guide diff and the private
+  README. Decisions 0153 and 0154, which the evidence cites, exist.
+- Read the complete 12-file diff (+1584/-20). That covers `coordinator_endpoint.rs`, the `tooling.rs`
+  helper, the `local_chat_transport.rs` accessor, the new `shells/host/src/coding_endpoint.rs`, all
+  890 lines of `coding_endpoint_tests.rs`, the engine test changes and the module declarations.
+- Read the paths the change depends on: `ToolRegistry::validate_argument_envelope`,
+  `validate_arguments` and `validate_call_shape`, `finish_refused_proposal`,
+  `RuntimeEndpointContextPacket::from_messages`, the context/request equality check
+  (`runtime_loop/endpoint.rs:112`), `prepare_chat`, `authorized`, `execute_inner` and
+  `DispatchControl`.
+- Before running anything I read every helper: run.py, parse.py, audit.py, final.py, capture.py and
+  manifest.py. They write only to the validation directory. I did not execute capture.py or
+  manifest.py. run.py takes no outer slot and guesses no lock descriptor. I also read
+  `scripts/local_agent_fast_gate.py`, which final.py asserts is unchanged.
+- Wrote my own probe test in a private scratch copy made with `git archive HEAD`
+  (`/lane/state/tmp/review-probe-f1ac4d326c42`). The repository was not modified.
+
+## Commands and results
+
+```text
+sha256sum -c /lane/state/tmp/t303-configured-endpoint/review-inputs.sha256   -> 60/60 OK
+sha256sum review-inputs.sha256 -> 06fc08710d69a79f60c665f44fcfada48944b6aee9a6210069f8454cc23d012a (matches request)
+sha256sum node-v24.15.0/bin/node -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c
+PATH=<node v24.15.0>:$PATH CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-configured-endpoint-f1ac4d326c42  (new, mode 700)
+python3 -B .../run.py > fast.log 2>&1        -> exit 1 (expected), wall 631 s, no outer slot
+rg -Fx 'FAST GATE: FAIL' fast.log            -> match
+rg -Fx 'SOURCE_FREEZE_UNCHANGED' fast.log    -> match
+python3 -B .../final.py > final.log 2>&1     -> exit 0; markdownlint 0 issues;
+    FINAL_LIGHT_PASS; ORIGINAL_TEST_BODIES_UNCHANGED; SOURCE_GATE_FAIL
+cmp validation-final/source-freeze.json <mine>/source-freeze.json -> identical
+git diff --check 12f10f00bb6537c8da3389abdc4e637f435432f7 --       -> clean
+git status --short                                                -> empty
+```
+
+Results from my audit.json:
+
+- 52 targets, totals 2805 passed / 72 failed / 79 ignored / 0 filtered. fast.log has 52 complete
+  `test result:` summaries.
+- Exit codes `[0,0,0,0,0,0,101]`: diff check, untracked lint, review lint, markdownlint,
+  `cargo fmt --check` and strict `cargo clippy -D warnings` all pass, and `cargo test` returns 101
+  because of the known baseline failures.
+- Exactly seven new passing identities: the six
+  `runtime_read_tests::coding_endpoint_tests::configured_endpoint_*` host methods and
+  `endpoint_coordinator_model_argument_defects_publish_terminal_refusal_without_dispatching_again`.
+- Every predecessor pass is retained. Failed and ignored identities and normalized diagnostics equal
+  the retained baselines. The eight Rust hashes are fixed, the ledger rows are unchanged and the
+  native host test bodies are unchanged.
+- The inference crate is unchanged from 623f06a3 to the predecessor.
+- `tooling.rs` minus the helper is byte-identical to the predecessor. `runtime_loop.rs`, Cargo
+  manifests, the lock file and the gate script are unchanged.
+- My command times were 0.10, 0.10, 0.10, 1.15, 227.83, 56.96 and 343.90 s (630.14 s including
+  slot waits).
+
+The builder's figures check out against their own retained logs:
+
+- validation-final/audit.json shows 2805/72/79/0 over 52 targets. Its seconds are 0.10, 0.10, 0.10,
+  1.35, 398.86, 13.68 and 312.92, which sum to 727.11.
+- validation-before-format/fast.log shows fmt exit 1 and a total of 445.09 s, as claimed.
+
+The retained report `docs/reviews/12f10f00bb65-local-coding-endpoint-coordinator.txt` is
+byte-identical to `/lane/reviews/12f10f00bb65-local-coding-endpoint-coordinator.md` (cmp, and
+final.py asserts it). The diff adds no lint suppression. No eval, hidden, held-out, scorer,
+threshold, ignore, SBOM, dependency or status file is touched.
+
+Hygiene scan of all added lines:
+
+- No home paths, usernames, hostnames, emails, credentials or other-product names appear.
+- The only `/lane/...` paths are in the retained predecessor report, which was already accepted.
+- The only key is the synthetic test string `synthetic-transport-key`.
+
+I compiled my probe test in the scratch copy:
+
+```text
+cd /lane/state/tmp/review-probe-f1ac4d326c42
+bash /tools/build-slot cargo test --locked --offline -p agentmage-kernel-engine --lib review_probe -- --nocapture  -> 1 passed
+```
+
+The probe adds `Response::Raw(text)` to the engine fixture and drives 14 model outputs. Except for
+the last, every case asserts a non-success terminal whose RunTerminal hashes the outcome, zero
+executions, no PermissionRequested or PermissionDecided event, one model call and an identical
+repeat read.
+
+| Model output | State | Code |
+| --- | --- | --- |
+| `arguments: null` | Failed | `arguments-invalid` |
+| top-level duplicate `tool_call` | Failed | `arguments-invalid` |
+| duplicate key nested in an argument array | Failed | `arguments-invalid` |
+| duplicate `tool_id` | Failed | `arguments-invalid` |
+| `tool_call` given as a string | Failed | `arguments-invalid` |
+| array arguments | Failed | `arguments-invalid` |
+| lone surrogate | Failed | `runtime.verification.failed` |
+| `1e400` | Failed | `runtime.verification.failed` |
+| 200-deep nesting | Failed | `runtime.verification.failed` |
+| trailing prose after the call | Failed | `runtime.verification.failed` |
+| Markdown-fenced call | Failed | `runtime.verification.failed` |
+| `fixture.write` with `../../etc/passwd` | Failed | `tool-not-offered` |
+| wrong `tool_version` | Failed | `tool-not-offered` |
+| valid call with a `fixture.txt` escape | NoOp | none; one execution and two calls, as expected |
+
+No case reached `InvalidBoundaryResult` or left the run without a terminal.
+
+## Assessment
+
+### M1 repair (engine), RESOLVED
+
+`coordinator_endpoint.rs:550-610` checks a model tool response in this order:
+
+1. The response is parsed with closed `deny_unknown_fields` structs that carry only `tool_id`,
+   `tool_version` and a plain `serde_json::Value`.
+2. The whole text then goes through the original `ClosedJson` duplicate-key check.
+3. Next come the budget check, then `is_model_proposable`.
+4. The schema comes from `definition.input_schema`. The coordinator encodes the bytes itself
+   (`serde_json::to_vec`), hashes them and builds a complete `ToolCall`.
+5. `registry.validate_arguments` runs before any `request_tool`. That call includes the envelope
+   check, the size check (`MAX_ARGUMENT_BYTES`) and the tool validator.
+
+Any JSON object carrying a `tool_call` key that fails the closed parse also gets
+`finish_refused_proposal`. That path transitions to Failed, closes the turn and publishes the
+terminal.
+
+The remaining `InvalidBoundaryResult` exits are not model-reachable:
+
+- `get_tool` failing after `is_model_proposable` succeeded.
+- `to_vec` on a `Value`.
+- The envelope check inside `request_tool`, which now always sees a coordinator-built envelope.
+
+Re-encoding can only shorten or keep the length of escaped input, so size cannot grow past the
+check. The strengthened existing test and the new eight-case regression assert the terminal, the
+whole-envelope hash, the event chain and repeat-read idempotence. My probe extends that to 14 more
+shapes. Native family decoding is untouched, and final.py checks the native validation code
+mechanically.
+
+### Configured transport composition (host), SOUND
+
+`ConfiguredCodingEndpoint` (`shells/host/src/coding_endpoint.rs`):
+
+- It borrows the credential-owning `LocalChatTransport` and the exact `LocalChatApproval`.
+- Its selection comes from `transport.model_selection`, so no caller-supplied address is accepted.
+- `prepare` makes three control checks: before context, after context and after freezing.
+- It refuses a mismatched selection before calling the context port.
+- It admits the original messages through `RuntimeEndpointContextPacket::from_messages` and freezes
+  the same slice through `prepare_chat`, which calls `authorized` before encoding.
+- The engine then requires the packet fingerprint to equal the transport's request context
+  (`endpoint.rs:112`), so a context divergence cannot pass.
+- `ConfiguredDispatch` holds only the single-use `PreparedEndpointChat`. It passes the coordinator
+  control into `execute_recorded_controlled`, which checks it before connecting, between socket
+  waits and fragments, and after EOF.
+- There is no retry, no prompt text, no new dependency and no native identity.
+- Transport errors map to content-free port failures.
+
+The six host tests use a real loopback socket. They assert:
+
+- The request path and credential header.
+- No tool before approval, and an identical repeated pending challenge.
+- The actual read result reaching the second context.
+- Grounded NoOp completion with whole-envelope provenance.
+- No private text or key in the event metadata.
+- Idempotent terminal reads.
+- No connection for invalid context, wrong approval, selection or address mismatch, any owner stop,
+  a post-context stop or a smaller-than-one-envelope budget. The shared nonblocking listener is
+  checked at the end, so even a connect-and-close would be caught.
+- A bounded stalled socket with exactly one call and no reconnect.
+- That truncated, token-limited and ungrounded responses all fail. ModelCompleted counts are
+  asserted per case.
+
+The 2 MiB fixture budget is test input, not a product change. Product defaults for comparable runs
+are 1–4 MiB, and the guide states the one-envelope headroom requirement.
+
+### Confinement
+
+Endpoint composition still admits only the ephemeral read-only catalog. The predecessor probe and
+my `fixture.write` probe both refuse write tools. No production boundary implements endpoint scopes
+yet, so no real workspace tool can run through this path. The test permission owner and snapshot
+operation are honestly labelled as non-live.
+
+Prompt-injected text in context ("ignore all permissions") does not change the approval
+requirement. Write, command and network confinement are unchanged by this commit. Escape testing
+against the live filesystem boundary is not possible yet and stays with the open rows.
+
+### Claims
+
+The evidence, guide and TASKS prose match the code and runs, with one exception: "no permission
+evaluation" is not directly asserted in the committed tests (L3). They state that the source gate
+FAILs, add or close no row, claim no score and do not compare against other products.
+
+## Findings
+
+No critical, high or medium finding.
+
+### L1 (low, backlog, carried): `RuntimeCoordinatorModelPort` is unsealed
+
+This comes from the predecessor report and is unchanged.
+
+### L2 (low, backlog, carried): no direct read-only catalog-authority regression
+
+This comes from the predecessor report and is unchanged.
+
+### L3 (low, backlog, new): the "no permission evaluation" claim lacks a direct assertion
+
+**Where.** `kernel/engine/src/runtime_loop_endpoint_coordinator_tests.rs:762-784`.
+
+**Problem.** The new regression asserts zero executions and one model call. It never asserts that
+no `PermissionRequested` or `PermissionDecided` event occurs, yet the guide claims "no permission
+evaluation". The code satisfies the claim by construction, because the refusal returns before
+`request_tool`, and my probe confirms it.
+
+**Fix.** In each case, add `assert!(!c.events().iter().any(|e| matches!(e.kind,
+RuntimeEventKind::PermissionRequested { .. } | RuntimeEventKind::PermissionDecided { .. })))`.
+
+### Observation, not a finding
+
+Tool attempts that are not valid JSON end as `runtime.verification.failed` rather than
+`runtime.proposal.arguments-invalid`. Examples are a Markdown-fenced call, trailing prose, a lone
+surrogate and an out-of-range number. These outcomes are terminal and inert, so this is only
+diagnostic quality, worth considering when real-model coding runs are measured.
+
+## Per-row result
+
+- **T-303 (non-closing increment): PASS.** M1 is resolved with a canonical terminal and no effects
+  for every model-authored argument defect I could construct. The configured transport composition
+  is sound, labelled honestly and bounded. The gate evidence reproduces exactly. T-303 stays OPEN.
+  Still open: live HTTP ownership, scoped filesystem and grant composition, projection, edit, test
+  and retry, durable recovery, approved Git and measurements.
+- **T-306 (non-closing increment): PASS**, on the same basis. T-306 stays OPEN.
+- Evaluation integrity: not affected. No eval, hidden, held-out, scorer, threshold or prompt change.
+- Source gate: FAIL on the deferred T-301.1 baseline (53 host-library and 19 Linux-library failures),
+  unchanged. Format and strict Clippy PASS.
+- Backlog: L1, L2 and L3, all low.
+
+Verdict: PASS

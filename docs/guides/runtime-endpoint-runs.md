@@ -1,5 +1,34 @@
 # Endpoint run framing
 
+`coding_endpoint_owner::CodingEndpointRuns` retains up to four complete configured
+endpoint coordinators under one non-cloneable in-process owner. Keep that same
+owner in the hosting service. Admission takes trusted original configuration,
+source snapshots, catalog and permission/verifier/clock ports; it executes no
+model or tool. Later calls identify the exact sealed request and advance only
+the retained instance. The original coordinator validates approvals, keeps
+cumulative resources and publishes the distinct endpoint outcome.
+
+Release refuses a running or approval-waiting run. Completed and faulted entries
+keep their slots until release. Release drops private context and ports, keeping
+only the run identity and request digest so it cannot reset that run's budgets.
+At most 256 identities are admitted over the owner's lifetime; no tombstone is
+evicted. Construction failures before admission have no effects and may be
+corrected. The kernel's original reconciliation flag distinguishes rejected
+approval input from errors after stateful advancement. A rejected approval
+preserves the challenge. A stateful error latches the entry closed; its event
+prefix remains readable and no further dispatch is allowed. Such a prefix is
+not a terminal or a recovery declaration.
+Export required events before release. Ordinary context buffers make no
+secure-erasure claim.
+
+This is synchronous library scheduling and exclusive ownership within one
+retained owner. Authentication, host-wide identity allocation, worker scheduling,
+native filesystem/grant composition and HTTP/CLI/MCP endpoint projections still
+need service integration. A fresh owner cannot resume an old run; it has no
+old clock, budgets or authority. It must use fresh service-issued identities.
+The socket tests use synthetic tools, permissions and verifiers and establish
+no real-model coding result. T-303/T-306 remain open.
+
 `ConfiguredCodingEndpoint::for_coding_run` now supplies a concrete
 `CodingEndpointContext`. The trusted caller first obtains source-read and
 endpoint-disclosure consent, then supplies already authorized snapshots. The
