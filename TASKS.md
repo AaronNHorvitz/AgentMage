@@ -2,6 +2,12 @@
 
 ## Active queue: local agent mission
 
+Endpoint completion claims now require an ordinary model stop; output-token-limit
+responses remain transport observations even when their JSON is complete. New
+registry tests check candidate substitution between endpoint runs and the native
+family. See the [completion safety record](docs/evidence/t303-completion-stop-2026-11-08.md).
+Independent core review is required; T-303/T-306 remain open, with no new row.
+
 The existing coordinator now selects a model-independent completion-verifier
 entry point. Native-only ports retain the exact original native proposal;
 endpoint claims bind accepted explicit turns and exact stream bytes without a

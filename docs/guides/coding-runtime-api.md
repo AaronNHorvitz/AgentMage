@@ -398,3 +398,17 @@ They never decode creation authority. Attached runtime operations retain this
 page's existing strict requests and individual approvals. The separate-process
 launcher retains its prior behavior and cannot recover manual ownership. Native
 positive workflow and model measurements remain open.
+
+## Endpoint completion safety
+
+The model-independent completion boundary requires an ordinary endpoint stop.
+A response stopped by the output-token limit cannot become a completion claim,
+even when it contains valid, complete-looking JSON. Its accepted transport
+observation still records the bytes and finish reason; it proves no task result.
+
+The deterministic verifier returns an inert candidate. A registry pinned to the
+exact claim identity must accept that candidate before completion. Synthetic
+tests check rejection between two endpoint runs and between the native and
+endpoint families, with a passing control for each. Full endpoint coordinator
+and API composition must preserve that binding. It remains open, along with
+T-303/T-306; these boundary tests establish no executable coding workflow or score.

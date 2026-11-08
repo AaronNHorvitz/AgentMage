@@ -2,7 +2,8 @@
 //! Model-independent, inert completion inputs for the existing verifier boundary.
 
 use agentmage_kernel_contracts::{
-    ClosedModelProposal, ContractPayload, ModelProposalKind, ProposalId, SchemaReference,
+    ClosedModelProposal, ContractPayload, EndpointModelFinish, ModelProposalKind, ProposalId,
+    SchemaReference,
 };
 
 use super::{
@@ -89,7 +90,9 @@ impl<'a> RuntimeCompletionClaim<'a> {
         Self(Claim::Native(proposal))
     }
 
-    /// Binds the complete accepted response as one inert completion payload.
+    /// Binds an ordinarily stopped accepted response as one inert completion
+    /// payload. A token-limited response remains an observation, even if its
+    /// text happens to be valid JSON; it cannot assert completed generation.
     /// The trusted caller chooses the schema; model text cannot select it.
     /// No text is decoded as instructions, tools, evidence or a native profile.
     pub fn endpoint(
@@ -102,7 +105,8 @@ impl<'a> RuntimeCompletionClaim<'a> {
             .endpoint_request()
             .ok_or(RuntimePortFailure::Invalid)?;
         let result = turn.result();
-        if !turn.run().binds(run)
+        if result.finish != EndpointModelFinish::Stop
+            || !turn.run().binds(run)
             || result.request.runtime_model_binding() != scope.model_binding()
             || result.response_text_bytes != response_text.len()
             || result.response_text_sha256 != sha256(response_text.as_bytes())

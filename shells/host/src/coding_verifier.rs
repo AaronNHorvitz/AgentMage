@@ -782,6 +782,7 @@ mod tests {
     struct CompletionPort<'a> {
         request: agentmage_kernel_contracts::EndpointModelRequest,
         text: &'a str,
+        finish: agentmage_kernel_contracts::EndpointModelFinish,
     }
     impl agentmage_kernel_engine::runtime_loop::endpoint::RuntimeEndpointModelPort
         for CompletionPort<'_>
@@ -802,7 +803,7 @@ mod tests {
             Ok(
                 agentmage_kernel_contracts::EndpointModelResult::from_completed_response(
                     self.request,
-                    agentmage_kernel_contracts::EndpointModelFinish::Stop,
+                    self.finish,
                     sha256(self.text.as_bytes()),
                     self.text.len(),
                     std::time::Duration::from_millis(1),
@@ -815,6 +816,21 @@ mod tests {
     fn completion_turn(
         native: &agentmage_kernel_contracts::RuntimeRunRequest,
         text: &str,
+    ) -> (
+        agentmage_kernel_contracts::RuntimeEndpointRunRequest,
+        agentmage_kernel_engine::runtime_loop::endpoint::RuntimeEndpointTurnResult,
+    ) {
+        completion_turn_with_finish(
+            native,
+            text,
+            agentmage_kernel_contracts::EndpointModelFinish::Stop,
+        )
+    }
+
+    fn completion_turn_with_finish(
+        native: &agentmage_kernel_contracts::RuntimeRunRequest,
+        text: &str,
+        finish: agentmage_kernel_contracts::EndpointModelFinish,
     ) -> (
         agentmage_kernel_contracts::RuntimeEndpointRunRequest,
         agentmage_kernel_engine::runtime_loop::endpoint::RuntimeEndpointTurnResult,
@@ -866,6 +882,7 @@ mod tests {
                 CompletionPort {
                     request: request.clone(),
                     text,
+                    finish,
                 },
                 None,
                 |_| {},
@@ -1053,6 +1070,122 @@ mod tests {
         let alternate = RuntimeCompletionClaim::endpoint(scope, &turn, text, schema).unwrap();
         assert_ne!(claim.proposal_sha256(), alternate.proposal_sha256());
         assert_ne!(claim.proposal_id(), alternate.proposal_id());
+    }
+
+    #[test]
+    fn endpoint_completion_refuses_token_limit_even_with_valid_complete_claim_json() {
+        use agentmage_kernel_contracts::EndpointModelFinish;
+        use agentmage_kernel_engine::runtime_loop::RuntimeCompletionClaim;
+        let (_, native) = fixture_profile_and_request();
+        for terminal_claim in [CodingTerminalClaim::Changed, CodingTerminalClaim::NoOp] {
+            let payload = proposal(&native, terminal_claim).payload.unwrap();
+            let text = std::str::from_utf8(&payload.bytes).unwrap();
+            for finish in [
+                EndpointModelFinish::Stop,
+                EndpointModelFinish::OutputTokenLimit,
+            ] {
+                let (run, turn) = completion_turn_with_finish(&native, text, finish);
+                // Both finishes are valid transport observations with the same
+                // exact text. Only an ordinary stop can become a completion claim.
+                assert_eq!(turn.result().finish, finish);
+                let claim = RuntimeCompletionClaim::endpoint(
+                    RuntimeRunScope::endpoint(&run).unwrap(),
+                    &turn,
+                    text,
+                    coding_completion_schema(),
+                );
+                match finish {
+                    EndpointModelFinish::Stop => assert!(claim.is_ok()),
+                    EndpointModelFinish::OutputTokenLimit => {
+                        assert!(matches!(claim, Err(RuntimePortFailure::Invalid)));
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn endpoint_completion_registry_refuses_candidates_from_other_runs_and_native_family() {
+        use agentmage_kernel_engine::{
+            agent_verifier::{VerifierContext, VerifierError, VerifierRegistry},
+            runtime_loop::{RuntimeCompletionClaim, RuntimeCompletionProposal},
+        };
+        let (profile, native) = fixture_profile_and_request();
+        let native_proposal = proposal(&native, CodingTerminalClaim::NoOp);
+        let payload = native_proposal.payload.as_ref().unwrap();
+        let text = std::str::from_utf8(&payload.bytes).unwrap();
+        let (run, turn) = completion_turn(&native, text);
+        let mut other = native.clone();
+        other.run_id = agentmage_kernel_contracts::RuntimeRunId::from_raw("other-completion-run");
+        let (other_run, other_turn) = completion_turn(&other, text);
+        assert_ne!(run.request_sha256, other_run.request_sha256);
+        let results = [
+            validation_result(&profile, &native, "validation"),
+            git_result(&native, "git", false),
+        ];
+        let evidence = [
+            self::evidence(&native, "validation-evidence", EvidenceKind::Validation),
+            self::evidence(&native, "git-evidence", EvidenceKind::Observation),
+        ];
+        let receipts = receipts(results.len());
+        let postconditions = [PostconditionId::from_raw("completion-postcondition")];
+        let mut verifier = CodingCompletionVerifier::for_profile(&profile);
+        let native_candidate = verifier
+            .verify(RuntimeVerificationInput {
+                request: &native,
+                proposal: &native_proposal,
+                state_revision: 8,
+                postconditions: &postconditions,
+                evidence: &evidence,
+                tool_results: &results,
+                receipt_ids: &receipts,
+            })
+            .unwrap();
+        let mut candidates = vec![native_candidate];
+        for (request, turn) in [(&run, &turn), (&other_run, &other_turn)] {
+            let scope = RuntimeRunScope::endpoint(request).unwrap();
+            let claim =
+                RuntimeCompletionClaim::endpoint(scope, turn, text, coding_completion_schema())
+                    .unwrap();
+            let proposal_id = claim.proposal_id().clone();
+            let candidate = verifier
+                .verify_completion(RuntimeVerificationInput {
+                    request: scope,
+                    proposal: claim,
+                    state_revision: 8,
+                    postconditions: &postconditions,
+                    evidence: &evidence,
+                    tool_results: &results,
+                    receipt_ids: &receipts,
+                })
+                .unwrap();
+            assert_eq!(candidate.proposal_id, proposal_id);
+            candidates.push(candidate);
+        }
+        for (owner, candidate) in candidates.iter().enumerate() {
+            assert_eq!(candidate.disposition, VerifierDisposition::NoOp);
+            assert!(candidate.postconditions[0].passed);
+            let registry = VerifierRegistry::new(VerifierContext {
+                verifier_id: verifier.verifier_id().clone(),
+                task_id: native.task.task_id.clone(),
+                proposal_id: candidate.proposal_id.clone(),
+                repository_snapshot_id: native.repository_snapshot_id.clone(),
+                state_revision: 8,
+                postconditions: postconditions.to_vec(),
+            })
+            .unwrap();
+            // Passing controls prevent refusal due to missing test evidence
+            // from concealing a candidate-substitution admission regression.
+            registry.verify(candidate).unwrap();
+            for (foreign, candidate) in candidates.iter().enumerate() {
+                if owner != foreign {
+                    assert_eq!(
+                        registry.verify(candidate),
+                        Err(VerifierError::ContextMismatch)
+                    );
+                }
+            }
+        }
     }
 
     struct LegacyCompletionVerifier(VerifierId);
