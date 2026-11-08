@@ -184,6 +184,50 @@ fn requests_bound_messages_tokens_and_encoded_size() {
             Err(ChatError::Request)
         );
     }
+    for include_usage in [false, true] {
+        let encode = |content: &str| {
+            encode_chat_request(
+                "test-model",
+                &[ChatMessage {
+                    role: ChatRole::User,
+                    content,
+                }],
+                1,
+                include_usage,
+            )
+        };
+        let overhead = encode("x").unwrap().len() - 1;
+        let mut content = "x".repeat(MAX_REQUEST_BYTES - overhead);
+        let bytes = encode(&content).unwrap();
+        assert_eq!(bytes.len(), MAX_REQUEST_BYTES);
+        assert_eq!(
+            serde_json::from_slice::<Value>(&bytes).unwrap()["messages"][0]["content"],
+            content
+        );
+        content.push('x');
+        assert_eq!(encode(&content), Err(ChatError::Request));
+    }
+}
+
+#[test]
+fn private_request_writer_keeps_one_allocation_and_refuses_overflow_atomically() {
+    use std::io::Write;
+    let mut writer = PrivateRequestWriter::reserved();
+    let allocation = writer.0.as_ptr();
+    let capacity = writer.0.capacity();
+    for bytes in [b"private fixture".as_slice(), &[0; 8192], &[b'x'; 32768]] {
+        writer.write_all(bytes).unwrap();
+        assert_eq!(writer.0.as_ptr(), allocation);
+        assert_eq!(writer.0.capacity(), capacity);
+    }
+    let remaining = MAX_REQUEST_BYTES - writer.0.len();
+    writer.write_all(&vec![b'y'; remaining]).unwrap();
+    let before = writer.0.clone();
+    assert!(writer.write_all(b"overflow").is_err());
+    assert_eq!(*writer.0, *before);
+    assert_eq!(writer.0.as_ptr(), allocation);
+    assert_eq!(writer.0.capacity(), capacity);
+    assert_eq!(writer.0.len(), MAX_REQUEST_BYTES);
 }
 
 #[test]

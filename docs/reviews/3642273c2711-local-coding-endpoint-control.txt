@@ -1,0 +1,177 @@
+Commit: 3642273c2711c1346d692ad8cd8774574c2534c4
+Scope: local-coding-endpoint-control
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate session with read-only access to the
+pinned checkout `/lane/review-checkout`. Tier: core. Rows: T-303 / T-306, non-closing increment; both
+parents remain OPEN. No row closure is requested and none is granted here.
+
+## Methods
+
+- Confirmed the commit with `git rev-parse HEAD`. Both it and the requested sha resolve to
+  `3642273c2711c1346d692ad8cd8774574c2534c4`. Checkout status is clean before and after the runs.
+- Read IP-POLICY.md, the TASKS.md active-queue prose (including the 13 added lines) and the new
+  evidence `docs/evidence/t303-endpoint-control-2026-11-07.md`. Also read the added guide section in
+  `docs/guides/coding-proposals.md`.
+- Reviewed the full seven-path diff above immutable predecessor
+  `6bee4c9d55be4120721ff29b5c0cea002953e380`: 780 insertions, 6 deletions. Read it line by line,
+  including the transport `Wire`, `request`, `chat_encoded`, `body`, `exact` and `fill` paths, and
+  the API `dispatch_coding_proposal`, `write`/`event`, repair entry and `ProposalDispatchControl`.
+- Traced every caller. `dispatch_coding_proposal` is the single dispatch point for snapshot and
+  workspace proposals (`platforms/local-api/src/lib.rs:1030`) and for repair
+  (`platforms/local-api/src/coding_repair_api.rs:86`). No other production caller of
+  `execute_recorded` remains. Legacy `execute`/`chat`/`models` still pass an uncontrolled
+  `DispatchControl`.
+- Read the existing `ModelOperationControl` contract (`kernel/contracts/src/model.rs:566-606`) and its
+  coordinator implementation `RuntimePhaseControl` (`kernel/engine/src/runtime_loop.rs:170-325`).
+  The purpose was to judge whether the new transport usage honours the contract: no renewal,
+  latched stops, and no acknowledgement.
+- Searched Rust, Python and JS consumers for error-code classification that could break when
+  proposal total-expiry changes code. `scripts/coding_proposal_measurement.py` records terminal codes
+  verbatim, and no consumer matches `chat.transport.timeout`.
+- Read `run.py`, `audit.py`, `final.py` and `README` in `/lane/state/tmp/t303-endpoint-control/` before
+  running them. `run.py` asserts that fd 9 is the outer `/shared/heavy.lock`, runs the unmodified
+  plan with an `env` prefix on Cargo commands only, and freezes the Rust/Cargo inputs before and
+  after. `audit.py` compares each current target against the predecessor's complete log:
+  failures, ignores, normalized diagnostics, filters, +6 passes and a final FAIL. `final.py` does
+  light checks only.
+- Ran my own privacy and trademark scan over all added lines.
+
+## Commands and results
+
+```sh
+sha256sum -c /lane/state/tmp/t303-endpoint-control/review-inputs.sha256     # 15 x OK
+sha256sum /lane/state/tmp/t303-endpoint-control/review-inputs.sha256       # 4100b7a12a83...c0b6 (matches)
+export PATH=/lane/state/tmp/t306-owned-api/node-v24.15.0/bin:$PATH       # node hash verified via manifest
+export CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+export AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-endpoint-control-3642273c2711  # new, mode 700
+bash /tools/build-slot python3 -B /lane/state/tmp/t303-endpoint-control/run.py > .../fast.log 2>&1
+                                                                         # exit 1 (expected FAIL)
+python3 -B /lane/state/tmp/t303-endpoint-control/final.py > .../final.log 2>&1   # exit 0
+cmp validation-2/source-freeze.json  $AGENTMAGE_VALIDATION_DIR/source-freeze.json   # identical
+cmp validation-2/plan-final.json     $AGENTMAGE_VALIDATION_DIR/plan-final.json      # identical
+cmp validation-2/audit.json          $AGENTMAGE_VALIDATION_DIR/audit.json           # identical
+cmp docs/reviews/6bee4c9d55be-local-coding-endpoint-exchange.txt \
+    /lane/reviews/6bee4c9d55be-local-coding-endpoint-exchange.md                    # identical
+git diff --check 6bee4c9d55be4120721ff29b5c0cea002953e380 --                       # exit 0, no output
+git status --short                                                                  # empty
+```
+
+My run, including the reservation wait and a partly cold compile, took 2950 s wall-clock. All seven
+commands ran under one reservation:
+
+- Exit codes were `[0,0,0,0,0,0,101]`.
+- Formatting took 0.90 s, Clippy `-D warnings` 42.97 s and tests 137.30 s. Times are slower than the
+  builder's because of a colder target directory.
+- Output included `FAST GATE: FAIL` and `SOURCE_FREEZE_UNCHANGED`.
+- 27 targets: **903 passed, 53 failed, 19 ignored, 0 filtered**. The predecessor had 897/53/19/0 on
+  the same targets.
+- All 53 failures are in `agentmage_host[unittests src/lib.rs]`, an unchanged library. Their
+  normalized diagnostics equal the predecessor's, and all 19 ignores match.
+- The `final.py` output ended with `FINAL_LIGHT_CHECKS_PASS; SOURCE_GATE_REMAINS_FAIL`.
+
+All six new methods passed unfiltered in my run:
+
+- `controlled_endpoint_refuses_every_owner_stop_before_connecting`
+- `controlled_endpoint_stops_stalled_headers_bodies_and_eof_without_completion`
+- `controlled_endpoint_does_not_renew_deadlines_or_complete_after_a_slow_callback`
+- `controlled_endpoint_retains_a_later_narrowed_budget_even_if_owner_renews_it`
+- `controlled_endpoint_success_keeps_frozen_request_usage_and_unknown_resources`
+- `operation_tests::coding_dispatch_control_preserves_an_elapsed_deadline_and_positive_remaining_time`
+
+The existing API success, incomplete, cancellation and repair fixtures and the exchange fixtures
+named by `audit.py` also passed.
+
+Evidence numbers trace to the builder's `validation-2/fast.log`. Its seven command times are
+0.10+0.10+0.10+1.15+0.95+12.97+95.79 = 111.16 s, with exit 101 last. `validation-1/fast.log` shows
+the two `E0277 ... LowerHex` errors in Clippy and tests, exactly as the evidence describes. `final.py`
+asserts that between the two freezes only the test source hash changed.
+
+GPU: none used and none claimed. No model process, download, push or release occurred.
+
+## Assessment of the claims
+
+- **No renewal.** `DispatchControl::remaining` (`platforms/linux-inference/src/local_chat_transport.rs:716-737`)
+  computes `min(owner, previous - elapsed)`, refuses on zero, and stores the narrowed value. This
+  matches the contract's no-renewal requirement even for a broken owner. The `RunControl`, which
+  reports a constant, and `NarrowOnce` fixtures exercise exactly this.
+- **Independent limits.** Original total and idle limits stay independent in `Wire::check`
+  (`:767-785`): run remaining, total, idle and `IO_TICK` are min'd, and none can be zero. The
+  `set_*_timeout(Some(0))` failure mode is therefore unreachable. The connect timeout is also
+  bounded by run remaining (`:580`).
+- **Polling points.** Polling happens before connect (`DispatchControl::new`, and `:580`), on every
+  socket wait (`fill`/`write_all`→`check`), before and after each decoded event and callback, and
+  after framed body plus actual EOF (`:562`, `:330-331`). EOF is mandatory after framed bodies
+  (`:1053-1056`). The stalled-EOF fixtures are therefore deterministic and cannot race to success.
+- **Stops.** A stop maps to `TransportError::OperationStopped(stop)`, whose code is the closed
+  `model.operation.*` label. A stop never touches `ChatCancellation`, and the tests assert
+  `!cancel.is_cancelled()`. No result is constructed on the error path, so there is no usage or
+  exchange.
+- **Frozen request.** Body, binding, transport and credential are unchanged: `execute_inner` sends
+  `self.body` with `self.binding` through the same `self.transport`. The success fixture
+  independently hashes the transmitted body and text, and checks that usage, verified tokens and
+  memory are null.
+- **API deadline.** The control is created at `platforms/local-api/src/lib.rs:1119`, before
+  `headers()` and the context `event`, so model entry cannot restart it. Socket writes there are
+  bounded by `WRITE_TIME` (250 ms), so publication cannot block indefinitely. The allowance equals
+  the prepared `total_timeout`, so the run deadline is at least as tight as the transport's own
+  total. Preparation, approval and repair-receipt consumption (`coding_repair_api.rs:71`) are
+  outside it. A stop after consumption is not refunded, the same as any other dispatch failure, as
+  claimed.
+- **Rounding.** `remaining.as_nanos().div_ceil(1_000_000)` rounds a positive fractional
+  millisecond up and refuses zero, and the unit test checks it.
+- **Honest labelling.** The evidence and guide say the peers are synthetic, that there is no
+  route-level backpressure or expiry fixture, and that there is no native coordinator admission,
+  resource ledger, native workflow, model or score. These match what I observed. Callbacks are
+  correctly described as non-preemptible.
+- **Confinement.** Unchanged. The transport gains no network destination, credential path, tool,
+  child process or retry. Endpoint approval checks are untouched.
+- **Supply chain.** There are no Cargo or lock changes (`final.py` asserts an empty diff).
+- **Privacy and branding.** Added lines contain no private host path, username, hostname,
+  credential, email or sibling-project name, and no other agent product or trademark. `/lane/...`
+  paths appear only inside the byte-identical retained review. They are lane placeholders with no
+  user or host component, matching 91 prior retained reviews.
+- **Evaluation integrity.** The diff touches no evaluation tasks, hidden tests, scorer, thresholds
+  or ignores. Ledger table rows are unchanged, and `audit.py` asserts this.
+- **Delivery.** No new sub-row was added. The increment runs and is measured by the gate.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test coverage)** at `platforms/local-api/src/lib.rs:1168`. No route-level fixture drives
+  a control stop through `/v1/code/proposals`, either expiry during context publication or
+  mid-stream. Several things are therefore inspected rather than tested:
+  - the emitted `{"type":"error","code":"model.operation.timed-out","partial":true}` event;
+  - the absence of completed usage in `proposal_observation`;
+  - the `op.outcome` activity label;
+  - the client-visible change of total-expiry code from `chat.transport.timeout` to
+    `model.operation.timed-out`.
+
+  The evidence discloses this honestly, which is why it is low. Fix: add one synthetic route
+  fixture with a small `total_timeout` and a stalled endpoint, asserting the terminal code, the
+  absent usage and token fields, and the activity outcome.
+- **L2 (low, diagnostic labelling)** at `platforms/linux-inference/src/local_chat_transport.rs:580-582`.
+  When run remaining is the binding bound on `connect_timeout` (the final ≤50 ms of the
+  allowance), a connect expiry maps through `io_error` to `chat.transport.timeout` rather than
+  `model.operation.timed-out`. It is still refused with no completion, but under the wrong closed
+  label. Fix: on a connect `TimedOut`/`WouldBlock`, re-poll `control.remaining()` and return its
+  stop if there is one.
+- **L3 (low, efficiency for the future coordinator composition)** at
+  `platforms/linux-inference/src/local_chat_transport.rs:811-812` and `:847-848`. `byte()`→`fill()`
+  calls `check()`, and therefore the owner's `remaining_ms()`, once per byte of header and
+  chunk-size lines, up to `MAX_HEADERS` = 16 KiB. With `ProposalDispatchControl` this costs almost
+  nothing. The coordinator's `RuntimePhaseControl` instead observes its cancellation probe and
+  clock on each call. Fix: poll the owner only before a socket wait (an empty buffer) and around
+  decoded events.
+
+The predecessor's lows (serialization-buffer reallocation, API finish-string assertions) and the
+native failed-test receipt route fixture remain backlog, as stated.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing increment, local-coding-endpoint-control):** PASS for this pinned
+  increment only. There are no high or medium findings, and L1–L3 are backlog in these rows. Both
+  parents remain OPEN. This does not accept native coordinator endpoint admission, the resource
+  ledger, native edit/test/retry, durable ownership, approved commit/push or parent measurements.
+
+Verdict: PASS

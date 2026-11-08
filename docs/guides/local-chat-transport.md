@@ -25,6 +25,15 @@ from the environment, URL, file, browser, cookie store or an external process.
 There is no persistence here: a future settings owner must implement protected
 storage separately. The transport neither prints nor logs content.
 
+Request encoding reserves the 256 KiB wire ceiling before writing private JSON.
+A bounded writer rejects overflow before appending, so that allocation never
+grows or leaves earlier plaintext buffers behind. Serialization failures erase
+the partially written allocation. The encoder transfers successful bytes to
+its caller, which is responsible for erasing them; the transport and API
+preflight checks use zeroizing owners. Message-array fingerprints stream directly
+into a byte counter and SHA-256, without allocating another serialized copy.
+This covers these owned buffers, not all copies of conversation text in memory.
+
 After the person explicitly chooses the endpoint for conversation data, the
 trusted application mints `LocalChatApproval::for_endpoint`. Pass it to `models`
 for the first-run connection test and listing, then to `chat` for streaming. Every

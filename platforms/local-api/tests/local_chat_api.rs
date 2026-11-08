@@ -210,6 +210,14 @@ fn assert_endpoint_runtime_observation(rows: &[Value]) {
     if terminal["response_complete"] == true {
         let result = &terminal["runtime_model_result"];
         assert_eq!(result["version"], 1);
+        assert_eq!(
+            result["finish"],
+            if terminal["code"] == "code.proposal.incomplete" {
+                "output_token_limit"
+            } else {
+                "stop"
+            }
+        );
         assert_eq!(result["request"], first["model_binding"]);
         assert_eq!(result["request"], terminal["model_binding"]);
         let text: String = rows

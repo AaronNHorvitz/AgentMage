@@ -957,7 +957,8 @@ fn prepare_proposal_messages(
         encode_chat_with_usage(model, &prepared.messages(context), max_tokens)
     } else {
         encode_chat(model, &prepared.messages(context), max_tokens)
-    };
+    }
+    .map(Zeroizing::new);
     if !(1..=4096).contains(&max_tokens) || encoded.is_err() {
         return Err((400, "api.request"));
     }
@@ -1901,7 +1902,8 @@ fn handle(
                     encode_chat_with_usage(&chat.model, &messages, chat.max_tokens)
                 } else {
                     encode_chat(&chat.model, &messages, chat.max_tokens)
-                };
+                }
+                .map(Zeroizing::new);
                 if encoded.is_err() {
                     return error(socket, 400);
                 }

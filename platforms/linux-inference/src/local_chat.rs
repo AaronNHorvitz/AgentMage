@@ -8,6 +8,7 @@ use std::net::{IpAddr, SocketAddr};
 
 use serde::Serialize;
 use serde_json::Value;
+use zeroize::Zeroizing;
 
 const MAX_REQUEST_BYTES: usize = 256 * 1024;
 const MAX_EVENT_BYTES: usize = 64 * 1024;
@@ -218,21 +219,48 @@ fn encode_chat_request(
     struct StreamOptions {
         include_usage: bool,
     }
-    let encoded = serde_json::to_vec(&Request {
-        model,
-        messages,
-        stream: true,
-        max_tokens,
-        n: 1,
-        stream_options: include_usage.then_some(StreamOptions {
-            include_usage: true,
-        }),
-    })
+    // Reserve the closed wire ceiling before any private bytes are written.
+    // Reject overflow in the writer, rather than allowing Vec to reallocate
+    // (and leave an earlier plaintext allocation behind).
+    let mut encoded = PrivateRequestWriter::reserved();
+    serde_json::to_writer(
+        &mut encoded,
+        &Request {
+            model,
+            messages,
+            stream: true,
+            max_tokens,
+            n: 1,
+            stream_options: include_usage.then_some(StreamOptions {
+                include_usage: true,
+            }),
+        },
+    )
     .map_err(|_| ChatError::Request)?;
-    if encoded.len() > MAX_REQUEST_BYTES {
-        return Err(ChatError::Request);
+    // Transfer the only allocation to the caller; it now owns its private bytes.
+    Ok(std::mem::take(&mut *encoded.0))
+}
+
+struct PrivateRequestWriter(Zeroizing<Vec<u8>>);
+
+impl PrivateRequestWriter {
+    fn reserved() -> Self {
+        Self(Zeroizing::new(Vec::with_capacity(MAX_REQUEST_BYTES)))
     }
-    Ok(encoded)
+}
+
+impl std::io::Write for PrivateRequestWriter {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        if bytes.len() > MAX_REQUEST_BYTES.saturating_sub(self.0.len()) {
+            return Err(std::io::Error::other("chat request limit"));
+        }
+        self.0.extend_from_slice(bytes);
+        Ok(bytes.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
 }
 
 /// Why the server finished producing text. A token ceiling is visible to the UI.

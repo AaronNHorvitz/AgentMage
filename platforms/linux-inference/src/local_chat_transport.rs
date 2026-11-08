@@ -31,6 +31,29 @@ const MAX_WIRE: usize = 5 * 1024 * 1024;
 const MAX_HEADERS: usize = 16 * 1024;
 const MAX_MODELS_BODY: usize = 256 * 1024;
 
+// Hash and count the exact serde encoding without allocating another copy of
+// private messages. Only the frozen request body retains their serialized text.
+#[derive(Default)]
+struct MessageFingerprint {
+    hash: Sha256,
+    bytes: usize,
+}
+
+impl Write for MessageFingerprint {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        self.bytes = self
+            .bytes
+            .checked_add(bytes.len())
+            .ok_or_else(|| std::io::Error::other("chat message size"))?;
+        self.hash.update(bytes);
+        Ok(bytes.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
 /// Fixed, content-free failures. Partial streamed text is never success.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TransportError {
@@ -391,9 +414,9 @@ impl LocalChatTransport {
         });
         // Use the same serde message-array encoding as the frozen body. This
         // observes JSON bytes and roles, never a server's rendered prompt tokens.
-        let message_bytes = Zeroizing::new(
-            serde_json::to_vec(messages).map_err(|_| TransportError::Chat(ChatError::Request))?,
-        );
+        let mut fingerprint = MessageFingerprint::default();
+        serde_json::to_writer(&mut fingerprint, messages)
+            .map_err(|_| TransportError::Chat(ChatError::Request))?;
         let binding = EndpointModelRequest::from_prepared_body(
             EndpointModelSelection {
                 endpoint: self.endpoint.base_url(),
@@ -401,8 +424,10 @@ impl LocalChatTransport {
             },
             EndpointModelContext {
                 message_count: messages.len(),
-                serialized_messages_bytes: message_bytes.len(),
-                serialized_messages_sha256: Sha256::digest(&*message_bytes)
+                serialized_messages_bytes: fingerprint.bytes,
+                serialized_messages_sha256: fingerprint
+                    .hash
+                    .finalize()
                     .iter()
                     .map(|byte| format!("{byte:02x}"))
                     .collect(),

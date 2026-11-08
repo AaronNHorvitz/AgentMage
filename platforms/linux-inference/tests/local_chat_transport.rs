@@ -836,7 +836,7 @@ fn prepared_endpoint_request_sends_the_exact_frozen_body_and_redacts_private_inp
             limits(),
         )
         .unwrap();
-        let mut prompt = String::from("private synthetic prompt: 界\0\n\"\\");
+        let mut prompt = "private synthetic prompt: 界\0\n\"\\".repeat(512);
         let original = prompt.clone();
         let request = transport
             .prepare_chat(

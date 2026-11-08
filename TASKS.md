@@ -91,8 +91,17 @@ polls the existing run-control contract while connecting, streaming and waiting
 for EOF. Snapshot, workspace and repair proposals share a local deadline from
 context publication through dispatch; it never renews on model entry. Stops
 retain no completed inference or proposal and do not acknowledge cancellation.
-This non-closing increment requires independent core review. Endpoint admission
-to the native coordinator, resource integration and both parents remain open.
+Its [independent core review](docs/reviews/3642273c2711-local-coding-endpoint-control.txt)
+has **Verdict: PASS** for exact commit `3642273c2711c1346d692ad8cd8774574c2534c4`,
+with no high/medium finding. Low L1 (route-level control-stop fixture), L2
+(connect-expiry diagnostic) and L3 (per-byte owner polling) remain backlog in
+these rows. Endpoint admission to the native coordinator, resource integration
+and both parents remain open. This report accepts its pinned increment only.
+The [private-encoding batch](docs/evidence/t303-private-encoding-2026-11-07.md)
+addresses endpoint-exchange lows L1/L2 in these same rows: streaming context
+fingerprints, bounded request serialization with zeroizing error/preflight
+buffers, and API finish-string assertions. Independent core review is required;
+both parents and native coordinator endpoint integration remain open.
 No public release is authorized. One level of sub-rows maximum; each implementation
 sub-row must run end to end and be measured. Never tune on held-out tasks, edit
 hidden tests or weaken thresholds. Desktop UI work is deferred to a separate shell.
