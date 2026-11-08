@@ -377,7 +377,7 @@ fn propose(
     task: &str,
     worktree: Option<&str>,
     options: ProposalOptions<'_>,
-) -> Result<()> {
+) -> Result<Value> {
     let selected = selection(client)?;
     if selected["model_context_approved"] != true
         || options
@@ -510,11 +510,13 @@ fn propose(
         request["approve_read"] = json!(true);
         edit_prepare(client, root, request)
     } else {
-        show(&client.json("POST", "/v1/code/workspace/changes", false, Some(request))?)
+        let preview = client.json("POST", "/v1/code/workspace/changes", false, Some(request))?;
+        show(&preview)?;
+        Ok(preview)
     }
 }
 
-fn edit_prepare(client: &Client, root: &str, body: Value) -> Result<()> {
+fn edit_prepare(client: &Client, root: &str, body: Value) -> Result<Value> {
     let status = client.json("GET", "/v1/code/repository/edit", true, None)?;
     let identity = status["worktree_root_sha256"]
         .as_str()
@@ -528,7 +530,9 @@ fn edit_prepare(client: &Client, root: &str, body: Value) -> Result<()> {
         &format!("read {identity}"),
     )?;
     verify()?;
-    show(&client.json("POST", "/v1/code/repository/edit/prepare", true, Some(body))?)
+    let preview = client.json("POST", "/v1/code/repository/edit/prepare", true, Some(body))?;
+    show(&preview)?;
+    Ok(preview)
 }
 
 fn original_apply_prepare(
@@ -736,6 +740,7 @@ fn execute(args: &[String]) -> Result<()> {
                 root,
                 serde_json::from_str(request).map_err(|_| ())?,
             )
+            .map(|_| ())
         }
         ("edit-apply", [root]) => edit_decide(&client, Some(root)),
         ("edit-deny", []) => edit_decide(&client, None),
@@ -891,7 +896,8 @@ fn execute(args: &[String]) -> Result<()> {
             task,
             None,
             ProposalOptions::default(),
-        ),
+        )
+        .map(|_| ()),
         ("propose-worktree", [root, model, bytes, tokens, task]) => propose(
             &client,
             model,
@@ -900,7 +906,8 @@ fn execute(args: &[String]) -> Result<()> {
             task,
             Some(root),
             ProposalOptions::default(),
-        ),
+        )
+        .map(|_| ()),
         ("repair-worktree", [root, model, bytes, tokens, task]) => propose(
             &client,
             model,
@@ -912,7 +919,8 @@ fn execute(args: &[String]) -> Result<()> {
                 repair: Some(ProposalRepair { receipt: None }),
                 ..ProposalOptions::default()
             },
-        ),
+        )
+        .map(|_| ()),
         ("apply", [root]) => apply(&client, Some(root)),
         ("deny", []) => apply(&client, None),
         _ => {

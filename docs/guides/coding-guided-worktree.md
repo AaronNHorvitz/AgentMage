@@ -57,13 +57,13 @@ original service separately enforces its test-attempt ceiling and one repair
 request per failed receipt. Settings and source-selection identity stay pinned
 between attempts. Each new preview must retain the complete test template,
 worktree creation binding, expected attempt and exact previous receipt.
-After preparation, the terminal inspects the pending edit and checks its root
-and creation binding. It refuses a change between that inspection and the
-approval helper's second inspection. It currently does not compare the first
-inspection with the original prepare reply; another control-token holder can
-replace the preview in that earlier window. The full current diff still needs
-its own exact approval. Binding the prepare reply and testing both replacement
-windows remain backlog in T-303/T-306.
+The terminal keeps the complete original edit-prepare reply, verifies its
+worktree root and creation binding, and requires both subsequent pending-edit
+inspections to equal that reply. Replacing an edit before either inspection
+stops the attempt before edit consent, even when root and ownership are unchanged.
+After the person approves, the service still requires the exact preview digest
+and original strict preimages before it can write. No automatic retry follows
+a replacement or lost reply.
 
 Every proposal request carries the original workspace selection identity,
 settings revision, exact endpoint and held worktree root digest. The original

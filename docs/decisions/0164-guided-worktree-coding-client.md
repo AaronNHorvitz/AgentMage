@@ -28,6 +28,12 @@ closing the gap between terminal inspection and admission. Repair requests
 retain the same binding and their original exact failure-disclosure approval.
 Optional pins narrow the older API contract without granting any authority.
 
+Carry each original edit-prepare reply through both pending-edit inspections
+and the exact diff approval helper. Require full preview equality, preserving
+the original worktree root and creation binding. Neither a new digest nor a
+changed preview body may become this attempt's edit. The native owner's exact
+digest, strict preimages and per-effect approval remain authoritative.
+
 This is client scheduling over existing product operations, not another runtime
 coordinator, model transport, sandbox, permission system or persistence format.
 The retained endpoint coordinator remains read-only. Per-operation records

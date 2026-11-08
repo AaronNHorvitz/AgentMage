@@ -255,6 +255,86 @@ fn guided_client_refuses_replacement_during_the_proposal_helpers_fresh_reads() {
         );
     }
 }
+// Keep the root and ownership receipt unchanged: only the proposed edit is
+// replaced. Test both initial generation and the failure-informed repair path.
+fn replaced_edit_is_refused(after_inspection: bool) {
+    let t = template();
+    for repair in [false, true] {
+        for field in ["preview_sha256", "diff"] {
+            let f = Fixture::new();
+            let mut script = Script::new(&f);
+            script.start(&t);
+            let prior = script.attempt(&t, 1, None, "assertion_failed");
+            script.attempt(&t, 2, Some(&prior), "passed");
+            let prepare = script
+                .routes
+                .iter()
+                .enumerate()
+                .filter(|(_, r)| *r == "POST /v1/code/repository/edit/prepare HTTP/1.1")
+                .nth(usize::from(repair))
+                .unwrap()
+                .0;
+            let index = prepare + if after_inspection { 2 } else { 1 };
+            let replacement = if field == "preview_sha256" {
+                json!("9".repeat(64))
+            } else {
+                // Equality must cover the whole preview, even an inconsistent
+                // peer response that retains the original digest field.
+                json!("replacement synthetic diff")
+            };
+            script.replies[index]["pending"][field] = replacement.clone();
+            if !after_inspection {
+                // A stable replacement in both GETs used to evade the binding.
+                script.replies[index + 1]["pending"][field] = replacement;
+            }
+            let original = script.replies[prepare].clone();
+            let (out, calls, routes) = script.run(&f, &t, "approve");
+            assert_ne!(out["status"], 0, "repair={repair}, field={field}: {out}");
+            assert_eq!(calls.len(), index + 1, "{out}");
+            assert_eq!(out["answered"], if repair { 5 } else { 1 }, "{out}");
+            assert_eq!(
+                calls
+                    .iter()
+                    .map(|c| c["route"].as_str().unwrap().to_owned())
+                    .collect::<Vec<_>>(),
+                routes[..calls.len()],
+                "{out}"
+            );
+            let edits = calls
+                .iter()
+                .filter(|c| c["route"] == "POST /v1/code/repository/edit/decide HTTP/1.1")
+                .count();
+            let tests = calls
+                .iter()
+                .filter(|c| c["route"] == "POST /v1/code/repository/validation/decide HTTP/1.1")
+                .count();
+            assert_eq!(edits, usize::from(repair), "{out}");
+            assert_eq!(tests, usize::from(repair), "{out}");
+            assert!(
+                !out["transcript"]
+                    .as_str()
+                    .unwrap()
+                    .contains("replacement synthetic diff")
+            );
+            assert_eq!(original["operation"], "edit-worktree");
+            assert_eq!(
+                fs::read_to_string(f.root.join("tree/calc.py")).unwrap(),
+                "return a - b\n"
+            );
+        }
+    }
+}
+
+#[test]
+fn guided_client_refuses_edit_replacement_before_the_first_inspection() {
+    replaced_edit_is_refused(false);
+}
+
+#[test]
+fn guided_client_refuses_edit_replacement_before_the_approval_inspection() {
+    replaced_edit_is_refused(true);
+}
+
 impl Script {
     fn new(f: &Fixture) -> Self {
         fs::create_dir(f.root.join("tree")).unwrap();

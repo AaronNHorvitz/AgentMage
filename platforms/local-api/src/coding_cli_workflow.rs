@@ -173,7 +173,7 @@ pub(super) fn run(client: &Client, args: &[String]) -> Result<()> {
         {
             return Err(());
         }
-        propose(
+        let prepared_edit = propose(
             client,
             model,
             bytes,
@@ -191,15 +191,20 @@ pub(super) fn run(client: &Client, args: &[String]) -> Result<()> {
                 }),
             },
         )?;
-        // The proposal helper prepared an inert diff after separate read consent.
-        // Existing exact diff approval performs the only native write.
-        let edit = client.json("GET", "/v1/code/repository/edit", true, None)?;
-        if edit["pending"]["worktree_root_sha256"] != identity
-            || edit["pending"]["creation_receipt_sha256"] != creation
+        // Carry the original prepare reply across both status inspections. A
+        // replacement with the same root/ownership still belongs to another
+        // proposal; never promote the newer pending edit to this attempt.
+        if prepared_edit["operation"] != "edit-worktree"
+            || prepared_edit["worktree_root_sha256"] != identity
+            || prepared_edit["creation_receipt_sha256"] != creation
         {
             return Err(());
         }
-        edit_decide_bound(client, Some(root), Some(&edit["pending"]))?;
+        let edit = client.json("GET", "/v1/code/repository/edit", true, None)?;
+        if edit["pending"] != prepared_edit {
+            return Err(());
+        }
+        edit_decide_bound(client, Some(root), Some(&prepared_edit))?;
         client.idle()?;
         body["prior_receipt_sha256"] = json!(prior);
         let preview = client.json(
