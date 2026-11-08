@@ -14,8 +14,20 @@ without an independent exact-commit PASS review retained under docs/reviews/ and
 no open high/medium finding. Evidence belongs under docs/evidence/; core changes
 require core review. The unchanged long documentation gate runs once at T-310.
 The [coding MCP bridge](docs/guides/coding-mcp.md) adds a client-credential-only
-stdio interface to existing selected-workspace tools under Decision 0161; independent
-core review is required, and T-303/T-306 remain open.
+stdio interface to existing selected-workspace tools under Decision 0161. Its
+[independent core review](docs/reviews/3ee8285e595a-local-coding-scoped-mcp.txt)
+has **Verdict: PASS** for exact commit `3ee8285e595a208fb1e354d46ab95e56d24c2bae`;
+T-303/T-306 remain open. The four low findings (MCP refusal detail, invalid-request
+reply behavior, staging origin, and warning against miscopying a control token
+as a client token) are backlog in these same rows.
+The [publication/usage re-review](docs/reviews/6c73f38048d7-local-coding-publication-repair-and-provider-usage.txt)
+has **Verdict: PASS** for exact commit `6c73f38048d7b3bd362956c330fa67df469e9354`,
+resolving the owned-creation publication M1 and accepting endpoint usage only
+as a non-closing component increment. T-303/T-306 remain open. Low L2
+(strict usage validation can discard an opted-in answer) remains backlog.
+The [approval clarity batch](docs/evidence/t306-approval-clarity-2026-11-07.md)
+addresses the prior creation-wording and recovery-snapshot consistency lows
+in-row; independent core review is required. No new row or closure follows.
 No public release is authorized. One level of sub-rows maximum; each implementation
 sub-row must run end to end and be measured. Never tune on held-out tasks, edit
 hidden tests or weaken thresholds. Desktop UI work is deferred to a separate shell.

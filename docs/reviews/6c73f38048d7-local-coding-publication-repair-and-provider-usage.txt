@@ -1,0 +1,195 @@
+Commit: 6c73f38048d7b3bd362956c330fa67df469e9354
+Scope: local-coding-publication-repair-and-provider-usage
+
+# Independent core review: owned-creation publication repair (M1) and optional endpoint usage
+
+Reviewer: a separate, read-only Claude Opus 5.5 session at extra-high effort. This is a same-model
+review; a cross-model review must still come before any public release. Rows: T-306 (M1 re-review)
+and shared T-303, a non-closing batch. Both parent rows stay OPEN whatever the verdict.
+
+## Methods
+
+I reviewed only the frozen checkout `/lane/review-checkout` at the exact commit above
+(`git rev-parse HEAD` = the commit), against base `b6d2829368e7e01716f4fc78c84e1154a62ed3f8`
+(19 paths, +1340/-73). Before running anything I read IP-POLICY.md, the TASKS.md diff, both
+evidence files, the four changed guides, the retained FINDINGS report and every private helper
+(`verify.py`, `docs-final.py`, `audit.py`, `audit-classification-note.txt`, `run-policy.py`). Then I
+read the complete source diff and the host code around it: the issued-operation dispatch in
+`execute_call`, the structured-write sibling guard, the full admitted creation body,
+`finish_specialized_effect_event`, and the only constructor of a `Some` effect event context
+(`execute_with_correctness_events`). I did not modify the repository. No GPU, model or network
+service was used.
+
+## Exact commands and results (all run in `/lane/review-checkout`)
+
+One deviation: the requested validation directory
+`/lane/state/tmp/review-publication-usage-6c73f38048d7` already existed when I started. It was
+created at 17:09, before this session, and held only a one-line `verification.log` ("Waiting for the
+shared heavy-build/test reservation...") from an earlier attempt that was not mine. My first `mkdir`
+therefore failed and nothing ran. I left that directory untouched and used the fresh sibling
+`/lane/state/tmp/review-publication-usage-6c73f38048d7-r2` for every command below. All helpers
+select their directory from the environment, so the commands are otherwise exactly as requested.
+
+```sh
+sha256sum -c /lane/state/tmp/t303-provider-usage/review-inputs.sha256       # 41 OK, 0 failed
+sha256sum /lane/state/tmp/t303-provider-usage/review-inputs.sha256          # 5e17f937…4f5f66, as requested
+sha256sum /lane/state/tmp/t306-owned-api/node-v24.15.0/bin/node             # d1de76d8…bd932c, as requested
+export PATH=/lane/state/tmp/t306-owned-api/node-v24.15.0/bin:$PATH
+export CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+export AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-publication-usage-6c73f38048d7-r2
+mkdir -m 700 "$AGENTMAGE_VALIDATION_DIR"
+bash /tools/build-slot python3 -B /lane/state/tmp/t303-provider-usage/verify.py > "$AGENTMAGE_VALIDATION_DIR/verification.log" 2>&1
+#   exit 1 (after about 40 min of reservation wait).
+#   FOCUSED publication exit 0: 2 passed/0 failed/0 ignored/601 filtered
+#   FOCUSED codec       exit 0: 22/0/0/160 filtered
+#   FOCUSED transport   exit 0: 18/0/0/0 filtered
+#   FOCUSED repair      exit 0: 3/0/0/25 filtered
+#   FOCUSED api         exit 0: 37/0/0/0 filtered
+#   Gate: diff-check, lint-untracked, lint-reviews, markdownlint (7 files, 0 issues), lint-python,
+#   unittest (Ran 16 tests, OK, no skips), fmt --check, Clippy -D warnings (31.95 s): all exit 0;
+#   cargo test exit 101 (76.13 s). FAST GATE: FAIL. FAST_GATE_EXIT 1.
+cmp …/validation-2/plan.json "$AGENTMAGE_VALIDATION_DIR/plan.json"                   # identical
+cmp …/validation-2/source-freeze.json "$AGENTMAGE_VALIDATION_DIR/source-freeze.json" # identical
+bash /tools/build-slot python3 -B /lane/state/tmp/t303-provider-usage/docs-final.py > …/docs-final.log 2>&1
+#   exit 0; markdownlint 0 issues in 7 files; "Validated 801 Markdown file(s) and all policy invariants.";
+#   POLICY_ALL_INPUTS_MATCH 9066; FINAL PROSE/POLICY CHECKS PASS; SOURCE HASHES UNCHANGED
+cmp …/validation-2/plan-final.json "$AGENTMAGE_VALIDATION_DIR/plan-final.json"                    # identical
+cmp …/validation-2/policy-final-inputs.json "$AGENTMAGE_VALIDATION_DIR/policy-final-inputs.json"  # identical
+python3 -B /lane/state/tmp/t303-provider-usage/audit.py > "$AGENTMAGE_VALIDATION_DIR/audit.json"  # exit 0
+cmp …/validation-2/audit.json "$AGENTMAGE_VALIDATION_DIR/audit.json"                              # identical
+cmp docs/reviews/b6d2829368e7-local-coding-created-file-transfer.txt /lane/reviews/b6d2829368e7-local-coding-created-file-transfer.md  # identical
+git diff --check b6d2829368e7e01716f4fc78c84e1154a62ed3f8 --   # clean
+git status --short                                             # clean
+```
+
+I also checked my own `fast.log` directly, not only through the audit. It has 26 test targets with
+**878 passed, 53 failed, 19 ignored and 0 filtered**. All 53 failures are in the host lib
+(`agentmage_host` unittests). They panic at the shared sandbox fixtures:
+`linux_coding_runtime.rs:11298` (42, `test sandbox manifest: InvalidManifest`), `linux_read.rs:2345`
+(10, `verified worker manifest: InvalidManifest`), plus one each at `:7329` and
+`linux_repository_map.rs:748`. The base log has the same distribution, at `:11255`/`:7286`. The
++43-line shift equals exactly the lines this diff adds above them. This is the recorded
+executable-trust blocker. The 19 ignores break down as 9 host lib, 2 `native_read_cancellation` and
+8 inference (`native_inference_lease` ×3, `native_resource_admission` ×1, `muse_live_evaluation` ×1,
+`muse_live_install` ×3). I confirmed that those four inference files are byte-identical to the base
+and carry 3+1+1+3 `#[ignore` annotations. The inference package enters the gate selection only
+because this diff touches it, so the brief's classification is correct. No ignore was added
+(`git diff` adds no `#[ignore`).
+
+All eight new Rust methods pass in the unfiltered run: both
+`owned_publication_tests::*`, the three `local_chat::tests::provider_usage_*`,
+`usage_transport_keeps_exact_approval_and_reports_only_valid_eof`,
+`opted_in_usage_is_provider_reported_and_never_implies_verified_tokens` and
+`proposal_usage_uses_the_same_validated_stream_without_authorizing_edits`. So does the expanded
+`coding_repair_api::tests::synthetic_feedback_uses_existing_stream_and_strict_edit_checker_with_a_bounded_prompt`
+(four legacy/opt-in × valid/invalid cases).
+
+## Source review
+
+### M1 re-review (owned creation without terminal publication)
+
+- `shells/host/src/linux_coding_runtime.rs:2897-2921`: `execute_prepared_controlled_create` is now
+  only a wrapper. It calls `with_owned_terminal_publication(self.owned_worktree.is_some(),
+  event_context.is_some(), || self.execute_prepared_controlled_create_admitted(...))`.
+  `with_owned_terminal_publication` (`:575-584`) returns `Invalid` before invoking the closure when
+  the boundary is owned and has no context. The admitted body has exactly one call site, inside that
+  closure (grep: definition `:2923`, call `:2912`, nothing else in `shells/`). The refusal therefore
+  precedes destructuring the issued authority, privacy checks, transaction-id allocation,
+  checkpoint construction, `lease.create_driver`, kernel `execute_controlled_filesystem` (where the
+  native grant is consumed) and `driver.complete`.
+- The condition and placement match the structured-write sibling (`:2654-2658`). The only other
+  consumer of the lease (`:2742`, structured writes, rollback, hunk selection) is already guarded.
+  Grep finds no third `owned_worktree` effect path.
+- The direct path from the original finding (`RuntimeToolBoundary::execute` → `execute_call(...,
+  None)`) now refuses an owned creation. The only `Some(RuntimeEffectEventContext)` is built in
+  `execute_with_correctness_events` (`:4179-4202`). With it, the admitted body takes the
+  `begin_controlled_filesystem_with_runtime_event` / `(Some, Some)` branch of
+  `finish_specialized_effect_event`, which commits the terminal event in the authority journal.
+  `driver.complete(&result)` (`:3116-3118`) still follows that call and its `?`. A failed
+  publication therefore returns before any lineage is recorded. The unowned path is unchanged, with
+  `(false, *)` admitted.
+- As with structured writes, the host `issued` entry has already been removed (`:1791`) when the
+  guard refuses. The refused call is single-use and recorded in action history. Because the kernel
+  transaction never starts, no native grant is consumed. This matches the evidence wording.
+- Tests: the two components run the real guard function with synthetic sentinels. They are labelled
+  honestly, as not constructing a native owner or observing native grant consumption. A host-level
+  regression cannot run in this lane, because every `LinuxCodingRuntimeBoundary` fixture fails at the
+  sandbox manifest. I could not reproduce the owned direct-path attempt end to end for the same
+  reason. The original fix request accepted a component equivalent with that limit recorded, and the
+  evidence records it. Source wiring is also asserted by the audit. **M1 is resolved.**
+- L1, the edit-centric terminal confirmation wording, is recorded as backlog in the existing row,
+  not as a new row. That is acceptable.
+
+### Optional endpoint usage
+
+- Codec (`local_chat.rs`): `encode_chat` delegates with `include_usage=false`. Because of
+  `skip_serializing_if`, the legacy wire bytes are unchanged, and a test asserts that the opted-in
+  request differs only by `stream_options`. `ChatStream::new` keeps `usage_limit=None`, so
+  `collect_usage` is a no-op and legacy decoding is unchanged. With `with_usage`, the codec accepts
+  one non-null usage, only after the finish reason. That can be on the finish chunk or on the
+  existing usage-only empty-choices path. It refuses early reports and duplicates, requires three
+  `u64`→`u32` counts (bools, floats, strings and negatives fail), a checked sum and
+  `completion_tokens ≤ max_tokens`, and drops extra provider fields. `usage()` returns a value only
+  when `ended && !failed`. `ended` is set only by a successful `end()`, and a later `feed` sets
+  `failed`, which revokes the value (tested at every split point).
+- Transport (`local_chat_transport.rs`): `chat_with_usage` runs the same `authorized(approval)` and
+  `cancel.check()` before encoding. The body is `Zeroizing`, and the code shares `chat_encoded` with
+  `chat`: same `request`, header framing, 4 MiB body bound, per-event cancellation and
+  `codec.end()` then `wire.check()`. The function returns `ChatCompletion` only on the `Ok` path
+  after both, with no retry. The socket test shows the wrong-endpoint approval refused with no
+  connection, and a 400 status failing with no second connection. Truncated and cancelled streams
+  return errors, a missing report gives `None`, and a valid report gives `Some`.
+- API (`local-api/src/lib.rs`, `coding_repair_api.rs`): `include_usage` is `#[serde(default)]` on
+  `deny_unknown_fields` structs. Defaults go through the original `chat` and emit the original
+  events. Opt-in preflight runs the usage encoder before headers on `/v1/chat`, and before receipt
+  consumption in repair (`prepare_repair` → `prepare_proposal_messages(..., include_usage)`
+  precedes `consume_repair_feedback`). Disclosure, settings and endpoint staleness, created-source
+  provenance and the single-use receipt are unchanged. `proposal_usage` attaches usage only when
+  requested and the transport returned `Ok`: a strict-edit rejection or a length result keeps
+  counts, while transport errors, cancellation and oversized output keep none. Oversized output
+  cancels and the next `cancel.check()` fails the transport. A missing report serializes as
+  `null`. A usage report never changes `applied:false`/`tested:false` or the strict checker.
+- Recorder (`scripts/local_chat_smoke.py`): `--include-usage` is opt-in. Envelope keys must match
+  exactly, counts must be `int` (not `bool`) in `0..2^32-1` with a matching sum and completion
+  ≤ 1024, and an unrequested usage envelope fails. The aggregate is produced only when every turn
+  completes with a non-null report. A failed second turn leaves `tokens: null` and only the
+  completed first turn's counts. Without the flag the request and version-1 report shape remain;
+  only the human `token_note` string changes.
+- Claims: the guides and evidence consistently call counts untrusted provider statements, not
+  tokenizer, context, weight, resource or admission facts. No profile, coordinator or model-port
+  file is in the diff. The historical pre-M1 run is labelled historical.
+- Privacy, IP and integrity: new prose and code contain no private host path, username, hostname,
+  credential, personal data, sibling-project name or trademark branding. The `/lane/...` paths and
+  reviewer model name occur only inside the byte-identical retained report, as in earlier retained
+  reports. No dependency, lockfile, SBOM, evaluation input, hidden or held-out test, threshold,
+  ignore, prompt or score changes. Only the T-303 and T-306 ledger lines change, both statuses stay
+  `[ ]`, and no row or sub-row is added.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L2 (low, backlog): a strict usage check can discard an otherwise valid opted-in answer.**
+`platforms/linux-inference/src/local_chat.rs:274-276` treats a provider whose `total_tokens` is
+not exactly `prompt + completion`, or which reports `completion_tokens` above the request ceiling,
+as a protocol failure of the whole stream. The visible answer is then partial. This is documented
+and conservative, and it only applies after an explicit opt-in. A future option could record the
+report as invalid without failing the text.
+
+The existing backlog lows (L1 creation wording, lifecycle/continuation, factory allocation,
+standard-library shadowing, terminal status/owner snapshot consistency) are unchanged.
+
+## Per-row result
+
+- **T-306, M1 re-review**: M1 is resolved at this commit. In source, the owned creation entry refuses
+  without terminal context before any issued-authority use, grant consumption or native effect.
+  Publication still precedes driver completion. The real guard is exercised by passing components,
+  and the host-level limit is recorded honestly. L1 stays backlog. T-306 stays OPEN. No native owned
+  creation, Git execution, terminal-publication observation or coding score is established.
+- **T-303 (shared), optional endpoint usage**: accepted as a non-closing increment. All focused and
+  new tests pass, the source gate's FAIL exactly matches the retained base failures and ignores, and
+  formatting, Clippy, docs, policy (801/9,066), plans, audit and the retained report all match.
+  T-303 stays OPEN. No real inference, configured-endpoint coordinator admission or score is
+  established or claimed.
+
+Verdict: PASS

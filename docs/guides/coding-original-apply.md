@@ -43,7 +43,12 @@ digests, and expiry.
 
 Application displays the complete escaped preview and requires
 `apply-original <outer-preview-digest>`. The client verifies the original root
-before and after consent and sends the decision once. Piped input, an incorrect
+before and after consent. For a creation-only preview, the confirmation
+explicitly describes creating absent files with the displayed complete contents
+and destination modes, refusal of existing destinations, and the requirement
+that parent directories already exist. The preview and approval digest remain
+unchanged; this wording grants no additional operation. It sends the decision
+once. Piped input, an incorrect
 answer or a substituted root cannot approve a write. `original-deny` consumes
 the exact pending preview without writing. An error or lost reply never causes
 an automatic resend. Inspect the latest result and disk before another action.

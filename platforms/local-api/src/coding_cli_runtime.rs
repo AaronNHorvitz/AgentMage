@@ -119,6 +119,7 @@ fn recover(client: &Client) -> Result<()> {
         || owner["retention"] != "process-only"
         || owner["apply_approved"] != false
         || !owner["recovery_pending"].is_boolean()
+        || owner["recovery_pending"] != state["runtime_recovery_pending"]
     {
         return Err(());
     }

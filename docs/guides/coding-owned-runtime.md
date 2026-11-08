@@ -240,6 +240,11 @@ agentmage-code '<loopback-ip:port>' '<private-auth-directory>' runtime-recover
 ```
 
 The client reads service state, then the control-only owner snapshot. It shows
+no recovery confirmation if the snapshots disagree on whether recovery is
+pending. Inspect again for a fresh consistent pair; it does not retry or send
+an ownership decision from the inconsistent pair. The two reads are not an
+atomic snapshot, and a matching pair does not replace the server's later checks.
+For a consistent pair, it shows
 the held root and handoff digests for attached and pending recovery alike and
 requires `recover <handoff-digest>` in the controlling terminal. It sends those
 exact digests once and checks the echoed identity. A changed handoff refuses;

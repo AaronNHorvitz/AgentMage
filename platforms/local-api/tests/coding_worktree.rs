@@ -744,6 +744,21 @@ fn synthetic_api_command_preview_needs_exact_tty_consent_and_current_root() {
             let consent: Value =
                 serde_json::from_str(transcript.split("Type exactly ").next().unwrap()).unwrap();
             assert_eq!(consent["preview"], expected_preview);
+            if kind == "original-create" {
+                let warning = consent["warning"].as_str().unwrap();
+                assert!(warning.contains("Creates the displayed absent files"));
+                assert!(warning.contains("complete displayed contents and destination modes"));
+                assert!(warning.contains("Existing destinations refuse"));
+                assert!(warning.contains("parent directories must already exist"));
+                assert!(warning.contains("No index change, commit, push or test claim"));
+            } else if kind == "original" {
+                assert!(
+                    consent["warning"]
+                        .as_str()
+                        .unwrap()
+                        .contains("complete diff")
+                );
+            }
             assert_eq!(
                 consent[if original { "repository" } else { "worktree" }],
                 root.to_str().unwrap()

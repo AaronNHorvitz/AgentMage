@@ -1,0 +1,212 @@
+Commit: 3ee8285e595a208fb1e354d46ab95e56d24c2bae
+Scope: local-coding-scoped-mcp
+
+Tier: core. Rows: T-303 / T-306, a non-closing interface batch. Both parents stay OPEN. This review
+does not close either parent, does not replace the separate in-flight review of 6c73f380, and does not
+approve or qualify any coding model.
+
+## Methods
+
+- I checked the commit in the frozen checkout: `git rev-parse HEAD` returned
+  3ee8285e595a208fb1e354d46ab95e56d24c2bae. The checkout was clean before and after the review.
+- I read IP-POLICY.md, Decision 0161, docs/guides/coding-mcp.md,
+  docs/evidence/t303-coding-mcp-2026-11-07.md and the TASKS.md addition. I also read the full
+  ten-path source diff against 6c73f38048d7b3bd362956c330fa67df469e9354 (coding_mcp.rs, bin/agentmage-mcp.rs,
+  coding_cli.rs, lib.rs, coding_repair_api.rs, tests/coding_cli.rs) and both private helpers
+  (verify.py, final.py) before running anything.
+- I traced the surrounding unchanged API code to judge the race claims. That covered `begin_scoped`
+  (a single active operation), `workspace_sources`, the PUT/DELETE workspace handlers, the
+  settings PUT/DELETE handlers, owned-runtime attach, the POST/GET `/v1/code/workspace/changes`
+  handlers, POST `/v1/code/workspace/apply`, the route control gates (lib.rs:1170-1184) and the
+  terminal `apply`/`confirm` path.
+- I ran my own escape probes against freshly built debug binaries (`agentmage-local-api serve`,
+  `agentmage-code`, `agentmage-mcp`) using a private scratch directory under the validation directory.
+  The probes used synthetic files only, no model and no GPU.
+
+## Commands and results
+
+```
+sha256sum -c /lane/state/tmp/t303-coding-mcp/review-inputs.sha256      -> all 19 OK
+sha256sum review-inputs.sha256                                           -> 4131c573...87f4c6 (matches)
+sha256sum node-v24.15.0/bin/node                                         -> d1de76d8...bd932c (matches)
+PATH=<node>:$PATH CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 \
+AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-scoped-mcp-3ee8285e595a \
+  bash /tools/build-slot python3 -B /lane/state/tmp/t303-coding-mcp/verify.py   -> exit 0
+    FOCUSED mcp-unit exit 0; FOCUSED terminal exit 0; FAST_GATE_EXIT 0
+cmp validation-2/plan.json          <mine>/plan.json            -> identical
+cmp validation-2/source-freeze.json <mine>/source-freeze.json   -> identical
+python3 -B /lane/state/tmp/t303-coding-mcp/final.py             -> exit 0 (markdownlint 4 files, 0 issues)
+cmp validation-2/plan-final.json <mine>/plan-final.json          -> identical
+cmp validation-2/audit.json      <mine>/audit.json               -> identical
+git diff --check 6c73f380... --                                  -> clean
+git status --short                                               -> empty
+```
+
+My runs:
+
+- **Focused protocol run:** 4 passed, 28 filtered.
+- **Complete terminal target:** 14 passed, 0 filtered, 0 ignored. My MCP component timer read
+  elapsed_us=38024. The builder's final run read 38004 and its failed first run 38104.
+- **Fast gate:** six `RESULT exit=0` and `FAST GATE: PASS`.
+  - The eight target results were 32+0+0+0+14+22+13+37 = 118 passed, 0 failed, 0 ignored,
+    0 filtered.
+  - All eight new methods appear as `... ok` in the unfiltered fast log: the four
+    `coding_cli::mcp::tests::*` methods and the four terminal `mcp_*`/`fresh_service_*` methods.
+- **Timings:** none are asserted. My cold build made the focused unit step take 36.2 seconds.
+
+I also inspected the builder's first failed run (validation-1/terminal.log). It shows 13 passing tests
+and one connection reset (ECONNRESET) in the new proposal-test setup. The commit's version of that test
+uses the real terminal `select-model` consent flow. No handler, threshold, existing test or ignore was
+changed for it.
+
+## Independent escape and protocol probes
+
+I used a synthetic workspace containing calc.py (with an embedded fake JSON-RPC line and an
+"IGNORE PREVIOUS INSTRUCTIONS" line), sub/other.py, and an `outside/secret.txt` that is not selected.
+
+**Selection**
+- Selecting `link.py` (a symlink to the outside file) was refused with `code.workspace.boundary`.
+- Selecting `../outside/secret.txt` and `/etc/passwd` was refused with `code.workspace.selection`.
+
+**MCP reads with a valid pin**
+- These paths were refused at the bridge or the API, with no content returned: `../outside/secret.txt`,
+  `./calc.py`, `sub/../calc.py`, `link.py`, and a duplicate `calc.py`.
+- These calls were refused as invalid arguments (-32602), with no dispatch: injected
+  `workspace_selection_id`, injected `root`, `workspace_diff` with an extra key, and
+  `workspace_apply` as a tool or as a method.
+- A `_meta` member containing `approve:true` was inert.
+- The embedded fake JSON-RPC line in calc.py came back escaped inside a text item and was not
+  executed.
+
+**Symlink swap after selection** (I swapped calc.py for a symlink to the secret and sub/ for a
+directory symlink)
+- Read and search through MCP returned `code.workspace.boundary`. There was no leak: "SECRET" never
+  appeared on stdout.
+
+**Credentials**
+- Each of these refused at launch with no stdout: a delegated directory with mode 0755, a token with
+  mode 0644, a symlinked token, a hard-linked token (nlink 2), and a control-only directory.
+- A directory containing both tokens worked and loaded only `client.token`, per the code path
+  `crate::read_api_token(dir, "client.token")`.
+- These launch arguments refused: missing consent, the wrong consent flag, revision 0, an uppercase
+  or 63-character selection ID, `0.0.0.0`, `localhost`, and a non-loopback IP.
+
+**Restart**
+- I killed the service, restarted it with the same authentication, and reselected twice to reach
+  revision 2 again. The old pin (revision 2, old ID) was refused for workspace, read and diff.
+
+**Race at the API owner**
+- A direct POST read with the current revision and a stale ID returned 409
+  `code.workspace.selection-stale`. An empty-string ID returned the same.
+- An absent or null ID was accepted, which is the documented compatibility path for old clients.
+- A non-string ID returned 400.
+- From code, this is safe:
+  - `workspace_sources` checks the ID under the state lock while the request holds the single
+    active operation.
+  - PUT/DELETE workspace, settings changes and runtime attach all require that no other operation
+    is active.
+  - So reselection cannot interleave with the later re-lock in staging (lib.rs:1258-1306).
+  - The diff check compares the pending ID returned in the same GET.
+
+**Staging and diff**
+- A valid MCP stage produced a pending preview and left the file unchanged.
+- A stale `expected_sources` hash returned `code.proposal.stale`.
+- An answer editing an unselected path was refused.
+- After a terminal `deny` created a write record, `workspace_diff` returned only
+  `{"pending":null,"workspace_revision":2}`. The terminal `review` showed 1 record, so historical
+  records are excluded.
+
+**Model proposal without consent**
+- Refused at the API with `code.workspace.disclosure-required`.
+
+**Framing**
+- Accepted:
+  - a frame of exactly 262144 bytes;
+  - CRLF line endings;
+  - negative integer IDs;
+  - `1` and `"1"` as distinct IDs.
+- `notifications/cancelled` was ignored and did not dispatch.
+- Refused, ending the session with exit 1: a frame of 262145 bytes and an unterminated frame at
+  EOF.
+- Refused as Invalid Request: an integer ID over 64 bits, a boolean ID and a client response
+  message.
+
+**Cleanup**
+- The probe service was stopped, and no probe process remains.
+
+**Tool surface (code reading)**
+- The six tools map to four fixed POST routes plus two fixed GETs, all with `control=false`.
+- `validate_arguments` closes the argument keys, so `workspace_revision`, `workspace_selection_id`,
+  routes, endpoints and credentials cannot come from MCP arguments.
+- No apply, command, worktree, commit or push route is reachable.
+- Notifications cannot dispatch tools.
+- IDs are unique per session, capped at 4096.
+- Replies are capped at 8 MiB and are refused whole if larger.
+- There is no retry, and no in-flight cancellation is claimed.
+- No new dependency was added and Cargo.lock is unchanged.
+- The added lines contain no private paths, usernames or credentials.
+
+**Prose and policy**
+- Prose does not compare against or name other agent products.
+- The protocol is referenced descriptively with a licence note, and no SDK or third-party code is
+  included.
+- TASKS.md adds one paragraph, and the status table is preserved, as asserted by final.py and
+  checked by me.
+
+## Findings
+
+No critical, high or medium findings.
+
+**Low (backlog)**
+
+1. **The API refusal reason is not passed to the MCP client.**
+   - Location: platforms/local-api/src/coding_mcp.rs:162.
+   - Every API refusal becomes `mcp.api-refused-or-disconnected`. The bounded, escaped code (for
+     example `code.workspace.selection-stale` or `code.workspace.disclosure-required`) goes only to
+     stderr.
+   - Effect: the calling program cannot tell "relaunch with a new selection" from "the person must
+     approve disclosure" or "hash stale".
+   - Fix: carry the already-validated API `error` code string (pattern `^[a-z.-]{1,64}$`) in the
+     isError payload. Keep `retry:false`.
+2. **Invalid Request replies don't follow JSON-RPC.**
+   - Location: coding_mcp.rs:93.
+   - Invalid Request always replies with `id:null`, even when a valid ID is present.
+   - A client-sent JSON-RPC response (`id` + `result`, no `method`) gets an error reply. JSON-RPC
+     says it should get none.
+   - This has no current impact because the server never sends requests.
+   - Fix: echo a valid ID, and silently drop response-shaped messages.
+3. **MCP staging silently replaces a person-staged pending preview, and the terminal review/apply
+   display has no origin marker.**
+   - Location: lib.rs:1306, and coding_cli.rs:590-610 for the display.
+   - This is documented in the guide. Apply binds the displayed preview hash, so nothing undisplayed
+     can be written.
+   - Fix: add a staged-by field (client or terminal) to the pending preview shown at the
+     controlling terminal.
+4. **A control token copied as `client.token` is not detected.**
+   - Location: coding_cli.rs:59-66.
+   - If a person copies `control.token` into the delegated `client.token`, the bridge runs (my probe:
+     exit 0) and the calling program's directory then holds the control credential.
+   - The MCP tools still reach only fixed non-control routes.
+   - Fix: add a one-line warning to the guide, or a launch-time probe of a control-only route
+     (for example GET `/v1/settings`) that refuses if it is accepted.
+
+## Per-row result
+
+- **T-303 / T-306, interface batch "local-coding-scoped-mcp":** PASS for this non-closing batch. Its
+  claims hold at this exact commit:
+  - client-only credential;
+  - explicit launch consent;
+  - revision plus random selection-ID pinning, rechecked under the API's active operation across
+    restart and reselection;
+  - closed tool arguments;
+  - fixed routes;
+  - no approve/write/command surface;
+  - pending-only diff;
+  - bounded framing.
+
+  Both parent rows remain OPEN. No parent closure, model admission, score, publication or release
+  status follows from this verdict. The deferred native-host trust blocker is unchanged and was not
+  assessed. I did not measure external editor integration or any parent coding workflow. No UI
+  screens are involved.
+
+Verdict: PASS

@@ -1351,3 +1351,27 @@ fn recovery_refuses_incomplete_identity_before_confirmation_or_post() {
         }
     }
 }
+
+#[test]
+fn recovery_refuses_inconsistent_lifecycle_snapshots_before_confirmation_or_post() {
+    let f = Fixture::new();
+    for pending in [false, true] {
+        let peer = f.peer(vec![ownership_state(pending), owner_identity(!pending)]);
+        let output = f.tty(peer.address, &["runtime-recover"], "approve");
+        assert_ne!(output["status"], 0, "{output}");
+        assert_eq!(output["answered"], 0, "{output}");
+        assert!(
+            !output["transcript"]
+                .as_str()
+                .unwrap()
+                .contains("Type exactly")
+        );
+        let requests = peer.finish();
+        assert_eq!(requests.len(), 2);
+        assert!(
+            requests
+                .iter()
+                .all(|request| request["route"].as_str().unwrap().starts_with("GET "))
+        );
+    }
+}

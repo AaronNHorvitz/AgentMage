@@ -520,9 +520,18 @@ fn original_apply_decide(client: &Client, original: Option<&str>) -> Result<()> 
         let verify =
             || LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ());
         verify()?;
+        let warning = if preview["write_preview"]["operations"]
+            .as_array()
+            .is_some_and(|operations| {
+                !operations.is_empty() && operations.iter().all(|entry| entry["kind"] == "create")
+            }) {
+            "Creates the displayed absent files in the original checkout with their complete displayed contents and destination modes. Existing destinations refuse; parent directories must already exist. No index change, commit, push or test claim. Process-only records: inspect disk after a lost reply; never resend approval."
+        } else {
+            "Writes exactly this complete diff in the original checkout. No index change, commit, push or test claim. Process-only records: inspect disk after a lost reply; never resend approval."
+        };
         confirm(
             &json!({"repository":root,"preview":preview,
-            "warning":"Writes exactly this complete diff in the original checkout. No index change, commit, push or test claim. Process-only records: inspect disk after a lost reply; never resend approval."}),
+            "warning":warning}),
             &format!("apply-original {hash}"),
         )?;
         verify()?;
