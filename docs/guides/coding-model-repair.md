@@ -60,6 +60,11 @@ The POST is a closed object with these required fields:
 ```
 
 No caller supplies output, a receipt body, a worktree root or creation proof.
+Optional `workspace_selection_id` and `expected_root_sha256` pin the exact
+source selection and its root digest. Mismatches refuse with
+`409 code.workspace.selection-stale` or `409 code.repair.scope` before failure
+admission; correct pins confer no ownership or disclosure authority. The guided
+worktree command supplies both, alongside its original settings binding.
 The owner derives failure data from its normalized command result. The existing
 kernel rerun planner determines eligibility; unknown, passed, malformed,
 uncertain, exhausted and non-retryable results refuse. A caller cannot adopt

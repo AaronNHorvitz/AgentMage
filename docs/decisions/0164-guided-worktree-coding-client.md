@@ -20,6 +20,14 @@ worktree creation binding. Require a clean test series, at most three tests,
 fresh approval per action and exact prior-receipt binding for repairs. Send each
 request once and stop on a lost reply. Do not recover or renew budgets.
 
+Bind each guided proposal to the initial source-selection identity, settings
+revision and exact endpoint, and the original held worktree root digest. Check
+fresh helper observations against that binding. The original API validates
+request pins under its operation lease before file reads or model dispatch,
+closing the gap between terminal inspection and admission. Repair requests
+retain the same binding and their original exact failure-disclosure approval.
+Optional pins narrow the older API contract without granting any authority.
+
 This is client scheduling over existing product operations, not another runtime
 coordinator, model transport, sandbox, permission system or persistence format.
 The retained endpoint coordinator remains read-only. Per-operation records

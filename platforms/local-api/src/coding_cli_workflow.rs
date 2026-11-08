@@ -119,7 +119,11 @@ pub(super) fn run(client: &Client, args: &[String]) -> Result<()> {
     }
     let mut body = definition(text)?;
     let selected = selection(client)?;
-    if selected["model_context_approved"] != true {
+    if selected["model_context_approved"] != true
+        || selected["workspace_selection_id"]
+            .as_str()
+            .is_none_or(|id| id.is_empty())
+    {
         return Err(());
     }
     let settings = client.json("GET", "/v1/settings", true, None)?;
@@ -176,9 +180,16 @@ pub(super) fn run(client: &Client, args: &[String]) -> Result<()> {
             tokens,
             task,
             Some(root),
-            prior.as_deref().map(|receipt| ProposalRepair {
-                receipt: Some(receipt),
-            }),
+            ProposalOptions {
+                repair: prior.as_deref().map(|receipt| ProposalRepair {
+                    receipt: Some(receipt),
+                }),
+                binding: Some(ProposalBinding {
+                    selected: &selected,
+                    settings: &settings,
+                    worktree_root_sha256: identity,
+                }),
+            },
         )?;
         // The proposal helper prepared an inert diff after separate read consent.
         // Existing exact diff approval performs the only native write.

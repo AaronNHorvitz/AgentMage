@@ -162,6 +162,99 @@ struct Script {
     selected: Value,
     settings: Value,
 }
+
+#[test]
+fn guided_client_keeps_the_original_disclosure_binding_on_every_proposal() {
+    let f = Fixture::new();
+    let t = template();
+    let mut script = Script::new(&f);
+    script.start(&t);
+    let prior = script.attempt(&t, 1, None, "assertion_failed");
+    script.attempt(&t, 2, Some(&prior), "passed");
+    let selected = script.selected.clone();
+    let settings = script.settings.clone();
+    let root = script.root.clone();
+    let (out, calls, _) = script.run(&f, &t, "approve");
+    assert_eq!(out["status"], 0, "{out}");
+    let proposals = calls
+        .iter()
+        .filter(|call| {
+            call["route"] == "POST /v1/code/workspace/proposals HTTP/1.1"
+                || call["route"] == "POST /v1/code/repository/repair/proposals HTTP/1.1"
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(proposals.len(), 2);
+    for call in proposals {
+        let body = &call["body"];
+        assert_eq!(body["workspace_revision"], selected["workspace_revision"]);
+        assert_eq!(
+            body["workspace_selection_id"],
+            selected["workspace_selection_id"]
+        );
+        assert_eq!(body["settings_revision"], settings["settings_revision"]);
+        assert_eq!(body["settings_endpoint"], settings["endpoint"]);
+        assert_eq!(body["expected_root_sha256"], root);
+    }
+}
+
+#[test]
+fn guided_client_refuses_replacement_during_the_proposal_helpers_fresh_reads() {
+    let t = template();
+    for case in [
+        "first-selection",
+        "repair-selection",
+        "repair-settings",
+        "repair-root",
+    ] {
+        let f = Fixture::new();
+        let mut script = Script::new(&f);
+        script.start(&t);
+        let prior = script.attempt(&t, 1, None, "assertion_failed");
+        script.attempt(&t, 2, Some(&prior), "passed");
+        let repair = script
+            .routes
+            .iter()
+            .position(|r| r == "GET /v1/code/repository/repair HTTP/1.1")
+            .unwrap();
+        let index = match case {
+            "first-selection" => 7,
+            "repair-selection" => repair - 1,
+            "repair-settings" => repair + 1,
+            "repair-root" => repair,
+            _ => unreachable!(),
+        };
+        let field = match case {
+            "repair-settings" => "settings_revision",
+            "repair-root" => "worktree_root_sha256",
+            _ => "workspace_selection_id",
+        };
+        script.replies[index][field] = if case == "repair-settings" {
+            json!(2)
+        } else {
+            json!("9".repeat(64))
+        };
+        let (out, calls, routes) = script.run(&f, &t, "approve");
+        assert_ne!(out["status"], 0, "{case}: {out}");
+        assert_eq!(calls.len(), index + 1, "{case}: {out}");
+        assert_eq!(
+            out["answered"],
+            if case == "first-selection" { 0 } else { 3 },
+            "{case}: {out}"
+        );
+        assert_eq!(
+            calls
+                .iter()
+                .map(|c| c["route"].as_str().unwrap().to_owned())
+                .collect::<Vec<_>>(),
+            routes[..calls.len()]
+        );
+        assert!(
+            !calls
+                .iter()
+                .any(|c| c["route"] == "POST /v1/code/repository/repair/proposals HTTP/1.1")
+        );
+    }
+}
 impl Script {
     fn new(f: &Fixture) -> Self {
         fs::create_dir(f.root.join("tree")).unwrap();

@@ -1103,6 +1103,67 @@ fn repair_api_requires_control_exact_object_disclosure_and_owned_failure() {
 }
 
 #[test]
+fn repair_api_checks_optional_selection_and_root_pins_before_failure_admission() {
+    let f = Fixture::new();
+    let upstream = TcpListener::bind("127.0.0.1:0").unwrap();
+    upstream.set_nonblocking(true).unwrap();
+    let endpoint = format!("http://{}/v1", upstream.local_addr().unwrap());
+    assert_eq!(
+        f.call(
+            "PUT",
+            "/v1/settings",
+            true,
+            json!({"endpoint":endpoint,"approve_conversations":true})
+        )
+        .0,
+        200
+    );
+    let (status, selected) = f.call(
+        "PUT",
+        "/v1/code/workspace",
+        true,
+        json!({"root":f.root.join("repo"),"paths":["sentinel"],"approve_read":true,
+            "approve_model_context":true,"settings_revision":1,"settings_endpoint":endpoint}),
+    );
+    assert_eq!(status, 200);
+    let scope = agentmage_platform_linux::LinuxCodingReadScope::select(
+        &f.root.join("repo"),
+        &["sentinel".into()],
+    )
+    .unwrap();
+    let request = json!({"workspace_revision":selected["workspace_revision"],
+        "workspace_selection_id":selected["workspace_selection_id"],
+        "expected_root_sha256":scope.root_sha256(),"paths":["sentinel"],"model":"synthetic-model",
+        "task":"Repair sentinel","max_message_bytes":8192,"max_tokens":128,
+        "receipt_sha256":"a".repeat(64),"feedback_sha256":"b".repeat(64),
+        "settings_revision":1,"settings_endpoint":endpoint,"approve_failure_disclosure":true});
+    let route = "/v1/code/repository/repair/proposals";
+    for (field, code) in [
+        ("workspace_selection_id", "code.workspace.selection-stale"),
+        ("expected_root_sha256", "code.repair.scope"),
+    ] {
+        let mut stale = request.clone();
+        stale[field] = json!("9".repeat(64));
+        let (status, result) = f.call("POST", route, true, stale);
+        assert_eq!(status, 409);
+        assert_eq!(result["error"], code);
+    }
+    // Correct pins cannot grant ownership, fabricate an eligible failed test,
+    // or spend a proposal. They only narrow the original admission path.
+    let (status, result) = f.call("POST", route, true, request);
+    assert_eq!(status, 409);
+    assert_eq!(result["error"], "code.command.worktree-required");
+    assert_eq!(
+        upstream.accept().unwrap_err().kind(),
+        std::io::ErrorKind::WouldBlock
+    );
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"human work"
+    );
+}
+
+#[test]
 fn synthetic_propose_worktree_requires_complete_proposal_and_fresh_read_consent() {
     // This is protocol evidence only: proposal, failure and creation are synthetic.
     for repair in [false, true] {

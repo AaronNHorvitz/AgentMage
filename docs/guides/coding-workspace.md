@@ -142,6 +142,18 @@ after mapping require fresh native validation during exact source selection.
 
 ## Read, search and propose
 
+`POST /v1/code/workspace/proposals` also accepts optional
+`settings_revision` and `settings_endpoint` pins together, and an optional
+`expected_root_sha256`. The original operation lease holds the exact endpoint
+configuration and workspace selection while checking these pins and reading
+source. A mismatched settings pair returns `409 code.workspace.settings-stale`;
+a partial pair returns `400 code.workspace.settings-binding`; a mismatched root
+returns `409 code.workspace.root-stale`. Each refuses before file reads or
+model dispatch. Existing `workspace_selection_id` checking still applies.
+Omitting the pins preserves the original endpoint-bound disclosure contract.
+The guided worktree command always supplies the complete binding. A root digest
+identifies the selected directory, not a content snapshot or creation proof.
+
 An ordinary client credential may request:
 
 ```text

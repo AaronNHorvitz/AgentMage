@@ -357,6 +357,18 @@ struct ProposalRepair<'a> {
     receipt: Option<&'a str>,
 }
 
+struct ProposalBinding<'a> {
+    selected: &'a Value,
+    settings: &'a Value,
+    worktree_root_sha256: &'a str,
+}
+
+#[derive(Default)]
+struct ProposalOptions<'a> {
+    repair: Option<ProposalRepair<'a>>,
+    binding: Option<ProposalBinding<'a>>,
+}
+
 fn propose(
     client: &Client,
     model: &str,
@@ -364,10 +376,15 @@ fn propose(
     tokens: &str,
     task: &str,
     worktree: Option<&str>,
-    repair: Option<ProposalRepair<'_>>,
+    options: ProposalOptions<'_>,
 ) -> Result<()> {
     let selected = selection(client)?;
-    if selected["model_context_approved"] != true {
+    if selected["model_context_approved"] != true
+        || options
+            .binding
+            .as_ref()
+            .is_some_and(|binding| binding.selected != &selected)
+    {
         return Err(());
     }
     let message_bytes = message_bytes.parse::<usize>().map_err(|_| ())?;
@@ -376,8 +393,16 @@ fn propose(
         "workspace_revision":selected["workspace_revision"],"paths":selected["paths"],
         "model":model,"task":task,"max_message_bytes":message_bytes,"max_tokens":tokens
     });
+    if selected["workspace_selection_id"].is_string() {
+        body["workspace_selection_id"] = selected["workspace_selection_id"].clone();
+    }
+    if let Some(binding) = &options.binding {
+        body["settings_revision"] = binding.settings["settings_revision"].clone();
+        body["settings_endpoint"] = binding.settings["endpoint"].clone();
+        body["expected_root_sha256"] = json!(binding.worktree_root_sha256);
+    }
     let mut expected_feedback = None;
-    let route = if let Some(repair) = &repair {
+    let route = if let Some(repair) = &options.repair {
         let root = worktree.ok_or(())?;
         let feedback = client.json("GET", "/v1/code/repository/repair", true, None)?;
         let hash = feedback["feedback_sha256"]
@@ -392,10 +417,22 @@ fn propose(
             .as_str()
             .filter(|s| digest(s))
             .ok_or(())?;
-        if repair.receipt.is_some_and(|expected| expected != receipt) {
+        if repair.receipt.is_some_and(|expected| expected != receipt)
+            || options
+                .binding
+                .as_ref()
+                .is_some_and(|binding| binding.worktree_root_sha256 != identity)
+        {
             return Err(());
         }
         let settings = client.json("GET", "/v1/settings", true, None)?;
+        if options
+            .binding
+            .as_ref()
+            .is_some_and(|binding| binding.settings != &settings)
+        {
+            return Err(());
+        }
         let revision = settings["settings_revision"].as_u64().ok_or(())?;
         let endpoint = settings["endpoint"].as_str().ok_or(())?;
         LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ())?;
@@ -416,7 +453,7 @@ fn propose(
     } else {
         "/v1/code/workspace/proposals"
     };
-    let events = client.call("POST", route, repair.is_some(), Some(body), show)?;
+    let events = client.call("POST", route, options.repair.is_some(), Some(body), show)?;
     let context = events.first().ok_or(())?;
     let terminal = events.last().ok_or(())?;
     if context["type"] != "context"
@@ -461,7 +498,7 @@ fn propose(
     client.idle()?;
     let mut request = json!({
         "workspace_revision":selected["workspace_revision"],"paths":selected["paths"],
-        "expected_sources":expected,"task":task,"max_message_bytes": if repair.is_some() {
+        "expected_sources":expected,"task":task,"max_message_bytes": if options.repair.is_some() {
             context["source_message_bytes"].as_u64().filter(|n| (2048..=32768).contains(n)).ok_or(())?
         } else { message_bytes as u64 },"answer":&**answer
     });
@@ -846,12 +883,24 @@ fn execute(args: &[String]) -> Result<()> {
             };
             show(&client.json("POST", route, false, Some(body))?)
         }
-        ("propose", [model, bytes, tokens, task]) => {
-            propose(&client, model, bytes, tokens, task, None, None)
-        }
-        ("propose-worktree", [root, model, bytes, tokens, task]) => {
-            propose(&client, model, bytes, tokens, task, Some(root), None)
-        }
+        ("propose", [model, bytes, tokens, task]) => propose(
+            &client,
+            model,
+            bytes,
+            tokens,
+            task,
+            None,
+            ProposalOptions::default(),
+        ),
+        ("propose-worktree", [root, model, bytes, tokens, task]) => propose(
+            &client,
+            model,
+            bytes,
+            tokens,
+            task,
+            Some(root),
+            ProposalOptions::default(),
+        ),
         ("repair-worktree", [root, model, bytes, tokens, task]) => propose(
             &client,
             model,
@@ -859,7 +908,10 @@ fn execute(args: &[String]) -> Result<()> {
             tokens,
             task,
             Some(root),
-            Some(ProposalRepair { receipt: None }),
+            ProposalOptions {
+                repair: Some(ProposalRepair { receipt: None }),
+                ..ProposalOptions::default()
+            },
         ),
         ("apply", [root]) => apply(&client, Some(root)),
         ("deny", []) => apply(&client, None),

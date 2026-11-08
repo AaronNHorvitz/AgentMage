@@ -1194,6 +1194,143 @@ fn document(bytes: &[u8]) -> Value {
 }
 
 #[test]
+fn proposal_binding_refuses_stale_or_partial_identity_before_source_reads_and_transport() {
+    let api = Api::new();
+    let files = WorkspaceFiles::new();
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let endpoint = format!("http://{}/v1", listener.local_addr().unwrap());
+    api.configure(&endpoint);
+    let revision = files.select(&api, true);
+    let selected = document(&api.call("GET", "/v1/code/workspace", CLIENT, None).1);
+    let settings = document(&api.call("GET", "/v1/settings", CONTROL, None).1);
+    let scope =
+        agentmage_platform_linux::LinuxCodingReadScope::select(&files.0, &["calc.py".into()])
+            .unwrap();
+    let mut input = workspace_proposal(revision);
+    input["workspace_selection_id"] = selected["workspace_selection_id"].clone();
+    input["settings_revision"] = settings["settings_revision"].clone();
+    input["settings_endpoint"] = settings["endpoint"].clone();
+    input["expected_root_sha256"] = json!(scope.root_sha256());
+    // A source read here would fail at the file boundary. The exact stale-pin
+    // refusals below must happen earlier, without touching a replacement file.
+    fs::rename(files.0.join("calc.py"), files.0.join("parked.py")).unwrap();
+    symlink(files.0.join("unselected.py"), files.0.join("calc.py")).unwrap();
+    for (field, value, status, code) in [
+        (
+            "settings_revision",
+            json!(0),
+            409,
+            "code.workspace.settings-stale",
+        ),
+        (
+            "settings_endpoint",
+            json!("http://127.0.0.1:1/v1"),
+            409,
+            "code.workspace.settings-stale",
+        ),
+        (
+            "settings_revision",
+            Value::Null,
+            400,
+            "code.workspace.settings-binding",
+        ),
+        (
+            "settings_endpoint",
+            Value::Null,
+            400,
+            "code.workspace.settings-binding",
+        ),
+        (
+            "expected_root_sha256",
+            json!("9".repeat(64)),
+            409,
+            "code.workspace.root-stale",
+        ),
+        (
+            "workspace_selection_id",
+            json!("9".repeat(64)),
+            409,
+            "code.workspace.selection-stale",
+        ),
+    ] {
+        let mut stale = input.clone();
+        stale[field] = value;
+        let result = api.call("POST", "/v1/code/workspace/proposals", CLIENT, Some(stale));
+        assert_eq!(
+            result.0,
+            status,
+            "{field}: {}",
+            String::from_utf8_lossy(&result.1)
+        );
+        assert_eq!(document(&result.1)["error"], code, "{field}");
+        assert!(matches!(listener.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock));
+    }
+    fs::remove_file(files.0.join("calc.py")).unwrap();
+    fs::rename(files.0.join("parked.py"), files.0.join("calc.py")).unwrap();
+    // Reapproving the same address and selection cannot renew the old request's
+    // settings pin, even when the caller updates its workspace identities.
+    api.configure(&endpoint);
+    input["workspace_revision"] = json!(files.select(&api, true));
+    input["workspace_selection_id"] =
+        document(&api.call("GET", "/v1/code/workspace", CLIENT, None).1)["workspace_selection_id"]
+            .clone();
+    let result = api.call("POST", "/v1/code/workspace/proposals", CLIENT, Some(input));
+    assert_eq!(result.0, 409);
+    assert_eq!(
+        document(&result.1)["error"],
+        "code.workspace.settings-stale"
+    );
+    assert!(matches!(listener.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock));
+}
+
+#[test]
+fn exactly_bound_workspace_proposal_uses_the_original_endpoint_and_read_path() {
+    let api = Api::new();
+    let files = WorkspaceFiles::new();
+    let (endpoint, worker) = upstream(|mut socket| {
+        let raw = incoming(&mut socket);
+        let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
+        let body = document(&raw[start..]);
+        assert!(
+            body["messages"][1]["content"]
+                .as_str()
+                .unwrap()
+                .contains("calc.py")
+        );
+        assert!(!body.to_string().contains("expected_root_sha256"));
+        assert!(!body.to_string().contains("workspace_selection_id"));
+        reply(
+            &mut socket,
+            "text/event-stream",
+            &format!("{}{}", chunk(&coding_answer()), end()),
+        );
+    });
+    api.configure(&endpoint);
+    let mut input = workspace_proposal(files.select(&api, true));
+    let selected = document(&api.call("GET", "/v1/code/workspace", CLIENT, None).1);
+    let settings = document(&api.call("GET", "/v1/settings", CONTROL, None).1);
+    let scope =
+        agentmage_platform_linux::LinuxCodingReadScope::select(&files.0, &["calc.py".into()])
+            .unwrap();
+    input["workspace_selection_id"] = selected["workspace_selection_id"].clone();
+    input["settings_revision"] = settings["settings_revision"].clone();
+    input["settings_endpoint"] = settings["endpoint"].clone();
+    input["expected_root_sha256"] = json!(scope.root_sha256());
+    let (status, bytes) = api.call("POST", "/v1/code/workspace/proposals", CLIENT, Some(input));
+    assert_eq!(status, 200);
+    let rows = events(&bytes);
+    assert_endpoint_runtime_observation(&rows);
+    assert_eq!(rows.last().unwrap()["type"], "proposal");
+    worker.join().unwrap();
+    assert!(
+        fs::read_to_string(files.0.join("calc.py"))
+            .unwrap()
+            .contains("return a - b")
+    );
+}
+
+#[test]
 fn workspace_requires_control_choice_exact_paths_and_explicit_model_disclosure() {
     let api = Api::new();
     let files = WorkspaceFiles::new();

@@ -734,6 +734,9 @@ struct WorkspaceSearch {
 struct WorkspaceProposal {
     workspace_revision: u64,
     workspace_selection_id: Option<String>,
+    settings_revision: Option<u64>,
+    settings_endpoint: Option<String>,
+    expected_root_sha256: Option<String>,
     paths: Vec<String>,
     model: String,
     task: String,
@@ -889,6 +892,46 @@ fn begin_scoped<'a>(
 
 // The operation token prevents grant/settings replacement while collecting and
 // using these snapshots. No grant object or absolute path reaches the model.
+fn workspace_proposal_sources(
+    state: &Mutex<State>,
+    input: &WorkspaceProposal,
+    config: Option<&Configuration>,
+) -> Result<Vec<CodingSource>, (u16, &'static str)> {
+    // Called only after acquiring the original operation lease. Check caller
+    // pins before any file access, using the exact configuration held for this
+    // dispatch. Missing pins retain the older explicit-disclosure contract.
+    {
+        let guard = state.lock().map_err(|_| (500, "code.workspace.state"))?;
+        match (input.settings_revision, input.settings_endpoint.as_deref()) {
+            (None, None) => {}
+            (Some(revision), Some(endpoint)) => {
+                if revision != guard.revision
+                    || config.is_none_or(|current| current.endpoint != endpoint)
+                {
+                    return Err((409, "code.workspace.settings-stale"));
+                }
+            }
+            _ => return Err((400, "code.workspace.settings-binding")),
+        }
+        if let Some(root) = &input.expected_root_sha256 {
+            let workspace = guard
+                .workspace
+                .as_ref()
+                .ok_or((428, "code.workspace.choice-required"))?;
+            if workspace.scope.root_sha256() != root {
+                return Err((409, "code.workspace.root-stale"));
+            }
+        }
+    }
+    workspace_sources(
+        state,
+        input.workspace_revision,
+        &input.paths,
+        true,
+        input.workspace_selection_id.as_deref(),
+    )
+}
+
 fn workspace_sources(
     state: &Mutex<State>,
     revision: u64,
@@ -1814,13 +1857,7 @@ fn handle(
                 Ok(operation) => operation,
                 Err(status) => return error(socket, status),
             };
-            let files = match workspace_sources(
-                state,
-                input.workspace_revision,
-                &input.paths,
-                true,
-                input.workspace_selection_id.as_deref(),
-            ) {
+            let files = match workspace_proposal_sources(state, &input, config.as_deref()) {
                 Ok(sources) => sources,
                 Err((status, code)) => {
                     op.outcome = code;

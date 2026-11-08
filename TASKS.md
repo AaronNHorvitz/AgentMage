@@ -2,11 +2,29 @@
 
 ## Active queue: local agent mission
 
+The guided worktree proposal path now binds each initial and repair request to
+its original selection identity, endpoint/settings revision and held worktree
+root. The original API checks these pins before source reads or model dispatch;
+fresh helper reads cannot replace them. See the
+[binding record](docs/evidence/t303-proposal-binding-2026-11-08.md).
+Independent core review is required. T-303/T-306 remain open; no row is added
+or closed. Native execution, durable recovery, approved Git and parent
+measurements remain open.
+
+The guided command's [independent core review](docs/reviews/ec1f3ee1d934-local-coding-guided-worktree.txt)
+has **Verdict: PASS** for exact commit
+`ec1f3ee1d934d40a633e8aaa14c9ab3de7f3c000`, with no high/medium finding.
+Low L1 (binding the original prepared edit preview and testing both replacement
+windows) and L2 (a guided command test against the actual service) remain
+same-row backlog. The guide now states the narrower preview check precisely.
+Earlier lows remain backlog; both parent rows remain open. The reviewer's
+documentation-lint exit 127 is retained as a failure, without a waiver.
+
 The [guided worktree command](docs/guides/coding-guided-worktree.md) connects
 configured-endpoint proposals, separately approved worktree edits, project tests
 and bounded repairs through the existing API owners. Native test preflight
 precedes generation; each effect and failure disclosure still needs its own
-terminal approval. It requires independent core review. T-303/T-306 remain open;
+terminal approval. Its independent review is recorded above. T-303/T-306 remain open;
 autonomous endpoint edit/test composition, native/model success, durable
 recovery, approved Git and parent measurements remain open. No row is added
 or closed.

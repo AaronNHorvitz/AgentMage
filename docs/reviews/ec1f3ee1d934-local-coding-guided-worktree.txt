@@ -1,0 +1,208 @@
+Commit: ec1f3ee1d934d40a633e8aaa14c9ab3de7f3c000
+Scope: local-coding-guided-worktree
+
+Reviewer: Claude Opus 5.5, separate session, read-only checkout at /lane/review-checkout. Tier: core.
+Rows: T-303 / T-306. This increment does not close either row, and both stay OPEN.
+
+## Methods
+
+- Confirmed the commit: `git rev-parse HEAD` gives `ec1f3ee1d934d40a633e8aaa14c9ab3de7f3c000`. Its parent is
+  the immutable predecessor `7604c037e470c3d3f8e08eb5f019e4892becbca2`. `git diff --stat` shows exactly
+  the nine claimed files (1316+/27-).
+- Read IP-POLICY.md, Decision 0164, the TASKS.md diff, the new guide and evidence, and the retained
+  predecessor review copy.
+- Read every source and test hunk: `coding_cli.rs`, `coding_cli_workflow.rs`, the
+  `coding_runtime_cli.rs` fixture/PTY hunks and `tests/support/coding_workflow.rs`.
+- Traced the client against the original owners it schedules:
+  - `coding_repository_api.rs`: the `PrepareValidation`/`TestOutputFormat` wire types and the edit,
+    validation and decide routes;
+  - `platforms/linux/src/coding_repository_edit.rs`: `prepare_edit` and `decide_edit`;
+  - `coding_repository_validation.rs`: `prepare_validation`, `validation_preview`,
+    `check_validation_selection` and `finish_validation`;
+  - `coding_repository_command.rs`: `command_preview` and the run/result shape;
+  - the kernel's `plan_failed_test_rerun`, `CommandEffectDriver::execute` and
+    `ValidationParserKind`/`CommandSpec` serialization;
+  - the redaction in `GET /v1/settings` (`lib.rs:1861`).
+- Ran the requested commands, plus one mutation probe of my own on a `git archive` scratch copy
+  outside the repository (details below).
+
+## Commands and results (all run in /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t303-guided-worktree/review-inputs.sha256`: **exit 0**.
+   The manifest has 39 lines, and its SHA-256 is `906efe9e…f479`, as claimed.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-guided-worktree-ec1f3ee1d934`:
+   **exit 1** (`GATE_EXIT 1`). The fast-gate exits were:
+
+   | Command | Exit | Seconds |
+   |---|---|---|
+   | diff-check | 0 | 0.10 |
+   | lint-untracked | 0 | 0.10 |
+   | lint-reviews | 0 | 0.10 |
+   | markdownlint | **127** | 0.05 |
+   | fmt | 0 | 37.37 |
+   | strict clippy | 0 | 31.47 |
+   | cargo test | 0 | 59.41 |
+
+   - Total wall time was 128.67 s including reservations, and `SOURCE_FREEZE_UNCHANGED True`.
+   - The test log covers **10 targets: 155 passed, 0 failed, 0 ignored, 0 filtered**.
+   - The 127 is Node being absent: `node` is not on PATH and `/lane/state/tooling` does not exist. I
+     downloaded nothing. This documentation-lint failure is recorded as is and is **not waived**.
+   - Runtime namespace: `/tmp/gw-d3i77scn`, recorded in `runtime-tmp-path`. It was empty once the gate
+     finished, and no gate or test process remained. I removed only that directory.
+3. `python3 -B …/audit.py <same dir>`: **exit 1**. It printed its complete comparison, then failed only on
+   its final assertion, `[0, 0, 0, 127, 0, 0, 0]`, which is the Node 127. Every check before that
+   passed:
+   - baseline 10 targets with 150/0/0/0; final 10 targets with 155/0/0/0;
+   - all 150 baseline identities preserved;
+   - the added methods are exactly the five named `workflow::guided_client_*` methods;
+   - the 4-file source freeze matches;
+   - the plan command count matches;
+   - TASKS.md ledger table rows are unchanged.
+4. `python3 -B …/final.py`: **exit 1**. It printed `NON_CARGO_FAILURES` containing only the markdownlint
+   127, then `SCOPE_PRIVACY_REVIEW_COPY_PASS`. Scope is exactly the nine files, the retained review copy
+   is byte-identical, and the privacy checks pass.
+5. `cmp …/validation-final/source-freeze.json …/review-guided-worktree-ec1f3ee1d934/source-freeze.json`: **exit 0**.
+6. `cmp docs/reviews/7604c037e470-local-coding-atomic-edits.txt /lane/reviews/7604c037e470-local-coding-atomic-edits.md`:
+   **exit 0**.
+7. `git diff --check 7604c037e470c3d3f8e08eb5f019e4892becbca2 --`: **exit 0**, no output.
+8. `git status --short`: **exit 0**, empty before and after my runs.
+
+**Documentation in place of the missing lint.** The builder's retained `final-hygiene.log` shows
+markdownlint-cli2 v0.23.2 reporting `0 issues` on the same 4 files. I read the three new documents and the
+TASKS.md hunk by hand: headings, lists and the code fence are well-formed. Every relative link in the four
+files resolves to a tracked file (scripted check, no misses), and none of the three new documents has
+trailing whitespace.
+
+**Builder's retained logs.**
+- `validation/fast.log` retains the initial failure:
+  `guided_client_pins_clean_series_command_scope_and_exact_failure_before_disclosure ... FAILED`, at
+  `coding_workflow.rs:612` (the `calls.len() == index + 1` assertion), with 35/1 in that target.
+- `validation-final/result.json` shows exit 0 and 107.02 s, matching the evidence.
+- `baseline.log` has 150 `ok` lines and the final log has 155.
+- The production fix matches the claim: `owner["pending"]` is now checked before
+  `GET /v1/code/repository/validation` (`coding_cli_workflow.rs:135-137`). The assertion itself is unchanged.
+
+**Reviewer mutation probe.** On a `git archive` copy in a scratch directory, I removed only the
+`expected` equality in `edit_decide_bound` (`coding_cli.rs:591-592`). I then ran
+`bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api --test coding_runtime_cli -- workflow::`
+with a separate scratch target. Result: **exit 0, 5 passed**. The mutation diff and log are kept as
+`reviewer-mutation.diff` and `reviewer-mutation.log` in my output directory. I then deleted the scratch
+tree and target.
+
+## Review
+
+**Authority and confinement.** `code-worktree` (`coding_cli_workflow.rs`) only sequences existing helpers:
+`selection`, `propose` → `edit_prepare` (`read <root>` TTY consent), `edit_decide_bound` (`edit <hash>`)
+and `command_decide_observed` (`test <hash>`). On repair it adds `propose`'s `share-failure <hash>`.
+
+- Every consequential step still goes through `confirm`. That function refuses a non-terminal stdin, reads
+  only `/dev/tty`, needs an exact challenge built from a digest-validated hash, and uses `safe()` to
+  escape all non-ASCII and control characters.
+- Stdin terminal checks, argument bounds and definition parsing (closed `PrepareValidation` type,
+  duplicate keys refused, `approve_definition` required, `prior_receipt_sha256` null) all happen before
+  any credential read or request. The piped and malformed-definition tests assert that zero requests
+  are sent.
+- No new writer, executor, sandbox, transport or grant exists. Writes stay with
+  `LinuxCodingRepository::decide_edit`. Tests stay with `decide_validation_with_cancellation`, which runs
+  the unchanged offline, read-only-worktree command path.
+- I confirmed that an approved edit dispatch clears the pending preflight validation
+  (`coding_repository_edit.rs:140`, `self.command = None`). That matches the decision's statement that
+  edits invalidate pending command approvals, and the client prepares each execution again.
+- The fixture's per-route token assertion verifies credential separation. The client token is used only
+  for status, workspace and ordinary proposals. Edit, validation, repair and settings use the control
+  token.
+
+**Model and untrusted input.**
+- Model text enters only as the strict-edit `answer`. The server's unchanged strict checker decides it.
+- The model cannot select the route, the test command, the parser or the minimum count. `check_preview`
+  pins the complete sealed template to the user's argv definition and compares it with the preflight
+  template on every attempt.
+- Failure excerpts are shown escaped before `share-failure`. The test feeds an ANSI clear-screen sequence
+  through that path.
+- `GET /v1/settings` returns only the endpoint and revision (`lib.rs:1869`), so the plan display cannot
+  leak an endpoint key.
+
+**Bounds and budget.**
+- The client's `MAX_ATTEMPTS = 3` equals the native `MAX_ATTEMPTS`, and the native
+  `check_validation_selection` still enforces the budget, stale-prior and rerun-forbidden rules on its own.
+- `plan_failed_test_rerun` is called with a placeholder attempt id and approval. I checked its body
+  (`validation_result.rs:586-621`): eligibility depends only on the template and receipt. Those
+  placeholders only make the identifier and hash format checks pass, they confer no authority, and the
+  server repeats the plan with the real values.
+- Repairs bind `repair.receipt` to the feedback receipt before disclosure. The stale-failure case asserts
+  refusal at 3 answers, before `share-failure`.
+
+**Wire compatibility with the real owners.** I checked this by reading, because no test drives the real
+service; see L2. The fields the client requires are all produced by the native owners at this commit:
+- the validation preview: `creation_receipt_sha256`, `worktree_root_sha256`, `command`, `request_sha256`,
+  `attempt`, `maximum_attempts`, `prior_receipt_sha256` and `validation_template`;
+- the decide result: top-level `outcome` from the authority receipt, which is the effect outcome sealed
+  from the command receipt, plus `command_receipt`, `validation.receipt`, `attempt`, `maximum_attempts`,
+  `prior_receipt_sha256` and `validation_passed`;
+- the edit preview: `worktree_root_sha256` and `creation_receipt_sha256`.
+
+The snake_case names of `TestOutputFormat` and `ValidationParserKind` agree. `CommandSpec` is the same
+type on both sides.
+
+**Stopping and recovery.**
+- Every effect request is sent once. Transport loss, non-200 replies, uncertain owners and nonretryable
+  receipts all return `Err` with no resend; the tests count at most one decide per route.
+- Declined previews remain pending, and state is process-only. Both are documented honestly.
+
+**Evaluation integrity and claims.**
+- No evaluation, held-out, hidden-test, scorer, threshold, dependency, model, GPU, SBOM, scoreboard or
+  release file changed.
+- The evidence numbers (150 baseline, 154 + 1 failure, 155 final, 107.02 s) trace to the retained raw
+  logs, and my run reproduces 155/0/0/0.
+- The synthetic nature of the peer is stated in the decision, guide, evidence and test comments. No
+  native, model or score claim is made.
+- No row is added or closed, and the TASKS.md table rows are byte-identical.
+
+**Privacy and IP.**
+- New authored text contains no host path, username, hostname, credential or other-product name.
+- The test endpoint `127.0.0.1:4321` is a placeholder.
+- The retained review copy contains only lane-internal `/lane/...` paths, as earlier committed review
+  copies do.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low): the edit-preview binding is weaker than claimed, and its client check is untested.**
+  - Locations: `coding_cli_workflow.rs:185-191`, `coding_cli.rs:480-494` and `coding_cli.rs:591-592`.
+  - The workflow does not bind to the preview returned by `POST /v1/code/repository/edit/prepare`, which
+    `edit_prepare` only prints. It reads `GET /v1/code/repository/edit` and checks only the root and
+    creation fields, then requires the second GET inside `edit_decide_bound` to equal the first.
+  - A preview replaced between preparation and the first GET is therefore not refused. That contradicts
+    `docs/guides/coding-guided-worktree.md:60` ("refuses a preview changed between preparation and
+    approval") and evidence line 22.
+  - No test makes the two GETs differ. My mutation removing the equality check leaves all five methods
+    passing.
+  - Impact is limited. Only another control-token holder could replace the preview. The person still
+    sees the full replaced preview and approves its exact hash, and the server consumes only that hash.
+    No confinement boundary depends on this check.
+  - Fix: return the prepared preview from `edit_prepare`, pass it as `expected`, and add a case where the
+    pending edit differs from the prepare reply (and one where the two GETs differ).
+- **L2 (low, backlog): no test drives `code-worktree` against the real local API service.**
+  - Location: `tests/support/coding_workflow.rs`.
+  - Every observation comes from the recording peer. Compatibility of wire shapes between the client and
+    the native owners currently rests on review: I verified it above for this commit. Nothing would
+    detect later drift in fields such as `validation.attempt` or the decide `outcome`.
+  - This is honestly labelled. Fix: a service-backed case that runs the real API up to the expected
+    native-admission refusal at preflight, or further where admission exists.
+- **Environment (not a code finding):** markdownlint could not run here (exit 127, Node absent). It is
+  recorded as a failure and not waived. Manual and link checks are above, and the builder's retained lint
+  shows 0 issues.
+
+## Per-row result
+
+- **T-303 / T-306 guided-worktree increment:** accepted for exact commit
+  `ec1f3ee1d934d40a633e8aaa14c9ab3de7f3c000` as a non-closing scoped API/client increment.
+  - No high or medium finding.
+  - L1 and L2 join same-row backlog.
+- **Not established:** native admission, autonomous endpoint edit/test composition, durable recovery,
+  approved Git, native or model execution and parent measurements. They remain OPEN.
+- **Parent rows:** T-303 and T-306 both remain OPEN.
+- **Deferred host/Linux T-301.1 gates:** not rerun and not waived. This is not a whole-workspace pass.
+
+Verdict: PASS

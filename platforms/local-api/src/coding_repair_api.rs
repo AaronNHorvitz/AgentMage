@@ -7,6 +7,8 @@ use super::*;
 #[serde(deny_unknown_fields)]
 struct Repair {
     workspace_revision: u64,
+    workspace_selection_id: Option<String>,
+    expected_root_sha256: Option<String>,
     paths: Vec<String>,
     model: String,
     task: String,
@@ -120,7 +122,21 @@ fn prepare_repair<'a>(
         .workspace
         .as_ref()
         .ok_or((428, "code.workspace.choice-required"))?;
+    if input
+        .workspace_selection_id
+        .as_ref()
+        .is_some_and(|id| id != &selected.selection_id)
+    {
+        return Err((409, "code.workspace.selection-stale"));
+    }
     let selected_root = selected.scope.root_sha256().to_owned();
+    if input
+        .expected_root_sha256
+        .as_ref()
+        .is_some_and(|root| root != &selected_root)
+    {
+        return Err((409, "code.repair.scope"));
+    }
     drop(guard);
     let feedback = repository.repair_feedback().map_err(|e| (409, e.code()))?;
     if feedback["receipt_sha256"] != input.receipt_sha256
@@ -133,7 +149,13 @@ fn prepare_repair<'a>(
     }
     // Read only paths already approved for source and model disclosure, and
     // independently require this owner's exact held creation provenance.
-    let files = workspace_sources(state, input.workspace_revision, &input.paths, true, None)?;
+    let files = workspace_sources(
+        state,
+        input.workspace_revision,
+        &input.paths,
+        true,
+        input.workspace_selection_id.as_deref(),
+    )?;
     repository
         .select_created_sources(&input.paths)
         .map_err(|e| (409, e.code()))?;

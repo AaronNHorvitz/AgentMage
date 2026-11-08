@@ -57,7 +57,22 @@ original service separately enforces its test-attempt ceiling and one repair
 request per failed receipt. Settings and source-selection identity stay pinned
 between attempts. Each new preview must retain the complete test template,
 worktree creation binding, expected attempt and exact previous receipt.
-The terminal also refuses a preview changed between preparation and approval.
+After preparation, the terminal inspects the pending edit and checks its root
+and creation binding. It refuses a change between that inspection and the
+approval helper's second inspection. It currently does not compare the first
+inspection with the original prepare reply; another control-token holder can
+replace the preview in that earlier window. The full current diff still needs
+its own exact approval. Binding the prepare reply and testing both replacement
+windows remain backlog in T-303/T-306.
+
+Every proposal request carries the original workspace selection identity,
+settings revision, exact endpoint and held worktree root digest. The original
+API checks these under its operation lease before reading source or contacting
+the model. Fresh helper reads cannot replace the workflow's selection or
+settings. A concurrent replacement after the terminal's checks is refused at
+admission. The root pin also refuses a source selection from another directory
+before initial disclosure. These pins narrow existing source consent; they do
+not authorize disclosure, edits or tests.
 
 The original kernel command and validation verifiers check returned receipts
 against the selected command and template. Only a full passing normalized
