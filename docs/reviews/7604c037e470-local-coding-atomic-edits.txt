@@ -1,0 +1,151 @@
+Commit: 7604c037e470c3d3f8e08eb5f019e4892becbca2
+Scope: local-coding-atomic-edits
+
+# Independent review: strict edit batch bounds on final snapshots (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate session, read-only checkout at /lane/review-checkout. Tier: core.
+Predecessor: 32c91cae33cb6d7de708ddc10b3979c71c9f25b4. Both parent rows stay OPEN. This verdict covers only
+this increment.
+
+## Methods
+
+- Confirmed the commit: `git rev-parse HEAD` gives `7604c037e470c3d3f8e08eb5f019e4892becbca2`, and its parent
+  is the stated predecessor. `git diff --stat` lists exactly the 7 claimed files (+613/-4).
+- Read IP-POLICY.md, the top of TASKS.md, the newest decision titles, the builder README and every helper
+  (review.py, run.py, audit.py, final.py, parse.py). The helpers write only to the output directory and a
+  fresh `/tmp/ae-*` namespace. The fast gate reserves each Cargo command through `/tools/build-slot`
+  (`scripts/local_agent_fast_gate.py:203-205,304-305`). I used no outer build-slot.
+- Read the whole changed checker, `check_coding_proposal` (`capabilities/repository-map/src/coding_proposal.rs:364-481`),
+  along with `validate_sources` and every caller: `platforms/local-api/src/lib.rs:797-819` (`checked_changes`),
+  `lib.rs:1283` (streamed proposals), `coding_repository_api.rs:106` (owned edit) and the repair path through
+  `dispatch_coding_proposal`. The evidence says all consumers share this checker. That holds.
+- Wrote my own probes outside the repository (a scratch crate with a path dependency). I ran them against
+  this commit and against a `git archive` of the predecessor. Its checker SHA-256 is `73fe601d…afde`, the
+  same as the builder's pre-fix-source.sha256. Copies of the probe source and log are kept in my output
+  directory: `reviewer-adv.rs` and `reviewer-adv.log`.
+
+## Commands and results (all run in /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t303-atomic-edits/review-inputs.sha256`: **exit 0**.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-atomic-edits/review.py /lane/state/tmp/review-atomic-edits-7604c037e470`:
+   **exit 1**, caused only by Node being absent.
+   - run.py: `GATE_EXIT 1`. Gate command exits are `[0, 0, 0, 127, 0, 0, 101]`, taking
+     0.10/0.10/0.10/0.05/228.63/34.57/171.72 s. Those commands are diff-check, lint-untracked, lint-reviews,
+     markdownlint (**127**), fmt, strict clippy and cargo test. `SOURCE_FREEZE_UNCHANGED True`.
+   - audit.py printed its complete comparison and then exited 1 on its final assertion only. The cause is
+     the 127 above. Every identity and diagnostic assertion before that passed:
+     - baseline: 26 targets with 850/53/11/0;
+     - final: 27 targets with **853 passed / 53 failed / 11 ignored / 0 filtered**;
+     - all 53 normalized diagnostics are identical;
+     - the 3 added methods are exactly the claimed ones;
+     - old `local_chat_api.rs` bodies are byte-identical to the base;
+     - ledger table rows are unchanged;
+     - 3-file source freeze held.
+   - All 53 failures are in `agentmage_host[unittests src/lib.rs]`, which is the existing host-target set under
+     deferred T-301.1. All 3 new methods report `ok`.
+   - final.py: `SCOPE_AND_PRIVACY_PASS`. Its only non-Cargo failure is the markdownlint 127.
+   - Wrapper result `REVIEW_CHECK_EXITS [['run.py', 1], ['audit.py', 1], ['final.py', 1]]`.
+   - **Documentation failure, recorded as is.** Node is not on PATH and `/lane/state/tooling` does not exist. I
+     downloaded nothing. This 127 is not converted or waived.
+   - The builder's retained final-hygiene.log shows markdownlint-cli2 v0.23.2 with `0 issues` on the 3 changed
+     documents. The repository config disables MD013. I read the new Markdown by hand: headings, lists and
+     links are well-formed, and both relative links resolve to tracked files.
+   - Runtime namespace: `/tmp/ae-87ulqrlf`, recorded in `runtime-tmp-path`. I removed it after confirming no
+     test process remained. I removed only that directory and my own `/tmp/rv7604-*` scratch.
+3. `cmp …/validation-final/source-freeze.json …/review-atomic-edits-7604c037e470/source-freeze.json`: **exit 0**.
+   My frozen Rust hashes equal the builder's.
+4. `cmp docs/reviews/32c91cae33cb-local-coding-endpoint-record.txt /lane/reviews/32c91cae33cb-local-coding-endpoint-record.md`:
+   **exit 0**. The predecessor review is retained byte-for-byte.
+5. `git diff --check 32c91cae33cb6d7de708ddc10b3979c71c9f25b4 --`: **exit 0**, no output.
+6. `git status --short`: **exit 0**, empty both before and after my run.
+
+**Independent probes** (my own crate, `cargo test --offline` through build-slot):
+
+| Probe | This commit | Predecessor |
+|---|---|---|
+| Two lexically earlier files grow +10 each and a later file shrinks −20, so the final total is exactly 128 KiB; the same with +1 byte | ok (accept; then reject) | **FAILED** (refused the valid batch) |
+| Same-file adjacent growth plus shrink at a 128 KiB file | ok | ok |
+| All-growth overflow by 1; single file at L−10 +11 (reject) and +9 (accept, L−1) | ok | ok |
+| Overlapping edits and a net no-op file still refused after planning | ok | ok |
+
+- Final run: this commit `4 passed`, exit 0. Predecessor `3 passed; 1 failed`, exit 101. Only the defect case
+  failed there.
+- My first run of the third probe failed on both trees. My arithmetic was wrong: +10 lands exactly at the
+  limit, and accepting it is correct. I corrected the probe to +11 and reran. Only the corrected source and its run log are retained; the first run's log was removed with my scratch.
+
+## Review
+
+**Correctness of the fix.**
+- The first loop computes each final file size from the original length and the sorted, already
+  overlap-checked spans. The fold `size - (end - start) + new.len()` cannot underflow, because spans are
+  disjoint within the file.
+- It rejects any file above `MAX_FILE` and updates the aggregate as `total - len + size`. That cannot
+  underflow: `total` starts as the sum over all sources, and paths are unique (`validate_sources`).
+- Only after every group has been planned does the code compare the aggregate, including unchanged files,
+  against `MAX_SOURCE`. Candidate strings are allocated after that. So peak allocation stays bounded by the
+  same 128 KiB final aggregate (plus the ≤64 KiB answer).
+- The net-no-op check, strict JSON, unique visible preimage, excerpt containment, overlap and stale checks are
+  untouched or run before planning.
+- `path: source.path.clone()` is the same string the old code used, because the group key equals the source
+  path. Output order is still lexical (BTreeMap).
+- The result is more permissive only for the ordering defect. Every final invariant (≤128 KiB per file and in
+  aggregate) is unchanged, and so is the error type (`Edit`).
+
+**Tests.**
+- The snapshot test is sound. Removing `trimβ`→`β` frees 4 bytes; ` é` adds 3 (L−1) and ` é!` adds 4
+  (exactly L). It runs over both lexical growth orders, both source orders and both edit orders, and checks
+  full content, both digests and that the inputs are unchanged.
+- The negative case makes 3 files, including an untouched one, exactly L+1. That would also catch an
+  implementation that counted only edited files.
+- Invalid final edits cover a missing path and an overlap (a second `alpha` edit on `z.txt`).
+- The HTTP method splits the answer across two SSE chunks through the configured transport. It checks the
+  disclosed excerpts, `proposal-only` authority, `applied`/`tested` false, full content and hashes, and the
+  `code.proposal.edit` terminal on overflow.
+- The builder's pre-fix logs (`regression-0.log`: 1 pass, 1 fail at `:63`; `regression-1.log`: `left: "error"` /
+  `right: "proposal"`) are consistent with the base checker hash. My own probe independently reproduces the
+  defect on the predecessor.
+
+**Security and confinement.** No read, disclosure, approval, grant, sandbox, command, network, retry or Git path
+changed. The diff touches only the in-memory validator, tests and documents. Downstream workspace writes keep
+their own limits (`platforms/linux/src/coding_workspace.rs:21,191`).
+
+**Evaluation integrity.** No evaluation, hidden or held-out test, scorer, threshold, dependency, model, GPU,
+SBOM, scoreboard or release file is in the diff.
+
+**Honest claims.**
+- The evidence states that the endpoint is synthetic and that there was no model, worker or write.
+- It says the full gate remains FAIL (Cargo 101) and the parents remain open.
+- Its numbers (850/53/11/0, 853/53/11/0, 194.34 s) match the retained logs. My run took
+  0.35 + 228.63 + 34.57 + 171.72 = 435.27 s, longer mainly because of reservation waits.
+
+**Privacy and IP.**
+- The authored text has no host path, username, hostname, credential or other-product name.
+- The retained review copy contains only lane-internal `/lane/...` paths, which 121 of the 129 retained
+  reviews already carry.
+- No trademark is used as branding.
+
+**Delivery.** No new sub-row; the fix ends in something that runs and is measured.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low (backlog, same row).** `capabilities/repository-map/tests/coding_batch_bounds.rs:34-127` covers only
+  one growing file and one shrinking file. It has no committed case where several lexically earlier files
+  grow before a later shrink, and none with growth and shrink in the same file. Both pass in my external
+  probes.
+  - Fix: add the three-file case from `reviewer-adv.rs` as an extra loop iteration in the existing method,
+    without adding a new row.
+- **Environment note (not a commit finding).** markdownlint exit 127 because Node is absent. It is recorded
+  above and not waived. Documentation lint for this commit rests on the builder's retained `0 issues` log and
+  my reading by hand.
+
+## Per-row result
+
+- T-303: this increment is accepted (no high or medium finding). The row stays **OPEN**: native edit/test/retry
+  through the configured endpoint, durable recovery, approved Git and measurements remain.
+- T-306: this increment is accepted (no high or medium finding). The row stays **OPEN**.
+- Predecessor lows L1 (event-count cap) and L2 (offline refusal wording) remain backlog. The new low above
+  joins them.
+
+Verdict: PASS

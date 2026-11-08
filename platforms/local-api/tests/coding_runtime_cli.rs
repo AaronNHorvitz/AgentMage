@@ -20,6 +20,8 @@ use std::{
 
 #[path = "support/coding_endpoint_cli.rs"]
 mod endpoint;
+#[path = "support/coding_workflow.rs"]
+mod workflow;
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
 struct Fixture {
@@ -98,7 +100,10 @@ impl Fixture {
                         assert!(header.len() < 8192);
                     }
                     let header = String::from_utf8(header).unwrap();
-                    let expected_token = if header.starts_with("GET /v1/status HTTP/1.1\r\n") {
+                    let expected_token = if header.starts_with("GET /v1/status HTTP/1.1\r\n")
+                        || header.starts_with("GET /v1/code/workspace HTTP/1.1\r\n")
+                        || header.starts_with("POST /v1/code/workspace/proposals HTTP/1.1\r\n")
+                    {
                         &client_token
                     } else {
                         &token
@@ -122,6 +127,13 @@ impl Fixture {
                         .get(observed.len() - 1)
                         .cloned()
                         .unwrap_or(json!({"unexpected":true}));
+                    if let Some(events) = value["test_peer_stream"].as_array() {
+                        socket.write_all(b"HTTP/1.1 200 Test\r\nContent-Type: application/x-ndjson\r\nConnection: close\r\n\r\n").unwrap();
+                        for event in events {
+                            writeln!(socket, "{event}").unwrap();
+                        }
+                        continue;
+                    }
                     let status = value["test_peer_status"].as_u64().unwrap_or(200);
                     let reply = serde_json::to_vec(if value.get("test_peer_status").is_some() {
                         &value["body"]
@@ -1318,6 +1330,7 @@ try:
             prompt=raw.split(b'Type exactly ')[-1].split(b' to approve;')[0]
             mode=sys.argv[1];tool=prompt.startswith(b'allow ')
             allow = mode in ('approve','slow-approve') or (mode in ('deny-tools','slow-deny-tools','signal-tool','eof-start','eof-tool','overflow-tool') and not tool) or (mode=='allow-tool-only' and tool)
+            if mode.startswith('deny-at-'):allow=answered!=int(mode.removeprefix('deny-at-'))
             if sys.argv[1]=='signal' or (sys.argv[1]=='signal-tool' and prompt.startswith(b'allow ')):os.kill(p.pid,signal.SIGINT)
             elif (mode=='eof-inspect' or (mode=='eof-start' and prompt.startswith(b'start ')) or (mode=='eof-tool' and tool)):os.write(master,b'\x04')
             elif mode=='overflow-tool' and tool:os.write(master,b'x'*257+b'\n')

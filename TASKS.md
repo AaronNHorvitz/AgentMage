@@ -2,11 +2,27 @@
 
 ## Active queue: local agent mission
 
+The [guided worktree command](docs/guides/coding-guided-worktree.md) connects
+configured-endpoint proposals, separately approved worktree edits, project tests
+and bounded repairs through the existing API owners. Native test preflight
+precedes generation; each effect and failure disclosure still needs its own
+terminal approval. It requires independent core review. T-303/T-306 remain open;
+autonomous endpoint edit/test composition, native/model success, durable
+recovery, approved Git and parent measurements remain open. No row is added
+or closed.
+
+The strict-edit fix's [independent core review](docs/reviews/7604c037e470-local-coding-atomic-edits.txt)
+has **Verdict: PASS** for exact commit
+`7604c037e470c3d3f8e08eb5f019e4892becbca2`, with no high/medium finding.
+Its low finding, committed coverage of several growing files and same-file
+balancing, remains same-row backlog. Earlier lows remain backlog. Both parent
+rows remain open; this accepts only that immutable validator increment.
+
 The [strict edit batch fix](docs/evidence/t303-atomic-edits-2026-11-08.md)
 checks final combined candidate size before allocation, including unchanged
 files. Balanced multi-file growth/shrinkage has the same limits regardless of
-path or edit order. Independent core review is required; T-303/T-306 remain
-open. Native edit/test/retry, durable recovery, approved Git and measurements
+path or edit order. Its independent acceptance is recorded above; T-303/T-306
+remain open. Native edit/test/retry, durable recovery, approved Git and measurements
 remain open; no row is added or closed.
 
 The terminal record's [independent core review](docs/reviews/32c91cae33cb-local-coding-endpoint-record.txt)

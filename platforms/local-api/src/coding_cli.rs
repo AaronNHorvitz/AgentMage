@@ -27,6 +27,8 @@ mod mcp;
 mod record;
 #[path = "coding_cli_runtime.rs"]
 mod runtime;
+#[path = "coding_cli_workflow.rs"]
+mod workflow;
 
 /// Runs the bounded stdio MCP bridge with only the ordinary API credential.
 /// Explicit launch arguments pin a person-selected workspace or endpoint run.
@@ -351,6 +353,10 @@ fn selection(client: &Client) -> Result<Value> {
     Ok(selected)
 }
 
+struct ProposalRepair<'a> {
+    receipt: Option<&'a str>,
+}
+
 fn propose(
     client: &Client,
     model: &str,
@@ -358,7 +364,7 @@ fn propose(
     tokens: &str,
     task: &str,
     worktree: Option<&str>,
-    repair: bool,
+    repair: Option<ProposalRepair<'_>>,
 ) -> Result<()> {
     let selected = selection(client)?;
     if selected["model_context_approved"] != true {
@@ -371,7 +377,7 @@ fn propose(
         "model":model,"task":task,"max_message_bytes":message_bytes,"max_tokens":tokens
     });
     let mut expected_feedback = None;
-    let route = if repair {
+    let route = if let Some(repair) = &repair {
         let root = worktree.ok_or(())?;
         let feedback = client.json("GET", "/v1/code/repository/repair", true, None)?;
         let hash = feedback["feedback_sha256"]
@@ -386,6 +392,9 @@ fn propose(
             .as_str()
             .filter(|s| digest(s))
             .ok_or(())?;
+        if repair.receipt.is_some_and(|expected| expected != receipt) {
+            return Err(());
+        }
         let settings = client.json("GET", "/v1/settings", true, None)?;
         let revision = settings["settings_revision"].as_u64().ok_or(())?;
         let endpoint = settings["endpoint"].as_str().ok_or(())?;
@@ -407,7 +416,7 @@ fn propose(
     } else {
         "/v1/code/workspace/proposals"
     };
-    let events = client.call("POST", route, repair, Some(body), show)?;
+    let events = client.call("POST", route, repair.is_some(), Some(body), show)?;
     let context = events.first().ok_or(())?;
     let terminal = events.last().ok_or(())?;
     if context["type"] != "context"
@@ -452,7 +461,7 @@ fn propose(
     client.idle()?;
     let mut request = json!({
         "workspace_revision":selected["workspace_revision"],"paths":selected["paths"],
-        "expected_sources":expected,"task":task,"max_message_bytes": if repair {
+        "expected_sources":expected,"task":task,"max_message_bytes": if repair.is_some() {
             context["source_message_bytes"].as_u64().filter(|n| (2048..=32768).contains(n)).ok_or(())?
         } else { message_bytes as u64 },"answer":&**answer
     });
@@ -573,9 +582,15 @@ fn original_apply_decide(client: &Client, original: Option<&str>) -> Result<()> 
 }
 
 fn edit_decide(client: &Client, root: Option<&str>) -> Result<()> {
+    edit_decide_bound(client, root, None)
+}
+
+fn edit_decide_bound(client: &Client, root: Option<&str>, expected: Option<&Value>) -> Result<()> {
     let status = client.json("GET", "/v1/code/repository/edit", true, None)?;
     let preview = &status["pending"];
-    if preview["operation"] != "edit-worktree" {
+    if preview["operation"] != "edit-worktree"
+        || expected.is_some_and(|expected| preview != expected)
+    {
         return Err(());
     }
     let hash = preview["preview_sha256"]
@@ -667,6 +682,9 @@ fn execute(args: &[String]) -> Result<()> {
     }
     if command == "runtime" || command.starts_with("runtime-") {
         return runtime::execute(&client, command, tail);
+    }
+    if command == "code-worktree" {
+        return workflow::run(&client, tail);
     }
     match (command.as_str(), tail) {
         ("edit", []) => show(&client.json("GET", "/v1/code/repository/edit", true, None)?),
@@ -829,14 +847,20 @@ fn execute(args: &[String]) -> Result<()> {
             show(&client.json("POST", route, false, Some(body))?)
         }
         ("propose", [model, bytes, tokens, task]) => {
-            propose(&client, model, bytes, tokens, task, None, false)
+            propose(&client, model, bytes, tokens, task, None, None)
         }
         ("propose-worktree", [root, model, bytes, tokens, task]) => {
-            propose(&client, model, bytes, tokens, task, Some(root), false)
+            propose(&client, model, bytes, tokens, task, Some(root), None)
         }
-        ("repair-worktree", [root, model, bytes, tokens, task]) => {
-            propose(&client, model, bytes, tokens, task, Some(root), true)
-        }
+        ("repair-worktree", [root, model, bytes, tokens, task]) => propose(
+            &client,
+            model,
+            bytes,
+            tokens,
+            task,
+            Some(root),
+            Some(ProposalRepair { receipt: None }),
+        ),
         ("apply", [root]) => apply(&client, Some(root)),
         ("deny", []) => apply(&client, None),
         _ => {
@@ -847,6 +871,9 @@ fn execute(args: &[String]) -> Result<()> {
 }
 
 fn usage() {
+    eprintln!(
+        "Guided coding: agentmage-code <loopback-ip:port> <private-auth-directory> code-worktree <worktree> <model> <message-bytes> <output-tokens> <task> <definition-json>"
+    );
     eprintln!(
         "Retained endpoint commands: endpoint | endpoint-step <run-id> <request-digest> | endpoint-approve|endpoint-deny <run-id> <request-digest> <challenge-json> | endpoint-events <run-id> <request-digest> <index> | endpoint-cancel|endpoint-release <run-id> <request-digest>"
     );
@@ -900,6 +927,28 @@ fn worktree_decide(client: &Client, roots: Option<(&String, &String)>) -> Result
 }
 
 fn command_decide(client: &Client, root: Option<&String>, validation: bool) -> Result<()> {
+    let (_, result) = command_decide_observed(client, root.map(String::as_str), validation, None)?;
+    if validation && root.is_some() && result["validation"]["validation_passed"] != true {
+        return Err(());
+    }
+    if result["outcome"]
+        != if root.is_some() {
+            "succeeded"
+        } else {
+            "denied"
+        }
+    {
+        return Err(());
+    }
+    Ok(())
+}
+
+fn command_decide_observed(
+    client: &Client,
+    root: Option<&str>,
+    validation: bool,
+    expected: Option<&Value>,
+) -> Result<(Value, Value)> {
     let (inspect, decide, challenge, operation) = if validation {
         (
             "/v1/code/repository/validation",
@@ -917,7 +966,7 @@ fn command_decide(client: &Client, root: Option<&String>, validation: bool) -> R
     };
     let status = client.json("GET", inspect, true, None)?;
     let preview = &status["pending"];
-    if preview["operation"] != operation {
+    if preview["operation"] != operation || expected.is_some_and(|expected| preview != expected) {
         return Err(());
     }
     let hash = preview["preview_sha256"]
@@ -947,19 +996,7 @@ fn command_decide(client: &Client, root: Option<&String>, validation: bool) -> R
         Some(json!({"preview_sha256":hash,"approve":root.is_some()})),
     )?;
     show(&result)?;
-    if validation && root.is_some() && result["validation"]["validation_passed"] != true {
-        return Err(());
-    }
-    if result["outcome"]
-        != if root.is_some() {
-            "succeeded"
-        } else {
-            "denied"
-        }
-    {
-        return Err(());
-    }
-    Ok(())
+    Ok((preview.clone(), result))
 }
 
 #[cfg(test)]
