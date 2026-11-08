@@ -2,6 +2,20 @@
 
 ## Active queue: local agent mission
 
+The [strict edit batch fix](docs/evidence/t303-atomic-edits-2026-11-08.md)
+checks final combined candidate size before allocation, including unchanged
+files. Balanced multi-file growth/shrinkage has the same limits regardless of
+path or edit order. Independent core review is required; T-303/T-306 remain
+open. Native edit/test/retry, durable recovery, approved Git and measurements
+remain open; no row is added or closed.
+
+The terminal record's [independent core review](docs/reviews/32c91cae33cb-local-coding-endpoint-record.txt)
+has **Verdict: PASS** for exact commit
+`32c91cae33cb6d7de708ddc10b3979c71c9f25b4`, with no high/medium finding.
+Low L1 (independent event-count ceiling coverage) and L2 (offline refusal
+wording) remain same-row backlog. Both parent rows remain open; earlier lows
+and native/model measurements remain open.
+
 The development worker's [independent core review](docs/reviews/ea856c414862-local-coding-endpoint-worker.txt)
 has **Verdict: PASS** for exact commit
 `ea856c414862031771d36818fdc5db4c61a076a9`, with no high/medium finding.

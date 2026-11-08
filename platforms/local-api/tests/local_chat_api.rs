@@ -2320,3 +2320,133 @@ fn proposal_usage_uses_the_same_validated_stream_without_authorizing_edits() {
         task.join().unwrap();
     }
 }
+
+#[test]
+fn strict_multifile_proposals_stream_final_batch_bounds_through_the_configured_endpoint() {
+    fn padded(first: &str) -> String {
+        let mut s = format!("{first}\n");
+        let left = 64 * 1024 - s.len();
+        s.push_str(&"p\n".repeat(left / 2));
+        if left % 2 == 1 {
+            s.push('p');
+        }
+        assert_eq!(s.len(), 64 * 1024);
+        s
+    }
+    for (grow, shrink) in [("a.txt", "z.txt"), ("z.txt", "a.txt")] {
+        for overflow in [false, true] {
+            let api = Api::new();
+            let original_grow = padded("alpha");
+            let original_shrink = padded("trimβ");
+            let replacement = if overflow { "alpha é!!" } else { "alpha é!" };
+            let answer = json!({"edits":[{"path":grow,"old":"alpha","new":replacement}, {"path":shrink,"old":"trimβ","new":"β"}]}).to_string();
+            let answer_copy = answer.clone();
+            let (endpoint, worker) = upstream(move |mut socket| {
+                let raw = incoming(&mut socket);
+                let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
+                let sent: Value = serde_json::from_slice(&raw[start..]).unwrap();
+                let context: Value =
+                    serde_json::from_str(sent["messages"][1]["content"].as_str().unwrap()).unwrap();
+                assert_eq!(context["files"].as_array().unwrap().len(), 2);
+                assert_eq!(
+                    context["files"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|f| f["bytes"].as_u64().unwrap())
+                        .sum::<u64>(),
+                    128 * 1024
+                );
+                for (path, needle) in [(grow, "alpha"), (shrink, "trimβ")] {
+                    assert!(
+                        context["excerpts"]
+                            .as_array()
+                            .unwrap()
+                            .iter()
+                            .any(|e| e["path"] == path
+                                && e["text"].as_str().unwrap().contains(needle))
+                    );
+                }
+                let midpoint = answer_copy.find("trimβ").unwrap();
+                reply(
+                    &mut socket,
+                    "text/event-stream",
+                    &format!(
+                        "{}{}{}",
+                        chunk(&answer_copy[..midpoint]),
+                        chunk(&answer_copy[midpoint..]),
+                        end()
+                    ),
+                );
+            });
+            api.configure(&endpoint);
+            let mut request = coding_request();
+            request["task"] = json!("Update alpha and trim together");
+            request["files"] = json!([{"path":grow,"content":original_grow},{"path":shrink,"content":original_shrink}]);
+            assert!(serde_json::to_vec(&request).unwrap().len() < 256 * 1024);
+            let (status, body) = api.call("POST", "/v1/code/proposals", CLIENT, Some(request));
+            assert_eq!(status, 200);
+            let observed = events(&body);
+            worker.join().unwrap();
+            assert_eq!(observed.first().unwrap()["type"], "context");
+            assert_eq!(observed[0]["authority"], "proposal-only");
+            assert!(observed[0]["message_bytes"].as_u64().unwrap() <= 4096);
+            assert_endpoint_runtime_observation(&observed);
+            let terminal = observed.last().unwrap();
+            assert_eq!(terminal["response_complete"], true);
+            let streamed: String = observed
+                .iter()
+                .filter(|e| e["type"] == "text")
+                .map(|e| e["text"].as_str().unwrap())
+                .collect();
+            assert_eq!(streamed, answer);
+            if overflow {
+                assert_eq!(terminal["type"], "error");
+                assert_eq!(terminal["code"], "code.proposal.edit");
+                assert!(observed.iter().all(|e| e.get("changes").is_none()));
+            } else {
+                assert_eq!(terminal["type"], "proposal");
+                assert_eq!(terminal["applied"], false);
+                assert_eq!(terminal["tested"], false);
+                assert_eq!(terminal["authority"], "proposal-only");
+                let changes = terminal["changes"].as_array().unwrap();
+                assert_eq!(changes.len(), 2);
+                assert!(
+                    changes[0]["path"].as_str().unwrap() < changes[1]["path"].as_str().unwrap()
+                );
+                assert_eq!(
+                    changes
+                        .iter()
+                        .map(|c| c["content"].as_str().unwrap().len())
+                        .sum::<usize>(),
+                    128 * 1024
+                );
+                for change in changes {
+                    let path = change["path"].as_str().unwrap();
+                    let (original, old, new) = if path == grow {
+                        (&original_grow, "alpha", replacement)
+                    } else {
+                        assert_eq!(path, shrink);
+                        (&original_shrink, "trimβ", "β")
+                    };
+                    let expected = original.replacen(old, new, 1);
+                    assert_eq!(change["content"], expected);
+                    assert_eq!(
+                        change["before_sha256"],
+                        Sha256::digest(original.as_bytes())
+                            .iter()
+                            .map(|byte| format!("{byte:02x}"))
+                            .collect::<String>()
+                    );
+                    assert_eq!(
+                        change["after_sha256"],
+                        Sha256::digest(expected.as_bytes())
+                            .iter()
+                            .map(|byte| format!("{byte:02x}"))
+                            .collect::<String>()
+                    );
+                }
+            }
+        }
+    }
+}

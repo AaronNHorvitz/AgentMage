@@ -432,7 +432,7 @@ pub fn check_coding_proposal(
             .or_default()
             .push((start, end, &edit.new));
     }
-    let mut result = Vec::new();
+    let mut plans = Vec::new();
     let mut total = sources.iter().map(|s| s.content.len()).sum::<usize>();
     for (path, mut edits) in grouped {
         edits.sort_by_key(|e| e.0);
@@ -443,16 +443,25 @@ pub fn check_coding_proposal(
             .iter()
             .find(|s| s.path == path)
             .ok_or(CodingProposalError::Edit)?;
-        // Calculate bounds before allocating a candidate, including aggregate growth.
+        // Plan every final size before allocating candidate content. All edits
+        // apply together, so the aggregate must include both growth and shrinkage
+        // regardless of lexical path order, plus every unchanged source file.
         let size = edits
             .iter()
             .fold(source.content.len(), |size, (start, end, new)| {
                 size - (end - start) + new.len()
             });
         total = total - source.content.len() + size;
-        if size > MAX_FILE || total > MAX_SOURCE {
+        if size > MAX_FILE {
             return Err(CodingProposalError::Edit);
         }
+        plans.push((source, edits));
+    }
+    if total > MAX_SOURCE {
+        return Err(CodingProposalError::Edit);
+    }
+    let mut result = Vec::new();
+    for (source, edits) in plans {
         let mut content = source.content.clone();
         for (start, end, new) in edits.into_iter().rev() {
             content.replace_range(start..end, new);
@@ -461,7 +470,7 @@ pub fn check_coding_proposal(
             return Err(CodingProposalError::Edit);
         }
         result.push(CodingProposedChange {
-            path: path.to_owned(),
+            path: source.path.clone(),
             before_sha256: digest(source.content.as_bytes()),
             after_sha256: digest(content.as_bytes()),
             content,

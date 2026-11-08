@@ -80,6 +80,12 @@ text, net unchanged files and growth beyond the snapshot limits reject the whole
 proposal. A changed complete source digest rejects a stale context. These checks
 validate an edit proposal, not its correctness or safety to execute.
 
+The 128 KiB candidate limit covers the final combined snapshot, including
+unchanged files. Growth in one file can be balanced by shrinkage in another
+within the same proposal. File names, source order and edit order do not change
+that accounting. All final file sizes and the aggregate are checked before
+candidate content is allocated; an overflow rejects the entire proposal.
+
 ## Events and cancellation
 
 A successful request returns `application/x-ndjson`:

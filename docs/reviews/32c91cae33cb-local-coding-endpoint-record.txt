@@ -1,0 +1,241 @@
+Commit: 32c91cae33cb6d7de708ddc10b3979c71c9f25b4
+Scope: local-coding-endpoint-record
+
+# Independent core review: terminal endpoint event-record export and offline replay
+
+Reviewer: Claude Opus 5.5, separate session, read-only checkout at /lane/review-checkout.
+Tier: core. Row: T-303 / T-306, a non-closing increment; both parents remain OPEN.
+Predecessor: ea856c414862031771d36818fdc5db4c61a076a9.
+
+## Methods
+
+- **Commit identity.** `git rev-parse HEAD` and `git rev-parse 32c91cae...` both print
+  `32c91cae33cb6d7de708ddc10b3979c71c9f25b4`.
+  - `git diff --stat ea856c41 HEAD` lists exactly the eleven requested files (834 insertions, 6 deletions).
+  - The working tree is clean.
+- **Line-by-line source reading:**
+  - `platforms/local-api/src/coding_cli_record.rs` (new);
+  - the diffs to `coding_cli.rs` and `coding_cli_endpoint.rs`;
+  - both new test bodies and the docs/evidence/TASKS diffs.
+- **Code the new module relies on:**
+  - `checked_selection` and `event_page` (`coding_cli_endpoint.rs:61-167`);
+  - `safe`/`show` (`coding_cli.rs:291-309`);
+  - `RuntimeEventSequence::push` (`kernel/engine/src/runtime_event.rs:362-398`);
+  - `decode_exact` (`shells/host/src/runtime_transport.rs:197-205`);
+  - the request/event contracts (`kernel/contracts/src/runtime_endpoint_run.rs`, `runtime_event.rs`);
+  - `LocalChatEndpoint::parse` (`platforms/linux-inference/src/local_chat.rs:70-110`).
+- **Own runs.** I ran the requested command set myself. I also ran my own hostile-input probes against the freshly
+  built `agentmage-code` binary.
+
+## Commands and results (all run in /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t303-endpoint-record/review-inputs.sha256`: **exit 0**.
+   - The manifest itself hashes to `ed799ee5e2eb3ebcd2db5627d5df845cdac68133f6cba3f2b8077515cd8b3398`, as stated.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-endpoint-record/review.py /lane/state/tmp/review-endpoint-record-32c91cae33cb`:
+   **exit 1**, caused only by Node being absent.
+   - run.py exits 1, audit.py exits 1 and final.py exits 1.
+   - Per-command exits in my fresh `fast.log`, in order:
+
+     | Command | Exit | Seconds |
+     | --- | --- | --- |
+     | git diff --check | 0 | 0.10 |
+     | --lint-untracked | 0 | 0.10 |
+     | --lint-reviews (retained report) | 0 | 0.10 |
+     | markdownlint | **127** | 0.05 |
+     | cargo fmt --check | 0 | 208.91 (incl. reservation wait) |
+     | cargo clippy -D warnings | 0 | 30.10 |
+     | cargo test --all-targets --no-fail-fast | 0 | 55.03 |
+
+   - **Documentation failure, recorded as is.** Node is not on PATH and `/lane/state/tooling` does not exist. I
+     downloaded nothing. This 127 is not converted or waived.
+   - **Audit comparisons (printed before the nonzero exit):**
+     - ten targets, 149 passed, 0 failed, 0 ignored, 0 filtered;
+     - all 147 predecessor passing identities are preserved, plus exactly the two new methods;
+     - existing test bodies and the TASKS table rows are unchanged;
+     - `SOURCE_FREEZE_UNCHANGED True`, with all six Rust hashes equal to the manifest.
+   - final.py: `SCOPE_AND_PRIVACY_PASS`; its only non-Cargo failure is the markdownlint 127.
+   - **Cross-check.** I parsed both logs with the builder's `parse.records`. My test-identity map equals the builder's
+     `validation-final/fast.log` exactly (10 targets / 149).
+   - **Builder's timing claim.** The six RESULT durations in the builder's log sum to 106.75 s, as claimed.
+   - **Builder's lint.** The builder's retained logs show markdownlint-cli2 v0.23.2 `0 issues` on the four changed
+     documents, both in the gate and in post-commit hygiene. I read the new Markdown by hand and found no lint-relevant
+     problem. Over-length lines in `runtime-endpoint-runs.md` are all pre-existing (lines 14-564; the new section
+     starts at 822).
+3. `cmp .../validation-final/source-freeze.json .../review-endpoint-record-32c91cae33cb/source-freeze.json`: **exit 0**.
+4. `cmp docs/reviews/ea856c414862-local-coding-endpoint-worker.txt /lane/reviews/ea856c414862-local-coding-endpoint-worker.md`:
+   **exit 0**. The retained report is byte-identical.
+5. `git diff --check ea856c414862031771d36818fdc5db4c61a076a9 --`: **exit 0**.
+6. `git status --short`: **exit 0**, empty output. Re-checked after all runs: still empty.
+
+**Hostile-input probes** (my own, against `/lane/state/review-target/debug/agentmage-code`):
+
+- Every probe below exits 1 with empty stdout. There was no crash or stack overflow.
+- `endpoint-replay` refused:
+  - 200 000 nested `[`;
+  - 100 000 nested objects;
+  - 4 MiB + 1 NUL bytes;
+  - invalid UTF-8;
+  - empty stdin;
+  - a wrong-shape `{"version":1,"request":{},"events":[]}`.
+- `endpoint-replay extra` refused: it falls through to address parsing.
+- Export refused a non-loopback address `10.0.0.1:80`.
+- Export refused a nonexistent auth directory.
+- Fixture namespace `/tmp/er-e4708ysq`:
+  - It was empty after the gate.
+  - I checked that no `agentmage-code` process remained (pgrep matched only my own shell), then removed the
+    directory.
+  - No `/tmp/er-*` remains. No other scratch was touched.
+
+## Review by concern
+
+### Authorization and permission
+
+- `endpoint-record` (`coding_cli_endpoint.rs:229-232`) reuses `checked_selection(..., control=true)`. That is the
+  `GET /v1/code/endpoint/request` route, with run-id and digest pinning.
+- It then calls `event_page(..., control=true)` repeatedly, using only `POST /v1/code/endpoint/events`.
+- The recording-peer test asserts that the routes, the bodies and the `after` indexes are exactly these. The refusal
+  cases also assert that only events routes follow the selection: no retry, cancel or effect route.
+- No advance, approve, deny, cancel or release path is reachable from `export`. `confirm` is never called.
+
+### Untrusted input (server pages, stdin records)
+
+**Export:**
+
+- Every page goes through the existing `event_page` checks:
+  - at most one event per page;
+  - `next`/`total` consistency;
+  - per-event hash verification;
+  - scope;
+  - `sequence == after`;
+  - `retention == "process-only"`.
+- Export then adds:
+  - exactly one event per page;
+  - a stable `total`;
+  - `total` no greater than 4096 and no greater than the run's `max_events`;
+  - a compact aggregate size below 4 MiB;
+  - full-chain `verify`;
+  - a check that the deadline has not passed;
+  - an escaped-output size of at most 4 MiB, checked before the single `writeln`.
+- A refusal emits nothing on stdout. The docs also note that shell redirection may already have created an empty
+  file.
+
+**Replay:**
+
+- Replay reads at most 4 MiB + 1 bytes and refuses anything larger.
+- `decode_exact` refuses duplicate members, positional structs and trailing data. `deny_unknown_fields` covers unknown
+  members.
+- `verify` (`coding_cli_record.rs:27-60`) checks:
+  - the request seal (`verify_runtime_endpoint_run_request`);
+  - version 1, `EphemeralReadOnly` and no event cursor;
+  - the event-count bounds;
+  - that the first event is `RunStarted` naming this request digest;
+  - per-event run/session/task/policy equality with the request;
+  - the original `RuntimeEventSequence::push` for every event (hash, sequence, previous digest, duplicate id,
+    causation, binding including correlation, timestamps and transitions);
+  - a terminal last event with `is_terminal()`.
+- I confirmed that `push` rejects any event after a terminal one, so trailing post-terminal events cannot be appended.
+
+**Terminal safety:**
+
+- All output passes through `safe()`. serde_json escapes C0 controls, and `safe` additionally escapes DEL and all
+  non-ASCII as `\uXXXX`.
+- So a hostile record cannot place raw terminal escapes or bidi overrides on the terminal. The CLI test asserts ASCII
+  stdout for a U+202E/emoji objective.
+
+### Confinement and filesystem
+
+- Export writes nothing but stdout, and replay reads nothing but stdin.
+- Replay dispatches before `Client::new`, `token()` or any address parsing (`coding_cli.rs:657-659`). The integration
+  test runs it with `env_clear()` after the service has stopped and the auth directory has been deleted.
+- No path argument is accepted by either command, so there is no traversal or symlink surface.
+- No network is used by replay. Export connects only to the validated loopback address.
+
+### Deadline change
+
+- `Client` now carries an optional shared deadline.
+- `connect_timeout` and the write timeout are clamped to the remaining time, and `receive_before` enforces the same
+  instant.
+- For existing callers the per-request deadline is `now + 180 s` taken at send time instead of receive time. That is
+  slightly stricter and harmless.
+- The test-only `receive` wrapper keeps the existing unit tests unchanged.
+- An expired deadline yields `checked_duration_since` → `None` → refusal, and a zero remainder fails
+  `connect_timeout`. Both fail closed.
+
+### Secrets and private content
+
+- The record contains the sealed request and digest-only event envelopes. The event kinds carry `*_sha256` digests
+  and content-free codes, not model text or tool bodies.
+- The request includes the task/work-packet text and the endpoint URL, as the guide states.
+- `LocalChatEndpoint::parse` accepts only `http://<loopback-ip|localhost>:port/path`, so URL userinfo (credentials)
+  cannot appear.
+- No token is serialized. The guide tells callers to treat the record as private and shows `umask 077`.
+
+### Honest claims
+
+- Replay output labels:
+  - `verification: canonical-event-chain-only`;
+  - `authenticity_verified: false`;
+  - `referenced_payloads_verified: false`;
+  - `resumes_execution: false`.
+- The docs and evidence say plainly that digests cannot authenticate the writer.
+- They say the tools, verifier and endpoint are synthetic, and that the failed baseline attempt is not a valid
+  baseline. The raw `baseline.log` shows the missing-module compile error.
+- They say the first focused run failed on a new lowercase `cancelled` assertion. The raw `focused.log` is retained,
+  and the contract serializes `CANCELLED`.
+- TASKS adds prose only. No row is added or closed. No evaluation, held-out or hidden-test, scorer, threshold,
+  dependency, model or GPU change is in the diff.
+
+### Privacy
+
+- The added text contains no host path, username, hostname or credential. final.py's privacy scan passes, and so did
+  my own grep.
+- The retained review report mentions only lane-internal `/lane/...` paths. These are allowed under the same
+  precedent as earlier retained reports.
+- No other product is named.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test coverage)**
+  - **Location:** `platforms/local-api/tests/support/coding_endpoint_cli.rs:451-452`.
+  - **Problem:** the fixture's `limits.max_events` is 2048 (`fixtures/runtime-producer/v5/run-request.json`). Both
+    the `total = 4097` case and the `max_events + 1` case are therefore refused by the per-run ceiling. The
+    independent `MAX_RECORD_EVENTS` (4096) checks are not discriminated by any test:
+    - `coding_cli_record.rs:33` (replay);
+    - `coding_cli_record.rs:84` (export).
+    Deleting them would leave every test green, because the run ceiling, which the contract allows up to 1 000 000,
+    is never set above 4096 in a test.
+  - **Fix:** in one case, raise the fixture's `max_events` above 4096 (for example 8192) and re-seal it. Then assert
+    that `total = 4097` refuses. Optionally add a replay case with a request whose `max_events` exceeds 4096 and more
+    than 4096 events; the 4 MiB cap may also refuse that, so assert only refusal.
+- **L2 (low, user-facing wording)**
+  - **Location:** `platforms/local-api/src/bin/agentmage-code.rs:7-9`.
+  - **Problem:** a refused offline `endpoint-replay` prints "Inspect the API status and files before retrying an
+    action". Replay uses no API and takes no action, so the message misleads.
+  - **Fix:** for the replay path, print a content-free "Record refused: not a complete, consistent version-1
+    terminal record. Nothing was executed." Or make the shared message neutral.
+
+Both are same-row backlog. Neither blocks this non-closing increment.
+
+## Per-row result
+
+**T-303 / T-306, non-closing increment "terminal endpoint event-record export and offline replay": accepted.** At
+this exact commit:
+
+- export uses only the control-authenticated request and events routes;
+- it writes only stdout, enforces the stated bounds and the shared deadline, and refuses empty, partial, changing or
+  non-terminal histories;
+- replay reads only bounded stdin before any client or credential, reuses the original strict decoder and kernel
+  event verifier, and labels its limits honestly;
+- the claimed tests run and pass in my own gate, with identity-for-identity agreement with the builder's retained
+  log.
+
+The markdownlint step could not run here (exit 127, Node absent). It is recorded unchanged above, not waived. As in
+the predecessor review, documentation lint for these four files rests on the builder's retained `0 issues` logs and my
+manual read; this row's acceptance does not depend on long-documentation gating.
+
+**Both parent rows remain OPEN.** Native worker and model success, full payload retention, execution recovery,
+edit/test/retry, approved Git and parent measurements are unobserved. This PASS does not close T-303 or T-306.
+
+Verdict: PASS
