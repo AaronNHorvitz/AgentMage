@@ -1,0 +1,143 @@
+Commit: c53ed1742a51a7827a70e65a26c2fcdce70180ff
+Scope: local-coding-repository-setup
+
+# Independent core review — T-303 / T-306 guided repository setup (non-closing)
+
+Reviewer: Claude Opus 5.5, separate session, read-only. Pinned checkout `/lane/review-checkout`,
+`git rev-parse HEAD` = `c53ed1742a51a7827a70e65a26c2fcdce70180ff`. The predecessor
+`0d8557509e74293cdd62c5986ff908b1a74f23f2` resolves and is the direct parent (one commit in range).
+Tier: core. Both parent rows stay OPEN. This verdict accepts the increment only and closes no row.
+
+## Scope checked
+
+The complete twelve-file diff over the predecessor (1137+/12-). It has three production Rust files
+(`coding_cli.rs`, new `coding_cli_repository.rs`, `coding_cli_workflow.rs`) and four Rust test inputs
+(`coding_runtime_cli.rs`, `support/coding_guided_service.rs`, `support/coding_workflow.rs`, new
+`support/coding_repository_workflow.rs`). It also has Decision 0165, the guide, the evidence record,
+TASKS.md and the retained predecessor review. No row was added or closed, and the `| [` ledger rows
+are unchanged (checked by final.py). No eval, hidden, held-out, scorer, threshold, model, GPU,
+dependency, Cargo.toml/lock, SBOM, scoreboard or release path was touched; a name grep on the diff
+returns nothing. The retained review `docs/reviews/0d8557509e74-local-coding-guided-service.txt` is
+byte-identical to `/lane/reviews/0d8557509e74-local-coding-guided-service.md` (`cmp` exit 0) and
+records `Verdict: PASS`.
+
+## Methods and exact commands (all run from /lane/review-checkout)
+
+| # | Command | Exit | Result |
+| --- | --- | --- | --- |
+| 1 | `sha256sum --quiet -c /lane/state/tmp/t303-repository-workflow/review-inputs.sha256` | 0 | All 27 entries match. Manifest SHA256 `ac1bc6b6c54b5261193a24d090caf60f191f1087ceb3090d43d8362007596eec`, as stated. |
+| 2 | `PATH=…/t303-repository-workflow/tooling:$PATH node --version` | 0 | `v24.15.0`. The binary SHA256 is in the manifest (`d1de76d8…932c`). The inode in `tooling-provenance.json` matches the hard-link source (link count 4). |
+| 3 | `PATH=…/tooling:$PATH CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-repository-setup-c53ed1742a51` (not wrapped in build-slot) | 0 | `GATE_EXIT 0`, `FAST GATE: PASS`, `SOURCE_FREEZE_UNCHANGED True`, 331.26 s including reservations. Each of the seven commands exited 0: diff-check 0.10 s, lint-untracked 0.15 s, lint-reviews 0.10 s, markdownlint 1.40 s (0 issues, 4 files), `cargo fmt --check` 231.05 s (mostly queue), `cargo clippy --locked --offline --all-targets -D warnings` 30.04 s, `cargo test --locked --offline --all-targets --no-fail-fast` 68.34 s. |
+| 4 | `python3 -B …/audit.py /lane/state/tmp/review-repository-setup-c53ed1742a51` | 0 | Baseline 10 targets 170/0/0/0. Fresh run 10 targets **179/0/0/0**. All 170 old identities still pass, plus exactly the nine named new methods (eight `workflow::repository::*`, one `guided_service::repository_setup_actual_service_…`). 7 Rust inputs frozen and unchanged. |
+| 5 | `PATH=…/tooling:$PATH python3 -B …/final.py` | 0 | Exact twelve-file scope, seven-file freeze matches, ledger rows unchanged, privacy patterns clear, retained review byte-identical, and four lightweight checks exit 0. Prints `SCOPE_PRIVACY_UNCHANGED_LEDGER_SOURCE_FREEZE_PASS`. |
+| 6 | `cmp …/validation-final/source-freeze.json /lane/state/tmp/review-repository-setup-c53ed1742a51/source-freeze.json` | 0 | Identical to the builder's freeze. |
+| 7 | `git diff --check 0d8557509e74293cdd62c5986ff908b1a74f23f2 --` | 0 | Clean. |
+| 8 | `git status --short` | 0 | Empty output. |
+
+Runtime namespace `/tmp/rs-z0anlk_i` (recorded in `runtime-tmp-path`) was empty after the jobs
+ended. No process referenced it, and it was removed with `rmdir` (exit 0). Nothing else was touched.
+
+Further independent runs:
+
+- **Baseline integrity.** `baseline.log` SHA256 `abc6c09f…318b` equals the predecessor builder's
+  final `t303-guided-service/validation-final/fast.log`. `parse.py` is byte-identical to the prior
+  helper. Parsing the earlier independent reviewer's fresh predecessor log
+  (`/lane/state/tmp/review-guided-service-0d8557509e74/fast.log`) yields the same 170 passing
+  identities in 10 targets as `baseline.log`. The baseline is therefore independently reproduced,
+  not builder-only.
+- **Confinement boundary used by the new composition (original code, rerun).**
+  `CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot cargo test --locked --offline
+  -p agentmage-platform-linux --test coding_map --test coding_workspace` gives coding_map 5/5 and
+  coding_workspace 6/6. Both cover outside-pointing symlinks to files and directories, hard links
+  to outside files, FIFOs, unselectable names and concurrent symlink swaps. This matters because
+  `code-repository` is the first caller that feeds map output automatically into a source
+  selection from a possibly untrusted repository. The map skips links and special files and limits
+  names to `[A-Za-z0-9._-/]` of at most 256 bytes. That bars prompt-injection text with spaces or
+  control characters in selected names. `select` refuses links again on read.
+- **Own CLI escape probe.** Built binary `/lane/state/review-target/debug/agentmage-code`, with a
+  local listener as the peer and a scratch directory that was removed afterwards. With a real PTY
+  and without one, these inputs exit 1 with no prompt: `repo/../outside` as the repository,
+  `owned/..` as the management directory, a management directory inside the repository, and
+  repository equal to management directory. A valid-shape invocation without a TTY exits 1. The
+  listener received **no connection** in any case. No credentials were read before refusal, since
+  the token load happens only inside `Client::call`.
+
+## Code review
+
+- **Composition only.** `coding_cli_repository.rs` calls only existing routes: repository prepare,
+  status, decide, `/v1/status`, map, settings, workspace PUT/GET. It then enters the original
+  `run_steps` inside the original `bounded` wrapper. It adds no new transport, permission, executor,
+  parser or persistence. The manual `worktree-create` path still goes through `worktree_decide` →
+  `client.confirm`. With `controls: None` that falls back to the original `/dev/tty` `confirm`, so
+  manual behaviour is unchanged.
+- **Reply bindings match the actual service shapes** (checked against
+  `platforms/linux/src/coding_repository.rs`):
+  - `prepare` returns exactly the `preview` stored as `pending.preview`, which `inspect()` returns.
+    The `expected != preview` equality in `worktree_decide_observed` is therefore satisfiable in
+    production and refuses any replacement.
+  - The decide reply's `receipt.receipt_sha256` is what validation later reports as
+    `creation_receipt_sha256` (`coding_repository.rs:434`, `:171`, `:375`), so the
+    `Origin.creation` pin is meaningful.
+  - Map `root_sha256`, workspace `expected_root_sha256`, `settings_revision` and
+    `settings_endpoint` all exist server-side (`lib.rs:1443`, `:1676-1736`). The server re-checks
+    the root identity and settings itself.
+- **Plan checks.** `RepositoryOperationPlan::verify()` plus exact branch
+  `refs/heads/agentmage/tasks/<task-id>` (never the default branch), `expected_new_object == base`
+  and the repository path hash. The two "independently valid alternate plan" cases rebuild valid
+  hashes and still refuse, which shows the exact pins, not hash validity, do the refusing.
+- **Ordering.** All input validation, definition parsing and the TTY/seconds check run before any
+  request. Inspect, create, discover and share each have their own typed challenge. Root identity
+  is re-verified locally around each human wait. No source bytes are read client-side before
+  `share` (the absent-file regression passes in the fresh run). After setup, the original guided
+  workflow refuses before model dispatch if selection, settings, owner root or creation receipt
+  differ from the setup origin.
+- **One clock.** `bounded` builds one `Signals`/deadline. `run_steps` is called inside it without
+  re-wrapping, so there is no renewal. The 0.9 s + 2 s handoff test passes in the fresh run.
+- **Stopping.** Every `Err` path returns without sending a deny, cancel, cleanup or retry request.
+  A pending creation preview is left to its process-only expiry, as documented.
+- **Network, push and Git.** The setup client talks only to the loopback API. The actual-service
+  test asserts the configured upstream listener never receives a connection. There is no commit or
+  push code. The base must be 40 or 64 hex characters.
+- **Honest labelling.** The evidence, decision and guide state that setup, model, write and test
+  observations are synthetic. They say the recording peer's worktree pre-exists, that the actual
+  service reaches only the native inspection refusal (409), and that no native creation, model,
+  project-test, GPU or score success is claimed. That matches the tests.
+- **TASKS clarification of the eight earlier cases.** It matches the code. `run_steps` checks
+  `model_context_approved` before `GET /v1/code/repository/edit`, so the four `disclose=false`
+  cases stop before the ownership lookup and the four `disclose=true` cases reach it.
+- **Privacy/IP.** No committed home path, username, e-mail, hostname, credential, other product
+  name or trademark branding appears in added lines. The `/lane/…` paths are inside the retained
+  review file only, following the established pattern of 126 earlier committed reviews, and
+  contain no username.
+- **Delivery.** It adds one running command with measured tests and no sub-row. No plan-only work.
+
+## Findings
+
+No critical, high or medium finding.
+
+**L1 (low) — the creation-reply root and outcome substitutions have no case of their own.**
+`platforms/local-api/tests/support/coding_repository_workflow.rs:205-226` covers the
+`created-repository` and `created-plan` substitutions. No case changes the decide reply's
+`worktree_root_sha256`, `receipt.outcome` or `repository_receipt.outcome`. The code does refuse all
+three (`coding_cli_repository.rs:101-119`): a substituted root fails the local `verify_root` on
+`<owned>/worktree` before the discover prompt. But that branch is unexercised, so a regression
+there would go unnoticed. Fix: add `created-root`, `created-outcome` and
+`created-repository-outcome` cases to the binding-substitution test. Each should assert no discover
+prompt and no map request. Same-row backlog.
+
+**L2 (low) — confusing guide transition.**
+`docs/guides/coding-guided-worktree.md:50-53` reads "For an already prepared worktree, use the
+original command:". The next paragraph then begins "Create the isolated worktree through the running
+service…", which a reader may take as contradicting "already prepared". Fix: say "Otherwise, create
+and select manually, then run `code-worktree`:" or similar. Same-row backlog.
+
+Earlier same-row lows (predecessor L1/L2 and older) remain backlog, as the commit records.
+
+## Per-row result
+
+- **T-303 (non-closing increment, local-coding-repository-setup):** PASS. The increment is accepted.
+  The row stays OPEN: native admission, autonomous endpoint edit/test, durable recovery, approved
+  Git and measurements remain.
+- **T-306 (non-closing increment):** PASS. The increment is accepted and the row stays OPEN.
+
+Verdict: PASS

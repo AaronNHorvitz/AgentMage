@@ -1354,9 +1354,9 @@ try:
             prompt_bytes.append(len(raw)-review_start);review_start=len(raw)
             prompt=raw.split(b'Type exactly ')[-1].split(b' to approve;')[0]
             mode=sys.argv[1];tool=prompt.startswith(b'allow ')
-            if mode=='repository-clock':
+            if mode in ('repository-clock','transfer-clock'):
                 if answered==0:time.sleep(.9)
-                if answered!=4:os.write(master,prompt+b'\n')
+                if answered!=(4 if mode=='repository-clock' else 7):os.write(master,prompt+b'\n')
                 answered+=1;continue
             allow = mode.startswith('workflow-socket:') or mode in ('approve','slow-approve') or (mode in ('deny-tools','slow-deny-tools','signal-tool','eof-start','eof-tool','overflow-tool') and not tool) or (mode=='allow-tool-only' and tool)
             if mode.startswith('workflow-stop:'):

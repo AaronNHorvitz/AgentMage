@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The explicit `code-repository-apply` variant connects the guided coding cycle to
+the existing original-checkout transfer. A full passing worktree test receipt
+precedes separate original read and complete-diff approvals, with original
+root/creation/preview bindings and the same setup deadline. See the
+[transfer record](docs/evidence/t303-guided-original-transfer-2026-11-08.md) and
+[guide](docs/guides/coding-guided-worktree.md). Independent core review is
+required. Native execution, autonomous endpoint composition, durable recovery,
+approved Git and measurements remain open. T-303/T-306 remain open; no row is
+added or closed.
+
+The repository-setup [independent core review](docs/reviews/c53ed1742a51-local-coding-repository-setup.txt)
+has **Verdict: PASS** for exact commit
+`c53ed1742a51a7827a70e65a26c2fcdce70180ff`, with no high/medium finding.
+Low L1 (creation-reply root/outcome substitution coverage) remains same-row
+backlog; low L2's manual-setup guide transition is clarified. Earlier lows
+remain backlog. Both parent rows stay open; no row is added or closed.
+
 The [repository setup command](docs/guides/coding-guided-worktree.md) connects
 approved original-repository inspection, exact worktree creation, bounded path
 discovery and source disclosure to the existing guided edit/test/repair workflow.

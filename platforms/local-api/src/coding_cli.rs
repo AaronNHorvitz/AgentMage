@@ -29,6 +29,8 @@ mod record;
 mod repository;
 #[path = "coding_cli_runtime.rs"]
 mod runtime;
+#[path = "coding_cli_transfer.rs"]
+mod transfer;
 #[path = "coding_cli_workflow.rs"]
 mod workflow;
 
@@ -574,6 +576,17 @@ fn original_apply_prepare(
     task: &str,
     paths: &[String],
 ) -> Result<()> {
+    original_apply_prepare_observed(client, original, worktree, task, paths, None).map(|_| ())
+}
+
+fn original_apply_prepare_observed(
+    client: &Client,
+    original: &str,
+    worktree: &str,
+    task: &str,
+    paths: &[String],
+    expected_roots: Option<(&str, &str)>,
+) -> Result<Value> {
     let status = client.json("GET", "/v1/code/repository/apply", true, None)?;
     let root = status["repository_root_sha256"]
         .as_str()
@@ -583,31 +596,46 @@ fn original_apply_prepare(
         .as_str()
         .filter(|s| digest(s))
         .ok_or(())?;
+    if expected_roots.is_some_and(|expected| expected != (root, tree)) {
+        return Err(());
+    }
     let verify = || {
         LinuxCodingReadScope::verify_root(Path::new(original), root).map_err(|_| ())?;
         LinuxCodingReadScope::verify_root(Path::new(worktree), tree).map_err(|_| ())
     };
     verify()?;
-    confirm(
+    client.confirm(
         &json!({"repository":original,"worktree":worktree,"paths":paths,"task":task,
         "expected_repository_root_sha256":root,"expected_worktree_root_sha256":tree,
         "warning":"Reads the displayed worktree files, original preimages for edits, and bounded original parent-directory names for new files to prepare the complete original-checkout preview. No writes, model request, command, commit or push."}),
         &format!("read {root} {tree}"),
     )?;
     verify()?;
-    show(&client.json(
+    let preview = client.json(
         "POST",
         "/v1/code/repository/apply/prepare",
         true,
         Some(json!({"paths":paths,"task":task,"approve_read":true,
             "expected_repository_root_sha256":root,"expected_worktree_root_sha256":tree})),
-    )?)
+    )?;
+    show(&preview)?;
+    Ok(preview)
 }
 
 fn original_apply_decide(client: &Client, original: Option<&str>) -> Result<()> {
+    original_apply_decide_observed(client, original, None).map(|_| ())
+}
+
+fn original_apply_decide_observed(
+    client: &Client,
+    original: Option<&str>,
+    expected: Option<&Value>,
+) -> Result<Value> {
     let status = client.json("GET", "/v1/code/repository/apply", true, None)?;
     let preview = &status["pending"];
-    if preview["operation"] != "apply-to-original" {
+    if preview["operation"] != "apply-to-original"
+        || expected.is_some_and(|expected| expected != preview)
+    {
         return Err(());
     }
     let hash = preview["preview_sha256"]
@@ -628,7 +656,7 @@ fn original_apply_decide(client: &Client, original: Option<&str>) -> Result<()> 
         } else {
             "Writes exactly this complete diff in the original checkout. No index change, commit, push or test claim. Process-only records: inspect disk after a lost reply; never resend approval."
         };
-        confirm(
+        client.confirm(
             &json!({"repository":root,"preview":preview,
             "warning":warning}),
             &format!("apply-original {hash}"),
@@ -651,7 +679,13 @@ fn original_apply_decide(client: &Client, original: Option<&str>) -> Result<()> 
     {
         return Err(());
     }
-    Ok(())
+    if let Some(expected) = expected
+        && (result["preview_sha256"] != expected["preview_sha256"]
+            || result["creation_receipt_sha256"] != expected["creation_receipt_sha256"])
+    {
+        return Err(());
+    }
+    Ok(result)
 }
 
 fn edit_decide(client: &Client, root: Option<&str>) -> Result<()> {
@@ -765,11 +799,16 @@ fn execute(args: &[String]) -> Result<()> {
         };
         return workflow::run(&client, rest, seconds.parse().map_err(|_| ())?);
     }
-    if command == "code-repository" {
+    if command == "code-repository" || command == "code-repository-apply" {
         let [seconds, rest @ ..] = tail else {
             return Err(());
         };
-        return repository::run(&client, rest, seconds.parse().map_err(|_| ())?);
+        return repository::run(
+            &client,
+            rest,
+            seconds.parse().map_err(|_| ())?,
+            command == "code-repository-apply",
+        );
     }
     match (command.as_str(), tail) {
         ("edit", []) => show(&client.json("GET", "/v1/code/repository/edit", true, None)?),
@@ -975,6 +1014,9 @@ fn execute(args: &[String]) -> Result<()> {
 }
 
 fn usage() {
+    eprintln!(
+        "Repository coding: code-repository|code-repository-apply <seconds> <repository> <management-directory> <task-id> <base-commit> <source-query> <model> <message-bytes> <output-tokens> <task> <definition-json>. The apply variant offers separate original-checkout read and diff approvals after passing worktree tests."
+    );
     eprintln!(
         "Repository workflow: agentmage-code <loopback-ip:port> <private-auth-directory> code-repository <seconds> <repository> <private-management-directory> <task-id> <base-commit> <source-query> <model> <message-bytes> <output-tokens> <task> <complete-test-definition-json>"
     );

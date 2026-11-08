@@ -8,6 +8,9 @@ use agentmage_kernel_engine::repository_safety::{
 };
 use std::os::unix::{ffi::OsStrExt, fs::PermissionsExt};
 
+#[path = "coding_transfer_workflow.rs"]
+mod transfer;
+
 fn setup(f: &Fixture) -> (Script, Value) {
     for name in ["repo", "owned"] {
         fs::create_dir(f.root.join(name)).unwrap();
@@ -100,12 +103,23 @@ fn run(
     answer: &str,
     seconds: &str,
 ) -> (Value, Vec<Value>, Vec<String>) {
+    run_command(f, script, t, answer, seconds, "code-repository")
+}
+
+fn run_command(
+    f: &Fixture,
+    script: Script,
+    t: &ValidationTemplate,
+    answer: &str,
+    seconds: &str,
+    command: &str,
+) -> (Value, Vec<Value>, Vec<String>) {
     let peer = f.peer(script.replies);
     let started = Instant::now();
     let output = f.tty(
         peer.address,
         &[
-            "code-repository",
+            command,
             seconds,
             f.root.join("repo").to_str().unwrap(),
             f.root.join("owned").to_str().unwrap(),

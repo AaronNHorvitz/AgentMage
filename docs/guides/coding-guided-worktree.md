@@ -47,9 +47,26 @@ creation or selection in place. There is no automatic cleanup, repeated effect,
 original-checkout transfer, commit or push. Inspect service records and disk
 before continuing manually. Native executable admission remains mandatory.
 
-For an already prepared worktree, use the original command:
+To include final transfer to the original checkout, use `code-repository-apply`
+with exactly the same arguments. After a full passing worktree test receipt,
+the command displays the original owner's transferable paths. They must be a
+nonempty sorted subset of this workflow's approved source selection. It asks
+for `read <repository-root-sha256> <worktree-root-sha256>` before reading the
+original preimages and current worktree postimages to prepare the complete diff,
+then `apply-original <preview-sha256>` before transferring it. Declining either
+decision stops further requests. A failed, zero-test or flaky receipt cannot
+reach transfer.
 
-Create the isolated worktree through the running service as described in
+Transfer retains the original repository, created-worktree and creation-receipt
+bindings. A replaced prepared diff refuses before final approval. Read and apply
+waits use the original setup deadline and signal latch. Each request is sent
+once; a lost response requires inspection of files and the original API's apply
+record. A successful transfer says only that the approved diff was written.
+The earlier passing receipt describes its worktree test execution; the original
+checkout has not been tested. Commit and push remain separate unfinished work.
+
+Alternatively, set up manually before running `code-worktree`. Create the
+isolated worktree through the running service as described in
 [worktree ownership](coding-worktrees.md). Select its exact source files and
 approve disclosure to the configured endpoint with `select-model` or
 `map-select`. Read the complete selected paths; repository ranking is lexical.

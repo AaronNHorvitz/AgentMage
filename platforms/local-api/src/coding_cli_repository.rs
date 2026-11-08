@@ -4,7 +4,7 @@
 use super::*;
 use agentmage_kernel_engine::repository_safety::{RepositoryOperation, RepositoryOperationPlan};
 
-pub(super) fn run(client: &Client, args: &[String], seconds: u64) -> Result<()> {
+pub(super) fn run(client: &Client, args: &[String], seconds: u64, apply: bool) -> Result<()> {
     let [
         root,
         owned,
@@ -76,7 +76,8 @@ pub(super) fn run(client: &Client, args: &[String], seconds: u64) -> Result<()> 
             &json!({"repository":root,"management_directory":owned,"task_id":task_id,
                 "base_commit":base,"source_query":query,"task":task,
                 "maximum_running_seconds":seconds,
-                "warning":"Runs hardened local Git inspection and reads the entire repository, including ignored and untracked work, to prepare an isolated worktree. Creation, source discovery, endpoint disclosure, edits and tests need separate approvals. No commit, push, removal or automatic cleanup. A lost reply stops; inspect records and disk before continuing."}),
+                "offer_original_transfer_after_tests":apply,
+                "warning":"Runs hardened local Git inspection and reads the entire repository, including ignored and untracked work, to prepare an isolated worktree. Creation, source discovery, endpoint disclosure, edits, tests and any original-checkout transfer need separate approvals. No commit, push, removal or automatic cleanup. A lost reply stops; inspect records and disk before continuing."}),
             &format!("inspect {base}"),
         )?;
         let prepared = client.json(
@@ -186,6 +187,10 @@ pub(super) fn run(client: &Client, args: &[String], seconds: u64) -> Result<()> 
             task.clone(),
             text.clone(),
         ];
-        workflow::run_steps(client, &args, seconds, Some(&origin))
+        workflow::run_steps(client, &args, seconds, Some(&origin))?;
+        if apply {
+            transfer::run(client, root, &worktree, task, &prepared, &origin)?;
+        }
+        Ok(())
     })
 }

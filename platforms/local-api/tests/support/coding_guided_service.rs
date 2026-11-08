@@ -42,6 +42,7 @@ fn states(f: &Fixture) -> Vec<Value> {
         "/v1/code/repository/edit",
         "/v1/code/repository/command",
         "/v1/code/repository/validation",
+        "/v1/code/repository/apply",
         "/v1/code/workspace/changes",
     ]
     .into_iter()
@@ -64,6 +65,15 @@ fn assert_preserved(f: &Fixture, before: &[Value]) {
 
 #[test]
 fn repository_setup_actual_service_stops_at_original_native_inspection_refusal() {
+    repository_setup_refusal("code-repository");
+}
+
+#[test]
+fn repository_transfer_actual_service_stops_at_original_native_inspection_refusal() {
+    repository_setup_refusal("code-repository-apply");
+}
+
+fn repository_setup_refusal(command: &str) {
     let f = Fixture::new();
     let upstream = TcpListener::bind("127.0.0.1:0").unwrap();
     upstream.set_nonblocking(true).unwrap();
@@ -85,7 +95,7 @@ fn repository_setup_actual_service_stops_at_original_native_inspection_refusal()
     let started = Instant::now();
     let out = f.terminal(
         &[
-            "code-repository",
+            command,
             "30",
             f.root.join("repo").to_str().unwrap(),
             f.root.join("owned").to_str().unwrap(),
