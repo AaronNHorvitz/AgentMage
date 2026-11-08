@@ -53,8 +53,41 @@ ceilings fit; a narrower ceiling refuses before dispatch. The phase retains
 only the immutable run/session/task identifiers and full request digest as
 `run_binding`; the ordinary proposal-only constructor leaves that value absent.
 
-This is one phase bound to a statically framed run. The eventual coordinator
-must own turn identities, cumulative resource spending, the overall clock,
-recovery and effect authority. Creating a second phase does not establish a
-fresh run budget, and a cursor alone does not establish resumability. No new
-agent loop, model prompt, live API route, tool or consent mechanism is added.
+`runtime_loop::endpoint::RuntimeEndpointTurns` now supplies explicit model-turn
+admission for eventual coordinator composition. It accepts only a sealed
+ephemeral read-only request without a resume cursor. Its constructor starts one
+run clock. `remaining_ms` and every dispatch borrow the existing coordinator's
+clock/cancellation implementation: time cannot restart between turns, regress,
+or continue past the deadline. Cancellation must match the original task and
+derived correlation identity. The exact observed signal remains inspectable;
+it is never a process-exit or cancellation-acknowledgement receipt.
+
+Each caller-supplied turn uses the original-context and streaming phase above.
+The turn ID follows the coordinator's run/ordinal derivation. Accepted results
+retain that ID, sealed run identity and complete request/response descriptor.
+They are model observations, not verified answers, approved tools or task success.
+
+One cumulative shared resource ledger bounds turns, context refreshes, model
+calls, full prepared input bytes, accepted output bytes and accepted rounded-up
+dispatch durations. Read-only packets may omit budgets; finite defaults still
+come from the run, and any declared narrower budget wins. No native token or
+server-memory observation is synthesized. Before dispatch, the entire configured
+response-text and transport-time envelopes must fit remaining cumulative
+capacity. Prepare a smaller envelope for a later turn when needed. Only actual
+accepted output/time is spent, rather than the reserved maxima. Wall-clock time
+also bounds preparation, waiting between turns and synchronous callbacks.
+
+Failed dispatches retain their admitted call/input usage. A control stop before
+the phase admits an attempt counts no model call or input bytes. Any refusal or
+failed turn closes this component; it cannot retry or renew its ledger. Streamed
+text remains provisional until completion is accepted. The containing
+coordinator must decide what to do with accepted results and record events.
+If a dependency unwinds and its caller catches the panic, the component stays
+closed with its reservation spent; that reservation proves no remote execution
+or process exit.
+
+This component emits no runtime events, interprets no proposals, and executes
+no orchestration loop, tool, grant, edit, command or retry. It is not yet wired
+into the full coordinator or any live API route. Durable ownership, recovery,
+effect authority and task verification remain there; a cursor alone establishes
+no resumability. No new model prompt or consent mechanism is added.

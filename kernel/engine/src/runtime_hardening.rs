@@ -222,6 +222,53 @@ impl RuntimeResourceLedger {
         })
     }
 
+    /// Cumulative endpoint model-turn accounting using the same work-packet
+    /// ceilings. Known model resources have finite run-derived defaults even
+    /// when an ephemeral read-only packet omits optional budgets. No memory or
+    /// locally verified token observation is synthesized.
+    pub(crate) fn for_endpoint_run(
+        request: &RuntimeEndpointRunRequest,
+    ) -> Result<Self, RuntimeHardeningError> {
+        let mut budgets: BTreeMap<_, _> = request
+            .work_packet
+            .budgets
+            .iter()
+            .map(|budget| (budget.resource, budget.limit))
+            .collect();
+        let input = request
+            .context_budget
+            .max_request_body_bytes
+            .checked_mul(u64::from(request.limits.max_context_refreshes))
+            .ok_or(RuntimeHardeningError::CounterOverflow)?;
+        for (resource, limit) in [
+            (
+                BudgetResource::PlanSteps,
+                u64::from(request.limits.max_turns),
+            ),
+            (
+                BudgetResource::ModelCalls,
+                u64::from(request.limits.max_model_calls),
+            ),
+            (BudgetResource::InputBytes, input),
+            (BudgetResource::OutputBytes, request.limits.max_output_bytes),
+            (
+                BudgetResource::ElapsedMilliseconds,
+                request.limits.max_elapsed_ms,
+            ),
+        ] {
+            budgets
+                .entry(resource)
+                .and_modify(|value| *value = (*value).min(limit))
+                .or_insert(limit);
+        }
+        Ok(Self {
+            mode: request.mode,
+            budgets,
+            limits: RuntimeHardeningLimits::from_endpoint_request(request)?,
+            snapshot: RuntimeResourceSnapshot::default(),
+        })
+    }
+
     /// Creates the same ledger for one inert endpoint proposal phase, without a
     /// fabricated native profile. Its prepared request bounds one dispatch and
     /// decoded text; it admits no event queue, artifact, tool, retry or write.

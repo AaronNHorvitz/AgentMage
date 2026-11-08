@@ -139,7 +139,8 @@ impl RuntimePhaseStop {
 /// Ports remain cooperative; this does not preempt an in-flight call.
 struct RuntimePhaseControl<'a, C> {
     clock: RefCell<&'a mut C>,
-    request: &'a RuntimeRunRequest,
+    task_id: &'a agentmage_kernel_contracts::TaskId,
+    max_elapsed_ms: u64,
     correlation_id: &'a CorrelationId,
     started_at: u64,
     last_observed_at: &'a Cell<u64>,
@@ -157,10 +158,34 @@ impl<'a, C: RuntimeClock> RuntimePhaseControl<'a, C> {
         last_observed_at: &'a Cell<u64>,
         cancellation: Option<&'a dyn ModelCancellationProbe>,
     ) -> Self {
+        Self::for_run_limits(
+            clock,
+            &request.task.task_id,
+            request.limits.max_elapsed_ms,
+            correlation_id,
+            started_at,
+            last_event_at,
+            last_observed_at,
+            cancellation,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn for_run_limits(
+        clock: &'a mut C,
+        task_id: &'a agentmage_kernel_contracts::TaskId,
+        max_elapsed_ms: u64,
+        correlation_id: &'a CorrelationId,
+        started_at: u64,
+        last_event_at: u64,
+        last_observed_at: &'a Cell<u64>,
+        cancellation: Option<&'a dyn ModelCancellationProbe>,
+    ) -> Self {
         last_observed_at.set(last_observed_at.get().max(last_event_at).max(started_at));
         Self {
             clock: RefCell::new(clock),
-            request,
+            task_id,
+            max_elapsed_ms,
             correlation_id,
             started_at,
             last_observed_at,
@@ -174,7 +199,7 @@ impl<'a, C: RuntimeClock> RuntimePhaseControl<'a, C> {
             observe_cancellation(self.cancellation).map_err(RuntimePhaseStop::Failed)?
         {
             if signal.schema_version != CONTRACT_SCHEMA_VERSION
-                || signal.task_id != self.request.task.task_id
+                || &signal.task_id != self.task_id
                 || &signal.correlation_id != self.correlation_id
             {
                 return Err(RuntimePhaseStop::Failed(
@@ -194,11 +219,7 @@ impl<'a, C: RuntimeClock> RuntimePhaseControl<'a, C> {
             ));
         }
         self.last_observed_at.set(now);
-        let remaining = self
-            .request
-            .limits
-            .max_elapsed_ms
-            .saturating_sub(now - self.started_at);
+        let remaining = self.max_elapsed_ms.saturating_sub(now - self.started_at);
         if remaining == 0 {
             Err(RuntimePhaseStop::Exhausted)
         } else {

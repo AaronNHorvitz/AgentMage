@@ -2,12 +2,21 @@
 
 ## Active queue: local agent mission
 
+The [endpoint turn component](docs/evidence/t303-endpoint-turns-2026-11-08.md)
+adds explicit turn/result binding, cumulative model budgets and the existing
+coordinator's clock/cancellation checks without another orchestration loop.
+It needs independent core review. Full coordinator wiring, native edit/test/retry,
+durable ownership, approved Git and T-303/T-306 remain open; no row is added.
+
 The [endpoint run-admission increment](docs/evidence/t303-endpoint-run-admission-2026-11-08.md)
 adds static endpoint run framing with the shared task, scope, policy, catalog
-and resource checks, plus a run-bound single model phase. Native profile and
-tokenizer admission stay intact. This needs independent core review; endpoint
-coordinator turn/result composition, edit/test/retry and T-303/T-306 remain open.
-No new sub-row or closure is introduced.
+and resource checks, plus a run-bound single model phase. Its
+[independent core review](docs/reviews/7e7b2c2a9c69-local-coding-endpoint-run-admission.txt)
+has **Verdict: PASS** for exact commit `7e7b2c2a9c699613048695cd9e15119124401e70`,
+with no high/medium finding. Low L1 (model-name format characters at display
+boundaries) and L2 (empty-authority lexical guard) remain backlog with earlier
+lows. Native profile/tokenizer admission stays intact. Full coordinator wiring,
+edit/test/retry and T-303/T-306 remain open; no row is added or closed.
 
 The [endpoint context admission](docs/evidence/t303-endpoint-context-2026-11-08.md)
 now derives bounded ordered-message observations in the kernel before preparing

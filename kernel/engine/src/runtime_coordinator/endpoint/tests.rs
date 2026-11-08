@@ -23,6 +23,9 @@ use crate::{
 
 use super::*;
 
+#[path = "../../runtime_loop/endpoint/turn_tests.rs"]
+mod turns;
+
 fn request() -> RuntimeEndpointRunRequest {
     let native = super::super::tests::request();
     RuntimeEndpointRunRequest {

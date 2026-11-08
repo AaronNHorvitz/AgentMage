@@ -1,0 +1,115 @@
+Commit: 7e7b2c2a9c699613048695cd9e15119124401e70
+Scope: local-coding-endpoint-run-admission
+
+# Independent core review: T-303 / T-306 endpoint run admission (non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), working in a separate session with a read-only checkout at
+/lane/review-checkout. This is a same-model review, so a cross-model review is still required before any release.
+I judged only the pinned commit above, against the immutable predecessor
+3f573cca96d5e3cecbc849a844b3b549d7fe437a. This review closes no row, and both parents remain OPEN.
+
+## Methods
+
+1. I confirmed the SHAs with `git rev-parse`: HEAD, 7e7b2c2a… and 3f573cca… all resolve, HEAD is
+   7e7b2c2a9c699613048695cd9e15119124401e70 and the working tree is clean.
+2. I read IP-POLICY.md, the top of TASKS.md and the full diff: 13 paths, +1273/−68. That includes the new
+   contract `kernel/contracts/src/runtime_endpoint_run.rs`, the coordinator refactor
+   (`runtime_coordinator.rs`, `runtime_coordinator/endpoint.rs`), the hardening refactor, `RuntimeEndpointModelPhase::for_run`,
+   the 610-line test file, the evidence file, the crate API guide
+   `docs/guides/runtime-endpoint-runs.md` and the retained predecessor review.
+3. I compared the refactor mechanically with the predecessor:
+   - The native validation order is unchanged. It runs version, then identifiers/digests/task/tools
+     (InvalidValue), then bindings, then work packet, then profile+tokenizer context, then limits, then
+     hardening, then the catalog digest, then the cursor shape. The model/resource step is now a closure
+     invoked at the identical position (`runtime_coordinator.rs:295-360`).
+   - `RuntimeHardeningLimits::from_request` → `from_parts(mode, work_packet, limits, context_budget.max_input_bytes)`
+     is a pure parameter extraction. The ten required controlled-write resources and their minimums are
+     unchanged (`runtime_hardening.rs:556-586`). The endpoint form substitutes `max_request_body_bytes`.
+   - The `RuntimeRunRequest` schema is untouched, since `runtime_run.rs` is not in the diff. Native seal/verify
+     are byte-identical.
+4. I traced `for_run` (`runtime_loop/endpoint.rs:127-163`):
+   - It verifies the sealed run, including its digest.
+   - It compares `runtime_model_binding()` (selection endpoint+model) with the run selection.
+   - It compares message count, packet content bytes, serialized-message bytes, full body bytes,
+     requested tokens, the response-text ceiling and `total_timeout` against the run, using an exact
+     `Duration::from_millis` comparison. That comparison is consistent with the ledger's `div_ceil`
+     millisecond rounding in `for_endpoint_model`.
+   - It then delegates to the unchanged `new`, which still requires `request.context == packet.messages()`.
+   - The binding has private fields with Serialize only, and `new` leaves it `None`.
+5. I checked contract parsing:
+   - `from_json` uses `deny_unknown_fields` on the request, the selection and the budget.
+   - `event_cursor` is a required option.
+   - The derive rejects duplicate fields.
+   - The version is checked by `validate_schema_version`.
+   - The distinct `model_profile` / `model_selection` keys make cross-decoding impossible in both directions.
+   - The two digest preimages cannot coincide because the JSON key sets differ.
+   - Adding `Deserialize` to `EndpointModelSelection` opens no new constructor path: its fields were already
+     `pub`, and `EndpointModelRequest` remains Serialize-only.
+6. I verified that all nine `committed-source/` copies are byte-identical to `git show HEAD:<path>`. I read
+   run.py, audit.py and final.py before running them; none writes to the repository.
+7. I ran the requested block in a new private validation directory and cross-checked the failure set against
+   my own previous review log for 3f573cca, not only against the builder's log.
+
+## Commands and results
+
+```
+sha256sum -c /lane/state/tmp/t303-endpoint-run/review-inputs.sha256      -> all 36 OK
+sha256sum review-inputs.sha256 -> 429618df4a538266aa428186fe182264041d9e0a0eb4c0e4db5fcdb192446767 (matches request)
+sha256sum <pinned node v24.15.0>/bin/node -> d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches)
+PATH=<pinned node> CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-endpoint-run-7e7b2c2a9c69 (new, mode 700)
+bash /tools/build-slot python3 -B .../run.py > fast.log   -> exit 1 (expected; FAST GATE: FAIL)
+  RESULT exits: 0 0 0 0 0(fmt 2.51s) 0(clippy -D warnings 55.89s) 101(tests 326.97s); SOURCE_FREEZE_UNCHANGED
+python3 -B .../final.py > final.log                      -> exit 0; FINAL_LIGHT_CHECKS_PASS; SOURCE_GATE_REMAINS_FAIL
+cmp validation-2/source-freeze.json <mine>                -> identical
+cmp validation-2/plan-final.json    <mine>                -> identical
+cmp validation-2/audit.json         <mine>                -> identical
+git diff --check 3f573cca… --                             -> clean (exit 0)
+git status --short                                        -> empty
+cmp docs/reviews/3f573cca96d5-…-context.txt /lane/reviews/3f573cca96d5-…-context.md -> identical
+diff <FAILED lines of my 3f573cca review log> <FAILED lines of this run>             -> identical (72)
+```
+
+My audit: 76 targets, 3259 passed / 72 failed / 79 ignored / 0 filtered. The 43 shared targets give
+2534/72/71/0, which is the previous 2528 passes plus exactly the six new `runtime_coordinator::endpoint::tests::*`
+methods. All six pass, and all 27 required methods pass unfiltered. Failure identities, normalized diagnostics and
+ignores match the predecessor. The 72 failures are 53 in `agentmage_host[unittests]` and 19 in
+`agentmage_platform_linux[unittests]`, the pre-existing deferred T-301.1 baseline; none is in the contracts or engine
+crates. The 33 additional targets have no failures. The builder's timings trace to their validation-2 log, and the
+steps sum to 299.15 s. The initial Clippy failure in validation-1 is the reported unused `Value` import, and final.py
+proves that this one-line removal is the only source change. Cargo.toml and Cargo.lock are unchanged. Ledger
+table rows are unchanged, with no new sub-row and no closure. No evaluation, held-out, hidden-test, scorer, GPU or
+prompt path is touched. I found no private host path, username or credential in the committed additions. The retained
+review's `/lane/...` sandbox paths follow the accepted precedent.
+
+## Analysis
+
+- **Honest labelling.** The guide and evidence say this is static framing plus one bound phase. They say it is not
+  reachable from HTTP, CLI or MCP, that it carries no ExactModelProfile or tokenizer assertion, and that the
+  selection checks are lexical only. All of that matches the code.
+- **Confinement.** Sealing grants no write, command, network or consent. The phase still owns no socket or
+  credential. Controlled-write framing keeps every original budget and covers the full body bytes times the
+  context refreshes. The tests check every missing and every one-short budget, plus the content-only underestimate.
+- **Single dispatch.** The second `execute` is refused without calling the port.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (backlog only, not blocking):
+- L1 `kernel/engine/src/runtime_coordinator/endpoint.rs:47`: `char::is_control` does not reject Unicode format
+  characters (for example U+202E or U+200B) in `model_selection.model`. Such a name could visually spoof a model
+  identity if it is later shown in a consent or approval surface. Fix: also reject `General_Category=Cf`, or
+  restrict the name to printable characters, when a display surface consumes it.
+- L2 `kernel/engine/src/runtime_coordinator/endpoint.rs:39-44`: the lexical guard admits `http://` with an empty
+  authority (for example `http:///v1`), and no fixture covers that case. Destination parsing is documented as
+  transport-owned, so it is harmless for now. Fix: add an empty-authority refusal and a regression
+  case alongside the existing delimiter cases.
+
+## Per-row result
+
+- T-303 / T-306 endpoint run-admission increment (non-closing): accepted at this exact commit. The source gate
+  remains FAIL on the pre-existing 72-case baseline. Both parents remain OPEN, as do endpoint coordinator turn/result
+  composition, cumulative run accounting, edit/test/retry and the parent measurements.
+
+Verdict: PASS

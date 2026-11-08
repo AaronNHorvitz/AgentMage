@@ -13,8 +13,13 @@ use crate::runtime_hardening::RuntimeResourceLedger;
 use super::{RuntimePortFailure, valid_sha256};
 
 mod context;
+mod turn;
 pub use context::{
     RuntimeEndpointContextPacket, RuntimeEndpointMessage, RuntimeEndpointMessageRole,
+};
+pub use turn::{
+    RuntimeEndpointTurnFailure, RuntimeEndpointTurnResult, RuntimeEndpointTurns,
+    RuntimeEndpointTurnsUsage,
 };
 
 /// A single prepared endpoint dispatch. The implementation retains its original
