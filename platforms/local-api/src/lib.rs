@@ -6,7 +6,9 @@
 
 /// Terminal client over this service's versioned coding routes.
 pub mod coding_cli;
+mod coding_endpoint_api;
 mod coding_owned_api;
+pub use coding_endpoint_api::{CodingEndpointHttpRun, serve_coding_endpoint};
 mod coding_repair_api;
 mod coding_repository_api;
 mod coding_runtime_api;
@@ -353,21 +355,43 @@ fn serve_state(
     stop: Arc<AtomicBool>,
     initial: State,
 ) -> Result<(), ApiError> {
+    let state = Mutex::new(initial);
+    serve_connections(
+        listener,
+        stop,
+        |socket, address, stop| handle(socket, address, &tokens, &state, stop),
+        || {
+            state
+                .lock()
+                .map_err(|_| ApiError::Io)?
+                .cancel_active(true)
+                .map(|_| ())
+        },
+    )
+}
+
+// Common bounded HTTP workers, including shutdown and joining, for both the
+// manual service and the dedicated endpoint owner. This owns no agent loop.
+fn serve_connections(
+    listener: TcpListener,
+    stop: Arc<AtomicBool>,
+    handler: impl Fn(&mut TcpStream, SocketAddr, &AtomicBool) -> Result<(), ApiError> + Sync,
+    shutdown: impl FnOnce() -> Result<(), ApiError>,
+) -> Result<(), ApiError> {
     let address = listener.local_addr().map_err(|_| ApiError::Io)?;
     if !address.ip().is_loopback() {
         return Err(ApiError::Configuration);
     }
     listener.set_nonblocking(true).map_err(|_| ApiError::Io)?;
-    let state = Mutex::new(initial);
     thread::scope(|scope| {
         let mut workers = Vec::new();
         for _ in 0..4 {
-            let (listener, tokens, stop, state) = (&listener, &tokens, &stop, &state);
+            let (listener, stop, handler) = (&listener, &stop, &handler);
             let worker = thread::Builder::new().spawn_scoped(scope, move || {
                 while !stop.load(Ordering::Relaxed) {
                     match listener.accept() {
                         Ok((mut socket, peer)) if peer.ip().is_loopback() => {
-                            let _ = handle(&mut socket, address, tokens, state, stop);
+                            let _ = handler(&mut socket, address, stop);
                         }
                         Ok(_) => {}
                         Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
@@ -395,14 +419,13 @@ fn serve_state(
             }
             thread::sleep(Duration::from_millis(10));
         }
-        state
-            .lock()
-            .map_err(|_| ApiError::Io)?
-            .cancel_active(true)?;
+        // Join even if shutdown reports an error. Scoped workers must never
+        // outlive the owner or strand a retained coordinator.
+        let shutdown_result = shutdown();
         for worker in workers {
             worker.join().map_err(|_| ApiError::Io)??;
         }
-        Ok(())
+        shutdown_result
     })
 }
 

@@ -9,8 +9,8 @@ use std::collections::BTreeMap;
 
 use agentmage_capability_repository_map::coding_proposal::CodingSource;
 use agentmage_kernel_contracts::{
-    ModelCancellationProbe, RuntimeApprovalResponse, RuntimeEndpointRunRequest, RuntimeEvent,
-    RuntimeRunId,
+    CorrelationId, ModelCancellationProbe, RuntimeApprovalResponse, RuntimeEndpointRunRequest,
+    RuntimeEvent, RuntimeRunId,
 };
 use agentmage_kernel_engine::{
     runtime_coordinator::verify_runtime_endpoint_run_request,
@@ -207,6 +207,18 @@ impl<'config, T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock>
         let result = coordinator.run_endpoint_until_boundary(response, cancellation);
         *faulted = result.is_err() && coordinator.requires_reconciliation();
         result.map_err(CodingEndpointOwnerError::Coordinator)
+    }
+
+    /// Borrows the retained coordinator's original cancellation correlation,
+    /// including before its first event. No caller recreates a derived id.
+    pub fn correlation_id(
+        &mut self,
+        request: &RuntimeEndpointRunRequest,
+    ) -> Result<&CorrelationId, CodingEndpointOwnerError> {
+        match &self.entry(request)?.held {
+            Held::Retained { coordinator, .. } => Ok(coordinator.correlation_id()),
+            Held::Released => Err(CodingEndpointOwnerError::NotHeld),
+        }
     }
 
     /// Borrows complete retained canonical events, including a faulted run's

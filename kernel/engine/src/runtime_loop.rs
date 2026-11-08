@@ -1929,6 +1929,13 @@ where
         self.publisher.subscribe(capacity).map_err(Into::into)
     }
 
+    /// Original run correlation, including before the first event. Hosts use
+    /// this exact identity for cancellation; a run id is not a correlation id.
+    #[must_use]
+    pub fn correlation_id(&self) -> &CorrelationId {
+        &self.correlation_id
+    }
+
     /// Returns the exact verified in-memory event history for this ephemeral run.
     #[must_use]
     pub fn events(&self) -> &[RuntimeEvent] {

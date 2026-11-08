@@ -2,6 +2,20 @@
 
 ## Active queue: local agent mission
 
+The dedicated endpoint HTTP adapter now projects one retained coordinator through
+fresh service-issued run/session identities, exact approval responses,
+cancellation, paged canonical events and release. See the
+[HTTP ownership record](docs/evidence/t303-endpoint-http-2026-11-08.md).
+Independent core review is required. This is a trusted-host library entry point;
+no executable activates it yet, and actual native filesystem/grant composition,
+CLI/MCP integration, edit/test/retry, durable recovery, approved Git and parent
+measurements remain open. No row is added or closed.
+
+The shared configuration [independent core review](docs/reviews/77eeb69607df-local-coding-shared-config.txt)
+has **Verdict: PASS** for exact commit
+`77eeb69607dfe2147b9275c9b7b0a40d7b4aa30b`, with no findings. It accepts
+only that immutable configuration increment; both parent rows remain open.
+
 The endpoint owner can now retain its original approved connection independently
 of service settings through shared immutable ownership. Frozen requests retain
 the exact credential-owning transport; approval, encoding, control and dispatch

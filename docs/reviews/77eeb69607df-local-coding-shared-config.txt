@@ -1,0 +1,136 @@
+Commit: 77eeb69607dfe2147b9275c9b7b0a40d7b4aa30b
+Scope: local-coding-shared-config
+
+# Independent core review — shared endpoint configuration ownership (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only checkout at
+`/lane/review-checkout`. Tier: core. Predecessor: `08a82f80297130cce0fc201b702a0749b518a563`.
+Configuration code commit: `77d6a946f4244ec8b4b05457ce7afa46703fd24c`; documentation follow-up
+`77eeb696` (the reviewed commit).
+
+## Methods
+
+- Confirmed the commit: `git rev-parse HEAD` = `77eeb69607dfe2147b9275c9b7b0a40d7b4aa30b`; history
+  `08a82f80 -> 77d6a946 -> 77eeb696`. Working tree clean before and after.
+- Read IP-POLICY.md, the top of TASKS.md, the list of newest decisions, the request, the private
+  README.md, run.py, parse.py, audit.py and final.py.
+- Read the complete twelve-file diff `08a82f80..77eeb696`, including every removed line of Rust
+  (`git diff ... -- '*.rs' | grep '^-'`), which showed that only field/constructor shapes changed and
+  no assertion was removed.
+- Confirmed that the follow-up commit touches only TASKS.md, the evidence record and the retained
+  report (`git diff --stat 77d6a946 77eeb696`: three files, no Rust).
+- Read the surrounding source: `prepare_chat`/`authorized`/`model_selection` in
+  `platforms/linux-inference/src/local_chat_transport.rs`, `release`/`entry` in
+  `shells/host/src/coding_endpoint_owner.rs`, and the uses of `Configuration` in
+  `platforms/local-api/src/lib.rs`.
+- Searched the whole repository for constructors of the new authority: `CodingEndpointConnection::Shared`
+  and `prepare_chat_shared` appear only in the new tests and in the single internal dispatch in
+  `shells/host/src/coding_endpoint.rs:215`. No HTTP route or service path constructs a shared connection.
+- Hygiene: grepped the added lines for private host paths, usernames, the email address, the private
+  sibling project name and credential patterns (no hits). The retained report
+  `docs/reviews/08a82f802971-local-coding-owner-faults.txt` is byte-identical (`cmp`) to
+  `/lane/reviews/08a82f802971-local-coding-owner-faults.md`. Its ten `/lane/` sandbox paths follow
+  the practice of 110 existing retained reports and contain no host username or home path.
+
+## Commands and results
+
+I ran exactly the requested sequence, unmodified apart from echoing exit codes, with no outer build-slot.
+The gate takes a `/tools/build-slot` reservation for each Cargo command itself
+(`scripts/local_agent_fast_gate.py:304`).
+
+```sh
+sha256sum --quiet -c /lane/state/tmp/t303-shared-config/review-inputs.sha256   # OK, 35 files; manifest sha256 fd07469c...c555c matches
+PATH=/lane/state/tmp/t306-owned-api/node-v24.15.0/bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target \
+CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-shared-config-77eeb69607df
+python3 -B /lane/state/tmp/t303-shared-config/run.py > $D/fast.log   # rc=1 (expected)
+rg -Fx 'FAST GATE: FAIL' / 'SOURCE_FREEZE_UNCHANGED'                  # both present
+python3 -B /lane/state/tmp/t303-shared-config/final.py > $D/final.log # rc=0, FINAL_LIGHT_PASS; SOURCE_GATE_FAIL; NO_ROW_CLOSED
+cmp validation-final/source-freeze.json $D/source-freeze.json         # identical
+git diff --check 08a82f80... --                                       # clean
+git status --short                                                    # empty
+```
+
+Results from the reviewer's own run (audit.json):
+
+- Seven commands. Exit codes `[0,0,0,0,0,0,101]`. Seconds
+  `[0.10,0.10,0.10,1.15,0.95,32.78,134.14]` (diff-check, untracked lint, review lint, markdownlint,
+  fmt, strict clippy, test). The extra report-lint command is the one the request expects. The Cargo
+  commands are identical to the builder's plan (asserted by final.py).
+- Totals over 27 targets: 936 passed, 53 failed, 19 ignored, 0 filtered. The prior baseline was
+  933/53/19/0. All old pass, fail and ignore identities are preserved, and the normalized failure
+  diagnostics are identical. The 53 failures all fall in `agentmage-host --lib`, with the panic
+  `test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }`. That is the deferred T-301.1
+  native-manifest blocker, and it is not waived.
+- Exactly three new passes:
+  `shared_prepared_request_retains_exact_transport_body_key_and_releases_after_dispatch`,
+  `shared_preparation_preserves_refusal_control_and_drop_without_connection`, and
+  `...owner_tests::shared_endpoint_owner_keeps_original_config_across_settings_drop_and_releases_it`.
+- The eight Rust source hashes were frozen throughout. My freeze file is identical to the builder's.
+  Format and strict Clippy pass. markdownlint found 0 issues.
+- The baseline selection in audit.py uses whole package-target sets (18 host/API targets plus 9
+  inference targets), never individual test outcomes. It asserts that `platforms/linux-inference` is
+  unchanged between `f1ac4d32` and `08a82f80`.
+
+The builder's numbers (936/53/19/0; six commands, 213.87 s) are consistent with my independent run.
+Timings differ only because of cache state and reservations; I treat them as published measurements,
+not gates.
+
+## Analysis
+
+- **Approval cannot be bypassed.** `prepare_chat_shared` (`local_chat_transport.rs:489`) calls the
+  ordinary `prepare_chat`, which runs `authorized()` (an exact endpoint equality check) before any
+  encoding. It then moves the binding and the `Zeroizing` body into a `Shared` variant. A Rust move
+  does not copy the heap buffer, so no unzeroized duplicate remains. `PreparedEndpointChat` has no
+  Drop impl that the destructuring could skip. The execution paths reach the transport only through
+  `Deref`, so there is no alternate dispatch logic. The test covers a wrong approval returning
+  `Err(Approval)` with no socket.
+- **No credential copy.** `LocalChatTransport` does not derive Clone. The `Arc` shares a single
+  immutable instance (endpoint, optional key and limits, with no interior mutability). The only
+  Clone-able object is `LocalChatApproval`, as before, and it holds no credential.
+- **A request cannot redirect the run.** `for_coding_run_with_connection`
+  (`coding_endpoint_context.rs:514`) still compares the sealed request's model selection with the
+  retained transport's own selection. The owner's `entry()` still filters on the exact
+  `request_sha256`. The new owner test shows that a request resealed with the same run id but a
+  replacement destination is refused with `NotHeld`, leaves events unchanged and opens no connection
+  on the replacement listener.
+- **Release.** `release` sets `Held::Released` for both terminal and faulted slots
+  (`coding_endpoint_owner.rs:242`). That drops the coordinator, and with it the shared connection.
+  The weak-reference assertions confirm this for terminal runs. For faulted runs it follows from the
+  same assignment. Spent identities remain, as before.
+- **Local API.** The only change is storage: `Arc<LocalChatTransport>` and `Arc<LocalChatApproval>`
+  inside the existing `Arc<Configuration>`. Every call site still auto-derefs to the same
+  `prepare_chat`/`chat_with_usage`/`models` methods with the same approval. The settings handlers,
+  consent and the operation lease are untouched.
+- **Tool confinement** (workspace writes, command sandbox, network, confirmation) is not touched by
+  this diff. No tool, permission, command or filesystem path changes. Escape surfaces that apply to
+  this change are endpoint redirect, approval substitution, credential exposure in observations, and
+  dispatch after a control stop or cancellation. The new socket tests exercise all of them, and I
+  traced each one in the code. I wrote no further probes because no confinement code changed and the
+  repository is read-only to me.
+- **Evaluation integrity.** No evaluation, hidden or held-out test, scorer, threshold, ignore,
+  dependency, model, GPU or scoreboard file is in the diff (final.py enforces exactly the 12 allowed
+  paths). The `|` row lines in TASKS.md are unchanged (audit.py asserts this), so no row or sub-row is
+  added or closed. Fixtures are labelled synthetic, and no score is claimed.
+- **Honest labelling.** The guide (`docs/guides/runtime-endpoint-runs.md`, new section) and the
+  evidence record both state that this is not a revocation policy. They also state that no HTTP
+  route, filesystem or grant composition, recovery, edit/test/retry or score is established, and that
+  the source gate still fails on T-301.1.
+- **Delivery.** This is a single increment that runs and is measured, with no new sub-row and no
+  plan-only change.
+
+Forward-looking note, not a finding for this commit: once a service path constructs `Shared`, a
+retained non-terminal run keeps the old transport and credential after settings are replaced or
+cleared, because `release` refuses `StillRunning`. The HTTP composition must check current settings
+revision and consent before each dispatch, and that check needs a socket test. Both the guide and the
+evidence already record this as open.
+
+## Findings
+
+None at high, medium or low severity. Low findings already recorded in these rows remain in the backlog.
+
+## Per-row result
+
+- T-303 (non-closing increment, shared configuration ownership): accepted. The parent remains OPEN.
+- T-306 (non-closing increment, shared configuration ownership): accepted. The parent remains OPEN.
+
+Verdict: PASS

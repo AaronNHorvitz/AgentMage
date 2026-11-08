@@ -31,8 +31,9 @@ secure-erasure claim.
 
 This is synchronous library scheduling and exclusive ownership within one
 retained owner. Authentication, host-wide identity allocation, worker scheduling,
-native filesystem/grant composition and HTTP/CLI/MCP endpoint projections still
-need service integration. A fresh owner cannot resume an old run; it has no
+native filesystem/grant composition and CLI/MCP projections still need
+service integration. The dedicated HTTP library adapter below fixes one run
+and one configuration per service; it does not activate those native ports. A fresh owner cannot resume an old run; it has no
 old clock, budgets or authority. It must use fresh service-issued identities.
 The socket tests use synthetic tools, permissions and verifiers and establish
 no real-model coding result. T-303/T-306 remain open.
@@ -468,3 +469,56 @@ references. Other legitimate holders can still retain their own references.
 This remains in-process configuration ownership. No configured-endpoint HTTP
 route, native filesystem/grant composition, persistent recovery, write/test/retry
 workflow, model score or parent closure is established by these socket tests.
+
+## Dedicated HTTP ownership
+
+`agentmage_local_api::serve_coding_endpoint` is a trusted-host library entry
+point over the same retained owner. It creates fresh random run and session
+identities, calls its trusted factory once and rejects any other identities.
+The factory returns `CodingEndpointHttpRun` with the sealed request, original
+shared configuration, already consented source snapshots and original
+permission/tool/verifier/clock ports. HTTP input cannot construct these ports,
+select source paths or change configuration. Admission performs no model or
+tool dispatch. The caller must obtain source-read consent before capture and
+supply actual confined native ports; the adapter grants none of that authority.
+The temporary snapshot vector is dropped immediately after context admission.
+
+This service has fixed configuration and one admitted run for its entire
+lifetime. It exposes no manual settings, workspace, repository or native-host
+routes. To change scope or configuration, cancel the old service and start a
+new one with fresh identities and consent. There is no settings replacement
+race within it. Each advance requires `approve_model_context: true` using the
+control credential. Refusal performs no dispatch and preserves any challenge;
+consent can be supplied by the person on a later request. Cancellation uses the original coordinator correlation, even before its first
+event, and latches for the rest of the service lifetime and permits cancellation advancement
+without disclosure consent. It cannot be cleared by a later request.
+
+All routes require the control credential and ordinary exact numeric Host,
+loopback, bounded-body and browser-origin protections. The client credential
+cannot read events, approve, advance, release or cancel this run. Apart from
+request inspection, bodies bind the exact `run_id` and `request_sha256`.
+
+| Method and path | Input and behavior |
+| --- | --- |
+| `GET /v1/code/endpoint/request` | Returns the original sealed request and process-only retention. |
+| `POST /v1/code/endpoint/advance` | Binding, `approve_model_context`, optional `response`; returns the original approval challenge or complete distinct endpoint terminal envelope. |
+| `POST /v1/code/endpoint/events` | Binding and zero-based `after` index; returns at most one original canonical event, `next` index and current `total`. This index is not a recovery cursor. |
+| `POST /v1/code/endpoint/cancel` | Binding; latches a cancellation request independently of a busy coordinator. The response acknowledges a request, not termination. |
+| `POST /v1/code/endpoint/release` | Binding; releases terminal/faulted private state and retains the spent identity. Running and approval-waiting release refuses. |
+
+Advancement borrows the same complete coordinator. Exact challenge validation,
+model/tool budgets, state transitions, completion verification and terminal
+idempotence remain in the kernel. Concurrent advancement, event reads and
+release return busy while that owner is locked. Request inspection and
+cancellation remain available through the four existing bounded HTTP workers.
+Shutdown reaches the same cancellation probe and joins every owned worker.
+No new agent loop, model process, automatic HTTP retry or detached worker exists.
+If a response is lost, inspect events and the original boundary before deciding
+whether to advance again. Events must be exported before release or shutdown;
+this service promises no durable recovery, artifact download or live event stream.
+
+No executable activates this entry point yet. Its socket tests use synthetic
+ports and a verifier that deliberately rejects completion; no software task
+success is established. Actual native filesystem/grant composition, CLI/MCP,
+edit/test/retry, approved Git and measured coding results remain open. This
+adapter does not relax native model-profile admission to provide those ports.
