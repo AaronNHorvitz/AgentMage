@@ -97,3 +97,15 @@ helpers. Final light checks cover the exact twelve-file change scope, unchanged
 ledger tables, retained review identity, newly authored public content and
 committed Git blobs. Independent core review of this exact increment remains
 required; neither parent closes.
+
+## Independent disposition
+
+The [independent core review](../reviews/974505fb1f2d-local-coding-endpoint-mcp.txt)
+has **Verdict: PASS** for exact commit
+`974505fb1f2d2b8bbebdfefa5348239cb603cc74`, with no high/medium finding.
+The report is retained unchanged. Its reviewer reproduced all Rust checks but
+could not run Markdown lint because Node was absent; it explicitly records that
+limitation. Low L1 (delegated event readers holding the owner lock during a
+bounded response) and L2 (the private request's Node fallback) remain in the
+same rows. The next request uses an installed-tool lookup in Python. Both parents remain
+open; this accepts only the immutable MCP interface increment.

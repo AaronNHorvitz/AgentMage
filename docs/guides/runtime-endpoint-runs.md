@@ -579,3 +579,31 @@ ports and a verifier that deliberately rejects completion; no software task
 success is established. Actual native filesystem/grant composition, CLI/MCP,
 edit/test/retry, approved Git and measured coding results remain open. This
 adapter does not relax native model-profile admission to provide those ports.
+
+## Endpoint policy composition
+
+`coding_authority::bind_endpoint_coding_policy` accepts trusted startup inputs:
+a complete sealed endpoint request, a held workspace authorization, an exact
+registry and explicit excluded scopes. It returns the resealed request together
+with the original `CodingRuntimePolicy` type. Use the returned request for
+subsequent admission and client pinning: the preliminary seal is replaced.
+Only the policy identity, policy digest and resulting whole-request seal change.
+The original task, endpoint selection, snapshots, catalog and budgets remain.
+
+The function checks the original seal, workspace identity, complete ordered
+catalog references and catalog digest. It refuses non-read tools, persistent
+or write modes and event cursors. The shared policy constructor retains exact
+actor/task identities, bounded coordinator action identities, authorization-bound
+workspace scopes and all canonical exclusions. Network, credentials and
+publication remain denied. Native coding continues through its original
+profile checks and guidance exclusions before using that same constructor.
+
+Binding a policy creates no grant, source-read consent, disclosure approval,
+coordinator, file read or effect. A trusted factory must still compose the real
+tool boundary with separately rendered approvals, grant issuance/consumption
+and native path revalidation. This helper does not activate the native-profile
+Linux boundary for an endpoint. Its component tests use actual Linux descriptors
+through the existing test-only workspace selector and kernel grants in memory;
+they establish neither production platform admission nor a running coding agent.
+Executable endpoint activation, native tool/grant composition, edit/test/retry,
+durable recovery, approved Git and parent measurements remain open.

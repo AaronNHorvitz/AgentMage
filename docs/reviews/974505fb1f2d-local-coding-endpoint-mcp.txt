@@ -1,0 +1,166 @@
+Commit: 974505fb1f2d2b8bbebdfefa5348239cb603cc74
+Scope: local-coding-endpoint-mcp
+
+# Independent core review: endpoint observation delegation through MCP
+
+Reviewer: separate Claude Opus 5.5 session at extra-high effort, read-only. I reviewed the frozen checkout
+`/lane/review-checkout` and nothing else. Tier: core. Immutable predecessor:
+`c73c5f9f8b4255286773d216df31d90bbf309279`. Rows: T-303 / T-306 (non-closing; both parents stay OPEN).
+
+## Methods
+
+- `git rev-parse HEAD 974505fb… c73c5f9f…` resolves both to exact SHAs, and HEAD equals the requested commit.
+  `git status --short` is clean. `git log c73c5f9f..HEAD` contains the one commit `974505fb`.
+- I read IP-POLICY.md, the TASKS.md active-queue preamble (16 added lines; the `|` table rows have
+  not changed), Decision 0162, the evidence record and the guide addition.
+- I read the complete twelve-file diff. That includes every line of the four changed product sources
+  (`coding_endpoint_api.rs`, `coding_mcp.rs`, `coding_cli_endpoint.rs`, `coding_cli.rs`/`lib.rs`), the
+  shared HTTP parser/authentication (`lib.rs` `request`, `serve_connections`, `write`, `response`), the
+  `Client::token` credential split, and the new test support file.
+- I read the builder helpers README.md, run.py, parse.py, audit.py and final.py, plus the builder's final
+  `validation-final/fast.log`.
+- I ran the requested gate in a fresh validation directory with a separate Cargo target (below).
+- I ran my own adversarial probe of the actual `agentmage-mcp` binary (below).
+
+## Commands and results
+
+Environment: `CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-endpoint-mcp-974505fb1f2d` (created fresh with mode 700).
+I did not use an outer build-slot, and I did not touch the builder's logs.
+
+```text
+sha256sum --quiet -c review-inputs.sha256                 OK (manifest sha256 abc1574c…c922, matches request)
+node lookup: `command -v node` and every candidate path    none exists. `find / -xdev -name node` also finds nothing.
+python3 -B run.py > fast.log                                rc 1, 1m52s wall
+  git diff --check c73c5f9f…                                exit 0
+  local_agent_fast_gate.py --lint-untracked                 exit 0
+  --lint-reviews docs/reviews/c73c5f9f8b42-…terminal.txt    exit 0
+  node markdownlint-cli2 (4 docs)                           exit 127 "Missing executable: node; no automatic download"
+  cargo fmt -p agentmage-local-api -- --check               exit 0
+  cargo clippy --locked --offline -p agentmage-local-api --all-targets -- -D warnings   exit 0
+  cargo test --locked --offline -p agentmage-local-api --all-targets --no-fail-fast     exit 0
+  FAST GATE: FAIL   (only because of the missing Node executable)
+  SOURCE_FREEZE_UNCHANGED
+cmp builder validation-final/source-freeze.json with mine   identical (7 Rust hashes)
+python3 -B final.py --committed                             rc 1: FileNotFoundError 'node' at the markdownlint step
+git diff --check c73c5f9f… --                               clean
+git status --short                                          clean
+```
+
+The markdownlint step failure is recorded on its own here. **I did not reproduce a green full gate.** Every
+Rust step (format, strict Clippy, the unfiltered all-targets test run) did reproduce green. The builder's
+retained final log shows `markdownlint-cli2 v0.23.2 … Linting: 4 files … Summary: 0 issues`, exit 0. I
+checked the added Markdown by hand. Only three added lines exceed 100 columns, and each is a link or a
+command line. Those are the same kinds of line the builder's lint passed. I judge this sufficient for a
+non-closing, docs-light increment. It is the same environment limitation the predecessor review recorded.
+
+I could not run audit.py or the rest of final.py as written: both assert `FAST GATE: PASS` or stop at
+`node`. So I wrote `reviewer_audit.py` in my validation directory. It imports the builder's unmodified
+`parse.records` and repeats the audit's checks: all nine predecessor targets against all nine current
+targets, exact sets of passing test names, zero failures/ignores/filters, exactly three additions in
+`coding_endpoint_http`, and per-command exit codes. It also repeats final.py's committed-blob, ledger and
+retained-review checks. Result: `totals [138, 0, 0, 0]`, 135 old passes, every predecessor identity
+retained, and exactly these three additions:
+`endpoint_observation_delegation_is_opt_in_and_never_delegates_controls`,
+`endpoint_mcp_binary_reads_only_exact_pinned_run_without_control_credential` and
+`endpoint_mcp_binary_exports_original_events_and_refuses_after_release_or_without_delegation`.
+The only nonzero command was `node`. All twelve HEAD blobs equal the worktree. The TASKS.md `|` rows are
+unchanged against the predecessor. `docs/reviews/c73c5f9f8b42-local-coding-endpoint-terminal.txt` is
+byte-identical to `/lane/reviews/c73c5f9f8b42-local-coding-endpoint-terminal.md`.
+
+### Independent binary probe (`probe/probe.py` in my validation directory)
+
+I wrote a loopback stub HTTP server that records the request line and bearer token. I gave it a private
+auth directory holding a valid `client.token` **and a valid `control.token`**. That is stronger than the
+builder's invalid-symlink neighbor, because a load of the control token would succeed here and would show
+up on the wire. I ran the built `agentmage-mcp … --share-selected-endpoint` against it.
+
+- The catalog contains exactly `endpoint_request` and `endpoint_events`.
+- Every HTTP request on the wire was `GET /v1/code/endpoint/request` with the **client** token. The
+  control token was never sent.
+- `endpoint_events` with `after` set to `1.0`, `"0"` or missing was refused at the MCP layer before any
+  HTTP request. So was `workspace_read {"paths":["/etc/passwd"]}` and `endpoint_request {"run_id":…}`.
+  Calls 1 and 2 performed exactly one pin recheck each, and the forged recheck failed before any events
+  request.
+- A run id `../../etc/passwd` is accepted only as a value to compare. It never reaches a path or route,
+  because routes are fixed literals and the id goes only into a JSON body.
+- Startup refused, with rc 1, no stdout and **zero** HTTP requests, in each of these cases: non-loopback
+  address, port 0, uppercase-hex digest, a 129-byte run id, a run id containing a space, and a
+  **symlinked `client.token`**.
+- I also made the stub return forged pages: an unsealed `request` object containing a sentinel string,
+  and an empty events page. Both tools returned `isError: true`, and the sentinel never reached stdout.
+
+Together with the builder's three retained-HTTP tests, which I re-ran, this covers the boundaries the
+request claims:
+- the route matrix with and without delegation;
+- client-token advance, cancel, release, wrong method or route, the fake `approve` route and `/v1/settings`
+  are all 403;
+- a client cancel does not latch (a later advance without consent stays 403);
+- stale run, stale digest and a replacement service are all refused without disclosing the objective;
+- release and the default policy both refuse;
+- the exported cancellation-event pages equal the control-token pages exactly;
+- zero tool executions and no upstream model connection.
+
+## Review of the change
+
+- **Authorization (`coding_endpoint_api.rs:217-225`).** The delegated set is an exact `(method, path)`
+  match. Paths are already restricted by the shared parser: they must start with `/v1/` and cannot
+  contain `?`, `#` or `%`. Authentication (401) runs first. The policy is a startup enum parameter. No
+  wire field reads it, and `serve_coding_endpoint` still hard-codes `ControlOnly`.
+- **Events and release.** The events branch shares an arm with release, but release is selected by
+  `ends_with("/release")`, and a client can only reach that arm with the exact path `/events`. `events()`
+  only reads. I found no client path to advance, cancel, release, disclosure consent or approval.
+- **MCP credential and pinning (`coding_mcp.rs:15-27`, `294-321`).** Endpoint mode validates the pin with
+  the shared `binding`, checks `client.token` once at startup, and only ever calls with `control=false`.
+  Arguments are validated twice (catalog keys and types, then the exact shape and range `≤ u32::MAX`)
+  before any HTTP request. `checked_selection` rechecks the sealed request (`verify_runtime_endpoint_run_request`,
+  retention, run id and digest) on every call.
+- **Shared validators (`coding_cli_endpoint.rs:131-167`).** `event_page` is a faithful extraction of the
+  former terminal branch: the same bounds, the same per-event hash and identity checks, and the same
+  labels. The terminal call sites still pass `control=true`.
+- **Workspace MCP unchanged.** `serve` passes the original `tools()` and the original instructions
+  string. The endpoint tools are not in that catalog, so `validate_arguments` refuses them, and the
+  reverse also holds.
+- **Claims are labelled honestly.** The evidence record says no executable activates the service, the
+  ports and verifier are synthetic, there is no native filesystem, grant, model or score claim, and the
+  pages give no whole-stream or recovery proof. The diff touches no evaluation, hidden or held-out test,
+  scorer, threshold, dependency, Cargo.lock or supply-chain file. No row or sub-row is added or closed.
+- **Hygiene.** The added content has no private host path, username, email, hostname, credential,
+  trademark branding or private sibling-project name. `/lane/...` sandbox paths appear only inside the
+  byte-identical retained review, as in earlier retained reviews. I found no licence or IP concern.
+- **Reachability.** The HTTP delegation is reachable only as a host library choice. The guide says so
+  plainly, and the MCP mode is reachable through the actual binary. That matches this increment's
+  non-closing claim. Activating the executable service is still a parent prerequisite.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, availability). A delegated observer can make trusted controls report busy.**
+  At `platforms/local-api/src/coding_endpoint_api.rs:306-327`, the events branch takes the session lock
+  with `try_lock` and keeps the guard while `response` writes to the socket (bounded by `WRITE_TIME`,
+  250 ms in `lib.rs:71`). Trusted `advance` (line 260) and `release` use `try_lock` too and answer 409
+  `api.busy` on contention. Before this commit, only control holders could take that lock. Now an
+  ordinary-client holder that loops event reads, or reads slowly, can repeatedly turn a person's advance
+  or release into 409. Cancellation is latched without the lock and still works, and there is no
+  confidentiality or authority impact.
+  Fix: copy the single page (`events[after..end].to_vec()`, `len`) under the guard, `drop(guard)` before
+  `response`, and add a test that alternates a client event read with a control advance.
+  Backlog in the same rows.
+- **L2 (low, process, outside the repository). The request's Node fallback loop is broken.**
+  The loop assigns `node_bin_dir=` (empty) and exports `PATH=":$PATH"`, which would put the current
+  directory on PATH if a candidate existed. Use `node_bin_dir=$(dirname "$node_candidate")`. It had no
+  effect here because no candidate exists. The predecessor review reported the same problem.
+- The carried backlog lows are unchanged: the predecessor's L1 cancelled finalization, its L2 exact
+  readable numeric text, and the prior HTTP regression-coverage low.
+
+## Per-row result
+
+- T-303 (non-closing increment): PASS for this exact commit. No high or medium finding. The parent stays
+  OPEN.
+- T-306 (non-closing increment): PASS for this exact commit. No high or medium finding. The parent stays
+  OPEN.
+- Limitation stated plainly: the documentation lint could not run in this sandbox (no Node). All Rust
+  gate steps reproduced green, and the audit-equivalent identity comparison passed.
+
+Verdict: PASS

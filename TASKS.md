@@ -2,6 +2,22 @@
 
 ## Active queue: local agent mission
 
+The endpoint MCP increment's [independent core review](docs/reviews/974505fb1f2d-local-coding-endpoint-mcp.txt)
+has **Verdict: PASS** for exact commit
+`974505fb1f2d2b8bbebdfefa5348239cb603cc74`, with no high/medium finding.
+Low L1 (delegated event readers holding the owner lock while responding) and
+L2 (the private review request's Node fallback) are recorded in the same rows;
+the next request uses an installed-tool lookup in Python. Earlier lows remain backlog. Neither
+parent closes on this interface increment.
+
+Endpoint startup can now bind a sealed read-only request to the original
+kernel coding policy using a held workspace and exact catalog, without a
+native model profile. See the [policy binding record](docs/evidence/t303-endpoint-policy-2026-11-08.md).
+This is inert library composition and requires independent core review.
+Native tool execution and grant-owner wiring, executable service activation,
+edit/test/retry, durable recovery, approved Git and parent measurements remain
+open. No row or sub-row is added or closed; T-303/T-306 remain open.
+
 The terminal client's [independent core review](docs/reviews/c73c5f9f8b42-local-coding-endpoint-terminal.txt)
 has **Verdict: PASS** for exact commit
 `c73c5f9f8b4255286773d216df31d90bbf309279`, with no high/medium finding.

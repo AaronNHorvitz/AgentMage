@@ -23,6 +23,12 @@ use sha2::{Digest, Sha256};
 
 use crate::coding_session::CodingSessionProfile;
 
+#[path = "coding_endpoint_authority.rs"]
+mod endpoint;
+pub use endpoint::{
+    BoundEndpointCodingPolicy, EndpointCodingPolicyRequest, bind_endpoint_coding_policy,
+};
+
 const MAX_OPERATION_TARGETS: usize = 128;
 const OPERATION_GRANT_LIFETIME_MS: u64 = 30_000;
 
@@ -373,6 +379,34 @@ where
     {
         return Err(CodingApprovalError::PolicyDenied);
     }
+    let mut excluded_scopes = request.profile.coding_guidance().excluded_scopes().to_vec();
+    excluded_scopes.extend(request.excluded_scopes);
+    build_runtime_policy_envelope(RuntimePolicyEnvelopeRequest {
+        actor_id: request.actor_id,
+        task_id: request.task_id,
+        run_id: request.run_id,
+        workspace: request.workspace,
+        registry,
+        maximum_tool_calls,
+        excluded_scopes,
+    })
+}
+
+struct RuntimePolicyEnvelopeRequest<'a, Workspace: AuthorizedWorkspaceHandle> {
+    actor_id: &'a ActorId,
+    task_id: &'a TaskId,
+    run_id: &'a RuntimeRunId,
+    workspace: &'a Workspace,
+    registry: &'a ToolRegistry,
+    maximum_tool_calls: u32,
+    excluded_scopes: Vec<WorkspaceScopePath>,
+}
+
+fn build_runtime_policy_envelope<Workspace: AuthorizedWorkspaceHandle>(
+    request: RuntimePolicyEnvelopeRequest<'_, Workspace>,
+) -> Result<CodingRuntimePolicy, CodingApprovalError> {
+    let registry = request.registry;
+    let maximum_tool_calls = request.maximum_tool_calls;
     let parent_scope = WorkspaceScopePath::new(
         request.workspace.workspace_id().clone(),
         std::iter::empty::<&str>(),
@@ -380,8 +414,7 @@ where
     .map_err(|_| CodingApprovalError::PolicyDenied)?;
     let parent_target = GrantTarget::workspace_scope(request.workspace, parent_scope)
         .map_err(|_| CodingApprovalError::PolicyDenied)?;
-    let mut excluded_scopes = request.profile.coding_guidance().excluded_scopes().to_vec();
-    excluded_scopes.extend(request.excluded_scopes);
+    let mut excluded_scopes = request.excluded_scopes;
     excluded_scopes.sort();
     excluded_scopes.dedup();
     let mut excluded_targets = excluded_scopes
