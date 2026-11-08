@@ -2,6 +2,20 @@
 
 ## Active queue: local agent mission
 
+The [streaming endpoint model port](docs/evidence/t303-endpoint-port-2026-11-08.md)
+now dispatches the existing proposal API through a prepared-request port. The
+kernel independently binds complete response descriptors to delivered text,
+checks byte limits before delivery and latches callback control stops. This is
+a non-closing T-303/T-306 increment; independent core review is required.
+Full endpoint coordinator composition and both parents remain open.
+
+The [endpoint-phase independent core review](docs/reviews/b56d936d7147-local-coding-endpoint-phase.txt)
+has **Verdict: PASS** for exact commit `b56d936d71473cdeb3cc80ff3c640b25b58d5087`,
+with no high/medium finding. Its low L1 (workspace/repair terminal phase-usage
+assertions and API pre-dispatch zero-attempt coverage) remains backlog in these
+rows, alongside the earlier retained lows. This accepts that phase increment
+only; the streaming port requires its own independent review.
+
 The [private-encoding independent review](docs/reviews/623f06a3da55-local-coding-private-encoding.txt)
 has **Verdict: PASS** for exact commit `623f06a3da55b702516884718f5333783350cd43`,
 with no open high/medium finding. Its low L1 (type-enforced zeroization of public

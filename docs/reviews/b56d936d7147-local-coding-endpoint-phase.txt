@@ -1,0 +1,132 @@
+Commit: b56d936d71473cdeb3cc80ff3c640b25b58d5087
+Scope: local-coding-endpoint-phase
+
+Reviewer: independent Claude Opus 5.5 session (extra-high effort), read-only, pinned checkout
+/lane/review-checkout. Same-model review; a cross-model review is still required before any release.
+Rows: T-303 / T-306, non-closing. No row closure was requested and none is granted.
+
+## Methods
+
+- `git rev-parse HEAD` = b56d936d71473cdeb3cc80ff3c640b25b58d5087; predecessor
+  623f06a3da55b702516884718f5333783350cd43 confirmed. `git diff --name-only` lists the ten claimed paths.
+  No Cargo.toml/Cargo.lock change (0 diff lines).
+- Read IP-POLICY.md, the new TASKS.md prose, the evidence note, the guide section, the full source diff
+  (`runtime_loop/endpoint.rs`, `endpoint/tests.rs`, `runtime_hardening.rs`, `runtime_loop.rs`,
+  `local-api/src/lib.rs`, `local_chat_api.rs`), the repair route (`coding_repair_api.rs`) for ordering, and
+  the transport's `prepare_chat` (`platforms/linux-inference/src/local_chat_transport.rs:401-458`) for
+  the limits that the phase framing checks.
+- Read the helper scripts run.py, audit.py, final.py and README before running them.
+- Checked that the retained review `docs/reviews/623f06a3da55-local-coding-private-encoding.txt` is
+  byte-identical to `/lane/reviews/623f06a3da55-local-coding-private-encoding.md` (cmp: identical).
+- Ran a privacy/trademark grep over the added lines (host paths, username, email, credentials, product names).
+  The only hit is the retained review's own "Reviewer: independent Claude Opus 5.5 session" line. That
+  identifies the reviewer, is not branding, and matches earlier accepted retained reviews.
+
+## Commands and results
+
+```
+sha256sum -c /lane/state/tmp/t303-endpoint-phase/review-inputs.sha256      -> all 17 OK
+sha256sum .../review-inputs.sha256 -> cc3fea2354b1d02cc800799676f0caa4446a11b169a713a2782611812b4299f3 (matches)
+PATH=<pinned node v24.15.0> CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4
+AGENTMAGE_VALIDATION_DIR=/lane/state/tmp/review-endpoint-phase-b56d936d7147 (new, mode 700)
+bash /tools/build-slot python3 -B .../run.py > fast.log   -> exit 1 (expected FAIL)
+  RESULT codes: 0,0,0,0,0 (fmt 1.95s), 0 (clippy 42.28s), 101 (tests 300.34s); FAST GATE: FAIL;
+  SOURCE_FREEZE_UNCHANGED
+python3 -B .../final.py > final.log -> exit 0; markdownlint 0 issues;
+  FINAL_LIGHT_CHECKS_PASS; SOURCE_GATE_REMAINS_FAIL
+cmp validation-1/source-freeze.json  -> identical
+cmp validation-1/plan-final.json     -> identical
+cmp validation-1/audit.json          -> identical
+git diff --check 623f06a3... --     -> clean
+git status --short                   -> clean
+```
+
+My own recount of fast.log: 43 targets, 2518 passed / 72 failed / 71 ignored / 0 filtered. Across the same
+43 targets in the earlier endpoint-exchange log, the predecessor had 2511/72/71/0. I diffed the passing test
+names per target myself instead of trusting audit.py. The only new passes are the six
+`runtime_loop::endpoint::tests::*` methods and
+`operation_tests::coding_dispatch_control_preserves_an_elapsed_deadline_and_positive_remaining_time`. That
+test already exists at 623f06a3 (added in 3642273c). No passing test disappeared. The failure and ignore
+identities and normalized diagnostics match the predecessor (audit.py assertions, reproduced). The one
+coding-related failure, `linux_coding_runtime::tests::s_048_mvp_e2e_failed_validation_requires_a_repair_before_success`,
+is in the pre-existing host-library set.
+
+Note on wording: in my replay, plan.json already has seven commands, because the retained review is now
+committed and its lint is in the plan from the start. The builder's "six commands, then seven in the final
+plan" describes their first run, made before the review arrived. The Cargo commands are identical, and
+final.py asserts this.
+
+## Source review
+
+- **Phase framing before consent.** `prepare_endpoint_coding_proposal` (lib.rs:1082) builds
+  `RuntimeEndpointModelPhase::new` from the transport-produced binding. On the repair route it is called
+  inside `prepare_repair` (coding_repair_api.rs:143), and `admit_repair_proposal` only runs `consume()` after
+  `prepared?` succeeds (coding_repair_api.rs:98-104). A framing refusal therefore cannot spend the receipt.
+  Confirmed.
+- **No new destination or rebuild.** The closure calls the same `request.execute_recorded_controlled(&op.cancel,
+  control, display_text)` on the originally prepared `PreparedEndpointChat`. No credential, endpoint, tool,
+  write, retry or native profile is added. The phase owns only a cloned `EndpointModelRequest` descriptor.
+  Confinement surfaces (workspace writes, command sandbox, network enablement) are not touched by this diff.
+  For that reason I ran no new path-traversal, symlink or environment-leak attempts. The only network
+  effect is the pre-existing single dispatch to the already approved endpoint.
+- **Single use.** `attempted` latches before any control or dependency observation (endpoint.rs:87-89).
+  Re-entry returns ResourceExhausted without calling the port (tested for success, pre-stop,
+  post-stop and dependency-failure paths).
+- **Result checks.** The whole request must be equal: selection, context, body and limits (derived
+  PartialEq on the contract struct). The text hash must be well-formed, and elapsed time must be at most
+  total_timeout. Output and elapsed budgets are consumed on a cloned ledger and committed only after both
+  succeed (endpoint.rs:117-127), and the tests assert zero durable output/elapsed after a refusal. The
+  rounded elapsed time cannot exceed the ceil(total) budget, so the elapsed refusal can only come from the
+  explicit `>` check.
+- **Ledger constructor.** `for_endpoint_model` sets zero ceilings for events, artifacts, retries, denials
+  and parser failures, and refuses zero input, output or elapsed budgets. The test confirms that
+  `admit_event`, `admit_artifact` and `record_retry` refuse.
+- **Error codes.** `runtime.model.result_invalid`, `runtime.budget.exhausted` and `model.operation.*` are
+  existing stable codes (runtime_event.rs:2025-2026, runtime_hardening.rs:59, model.rs:590-595). Transport
+  errors keep their own codes.
+- **Usage honesty.** `RuntimeEndpointPhaseUsage` exposes no token or memory fields. The completed text and
+  time fields are `Option` and are null unless `completed`. The API helper asserts no `input_tokens` or
+  `peak_memory_bytes` and null completed fields on partial, malformed, late and cancelled terminals
+  (local_chat_api.rs:210-217, 249-253, 278-279; call sites at 393, 553, 604, 2284).
+- **Transport limits compatibility.** The real binding uses MAX_WIRE, MAX_STREAM_BYTES and MAX_TEXT_BYTES,
+  and `TransportLimits` already refuses idle > total (local_chat_transport.rs:210). The live fixtures
+  passing unfiltered confirms that the phase framing accepts real prepared requests.
+- **Behaviour change accepted.** The post-dispatch control check means a completion that returns after the
+  shared proposal deadline has expired is now refused as `model.operation.timed-out` instead of accepted.
+  That is conservative and consistent with the documented "refuses late completions". The repair receipt
+  is already spent in that case, which matches the existing documented policy.
+- **Evaluation integrity.** No frozen task, hidden/held-out test, scorer, threshold, ignore or supply-chain
+  file is in the diff. No score, model, GPU or native-workflow result is claimed. The fixtures are labelled
+  synthetic. No new sub-row is added, and the TASKS table rows are unchanged (audit assertion, reproduced).
+- **Claims vs evidence.** Every number in the evidence note (43 targets, 2518/72/71/0, 53+19 failures,
+  +7 provenance, Cargo 101/gate 1) is consistent with my run. The timings differ only by machine load
+  (mine: tests 300.34s, clippy 42.28s), and they are labelled as measurements.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, test coverage).** `platforms/local-api/tests/local_chat_api.rs:1313` (workspace route) and the
+  repair-route fixtures (`platforms/local-api/src/coding_repair_api.rs` tests) do not assert
+  `endpoint_phase_usage`. Only the snapshot-route call sites of `assert_endpoint_runtime_observation`
+  check it. Also, no API-level fixture covers the documented "refusal before dispatch has zero attempts and
+  bytes" terminal (docs/guides/coding-proposals.md:263-267); only the kernel unit test does. All routes share
+  `dispatch_coding_proposal`, so the risk is low. Fix: call `assert_endpoint_runtime_observation` on the
+  workspace and repair terminal rows. Backlog.
+- Retained backlog lows from earlier reviews (encoder return-type zeroization L1, control-stop,
+  connect-expiry, owner-polling and native failed-test receipt coverage) remain open in these rows and are
+  not re-judged here.
+
+## Per-row result
+
+- T-303 (non-closing increment): the endpoint model phase is acceptable at this exact commit. The row
+  remains OPEN; full endpoint run/context/result composition, native edit/test/retry, durable ownership
+  and scores are outstanding.
+- T-306 (non-closing increment): acceptable at this exact commit. The row remains OPEN; approved Git
+  publication and parent scores are outstanding.
+
+The source gate itself is FAIL (Cargo 101) because of the 72 pre-existing failures in the unchanged host and
+Linux platform libraries. That is accepted only as an unchanged baseline for this non-closing increment,
+not as a passing gate.
+
+Verdict: PASS

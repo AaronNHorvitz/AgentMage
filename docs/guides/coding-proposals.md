@@ -177,7 +177,8 @@ Native runtime ports use the distinct `exact_profile` binding variant. Their
 complete native profile comparison and exact token/resource checks remain
 mandatory. A selected endpoint cannot satisfy native admission even if its
 model name equals the profile identifier. Shared endpoint exchange records do
-not yet admit endpoint execution to that coordinator or its resource ledger.
+not yet admit endpoint execution to that coordinator. The single model phase
+uses the shared resource ledger as described below.
 
 The credential-owning transport prepares an immutable request without connecting.
 Its single-use execution sends those same body bytes through that original
@@ -256,9 +257,30 @@ framing happens before consuming its single-use disclosure receipt. The phase
 uses the existing runtime resource ledger with one model-call allowance, the
 prepared body length, the transport's decoded-text ceiling and total deadline.
 It borrows the same operation control before and after the credential-owning
-transport. It accepts only a result naming the complete original selection,
+transport. The `RuntimeEndpointModelPort` moves the original prepared transport
+and cancellation reference into this dispatch. The kernel first compares the
+port's prepared request against its frozen request, before spending dispatch
+accounting or invoking the port. A mismatch consumes the phase but records no
+admitted dispatch. It accepts only a result naming the complete original selection,
 context, body and limits, within those byte/time bounds. A failed or stopped
 phase cannot dispatch again. The phase owns no credential or effect boundary.
+
+The kernel also hashes and counts the actual UTF-8 text at the synchronous
+consumer boundary, independently of the transport's response descriptor. The
+completed descriptor must match those bytes exactly. Fragment boundaries and
+empty fragments do not change that comparison; reordering, omitted text, a
+different digest or a different byte count refuse completion. The kernel retains
+only the streaming hash and byte count, without another plaintext buffer.
+
+Each fragment is checked against the decoded-text ceiling before delivery, with
+control polled before and after the consumer callback. A limit or control stop
+latches for the rest of the phase: later callbacks are suppressed even if a
+broken port continues or the control subsequently reports more time. The
+transport still polls during socket waits and retains its original limits and
+cancellation. A synchronous consumer cannot be preempted. Text already delivered
+remains provisional; a later refusal produces no completed result, proposal or
+completed resource accounting. A transport error keeps its original dependency
+code even if a stream refusal was also observed.
 
 Terminal events include `endpoint_phase_usage`: `dispatch_attempts` counts
 admitted calls to the transport, including failed attempts, and

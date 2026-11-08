@@ -36,12 +36,13 @@ use agentmage_capability_repository_map::coding_proposal::{
     check_coding_proposal, prepare_coding_proposal,
 };
 use agentmage_kernel_contracts::{
-    EndpointModelFinish, EndpointModelResult, ModelOperationControl, ModelOperationStop,
-    RuntimeModelTokenAccounting,
+    EndpointModelFinish, EndpointModelRequest, EndpointModelResult, ModelOperationControl,
+    ModelOperationStop, RuntimeModelTokenAccounting,
 };
 
 use agentmage_kernel_engine::runtime_loop::endpoint::{
-    RuntimeEndpointModelPhase, RuntimeEndpointPhaseFailure, RuntimeEndpointPhaseUsage,
+    RuntimeEndpointModelPhase, RuntimeEndpointModelPort, RuntimeEndpointPhaseFailure,
+    RuntimeEndpointPhaseUsage,
 };
 
 use agentmage_platform_linux::{
@@ -54,7 +55,8 @@ use agentmage_platform_linux_inference::local_chat::{
 };
 use agentmage_platform_linux_inference::local_chat_transport::{
     BearerKey, ChatCancellation, ChatCompletion, EndpointChatBinding, LocalChatApproval,
-    LocalChatTransport, LocalProbeApproval, PreparedEndpointChat, TransportLimits, probe_endpoints,
+    LocalChatTransport, LocalProbeApproval, PreparedEndpointChat, TransportError, TransportLimits,
+    probe_endpoints,
 };
 
 const MAX_HEADER: usize = 8192;
@@ -1049,6 +1051,30 @@ struct PreparedCodingProposal<'a> {
     phase: RuntimeEndpointModelPhase,
 }
 
+// The model port moves the original prepared transport, never reconstructing a
+// body or resolving credentials after disclosure consent has been consumed.
+struct ProposalModelPort<'config, 'operation> {
+    request: PreparedEndpointChat<'config>,
+    cancellation: &'operation ChatCancellation,
+}
+
+impl RuntimeEndpointModelPort for ProposalModelPort<'_, '_> {
+    type Error = TransportError;
+
+    fn request(&self) -> &EndpointModelRequest {
+        self.request.binding()
+    }
+
+    fn dispatch(
+        self,
+        control: &dyn ModelOperationControl,
+        text: &mut dyn FnMut(&str),
+    ) -> Result<EndpointModelResult, Self::Error> {
+        self.request
+            .execute_recorded_controlled(self.cancellation, control, text)
+    }
+}
+
 fn prepare_endpoint_coding_proposal<'a>(
     input: CodingProposalRequest,
     context: CodingProposalContext,
@@ -1159,9 +1185,14 @@ fn dispatch_coding_proposal(
         }
     };
     let result = phase
-        .execute(&control, |control| {
-            request.execute_recorded_controlled(&op.cancel, control, display_text)
-        })
+        .execute(
+            &control,
+            ProposalModelPort {
+                request,
+                cancellation: &op.cancel,
+            },
+            display_text,
+        )
         .map_err(|error| match error {
             RuntimeEndpointPhaseFailure::Stopped(stop) => stop.code(),
             RuntimeEndpointPhaseFailure::Dependency(error) => error.code(),

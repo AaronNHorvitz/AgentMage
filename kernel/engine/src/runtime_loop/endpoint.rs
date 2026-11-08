@@ -5,10 +5,31 @@ use agentmage_kernel_contracts::{
     BudgetResource, EndpointModelRequest, EndpointModelResult, ModelOperationControl,
     ModelOperationStop,
 };
+use sha2::{Digest, Sha256};
 
 use crate::runtime_hardening::RuntimeResourceLedger;
 
 use super::{RuntimePortFailure, valid_sha256};
+
+/// A single prepared endpoint dispatch. The implementation retains its original
+/// credentials, body and disclosure approval; the kernel owns no socket or key.
+/// Text is provisional until the complete result and delivered stream agree.
+pub trait RuntimeEndpointModelPort {
+    /// The transport's closed, content-free failure type.
+    type Error;
+
+    /// Describes the immutable request this exact port will dispatch.
+    fn request(&self) -> &EndpointModelRequest;
+
+    /// Consumes the prepared request once under the original borrowed control.
+    /// Implementations must poll control during waits and after text callbacks.
+    /// Callbacks are synchronous and cannot be preempted by this contract.
+    fn dispatch(
+        self,
+        control: &dyn ModelOperationControl,
+        text: &mut dyn FnMut(&str),
+    ) -> Result<EndpointModelResult, Self::Error>;
+}
 
 /// A refusal by the phase owner, distinct from the credential-owning transport.
 #[derive(Debug, PartialEq, Eq)]
@@ -75,14 +96,15 @@ impl RuntimeEndpointModelPhase {
         })
     }
 
-    /// Invokes the supplied single-use transport under the original borrowed
+    /// Invokes the supplied single-use model port under the original borrowed
     /// control. No reconstruction, retry, tool dispatch or cancellation ack.
     /// Even a failed dispatch consumes this phase; re-entry never calls the port.
-    pub fn execute<E>(
+    pub fn execute<P: RuntimeEndpointModelPort>(
         &mut self,
         control: &dyn ModelOperationControl,
-        dispatch: impl FnOnce(&dyn ModelOperationControl) -> Result<EndpointModelResult, E>,
-    ) -> Result<EndpointModelResult, RuntimeEndpointPhaseFailure<E>> {
+        port: P,
+        mut text: impl FnMut(&str),
+    ) -> Result<EndpointModelResult, RuntimeEndpointPhaseFailure<P::Error>> {
         if self.attempted {
             return Err(RuntimeEndpointPhaseFailure::ResourceExhausted);
         }
@@ -91,6 +113,9 @@ impl RuntimeEndpointModelPhase {
         control
             .remaining_ms()
             .map_err(RuntimeEndpointPhaseFailure::Stopped)?;
+        if port.request() != &self.request {
+            return Err(RuntimeEndpointPhaseFailure::InvalidResult);
+        }
         self.resources
             .consume(
                 BudgetResource::InputBytes,
@@ -98,13 +123,55 @@ impl RuntimeEndpointModelPhase {
             )
             .and_then(|()| self.resources.consume(BudgetResource::ModelCalls, 1))
             .map_err(|_| RuntimeEndpointPhaseFailure::ResourceExhausted)?;
-        let result = dispatch(control).map_err(RuntimeEndpointPhaseFailure::Dependency)?;
+        // Hash/count at the consumer boundary independently of the transport.
+        // No plaintext is retained here. Once a callback refuses, suppress all
+        // subsequent text even if a broken port continues calling it.
+        let mut response_hash = Sha256::new();
+        let mut response_bytes = 0_usize;
+        let mut stream_failure = None;
+        let result = port
+            .dispatch(control, &mut |fragment| {
+                if stream_failure.is_some() {
+                    return;
+                }
+                if let Err(stop) = control.remaining_ms() {
+                    stream_failure = Some(RuntimeEndpointPhaseFailure::Stopped(stop));
+                    return;
+                }
+                let Some(bytes) = response_bytes
+                    .checked_add(fragment.len())
+                    .filter(|bytes| *bytes <= self.request.limits().response_text_limit_bytes)
+                else {
+                    stream_failure = Some(RuntimeEndpointPhaseFailure::ResourceExhausted);
+                    return;
+                };
+                response_hash.update(fragment.as_bytes());
+                response_bytes = bytes;
+                text(fragment);
+                if let Err(stop) = control.remaining_ms() {
+                    stream_failure = Some(RuntimeEndpointPhaseFailure::Stopped(stop));
+                }
+            })
+            .map_err(RuntimeEndpointPhaseFailure::Dependency)?;
+        if let Some(failure) = stream_failure {
+            return Err(failure);
+        }
         control
             .remaining_ms()
             .map_err(RuntimeEndpointPhaseFailure::Stopped)?;
         if result.request != self.request
             || !valid_sha256(&result.response_text_sha256)
             || result.resources.dispatch_elapsed > self.request.limits().total_timeout
+        {
+            return Err(RuntimeEndpointPhaseFailure::InvalidResult);
+        }
+        if result.response_text_bytes != response_bytes
+            || result.response_text_sha256
+                != response_hash
+                    .finalize()
+                    .iter()
+                    .map(|b| format!("{b:02x}"))
+                    .collect::<String>()
         {
             return Err(RuntimeEndpointPhaseFailure::InvalidResult);
         }
