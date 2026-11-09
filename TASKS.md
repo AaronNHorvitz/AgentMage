@@ -2,6 +2,31 @@
 
 ## Active queue: local agent mission
 
+The [HTTP terminal tool-return integration](docs/evidence/t303-http-tool-return-2026-11-08.md)
+connects exact control-authorized terminal release to the trusted host's original
+tool owner after the service joins its workers. Live, faulted and uncertain
+runs refuse; stopping without explicit release returns no tool. Ordinary service
+entry points keep their discard behavior. Synthetic HTTP tests cover two fresh
+services, stale approvals, delegation refusal, original object identity and
+uncertain refusal preserving inspection. The complete scoped fast gate passes:
+202 tests across 10 local API targets, no failures, ignores or filters; formatting
+and Clippy pass. This does not rerun the unchanged host/Linux test packages or
+the long acceptance gate. T-303/T-306 remain open; no row or sub-row is added or
+closed. Independent core review is required.
+
+The [terminal owner-return independent core review](docs/reviews/b62f35cfbaef-local-coding-terminal-owner-return.txt)
+has **Verdict: PASS** for exact commit
+`b62f35cfbaef6a786cc64e172c7729b9cc889e18`, with no high/medium finding.
+Its low L1 refusal-restore coverage is exercised by the service integration;
+low L2 prepared-factory admission/return coverage remains same-row backlog.
+Neither parent closes.
+
+The [command-output independent core review](docs/reviews/c7a63ebefe55-local-coding-command-output.txt)
+has **Verdict: PASS** for exact commit
+`c7a63ebefe55544444c3d7fc398ebba2ec7e082f`, with no high/medium finding.
+Fixed validation-metadata allowance and remaining aggregate-output preflight
+remain same-row backlog with CPU/scratch/disk preflight. Neither parent closes.
+
 The [command output reservation](docs/evidence/t303-command-output-reservation-2026-11-08.md)
 refuses an undersized sealed result limit before native handoff, grant issuance
 or validation-attempt consumption. It accounts for decimal-byte JSON channels

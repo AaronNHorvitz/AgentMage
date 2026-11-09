@@ -58,6 +58,13 @@ pub enum CodingEndpointObservationAccess {
 
 struct Session<T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock> {
     runs: CodingEndpointRuns<'static, T, V, C>,
+    returned: Option<T>,
+}
+
+#[derive(Clone, Copy)]
+enum TerminalToolDisposition {
+    Discard,
+    Return,
 }
 
 #[derive(Deserialize)]
@@ -222,6 +229,74 @@ where
     V: RuntimeVerifierPort + Send + 'static,
     C: RuntimeClock + Send + 'static,
 {
+    serve_admitted_endpoint_inner(
+        listener,
+        tokens,
+        stop,
+        access,
+        factory,
+        TerminalToolDisposition::Discard,
+    )
+    .map(|_| ())
+}
+
+/// Hosts the original admitted run, retaining its original tool owner after an
+/// exact control-authorized terminal release. Only a known, fully published,
+/// non-uncertain terminal can return the boundary. Refused releases leave the
+/// run held for inspection; no wire argument can select a different policy.
+///
+/// Returns the boundary only after serving ends and all HTTP workers join. A
+/// successful stop without an explicit successful release returns `None`.
+/// Faults, uncertainty and interrupted live runs are never recovered this way.
+/// Service errors may drop process-held state; this is not durable recovery.
+/// The caller must abandon old native previews through their original owner's
+/// methods and obtain fresh admission and approval before later work. Only the
+/// original boundary returns, including its existing native authority; no grant
+/// is renewed. The old run, budget, verifier and endpoint connection are dropped.
+/// Existing service entry points retain their ordinary discard behavior.
+pub fn serve_admitted_coding_endpoint_returning_tool<T, V, C>(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    access: CodingEndpointObservationAccess,
+    factory: impl FnOnce(
+        RuntimeRunId,
+        SessionId,
+        &mut CodingEndpointRuns<'static, T, V, C>,
+    ) -> Result<RuntimeEndpointRunRequest, ApiError>,
+) -> Result<Option<T>, ApiError>
+where
+    T: RuntimeToolBoundary + Send + 'static,
+    V: RuntimeVerifierPort + Send + 'static,
+    C: RuntimeClock + Send + 'static,
+{
+    serve_admitted_endpoint_inner(
+        listener,
+        tokens,
+        stop,
+        access,
+        factory,
+        TerminalToolDisposition::Return,
+    )
+}
+
+fn serve_admitted_endpoint_inner<T, V, C>(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    access: CodingEndpointObservationAccess,
+    factory: impl FnOnce(
+        RuntimeRunId,
+        SessionId,
+        &mut CodingEndpointRuns<'static, T, V, C>,
+    ) -> Result<RuntimeEndpointRunRequest, ApiError>,
+    disposition: TerminalToolDisposition,
+) -> Result<Option<T>, ApiError>
+where
+    T: RuntimeToolBoundary + Send + 'static,
+    V: RuntimeVerifierPort + Send + 'static,
+    C: RuntimeClock + Send + 'static,
+{
     if stop.load(Ordering::Acquire)
         || !listener
             .local_addr()
@@ -242,7 +317,10 @@ where
         .correlation_id(&request)
         .map_err(|_| ApiError::Configuration)?
         .clone();
-    let session = Mutex::new(Session { runs });
+    let session = Mutex::new(Session {
+        runs,
+        returned: None,
+    });
     let cancelled = AtomicBool::new(false);
     serve_connections(
         listener,
@@ -347,7 +425,15 @@ where
                         Err(TryLockError::Poisoned(_)) => return error(socket, 500),
                     };
                     if req.path.ends_with("/release") {
-                        return match guard.runs.release(&request) {
+                        let released = match disposition {
+                            TerminalToolDisposition::Discard => guard.runs.release(&request),
+                            TerminalToolDisposition::Return => {
+                                guard.runs.release_with_tool_boundary(&request).map(|tool| {
+                                    guard.returned = Some(tool);
+                                })
+                            }
+                        };
+                        return match released {
                             Ok(()) => response(socket, 200, json!({"released":true})),
                             Err(e) => owner_error(socket, e),
                         };
@@ -371,7 +457,9 @@ where
             }
         },
         || Ok(()),
-    )
+    )?;
+    let session = session.into_inner().map_err(|_| ApiError::Io)?;
+    Ok(session.returned)
 }
 
 fn owner_error(socket: &mut TcpStream, error: CodingEndpointOwnerError) -> Result<(), ApiError> {

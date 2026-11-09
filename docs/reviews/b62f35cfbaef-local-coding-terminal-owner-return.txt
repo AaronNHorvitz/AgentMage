@@ -1,0 +1,163 @@
+Commit: b62f35cfbaef6a786cc64e172c7729b9cc889e18
+Scope: local-coding-terminal-owner-return
+
+# Independent core review: return of the original endpoint tool owner at terminal
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only on the repository.
+Pinned checkout: /lane/review-checkout. `git rev-parse HEAD` = b62f35cfbaef6a786cc64e172c7729b9cc889e18.
+Its only parent since the base is a7a532057fdf9ddd3b23883793ce136793e0f7d2 (`git log a7a5320..HEAD` lists one
+commit). Rows: T-303 / T-306, a non-closing increment. Both parent rows remain OPEN.
+
+## Methods
+
+1. I read the builder README and every helper (run.py, retry_fmt.py, audit.py, light.py) before running
+   anything. They only run the repository gate script and `git`/`cargo`. They write only to the given output
+   directory and to an owned `/tmp/tr-*` namespace, which they remove only if it is empty. The PATH prefix
+   `/lane/state/tmp/t303-endpoint-write/tooling` contains only a `node` ELF binary and its LICENSE.
+2. I read the complete 14-file diff over a7a5320: 7 Rust files, TASKS.md, Decision 0170, the evidence record,
+   2 guides and 2 retained reviews.
+3. Kernel `try_into_endpoint_tool_boundary` (`kernel/engine/src/runtime_loop/coordinator_endpoint.rs:229-247`).
+   I traced every state it relies on:
+   - `endpoint_outcome` is set before the RunTerminal emit, and `outcome` is set only after the emit and the
+     journal flush (`runtime_loop.rs:4824-4846`). So a failed emit leaves `outcome` None, and the method
+     refuses.
+   - Any error after advancement starts sets `correctness_reconciliation_required` (`runtime_loop.rs:2165-2168`,
+     `coordinator_endpoint.rs:306-312`).
+   - `valid_runtime_state_change` (`runtime_loop.rs:6297-6320`) allows `StateChange::Uncertain` only together
+     with `OperationOutcome::Uncertain`, and that maps to an Uncertain terminal (`runtime_loop.rs:4214-4224`).
+     Failed, Denied, Cancelled and TimedOut must be NotChanged.
+   - So "known terminal" is exactly what the method accepts: not Uncertain, not reconciliation-required, not
+     suspended, no pending decision. The method exists only on the endpoint-driver specialisation, so native
+     coordinators cannot call it.
+4. Host `release_with_tool_boundary` (`shells/host/src/coding_endpoint_owner.rs:262-296`). The checks are, in
+   order: exact sealed request plus digest (via `entry`), then Released, then faulted, then no terminal. On
+   kernel refusal the same Box is restored with `faulted: false`, which was its prior value. Capacity
+   accounting matches ordinary `release`.
+5. Confinement and authority carry-over. The native edit and command boundaries check
+   `scope.endpoint_request() == original request`, the exact definition and the exact call
+   (`platforms/linux/src/coding_repository_endpoint_boundary.rs:76-89`,
+   `coding_repository_endpoint_command.rs:274-287`). Their stages are single-use (`Spent`). So a returned
+   boundary reused directly in a different run refuses with Invalid; it cannot act on an old grant.
+   - `into_repository` clears `repository.edit` / `repository.command`, which drops pending previews and
+     in-memory issued grant handles.
+   - The host two-run test shows that a later run needs a fresh challenge and rejects the previous run's
+     approval response.
+   - No wire route, path adoption or new executor is added (grep of the diff).
+6. Fixture correction. The `Boundary` change in the kernel test (`runtime_loop_endpoint_coordinator_tests.rs:329-340`)
+   clears evidence only for uncertain WorkspaceRead. No existing test used an uncertain read: the
+   `result_override` users are the new test and the write/command list in `runtime_loop_endpoint_write_tests.rs:279-317`.
+   No validator or production code was weakened. The retained attempt1 log shows the stated 2 pass / 1 fail
+   (exit 101), followed by exit 0.
+7. Documentation:
+   - Decision 0170, the guides, the evidence and the TASKS text match the code.
+   - Both retained reviews are byte-identical to `/lane/reviews/5d4250ae6124-local-coding-prepared-startup.md`
+     and `/lane/reviews/a7a532057fdf-local-coding-original-cancellation.md` (`cmp`).
+   - The two documentation precisions apply exactly the fixes those reviews recommended (L2 of each).
+8. Privacy and IP:
+   - Added lines contain no `/var/home`, `/home/<user>`, username, hostname, e-mail or credential.
+   - `/lane/...` paths occur only inside the retained predecessor reports, as in earlier accepted reviews.
+   - No other agent product is named or compared; "Claude Opus 5.5" appears only as reviewer attribution.
+   - No evaluation, held-out, hidden-test, scorer, threshold, dependency or SBOM file is touched (diff
+     path list).
+9. Own runs. I ran the gate and audits as requested. I also ran a scratch probe and two mutations in an
+   out-of-repository `git archive` copy (see below). I did not use a GPU, download anything or modify the
+   repository.
+
+## Commands and results (run in /lane/review-checkout)
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-terminal-return/review-inputs.sha256` | 0 | All 34 inputs match. The manifest SHA-256 is ef43853e8c454d3a69461431aa5bb7fb55fc66cb8bbd6735d1aa8f56ffd54b11, as stated |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-terminal-owner-b62f35cfbaef` | 1 (expected) | `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`. Command exits 0,0,0,0,0,0,101: diff-check 0.10s, untracked 0.10s, reviews 0.10s, markdownlint 1.25s, **fmt 0 in 2.21s**, clippy -D warnings 0 in 49.25s, tests 101 in 375.35s. 428.44s including reservations. `FAST GATE: FAIL` |
+| `retry_fmt.py` | not run | Not applicable: ordinary formatting exited 0, not 124. The brief allows the retry only after 124 |
+| `python3 -B …/audit.py /lane/state/tmp/review-terminal-owner-b62f35cfbaef` | 0 | Data audit only. 45 targets; 2770 passed, 72 failed, 71 ignored, 0 measured, 0 filtered. 72 inherited identities, 0 new, 0 missing. 4 new and 4 strengthened methods ok. Source unchanged. `separate_fmt_retry: null` |
+| `python3 -B …/light.py` | 0 | diff-check, lint-untracked, lint-reviews (2 retained reports) and markdownlint on 5 files (0 issues) all exit 0 |
+| `cmp …/validation-final/source-freeze.json …/review-terminal-owner-b62f35cfbaef/source-freeze.json` | 0 | Identical 7 Rust hashes |
+| `git diff --check a7a532057fdf9ddd3b23883793ce136793e0f7d2 --` | 0 | Clean |
+| `git status --short` | 0 | Empty |
+
+Totals and failure identities reproduce the builder's validation-final exactly. Inherited ignored tests were
+not run.
+
+My formatting step did not queue. The builder's ordinary formatting 124 followed by a separate retry 0 is
+therefore not something I reproduced as a timeout. I observed ordinary formatting pass directly at this commit.
+That does not change the gate, which is FAIL on the inherited test failures.
+
+Temporary space: my owned runtime namespace `/tmp/tr-h8ftvqpe` was not empty and was retained. It has 11
+top-level entries and 4 inherited host-fixture files totalling 36 bytes, matching the builder's described
+pattern. The builder's `/tmp/tr-n_i398j1` is not visible from this session (separate /tmp namespace), so I
+could not check that retention claim. Each owned `/tmp/tr-rv-*` namespace used by the probe was empty and was
+removed. The scratch copy `/lane/state/tmp/review-scratch-b62f35cfbaef` and two `.orig` backups are reviewer
+state outside the repository.
+
+## Reviewer probe and mutations (scratch copy; repository untouched)
+
+Setup:
+- I ran `git archive HEAD` into `/lane/state/tmp/review-scratch-b62f35cfbaef`.
+- I added a test-only thread-local flag to the host `ReadBoundary`. It makes the execution report
+  `Uncertain`/`Uncertain` with no output or evidence.
+- I added `reviewer_terminal_return_refuses_uncertain_and_restores_the_same_entry`. It admits a run, approves
+  it and gets an Uncertain terminal. Two calls to `release_with_tool_boundary` then return `ToolNotRecoverable`;
+  events are unchanged and `advance` still returns the same Complete. Ordinary `release` then returns Ok, a
+  further return gives `NotHeld`, and executions stays at 1.
+- Each run: `TMPDIR=<owned> CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 bash /tools/build-slot cargo test --locked --offline …`
+
+Results:
+- **Unmutated:** the probe and `endpoint_owner_terminal_return_reuses_only_the_tool_and_keeps_both_run_identities_spent`
+  both pass (2 passed, exit 0).
+- **M1, kernel uncertainty check removed** (`coordinator_endpoint.rs:232`): the committed
+  `endpoint_terminal_tool_return_refuses_uncertainty_faults_and_incomplete_publication` FAILS, and the
+  reviewer host probe FAILS. The tests detect this regression.
+- **M2, host restore removed** (`coding_endpoint_owner.rs:286-290`, the coordinator dropped instead of
+  re-retained): all 9 committed `endpoint_owner*` tests still PASS. Only the reviewer probe fails, at line 837
+  (`events()` returns NotHeld). See L1.
+
+Both mutations were reverted in the scratch copy; I confirmed the kernel file matches the pinned checkout.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L1 (low, test coverage; backlog): the host refusal-restore path has no committed test.**
+- Location: `shells/host/src/coding_endpoint_owner.rs:284-293`.
+- Decision 0170 and `docs/guides/runtime-endpoint-runs.md` state that `ToolNotRecoverable` refusals "leave the
+  original entry intact for inspection". The code does this: my probe passes against the unmutated commit.
+- However, no committed host test reaches `ToolNotRecoverable`. Mutation M2 drops the uncertain coordinator,
+  and with it the only retained events of an uncertain effect, while every committed owner test still passes.
+- This is not an authority or confinement bypass: the dropped state carries no grant. It is a regression risk
+  for inspection data.
+- Fix: add a host owner test that drives an Uncertain terminal (for example a flag on the test `ReadBoundary`,
+  as in the probe). It should assert `ToolNotRecoverable` twice, then unchanged `events()`, then ordinary
+  `release` Ok, then `NotHeld`.
+
+**L2 (low, test coverage; backlog): `CodingEndpointPreparedBoundary::into_repository` is never called by a test.**
+- Location: `shells/host/src/coding_endpoint_prepared_startup.rs:329-341`.
+- It is a two-arm delegation to the native `into_repository` methods. The Linux edit and command coordinator
+  tests exercise those methods directly, and the delegation is trivially correct by inspection.
+- No test composes prepared startup, `release_with_tool_boundary` and `into_repository`. That composition
+  depends on the positive prepared-factory admission that is already open (predecessor L1).
+- Fix: cover it when that positive admission test lands.
+
+Carried backlog, unchanged:
+- prepared-startup L1 (unexecuted positive factory admission);
+- cancellation L1 (isolation when replacing an unconsumed preview);
+- conservative output/CPU/disk preflight.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing):** I accept this increment at exact commit
+  b62f35cfbaef6a786cc64e172c7729b9cc889e18.
+  - The kernel returns the original tool owner only after a known, fully published, non-uncertain terminal.
+    It refuses everything else and returns the same coordinator.
+  - The host releases only the exact sealed request. Run identities stay spent, and later work needs fresh
+    admission and fresh approvals.
+  - Native boundaries remain bound to their original request and call, so they cannot be reused for a
+    different run.
+  - The evidence honestly labels synthetic endpoint, creation and command observations.
+  - Both parent rows remain **OPEN**. Executable controlled startup, positive prepared-factory admission,
+    general model-driven coding, durable recovery, approved Git and measurements are not established. This
+    verdict closes no row.
+- **Gate:** the ordinary complete fast gate remains FAIL (exit 1) on exactly the 72 inherited T-301 identities,
+  with no new failure. The data audit passing is not a passing gate.
+
+Verdict: PASS

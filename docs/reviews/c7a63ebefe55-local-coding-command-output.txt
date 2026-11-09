@@ -1,0 +1,153 @@
+Commit: c7a63ebefe55544444c3d7fc398ebba2ec7e082f
+Scope: local-coding-command-output
+
+# Independent core review — endpoint command output reservation (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Same-model review;
+a cross-model review is still required before any public release.
+
+## Methods
+
+- Confirmed the pinned checkout: `git rev-parse HEAD` returns
+  c7a63ebefe55544444c3d7fc398ebba2ec7e082f. Its parent is
+  b62f35cfbaef6a786cc64e172c7729b9cc889e18, as stated in the request. `git status --short` is clean.
+- Read IP-POLICY.md, the newest decisions (0169 as amended, 0170), the top of TASKS.md and the
+  builder bundle (README.md, run.py, audit.py, light.py, expected-paths.json) before running anything.
+  run.py prepends `/lane/state/tmp/t303-endpoint-write/tooling` to PATH. I checked it: it holds only an
+  installed Node ELF binary and its LICENSE. There were no downloads.
+- Read the whole six-file diff over b62f35cf. Traced the new check against the real projection path:
+  `into_endpoint_command` → `execute_using` → `run_command_observed`
+  (`coding_repository_command.rs:364-451`) → `finish_validation`
+  (`coding_repository_validation.rs:292-344`) → `project` (`coding_repository_endpoint_command.rs:616-631`).
+  I also read the kernel receipt verification (`kernel/engine/src/command_runner.rs:627-636`) and the
+  native channel ceilings (`coding_repository_command.rs:503-513`).
+- Ran every command in the request from /lane/review-checkout, with fresh output and a separate
+  target. I did not use an outer build-slot, the GPU or any model.
+
+## Commands and results (every exit retained)
+
+| Command | Exit | Notes |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-command-output/review-inputs.sha256` | 0 | Manifest SHA-256 is 8daa983c750e6b89f331c171d64c2d366bb56b1bad14b3072dedd9d1793f9a70, which matches the request |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-command-output-c7a63ebefe55` | 1 (expected) | `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True` |
+| ↳ `git diff --check` | 0 | 0.10 s |
+| ↳ `--lint-untracked` | 0 | 0.15 s |
+| ↳ markdownlint (4 files) | 0 | 1.65 s |
+| ↳ `cargo fmt … --check` | 0 | 102.51 s including reservation |
+| ↳ `cargo clippy --all-targets -D warnings` | 0 | 35.86 s |
+| ↳ `cargo test --all-targets --no-fail-fast` | 101 (expected) | 192.19 s |
+| ↳ fast gate overall | FAIL | `FAST GATE: FAIL` |
+| `python3 -B …/audit.py <out>` | 0 | Checks data only. 25 targets: 1151 passed, 72 failed, 63 ignored, 0 measured, 0 filtered. Exactly 72 inherited failure identities, 0 new |
+| `python3 -B …/light.py` | 0 | `CURRENT_LIGHT_CHECKS_PASS`; markdownlint reports 0 issues |
+| `cmp validation-final/source-freeze.json <out>/source-freeze.json` | 0 | Both Rust source hashes are identical to the builder's freeze |
+| `git diff --check b62f35cf… --` | 0 | |
+| `git status --short` | 0 | Empty output; the checkout is unmodified |
+
+Further independent checks:
+
+- `cmp <out>/failure-identities.json …/validation-final/failure-identities.json` exits 0. My failure
+  set is byte-identical to the builder's, and audit.py checks it against the T-301 baseline from the
+  base commit (72 names, none new or missing).
+- All three added methods pass in the unfiltered run:
+  `endpoint_command_output_reservation_refuses_before_authority_and_preserves_original_preview`,
+  `endpoint_command_full_byte_channels_fit_reserved_projection_without_reencoding_loss` and
+  `endpoint_command_output_reservation_overflow_refuses_instead_of_wrapping`.
+- No `/tmp/co-*` existed before my run. My run created `/tmp/co-uaoq9zx5`. It holds 22 entries:
+  4 files totalling 36 bytes from the inherited host generic-denials and generic-preview fixtures,
+  plus their directories. It is not empty, so run.py correctly left it in place. I have not removed it,
+  and I touched no other `/tmp` contents.
+- I searched the diff's added lines for host paths, usernames, the user's name, email address,
+  tokens, passwords and secrets. There were no hits.
+- `Option::is_none_or` requires Rust 1.82. The workspace MSRV and toolchain are 1.95.0, so it is
+  allowed.
+- Evaluation integrity: the diff touches no hidden or held-out task, task base, scorer, threshold,
+  dependency, SBOM, status or score file. No other agent product is named.
+
+## Analysis
+
+**Correctness of the reservation.** `project` serializes the result with `serde_json::to_vec`, which
+is compact, not pretty-printed. `stdout` and `stderr` are `&[u8]` and become JSON number arrays. A
+channel of n bytes uses at most 4n+1 bytes: at most three digits plus a comma per byte, minus the
+last comma, plus the brackets. So `4*(a+b)` covers both channels apart from +2 bytes, which the
+16 KiB allowance absorbs.
+
+Kernel `verify_command_receipt` rejects a receipt whose retained channel bytes exceed the prepared
+bounds (`command_runner.rs:629-630`), and `run_command_observed` requires the retained lengths to
+equal the receipt's. The reservation therefore bounds the actual channel bytes, not only what the
+command declared. The bounds come from the process-held `pending.prepared`, not from wire input, and
+`max_output_bytes` comes from the verified sealed request.
+
+Checked add, then multiply, then add cannot wrap. `.is_none_or(...)` refuses on overflow.
+
+**Refusal semantics.** The check sits inside the existing immutable `prepare` closure. It runs after
+binding verification and before `seal_runtime_approval_challenge`. Refusal returns `Err((self, error))`
+before any grant, challenge or attempt consumption. The test confirms that `inspect`,
+`inspect_command` and `inspect_validation` are unchanged, that `issued` is `None` and that there are no
+receipts, for both commands and validations.
+
+**Test discrimination.** The fixture bounds are 1024/1024 (`coding_repository_command_tests.rs:135`),
+giving a reservation of 24 576. The tests refuse at 24 575 and admit at 24 576 with nothing else
+changed, so the new check is the cause; the error code is the bounds-specific
+`code.endpoint-command.bounds`. Two mutations would be caught: changing `>` to `>=` fails the
+admission case, and changing the multiplier to 3 or less fails the refusal case.
+
+The projection test fills both channels with 1024 × `255`. That is the worst-case three-digit
+encoding, and it hits the exact retained ceiling. The test round-trips both channels exactly. For
+validations it confirms `validation_passed == false` with `attempt == 1`. It also confirms that a
+second `execute` errors and the call counter stays at 1, so there is no replay. The cancellation
+handle cancelled on the refused original is observed on the later admitted handoff, so the same
+original signal is preserved.
+
+**Confinement.** The change only adds a refusal condition. No native manifest, worker confinement,
+authority transaction, parser, retry ceiling or post-dispatch projection check is weakened. The
+post-dispatch `bytes.len() > max_output_bytes → Uncertain` check is unchanged.
+
+**Honest labelling.** The evidence, guide, decision and TASKS text all state the following:
+
+- Creation and command observations are synthetic.
+- The reservation is a minimum and does not bound parsed validation metadata or the aggregate budget.
+- CPU and scratch/disk preflight remain backlog.
+- The complete gate is FAIL.
+- No row is closed.
+
+My run reproduces every quantitative claim. The counts match exactly. Timings differ only by
+reservation wait: formatting took 102.51 s against the builder's 92.52 s, Clippy 35.86 s against
+20.88 s and tests 192.19 s against 195.01 s.
+
+**Delivery.** No row or sub-row is added or closed. The increment runs and is measured.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low (backlog), `platforms/linux/src/coding_repository_endpoint_command.rs:29`.** The fixed
+  `COMMAND_PROJECTION_ALLOWANCE` of 16 KiB is not derived from the serialized size of the receipt,
+  command receipt and normalized validation receipt. A validation whose parser output exceeds it
+  (for example many small failing test records from structured stdout) can still pass admission,
+  obtain approval, dispatch a real process and then be refused as `Uncertain` in `project`, after the
+  attempt has been spent. This is disclosed in all four documents and is not a confinement bypass,
+  because the effect stays confined and is not replayed. Fix: bound the normalized validation receipt
+  size in the parser template, for example with maximum test count and name length, and include that
+  bound in the reservation; or add a test that measures worst-case metadata at the native channel
+  ceilings.
+- **Low (backlog), `coding_repository_endpoint_command.rs:173-174`.** Admission compares only against
+  the per-result `limits.max_output_bytes`, not against the run's remaining aggregate `OutputBytes`
+  budget, so a late command in a run can still be refused after dispatch. This is disclosed. Fix: check
+  the coordinator's remaining budget at evaluation time, before the approval prompt.
+- **Low (test coverage), `coding_repository_endpoint_command_tests.rs` (overflow test).** The overflow
+  method exercises `output_reservation` directly rather than through `into_endpoint_command`. That is
+  acceptable, because the native 64 KiB ceilings make overflow unreachable through prepared commands,
+  but it proves only the helper. No change is required.
+
+## Per-row result
+
+- **T-303:** the increment is accepted with no open high or medium finding. The row stays open:
+  positive native startup, the general edit/test/retry loop, durable recovery and approved Git are
+  still outstanding, as the builder states.
+- **T-306:** the increment is accepted with no open high or medium finding. The row stays open:
+  parent measurements are still outstanding, as the builder states.
+
+This PASS covers only this non-closing increment at the exact commit above. It does not close either
+parent row and certifies nothing.
+
+Verdict: PASS

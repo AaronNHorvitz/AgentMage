@@ -1122,3 +1122,25 @@ run remains non-successful. Original native admission still refuses in this lane
 Successful native execution, controlled service startup, general model-driven
 coding, durable recovery, approved Git and parent measurements remain open.
 See [Decision 0169](../decisions/0169-native-endpoint-command-coordinator.md).
+
+### Returning the terminal tool owner from the HTTP service
+
+Trusted hosts may use `serve_admitted_coding_endpoint_returning_tool` with the
+same original admission factory and protected HTTP controls. Its existing
+`/v1/code/endpoint/release` route returns no tool data over HTTP: it retires the
+exact known terminal run and keeps its original tool owner inside the service.
+After shutdown joins all HTTP workers, the host receives `Some(original_tool)`.
+An observation credential cannot release; a substituted request, live run,
+fault or uncertain terminal refuses. Refusal preserves inspection. Successful
+release removes the old events, so export them first. Repeated release refuses.
+
+Shutdown without an explicit successful release returns `None`, including after
+cancellation. Service errors may drop process-held state. This is ephemeral
+continuation; it does not reconstruct or resume a run. Prepared native boundaries
+must return their repository through `into_repository`, abandoning old preview
+and grant handles, before preparing later work under fresh admission and approval.
+Only the original tool boundary returns, including its existing native authority;
+no grant is renewed. The old verifier, context, endpoint connection and run
+budget are dropped. Ordinary service entry points continue to discard on release. The opt-in function
+is a host composition surface; executable controlled startup and a general
+model-driven edit/test/retry workflow remain open.

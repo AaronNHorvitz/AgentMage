@@ -29,8 +29,20 @@ run needs its own admission and exact approvals; no old run is resumed.
 The prepared edit/command boundary returns the same original repository through
 the existing native abandonment methods. Successful edit lineage and validation
 attempts remain with that owner. Pending previews and issued handles are
-abandoned; durable grants retain their ordinary expiry. There is no wire route,
-durable recovery, path adoption, automatic cleanup or approval inheritance.
+abandoned; durable grants retain their ordinary expiry. There is no new wire
+route, durable recovery, path adoption, automatic cleanup or approval inheritance.
+
+The dedicated HTTP service offers trusted startup an opt-in tool-return entry
+point. In that service only, the existing exact control-authorized release
+requires the same safe terminal checks and retains the boundary until service
+shutdown joins every worker. Observation credentials cannot release it. Repeated
+or substituted releases refuse; uncertain/faulted releases preserve inspection.
+Stopping without a successful explicit release returns no tool. Service errors
+can drop process-held state. The caller must export events before release and
+abandon old native previews before separate later admission. No serialized port,
+path adoption, renewed grant, budget or old run is returned. The boundary keeps
+its existing native authority. Ordinary service entry
+points retain their discard behavior.
 
 Tests exercise terminal ownership and fresh approvals with synthetic endpoint
 responses, plus original native edits and synthetic command observations with
