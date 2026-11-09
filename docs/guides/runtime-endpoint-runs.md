@@ -1,5 +1,37 @@
 # Endpoint run framing
 
+## Return the original tool owner after a terminal run
+
+Trusted in-process hosts can use
+`CodingEndpointRuns::release_with_tool_boundary(&original_request)` after
+exporting the run's events. This consumes the original terminal coordinator
+and returns its actual tool boundary, leaving the run identity permanently
+spent. Running or approval-waiting entries return `StillRunning`; faulted
+entries return `Faulted`. Unsafe terminal return, including uncertain effects,
+returns `ToolNotRecoverable`. Refusals leave the original entry intact for
+inspection. Ordinary `release` still discards terminal or faulted owners.
+
+For `CodingEndpointPreparedBoundary`, call `into_repository()` on the returned
+boundary to retain the original live worktree owner. Existing edit lineage and
+validation attempts survive. Pending edit/command previews and grant handles
+are abandoned through the original native methods; issued grants remain in
+durable authority until ordinary expiry. A later test, edit or original-checkout
+diff must be freshly prepared and separately approved. No run, old challenge,
+model connection, budget ledger or execution cursor is restored.
+
+The kernel's consuming `try_into_endpoint_tool_boundary` refuses missing or
+disagreeing terminal envelopes, incomplete terminal publication, pending
+approvals, suspension, reconciliation requirements and uncertain state. It
+returns the unchanged coordinator on refusal without invoking dependencies.
+Successful extraction drops the old context, connection, verifier and clock.
+The boundary can retain its own original control and clock until abandonment;
+neither is renewed by extraction.
+
+This is process-local library continuation, with no new HTTP, CLI or MCP route.
+It does not provide service restart recovery, automatic retries or continued
+execution under the old run's budget. Native positive startup and model-driven
+workflow measurements remain unobserved. See [Decision 0170](../decisions/0170-terminal-endpoint-tool-owner-return.md).
+
 ## Trusted startup for an original prepared effect
 
 `CodingEndpointPreparedStartup` composes one original prepared edit or command

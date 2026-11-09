@@ -79,6 +79,9 @@ pub enum CodingEndpointOwnerError {
     StillRunning,
     /// A prior coordinator error or unwind prevents further dispatch.
     Faulted,
+    /// Terminal ownership cannot return safely (for example, uncertain effects).
+    /// The entry stays held for inspection or ordinary discard, never replay.
+    ToolNotRecoverable,
     /// Original context construction failed without admission or dispatch.
     Context(RuntimePortFailure),
     /// Original coordinator error; retained events remain inspectable.
@@ -100,7 +103,8 @@ struct Entry<'config, T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: Runtime
 
 /// A non-cloneable owner of at most four complete coordinators. All operations
 /// borrow this same owner; no method extracts a live coordinator or replaces
-/// its ports. Released identities remain spent for this owner's lifetime.
+/// its ports. A terminal tool owner can be returned for separate later work.
+/// Released identities remain spent for this owner's lifetime.
 /// After 256 admissions, create a new service with fresh run identities rather
 /// than evicting tombstones. A new owner does not recover any prior run.
 pub struct CodingEndpointRuns<
@@ -253,6 +257,42 @@ impl<'config, T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock>
         }
         entry.held = Held::Released;
         Ok(())
+    }
+
+    /// Retires one exact terminal run and returns its original tool boundary.
+    /// This trusted in-process operation exposes no HTTP/model authority. Later
+    /// work requires fresh admission and exact approvals; the old identity stays
+    /// spent. Export events first. Unlike ordinary release, faulted/uncertain
+    /// entries refuse and remain held for inspection; no reconciliation occurs.
+    pub fn release_with_tool_boundary(
+        &mut self,
+        request: &RuntimeEndpointRunRequest,
+    ) -> Result<T, CodingEndpointOwnerError> {
+        let entry = self.entry(request)?;
+        match &entry.held {
+            Held::Released => return Err(CodingEndpointOwnerError::NotHeld),
+            Held::Retained { faulted: true, .. } => {
+                return Err(CodingEndpointOwnerError::Faulted);
+            }
+            Held::Retained { coordinator, .. } if coordinator.endpoint_outcome().is_none() => {
+                return Err(CodingEndpointOwnerError::StillRunning);
+            }
+            _ => {}
+        }
+        let Held::Retained { coordinator, .. } = std::mem::replace(&mut entry.held, Held::Released)
+        else {
+            unreachable!("retained entry checked above")
+        };
+        match coordinator.try_into_endpoint_tool_boundary() {
+            Ok(boundary) => Ok(boundary),
+            Err(coordinator) => {
+                entry.held = Held::Retained {
+                    coordinator,
+                    faulted: false,
+                };
+                Err(CodingEndpointOwnerError::ToolNotRecoverable)
+            }
+        }
     }
 
     fn entry(

@@ -271,6 +271,10 @@ fn endpoint_owner_latches_boundary_errors_and_preserves_events_without_redispatc
     );
     assert_eq!(executions.load(Ordering::SeqCst), 1);
     assert_eq!(runs.advance(&request, None, None), Err(Error::Faulted));
+    assert!(matches!(
+        runs.release_with_tool_boundary(&request),
+        Err(Error::Faulted)
+    ));
     assert_eq!(
         runs.advance(&request, Some(&allow(&challenge)), None),
         Err(Error::Faulted)
@@ -435,6 +439,11 @@ fn endpoint_owner_caught_clock_and_verifier_panics_keep_events_but_never_advance
             assert_eq!(runs.advance(&request, response, None), Err(Error::Faulted));
             assert_eq!(runs.events(&request).unwrap(), events);
         }
+        assert!(matches!(
+            runs.release_with_tool_boundary(&request),
+            Err(Error::Faulted)
+        ));
+        assert_eq!(runs.events(&request).unwrap(), events);
         assert_eq!(clock_calls.load(Ordering::SeqCst), clock_count);
         let expected_executions = usize::from(!panic_in_clock);
         assert_eq!(executions.load(Ordering::SeqCst), expected_executions);
@@ -446,6 +455,116 @@ fn endpoint_owner_caught_clock_and_verifier_panics_keep_events_but_never_advance
             std::io::ErrorKind::WouldBlock
         );
     }
+}
+
+#[test]
+fn endpoint_owner_terminal_return_reuses_only_the_tool_and_keeps_both_run_identities_spent() {
+    let (listener, endpoint) = listener();
+    let transport = transport(endpoint.clone());
+    let approval = LocalChatApproval::for_endpoint(endpoint);
+    let request = selected_request(&transport, "terminal-return-first");
+    let objective = sha256(request.task.objective.as_bytes());
+    let worker = thread::spawn(move || {
+        for turn in 0..4 {
+            let mut socket = accept(&listener);
+            let body = read_context_request(&mut socket);
+            let user: serde_json::Value =
+                serde_json::from_str(body["messages"][1]["content"].as_str().unwrap()).unwrap();
+            assert_eq!(user["turn"], turn % 2 + 1);
+            assert_eq!(
+                user["untrusted_tool_results"].as_array().unwrap().len(),
+                turn % 2
+            );
+            if turn % 2 == 0 {
+                respond(&mut socket, &read_proposal(), "stop", true);
+            } else {
+                let claim = serde_json::to_string(&CodingCompletionCandidate {
+                    schema_version: 1,
+                    objective_sha256: objective.clone(),
+                    terminal_claim: CodingTerminalClaim::NoOp,
+                    summary: "fixture function returns 42".into(),
+                    checks_not_run: vec!["project tests".into()],
+                    residual_risks: vec![],
+                })
+                .unwrap();
+                respond(&mut socket, &claim, "stop", true);
+            }
+        }
+        listener
+    });
+    let executions = Arc::new(AtomicUsize::new(0));
+    let mut runs = Runs::default();
+    let mut next_boundary = None;
+    let mut previous_response = None;
+    for ordinal in 0..2 {
+        let current = selected_request(
+            &transport,
+            if ordinal == 0 {
+                "terminal-return-first"
+            } else {
+                "terminal-return-second"
+            },
+        );
+        let mut input = admission(current.clone(), &transport, &approval, &executions);
+        if let Some(boundary) = next_boundary.take() {
+            input.tool_boundary = boundary;
+        }
+        runs.admit(input).unwrap();
+        assert!(matches!(
+            runs.release_with_tool_boundary(&current),
+            Err(Error::StillRunning)
+        ));
+        let first = runs.advance(&current, None, None).unwrap();
+        let RuntimeEndpointCoordinatorStep::AwaitingApproval { challenge } = &first else {
+            panic!("fresh approval expected")
+        };
+        let events = runs.events(&current).unwrap().to_vec();
+        assert!(matches!(
+            runs.release_with_tool_boundary(&current),
+            Err(Error::StillRunning)
+        ));
+        let mut changed = current.clone();
+        changed.task.objective.push_str(" changed");
+        assert!(matches!(
+            runs.release_with_tool_boundary(&changed),
+            Err(Error::Invalid)
+        ));
+        changed = seal_runtime_endpoint_run_request(changed).unwrap();
+        assert!(matches!(
+            runs.release_with_tool_boundary(&changed),
+            Err(Error::NotHeld)
+        ));
+        if let Some(old) = &previous_response {
+            assert!(runs.advance(&current, Some(old), None).is_err());
+        }
+        assert_eq!(runs.advance(&current, None, None).unwrap(), first);
+        assert_eq!(runs.events(&current).unwrap(), events);
+        let response = allow(challenge);
+        assert!(matches!(
+            runs.advance(&current, Some(&response), None).unwrap(),
+            RuntimeEndpointCoordinatorStep::Complete { .. }
+        ));
+        assert_eq!(executions.load(Ordering::SeqCst), ordinal + 1);
+        let boundary = runs.release_with_tool_boundary(&current).unwrap();
+        assert!(Arc::ptr_eq(&boundary.0, &executions));
+        assert_eq!(executions.load(Ordering::SeqCst), ordinal + 1);
+        assert_eq!(runs.events(&current), Err(Error::NotHeld));
+        assert_eq!(runs.advance(&current, None, None), Err(Error::NotHeld));
+        assert!(matches!(
+            runs.release_with_tool_boundary(&current),
+            Err(Error::NotHeld)
+        ));
+        assert_eq!(
+            runs.admit(admission(current, &transport, &approval, &executions)),
+            Err(Error::AlreadyAdmitted)
+        );
+        next_boundary = Some(boundary);
+        previous_response = Some(response);
+    }
+    assert_eq!(
+        worker.join().unwrap().accept().unwrap_err().kind(),
+        std::io::ErrorKind::WouldBlock
+    );
 }
 
 #[test]

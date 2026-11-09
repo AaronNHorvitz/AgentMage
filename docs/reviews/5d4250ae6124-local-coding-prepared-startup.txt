@@ -1,0 +1,150 @@
+Commit: 5d4250ae61241565d3567b391f3dd7b054ed107f
+Scope: local-coding-prepared-startup
+
+# Independent core review: trusted prepared-effect startup (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only on the repository.
+Pinned checkout: /lane/review-checkout. `git rev-parse HEAD` = 5d4250ae61241565d3567b391f3dd7b054ed107f;
+predecessor 07ab1d6f398777a35c47ef81aba43bed09894ded resolves. The diff is 14 files (10 Rust, TASKS,
+guide, builder evidence, retained predecessor review).
+
+## Methods
+
+1. Read IP-POLICY.md, the newest decision (0169), the top of TASKS.md, the builder README and the
+   helpers (run.py, audit.py, light.py) before running anything.
+2. Read the full diff line by line: `shells/host/src/coding_endpoint_prepared_startup.rs` (new),
+   its tests, the exported `serve_admitted_coding_endpoint`, the new
+   `LinuxCodingEndpointCommand::into_repository` and the guide/evidence/TASKS text.
+3. Traced the authority path through code I did not have to trust from the brief:
+   - `CodingEndpointRuns::admit`/`entry`/`correlation_id` (`shells/host/src/coding_endpoint_owner.rs:130-268`):
+     the held entry is keyed by run id and filtered by the exact `request_sha256`, so the service only
+     serves a request that is actually held.
+   - Native edit binding (`platforms/linux/src/coding_repository_endpoint_edit.rs:129-165`): every
+     preview file must be an exact member of `mutable_files` (string `contains`, not a prefix) and outside
+     every protected prefix. So removing an excluded file from `mutable_files` in `prepare` makes the native
+     owner refuse any diff that touches it. The existing native test at `coding_repository_endpoint_edit_tests.rs:507`
+     covers refusal after a mutable file is removed.
+   - Native command binding (`coding_repository_endpoint_command.rs:118-160`): timeout is checked against
+     the narrowed `limits.max_elapsed_ms`; memory/process are checked against the work-packet budgets.
+   - The native boundary's `evaluate_scoped` (`coding_repository_endpoint_boundary.rs:134-158`) always
+     returns `Ask`, so `RequireUserConfirmation` is met by the exact per-effect decision and is never
+     accepted and then ignored.
+   - `compile_guidance` (`coding_guidance.rs:197-...`): with an empty validation list every
+     `RequireVerification` returns `ConstraintDenied`; `Stop` refuses; budget caps can only reduce.
+   - Each native registry holds exactly one tool. If a `DisableTool` removes it, the registry is empty and
+     `prepare` returns `NoTools`. So not updating `visible_tools`/`tool_catalog_sha256` after
+     `restrict_registry` is correct here, and it matches the native adapters' full-catalog check.
+     The file-only startup does update them because its registry can shrink to a non-empty subset.
+   - `WorkspacePath` component validation (`kernel/contracts/src/path.rs:308-347`) rejects empty, `.`,
+     `..`, wildcards, rooted, colon, all separator look-alikes, percent-encoding, NUL/control, trailing
+     dot/space, invisible format characters and non-NFC/NFKC text. No normalization rewrites a component,
+     so the string-based native check and the component-based exclusion check agree.
+   - Model-originated calls can only reach the single prepared effect: the native `check` requires the exact
+     prepared call bytes/hash/action id, and every effect still needs the original exact approval.
+4. Ran the requested commands in the pinned checkout, keeping every exit code.
+5. Escape attempts and a composition check, run in a separate scratch export
+   (`git archive HEAD` → /lane/state/tmp/review-scratch-5d4250ae6124, separate target
+   /lane/state/review-target-scratch, owned TMPDIR, under build-slot). The repository was not modified.
+6. Privacy and trademark scan of the added lines; evaluation-integrity scope check; commit-input blob check.
+
+## Commands and results (run in /lane/review-checkout)
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-prepared-startup/review-inputs.sha256` | 0 | All 46 inputs match. The manifest file hash is f2cec5ff9eef78fd7b860610f623d21f123c05e5f1aa7c0c8ca877be39bfa084, as stated. |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-prepared-startup-5d4250ae6124` | 1 | `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`. Seven commands exited 0,0,0,0,0,0,101: diff-check 0.40s, lint-untracked 0.10s, lint-reviews 0.10s, markdownlint 1.20s, fmt 148.60s (mostly reservation wait), clippy -D warnings 34.65s, all-target tests 195.21s. Total 380.64s including reservations. `FAST GATE: FAIL`. No timeout, so no 124. |
+| `python3 -B .../audit.py /lane/state/tmp/review-prepared-startup-5d4250ae6124` | 0 | 25 targets; 1142 passed, 72 failed, 63 ignored, 0 measured, 0 filtered. 72 inherited identities, 0 new, 0 missing. 12 new methods. Source unchanged. `DATA_AUDIT_PASS..._FULL_GATE_REMAINS_FAIL`. |
+| `python3 -B .../light.py` | 0 | diff-check, lint-untracked, lint-reviews and markdownlint (3 files, 0 issues) all exit 0. `CURRENT_LIGHT_CHECKS_PASS`. |
+| `cmp .../validation-final/source-freeze.json .../review-prepared-startup-5d4250ae6124/source-freeze.json` | 0 | Identical. My ten Rust source hashes equal the builder's. |
+| `git diff --check 07ab1d6f398777a35c47ef81aba43bed09894ded --` | 0 | Clean. |
+| `git status --short` | 0 | Empty. |
+
+I checked the log directly as well as through audit.py. All 12 added methods appear as `... ok` in the
+unfiltered run: 2 clock tests, 7 prepared-startup tests, 1 Linux command-abandonment test and 2 HTTP
+direct-admission tests. There are exactly 72 `FAILED` lines. Inherited ignored tests were not run.
+
+The owned review namespace /tmp/ps-88urwkj7 is retained. It has 22 entries: 11 inherited host-fixture
+directories and 4 files totalling 36 bytes. None comes from the prepared or endpoint-startup fixtures.
+This matches the builder's report, and I did no broad cleanup.
+
+Reviewer-only scratch runs (not committed; repository untouched):
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `TMPDIR=<owned> CARGO_TARGET_DIR=/lane/state/review-target-scratch CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 bash /tools/build-slot cargo test --locked --offline -p agentmage-host --lib reviewer_` | 0 | 3 passed, 672 filtered. See the list below. |
+| `... bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api --test reviewer_prepared_compose` | 0 | 1 passed. This is a compile check, described below. |
+
+The three reviewer host tests:
+
+- `check_sources` refuses 16 escape variants against an excluded `private` scope: `private/./a.rs`,
+  `./private/a.rs`, `src/../private/a.rs`, `private/`, `/private/a.rs`, backslash, NUL, `%2f`, U+2215,
+  trailing space/dot, `*`, `**/a.rs`, empty, `C:/...` and a zero-width character. A case variant and
+  a sibling prefix (`Private/`, `privatex/`) are distinct paths and are allowed.
+- Mutable-file traversal variants refuse with `Binding`. An entry `private` and an entry
+  `private/deep/x.rs` are removed from `mutable_files`, leaving only `src/lib.rs`. A command with any
+  exclusion refuses with `Source`.
+- Both kinds refuse `DurableReadOnly` mode.
+
+The compile check is a generic function that passes `CodingEndpointPrepared::admit` into the exported
+`serve_admitted_coding_endpoint::<CodingEndpointPreparedBoundary<C>, V, CodingEndpointPreparedClock<C>>`.
+It type-checks, so the `Send + 'static` bounds hold and the guide's embedding path can be built.
+It is a compile check only, not an execution.
+
+The owned scratch TMPDIR was empty and was removed.
+
+Other checks:
+
+- Privacy: in the added lines there is no `/var/home`, `/home/<user>`, username, hostname, e-mail or
+  credential. The only `/lane/...` paths are in the retained predecessor report, which follows established
+  practice. No other product is named as branding.
+- Evaluation integrity: no hidden, held-out, task, scorer, threshold, model, dependency, Cargo.toml/lock or
+  SBOM path is in the diff. The TASKS table rows are unchanged, as audit.py checks. Nothing in this
+  increment produces or claims a score.
+- The retained `docs/reviews/07ab1d6f3987-local-coding-endpoint-command.txt` is byte-identical to
+  /lane/reviews/07ab1d6f3987-local-coding-endpoint-command.md.
+- All 14 committed blob hashes match commit-inputs.json.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L1 (low, same-row backlog): the positive composition path has never been executed.**
+Location: `shells/host/src/coding_endpoint_prepared_startup.rs:184-204` (`bind`, success branch) and
+`:281-316` (`CodingEndpointPrepared::admit`).
+No test reaches a successful `bind` or any call of `admit`. So three things are unobserved at runtime:
+the in-`admit` `check_sources` refusal, the coordinator and native boundary sharing one clock and one
+request inside a live admission, and the delegation of all three scoped stages.
+By code reading, these are simple moves of values that the predecessor reviews already established.
+My compile check shows the documented HTTP embedding type-checks. The builder labels this gap honestly in
+the guide, the evidence and TASKS, and both parents stay open.
+Fix: before any closing claim, add one positive test with a synthetic native creation (for example a
+crate-visible Linux test fixture). It should bind an edit and a command, admit through
+`serve_admitted_coding_endpoint`, and assert:
+- an excluded source refuses inside `admit`;
+- one `Ask` challenge equals `CodingEndpointPrepared::challenge`;
+- a clock read by the tool advances the coordinator's clock.
+
+**L2 (low, documentation precision): the `bind` doc reads as if command paths were verified.**
+Location: `shells/host/src/coding_endpoint_prepared_startup.rs:179-182`.
+The doc comment says the original adapters verify "complete diff or command, mutable/protected paths".
+For commands, the native adapter checks creation, preview, call and resource ceilings, but it does not
+restrict which worktree files the command may touch. Mutable/protected checks apply only to edits.
+Behaviour is not affected: commands remain sandboxed to the held worktree, and commands refuse under any
+exclusion. Still, a reader could infer protected-file confinement for commands that the code does not
+provide.
+Fix: reword so that mutable/protected path checks are attributed to edits only.
+
+The predecessor's L1 (pre-handoff cancellation handles) and L2 (output/CPU/disk preflight) remain
+same-row backlog and are restated accurately in the guide.
+
+## Per-row result
+
+- T-303: non-closing increment accepted. There are no high or medium findings in this scope. The row stays
+  OPEN because executable controlled startup, general model-driven coding, recovery, approved Git and
+  measurements are not delivered.
+- T-306: non-closing increment accepted. The row stays OPEN for the same reasons.
+- No row or sub-row is added or closed. Delivery is not split and is not a plan-only increment.
+- The ordinary full gate is FAIL: exactly the 72 inherited T-301 failures (53 host, 19 Linux), with none
+  new and none missing. This PASS covers this increment's scope; it is not a green-gate claim.
+
+Verdict: PASS

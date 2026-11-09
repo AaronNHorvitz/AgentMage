@@ -177,9 +177,10 @@ impl CodingEndpointPreparedStartup {
     }
 
     /// Consume the original live creation owner and its exact prepared call.
-    /// Original adapters verify workspace/creation, complete diff or command,
-    /// mutable/protected paths and command resource ceilings against this final
-    /// request. Refusal returns the same repository intact. No effect occurs.
+    /// Original adapters verify workspace/creation and the complete preview.
+    /// Edits check mutable/protected paths; commands check resource ceilings
+    /// against this final request. Refusal returns the same repository intact.
+    /// No effect occurs.
     #[allow(clippy::result_large_err)]
     pub fn bind(
         self,
@@ -324,6 +325,19 @@ pub enum CodingEndpointPreparedBoundary<C> {
     Edit(LinuxCodingEndpointEditBoundary<CodingEndpointPreparedClock<C>>),
     /// Original native command/test and its privately retained exact grant.
     Command(LinuxCodingEndpointCommandBoundary<CodingEndpointPreparedClock<C>>),
+}
+impl<C: RuntimeClock> CodingEndpointPreparedBoundary<C> {
+    /// Abandon any pending single-effect decision and return the same original
+    /// live repository, including successful edit lineage and validation state.
+    /// After admission obtain this boundary only through terminal owner release;
+    /// old approvals and run budgets cannot be resumed or reconstructed.
+    #[must_use]
+    pub fn into_repository(self) -> LinuxCodingRepository {
+        match self {
+            Self::Edit(tool) => tool.into_repository(),
+            Self::Command(tool) => tool.into_repository(),
+        }
+    }
 }
 impl<C: RuntimeClock> RuntimeToolBoundary for CodingEndpointPreparedBoundary<C> {
     fn evaluate_scoped(

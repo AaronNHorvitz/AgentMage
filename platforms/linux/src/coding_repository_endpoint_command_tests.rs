@@ -1163,6 +1163,18 @@ fn endpoint_command_actual_coordinator_uses_exact_challenge_and_original_command
             RuntimeEndpointCoordinatorStep::Complete { outcome }
         );
         assert_eq!(calls.load(Ordering::SeqCst), usize::from(allow));
+        let boundary = Box::new(coordinator)
+            .try_into_endpoint_tool_boundary()
+            .ok()
+            .unwrap();
+        let owner = boundary.inner.into_repository();
+        let validation = owner.inspect_validation().unwrap();
+        assert!(validation["pending"].is_null());
+        assert_eq!(validation["attempts"], usize::from(allow));
+        assert_eq!(validation["maximum_attempts"], 3);
+        assert_eq!(validation["latest"].is_object(), allow);
+        assert_eq!(calls.load(Ordering::SeqCst), usize::from(allow));
+        assert_eq!(models.load(Ordering::SeqCst), 1);
     }
 }
 #[test]

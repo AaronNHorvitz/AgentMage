@@ -125,6 +125,9 @@ observe it, even when no explicit handle is passed to the direct decision.
 The first accepted cancellation reason persists. A fresh preparation, including
 a validation retry, has its own token; abandoning an attempt does not transfer
 its cancellation to the next one. These handles grant no execution authority.
+A direct validation decision with an already cancelled attempt records a
+cancelled, spent attempt even when no child launches; endpoint cancellation
+observed before native preflight spends no validation attempt.
 
 Previews and ownership are process-only; command output is response-only.
 Canonical content-free authority receipts survive restart. There is no durable

@@ -813,5 +813,32 @@ fn endpoint_native_boundary_actual_coordinator_challenge_and_native_write() {
         );
         assert_eq!(calls.load(Ordering::SeqCst), 1);
         f.assert_original();
+        // Return the actual native owner after terminal publication. A known
+        // later model refusal does not erase the already committed edit lineage.
+        let boundary = Box::new(coordinator)
+            .try_into_endpoint_tool_boundary()
+            .ok()
+            .unwrap();
+        let mut owner = boundary.into_repository();
+        assert!(owner.inspect_edit().unwrap()["pending"].is_null());
+        assert_eq!(
+            owner.created.as_ref().unwrap().edits.len(),
+            if allow { 2 } else { 0 }
+        );
+        if allow {
+            let status = owner.inspect_apply().unwrap();
+            let preview = owner
+                .prepare_apply(
+                    &["one.py".into(), "two.py".into()],
+                    "Separately review the retained original-checkout diff",
+                    status["repository_root_sha256"].as_str().unwrap(),
+                    status["worktree_root_sha256"].as_str().unwrap(),
+                    NOW,
+                )
+                .unwrap();
+            assert!(preview.is_object());
+            f.assert_original();
+        }
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
     }
 }

@@ -326,10 +326,18 @@ impl RuntimeToolBoundary for Boundary {
                 outcome,
                 output: None,
                 validation_issues: vec![],
-                evidence: vec![evidence(
-                    call.tool_call_id.as_str(),
-                    EvidenceKind::ToolOutput,
-                )],
+                evidence: if outcome == OperationOutcome::Uncertain
+                    && definition.required_grant.operation.operation()
+                        == GrantOperation::WorkspaceRead
+                {
+                    // An uncertain synthetic read supplies no trusted bytes.
+                    vec![]
+                } else {
+                    vec![evidence(
+                        call.tool_call_id.as_str(),
+                        EvidenceKind::ToolOutput,
+                    )]
+                },
                 error: None,
                 elapsed_ms: 1,
                 state_change,
@@ -936,3 +944,115 @@ fn endpoint_coordinator_cancellation_wins_before_pending_allow() {
 
 #[path = "runtime_loop_endpoint_write_tests.rs"]
 mod controlled_write_tests;
+
+#[test]
+fn endpoint_terminal_tool_return_preserves_original_owner_and_refuses_live_approvals() {
+    let mut c = Box::new(coordinator([Response::Read, Response::Answer], true));
+    let original = &*c as *const Coordinator;
+    let executions = c.tool_boundary.executions.clone();
+    let calls = c.model.0.calls.clone();
+    c = c.try_into_endpoint_tool_boundary().err().unwrap();
+    assert_eq!(&*c as *const Coordinator, original);
+    assert!(c.events().is_empty());
+    assert_eq!(calls.load(Ordering::SeqCst), 0);
+    let EndpointStep::AwaitingApproval { challenge } =
+        c.run_endpoint_until_boundary(None, None).unwrap()
+    else {
+        panic!("approval expected")
+    };
+    let events = c.events().to_vec();
+    c = c.try_into_endpoint_tool_boundary().err().unwrap();
+    assert_eq!(&*c as *const Coordinator, original);
+    assert_eq!(c.events(), events);
+    assert_eq!(calls.load(Ordering::SeqCst), 1);
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    let response = decide(&challenge, RuntimeApprovalDisposition::Allow);
+    assert!(matches!(
+        c.run_endpoint_until_boundary(Some(&response), None)
+            .unwrap(),
+        EndpointStep::Complete { .. }
+    ));
+    let boundary = c.try_into_endpoint_tool_boundary().ok().unwrap();
+    assert!(Arc::ptr_eq(&boundary.executions, &executions));
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    assert_eq!(calls.load(Ordering::SeqCst), 2);
+}
+
+#[test]
+fn endpoint_terminal_tool_return_refuses_uncertainty_faults_and_incomplete_publication() {
+    for defect in 0..6 {
+        let mut c = Box::new(coordinator([Response::Read, Response::Answer], false));
+        if defect == 0 {
+            c.tool_boundary.result_override =
+                Some((OperationOutcome::Uncertain, StateChange::Uncertain));
+        }
+        let outcome = terminal(&mut c);
+        if defect == 0 {
+            assert_eq!(outcome.outcome.state, AgentStateKind::Uncertain);
+        }
+        match defect {
+            0 => {}
+            1 => c.correctness_reconciliation_required = true,
+            2 => c.suspended = true,
+            3 => c.endpoint_outcome = None,
+            4 => {
+                c.endpoint_outcome
+                    .as_mut()
+                    .unwrap()
+                    .outcome
+                    .model_call_count += 1
+            }
+            5 => {
+                c.events.pop();
+            }
+            _ => unreachable!(),
+        }
+        let events = c.events().to_vec();
+        let executions = c.tool_boundary.executions.load(Ordering::SeqCst);
+        let calls = c.model.0.calls.load(Ordering::SeqCst);
+        let original = &*c as *const Coordinator;
+        let c = c.try_into_endpoint_tool_boundary().err().unwrap();
+        assert_eq!(&*c as *const Coordinator, original);
+        assert_eq!(c.events(), events);
+        assert_eq!(
+            c.tool_boundary.executions.load(Ordering::SeqCst),
+            executions
+        );
+        assert_eq!(c.model.0.calls.load(Ordering::SeqCst), calls);
+    }
+}
+
+#[test]
+fn endpoint_terminal_tool_return_allows_known_denial_and_model_failure_without_dispatch() {
+    for deny in [false, true] {
+        let mut c = Box::new(coordinator(
+            if deny {
+                vec![Response::Read]
+            } else {
+                vec![Response::Failure]
+            },
+            true,
+        ));
+        let calls = c.model.0.calls.clone();
+        let executions = c.tool_boundary.executions.clone();
+        if deny {
+            let EndpointStep::AwaitingApproval { challenge } =
+                c.run_endpoint_until_boundary(None, None).unwrap()
+            else {
+                panic!("approval expected")
+            };
+            let response = decide(&challenge, RuntimeApprovalDisposition::Deny);
+            assert!(matches!(
+                c.run_endpoint_until_boundary(Some(&response), None)
+                    .unwrap(),
+                EndpointStep::Complete { .. }
+            ));
+        } else {
+            terminal(&mut c);
+        }
+        let boundary = c.try_into_endpoint_tool_boundary().ok().unwrap();
+        assert!(Arc::ptr_eq(&boundary.executions, &executions));
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+    }
+}

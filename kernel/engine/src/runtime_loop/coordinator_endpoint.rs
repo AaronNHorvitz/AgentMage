@@ -220,6 +220,31 @@ impl<P: RuntimeEndpointTurnPort, T: RuntimeToolBoundary, V: RuntimeVerifierPort,
             None,
         )
     }
+
+    /// Consumes a terminal endpoint coordinator and returns its ORIGINAL tool
+    /// owner for separately admitted later work. No run, budget, approval or
+    /// pending decision is resumed. Export events before consuming this owner.
+    /// Running, suspended, uncertain or reconciliation-required runs refuse and
+    /// return the same coordinator unchanged. No dependency is entered here.
+    pub fn try_into_endpoint_tool_boundary(self: Box<Self>) -> Result<T, Box<Self>> {
+        let terminal = self.endpoint_outcome.as_ref().is_some_and(|endpoint| {
+            self.outcome.as_ref() == Some(&endpoint.outcome)
+                && endpoint.outcome.state != AgentStateKind::Uncertain
+                && self.events.last().is_some_and(|event| {
+                    matches!(&event.kind, RuntimeEventKind::RunTerminal { state, outcome_sha256 }
+                        if *state == endpoint.outcome.state
+                            && outcome_sha256 == &endpoint.outcome.outcome_sha256)
+                })
+        });
+        if !terminal
+            || self.pending.is_some()
+            || self.suspended
+            || self.correctness_reconciliation_required
+        {
+            return Err(self);
+        }
+        Ok(self.tool_boundary)
+    }
 }
 
 /// Endpoint boundary retaining its complete terminal envelope. Native boundary

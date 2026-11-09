@@ -1,0 +1,165 @@
+Commit: a7a532057fdf9ddd3b23883793ce136793e0f7d2
+Scope: local-coding-original-cancellation
+
+# Independent core review: original command cancellation across endpoint handoff
+
+Reviewer: independent session, read-only, pinned checkout `/lane/review-checkout`.
+Tier: core. Rows: T-303 / T-306 (non-closing; both parent rows remain OPEN).
+Base: immutable predecessor `5d4250ae61241565d3567b391f3dd7b054ed107f` (sole parent of the commit).
+
+## Methods
+
+1. Confirmed the commit: `git rev-parse HEAD` = `a7a532057fdf9ddd3b23883793ce136793e0f7d2`,
+   parent `5d4250ae61241565d3567b391f3dd7b054ed107f`. The diff has exactly six files (two Rust,
+   TASKS.md, two guides, one evidence file), 395 insertions and 11 deletions.
+2. Read IP-POLICY.md, the newest decision (0169), the top of TASKS.md, the builder README, and
+   `run.py`, `audit.py` and `light.py` before running them. The helpers only call the
+   repository's own `scripts/local_agent_fast_gate.py`, write to the given output directory and
+   remove the owned `/tmp/oc-*` namespace only if it is empty. The PATH prefix
+   `/lane/state/tmp/t303-endpoint-write/tooling` contains only `node` and its `LICENSE`, so
+   nothing shadows cargo, git or python.
+3. Read the full source diff and its surrounding code: `coding_repository_command.rs`,
+   `coding_repository_validation.rs`, `coding_repository_endpoint_command.rs` (`execute_using`,
+   `CommandControl`, `into_repository`) and `kernel/engine/src/propagation.rs`
+   (`CancellationToken`).
+4. Ran every requested command and kept every exit code (below).
+5. Ran two mutation checks on an exported copy (`git archive HEAD`) outside the repository,
+   with a separate target directory, under `/tools/build-slot`. The repository was not modified.
+6. Checked privacy and branding on all added lines and compared the committed blobs with the
+   builder's `commit-inputs.json`.
+
+## Exact commands and results
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-original-cancellation/review-inputs.sha256` | 0 | Manifest file SHA-256 `d13047837ef6b7b4d4803531b4bcf501deeeef1c8d8adb490f08aef855ca958b` matches the request |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-original-cancellation-a7a532057fdf` | 1 (expected) | `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`; 231.06 s including reservations |
+| `python3 -B …/audit.py /lane/state/tmp/review-original-cancellation-a7a532057fdf` | 0 | Data audit only: 72 inherited identities, 0 new, 5 new methods ok, source unchanged |
+| `python3 -B …/light.py` | 0 | diff-check 0, untracked lint 0, markdownlint 0 issues in 4 files |
+| `cmp …/validation-final/source-freeze.json …/review-original-cancellation-a7a532057fdf/source-freeze.json` | 0 | Identical |
+| `git diff --check 5d4250ae61241565d3567b391f3dd7b054ed107f --` | 0 | Clean |
+| `git status --short` | 0 | Empty |
+
+Ordinary complete gate, from my `fast.log`
+(SHA-256 `c6f3b685b926f4f0d2bde49e31cf02447d6912297cadb2984989ec649539e00c`):
+
+- **Per-command results:** 0 (0.20 s), 0 (0.10 s), 0 (fmt, 1.15 s), 0 (1.15 s),
+  0 (clippy, 34.97 s, cold review target), then **101** (all-target tests, 193.30 s).
+  `FAST GATE: FAIL`.
+- **Totals:** 25 targets; 1,147 passed, 72 failed, 63 ignored, 0 measured, 0 filtered.
+- **Failure identities:** the 72 failures exactly match the T-301 baseline list at the base
+  (baseline SHA-256 `d615eaf0…f19e`), with none new and none missing.
+- **New methods:** all five pass in the unfiltered run:
+  - `endpoint_command_original_handles_share_one_signal_without_explicit_direct_attachment`
+  - `endpoint_command_original_handle_cancels_after_handoff_before_native_preflight`
+  - `endpoint_command_original_handle_reaches_live_supervisor_observation_from_another_thread`
+  - `endpoint_command_abandoned_handle_never_cancels_a_fresh_attempt`
+  - `endpoint_command_failed_validation_handle_cannot_cancel_the_exact_fresh_retry`
+- **Agreement with the builder:** my run matches the builder's `validation-final` totals and
+  identities. Wall times differ only because my review target was cold.
+- **Retained namespace:** `/tmp/oc-5w46n6nz` has 22 entries, holding 4 inherited host fixture
+  files (36 bytes) from `agentmage-host-generic-*`. No new command fixtures. It was not empty,
+  so it is kept and reported here, not removed.
+- **No passing claim:** the gate is not called passing, nothing was waived, and the inherited
+  ignored tests stayed unrun.
+
+Committed blobs: all six files at HEAD (and in the working tree) match the SHA-256 values in
+`commit-inputs.json`. The task rows (`| [` lines) in TASKS.md are byte-identical to the base,
+so no row or sub-row was added or closed.
+
+### Mutation checks (independent)
+
+Both ran in an exported copy outside the repository with
+`CARGO_TARGET_DIR=/lane/state/review-target-mutant`, two jobs and four test threads, under
+`bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib endpoint_command_`.
+Logs are kept at `/lane/state/tmp/review-oc-mutant-revert.log`
+(SHA-256 `18f7db33…c11c`) and `/lane/state/tmp/review-oc-mutant-reuse.log` (`29ad62ae…9549`).
+The copy and the mutant target were then removed; they were my own scratch.
+
+- **M1: revert `coding_repository_command.rs` to the predecessor** (a fresh root per lookup,
+  which is the L1 defect). Exit 101: 18 passed, 3 failed. The share-one-signal test fails
+  (`left: UserRequested, right: Shutdown`), as do the post-handoff preflight test and the
+  cross-thread supervisor test. So the three positive tests detect the original defect. The two
+  isolation tests pass, as they must when roots are disconnected.
+- **M2: a fresh `command_preview` reuses the token of any still-pending `self.command`.**
+  Exit 0: all 21 pass. In the tests, a fresh preparation always follows `into_repository()`
+  (which clears `command`) or a consumed decision, so this mutant behaves identically for every
+  test flow. See L1 below.
+
+## Review of the change
+
+- **Shared signal is real.** `CancellationToken` is `Arc<Mutex<CancellationNode>>` with a derived
+  `Clone`, so `pending.cancellation.clone()` in `for_pending` (`coding_repository_command.rs:38`)
+  shares one node. These all observe that one token: public `command_cancellation` and
+  `validation_cancellation`, the default `None` arm of `run_command_with_cancellation`
+  (`:359`), and the endpoint bridge's `signal` (`coding_repository_endpoint_command.rs:430`).
+- **Fresh roots are unconditional.** The only `PendingCommand` constructor is
+  `command_preview` (`coding_repository_command.rs:280-290`), which always builds a new root
+  keyed to a new random attempt ID. `validation_preview` calls it and then only rewrites
+  `hash` and `preview` before the pending is stored, so a handle can never see a
+  pre-refinement hash. A validation retry goes through the same constructor.
+- **Stale explicit attachment still refuses.** `verify_command_cancellation` and the explicit arm
+  of `run_command_with_cancellation` still compare both the preview hash and the attempt ID.
+- **Authority is unchanged.** Cancellation only stops: `cancel` installs the first signal,
+  and later calls return that existing signal (`propagation.rs:101-115`).
+  `CommandControl::request` signals the same attempt with origin `Shell`, which matches the
+  root's boundary, so there is no `OriginMismatch` failure mode. No grant, approval, executor,
+  policy or supervisor path is added. `observe_command_cancellation` still treats lock
+  contention as `Unavailable`, which fails closed after 8 passive reads. A concurrent `cancel()`
+  can now contend with the supervisor poll; the worst case is a fail-closed termination, never
+  an uncancelled observation.
+- **Confinement is unchanged.** No path, workspace, sandbox, network or environment code is
+  touched, and tool arguments cannot reach the cancellation handle (it is a library API only).
+  None of the brief's escape classes (path traversal, symlinks, environment leaks, injected tool
+  calls) is reachable through this diff, so the earlier command-adapter review's confinement
+  results still apply.
+- **The docs are accurate.** The guides say cancellation is not revocation, that an issued grant
+  stays recorded until expiry, that an acknowledgement is not proof a child stopped, and that
+  the handles grant no authority. This matches the code. The evidence labels creation and
+  executor observations as SYNTHETIC and claims no native child stop, model workflow, grade or
+  score.
+- **Privacy and branding:** the added lines contain no host path, username, hostname,
+  credential, sibling-project name or third-party product name. Evaluation integrity is
+  untouched: no held-out, hidden, task, scorer or threshold change.
+- **Delivery:** no new row, sub-row or plan-only row. This is an in-row repair of the earlier
+  review's low L1.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test coverage; backlog):** `platforms/linux/src/coding_repository_endpoint_command_tests.rs:1518`
+  and `:1557`. The isolation tests only create a fresh preparation after
+  `into_repository()` cleared `command` or after the old pending was consumed. Nothing tests the
+  public flow where `prepare_command` or `prepare_validation` replaces an unconsumed pending
+  directly: prepare A, take A's handle, prepare B, cancel A, then expect B to be uncancelled.
+  Mutant M2 (reuse of the still-pending token) passes every test. The current code is correct
+  because the root is created unconditionally, so this is a regression guard, not a defect.
+  Fix: add one case that calls `prepare(&mut owner, …)` twice with no abandonment in between,
+  cancels the first handle, and asserts that the second handle observes `None` and that the
+  second attempt runs.
+- **L2 (low, documentation; backlog):** `platforms/linux/src/coding_repository_command.rs:359`
+  together with `coding_repository_validation.rs:121-145`. The default direct path is now
+  reachable by a pre-handoff cancellation. A validation cancelled before a direct
+  `decide_validation` spends one of its three attempts without launching (the share-one-signal
+  test asserts `attempts == 1`). The endpoint path cancelled before preflight spends none. Both
+  outcomes fail safe, but only the endpoint behaviour is described in the guide. Fix: add one
+  sentence to the `docs/guides/coding-commands.md` paragraph saying that a direct validation
+  decision with a cancelled attempt records a cancelled, spent attempt.
+
+Builder's open backlog item, unchanged: conservative output, CPU and disk preflight coverage
+(earlier L2) remains same-row backlog.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing):** I accept this repair at the exact commit
+  `a7a532057fdf9ddd3b23883793ce136793e0f7d2`. It resolves the command-adapter review's low L1:
+  pre-handoff handles now reach the endpoint supervisor and the default direct path, and
+  mutation M1 shows the tests detect a regression. Both parent rows remain **OPEN**. Executable
+  controlled startup, general model-driven coding, durable recovery, approved Git and parent
+  measurements are still not established. This verdict closes no row.
+- **Gate:** the ordinary complete fast gate remains FAIL (exit 1). Its failures are exactly the
+  72 inherited T-301 identities, with no new failure. The data audit passing is not a passing
+  gate.
+
+Verdict: PASS

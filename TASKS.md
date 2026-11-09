@@ -2,12 +2,41 @@
 
 ## Active queue: local agent mission
 
+The [terminal tool-owner return](docs/decisions/0170-terminal-endpoint-tool-owner-return.md)
+lets trusted hosts retire an exact completed endpoint run and recover its
+original tool boundary for separately admitted later work. Live approvals,
+faults and uncertain terminals refuse; old run identities stay spent. Prepared
+boundaries return the same native repository, preserving edit lineage and test
+attempts. The [builder record](docs/evidence/t303-terminal-owner-return-2026-11-08.md)
+records verification and limitations. Independent core review is required.
+T-303/T-306 remain open; no row or sub-row is added or closed.
+Four new and four strengthened methods pass in the unfiltered 45-target run:
+2,770 passed, exactly 72 inherited failures and none new, 71 existing ignored.
+Clippy passes. Ordinary formatting timed out while queued; its separately
+reserved identical check passes. The ordinary complete gate remains FAIL.
+
+The [prepared-startup independent core review](docs/reviews/5d4250ae6124-local-coding-prepared-startup.txt)
+has **Verdict: PASS** for exact commit
+`5d4250ae61241565d3567b391f3dd7b054ed107f`, with no high/medium finding.
+Low L1 (unexecuted positive factory admission) remains same-row backlog; low
+L2 is corrected by attributing mutable/protected path checks only to edits.
+Neither parent closes.
+
+The [cancellation independent core review](docs/reviews/a7a532057fdf-local-coding-original-cancellation.txt)
+has **Verdict: PASS** for exact commit
+`a7a532057fdf9ddd3b23883793ce136793e0f7d2`, with no high/medium finding.
+Low L1 (fresh cancellation isolation when replacing an unconsumed preview)
+remains same-row test backlog. Low L2 is clarified in the command guide:
+pre-cancelled direct validation spends an attempt; endpoint cancellation before
+preflight does not. Existing conservative resource preflight remains backlog.
+Neither parent closes.
+
 The [original command cancellation repair](docs/evidence/t303-original-cancellation-2026-11-08.md)
 keeps one token in the original pending attempt. Pre-handoff command/validation
 handles, repeated lookups, default direct decisions and endpoint supervisor
 observations share that signal. Fresh preparations and validation retries remain
 isolated; original grants, approvals and sandbox admission are unchanged.
-Independent core review is required. T-303/T-306 remain open; no row or sub-row
+Independent core review is recorded above. T-303/T-306 remain open; no row or sub-row
 is added or closed. Five added regression methods pass; formatting and Clippy
 pass. The complete scoped gate remains FAIL with exactly the 72 inherited
 failure identities and none new (1,147 passed, 63 inherited ignored).
@@ -18,7 +47,7 @@ The [command/test adapter independent core review](docs/reviews/07ab1d6f3987-loc
 has **Verdict: PASS** for exact commit
 `07ab1d6f398777a35c47ef81aba43bed09894ded`, with no high/medium finding.
 Low L1 (disconnected pre-handoff cancellation handles) is addressed by the
-repair above, pending independent review. Low L2 (conservative output/CPU/disk
+repair above, accepted by its independent review. Low L2 (conservative output/CPU/disk
 preflight bounds) remains same-row backlog.
 Both parent rows remain open; no row is closed.
 
@@ -29,7 +58,7 @@ native admission and one shared epoch-clock owner. This is single-effect library
 composition; executable controlled startup, general model-driven coding,
 recovery, approved Git and measurements remain open. The
 [builder record](docs/evidence/t303-prepared-startup-2026-11-08.md) records tests
-and limitations. Independent core review is required. T-303/T-306 remain open;
+and limitations. Independent core review is recorded above. T-303/T-306 remain open;
 no row or sub-row is added or closed. Twelve added methods pass; formatting and
 Clippy pass. The complete scoped gate remains FAIL with exactly the 72 inherited
 failures and no new failure identities.
