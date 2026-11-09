@@ -1398,3 +1398,68 @@ endpoint and creation fixtures in its tests. It does not yet provide executable
 controlled startup, test-command scheduling, feedback-driven retries, durable
 recovery, approved Git, verified task completion or a measured coding score.
 A strict answer always proposes an edit; it cannot act as a completion claim.
+
+## Executable development startup for strict edits
+
+The explicit command connects native worktree creation to the retained strict-edit
+service. It is development activation, with no automatic test/retry scheduler or
+verified task completion. A trusted local host supplies the sealed request and
+current instruction ledger; this is not yet first-run configuration for an owner.
+
+```sh
+agentmage-local-api serve-endpoint-edit-development 127.0.0.1:8008 \
+  <private-auth-directory> <absolute-private-launch.json> \
+  --approve-inspection-state-and-endpoint
+```
+
+The launch document must be an owner-only, single-link regular file, mode `0600`,
+in a canonical private parent. Aliases, symbolic links, unknown fields, stale
+request seals and files over 1 MiB refuse. Its version-1 fields are:
+
+| Field | Meaning |
+| --- | --- |
+| `version` | Integer `1` |
+| `state_root` | Existing private encrypted-authority directory |
+| `repository_root` | Existing repository to inspect with the original offline Git collector |
+| `owned_root` | Existing private empty management directory; native creation targets its `worktree` child |
+| `base_commit` | Exact lowercase hexadecimal base commit, 40 or 64 characters |
+| `credential_file` | `null`, or an absolute private `0600` file with the endpoint key, at most 4096 bytes |
+| `request` | Originally sealed controlled-write endpoint request for the native prepared-edit catalog |
+| `instructions` | Current trusted instruction evidence ledger for that request's workspace snapshot |
+| `paths` | Fixed unique consentable source paths, 1–128 entries |
+| `source_budget` | Excerpt allocation, 2048–32768 bytes |
+
+All three roots must be canonical, absolute and disjoint. The original native
+owners revalidate held roots and confinement; the launch file cannot adopt an
+existing worktree. The request uses workspace label
+`local-coding-worktree-create`, which alone proves no ownership. Its endpoint
+must be the canonical numeric loopback HTTP base returned by the existing
+endpoint parser. No model, worker, permission policy or verifier is loaded from
+a model response. Run/session/task/packet identities are freshly bound by the
+service and the request is narrowed through the existing instruction machinery.
+The native creation task label is derived from the final sealed request hash.
+
+The explicit launch option permits configuration/key reads, encrypted state
+writes and native offline inspection of the entire repository. It does not
+approve worktree creation or disclose sources to the model. Startup prints the
+original native creation preview as JSON, with the selected repository and
+management roots. Review its exact branch, base and destination, then enter
+`approve <preview_sha256>` followed by a newline on stdin, or `deny`. Other input,
+a wrong digest, EOF, overlong input, expiry or shutdown refuses. Input is bounded
+and nonblocking, and its inherited descriptor flags are restored. The original
+native preview expiry and exact grant still apply; there is no automatic retry.
+
+Only observed native creation success transfers the same live owner to the
+strict service. Credentials are not read until creation succeeds. Startup sends
+no model request. Subsequent authenticated HTTP advances separately consent to
+reading/disclosing the fixed paths. Every proposed native edit requires its own
+exact protected approval, within the same cumulative coordinator and deadline.
+The command binds a verifier that always refuses certification: no test or
+independent task checker is supplied. It cannot report verified completion.
+
+Failure after native dispatch can leave a worktree or uncertain receipts. Inspect
+them manually; shutdown drops ephemeral ownership and performs no automatic
+cleanup or recovery. No apply to the original checkout, commit or push is added.
+In the builder lane, actual startup reaches the unchanged native Git artifact
+trust refusal before creation or model dispatch. Successful native creation and
+an executable real-model edit workflow remain unobserved.

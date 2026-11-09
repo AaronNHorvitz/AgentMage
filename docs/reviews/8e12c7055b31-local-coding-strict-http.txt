@@ -1,0 +1,151 @@
+Commit: 8e12c7055b311794f926931be90e671236edbaf1
+Scope: local-coding-strict-http
+
+# Independent core review: strict edits through the retained HTTP service
+
+Reviewer: Claude Opus 5.5 (separate session, read-only repository access), 2026-11-09.
+Tier: core. Rows: T-303 / T-306 (non-closing batch; both parents remain OPEN).
+
+## Methods
+
+- Confirmed the pinned checkout: `git rev-parse HEAD` in `/lane/review-checkout` gives
+  `8e12c7055b311794f926931be90e671236edbaf1`, and the tree is clean. The diff against
+  `01cf9c2eea420015d1163a8f7d40f283d8901625` covers exactly 13 paths (1113+/46-).
+- Read the builder's README, `run.py`, `check.py` and `light.py` before running them. They only
+  run the repository's own fast gate and compare data. They make no network fetches and change
+  no ceilings. They add only the retained Node tooling directory to PATH.
+- Read all production changes line by line: `coding_endpoint_api.rs`, `coding_endpoint_prepared.rs`,
+  `local-api/src/lib.rs`, `coding_endpoint_edit_generation.rs`, `coding_endpoint_edit_previews.rs`,
+  `coding_endpoint_owner.rs`, `coding_endpoint_prepared_startup.rs` and `host/src/lib.rs`. I also
+  read the new test methods, the guide section, the evidence file and the TASKS.md preamble.
+- Traced the confinement path the new per-turn read relies on. `read_context` calls
+  `check_sources` (`WorkspacePath` and guidance exclusions). It then calls
+  `LinuxCodingRepository::select_created_sources`, which checks the held root hash. Finally it calls
+  `LinuxCodingReadScope::read`, which uses `openat2` with BENEATH, no-symlinks, no-magic-links,
+  no-xdev and hardlink refusal (`platforms/linux/src/lib.rs:185`, `coding_workspace.rs:97-210`).
+- Reproduced escape attempts myself. I used a scratch copy made with `git archive HEAD` at
+  `/lane/state/tmp/review-scratch-8e12c7055b31` (outside the repository; the repository was not
+  modified). I added one reviewer-only test driving `serve_coding_endpoint_strict_edits` over real
+  HTTP, a real fake-endpoint socket and real native files.
+
+## Exact commands and results (pinned checkout unless stated)
+
+| Command | Result |
+| --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-strict-http/review-inputs.sha256` | exit 0; 45 entries; manifest SHA-256 `6d70e582c9273d8b60cffaa636ce90ff784d84b59bbff29f8c7cc909b4949c7d` matches |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-strict-http/run.py /lane/state/tmp/review-strict-http-8e12c7055b31` | exit **1** (expected): `GATE_EXIT 1`, source freeze unchanged, 202.48 s including reservations |
+| `python3 -B /lane/state/tmp/t303-strict-http/check.py /lane/state/tmp/review-strict-http-8e12c7055b31` (DEFAULT, no `--builder-doc-failure`) | exit 0; 20 targets; 855 passed / 53 failed / 11 ignored / 0 measured / 0 filtered; failures equal exactly the 53 inherited host identities, none new or missing; command exits `0,0,0,0,0,0,101` (Markdown step **0**, fmt 0.95 s, clippy 35.06 s, tests 101 in 164.89 s); raw log SHA-256 `27c536ef6874272b9ffa87de1b3623f6e9d31eddf578e79a18cf0ed40393ddaa` |
+| `python3 -B /lane/state/tmp/t303-strict-http/light.py` | exit 0 (diff-check, untracked lint, review lint, markdownlint "0 issues in 0 files") |
+| `cmp …/validation/source-freeze.json …/review-strict-http-8e12c7055b31/source-freeze.json` | exit 0 (nine Rust hashes identical) |
+| `cmp docs/reviews/01cf9c2eea42-local-coding-live-edit-response.txt /lane/reviews/01cf9c2eea42-local-coding-live-edit-response.md` | exit 0 (predecessor review retained byte-identically) |
+| `git diff --check 01cf9c2eea420015d1163a8f7d40f283d8901625 --` | exit 0 |
+| `git status --short` | exit 0, empty |
+| Fresh log: both new methods | `endpoint_strict_service_fresh_sources_exact_native_approvals_and_same_run_budget ... ok`, `endpoint_strict_service_rejects_foreign_factory_or_excluded_sources_before_io ... ok` |
+| Scratch: `CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=1 bash /tools/build-slot cargo test -p agentmage-local-api --test coding_endpoint_http reviewer_strict_escape_attempts -- --nocapture` | 1 passed, 20 filtered, 28.74 s |
+
+All outcomes match the builder's stated expectations. My timings differ from the builder's
+(202.48 s versus 185.61 s total) only because of build-slot waiting. No GPU was used.
+
+### Reviewer escape and injection reproduction (scratch only, all cases SAFE)
+
+Fixture: worktree `one.py` (mutable), `two.py` (not mutable), `private/x.py` (guidance-excluded
+and protected), and an `outside.py` holding `SECRET\n` outside the worktree. The upstream peer
+asserts that no request body contains `SECRET`.
+
+| Case | Observed |
+| --- | --- |
+| `one.py` replaced by a symlink to the outside file before the first advance | terminal FAILED, `model_call_count` 0, no upstream socket, outside unchanged |
+| `one.py` replaced by a hardlink to the outside file before the first advance | terminal FAILED, 0 model calls, no disclosure |
+| Worktree directory moved aside and replaced by a symlink to a foreign directory | terminal FAILED, 0 model calls, no disclosure |
+| `one.py` swapped for a symlink to an outside file with matching preimage, between challenge and Allow | approval `409 code.endpoint.refused`, then `409 code.endpoint.faulted`; outside file not written; link left intact |
+| Model answer edits `private/x.py` (excluded and protected) | terminal FAILED with no approval challenge; bytes unchanged |
+| Model answer edits `two.py` (not mutable, not in context) | terminal FAILED with no challenge; unchanged |
+| Model answer edits `../../outside.py` | terminal FAILED with no challenge; outside unchanged |
+| Model answer edits an absolute outside path | terminal FAILED with no challenge; outside unchanged |
+| Model answer mixes a valid `one.py` edit with a `two.py` edit | terminal FAILED with no challenge; both unchanged |
+
+In every case the original checkout's `one.py` stays `before\n`. The model can only propose
+edits through the strict parser, so injected prompt text in a source can, at most, shape a
+proposal that the existing path and context checks then refuse. Nothing in this composition
+executes commands, uses the network beyond the approved endpoint, or reads anything outside the
+fixed consented paths.
+
+## Review notes
+
+- **Authorization.** Paths, connection, startup, repository, control, clock and verifier are all
+  supplied by the trusted in-process factory. No HTTP or model field selects them.
+  `serve_coding_endpoint_strict_edits` checks the factory's run and session IDs against the
+  service's fresh identities (`coding_endpoint_prepared.rs:140-143`). `CodingEndpointStrictEdits::new`
+  checks the transport model binding, the paths (`check_sources`) and the budget range before any
+  I/O; startup tests cover this. `prepare` rejects request substitution and out-of-range turns
+  before reading. Each advance still goes through the unchanged HTTP disclosure-consent check:
+  without consent it returns 403 with zero model calls and zero clock reads. Each native write
+  needs its own exact approval, and tampered or old approvals return 409. All of this is
+  asserted in the new HTTP method.
+- **Owner state.** `read_context` requires `Owner::Ready` and the workspace binding. A pending,
+  failed or uncertain owner therefore refuses before any model dispatch. This closes the
+  predecessor's "spends one accounted model call" backlog note for this service path. The
+  symlink-before-read cases above confirm `model_call_count` 0.
+- **Clock.** The new public `Clone` and `new` on `CodingEndpointPreparedClock` share one
+  `Arc<Mutex<C>>`, so a clone cannot start a fresh running-time budget. The factory passes one
+  clone to previews and native boundaries and the original to the coordinator. The expiry case
+  exercises this. Only its doc comment is stale (L1).
+- **Owner genericity.** The `P` parameter with a default leaves existing constructors
+  source-compatible. `check_admission` is the same code, moved out of `admit` and reused unchanged
+  by `admit_turn_port`, so capacity, held-run limits and tombstones are identical.
+  `serve_admitted_coding_endpoint_with_turns` is a public, trusted library entry point and always
+  uses `TerminalToolDisposition::Discard`. That matches the "strict service discards owners" claim.
+- **Linux guard.** The predecessor's L1 is fixed: `#[cfg(target_os = "linux")]` now precedes
+  `coding_endpoint_edit_previews` (`shells/host/src/lib.rs:52-54`).
+- **Evidence honesty.** The evidence and guide label the creation provenance and endpoint answers
+  as synthetic. They claim no real model, native Git, command or test run, grade or score. They
+  record the full gate as FAIL, along with the Markdown error, its document-only correction and
+  the fact that the source suite was not rerun. My fresh default run confirms the corrected
+  Markdown passes and the source numbers reproduce exactly (855/53/11).
+- **Evaluation integrity.** No held-out, hidden-test, scorer, task-pin, threshold, dependency,
+  Cargo manifest/lock, SBOM or status-model path is touched, and no score is claimed. The
+  `| [` row lines in TASKS.md are identical to the base (checked by `check.py`). No row or sub-row
+  is added or closed. The batch ends in two running, measured test methods.
+- **Public hygiene.** The added lines contain no private host path, username, hostname, credential
+  or private sibling-project name; only test-fixture token placeholders appear. The only model
+  name is the reviewer attribution inside the retained review file, not branding. No other agent
+  product is named.
+- **Supply chain.** No dependency change.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, documentation), `shells/host/src/coding_endpoint_prepared_startup.rs:358`.**
+  The doc comment still says "Two private references to one original epoch clock". This commit
+  makes the type publicly `Clone` (line 361) and constructible (`new`, line 368), so any number of
+  references can exist. Safety is unaffected, because every clone shares the same mutex-guarded
+  clock and none can reset time. Fix: reword it to "Shared references to one original epoch clock;
+  every clone reads the same clock, and none can start a fresh budget."
+- **L2 (low, test coverage), `platforms/local-api/tests/support/coding_endpoint_prepared.rs:531`.**
+  The strict service's per-turn fresh read has no committed regression for link substitution or
+  model-proposed out-of-scope edits. The native layer has its own symlink and hardlink tests, and
+  I reproduced all nine cases above at the service level. Still, nothing in the repository pins
+  that a swapped `one.py` symlink or hardlink, or a swapped worktree root, refuses with zero model
+  calls through this service. Nothing pins that excluded, unlisted, traversal or absolute edit
+  paths in a strict answer end FAILED with no challenge. Fix: add these cases to the existing
+  scenario list, asserting `model_call_count` 0 or no challenge, and unchanged outside bytes.
+
+Both are same-row backlog, alongside the predecessor's open L2/L3 and earlier lows.
+
+## Per-row result
+
+- **T-303 (non-closing batch): PASS for this scope.** Strict source capture, bounded generation,
+  native preview and separately approved native writes are reachable through the retained HTTP
+  service. That covers two approved edits in one coordinator and one cumulative ledger, with the
+  second wire context freshly including the first edit. The row stays OPEN: executable controlled
+  startup, general edit/test/retry, durable recovery, approved Git and parent measurements are not
+  delivered.
+- **T-306 (non-closing batch): PASS for this scope.** The confinement and permission boundary is
+  unchanged and correctly composed, and the independent escape attempts all failed closed.
+  The row stays OPEN.
+- Gate: the full scoped gate is FAIL on exactly the 53 inherited host failures, with none new.
+  This is recorded as data, not acceptance. No parent closes, and no owner-ready or release claim
+  is made or granted.
+
+Verdict: PASS

@@ -7,7 +7,12 @@
 /// Terminal client over this service's versioned coding routes.
 pub mod coding_cli;
 mod coding_endpoint_api;
+mod coding_endpoint_edit_launch;
 mod coding_endpoint_launch;
+#[cfg(test)]
+#[path = "../tests/support/endpoint_launch.rs"]
+mod endpoint_launch_fixture;
+pub use coding_endpoint_edit_launch::serve_coding_endpoint_edit_development;
 mod coding_endpoint_prepared;
 pub use coding_endpoint_launch::serve_coding_endpoint_read_development;
 pub use coding_endpoint_prepared::{

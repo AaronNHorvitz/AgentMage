@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //! Private configuration refusal and production preparation components.
 use super::*;
-#[path = "../tests/support/endpoint_launch.rs"]
-mod fixture;
+use crate::endpoint_launch_fixture as fixture;
 use fixture::{Fixture, private_file};
 use std::{
     fs,

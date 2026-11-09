@@ -2,6 +2,22 @@
 
 ## Active queue: local agent mission
 
+The [strict HTTP service independent core review](docs/reviews/8e12c7055b31-local-coding-strict-http.txt)
+has **Verdict: PASS** for exact commit
+`8e12c7055b311794f926931be90e671236edbaf1`, with no high/medium finding.
+Low L1 (shared-clock documentation) and L2 (committed service escape cases)
+remain same-row backlog alongside earlier lows. Neither parent closes.
+
+The [executable strict-edit startup](docs/evidence/t303-edit-launch-2026-11-09.md)
+connects the original native creation preview and exact stdin decision to the
+same live owner in the retained strict HTTP coordinator. Source disclosure and
+every edit still need separate HTTP approval. The scoped fast gate passes:
+217 tests passed across 11 unfiltered targets, with zero failures or ignores;
+formatting and Clippy pass. Independent core review is required. Successful
+native startup remains unobserved in this lane. T-303/T-306 stay open;
+no row or sub-row is added or closed. General edit/test/retry, durable recovery,
+approved Git and parent measurements remain open.
+
 The [live-edit connection independent core review](docs/reviews/01cf9c2eea42-local-coding-live-edit-response.txt)
 has **Verdict: PASS** for exact commit
 `01cf9c2eea420015d1163a8f7d40f283d8901625`, with no high/medium finding.
@@ -10,7 +26,8 @@ Low L2 direct non-success native execution/held-owner coverage and L3 exact
 kernel refusal reasons remain same-row backlog with the earlier lows. The new
 service refuses context preparation while an effect is pending or failed, before
 another model dispatch; its stale-file fixture latches the original fault.
-Neither parent closes; the new service connection requires separate core review.
+Neither parent closes; the service composition has the independent PASS recorded
+above for its exact scope only.
 
 The [strict-edit HTTP service connection](docs/evidence/t303-strict-http-service-2026-11-09.md)
 selects fresh consented source snapshots, bounded strict generation and original
@@ -19,8 +36,8 @@ coordinator. Each edit still requires its exact protected approval. Builder
 verification is complete: formatting and Clippy pass; the 20-target unfiltered
 source tests have 855 passed, exactly 53 inherited host failures and none new,
 11 existing ignored. An initial Markdown error is corrected and checked
-separately; the complete scoped gate remains FAIL. Independent core review is
-required. T-303/T-306 remain open; no row or sub-row is added or closed. Executable controlled startup,
+separately; the complete scoped gate remains FAIL. Independent core review passed
+as recorded above. T-303/T-306 remain open; no row or sub-row is added or closed. Executable controlled startup,
 general edit/test/retry, durable recovery, approved Git and parent measurements
 remain open.
 

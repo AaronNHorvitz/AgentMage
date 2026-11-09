@@ -73,7 +73,7 @@ type Runs = CodingEndpointRuns<
 
 // Hold the private canonical parent, refuse aliases/links/devices, bound actual
 // reads as well as metadata, and erase temporary configuration/key buffers.
-fn private_bytes(path: &Path, limit: u64) -> Result<Zeroizing<Vec<u8>>, ApiError> {
+pub(super) fn private_bytes(path: &Path, limit: u64) -> Result<Zeroizing<Vec<u8>>, ApiError> {
     let parent = path.parent().ok_or(ApiError::Configuration)?;
     if !path.is_absolute()
         || std::fs::canonicalize(parent).map_err(|_| ApiError::Configuration)? != parent
@@ -132,7 +132,7 @@ fn load(path: &Path) -> Result<Launch, ApiError> {
     Ok(launch)
 }
 
-fn bind_identities(
+pub(super) fn bind_identities(
     mut request: RuntimeEndpointRunRequest,
     run_id: RuntimeRunId,
     session_id: SessionId,
