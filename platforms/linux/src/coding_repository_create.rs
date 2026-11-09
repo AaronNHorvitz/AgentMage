@@ -212,6 +212,7 @@ impl ControlledFilesystemDriver for LinuxCodingRuntimeCreateDriver<'_> {
             owner.command = None;
             owner.edit = None;
             owner.apply = None;
+            owner.applied_write = None;
             // No prior path is eligible here, but do not retain it if a future
             // caller changes validation. Publication is the only insertion site.
             for (path, _, _) in attempt.operations.values() {

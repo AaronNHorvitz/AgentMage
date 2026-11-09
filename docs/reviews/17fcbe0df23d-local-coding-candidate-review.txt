@@ -1,0 +1,126 @@
+Commit: 17fcbe0df23df8db207b66e2776ad8a639de2a92
+Scope: local-coding-candidate-review
+
+Tier: core. Rows: T-303 / T-306 (non-closing; both parents stay OPEN).
+Base: b777008eb0aa7f6fb2f32d4260965f2bc85c3831 (immutable).
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only on the repository.
+
+## Methods
+
+- Read IP-POLICY.md, the newest decisions (0180 to 0182), the top of TASKS.md and the request. Read the
+  bundle's README.md, run.py, diagnostic.py, check.py, parse_gate.py and light.py before running anything.
+  They only call the existing fast gate or one filtered `cargo test`, hash files and run read-only
+  git/markdown checks. Output files are opened with `exist_ok=False` or `open('x')`, and the output path
+  did not exist beforehand.
+- `git rev-parse HEAD` in /lane/review-checkout is 17fcbe0df23df8db207b66e2776ad8a639de2a92. The diff
+  against the base has exactly 16 paths, matching expected-paths.json as asserted by check.py. There are
+  no Cargo.toml, Cargo.lock, frozen-task, hidden-test, held-out, scorer, threshold, prompt, status or
+  scoreboard changes. The T-303/T-306 ledger rows are byte-unchanged.
+- Read the whole new production module `coding_repository_commit_review.rs` and all nine new tests, the
+  new fixture in `coding_repository_command_tests.rs`, `LinuxLinkedRepository::verify_owned_worktree` and
+  its test, and the test-only getters. I also read the reused code each correlation depends on:
+  - kernel `plan_candidate_tree`, `verify_review_packet`, `verify_reviewable_change_set` and
+    `capture_reviewable_change_set`;
+  - `write_approval` diff construction;
+  - the Linux `LinuxCandidateTreeBuilder::build` preamble;
+  - `check_completion_validation` and `permits_completion_summary`/`matches_current`;
+  - `WorkspaceObservation::scan`, `LinuxLinkedRepository::verify` and its `directory`/`regular`/`line`
+    helpers;
+  - the sandbox mount arguments.
+
+## Exact commands and results (run in /lane/review-checkout)
+
+| Command | Result |
+| --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t306-candidate-review/review-inputs.sha256` | exit 0; the manifest file's own SHA-256 is 0252165257f4…4aa4177, as stated |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-candidate-review-17fcbe0df23d` (fresh) | exit 1 as expected; `FAST GATE: FAIL`; the first six commands exit 0 (fmt 406.66 s and clippy 45.13 s, both mostly reservation wait); tests exit 101 after 284.19 s; source_unchanged true; 737.61 s total; raw log 068407d4…2e8c1 |
+| `CARGO_TARGET_DIR=... python3 -B .../diagnostic.py <out>` | exit 0; 9 passed, 0 failed, 402 filtered; prints `native candidate planning not measured: exact system Git trust refusal retained`; raw log 0ef52637…b19f4 |
+| `python3 -B .../check.py <out>` | exit 0; 26 targets; totals [1277, 72, 64, 0, 0]; 72 inherited failure identities, 0 new; 14 named methods ok; 10 frozen Rust hashes; both retained reports byte-identical; ledger rows unchanged; `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL` |
+| `python3 -B .../light.py` | exit 0; markdownlint reports 0 issues in 4 files; review lint and untracked lint exit 0 |
+| `cmp .../validation-1/source-freeze.json <out>/source-freeze.json` | identical |
+| `git diff --check b777008eb0aa7f6fb2f32d4260965f2bc85c3831 --` | exit 0 |
+| `git status --short` | empty |
+
+Traceability:
+
+- The builder's validation-1/fast.log hashes to the stated 93ad852c…3f09a2. Its RESULT lines give
+  fmt 1.30 s, clippy 13.07 s and tests 258.65 s, and result.json gives 274.61 s, all matching the evidence.
+- The builder's diagnostic.log hashes to the stated f414d319…e0bea, with 9 passed / 402 filtered in
+  2.54 s and RESULT 41.84 s.
+- parse_gate over the builder's log and over mine yields identical per-target rows: 26 targets with the
+  same counts and the same failed and ignored identity lists.
+- `cmp docs/reviews/{b777008eb0aa-local-coding-git-identity,55b674a02340-local-coding-guided-transfer}.txt`
+  against `/lane/reviews/*.md`: both are identical.
+
+I did not run a GPU or model process; none is needed.
+
+## Security and correctness analysis
+
+- **Packet to live-owner binding.** `verify_review_packet` rebuilds and re-digests the packet. Change-set
+  paths are strictly ordered, so they are unique, and `files.len() == created.edits.len()` plus a
+  per-path lookup gives a bijection with this owner's edit lineage. Each file's preimage, postimage and
+  current bytes must match the lineage. The diffs are kernel-computed from the same bytes in
+  `write_approval::exact_diff`. The packet's base, repository and snapshot must equal the owner's identity
+  and a fresh capture, and `validations` must equal exactly the final sealed attempt rebound through the
+  kernel binder. `check_completion_validation` additionally requires a linked full pass whose observation
+  equals the current capture (`coding_repository_validation_workspace.rs:69`). New-file lineage
+  (`created_mode`) is refused.
+- **Findings gate.** Visible Medium, High and Critical findings refuse planning before any Git read; Low
+  findings pass. Suppressed findings are not consulted, which matches the documented "visible" wording.
+- **Modes.** Modes come from the current object's owner-execute bit. The source observation binds mode and
+  ctime, and sandboxed commands mount only read-only sealed copies (`command_runner_worktree.rs:123`). Agent
+  tools therefore cannot change a mode after review without causing a snapshot mismatch. The write
+  primitive preserves an existing executable bit (the 0o700/0o755 cases).
+- **Git observations.** The production closure checks the system Git artifact trust first; on this host
+  it refuses, as the native-entry test and the diagnostic show. It then uses the existing preservation
+  collector on the original and a confined linked inventory on the task worktree. `verify_owned_worktree`
+  takes the pointer from the worktree, but the existing verifier still demands an absolute canonical
+  `<original .git>/worktrees/<name>` path compared by `Path` components (no `..` normalisation), the
+  `../..` commondir and an exact backlink. A rewritten `.git` pointer also changes the source snapshot.
+  Branch, HEAD, manifest, linked identity and inventory are compared in full across both reads, and
+  roots, validation and source are rechecked before the inert plan is released.
+- **Index identity.** `user_index_sha256` comes from the original repository's manifest, and the
+  temporary index is placed in the held management root. This matches what
+  `LinuxCandidateTreeBuilder::build` later checks (`local_commit.rs:201-207`).
+- **Reachability and honesty.**
+  - The substitution entry `plan_reviewed_candidate_tree_with` and `GitObservation` are private to the
+    module.
+  - The public method has no production caller, HTTP route or CLI route, as the documentation states.
+  - The new test-only accessors are `#[cfg(test)]`, and production fields remain private.
+  - Synthetic Git and process observations are labelled as such in the code, the evidence and the guide.
+  - No native candidate, coding score or model result is claimed.
+- **Public-repo hygiene.** Added lines contain no home paths, usernames, hostnames, email addresses,
+  credentials, private project names or third-party branding.
+- **Delivery.** No row or sub-row is added. This is a non-closing increment that runs and is tested; it
+  does not only add plans. Native measurement remains open, and it must eventually close the parents.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test precision): `platforms/linux/src/coding_repository_commit_review_tests.rs:446`, `:469`
+  (also `:231`, `:403`, `:416`).**
+  - The "mode" case of `candidate_review_rejects_missing_owner_lineage_newfiles_and_unsafe_modes` sets
+    0o600, which the mode test accepts as a valid Regular source.
+  - The case only fails because the chmod changes the bound mode and ctime, so
+    `check_completion_validation` refuses at source binding.
+  - The special-bit refusal at `coding_repository_commit_review.rs:162` is therefore never exercised. It is
+    defence-in-depth, since sealed scans already refuse 0o7000 (`command_runner_worktree.rs:262`).
+  - Several refusal tests assert only `is_err()`, so they could pass for an earlier, unrelated reason.
+  - Fix: assert the exact refusal codes, and rename the case or mark the special-bit branch as
+    defence-in-depth.
+- **L2 (low, test isolation): `platforms/linux/src/linked_repository_tests.rs:83`.**
+  - The relative-pointer assertion runs after the backlink has already been redirected to a foreign root
+    (`:79`), so it would still fail if relative pointers were accepted.
+  - Fix: restore the backlink before the last case.
+- The base lows L1/L2 from the b777008eb0aa review remain same-row backlog, as stated.
+
+## Per-row result
+
+- T-303: increment accepted with no H/M finding; the row stays OPEN.
+- T-306: increment accepted with no H/M finding; the row stays OPEN.
+- Native trust, measured native/model workflow, approved Git execution, durable recovery and the
+  inherited host/Linux gate failures remain open. The complete affected gate is FAIL (1277 passed,
+  72 inherited failed, 64 ignored) with no new failure.
+
+Verdict: PASS

@@ -4,7 +4,7 @@
 use super::*;
 use agentmage_kernel_engine::review_packet::{
     ChangePurposeAssignment, CommitChangePurpose, ReviewPacketInput, build_logical_commit_plan,
-    build_review_packet, capture_reviewable_change_set, normalize_review_findings,
+    build_review_packet, normalize_review_findings,
 };
 use std::cell::Cell;
 use std::fs;
@@ -33,20 +33,18 @@ fn packet(
     owner: &LinuxCodingRepository,
     changes: &agentmage_kernel_engine::write_approval::ShadowChangeSet,
 ) -> LocalReviewPacket {
-    let change_set = capture_reviewable_change_set(
-        changes,
-        changes
-            .operations()
-            .iter()
-            .map(|op| ChangePurposeAssignment {
-                operation_id: op.operation_id().into(),
-                purpose: CommitChangePurpose::Behavior,
-            })
-            .collect(),
-        hash(b"synthetic approval identity"),
-        hash(b"synthetic application identity"),
-    )
-    .unwrap();
+    let change_set = owner
+        .capture_applied_write_review(
+            changes
+                .operations()
+                .iter()
+                .map(|op| ChangePurposeAssignment {
+                    operation_id: op.operation_id().into(),
+                    purpose: CommitChangePurpose::Behavior,
+                })
+                .collect(),
+        )
+        .unwrap();
     let evidence = owner.completion_validation_evidence().unwrap();
     let last = evidence.attempts().last().unwrap();
     let validation = bind_validation_evidence(
@@ -467,6 +465,219 @@ fn candidate_review_rejects_missing_owner_lineage_newfiles_and_unsafe_modes() {
         }
         assert!(
             plan(&owner, &packet, || panic!("Git must not run for {which}")).is_err(),
+            "{which}"
+        );
+    }
+}
+
+fn purposes() -> Vec<ChangePurposeAssignment> {
+    vec![ChangePurposeAssignment {
+        operation_id: "edit-0".into(),
+        purpose: CommitChangePurpose::Behavior,
+    }]
+}
+
+#[test]
+fn applied_review_uses_actual_native_receipt_chain_and_rejects_resealed_caller_hashes() {
+    use agentmage_kernel_engine::review_packet::capture_reviewable_change_set;
+    let (f, owner, changes) = command::tests::candidate_review_fixture();
+    let original = packet(&owner, &changes);
+    let projection = serde_json::to_value(&original.change_set).unwrap();
+    let result = owner.inspect_edit().unwrap();
+    let receipts = result["latest"]["write_result"]["receipts"]
+        .as_array()
+        .unwrap();
+    assert_eq!(
+        projection["write_application_receipt_sha256"],
+        receipts.last().unwrap()["receipt_sha256"]
+    );
+    assert_eq!(receipts.last().unwrap()["status"], "verified");
+    assert_eq!(projection["change_set_sha256"], changes.change_set_sha256());
+    for which in ["approval", "application", "both"] {
+        let mut p = original.clone();
+        p.change_set = capture_reviewable_change_set(
+            &changes,
+            purposes(),
+            if which == "application" {
+                projection["write_approval_receipt_sha256"]
+                    .as_str()
+                    .unwrap()
+                    .to_owned()
+            } else {
+                hash(b"caller approval")
+            },
+            if which == "approval" {
+                projection["write_application_receipt_sha256"]
+                    .as_str()
+                    .unwrap()
+                    .to_owned()
+            } else {
+                hash(b"caller application")
+            },
+        )
+        .unwrap();
+        p.commit_plan = build_logical_commit_plan(&p.change_set, vec![]).unwrap();
+        let p = reseal(p);
+        assert!(verify_review_packet(&p));
+        assert_eq!(
+            plan(&owner, &p, || panic!("Git must not run for {which}"))
+                .unwrap_err()
+                .code(),
+            "code.commit.write-provenance"
+        );
+    }
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"preserve human work"
+    );
+    assert!(!f.root.join("owned/candidate-index-review-build").exists());
+}
+
+#[test]
+fn applied_review_requires_same_owner_not_copied_records_or_missing_proof() {
+    let (f, mut owner, changes) = command::tests::candidate_review_fixture();
+    let packet = packet(&owner, &changes);
+    owner.applied_write = None;
+    assert_eq!(
+        plan(&owner, &packet, || panic!("no Git without proof"))
+            .unwrap_err()
+            .code(),
+        "code.commit.write-provenance"
+    );
+    let result = owner.edit_result.clone();
+    let created = owner.created.as_ref().unwrap();
+    let edits = created.edits.clone();
+    let creation_receipt_sha256 = created.creation_receipt_sha256.clone();
+    // Reopening is tested after the original authority-store owner is dropped.
+    // Its exclusive live lock must never be bypassed by a fixture.
+    drop(owner);
+    let mut reopened = f.open();
+    reopened.created = Some(CreatedWorktree {
+        original_path: f.root.join("repo"),
+        original: held_root(&f.root.join("repo")).unwrap(),
+        path: f.root.join("owned/worktree"),
+        held: held_root(&f.root.join("owned/worktree")).unwrap(),
+        owned: held_root(&f.root.join("owned")).unwrap(),
+        creation_receipt_sha256,
+        git_creation: None,
+        edits,
+    });
+    reopened.edit_result = result;
+    assert_eq!(
+        reopened
+            .capture_applied_write_review(purposes())
+            .unwrap_err()
+            .code(),
+        "code.commit.write-provenance"
+    );
+}
+
+#[test]
+fn applied_review_refuses_later_transaction_without_complete_original_preimage() {
+    let (f, mut owner, _) = command::tests::candidate_review_fixture();
+    let scope = owner.select_created_sources(&["sentinel".into()]).unwrap();
+    let p = owner
+        .prepare_edit(
+            scope,
+            &[crate::LinuxCodingReplacement {
+                path: "sentinel",
+                before_sha256: &hash(b"reviewed change"),
+                content: "second change",
+            }],
+            "second exact edit",
+            1000,
+        )
+        .unwrap();
+    assert_eq!(
+        owner
+            .decide_edit(p["preview_sha256"].as_str().unwrap(), true, 1000)
+            .unwrap()["outcome"],
+        "committed"
+    );
+    assert!(owner.applied_write.is_some());
+    assert_eq!(
+        owner
+            .capture_applied_write_review(purposes())
+            .unwrap_err()
+            .code(),
+        "code.commit.write-provenance"
+    );
+    assert_eq!(
+        fs::read(f.root.join("owned/worktree/sentinel")).unwrap(),
+        b"second change"
+    );
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"preserve human work"
+    );
+}
+
+#[test]
+fn applied_review_denial_preserves_proof_but_failed_native_attempt_retires_it() {
+    let (f, mut owner, _) = command::tests::candidate_review_fixture();
+    let original = owner.capture_applied_write_review(purposes()).unwrap();
+    for approve in [false, true] {
+        let scope = owner.select_created_sources(&["sentinel".into()]).unwrap();
+        let p = owner
+            .prepare_edit(
+                scope,
+                &[crate::LinuxCodingReplacement {
+                    path: "sentinel",
+                    before_sha256: &hash(b"reviewed change"),
+                    content: "never approved before drift",
+                }],
+                "exact edit",
+                1000,
+            )
+            .unwrap();
+        let digest = p["preview_sha256"].as_str().unwrap();
+        if approve {
+            fs::write(f.root.join("owned/worktree/sentinel"), b"external change").unwrap();
+            assert!(owner.decide_edit(digest, true, 1000).is_err());
+            assert!(owner.applied_write.is_none());
+            fs::write(f.root.join("owned/worktree/sentinel"), b"reviewed change").unwrap();
+            assert!(owner.capture_applied_write_review(purposes()).is_err());
+        } else {
+            assert_eq!(
+                owner.decide_edit(digest, false, 1000).unwrap()["outcome"],
+                "denied"
+            );
+            assert_eq!(
+                owner.capture_applied_write_review(purposes()).unwrap(),
+                original
+            );
+        }
+    }
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"preserve human work"
+    );
+}
+
+#[test]
+fn applied_review_rechecks_current_bytes_and_all_held_roots() {
+    for which in ["source", "original", "worktree", "owned", "scope"] {
+        let (f, mut owner, _) = command::tests::candidate_review_fixture();
+        match which {
+            "source" => {
+                fs::write(f.root.join("owned/worktree/sentinel"), b"external bytes").unwrap()
+            }
+            "scope" => {
+                let (_other_fixture, mut other, _) = command::tests::candidate_review_fixture();
+                owner.applied_write = other.applied_write.take();
+            }
+            other => {
+                let path = match other {
+                    "original" => "repo",
+                    "worktree" => "owned/worktree",
+                    _ => "owned",
+                };
+                fs::rename(f.root.join(path), f.root.join("saved-root")).unwrap();
+                fs::create_dir(f.root.join(path)).unwrap();
+            }
+        }
+        assert!(
+            owner.capture_applied_write_review(purposes()).is_err(),
             "{which}"
         );
     }

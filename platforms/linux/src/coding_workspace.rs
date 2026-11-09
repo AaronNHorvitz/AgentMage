@@ -14,7 +14,7 @@ use crate::{LinuxAuthorizedWorkspace, LinuxPathAdapter, authorize_workspace_root
 
 #[path = "coding_workspace_write.rs"]
 mod write;
-pub(crate) use write::LinuxCodingPendingCreate;
+pub(crate) use write::{LinuxCodingAppliedWrite, LinuxCodingPendingCreate};
 pub use write::{LinuxCodingPendingWrite, LinuxCodingReplacement, LinuxCodingWriteError};
 
 const MAX_FILES: usize = 16;

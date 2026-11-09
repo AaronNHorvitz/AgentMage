@@ -729,6 +729,102 @@ fn runtime_edit_at(
 }
 
 #[test]
+fn runtime_handoff_retains_manual_review_proof_until_native_runtime_edit_dispatch() {
+    use agentmage_kernel_engine::review_packet::{ChangePurposeAssignment, CommitChangePurpose};
+    let purposes = || {
+        vec![ChangePurposeAssignment {
+            operation_id: "edit-0".into(),
+            purpose: CommitChangePurpose::Behavior,
+        }]
+    };
+    for publish in [false, true] {
+        let f = Fixture::new();
+        let mut owner = f.owner();
+        f.edit(&mut owner, "one.py", "manual change\n");
+        let projection = owner.capture_applied_write_review(purposes()).unwrap();
+        let lease = runtime_lease(owner);
+        let owner = recover_lease(lease);
+        assert_eq!(
+            owner.capture_applied_write_review(purposes()).unwrap(),
+            projection
+        );
+        let lease = runtime_lease(owner);
+        runtime_edit(&f, &lease, "runtime change\n", publish);
+        let owner = recover_lease(lease);
+        assert!(owner.applied_write.is_none());
+        assert!(owner.capture_applied_write_review(purposes()).is_err());
+        assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+        f.assert_preserved();
+    }
+}
+
+#[test]
+fn original_transfer_retires_native_review_proof_only_after_exact_dispatch_choice() {
+    use agentmage_kernel_engine::review_packet::{ChangePurposeAssignment, CommitChangePurpose};
+    let purposes = || {
+        vec![ChangePurposeAssignment {
+            operation_id: "edit-0".into(),
+            purpose: CommitChangePurpose::Behavior,
+        }]
+    };
+    let f = Fixture::new();
+    let mut owner = f.owner();
+    f.edit(&mut owner, "one.py", "reviewed change\n");
+    let projection = owner.capture_applied_write_review(purposes()).unwrap();
+    let denied = f.prepare(&mut owner);
+    assert_eq!(
+        owner
+            .decide_apply(denied["preview_sha256"].as_str().unwrap(), false, NOW)
+            .unwrap()["outcome"],
+        "denied"
+    );
+    assert_eq!(
+        owner.capture_applied_write_review(purposes()).unwrap(),
+        projection
+    );
+    let approved = f.prepare(&mut owner);
+    assert_eq!(
+        owner
+            .decide_apply(approved["preview_sha256"].as_str().unwrap(), true, NOW)
+            .unwrap()["outcome"],
+        "committed"
+    );
+    assert!(owner.applied_write.is_none());
+    assert!(owner.capture_applied_write_review(purposes()).is_err());
+    assert_eq!(
+        fs::read(f.0.join("original/one.py")).unwrap(),
+        b"reviewed change\n"
+    );
+    f.assert_preserved();
+}
+
+#[test]
+fn native_creation_retires_earlier_existing_file_review_proof_even_without_publication() {
+    let f = Fixture::new();
+    let mut owner = f.owner();
+    f.edit(&mut owner, "one.py", "manual change\n");
+    assert!(owner.applied_write.is_some());
+    let lease = runtime_lease(owner);
+    runtime_create(
+        &f,
+        &lease,
+        &[("new.py", "native creation\n", 0o600)],
+        false,
+        None,
+    )
+    .unwrap();
+    let owner = recover_lease(lease);
+    assert!(owner.applied_write.is_none());
+    assert_eq!(
+        fs::read(f.0.join("owned/worktree/new.py")).unwrap(),
+        b"native creation\n"
+    );
+    assert!(!f.0.join("original/new.py").exists());
+    assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+    f.assert_preserved();
+}
+
+#[test]
 fn runtime_handoff_preserves_native_edit_lineage_and_separate_original_approval() {
     let started = Instant::now();
     let f = Fixture::new();

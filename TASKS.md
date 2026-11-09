@@ -2,6 +2,24 @@
 
 ## Active queue: local agent mission
 
+The [native write-provenance increment](docs/evidence/t306-write-provenance-2026-11-09.md)
+binds candidate-review change sets to the live owner's actual prepared-edit
+approval and checked native application chain. Complete current existing-file
+lineage is required; incomplete cumulative coverage refuses. Runtime writes,
+creation and original transfer retire older proof before dispatch. Reviewer
+and artifact provenance, candidate execution, approved Git, native/model
+measurement and durable recovery remain open. T-303/T-306 remain open; no row or
+sub-row is added or closed. Independent core review is required. The complete
+affected gate remains **FAIL**: 1,286 passed, the same 72 inherited failures and
+64 existing ignores across 26 unfiltered targets. All nine new tests, formatting
+and Clippy pass; twelve Rust hashes stay fixed during verification.
+
+The preceding [candidate-review independent report](docs/reviews/17fcbe0df23d-local-coding-candidate-review.txt)
+has **Verdict: PASS** for exact commit
+`17fcbe0df23df8db207b66e2776ad8a639de2a92`, with no high or medium finding.
+Its low L1 refusal-test precision and L2 linked-pointer test isolation findings
+remain same-row backlog, alongside the earlier lows. This review closes no row.
+
 The [live candidate-review bridge](docs/evidence/t306-candidate-review-2026-11-09.md)
 connects the original owner's edit lineage and sealed test evidence to the
 existing typed review-packet and candidate-tree planner. Fresh original and

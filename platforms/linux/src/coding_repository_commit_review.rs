@@ -8,7 +8,8 @@ use agentmage_kernel_engine::local_commit::{
 };
 use agentmage_kernel_engine::repository_safety::RepositoryPreservationManifest;
 use agentmage_kernel_engine::review_packet::{
-    FindingSeverity, LocalReviewPacket, bind_validation_evidence, verify_review_packet,
+    ChangePurposeAssignment, FindingSeverity, LocalReviewPacket, ReviewableChangeSet,
+    bind_validation_evidence, verify_review_packet,
 };
 
 #[derive(PartialEq, Eq)]
@@ -21,6 +22,54 @@ struct GitObservation {
 }
 
 impl LinuxCodingRepository {
+    /// Projects the original native write's approval and checked application
+    /// receipt into an authority-free review change set. Call only after source
+    /// read consent. Purposes are caller review labels, never approval evidence.
+    ///
+    /// The retained single transaction must cover the complete current existing-
+    /// file lineage from its first preimage to its final postimage. Multiple
+    /// transactions with incomplete cumulative coverage, new files and runtime writes without retained approval
+    /// provenance refuse. No receipt/path/JSON can restore this process-only proof.
+    pub fn capture_applied_write_review(
+        &self,
+        purposes: Vec<ChangePurposeAssignment>,
+    ) -> Result<ReviewableChangeSet> {
+        let created = self.verify_apply_roots()?;
+        let proof = self
+            .applied_write
+            .as_ref()
+            .ok_or(err("code.commit.write-provenance"))?;
+        if proof.root_sha256() != created.held.root_path_sha256() {
+            return Err(err("code.commit.write-provenance"));
+        }
+        let projected = proof
+            .project(purposes)
+            .map_err(|_| err("code.commit.write-provenance"))?;
+        let files = projected.files();
+        if files.is_empty()
+            || files.len() != created.edits.len()
+            || files.iter().any(|f| {
+                created.edits.get(&f.path).is_none_or(|edit| {
+                    edit.created_mode.is_some()
+                        || edit.before_sha256 != f.preimage_sha256
+                        || edit.after_sha256 != f.postimage_sha256
+                })
+            })
+        {
+            return Err(err("code.commit.write-provenance"));
+        }
+        let paths = files.iter().map(|f| f.path.clone()).collect::<Vec<_>>();
+        let scope = self.select_created_sources(&paths)?;
+        let sources = scope.read(&paths).map_err(|e| err(e.code()))?;
+        if files.iter().zip(sources).any(|(file, source)| {
+            file.path != source.path || file.postimage_sha256 != hash(source.content.as_bytes())
+        }) {
+            return Err(err("code.commit.write-provenance"));
+        }
+        self.verify_apply_roots()?;
+        Ok(projected)
+    }
+
     /// Checks a complete typed review packet against this original live owner
     /// and returns the existing kernel's inert candidate-tree plan.
     ///
@@ -32,7 +81,8 @@ impl LinuxCodingRepository {
     /// A packet's hashes do not establish ownership or independent review. This
     /// method checks current content/lineage, original held validation evidence
     /// and fresh Git observations. It does not authenticate caller-supplied
-    /// review findings, write-approval receipt identities or evidence artifacts.
+    /// review findings or evidence artifacts. Write-approval and application
+    /// identities must match the retained original native transaction exactly.
     /// The returned plan grants no candidate build, commit or publication. Any
     /// future executor still needs complete provenance and separate authority.
     /// Source and Git checks are bounded observations, not an atomic lease.
@@ -100,6 +150,18 @@ impl LinuxCodingRepository {
             })
         {
             return Err(err("code.commit.review-packet"));
+        }
+        let purposes = packet
+            .change_set
+            .files()
+            .iter()
+            .map(|file| ChangePurposeAssignment {
+                operation_id: file.operation_id.clone(),
+                purpose: file.purpose,
+            })
+            .collect();
+        if self.capture_applied_write_review(purposes)? != packet.change_set {
+            return Err(err("code.commit.write-provenance"));
         }
         // Reject pending effects and stale/nonsealed validation before any Git
         // child or repository-wide preservation read.

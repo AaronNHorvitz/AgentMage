@@ -35,7 +35,7 @@ impl Fixture {
         fs::write(root.join("repo/sentinel"), b"preserve human work").unwrap();
         Self { root }
     }
-    fn open(&self) -> LinuxCodingRepository {
+    pub(super) fn open(&self) -> LinuxCodingRepository {
         LinuxCodingRepository::open(&self.root.join("state"), KEY, NOW).unwrap()
     }
     fn native(&self) -> LinuxAuthorizedWorkspace {

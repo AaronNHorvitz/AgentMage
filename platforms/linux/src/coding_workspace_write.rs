@@ -32,6 +32,9 @@ use crate::{LinuxAtomicWriteDriver, LinuxAtomicWriteDriverLimits};
 #[path = "coding_workspace_create.rs"]
 mod create;
 pub(crate) use create::LinuxCodingPendingCreate;
+#[path = "coding_workspace_write_proof.rs"]
+mod proof;
+pub(crate) use proof::LinuxCodingAppliedWrite;
 
 const LIFETIME_MS: u64 = 120_000;
 
@@ -299,6 +302,28 @@ impl LinuxCodingPendingWrite {
         preview_sha256: &str,
         now_epoch_ms: u64,
     ) -> Result<Value, LinuxCodingWriteError> {
+        self.apply_retaining_proof(scope, change_set_sha256, preview_sha256, now_epoch_ms)
+            .map(|(value, _)| value)
+    }
+
+    // Only the original live repository owner retains this typed evidence.
+    // JSON results, receipt hashes and saved records cannot construct it.
+    pub(crate) fn apply_retaining_proof(
+        mut self,
+        scope: &LinuxCodingReadScope,
+        change_set_sha256: &str,
+        preview_sha256: &str,
+        now_epoch_ms: u64,
+    ) -> Result<(Value, Option<LinuxCodingAppliedWrite>), LinuxCodingWriteError> {
+        if self.approval.is_none() {
+            self.approve(change_set_sha256, preview_sha256, now_epoch_ms)?;
+        }
+        let changes = self.change_set.clone();
+        let approval = self
+            .approval
+            .as_ref()
+            .ok_or(LinuxCodingWriteError::Approval)?
+            .clone();
         let mut driver = LinuxAtomicWriteDriver::new(
             &scope.workspace,
             LinuxAtomicWriteDriverLimits {
@@ -314,13 +339,26 @@ impl LinuxCodingPendingWrite {
             now_epoch_ms,
             &mut driver,
         )?;
-        Ok(json!({"outcome":match result.outcome {
+        let proof = if result.outcome == WriteTransactionOutcome::Committed {
+            Some(LinuxCodingAppliedWrite::from_native_result(
+                scope.root_sha256(),
+                changes,
+                &approval,
+                &result,
+            )?)
+        } else {
+            None
+        };
+        Ok((
+            json!({"outcome":match result.outcome {
             WriteTransactionOutcome::Committed => "committed",
             WriteTransactionOutcome::FailedNoChange => "failed_no_change",
             WriteTransactionOutcome::Restored => "restored",
             WriteTransactionOutcome::Uncertain => "uncertain",
         }, "receipts":result.receipts, "consumed_grant_sha256":result.grant_consumption.consumed_grant_sha256,
-        "tested":false,"isolation_verified":false,"retention":"process-only"}))
+        "tested":false,"isolation_verified":false,"retention":"process-only"}),
+            proof,
+        ))
     }
 
     /// Issue the original one-use grant without dispatch. Never replaces an

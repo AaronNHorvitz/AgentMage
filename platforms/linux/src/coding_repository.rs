@@ -162,6 +162,7 @@ pub struct LinuxCodingRepository {
     validation: Option<validation::ValidationSeries>,
     edit: Option<edit::PendingEdit>,
     edit_result: Option<Value>,
+    applied_write: Option<crate::coding_workspace::LinuxCodingAppliedWrite>,
     apply: Option<apply::PendingApply>,
     apply_result: Option<Value>,
 }
@@ -236,6 +237,7 @@ impl LinuxCodingRepository {
             validation: None,
             edit: None,
             edit_result: None,
+            applied_write: None,
             apply: None,
             apply_result: None,
         })
@@ -482,6 +484,7 @@ impl LinuxCodingRepository {
                 self.validation = None;
                 self.edit = None;
                 self.edit_result = None;
+                self.applied_write = None;
                 self.apply = None;
                 self.apply_result = None;
                 self.created = Some(CreatedWorktree {

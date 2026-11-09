@@ -360,6 +360,9 @@ impl AtomicWriteDriver for LinuxCodingRuntimeWriteDriver<'_> {
             owner.command = None;
             owner.edit = None;
             owner.apply = None;
+            // Runtime writes do not yet retain the original approval binding.
+            // Their transferable bytes cannot reuse a prior manual proof.
+            owner.applied_write = None;
             let created = owner.created.as_mut().expect("verified created worktree");
             for path in attempt.edits.keys() {
                 created.edits.remove(path);

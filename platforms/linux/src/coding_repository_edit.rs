@@ -165,13 +165,14 @@ impl LinuxCodingRepository {
             Some(json!({"preview_sha256":digest,"outcome":"dispatching","effect":"unknown"}));
         self.command = None;
         self.apply = None;
+        self.applied_write = None;
         // Uncertain writes must never leave an older transferable postimage.
         if let Some(created) = &mut self.created {
             for path in pending.edits.keys() {
                 created.edits.remove(path);
             }
         }
-        let result = pending.write.apply(
+        let result = pending.write.apply_retaining_proof(
             &pending.scope,
             pending.preview["write_preview"]["change_set_sha256"]
                 .as_str()
@@ -184,13 +185,16 @@ impl LinuxCodingRepository {
         let checked = self
             .verify_edit_scope(&pending.scope)
             .map_err(|_| err("code.edit.uncertain"));
-        let value = match (result, checked) {
-            (Ok(value), Ok(_)) => json!({"preview_sha256":digest,
+        let (value, proof) = match (result, checked) {
+            (Ok((value, proof)), Ok(_)) => (
+                json!({"preview_sha256":digest,
                 "creation_receipt_sha256":pending.creation_receipt_sha256,
                 "worktree_root_sha256":pending.scope.root_sha256(),
                 "outcome":value["outcome"],"write_result":value,
                 "ownership_scope":"service-created-worktree","tested":false,
                 "retention":"process-only","automatic_replay":false}),
+                proof,
+            ),
             (Err(e), Ok(_)) => {
                 self.edit_result =
                     Some(json!({"preview_sha256":digest,"error":e.code(),"effect":"unknown"}));
@@ -208,6 +212,7 @@ impl LinuxCodingRepository {
                 .ok_or(err("code.edit.uncertain"))?
                 .edits
                 .extend(pending.edits);
+            self.applied_write = proof;
         }
         self.edit_result = Some(value.clone());
         Ok(value)

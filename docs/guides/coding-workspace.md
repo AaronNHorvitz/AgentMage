@@ -250,9 +250,28 @@ executable bit; private file permissions do not become Git modes. New-file
 lineage is refused until its distinct transaction proof is connected.
 
 This is internal library composition, with no HTTP or terminal command yet.
-The method does not authenticate caller-supplied reviewer output, write receipt
-identities or artifact metadata, and the returned plan grants no execution.
+The method does not authenticate caller-supplied reviewer output or artifact
+metadata, and the returned plan grants no execution.
 Candidate construction, signed commit and publication still require full
 provenance, fresh native postconditions and separate exact approvals. These
 observations provide no atomic lease over a concurrently changing repository.
 The native executable trust refusal in this lane remains in force.
+
+Before planning, `capture_applied_write_review()` projects the original native
+prepared edit's approval binding and checked application chain through the
+kernel's existing review builder. Caller purpose assignments are review labels,
+not write evidence. The entire packet change set must equal that projection;
+resealing a packet with other write receipt hashes does not satisfy provenance.
+Calling this method requires source-read consent and verifies current bytes and
+all held roots. It issues no grant and runs no Git or model request.
+
+Only the latest committed prepared-edit transaction is retained, within the
+existing sixteen-file and source-byte limits. Its preimages and postimages must
+cover every current transferable edit from its original preimage. Incomplete
+cumulative coverage, new files and runtime writes without the retained original
+approval refuse candidate review. A runtime write, creation or original-apply
+dispatch retires earlier proof, including on uncertain results; declining a
+preview preserves historical proof. Idle handoff and return keep the same live
+proof. Saved JSON, copied receipt chains and a reopened store cannot restore it.
+This establishes original write provenance, not independent review or permission
+to construct a tree, commit or push.

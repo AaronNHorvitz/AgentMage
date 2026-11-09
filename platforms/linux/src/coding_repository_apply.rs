@@ -250,6 +250,7 @@ impl LinuxCodingRepository {
         self.apply_result =
             Some(json!({"preview_sha256":digest,"outcome":"dispatching","effect":"unknown"}));
         self.edit = None;
+        self.applied_write = None;
         let result = pending.write.apply(&pending.original, now);
         let checked = self.verify_apply_roots();
         let value = match (result, checked) {
