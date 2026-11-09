@@ -5695,6 +5695,7 @@ mod tests {
                 self.stderr.clone()
             };
             Ok(CommandPlatformResult {
+                sealed_workspace_input: None,
                 termination: if cancelled {
                     CommandTermination::Cancelled
                 } else {

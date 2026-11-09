@@ -386,6 +386,9 @@ impl LinuxBoundedCommandExecutor {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
+        let sealed_workspace_input = sealed_worktree
+            .as_ref()
+            .map(worktree::SealedWorktree::input_record);
         let projections = sealed_worktree.map_or_else(
             || held_worktree.into_iter().collect(),
             worktree::SealedWorktree::into_descriptors,
@@ -433,6 +436,7 @@ impl LinuxBoundedCommandExecutor {
             _ => return Err(CommandExecutionFailure::ExecutionFailed),
         };
         Ok(CommandPlatformResult {
+            sealed_workspace_input,
             termination,
             exit_code: if termination == CommandTermination::Exited {
                 result.status.as_ref().and_then(ExitStatus::code)
@@ -649,6 +653,7 @@ const fn report_generated_unit(_unit: &str) {}
 
 fn failed(code: &str) -> Result<CommandPlatformResult, CommandExecutionFailure> {
     Ok(CommandPlatformResult {
+        sealed_workspace_input: None,
         termination: CommandTermination::LaunchFailed,
         exit_code: None,
         signal: None,

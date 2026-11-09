@@ -363,6 +363,7 @@ impl BoundedCommandExecutor for Synthetic {
             false
         };
         Ok(CommandPlatformResult {
+            sealed_workspace_input: None,
             termination: if cancelled {
                 CommandTermination::Cancelled
             } else {

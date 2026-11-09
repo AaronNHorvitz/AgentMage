@@ -169,6 +169,7 @@ impl BoundedCommandExecutor for Synthetic {
         }
         let stdout = b"untrusted \x1b[31m output".to_vec();
         Ok(CommandPlatformResult {
+            sealed_workspace_input: None,
             termination: CommandTermination::Exited,
             exit_code: Some(self.exit),
             signal: None,
@@ -328,6 +329,7 @@ impl BoundedCommandExecutor for CancelDuringExecution {
         }
         let stdout = b"partial untrusted output".to_vec();
         Ok(CommandPlatformResult {
+            sealed_workspace_input: None,
             termination: CommandTermination::Cancelled,
             exit_code: None,
             signal: None,
@@ -695,6 +697,7 @@ impl BoundedCommandExecutor for Envelope {
     ) -> std::result::Result<CommandPlatformResult, CommandExecutionFailure> {
         self.calls.fetch_add(1, Ordering::Relaxed);
         Ok(CommandPlatformResult {
+            sealed_workspace_input: None,
             termination: CommandTermination::Exited,
             exit_code: Some(self.exit),
             signal: None,
@@ -2005,6 +2008,162 @@ fn validation_workspace_binding_keeps_failed_history_and_binds_only_the_final_pa
         owner.inspect_validation().unwrap()["workspace_binding"]["matches_current_observation"],
         false
     );
+}
+
+// Actual memfd capture with a synthetic result, not native project execution.
+struct SealedEnvelope {
+    inner: Envelope,
+    mutate_after_capture: Option<PathBuf>,
+    mismatched_observation: bool,
+}
+impl BoundedCommandExecutor for SealedEnvelope {
+    type WorkingDirectory = LinuxAuthorizedWorkspace;
+    fn execute(
+        &mut self,
+        permit: CommandLaunchPermit<'_>,
+        workspace: &LinuxAuthorizedWorkspace,
+        cancellation: &dyn EffectCancellationObservation,
+    ) -> std::result::Result<CommandPlatformResult, CommandExecutionFailure> {
+        let mut input =
+            crate::command_runner::worktree::capture_input_for_test(workspace, cancellation)
+                .ok_or(CommandExecutionFailure::ExecutionFailed)?;
+        if self.mismatched_observation {
+            input.observation_sha256 = hash(b"different capture");
+        }
+        if let Some(path) = &self.mutate_after_capture {
+            fs::write(path, b"changed after capture").unwrap();
+        }
+        let mut result = self.inner.execute(permit, workspace, cancellation)?;
+        result.sealed_workspace_input = Some(input);
+        Ok(result)
+    }
+}
+
+#[test]
+fn sealed_validation_receipts_preserve_failed_inputs_and_bind_the_final_source_observation() {
+    let f = Fixture::new();
+    let mut owner = f.open();
+    f.synthetic_created(&mut owner);
+    let calls = Arc::new(AtomicUsize::new(0));
+    let mut results = Vec::new();
+    for attempt in 0..2 {
+        let prior = results.last().map(|value: &Value| {
+            value["validation"]["receipt"]["receipt_sha256"]
+                .as_str()
+                .unwrap()
+        });
+        let digest = validation_pending(&mut owner, prior).unwrap();
+        let pending = owner.take_command(&digest, true, NOW).unwrap().unwrap();
+        let passed = attempt == 1;
+        results.push(
+            owner
+                .run_command(
+                    pending,
+                    SealedEnvelope {
+                        inner: Envelope {
+                            calls: calls.clone(),
+                            stdout: if passed {
+                                envelope("passed", 2, 0, 0)
+                            } else {
+                                envelope("assertion_failed", 1, 1, 0)
+                            },
+                            stderr: vec![],
+                            exit: i32::from(!passed),
+                            corrupt: false,
+                        },
+                        mutate_after_capture: None,
+                        mismatched_observation: false,
+                    },
+                    NOW,
+                )
+                .unwrap(),
+        );
+        if !passed {
+            fs::write(f.0.join("owned/worktree/sentinel"), b"repair").unwrap();
+        }
+    }
+    let inspected = owner.inspect_validation().unwrap();
+    assert_eq!(calls.load(Ordering::Relaxed), 2);
+    assert_eq!(
+        inspected["command_history"],
+        json!([results[0]["command_receipt"], results[1]["command_receipt"]])
+    );
+    for (index, result) in results.iter().enumerate() {
+        assert_eq!(
+            inspected["history"][index]["command_receipt_sha256"],
+            result["command_receipt"]["receipt_sha256"]
+        );
+        assert_eq!(
+            result["validation"]["sealed_workspace_input"],
+            result["command_receipt"]["sealed_workspace_input"]
+        );
+    }
+    assert_ne!(
+        inspected["command_history"][0]["sealed_workspace_input"]["projection_sha256"],
+        inspected["command_history"][1]["sealed_workspace_input"]["projection_sha256"]
+    );
+    assert_eq!(inspected["history"][0]["status"], "assertion_failed");
+    assert_eq!(inspected["linked_pass_verified"], true);
+    let binding = &inspected["workspace_binding"];
+    assert_eq!(
+        binding["command_receipt_sha256"],
+        results[1]["command_receipt"]["receipt_sha256"]
+    );
+    assert_eq!(binding["sealed_input_matches_observation"], true);
+    assert_eq!(binding["matches_current_observation"], true);
+    assert_eq!(inspected["current_workspace_verified"], false);
+    assert_eq!(inspected["test_suite_verified"], false);
+    fs::write(f.0.join("owned/worktree/sentinel"), b"later source").unwrap();
+    let stale = owner.inspect_validation().unwrap();
+    assert_eq!(
+        stale["workspace_binding"]["matches_current_observation"],
+        false
+    );
+    assert_eq!(stale["command_history"], inspected["command_history"]);
+}
+
+#[test]
+fn sealed_validation_input_cannot_replace_a_missing_or_mismatched_source_observation() {
+    for changed_after_capture in [false, true] {
+        let f = Fixture::new();
+        let mut owner = f.open();
+        f.synthetic_created(&mut owner);
+        let calls = Arc::new(AtomicUsize::new(0));
+        let digest = validation_pending(&mut owner, None).unwrap();
+        let pending = owner.take_command(&digest, true, NOW).unwrap().unwrap();
+        let result = owner
+            .run_command(
+                pending,
+                SealedEnvelope {
+                    inner: Envelope {
+                        calls: calls.clone(),
+                        stdout: envelope("passed", 2, 0, 0),
+                        stderr: vec![],
+                        exit: 0,
+                        corrupt: false,
+                    },
+                    mutate_after_capture: changed_after_capture
+                        .then(|| f.0.join("owned/worktree/sentinel")),
+                    mismatched_observation: !changed_after_capture,
+                },
+                NOW,
+            )
+            .unwrap();
+        assert_eq!(result["validation"]["linked_pass_verified"], true);
+        let inspected = owner.inspect_validation().unwrap();
+        assert!(inspected["command_history"][0]["sealed_workspace_input"].is_object());
+        if changed_after_capture {
+            assert!(inspected["workspace_binding"].is_null());
+        } else {
+            assert_eq!(
+                inspected["workspace_binding"]["sealed_input_matches_observation"],
+                false
+            );
+        }
+        assert_eq!(inspected["current_workspace_verified"], false);
+        assert_eq!(inspected["test_suite_verified"], false);
+        assert_eq!(calls.load(Ordering::Relaxed), 1);
+    }
 }
 
 #[test]

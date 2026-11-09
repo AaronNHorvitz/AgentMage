@@ -8,9 +8,10 @@ use std::time::{Duration, Instant};
 
 use crate::{LinuxAuthorizedWorkspace, LinuxPathAdapter};
 use agentmage_kernel_contracts::{
-    HeldWorkspaceObject, PathResolutionIntent, PlatformPathAdapter, WorkspaceObjectKind,
-    WorkspacePath,
+    FilePreimage, HeldWorkspaceObject, PathResolutionIntent, PlatformPathAdapter,
+    WorkspaceObjectKind, WorkspacePath,
 };
+use agentmage_kernel_engine::command_runner::SealedCommandWorkspaceInput;
 use agentmage_kernel_engine::propagation::EffectCancellationObservation;
 use rustix::fd::OwnedFd;
 use serde_json::json;
@@ -34,11 +35,14 @@ struct SealedFile {
     path: Vec<String>,
     mode: u32,
     descriptor: OwnedFd,
+    preimage: FilePreimage,
 }
 
 /// Private projection owned until the original supervisor confirms cleanup.
 /// No mutable source directory is passed to the native child in this mode.
 pub(super) struct SealedWorktree {
+    worktree_root_sha256: String,
+    observation_sha256: String,
     root_mode: u32,
     directories: BTreeMap<Vec<String>, u32>,
     files: Vec<SealedFile>,
@@ -52,6 +56,8 @@ impl SealedWorktree {
     ) -> Option<Self> {
         let deadline = command_deadline.min(Instant::now() + Duration::from_secs(2));
         let mut sealed = Self {
+            worktree_root_sha256: workspace.root_path_sha256().into(),
+            observation_sha256: String::new(),
             root_mode: 0,
             directories: BTreeMap::new(),
             files: Vec::new(),
@@ -64,7 +70,28 @@ impl SealedWorktree {
             return None;
         }
         sealed.files.sort_by(|a, b| a.path.cmp(&b.path));
+        sealed.observation_sha256 = before.digest;
         Some(sealed)
+    }
+
+    pub(super) fn input_record(&self) -> SealedCommandWorkspaceInput {
+        // file_projection verified these preimages while copying, then sealed
+        // the descriptors used by mount_arguments. No later host read supplies
+        // this identity. Delimited canonical JSON binds names, modes and bytes.
+        let manifest = json!({"schema_version":1,"mode":"sealed-read-only-tree-v1",
+            "root_mode":self.root_mode,
+            "directories":self.directories.iter().collect::<Vec<_>>(),
+            "files":self.files.iter().map(|file| json!({"path":file.path,
+                "mode":file.mode,"preimage":file.preimage})).collect::<Vec<_>>()});
+        SealedCommandWorkspaceInput {
+            schema_version: 1,
+            worktree_root_sha256: self.worktree_root_sha256.clone(),
+            observation_sha256: self.observation_sha256.clone(),
+            projection_sha256: hash(manifest.to_string().as_bytes()),
+            files: self.files.len() as u32,
+            directories: self.directories.len() as u32 + 1,
+            file_bytes: self.files.iter().map(|file| file.preimage.byte_len()).sum(),
+        }
     }
 
     pub(super) fn open_file_properties(&self, parent_pid: u32) -> Vec<String> {
@@ -117,6 +144,22 @@ impl SealedWorktree {
 
 fn guest_path(components: &[String]) -> String {
     format!("/work/{}", components.join("/"))
+}
+
+// Component-only access to real sealing, never a production executor injection.
+#[cfg(test)]
+pub(crate) fn capture_input_for_test(
+    workspace: &LinuxAuthorizedWorkspace,
+    cancellation: &dyn EffectCancellationObservation,
+) -> Option<SealedCommandWorkspaceInput> {
+    Some(
+        SealedWorktree::capture(
+            workspace,
+            cancellation,
+            Instant::now() + Duration::from_secs(2),
+        )?
+        .input_record(),
+    )
 }
 
 fn available(deadline: Instant, cancellation: Option<&dyn EffectCancellationObservation>) -> bool {
@@ -235,6 +278,7 @@ impl WorkspaceObservation {
                                 path: child.clone(),
                                 mode: stat.mode & 0o777,
                                 descriptor,
+                                preimage: object.preimage()?.clone(),
                             });
                         }
                     }
@@ -341,6 +385,57 @@ mod tests {
             assert_eq!(pread(descriptor, &mut bytes, 0).unwrap(), size);
         }
         bytes
+    }
+
+    #[test]
+    fn sealed_input_digest_binds_guest_contents_names_modes_and_empty_directories() {
+        let tree = Tree::new();
+        fs::write(tree.0.join("source"), b"first").unwrap();
+        fs::set_permissions(tree.0.join("source"), fs::Permissions::from_mode(0o640)).unwrap();
+        let snapshot = seal(&tree).unwrap();
+        let original = snapshot.input_record();
+        assert_eq!(original, seal(&tree).unwrap().input_record());
+        assert_eq!(original.files, 1);
+        assert_eq!(original.directories, 1);
+        assert_eq!(original.file_bytes, 5);
+        assert_eq!(
+            original.worktree_root_sha256,
+            tree.held().root_path_sha256()
+        );
+        assert_eq!(
+            original.observation_sha256,
+            WorkspaceObservation::capture(&tree.held()).unwrap().digest
+        );
+        let mut previous = original.clone();
+        for case in 0..5 {
+            match case {
+                0 => fs::write(tree.0.join("source"), b"other").unwrap(),
+                1 => fs::rename(tree.0.join("source"), tree.0.join("renamed")).unwrap(),
+                2 => fs::set_permissions(tree.0.join("renamed"), fs::Permissions::from_mode(0o600))
+                    .unwrap(),
+                3 => fs::create_dir(tree.0.join("empty")).unwrap(),
+                4 => fs::write(tree.0.join(".hidden"), b"hidden").unwrap(),
+                _ => unreachable!(),
+            }
+            let changed = seal(&tree).unwrap().input_record();
+            assert_ne!(
+                previous.projection_sha256, changed.projection_sha256,
+                "case {case}"
+            );
+            previous = changed;
+            assert_eq!(snapshot.input_record(), original);
+            assert_eq!(bytes(&snapshot.files[0].descriptor), b"first");
+        }
+        fs::remove_file(tree.0.join(".hidden")).unwrap();
+        fs::remove_dir(tree.0.join("empty")).unwrap();
+        fs::rename(tree.0.join("renamed"), tree.0.join("source")).unwrap();
+        fs::write(tree.0.join("source"), b"first").unwrap();
+        fs::set_permissions(tree.0.join("source"), fs::Permissions::from_mode(0o640)).unwrap();
+        // Projection identity describes reproduced data, not source inode times.
+        assert_eq!(
+            seal(&tree).unwrap().input_record().projection_sha256,
+            original.projection_sha256
+        );
     }
 
     #[test]

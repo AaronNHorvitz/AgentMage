@@ -1184,6 +1184,7 @@ mod tests {
             CommandTermination::TimedOut => OperationOutcome::TimedOut,
         };
         let mut receipt = CommandReceipt {
+            sealed_workspace_input: None,
             schema_version: 1,
             authority_transaction_id: "transaction-validation-0001".to_owned(),
             operation_attempt_id: "operation-validation-0001".to_owned(),

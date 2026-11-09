@@ -4,6 +4,7 @@
 use super::*;
 use agentmage_kernel_engine::command_runner::{
     BoundedCommandExecutor, CommandExecutionFailure, CommandLaunchPermit, CommandPlatformResult,
+    CommandReceipt, SealedCommandWorkspaceInput,
 };
 use agentmage_kernel_engine::propagation::EffectCancellationObservation;
 
@@ -13,6 +14,8 @@ pub(in crate::coding_repository) struct ValidationWorkspaceBinding {
     observation: WorkspaceObservation,
     creation_receipt: String,
     validation_receipt: String,
+    command_receipt: String,
+    sealed_input: Option<SealedCommandWorkspaceInput>,
 }
 
 impl ValidationWorkspaceBinding {
@@ -20,11 +23,14 @@ impl ValidationWorkspaceBinding {
         observation: WorkspaceObservation,
         creation: &str,
         receipt: &str,
+        command: &CommandReceipt,
     ) -> Self {
         Self {
             observation,
             creation_receipt: creation.into(),
             validation_receipt: receipt.into(),
+            command_receipt: command.receipt_sha256.clone(),
+            sealed_input: command.sealed_workspace_input.clone(),
         }
     }
 
@@ -37,8 +43,18 @@ impl ValidationWorkspaceBinding {
             && self.validation_receipt == receipt
             && WorkspaceObservation::capture(&created.held)
                 .is_some_and(|now| now == self.observation);
+        let sealed_matches = self.sealed_input.as_ref().is_some_and(|input| {
+            input.worktree_root_sha256 == self.observation.root
+                && input.observation_sha256 == self.observation.digest
+                && u64::from(input.files) + u64::from(input.directories) - 1
+                    == self.observation.entries as u64
+                && input.file_bytes == self.observation.bytes
+        });
         json!({"version":1,"scope":"whole-worktree-observation",
             "validation_receipt_sha256":self.validation_receipt,
+            "command_receipt_sha256":self.command_receipt,
+            "sealed_workspace_input":self.sealed_input,
+            "sealed_input_matches_observation":sealed_matches,
             "creation_receipt_sha256":self.creation_receipt,
             "worktree_root_sha256":self.observation.root,
             "observation_sha256":self.observation.digest,

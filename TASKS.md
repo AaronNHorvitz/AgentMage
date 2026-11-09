@@ -2,6 +2,19 @@
 
 ## Active queue: local agent mission
 
+The [sealed-input receipt connection](docs/evidence/t303-sealed-input-receipts-2026-11-09.md)
+binds the native source projection to the original canonical command receipt
+and retained validation history. Failed inputs remain unchanged. Final bindings
+separately report capture-observation agreement and sampled current agreement;
+neither is task acceptance. Both completion verifiers stay unchanged and both
+verification flags remain false. Formatting and Clippy pass. The complete scoped
+gate remains FAIL: 2,845 passed, exactly 72 inherited failures and none new,
+71 existing ignored across 46 unfiltered targets. All four new methods and
+both expanded authority methods pass; ten Rust hashes stay fixed. Independent
+core review is required. T-303/T-306 remain open; no row or sub-row is added or closed.
+Native/model execution, completion acceptance, durable recovery, approved Git
+and parent measurements remain open.
+
 The [sealed-validation input work](docs/evidence/t303-sealed-validation-2026-11-09.md) replaces the live source mount for native
 project tests with complete bounded sealed file copies and a read-only sandbox
 directory tree. The exact original approval displays this mode; incomplete or

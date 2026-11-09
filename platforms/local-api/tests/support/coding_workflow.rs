@@ -100,6 +100,7 @@ fn result(t: &ValidationTemplate, p: &Value, status: &str) -> Value {
         "artifact_ids":[],"retry_count":u8::from(status == "flaky"),"initial_failure_sha256":if status == "flaky" {Some("a".repeat(64))}else{None}}))
     .unwrap();
     let mut command = CommandReceipt {
+        sealed_workspace_input: None,
         schema_version: 1,
         authority_transaction_id: "synthetic-transaction".into(),
         operation_attempt_id: "synthetic-operation".into(),

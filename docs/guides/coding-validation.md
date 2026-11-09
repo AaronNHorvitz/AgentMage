@@ -54,7 +54,7 @@ over these routes. `approve_definition: true` alone cannot execute anything.
 
 | Route | Request/result |
 | --- | --- |
-| `GET /v1/code/repository/validation` | No body; process-only preview, last receipt, complete bounded receipt history, rerun plans, linked-pass check, optional whole-worktree observation binding, attempt count and limits |
+| `GET /v1/code/repository/validation` | No body; process-only preview, last receipt, bounded validation and command histories, rerun plans, linked-pass check, optional whole-worktree observation binding, attempt count and limits |
 | `POST /v1/code/repository/validation/prepare` | Exact definition object above; returns an inert preview |
 | `POST /v1/code/repository/validation/decide` | Exact `preview_sha256` and Boolean `approve`; returns both command and validation outcomes |
 
@@ -215,7 +215,12 @@ null must never establish current-source acceptance. `atomic_snapshot` and
 `independent_task_grade` are explicitly false. The existing
 `current_workspace_verified` and `test_suite_verified` remain false even with a
 matching observation, and the completion/development verifiers stay unchanged.
-Projection receipt binding and reviewed acceptance integration remain open.
+The binding also includes the final command receipt digest and its optional
+`sealed_workspace_input`. `sealed_input_matches_observation` checks whether
+that record's root, capture observation and counts match the bound observation.
+This flag does not recheck current files; `matches_current_observation` supplies
+that separate sampled comparison. Either flag alone, or both together, cannot
+establish task acceptance. Reviewed acceptance integration remains open.
 Observations add bounded local work outside the runner's elapsed-time receipt;
 blocked filesystem calls can delay cancellation/deadlines. No raw file content
 is newly disclosed to a model or client, no command authority is created, and no
@@ -265,8 +270,26 @@ spent when capture fails.
 
 The sandbox copy preserves file bytes, directory names and ordinary modes;
 inodes, timestamps and ownership differ. Sealed contents are immutable, while
-capture is not an atomic snapshot of the source filesystem. The command receipt
-does not yet include a projection digest. The existing workspace observation
-remains a sampled comparison, both completion verifiers remain unchanged, and
+capture is not an atomic snapshot of the source filesystem. The original command
+receipt now includes optional `sealed_workspace_input`: version one, held-root
+and capture-observation digests, projection digest, file and directory counts
+(including root), and total file bytes. The projection digest binds the mode,
+root permissions, ordered directory paths and permissions, and ordered file
+paths, permissions and exact copied preimages. It describes the descriptors
+handed to the original supervisor, not bytes reread after execution. It covers
+source inputs only, not the entire toolchain or runtime filesystem. It does not
+prove the child entered its command body; the original termination and cleanup
+evidence remain necessary.
+
+The kernel seals this record into the original command receipt, which the
+validation receipt already references. `command_history` exposes those original
+receipts alongside `history`, in the same bounded order, retaining failed inputs
+unchanged. The immediate validation result also exposes the sealed record.
+Missing legacy records remain absent and cannot establish a sealed-input match.
+The optional receipt extension preserves absent-field canonical bytes; older
+strict readers require an update to read extended receipts. Digests are integrity
+bindings, not authentication for caller-supplied receipts or task grades.
+
+The existing workspace observation remains a sampled comparison, both completion verifiers remain unchanged, and
 `current_workspace_verified` and `test_suite_verified` remain false. Native/model
 workflow evidence and reviewed acceptance integration are still open.

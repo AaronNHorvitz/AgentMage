@@ -96,6 +96,7 @@ impl LinuxCodingRepository {
             "maximum_attempts":MAX_ATTEMPTS,"retention":"process-only",
             "repair_requested":self.validation.as_ref().is_some_and(|s| s.repair_requested),
             "history":self.validation.as_ref().map(|s| s.history.iter().map(|a| &a.validation).collect::<Vec<_>>()).unwrap_or_default(),
+            "command_history":self.validation.as_ref().map(|s| s.history.iter().map(|a| &a.command).collect::<Vec<_>>()).unwrap_or_default(),
             "rerun_plans":self.validation.as_ref().map(|s| s.reruns.as_slice()).unwrap_or_default(),
             "linked_pass_verified":self.validation.as_ref().is_some_and(ValidationSeries::linked_pass_verified),
             "workspace_binding":workspace_binding,
@@ -376,6 +377,7 @@ impl LinuxCodingRepository {
                         observation,
                         &created.creation_receipt_sha256,
                         &receipt.receipt_sha256,
+                        command,
                     )
                 })
             })
@@ -388,6 +390,7 @@ impl LinuxCodingRepository {
                 .map(|created| binding.inspect(created, &receipt.receipt_sha256))
         });
         let value = json!({"receipt":receipt,"validation_passed":receipt.is_full_pass(),
+            "sealed_workspace_input":command.sealed_workspace_input,
             "linked_pass_verified":linked_pass_verified,
             "workspace_binding":workspace_binding,
             "prior_receipt_sha256":validation.prior_receipt_sha256,

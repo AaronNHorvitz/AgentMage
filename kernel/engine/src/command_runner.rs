@@ -473,6 +473,8 @@ pub enum CommandTermination {
 /// Bounded platform observation for one command attempt.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CommandPlatformResult {
+    /// Optional sealed source projection reported by the trusted executor.
+    pub sealed_workspace_input: Option<SealedCommandWorkspaceInput>,
     /// Terminal reason.
     pub termination: CommandTermination,
     /// Observed process exit code when available.
@@ -501,6 +503,40 @@ pub struct CommandPlatformResult {
     pub platform_code: String,
 }
 
+/// Content-free identity of the complete sealed read-only source projection.
+/// This is executor provenance, never an independent test grade or authority.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SealedCommandWorkspaceInput {
+    /// Closed projection format, currently one.
+    pub schema_version: u16,
+    /// Held host worktree root identity, without disclosing its path.
+    pub worktree_root_sha256: String,
+    /// Complete source observation from which the sealed files were captured.
+    pub observation_sha256: String,
+    /// Digest of ordered guest paths, ordinary modes and exact sealed preimages.
+    pub projection_sha256: String,
+    /// Number of regular files in the complete projection.
+    pub files: u32,
+    /// Number of directories, including the root.
+    pub directories: u32,
+    /// Total sealed file bytes.
+    pub file_bytes: u64,
+}
+
+impl SealedCommandWorkspaceInput {
+    fn valid(&self) -> bool {
+        self.schema_version == 1
+            && validate_digest(&self.worktree_root_sha256).is_ok()
+            && validate_digest(&self.observation_sha256).is_ok()
+            && validate_digest(&self.projection_sha256).is_ok()
+            && self.files <= 128
+            && (1..=256).contains(&self.directories)
+            && self.file_bytes <= 64 * 1024 * 1024
+            && (self.files > 0 || self.file_bytes == 0)
+    }
+}
+
 /// Content-free resource observations for one owned command process tree.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -517,6 +553,9 @@ pub struct CommandResourceUsage {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CommandReceipt {
+    /// Optional trusted executor projection; absent legacy receipts keep their bytes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sealed_workspace_input: Option<SealedCommandWorkspaceInput>,
     /// Closed command schema version.
     pub schema_version: u16,
     /// Exact authority transaction.
@@ -616,6 +655,11 @@ pub fn verify_command_receipt(prepared: &PreparedCommand, receipt: &CommandRecei
     let mut canonical = receipt.clone();
     canonical.receipt_sha256 = "0".repeat(64);
     receipt.schema_version == COMMAND_SCHEMA_VERSION
+        && receipt.sealed_workspace_input.as_ref().is_none_or(|input| {
+            input.valid()
+                && prepared.command.working_directory == CommandWorkingDirectory::OwnedWorktree
+                && receipt.termination != CommandTermination::LaunchFailed
+        })
         && receipt.command_attempt_id == prepared.request.command_attempt_id
         && receipt.template_id == prepared.command.template_id
         && receipt.template_version == prepared.command.template_version
@@ -875,6 +919,7 @@ where
         };
         let platform = if cancelled {
             CommandPlatformResult {
+                sealed_workspace_input: None,
                 termination: CommandTermination::Cancelled,
                 exit_code: None,
                 signal: None,
@@ -972,6 +1017,11 @@ fn seal_receipt(
     platform: CommandPlatformResult,
 ) -> Result<CommandReceipt, CommandError> {
     validate_platform_result(&prepared.command.bounds, &platform)?;
+    if platform.sealed_workspace_input.is_some()
+        && prepared.command.working_directory != CommandWorkingDirectory::OwnedWorktree
+    {
+        return Err(CommandError::InvalidPlatformResult);
+    }
     let outcome = match platform.termination {
         CommandTermination::Exited if platform.exit_code == Some(0) => OperationOutcome::Succeeded,
         CommandTermination::Exited
@@ -981,6 +1031,7 @@ fn seal_receipt(
         CommandTermination::TimedOut => OperationOutcome::TimedOut,
     };
     let mut receipt = CommandReceipt {
+        sealed_workspace_input: platform.sealed_workspace_input,
         schema_version: COMMAND_SCHEMA_VERSION,
         authority_transaction_id: authorization.transaction_id().as_str().to_owned(),
         operation_attempt_id: authorization.attempt_id().as_str().to_owned(),
@@ -1065,6 +1116,9 @@ fn validate_platform_result(
     result: &CommandPlatformResult,
 ) -> Result<(), CommandError> {
     if result.stdout.len() as u64 > bounds.stdout_bytes
+        || result.sealed_workspace_input.as_ref().is_some_and(|input| {
+            !input.valid() || result.termination == CommandTermination::LaunchFailed
+        })
         || result.stderr.len() as u64 > bounds.stderr_bytes
         || result.stdout_total_bytes < result.stdout.len() as u64
         || result.stderr_total_bytes < result.stderr.len() as u64
@@ -1540,6 +1594,7 @@ mod tests {
 
     fn successful_platform_result() -> CommandPlatformResult {
         CommandPlatformResult {
+            sealed_workspace_input: None,
             termination: CommandTermination::Exited,
             exit_code: Some(0),
             signal: None,
@@ -1558,6 +1613,57 @@ mod tests {
             descendants_terminated: true,
             platform_code: "fixture.command.exited".to_owned(),
         }
+    }
+
+    fn sealed_input() -> super::SealedCommandWorkspaceInput {
+        super::SealedCommandWorkspaceInput {
+            schema_version: 1,
+            worktree_root_sha256: "1".repeat(64),
+            observation_sha256: "2".repeat(64),
+            projection_sha256: "3".repeat(64),
+            files: 2,
+            directories: 3,
+            file_bytes: 25,
+        }
+    }
+
+    #[test]
+    fn sealed_command_input_rejects_invalid_shapes_and_launch_failures() {
+        let prepared = prepare_command(
+            &CommandRegistry::build(vec![spec(vec!["ok".into()]).unwrap()]).unwrap(),
+            CommandRequest::new("input-shape", &spec(vec!["ok".into()]).unwrap()),
+        )
+        .unwrap();
+        for case in 0..9 {
+            let mut platform = successful_platform_result();
+            let mut input = sealed_input();
+            match case {
+                0 => input.schema_version = 2,
+                1 => input.worktree_root_sha256.clear(),
+                2 => input.observation_sha256 = "x".repeat(64),
+                3 => input.projection_sha256 = "0".repeat(63),
+                4 => input.files = 129,
+                5 => input.directories = 0,
+                6 => input.directories = 257,
+                7 => input.file_bytes = 64 * 1024 * 1024 + 1,
+                8 => input.files = 0,
+                _ => unreachable!(),
+            }
+            platform.sealed_workspace_input = Some(input);
+            assert!(
+                super::validate_platform_result(&prepared.command.bounds, &platform).is_err(),
+                "case {case}"
+            );
+        }
+        let mut platform = successful_platform_result();
+        platform.sealed_workspace_input = Some(sealed_input());
+        assert!(super::validate_platform_result(&prepared.command.bounds, &platform).is_ok());
+        platform.termination = CommandTermination::LaunchFailed;
+        platform.exit_code = None;
+        assert!(super::validate_platform_result(&prepared.command.bounds, &platform).is_err());
+        let mut value = serde_json::to_value(sealed_input()).unwrap();
+        value["extra"] = serde_json::json!(true);
+        assert!(serde_json::from_value::<super::SealedCommandWorkspaceInput>(value).is_err());
     }
 
     #[test]
@@ -1787,49 +1893,57 @@ mod tests {
 
     #[test]
     fn invalid_post_launch_command_evidence_is_canonical_uncertainty() {
-        let mut fixture = authority_fixture();
-        let cancellation = CancellationToken::root(
-            BoundaryKind::Tool,
-            fixture.grant.task_id.clone(),
-            fixture.call.correlation_id.clone(),
-        );
-        let mut platform = successful_platform_result();
-        platform.stdout_sha256 = "0".repeat(64);
-        let executor = FakeExecutor {
-            launches: 0,
-            result: Some(platform),
-        };
-        let mut driver =
-            CommandEffectDriver::new(executor, &fixture.held, fixture.prepared, cancellation);
-        let request = AuthorityTransactionRequest::new(
-            AuthorityTransactionId::from_raw("transaction-command-malformed"),
-            OperationAttemptId::from_raw("attempt-command-malformed"),
-            fixture.approval_id,
-            fixture.grant.grant_id,
-            fixture.call,
-            fixture.context,
-            4_000,
-            "1970-01-01T00:00:04Z",
-        )
-        .unwrap();
-        let mut coordinator = AuthorityTransactionCoordinator::new();
-        let receipt = coordinator
-            .execute_effect(
-                &fixture.registry,
-                &mut fixture.issuer,
-                &fixture.policy,
-                request,
-                &mut driver,
+        for invalid_projection in [false, true] {
+            let mut fixture = authority_fixture();
+            let cancellation = CancellationToken::root(
+                BoundaryKind::Tool,
+                fixture.grant.task_id.clone(),
+                fixture.call.correlation_id.clone(),
+            );
+            let mut platform = successful_platform_result();
+            if invalid_projection {
+                let mut input = sealed_input();
+                input.directories = 0;
+                platform.sealed_workspace_input = Some(input);
+            } else {
+                platform.stdout_sha256 = "0".repeat(64);
+            }
+            let executor = FakeExecutor {
+                launches: 0,
+                result: Some(platform),
+            };
+            let mut driver =
+                CommandEffectDriver::new(executor, &fixture.held, fixture.prepared, cancellation);
+            let request = AuthorityTransactionRequest::new(
+                AuthorityTransactionId::from_raw("transaction-command-malformed"),
+                OperationAttemptId::from_raw("attempt-command-malformed"),
+                fixture.approval_id,
+                fixture.grant.grant_id,
+                fixture.call,
+                fixture.context,
+                4_000,
+                "1970-01-01T00:00:04Z",
             )
             .unwrap();
-        assert_eq!(receipt.outcome, OperationOutcome::Uncertain);
-        assert!(driver.take_receipt().is_none());
-        assert!(driver.take_output().is_none());
-        assert_eq!(
-            driver.take_error(),
-            Some(CommandError::InvalidPlatformResult)
-        );
-        assert_eq!(driver.into_executor().launches, 1);
+            let mut coordinator = AuthorityTransactionCoordinator::new();
+            let receipt = coordinator
+                .execute_effect(
+                    &fixture.registry,
+                    &mut fixture.issuer,
+                    &fixture.policy,
+                    request,
+                    &mut driver,
+                )
+                .unwrap();
+            assert_eq!(receipt.outcome, OperationOutcome::Uncertain);
+            assert!(driver.take_receipt().is_none());
+            assert!(driver.take_output().is_none());
+            assert_eq!(
+                driver.take_error(),
+                Some(CommandError::InvalidPlatformResult)
+            );
+            assert_eq!(driver.into_executor().launches, 1);
+        }
     }
 
     #[test]
@@ -1840,9 +1954,11 @@ mod tests {
             fixture.grant.task_id.clone(),
             fixture.call.correlation_id.clone(),
         );
+        let mut platform = successful_platform_result();
+        platform.sealed_workspace_input = Some(sealed_input());
         let executor = FakeExecutor {
             launches: 0,
-            result: Some(successful_platform_result()),
+            result: Some(platform),
         };
         let mut driver =
             CommandEffectDriver::new(executor, &fixture.held, fixture.prepared, cancellation);
@@ -1888,6 +2004,41 @@ mod tests {
         assert!(command_receipt.descendants_terminated);
         assert!(super::verify_command_receipt(
             &driver.prepared,
+            &command_receipt
+        ));
+        assert_eq!(command_receipt.sealed_workspace_input, Some(sealed_input()));
+        for case in 0..8 {
+            let mut changed = command_receipt.clone();
+            if case == 7 {
+                changed.sealed_workspace_input = None;
+            } else {
+                let input = changed.sealed_workspace_input.as_mut().unwrap();
+                match case {
+                    0 => input.schema_version = 2,
+                    1 => input.worktree_root_sha256 = "4".repeat(64),
+                    2 => input.observation_sha256 = "5".repeat(64),
+                    3 => input.projection_sha256 = "6".repeat(64),
+                    4 => input.files += 1,
+                    5 => input.directories += 1,
+                    6 => input.file_bytes += 1,
+                    _ => unreachable!(),
+                }
+            }
+            assert!(!super::verify_command_receipt(&driver.prepared, &changed));
+        }
+        let mut legacy = command_receipt.clone();
+        legacy.sealed_workspace_input = None;
+        legacy.receipt_sha256 = "0".repeat(64);
+        legacy.receipt_sha256 = super::canonical_sha256(&legacy).unwrap();
+        let wire = serde_json::to_value(&legacy).unwrap();
+        assert!(wire.get("sealed_workspace_input").is_none());
+        let decoded = serde_json::from_value(wire).unwrap();
+        assert_eq!(legacy, decoded);
+        assert!(super::verify_command_receipt(&driver.prepared, &decoded));
+        let mut foreign_scope = driver.prepared.clone();
+        foreign_scope.command.working_directory = CommandWorkingDirectory::EmptyScratch;
+        assert!(!super::verify_command_receipt(
+            &foreign_scope,
             &command_receipt
         ));
         // Even a correctly rehashed exit-zero receipt must prove cleanup.
