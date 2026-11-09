@@ -3,7 +3,9 @@
 
 use std::sync::{Arc, Mutex};
 
-use agentmage_capability_repository_map::coding_proposal::CodingProposalContext;
+use agentmage_capability_repository_map::coding_proposal::{
+    CodingProposalContext, CodingSource, prepare_coding_proposal,
+};
 use agentmage_kernel_contracts::*;
 use agentmage_kernel_engine::runtime_loop::{
     RuntimeClock, RuntimeEndpointToolPreparationInput, RuntimeEndpointToolProposal,
@@ -81,6 +83,67 @@ impl<C: RuntimeClock + Clone> CodingEndpointEditPreviews<C> {
     #[must_use]
     pub fn startup(&self) -> &CodingEndpointPreparedStartup {
         &self.startup
+    }
+
+    /// Capture fresh selected snapshots under PRIOR read and model-disclosure
+    /// consent. Exclusions and workspace binding are checked before any read.
+    /// Pending/failed/uncertain effects cannot supply a later model context.
+    pub fn read_context(
+        &self,
+        paths: &[String],
+        source_budget: usize,
+        control: &dyn ModelOperationControl,
+    ) -> Result<CodingProposalContext, RuntimePortFailure> {
+        control.remaining_ms().map_err(control_failure)?;
+        if paths.is_empty() || !(2048..=32768).contains(&source_budget) {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        let mut state = self
+            .state
+            .lock()
+            .map_err(|_| RuntimePortFailure::Unavailable)?;
+        state.control.remaining_ms().map_err(control_failure)?;
+        let Some(Owner::Ready(repository)) = state.owner.as_mut() else {
+            return Err(RuntimePortFailure::Invalid);
+        };
+        if repository.created_workspace_id() != Some(&self.startup.request().workspace_id) {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        // Reuse the narrowed path validator before source selection or reads.
+        self.startup
+            .check_sources(
+                &paths
+                    .iter()
+                    .map(|path| CodingSource {
+                        path: path.clone(),
+                        content: String::new(),
+                    })
+                    .collect::<Vec<_>>(),
+            )
+            .map_err(|_| RuntimePortFailure::Invalid)?;
+        let sources = repository
+            .select_created_sources(paths)
+            .map_err(|_| RuntimePortFailure::Unavailable)?
+            .read(paths)
+            .map_err(|_| RuntimePortFailure::Unavailable)?
+            .into_iter()
+            .map(|source| CodingSource {
+                path: source.path,
+                content: source.content,
+            })
+            .collect::<Vec<_>>();
+        control.remaining_ms().map_err(control_failure)?;
+        state.control.remaining_ms().map_err(control_failure)?;
+        let context = prepare_coding_proposal(
+            &self.startup.request().task.objective,
+            &sources,
+            source_budget,
+        )
+        .map_err(|_| RuntimePortFailure::Invalid)?;
+        self.startup
+            .check_edit_context(&context)
+            .map_err(|_| RuntimePortFailure::Invalid)?;
+        Ok(context)
     }
 
     pub(super) fn response<'a>(

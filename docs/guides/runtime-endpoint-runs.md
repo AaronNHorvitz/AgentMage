@@ -1347,6 +1347,54 @@ lock poisoning refuses. All turns, approvals and effects retain the same
 coordinator, ledger and continuous control. Native edit lineage stays with the
 repository; terminal owner return and a fresh ledger are not used for continuation.
 Current snapshots and consent remain caller-owned. The ordinary service factory
-does not select this path automatically. General edit/test/retry scheduling,
+retains its existing behavior; the explicit strict-edit service below selects this
+path. General edit/test/retry scheduling,
 durable recovery, approved Git and measured coding-task success remain open.
 See [Decision 0171](../decisions/0171-strict-response-native-preview-in-one-coordinator.md).
+
+## Strict edits through the retained HTTP service
+
+A trusted host can select `serve_coding_endpoint_strict_edits` with a
+`CodingEndpointStrictHttpRun`. Supply the original instruction-narrowed edit
+startup, original live repository, approved credential-owning connection,
+continuous control, epoch clock, independent verifier, exact source paths and
+excerpt allocation. Prior consent must cover reading and disclosing those
+sources on each advance. These inputs are process-local; no HTTP or model field
+can create an owner or select this service composition.
+
+The factory receives fresh run/session identities. Admission checks both
+identities, the actual transport binding, workspace label, source exclusions and
+excerpt allocation without reading source, opening an endpoint socket or issuing
+a grant. The shared clock wraps the original clock, even when its type does not
+implement `Clone`; both native approvals and the coordinator use that same clock.
+As elsewhere, the workspace label alone does not establish owner provenance.
+
+Use the existing `/v1/code/endpoint/request`, `/advance`, `/events`, `/cancel` and
+`/release` routes and ordinary terminal/MCP clients. Authentication, optional
+observation delegation, explicit model-context consent on advances, exact
+protected approvals and worker joining all use the retained service machinery.
+There is no additional wire route, executor, permission model or agent loop.
+
+At each model turn, the selected paths are read afresh from the original ready
+worktree owner and passed to the existing strict context allocator. Excluded or
+foreign inputs refuse before reads; pending, failed or uncertain native effects
+cannot provide another context. The original bounded generation and response
+callback prepare the complete native diff. Each edit needs its own exact
+approval. After successful native execution, the same owner can supply fresh
+snapshots for another turn within the same cumulative budget. Old approvals and
+terminal reads cannot reset it. Source drift refuses and may latch the run
+faulted; it never overwrites the changed bytes.
+
+`CodingEndpointRuns` now accepts a trusted turn-port type, defaulting to the
+existing configured endpoint. `admit_turn_port` and
+`serve_admitted_coding_endpoint_with_turns` reuse its original admission checks,
+identity tombstones, bounded capacity, coordinator, cancellation and fault
+handling. Ordinary service constructors keep their previous behavior.
+
+The strict service discards ephemeral ownership at release or shutdown; it does
+not return a repository for continuation under a fresh ledger. Errors can drop
+process-held ownership. This is a library service composition, with synthetic
+endpoint and creation fixtures in its tests. It does not yet provide executable
+controlled startup, test-command scheduling, feedback-driven retries, durable
+recovery, approved Git, verified task completion or a measured coding score.
+A strict answer always proposes an edit; it cannot act as a completion claim.

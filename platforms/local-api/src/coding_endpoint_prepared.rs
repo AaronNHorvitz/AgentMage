@@ -84,3 +84,95 @@ where
     )
     .map(|boundary| boundary.map(|tool| tool.into_repository()))
 }
+
+/// Trusted startup for repeated strict model edits over one original repository.
+/// Sources are a fixed consented selection, re-read freshly for each model turn.
+/// This is ephemeral library composition, not executable activation or recovery.
+pub struct CodingEndpointStrictHttpRun<V, C> {
+    /// Original narrowed edit startup, using the factory's fresh identities.
+    pub startup: agentmage_host::coding_endpoint_prepared_startup::CodingEndpointPreparedStartup,
+    /// Original live creation owner; a path or serialized receipt cannot supply it.
+    pub repository: LinuxCodingRepository,
+    /// Original destination-approved, credential-owning transport.
+    pub connection: CodingEndpointConnection<'static>,
+    /// Original continuous control, retained through every advance and approval.
+    pub control: Arc<dyn ModelOperationControl + Send + Sync>,
+    /// One original epoch clock; the factory shares it without requiring Clone.
+    pub clock: C,
+    /// Independent trusted acceptance checks, never model narration.
+    pub verifier: V,
+    /// Exact selected paths under prior read and endpoint-disclosure consent.
+    pub paths: Vec<String>,
+    /// Deterministic excerpt byte allocation.
+    pub source_budget: usize,
+    /// Request actual endpoint usage observations.
+    pub include_usage: bool,
+}
+
+/// Run strict source capture, generation, original native diff and exact approval
+/// through the existing retained HTTP coordinator. Construction is inert; each
+/// advance requires disclosure consent and each edit its own protected approval.
+/// One cumulative ledger and shared original clock cover the entire run. Stop,
+/// release and shutdown discard ephemeral ownership; no fresh run resumes it.
+/// General edit/test/retry, approved Git and durable recovery remain separate.
+pub fn serve_coding_endpoint_strict_edits<V, C>(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    access: CodingEndpointObservationAccess,
+    factory: impl FnOnce(RuntimeRunId, SessionId) -> Result<CodingEndpointStrictHttpRun<V, C>, ApiError>,
+) -> Result<(), ApiError>
+where
+    V: RuntimeVerifierPort + Send + 'static,
+    C: RuntimeClock + Send + 'static,
+{
+    use agentmage_host::{
+        coding_endpoint_edit_generation::CodingEndpointStrictEdits,
+        coding_endpoint_edit_previews::CodingEndpointEditPreviews,
+        coding_endpoint_prepared_startup::CodingEndpointPreparedClock,
+    };
+    serve_admitted_coding_endpoint_with_turns(
+        listener,
+        tokens,
+        stop,
+        access,
+        |id, session, runs| {
+            let input = factory(id.clone(), session.clone())?;
+            let request = input.startup.request().clone();
+            if request.run_id != id || request.session_id != session {
+                return Err(ApiError::Configuration);
+            }
+            let registry = agentmage_platform_linux::linux_coding_endpoint_edit_registry()
+                .map_err(|_| ApiError::Configuration)?;
+            // Preserve the narrowed catalog rather than exposing the full registry.
+            let mut registry = registry;
+            input.startup.guidance().restrict_registry(&mut registry);
+            let clock = CodingEndpointPreparedClock::new(input.clock);
+            let (previews, boundary) = CodingEndpointEditPreviews::new(
+                input.startup,
+                input.repository,
+                input.control,
+                clock.clone(),
+            )
+            .map_err(|_| ApiError::Configuration)?;
+            let port = CodingEndpointStrictEdits::new(
+                previews,
+                input.connection,
+                input.paths,
+                input.source_budget,
+                input.include_usage,
+            )
+            .map_err(|_| ApiError::Configuration)?;
+            runs.admit_turn_port(
+                request.clone(),
+                port,
+                registry,
+                boundary,
+                input.verifier,
+                clock,
+            )
+            .map_err(|_| ApiError::Configuration)?;
+            Ok(request)
+        },
+    )
+}

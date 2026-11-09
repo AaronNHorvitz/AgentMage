@@ -358,6 +358,17 @@ pub struct CodingEndpointPreparedInput<'config, 'source, V, C> {
 /// Two private references to one original epoch clock. Poisoning fails closed;
 /// a tool decision cannot replace the clock or start a fresh running-time budget.
 pub struct CodingEndpointPreparedClock<C>(Arc<Mutex<C>>);
+impl<C> Clone for CodingEndpointPreparedClock<C> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+impl<C> CodingEndpointPreparedClock<C> {
+    /// Hold one original epoch clock. Every clone shares this same clock.
+    pub fn new(clock: C) -> Self {
+        Self(Arc::new(Mutex::new(clock)))
+    }
+}
 impl<C: RuntimeClock> RuntimeClock for CodingEndpointPreparedClock<C> {
     fn now_epoch_ms(&mut self) -> Result<u64, RuntimePortFailure> {
         self.0

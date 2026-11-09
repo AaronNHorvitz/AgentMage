@@ -481,3 +481,330 @@ fn endpoint_prepared_service_stop_without_release_does_not_return_a_native_owner
     fixture.assert_bytes(b"before\n");
     assert!(matches!(upstream.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock));
 }
+
+fn strict_input(
+    owner: LinuxCodingRepository,
+    endpoint: LocalChatEndpoint,
+    id: RuntimeRunId,
+    session: SessionId,
+    clock: Arc<AtomicUsize>,
+) -> agentmage_local_api::CodingEndpointStrictHttpRun<Verifier, SharedClock> {
+    let input = compose(id, session, endpoint, Arc::new(AtomicUsize::new(0)));
+    let registry = linux_coding_endpoint_edit_registry().unwrap();
+    let mut request = input.request;
+    request.mode = RuntimeSessionMode::ControlledWrite;
+    request.workspace_id = WorkspaceId::from_raw("local-coding-worktree-create");
+    request.work_packet.mutable_files = vec!["one.py".into()];
+    request.work_packet.protected_files = vec!["private".into()];
+    request.visible_tools = runtime_tool_references(&registry).unwrap();
+    request.tool_catalog_sha256 =
+        runtime_tool_catalog_sha256(&request.tool_catalog_id, &request.visible_tools).unwrap();
+    request.limits.max_model_calls = 2;
+    let request = seal_runtime_endpoint_run_request(request).unwrap();
+    let evidence = ledger(&request);
+    agentmage_local_api::CodingEndpointStrictHttpRun {
+        startup: CodingEndpointPreparedStartup::prepare(
+            request,
+            CodingEndpointPreparedKind::Edit,
+            &evidence,
+        )
+        .unwrap(),
+        repository: owner,
+        connection: input.connection,
+        control: Arc::new(Control),
+        clock: SharedClock(clock),
+        verifier: input.verifier,
+        paths: vec!["one.py".into()],
+        source_budget: 2048,
+        include_usage: true,
+    }
+}
+
+fn approval(challenge: &Value, allow: bool) -> Value {
+    json!({"schema_version":CONTRACT_SCHEMA_VERSION,"run_id":challenge["run_id"],
+        "approval_id":challenge["approval_id"],"disposition":if allow {RuntimeApprovalDisposition::Allow} else {RuntimeApprovalDisposition::Deny},
+        "challenge_sha256":challenge["challenge_sha256"],
+        "grant_id":if allow {challenge["proposed_grant_id"].clone()} else {Value::Null},"selection":null})
+}
+
+#[test]
+fn endpoint_strict_service_fresh_sources_exact_native_approvals_and_same_run_budget() {
+    use agentmage_capability_repository_map::coding_proposal::{
+        CODING_PROPOSAL_INSTRUCTION, CodingSource, prepare_coding_proposal,
+    };
+    for case in [
+        "allow",
+        "deny",
+        "cancel",
+        "malformed",
+        "stale",
+        "budget",
+        "expiry",
+    ] {
+        let fixture = Fixture::new();
+        let owner = fixture.owner();
+        let (upstream, endpoint) = upstream();
+        let observed = Arc::new(AtomicUsize::new(0));
+        let calls = observed.clone();
+        let (objective_tx, objective_rx) = mpsc::sync_channel::<String>(1);
+        let peer = thread::spawn(move || {
+            let objective = objective_rx.recv_timeout(Duration::from_secs(10)).unwrap();
+            let count = if case == "allow" { 2 } else { 1 };
+            for (old, new) in [("before\n", "first\n"), ("first\n", "second\n")]
+                .into_iter()
+                .take(count)
+            {
+                let mut socket = accept(&upstream);
+                let body = read_upstream(&mut socket);
+                assert_eq!(body["messages"][0]["content"], CODING_PROPOSAL_INSTRUCTION);
+                let context = prepare_coding_proposal(
+                    &objective,
+                    &[CodingSource {
+                        path: "one.py".into(),
+                        content: old.into(),
+                    }],
+                    2048,
+                )
+                .unwrap();
+                assert_eq!(body["messages"][1]["content"], context.user_message());
+                calls.fetch_add(1, Ordering::SeqCst);
+                respond(
+                    &mut socket,
+                    &if case == "malformed" {
+                        "untrusted completion claim".into()
+                    } else {
+                        json!({"edits":[{"path":"one.py","old":old,"new":new}]}).to_string()
+                    },
+                );
+            }
+            upstream
+        });
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        let stop = Arc::new(AtomicBool::new(false));
+        let service_stop = stop.clone();
+        let clock = Arc::new(AtomicUsize::new(0));
+        let shared_clock = clock.clone();
+        let worker = thread::spawn(move || {
+            agentmage_local_api::serve_coding_endpoint_strict_edits(
+                listener,
+                ApiTokens::new(CLIENT.into(), CONTROL.into()).unwrap(),
+                service_stop,
+                CodingEndpointObservationAccess::ControlOnly,
+                |id, session| {
+                    let mut input = strict_input(owner, endpoint, id, session, shared_clock);
+                    if case == "budget" {
+                        // Same sealed original run, one model call for its lifetime.
+                        let mut request = input.startup.request().clone();
+                        request.limits.max_model_calls = 1;
+                        let request = seal_runtime_endpoint_run_request(request).unwrap();
+                        let evidence = ledger(&request);
+                        input.startup = CodingEndpointPreparedStartup::prepare(
+                            request,
+                            CodingEndpointPreparedKind::Edit,
+                            &evidence,
+                        )
+                        .unwrap();
+                    }
+                    Ok(input)
+                },
+            )
+        });
+        let api = Api {
+            address,
+            stop,
+            worker: Some(worker),
+        };
+        let request = api.request();
+        objective_tx
+            .send(request["task"]["objective"].as_str().unwrap().into())
+            .unwrap();
+        assert_eq!(
+            api.call("GET", "/v1/code/endpoint/request", CLIENT, None).0,
+            403
+        );
+        assert_eq!(api.advance(&request, Value::Null, false).0, 403);
+        assert_eq!(observed.load(Ordering::SeqCst), 0);
+        assert_eq!(clock.load(Ordering::SeqCst), 0);
+        fixture.assert_bytes(b"before\n");
+        let (code, mut result) = api.advance(&request, Value::Null, true);
+        assert_eq!(code, 200);
+        if case != "malformed" {
+            assert_eq!(result["state"], "awaiting_approval");
+            assert_eq!(observed.load(Ordering::SeqCst), 1);
+            assert_eq!(api.bind("release", &request).0, 409);
+            fixture.assert_bytes(b"before\n");
+            let first = approval(&result["challenge"], true);
+            let mut tampered = first.clone();
+            tampered["challenge_sha256"] = json!("0".repeat(64));
+            assert_eq!(api.advance(&request, tampered, true).0, 409);
+            fixture.assert_bytes(b"before\n");
+            if case == "stale" {
+                fs::write(fixture.0.join("owned/worktree/one.py"), "external\n").unwrap();
+            }
+            if case == "expiry" {
+                let elapsed = request["limits"]["max_elapsed_ms"].as_u64().unwrap() + 1000;
+                let expiry = result["challenge"]["expires_at_epoch_ms"].as_u64().unwrap();
+                clock.store((elapsed.max(expiry) - 1000) as usize, Ordering::SeqCst);
+                assert_eq!(api.advance(&request, first.clone(), true).0, 409);
+                fixture.assert_bytes(b"before\n");
+                result = api.advance(&request, Value::Null, true).1;
+            } else if case == "cancel" {
+                assert_eq!(api.bind("cancel", &request).0, 200);
+                result = api.advance(&request, Value::Null, false).1;
+            } else {
+                let decision = approval(&result["challenge"], case != "deny");
+                let (status, next) = api.advance(&request, decision, true);
+                if case == "stale" {
+                    assert_eq!(status, 409);
+                    assert_eq!(next, json!({"error":"code.endpoint.refused"}));
+                    fixture.assert_bytes(b"external\n");
+                    assert_eq!(
+                        api.advance(&request, Value::Null, true),
+                        (409, json!({"error":"code.endpoint.faulted"}))
+                    );
+                    assert_eq!(api.bind("release", &request).0, 200);
+                    drop(api);
+                    let upstream = peer.join().unwrap();
+                    assert!(
+                        matches!(upstream.accept(), Err(e) if e.kind()==std::io::ErrorKind::WouldBlock)
+                    );
+                    continue;
+                } else {
+                    assert_eq!(status, 200);
+                    result = next;
+                }
+            }
+            if case == "allow" {
+                fixture.assert_bytes(b"first\n");
+                assert_eq!(result["state"], "awaiting_approval");
+                assert_ne!(result["challenge"]["approval_id"], first["approval_id"]);
+                assert_eq!(observed.load(Ordering::SeqCst), 2);
+                assert_eq!(api.advance(&request, first, true).0, 409);
+                fixture.assert_bytes(b"first\n");
+                result = api
+                    .advance(&request, approval(&result["challenge"], true), true)
+                    .1;
+            }
+        }
+        assert_eq!(result["state"], "terminal", "case={case}: {result}");
+        assert_eq!(
+            result["outcome"]["outcome"]["state"],
+            match case {
+                "deny" => "DECLINED",
+                "cancel" => "CANCELLED",
+                "allow" | "budget" | "expiry" => "EXHAUSTED",
+                _ => "FAILED",
+            }
+        );
+        assert_eq!(
+            result["outcome"]["outcome"]["model_call_count"],
+            if case == "allow" { 2 } else { 1 }
+        );
+        assert!(result["outcome"]["outcome"]["output"].is_null());
+        assert_eq!(
+            result["outcome"]["outcome"]["tool_call_count"],
+            match case {
+                "allow" => 2,
+                "budget" | "deny" | "cancel" | "expiry" => 1,
+                _ => 0,
+            }
+        );
+        fixture.assert_bytes(match case {
+            "allow" => b"second\n",
+            "budget" => b"first\n",
+            "stale" => b"external\n",
+            _ => b"before\n",
+        });
+        assert_eq!(api.advance(&request, Value::Null, true).1, result);
+        // Reconstruct the full immutable event sequence using ordinary paging.
+        let mut sequence = agentmage_kernel_engine::runtime_event::RuntimeEventSequence::new();
+        let mut index = 0;
+        loop {
+            let (code, page) = api.call("POST", "/v1/code/endpoint/events", CONTROL, Some(json!({"run_id":request["run_id"],"request_sha256":request["request_sha256"],"after":index})));
+            assert_eq!(code, 200);
+            for event in page["events"].as_array().unwrap() {
+                sequence
+                    .push(&serde_json::from_value(event.clone()).unwrap())
+                    .unwrap();
+            }
+            index = page["next"].as_u64().unwrap();
+            if index == page["total"].as_u64().unwrap() {
+                break;
+            }
+        }
+        assert_eq!(api.bind("release", &request).0, 200);
+        assert_eq!(api.advance(&request, Value::Null, true).0, 409);
+        drop(api);
+        let upstream = peer.join().unwrap();
+        assert!(matches!(upstream.accept(), Err(e) if e.kind()==std::io::ErrorKind::WouldBlock));
+    }
+}
+
+#[test]
+fn endpoint_strict_service_rejects_foreign_factory_or_excluded_sources_before_io() {
+    for case in [
+        "foreign-run",
+        "foreign-session",
+        "excluded",
+        "outside",
+        "zero-budget",
+        "empty",
+        "foreign-endpoint",
+    ] {
+        let fixture = Fixture::new();
+        let owner = fixture.owner();
+        let (upstream, endpoint) = upstream();
+        let clock = Arc::new(AtomicUsize::new(0));
+        let result = agentmage_local_api::serve_coding_endpoint_strict_edits(
+            TcpListener::bind("127.0.0.1:0").unwrap(),
+            ApiTokens::new(CLIENT.into(), CONTROL.into()).unwrap(),
+            Arc::new(AtomicBool::new(false)),
+            CodingEndpointObservationAccess::ControlOnly,
+            |id, session| {
+                let mut input = strict_input(
+                    owner,
+                    endpoint,
+                    if case == "foreign-run" {
+                        RuntimeRunId::from_raw("foreign")
+                    } else {
+                        id
+                    },
+                    if case == "foreign-session" {
+                        SessionId::from_raw("foreign")
+                    } else {
+                        session
+                    },
+                    clock.clone(),
+                );
+                match case {
+                    "excluded" => input.paths = vec!["private/missing.py".into()],
+                    "outside" => input.paths = vec!["../outside.py".into()],
+                    "zero-budget" => input.source_budget = 0,
+                    "empty" => input.paths.clear(),
+                    "foreign-endpoint" => {
+                        let mut request = input.startup.request().clone();
+                        request.model_selection.endpoint = "http://127.0.0.1:1/v1".into();
+                        let request = seal_runtime_endpoint_run_request(request).unwrap();
+                        let evidence = ledger(&request);
+                        input.startup = CodingEndpointPreparedStartup::prepare(
+                            request,
+                            CodingEndpointPreparedKind::Edit,
+                            &evidence,
+                        )
+                        .unwrap();
+                    }
+                    _ => (),
+                }
+                Ok(input)
+            },
+        );
+        assert!(
+            matches!(result, Err(ApiError::Configuration)),
+            "case={case}"
+        );
+        assert_eq!(clock.load(Ordering::SeqCst), 0);
+        fixture.assert_bytes(b"before\n");
+        assert!(matches!(upstream.accept(),Err(e) if e.kind()==std::io::ErrorKind::WouldBlock));
+    }
+}

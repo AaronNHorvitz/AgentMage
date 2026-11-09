@@ -15,7 +15,8 @@ use agentmage_kernel_contracts::{
 };
 use agentmage_kernel_engine::{
     runtime_loop::{
-        RuntimeClock, RuntimeEndpointCoordinatorStep, RuntimeToolBoundary, RuntimeVerifierPort,
+        RuntimeClock, RuntimeEndpointCoordinatorStep, RuntimeEndpointTurnPort, RuntimeToolBoundary,
+        RuntimeVerifierPort,
     },
     tooling::ToolRegistry,
 };
@@ -56,8 +57,13 @@ pub enum CodingEndpointObservationAccess {
     DelegateObservations,
 }
 
-struct Session<T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock> {
-    runs: CodingEndpointRuns<'static, T, V, C>,
+struct Session<
+    T: RuntimeToolBoundary,
+    V: RuntimeVerifierPort,
+    C: RuntimeClock,
+    P: RuntimeEndpointTurnPort,
+> {
+    runs: CodingEndpointRuns<'static, T, V, C, P>,
     returned: Option<T>,
 }
 
@@ -280,7 +286,12 @@ where
     )
 }
 
-fn serve_admitted_endpoint_inner<T, V, C>(
+/// Trusted custom turn selection through the SAME endpoint HTTP service.
+/// The factory supplies a live process-local turn port and original boundaries;
+/// wire input cannot select them. Disclosure consent, exact approvals, retention,
+/// cancellation and worker joining are identical to ordinary admitted runs.
+/// This entry point discards ephemeral owners at shutdown; it grants no recovery.
+pub fn serve_admitted_coding_endpoint_with_turns<T, V, C, P>(
     listener: TcpListener,
     tokens: ApiTokens,
     stop: Arc<AtomicBool>,
@@ -288,7 +299,35 @@ fn serve_admitted_endpoint_inner<T, V, C>(
     factory: impl FnOnce(
         RuntimeRunId,
         SessionId,
-        &mut CodingEndpointRuns<'static, T, V, C>,
+        &mut CodingEndpointRuns<'static, T, V, C, P>,
+    ) -> Result<RuntimeEndpointRunRequest, ApiError>,
+) -> Result<(), ApiError>
+where
+    T: RuntimeToolBoundary + Send + 'static,
+    V: RuntimeVerifierPort + Send + 'static,
+    C: RuntimeClock + Send + 'static,
+    P: RuntimeEndpointTurnPort + Send + 'static,
+{
+    serve_admitted_endpoint_inner(
+        listener,
+        tokens,
+        stop,
+        access,
+        factory,
+        TerminalToolDisposition::Discard,
+    )
+    .map(|_| ())
+}
+
+fn serve_admitted_endpoint_inner<T, V, C, P>(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    access: CodingEndpointObservationAccess,
+    factory: impl FnOnce(
+        RuntimeRunId,
+        SessionId,
+        &mut CodingEndpointRuns<'static, T, V, C, P>,
     ) -> Result<RuntimeEndpointRunRequest, ApiError>,
     disposition: TerminalToolDisposition,
 ) -> Result<Option<T>, ApiError>
@@ -296,6 +335,7 @@ where
     T: RuntimeToolBoundary + Send + 'static,
     V: RuntimeVerifierPort + Send + 'static,
     C: RuntimeClock + Send + 'static,
+    P: RuntimeEndpointTurnPort + Send + 'static,
 {
     if stop.load(Ordering::Acquire)
         || !listener

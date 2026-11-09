@@ -2,6 +2,28 @@
 
 ## Active queue: local agent mission
 
+The [live-edit connection independent core review](docs/reviews/01cf9c2eea42-local-coding-live-edit-response.txt)
+has **Verdict: PASS** for exact commit
+`01cf9c2eea420015d1163a8f7d40f283d8901625`, with no high/medium finding.
+Its low L1 missing Linux module guard is repaired in the strict-service batch.
+Low L2 direct non-success native execution/held-owner coverage and L3 exact
+kernel refusal reasons remain same-row backlog with the earlier lows. The new
+service refuses context preparation while an effect is pending or failed, before
+another model dispatch; its stale-file fixture latches the original fault.
+Neither parent closes; the new service connection requires separate core review.
+
+The [strict-edit HTTP service connection](docs/evidence/t303-strict-http-service-2026-11-09.md)
+selects fresh consented source snapshots, bounded strict generation and original
+native previews through the retained endpoint service and one cumulative
+coordinator. Each edit still requires its exact protected approval. Builder
+verification is complete: formatting and Clippy pass; the 20-target unfiltered
+source tests have 855 passed, exactly 53 inherited host failures and none new,
+11 existing ignored. An initial Markdown error is corrected and checked
+separately; the complete scoped gate remains FAIL. Independent core review is
+required. T-303/T-306 remain open; no row or sub-row is added or closed. Executable controlled startup,
+general edit/test/retry, durable recovery, approved Git and parent measurements
+remain open.
+
 The [coordinator-generation independent core review](docs/reviews/f4aa4b43f398-local-coding-coordinator-generation.txt)
 has **Verdict: PASS** for exact commit
 `f4aa4b43f39821c47c1ee300e8999a3b23d467b0`, with no high/medium finding.

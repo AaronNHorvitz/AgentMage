@@ -16,8 +16,8 @@ use agentmage_kernel_engine::{
     runtime_coordinator::verify_runtime_endpoint_run_request,
     runtime_loop::{
         ReusableRuntimeCoordinator, RuntimeClock, RuntimeEndpointCoordinatorStep,
-        RuntimeEndpointDriver, RuntimeLoopError, RuntimeNoNativeContext, RuntimePortFailure,
-        RuntimeToolBoundary, RuntimeVerifierPort,
+        RuntimeEndpointDriver, RuntimeEndpointTurnPort, RuntimeLoopError, RuntimeNoNativeContext,
+        RuntimePortFailure, RuntimeToolBoundary, RuntimeVerifierPort,
     },
     tooling::ToolRegistry,
 };
@@ -30,13 +30,8 @@ use crate::{
 const MAX_HELD_RUNS: usize = 4;
 const MAX_ADMITTED_IDENTITIES: usize = 256;
 
-type Coordinator<'config, T, V, C> = ReusableRuntimeCoordinator<
-    RuntimeEndpointDriver<ConfiguredCodingEndpoint<'config, CodingEndpointContext>>,
-    RuntimeNoNativeContext,
-    T,
-    V,
-    C,
->;
+type Coordinator<P, T, V, C> =
+    ReusableRuntimeCoordinator<RuntimeEndpointDriver<P>, RuntimeNoNativeContext, T, V, C>;
 
 /// Trusted composition inputs. Prior source-read/disclosure consent and actual
 /// scoped tool/grant ownership remain the caller's responsibility. None of
@@ -88,17 +83,27 @@ pub enum CodingEndpointOwnerError {
     Coordinator(RuntimeLoopError),
 }
 
-enum Held<'config, T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock> {
+enum Held<
+    P: RuntimeEndpointTurnPort,
+    T: RuntimeToolBoundary,
+    V: RuntimeVerifierPort,
+    C: RuntimeClock,
+> {
     Retained {
-        coordinator: Box<Coordinator<'config, T, V, C>>,
+        coordinator: Box<Coordinator<P, T, V, C>>,
         faulted: bool,
     },
     Released,
 }
 
-struct Entry<'config, T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock> {
+struct Entry<
+    P: RuntimeEndpointTurnPort,
+    T: RuntimeToolBoundary,
+    V: RuntimeVerifierPort,
+    C: RuntimeClock,
+> {
     request_sha256: String,
-    held: Held<'config, T, V, C>,
+    held: Held<P, T, V, C>,
 }
 
 /// A non-cloneable owner of at most four complete coordinators. All operations
@@ -112,15 +117,18 @@ pub struct CodingEndpointRuns<
     T: RuntimeToolBoundary,
     V: RuntimeVerifierPort,
     C: RuntimeClock,
+    P: RuntimeEndpointTurnPort = ConfiguredCodingEndpoint<'config, CodingEndpointContext>,
 > {
-    entries: BTreeMap<RuntimeRunId, Entry<'config, T, V, C>>,
+    lifetime: std::marker::PhantomData<&'config ()>,
+    entries: BTreeMap<RuntimeRunId, Entry<P, T, V, C>>,
 }
 
-impl<T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock> Default
-    for CodingEndpointRuns<'_, T, V, C>
+impl<T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock, P: RuntimeEndpointTurnPort>
+    Default for CodingEndpointRuns<'_, T, V, C, P>
 {
     fn default() -> Self {
         Self {
+            lifetime: std::marker::PhantomData,
             entries: BTreeMap::new(),
         }
     }
@@ -135,9 +143,42 @@ impl<'config, T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock>
         &mut self,
         input: CodingEndpointAdmission<'config, '_, T, V, C>,
     ) -> Result<(), CodingEndpointOwnerError> {
-        verify_runtime_endpoint_run_request(&input.request)
+        self.check_admission(&input.request)?;
+        let port = ConfiguredCodingEndpoint::for_coding_run_with_connection(
+            input.connection,
+            &input.request,
+            &input.registry,
+            input.sources,
+            input.source_budget,
+            input.include_usage,
+        )
+        .map_err(CodingEndpointOwnerError::Context)?;
+        self.admit_turn_port(
+            input.request,
+            port,
+            input.registry,
+            input.tool_boundary,
+            input.verifier,
+            input.clock,
+        )
+    }
+}
+
+impl<
+    'config,
+    T: RuntimeToolBoundary,
+    V: RuntimeVerifierPort,
+    C: RuntimeClock,
+    P: RuntimeEndpointTurnPort,
+> CodingEndpointRuns<'config, T, V, C, P>
+{
+    fn check_admission(
+        &self,
+        request: &RuntimeEndpointRunRequest,
+    ) -> Result<(), CodingEndpointOwnerError> {
+        verify_runtime_endpoint_run_request(request)
             .map_err(|_| CodingEndpointOwnerError::Invalid)?;
-        if self.entries.contains_key(&input.request.run_id) {
+        if self.entries.contains_key(&request.run_id) {
             return Err(CodingEndpointOwnerError::AlreadyAdmitted);
         }
         if self.entries.len() >= MAX_ADMITTED_IDENTITIES
@@ -150,24 +191,31 @@ impl<'config, T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock>
         {
             return Err(CodingEndpointOwnerError::Capacity);
         }
-        let port = ConfiguredCodingEndpoint::for_coding_run_with_connection(
-            input.connection,
-            &input.request,
-            &input.registry,
-            input.sources,
-            input.source_budget,
-            input.include_usage,
-        )
-        .map_err(CodingEndpointOwnerError::Context)?;
-        let id = input.request.run_id.clone();
-        let request_sha256 = input.request.request_sha256.clone();
+        Ok(())
+    }
+
+    /// Trusted in-process composition of the original turn port. The same
+    /// admission bounds, immutable identities and coordinator own every advance.
+    /// This grants no source consent, effect authority or durable recovery.
+    pub fn admit_turn_port(
+        &mut self,
+        request: RuntimeEndpointRunRequest,
+        port: P,
+        registry: ToolRegistry,
+        tool_boundary: T,
+        verifier: V,
+        clock: C,
+    ) -> Result<(), CodingEndpointOwnerError> {
+        self.check_admission(&request)?;
+        let id = request.run_id.clone();
+        let request_sha256 = request.request_sha256.clone();
         let coordinator = ReusableRuntimeCoordinator::new_endpoint(
-            input.request,
+            request,
             port,
-            input.registry,
-            input.tool_boundary,
-            input.verifier,
-            input.clock,
+            registry,
+            tool_boundary,
+            verifier,
+            clock,
         )
         .map_err(CodingEndpointOwnerError::Coordinator)?;
         self.entries.insert(
@@ -298,7 +346,7 @@ impl<'config, T: RuntimeToolBoundary, V: RuntimeVerifierPort, C: RuntimeClock>
     fn entry(
         &mut self,
         request: &RuntimeEndpointRunRequest,
-    ) -> Result<&mut Entry<'config, T, V, C>, CodingEndpointOwnerError> {
+    ) -> Result<&mut Entry<P, T, V, C>, CodingEndpointOwnerError> {
         verify_runtime_endpoint_run_request(request)
             .map_err(|_| CodingEndpointOwnerError::Invalid)?;
         self.entries

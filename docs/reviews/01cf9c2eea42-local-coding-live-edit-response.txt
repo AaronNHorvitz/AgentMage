@@ -1,0 +1,180 @@
+Commit: 01cf9c2eea420015d1163a8f7d40f283d8901625
+Scope: local-coding-live-edit-response
+
+# Independent core review: strict responses to original native previews (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (separate session, read-only repository access), 2026-11-09.
+Tier: core. Base: f4aa4b43f39821c47c1ee300e8999a3b23d467b0 (immutable).
+
+## Methods
+
+1. Confirmed the pinned commit: `git rev-parse HEAD` in /lane/review-checkout gives
+   01cf9c2eea420015d1163a8f7d40f283d8901625. `git diff --stat` against the base shows exactly the
+   fourteen stated paths (nine Rust inputs, five docs), 1488 insertions and 8 deletions, in one commit.
+2. Read README.md, run.py, check.py and light.py in /lane/state/tmp/t303-live-edit-response before
+   running anything. run.py and light.py prepend /lane/state/tmp/t303-endpoint-write/tooling to PATH.
+   That directory holds only a Node ELF executable and its LICENSE: no Cargo or Python shim. run.py
+   runs the repository's own `scripts/local_agent_fast_gate.py` with two build jobs, four test
+   threads and a private TMPDIR namespace, and records source hashes before and after. check.py
+   compares failure identities with the base's T-301 baseline file. It does not grant acceptance.
+3. Read IP-POLICY.md and the predecessor review. Its L1 (exact-prompt assertion) is the item
+   this batch says it strengthens.
+4. Read the full kernel diff (`runtime_loop.rs`, `runtime_loop/coordinator_endpoint.rs`) along
+   with the surrounding endpoint turn code (model accounting, finish check, `tool_budget_exhausted`,
+   `request_tool`). Read the whole new host module `coding_endpoint_edit_previews.rs`, the
+   generation diff and the unchanged native binding it depends on
+   (`platforms/linux/src/coding_repository_endpoint_edit.rs` `into_endpoint_edit`,
+   `coding_repository_endpoint_boundary.rs` `check`/`current`/`evaluate_scoped`/`resolve_scoped`)
+   and `CodingEndpointPreparedStartup::prepare_edit_proposal`. Read both new regression methods
+   case by case.
+5. Ran every requested command from the pinned checkout with a fresh output directory and a
+   separate target. I did not wrap run.py in build-slot and did not use the GPU.
+6. Checked the added lines for private paths, usernames, hostnames, credentials and product names.
+   Checked TASKS.md row lines, and confirmed no evaluation, held-out, hidden-test, scorer, pin,
+   threshold or dependency path changed.
+
+## Exact commands and results (all run from /lane/review-checkout)
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-live-edit-response/review-inputs.sha256` | 0 | all inputs match; the manifest's own SHA-256 is f8a9994b13ac98984ecff69d519363a9301c54f33fe8d9e190377c2ae907f5bb, as stated |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-live-edit-response/run.py /lane/state/tmp/review-live-edit-response-01cf9c2eea42` | 1 | expected. Printed `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`; log ends `FAST GATE: FAIL`. Exit codes per command: diff-check 0, untracked lint 0, review lint 0, markdownlint 0 (1.35 s), fmt 0 (36.32 s including slot wait), clippy 0 (45.39 s), tests 101 (334.90 s); 418.34 s total including reservations |
+| `python3 -B /lane/state/tmp/t303-live-edit-response/check.py /lane/state/tmp/review-live-edit-response-01cf9c2eea42` | 0 | 45 targets. Totals: 2796 passed, 72 failed, 71 ignored, 0 measured, 0 filtered. The 72 failure identities equal the inherited host/Linux baseline exactly, with none new or missing. All four named methods are `ok`. Raw log sha256 9203c5a42822fff8f288f9183fe23bd3d4bf9d63d75728d9b3458d73d524b04f. Data comparison only |
+| `python3 -B /lane/state/tmp/t303-live-edit-response/light.py` | 0 | four LIGHT_EXIT 0 lines (diff-check, untracked lint, review lint, markdownlint) |
+| `cmp .../validation-corrected/source-freeze.json /lane/state/tmp/review-live-edit-response-01cf9c2eea42/source-freeze.json` | 0 | the nine Rust hashes are identical to the builder's final freeze |
+| `cmp docs/reviews/f4aa4b43f398-local-coding-coordinator-generation.txt /lane/reviews/f4aa4b43f398-local-coding-coordinator-generation.md` | 0 | predecessor review retained byte-identically |
+| `git diff --check f4aa4b43f39821c47c1ee300e8999a3b23d467b0 --` | 0 | no whitespace errors |
+| `git status --short` | 0 | empty; tree clean |
+
+Every outcome matched the request: run.py 1 (gate FAIL), all others 0. My plan.json is
+byte-identical to the builder's validation-corrected/plan.json. My timings differ from the builder's
+(fmt 36.32 s vs 2.11 s, clippy 45.39 s vs 12.28 s, tests 334.90 s vs 303.80 s). That is consistent
+with slot waiting and cache state; the builder's figures are reported correctly as their own run.
+My run's temp namespace (/tmp/lp-f6cylvpl) holds 22 entries including 4 files and 36 bytes, all
+inherited host test leftovers. That is the same shape the builder reported.
+
+## Security and correctness analysis
+
+Kernel callback (`coordinator_endpoint.rs:634-705`):
+- The callback is reached only after full accounting. Input bytes and model calls are charged
+  before dispatch; output bytes and elapsed time are charged after a completed result; then
+  `ModelCompleted` is emitted, and `finish != Stop` is refused before the callback. Failure,
+  limited and overflow responses return through `finish_model_failure` or `finish_phase_stop`
+  earlier. The kernel test confirms this in modes 5-7 (interpreted count 0).
+- `tool_budget_exhausted` runs before the callback. Mode 8 (`max_tool_calls = 0`) confirms the
+  callback is never entered.
+- The identities passed to the callback match what `request_tool` later derives: operation
+  `tool_call_count+1`, endpoint-call `turn_count`, action `tool_call_count+1`. The kernel test asserts
+  each one.
+- The callback runs under a `RuntimePhaseControl` over the original clock, start time and
+  cancellation probe, with `check()` before and after. A deadline crossed inside the callback is a
+  phase stop, and the proposal is discarded (mode 2, no execution).
+- Callback `Err` goes to `finish_refused_proposal("runtime.proposal.preparation-refused")`. When a
+  callback is set there is no path to raw text, the tool-call envelope or completion parsing:
+  `interpreted` is `Some` or the function has already returned. A callback-produced proposal still
+  goes through `is_model_proposable`, registry-owned schema and encoding, `validate_arguments`,
+  `request_tool` input charging, the attempt guard and the permission boundary.
+- No wire or model field can construct the callback. It is set only by process-local
+  `with_tool_preparation`.
+
+Host pair (`coding_endpoint_edit_previews.rs`):
+- The constructor requires that the repository's created workspace equals the startup workspace,
+  and that visible tools equal the edit registry.
+- `response()` re-checks the startup digest and the edit context. The callback re-checks that the
+  request equals the startup request, checks both controls before and after, requires
+  `Owner::Ready`, and runs the existing strict `prepare_edit_proposal`: fresh reads, complete
+  preimages, mutable and protected paths, native diff. It then binds through the unchanged
+  `into_endpoint_edit`.
+- The native binding requires the exact registry-encoded bytes and digest of `{"preview": ...}`,
+  the exact definition, and an action ID in range. The boundary's `check` requires
+  `call == self.edit.call` and the exact request, and `evaluate_scoped` requires the exact
+  operation ID. A coordinator-side re-encoding that differed in any byte would therefore fail
+  closed.
+- The owner is retired (`take`) before handoff. Binding refusal restores the same repository
+  without a grant.
+- Tool-side `evaluate`, `resolve` and `execute` (the unscoped variants) refuse. The scoped variants
+  delegate only when the owner is `Pending`.
+- Only `OperationOutcome::Succeeded` returns the owner to `Ready`. An execute `Err` propagates with
+  the owner still `Pending`. A panic while the lock is held poisons it, and later locks refuse with
+  `Unavailable`.
+- Approval IDs derive from each preview's change-set ID. The host test asserts that the second
+  approval ID differs and that the earlier approval and a tampered approval leave events
+  unchanged.
+
+Confinement reproduction. This commit adds no new filesystem, network or command primitive. It
+composes the unchanged native reader, binding and atomic writer. The host method exercises
+protected (`private/secret.py`) and outside (`../outside`) edit paths, a stale preimage (file
+changed before the preview; a second context naming an already edited file) and a
+model-authored tool envelope. All are refused with zero tool calls where the commit claims so,
+and the files are asserted unchanged. Symlink and hardlink escapes on this read and write path are
+covered by the unchanged native tests (`coding_repository_endpoint_edit_tests.rs` symlink and
+hardlink cases; `coding_endpoint_model_edit_tests.rs:293`), which pass in this gate. Prompt injection
+in document or model text cannot select a tool, a path outside the work packet or an approval: the
+callback fixes the tool, and every write needs its own exact approval. No network access is added.
+No environment value enters the new code.
+
+Accounting claims. The host method asserts that cumulative input equals the actual frozen bodies
+plus the native argument bytes, and that output equals the model text plus the native result
+bytes. It also asserts that the output key is absent for the overflow and incomplete cases
+(3 and 4), along with exact terminal states and tool counts for all 13 cases in both connection
+forms, verified event sequences, inert terminal rereads and that no unexpected socket connection
+remains. These match the evidence text.
+
+Evaluation integrity, honesty and hygiene. No held-out, hidden-test, scorer, task-pin, threshold,
+dependency or SBOM path is touched. The evidence labels creation provenance and model answers as
+synthetic and claims no real-model coding, Git, test success or score. TASKS.md row lines are
+identical to the base (check.py asserts this). No row or sub-row is added. Added lines contain no
+home path, username, hostname or credential. The only product-like name is the reviewer
+attribution line inside the retained predecessor review. `/lane/...` paths in that retained review
+follow the existing committed review convention (144 prior review files).
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, portability), `shells/host/src/lib.rs:52`.** `pub mod coding_endpoint_edit_previews;`
+  is the only module in this region without `#[cfg(target_os = "linux")]`. It imports
+  `agentmage_platform_linux` (declared only under `[target.'cfg(target_os = "linux")'.dependencies]`
+  in `shells/host/Cargo.toml:46-47`) and the Linux-only modules `crate::coding_endpoint` and
+  `crate::coding_endpoint_prepared_startup`. A non-Linux build of `agentmage-host` therefore cannot
+  resolve those paths, which is a regression from the base, where every such module is gated. I
+  reasoned this from the cfg and dependency declarations and did not run a cross-target build. No
+  current gate builds non-Linux, and the mission is Linux-only, so this is low. Fix: add
+  `#[cfg(target_os = "linux")]` and a `///` doc line above the module, as its neighbours have.
+- **L2 (low, test coverage), `shells/host/src/coding_endpoint_edit_previews.rs:251`.** The
+  "failed/uncertain remain held" rule (only `Succeeded` returns the owner to `Ready`) has no direct
+  regression. No host case approves a write that then fails natively (for example, the source is
+  changed after the challenge and before the Allow response) and then reaches a later strict turn.
+  Cases 8 and 10 end before execution, and case 5 is refused at preview time. If the line were
+  mutated to return the owner on any outcome, every existing case would still pass. A later write
+  would still need its own exact approval, so this is not a confinement gap. Fix: add one case to
+  the existing method that modifies `one.py` between the first challenge and Allow. Assert that the
+  native outcome is not success, that the second strict turn is refused with no second challenge,
+  and that `two.py` is unchanged. Related backlog: `response()` does not check owner readiness when
+  the turn is prepared, so a turn after a non-successful effect still spends one accounted model
+  call before the callback refuses.
+- **L3 (low, test precision),
+  `kernel/engine/src/runtime_loop_endpoint_coordinator_tests.rs:634`.** For modes 1-8 the kernel
+  method asserts only `Complete`, the interpreted count and zero executions. It does not assert the
+  terminal state or reason codes: `preparation-refused`, deadline stop, `tool-not-offered`,
+  `arguments-invalid`, model failure and tool-budget exhaustion. Fix: assert
+  `outcome.outcome.state` and the reason code for each mode.
+
+All three are same-row backlog and block nothing.
+
+## Per-row result
+
+- T-303 (non-closing batch): PASS for this scope. The strict answer reaches the original native
+  preview, exact approval and atomic write inside one coordinator, with fail-closed refusal and
+  cumulative accounting, reachable through `into_coordinator_edit_turn`. The row stays OPEN.
+  Automatic service selection, general edit/test/retry, recovery, approved Git and measurements are
+  not delivered.
+- T-306 (non-closing batch): PASS for this scope. The confinement and approval boundary is
+  unchanged and correctly composed. The row stays OPEN.
+- The predecessor review is retained byte-identically, and its L1 is addressed exactly as
+  recommended (`coding_endpoint_edit_coordinator_tests.rs:303-318`). The overflow-prefix assertion
+  now checks the exact delivered prefix.
+- The gate is FAIL on exactly the 72 inherited failures, with none new. This is recorded as data
+  and is not an acceptance gate. No parent closes and no owner-test-ready claim is made.
+
+Verdict: PASS

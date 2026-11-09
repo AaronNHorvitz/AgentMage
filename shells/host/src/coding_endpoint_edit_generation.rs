@@ -12,7 +12,8 @@ use agentmage_kernel_contracts::{
     SchemaReference,
 };
 use agentmage_kernel_engine::runtime_loop::{
-    RuntimeEndpointPreparationInput, RuntimePortFailure, RuntimePreparedEndpointTurn,
+    RuntimeClock, RuntimeEndpointPreparationInput, RuntimeEndpointTurnPort, RuntimePortFailure,
+    RuntimePreparedEndpointTurn,
     endpoint::{
         RuntimeEndpointContextPacket, RuntimeEndpointMessage, RuntimeEndpointMessageRole,
         RuntimeEndpointModelPhase, RuntimeEndpointModelPort, RuntimeEndpointPhaseFailure,
@@ -33,6 +34,125 @@ use crate::{
 };
 
 const MAX_EDIT_ANSWER_BYTES: usize = 64 * 1024;
+
+/// Fixed trusted source selection for strict edits inside one live coordinator.
+/// Each turn re-reads current bytes from the original owner under prior consent;
+/// no path or executor is selected by a model or HTTP argument. Native effects
+/// still require their separate exact approvals. No test/retry scheduler or
+/// model-certified completion is supplied by this port.
+pub struct CodingEndpointStrictEdits<'config, C> {
+    previews: crate::coding_endpoint_edit_previews::CodingEndpointEditPreviews<C>,
+    connection: CodingEndpointConnection<'config>,
+    paths: Vec<String>,
+    source_budget: usize,
+    include_usage: bool,
+}
+
+impl<'config, C: RuntimeClock + Clone> CodingEndpointStrictEdits<'config, C> {
+    /// Inert construction. Consent must cover these exact sources on every
+    /// advance. Transport binding and the source allocation are checked here;
+    /// no source is read and no model request is dispatched during admission.
+    pub fn new(
+        previews: crate::coding_endpoint_edit_previews::CodingEndpointEditPreviews<C>,
+        connection: CodingEndpointConnection<'config>,
+        paths: Vec<String>,
+        source_budget: usize,
+        include_usage: bool,
+    ) -> Result<Self, RuntimePortFailure> {
+        let request = previews.startup().request();
+        if paths.is_empty()
+            || !(2048..=32768).contains(&source_budget)
+            || request.model_selection
+                != connection
+                    .transport()
+                    .model_selection(&request.model_selection.model)
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        previews
+            .startup()
+            .check_sources(
+                &paths
+                    .iter()
+                    .map(|path| {
+                        agentmage_capability_repository_map::coding_proposal::CodingSource {
+                            path: path.clone(),
+                            content: String::new(),
+                        }
+                    })
+                    .collect::<Vec<_>>(),
+            )
+            .map_err(|_| RuntimePortFailure::Invalid)?;
+        Ok(Self {
+            previews,
+            connection,
+            paths,
+            source_budget,
+            include_usage,
+        })
+    }
+}
+
+impl<C: RuntimeClock + Clone> RuntimeEndpointTurnPort for CodingEndpointStrictEdits<'_, C> {
+    fn model_binding(&self) -> agentmage_kernel_contracts::RuntimeModelBinding<'_> {
+        let selection = &self.previews.startup().request().model_selection;
+        agentmage_kernel_contracts::RuntimeModelBinding::SelectedEndpoint {
+            endpoint: &selection.endpoint,
+            model: &selection.model,
+        }
+    }
+
+    fn prepare<'a>(
+        &mut self,
+        input: RuntimeEndpointPreparationInput<'_>,
+        control: &dyn ModelOperationControl,
+    ) -> Result<RuntimePreparedEndpointTurn<'a>, RuntimePortFailure>
+    where
+        Self: 'a,
+    {
+        // Reject substitution before reading or disclosing a single source byte.
+        if input.request != self.previews.startup().request()
+            || input.turn == 0
+            || input.turn > input.request.limits.max_turns
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        let context = self
+            .previews
+            .read_context(&self.paths, self.source_budget, control)?;
+        let connection = match &self.connection {
+            CodingEndpointConnection::Borrowed {
+                transport,
+                approval,
+            } => CodingEndpointConnection::Borrowed {
+                transport,
+                approval,
+            },
+            CodingEndpointConnection::Shared {
+                transport,
+                approval,
+            } => CodingEndpointConnection::Shared {
+                transport: transport.clone(),
+                approval: approval.clone(),
+            },
+        };
+        self.previews
+            .startup()
+            .prepare_edit_generation(connection, context, self.include_usage)
+            .and_then(|generation| {
+                generation.into_coordinator_edit_turn(
+                    input,
+                    control,
+                    crate::coding_verifier::coding_completion_schema(),
+                    &mut self.previews,
+                )
+            })
+            .map_err(|error| match error {
+                CodingEndpointGenerationError::Preparation(error) => error,
+                _ => RuntimePortFailure::Invalid,
+            })
+    }
+}
 
 /// Content-free refusal. Generation never grants an edit or establishes success.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
