@@ -9,7 +9,9 @@ use agentmage_kernel_engine::runtime_loop::{
 };
 use agentmage_platform_linux_inference::{
     local_chat::LocalChatEndpoint,
-    local_chat_transport::{LocalChatApproval, LocalChatTransport, TransportLimits},
+    local_chat_transport::{
+        LocalChatApproval, LocalChatTransport, TransportError, TransportLimits,
+    },
 };
 use std::{
     io::{Read, Write},
@@ -363,18 +365,15 @@ fn endpoint_strict_generation_refuses_scope_destination_and_phase_limits_without
         &f.empty_ledger(),
     )
     .unwrap();
-    assert_eq!(
-        small
-            .prepare_edit_generation(
-                connection(transport.clone(), endpoint.clone()),
-                context(&small),
-                true
-            )
-            .err(),
-        Some(GenerationError::Preparation(
-            RuntimePortFailure::ResourceExhausted
-        ))
-    );
+    let prepared = small
+        .prepare_edit_generation(
+            connection(transport.clone(), endpoint.clone()),
+            context(&small),
+            true,
+        )
+        .unwrap();
+    assert_eq!(prepared.binding().limits().response_text_limit_bytes, 4096);
+    drop(prepared);
     let command = Startup::prepare(
         controlled(&f, Kind::Command),
         Kind::Command,
@@ -517,16 +516,114 @@ fn endpoint_strict_generation_original_control_stops_dispatch_callbacks_and_prev
         peer.join().unwrap();
         control.0.store(true, Ordering::SeqCst);
         if cancel_in_callback {
-            assert!(generated.result().is_err());
+            assert!(matches!(
+                generated.result(),
+                Err(RuntimeEndpointPhaseFailure::Dependency(
+                    TransportError::OperationStopped(ModelOperationStop::Cancelled)
+                ))
+            ));
         } else {
             assert!(generated.result().is_ok());
         }
-        assert!(
-            generated
-                .prepare_preview(&startup, &mut owner, &control, 1000)
-                .is_err()
+        assert_eq!(
+            generated.prepare_preview(&startup, &mut owner, &control, 1000),
+            Err(if cancel_in_callback {
+                GenerationError::Incomplete
+            } else {
+                GenerationError::Preparation(RuntimePortFailure::Cancelled)
+            })
         );
         assert!(owner.inspect_edit().unwrap()["pending"].is_null());
+    }
+}
+
+#[test]
+fn endpoint_strict_generation_uses_run_text_ceiling_for_preview_and_refuses_overflow() {
+    for ceiling in [4096, 64 * 1024, 2 * 1024 * 1024] {
+        for shared in [false, true] {
+            for overflow in [false, true] {
+                let f = generation_fixture();
+                let mut repository = owner(&f);
+                let (listener, endpoint) = socket();
+                let startup = generation_startup(&f, &endpoint, &f.empty_ledger());
+                let mut request = startup.request().clone();
+                request.limits.max_output_bytes = ceiling;
+                let startup = Startup::prepare(
+                    seal_runtime_endpoint_run_request(request).unwrap(),
+                    Kind::Edit,
+                    &f.empty_ledger(),
+                )
+                .unwrap();
+                let prior = startup
+                    .prepare_edit_proposal(&mut repository, &context(&startup), &good(), 1000)
+                    .unwrap();
+                let cap = ceiling.min(64 * 1024) as usize;
+                let mut answer = good();
+                answer.extend(std::iter::repeat_n(
+                    ' ',
+                    cap + usize::from(overflow) - answer.len(),
+                ));
+                let expected_answer = answer.clone();
+                let peer = thread::spawn(move || {
+                    let mut stream = accept(&listener);
+                    body(&mut stream);
+                    respond(&mut stream, &answer, "stop", true);
+                });
+                let transport = configured_transport(endpoint.clone());
+                let approval = LocalChatApproval::for_endpoint(endpoint.clone());
+                let connection = if shared {
+                    connection(transport.clone(), endpoint)
+                } else {
+                    CodingEndpointConnection::Borrowed {
+                        transport: &transport,
+                        approval: &approval,
+                    }
+                };
+                let generation = startup
+                    .prepare_edit_generation(connection, context(&startup), true)
+                    .unwrap();
+                assert_eq!(generation.binding().limits().response_text_limit_bytes, cap);
+                let mut text = String::new();
+                let control = Control::new();
+                let generated = generation.execute(&control, |part| text.push_str(part));
+                peer.join().unwrap();
+                assert_eq!(generated.usage().dispatch_attempts, 1);
+                if overflow {
+                    assert!(matches!(
+                        generated.result(),
+                        Err(RuntimeEndpointPhaseFailure::Dependency(
+                            TransportError::Limit
+                        ))
+                    ));
+                    assert!(text.len() <= cap);
+                    assert_eq!(generated.usage().completed_response_text_bytes, None);
+                    assert_eq!(generated.usage().completed_dispatch_elapsed_ms, None);
+                    assert_eq!(
+                        generated.prepare_preview(&startup, &mut repository, &control, 1001),
+                        Err(GenerationError::Incomplete)
+                    );
+                    assert_eq!(repository.inspect_edit().unwrap()["pending"], prior);
+                } else {
+                    assert!(generated.result().is_ok());
+                    assert_eq!(text, expected_answer);
+                    assert_eq!(
+                        generated.usage().completed_response_text_bytes,
+                        Some(cap as u64)
+                    );
+                    let preview = generated
+                        .prepare_preview(&startup, &mut repository, &control, 1001)
+                        .unwrap();
+                    assert_eq!(
+                        preview["write_preview"]["files"].as_array().unwrap().len(),
+                        1
+                    );
+                }
+                assert_eq!(
+                    fs::read(f.root.join("owned/worktree/one.py")).unwrap(),
+                    b"one\n"
+                );
+            }
+        }
     }
 }
 

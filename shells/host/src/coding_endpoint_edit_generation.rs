@@ -31,6 +31,8 @@ use crate::{
     },
 };
 
+const MAX_EDIT_ANSWER_BYTES: usize = 64 * 1024;
+
 /// Content-free refusal. Generation never grants an edit or establishes success.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CodingEndpointGenerationError {
@@ -116,6 +118,14 @@ impl CodingEndpointPreparedStartup {
                 include_usage,
             ),
         }
+        .and_then(|prepared| {
+            prepared.with_response_text_limit(
+                request
+                    .limits
+                    .max_output_bytes
+                    .min(MAX_EDIT_ANSWER_BYTES as u64) as usize,
+            )
+        })
         .map_err(|_| Error::Preparation(RuntimePortFailure::Invalid))?;
         let phase = RuntimeEndpointModelPhase::for_run(request, prepared.binding(), packet)
             .map_err(Error::Preparation)?;
@@ -170,6 +180,7 @@ impl CodingEndpointEditGeneration<'_> {
             mut phase,
         } = self;
         let cancellation = ChatCancellation::default();
+        let answer_limit = prepared.binding().limits().response_text_limit_bytes;
         let mut answer = String::new();
         let mut oversized = false;
         let result = phase.execute(
@@ -179,7 +190,7 @@ impl CodingEndpointEditGeneration<'_> {
                 cancellation: cancellation.clone(),
             },
             |fragment| {
-                if fragment.len() > (64 * 1024_usize).saturating_sub(answer.len()) {
+                if fragment.len() > answer_limit.saturating_sub(answer.len()) {
                     oversized = true;
                     cancellation.cancel();
                 } else if !oversized {

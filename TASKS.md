@@ -2,6 +2,18 @@
 
 ## Active queue: local agent mission
 
+The [strict-generation text envelope repair](docs/evidence/t303-generation-text-ceiling-2026-11-09.md)
+freezes the smaller of 64 KiB and the sealed run output ceiling in the original
+prepared transport. UTF-8 overflow refuses before the caller callback, with no
+completed result or native edit; exact-limit answers can prepare the original
+preview. Zero and increases refuse; body, credential ownership, wire/body limits
+and deadlines remain unchanged. Cancellation assertions now check the exact
+observed failure identities. The complete scoped gate remains FAIL: 1,070 passed,
+exactly 53 inherited host failures and none new, 19 existing ignored across
+29 targets. Formatting and Clippy pass. Independent core review is required;
+T-303/T-306 remain open, with cumulative accounting and general edit/test/retry
+still open. No row or sub-row is added or closed.
+
 The [preview workspace repair](docs/evidence/t303-preview-workspace-binding-2026-11-09.md)
 checks the sealed workspace label against the original created owner before
 source selection, reads or preview replacement. Matching labels still require

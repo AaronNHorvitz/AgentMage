@@ -291,6 +291,25 @@ impl std::ops::Deref for PreparedTransport<'_> {
 }
 
 impl PreparedEndpointChat<'_> {
+    /// Narrow this frozen request's decoded text ceiling before dispatch.
+    /// Zero or any increase refuses without connecting. The body, destination,
+    /// credentials, wire/body limits and original deadlines stay unchanged.
+    /// The transport rejects an overflowing fragment before forwarding it.
+    pub fn with_response_text_limit(mut self, bytes: usize) -> Result<Self, TransportError> {
+        if bytes == 0 || bytes > self.binding.limits().response_text_limit_bytes {
+            return Err(TransportError::Configuration);
+        }
+        let mut limits = self.binding.limits().clone();
+        limits.response_text_limit_bytes = bytes;
+        self.binding = EndpointModelRequest::from_prepared_body(
+            self.transport.model_selection(self.binding.model()),
+            self.binding.context.clone(),
+            self.binding.body().clone(),
+            limits,
+        );
+        Ok(self)
+    }
+
     /// Describes exactly the immutable JSON body that execute will send.
     #[must_use]
     pub const fn binding(&self) -> &EndpointChatBinding {
@@ -354,17 +373,13 @@ impl PreparedEndpointChat<'_> {
         let mut response_hash = Sha256::new();
         let mut response_bytes = 0;
         let completion = self.transport.chat_encoded(
-            self.binding.model(),
+            &self.binding,
             &self.body,
-            self.binding
-                .limits()
-                .provider_usage_requested
-                .then_some(self.binding.limits().requested_max_output_tokens),
             cancel,
             &control,
             |fragment| {
                 response_hash.update(fragment.as_bytes());
-                response_bytes += fragment.len(); // Codec enforces its text-byte ceiling.
+                response_bytes += fragment.len(); // Transport enforces the frozen text ceiling.
                 text(fragment);
             },
         )?;
@@ -596,16 +611,19 @@ impl LocalChatTransport {
 
     fn chat_encoded(
         &self,
-        model: &str,
+        binding: &EndpointModelRequest,
         body: &[u8],
-        usage_limit: Option<u32>,
         cancel: &ChatCancellation,
         control: &DispatchControl<'_>,
         mut text: impl FnMut(&str),
     ) -> Result<ChatCompletion, TransportError> {
-        let mut codec = match usage_limit {
-            Some(limit) => ChatStream::with_usage(model, limit)?,
-            None => ChatStream::new(model)?,
+        let mut codec = if binding.limits().provider_usage_requested {
+            ChatStream::with_usage(
+                binding.model(),
+                binding.limits().requested_max_output_tokens,
+            )?
+        } else {
+            ChatStream::new(binding.model())?
         };
         let mut wire = self.request(
             "POST",
@@ -617,12 +635,19 @@ impl LocalChatTransport {
         )?;
         let framing = wire.headers("text/event-stream")?;
         let mut finish = None;
+        let mut text_bytes = 0_usize;
         wire.body(framing, MAX_STREAM_BYTES, |bytes| {
             for event in codec.feed(bytes)? {
                 cancel.check()?;
                 control.remaining()?;
                 match event {
-                    ChatEvent::Text(value) => text(&value),
+                    ChatEvent::Text(value) => {
+                        text_bytes = text_bytes
+                            .checked_add(value.len())
+                            .filter(|bytes| *bytes <= binding.limits().response_text_limit_bytes)
+                            .ok_or(TransportError::Limit)?;
+                        text(&value);
+                    }
                     ChatEvent::Finished(reason) => finish = Some(reason),
                 }
                 cancel.check()?;

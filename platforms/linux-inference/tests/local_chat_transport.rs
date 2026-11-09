@@ -1809,3 +1809,150 @@ fn shared_preparation_preserves_refusal_control_and_drop_without_connection() {
         std::io::ErrorKind::WouldBlock
     );
 }
+
+#[test]
+fn prepared_text_ceiling_only_narrows_without_connecting_or_changing_body() {
+    use std::sync::Arc;
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let endpoint =
+        LocalChatEndpoint::parse(&format!("http://{}/v1", listener.local_addr().unwrap())).unwrap();
+    let (transport, approval) = connection(endpoint, limits());
+    let transport = Arc::new(transport);
+    let messages = [ChatMessage {
+        role: ChatRole::User,
+        content: "synthetic",
+    }];
+    for shared in [false, true] {
+        let prepare = || {
+            if shared {
+                Arc::clone(&transport).prepare_chat_shared(
+                    &approval,
+                    "test-model",
+                    &messages,
+                    16,
+                    true,
+                )
+            } else {
+                transport.prepare_chat(&approval, "test-model", &messages, 16, true)
+            }
+            .unwrap()
+        };
+        let original = prepare().binding().clone();
+        for cap in [0, original.limits().response_text_limit_bytes + 1] {
+            assert!(matches!(
+                prepare().with_response_text_limit(cap),
+                Err(TransportError::Configuration)
+            ));
+        }
+        let narrowed = prepare().with_response_text_limit(5).unwrap();
+        let mut expected = serde_json::to_value(&original).unwrap();
+        expected["response_text_limit_bytes"] = 5.into();
+        assert_eq!(serde_json::to_value(narrowed.binding()).unwrap(), expected);
+        assert_eq!(
+            serde_json::to_value(narrowed.with_response_text_limit(5).unwrap().binding()).unwrap(),
+            expected
+        );
+        assert!(matches!(
+            prepare()
+                .with_response_text_limit(5)
+                .unwrap()
+                .with_response_text_limit(6),
+            Err(TransportError::Configuration)
+        ));
+        assert_eq!(
+            prepare()
+                .with_response_text_limit(1)
+                .unwrap()
+                .binding()
+                .limits()
+                .response_text_limit_bytes,
+            1
+        );
+        assert_eq!(
+            prepare()
+                .with_response_text_limit(original.limits().response_text_limit_bytes)
+                .unwrap()
+                .binding(),
+            &original
+        );
+    }
+    assert_eq!(
+        listener.accept().unwrap_err().kind(),
+        std::io::ErrorKind::WouldBlock
+    );
+}
+
+#[test]
+fn narrowed_text_ceiling_counts_utf8_across_fragments_before_callbacks() {
+    use sha2::Digest;
+    use std::sync::Arc;
+    for shared in [false, true] {
+        for include_usage in [false, true] {
+            for overflow in [false, true] {
+                let (endpoint, peer) = server(move |mut stream| {
+                    let wire = response(
+                        "text/event-stream",
+                        &[
+                            text_frame("é"),
+                            text_frame("a"),
+                            text_frame(if overflow { "€" } else { "é" }),
+                            ending("stop"),
+                        ]
+                        .concat(),
+                    );
+                    if let Err(e) = stream.write_all(&wire) {
+                        assert!(matches!(
+                            e.kind(),
+                            std::io::ErrorKind::BrokenPipe | std::io::ErrorKind::ConnectionReset
+                        ));
+                    }
+                });
+                let (transport, approval) = connection(endpoint, limits());
+                let transport = Arc::new(transport);
+                let messages = [ChatMessage {
+                    role: ChatRole::User,
+                    content: "synthetic",
+                }];
+                let prepared = if shared {
+                    Arc::clone(&transport).prepare_chat_shared(
+                        &approval,
+                        "test-model",
+                        &messages,
+                        16,
+                        include_usage,
+                    )
+                } else {
+                    transport.prepare_chat(&approval, "test-model", &messages, 16, include_usage)
+                }
+                .unwrap()
+                .with_response_text_limit(5)
+                .unwrap();
+                let binding = prepared.binding().clone();
+                let mut text = String::new();
+                let result = prepared.execute_recorded_controlled(
+                    &ChatCancellation::default(),
+                    &run_control(2000),
+                    |part| text.push_str(part),
+                );
+                peer.join().unwrap();
+                if overflow {
+                    assert_eq!(result, Err(TransportError::Limit));
+                    assert_eq!(text, "éa");
+                } else {
+                    let result = result.unwrap();
+                    assert_eq!(text, "éaé");
+                    assert_eq!(result.response_text_bytes, 5);
+                    assert_eq!(result.request, binding);
+                    assert_eq!(
+                        result.response_text_sha256,
+                        sha2::Sha256::digest(text.as_bytes())
+                            .iter()
+                            .map(|b| format!("{b:02x}"))
+                            .collect::<String>()
+                    );
+                }
+            }
+        }
+    }
+}

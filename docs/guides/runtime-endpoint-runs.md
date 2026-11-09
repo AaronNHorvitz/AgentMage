@@ -1219,19 +1219,27 @@ and exact context message; it checks the task, exclusions, selected endpoint
 and model, and sealed per-phase context, request, output and time ceilings.
 Preparation opens no socket and reads no file.
 
-The transport currently fixes its per-response text ceiling at 1 MiB. The
-kernel admits that complete envelope before dispatch, so a narrowed run must
-have `max_output_bytes` of at least 1 MiB even though generation retains at most
-64 KiB. Smaller ceilings refuse with `ResourceExhausted` before a socket opens.
-Supporting a smaller prepared transport envelope remains same-row backlog.
+Strict generation narrows the prepared transport's response text ceiling to
+the smaller of 64 KiB and the sealed run's `max_output_bytes`. The kernel
+checks that actual frozen envelope before dispatch. The transport counts UTF-8
+bytes across fragments and rejects an overflowing fragment before forwarding
+it; earlier streamed text stays partial. Wire and response-body ceilings,
+destination approval and original deadlines remain unchanged.
+
+`PreparedEndpointChat::with_response_text_limit(bytes)` consumes an inert
+prepared request and can only reduce its current ceiling (or keep it equal).
+Zero and increases refuse without connecting. It retains the same body,
+credential owner and request fingerprints. Ordinary chat keeps its default
+1 MiB text ceiling unless a trusted caller narrows its prepared request.
 
 Inspect the returned `binding()` and reserve its model call and frozen body
 in the existing owner's cumulative budget before calling `execute` with the
 original continuous run control. Execution consumes the frozen request once,
 through the existing kernel endpoint phase and controlled streaming transport.
 It never selects tools, issues authority or automatically retries. Streamed
-text is provisional. Answers over 64 KiB cancel the generation; partial or
-output-token-limited answers cannot prepare a native edit.
+text is provisional. Answers over the frozen text ceiling fail without a
+completed result; partial or output-token-limited answers cannot prepare a
+native edit.
 
 The returned observation retains `result()` and `usage()` even when the model
 answer is malformed or later source checks fail. Missing completed counts
