@@ -1268,11 +1268,15 @@ Preview preparation now compares the sealed workspace label with the original
 repository's held created-worktree label before selecting sources, reading files
 or replacing a preview. A foreign label or absent creation owner refuses with
 `Scope`, including through generated-answer preparation. This addresses the
-strict-preparation review's low workspace-binding finding; independent core
-review of the repair is required. Generation observations survive this refusal.
+strict-preparation review's low workspace-binding finding; its
+[independent core review](../reviews/37207e27bb0d-local-coding-preview-workspace.txt)
+has PASS for the workspace-label repair only. Generation observations survive
+this refusal. The newer text-ceiling repair still requires independent review.
 
 `created_workspace_id()` exposes only that process-held label and performs no
-file access. Equal labels establish neither root identity nor authority: the
+file access. All created worktree owners currently share the same label,
+`local-coding-worktree-create`; it does not distinguish two created owners.
+Equal labels establish neither root identity nor authority: the
 original native reader still revalidates held roots and selected paths, and
 `bind` still checks the original complete request and creation receipt. Callers
 must still supply the correct live owner and prior source/disclosure consent.

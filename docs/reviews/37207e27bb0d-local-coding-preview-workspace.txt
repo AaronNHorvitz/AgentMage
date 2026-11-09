@@ -1,0 +1,121 @@
+Commit: 37207e27bb0dfd5b68cf18f80f9e50570742453d
+Scope: local-coding-preview-workspace
+
+Tier: core. Rows: T-303 / T-306, non-closing (both parents stay OPEN; no closure requested or granted).
+Reviewer: independent Claude Opus 5.5 session, extra-high effort, read-only on the repository.
+Base: immutable predecessor d2ce9c60e20d96f1b932c875d862d42b3d3d2e85.
+
+## Methods
+
+1. Confirmed the commit: `git rev-parse HEAD` in /lane/review-checkout = 37207e27bb0dfd5b68cf18f80f9e50570742453d;
+   predecessor resolves to d2ce9c60e20d96f1b932c875d862d42b3d3d2e85. `git diff --stat` shows the eight files
+   claimed (TASKS.md, evidence note, runtime-endpoint-runs guide, retained d2ce review, coding_repository_edit.rs,
+   coding_endpoint_prepared_startup.rs, and the two test files), +464/-14.
+2. Read README.md, run.py, check.py and light.py under /lane/state/tmp/t303-preview-workspace before running
+   anything. run.py prepends /lane/state/tmp/t303-endpoint-write/tooling to PATH; I checked it. It holds a Node
+   binary and the Node licence, used only by the markdownlint step. run.py does not wrap itself in build-slot.
+3. Read the whole diff, the edited `prepare_edit_proposal` and `check_edit_context`
+   (shells/host/src/coding_endpoint_prepared_startup.rs:213-296), and the generation path
+   `prepare_edit_generation` / `prepare_preview` (shells/host/src/coding_endpoint_edit_generation.rs:66-110,
+   231-254). I also read the accessor's backing store (`CreatedWorktree.held`, platforms/linux/src/coding_repository.rs:81-86,
+   177; `LinuxAuthorizedWorkspace::workspace_id`, platforms/linux/src/lib.rs:427-429), the unchanged native `bind`
+   mismatch check (platforms/linux/src/coding_repository_endpoint_edit.rs:140-146) and the prior strict-preparation
+   review's L1 (/lane/reviews/3e2f9b9a95e7-local-coding-strict-preparation.md:101-112).
+4. Ran the requested commands from the pinned checkout (results below).
+5. Ran three mutations, outside the repository only, on a `git archive` copy at
+   /lane/state/tmp/review-mut-37207e27bb0d. Each one replaces coding_endpoint_prepared_startup.rs, and each runs through
+   `bash /tools/build-slot cargo test --locked --offline -p agentmage-host --lib endpoint_ -- --test-threads 4`
+   with CARGO_BUILD_JOBS=2 and CARGO_TARGET_DIR=/lane/state/review-target. Logs are kept at
+   /lane/state/tmp/review-mut-37207e27bb0d.{M1,M2,M3}.log.
+6. Scanned the diff for private paths, usernames, hosts, credentials and branding. The only "secret" is the synthetic
+   test key `synthetic-uncreated-workspace-test-secret`. I checked that no evaluation, held-out, hidden-test, scorer or
+   score file is in the diff.
+
+No GPU, model, download, long documentation gate or full-workspace acceptance was run. This row has no UI surface.
+
+## Commands and results (pinned checkout)
+
+| Command | Exit | Notes |
+| --- | --- | --- |
+| `sha256sum --quiet -c .../review-inputs.sha256` | 0 | all 22 inputs match |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-preview-workspace-37207e27bb0d` | 1 | expected; `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`, `FAST GATE: FAIL` |
+| `python3 -B .../check.py <out>` | 0 | data comparison only |
+| `python3 -B .../light.py` | 0 | diff --check, lint-untracked, lint-reviews and markdownlint (3 files, 0 issues) |
+| `cmp validation/source-freeze.json <out>/source-freeze.json` | 0 | same four Rust hashes |
+| `cmp docs/reviews/d2ce9c60e20d-local-coding-strict-generation.txt /lane/reviews/d2ce9c60e20d-local-coding-strict-generation.md` | 0 | byte-identical retention |
+| `git diff --check d2ce9c60e20d... --` | 0 | |
+| `git status --short` | 0 | empty output, clean tree |
+
+Fresh gate details (raw log SHA-256 14e461ba72693d66b58d49836b524c3812f214b887f25838c7ea4d37a62115d7):
+25 targets, 1,169 passed, 72 failed, 63 ignored, 0 measured, 0 filtered. The 72 failure identities equal the
+committed T-301 host/Linux baseline exactly, with none new and none missing. Per-command results: 0/0.10s, 0/0.10s,
+0/0.10s, 0/1.25s, fmt 0/81.54s, clippy 0/36.57s, tests 101/192.63s. Total 312.36s including reservations. My plan.json
+SHA-256 (cc067d7f…) equals the builder's plan-final.json, so the Cargo commands are identical. All three new methods
+pass, and so do the existing positive, exclusion and generation methods, `..._native_source_substitutions` and the
+protected native HTTP method `endpoint_prepared_service_native_edit_returns_original_lineage_and_needs_new_approval`.
+Timings differ from the builder's 399.21s, which is expected under shared reservation; the counts match exactly.
+The owned namespace /tmp/pw-odxth4ei holds 22 entries, 4 inherited host fixture files and 36 bytes, all from
+`agentmage-host-*` fixtures. No `agentmage-endpoint-startup-*` root was left behind, which matches the claim.
+
+## Mutation results (scratch copy, never the repository)
+
+- M1: deleted the new label check (prepared_startup.rs:222-224). Result: exit 101. All three new methods FAIL;
+  73 other `endpoint_` tests pass. The foreign startup with valid snapshots replaced the original owner's preview
+  (`Ok(..)` vs `Err(Scope)`), and the uncreated owner returned `Native` vs `Scope`. The tests detect the regression.
+- M2: replaced the exclusion `try_for_each` in `check_edit_context` with `Ok(())`. Result: exit 101.
+  `endpoint_model_edit_checks_task_exclusions_and_targets_before_replacing_preview` and
+  `endpoint_strict_generation_refuses_scope_destination_and_phase_limits_without_socket` FAIL. Relabelling the
+  fixtures to the native owner's label did not make the exclusion assertions vacuous: the new `Scope` check cannot
+  mask a removed exclusion.
+- M3: moved the label check to after selection and reads, just before `check_coding_proposal`. Result: exit 101. All
+  three new methods FAIL, because missing or unreadable sources now return `Native` before `Scope`. The tests enforce
+  the "before source selection or reads" claim, not just eventual refusal.
+
+## Security and correctness assessment
+
+- Ordering: `check_edit_context` (metadata only: kind, task, exclusions) runs first, then the label comparison, then
+  `select_created_sources`, the reads, the parser and `prepare_edit`. No file access or preview mutation happens before
+  either refusal. A refusal returns before `prepare_edit`, so the prior preview survives. M1 and M3 confirm this.
+- Accessor: `created_workspace_id()` is a pure `Option` map over an in-memory `LinuxAuthorizedWorkspace` field. It does
+  no I/O and grants no capability, because it returns `&WorkspaceId` only. It is `#[must_use]`.
+- Generation: `prepare_preview` delegates to `prepare_edit_proposal`, so generated answers get the same check. The
+  generation result and usage are on `self`, not consumed, and the new test asserts they are unchanged after refusal
+  (`dispatch_attempts == 1`, completed bytes present). As the docs say, generation itself has no owner and cannot
+  check ownership.
+- Root identity: the same-path directory replacement test shows that a matching label is not enough; the native
+  held-root check refuses with `Native`. The native `bind` still compares the request label and creation receipt.
+- No new route, executor, grant, consent, retry or recovery path. Other `select_created_sources` callers in local-api
+  and apply are untouched and outside this diff.
+- Evaluation integrity: no held-out, hidden, scorer, task-base or score files touched. TASKS row lines are unchanged
+  (check.py asserts this, and it exits 0). No sub-row was added.
+- Honest labelling: the evidence, guide and TASKS text say creation and endpoint responses are synthetic and claim no
+  actual model, native Git creation, grade or score. The numbers in the evidence note match the builder's raw log hash
+  and my independent rerun counts.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low L1 (backlog, documentation precision): the label is a process-wide constant, not a per-owner identity.**
+  platforms/linux/src/coding_repository.rs:66 and :484 set every created worktree's `WorkspaceId` to the constant
+  `local-coding-worktree-create`. So the new check (shells/host/src/coding_endpoint_prepared_startup.rs:222) refuses
+  startups sealed for any other label family, and owners that have not created a worktree. It cannot tell two created
+  owners apart in one process. A startup sealed for owner A can still prepare a preview in owner B. The docs already
+  say equal labels are not identity or authority and that callers must supply the correct live owner, so this is a
+  precision gap, not a broken boundary. Bind-time creation-receipt checks still apply.
+  Fix: in runtime-endpoint-runs.md (the "`created_workspace_id()` exposes only…" paragraph), state that the label is
+  currently shared by all created owners. If per-owner binding is wanted, bind the startup to the creation receipt
+  before reads.
+- Inherited lows stay backlog unchanged: d2ce L1 (exact cancellation assertions), L2 (smaller prepared transport
+  envelope; the fixed 1 MiB envelope is now disclosed accurately in the guide), and the earlier schema-ID and
+  command-resource lows.
+
+## Per-row result
+
+- T-303 (non-closing): the repair is correct, tested (all three mutations killed) and honestly labelled. PASS for this
+  increment. The row stays OPEN.
+- T-306 (non-closing): same. PASS for this increment. The row stays OPEN.
+- The strict-preparation low L1 (workspace label checked before reads) is resolved at this commit, with low L1 above
+  as a residual documentation note.
+
+Verdict: PASS

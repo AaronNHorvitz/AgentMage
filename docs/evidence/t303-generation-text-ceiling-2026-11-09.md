@@ -69,8 +69,9 @@ Formatting exits zero in 13.08 seconds, Clippy zero in 8.82 seconds, and tests
 101 in 134.62 seconds. Total elapsed time including reservations is 157.06
 seconds. The four Rust input hashes are unchanged throughout. Final
 documentation checks run separately after recording these results; the final
-seven-path plan adds only the ledger and this evidence to the frozen five-path
-source plan, with identical Cargo commands. No Rust changes follow the gate.
+eight-path plan adds only the ledger, this evidence and the retained predecessor
+review to the frozen five-path source plan, with identical Cargo commands. No
+Rust changes follow the gate.
 
 Raw full-gate log SHA-256:
 `e04d186d71891371e06c2f28f2450373e2838fde8534479a53a7ff93877491a0`.
@@ -91,5 +92,24 @@ native command-factory admission, approved Git and parent measurements remain
 open. Earlier schema-ID and command-preflight lows remain same-row backlog.
 No hidden/held-out test, scorer, task pin, threshold, dependency, SBOM, status
 model or scoreboard changes. The long acceptance gate and GPU inference do not
-run in this batch. The preceding workspace-label repair remains under independent
-review; its in-flight marker and immutable commit are preserved.
+run in this batch. The preceding workspace-label repair's immutable commit is
+preserved.
+
+## Predecessor verdict received after implementation commit
+
+The [independent predecessor review](../reviews/37207e27bb0d-local-coding-preview-workspace.txt)
+has **Verdict: PASS** for exact commit
+`37207e27bb0dfd5b68cf18f80f9e50570742453d`, no high/medium finding and no parent
+closure. Its bytes are retained unchanged. Its low L1 documentation finding is
+addressed in the guide: all created worktree owners currently share the same
+workspace label, so this metadata check cannot distinguish two created owners.
+The trusted caller must still supply the original live owner; held-root checks,
+complete creation-receipt binding and exact approvals remain authoritative.
+Per-owner binding before reads remains future work, not a claim of this repair.
+
+This verdict arrived after implementation commit
+`a5923bebfa9fa1b60ecc2cac4ff2613d2c811803`. Retaining it and clarifying the
+shared label changes documentation only, on top of that commit. The final plan
+retains the exact same Cargo commands and four Rust hashes from the full run.
+Documentation, review-text, whitespace and public-hygiene checks are repeated.
+The new text-ceiling repair still requires its own independent core review.

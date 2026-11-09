@@ -14,6 +14,15 @@ exactly 53 inherited host failures and none new, 19 existing ignored across
 T-303/T-306 remain open, with cumulative accounting and general edit/test/retry
 still open. No row or sub-row is added or closed.
 
+The [preview-workspace independent core review](docs/reviews/37207e27bb0d-local-coding-preview-workspace.txt)
+has **Verdict: PASS** for exact commit
+`37207e27bb0dfd5b68cf18f80f9e50570742453d`, with no high/medium finding.
+Its low L1 shared-label precision finding is clarified in the guide: all created
+owners share a workspace label, which cannot distinguish those owners. The
+trusted caller must still provide the original owner; receipt/root checks and
+exact approvals remain required. Per-owner binding before reads remains future
+work. Neither parent closes; the new text-ceiling repair needs independent review.
+
 The [preview workspace repair](docs/evidence/t303-preview-workspace-binding-2026-11-09.md)
 checks the sealed workspace label against the original created owner before
 source selection, reads or preview replacement. Matching labels still require
