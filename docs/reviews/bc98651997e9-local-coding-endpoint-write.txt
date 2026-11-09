@@ -1,0 +1,189 @@
+Commit: bc98651997e99c19fd3ddb6b3a58c01a09f21c77
+Scope: local-coding-endpoint-write
+
+# Independent core review: endpoint controlled-write composition (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. This is a same-model
+review; a cross-model review must come before any public release.
+Checkout: /lane/review-checkout. `git rev-parse HEAD` returns
+bc98651997e99c19fd3ddb6b3a58c01a09f21c77. The predecessor is the immutable
+10036f5e293ce7b543425cbedfbce016c09403dd. `git status --short` is empty before and after the review.
+Tier: core. The parent rows T-303 and T-306 stay OPEN, and this review closes nothing.
+
+## Methods
+
+1. Read IP-POLICY.md, Decision 0166, the top of TASKS.md, the builder evidence record, the guide diff,
+   and the helper README, run.py, audit.py and light.py.
+2. Reviewed the complete eleven-file diff (`git diff --stat` shows 11 files, +1040/−57). That is three
+   production Rust files, three test Rust files, TASKS, the guide, the decision, the evidence record and
+   the retained predecessor report.
+3. Traced how the three production mode-gate relaxations reach the real code paths:
+   - `runtime_loop.rs:1806-1821` (compose) and `coordinator_endpoint.rs:200-222` (`new_endpoint`):
+     the endpoint passes no journal, artifact, checkpoint, correctness or research hooks. So the
+     native-only `request.native()?` branches in `request_tool`, `process_permission` and
+     `resume_pending` (which sit behind `self.correctness`) are never taken. Endpoint effects go
+     through the shared scoped-port path: `evaluate_scoped`, then a challenge bound to the exact
+     run/turn/operation/call, then `verify_runtime_approval_response`, then `resolve_scoped` and
+     `execute_scoped`.
+   - Catalog admission (`runtime_loop.rs:6249-6262`) admits only WorkspaceRead/Write/CommandExecute in
+     ControlledWrite. The registry already forces `declared_effects == [required_grant]`
+     (`tooling.rs:571-593`).
+   - State-change rules (`valid_runtime_state_change`) and the ProcessCount charge for commands
+     (`runtime_loop.rs:3321-3340`) are mode-shared, so endpoint commands are charged too.
+   - Controlled-write ceilings are enforced when the request is sealed or verified
+     (`runtime_coordinator/endpoint.rs:62-64` calls `RuntimeHardeningLimits::from_endpoint_request`,
+     which calls `validate_controlled_write_budgets`). An endpoint request with a missing ceiling
+     therefore cannot be sealed. The context and owner refuse it at `verify` before the digest check,
+     so the host test's unsealed `missing` case is refused for the right reason.
+   - Whole-envelope outcome sealing and verification (`endpoint_outcome.rs:109-130`) only widen the mode
+     gate. Cursor refusal, null nested answer evidence and claim binding are unchanged.
+   - The production read-only owners still refuse controlled mode:
+     `coding_endpoint_authority.rs:55`, `coding_endpoint_files.rs:163`,
+     `coding_endpoint_read_verifier.rs:114`. `CodingEndpointStartup::admit` composes only that
+     read-only owner, and `coding_endpoint_launch.rs` (the only executable launch) goes through
+     `CodingEndpointStartup::prepare`. No production path builds a controlled-write endpoint run.
+     The generic `serve_coding_endpoint` takes a trusted Rust factory, never wire input.
+4. Ran every requested command, with fresh output and the review target. When the requested gate
+   run was invalidated by build-slot queue timeouts (see below), I ran the identical Cargo commands
+   directly under `/tools/build-slot`.
+5. Escape and replay probes, written by me in a scratch `git archive` copy outside the repository
+   (`/lane/state/tmp/review-probe-bc98651997e9/src`, never committed). Four tests were appended to the
+   copied `runtime_loop_endpoint_write_tests.rs` and run through the real coordinator:
+   - The model re-proposes an identical write after the first one is allowed. It gets a fresh
+     challenge with a different digest. Replaying the first decision is refused and does not latch
+     reconciliation. Effects stay at 1 until the second Allow, which ends in Success with 2 effects.
+   - Cancellation is latched together with an Allow for the pending command after a write ran. The
+     result is Cancelled, effects stay at 1, there is 1 receipt and the command never runs.
+   - A person's Narrow on a model write performs no effect and is not a success.
+   - A model write against a command-only catalog is refused with 0 effects.
+
+   Command (exit 0): `TMPDIR=<fresh /tmp/ew-rp-*> CARGO_TARGET_DIR=/lane/state/review-target
+   CARGO_BUILD_JOBS=2 bash /tools/build-slot cargo test --locked --offline -p agentmage-kernel-engine
+   --lib reviewer_probe` printed `4 passed; 0 failed; 0 ignored; 0 measured; 1560 filtered out`.
+   The probe namespace was removed empty.
+
+   Path traversal, symlink and environment-leak escapes are not reachable in this increment: the
+   concrete production file owner and the native worker/sandbox are unchanged and read-only, and
+   the only effect ports that accept writes or commands are the synthetic test fixtures. In endpoint
+   mode, confinement of a write or command belongs entirely to the trusted scoped boundary that the
+   host supplies. Decision 0166 and the guide state this.
+
+   Prompt-injected tool calls reach only the closed `{"tool_call":{tool_id,tool_version,arguments}}`
+   form (`deny_unknown_fields`). Injected `grant_id` or `tool_call_id` fields are refused, as the
+   unchanged predecessor `BadArguments` cases show. Unknown or unregistered tools are refused. Every
+   call then still needs the boundary's own evaluation and, for Ask, an exact person decision.
+
+## Exact commands and results
+
+| Command | Result |
+| --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-endpoint-write/review-inputs.sha256` | exit 0. Manifest has 34 lines. Manifest SHA256 is `55526f81d06058d8d7cc2c88bd50546733407669e5ff8e4d4ee4492f25b0fd78`, matching the request |
+| `/lane/state/tmp/t303-endpoint-write/tooling/node --version` | exit 0, `v24.15.0` |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-endpoint-write/run.py /lane/state/tmp/review-endpoint-write-bc98651997e9` | **exit 1**, `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`, 1802.08 s including reservations. The seven RESULT exits were **0, 0, 0, 0, 124, 124, 124**, then `FAST GATE: FAIL`. This differs from the expected `0×6, 101`: fmt, clippy and the full tests each hit the gate's 600 s per-command timeout. fmt and clippy timed out while still printing `Waiting for a shared heavy-build/test reservation`. The tests got a slot late and were killed mid-run, after 10 target summaries. Other lanes held the shared slots, and the gate's timeout wraps `build-slot`, so queue time counts against it. fast.log SHA256 is `11f4f643…d655` |
+| `python3 -B /lane/state/tmp/t303-endpoint-write/audit.py /lane/state/tmp/review-endpoint-write-bc98651997e9` | **exit 1**: an AssertionError on the command exits `[0,0,0,0,124,124,124]`. It correctly refuses the invalidated run. I re-checked its remaining data assertions by hand (below) |
+| `python3 -B /lane/state/tmp/t303-endpoint-write/light.py` | exit 0. diff-check, lint-untracked and lint-reviews passed; markdownlint found 0 issues in 4 files; `CURRENT_LIGHT_CHECKS_PASS` |
+| `cmp …/validation-final2/source-freeze.json …/review-endpoint-write-bc98651997e9/source-freeze.json` | exit 0, identical. 6 frozen Rust inputs, unchanged after the run |
+| `git diff --check 10036f5e293ce7b543425cbedfbce016c09403dd --` | exit 0 |
+| `git status --short` | exit 0, empty |
+
+To replace the invalidated Cargo steps, I ran the same three commands that the plan lists, with the
+same packages and flags and with `CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4`, tooling on PATH, a fresh
+`TMPDIR=/tmp/ew-rv-*` and `CARGO_TARGET_DIR=/lane/state/review-target`. Each ran under
+`bash /tools/build-slot`, without the queue-inclusive timeout. The script and logs are in
+`/lane/state/tmp/review-endpoint-write-bc98651997e9-direct/`.
+
+| Command | Result |
+| --- | --- |
+| `cargo fmt -p agentmage-host -p agentmage-kernel-engine -p agentmage-local-api -p agentmage-platform-linux -- --check` | exit 0 (376 s, mostly queue) |
+| `cargo clippy --locked --offline … --all-targets -- -D warnings` | exit 0 (45 s) |
+| `cargo test --locked --offline … --all-targets --no-fail-fast` | **exit 101** (318 s including reservation). 45 targets: **2717 passed / 72 failed / 71 ignored / 0 measured / 0 filtered**. tests.log SHA256 is `1d98df3f…e9e0e` |
+
+My manual check of that log against the committed baseline (`git show 10036f5e:docs/evidence/t301-baseline-failures-2026-10-25.md`)
+found 72 baseline identities and 72 FAILED identities. The two sets are equal: **0 new, 0 missing**.
+The baseline file is byte-identical at both commits. All 10 new methods report `ok` (8
+`controlled_write_tests::endpoint_controlled_write_*` and 2
+`context_tests::endpoint_controlled_context_*`). All 12 predecessor endpoint-coordinator methods
+report `ok`. These totals and identities exactly reproduce the builder's validation-final2
+(`audit.json`: 45 targets, `[2717,72,71,0,0]`). The ordinary gate therefore remains **FAIL**: 72
+inherited failures, and the 71 inherited ignored tests were not run. I infer no native acceptance and
+claim no green gate.
+
+I also re-checked the remaining audit.py assertions by hand. The scope is exactly 11 files. The TASKS
+ledger rows are unchanged. Added lines contain no private-path, username, email or home-path pattern.
+The retained `docs/reviews/10036f5e293c-local-coding-runtime-budget.txt` is byte-identical to
+`/lane/reviews/10036f5e293c-local-coding-runtime-budget.md` (`cmp`). The 6-file source freeze still
+holds. No evaluation, hidden, held-out, scorer, threshold, benchmark or scoreboard path is in the diff.
+
+Temporary namespaces were retained, not deleted, because neither was empty:
+- `/tmp/ew-jf_k1bp4` (run.py, 6,160,404 bytes): the same 11 inherited host fixtures plus 4 kernel test
+  directories (operational-store, research-completion ×2, runtime-journal) left behind when the gate's
+  timeout killed the test process.
+- `/tmp/ew-rv-eS07MH` (direct run, 22 entries plus the root): the same 11 inherited host fixtures the
+  builder reported.
+
+The probe namespace was removed empty. I made no queue, worker or limit change.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, documentation and reachability):** `docs/guides/runtime-endpoint-runs.md:214` says
+  "Trusted hosts can expose it through the dedicated endpoint API". The doc comment at
+  `platforms/local-api/src/coding_endpoint_api.rs:126` still says that function "Hosts one ephemeral
+  configured-endpoint run". No test in this commit drives a controlled-write run, meaning a write or
+  command challenge plus its Allow/Deny response, through `serve_coding_endpoint`. The adapter is
+  generic and mode-agnostic, so I found no defect. With `DelegateObservations`, ordinary-credential
+  holders would now also see write and command tool events. Fix: add one local-API test using a
+  synthetic write boundary, or reword the guide sentence to "library composition only". Also update
+  the adapter's doc comment to cover controlled-write runs and the meaning of delegated observations.
+- **L2 (low, test strength; backlog note):** the synthetic boundary in
+  `runtime_loop_endpoint_coordinator_tests.rs:256-298` issues the same `approval_id` and `grant_id`
+  for every Ask, so write and command challenges differ only by challenge digest. The binding is
+  still exercised, and I confirmed it with my repeated-write probe. Distinct per-operation
+  identities would additionally show that a mismatched approval or grant identity is refused across
+  operations. Separately, the existing state-change rule treats a *successful command reporting
+  Changed* as a boundary fault that latches reconciliation
+  (`runtime_loop_endpoint_write_tests.rs:306-310`). That is unchanged native semantics. The future
+  native test-command owner must report NotChanged or fit this rule; note it for the activation row.
+
+The two predecessor lows (L1 release slice within the cancellation grace, L2 direct post-stop
+allowlist probes) and earlier lows remain backlog, unchanged.
+
+## Policy, evidence and claims
+
+- IP and privacy: no third-party code, text or trademark branding was introduced. No private path,
+  username, hostname, credential or email appears in added lines. The commit author identity is the
+  repository owner's ordinary Git metadata. The `/lane/…` paths in the retained predecessor report
+  follow the established review-path convention.
+- Evaluation integrity: untouched. No held-out or hidden task content, scorer, threshold, model, GPU,
+  dependency or scoreboard change.
+- Honest labelling: the decision, guide, evidence and TASKS label everything as synthetic effects and
+  a loopback peer. They claim no native edit or test, model quality, score, recovery or Git result.
+  They keep the gate FAIL. The development failures are recorded as raw results. The evidence
+  numbers (45 targets, 2717/72/71/0, 72 inherited, 10 new and 12 original methods) match
+  validation-final2 and my independent run.
+- Delivery: no row or sub-row was added or closed, and nothing moved in history. The increment ships
+  running and measured component code.
+
+## Per-row result
+
+- **T-303 (non-closing component increment):** PASS for this increment. No high or medium finding.
+  The row stays OPEN: native controlled-write activation, edit/test/retry, durable recovery, approved
+  Git and parent measurements remain open.
+- **T-306 (non-closing component increment):** PASS for this increment. No high or medium finding.
+  The row stays OPEN.
+
+The PASS rests on these facts:
+- Static tracing shows the endpoint controlled-write path reuses the original scoped-boundary,
+  exact-approval, ledger, state-change, verifier and envelope owners.
+- Production owners remain read-only.
+- 4 reviewer probes passed.
+- Independent fmt and clippy exited 0.
+- The full test run produced exactly the 72 inherited failure identities.
+
+The requested `run.py` invocation itself exited 1 with three 124 timeouts, and `audit.py` exited 1 on
+those exits. The cause is shared build-slot queueing, not the code: the identical Cargo commands,
+run directly under `build-slot`, reproduced the builder's recorded data exactly. The ordinary
+complete gate remains FAIL.
+
+Verdict: PASS

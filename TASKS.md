@@ -2,6 +2,28 @@
 
 ## Active queue: local agent mission
 
+The controlled-write composition's [independent core review](docs/reviews/bc98651997e9-local-coding-endpoint-write.txt)
+has **Verdict: PASS** for exact commit
+`bc98651997e99c19fd3ddb6b3a58c01a09f21c77`, with no high/medium finding.
+Low L1 (controlled-write API coverage and delegated-observation wording) and
+L2 (distinct synthetic approval identities and unchanged test-command state
+semantics) remain same-row backlog with earlier lows. The review's first gate
+run timed out in the shared queue; its separately reserved identical Cargo
+commands reproduced the exact 72 inherited failures. T-303/T-306 remain open;
+no row or sub-row is added or closed.
+
+The [native endpoint edit decision handoff](docs/decisions/0167-native-endpoint-edit-decision.md)
+connects an exact protected endpoint response to the original prepared native
+worktree diff and atomic writer. Eight new component methods pass, including
+real native writes with synthetic creation provenance. Formatting and Clippy
+pass; the complete scoped gate remains FAIL with exactly the 72 inherited
+failure identities and no new failures. See the
+[builder record](docs/evidence/t303-native-endpoint-edit-2026-11-08.md).
+This is a library handoff; the coordinator adapter, controlled service startup,
+model-driven edit/test execution, recovery, approved Git and measurements remain
+unfinished. Independent core review is required. T-303/T-306 remain open;
+no row or sub-row is added or closed.
+
 The runtime-budget increment's [independent core review](docs/reviews/10036f5e293c-local-coding-runtime-budget.txt)
 has **Verdict: PASS** for exact commit
 `10036f5e293ce7b543425cbedfbce016c09403dd`, with no high/medium finding.

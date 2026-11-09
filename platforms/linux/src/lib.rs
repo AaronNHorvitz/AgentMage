@@ -37,6 +37,7 @@ pub use coding_map::{
 };
 /// Closed output protocols for separately approved project tests.
 pub use coding_repository::{LinuxCodingCommandCancellation, LinuxCodingTestFormat};
+pub use coding_repository::{LinuxCodingEndpointEdit, linux_coding_endpoint_edit_registry};
 pub use coding_repository::{LinuxCodingRepository, LinuxCodingRepositoryError};
 pub use coding_repository::{
     LinuxCodingRuntimeCreateDriver, LinuxCodingRuntimeWriteDriver, LinuxCodingWorktreeLease,

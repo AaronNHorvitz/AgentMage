@@ -1,5 +1,44 @@
 # Endpoint run framing
 
+## Native prepared-edit decision handoff
+
+Trusted Linux hosts can consume a `LinuxCodingRepository` with its original
+prepared edit through `into_endpoint_edit`. Use the exact catalog returned by
+`linux_coding_endpoint_edit_registry`, a sealed controlled-write endpoint request,
+the original coordinator turn/operation identities and a canonical call whose
+arguments are `{"preview": <complete-original-native-preview>}`. Source reads and
+diff preparation retain their original consent requirements. The caller must
+already own run admission, instruction narrowing and source/model disclosure.
+The constructor performs no write, model call or grant issuance.
+
+The non-cloneable `LinuxCodingEndpointEdit` retains that owner, request, call and
+protected challenge. Every edited path must be explicitly mutable and outside
+protected paths; altered catalog, workspace, creation binding, call or native
+preview refuses. Its challenge shows the complete native diff and uses the
+original writer's eventual approval/grant identities. `decide` accepts only the
+exact response to that challenge and the continuously retained original run
+control. A matching decision spends the handle before any further dependency;
+denial, stop, error or unwind cannot authorize a second attempt. A malformed or
+foreign response leaves the original pending decision intact.
+
+The original `decide_edit` owns grant issuance, single-use consumption, atomic
+write, preimage/link checks and reconciliation. Inspect the original native result
+with `inspect`; its actual per-operation receipt chain is returned unchanged.
+The bounded transaction is non-interruptible once admitted. A lost result never
+means no effect. There is no retry, recovery or secure-erasure claim.
+
+`into_repository` consumes the handle and returns the same live native owner for
+separately approved later work. It drops any pending edit while preserving native
+results and successful lineage. It cannot restore an old preview or reconstruct
+ownership from a path, receipt or restart.
+
+This is a library decision handoff, with no `RuntimeToolBoundary` implementation
+or service activation yet. The native coordinator adapter, controlled endpoint
+startup, model-driven edit/test loop, recovery, approved Git and measurements
+remain unfinished. Real file-write tests use synthetic creation provenance and
+do not demonstrate native Git creation or local-model coding. T-303/T-306 remain
+open. See [Decision 0167](../decisions/0167-native-endpoint-edit-decision.md).
+
 ## Controlled-write composition for trusted hosts
 
 The shared kernel coordinator and host context accept a sealed
