@@ -1,0 +1,188 @@
+Commit: c86aabe0bb9cc47c515a2a6fb278c2b239d161f6
+Scope: local-coding-terminal-original-transfer
+
+# Independent core review: terminal controlled-run to original-transfer increment
+
+Reviewer: separate read-only session at extra-high effort. I reviewed the pinned checkout
+`/lane/review-checkout` only. Base `24633619dec4f011d81846eaac0eece42ddd7595` is the direct
+parent: `git log base..HEAD` shows exactly one commit, c86aabe0. Row: T-303 / T-306. This is a
+non-closing increment and both parents stay OPEN.
+
+## Methods
+
+- Read IP-POLICY.md, the top of TASKS.md, the brief and the bundle README, run.py, check.py,
+  parse_gate.py and light.py before running anything.
+- Read the full source diff against the base: `coding_cli_endpoint_transfer.rs` (new),
+  `coding_cli_endpoint.rs`, `coding_cli_record.rs` and `coding_cli.rs`. I also read the
+  helpers the new code reuses: `Client::{call,confirm,check_running}`, `workflow::bounded`,
+  `original_apply_prepare_observed`, `original_apply_decide_observed`, `record::verify` and
+  `export_observed`.
+- Read the new and changed tests (`coding_endpoint_original_cli.rs`,
+  `coding_endpoint_cli.rs`, `coding_endpoint_original_review.rs`), the evidence file, the
+  three guide diffs, the TASKS.md diff and the retained base review.
+- Ran every requested command from the pinned checkout with
+  `CARGO_TARGET_DIR=/lane/state/review-target` and a fresh output directory.
+- Wrote and ran my own adversarial probes in a scratch `git archive` extract of this commit
+  (`/lane/state/tmp/review-probe-c86aabe0bb9c`, outside the repository). They ran through
+  `/tools/build-slot` against the real strict review HTTP service and the real
+  `agentmage-code` binary under a controlling PTY. Details are below.
+- No GPU, model or download was used, and the repository was not modified.
+
+## Exact commands and results (from /lane/review-checkout)
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-terminal-original-transfer/review-inputs.sha256` | 0 | all inputs match; manifest SHA-256 `a6c8ff570850acb10d42b4b0c64fc3af17e64101d4070fbb1f71f4a8fe6b06c6` as stated |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-terminal-original-transfer-c86aabe0bb9c` | 0 | `exit 0`, `source_unchanged true`, 120.92 s including reservations, raw log `1947c97d183633bd026b8308d29472755116e1c4b17ca425ecfb76f6ea92b937` (the hash differs from the builder's, as expected for timing) |
+| `python3 -B …/check.py <out>` | 0 | gate PASS; 11 targets; totals 238/0/0/0/0; all 11 named methods ok; 7 plan commands, all exit 0 (4 light, fmt 0.30 s, clippy 32.50 s cold, tests 86.55 s) |
+| `python3 -B …/light.py` | 0 | diff-check, lint-untracked, lint-reviews and markdownlint (5 files, 0 issues) all exit 0 |
+| `cmp …/validation-final/source-freeze.json <out>/source-freeze.json` | 0 | identical; 7 Rust hashes |
+| `cmp docs/reviews/24633619dec4-local-coding-original-review.txt /lane/reviews/24633619dec4-local-coding-original-review.md` | 0 | byte-identical retained report |
+| `git diff --check 24633619dec4f011d81846eaac0eece42ddd7595 --` | 0 | clean |
+| `git status --short` | 0 | empty |
+
+Per-target counts match `expected-targets.json` exactly:
+
+| Target | Tests |
+| --- | --- |
+| lib | 53 |
+| agentmage-code | 0 |
+| main | 0 |
+| mcp | 0 |
+| coding_cli | 14 |
+| coding_endpoint_edit_launch | 6 |
+| coding_endpoint_http | 30 |
+| coding_endpoint_launch | 4 |
+| coding_runtime_cli | 71 |
+| coding_worktree | 20 |
+| local_chat_api | 40 |
+
+The Cargo command list matches the current plan. The plan path list matches
+`expected-paths.json`. All seven new methods passed in my run:
+
+- 5 `terminal_original_transfer_*` methods
+- `endpoint_terminal_controlled_mode_keeps_exact_tool_and_disclosure_consent`
+- `endpoint_terminal_still_refuses_durable_mode_before_disclosure_or_release`
+
+There are no mismatches. Clippy timing differs from the builder's warm 1.75 s because my
+target directory had to rebuild. That is timing only.
+
+## Reviewer probes (scratch copy, real service and binary, PTY)
+
+Command: `bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api --test
+coding_endpoint_http reviewer_probe -- --nocapture`, with 2 jobs and 4 threads. Result:
+2 passed, 0 failed.
+
+| Probe | Observed |
+| --- | --- |
+| stdout redirected to `/dev/full` (flush-before-release claim) | exit 1, **no prompt**, run still owned (`events` 200), original bytes unchanged |
+| SIGINT at the release prompt | exit 1, one prompt, **not released** (`events` 200), no write |
+| cancellation latched but not advanced (non-terminal prefix) | exit 1, no prompt, not released |
+| path `a/../one.py` | refused before any prompt |
+| path `human`, which is outside the recorded lineage | release and read prompts, then the native prepare refuses; no pending preview, no write, owner retained, human and index sentinels intact |
+| worktree root or original root passed as a symlink to the real root | release prompted and performed, then the client's `verify_root` refuses the symlinked path before read consent; no write, owner retained (`available_paths ["one.py"]`). See L1 |
+
+The new client adds no confinement surface beyond the existing native checks:
+
+- It sends only fixed literal routes over loopback.
+- The server keeps its own roots. Client path arguments are used only for local identity
+  checks and for display.
+- All displayed content goes through the existing ASCII-escaping renderer. The test asserts
+  that the transcript contains no ESC byte.
+- Confirmations read only from `/dev/tty`, and `bounded` refuses piped stdin before any
+  network access. The piped case is tested and its stdout is empty.
+
+The record is verified as a complete terminal chain and is written and flushed before the
+release prompt. My `/dev/full` probe confirms that a failed write blocks release.
+
+## Review notes on the increment
+
+- **Mode widening (`coding_cli_endpoint.rs:42-45`, `coding_cli_record.rs:30-33`).**
+  `selected()` and `verify()` now accept `ControlledWrite` as well as `EphemeralReadOnly`.
+  Durable mode and cursors still refuse, and the new durable test covers that. Accepting the
+  controlled mode adds no authority:
+  - `endpoint-approve` still needs a typed `allow <challenge-sha>` and then a separate
+    `share <request-sha>`.
+  - The server rechecks the pending challenge.
+  - The controlled-mode test shows that the tool-only answer sends nothing.
+- **Transfer binding.** The new command does not tie the preview's worktree or creation
+  receipt to the released run (`expected_roots` is `None`). That is acceptable: the service
+  holds exactly one owner, which it returns at release. The user sees both root identities and
+  the complete preview. The exact `apply-original <preview-sha>` decision must match the
+  pending preview.
+- **Lost-reply handling.** The proxy test drops real successful `release` and `apply/decide`
+  replies. In each case the route is seen exactly once and is the last route. No success
+  summary is printed. The test then checks the real effect: retained lineage after a lost
+  release, and a committed write with `latest.outcome committed` after a lost apply.
+- **Proxy Host repair.** Only the fixture proxy's forwarded `Host` changed. The retained
+  `initial-original-cli.rs` and `focused-original.log` (4 pass, 1 fail, HTTP 403) show the
+  original fixture failure. No production Host validation changed.
+- **Evaluation integrity and scope.** The plan path list excludes Cargo.lock, Cargo.toml, the
+  status model and the scoreboard. The diff touches no frozen task, hidden test, held-out
+  data, scorer, threshold or prompt, and claims no score. No TASKS.md row line changed
+  (check.py asserts this), and no sub-row was added.
+- **Honest labelling.** The evidence states plainly what the tests do not show:
+  - creation provenance is synthetic;
+  - the transferred lineage comes from a prior native edit, and the run was cancelled before
+    any model dispatch;
+  - nothing ran inside the run: no model, test or checker;
+  - there is no Git commit, and a `committed` native write is not a Git commit;
+  - the API-only gate does not clear the inherited host/Linux failures.
+
+  The one timing figure is labelled as a synthetic component timing.
+- **Privacy and branding.** check.py's private-path and username scan over added lines passes,
+  and my grep of the added lines finds no product branding, credentials or personal data. The
+  model name in the retained base report is reviewer attribution, as the base review already
+  accepted.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, ordering/UX):** `platforms/local-api/src/coding_cli_endpoint_transfer.rs:13-27`
+  and `:76-77`.
+  - Problem: the comment says malformed selections are rejected "before offering
+    irreversible release". But a root argument that is a symlink to the real held root
+    passes the shape check, release is offered and performed, and only then does
+    `original_apply_prepare_observed` → `LinuxCodingReadScope::verify_root` refuse it.
+  - Reproduction: probe `symlink-worktree` / `symlink-original` above. The prompts are
+    `["release …"]`, exit 1, and the owner stays retained.
+  - Impact: limited. The record was already exported, the explicit review service keeps the
+    owner, and no write occurs. The process-held run record is still dropped for an input the
+    client could have refused earlier.
+  - Fix: before the release confirmation, refuse each root if `symlink_metadata` shows a
+    symlink, or if `fs::canonicalize(root) != root`. Add the symlink case to
+    `terminal_original_transfer_refuses_unstarted_foreign_or_invalid_input_before_release`.
+  - Severity: same-row backlog.
+- **L2 (low, coverage residual of base L2):** the new tests drive
+  `original_apply_prepare_observed` and `original_apply_decide_observed` through
+  `endpoint-original-apply` against both review services. That substantially addresses base
+  L2.
+  - Gap: the standalone `original`, `original-prepare` and `original-apply` command dispatch
+    against a review service is still not driven at the client level. The new guide text
+    (`docs/guides/coding-original-apply.md`, "Declining reads or the diff after release …
+    Use the ordinary original-apply commands") now recommends that path for recovery after a
+    post-release decline.
+  - Fix: extend `terminal_original_transfer_declines_release_read_and_apply_without_writes`.
+    After decline-2 and decline-3, drive `original-prepare` and `original-apply` (or
+    `original-deny`) through the PTY, and assert the resulting pending/latest state.
+  - Severity: same-row backlog.
+- The base lows carried forward unchanged remain same-row backlog: L1 (extraction-error
+  response after release) and L3 (combined native model-edit/test transfer). This increment
+  does not touch them.
+
+## Per-row result
+
+- **T-303 / T-306 increment (local-coding-terminal-original-transfer):** PASS for this
+  non-closing increment. All eight requested commands exit 0 with matching counts, hashes,
+  Cargo commands and target list. All seven new methods pass in my run. My probes confirm:
+  - flush-before-release;
+  - no release on interrupt or on a non-terminal prefix;
+  - native refusal of out-of-lineage paths with human, index and worktree bytes preserved.
+- **What this does not show.** It closes no row, and no parent is accepted. It does not
+  demonstrate native worktree creation or command admission, a positive native Git/model
+  workflow, native/model measurements, durable recovery, approved commit/push, or clearance
+  of the inherited host/Linux failures. This verdict certifies nothing beyond the reviewed
+  increment.
+
+Verdict: PASS

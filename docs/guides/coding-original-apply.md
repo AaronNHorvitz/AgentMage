@@ -166,6 +166,12 @@ drift and the original native refusals still apply. There is no automatic retry,
 cancellation, cleanup or new model call. After a lost reply, inspect state and
 disk; a write may have completed even though the command reports an error.
 
+An explicit HTTP 409 `code.endpoint.original-review-unavailable` refusal reports
+`released: true` and `original_review_available: false`: the terminal run is gone
+but no repository was published for review. The terminal displays this refusal
+and stops. Inspect state and disk rather than repeating release or approval;
+the service cannot reconstruct ownership from the exported record.
+
 Declining release keeps the old record. Declining reads or the diff after
 release leaves the original owner available for separate inspection; an inert
 preview may remain pending. Use the ordinary original-apply commands to inspect

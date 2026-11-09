@@ -550,13 +550,38 @@ where
                                 })
                             }
                             TerminalToolDisposition::RepositoryReview(convert) => {
+                                // Check publication state before consuming the run. A
+                                // busy or poisoned review owner must not discard it.
+                                let mut review = match review.try_lock() {
+                                    Ok(review) => review,
+                                    Err(TryLockError::WouldBlock) => return error(socket, 409),
+                                    Err(TryLockError::Poisoned(_)) => return error(socket, 500),
+                                };
+                                if review.repository.is_some() {
+                                    // This single-run service already published its
+                                    // original owner; repeated release stays refused.
+                                    return owner_error(socket, CodingEndpointOwnerError::NotHeld);
+                                }
                                 match guard.runs.release_with_tool_boundary(&request) {
                                     Ok(tool) => {
-                                        let repository = convert(tool)?;
-                                        let mut review = review.lock().map_err(|_| ApiError::Io)?;
-                                        if review.repository.is_some() {
-                                            return error(socket, 500);
-                                        }
+                                        let repository = match convert(tool) {
+                                            Ok(repository) => repository,
+                                            // Release already consumed the terminal run.
+                                            // Never disguise extraction refusal as an empty
+                                            // socket reply or imply that retry restores it.
+                                            Err(_) => {
+                                                return response(
+                                                    socket,
+                                                    409,
+                                                    json!({
+                                                        "error":"code.endpoint.original-review-unavailable",
+                                                        "released":true,
+                                                        "original_review_available":false,
+                                                        "message":"The run was released, but original review is unavailable. Inspect state and disk; do not repeat release or approval."
+                                                    }),
+                                                );
+                                            }
+                                        };
                                         review.repository = Some(Arc::new(Mutex::new(repository)));
                                         Ok(())
                                     }
@@ -609,3 +634,7 @@ fn owner_error(socket: &mut TcpStream, error: CodingEndpointOwnerError) -> Resul
     };
     response(socket, 409, json!({"error":code}))
 }
+
+#[cfg(test)]
+#[path = "coding_endpoint_release_tests.rs"]
+mod tests;

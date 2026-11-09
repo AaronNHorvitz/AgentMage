@@ -371,6 +371,42 @@ fn endpoint_terminal_cancel_needs_no_model_disclosure_and_release_is_separately_
 }
 
 #[test]
+fn endpoint_terminal_reports_extraction_refusal_without_retry_or_follow_on() {
+    let f = Fixture::new();
+    let mut r = request();
+    r.mode = RuntimeSessionMode::ControlledWrite;
+    let r = seal_runtime_endpoint_run_request(r).unwrap();
+    // Synthetic HTTP error, separately from the real service/coordinator test.
+    let peer = f.peer(vec![
+        selection(&r),
+        json!({"test_peer_status":409,"body":{
+            "error":"code.endpoint.original-review-unavailable",
+            "released":true,"original_review_available":false,
+            "message":"The run was released, but original review is unavailable. Inspect state and disk; do not repeat release or approval."
+        }}),
+    ]);
+    let output = f.tty(
+        peer.address,
+        &["endpoint-release", "run", &r.request_sha256],
+        "approve",
+    );
+    assert_ne!(output["status"], 0, "{output}");
+    assert_eq!(output["answered"], 1);
+    let text = output["transcript"].as_str().unwrap();
+    assert!(text.contains("API refusal (409)"));
+    assert!(text.contains("code.endpoint.original-review-unavailable"));
+    assert!(text.contains("do not repeat release or approval"));
+    let calls = peer.finish();
+    assert_eq!(calls.len(), 2);
+    assert_eq!(calls[0]["route"], "GET /v1/code/endpoint/request HTTP/1.1");
+    assert_eq!(calls[1]["route"], "POST /v1/code/endpoint/release HTTP/1.1");
+    assert_eq!(
+        calls[1]["body"],
+        json!({"run_id":"run","request_sha256":r.request_sha256})
+    );
+}
+
+#[test]
 fn endpoint_terminal_refused_or_lost_advance_is_never_retried_or_auto_cancelled() {
     let f = Fixture::new();
     let r = request();

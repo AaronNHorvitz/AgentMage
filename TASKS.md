@@ -2,6 +2,24 @@
 
 ## Active queue: local agent mission
 
+The [release-extraction response repair](docs/evidence/t306-release-response-2026-11-09.md)
+returns an explicit HTTP refusal when terminal release succeeds but original
+repository extraction fails. The terminal displays the failure and stops;
+repeated release restores no owner or event record. Publication state is checked
+before consuming the run. This addresses the existing low extraction-response
+finding, pending independent core review. T-303/T-306 remain open; no row or
+sub-row is added or closed. Native/model measurements, durable recovery and
+approved Git remain open. Verification is recorded in the linked evidence.
+The affected API gate passes all 240 tests across eleven unfiltered targets,
+with zero failures or ignores; formatting and Clippy pass with three Rust
+hashes unchanged. Earlier host/Linux failures remain outside this selection.
+The preceding [terminal-transfer independent review](docs/reviews/c86aabe0bb9c-local-coding-terminal-original-transfer.txt)
+has **Verdict: PASS** for exact commit
+`c86aabe0bb9cc47c515a2a6fb278c2b239d161f6`, with no high/medium finding.
+Its low root-alias preflight and standalone recovery-client coverage findings
+remain same-row backlog, alongside native combined execution and older lows.
+This review closes no row.
+
 The [terminal original-transfer increment](docs/evidence/t306-terminal-original-transfer-2026-11-09.md)
 connects controlled-run record export, terminal release, fresh two-root read
 consent and exact original diff approval through the existing HTTP routes.

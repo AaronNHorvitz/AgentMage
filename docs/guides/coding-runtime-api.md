@@ -497,3 +497,13 @@ are abandoned. No old approval, grant, budget or disclosure is renewed. Export
 events first, inspect after a lost reply, and never retry an effect automatically.
 Extraction errors may lose ownership; this remains process-local continuation,
 with durable recovery, native/model measurements and both parents open.
+
+If release consumes the terminal run but extraction refuses, the service returns
+HTTP 409 with `error: code.endpoint.original-review-unavailable`, `released: true`
+and `original_review_available: false`. The old event record is gone and the
+original apply routes remain unavailable. This is a failed continuation, not a
+successful original review. The terminal displays the refusal and stops without
+retrying or sending an apply request. Inspect state and disk; repeating release
+cannot restore ownership. A lost response remains ambiguous and requires the
+same inspection. Publication-state checks run before terminal consumption;
+ordinary discard and returned-owner services keep their existing behavior.
