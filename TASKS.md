@@ -2,12 +2,29 @@
 
 ## Active queue: local agent mission
 
+The runtime-budget increment's [independent core review](docs/reviews/10036f5e293c-local-coding-runtime-budget.txt)
+has **Verdict: PASS** for exact commit
+`10036f5e293ce7b543425cbedfbce016c09403dd`, with no high/medium finding.
+Low L1 (reserve a release slice within cancellation grace) and L2 (direct
+post-stop request-allowlist probes) remain same-row backlog with earlier lows.
+T-303/T-306 remain open; no row is added or closed.
+
+The shared configured-endpoint coordinator now accepts process-held controlled
+writes through trusted scoped tool owners, with the original exact approvals,
+complete resource ceilings and deterministic completion checks. The production
+read-only launch, its file owner and native admission remain read-only. See
+[Decision 0166](docs/decisions/0166-endpoint-controlled-write-composition.md) and
+the [builder record](docs/evidence/t303-endpoint-write-composition-2026-11-08.md).
+Independent core review is required. Native endpoint edit/test execution,
+durable recovery, approved Git and parent measurements remain open.
+No row or sub-row is added or closed.
+
 The native `runtime-run` terminal now shares its original deadline and signal
 latch with HTTP reads. The original driver's release and cancellation
 reconciliation use one bounded grace period. See the
 [runtime guide](docs/guides/coding-runtime-api.md) and
 [builder record](docs/evidence/t303-runtime-budget-2026-11-08.md).
-Independent core review is required. T-303/T-306 remain open; no row is added
+Independent core review is recorded above. T-303/T-306 remain open; no row is added
 or closed. Native success, autonomous endpoint edit/test, durable recovery,
 approved Git and parent measurements remain open.
 

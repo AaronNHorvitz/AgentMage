@@ -1,5 +1,36 @@
 # Endpoint run framing
 
+## Controlled-write composition for trusted hosts
+
+The shared kernel coordinator and host context accept a sealed
+`controlled_write` endpoint request through the existing trusted composition
+interfaces. A host must supply the actual scoped permission/tool owner, exact
+registered catalog, original connection, continuously retained clock and
+independent completion verifier. Request bytes and model output cannot select
+or reconstruct these dependencies. The read-only development launch and its
+file/grant owner still accept only `ephemeral_read_only`; they cannot be used
+as a write or test executor.
+
+Controlled mode admits only workspace reads, workspace writes and bounded
+commands under the original catalog rules. Every effect still passes the
+original scoped permission boundary; endpoint transport creates no grants.
+Full controlled-write resource ceilings must cover the complete prepared body
+and all planned turns. Decisions remain bound to the exact pending challenge,
+operation and run. A write decision cannot approve a later test command.
+The original state-change checks refuse a successful write reporting no
+change, and uncertain or failed observations cannot establish completion.
+Completion still requires the registered deterministic verifier and an accepted
+endpoint claim, with the whole terminal envelope bound to its original request.
+
+This is process-held execution only. Durable read-only mode and event cursors
+remain refused by endpoint composition. There is no automatic effect replay,
+restored grant or restarted budget. No native model profile is synthesized.
+Tests use synthetic effect ports and a loopback model peer; they establish
+coordinator and transport composition, not native edits/tests or model quality.
+The executable native controlled-write owner and its trusted activation remain
+unfinished. T-303/T-306 remain open. See
+[Decision 0166](../decisions/0166-endpoint-controlled-write-composition.md).
+
 ## Terminal access to a retained endpoint service
 
 `agentmage-code <loopback-ip:port> <private-auth-directory>` now supports the
@@ -98,7 +129,7 @@ no real-model coding result. T-303/T-306 remain open.
 `ConfiguredCodingEndpoint::for_coding_run` now supplies a concrete
 `CodingEndpointContext`. The trusted caller first obtains source-read and
 endpoint-disclosure consent, then supplies already authorized snapshots. The
-constructor checks the sealed read-only run, actual transport selection and
+constructor checks the sealed process-held run, actual transport selection and
 complete registered catalog. It uses the existing deterministic source selector
 with its unchanged 2–32 KiB allocation. Every supplied file has a whole-content
 digest and byte count; only retained exact UTF-8 byte ranges are visible source.
@@ -178,10 +209,10 @@ and tool composition, and its distinct endpoint result projection. Endpoint
 edit/test/retry, durable recovery, approved Git and measurements remain open.
 
 The engine can statically seal and verify a `RuntimeEndpointRunRequest` without
-constructing an `ExactModelProfile`. The reusable coordinator also accepts this request for ephemeral read-only
-library execution under T-303/T-306. The local HTTP coding runtime, CLI and MCP
-runtime interface do not yet expose that composition. An endpoint
-edit/test/retry workflow remains open.
+constructing an `ExactModelProfile`. The reusable coordinator accepts this
+request for ephemeral read-only or process-held controlled-write library
+execution under T-303/T-306. Trusted hosts can expose it through the dedicated
+endpoint API. Native endpoint edit/test/retry activation remains open.
 
 `runtime_coordinator::seal_runtime_endpoint_run_request` sets the contract
 version and computes the canonical request digest. Its corresponding
@@ -302,11 +333,11 @@ component emits no `RunTerminal`, cancellation acknowledgement or exit receipt.
 
 It interprets no proposals and executes no orchestration loop, tool, grant,
 edit, command or retry. The shared event framing and underlying model phase
-also serve the read-only coordinator described below; that coordinator owns
-proposal interpretation, tools and task verification. No live runtime API route
-yet exposes endpoint coordination. The scope interfaces below remove the native
-request requirement at explicitly supporting boundaries. Controlled writes,
-durable ownership, recovery and coding workflow acceptance remain open;
+also serve the shared coordinator described below; that coordinator owns
+proposal interpretation, tools and task verification. The scope interfaces
+below remove the native request requirement at explicitly supporting boundaries.
+Native controlled-write activation, durable ownership, recovery and coding
+workflow acceptance remain open;
 a cursor alone establishes no resumability. No new model prompt or consent
 mechanism is added.
 
@@ -346,9 +377,10 @@ Synthetic endpoint verifier fixtures establish no actual endpoint tool effects
 or measured coding result.
 
 This integrates request scope into the existing coordinator and coding verifier.
-The coordinator admits read-only endpoint runs through its explicit endpoint
-constructor below. Connecting the live API and native controlled tools remains
-required before any configured-endpoint edit/test/retry workflow is claimed.
+The coordinator admits read-only and controlled-write endpoint runs through its
+explicit endpoint constructor below. Connecting native controlled tools and
+trusted activation remains required before any native configured-endpoint
+edit/test/retry workflow is claimed.
 
 ## Completion verification without a native proposal
 
@@ -429,8 +461,9 @@ this whole-envelope digest. Hashing only the nested outcome is insufficient. The
 form is closed and versioned through the nested outcome; outer answer evidence
 must be explicitly present or null. It is distinct from native outcome JSON.
 
-Only ephemeral read-only endpoint framing without a resume cursor is admitted.
-No durable, artifact-backed or controlled-write endpoint mode is enabled here.
+Ephemeral read-only and process-held controlled-write endpoint framing without
+a resume cursor are admitted. Durable and artifact-backed endpoint modes remain
+unsupported. The selected mode does not construct or authorize a tool owner.
 These functions frame an already decided result; they never verify a coding
 task, inspect a repository, select a proposal, emit a terminal event or run a
 loop. The containing coordinator must obtain its own current tool observations,
@@ -438,10 +471,10 @@ receipts and state revision and pass its exact verifier registry before deciding
 success. Full endpoint coordinator and API wiring, exclusive ownership,
 edit/test/retry and measured coding acceptance remain open.
 
-## Read-only coordinator execution
+## Shared endpoint coordinator execution
 
 `ReusableRuntimeCoordinator::new_endpoint` composes a `RuntimeEndpointTurnPort`,
-the exact sealed endpoint request, its exact read-only tool registry, a scoped
+the exact sealed endpoint request, its exact mode-appropriate tool registry, a scoped
 tool boundary, a completion verifier and the original run clock. This uses the
 existing coordinator's advancement loop, permission challenges, tool attempts,
 observations, resource ledger, event publisher and replay. It creates no second
@@ -468,9 +501,10 @@ checks that complete envelope and tool-specific arguments before requesting a
 tool. A malformed tool representation or invalid argument value produces a
 canonical terminal refusal, with no permission evaluation or execution. Valid
 calls invoke the existing scoped permission and tool boundaries. Every effect
-still needs the boundary's own valid authority. Endpoint composition admits
-only the existing ephemeral read-only catalog; writes, commands, network tools,
-durable state and resume cursors remain refused.
+still needs the boundary's own valid authority. Read-only mode admits only its
+existing read catalog. Controlled-write mode additionally admits workspace
+writes and bounded commands through the supplied scoped owner and full explicit
+resource ceilings. Network tools, durable state and resume cursors remain refused.
 
 Other response text is an inert completion payload under the schema fixed
 before dispatch. The owning coordinator constructs the exact verifier registry
@@ -494,8 +528,8 @@ Keep one mutable coordinator as the owning instance for a run. Constructing a
 second instance with the same request cannot resume the first or grant a fresh
 budget; this library constructor is not a global identity registry. The live
 API still needs to enforce exclusive run ownership and connect its real
-credential-owning transport and native tool authority. Controlled writes,
-native edit/test/retry, durable ownership, approved Git and parent measurements
+credential-owning transport and native tool authority. Native controlled-write
+activation, edit/test/retry, durable ownership, approved Git and parent measurements
 remain open. Synthetic coordinator tests establish no real-model coding score.
 
 The generic resource snapshot is a ledger diagnostic, including unused counters;

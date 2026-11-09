@@ -110,9 +110,13 @@ fn validate_base(
     outcome: &RuntimeOutcome,
     request: &RuntimeEndpointRunRequest,
 ) -> Result<(), RuntimeCoordinatorError> {
-    // These are the only currently composable endpoint turns. A failure
-    // envelope must not implicitly enable a durable or controlled-write mode.
-    if request.mode != RuntimeSessionMode::EphemeralReadOnly || request.event_cursor.is_some() {
+    // Match the coordinator's process-held endpoint modes. Neither an outcome
+    // envelope nor its request reconstructs tools, grants or durable ownership.
+    if !matches!(
+        request.mode,
+        RuntimeSessionMode::EphemeralReadOnly | RuntimeSessionMode::ControlledWrite
+    ) || request.event_cursor.is_some()
+    {
         return Err(RuntimeCoordinatorError::OutcomeDenied);
     }
     validate_common_runtime_outcome_shape(

@@ -21,6 +21,7 @@ use agentmage_kernel_contracts::{
 #[derive(Clone, Copy)]
 enum Response {
     Read,
+    Effect(GrantOperation),
     Answer,
     Limited,
     WrongDigest,
@@ -75,6 +76,14 @@ impl RuntimeEndpointModelPort for Dispatch {
                     serde_json::from_slice::<serde_json::Value>(&args.bytes).unwrap()
                 };
                 serde_json::json!({"tool_call": {"tool_id":"fixture.read", "tool_version":"1.0.0", "arguments":arguments}}).to_string()
+            }
+            Response::Effect(operation) => {
+                let id = match operation {
+                    GrantOperation::WorkspaceWrite => "fixture.write",
+                    GrantOperation::CommandExecute => "fixture.command",
+                    _ => panic!("unsupported synthetic effect"),
+                };
+                serde_json::json!({"tool_call": {"tool_id":id,"tool_version":"1.0.0","arguments":{"path":"fixture.txt"}}}).to_string()
             }
             Response::Overflow => "x".repeat(self.request.limits().response_text_limit_bytes + 1),
             Response::BadArguments(kind) => match kind {
@@ -136,14 +145,14 @@ impl RuntimeEndpointTurnPort for EndpointPort {
         self.preparations.fetch_add(1, Ordering::SeqCst);
         assert_eq!(input.request.model_selection, self.selection);
         assert_eq!(input.turn as usize, self.calls.load(Ordering::SeqCst) + 1);
-        if input.turn == 2 && !input.tool_results.is_empty() {
-            assert_eq!(input.tool_results.len(), 1);
-            assert_eq!(input.completed_tool_calls.len(), 1);
+        if !input.tool_results.is_empty() {
+            assert_eq!(input.tool_results.len(), input.turn as usize - 1);
+            assert_eq!(input.completed_tool_calls.len(), input.tool_results.len());
             assert_eq!(
                 input.tool_results[0].tool_call_id,
                 input.completed_tool_calls[0].tool_call_id
             );
-            assert_eq!(input.evidence.len(), 1);
+            assert_eq!(input.evidence.len(), input.tool_results.len());
         }
         control
             .remaining_ms()
@@ -204,6 +213,7 @@ struct Boundary {
     executions: Arc<AtomicUsize>,
     ask: bool,
     scope_digest: String,
+    result_override: Option<(OperationOutcome, StateChange)>,
 }
 impl Boundary {
     fn check(&self, scope: RuntimeRunScope<'_>) {
@@ -290,7 +300,7 @@ impl RuntimeToolBoundary for Boundary {
         &mut self,
         scope: RuntimeRunScope<'_>,
         evaluation: &RuntimePermissionEvaluation,
-        _: &ToolDefinition,
+        definition: &ToolDefinition,
         call: &ToolCall,
         _: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
     ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
@@ -300,20 +310,31 @@ impl RuntimeToolBoundary for Boundary {
             RuntimePermissionEvaluation::Allow { .. }
         ));
         self.executions.fetch_add(1, Ordering::SeqCst);
+        let (outcome, state_change) = self.result_override.unwrap_or((
+            OperationOutcome::Succeeded,
+            if definition.required_grant.operation.operation() == GrantOperation::WorkspaceWrite {
+                StateChange::Changed
+            } else {
+                StateChange::NotChanged
+            },
+        ));
         Ok(RuntimeToolExecution {
             result: ToolResult {
                 schema_version: CONTRACT_SCHEMA_VERSION,
                 tool_call_id: call.tool_call_id.clone(),
                 correlation_id: call.correlation_id.clone(),
-                outcome: OperationOutcome::Succeeded,
+                outcome,
                 output: None,
                 validation_issues: vec![],
-                evidence: vec![evidence("endpoint-file", EvidenceKind::ToolOutput)],
+                evidence: vec![evidence(
+                    call.tool_call_id.as_str(),
+                    EvidenceKind::ToolOutput,
+                )],
                 error: None,
                 elapsed_ms: 1,
-                state_change: StateChange::NotChanged,
+                state_change,
             },
-            receipt_id: ReceiptId::from_raw("endpoint-receipt"),
+            receipt_id: ReceiptId::from_raw(format!("receipt-{}", call.tool_call_id.as_str())),
             receipt_sha256: sha256(b"actual synthetic read"),
             result_output_kind: None,
             artifact_candidates: vec![],
@@ -333,6 +354,8 @@ fn allow() -> RuntimePermissionEvaluation {
 struct Verifier {
     id: VerifierId,
     mutation: u8,
+    expected_results: usize,
+    disposition: VerifierDisposition,
 }
 impl RuntimeVerifierPort for Verifier {
     fn verifier_id(&self) -> &VerifierId {
@@ -350,8 +373,12 @@ impl RuntimeVerifierPort for Verifier {
     ) -> Result<VerifierCandidate, RuntimePortFailure> {
         assert!(input.proposal.matches_scope(input.request));
         assert!(input.proposal.native_proposal().is_none());
-        let good = input.tool_results.len() == 1
-            && input.receipt_ids.len() == 1
+        let good = input.tool_results.len() == self.expected_results
+            && input.receipt_ids.len() == self.expected_results
+            && input
+                .tool_results
+                .iter()
+                .all(|result| result.outcome == OperationOutcome::Succeeded)
             && input.proposal.payload().unwrap().bytes == br#"{"answer":"done"}"#;
         let mut candidate = VerifierCandidate {
             schema_version: CONTRACT_SCHEMA_VERSION,
@@ -362,7 +389,7 @@ impl RuntimeVerifierPort for Verifier {
             repository_snapshot_id: input.request.repository_snapshot_id().clone(),
             state_revision: input.state_revision,
             source: VerifierSource::DeterministicPostcondition,
-            disposition: VerifierDisposition::NoOp,
+            disposition: self.disposition,
             postconditions: input
                 .postconditions
                 .iter()
@@ -411,6 +438,19 @@ fn build(
     responses: impl IntoIterator<Item = Response>,
     ask: bool,
 ) -> Result<Coordinator, RuntimeLoopError> {
+    build_registry(
+        request,
+        responses,
+        ask,
+        registry_for_operation(GrantOperation::WorkspaceRead),
+    )
+}
+fn build_registry(
+    request: RuntimeEndpointRunRequest,
+    responses: impl IntoIterator<Item = Response>,
+    ask: bool,
+    registry: ToolRegistry,
+) -> Result<Coordinator, RuntimeLoopError> {
     let clock = Arc::new(AtomicU64::new(1000));
     ReusableRuntimeCoordinator::new_endpoint(
         request.clone(),
@@ -424,15 +464,18 @@ fn build(
             expire_in_stream: false,
             output_limit: 2048,
         },
-        registry_for_operation(GrantOperation::WorkspaceRead),
+        registry,
         Boundary {
             executions: Arc::new(AtomicUsize::new(0)),
             ask,
             scope_digest: request.request_sha256,
+            result_override: None,
         },
         Verifier {
             id: VerifierId::from_raw("endpoint-fixture-verifier"),
             mutation: 0,
+            expected_results: 1,
+            disposition: VerifierDisposition::NoOp,
         },
         Clock(clock),
     )
@@ -669,19 +712,13 @@ fn endpoint_coordinator_run_counts_and_cumulative_bytes_refuse_before_second_dis
 #[test]
 fn endpoint_coordinator_refuses_authority_modes_catalog_drift_and_native_entry() {
     let original = endpoint_request();
-    for mode in [
-        RuntimeSessionMode::DurableReadOnly,
-        RuntimeSessionMode::ControlledWrite,
-    ] {
-        let mut request = original.clone();
-        request.mode = mode;
-        let request =
-            crate::runtime_coordinator::seal_runtime_endpoint_run_request(request).unwrap();
-        assert!(matches!(
-            build(request, [Response::Read], false),
-            Err(RuntimeLoopError::UnsupportedMode)
-        ));
-    }
+    let mut durable = original.clone();
+    durable.mode = RuntimeSessionMode::DurableReadOnly;
+    let durable = crate::runtime_coordinator::seal_runtime_endpoint_run_request(durable).unwrap();
+    assert!(matches!(
+        build(durable, [Response::Read], false),
+        Err(RuntimeLoopError::UnsupportedMode)
+    ));
     let mut bad = original.clone();
     bad.visible_tools.clear();
     bad.tool_catalog_sha256 =
@@ -896,3 +933,6 @@ fn endpoint_coordinator_cancellation_wins_before_pending_allow() {
             .any(|event| matches!(event.kind, RuntimeEventKind::PermissionDecided { .. }))
     );
 }
+
+#[path = "runtime_loop_endpoint_write_tests.rs"]
+mod controlled_write_tests;

@@ -1,0 +1,148 @@
+Commit: 10036f5e293ce7b543425cbedfbce016c09403dd
+Scope: local-coding-runtime-budget
+
+# Independent core review — native terminal HTTP stopping budget (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Same-model review; a
+cross-model review still precedes any public release. Tier: core.
+
+## Commit and scope
+
+Checkout: /lane/review-checkout; `git rev-parse HEAD` and `git rev-parse 10036f5e…` both
+= 10036f5e293ce7b543425cbedfbce016c09403dd. Diff over immutable predecessor
+ae0edbd912b24d5739521d5bab7baa299f83b8b3 is exactly the eight requested files (812+/23-):
+`platforms/local-api/src/coding_cli_driver.rs` (only production change),
+`platforms/local-api/tests/coding_runtime_cli.rs`, `tests/support/coding_guided_service.rs`,
+`tests/support/coding_runtime_budget.rs` (new), `TASKS.md`, `docs/guides/coding-runtime-api.md`,
+`docs/evidence/t303-runtime-budget-2026-11-08.md` and the retained predecessor report
+`docs/reviews/ae0edbd912b2-local-coding-guided-original-transfer.txt`. No ledger row added, closed
+or moved (final.py compares every `| [` row with the predecessor). No eval, hidden/held-out task,
+scorer, threshold, model, GPU, dependency, lockfile, SBOM, scoreboard or release file is touched.
+
+## Methods
+
+1. Read IP-POLICY.md, the TASKS.md top, the builder README/helpers (run.py, audit.py, final.py,
+   parse.py) and the full diff.
+2. Line-by-line review of the production change against `Client::call`/`receive_before`/`read_until`
+   (`platforms/local-api/src/coding_cli.rs:52-300`) and the shared driver
+   `drive_interactive_cli_runtime`, `RunDriver::{drive,finish,cancel_run,request_job_control}`
+   (`shells/host/src/cli_runtime.rs:269-640`) to enumerate every HTTP request the driver can issue
+   before and after a stop.
+3. Ran the requested commands in /lane/review-checkout with a fresh output directory and the
+   reviewer target; run.py was not wrapped in build-slot.
+4. Independent probe (outside the repository, in `/lane/state/tmp/review-probe-10036f5e293c/`):
+   a copy of the gate-built `agentmage-code` run under a pty against my own *trickling* loopback
+   peer (keeps sending one byte every 200 ms, unlike the builder's silent stall), for header and
+   body stages, with a 1-second deadline and with SIGINT/SIGTERM/SIGHUP at 0.4 s on a 30-second
+   budget. Throwaway random tokens; auth dirs and binary copy removed afterwards; `probe.py` and
+   `probe.log` retained.
+5. Checked that the baseline identity set equals the independent predecessor reviewer log.
+6. Privacy/trademark/IP scan of the added lines.
+
+## Commands and results
+
+| Command | Result |
+|---|---|
+| `sha256sum --quiet -c /lane/state/tmp/t303-runtime-budget/review-inputs.sha256` | exit 0; manifest 32 lines, file SHA256 `e0c8b140693d6aebfa8a2f1652a900250f1b046cde1a71207c8448d2a54e66a1` matches the request |
+| `PATH=…/tooling:$PATH node --version` | `v24.15.0`, exit 0; `tooling/node` SHA256 `d1de76d8…bd932c` matches; `node` and `LICENSE` have link count 6 (hard links, no copy) |
+| `PATH=…/tooling:$PATH CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-runtime-budget-10036f5e293c` | `GATE_EXIT 0`; seven `RESULT exit=0` (0.21, 0.10, 0.10, 1.20, 134.68 fmt, 31.12 clippy, 76.01 tests s); `FAST GATE: PASS`; `SOURCE_FREEZE_UNCHANGED True`; 243.63 s including reservations |
+| `python3 -B …/audit.py /lane/state/tmp/review-runtime-budget-10036f5e293c` | exit 0; baseline 10 targets `[188,0,0,0]`; final 10 targets `[197,0,0,0]`; all 188 predecessor identities retained; exactly the 9 named new methods; 4 frozen Rust inputs; 7 exits 0 |
+| `PATH=…/tooling:$PATH python3 -B …/final.py` | exit 0; scope exactly 8 files; ledger rows unchanged; privacy patterns absent; retained review byte-identical to `/lane/reviews/ae0edbd912b2-local-coding-guided-original-transfer.md`; light checks exit 0 (markdownlint 0 issues in 3 files); `SCOPE_PRIVACY_UNCHANGED_LEDGER_SOURCE_FREEZE_PASS` |
+| `cmp …/validation-final/source-freeze.json …/review-runtime-budget-10036f5e293c/source-freeze.json` | exit 0 (identical) |
+| `git diff --check ae0edbd912b24d5739521d5bab7baa299f83b8b3 --` | exit 0, no output |
+| `git status --short` | exit 0, clean |
+| `rmdir /tmp/rb-m5dc9980` (my run's recorded namespace, verified empty first) | exit 0 |
+| Baseline identity cross-check via parse.py against `/lane/state/tmp/review-original-transfer-ae0edbd912b2/fast.log` (SHA256 `907a02de…08b129`) | 188 = 188, sets equal |
+| Independent trickle probe (8 cases) | every case exit 1 with only `GET /v1/code/runtime` dispatched; deadline cases 1.00–1.01 s; signal cases 0.40 s (right at the signal); no prepare/start reached |
+
+The builder's retained logs agree with their claims: `focused.log` shows 6 passed / 1 FAILED
+(`stalled_terminal_evidence_cannot_be_reported_as_verified_success`); `validation-before-format`
+is exit 1, "Check interrupted; this check did not pass" before compilation; `validation-final` is
+exit 0 after 586.97 s. My timings differ only because of shared reservation waits.
+
+## Analysis of the production change (`coding_cli_driver.rs`)
+
+- **One clock/latch for ordinary requests.** `run` now wraps the caller's client with
+  `deadline = controls.deadline()` and `controls = Some(controls.observer())`
+  (`coding_cli_driver.rs:434-439`). `Signals::observer` (`:45-52`) shares the `Arc<AtomicBool>`,
+  `started` and `limit` and has an empty `registered`, so its `Drop` unregisters nothing; the
+  original `controls` keeps sole ownership of the three handlers. `Client::call` refuses before
+  token load, before connect and before each write when stopped, and caps the per-request
+  180-second ceiling by the run deadline; `read_until` closes on deadline or latch every ≤100 ms.
+  The initial selection GET (`:440`) is covered. My trickle probe confirms a peer that keeps
+  sending bytes cannot extend the wait.
+- **Post-stop allowlist.** `HttpRuntime::request` (`:241-273`) routes to a grace client only for:
+  release (always), and, once stopped, job/declarations/artifact reads, `control` with
+  `action == "cancel"` (JobControlAction is `snake_case`, `kernel/engine/src/job_control.rs:88`),
+  and `advance` with `response == null` after a successful cancel control. Everything else keeps
+  the observer-bearing client, whose `check_running` refuses before dispatch, so after a stop no
+  prepare, start, approval-bearing advance or suspend/resume can be sent. Tracing the driver:
+  after stop the only reachable sequence is `cancel_run` → `job_status` → cancel `control_job`
+  (≤ MAX_JOB_CONTROL_ATTEMPTS, revision-bound) → one response-free `advance` → next loop
+  `Controls::poll` returns `Err(Cancellation)` (`coding_cli_driver.rs:166-180`) →
+  `best_effort_release`; or, from a terminal step, `finish` reads + release. All are inside one
+  2-second deadline set lazily on the first cleanup request and never renewed; the grace client
+  has no observer, so a further signal cannot cut it but the deadline does.
+  `cancellation_sent` can only become true after a stop, because the driver issues Cancel only
+  from `cancel_run`, which follows `Controls::poll` observing the stop.
+- **Release once.** `release_sent` (`:405-410`) is set before dispatch, so `finish`'s failed
+  release followed by `best_effort_release` (`cli_runtime.rs:300-302`) cannot replay it; a release
+  whose grace already expired is never dispatched (reported as an error, uncertain).
+- **No success after stop.** `:496-501` refuses to print `verified-outcome` for a SUCCESS/NO_OP
+  outcome once stopped. This branch is genuinely exercised: in
+  `stalled_terminal_evidence_cannot_be_reported_as_verified_success` the declarations/job cases
+  tolerate the aborted optional read, release succeeds within grace and the NO_OP outcome would
+  otherwise exit 0; the test asserts non-zero and no `verified-outcome`.
+- Confinement, tool execution, approvals, event/revision/artifact verification and the server
+  are unchanged; this increment only narrows what the terminal can send after a stop compared
+  with the predecessor (which used per-request 180-second deadlines with no latch).
+
+Tests discriminate the change: each of the 48 synthetic cases (I counted 24+8+2+1+6+2+4+1) bounds
+elapsed time well below the old 180-second ceiling and asserts exact call counts, routes, bodies,
+disconnection and absence of any approval response after stop. The peer executes no model or
+native effect and is labelled synthetic. The actual-service method reaches only the original
+absent-runtime 428 refusal and checks no prompt, no upstream connection and preserved state; the
+evidence labels it refusal-only.
+
+Documentation claims checked: "System suspend is excluded" matches Rust `Instant`
+(CLOCK_MONOTONIC on Linux); "per-request ceiling remains 180 seconds, capped by the remaining run
+budget" matches `Client::call`; connect/write two-second ceilings and output backpressure are
+stated as cooperative limits; "at most one release request" matches the guard. No native success,
+model score, full-workspace or owner-ready claim.
+
+Privacy/IP: added lines contain no host home path, username, hostname, credential or personal
+data; `/lane/…` reviewer paths in the retained predecessor report follow the 128 previously
+committed review files. No other agent product is named; no trademark branding; no third-party
+code or patent material.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **Low L1 — shared grace can starve the release attempt.** `coding_cli_driver.rs:257-262`: the
+  single 2-second deadline is shared by reconciliation reads and the final release, so a stalled
+  response-free advance after cancellation consumes all of it and `best_effort_release` is never
+  dispatched (the builder's own `cancellation_grace_is_shared_across_job_control_and_next_boundary_reads`
+  asserts exactly 6 calls, no release). The host keeps the run held until it reclaims it; the
+  client does report an error and says to inspect canonical state, and the guide says
+  reconciliation can time out, so this is documented behaviour, not a hidden failure. Suggested
+  fix (backlog): reserve a small fixed release slice (e.g. cap reconciliation reads at grace minus
+  0.5 s) so the one release attempt is always dispatched, with a test that the stalled advance is
+  followed by exactly one release.
+- **Low L2 — post-stop allowlist is only tested through the driver.** `coding_cli_driver.rs:245-256`
+  is a defence-in-depth guard, but no test calls `HttpRuntime` directly after a stop with an
+  approval-bearing advance, a suspend/resume control or a response-free advance without a prior
+  cancel to show each is refused before dispatch. The current driver cannot reach those paths,
+  so there is no live bypass. Suggested fix (backlog): one in-crate unit test with a stopped
+  `Signals` and a listener that asserts zero connections for each disallowed route.
+
+Both lows are same-row backlog, alongside the predecessor's L1/L2 and earlier lows.
+
+## Per-row result
+
+- T-303 (non-closing increment): PASS for this commit. Row stays OPEN: native success,
+  autonomous endpoint edit/test composition, durable recovery, approved Git and parent
+  measurements remain unobserved; native executable UID admission remains blocked.
+- T-306 (non-closing increment): PASS for this commit. Row stays OPEN for the same reasons.
+
+Verdict: PASS

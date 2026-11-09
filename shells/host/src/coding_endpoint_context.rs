@@ -104,7 +104,7 @@ impl<'config> crate::coding_endpoint::ConfiguredCodingEndpoint<'config, CodingEn
 }
 
 impl CodingEndpointContext {
-    /// Pins the sealed ephemeral read-only request and the original registered
+    /// Pins the sealed process-held request and the original registered
     /// model-visible definitions/schemas. Uses the existing deterministic source
     /// selector with its unchanged 2–32 KiB budget; omissions retain exact range
     /// and whole-file identities. Empty sources support task/tool-only context.
@@ -116,8 +116,11 @@ impl CodingEndpointContext {
         source_budget: usize,
     ) -> Result<Self, RuntimePortFailure> {
         verify_runtime_endpoint_run_request(request).map_err(|_| RuntimePortFailure::Invalid)?;
-        if request.mode != agentmage_kernel_contracts::RuntimeSessionMode::EphemeralReadOnly
-            || request.event_cursor.is_some()
+        if !matches!(
+            request.mode,
+            agentmage_kernel_contracts::RuntimeSessionMode::EphemeralReadOnly
+                | agentmage_kernel_contracts::RuntimeSessionMode::ControlledWrite
+        ) || request.event_cursor.is_some()
             || request.context_budget.max_messages < 2
             || !(2048..=32768).contains(&source_budget)
             || runtime_tool_references(registry).map_err(|_| RuntimePortFailure::Invalid)?

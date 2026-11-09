@@ -1804,8 +1804,14 @@ where
             return Err(RuntimeLoopError::UnsupportedMode);
         }
         if let Some(endpoint) = request.endpoint() {
-            if endpoint.mode != RuntimeSessionMode::EphemeralReadOnly
-                || endpoint.event_cursor.is_some()
+            // Endpoint selection changes model transport, not effect authority.
+            // Controlled writes use the same catalog, exact scoped boundary,
+            // resource ledger and verifier as native controlled-write runs.
+            // Endpoint journal/checkpoint composition is not implemented.
+            if !matches!(
+                endpoint.mode,
+                RuntimeSessionMode::EphemeralReadOnly | RuntimeSessionMode::ControlledWrite
+            ) || endpoint.event_cursor.is_some()
             {
                 return Err(RuntimeLoopError::UnsupportedMode);
             }

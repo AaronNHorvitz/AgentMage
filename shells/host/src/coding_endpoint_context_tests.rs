@@ -564,9 +564,21 @@ impl RuntimeVerifierPort for ContextVerifier {
 
 #[test]
 fn endpoint_context_drives_two_socket_turns_through_existing_approval_and_verification() {
+    socket_context_case(false);
+}
+
+#[test]
+fn endpoint_controlled_context_drives_original_transport_and_scoped_read_owner() {
+    socket_context_case(true);
+}
+
+fn socket_context_case(controlled: bool) {
     let (listener, endpoint) = listener();
     let mut request = request();
     request.model_selection = transport(endpoint.clone()).model_selection("fixture-model");
+    if controlled {
+        controlled_budgets(&mut request);
+    }
     let request = seal_runtime_endpoint_run_request(request).unwrap();
     let objective = sha256(request.task.objective.as_bytes());
     let worker = thread::spawn(move || {
@@ -737,4 +749,120 @@ fn endpoint_context_overflow_terminates_before_socket_or_permission_entry() {
         ),
         Err(RuntimePortFailure::Invalid)
     ));
+}
+
+// Full explicit ceilings, including prepared JSON body overhead. No native
+// model profile or token count is inferred by this context-only fixture.
+fn controlled_budgets(request: &mut RuntimeEndpointRunRequest) {
+    use agentmage_kernel_contracts::{BudgetLimit, BudgetResource, RuntimeSessionMode};
+    request.mode = RuntimeSessionMode::ControlledWrite;
+    request.work_packet.budgets = [
+        (
+            BudgetResource::PlanSteps,
+            u64::from(request.limits.max_turns),
+        ),
+        (
+            BudgetResource::ToolCallDepth,
+            u64::from(request.limits.max_tool_call_depth),
+        ),
+        (
+            BudgetResource::ModelCalls,
+            u64::from(request.limits.max_model_calls),
+        ),
+        (
+            BudgetResource::ToolCalls,
+            u64::from(request.limits.max_tool_calls),
+        ),
+        (
+            BudgetResource::InputBytes,
+            request.context_budget.max_request_body_bytes
+                * u64::from(request.limits.max_context_refreshes),
+        ),
+        (BudgetResource::OutputBytes, request.limits.max_output_bytes),
+        (
+            BudgetResource::ElapsedMilliseconds,
+            request.limits.max_elapsed_ms,
+        ),
+        (BudgetResource::MemoryBytes, 1),
+        (BudgetResource::DiskBytes, request.limits.max_output_bytes),
+        (
+            BudgetResource::ProcessCount,
+            u64::from(request.limits.max_tool_calls.min(1)),
+        ),
+    ]
+    .into_iter()
+    .map(|(resource, limit)| BudgetLimit { resource, limit })
+    .collect();
+}
+
+#[test]
+fn endpoint_controlled_context_pins_original_write_schemas_and_refuses_drift_and_resume() {
+    use agentmage_kernel_contracts::{BudgetResource, GrantOperation, RuntimeSessionMode};
+    let mut registry = registry();
+    crate::coding_changes::register_controlled_change_runtime_tools(
+        &mut registry,
+        crate::coding_changes::CodingWriteScope::new(
+            request().workspace_id,
+            vec![vec!["src".into()]],
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    let mut request = request();
+    request.visible_tools = runtime_tool_references(&registry).unwrap();
+    request.tool_catalog_sha256 =
+        runtime_tool_catalog_sha256(&request.tool_catalog_id, &request.visible_tools).unwrap();
+    controlled_budgets(&mut request);
+    request = seal_runtime_endpoint_run_request(request).unwrap();
+    let mut context = CodingEndpointContext::new(&request, &registry, &sources(), 2048).unwrap();
+    let messages = context
+        .build_messages(input(&request, 1), &available())
+        .unwrap();
+    let system: serde_json::Value = serde_json::from_str(messages[0].content).unwrap();
+    let original = model_visible_coding_tools(&registry).unwrap();
+    assert!(original.iter().any(
+        |t| t.definition.required_grant.operation.operation() == GrantOperation::WorkspaceWrite
+    ));
+    assert_eq!(
+        system["tools"],
+        serde_json::to_value(original.iter().map(|t| &t.definition).collect::<Vec<_>>()).unwrap()
+    );
+    for tool in original {
+        assert_eq!(
+            system["input_schemas"][tool.definition.input_schema.schema_sha256],
+            tool.input_schema
+        );
+    }
+    let mut replacement = request.clone();
+    replacement.policy_sha256 = "f".repeat(64);
+    replacement = seal_runtime_endpoint_run_request(replacement).unwrap();
+    assert!(
+        context
+            .build_messages(input(&replacement, 2), &available())
+            .is_err()
+    );
+    assert!(
+        context
+            .build_messages(input(&request, 2), &available())
+            .is_err()
+    );
+    let mut missing = request.clone();
+    missing
+        .work_packet
+        .budgets
+        .retain(|b| b.resource != BudgetResource::ProcessCount);
+    assert!(CodingEndpointContext::new(&missing, &registry, &[], 2048).is_err());
+    let mut continued = request.clone();
+    continued.event_cursor = Some(agentmage_kernel_contracts::RuntimeEventCursor {
+        run_id: continued.run_id.clone(),
+        event_id: agentmage_kernel_contracts::RuntimeEventId::from_raw("old-context-event"),
+        sequence: 0,
+        event_sha256: "a".repeat(64),
+    });
+    let continued = seal_runtime_endpoint_run_request(continued).unwrap();
+    assert!(CodingEndpointContext::new(&continued, &registry, &[], 2048).is_err());
+    let mut durable = request;
+    durable.mode = RuntimeSessionMode::DurableReadOnly;
+    durable = seal_runtime_endpoint_run_request(durable).unwrap();
+    assert!(CodingEndpointContext::new(&durable, &registry, &[], 2048).is_err());
 }
