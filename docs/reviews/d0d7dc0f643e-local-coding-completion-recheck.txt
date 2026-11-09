@@ -1,0 +1,119 @@
+Commit: d0d7dc0f643e264036c5f1744ed2b2010dd5afaf
+Scope: local-coding-completion-recheck
+
+# Independent core review: post-generation completion recheck (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate read-only session, pinned checkout `/lane/review-checkout`.
+Base: `8aa5d391f0d8e207d38f20d2b57f9377e6b47ea8`. Date: 2026-11-09.
+
+## Methods
+
+- Confirmed the commit: `git rev-parse HEAD` and `git rev-parse d0d7dc0f…` both give
+  `d0d7dc0f643e264036c5f1744ed2b2010dd5afaf`, and the working tree is clean before and after all runs.
+- Read IP-POLICY.md, the newest decisions list (0174–0176), the top of TASKS.md, and the bundle's
+  README.md, run.py, check.py and light.py before running anything. The scripts only read the
+  checkout, run the repository fast gate and its plan, and write to the fresh output directory.
+- Read the full code diff base..commit (10 files): `coordinator_endpoint.rs` (hook type, builder,
+  closed-JSON guard, invocation site), `coding_endpoint_edit_generation.rs` (production install),
+  `coding_endpoint_edit_previews.rs` (`completion_check`), and both test files. I also read the
+  surrounding coordinator code: accounting, the completion-only narrowing, the tool-preparation
+  precedence pattern, the verifier dispatch and `tooling::is_closed_json`.
+- Traced every production and test use of `with_completion_check`, `completion_check()`,
+  `prepare_coding_completion`, `Next::Completion` and `completion-check-refused`.
+- Checked the evidence, guide, TASKS and earlier-evidence prose against the code and the run.
+
+## Exact commands and results (all from /lane/review-checkout)
+
+| Command | Expected | Observed |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-completion-recheck/review-inputs.sha256` | 0 | 0. I also hashed each of the ten committed blobs in the pinned checkout myself; all match the listed hashes. |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-completion-recheck-d0d7dc0f643e` | 1 | 1: `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True` |
+| `python3 -B …/check.py /lane/state/tmp/review-completion-recheck-d0d7dc0f643e` | 0 | 0: gate FAIL, 46 targets, totals [2850 passed, 72 failed, 72 ignored, 0 measured, 0 filtered], 72 inherited identities, 0 new, 7 checked methods, source unchanged |
+| `python3 -B …/light.py` | 0 | 0: diff-check, untracked lint, review lint and markdownlint (4 files, 0 issues) |
+| `cmp …/validation-repaired/source-freeze.json …/review-completion-recheck-d0d7dc0f643e/source-freeze.json` | 0 | 0 |
+| `cmp docs/reviews/8aa5d391f0d8-local-coding-completion-source-check.txt /lane/reviews/8aa5d391f0d8-local-coding-completion-source-check.md` | 0 | 0 (retained byte-for-byte) |
+| `git diff --check 8aa5d391f0d8e207d38f20d2b57f9377e6b47ea8 --` | 0 | 0 |
+| `git status --short` | empty | empty |
+
+Command exits in my run were fmt 0, clippy 0 and tests 101. The run took 542.46 s in total, including
+reservations, with tests at 383.90 s; it was slower than the builder's 388.24 s because my target
+directory started empty. My raw log SHA-256 is
+`eda75dd33bba4c7e7fcfe2c83a68b94175bbce33e30ef2895690ed5ee5b09ac0`; it differs from the builder's
+because of timings and ordering, which is expected. Failure and ignore identities match exactly. Both
+new methods pass:
+`endpoint_completion_check_runs_once_after_accounting_and_before_verification` and
+`coding_cycle_post_generation_guard_refuses_original_missing_validation_or_revoked_control`.
+The full gate remains FAIL on the 72 inherited failures, as the builder states.
+
+## Analysis
+
+- **Placement:** In `coordinator_endpoint.rs`, the hook runs after these steps, in order:
+  - resource accounting and `ModelCompleted`
+  - the `finish == Stop` check and the stop-before-phase check
+  - completion-only tool-shape refusal and the `tool_call` refusal
+  - the new closed-JSON guard (line ~835)
+  - `OwnedEndpointClaim::claim`
+
+  It runs before the Approval/Execution/Verification transitions and before `VerifierRegistry` is
+  built. It is a single-use `FnOnce` and is dropped on every earlier exit. This matches the claim.
+- **Control:** The coordinator checks its control before and after the callback (the post-check is
+  unconditional). The host callback checks both the coordinator control and the original continuous
+  `state.control`, before and after `check_completion_validation`. A control failure wins over a
+  validation refusal inside the host callback. If the callback refuses while the coordinator is
+  stopped, the result is a typed model failure, the same precedence as the existing
+  tool-preparation path. Kernel mode 3 asserts this as `runtime.port.invalid`.
+- **Who installs the hook:** Only trusted port code installs it. Production installs it at
+  `coding_endpoint_edit_generation.rs:196-197` for `Next::Completion`, and that turn is
+  `completion_only()`. Model text and wire fields cannot select it or skip it. The closed-JSON
+  narrowing is gated on `completion_check.is_some()`, which is trusted state.
+- **What the callback reads:** The callback holds only `Arc<Mutex<State>>`. It requires
+  `Next::Completion`, `Owner::Ready`, and the existing `check_completion_validation`. It sends no
+  new bytes to the model, creates no grant and changes no verifier. Both verification flags and
+  verifiers are untouched in the diff.
+- **Confinement:** No change to write confinement, the sandbox, network, approvals or push. The
+  diff touches no hidden, held-out or frozen task, scorer, pin, threshold, dependency, SBOM, status
+  model or scoreboard file. check.py also confirms that TASKS row lines are unchanged.
+- **Honesty:** The evidence labels the kernel matrix as synthetic (6 modes × 8 responses = 48) and
+  the host test as a framing fixture that skips the pre-generation check. It claims no native pass
+  and no score. The initial failure (malformed JSON reached the check) and the MD012 failure are
+  disclosed. The fix adds a guard and does not weaken an assertion: the matrix still asserts zero
+  checks for `MalformedCompletion` and `DuplicateCompletion`.
+- **Privacy and IP:** No private paths, usernames, hostnames, credentials or other-product names
+  are in the diff. The private paths in the bundle's `review-inputs.sha256` and check.py are not
+  committed.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test coverage):** `shells/host/src/coding_endpoint_edit_generation.rs:196-197`. No
+  test exercises the production installation of the hook.
+  - Why: the host test installs `previews.completion_check()` through
+    `CheckedCompletionFramingFixture`, not through `CodingEndpointStrictEdits::prepare`. The
+    production `Next::Completion` branch can only get past `previews.next()` with a native linked
+    pass, and no test produces one; the existing production test refuses before the model call.
+  - Effect: deleting the `.map(|turn| turn.with_completion_check(...))` line would pass every test,
+    including the 7 checked methods.
+  - Impact: this is defence in depth behind the reviewed pre-generation check, so it is not a
+    confinement gap.
+  - Fix: add a `#[cfg(test)]` observable on `RuntimePreparedEndpointTurn`, for example
+    `has_completion_check()`, and assert it on the turn the production port prepares. This fits
+    the existing L2 typed-readiness backlog, which would allow a positive production-path test.
+- **L2 (low, test precision):** `shells/host/src/coding_endpoint_edit_cycle_tests.rs:283-294`.
+  The `stopped` case asserts `runtime.port.cancelled` but does not assert that the callback ran.
+  The not-stopped case cannot tell which refusal clause fired: the phase check, the owner check or
+  missing validation (this is backlog L3's concern).
+  - Fix: wrap the callback with an invocation counter, assert it equals 1 in both cases, and cover
+    the refusal clauses separately when L3 is addressed.
+
+Earlier lows, including base L2/L3, remain same-row backlog as the builder states.
+
+## Per-row result
+
+- **T-303** (non-closing increment): PASS for this commit's scope. No high or medium finding.
+  Completion acceptance, durable recovery, approved Git and native/model measurement remain open,
+  blocked by T-301.1 owner-host trust. The row stays OPEN.
+- **T-306** (non-closing increment): PASS for this commit's scope, with the same qualifications.
+  The row stays OPEN.
+
+Verdict: PASS

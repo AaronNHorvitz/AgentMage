@@ -118,7 +118,7 @@ impl<C: RuntimeClock + Clone> RuntimeEndpointTurnPort for CodingEndpointStrictEd
         {
             return Err(RuntimePortFailure::Invalid);
         }
-        let next = self.previews.next()?;
+        let next = self.previews.next(&input, control)?;
         let connection = match &self.connection {
             CodingEndpointConnection::Borrowed {
                 transport,
@@ -135,9 +135,9 @@ impl<C: RuntimeClock + Clone> RuntimeEndpointTurnPort for CodingEndpointStrictEd
                 approval: approval.clone(),
             },
         };
-        use crate::coding_endpoint_edit_previews::Next;
+        use crate::coding_endpoint_edit_previews::PreparedNext;
         match next {
-            Next::Edit => {
+            PreparedNext::Edit => {
                 let context =
                     self.previews
                         .read_context(&self.paths, self.source_budget, control)?;
@@ -163,7 +163,7 @@ impl<C: RuntimeClock + Clone> RuntimeEndpointTurnPort for CodingEndpointStrictEd
                         _ => RuntimePortFailure::Invalid,
                     })
             }
-            Next::Test => {
+            PreparedNext::Test => {
                 let instruction = "Return exactly {\"validate\":true}. The trusted host will prepare its fixed original test definition for separate exact approval. Never select a command, supply arguments, claim tests ran, or certify completion.";
                 let messages = [
                     ChatMessage {
@@ -187,21 +187,22 @@ impl<C: RuntimeClock + Clone> RuntimeEndpointTurnPort for CodingEndpointStrictEd
                 )
                 .with_tool_preparation(self.previews.validation_response()?))
             }
-            Next::Completion => prepare_coding_completion(
+            PreparedNext::Completion(ready) => prepare_coding_completion(
+                ready,
                 connection,
                 input,
                 self.source_budget,
                 self.include_usage,
                 control,
-            )
-            .map(|turn| turn.with_completion_check(self.previews.completion_check())),
+            ),
         }
     }
 }
 
-// The trusted turn owner must check original validation/source readiness first.
-// This shared framing helper grants no completion or execution authority.
+// Consuming the original owner's readiness also installs its second check.
+// Neither sampled check grants completion or execution authority.
 pub(super) fn prepare_coding_completion<'a, 'config: 'a>(
+    ready: crate::coding_endpoint_edit_previews::CompletionReady<'a>,
     connection: CodingEndpointConnection<'config>,
     input: RuntimeEndpointPreparationInput<'_>,
     source_budget: usize,
@@ -209,6 +210,7 @@ pub(super) fn prepare_coding_completion<'a, 'config: 'a>(
     control: &dyn ModelOperationControl,
 ) -> Result<RuntimePreparedEndpointTurn<'a>, RuntimePortFailure> {
     use crate::coding_endpoint::CodingEndpointContextPort;
+    let check = ready.into_check(&input)?;
     let registry = agentmage_platform_linux::linux_coding_endpoint_coding_registry()
         .map_err(|_| RuntimePortFailure::Invalid)?;
     // Actual complete tool history; no additional source disclosure. Readiness
@@ -230,7 +232,8 @@ pub(super) fn prepare_coding_completion<'a, 'config: 'a>(
         }),
         crate::coding_verifier::coding_completion_schema(),
     )
-    .completion_only())
+    .completion_only()
+    .with_completion_check(check))
 }
 
 /// Content-free refusal. Generation never grants an edit or establishes success.

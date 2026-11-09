@@ -2384,11 +2384,43 @@ fn validation_workspace_binding_is_unavailable_for_unsafe_or_incomplete_trees() 
 #[test]
 fn completion_validation_refuses_missing_seals_pending_effects_and_changed_sources() {
     for case in [
-        "legacy", "pending", "creation", "hidden", "test", "mode", "unsafe",
+        "legacy",
+        "pending",
+        "pending-edit",
+        "pending-apply",
+        "creation",
+        "hidden",
+        "test",
+        "mode",
+        "unsafe",
     ] {
         let f = Fixture::new();
         let mut owner = f.open();
         f.synthetic_created(&mut owner);
+        if matches!(case, "pending-edit" | "pending-apply") {
+            for side in ["original", "owned/worktree"] {
+                fs::write(f.0.join(side).join("one.py"), b"before\n").unwrap();
+            }
+            if case == "pending-apply" {
+                let scope = owner.select_created_sources(&["one.py".into()]).unwrap();
+                let preview = owner
+                    .prepare_edit(
+                        scope,
+                        &[crate::LinuxCodingReplacement {
+                            path: "one.py",
+                            before_sha256: &hash(b"before\n"),
+                            content: "after\n",
+                        }],
+                        "Prepare real transferable lineage",
+                        NOW,
+                    )
+                    .unwrap();
+                let edited = owner
+                    .decide_edit(preview["preview_sha256"].as_str().unwrap(), true, NOW)
+                    .unwrap();
+                assert_eq!(edited["outcome"], "committed");
+            }
+        }
         let calls = Arc::new(AtomicUsize::new(0));
         let digest = validation_pending(&mut owner, None).unwrap();
         let pending = owner.take_command(&digest, true, NOW).unwrap().unwrap();
@@ -2442,12 +2474,47 @@ fn completion_validation_refuses_missing_seals_pending_effects_and_changed_sourc
                         .unwrap(),
                 );
             }
+            "pending-edit" => {
+                let scope = owner.select_created_sources(&["one.py".into()]).unwrap();
+                owner
+                    .prepare_edit(
+                        scope,
+                        &[crate::LinuxCodingReplacement {
+                            path: "one.py",
+                            before_sha256: &hash(b"before\n"),
+                            content: "pending\n",
+                        }],
+                        "Stage only; never approve this edit",
+                        NOW,
+                    )
+                    .unwrap();
+            }
+            "pending-apply" => {
+                let status = owner.inspect_apply().unwrap();
+                owner
+                    .prepare_apply(
+                        &["one.py".into()],
+                        "Stage only; never approve this apply",
+                        status["repository_root_sha256"].as_str().unwrap(),
+                        status["worktree_root_sha256"].as_str().unwrap(),
+                        NOW,
+                    )
+                    .unwrap();
+            }
             "creation" => {
                 owner.created.as_mut().unwrap().creation_receipt_sha256 = hash(b"foreign creation");
             }
             _ => unreachable!(),
         }
-        assert!(owner.check_completion_validation().is_err(), "{case}");
+        assert_eq!(
+            owner.check_completion_validation().unwrap_err().code(),
+            if matches!(case, "pending" | "pending-edit" | "pending-apply") {
+                "code.completion.pending-effect"
+            } else {
+                "code.completion.source-binding"
+            },
+            "{case}"
+        );
         // Refusal does not dispatch another command or erase retained history.
         assert_eq!(calls.load(Ordering::Relaxed), 1, "{case}");
         assert_eq!(
@@ -2460,5 +2527,21 @@ fn completion_validation_refuses_missing_seals_pending_effects_and_changed_sourc
             b"preserve",
             "{case}"
         );
+        if matches!(case, "pending-edit" | "pending-apply") {
+            assert_eq!(
+                fs::read(f.0.join("original/one.py")).unwrap(),
+                b"before\n",
+                "{case}"
+            );
+            assert_eq!(
+                fs::read(f.0.join("owned/worktree/one.py")).unwrap(),
+                if case == "pending-apply" {
+                    b"after\n".as_slice()
+                } else {
+                    b"before\n".as_slice()
+                },
+                "{case}"
+            );
+        }
     }
 }

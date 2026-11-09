@@ -18,6 +18,7 @@ use agentmage_kernel_engine::{
 };
 use agentmage_platform_linux::linux_coding_endpoint_coding_registry;
 use sha2::{Digest, Sha256};
+use std::sync::atomic::AtomicUsize;
 #[derive(Clone)]
 struct Clock(Arc<AtomicU64>);
 impl RuntimeClock for Clock {
@@ -99,9 +100,12 @@ fn digest(bytes: &[u8]) -> String {
 
 // Exercise the exact production completion framer and coordinator guard without
 // pretending this synthetic phase has a native validated source binding.
+type SyntheticCompletionCheck =
+    Box<dyn FnOnce(&dyn ModelOperationControl) -> Result<(), RuntimePortFailure>>;
 struct CompletionFramingFixture {
     request: RuntimeEndpointRunRequest,
     connection: CodingEndpointConnection<'static>,
+    check: Option<SyntheticCompletionCheck>,
 }
 impl agentmage_kernel_engine::runtime_loop::RuntimeEndpointTurnPort for CompletionFramingFixture {
     fn model_binding(&self) -> agentmage_kernel_contracts::RuntimeModelBinding<'_> {
@@ -130,6 +134,11 @@ impl agentmage_kernel_engine::runtime_loop::RuntimeEndpointTurnPort for Completi
             panic!("owned synthetic transport")
         };
         crate::coding_endpoint_edit_generation::prepare_coding_completion(
+            crate::coding_endpoint_edit_previews::CompletionReady::synthetic_for_framing(
+                &self.request,
+                input.turn,
+                self.check.take().unwrap_or_else(|| Box::new(|_| Ok(()))),
+            ),
             CodingEndpointConnection::Shared {
                 transport: transport.clone(),
                 approval: approval.clone(),
@@ -140,6 +149,50 @@ impl agentmage_kernel_engine::runtime_loop::RuntimeEndpointTurnPort for Completi
             control,
         )
     }
+}
+
+#[test]
+fn coding_completion_readiness_refuses_another_request_or_turn_before_transport() {
+    use crate::coding_endpoint_edit_previews::CompletionReady;
+    use agentmage_kernel_engine::runtime_loop::RuntimeEndpointPreparationInput;
+
+    let f = generation_fixture();
+    let (listener, endpoint) = socket();
+    let startup = coding_startup(&f, &endpoint);
+    let request = startup.request();
+    for case in ["request", "turn"] {
+        // Explicit synthetic issuance exercises consumption scope only, never
+        // original native readiness. Preserve the old seal in the request case
+        // to prove that the token binds the complete request, not just its hash.
+        let ready = CompletionReady::synthetic_for_framing(request, 1, |_| Ok(()));
+        let mut substituted = request.clone();
+        if case == "request" {
+            substituted.task.objective.push_str(" substituted");
+        }
+        let input = RuntimeEndpointPreparationInput {
+            request: &substituted,
+            turn: if case == "turn" { 2 } else { 1 },
+            completed_tool_calls: &[],
+            tool_results: &[],
+            evidence: &[],
+            rejected_tool_calls: &[],
+        };
+        assert!(
+            matches!(
+                crate::coding_endpoint_edit_generation::prepare_coding_completion(
+                    ready,
+                    connection(configured_transport(endpoint.clone()), endpoint.clone()),
+                    input,
+                    2048,
+                    true,
+                    &Control::new(),
+                ),
+                Err(RuntimePortFailure::Invalid)
+            ),
+            "{case}"
+        );
+    }
+    assert!(matches!(listener.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock));
 }
 
 #[test]
@@ -198,39 +251,6 @@ fn coding_cycle_refuses_completion_without_original_linked_sealed_validation_bef
     assert_eq!(coordinator.events(), events);
 }
 
-// Synthetic framing deliberately skips the pre-generation readiness check, so
-// this fixture can exercise the ORIGINAL post-generation owner guard without
-// manufacturing native execution or exposing private validation mutation.
-struct CheckedCompletionFramingFixture<F> {
-    inner: CompletionFramingFixture,
-    check: Option<F>,
-}
-impl<F> agentmage_kernel_engine::runtime_loop::RuntimeEndpointTurnPort
-    for CheckedCompletionFramingFixture<F>
-where
-    F: FnOnce(&dyn ModelOperationControl) -> Result<(), RuntimePortFailure>,
-{
-    fn model_binding(&self) -> agentmage_kernel_contracts::RuntimeModelBinding<'_> {
-        self.inner.model_binding()
-    }
-    fn prepare<'a>(
-        &mut self,
-        input: agentmage_kernel_engine::runtime_loop::RuntimeEndpointPreparationInput<'_>,
-        control: &dyn ModelOperationControl,
-    ) -> Result<
-        agentmage_kernel_engine::runtime_loop::RuntimePreparedEndpointTurn<'a>,
-        RuntimePortFailure,
-    >
-    where
-        Self: 'a,
-    {
-        let check = self.check.take().expect("single completion check");
-        self.inner
-            .prepare(input, control)
-            .map(|turn| turn.with_completion_check(check))
-    }
-}
-
 #[test]
 fn coding_cycle_post_generation_guard_refuses_original_missing_validation_or_revoked_control() {
     for stopped in [false, true] {
@@ -252,12 +272,17 @@ fn coding_cycle_post_generation_guard_refuses_original_missing_validation_or_rev
         // callback must see current state, never a captured approval/pass flag.
         let check = previews.completion_check();
         previews.synthetic_observation(Next::Completion, None);
-        let port = CheckedCompletionFramingFixture {
-            inner: CompletionFramingFixture {
-                request: request.clone(),
-                connection: connection(configured_transport(endpoint.clone()), endpoint),
-            },
-            check: Some(check),
+        let check_calls = Arc::new(AtomicUsize::new(0));
+        let observed_calls = check_calls.clone();
+        // Test-only issuance skips initial native readiness. The production
+        // framer must itself install this EXACT original-owner callback.
+        let port = CompletionFramingFixture {
+            request: request.clone(),
+            connection: connection(configured_transport(endpoint.clone()), endpoint),
+            check: Some(Box::new(move |control| {
+                observed_calls.fetch_add(1, Ordering::SeqCst);
+                check(control)
+            })),
         };
         let objective = digest(request.task.objective.as_bytes());
         let peer = thread::spawn(move || {
@@ -284,6 +309,7 @@ fn coding_cycle_post_generation_guard_refuses_original_missing_validation_or_rev
         else {
             panic!("terminal refusal")
         };
+        assert_eq!(check_calls.load(Ordering::SeqCst), 1);
         assert_eq!(outcome.outcome.state, AgentStateKind::Failed);
         assert_eq!(
             outcome.outcome.unresolved_codes,
@@ -317,6 +343,7 @@ fn coding_cycle_post_generation_guard_refuses_original_missing_validation_or_rev
             RuntimeEndpointCoordinatorStep::Complete { outcome }
         );
         assert_eq!(coordinator.events(), events);
+        assert_eq!(check_calls.load(Ordering::SeqCst), 1);
         peer.join().unwrap();
     }
 }
@@ -627,6 +654,7 @@ fn coding_cycle_completion_is_only_a_candidate_for_the_supplied_independent_veri
     let port = CompletionFramingFixture {
         request: request.clone(),
         connection: connection(configured_transport(endpoint.clone()), endpoint),
+        check: None,
     };
     let objective = digest(request.task.objective.as_bytes());
     let peer = thread::spawn(move || {
@@ -706,6 +734,7 @@ fn coding_cycle_completion_tool_requests_record_terminal_refusal_without_effects
             let port = CompletionFramingFixture {
                 request: request.clone(),
                 connection: connection(configured_transport(endpoint.clone()), endpoint),
+                check: None,
             };
             let call = json!({
                 "tool_id":tool.tool_id, "tool_version":tool.tool_version,

@@ -2,11 +2,33 @@
 
 ## Active queue: local agent mission
 
+The [post-generation independent core review](docs/reviews/d0d7dc0f643e-local-coding-completion-recheck.txt)
+has **Verdict: PASS** for exact commit
+`d0d7dc0f643e264036c5f1744ed2b2010dd5afaf`, with no high/medium finding.
+Its low callback-installation and invocation-count observations are addressed
+by the readiness framer tests below, pending independent review. Positive
+original-owner issuance and remaining host refusal-branch isolation stay open.
+Neither parent closes.
+
+The [completion readiness contract](docs/evidence/t303-completion-readiness-2026-11-09.md)
+requires a single-use original-owner token to frame the combined coding
+completion turn. Consumption binds the complete request and turn and installs
+the original post-generation check. The incoming source-check review's low L2
+and L3 are addressed in this same-row batch, pending independent core review.
+T-303/T-306 remain open; no row or sub-row is added or closed. Native/model
+workflow, independent completion acceptance, durable recovery, approved Git and
+measurements remain open. Formatting, Clippy and all eight checked methods
+pass. The full affected gate remains FAIL: 1,219 passed, exactly 72 inherited
+failures and none new, 64 existing ignored across 26 unfiltered targets. Five
+Rust source hashes remain fixed. An initial missing test import is repaired
+without weakening assertions; the failed run and source snapshot are retained.
+
 The [completion-source independent core review](docs/reviews/8aa5d391f0d8-local-coding-completion-source-check.txt)
 has **Verdict: PASS** for exact commit
 `8aa5d391f0d8e207d38f20d2b57f9377e6b47ea8`, with no high/medium finding.
-Low L1's framing-fixture wording is corrected in this batch. Low L2's typed
-readiness token and L3's isolated refusal coverage remain same-row backlog.
+Low L1's framing-fixture wording is corrected in the preceding batch. Low L2's
+typed readiness token and L3's isolated refusal coverage are addressed by the
+completion readiness contract above, pending independent review.
 Both parents remain open.
 
 The [post-generation completion check](docs/evidence/t303-completion-recheck-2026-11-09.md)

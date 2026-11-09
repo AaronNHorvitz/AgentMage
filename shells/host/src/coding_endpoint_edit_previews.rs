@@ -8,9 +8,9 @@ use agentmage_capability_repository_map::coding_proposal::{
 };
 use agentmage_kernel_contracts::*;
 use agentmage_kernel_engine::runtime_loop::{
-    RuntimeClock, RuntimeEndpointToolPreparationInput, RuntimeEndpointToolProposal,
-    RuntimePermissionEvaluation, RuntimePortFailure, RuntimeRunScope, RuntimeToolBoundary,
-    RuntimeToolExecution, runtime_tool_references,
+    RuntimeClock, RuntimeEndpointPreparationInput, RuntimeEndpointToolPreparationInput,
+    RuntimeEndpointToolProposal, RuntimePermissionEvaluation, RuntimePortFailure, RuntimeRunScope,
+    RuntimeToolBoundary, RuntimeToolExecution, runtime_tool_references,
 };
 use agentmage_platform_linux::{
     LinuxCodingEndpointCommandBoundary, LinuxCodingEndpointEditBoundary, LinuxCodingRepository,
@@ -48,6 +48,50 @@ pub(super) enum Next {
     Edit,
     Test,
     Completion,
+}
+
+pub(super) enum PreparedNext<'a> {
+    Edit,
+    Test,
+    Completion(CompletionReady<'a>),
+}
+
+type CompletionCheck<'a> =
+    Box<dyn FnOnce(&dyn ModelOperationControl) -> Result<(), RuntimePortFailure> + 'a>;
+
+// Issued only by the original checked owner. Single use, process-local and
+// bound to one sealed request/turn. This is sampled readiness, never acceptance.
+pub(super) struct CompletionReady<'a> {
+    request: Box<RuntimeEndpointRunRequest>,
+    turn: u32,
+    check: CompletionCheck<'a>,
+}
+
+impl<'a> CompletionReady<'a> {
+    pub(super) fn into_check(
+        self,
+        input: &RuntimeEndpointPreparationInput<'_>,
+    ) -> Result<CompletionCheck<'a>, RuntimePortFailure> {
+        if self.request.as_ref() != input.request || self.turn != input.turn {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        Ok(self.check)
+    }
+
+    #[cfg(test)]
+    pub(super) fn synthetic_for_framing(
+        request: &RuntimeEndpointRunRequest,
+        turn: u32,
+        check: impl FnOnce(&dyn ModelOperationControl) -> Result<(), RuntimePortFailure> + 'a,
+    ) -> Self {
+        // Grammar/socket fixtures only: deliberately skips native readiness.
+        // No production constructor, original validation or success is implied.
+        Self {
+            request: Box::new(request.clone()),
+            turn,
+            check: Box::new(check),
+        }
+    }
 }
 struct State<C> {
     owner: Option<Owner<C>>,
@@ -221,7 +265,21 @@ impl<C: RuntimeClock + Clone> CodingEndpointEditPreviews<C> {
         state.feedback = feedback;
     }
 
-    pub(super) fn next(&self) -> Result<Next, RuntimePortFailure> {
+    pub(super) fn next<'a>(
+        &self,
+        input: &RuntimeEndpointPreparationInput<'_>,
+        control: &dyn ModelOperationControl,
+    ) -> Result<PreparedNext<'a>, RuntimePortFailure>
+    where
+        C: 'a,
+    {
+        if input.request != self.startup.request()
+            || input.turn == 0
+            || input.turn > input.request.limits.max_turns
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        control.remaining_ms().map_err(control_failure)?;
         let state = self
             .state
             .lock()
@@ -237,9 +295,18 @@ impl<C: RuntimeClock + Clone> CodingEndpointEditPreviews<C> {
             repository
                 .check_completion_validation()
                 .map_err(|_| RuntimePortFailure::Invalid)?;
+            control.remaining_ms().map_err(control_failure)?;
             state.control.remaining_ms().map_err(control_failure)?;
         }
-        Ok(state.next)
+        Ok(match state.next {
+            Next::Edit => PreparedNext::Edit,
+            Next::Test => PreparedNext::Test,
+            Next::Completion => PreparedNext::Completion(CompletionReady {
+                request: Box::new(input.request.clone()),
+                turn: input.turn,
+                check: Box::new(self.completion_check()),
+            }),
+        })
     }
 
     /// Retain only a reference to the original owner for a second inspection

@@ -1531,6 +1531,14 @@ bounded complete worktree observation must still agree. Pending effects, missing
 seals, incomplete observations, altered history and changed source refuse before
 another model request. Earlier failures and their inputs remain in history.
 
+Only this checked original owner can issue the completion framer's single-use
+readiness token. It binds the complete sealed request and exact turn, cannot be
+cloned or restored from wire data, and carries the same owner's second check.
+The framer consumes the token and installs that check before returning a turn;
+another request or turn refuses before transport preparation. Synthetic grammar
+fixtures use an explicit test-only constructor that skips native readiness and
+does not establish a native pass.
+
 The trusted host must have prior consent for this complete worktree inspection,
 including hidden files, configuration and tests. The development launch's
 inspection scope includes reinspections before and after summary generation.
