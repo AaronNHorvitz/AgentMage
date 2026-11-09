@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The [failed-feedback independent core review](docs/reviews/d2ddd2dcd701-local-coding-failed-test-feedback.txt)
+has **Verdict: PASS** for exact commit
+`d2ddd2dcd701fbdfbdd4a52cd95be1a6bc2eeabd`, with no high/medium finding.
+Low L1 verifier-contract clarity, L2 prepared-host opt-in coverage, L3 guard
+coverage and L4 linked-pass supersession remain same-row backlog alongside
+earlier lows. The existing coding verifier rejects any failed result, including
+an earlier failure followed by a pass; neither parent closes.
+
+The [combined edit/test/repair composition](docs/evidence/t303-edit-test-cycle-2026-11-09.md)
+keeps strict edits, the fixed original validation definition and eligible failure
+feedback in one retained endpoint coordinator. Every effect still needs its
+fresh exact approval, with the original three-attempt ceiling and cumulative
+budgets. All eight added methods pass. The complete scoped gate remains FAIL:
+1,196 passed, exactly 72 inherited failures and none new, 63 existing ignored
+across 26 unfiltered targets; formatting and Clippy pass. Independent core
+review is required. T-303/T-306 remain open, with no row or sub-row added or closed.
+Executable selection, successful native/model workflow, durable recovery,
+approved Git and parent measurements remain open.
+
 The [executable startup independent core review](docs/reviews/3f8d1f2219a6-local-coding-edit-launch.txt)
 has **Verdict: PASS** for exact commit
 `3f8d1f2219a6ee27a5d15ba9b7d067c0ab42a05c`, with no high/medium finding.

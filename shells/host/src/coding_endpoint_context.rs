@@ -174,6 +174,23 @@ impl CodingEndpointContext {
         })
     }
 
+    // Trusted continuation begins a newly captured source context at the
+    // coordinator's current turn, preserving its complete original history.
+    pub(super) fn at_turn(
+        mut self,
+        turn: u32,
+        request: &RuntimeEndpointRunRequest,
+    ) -> Result<Self, RuntimePortFailure> {
+        if turn == 0
+            || turn > request.limits.max_turns
+            || self.request_sha256 != request.request_sha256
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        self.next_turn = Some(turn);
+        Ok(self)
+    }
+
     fn prepare_context(
         &mut self,
         input: RuntimeEndpointPreparationInput<'_>,

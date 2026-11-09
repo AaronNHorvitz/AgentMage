@@ -102,6 +102,21 @@ pub fn linux_coding_endpoint_command_registry() -> Result<ToolRegistry> {
     Ok(registry)
 }
 
+/// Explicit two-operation catalog for one original edit/test coordinator.
+/// Reuses both original definitions and validators; registration grants nothing.
+pub fn linux_coding_endpoint_coding_registry() -> Result<ToolRegistry> {
+    let mut registry = ToolRegistry::new();
+    registry
+        .register_tool(Box::new(
+            super::super::edit::endpoint::EndpointEditTool::new(),
+        ))
+        .map_err(|_| err("code.endpoint-command.catalog"))?;
+    registry
+        .register_tool(Box::new(EndpointCommandTool::new()))
+        .map_err(|_| err("code.endpoint-command.catalog"))?;
+    Ok(registry)
+}
+
 /// Process-held original pending command or test, never reconstructed from wire metadata.
 pub struct LinuxCodingEndpointCommand {
     repository: LinuxCodingRepository,
@@ -122,10 +137,39 @@ impl LinuxCodingRepository {
         operation_id: RuntimeOperationId,
         call: ToolCall,
     ) -> std::result::Result<LinuxCodingEndpointCommand, (Self, LinuxCodingRepositoryError)> {
+        self.bind_endpoint_command(request, turn_id, operation_id, call, false)
+    }
+
+    /// Exact command/test in the explicit combined edit/test catalog. Native
+    /// admission, original resource checks and one-shot grant handling remain.
+    #[allow(clippy::result_large_err)]
+    pub fn into_endpoint_coding_command(
+        self,
+        request: RuntimeEndpointRunRequest,
+        turn_id: RuntimeTurnId,
+        operation_id: RuntimeOperationId,
+        call: ToolCall,
+    ) -> std::result::Result<LinuxCodingEndpointCommand, (Self, LinuxCodingRepositoryError)> {
+        self.bind_endpoint_command(request, turn_id, operation_id, call, true)
+    }
+
+    #[allow(clippy::result_large_err)]
+    fn bind_endpoint_command(
+        self,
+        request: RuntimeEndpointRunRequest,
+        turn_id: RuntimeTurnId,
+        operation_id: RuntimeOperationId,
+        call: ToolCall,
+        combined: bool,
+    ) -> std::result::Result<LinuxCodingEndpointCommand, (Self, LinuxCodingRepositoryError)> {
         let prepare = || {
             verify_runtime_endpoint_run_request(&request)
                 .map_err(|_| err("code.endpoint-command.binding"))?;
-            let registry = linux_coding_endpoint_command_registry()?;
+            let registry = if combined {
+                linux_coding_endpoint_coding_registry()?
+            } else {
+                linux_coding_endpoint_command_registry()?
+            };
             let definition = EndpointCommandTool::new().0;
             let created = self.verify_created()?;
             let pending = self
@@ -253,6 +297,7 @@ impl LinuxCodingEndpointCommand {
             result: None,
             failure_observations: false,
             observed_elapsed_ms: None,
+            admitted_feedback: None,
         }
     }
 }
@@ -276,6 +321,7 @@ pub struct LinuxCodingEndpointCommandBoundary<C> {
     result: Option<Value>,
     failure_observations: bool,
     observed_elapsed_ms: Option<u64>,
+    admitted_feedback: Option<Value>,
 }
 impl<C: RuntimeClock> LinuxCodingEndpointCommandBoundary<C> {
     /// Explicit trusted composition for bounded test-failure feedback in the
@@ -301,6 +347,25 @@ impl<C: RuntimeClock> LinuxCodingEndpointCommandBoundary<C> {
     pub fn into_repository(self) -> LinuxCodingRepository {
         self.command.into_repository()
     }
+    /// Exact original sealed run; inspection cannot reconstruct its owner.
+    pub fn request(&self) -> &RuntimeEndpointRunRequest {
+        &self.command.request
+    }
+
+    /// Consume this spent owner only after its original failed observation was
+    /// admitted once. Returns the exact already-consumed feedback selection.
+    /// Refusal retains the original boundary; no preview, grant or attempt resets.
+    #[allow(clippy::result_large_err)]
+    pub fn into_repair_repository(
+        mut self,
+    ) -> std::result::Result<(LinuxCodingRepository, Value), Self> {
+        if !matches!(self.stage, Stage::Spent) || self.admitted_feedback.is_none() {
+            return Err(self);
+        }
+        let feedback = self.admitted_feedback.take().expect("checked feedback");
+        Ok((self.command.into_repository(), feedback))
+    }
+
     fn check(
         &self,
         scope: RuntimeRunScope<'_>,
@@ -544,10 +609,12 @@ impl<C: RuntimeClock> RuntimeToolBoundary for LinuxCodingEndpointCommandBoundary
         // Spend the ORIGINAL selection before admitting it to coordinator
         // history. A lost/stopped next model turn cannot restore a parallel
         // single-proposal selection. This consumes no test attempt or grant.
-        self.command
+        let feedback = self
+            .command
             .repository
             .consume_repair_feedback(receipt, digest)
             .map_err(|_| RuntimePortFailure::Invalid)?;
+        self.admitted_feedback = Some(feedback);
         Ok(true)
     }
 

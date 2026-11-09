@@ -6,7 +6,7 @@ use crate::{LinuxCodingPendingWrite, LinuxCodingReplacement};
 use agentmage_kernel_contracts::AuthorizedWorkspaceHandle;
 
 #[path = "coding_repository_endpoint_edit.rs"]
-mod endpoint;
+pub(super) mod endpoint;
 pub use endpoint::{
     LinuxCodingEndpointEdit, LinuxCodingEndpointEditBoundary, linux_coding_endpoint_edit_registry,
 };

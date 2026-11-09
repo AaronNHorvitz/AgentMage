@@ -1928,3 +1928,6 @@ fn endpoint_command_failure_feedback_never_extends_three_attempts_or_malformed_t
         assert_eq!(failure_feedback(&mut b, &result), Ok(eligible), "{status}");
     }
 }
+
+#[path = "coding_repository_endpoint_cycle_tests.rs"]
+mod cycle_tests;

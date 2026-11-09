@@ -808,3 +808,175 @@ fn endpoint_strict_service_rejects_foreign_factory_or_excluded_sources_before_io
         assert!(matches!(upstream.accept(),Err(e) if e.kind()==std::io::ErrorKind::WouldBlock));
     }
 }
+
+#[test]
+fn endpoint_edit_test_service_keeps_disclosure_consent_and_fixed_test_approval_in_one_run() {
+    use agentmage_host::coding_endpoint_edit_previews::CodingEndpointValidation;
+    use agentmage_kernel_engine::{
+        command_runner::{CommandBounds, CommandRisk, CommandSpec, CommandWorkingDirectory},
+        validation_template::ValidationKind,
+    };
+    use agentmage_platform_linux::linux_coding_endpoint_coding_registry;
+    for invalid_ack in [false, true] {
+        let fixture = Fixture::new();
+        let owner = fixture.owner();
+        let (upstream, endpoint) = upstream();
+        let observed = Arc::new(AtomicUsize::new(0));
+        let calls = observed.clone();
+        let peer = thread::spawn(move || {
+            let mut socket = accept(&upstream);
+            let body = read_upstream(&mut socket);
+            assert_eq!(
+                body["messages"][0]["content"],
+                agentmage_capability_repository_map::coding_proposal::CODING_PROPOSAL_INSTRUCTION
+            );
+            calls.fetch_add(1, Ordering::SeqCst);
+            respond(
+                &mut socket,
+                &json!({"edits":[{"path":"one.py","old":"before\n","new":"first\n"}]}).to_string(),
+            );
+            drop(socket); // Finish the first SSE response before the next request.
+            let mut socket = accept(&upstream);
+            let body = read_upstream(&mut socket);
+            assert!(
+                body["messages"][0]["content"]
+                    .as_str()
+                    .unwrap()
+                    .starts_with("Return exactly {\"validate\":true}")
+            );
+            calls.fetch_add(1, Ordering::SeqCst);
+            respond(
+                &mut socket,
+                if invalid_ack {
+                    "{\"validate\":true,\"command\":\"foreign\"}"
+                } else {
+                    "{\"validate\":true}"
+                },
+            );
+            upstream
+        });
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        let stop = Arc::new(AtomicBool::new(false));
+        let service_stop = stop.clone();
+        let worker = thread::spawn(move || {
+            agentmage_local_api::serve_coding_endpoint_edits_and_tests(
+                listener,
+                ApiTokens::new(CLIENT.into(), CONTROL.into()).unwrap(),
+                service_stop,
+                CodingEndpointObservationAccess::ControlOnly,
+                |id, session| {
+                    // This positive fixture has no read exclusions. The original
+                    // edit-only fixture's exclusion still refuses combined admission.
+                    let source = compose(id, session, endpoint, Arc::new(AtomicUsize::new(0)));
+                    let registry = linux_coding_endpoint_coding_registry().unwrap();
+                    let mut request = source.request;
+                    request.mode = RuntimeSessionMode::ControlledWrite;
+                    request.workspace_id = WorkspaceId::from_raw("local-coding-worktree-create");
+                    request.work_packet.mutable_files = vec!["one.py".into()];
+                    request.work_packet.protected_files = vec!["private".into()];
+                    request.visible_tools = runtime_tool_references(&registry).unwrap();
+                    request.tool_catalog_sha256 = runtime_tool_catalog_sha256(
+                        &request.tool_catalog_id,
+                        &request.visible_tools,
+                    )
+                    .unwrap();
+                    request.limits.max_model_calls = 2;
+                    let request = seal_runtime_endpoint_run_request(request).unwrap();
+                    assert!(matches!(
+                        CodingEndpointPreparedStartup::prepare(request.clone(), CodingEndpointPreparedKind::EditAndTest, &ledger(&request)),
+                        Err(agentmage_host::coding_endpoint_startup::CodingEndpointStartupError::Source)
+                    ));
+                    let evidence = build_instruction_ledger(
+                        request.workspace_snapshot_sha256.clone(),
+                        vec![],
+                        vec![],
+                        vec![],
+                        &BTreeMap::new(),
+                    )
+                    .unwrap();
+                    let input = agentmage_local_api::CodingEndpointStrictHttpRun {
+                        startup: CodingEndpointPreparedStartup::prepare(
+                            request,
+                            CodingEndpointPreparedKind::EditAndTest,
+                            &evidence,
+                        )
+                        .unwrap(),
+                        repository: owner,
+                        connection: source.connection,
+                        control: Arc::new(Control),
+                        clock: SharedClock(Arc::new(AtomicUsize::new(0))),
+                        verifier: source.verifier,
+                        paths: vec!["one.py".into()],
+                        source_budget: 2048,
+                        include_usage: true,
+                    };
+                    let command = CommandSpec::seal(
+                        "fixed-http-test",
+                        "1.0.0",
+                        "/usr/bin/true",
+                        digest(&fs::read("/usr/bin/true").unwrap()),
+                        vec![],
+                        CommandWorkingDirectory::OwnedWorktree,
+                        Default::default(),
+                        CommandRisk::Moderate,
+                        CommandBounds::new(1000, 1024, 1024, 16 * 1024 * 1024, 1, 100).unwrap(),
+                    )
+                    .unwrap();
+                    Ok((
+                        input,
+                        CodingEndpointValidation {
+                            command,
+                            kind: ValidationKind::Unit,
+                            minimum_test_count: 1,
+                            output_format: Default::default(),
+                        },
+                    ))
+                },
+            )
+        });
+        let api = Api {
+            address,
+            stop,
+            worker: Some(worker),
+        };
+        let request = api.request();
+        assert_eq!(request["visible_tools"].as_array().unwrap().len(), 2);
+        assert_eq!(api.advance(&request, Value::Null, false).0, 403);
+        assert_eq!(observed.load(Ordering::SeqCst), 0);
+        let (status, result) = api.advance(&request, Value::Null, true);
+        assert_eq!(status, 200);
+        assert_eq!(result["state"], "awaiting_approval");
+        fixture.assert_bytes(b"before\n");
+        let original = approval(&result["challenge"], true);
+        assert_eq!(api.advance(&request, original.clone(), false).0, 403);
+        fixture.assert_bytes(b"before\n");
+        let (status, mut result) = api.advance(&request, original.clone(), true);
+        assert_eq!(status, 200);
+        fixture.assert_bytes(b"first\n");
+        assert_eq!(observed.load(Ordering::SeqCst), 2);
+        if result["state"] == "awaiting_approval" {
+            assert!(!invalid_ack);
+            assert_eq!(
+                result["challenge"]["presentation"]["tool_id"],
+                "agentmage.code.run-prepared-command"
+            );
+            assert_eq!(api.advance(&request, original, true).0, 409);
+            result = api
+                .advance(&request, approval(&result["challenge"], false), true)
+                .1;
+        }
+        assert_eq!(result["state"], "terminal");
+        assert!(matches!(
+            result["outcome"]["outcome"]["state"].as_str(),
+            Some("FAILED" | "DECLINED")
+        ));
+        assert_eq!(result["outcome"]["outcome"]["model_call_count"], 2);
+        assert!(result["outcome"]["outcome"]["output"].is_null());
+        assert_eq!(api.advance(&request, Value::Null, true).1, result);
+        assert_eq!(api.bind("release", &request).0, 200);
+        drop(api);
+        let upstream = peer.join().unwrap();
+        assert!(matches!(upstream.accept(),Err(e) if e.kind()==std::io::ErrorKind::WouldBlock));
+    }
+}

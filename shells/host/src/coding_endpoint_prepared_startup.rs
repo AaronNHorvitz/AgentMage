@@ -19,7 +19,8 @@ use agentmage_kernel_engine::{
 use agentmage_platform_linux::{
     LinuxCodingEndpointCommand, LinuxCodingEndpointCommandBoundary, LinuxCodingEndpointEdit,
     LinuxCodingEndpointEditBoundary, LinuxCodingReplacement, LinuxCodingRepository,
-    linux_coding_endpoint_command_registry, linux_coding_endpoint_edit_registry,
+    linux_coding_endpoint_coding_registry, linux_coding_endpoint_command_registry,
+    linux_coding_endpoint_edit_registry,
 };
 
 use crate::{
@@ -50,12 +51,15 @@ pub enum CodingEndpointPreparedKind {
     Edit,
     /// Original prepared command or validation, with unchanged native admission.
     Command,
+    /// Alternating original edits and a trusted fixed validation definition.
+    EditAndTest,
 }
 impl CodingEndpointPreparedKind {
     fn registry(self) -> Result<ToolRegistry, Error> {
         match self {
             Self::Edit => linux_coding_endpoint_edit_registry(),
             Self::Command => linux_coding_endpoint_command_registry(),
+            Self::EditAndTest => linux_coding_endpoint_coding_registry(),
         }
         .map_err(|_| Error::Binding)
     }
@@ -106,7 +110,11 @@ impl CodingEndpointPreparedStartup {
         )
         .map_err(Error::Guidance)?;
         guidance.restrict_registry(&mut registry);
-        if registry.list_tools().is_empty() || guidance.limits().max_tool_calls == 0 {
+        if registry.list_tools().is_empty()
+            || guidance.limits().max_tool_calls == 0
+            || runtime_tool_references(&registry).map_err(|_| Error::Binding)?
+                != request.visible_tools
+        {
             return Err(Error::NoTools);
         }
         let excluded = |path: &str| -> Result<bool, Error> {
@@ -126,7 +134,11 @@ impl CodingEndpointPreparedStartup {
         {
             excluded(path)?;
         }
-        if kind == CodingEndpointPreparedKind::Command && !guidance.excluded_scopes().is_empty() {
+        if matches!(
+            kind,
+            CodingEndpointPreparedKind::Command | CodingEndpointPreparedKind::EditAndTest
+        ) && !guidance.excluded_scopes().is_empty()
+        {
             // The original offline command can read its whole held worktree.
             // It cannot honor per-directory read exclusions: refuse admission.
             return Err(Error::Source);
@@ -141,7 +153,8 @@ impl CodingEndpointPreparedStartup {
                 Err(e) => Some(Err(e)),
             })
             .collect::<Result<_, _>>()?;
-        if kind == CodingEndpointPreparedKind::Edit && request.work_packet.mutable_files.is_empty()
+        if kind != CodingEndpointPreparedKind::Command
+            && request.work_packet.mutable_files.is_empty()
         {
             return Err(Error::NoTools);
         }
@@ -283,7 +296,7 @@ impl CodingEndpointPreparedStartup {
         &self,
         context: &CodingProposalContext,
     ) -> Result<(), CodingEndpointEditProposalError> {
-        if self.kind != CodingEndpointPreparedKind::Edit
+        if self.kind == CodingEndpointPreparedKind::Command
             || context.task() != self.request.task.objective
         {
             return Err(CodingEndpointEditProposalError::Scope);
@@ -312,6 +325,7 @@ impl CodingEndpointPreparedStartup {
             CodingEndpointPreparedKind::Edit => repository
                 .into_endpoint_edit(self.request.clone(), turn_id, operation_id, call)
                 .map(NativePrepared::Edit),
+            CodingEndpointPreparedKind::EditAndTest => return Err((repository, Error::Binding)),
             CodingEndpointPreparedKind::Command => repository
                 .into_endpoint_command(self.request.clone(), turn_id, operation_id, call)
                 .map(NativePrepared::Command),

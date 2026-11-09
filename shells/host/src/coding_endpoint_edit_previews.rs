@@ -13,7 +13,9 @@ use agentmage_kernel_engine::runtime_loop::{
     RuntimeToolExecution, runtime_tool_references,
 };
 use agentmage_platform_linux::{
-    LinuxCodingEndpointEditBoundary, LinuxCodingRepository, linux_coding_endpoint_edit_registry,
+    LinuxCodingEndpointCommandBoundary, LinuxCodingEndpointEditBoundary, LinuxCodingRepository,
+    LinuxCodingTestFormat, linux_coding_endpoint_coding_registry,
+    linux_coding_endpoint_command_registry, linux_coding_endpoint_edit_registry,
 };
 use sha2::{Digest, Sha256};
 
@@ -25,11 +27,36 @@ use crate::{
 enum Owner<C> {
     Ready(Box<LinuxCodingRepository>),
     Pending(Box<LinuxCodingEndpointEditBoundary<C>>),
+    Command(Box<LinuxCodingEndpointCommandBoundary<C>>),
+}
+
+/// Fixed trusted validation definition. No model or HTTP field can select a
+/// command here. Native manifest checks and each exact approval remain required.
+pub struct CodingEndpointValidation {
+    /// Exact user-selected offline command, including identity and bounds.
+    pub command: agentmage_kernel_engine::command_runner::CommandSpec,
+    /// Test category checked by the original native validation owner.
+    pub kind: agentmage_kernel_engine::validation_template::ValidationKind,
+    /// Minimum observed test count; zero is refused.
+    pub minimum_test_count: u32,
+    /// Explicit closed output parser, never inferred from process prose.
+    pub output_format: LinuxCodingTestFormat,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Next {
+    Edit,
+    Test,
+    Completion,
 }
 struct State<C> {
     owner: Option<Owner<C>>,
     control: Arc<dyn ModelOperationControl + Send + Sync>,
     clock: C,
+    validation: Option<CodingEndpointValidation>,
+    next: Next,
+    feedback: Option<serde_json::Value>,
+    prior_receipt: Option<String>,
 }
 
 /// Trusted turn-side reference to the same original repository as the tool
@@ -40,8 +67,9 @@ pub struct CodingEndpointEditPreviews<C> {
     state: Arc<Mutex<State<C>>>,
 }
 
-/// Tool-side reference. Only the existing original native boundary can grant
-/// or execute an edit. A pending/failed/uncertain effect cannot be replaced.
+/// Tool-side reference. Original native boundaries alone grant and execute.
+/// Pending and uncertain effects stay held. An eligible failed test returns its
+/// owner only after the original failure classifier consumes its selection.
 pub struct CodingEndpointEditBoundary<C> {
     state: Arc<Mutex<State<C>>>,
 }
@@ -57,8 +85,38 @@ impl<C: RuntimeClock + Clone> CodingEndpointEditPreviews<C> {
         control: Arc<dyn ModelOperationControl + Send + Sync>,
         clock: C,
     ) -> Result<(Self, CodingEndpointEditBoundary<C>), RuntimePortFailure> {
-        let registry =
-            linux_coding_endpoint_edit_registry().map_err(|_| RuntimePortFailure::Invalid)?;
+        Self::new_inner(startup, repository, control, clock, None)
+    }
+
+    /// One original owner alternates strict edits and this frozen validation.
+    /// Must use the explicit combined startup; commands with read exclusions
+    /// refuse there. No command, grant or model request occurs during construction.
+    pub fn new_coding(
+        startup: CodingEndpointPreparedStartup,
+        repository: LinuxCodingRepository,
+        control: Arc<dyn ModelOperationControl + Send + Sync>,
+        clock: C,
+        validation: CodingEndpointValidation,
+    ) -> Result<(Self, CodingEndpointEditBoundary<C>), RuntimePortFailure> {
+        if validation.minimum_test_count == 0 || !validation.kind.is_test() {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        Self::new_inner(startup, repository, control, clock, Some(validation))
+    }
+
+    fn new_inner(
+        startup: CodingEndpointPreparedStartup,
+        repository: LinuxCodingRepository,
+        control: Arc<dyn ModelOperationControl + Send + Sync>,
+        clock: C,
+        validation: Option<CodingEndpointValidation>,
+    ) -> Result<(Self, CodingEndpointEditBoundary<C>), RuntimePortFailure> {
+        let registry = if validation.is_some() {
+            linux_coding_endpoint_coding_registry()
+        } else {
+            linux_coding_endpoint_edit_registry()
+        }
+        .map_err(|_| RuntimePortFailure::Invalid)?;
         if repository.created_workspace_id() != Some(&startup.request().workspace_id)
             || startup.request().visible_tools
                 != runtime_tool_references(&registry).map_err(|_| RuntimePortFailure::Invalid)?
@@ -69,6 +127,10 @@ impl<C: RuntimeClock + Clone> CodingEndpointEditPreviews<C> {
             owner: Some(Owner::Ready(Box::new(repository))),
             control,
             clock,
+            validation,
+            next: Next::Edit,
+            feedback: None,
+            prior_receipt: None,
         }));
         Ok((
             Self {
@@ -146,6 +208,136 @@ impl<C: RuntimeClock + Clone> CodingEndpointEditPreviews<C> {
         Ok(context)
     }
 
+    #[cfg(test)]
+    pub(super) fn synthetic_observation(&self, next: Next, feedback: Option<serde_json::Value>) {
+        // Host prompt/scheduling fixtures only. Native admission and original
+        // failure-to-owner transfer are tested at their private platform seam.
+        let mut state = self.state.lock().unwrap();
+        assert!(matches!(state.owner, Some(Owner::Ready(_))));
+        state.next = next;
+        state.feedback = feedback;
+    }
+
+    pub(super) fn next(&self) -> Result<Next, RuntimePortFailure> {
+        let state = self
+            .state
+            .lock()
+            .map_err(|_| RuntimePortFailure::Unavailable)?;
+        state.control.remaining_ms().map_err(control_failure)?;
+        if !matches!(state.owner, Some(Owner::Ready(_))) {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        Ok(state.next)
+    }
+
+    // This exact native selection was consumed when the failed observation was
+    // admitted. Taking it for one fresh prompt never restores a repair selection.
+    pub(super) fn take_feedback(&self) -> Result<Option<serde_json::Value>, RuntimePortFailure> {
+        let mut state = self
+            .state
+            .lock()
+            .map_err(|_| RuntimePortFailure::Unavailable)?;
+        state.control.remaining_ms().map_err(control_failure)?;
+        if state.next != Next::Edit || !matches!(state.owner, Some(Owner::Ready(_))) {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        Ok(state.feedback.take())
+    }
+
+    pub(super) fn validation_response<'a>(
+        &self,
+    ) -> Result<
+        impl FnOnce(
+            RuntimeEndpointToolPreparationInput<'_>,
+            &dyn ModelOperationControl,
+        ) -> Result<RuntimeEndpointToolProposal, RuntimePortFailure>
+        + 'a,
+        RuntimePortFailure,
+    >
+    where
+        C: 'a,
+    {
+        let startup = self.startup.clone();
+        let state = self.state.clone();
+        Ok(
+            move |input: RuntimeEndpointToolPreparationInput<'_>,
+                  control: &dyn ModelOperationControl| {
+                #[derive(serde::Deserialize)]
+                #[serde(deny_unknown_fields)]
+                struct Validate {
+                    validate: bool,
+                }
+                if input.request != startup.request()
+                    || !serde_json::from_str::<Validate>(input.text)
+                        .map_err(|_| RuntimePortFailure::Invalid)?
+                        .validate
+                {
+                    return Err(RuntimePortFailure::Invalid);
+                }
+                control.remaining_ms().map_err(control_failure)?;
+                let mut state = state.lock().map_err(|_| RuntimePortFailure::Unavailable)?;
+                state.control.remaining_ms().map_err(control_failure)?;
+                if state.next != Next::Test {
+                    return Err(RuntimePortFailure::Invalid);
+                }
+                let now = state.clock.now_epoch_ms()?;
+                let State {
+                    owner,
+                    validation,
+                    prior_receipt,
+                    ..
+                } = &mut *state;
+                let Some(Owner::Ready(repository)) = owner.as_mut() else {
+                    return Err(RuntimePortFailure::Invalid);
+                };
+                let validation = validation.as_ref().ok_or(RuntimePortFailure::Invalid)?;
+                let preview = repository
+                    .prepare_validation(
+                        validation.command.clone(),
+                        validation.kind,
+                        validation.minimum_test_count,
+                        validation.output_format,
+                        prior_receipt.as_deref(),
+                        now,
+                    )
+                    .map_err(|_| RuntimePortFailure::Unavailable)?;
+                control.remaining_ms().map_err(control_failure)?;
+                state.control.remaining_ms().map_err(control_failure)?;
+                let registry = linux_coding_endpoint_command_registry()
+                    .map_err(|_| RuntimePortFailure::Invalid)?;
+                let definition = registry.list_tools()[0];
+                let arguments = serde_json::json!({"preview": preview});
+                let call = prepared_call(&input, definition, &arguments)?;
+                let Some(Owner::Ready(repository)) = state.owner.take() else {
+                    unreachable!()
+                };
+                match (*repository).into_endpoint_coding_command(
+                    input.request.clone(),
+                    input.turn_id.clone(),
+                    input.operation_id.clone(),
+                    call,
+                ) {
+                    Ok(command) => {
+                        state.owner = Some(Owner::Command(Box::new(
+                            command
+                                .into_boundary(state.control.clone(), state.clock.clone())
+                                .with_failure_observations(),
+                        )));
+                        Ok(RuntimeEndpointToolProposal {
+                            tool_id: definition.tool_id.clone(),
+                            tool_version: definition.tool_version.clone(),
+                            arguments,
+                        })
+                    }
+                    Err((repository, _)) => {
+                        state.owner = Some(Owner::Ready(Box::new(repository)));
+                        Err(RuntimePortFailure::Invalid)
+                    }
+                }
+            },
+        )
+    }
+
     pub(super) fn response<'a>(
         &self,
         startup_sha256: &str,
@@ -178,6 +370,9 @@ impl<C: RuntimeClock + Clone> CodingEndpointEditPreviews<C> {
                 control.remaining_ms().map_err(control_failure)?;
                 let mut state = state.lock().map_err(|_| RuntimePortFailure::Unavailable)?;
                 state.control.remaining_ms().map_err(control_failure)?;
+                if state.next != Next::Edit {
+                    return Err(RuntimePortFailure::Invalid);
+                }
                 let now = state.clock.now_epoch_ms()?;
                 let Some(Owner::Ready(repository)) = state.owner.as_mut() else {
                     return Err(RuntimePortFailure::Invalid);
@@ -191,36 +386,29 @@ impl<C: RuntimeClock + Clone> CodingEndpointEditPreviews<C> {
                     .map_err(|_| RuntimePortFailure::Invalid)?;
                 let definition = registry.list_tools()[0];
                 let arguments = serde_json::json!({"preview": preview});
-                let bytes =
-                    serde_json::to_vec(&arguments).map_err(|_| RuntimePortFailure::Invalid)?;
-                let call = ToolCall {
-                    schema_version: CONTRACT_SCHEMA_VERSION,
-                    tool_call_id: input.tool_call_id.clone(),
-                    correlation_id: input.correlation_id.clone(),
-                    action_id: input.action_id.clone(),
-                    tool_id: definition.tool_id.clone(),
-                    tool_version: definition.tool_version.clone(),
-                    arguments: ContractPayload {
-                        schema: definition.input_schema.clone(),
-                        media_type: "application/json".into(),
-                        sha256: Sha256::digest(&bytes)
-                            .iter()
-                            .map(|b| format!("{b:02x}"))
-                            .collect(),
-                        bytes,
-                    },
-                };
+                let call = prepared_call(&input, definition, &arguments)?;
+                let combined = state.validation.is_some();
                 // Retire before handoff: unwind cannot restore this effect. Ordinary
                 // refusal returns the same original repository, without a grant.
                 let Some(Owner::Ready(repository)) = state.owner.take() else {
                     unreachable!()
                 };
-                match (*repository).into_endpoint_edit(
-                    input.request.clone(),
-                    input.turn_id.clone(),
-                    input.operation_id.clone(),
-                    call,
-                ) {
+                let prepared = if combined {
+                    (*repository).into_endpoint_coding_edit(
+                        input.request.clone(),
+                        input.turn_id.clone(),
+                        input.operation_id.clone(),
+                        call,
+                    )
+                } else {
+                    (*repository).into_endpoint_edit(
+                        input.request.clone(),
+                        input.turn_id.clone(),
+                        input.operation_id.clone(),
+                        call,
+                    )
+                };
+                match prepared {
                     Ok(edit) => {
                         state.owner = Some(Owner::Pending(Box::new(
                             edit.into_boundary(state.control.clone(), state.clock.clone()),
@@ -251,6 +439,7 @@ impl<C: RuntimeClock> CodingEndpointEditBoundary<C> {
         match state.owner.as_ref() {
             Some(Owner::Ready(repository)) => repository.inspect_edit(),
             Some(Owner::Pending(boundary)) => boundary.inspect(),
+            Some(Owner::Command(boundary)) => boundary.inspect(),
             None => return Err(RuntimePortFailure::Invalid),
         }
         .map_err(|_| RuntimePortFailure::Unavailable)
@@ -258,6 +447,41 @@ impl<C: RuntimeClock> CodingEndpointEditBoundary<C> {
 }
 
 impl<C: RuntimeClock> RuntimeToolBoundary for CodingEndpointEditBoundary<C> {
+    fn permits_failure_observation(
+        &mut self,
+        scope: RuntimeRunScope<'_>,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        execution: &RuntimeToolExecution,
+    ) -> Result<bool, RuntimePortFailure> {
+        let mut state = self
+            .state
+            .lock()
+            .map_err(|_| RuntimePortFailure::Unavailable)?;
+        let Some(Owner::Command(boundary)) = state.owner.as_mut() else {
+            return Ok(false);
+        };
+        if !boundary.permits_failure_observation(scope, definition, call, execution)? {
+            return Ok(false);
+        }
+        let Some(Owner::Command(boundary)) = state.owner.take() else {
+            unreachable!()
+        };
+        match (*boundary).into_repair_repository() {
+            Ok((repository, feedback)) => {
+                state.prior_receipt = feedback["receipt_sha256"].as_str().map(str::to_owned);
+                state.feedback = Some(feedback);
+                state.owner = Some(Owner::Ready(Box::new(repository)));
+                state.next = Next::Edit;
+                Ok(true)
+            }
+            Err(boundary) => {
+                state.owner = Some(Owner::Command(Box::new(boundary)));
+                Err(RuntimePortFailure::Invalid)
+            }
+        }
+    }
+
     fn evaluate_scoped(
         &mut self,
         s: RuntimeRunScope<'_>,
@@ -270,10 +494,11 @@ impl<C: RuntimeClock> RuntimeToolBoundary for CodingEndpointEditBoundary<C> {
             .state
             .lock()
             .map_err(|_| RuntimePortFailure::Unavailable)?;
-        let Some(Owner::Pending(boundary)) = state.owner.as_mut() else {
-            return Err(RuntimePortFailure::Invalid);
-        };
-        boundary.evaluate_scoped(s, op, d, c, now)
+        match state.owner.as_mut() {
+            Some(Owner::Pending(boundary)) => boundary.evaluate_scoped(s, op, d, c, now),
+            Some(Owner::Command(boundary)) => boundary.evaluate_scoped(s, op, d, c, now),
+            _ => Err(RuntimePortFailure::Invalid),
+        }
     }
     fn resolve_scoped(
         &mut self,
@@ -288,10 +513,11 @@ impl<C: RuntimeClock> RuntimeToolBoundary for CodingEndpointEditBoundary<C> {
             .state
             .lock()
             .map_err(|_| RuntimePortFailure::Unavailable)?;
-        let Some(Owner::Pending(boundary)) = state.owner.as_mut() else {
-            return Err(RuntimePortFailure::Invalid);
-        };
-        boundary.resolve_scoped(s, ch, r, d, c, now)
+        match state.owner.as_mut() {
+            Some(Owner::Pending(boundary)) => boundary.resolve_scoped(s, ch, r, d, c, now),
+            Some(Owner::Command(boundary)) => boundary.resolve_scoped(s, ch, r, d, c, now),
+            _ => Err(RuntimePortFailure::Invalid),
+        }
     }
     fn execute_scoped(
         &mut self,
@@ -305,17 +531,29 @@ impl<C: RuntimeClock> RuntimeToolBoundary for CodingEndpointEditBoundary<C> {
             .state
             .lock()
             .map_err(|_| RuntimePortFailure::Unavailable)?;
-        let Some(Owner::Pending(boundary)) = state.owner.as_mut() else {
-            return Err(RuntimePortFailure::Invalid);
+        let result = match state.owner.as_mut() {
+            Some(Owner::Pending(boundary)) => boundary.execute_scoped(s, e, d, c, p)?,
+            Some(Owner::Command(boundary)) => boundary.execute_scoped(s, e, d, c, p)?,
+            _ => return Err(RuntimePortFailure::Invalid),
         };
-        let result = boundary.execute_scoped(s, e, d, c, p)?;
-        // Only an observed successful effect permits another preview in this
-        // SAME coordinator. Failed/uncertain/spent boundaries remain held.
+        // Failed commands stay held until the original classifier admits their
+        // exact observation. No failed/uncertain edit can re-enter preparation.
         if result.result.outcome == OperationOutcome::Succeeded {
-            let Some(Owner::Pending(boundary)) = state.owner.take() else {
-                unreachable!()
-            };
-            state.owner = Some(Owner::Ready(Box::new((*boundary).into_repository())));
+            match state.owner.take() {
+                Some(Owner::Pending(boundary)) => {
+                    state.owner = Some(Owner::Ready(Box::new((*boundary).into_repository())));
+                    state.next = if state.validation.is_some() {
+                        Next::Test
+                    } else {
+                        Next::Edit
+                    };
+                }
+                Some(Owner::Command(boundary)) => {
+                    state.owner = Some(Owner::Ready(Box::new((*boundary).into_repository())));
+                    state.next = Next::Completion;
+                }
+                _ => unreachable!(),
+            }
         }
         Ok(result)
     }
@@ -350,4 +588,29 @@ impl<C: RuntimeClock> RuntimeToolBoundary for CodingEndpointEditBoundary<C> {
     ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
         Err(RuntimePortFailure::Invalid)
     }
+}
+
+fn prepared_call(
+    input: &RuntimeEndpointToolPreparationInput<'_>,
+    definition: &ToolDefinition,
+    arguments: &serde_json::Value,
+) -> Result<ToolCall, RuntimePortFailure> {
+    let bytes = serde_json::to_vec(arguments).map_err(|_| RuntimePortFailure::Invalid)?;
+    Ok(ToolCall {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        tool_call_id: input.tool_call_id.clone(),
+        correlation_id: input.correlation_id.clone(),
+        action_id: input.action_id.clone(),
+        tool_id: definition.tool_id.clone(),
+        tool_version: definition.tool_version.clone(),
+        arguments: ContractPayload {
+            schema: definition.input_schema.clone(),
+            media_type: "application/json".into(),
+            sha256: Sha256::digest(&bytes)
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect(),
+            bytes,
+        },
+    })
 }

@@ -41,7 +41,8 @@ pub use coding_repository::{
 /// Closed output protocols for separately approved project tests.
 pub use coding_repository::{
     LinuxCodingCommandCancellation, LinuxCodingEndpointCommand, LinuxCodingEndpointCommandBoundary,
-    LinuxCodingTestFormat, linux_coding_endpoint_command_registry,
+    LinuxCodingTestFormat, linux_coding_endpoint_coding_registry,
+    linux_coding_endpoint_command_registry,
 };
 pub use coding_repository::{
     LinuxCodingEndpointEdit, LinuxCodingEndpointEditBoundary, linux_coding_endpoint_edit_registry,

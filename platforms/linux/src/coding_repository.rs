@@ -58,7 +58,7 @@ pub use create::LinuxCodingRuntimeCreateDriver;
 mod validation;
 pub use command::{
     LinuxCodingCommandCancellation, LinuxCodingEndpointCommand, LinuxCodingEndpointCommandBoundary,
-    linux_coding_endpoint_command_registry,
+    linux_coding_endpoint_coding_registry, linux_coding_endpoint_command_registry,
 };
 pub use runtime::{LinuxCodingRuntimeWriteDriver, LinuxCodingWorktreeLease};
 pub use validation::LinuxCodingTestFormat;

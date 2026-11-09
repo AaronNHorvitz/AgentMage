@@ -23,9 +23,9 @@ const ENDPOINT_EDIT: &str = "agentmage.code.apply-prepared-edit";
 const INPUT: &str = LINUX_CODING_PREPARED_INPUT_SCHEMA_JSON;
 const OUTPUT: &str = r#"{"type":"object"}"#;
 
-struct EndpointEditTool(ToolDefinition);
+pub(crate) struct EndpointEditTool(ToolDefinition);
 impl EndpointEditTool {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         let schema = |id: &str, text: &str| SchemaReference {
             schema_id: SchemaId::from_raw(id),
             schema_version: 1,
@@ -116,10 +116,40 @@ impl LinuxCodingRepository {
         operation_id: RuntimeOperationId,
         call: ToolCall,
     ) -> std::result::Result<LinuxCodingEndpointEdit, (Self, LinuxCodingRepositoryError)> {
+        self.bind_endpoint_edit(request, turn_id, operation_id, call, false)
+    }
+
+    /// Exact edit in the explicit combined edit/test catalog. The original
+    /// held-root, preview, mutable/protected-path and grant checks still apply.
+    /// This never admits an arbitrary subset or a caller-supplied catalog.
+    #[allow(clippy::result_large_err)]
+    pub fn into_endpoint_coding_edit(
+        self,
+        request: RuntimeEndpointRunRequest,
+        turn_id: RuntimeTurnId,
+        operation_id: RuntimeOperationId,
+        call: ToolCall,
+    ) -> std::result::Result<LinuxCodingEndpointEdit, (Self, LinuxCodingRepositoryError)> {
+        self.bind_endpoint_edit(request, turn_id, operation_id, call, true)
+    }
+
+    #[allow(clippy::result_large_err)]
+    fn bind_endpoint_edit(
+        self,
+        request: RuntimeEndpointRunRequest,
+        turn_id: RuntimeTurnId,
+        operation_id: RuntimeOperationId,
+        call: ToolCall,
+        combined: bool,
+    ) -> std::result::Result<LinuxCodingEndpointEdit, (Self, LinuxCodingRepositoryError)> {
         let prepare = || {
             verify_runtime_endpoint_run_request(&request)
                 .map_err(|_| err("code.endpoint-edit.binding"))?;
-            let registry = linux_coding_endpoint_edit_registry()?;
+            let registry = if combined {
+                linux_coding_endpoint_coding_registry()?
+            } else {
+                linux_coding_endpoint_edit_registry()?
+            };
             let definition = EndpointEditTool::new().0;
             let created = self.verify_created()?;
             let pending = self.edit.as_ref().ok_or(err("code.edit.choice-required"))?;

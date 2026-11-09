@@ -32,11 +32,12 @@ fn controlled(f: &Fixture, kind: Kind) -> RuntimeEndpointRunRequest {
     r.work_packet.protected_files = vec!["tests".into()];
     r.work_packet.required_capability_class = match kind {
         Kind::Edit => AuthorityClass::LocalWrite,
-        Kind::Command => AuthorityClass::Execute,
+        Kind::Command | Kind::EditAndTest => AuthorityClass::Execute,
     };
     let registry = match kind {
         Kind::Edit => linux_coding_endpoint_edit_registry(),
         Kind::Command => linux_coding_endpoint_command_registry(),
+        Kind::EditAndTest => agentmage_platform_linux::linux_coding_endpoint_coding_registry(),
     }
     .unwrap();
     r.visible_tools = runtime_tool_references(&registry).unwrap();
@@ -275,6 +276,7 @@ fn prepared_endpoint_startup_native_binding_refuses_unowned_repository_and_retur
         let registry = match kind {
             Kind::Edit => linux_coding_endpoint_edit_registry(),
             Kind::Command => linux_coding_endpoint_command_registry(),
+            Kind::EditAndTest => agentmage_platform_linux::linux_coding_endpoint_coding_registry(),
         }
         .unwrap();
         let def = registry.list_tools()[0];
@@ -313,4 +315,39 @@ fn prepared_endpoint_startup_native_binding_refuses_unowned_repository_and_retur
         fs::read(f.root.join("sentinel")).unwrap(),
         b"unchanged synthetic source"
     );
+}
+
+#[test]
+fn combined_endpoint_startup_refuses_read_exclusions_and_either_disabled_original_tool() {
+    let f = Fixture::new();
+    let kind = Kind::EditAndTest;
+    let startup = Startup::prepare(controlled(&f, kind), kind, &f.empty_ledger()).unwrap();
+    assert_eq!(startup.request().visible_tools.len(), 2);
+    let excluded = f.ledger(vec![constraint(
+        GuidanceConstraintKind::ExcludeScope,
+        "private",
+    )]);
+    assert_eq!(
+        Startup::prepare(controlled(&f, kind), kind, &excluded).err(),
+        Some(Error::Source)
+    );
+    for tool in [
+        "agentmage.code.apply-prepared-edit",
+        "agentmage.code.run-prepared-command",
+    ] {
+        let ledger = f.ledger(vec![constraint(
+            GuidanceConstraintKind::DisableTool,
+            &format!("{tool}@1.0.0"),
+        )]);
+        assert_eq!(
+            Startup::prepare(controlled(&f, kind), kind, &ledger).err(),
+            Some(Error::NoTools)
+        );
+    }
+    let ledger = f.ledger(vec![constraint(
+        GuidanceConstraintKind::ReduceBudget,
+        "max_model_calls=1",
+    )]);
+    let startup = Startup::prepare(controlled(&f, kind), kind, &ledger).unwrap();
+    assert_eq!(startup.request().limits.max_model_calls, 1);
 }

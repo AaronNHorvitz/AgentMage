@@ -1,0 +1,163 @@
+Commit: d2ddd2dcd701fbdfbdd4a52cd95be1a6bc2eeabd
+Scope: local-coding-failed-test-feedback
+
+# Independent core review: failed-test feedback in the endpoint coordinator
+
+Reviewer: independent session with read-only access to the repository. It worked only in the pinned checkout
+`/lane/review-checkout`, used its own build target (`/lane/state/review-target`) and used no GPU.
+Tier: core. Rows: T-303 / T-306 (this commit does not close either row; both parents stay OPEN).
+Base: `3f8d1f2219a6ee27a5d15ba9b7d067c0ab42a05c`.
+
+## Methods
+
+1. Confirmed the pinned commit, a clean tree and the 12-path diff against the base. Read IP-POLICY.md, the
+   top of TASKS.md, Decision 0172, the evidence file, the guide section and the builder's
+   README/run.py/check.py/light.py before running anything.
+2. Read every changed Rust line and the code it relies on:
+   - the kernel: `complete_tool`, output and artifact routing, `persist_safe_boundary`, continuation
+     validation, the event-sequence validator and the endpoint checkpoint refusal;
+   - the Linux side: `permits_failure_observation`, `project`, `repair_feedback`,
+     `consume_repair_feedback` and the three-attempt ceiling;
+   - the host side: prepared admission and boundary delegation, `CodingEndpointContext::prepare_context`
+     and its ToolResult projection;
+   - every in-tree `RuntimeVerifierPort` that now receives failed results.
+3. Ran the builder's full command set myself from a fresh output directory, then compared the results with
+   the builder's recorded evidence.
+4. Added my own escape probes to a scratch `git archive` export of the pinned commit (the repository was
+   not modified) and ran them through the build slot.
+
+## Commands and results
+
+| Command (cwd `/lane/review-checkout` unless noted) | Result |
+| --- | --- |
+| `git rev-parse HEAD` | `d2ddd2dcd701fbdfbdd4a52cd95be1a6bc2eeabd`; `git status --short` empty |
+| `sha256sum --quiet -c /lane/state/tmp/t303-failed-test-feedback/review-inputs.sha256` | exit 0; 59 entries; manifest SHA-256 `d268f9a1f4fc0b84de0336e9fe530f87cfa7e1be85b7468106a7cab2601bf297` matches the request |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-failed-test-feedback/run.py /lane/state/tmp/review-failed-test-feedback-d2ddd2dcd701` | exit **1** as expected: `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`; 536.44 s including reservations; command exits 0,0,0,0, fmt 0 (120.58 s incl. slot wait), clippy 0 (46.13 s), test 101 (367.90 s); raw log SHA-256 `58e226919ff018b6cdb667a7ca30ebae5066b32de8bc519a7c0c56c80eefbd20` |
+| `python3 -B /lane/state/tmp/t303-failed-test-feedback/check.py <same output>` | exit 0; data comparison only: 46 targets; 2815 passed / 72 failed / 71 ignored / 0 measured / 0 filtered; 72 failure identities exactly equal the unchanged T-301 baseline, 0 new; all 8 named methods `ok`; the 12-path set and TASKS row lines unchanged |
+| `python3 -B /lane/state/tmp/t303-failed-test-feedback/light.py` | exit 0 (diff-check, untracked lint, review lint, markdownlint: 0 issues in 4 files) |
+| `cmp .../validation-final/source-freeze.json <output>/source-freeze.json` | exit 0 (the 7 Rust hashes match the builder's final freeze) |
+| `cmp docs/reviews/3f8d1f2219a6-local-coding-edit-launch.txt /lane/reviews/3f8d1f2219a6-local-coding-edit-launch.md` | exit 0 (predecessor review retained byte-identically) |
+| `git diff --check 3f8d1f2219a6ee27a5d15ba9b7d067c0ab42a05c --` | exit 0 |
+| `git status --short` (after all runs) | empty |
+| Leftovers in my run's temp namespace `/tmp/ff-p5gy7tk7` | exactly the 11 known inherited-failure fixture dirs (`agentmage-host-*-3227-1..11`); nothing else touched or cleaned |
+
+The gate is FAIL for exactly the inherited host/Linux failures, as the builder stated, and no failure is
+new. That FAIL is the recorded known state; I do not count it as a green gate.
+
+### Reviewer escape probes (scratch export `/lane/state/tmp/review-probe-d2ddd2dcd701`, not the repository)
+
+I appended two tests to `kernel/engine/src/runtime_loop_endpoint_write_tests.rs` in the export and ran:
+`CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot cargo test -p agentmage-kernel-engine --lib reviewer_probe -- --nocapture`.
+
+- **Failed command with Changed or Uncertain state, and a hook that answers `Ok(true)` to every call:** the
+  hook is never consulted (0 calls). The step fails closed with an error, there is no second model
+  dispatch and no observation reaches the model. PASS.
+- **Repeating the same command after an admitted failure:** the run stops at a fresh challenge with a
+  different `challenge_sha256`. Replaying the old Allow decision is refused, the events are unchanged and
+  the effect still has exactly 1 execution. PASS.
+- My first version of the second probe also asserted that the two `approval_id`s differ. That assertion
+  failed only because the synthetic fixture boundary hard-codes `ApprovalId("endpoint-read-approval")`
+  (`runtime_loop_endpoint_coordinator_tests.rs:286,309,378`). It is a fixture artifact, not a product
+  defect; I removed that line and the rerun passed (2 passed).
+
+## Analysis
+
+- **Kernel gate** (`kernel/engine/src/runtime_loop.rs:4125-4140`): the opt-in applies only when all of these
+  hold:
+  - no terminal event has been emitted yet;
+  - the run is an endpoint run in ControlledWrite mode;
+  - the tool is CommandExecute;
+  - the outcome is `Failed` with `NotChanged` state;
+  - the output is present, its kind is `Report` and there are no artifact candidates;
+  - the trusted boundary's hook agrees (the default hook returns `Ok(false)`, `runtime_loop.rs:641`).
+
+  A hook error maps to `Dependency` after the effect and latches reconciliation. The failed output is
+  stored through the existing non-success audit-artifact route and charged once. The event stays
+  `ToolFailed`/`runtime.tool.failed`, which the event validator accepts mid-turn (`runtime_event.rs:601`).
+  Endpoint runs have no checkpoint support (`runtime_loop.rs:1829`), and continuation validation
+  (`runtime_artifact.rs:2534`) still refuses non-success results, so no durable path can absorb a failed
+  observation.
+- **Native binding** (`platforms/linux/src/coding_repository_endpoint_command.rs:497-552`): before any
+  feedback is admitted, the boundary:
+  - requires the explicit opt-in, `Stage::Spent` and the retained result;
+  - checks the elapsed time, then compares the complete execution with a re-projection of the retained
+    value;
+  - reuses the original `repair_feedback()` checks (eligibility, consumed selection and `attempts < 3`);
+  - consumes the selection through the original `consume_repair_feedback`.
+
+  It spends no test attempt and grants nothing. Substituted receipt, receipt hash, call id, evidence,
+  schema, payload and elapsed time are all rejected (tested). The owner stays spent, so no second command
+  can run (tested).
+- **Composition:** the opt-in is only a Rust builder method, `CodingEndpointPrepared::with_failure_observations`
+  or the Linux boundary method. No HTTP or model field reaches it (grep finds no non-test callers). An
+  Edit-variant boundary returns `Ok(false)`. The next context projects the result with
+  `"outcome":"Failed"` under `untrusted_tool_results` (`shells/host/src/coding_endpoint_context.rs:246,343`).
+  Untrusted test output can therefore influence only a model proposal, and every effect still needs its
+  own exact approval (kernel test plus my probe).
+- **Confinement:** the diff does not touch the sandbox, worker, path-resolution, network or grant-issuing
+  code. The escape surface this change adds is result substitution, approval replay and selection
+  renewal, and I exercised each of those above.
+- **Evidence and honesty:** the evidence labels everything as synthetic process/model/creation
+  observations and claims no workflow qualification and no score. The counts match my rerun exactly. The
+  12-path diff touches no held-out task, hidden test, scorer, pin, threshold, dependency or SBOM, and it
+  adds or closes no row or sub-row. Public hygiene is clean: no private host path, username, hostname or
+  credential in added lines. `/lane/...` paths appear only inside the predecessor review retained byte
+  for byte, as accepted in earlier reviews. No trademarks, no third-party product comparisons.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, contract drift): verifier input no longer guarantees successful results.**
+  `kernel/engine/src/runtime_loop.rs:1162` still documents `RuntimeVerificationInput::tool_results` as
+  "Ordered successful tool results". After this change, admitted `Failed` results reach every verifier. Their
+  `ToolOutput` evidence is also merged into the run's grounded `evidence` and resets the no-progress
+  counter (`runtime_loop.rs:4167-4189`).
+
+  No in-tree verifier can accept because of this:
+  - `CodingCompletionVerifier` rejects any non-success result (`shells/host/src/coding_verifier.rs:130`);
+  - `CodingEndpointReadVerifier` checks outcomes (`coding_endpoint_read_verifier.rs:209`);
+  - `EvidenceAnswerVerifier` does not check outcomes (`standalone_evidence.rs:1663`), but it can cite only
+    `ArtifactResult` fragments, never command receipts.
+
+  However, the prepared serve path takes any trusted-factory verifier `V`, and one written to the stale
+  doc could treat the presence of failure evidence as success. Fix:
+  - update the doc (as was done for `RuntimeEndpointPreparationInput`);
+  - preferably also keep evidence from admitted failures out of grounded `evidence`, or have the kernel
+    refuse a `Success` verification while any result in `tool_results` is non-success.
+- **L2 (low, coverage): host-layer opt-in and delegation are untested.**
+  The host-layer opt-in (`shells/host/src/coding_endpoint_prepared_startup.rs:389,441-447`) and its
+  delegation (`:490-501`) have no test, and neither does `serve_coding_endpoint_prepared` with the opt-in.
+  The evidence says "Prepared admission can select it", but that is supported only by reading the code. A
+  broken delegation would fail closed (default `false`). Fix: add a host test that admits a prepared
+  command with the opt-in and asserts:
+  - the `Failed` result reaches `CodingEndpointContext` preparation;
+  - the Edit variant returns `false`;
+  - the default prepared command still stops at the failure.
+- **L3 (low, coverage): some kernel guard branches are untested in the repository.**
+  The guards for Failed with Changed state, non-endpoint (native) runs and ReadOnly mode are visible in the
+  code (`runtime_loop.rs:4128-4131`) but have no committed tests. My scratch probe covers Changed and
+  Uncertain; native and ReadOnly remain covered only by reading. Fix: add these cases to the
+  `endpoint_failure_feedback_is_explicit...` matrix.
+- **L4 (low, design backlog for the open parent): the same-run repair loop cannot reach verified success.**
+  Under the current coding verifier, a failed result stays in `tool_results` and that verifier rejects any
+  non-success result. So even a later passing validation inside the same run can never be verified
+  complete. The builder states that no scheduler is provided. Whoever builds the T-303/T-306 repair
+  scheduler must define, explicitly and in a test, how a later full pass supersedes an earlier admitted
+  failure without erasing it.
+
+The predecessor's L1-L4 and earlier lows remain same-row backlog. They are not re-reviewed here.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing increment, scope `local-coding-failed-test-feedback`): PASS** for exact
+  commit `d2ddd2dcd701fbdfbdd4a52cd95be1a6bc2eeabd`. There is no high or medium finding, and L1-L4 are
+  same-row backlog.
+  - The opt-in is narrow, explicit and fails closed.
+  - The original failed result, receipt and event are preserved.
+  - No approval, attempt, budget or clock is renewed.
+  - Builder evidence reproduces exactly: the gate FAILs on the 72 inherited failures, 0 new.
+- Both parent rows remain **OPEN**. This PASS does not close any row, certify any workflow, qualify any
+  real model or native process, or support any coding score.
+
+Verdict: PASS

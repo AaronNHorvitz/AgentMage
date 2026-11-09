@@ -24,6 +24,8 @@ use std::{
 
 #[path = "coding_endpoint_edit_coordinator_tests.rs"]
 mod coordinator_tests;
+#[path = "coding_endpoint_edit_cycle_tests.rs"]
+mod cycle_tests;
 #[path = "coding_endpoint_edit_preview_tests.rs"]
 mod preview_tests;
 

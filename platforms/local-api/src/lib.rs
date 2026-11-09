@@ -16,7 +16,8 @@ pub use coding_endpoint_edit_launch::serve_coding_endpoint_edit_development;
 mod coding_endpoint_prepared;
 pub use coding_endpoint_launch::serve_coding_endpoint_read_development;
 pub use coding_endpoint_prepared::{
-    CodingEndpointPreparedHttpRun, CodingEndpointStrictHttpRun, serve_coding_endpoint_prepared,
+    CodingEndpointPreparedHttpRun, CodingEndpointStrictHttpRun,
+    serve_coding_endpoint_edits_and_tests, serve_coding_endpoint_prepared,
     serve_coding_endpoint_strict_edits,
 };
 mod coding_owned_api;

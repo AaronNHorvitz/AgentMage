@@ -16,7 +16,7 @@ use agentmage_kernel_engine::propagation::{
 mod endpoint;
 pub use endpoint::{
     LinuxCodingEndpointCommand, LinuxCodingEndpointCommandBoundary,
-    linux_coding_endpoint_command_registry,
+    linux_coding_endpoint_coding_registry, linux_coding_endpoint_command_registry,
 };
 
 const COMMAND_TOOL: &str = "local-coding-command";

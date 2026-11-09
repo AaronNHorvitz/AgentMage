@@ -126,6 +126,61 @@ where
     V: RuntimeVerifierPort + Send + 'static,
     C: RuntimeClock + Send + 'static,
 {
+    serve_coding_endpoint_edits_and_tests_inner(listener, tokens, stop, access, |id, session| {
+        factory(id, session).map(|run| (run, None))
+    })
+}
+
+/// Explicit fixed-test coding composition over the same local API. The factory
+/// must use an EditAndTest startup and the original live repository. Its fixed
+/// validation definition is never selected by a model or deserialized HTTP field.
+/// Every advance still requires disclosure consent and every edit/test its exact
+/// approval. The supplied independent verifier alone can accept completion.
+pub fn serve_coding_endpoint_edits_and_tests<V, C>(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    access: CodingEndpointObservationAccess,
+    factory: impl FnOnce(
+        RuntimeRunId,
+        SessionId,
+    ) -> Result<
+        (
+            CodingEndpointStrictHttpRun<V, C>,
+            agentmage_host::coding_endpoint_edit_previews::CodingEndpointValidation,
+        ),
+        ApiError,
+    >,
+) -> Result<(), ApiError>
+where
+    V: RuntimeVerifierPort + Send + 'static,
+    C: RuntimeClock + Send + 'static,
+{
+    serve_coding_endpoint_edits_and_tests_inner(listener, tokens, stop, access, |id, session| {
+        factory(id, session).map(|(run, validation)| (run, Some(validation)))
+    })
+}
+
+fn serve_coding_endpoint_edits_and_tests_inner<V, C>(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    access: CodingEndpointObservationAccess,
+    factory: impl FnOnce(
+        RuntimeRunId,
+        SessionId,
+    ) -> Result<
+        (
+            CodingEndpointStrictHttpRun<V, C>,
+            Option<agentmage_host::coding_endpoint_edit_previews::CodingEndpointValidation>,
+        ),
+        ApiError,
+    >,
+) -> Result<(), ApiError>
+where
+    V: RuntimeVerifierPort + Send + 'static,
+    C: RuntimeClock + Send + 'static,
+{
     use agentmage_host::{
         coding_endpoint_edit_generation::CodingEndpointStrictEdits,
         coding_endpoint_edit_previews::CodingEndpointEditPreviews,
@@ -137,23 +192,37 @@ where
         stop,
         access,
         |id, session, runs| {
-            let input = factory(id.clone(), session.clone())?;
+            let (input, validation) = factory(id.clone(), session.clone())?;
             let request = input.startup.request().clone();
             if request.run_id != id || request.session_id != session {
                 return Err(ApiError::Configuration);
             }
-            let registry = agentmage_platform_linux::linux_coding_endpoint_edit_registry()
-                .map_err(|_| ApiError::Configuration)?;
+            let registry = if validation.is_some() {
+                agentmage_platform_linux::linux_coding_endpoint_coding_registry()
+            } else {
+                agentmage_platform_linux::linux_coding_endpoint_edit_registry()
+            }
+            .map_err(|_| ApiError::Configuration)?;
             // Preserve the narrowed catalog rather than exposing the full registry.
             let mut registry = registry;
             input.startup.guidance().restrict_registry(&mut registry);
             let clock = CodingEndpointPreparedClock::new(input.clock);
-            let (previews, boundary) = CodingEndpointEditPreviews::new(
-                input.startup,
-                input.repository,
-                input.control,
-                clock.clone(),
-            )
+            let (previews, boundary) = if let Some(validation) = validation {
+                CodingEndpointEditPreviews::new_coding(
+                    input.startup,
+                    input.repository,
+                    input.control,
+                    clock.clone(),
+                    validation,
+                )
+            } else {
+                CodingEndpointEditPreviews::new(
+                    input.startup,
+                    input.repository,
+                    input.control,
+                    clock.clone(),
+                )
+            }
             .map_err(|_| ApiError::Configuration)?;
             let port = CodingEndpointStrictEdits::new(
                 previews,

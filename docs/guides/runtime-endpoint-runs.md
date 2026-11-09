@@ -1496,3 +1496,54 @@ cleanup or recovery. No apply to the original checkout, commit or push is added.
 In the builder lane, actual startup reaches the unchanged native Git artifact
 trust refusal before creation or model dispatch. Successful native creation and
 an executable real-model edit workflow remain unobserved.
+
+## Fixed tests and repair in one retained run
+
+Trusted hosts can select `CodingEndpointPreparedKind::EditAndTest` and construct
+`CodingEndpointEditPreviews::new_coding` with the original live repository and a
+`CodingEndpointValidation`: one explicit command definition, test kind, minimum
+count and closed output parser. `serve_coding_endpoint_edits_and_tests` supplies
+this composition through the existing local API. It is a library factory;
+the development executable still selects its existing edit-only path.
+
+The combined catalog contains the original edit and command definitions.
+Single-effect admission still refuses a combined catalog. Startup refuses read
+exclusions or disabling either tool; it cannot silently re-enable a disabled
+tool or let the test worker read excluded directories. Native worktree, command
+manifest, confined worker, resource and grant checks are unchanged.
+
+The trusted scheduler alternates strict edits and the fixed test definition.
+A test turn accepts only `{"validate":true}`, without extra members or a
+model-selected command. Each edit and test presents its complete original native
+preview for fresh exact approval. After an eligible failed test, the original
+classifier consumes its repair selection once and returns the same repository
+with that exact feedback. The next repair prompt uses fresh selected source and
+labels diagnostics as untrusted data. The immutable validation series links each
+rerun to the failed receipt and still permits at most three admitted attempts.
+An invalid, interrupted, lost or oversized model response restores no selection.
+
+A successful command proceeds only to an ordinary completion candidate with
+complete actual tool history. The supplied independent verifier decides whether
+the task is satisfied. A process exit or parsed test pass alone cannot certify
+the task or current source. Every turn shares the same coordinator, cumulative
+ledger, continuous control and epoch clock; approvals do not renew them.
+
+The existing API requires the control credential and model-context consent on
+each advance. Consent must cover the selected sources, failure diagnostics and
+actual tool observations that the advance may disclose, including a repair
+prompt following an approved test. An effect decision alone supplies no such
+consent. The host chooses the endpoint and fixed test definition before serving;
+no model or HTTP argument can replace either native executor or original owner.
+
+Native command admission can refuse before a test approval in this lane.
+Synthetic creation/model/process fixtures are component evidence, not a
+successful native coding workflow or a model score. Complete native/model
+execution, executable coding-cycle selection, durable recovery, approved Git and
+T-303/T-306 acceptance remain open.
+
+The existing `CodingCompletionVerifier` rejects any non-success tool result,
+including an earlier failed check followed by a full pass. This composition does
+not change that rule or supply linked-pass supersession. Its completion route
+alone cannot qualify the repair workflow. A reviewed verifier that explicitly
+binds a later pass to the original failed validation and current source remains
+open work; earlier failures must stay in the run record.
