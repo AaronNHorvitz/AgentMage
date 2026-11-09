@@ -1219,6 +1219,12 @@ and exact context message; it checks the task, exclusions, selected endpoint
 and model, and sealed per-phase context, request, output and time ceilings.
 Preparation opens no socket and reads no file.
 
+The transport currently fixes its per-response text ceiling at 1 MiB. The
+kernel admits that complete envelope before dispatch, so a narrowed run must
+have `max_output_bytes` of at least 1 MiB even though generation retains at most
+64 KiB. Smaller ceilings refuse with `ResourceExhausted` before a socket opens.
+Supporting a smaller prepared transport envelope remains same-row backlog.
+
 Inspect the returned `binding()` and reserve its model call and frozen body
 in the existing owner's cumulative budget before calling `execute` with the
 original continuous run control. Execution consumes the frozen request once,
@@ -1250,10 +1256,16 @@ Socket tests use synthetic endpoint answers and creation provenance, including
 native writes through separate protected HTTP approvals. They establish no
 actual local-model result, native Git creation, test-worker success or score.
 
-The strict-preparation review records a low workspace-binding limitation:
-preview preparation checks the startup's task and exclusions but does not
-compare its workspace identity with the native owner before reads/replacement.
-Trusted callers must supply the correct original owner. The original native
-`bind` still refuses a foreign workspace before write authority. The generation
-helper retains this precondition; adding the earlier content-free workspace
-check remains same-row backlog.
+Preview preparation now compares the sealed workspace label with the original
+repository's held created-worktree label before selecting sources, reading files
+or replacing a preview. A foreign label or absent creation owner refuses with
+`Scope`, including through generated-answer preparation. This addresses the
+strict-preparation review's low workspace-binding finding; independent core
+review of the repair is required. Generation observations survive this refusal.
+
+`created_workspace_id()` exposes only that process-held label and performs no
+file access. Equal labels establish neither root identity nor authority: the
+original native reader still revalidates held roots and selected paths, and
+`bind` still checks the original complete request and creation receipt. Callers
+must still supply the correct live owner and prior source/disclosure consent.
+Generation without a repository owner cannot establish workspace ownership.

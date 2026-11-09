@@ -198,7 +198,9 @@ fn endpoint_model_edit_refuses_invalid_or_stale_proposals_without_replacing_prev
 
 #[test]
 fn endpoint_model_edit_checks_task_exclusions_and_targets_before_replacing_preview() {
-    let f = Fixture::new();
+    let mut f = Fixture::new();
+    f.request.workspace_id = WorkspaceId::from_raw("local-coding-worktree-create");
+    f.request = seal_runtime_endpoint_run_request(f.request.clone()).unwrap();
     let mut owner = owner(&f);
     let startup = startup(&f, &["two.py", "private"], &f.empty_ledger());
     let task = &startup.request().task.objective;
@@ -301,4 +303,95 @@ fn endpoint_model_edit_refuses_nonedit_unlisted_and_native_source_substitutions(
         fs::read(f.root.join("sentinel")).unwrap(),
         b"unchanged synthetic source"
     );
+}
+
+#[test]
+fn endpoint_model_edit_refuses_foreign_workspace_before_reads_or_preview_replacement() {
+    let f = Fixture::new();
+    let mut repository = owner(&f);
+    let startup = startup(&f, &[], &f.empty_ledger());
+    let context = proposal_context(&startup.request().task.objective, &[("one.py", "one\n")]);
+    let answer = json!({"edits":[edit("one.py","one","first")]}).to_string();
+    let prior = startup
+        .prepare_edit_proposal(&mut repository, &context, &answer, 1000)
+        .unwrap();
+    assert_eq!(
+        repository.created_workspace_id(),
+        Some(&startup.request().workspace_id)
+    );
+    let mut request = startup.request().clone();
+    request.workspace_id = WorkspaceId::from_raw("foreign-workspace");
+    let foreign = Startup::prepare(
+        seal_runtime_endpoint_run_request(request).unwrap(),
+        Kind::Edit,
+        &f.empty_ledger(),
+    )
+    .unwrap();
+    // All snapshots and the proposal are valid. Previously this replaced the
+    // original owner's preview despite the foreign sealed workspace label.
+    assert_eq!(
+        foreign.prepare_edit_proposal(&mut repository, &context, &answer, 1001),
+        Err(Refusal::Scope)
+    );
+    assert_eq!(repository.inspect_edit().unwrap()["pending"], prior);
+    assert_eq!(
+        fs::read(f.root.join("owned/worktree/one.py")).unwrap(),
+        b"one\n"
+    );
+    fs::remove_file(f.root.join("owned/worktree/one.py")).unwrap();
+    // Even an unreadable selection still refuses Scope. Native would mean
+    // selection/reading was reached; the matching startup proves that path.
+    assert_eq!(
+        foreign.prepare_edit_proposal(&mut repository, &context, &answer, 1002),
+        Err(Refusal::Scope)
+    );
+    assert_eq!(
+        startup.prepare_edit_proposal(&mut repository, &context, &answer, 1002),
+        Err(Refusal::Native)
+    );
+    assert_eq!(repository.inspect_edit().unwrap()["pending"], prior);
+    assert!(repository.inspect_edit().unwrap()["latest"].is_null());
+}
+
+#[test]
+fn endpoint_model_edit_workspace_label_cannot_adopt_missing_or_replaced_owner() {
+    let f = Fixture::new();
+    let mut repository = owner(&f);
+    let startup = startup(&f, &[], &f.empty_ledger());
+    let context = proposal_context(&startup.request().task.objective, &[("one.py", "one\n")]);
+    let answer = json!({"edits":[edit("one.py","one","first")]}).to_string();
+    let prior = startup
+        .prepare_edit_proposal(&mut repository, &context, &answer, 1000)
+        .unwrap();
+    let state = f.root.join("uncreated-state");
+    fs::create_dir(&state).unwrap();
+    fs::set_permissions(&state, fs::Permissions::from_mode(0o700)).unwrap();
+    let mut uncreated =
+        LinuxCodingRepository::open(&state, b"synthetic-uncreated-workspace-test-secret", 1000)
+            .unwrap();
+    assert_eq!(uncreated.created_workspace_id(), None);
+    assert_eq!(
+        startup.prepare_edit_proposal(&mut uncreated, &context, &answer, 1001),
+        Err(Refusal::Scope)
+    );
+    assert!(uncreated.inspect_edit().unwrap()["pending"].is_null());
+    // A matching in-memory label is deliberately insufficient. Replacing the
+    // directory at the same path must still fail the original held-root check.
+    let worktree = f.root.join("owned/worktree");
+    let displaced = f.root.join("owned/displaced");
+    fs::rename(&worktree, &displaced).unwrap();
+    fs::create_dir(&worktree).unwrap();
+    fs::set_permissions(&worktree, fs::Permissions::from_mode(0o700)).unwrap();
+    fs::write(worktree.join("one.py"), "one\n").unwrap();
+    assert_eq!(
+        repository.created_workspace_id(),
+        Some(&startup.request().workspace_id)
+    );
+    assert_eq!(
+        startup.prepare_edit_proposal(&mut repository, &context, &answer, 1002),
+        Err(Refusal::Native)
+    );
+    assert_eq!(repository.inspect_edit().unwrap()["pending"], prior);
+    assert_eq!(fs::read(displaced.join("one.py")).unwrap(), b"one\n");
+    assert_eq!(fs::read(worktree.join("one.py")).unwrap(), b"one\n");
 }

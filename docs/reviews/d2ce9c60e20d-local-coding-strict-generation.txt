@@ -1,0 +1,190 @@
+Commit: d2ce9c60e20d96f1b932c875d862d42b3d3d2e85
+Scope: local-coding-strict-generation
+
+# Independent core review: strict edit generation (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only access.
+Pinned checkout: /lane/review-checkout. Tier: core. Base: immutable
+3e2f9b9a95e7c52af7bcfc5365ce4159b9343aa3. Implementation
+fc048b3e455ea72211c18103482bbaeee16d7c4a, followed by the docs-only tip d2ce9c60.
+This is a same-model review; a cross-model review must still happen before any
+public release.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = d2ce9c60e20d96f1b932c875d862d42b3d3d2e85.
+  The diff over the base touches exactly 10 files (1155+/17-). The follow-up
+  fc048b3e..d2ce9c60 changes only TASKS.md, the evidence doc, the guide and the
+  retained review file.
+- Read IP-POLICY.md, the top of TASKS.md, the newest decisions list, and the
+  builder README, run.py, audit.py and light.py first.
+- Read all of `shells/host/src/coding_endpoint_edit_generation.rs` and its
+  525-line test file, the `coding_endpoint_prepared_startup.rs` refactor, the
+  strengthened `platforms/local-api/tests/support/coding_endpoint_prepared.rs`,
+  and the code the change depends on: `RuntimeEndpointModelPhase::{new,for_run,
+  execute,usage}` (kernel/engine/src/runtime_loop/endpoint.rs),
+  `LocalChatTransport::{prepare_chat,prepare_chat_shared,authorized}` and
+  `PreparedEndpointChat::execute_inner` (platforms/linux-inference), the
+  construction of `CodingProposalContext` (capabilities/repository-map), and
+  `CodingEndpointPreparedStartup::prepare` and `check_source_path`.
+- Ran every requested command and compared my output with the builder's
+  retained `validation-retry/` output.
+
+## Commands and results (all run from the pinned checkout)
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `sha256sum /lane/state/tmp/t303-strict-generation/review-inputs.sha256` | 0 | `0969ae63c9cb02fd0390f4386a28724761ff1bf0d8511294e181a31c71612fb7`, 58 entries, matches the request |
+| `sha256sum --quiet -c …/review-inputs.sha256` | 0 | all 58 inputs match |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-strict-generation-d2ce9c60e20d` | **1** (expected) | `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`; FAST GATE: FAIL; 190.10 s including reservations |
+| `python3 -B …/audit.py <out>` | 0 | `DATA_AUDIT_PASS__FULL_GATE_REMAINS_FAIL` (data comparison only) |
+| `python3 -B …/light.py` | 0 | diff-check 0, lint-untracked 0, lint-reviews 0, markdownlint 0 issues in 3 files |
+| `cmp …/validation-retry/source-freeze.json <out>/source-freeze.json` | 0 | the six Rust/TOML hashes are identical |
+| `git diff --check 3e2f9b9a…` | 0 | clean |
+| `git status --short` | 0 | empty |
+
+Gate detail from my run (`<out>/fast.log`). The plan has 10 paths and 7 commands.
+The four light commands exit 0 (0.10, 0.10, 0.10 and 1.15 s). `cargo fmt`
+exits 0 (3.91 s), `cargo clippy --all-targets -D warnings` exits 0 (33.25 s), and
+`cargo test --all-targets --no-fail-fast` exits 101 (151.42 s). There are
+20 test-result targets: 846 passed, 53 failed, 11 ignored, 0 measured,
+0 filtered.
+My `failure-identities.json` is byte-identical to the builder's
+`validation-retry/failure-identities.json`. The 53 failures are exactly the
+host list in `docs/evidence/t301-baseline-failures-2026-10-25.md` at the base;
+none are new or missing. All four new methods
+(`endpoint_strict_generation_{streams_original_context_then_requires_native_approval,
+refuses_scope_destination_and_phase_limits_without_socket,
+keeps_usage_and_prior_preview_on_invalid_incomplete_or_stale_answer,
+original_control_stops_dispatch_callbacks_and_preview}`) and the strengthened
+`endpoint_prepared_service_native_edit_returns_original_lineage_and_needs_new_approval`
+report `ok`.
+
+Temporary namespace: `/tmp/se-kis7zk_x` holds 22 entries, 4 files and 36 bytes,
+all inherited `agentmage-host-*` fixture directories. It is not empty, so it is
+retained and was not removed, as instructed. No other `/tmp/se-*` entry exists.
+The builder's numbers (22/4/36) match. I used no GPU, model or download, and no
+outer build slot. Each Cargo command reserved its own slot through the gate.
+
+I did not rerun the unchanged Linux unit package (19 inherited failures). It was
+outside this request, as stated.
+
+## Analysis
+
+Authorization and destination. `prepare_edit_generation` runs
+`check_edit_context` (kind == Edit, task == sealed objective, every outline path
+parsed as a `WorkspacePath` and outside every excluded scope) before encoding. It
+then calls the original `prepare_chat`/`prepare_chat_shared`, which refuses
+unless `approval.0 == transport.endpoint` and performs no network I/O.
+`RuntimeEndpointModelPhase::for_run` re-verifies the sealed run and requires the
+prepared binding's endpoint and model to equal `run.model_selection`. It also
+enforces the per-phase message, content, serialized, body, requested-token,
+output-byte and total-timeout ceilings. `new` requires the packet to equal the
+prepared message fingerprint. The tests cover a foreign task, an excluded path,
+command kind, a wrong approval, a wrong transport and two ceiling refusals. All
+of them refuse with no accepted socket.
+
+Context integrity. `CodingProposalContext` has private construction, and every
+excerpt indexes a file in `outlines`. So checking only outline paths for
+exclusions covers all the source text that gets disclosed. The refactor of
+`prepare_edit_proposal` into `check_edit_context` behaves the same as the
+reviewed base.
+
+Startup seal. `prepare_preview` compares `request_sha256`. `Startup::prepare`
+re-seals after appending the guidance policy SHA-256 to the constraints, and
+the registry-derived visible tools also go into the seal. The digest therefore
+binds the kind, the narrowing policy and the reduced limits. In addition,
+`prepare_edit_proposal` re-checks the supplied startup's own kind, task and
+exclusions.
+
+Answer handling (untrusted model output). Phase accounting hashes and counts
+every fragment against the transport's 1 MiB text limit. The generation callback
+adds a 64 KiB cap. A fragment that would cross the cap is dropped, sets
+`oversized` and cancels. Later fragments are dropped. Only `Ok` with
+`finish == Stop` and no oversize reaches the original strict parser. Without
+oversize, the private `answer` equals exactly the hashed and verified stream.
+A token limit (`length`), a missing `[DONE]`, an over-cap answer, duplicate JSON
+keys and a stale unedited context file all refuse. The prior preview and
+worktree bytes stay unchanged, and `dispatch_attempts == 1` is kept for each
+case. The answer can only become an inert preview. The mutable/protected check,
+the native diff, exact approval and the atomic writer are unchanged from the
+reviewed base. A prompt-injected document or answer therefore gets no tool,
+command, network or write authority from this path.
+
+Control. The phase latches single use, then checks control before dispatch.
+The transport's controlled path checks control around socket waits and
+fragments; existing transport tests cover this, see
+`platforms/linux-inference/tests/local_chat_transport.rs:1362-1788`. The phase
+checks control around each callback and after EOF. `prepare_preview` checks
+control before any read. The tests cover stop before dispatch (no socket,
+0 attempts), stop inside a callback, and stop between generation and preview.
+The control identity is the caller's responsibility and cannot be verified
+here. The docs state this.
+
+Accounting and honesty. Usage keeps `completed_*` as `None` on failure, so
+missing completed counts stay absent. The docs say plainly, in TASKS.md, the
+evidence doc and the guide, that cumulative budgeting across generation and
+coordinator phases belongs to the caller. They also say the HTTP fixture's extra
+generation phases are outside coordinator accounting, and that the creation,
+endpoint and model answers are synthetic. I found no claim of a real model, a
+score or a grade. No new wire route, executor, grant or retry is added: the
+helper is reachable only from trusted Rust callers.
+
+Evaluation integrity. The diff touches no held-out, hidden-test, task, scorer,
+threshold, dependency, SBOM or scoreboard file. Audit confirms the TASKS.md row
+table is unchanged against the base, so no row or sub-row is added or closed.
+
+Public hygiene and IP. Searching the added lines for private paths,
+usernames/emails, hostnames, credentials and key material found nothing. Audit
+reports no `#[ignore` in the Rust changes. I found no product or trademark
+naming in the committed text. The retained review
+`docs/reviews/3e2f9b9a95e7-local-coding-strict-preparation.txt` is
+byte-identical (`cmp` 0) to `/lane/reviews/3e2f9b9a95e7-local-coding-strict-preparation.md`.
+
+Delivery. No new sub-row. The change adds running, tested code, not only plans.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low L1: weak refusal assertions in the control test.**
+  `shells/host/src/coding_endpoint_edit_generation_tests.rs:514` and `:521`
+  assert only `is_err()`. That holds for both the callback-cancelled result and
+  the post-stop `prepare_preview`. A regression that refuses for a different
+  reason, for example `Scope` instead of `Preparation(Cancelled)`, or
+  `Incomplete` hiding a missing control check, would still pass. Fix: assert
+  `Err(RuntimeEndpointPhaseFailure::Stopped(ModelOperationStop::Cancelled))` for
+  the result. For the preview, assert
+  `Err(GenerationError::Incomplete)` in the callback case and
+  `Err(GenerationError::Preparation(RuntimePortFailure::Cancelled))` in the
+  post-EOF stop case. Same-row backlog.
+- **Low L2: fail-closed ceiling mismatch.** The phase ceiling
+  (`kernel/engine/src/runtime_loop/endpoint.rs:164`, reached from
+  `shells/host/src/coding_endpoint_edit_generation.rs:120`) compares the
+  transport's fixed 1 MiB `response_text_limit_bytes` with
+  `run.limits.max_output_bytes`. The generation itself never accepts more than
+  64 KiB (`coding_endpoint_edit_generation.rs:182`). Any narrowed run with
+  `max_output_bytes < 1 MiB` therefore always refuses generation with
+  `ResourceExhausted`; the fixtures raise it to 2 MiB (`…_tests.rs:131`). This
+  fails closed, so it is not a security issue, but it will block realistic runs.
+  Fix: prepare the chat with a response text limit equal to the generation cap,
+  or record the requirement in the guide. Backlog.
+
+The earlier lows stay as same-row backlog: the predecessor's L1 workspace
+identity check before preview reads, the schema-ID constants and the command
+preflight lows. This change does not widen them. The generation helper keeps
+the trusted original-owner precondition, and native `bind` still refuses a
+foreign workspace before write authority.
+
+## Per-row result
+
+- T-303: this increment PASSes at d2ce9c60 with no open high or medium finding.
+  The row stays **OPEN**: general scheduling and cumulative accounting, the
+  command factory, recovery, approved Git and measurements remain.
+- T-306: this increment PASSes. The row stays **OPEN**.
+
+Not done: I ran no headless browser or UI check, since no UI is in scope. I did
+not rerun the Linux unit package. No long-documentation or workspace acceptance
+gate ran. I make no claim of certification, compliance or legal clearance.
+
+Verdict: PASS

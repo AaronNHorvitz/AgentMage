@@ -3,6 +3,7 @@
 
 use super::*;
 use crate::{LinuxCodingPendingWrite, LinuxCodingReplacement};
+use agentmage_kernel_contracts::AuthorizedWorkspaceHandle;
 
 #[path = "coding_repository_endpoint_edit.rs"]
 mod endpoint;
@@ -21,6 +22,16 @@ pub(super) struct PendingEdit {
 }
 
 impl LinuxCodingRepository {
+    /// Content-free label of this process's held created worktree. Does not
+    /// inspect files, revalidate roots or confer source/write authority. Equal
+    /// labels alone cannot establish root identity or adopt another owner.
+    #[must_use]
+    pub fn created_workspace_id(&self) -> Option<&WorkspaceId> {
+        self.created
+            .as_ref()
+            .map(|created| created.held.workspace_id())
+    }
+
     /// Explicitly selects exact source paths in this owner's held worktree.
     /// Call only after read consent. Caller paths cannot adopt a worktree, and
     /// selecting sources confers neither model disclosure nor write authority.

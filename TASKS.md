@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The [preview workspace repair](docs/evidence/t303-preview-workspace-binding-2026-11-09.md)
+checks the sealed workspace label against the original created owner before
+source selection, reads or preview replacement. Matching labels still require
+the original held-root checks; exact approvals are unchanged. Three added
+regression methods pass. The complete scoped gate remains FAIL: 1,169 passed,
+exactly 72 inherited host/Linux failures and none new, 63 existing ignored
+across 25 targets. Formatting and Clippy pass. Independent core review is
+required. T-303/T-306 remain open; no row or sub-row is added or closed.
+
+The [strict-generation independent core review](docs/reviews/d2ce9c60e20d-local-coding-strict-generation.txt)
+has **Verdict: PASS** for exact commit
+`d2ce9c60e20d96f1b932c875d862d42b3d3d2e85`, with no high/medium finding.
+Its low L1 exact cancellation assertions remain same-row test backlog.
+Low L2's fixed 1 MiB transport envelope is now disclosed in the guide; smaller
+envelopes remain backlog. The earlier workspace-label finding is addressed by
+the repair above, pending independent core review. Neither parent closes.
+
 The [strict generation composition](docs/evidence/t303-strict-edit-generation-2026-11-08.md)
 connects a consented strict-edit context to the original credential-owning
 transport and single-use kernel model phase, then to the original native diff.

@@ -118,6 +118,12 @@ fn configured_transport(endpoint: LocalChatEndpoint) -> Arc<LocalChatTransport> 
         .unwrap(),
     )
 }
+fn generation_fixture() -> Fixture {
+    let mut f = Fixture::new();
+    f.request.workspace_id = WorkspaceId::from_raw("local-coding-worktree-create");
+    f.request = seal_runtime_endpoint_run_request(f.request.clone()).unwrap();
+    f
+}
 fn generation_startup(
     f: &Fixture,
     endpoint: &LocalChatEndpoint,
@@ -167,7 +173,7 @@ fn good() -> String {
 
 #[test]
 fn endpoint_strict_generation_streams_original_context_then_requires_native_approval() {
-    let f = Fixture::new();
+    let f = generation_fixture();
     let mut owner = owner(&f);
     let (listener, endpoint) = socket();
     let startup = generation_startup(&f, &endpoint, &f.empty_ledger());
@@ -273,7 +279,7 @@ fn endpoint_strict_generation_streams_original_context_then_requires_native_appr
 
 #[test]
 fn endpoint_strict_generation_refuses_scope_destination_and_phase_limits_without_socket() {
-    let f = Fixture::new();
+    let f = generation_fixture();
     let (listener, endpoint) = socket();
     let transport = configured_transport(endpoint.clone());
     let startup = generation_startup(&f, &endpoint, &f.empty_ledger());
@@ -388,7 +394,7 @@ fn endpoint_strict_generation_refuses_scope_destination_and_phase_limits_without
 fn endpoint_strict_generation_keeps_usage_and_prior_preview_on_invalid_incomplete_or_stale_answer()
 {
     for case in 0..5 {
-        let f = Fixture::new();
+        let f = generation_fixture();
         let mut owner = owner(&f);
         let (listener, endpoint) = socket();
         let startup = generation_startup(&f, &endpoint, &f.empty_ledger());
@@ -467,7 +473,7 @@ fn endpoint_strict_generation_keeps_usage_and_prior_preview_on_invalid_incomplet
 
 #[test]
 fn endpoint_strict_generation_original_control_stops_dispatch_callbacks_and_preview() {
-    let f = Fixture::new();
+    let f = generation_fixture();
     let mut owner = owner(&f);
     let (listener, endpoint) = socket();
     let startup = generation_startup(&f, &endpoint, &f.empty_ledger());
@@ -521,5 +527,57 @@ fn endpoint_strict_generation_original_control_stops_dispatch_callbacks_and_prev
                 .is_err()
         );
         assert!(owner.inspect_edit().unwrap()["pending"].is_null());
+    }
+}
+
+#[test]
+fn endpoint_strict_generation_foreign_workspace_preserves_usage_and_original_preview() {
+    let f = generation_fixture();
+    let mut repository = owner(&f);
+    let (listener, endpoint) = socket();
+    let startup = generation_startup(&f, &endpoint, &f.empty_ledger());
+    let prior = startup
+        .prepare_edit_proposal(&mut repository, &context(&startup), &good(), 1000)
+        .unwrap();
+    let mut request = startup.request().clone();
+    request.workspace_id = WorkspaceId::from_raw("foreign-workspace");
+    let foreign = Startup::prepare(
+        seal_runtime_endpoint_run_request(request).unwrap(),
+        Kind::Edit,
+        &f.empty_ledger(),
+    )
+    .unwrap();
+    let peer = thread::spawn(move || {
+        let mut stream = accept(&listener);
+        body(&mut stream);
+        respond(&mut stream, &good(), "stop", true);
+    });
+    let control = Control::new();
+    // Generation itself uses a prior-consented snapshot; it has no native
+    // owner and makes no claim that disclosure proves repository ownership.
+    let generated = foreign
+        .prepare_edit_generation(
+            connection(configured_transport(endpoint.clone()), endpoint),
+            context(&foreign),
+            true,
+        )
+        .unwrap()
+        .execute(&control, |_| {});
+    peer.join().unwrap();
+    assert!(generated.result().is_ok());
+    let usage = generated.usage().clone();
+    for unreadable in [false, true] {
+        if unreadable {
+            fs::remove_file(f.root.join("owned/worktree/one.py")).unwrap();
+        }
+        assert_eq!(
+            generated.prepare_preview(&foreign, &mut repository, &control, 1001),
+            Err(GenerationError::Proposal(Refusal::Scope))
+        );
+        assert_eq!(generated.usage(), &usage);
+        assert_eq!(generated.usage().dispatch_attempts, 1);
+        assert!(generated.usage().completed_response_text_bytes.is_some());
+        assert_eq!(repository.inspect_edit().unwrap()["pending"], prior);
+        assert!(repository.inspect_edit().unwrap()["latest"].is_null());
     }
 }

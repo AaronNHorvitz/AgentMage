@@ -35,7 +35,7 @@ type Error = CodingEndpointStartupError;
 /// a model, command or tool; any previous native edit preview stays unchanged.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CodingEndpointEditProposalError {
-    /// Wrong prepared kind or task; excluded source or disallowed edit target.
+    /// Wrong kind, task or workspace; excluded source or disallowed edit target.
     Scope,
     /// The original strict parser refused the proposal or a changed preimage.
     Proposal(CodingProposalError),
@@ -200,7 +200,10 @@ impl CodingEndpointPreparedStartup {
     /// This method performs no model request and grants no read/disclosure/write
     /// authority. It does not turn the single-effect factory into an agent loop.
     ///
-    /// Exclusions are checked before selection or reads. The original parser
+    /// Workspace identity and exclusions are checked before selection or reads.
+    /// The original native reader still revalidates the held roots and paths;
+    /// the content-free workspace label alone establishes no ownership.
+    /// The original parser
     /// checks the complete snapshots and visible, unique nonoverlapping edits.
     /// Every changed path must be explicitly mutable and outside protected paths.
     /// Only then prepare the original complete native diff. Binding via `bind`
@@ -216,6 +219,9 @@ impl CodingEndpointPreparedStartup {
     ) -> Result<serde_json::Value, CodingEndpointEditProposalError> {
         use CodingEndpointEditProposalError as Refusal;
         self.check_edit_context(context)?;
+        if repository.created_workspace_id() != Some(&self.request.workspace_id) {
+            return Err(Refusal::Scope);
+        }
         let paths = context
             .outlines()
             .iter()
