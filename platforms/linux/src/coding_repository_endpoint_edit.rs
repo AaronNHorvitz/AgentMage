@@ -20,7 +20,7 @@ mod boundary;
 pub use boundary::LinuxCodingEndpointEditBoundary;
 
 const ENDPOINT_EDIT: &str = "agentmage.code.apply-prepared-edit";
-const INPUT: &str = r#"{"type":"object","required":["preview"],"additionalProperties":false,"properties":{"preview":{"type":"object"}}}"#;
+const INPUT: &str = LINUX_CODING_PREPARED_INPUT_SCHEMA_JSON;
 const OUTPUT: &str = r#"{"type":"object"}"#;
 
 struct EndpointEditTool(ToolDefinition);

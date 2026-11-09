@@ -270,7 +270,16 @@ fn endpoint_http_tool_return_refuses_uncertain_and_faulted_runs_without_losing_e
         let events = api.bind("events", &r);
         assert_eq!(events.0, 200);
         for _ in 0..2 {
-            assert_eq!(api.bind("release", &r).0, 409);
+            let refusal = api.bind("release", &r);
+            assert_eq!(refusal.0, 409);
+            assert_eq!(
+                refusal.1["error"],
+                if fault {
+                    "code.endpoint.faulted"
+                } else {
+                    "code.endpoint.refused"
+                }
+            );
             assert_eq!(api.bind("events", &r), events);
             if fault {
                 assert_eq!(

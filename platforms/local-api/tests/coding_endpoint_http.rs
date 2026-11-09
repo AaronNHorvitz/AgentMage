@@ -18,6 +18,8 @@ use agentmage_local_api::{
 
 #[path = "support/coding_endpoint_mcp.rs"]
 mod endpoint_mcp;
+#[path = "support/coding_endpoint_prepared.rs"]
+mod endpoint_prepared;
 #[path = "support/coding_endpoint_record.rs"]
 mod endpoint_record;
 #[path = "support/coding_endpoint_tool_return.rs"]
@@ -428,7 +430,12 @@ impl Drop for Api {
     fn drop(&mut self) {
         self.stop.store(true, Ordering::Release);
         if let Some(w) = self.worker.take() {
-            w.join().unwrap().unwrap();
+            let result = w.join();
+            // Preserve the primary test failure without a second unwind in
+            // cleanup. Successful tests must still observe every service error.
+            if !thread::panicking() {
+                result.unwrap().unwrap();
+            }
         }
     }
 }

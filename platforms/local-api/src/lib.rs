@@ -8,7 +8,9 @@
 pub mod coding_cli;
 mod coding_endpoint_api;
 mod coding_endpoint_launch;
+mod coding_endpoint_prepared;
 pub use coding_endpoint_launch::serve_coding_endpoint_read_development;
+pub use coding_endpoint_prepared::{CodingEndpointPreparedHttpRun, serve_coding_endpoint_prepared};
 mod coding_owned_api;
 pub use coding_endpoint_api::{
     CodingEndpointHttpRun, CodingEndpointObservationAccess, serve_admitted_coding_endpoint,

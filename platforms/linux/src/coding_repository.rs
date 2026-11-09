@@ -65,6 +65,10 @@ pub use validation::LinuxCodingTestFormat;
 
 const TOOL: &str = "local-coding-worktree-create";
 
+/// Exact original input schema for prepared native edit and command previews.
+/// Publishing schema bytes supplies no native owner, grant or effect authority.
+pub const LINUX_CODING_PREPARED_INPUT_SCHEMA_JSON: &str = r#"{"type":"object","required":["preview"],"additionalProperties":false,"properties":{"preview":{"type":"object"}}}"#;
+
 #[derive(Clone)]
 struct AppliedEdit {
     before_sha256: String,
@@ -157,6 +161,28 @@ pub struct LinuxCodingRepository {
 }
 
 impl LinuxCodingRepository {
+    /// TEST SUPPORT ONLY: attach synthetic creation provenance to held fixture
+    /// directories. This does not execute Git or demonstrate native creation.
+    /// Unavailable unless the explicit `test-support` feature is enabled.
+    #[cfg(feature = "test-support")]
+    #[doc(hidden)]
+    pub fn with_test_created_worktree(mut self, original: &Path, owned: &Path) -> Result<Self> {
+        if self.created.is_some() || self.pending.is_some() {
+            return Err(err("code.repository.test-fixture"));
+        }
+        let path = owned.join("worktree");
+        self.created = Some(CreatedWorktree {
+            original_path: original.to_owned(),
+            original: held_root(original)?,
+            held: held_root(&path)?,
+            path,
+            owned: held_root(owned)?,
+            creation_receipt_sha256: hash(b"synthetic-test-creation-not-native-git"),
+            edits: BTreeMap::new(),
+        });
+        Ok(self)
+    }
+
     /// Opens an existing owner-only strict-local directory. The person explicitly
     /// authorizes state writes by starting this service. Key material is a random
     /// control secret (at least 32 bytes), domain-separated with HKDF; it must be

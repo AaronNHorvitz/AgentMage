@@ -1,0 +1,166 @@
+Commit: a7a137899ad927ba8523bdb22239ed14d4de1397
+Scope: local-coding-http-tool-return
+
+# Independent core review: original terminal tool owner returned through the endpoint HTTP service
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only on the repository. Same-model review.
+Pinned checkout: /lane/review-checkout. `git rev-parse HEAD` = a7a137899ad927ba8523bdb22239ed14d4de1397.
+Predecessor: c7a63ebefe55544444c3d7fc398ebba2ec7e082f. Rows: T-303 / T-306. This review closes no row.
+
+## Methods
+
+1. I read IP-POLICY.md, decision 0170, the top of TASKS.md and the request. I read the builder's README.md,
+   run.py, audit.py and light.py before running anything. run.py makes a fresh output directory
+   (exist_ok=False), sets 2 build jobs and 4 test threads, and prefixes PATH with a directory that holds only a
+   `node` ELF binary and its LICENSE. It creates an owned `/tmp/hr-*` namespace and removes it only if it is
+   empty. It freezes the hashes of the planned `.rs` files and runs the existing fast-gate selector. That
+   selector reserves `/tools/build-slot` for each Cargo invocation, so there is no outer slot.
+2. I read the full diff over the predecessor. I also read the code it depends on:
+   - `serve_connections` (`platforms/local-api/src/lib.rs:381-436`);
+   - the host `release` and `release_with_tool_boundary` (`shells/host/src/coding_endpoint_owner.rs:243-296`);
+   - the shared test fixtures in `platforms/local-api/tests/coding_endpoint_http.rs`.
+3. I ran the seven requested commands from the pinned checkout and kept every exit code.
+4. **Mutation check.** I extracted the commit with `git archive` into an out-of-repository scratch copy,
+   `/lane/state/tmp/review-mut-a7a137899ad9`. I applied four single mutations one at a time and ran the three
+   new methods after each through `bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api
+   --test coding_endpoint_http endpoint_tool_return`, with the separate target
+   `/lane/state/review-target/mut`. After each run I restored the mutated file and confirmed with `cmp` that it
+   matched the pinned checkout again.
+5. **Privacy and IP scan.** I scanned the added lines for private paths, usernames, hostnames, e-mail
+   addresses, credentials and the names of other agent products.
+
+No model, GPU or download was used. The repository was not modified.
+
+## Commands and results (run in /lane/review-checkout)
+
+| Command | Exit | Result |
+|---|---|---|
+| `sha256sum --quiet -c /lane/state/tmp/t303-http-tool-return/review-inputs.sha256` | 0 | All 31 inputs match. The manifest SHA-256 is cdd5fcaf5311f394390f02ae7bbc5f844fea203c1b56d9cfcb578bb527299385, as stated |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-http-tool-return-a7a137899ad9` | 0 | `GATE_EXIT 0 SOURCE_FREEZE_UNCHANGED True`. Seven commands, all exit 0: diff-check 0.11s, untracked 0.10s, reviews 0.10s, markdownlint 1.25s, fmt 0.25s, clippy -D warnings 33.06s, tests 82.34s. 117.28s including reservations. `FAST GATE: PASS` |
+| `python3 -B …/audit.py /lane/state/tmp/review-http-tool-return-a7a137899ad9` | 0 | 10 targets; 202 passed, 0 failed, 0 ignored, 0 measured, 0 filtered. All 3 new methods ok. Plan covers all 10 paths (`late_review_added_after_builder_gate: false`). Data audit only |
+| `python3 -B …/light.py` | 0 | diff-check, untracked lint, review lint (both retained reports) and markdownlint (4 files, 0 issues) all 0. `CURRENT_LIGHT_CHECKS_PASS` |
+| `cmp …/validation-final-2/source-freeze.json …/review-http-tool-return-a7a137899ad9/source-freeze.json` | 0 | The four Rust source hashes are identical to the builder's final gate |
+| `git diff --check c7a63ebefe55544444c3d7fc398ebba2ec7e082f --` | 0 | No output |
+| `git status --short` | 0 | Clean |
+
+Temporary space: my owned namespace `/tmp/hr-gez9k1v3` was empty, and run.py removed it. No `/tmp/hr-*`
+remains. I cannot see the builder's namespaces from this session. The out-of-repository mutation scratch copy,
+its logs (`/lane/state/tmp/review-mut-a7a137899ad9*`) and the run output file are retained.
+
+Scope caveat, as the request states: the selector chooses only `agentmage-local-api`. The unchanged host and
+Linux packages, which carry the inherited T-301 failures, and the long/workspace acceptance were not run. The
+Rust changes are confined to `platforms/local-api`, so this scope is adequate for the diff.
+
+### Mutation results (scratch copy, new methods only)
+
+| Mutation | Exit | Detected by |
+|---|---|---|
+| Baseline (unmutated) | 0 | 3 passed, 12 filtered |
+| M1: the `Return` disposition calls ordinary `release` (tool discarded) | 101 | All 3 new methods fail |
+| M2: host `ToolNotRecoverable` restore removed (coordinator dropped), the predecessor's L1 | 101 | `…refuses_uncertain_and_faulted_runs_without_losing_events` fails |
+| M3: observation credential allowed on `/release` | 101 | `…keeps_original_owner_and_requires_fresh_run_approvals` fails |
+| M4: host `Faulted` arm removed from `release_with_tool_boundary` | 0 | Not detected over HTTP; see L1. The host unit test at `coding_endpoint_owner_tests.rs:443-444` covers this arm |
+
+M2 confirms the claim that the service integration now exercises the predecessor's low L1 refusal-restore path.
+
+## Review
+
+**Authorization.** Release still requires the control credential. `observation` matches only
+`GET /request` and `POST /events` (`coding_endpoint_api.rs:335-342`), so `DelegateObservations` cannot
+release. The run binding (run_id plus request_sha256) is checked before the lock is taken. No wire input selects
+the disposition: `TerminalToolDisposition` is fixed by which public function trusted startup calls. No route,
+port, deserialized authority, admission change or grant renewal is added.
+
+**Terminal checks.** The `Return` path calls the original host `release_with_tool_boundary`. That method:
+- refuses `Released` (NotHeld), `faulted` (Faulted) and live runs (StillRunning);
+- moves the coordinator out and calls the kernel's `try_into_endpoint_tool_boundary`, which has the uncertainty
+  and publication checks reviewed at b62f35cf;
+- on refusal, restores the entry (ToolNotRecoverable).
+
+A successful release sets `Held::Released`, so a repeated release returns NotHeld. Later `events` and `advance`
+calls also return NotHeld, and the test asserts all three.
+
+**Ownership and lifetime.** The boundary sits in `Session.returned` under the mutex. After `serve_connections`
+returns Ok, the function calls `session.into_inner()`. `serve_connections` uses `thread::scope` and joins every
+worker first, so no HTTP worker can outlive the hand-back.
+
+Handler errors are discarded (`let _ = handler(...)`, `lib.rs:400`). A client that disconnects after a
+successful release therefore does not lose the retained owner.
+
+On any service error (accept failure or worker panic), the `?` drops the session and the tool. This fails
+closed, and the documentation states it ("Service errors may drop process-held state").
+
+A stop without a release returns `None`, as tested for both unstarted and cancelled-but-unreleased runs.
+
+**Ordinary entry points.** `serve_admitted_coding_endpoint` routes through the same inner function with
+`Discard` and maps the result to `()`. The release arm in `Discard` is byte-identical to the previous code. The
+only addition is `into_inner`, which can fail only after a poisoning panic, and such a panic already surfaces as
+a join error. The existing HTTP tests in the same target pass.
+
+**Tests.** The tests use real loopback HTTP and upstream sockets. They check:
+- the same heap allocation (`Box<u8>` address and value) and the same `Arc` counter across two fresh services;
+- that the previous run's request and approval response are refused (409);
+- delegated release (403), a substituted digest (409) and single-use release;
+- uncertain and faulted runs: repeated 409, unchanged event page, unchanged terminal or fault state, no
+  redispatch and `None` on shutdown;
+- explicit release after a pre-dispatch cancellation, with zero tool calls and zero upstream connections.
+
+The fixture's earlier development failure (approval casing, cleanup double panic) is fixed in test code only.
+The `let _ = tx.send(...)` tolerates a dropped receiver, and a serve error still makes `recv_timeout(..).unwrap()`
+fail. I found no weakened production check.
+
+**Honest labelling.** The evidence, guide, decision and TASKS text all say that the upstream, tools,
+authority and verifier are synthetic. They say there is no native Git, model or coding score, and that positive
+prepared-factory admission and return, executable controlled startup, general coding, durable recovery, approved
+Git and parent measurements remain open. The numbers in the evidence (202/10, fmt/clippy/test times and the
+four-hash freeze) match the builder's retained `validation-final-2` artifacts. My independent run reproduces the
+counts. My timings differ only through reservation and queue time.
+
+**Evaluation integrity.** The diff touches no evaluation task, hidden test, held-out set, scorer, threshold,
+dependency or SBOM. The TASKS row lines (`| [`) are unchanged, as audit.py asserted. No row or sub-row is added
+or closed.
+
+**Privacy and IP.** Added lines contain no `/var/home`, `/home/<user>`, username, hostname, e-mail or
+credential. `/lane/...` paths appear only inside the two retained predecessor reports, as in earlier accepted
+reviews. Both retained reports are byte-identical to their `/lane/reviews/*.md` originals (`cmp`). No other
+agent product is named or compared.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L1 (low, test precision; backlog): the HTTP refusal assertions check only the status code.**
+- Location: `platforms/local-api/tests/support/coding_endpoint_tool_return.rs:273`.
+- The uncertain and faulted release refusals assert `.0 == 409` and not the error code. Mutation M4 (host
+  `Faulted` arm removed) still passes, because a lower layer also refuses.
+- This is not a safety gap. Refusal still happens, and the host unit test covers the `Faulted` arm.
+- Fix: assert `code.endpoint.faulted` for the fault case and `code.endpoint.refused` for the uncertain case.
+
+**L2 (low, claim precision; backlog): "requires fresh approvals" is partly a fixture property.**
+- Location: the test name at `coding_endpoint_tool_return.rs:144` and the evidence bullet "each requires fresh
+  approval".
+- The synthetic `Boundary::evaluate_scoped` always returns `Ask` (`platforms/local-api/tests/coding_endpoint_http.rs:173`).
+  The second run therefore asks again because of the fixture.
+- What the service and coordinator do enforce is the refusal of the old run's request and approval response, and
+  the test covers that.
+- The returned boundary keeps its existing native authority, and the decision says durable grants keep their
+  ordinary expiry. Whether a native boundary asks again for an unexpired grant in a later run is not exercised
+  here.
+- This is labelled synthetic and belongs to the open positive prepared-factory work (predecessor L2).
+- Fix: word the evidence as "the fixture asks again; stale approvals and bindings refuse", or cover it when the
+  native factory path becomes executable.
+
+Same-row backlog carried forward unchanged: predecessor L2 (positive prepared-factory admission and return), and
+the command-output metadata allowance, aggregate-output, CPU and disk preflight lows.
+
+## Per-row result
+
+- **T-303:** the increment is accepted with no open high or medium finding. The row stays OPEN: executable
+  controlled startup, general model-driven coding, durable recovery, approved Git and parent measurements remain.
+- **T-306:** the increment is accepted with no open high or medium finding. The row stays OPEN for the same open
+  items.
+
+This verdict accepts the scoped increment at this exact commit only. It closes no row or sub-row and approves
+nothing in the repository.
+
+Verdict: PASS

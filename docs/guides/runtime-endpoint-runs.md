@@ -34,6 +34,34 @@ workflow measurements remain unobserved. See [Decision 0170](../decisions/0170-t
 
 ## Trusted startup for an original prepared effect
 
+`serve_coding_endpoint_prepared` is the typed trusted HTTP entry point for this
+composition. Its factory runs once with fresh service run/session identities and
+returns `CodingEndpointPreparedHttpRun`: the original bound preparation,
+credential-owning connection, continuous control, clock, independent verifier
+and previously consented source snapshots. It admits through the original
+prepared factory into the same registry served by the authenticated endpoint API.
+Excluded or malformed snapshots and foreign identities refuse before serving.
+Both prepared native catalogs now project their exact original input schemas
+into endpoint context; a substituted schema identity or digest still refuses.
+
+After explicit successful terminal release and joined service shutdown, it
+abandons pending previews through the original native boundary and returns
+`Option<LinuxCodingRepository>`. Existing edit lineage and validation attempts
+stay with that repository. Stopping without release returns `None`; uncertainty
+or faults refuse release and preserve inspection. Errors can drop process-held
+ownership. Each later effect needs separate preparation, admission and approval.
+There is no path adoption, automatic cleanup or renewed grant/budget.
+
+Real HTTP integration tests now exercise successful prepared-edit binding,
+admission, exact challenge resolution, native writes and repository return over
+two fresh services, with synthetic creation and endpoint responses. They also
+exercise excluded snapshots inside admission and a stop without release. The
+returned owner prepares an original-checkout diff spanning both edits; it does
+not apply that diff. These are component/service observations, with no native
+Git creation, real model coding, command-factory admission or task score. The
+Linux `test-support` feature supplies the explicitly synthetic creation fixture;
+normal builds have no fixture constructor or route that adopts a worktree.
+
 `CodingEndpointPreparedStartup` composes one original prepared edit or command
 with the retained configured-endpoint coordinator. The trusted host supplies
 current repository instruction provenance, selects the exact catalog and obtains
@@ -71,7 +99,9 @@ Abandoning a bound preparation returns that same owner with the pending effect
 dropped. There is no replay or durable recovery. This is a single-prepared-effect
 library composition; executable controlled startup, general model-driven
 edit/test/retry, recovery, approved Git and coding measurements remain open.
-Positive native admission through this factory has not been demonstrated.
+Positive prepared-edit admission is demonstrated only by the synthetic-creation
+service fixture above. Native Git creation and prepared-command admission through
+this factory remain unobserved in this lane.
 T-303/T-306 remain open.
 
 Trusted hosts can call the exported `serve_admitted_coding_endpoint` with a

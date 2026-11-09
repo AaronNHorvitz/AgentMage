@@ -342,6 +342,10 @@ fn coding_input_schema_json(schema_id: &str) -> Option<&'static str> {
         ROLLBACK_INPUT_SCHEMA_ID => Some(ROLLBACK_INPUT_SCHEMA_JSON),
         BOUNDED_COMMAND_INPUT_SCHEMA_ID => Some(BOUNDED_COMMAND_INPUT_SCHEMA_JSON),
         TARGETED_VALIDATION_INPUT_SCHEMA_ID => Some(TARGETED_VALIDATION_INPUT_SCHEMA_JSON),
+        #[cfg(target_os = "linux")]
+        "agentmage.code.prepared-edit.input" | "agentmage.code.prepared-command.input" => {
+            Some(agentmage_platform_linux::LINUX_CODING_PREPARED_INPUT_SCHEMA_JSON)
+        }
         _ => None,
     }
 }
@@ -374,6 +378,60 @@ fn sha256_hex(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn prepared_native_tool_schemas_project_exact_bytes_and_refuse_substitutions() {
+        use super::*;
+        use agentmage_platform_linux::{
+            LINUX_CODING_PREPARED_INPUT_SCHEMA_JSON, linux_coding_endpoint_command_registry,
+            linux_coding_endpoint_edit_registry,
+        };
+        struct Definition(ToolDefinition);
+        impl Tool for Definition {
+            fn definition(&self) -> &ToolDefinition {
+                &self.0
+            }
+            fn validate_arguments(&self, _: &[u8]) -> Vec<ValidationIssue> {
+                vec![]
+            }
+        }
+        let original = r#"{"type":"object","required":["preview"],"additionalProperties":false,"properties":{"preview":{"type":"object"}}}"#;
+        assert_eq!(LINUX_CODING_PREPARED_INPUT_SCHEMA_JSON, original);
+        for registry in [
+            linux_coding_endpoint_edit_registry().unwrap(),
+            linux_coding_endpoint_command_registry().unwrap(),
+        ] {
+            let tools = model_visible_coding_tools(&registry).unwrap();
+            assert_eq!(tools.len(), 1);
+            assert_eq!(&tools[0].definition, registry.list_tools()[0]);
+            assert_eq!(
+                tools[0].definition.input_schema.schema_sha256,
+                sha256_hex(original.as_bytes())
+            );
+            assert_eq!(
+                tools[0].input_schema,
+                serde_json::from_str::<serde_json::Value>(original).unwrap()
+            );
+            for foreign_id in [false, true] {
+                let mut definition = tools[0].definition.clone();
+                if foreign_id {
+                    definition.input_schema.schema_id =
+                        SchemaId::from_raw("unregistered.prepared.input");
+                } else {
+                    definition.input_schema.schema_sha256 = "0".repeat(64);
+                }
+                let mut substituted = ToolRegistry::new();
+                substituted
+                    .register_tool(Box::new(Definition(definition)))
+                    .unwrap();
+                assert_eq!(
+                    model_visible_coding_tools(&substituted).err(),
+                    Some(CodingToolCatalogError::SchemaDenied)
+                );
+            }
+        }
+    }
 
     use agentmage_capability_read_only::{
         ArtifactToolKind, GIT_INSPECTION_TOOL_ID, ReadOnlyToolKind,

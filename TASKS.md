@@ -2,6 +2,30 @@
 
 ## Active queue: local agent mission
 
+The [prepared native HTTP service](docs/evidence/t303-prepared-http-service-2026-11-08.md)
+composes original instruction-narrowed prepared admission, exact native approvals
+and joined terminal repository return in one trusted entry point. It fixes the
+missing prepared-tool schema projection while preserving digest checks.
+Integration fixtures exercise native edits over two services, original edit lineage,
+excluded-source admission refusal and stop without release, with explicitly
+synthetic creation and endpoint responses. Four new regression methods pass in
+the unfiltered 25-target run: 1,158 passed, exactly 72 inherited failures and none
+new, 63 existing ignored. Formatting and Clippy pass; the complete scoped gate
+remains FAIL. Independent core review is required; T-303/T-306 remain open.
+No row or sub-row is added or closed.
+Native Git creation, positive prepared-command factory admission, executable
+controlled startup, general edit/test/retry, durable recovery, approved Git and
+parent measurements remain open.
+
+The [HTTP tool-return independent core review](docs/reviews/a7a137899ad9-local-coding-http-tool-return.txt)
+has **Verdict: PASS** for exact commit
+`a7a137899ad927ba8523bdb22239ed14d4de1397`, with no high/medium finding.
+Low L1 now asserts exact faulted/uncertain refusal codes. Low L2's previous
+synthetic fixture establishes stale binding/response refusal; the new prepared
+edit fixture additionally traverses separate original native approvals. Earlier
+command resource lows and the command-factory gap remain same-row backlog.
+Neither parent closes.
+
 The [HTTP terminal tool-return integration](docs/evidence/t303-http-tool-return-2026-11-08.md)
 connects exact control-authorized terminal release to the trusted host's original
 tool owner after the service joins its workers. Live, faulted and uncertain

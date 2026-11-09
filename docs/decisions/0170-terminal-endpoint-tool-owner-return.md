@@ -44,6 +44,15 @@ path adoption, renewed grant, budget or old run is returned. The boundary keeps
 its existing native authority. Ordinary service entry
 points retain their discard behavior.
 
+The typed prepared-effect HTTP entry point composes the existing prepared
+admission and returning service directly. On explicit safe terminal release and
+joined shutdown it abandons old previews through the original boundary and
+returns the same repository. Its trusted factory alone constructs process-local
+ports; no wire route or serialized authority is added. A feature-gated synthetic
+creation fixture makes positive native-edit service tests possible without
+changing production Git or executable admission. These tests establish no native
+Git creation, command-factory success, real-model coding or task score.
+
 Tests exercise terminal ownership and fresh approvals with synthetic endpoint
 responses, plus original native edits and synthetic command observations with
 real authority receipts. They establish no complete native Git/model workflow,

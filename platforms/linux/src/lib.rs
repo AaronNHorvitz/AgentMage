@@ -35,6 +35,9 @@ pub use agentmage_kernel_engine::validation_template::ValidationKind as LinuxCod
 pub use coding_map::{
     LinuxCodingMap, LinuxCodingMapEntry, LinuxCodingMapError, discover_linux_coding_map,
 };
+pub use coding_repository::{
+    LINUX_CODING_PREPARED_INPUT_SCHEMA_JSON, LinuxCodingRepository, LinuxCodingRepositoryError,
+};
 /// Closed output protocols for separately approved project tests.
 pub use coding_repository::{
     LinuxCodingCommandCancellation, LinuxCodingEndpointCommand, LinuxCodingEndpointCommandBoundary,
@@ -43,7 +46,6 @@ pub use coding_repository::{
 pub use coding_repository::{
     LinuxCodingEndpointEdit, LinuxCodingEndpointEditBoundary, linux_coding_endpoint_edit_registry,
 };
-pub use coding_repository::{LinuxCodingRepository, LinuxCodingRepositoryError};
 pub use coding_repository::{
     LinuxCodingRuntimeCreateDriver, LinuxCodingRuntimeWriteDriver, LinuxCodingWorktreeLease,
 };

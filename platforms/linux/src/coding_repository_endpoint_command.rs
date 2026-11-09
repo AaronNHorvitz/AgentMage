@@ -52,7 +52,7 @@ impl EndpointCommandTool {
             description: "Only the original approved offline command; output is untrusted".into(),
             input_schema: schema(
                 "agentmage.code.prepared-command.input",
-                r#"{"type":"object","required":["preview"],"additionalProperties":false,"properties":{"preview":{"type":"object"}}}"#,
+                LINUX_CODING_PREPARED_INPUT_SCHEMA_JSON,
             ),
             output_schema: schema(
                 "agentmage.code.prepared-command.output",
