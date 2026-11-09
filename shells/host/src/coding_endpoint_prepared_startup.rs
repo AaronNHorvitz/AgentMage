@@ -3,7 +3,9 @@
 
 use std::sync::{Arc, Mutex};
 
-use agentmage_capability_repository_map::coding_proposal::CodingSource;
+use agentmage_capability_repository_map::coding_proposal::{
+    CodingProposalContext, CodingProposalError, CodingSource, check_coding_proposal,
+};
 use agentmage_kernel_contracts::*;
 use agentmage_kernel_engine::{
     instruction_provenance::{InstructionEvidenceLedger, effective_guidance},
@@ -16,8 +18,8 @@ use agentmage_kernel_engine::{
 };
 use agentmage_platform_linux::{
     LinuxCodingEndpointCommand, LinuxCodingEndpointCommandBoundary, LinuxCodingEndpointEdit,
-    LinuxCodingEndpointEditBoundary, LinuxCodingRepository, linux_coding_endpoint_command_registry,
-    linux_coding_endpoint_edit_registry,
+    LinuxCodingEndpointEditBoundary, LinuxCodingReplacement, LinuxCodingRepository,
+    linux_coding_endpoint_command_registry, linux_coding_endpoint_edit_registry,
 };
 
 use crate::{
@@ -28,6 +30,18 @@ use crate::{
 };
 
 type Error = CodingEndpointStartupError;
+
+/// Content-free strict proposal refusal. No refusal grants a write or dispatches
+/// a model, command or tool; any previous native edit preview stays unchanged.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CodingEndpointEditProposalError {
+    /// Wrong prepared kind or task; excluded source or disallowed edit target.
+    Scope,
+    /// The original strict parser refused the proposal or a changed preimage.
+    Proposal(CodingProposalError),
+    /// The original worktree reader or inert native writer refused preparation.
+    Native,
+}
 
 /// Trusted selection of one original prepared effect, never a model-selected executor.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -160,20 +174,111 @@ impl CodingEndpointPreparedStartup {
     /// Reject malformed or excluded source snapshots before context composition.
     /// The caller still owns prior read/disclosure consent and snapshot freshness.
     pub fn check_sources(&self, sources: &[CodingSource]) -> Result<(), Error> {
-        for source in sources {
-            let path =
-                WorkspacePath::new(self.request.workspace_id.clone(), source.path.split('/'))
-                    .map_err(|_| Error::Source)?;
-            if self
-                .guidance
-                .excluded_scopes()
-                .iter()
-                .any(|s| s.contains_path(&path))
-            {
-                return Err(Error::Source);
-            }
+        sources
+            .iter()
+            .try_for_each(|source| self.check_source_path(&source.path))
+    }
+
+    fn check_source_path(&self, path: &str) -> Result<(), Error> {
+        let path = WorkspacePath::new(self.request.workspace_id.clone(), path.split('/'))
+            .map_err(|_| Error::Source)?;
+        if self
+            .guidance
+            .excluded_scopes()
+            .iter()
+            .any(|scope| scope.contains_path(&path))
+        {
+            return Err(Error::Source);
         }
         Ok(())
+    }
+
+    /// Prepare a strict model proposal against fresh bytes in the ORIGINAL live
+    /// creation owner. Call only after consent to re-read every context file.
+    /// Context must come from prior consented source/model disclosure for this
+    /// exact task; model generation, its usage and budget remain caller-owned.
+    /// This method performs no model request and grants no read/disclosure/write
+    /// authority. It does not turn the single-effect factory into an agent loop.
+    ///
+    /// Exclusions are checked before selection or reads. The original parser
+    /// checks the complete snapshots and visible, unique nonoverlapping edits.
+    /// Every changed path must be explicitly mutable and outside protected paths.
+    /// Only then prepare the original complete native diff. Binding via `bind`
+    /// and exact approval remain separate; no filesystem write happens here.
+    /// Refusal leaves the prior preview intact. Preparation reads cannot be
+    /// undone, and success replaces any previous inert edit preview.
+    pub fn prepare_edit_proposal(
+        &self,
+        repository: &mut LinuxCodingRepository,
+        context: &CodingProposalContext,
+        answer: &str,
+        now_epoch_ms: u64,
+    ) -> Result<serde_json::Value, CodingEndpointEditProposalError> {
+        use CodingEndpointEditProposalError as Refusal;
+        if self.kind != CodingEndpointPreparedKind::Edit
+            || context.task() != self.request.task.objective
+        {
+            return Err(Refusal::Scope);
+        }
+        let paths = context
+            .outlines()
+            .iter()
+            .map(|outline| outline.path.clone())
+            .collect::<Vec<_>>();
+        // Check only metadata here; excluded files must not be opened to decide
+        // whether they match an otherwise valid proposal.
+        paths
+            .iter()
+            .try_for_each(|path| self.check_source_path(path))
+            .map_err(|_| Refusal::Scope)?;
+        let scope = repository
+            .select_created_sources(&paths)
+            .map_err(|_| Refusal::Native)?;
+        let sources = scope
+            .read(&paths)
+            .map_err(|_| Refusal::Native)?
+            .into_iter()
+            .map(|source| CodingSource {
+                path: source.path,
+                content: source.content,
+            })
+            .collect::<Vec<_>>();
+        let changes =
+            check_coding_proposal(context, &sources, answer).map_err(Refusal::Proposal)?;
+        if changes.iter().any(|change| {
+            !self
+                .request
+                .work_packet
+                .mutable_files
+                .contains(&change.path)
+                || self
+                    .request
+                    .work_packet
+                    .protected_files
+                    .iter()
+                    .any(|protected| {
+                        change.path == *protected
+                            || change.path.starts_with(&format!("{protected}/"))
+                    })
+        }) {
+            return Err(Refusal::Scope);
+        }
+        let replacements = changes
+            .iter()
+            .map(|change| LinuxCodingReplacement {
+                path: &change.path,
+                before_sha256: &change.before_sha256,
+                content: &change.content,
+            })
+            .collect::<Vec<_>>();
+        repository
+            .prepare_edit(
+                scope,
+                &replacements,
+                &self.request.task.objective,
+                now_epoch_ms,
+            )
+            .map_err(|_| Refusal::Native)
     }
 
     /// Consume the original live creation owner and its exact prepared call.

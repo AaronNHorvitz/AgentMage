@@ -149,7 +149,14 @@ impl Fixture {
                         let mut byte = [0];
                         // The client must close its one uncertain request. A
                         // prepared native run may subsequently try exact release.
-                        assert_eq!(socket.read(&mut byte).unwrap(), 0);
+                        // Closing with an unread response body can reset TCP
+                        // instead of sending EOF. Both prove disconnection;
+                        // received bytes and every other error still fail.
+                        match socket.read(&mut byte) {
+                            Ok(0) => {}
+                            Err(error) if error.kind() == std::io::ErrorKind::ConnectionReset => {}
+                            other => panic!("client did not disconnect: {other:?}"),
+                        }
                         observed.last_mut().unwrap()["test_peer_disconnected"] = json!(true);
                         continue;
                     }

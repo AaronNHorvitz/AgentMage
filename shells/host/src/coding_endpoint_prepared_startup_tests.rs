@@ -10,6 +10,9 @@ use agentmage_platform_linux::{
 };
 use std::os::unix::fs::PermissionsExt;
 
+#[path = "coding_endpoint_model_edit_tests.rs"]
+mod model_edit_tests;
+
 fn controlled(f: &Fixture, kind: Kind) -> RuntimeEndpointRunRequest {
     let mut r = f.request.clone();
     r.mode = RuntimeSessionMode::ControlledWrite;

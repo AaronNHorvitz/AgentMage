@@ -1,0 +1,157 @@
+Commit: d2f6f2d667bdbcfc576ba21791ae79e0b8a28dd4
+Scope: local-coding-prepared-http
+
+# Independent core review: prepared native effect through the HTTP service
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only on the repository. Same-model review.
+Tier: core. Rows: T-303 / T-306. This increment does not close either row, and both stay OPEN.
+
+## Methods
+
+- Confirmed the pinned checkout: `git rev-parse HEAD` = `d2f6f2d667bdbcfc576ba21791ae79e0b8a28dd4`. Its parent is
+  `a7a137899ad927ba8523bdb22239ed14d4de1397`. The diff has 16 files (+947/-6): ten Rust files, one manifest, TASKS,
+  decision 0170, the guide, the evidence file and the copy of the prior review.
+- Read IP-POLICY.md, the new TASKS paragraphs, decision 0170, the guide and the evidence file. Read the helper
+  README, run.py, audit.py and light.py before running them. The only change run.py makes to PATH is to prepend a
+  directory holding the existing Node binary and its MIT licence. No helper writes into the repository.
+- Read every changed Rust line. I also read the existing code these changes lean on:
+  `CodingEndpointPrepared::admit` and `check_sources` (shells/host/src/coding_endpoint_prepared_startup.rs:162-317),
+  `CodingEndpointRuns::admit` (coding_endpoint_owner.rs:134), `serve_admitted_endpoint_inner`
+  (platforms/local-api/src/coding_endpoint_api.rs:283-420, which checks loopback, fresh identities and request
+  binding), and the host `model_visible_coding_tools` / `coding_input_schema_json` projection.
+- Feature isolation: `test-support` is declared at platforms/linux/Cargo.toml:12. Only `[dev-dependencies]` enable
+  it: shells/host/Cargo.toml:51 (existing) and platforms/local-api/Cargo.toml:25 (new). The workspace uses resolver
+  3, so dev-dependency features do not reach normal builds. `with_test_created_worktree` is
+  `#[cfg(feature = "test-support")]`.
+- Reachability of the schema change: grep shows that `linux_coding_endpoint_{edit,command}_registry` are used only by
+  the prepared startup (coding_endpoint_prepared_startup.rs:43-44), by Linux internals and by tests. Publishing the
+  schema therefore adds no prepared tool to the general native catalog. Before this change, any registry containing
+  these tools was refused as a whole (SchemaDenied).
+- Privacy and trademark: I grepped the added lines for home paths, the username, e-mail, hostnames, credential terms
+  and other agent-product names. The only hits are the reviewer attribution line in the retained review copy and
+  test token identifiers. There are no private paths or product branding. I did not read or cite any other product's
+  code or documentation.
+
+## Commands and results (all run from /lane/review-checkout)
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-prepared-service/review-inputs.sha256` | 0 | 31 entries; manifest SHA-256 `a676fe27…dc85fff5d` as stated |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-prepared-service-d2f6f2d667bd` | 1 | `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`; FAST GATE: FAIL |
+| `python3 -B …/audit.py /lane/state/tmp/review-prepared-service-d2f6f2d667bd` | 0 | `DATA_AUDIT_PASS_SCOPE_PRIVACY_LEDGER_FREEZE__FULL_GATE_REMAINS_FAIL` |
+| `python3 -B …/light.py` | 0 | diff-check, untracked lint, review lint, markdownlint all 0 |
+| `cmp …/validation-final/source-freeze.json …/review-prepared-service-d2f6f2d667bd/source-freeze.json` | 0 | identical |
+| `git diff --check a7a137899ad927ba8523bdb22239ed14d4de1397 --` | 0 | clean |
+| `git status --short` | 0 | empty |
+
+Results from my own gate run:
+
+- The four non-Cargo checks exited 0 (0.10/0.10/0.10/1.55 s). Fmt exited 0 (470.92 s, almost all of it waiting for
+  the reservation). Clippy exited 0 (50.23 s). Tests exited 101 after 283.23 s.
+- 25 targets: **1158 passed, 72 failed, 63 ignored, 0 measured, 0 filtered**. These totals match the builder's
+  exactly. My times are longer because the shared reservation was contended. Times are not gated.
+- The sorted set of failed test lines is identical to the builder's validation-final/fast.log (`diff` empty). The
+  audit confirms these are exactly the 72 T-301 baseline identities, with none new and none missing.
+- The four new methods and the strengthened method all report `ok`:
+  - `coding_tools::tests::prepared_native_tool_schemas_project_exact_bytes_and_refuse_substitutions`
+  - `endpoint_prepared::endpoint_prepared_service_native_edit_returns_original_lineage_and_needs_new_approval`
+  - `endpoint_prepared::endpoint_prepared_service_refuses_excluded_sources_and_foreign_identity_before_serving`
+  - `endpoint_prepared::endpoint_prepared_service_stop_without_release_does_not_return_a_native_owner`
+  - `endpoint_tool_return::endpoint_http_tool_return_refuses_uncertain_and_faulted_runs_without_losing_events`
+- Temporary namespace: `/tmp/ps-ck1n55p5` is not empty, so the driver kept it, and so did I. It holds 22 entries:
+  11 inherited host fixture roots and 4 files totalling 36 bytes (`generic-denials` and `generic-preview`
+  workspaces). It contains no `agentmage-prepared-http-*` root, and no such root exists anywhere under /tmp. This
+  matches the builder's inventory (22 entries, 4 files, 36 bytes). I did not remove anything belonging to other
+  workers.
+- No GPU, model or download was used, and no outer build-slot.
+
+## Assessment
+
+**Confinement and authority.**
+
+- `serve_coding_endpoint_prepared` (platforms/local-api/src/coding_endpoint_prepared.rs:48-86) is a thin
+  composition. It calls the trusted factory once with fresh identities, then the original `prepared.admit`. Admission
+  runs `check_sources` and then the original `CodingEndpointRuns::admit` with the original native boundary. The
+  wrapper maps any error to `Configuration`.
+- The existing `serve_admitted_endpoint_inner` still does the following:
+  - refuses a pre-set stop and non-loopback listeners;
+  - refuses a request whose run/session differs from the fresh identities (this is how the foreign-run case is
+    refused);
+  - requires the control token and per-advance model-disclosure consent;
+  - binds every route to the exact run_id and request_sha256.
+- The new code adds no wire route, no deserialized authority, no executor and no permission logic. Return to the
+  owner is `boundary.map(into_repository)`, which abandons any pending preview through the original native boundary.
+  The test checks this: `pending` is null after return.
+- The schema projection maps two exact schema IDs to the original 112-byte constant. The full-digest comparison
+  (coding_tools.rs:318-320) is unchanged. The new test confirms that a substituted ID or digest is refused for both
+  catalogs. The constant matches the original literal byte for byte; audit.py checks this against the base commit.
+  The constant is schema text only and carries no effect authority.
+- The test-only `with_test_created_worktree` (platforms/linux/src/coding_repository.rs:167-184) is compiled only with
+  the dev-only feature. It records an explicit `synthetic-test-creation-not-native-git` receipt hash and refuses if
+  any creation or pending creation already exists. It is not reachable in normal builds and does not change native
+  Git or executable trust.
+- I found no traversal, symlink or environment-leak path in this diff. The confinement code it relies on (held
+  roots, preimage checks, atomic writer, guidance exclusion) is unchanged. The `../escape.py` and `private/…`
+  snapshots are refused inside admission, before any model connection or write.
+
+**Evidence and labelling.**
+
+- The evidence, guide and decision say plainly that creation, endpoint responses, instruction records, control and
+  verifier are synthetic, and that native edits, grants, receipts and lineage are real.
+- They state that the runs end FAILED because the completion is deliberately unverified, and that a successful write
+  is not task success.
+- They state that the original-checkout diff is prepared but never applied.
+- The gate is reported as FAIL, the development failure (101/SIGABRT) is disclosed, and the focused retry is marked
+  as not the gate.
+- Every number I could check reproduces (totals, failure set, method results, namespace inventory). The retained
+  prior review copy is byte-identical to `/lane/reviews/a7a137899ad9-local-coding-http-tool-return.md` (`cmp` 0).
+- No TASKS row line changed (audit compares the `| [` rows). No sub-row was added. Nothing touches evaluation,
+  held-out, scorer or score files. No dependency version changed; the manifest change only enables an existing
+  first-party feature in dev-dependencies.
+
+**Prior low findings.** L1 is addressed: exact `code.endpoint.faulted` / `code.endpoint.refused` codes are now
+asserted (coding_endpoint_tool_return.rs:273-282). L2 is reasonably addressed by the native fixture, which exercises
+a separate original protected approval in each of two services on the same returned repository.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low L1: the service-level exclusion test cannot tell which check refused, and has no positive source control.**
+  - Where: platforms/local-api/tests/support/coding_endpoint_prepared.rs:322-365 and
+    platforms/local-api/src/coding_endpoint_prepared.rs:83.
+  - Problem: the wrapper maps every admission error to `ApiError::Configuration`, and the positive service test
+    always passes `sources: vec![]`. As a result, the HTTP-level test would still pass if any non-empty source
+    snapshot were refused, or if the refusal came from endpoint context composition rather than the guidance
+    exclusion.
+  - Why it is only low: the exclusion check itself is unit-tested with positive and negative cases
+    (shells/host/src/coding_endpoint_prepared_startup_tests.rs:107-125). The test is therefore weak at the service
+    level, but the boundary is not untested.
+  - Fix: add one positive service case with an allowed, consented snapshot (for example `one.py`), and assert that
+    the excluded and malformed cases are refused while the allowed one is admitted.
+- **Low L2: fixture cleanup can still double-panic.**
+  - Where: platforms/local-api/tests/support/coding_endpoint_prepared.rs:78-81. `Fixture::drop` calls
+    `remove_dir_all(..).unwrap()` without the `thread::panicking()` guard that was added to `Api::drop`.
+  - Effect: if a test fails and cleanup also fails, the process aborts and hides the primary failure. This is the same
+    class of problem as the development SIGABRT.
+  - Fix: guard the unwrap the same way `Api::drop` now does.
+- **Low L3: the prepared schema IDs are duplicated string literals.**
+  - Where: the host match arm (shells/host/src/coding_tools.rs:346) repeats the IDs as literals instead of using
+    exported constants next to `LINUX_CODING_PREPARED_INPUT_SCHEMA_JSON`.
+  - Why it is only low: if the IDs drift, the result fails closed (SchemaDenied), so this is maintainability only.
+  - Fix: export the two IDs from the Linux crate and match on them.
+
+The earlier metadata, aggregate-output, CPU and disk preflight lows, and the command-factory gap, remain same-row
+backlog as stated.
+
+## Per-row result
+
+- T-303 (non-closing increment): PASS for this commit's scope. The row remains OPEN. Still unobserved: native Git
+  creation, positive prepared-command factory admission, executable controlled startup, general edit/test/retry,
+  durable recovery, approved Git, and parent measurements.
+- T-306 (non-closing increment): PASS for this commit's scope. The row remains OPEN for the same reasons.
+
+This PASS covers only the reviewed diff. It does not certify a passing full gate (the scoped gate is FAIL, with
+exactly the 72 inherited failures) and it is not a closing verdict for either parent row.
+
+Verdict: PASS

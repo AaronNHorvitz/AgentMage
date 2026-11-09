@@ -2,6 +2,27 @@
 
 ## Active queue: local agent mission
 
+The [strict prepared-edit bridge](docs/evidence/t303-strict-prepared-edits-2026-11-08.md)
+connects original bounded proposal context and strict model edit checking to
+fresh reads from the original live worktree owner and its native complete diff.
+It checks the task, exclusions, full preimages and exact mutable/protected paths
+before replacing a preview; refusal preserves the prior preview. Exact native
+approval and HTTP ownership remain unchanged. The final unfiltered scoped gate
+records 925 passed, exactly 53 inherited host failures and none new, 11 existing
+ignored across 27 targets. Formatting and Clippy pass; the complete gate remains
+FAIL. The first full run also exposed a disconnect-fixture failure, corrected
+in this batch with all deadlines and approval assertions preserved. Independent
+core review is required. T-303/T-306 remain open; no row or sub-row is added or
+closed. Model generation/accounting, general edit/test/retry and parent
+measurements remain open.
+
+The [prepared-service independent core review](docs/reviews/d2f6f2d667bd-local-coding-prepared-http.txt)
+has **Verdict: PASS** for exact commit
+`d2f6f2d667bdbcfc576ba21791ae79e0b8a28dd4`, with no high/medium finding.
+Low L1's positive nonempty-source admission and L2's primary-panic cleanup
+guard are addressed in the strict-edit batch. Low L3 (schema-ID constants)
+remains same-row backlog with earlier lows. Neither parent closes.
+
 The [prepared native HTTP service](docs/evidence/t303-prepared-http-service-2026-11-08.md)
 composes original instruction-narrowed prepared admission, exact native approvals
 and joined terminal repository return in one trusted entry point. It fixes the

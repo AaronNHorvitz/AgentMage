@@ -75,7 +75,10 @@ impl Fixture {
 }
 impl Drop for Fixture {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).unwrap();
+        let result = fs::remove_dir_all(&self.0);
+        if !thread::panicking() {
+            result.unwrap();
+        }
     }
 }
 
@@ -148,11 +151,12 @@ fn ledger(request: &RuntimeEndpointRunRequest) -> InstructionEvidenceLedger {
 }
 
 fn prepared_input(
-    owner: LinuxCodingRepository,
+    mut owner: LinuxCodingRepository,
     endpoint: LocalChatEndpoint,
     id: RuntimeRunId,
     session: SessionId,
     clock: Arc<AtomicUsize>,
+    model_edit: Option<&str>,
 ) -> (
     CodingEndpointPreparedHttpRun<Verifier, SharedClock>,
     RuntimeApprovalChallenge,
@@ -174,6 +178,32 @@ fn prepared_input(
     let startup =
         CodingEndpointPreparedStartup::prepare(request, CodingEndpointPreparedKind::Edit, &ledger)
             .unwrap();
+    let mut consented_sources = vec![];
+    if let Some(answer) = model_edit {
+        use agentmage_capability_repository_map::coding_proposal::{
+            CodingSource, prepare_coding_proposal,
+        };
+        // Explicit fixture read consent; proposal bytes are synthetic, never
+        // described as a real model-generated edit or a task grade.
+        let paths = vec!["one.py".into()];
+        let sources = owner
+            .select_created_sources(&paths)
+            .unwrap()
+            .read(&paths)
+            .unwrap()
+            .into_iter()
+            .map(|s| CodingSource {
+                path: s.path,
+                content: s.content,
+            })
+            .collect::<Vec<_>>();
+        let context =
+            prepare_coding_proposal(&startup.request().task.objective, &sources, 2048).unwrap();
+        startup
+            .prepare_edit_proposal(&mut owner, &context, answer, 1000)
+            .unwrap();
+        consented_sources = sources;
+    }
     let args = json!({"preview":owner.inspect_edit().unwrap()["pending"]});
     let bytes = serde_json::to_vec(&args).unwrap();
     let call = ToolCall {
@@ -208,7 +238,7 @@ fn prepared_input(
             control: Arc::new(Control),
             clock: SharedClock(clock),
             verifier: input.verifier,
-            sources: vec![],
+            sources: consented_sources,
             source_budget: 2048,
             include_usage: true,
         },
@@ -239,7 +269,12 @@ fn endpoint_prepared_service_native_edit_returns_original_lineage_and_needs_new_
     let clock = Arc::new(AtomicUsize::new(0));
     let mut prior: Option<(Value, Value)> = None;
     for (iteration, content) in [(1, "first\n"), (2, "second\n")] {
-        fixture.prepare(&mut owner, content);
+        let old = if iteration == 1 {
+            "before\n"
+        } else {
+            "first\n"
+        };
+        let model_edit = json!({"edits":[{"path":"one.py","old":old,"new":content}]}).to_string();
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let address = listener.local_addr().unwrap();
         let stop = Arc::new(AtomicBool::new(false));
@@ -257,7 +292,9 @@ fn endpoint_prepared_service_native_edit_returns_original_lineage_and_needs_new_
                 CodingEndpointObservationAccess::ControlOnly,
                 |id, session| {
                     let (input, challenge, proposal) =
-                        prepared_input(owner, endpoint, id, session, clock);
+                        prepared_input(owner, endpoint, id, session, clock, Some(&model_edit));
+                    assert_eq!(input.sources.len(), 1);
+                    assert_eq!(input.sources[0].path, "one.py");
                     challenge_tx.send(challenge).unwrap();
                     proposal_tx.send(proposal).unwrap();
                     Ok(input)
@@ -361,7 +398,8 @@ fn endpoint_prepared_service_refuses_excluded_sources_and_foreign_identity_befor
                 } else {
                     id
                 };
-                let (mut input, _, _) = prepared_input(owner, endpoint, id, session, clock.clone());
+                let (mut input, _, _) =
+                    prepared_input(owner, endpoint, id, session, clock.clone(), None);
                 if selection != "foreign-run" {
                     input.sources = vec![
                         agentmage_capability_repository_map::coding_proposal::CodingSource {
@@ -395,7 +433,7 @@ fn endpoint_prepared_service_stop_without_release_does_not_return_a_native_owner
         stop.clone(),
         CodingEndpointObservationAccess::ControlOnly,
         |id, session| {
-            let input = prepared_input(owner, endpoint, id, session, clock.clone()).0;
+            let input = prepared_input(owner, endpoint, id, session, clock.clone(), None).0;
             stop.store(true, Ordering::Release);
             Ok(input)
         },

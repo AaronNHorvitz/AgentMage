@@ -95,12 +95,19 @@ struct Payload<'a> {
 /// Prepared prompt and coverage. Private construction prevents caller-forged
 /// visibility or snapshot bindings. All fields are available through accessors.
 pub struct CodingProposalContext {
+    task: String,
     user: String,
     outlines: Vec<CodingOutline>,
     excerpts: Vec<CodingExcerpt>,
 }
 
 impl CodingProposalContext {
+    /// Original task used to select these exact excerpts, never model authority.
+    #[must_use]
+    pub fn task(&self) -> &str {
+        &self.task
+    }
+
     /// Serialized task, outlines and exact selected source data.
     #[must_use]
     pub fn user_message(&self) -> &str {
@@ -323,6 +330,7 @@ pub fn prepare_coding_proposal(
         return Err(CodingProposalError::Context);
     }
     Ok(CodingProposalContext {
+        task: task.to_owned(),
         user,
         outlines,
         excerpts,

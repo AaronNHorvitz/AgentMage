@@ -1174,3 +1174,37 @@ no grant is renewed. The old verifier, context, endpoint connection and run
 budget are dropped. Ordinary service entry points continue to discard on release. The opt-in function
 is a host composition surface; executable controlled startup and a general
 model-driven edit/test/retry workflow remain open.
+
+## Strict edits in trusted prepared startup
+
+An edit-kind `CodingEndpointPreparedStartup` can now take a strict model answer
+through `prepare_edit_proposal(&mut repository, &context, answer, now_epoch_ms)`.
+Supply the original `CodingProposalContext` from the consented model request,
+the same live native repository owner and fresh time. The context exposes its
+original task through `task()`; it must equal the final sealed task objective.
+This is a trusted library call. Obtain consent to re-read every context file
+before calling it. It supplies no read, disclosure or write permission itself.
+
+The method checks instruction exclusions before selecting or opening files,
+then re-reads every original context file from the owner's held worktree. The
+existing strict proposal checker verifies complete snapshot hashes and permits
+only unique, visible, nonoverlapping exact edits. A changed file must appear
+literally in the narrowed mutable list and stay outside every protected file
+or directory. Protected files may provide separately consented context.
+
+Only a fully valid proposal reaches the original native diff preparation.
+Refusal preserves the previous preview; success replaces that inert preview.
+Preparation does not write source files. Call the existing `bind` with the
+complete resulting preview, then admit through `serve_coding_endpoint_prepared`.
+Its original exact challenge, protected approval, atomic writer, preimage
+checks and terminal owner return remain authoritative. Reads made during
+preparation cannot be undone; snapshots are checked at preparation time, with
+edited-file preimages checked again by the native writer at dispatch.
+
+This call does not generate a model answer, account for its usage or manage its
+budget; those remain with the original caller. It is no new HTTP tool, executor,
+command admission exception or general edit/test/retry loop. Integration tests
+use synthetic strict answers and endpoint responses with real native writes
+through two HTTP services. Native Git creation, positive command-factory
+admission, executable controlled startup, model quality, recovery, approved Git
+and T-303/T-306 measurements remain open.
