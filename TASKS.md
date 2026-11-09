@@ -2,6 +2,26 @@
 
 ## Active queue: local agent mission
 
+The [native edit boundary independent core review](docs/reviews/04eb70a5162e-local-coding-native-endpoint-boundary.txt)
+has **Verdict: PASS** for exact commit
+`04eb70a5162ed0385e3d2e199427340174fa2fec`, with no high/medium finding.
+Low L1 (projected reconciled-failure/uncertain coverage) and L2 (explicit
+classification of conservative pre-consumption refusal) remain same-row
+backlog with earlier lows. Both parent rows remain open; no row is closed.
+
+The [endpoint command/test adapter](docs/decisions/0169-native-endpoint-command-coordinator.md)
+connects one original prepared command or validation to the scoped tool port.
+Exact approval issues the original durable grant; execution consumes it through
+the original native command driver. The original control reaches supervisor
+polling, and original parsers and retry limits remain authoritative. Native
+admission, controlled startup, general model-driven coding, recovery, approved
+Git and parent measurements remain open. Fifteen new methods pass; formatting
+and Clippy pass. The complete scoped gate remains FAIL with exactly 72 inherited
+failures and no new failure identities. See the
+[builder record](docs/evidence/t303-endpoint-command-2026-11-08.md).
+Independent core review is required. T-303/T-306 stay open; no row is added
+or closed.
+
 The predecessor's [independent core review](docs/reviews/e4a92e4b6a48-local-coding-native-endpoint-edit.txt)
 has **Verdict: PASS** for exact commit
 `e4a92e4b6a486484108262cb42c09c8a2a05113d`, with no high/medium finding.
@@ -18,8 +38,8 @@ Nine new methods pass in the complete scoped gate, including real native writes
 through a synthetic endpoint/creation fixture. Formatting and Clippy pass; the
 gate remains FAIL with exactly the 72 inherited failures and no new failures.
 See the [builder record](docs/evidence/t303-native-endpoint-boundary-2026-11-08.md).
-Independent core review is required. T-303/T-306 stay open; no row is added
-or closed.
+Its independent core review is recorded above. T-303/T-306 stay open; no row is
+added or closed.
 
 The controlled-write composition's [independent core review](docs/reviews/bc98651997e9-local-coding-endpoint-write.txt)
 has **Verdict: PASS** for exact commit

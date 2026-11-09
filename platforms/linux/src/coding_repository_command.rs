@@ -12,6 +12,13 @@ use agentmage_kernel_engine::propagation::{
     CancellationObservationError, EffectCancellationObservation,
 };
 
+#[path = "coding_repository_endpoint_command.rs"]
+mod endpoint;
+pub use endpoint::{
+    LinuxCodingEndpointCommand, LinuxCodingEndpointCommandBoundary,
+    linux_coding_endpoint_command_registry,
+};
+
 const COMMAND_TOOL: &str = "local-coding-command";
 
 /// Cancellation of one exact process-held command preview. Clones share only
@@ -118,6 +125,7 @@ pub(super) struct PendingCommand {
     created_at: u64,
     expires_at: u64,
     deadline: Instant,
+    issued: Option<IssuedExactEffect>,
 }
 
 impl LinuxCodingRepository {
@@ -271,6 +279,7 @@ impl LinuxCodingRepository {
         Ok(PendingCommand {
             prepared,
             validation: None,
+            issued: None,
             preview,
             hash: digest,
             created_at: now,
@@ -341,6 +350,19 @@ impl LinuxCodingRepository {
             Some(_) => return Err(err("code.command.cancellation-stale")),
             None => LinuxCodingCommandCancellation::for_pending(&pending),
         };
+        self.run_command_observed(pending, executor, now, cancellation)
+    }
+
+    pub(super) fn run_command_observed<
+        E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+        C: EffectCancellationObservation,
+    >(
+        &mut self,
+        mut pending: PendingCommand,
+        executor: E,
+        now: u64,
+        cancellation: C,
+    ) -> Result<Value> {
         let created = self.verify_created()?;
         if pending.preview["worktree_root_sha256"] != created.held.root_path_sha256()
             || pending.preview["creation_receipt_sha256"] != created.creation_receipt_sha256
@@ -355,36 +377,18 @@ impl LinuxCodingRepository {
         if dispatch_now >= pending.expires_at || remaining.is_zero() {
             return Err(err("code.command.expired"));
         }
+        let issued = pending.issued.take();
+        let exact = self.command_effect(&pending, dispatch_now)?;
         let prepared = pending.prepared;
         let validation = pending.validation;
         // Spend before dispatch, including an uncertain authority/runner result.
         // A lost result never becomes automatic retry authority.
         let id = prepared.preview().command_attempt_id.clone();
-        let target = GrantTarget::held_workspace_root(&created.held)
-            .map_err(|_| err("code.command.scope"))?;
-        let scope = GrantTarget::workspace_scope(
-            &created.held,
-            WorkspaceScopePath::new(WorkspaceId::from_raw(TOOL), Vec::<String>::new())
-                .map_err(|_| err("code.command.scope"))?,
-        )
-        .map_err(|_| err("code.command.scope"))?;
         let rerun_plan = validation
             .as_ref()
             .map(|validation| self.consume_validation(validation, &id, &pending.hash))
             .transpose()?
             .flatten();
-        let exact = ExactEffect {
-            id: id.clone(),
-            operation: OperationBinding::new(GrantOperation::CommandExecute),
-            target,
-            scope,
-            plan_sha256: prepared.preview().preview_sha256.clone(),
-            request_sha256: prepared.request_sha256().into(),
-            tool: command_tool(&prepared),
-            preview_hash: pending.hash.clone(),
-            expires_at: pending.expires_at,
-            now: dispatch_now,
-        };
         // Split borrows: the existing driver holds the exact owned-worktree root.
         let created = self
             .created
@@ -392,7 +396,12 @@ impl LinuxCodingRepository {
             .ok_or(err("code.command.worktree-required"))?;
         let mut driver =
             CommandEffectDriver::new(executor, &created.held, prepared.clone(), cancellation);
-        let receipt = exact.execute(self.authority.authority_mut(), &mut driver)?;
+        let receipt = match issued {
+            Some(issued) => {
+                issued.execute(self.authority.authority_mut(), &mut driver, dispatch_now)?
+            }
+            None => exact.execute(self.authority.authority_mut(), &mut driver)?,
+        };
         let command_receipt = driver.take_receipt();
         let output = driver.take_output();
         let failure = driver.take_error();
@@ -432,6 +441,54 @@ impl LinuxCodingRepository {
             "validation":validation_result,"rerun_plan":rerun_plan,
             "test_suite_verified":false,"automatic_replay":false}),
         )
+    }
+
+    fn command_effect(&self, pending: &PendingCommand, now: u64) -> Result<ExactEffect> {
+        let created = self.verify_created()?;
+        if pending.preview["worktree_root_sha256"] != created.held.root_path_sha256()
+            || pending.preview["creation_receipt_sha256"] != created.creation_receipt_sha256
+            || now < pending.created_at
+            || now >= pending.expires_at
+            || Instant::now() >= pending.deadline
+        {
+            return Err(err("code.command.stale"));
+        }
+        let prepared = &pending.prepared;
+        Ok(ExactEffect {
+            id: prepared.preview().command_attempt_id.clone(),
+            operation: OperationBinding::new(GrantOperation::CommandExecute),
+            target: GrantTarget::held_workspace_root(&created.held)
+                .map_err(|_| err("code.command.scope"))?,
+            scope: GrantTarget::workspace_scope(
+                &created.held,
+                WorkspaceScopePath::new(WorkspaceId::from_raw(TOOL), Vec::<String>::new())
+                    .map_err(|_| err("code.command.scope"))?,
+            )
+            .map_err(|_| err("code.command.scope"))?,
+            plan_sha256: prepared.preview().preview_sha256.clone(),
+            request_sha256: prepared.request_sha256().into(),
+            tool: command_tool(prepared),
+            preview_hash: pending.hash.clone(),
+            expires_at: pending.expires_at,
+            now,
+        })
+    }
+
+    pub(super) fn issue_command(&mut self, now: u64) -> Result<()> {
+        let pending = self
+            .command
+            .as_ref()
+            .ok_or(err("code.command.choice-required"))?;
+        if pending.issued.is_some() {
+            return Err(err("code.command.spent"));
+        }
+        let exact = self.command_effect(pending, now)?;
+        let issued = exact.issue(self.authority.authority_mut())?;
+        self.command
+            .as_mut()
+            .ok_or(err("code.command.choice-required"))?
+            .issued = Some(issued);
+        Ok(())
     }
 }
 

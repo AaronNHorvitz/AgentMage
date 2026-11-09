@@ -969,3 +969,47 @@ native Git creation, tests or coding score. Trusted controlled startup, general
 edit/test execution, durable recovery, approved Git and parent measurements
 remain open under T-303/T-306. See
 [Decision 0168](../decisions/0168-native-endpoint-edit-coordinator.md).
+
+## Original command and tests through the coordinator
+
+Trusted library code can move its original `LinuxCodingRepository`, with an
+already prepared command or validation, into `LinuxCodingEndpointCommand` using
+`into_endpoint_command`. Consume that handle with `into_boundary`, retaining the
+original continuous run control and trusted clock. Use the exact single-operation
+catalog from `linux_coding_endpoint_command_registry`. The complete original
+preview is the only accepted argument. This does not activate an HTTP service,
+select tests from prose, prepare a command or permit model disclosure.
+
+Evaluation presents the original protected challenge. An exact Allow verifies
+the original native manifest and issues the original durable operation grant,
+without launching a process or spending a test attempt. Execution verifies native
+admission again and consumes the same grant through the original command driver.
+Memory, task-count and timeout ceilings must fit the sealed run. Run cancellation
+and deadline stops reach the original supervisor as attempt-scoped signals;
+foreign or unavailable observations fail closed. Native execution stays offline
+with a read-only worktree and temporary scratch. NotChanged describes workspace
+state; process execution still requires its own exact permission.
+
+The output contains the actual authority receipt, original command receipt,
+untrusted byte-array output and optional normalized validation. A failed test
+can select a fresh separately approved rerun through the same live owner; the
+original parser, immutable definition, failure receipt and three-attempt ceiling
+remain in force. These results do not independently grade a task or verify the
+current repository. Model-generated success text is never a test receipt.
+
+Inspect `last_result` on the boundary after dispatch. Output-budget refusal
+returns uncertain even when an original result is retained. Errors after dispatch
+also conservatively report uncertain; inspect canonical authority receipts before
+another action. Every matching stage is single-use, including after stop, error
+or unwind. `into_repository` abandons pending preview/grant handles and preserves
+existing validation state. Issued grants remain in durable authority until normal
+expiry; abandoning a handle is not revocation. No pending command is restored
+from a digest or event record.
+
+The component fixtures use synthetic creation and command results with real
+kernel authority transactions and parsing. The actual shared-coordinator test
+uses an explicitly synthetic executor and refuses the later model turn, so its
+run remains non-successful. Original native admission still refuses in this lane.
+Successful native execution, controlled service startup, general model-driven
+coding, durable recovery, approved Git and parent measurements remain open.
+See [Decision 0169](../decisions/0169-native-endpoint-command-coordinator.md).

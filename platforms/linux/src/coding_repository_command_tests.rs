@@ -80,9 +80,9 @@ fn passive_command_poll_retries_only_unavailability_and_keeps_a_fixed_fail_close
 
 const NOW: u64 = 1000;
 const KEY: &[u8] = b"synthetic-command-state-secret-not-a-real-credential";
-struct Fixture(PathBuf);
+pub(super) struct Fixture(pub(super) PathBuf);
 impl Fixture {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         let path = std::env::temp_dir().join(format!(
             "agentmage-command-owner-{}-{}",
             std::process::id(),
@@ -96,10 +96,10 @@ impl Fixture {
         fs::write(path.join("owned/worktree/sentinel"), b"preserve").unwrap();
         Self(path)
     }
-    fn open(&self) -> LinuxCodingRepository {
+    pub(super) fn open(&self) -> LinuxCodingRepository {
         LinuxCodingRepository::open(&self.0.join("state"), KEY, NOW).unwrap()
     }
-    fn synthetic_created(&self, owner: &mut LinuxCodingRepository) {
+    pub(super) fn synthetic_created(&self, owner: &mut LinuxCodingRepository) {
         // No native creation claim: inject only process-local provenance in tests.
         let path = self.0.join("owned/worktree");
         let original = self.0.join("original");
@@ -131,7 +131,7 @@ impl Drop for Fixture {
         fs::remove_dir_all(&self.0).unwrap();
     }
 }
-fn spec() -> CommandSpec {
+pub(super) fn spec() -> CommandSpec {
     spec_with_bounds(CommandBounds::new(1000, 1024, 1024, 128 * 1024 * 1024, 8, 100).unwrap())
 }
 fn spec_with_bounds(bounds: CommandBounds) -> CommandSpec {

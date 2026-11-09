@@ -36,7 +36,10 @@ pub use coding_map::{
     LinuxCodingMap, LinuxCodingMapEntry, LinuxCodingMapError, discover_linux_coding_map,
 };
 /// Closed output protocols for separately approved project tests.
-pub use coding_repository::{LinuxCodingCommandCancellation, LinuxCodingTestFormat};
+pub use coding_repository::{
+    LinuxCodingCommandCancellation, LinuxCodingEndpointCommand, LinuxCodingEndpointCommandBoundary,
+    LinuxCodingTestFormat, linux_coding_endpoint_command_registry,
+};
 pub use coding_repository::{
     LinuxCodingEndpointEdit, LinuxCodingEndpointEditBoundary, linux_coding_endpoint_edit_registry,
 };

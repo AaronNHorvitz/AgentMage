@@ -56,7 +56,10 @@ mod runtime;
 pub use create::LinuxCodingRuntimeCreateDriver;
 #[path = "coding_repository_validation.rs"]
 mod validation;
-pub use command::LinuxCodingCommandCancellation;
+pub use command::{
+    LinuxCodingCommandCancellation, LinuxCodingEndpointCommand, LinuxCodingEndpointCommandBoundary,
+    linux_coding_endpoint_command_registry,
+};
 pub use runtime::{LinuxCodingRuntimeWriteDriver, LinuxCodingWorktreeLease};
 pub use validation::LinuxCodingTestFormat;
 
@@ -611,6 +614,14 @@ impl ExactEffect {
         runtime: &mut agentmage_kernel_engine::operational_store::DurableAuthorityRuntime,
         driver: &mut impl agentmage_kernel_engine::authority_transaction::EffectDriver,
     ) -> Result<agentmage_kernel_contracts::Receipt> {
+        let now = self.now;
+        self.issue(runtime)?.execute(runtime, driver, now)
+    }
+
+    fn issue(
+        self,
+        runtime: &mut agentmage_kernel_engine::operational_store::DurableAuthorityRuntime,
+    ) -> Result<IssuedExactEffect> {
         let Self {
             id,
             operation,
@@ -730,19 +741,52 @@ impl ExactEffect {
             credential_scope: None,
             publication_scope: None,
         };
-        let request = AuthorityTransactionRequest::new(
-            AuthorityTransactionId::from_raw(&id),
-            OperationAttemptId::from_raw(format!("attempt-{id}")),
+        Ok(IssuedExactEffect {
+            id,
             approval,
-            grant.grant_id,
+            grant,
+            registry,
+            policy,
             call,
             context,
+        })
+    }
+}
+
+// Private, non-cloneable original issuer state. No wire digest can construct it.
+struct IssuedExactEffect {
+    id: String,
+    approval: ApprovalId,
+    grant: agentmage_kernel_contracts::CapabilityGrant,
+    registry: ToolRegistry,
+    policy: PolicyEngine,
+    call: ToolCall,
+    context: PolicyEvaluationContext,
+}
+impl IssuedExactEffect {
+    fn execute(
+        mut self,
+        runtime: &mut agentmage_kernel_engine::operational_store::DurableAuthorityRuntime,
+        driver: &mut impl agentmage_kernel_engine::authority_transaction::EffectDriver,
+        now: u64,
+    ) -> Result<agentmage_kernel_contracts::Receipt> {
+        if now < self.grant.issued_at_epoch_ms || now >= self.grant.expires_at_epoch_ms {
+            return Err(err("code.repository.expired"));
+        }
+        self.context.now_epoch_ms = now;
+        let request = AuthorityTransactionRequest::new(
+            AuthorityTransactionId::from_raw(&self.id),
+            OperationAttemptId::from_raw(format!("attempt-{}", self.id)),
+            self.approval,
+            self.grant.grant_id,
+            self.call,
+            self.context,
             now,
             now.to_string(),
         )
         .map_err(|_| err("code.repository.request"))?;
         runtime
-            .execute_effect(&registry, &policy, request, driver)
+            .execute_effect(&self.registry, &self.policy, request, driver)
             .map_err(|_| err("code.repository.uncertain"))
     }
 }
