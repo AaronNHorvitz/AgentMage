@@ -2,6 +2,9 @@
 //! Synthetic creation/model, real native edits and separately approved transfer.
 use super::*;
 
+#[path = "coding_endpoint_original_cli.rs"]
+mod terminal;
+
 #[test]
 fn endpoint_original_review_requires_terminal_release_fresh_read_and_exact_apply() {
     for checked in [false, true] {

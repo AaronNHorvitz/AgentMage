@@ -21,6 +21,8 @@ const DEADLINE: Duration = Duration::from_secs(180);
 mod driver;
 #[path = "coding_cli_endpoint.rs"]
 mod endpoint;
+#[path = "coding_cli_endpoint_transfer.rs"]
+mod endpoint_transfer;
 #[path = "coding_mcp.rs"]
 mod mcp;
 #[path = "coding_cli_record.rs"]

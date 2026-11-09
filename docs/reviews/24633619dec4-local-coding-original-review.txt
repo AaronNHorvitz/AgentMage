@@ -1,0 +1,184 @@
+Commit: 24633619dec4f011d81846eaac0eece42ddd7595
+Scope: local-coding-original-review
+
+# Independent core review: post-release original diff review in the endpoint service
+
+Reviewer: Claude Opus 5.5, separate read-only session, extra-high effort. I reviewed the pinned
+checkout `/lane/review-checkout` at the exact commit only (`git rev-parse HEAD` =
+`24633619dec4f011d81846eaac0eece42ddd7595`). Base `e83b092b2dc96c10dc08d72a10a1e2d13698dc4d`.
+Rows: T-303 / T-306, non-closing increment; both parents stay OPEN. I made no change to the
+repository. My adversarial probe ran in a separate `git archive` export at
+`/lane/state/tmp/review-probe-24633619dec4/checkout`.
+
+## Methods
+
+- Read IP-POLICY.md, Decision 0178, the new TASKS.md preamble, the evidence note
+  `docs/evidence/t306-original-review-2026-11-09.md`, both guide additions, and the bundle's
+  README.md, run.py, check.py, parse_gate.py and light.py before running anything. The scripts do
+  what the README says: each Cargo command reserves a slot through `/tools/build-slot` inside
+  `scripts/local_agent_fast_gate.py`; run.py is not wrapped from outside; two jobs and four test
+  threads; the PATH gets only the retained Node/LICENSE tooling directory.
+- Read the full product diff (`coding_endpoint_api.rs`, `coding_endpoint_prepared.rs`,
+  `coding_endpoint_edit_launch.rs`, `lib.rs`, `main.rs`) and the unchanged code it relies on:
+  `coding_repository_api::handle_repository` (control check, `begin_controlled`, apply
+  prepare/decide), `serve_connections` (handler errors are discarded at `lib.rs:419`),
+  `CodingEndpointRuns::release_with_tool_boundary` (refuses NotHeld, Faulted and StillRunning
+  before taking the coordinator), `CodingEndpointEditBoundary::try_into_repository` (needs
+  `Arc::strong_count == 1`, refuses poison, calls `abandon_pending_decisions`) and the terminal
+  client `coding_cli.rs:582-680` (uses only the three apply routes).
+- Read the new fixture `tests/support/coding_endpoint_original_review.rs` and the test changes
+  in `coding_endpoint_edit_launch.rs` and `coding_endpoint_strict_return.rs`.
+- Wrote and ran my own adversarial probe (below).
+
+## Exact commands and results (from /lane/review-checkout)
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-original-review/review-inputs.sha256` | 0 | all 40 inputs match |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-original-review/run.py /lane/state/tmp/review-original-review-24633619dec4` | 0 | `GATE_EXIT 0 SOURCE_FREEZE_UNCHANGED True`; output directory was absent beforehand |
+| `python3 -B /lane/state/tmp/t303-original-review/check.py /lane/state/tmp/review-original-review-24633619dec4` | 0 | gate PASS; 11 targets; totals 231/0/0/0/0; 14 named methods ok; 7 commands exit 0; source unchanged |
+| `python3 -B /lane/state/tmp/t303-original-review/light.py` | 0 | diff-check, lint-untracked, lint-reviews and markdownlint (0 issues, 5 files) all exit 0 |
+| `cmp …/validation-final/source-freeze.json /lane/state/tmp/review-original-review-24633619dec4/source-freeze.json` | 0 | identical; 8 Rust hashes |
+| `cmp docs/reviews/e83b092b2dc9-local-coding-strict-owner-return.txt /lane/reviews/e83b092b2dc9-local-coding-strict-owner-return.md` | 0 | byte-identical; ends `Verdict: PASS` |
+| `git diff --check e83b092b2dc96c10dc08d72a10a1e2d13698dc4d --` | 0 | no output |
+| `git status --short` | 0 | empty before and after |
+
+My own run's timings: fmt 100.59 s (including the reservation wait), clippy 36.82 s, tests
+97.39 s, total 236.49 s. Raw log SHA-256
+`3fe38484ebe8916345f71a96511ba774c26c68993a76e12d55c99e535c8388c7`. Timings and the raw-log hash
+differ from the builder's figures (914.03/0.80/42.81/959.48 s,
+`6865a587…be251`). Fresh runs are expected to differ here because the reservation wait and
+the build cache change. Every count, target, named method and source hash matches. No other
+difference.
+
+Per-target counts in my log: 53, 0, 0, 0, 14, 6, 25, 4, 69, 20, 40 passed (231 in total). None
+failed, was ignored or measured, or was filtered out. This equals `expected-targets.json`.
+
+## Independent adversarial probe
+
+In the scratch export I added one test, `reviewer_probe_original_review_escape_attempts`, next
+to the new fixture. It used the same synthetic creation/model and real native edits. I ran
+`bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api --test
+coding_endpoint_http original_review -- --nocapture` with the same CARGO_TARGET_DIR, two jobs and
+four threads. Exit 0, 3 passed, 0 failed. The run was strict review: approve one edit, deny the
+second, reach DECLINED, then:
+
+- **Concurrent release:** four simultaneous `release` calls returned `[200, 409, 409, 409]`.
+  Exactly one publication happened, which matches the session `try_lock` held across extraction
+  and publication.
+- **Authentication:** with an empty bearer token and with a wrong 64-character token, `GET
+  /v1/code/repository/apply` returned 401 both times. The fixture already covers the observation
+  token (403).
+- **Route confinement:** after release, every POST to `/v1/code/repository/{repair/prepare,
+  decide, validation/prepare, edit/decide, command/decide}` returned 404. Route variants
+  (`apply/`, `apply?x=1`), `GET /v1/code/repository{,/edit,/command,/validation}`,
+  `/v1/code/runtime`, `endpoint/cancel` and `endpoint/advance` with a JSON body all returned 400.
+  None returned 200. By code reading, `coding_endpoint_api.rs:437-448` dispatches only the three
+  exact method/path pairs, so the repair prefix branch in `handle_repository` cannot be reached.
+- **Path escape at prepare:** these selections each returned 409 with `no-write-dispatch`:
+  `../original/human`, `/etc/passwd`, `human`, `.git/index`, `./one.py` and `one.py/../one.py`
+  gave `code.apply.lineage`; duplicate and empty selections gave `code.workspace.selection`.
+- **Worktree symlink swap before prepare:** `one.py` was replaced by a symlink to
+  `original/human`. Prepare returned 409 `code.workspace.boundary`.
+- **Worktree mutation between prepare and decide:** an approved decide returned 409
+  `code.apply.source-drift`. The original `one.py` and `human` bytes were unchanged.
+- **Original target replaced by a symlink between prepare and decide:** an approved decide
+  returned 409 `code.write.transaction`. `original/human` was unchanged and the symlink was left
+  in place, so nothing was written through it.
+
+The prepared preview carries `tested:false` and lists no-test/no-isolation risks, which is honest
+labelling. My probe does not cover prompt-injected tool calls from documents or web pages. This
+increment adds no new model-facing tool: the repository is published only after the run and its
+model connection are dropped, and the strict edit path is unchanged from the reviewed base.
+
+## Review against the request's claims
+
+- **Startup policy only:** the variant is chosen by an explicit library function or an explicit
+  executable command (`main.rs:80-123`). No request or model field selects it. Ordinary and
+  returning variants pass `Discard`/`Return` exactly as before (`coding_endpoint_prepared.rs:137,
+  174, 211, 243, 279`). In those modes the new `review` State stays empty, and its shutdown hook
+  (`coding_endpoint_api.rs:590-596`) is a no-op when no operation is active.
+- **Same original owner, single-owner/poison checks, pending decisions abandoned:** extraction
+  goes through the reviewed `release_with_tool_boundary` and then
+  `CodingEndpointEditBoundary::try_into_repository`. No path, receipt or new owner is created.
+  The combined fixture shows that the dropped coordinator releases the completion verifier's
+  reference.
+- **Session lock:** the release handler holds the `session` guard through conversion and
+  publication (`coding_endpoint_api.rs:539-566`). Apply handlers take only the `review` mutex.
+  The lock order is session then review, with no reverse path, so there is no deadlock. Before
+  release the apply routes return 428 (fixture and code).
+- **Read consent and exact approval:** the unchanged `handle_repository` checks `req.control`,
+  `approve_read`, expected roots for both trees, `stop`, and an exact `preview_sha256` decision.
+  The fixture covers the client token, refused read, a stale root, a foreign hash, denial without
+  a write, reuse after denial, and reuse after commit.
+- **No new manual route or model run:** confirmed by code, by the fixture's 404 list and by my
+  probe. After release, `advance` returns 409 and the upstream listener sees no further request
+  (WouldBlock assertion).
+- **Honest labelling:** the docs, evidence and TASKS text say the creation and model are
+  synthetic and the edits and transfer are real native operations. They also say the combined
+  case transfers an earlier manual edit made through the same owner, with no test preparation or
+  dispatch, and that this is not native Git/model acceptance or a score. I checked that each of
+  these statements matches the fixture.
+- **Retained failure evidence:** check.py verifies that the failed-run fixture hash equals
+  `validation-failed-original-review.rs`, that the other seven Rust hashes are identical between
+  the failed and final runs, and that the failed run's totals were 230/1/0/0/0 with only the new
+  test failing. The change is confined to the new fixture. No product refusal, older test or
+  threshold was weakened (diff read).
+- **Evaluation integrity:** the diff touches no task, held-out, hidden-test, scorer, threshold,
+  scoreboard, status-model, dependency or SBOM file (`git diff --stat`; check.py excludes
+  Cargo.lock, Cargo.toml, status-model and scoreboard). Not applicable beyond that.
+- **Delivery:** check.py asserts that the TASKS.md table rows are unchanged, so no row or
+  sub-row was added or closed.
+- **Public-repository hygiene:** added lines contain no home path, username, hostname,
+  credential or third-party product branding. The `/lane/...` paths appear only inside the
+  retained, byte-identical base review report, which follows the precedent of earlier retained
+  reports. The reviewer model name there is attribution, not branding.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, error reporting):** `platforms/local-api/src/coding_endpoint_api.rs:555`,
+  `let repository = convert(tool)?;`. If extraction fails after `release_with_tool_boundary`
+  has already marked the entry Released, the handler returns `Err`. `serve_connections`
+  discards that error (`lib.rs:419`), so the client gets a closed connection with no status.
+  Ownership is lost: a later release returns 409 and apply returns 428. The client cannot tell
+  this apart from a lost success reply until it inspects. The same applies to the unreachable
+  `review.repository.is_some()` 500 branch at line 557, which silently drops the extracted
+  owner. This is documented ("extraction errors may lose ownership") and has no
+  confinement or data-loss effect on the original checkout. It is the review-mode counterpart of
+  base L1.
+  - Fix: before returning, write an explicit `500 {"error":"code.endpoint.release-extraction","ownership":"lost"}`
+    response.
+  - Fix: add a test with a boundary whose extraction refuses.
+  - Severity: same-row backlog.
+- **L2 (low, coverage):** no test drives the terminal client against a review service
+  (`agentmage-code … original`, `original-prepare`, `original-apply`), although the guide
+  documents that path (`docs/guides/coding-runtime-api.md`, "Review the original diff in the
+  endpoint service"). I confirmed reachability only by code reading: `coding_cli.rs:590-668` uses
+  only the three published routes with the control token.
+  - Fix: add one client-level test against `serve_coding_endpoint_strict_edits_with_repository_review`.
+  - Severity: backlog.
+- **L3 (low, coverage, honestly labelled):** in the combined review fixture, the transferred
+  lineage comes from an edit made through the same owner before the run. No model edit approved
+  inside a combined run is transferred, because native validation preparation is blocked in
+  this lane. The evidence states this plainly, so it is not a claims problem.
+  - Fix: once native validation preparation works, add a combined-run case in which a model edit
+    is approved, then transferred.
+  - Severity: backlog.
+
+Base lows L1 (returned-owner extraction failure after release response) and L2 (direct older
+non-turn service coverage) remain open as same-row backlog.
+
+## Per-row result
+
+- **T-303 / T-306 increment (local-coding-original-review):** PASS for this non-closing
+  increment. The required gate, checker, light checks, freeze cmp, retained-report cmp,
+  diff-check and status all exit 0 with matching counts and hashes. Confinement and approval
+  boundaries held under my own escape attempts. No high or medium finding.
+- **T-303 and T-306 as parents:** stay OPEN. This commit does not establish native executable
+  admission, a positive native Git/model workflow, native/model measurements, durable recovery
+  or approved commit/push, and the inherited host/Linux failures are not cleared. This verdict
+  closes no row and certifies nothing beyond the reviewed increment.
+
+Verdict: PASS

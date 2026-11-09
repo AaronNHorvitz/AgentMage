@@ -44,6 +44,75 @@ fn waiting(r: &RuntimeEndpointRunRequest) -> Value {
 }
 
 #[test]
+fn endpoint_terminal_controlled_mode_keeps_exact_tool_and_disclosure_consent() {
+    let f = Fixture::new();
+    let mut r = request();
+    r.mode = RuntimeSessionMode::ControlledWrite;
+    let r = seal_runtime_endpoint_run_request(r).unwrap();
+    let encoded = serde_json::to_string(&approval(&r)).unwrap();
+    for (command, prompts) in [
+        ("endpoint-step", 1),
+        ("endpoint-approve", 2),
+        ("endpoint-deny", 1),
+    ] {
+        let peer = f.peer(vec![selection(&r), waiting(&r)]);
+        let mut args = vec![command, "run", &r.request_sha256];
+        if command != "endpoint-step" {
+            args.push(&encoded);
+        }
+        let output = f.tty(peer.address, &args, "approve");
+        assert_eq!(output["status"], 0, "{output}");
+        assert_eq!(output["answered"], prompts);
+        let calls = peer.finish();
+        assert_eq!(calls.len(), 2);
+        assert_eq!(calls[1]["route"], "POST /v1/code/endpoint/advance HTTP/1.1");
+        assert_eq!(calls[1]["body"]["approve_model_context"], true);
+        assert_eq!(calls[1]["body"]["request_sha256"], r.request_sha256);
+        assert_eq!(
+            calls[1]["body"]["response"]["disposition"],
+            match command {
+                "endpoint-approve" => json!("allow"),
+                "endpoint-deny" => json!("deny"),
+                _ => Value::Null,
+            }
+        );
+    }
+    let peer = f.peer(vec![selection(&r)]);
+    let output = f.tty(
+        peer.address,
+        &["endpoint-approve", "run", &r.request_sha256, &encoded],
+        "allow-tool-only",
+    );
+    assert_ne!(output["status"], 0);
+    assert_eq!(output["answered"], 2);
+    assert_eq!(peer.finish().len(), 1);
+}
+
+#[test]
+fn endpoint_terminal_still_refuses_durable_mode_before_disclosure_or_release() {
+    let f = Fixture::new();
+    let mut r = request();
+    r.mode = RuntimeSessionMode::DurableReadOnly;
+    let r = seal_runtime_endpoint_run_request(r).unwrap();
+    for command in [
+        "endpoint",
+        "endpoint-step",
+        "endpoint-release",
+        "endpoint-record",
+    ] {
+        let peer = f.peer(vec![selection(&r)]);
+        let mut args = vec![command];
+        if command != "endpoint" {
+            args.extend(["run", &r.request_sha256]);
+        }
+        let output = f.tty(peer.address, &args, "approve");
+        assert_ne!(output["status"], 0, "{output}");
+        assert_eq!(output["answered"], 0);
+        assert_eq!(peer.finish().len(), 1);
+    }
+}
+
+#[test]
 fn endpoint_terminal_step_pins_original_request_and_requires_fresh_disclosure() {
     let f = Fixture::new();
     let r = request();

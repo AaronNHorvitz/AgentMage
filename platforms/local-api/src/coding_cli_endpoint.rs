@@ -39,7 +39,10 @@ fn selected(client: &Client, control: bool) -> Result<RuntimeEndpointRunRequest>
     verify_runtime_endpoint_run_request(&selection.request).map_err(|_| ())?;
     if selection.retention != "process-only"
         || selection.configuration != "fixed-for-service"
-        || selection.request.mode != RuntimeSessionMode::EphemeralReadOnly
+        || !matches!(
+            selection.request.mode,
+            RuntimeSessionMode::EphemeralReadOnly | RuntimeSessionMode::ControlledWrite
+        )
         || selection.request.event_cursor.is_some()
     {
         return Err(());
@@ -168,6 +171,7 @@ pub(super) fn event_page(
 
 pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result<()> {
     match (command, args) {
+        ("endpoint-original-apply", args) => super::endpoint_transfer::run(client, args),
         ("endpoint", []) => show(
             &json!({"request":selected(client, true)?,"retention":"process-only","configuration":"fixed-for-service"}),
         ),
@@ -262,7 +266,7 @@ pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result
         }
         _ => {
             eprintln!(
-                "Endpoint commands: endpoint | endpoint-step <run-id> <request-digest> | endpoint-approve|endpoint-deny <run-id> <request-digest> <challenge-json> | endpoint-events <run-id> <request-digest> <index> | endpoint-record <run-id> <request-digest> | endpoint-cancel|endpoint-release <run-id> <request-digest>. Offline: agentmage-code endpoint-replay < record.json"
+                "Endpoint commands: endpoint | endpoint-step <run-id> <request-digest> | endpoint-approve|endpoint-deny <run-id> <request-digest> <challenge-json> | endpoint-events <run-id> <request-digest> <index> | endpoint-record <run-id> <request-digest> | endpoint-cancel|endpoint-release <run-id> <request-digest> | endpoint-original-apply <seconds> <run-id> <request-digest> <repository> <worktree> <task> <paths...>. Offline: agentmage-code endpoint-replay < record.json"
             );
             Err(())
         }

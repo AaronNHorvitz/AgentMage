@@ -259,12 +259,20 @@ bounded HTTP client; it never follows a model-supplied URL or redirects.
 | `endpoint-events <run-id> <request-digest> <index>` | Inspect one canonical event page, starting at zero |
 | `endpoint-cancel <run-id> <request-digest>` | Latch cancellation without model disclosure |
 | `endpoint-release <run-id> <request-digest>` | Separately confirm dropping a terminal or faulted run's process-only record |
+| `endpoint-original-apply <seconds> <run-id> <request-digest> <repository> <worktree> <task> <paths...>` | Export the terminal record, confirm release, then separately consent to original reads and the exact diff; requires an original-review service |
 
 Use the run identity and full request digest returned by `endpoint`. Copy the
 complete `step.challenge` JSON from an approval-waiting response when approving
 or denying it. These arguments identify an existing owner; they never construct
 a new run, change settings, select files or reset a budget. JSON arguments are
 bounded by the client and the operating system's command-line limit.
+
+Terminal selection, record export and offline replay support the existing
+`ephemeral_read_only` and process-held `controlled_write` requests. Durable mode
+and resume cursors refuse. Accepting the controlled request grants no effect:
+the service still owns each exact native approval. The
+[original-transfer workflow](coding-original-apply.md#continue-from-a-terminal-coding-run)
+requires a terminal controlled-write run and adds no model request or test claim.
 
 Before advancing, the terminal fetches and verifies the service's sealed
 request and checks its exact run identity and digest. Its complete request,

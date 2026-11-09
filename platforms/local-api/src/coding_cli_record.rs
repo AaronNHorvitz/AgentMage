@@ -27,7 +27,10 @@ struct Record {
 fn verify(record: &Record) -> Result<AgentStateKind> {
     verify_runtime_endpoint_run_request(&record.request).map_err(|_| ())?;
     if record.version != 1
-        || record.request.mode != RuntimeSessionMode::EphemeralReadOnly
+        || !matches!(
+            record.request.mode,
+            RuntimeSessionMode::EphemeralReadOnly | RuntimeSessionMode::ControlledWrite
+        )
         || record.request.event_cursor.is_some()
         || record.events.is_empty()
         || record.events.len() > MAX_RECORD_EVENTS
@@ -70,6 +73,12 @@ pub(super) fn export(client: &Client, request: RuntimeEndpointRunRequest) -> Res
         deadline: Some(Instant::now() + DEADLINE),
         controls: None,
     };
+    export_observed(&client, request)
+}
+
+/// The guided continuation retains its original deadline and interruption latch.
+/// Emission succeeds before it can ask to discard the process-held record.
+pub(super) fn export_observed(client: &Client, request: RuntimeEndpointRunRequest) -> Result<()> {
     let mut record = Record {
         version: 1,
         request,
@@ -78,7 +87,7 @@ pub(super) fn export(client: &Client, request: RuntimeEndpointRunRequest) -> Res
     let mut bytes = serde_json::to_vec(&record).map_err(|_| ())?.len();
     let mut total = None;
     loop {
-        let page = endpoint::event_page(&client, &record.request, record.events.len(), true)?;
+        let page = endpoint::event_page(client, &record.request, record.events.len(), true)?;
         let page = &page["page"];
         let count = page["total"].as_u64().ok_or(())?;
         if count == 0
@@ -118,7 +127,10 @@ pub(super) fn export(client: &Client, request: RuntimeEndpointRunRequest) -> Res
     if encoded.len() >= MAX_RECORD_BYTES {
         return Err(());
     }
-    writeln!(std::io::stdout().lock(), "{encoded}").map_err(|_| ())
+    client.check_running()?;
+    let mut output = std::io::stdout().lock();
+    writeln!(output, "{encoded}").map_err(|_| ())?;
+    output.flush().map_err(|_| ())
 }
 
 /// Reads only bounded explicitly supplied stdin, before any API client/auth.

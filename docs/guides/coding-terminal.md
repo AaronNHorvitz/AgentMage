@@ -11,6 +11,13 @@ The retained endpoint commands additionally support explicit
 This replays event envelopes without restoring execution or verifying referenced
 tool-result bodies.
 
+For the explicit original-review endpoint service,
+[`endpoint-original-apply`](coding-original-apply.md#continue-from-a-terminal-coding-run)
+connects terminal-record export, release, fresh read consent and exact original
+diff approval under one allowance. Endpoint commands and replay accept the
+existing process-held controlled-write mode, with separate tool and disclosure
+decisions. They add no durable recovery or approved Git operation.
+
 The separate [approved worktree path](coding-worktrees.md) adds `worktree`,
 `worktree-prepare`, `worktree-create` and `worktree-deny` through this same API.
 It uses canonical durable authority receipts but has not demonstrated native

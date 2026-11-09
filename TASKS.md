@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The [terminal original-transfer increment](docs/evidence/t306-terminal-original-transfer-2026-11-09.md)
+connects controlled-run record export, terminal release, fresh two-root read
+consent and exact original diff approval through the existing HTTP routes.
+Terminal selection and replay now accept the existing process-held controlled
+mode; durable mode and cursors remain excluded. No model request or approved
+Git operation is added. The preceding
+[original-review independent report](docs/reviews/24633619dec4-local-coding-original-review.txt)
+has **Verdict: PASS** for exact commit
+`24633619dec4f011d81846eaac0eece42ddd7595`, with no high/medium finding.
+Its client-coverage low is addressed by this increment, pending independent
+core review; extraction-error handling and native combined execution remain
+backlog. Neither parent nor any sub-row closes. Native/model measurements,
+durable recovery and approved Git remain open.
+The complete affected API gate passes: 238 tests across 11 unfiltered targets,
+zero failures or ignores, formatting and Clippy green and seven Rust hashes
+unchanged. The initial proxy-fixture Host refusal and its source are retained;
+only fixture forwarding was repaired. Existing host/Linux failures are not
+cleared by this API-only gate.
+
 The [strict-owner independent core review](docs/reviews/e83b092b2dc9-local-coding-strict-owner-return.txt)
 has **Verdict: PASS** for exact commit
 `e83b092b2dc96c10dc08d72a10a1e2d13698dc4d`, with no high/medium

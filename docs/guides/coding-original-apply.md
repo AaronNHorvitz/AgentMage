@@ -136,3 +136,42 @@ also exposes these three routes after exact terminal release of its strict
 coding run. It retains the same original repository and recorded successful edit
 lineage; it does not adopt a worktree path or enable other manual tools. The
 read consent and exact apply decision described above are still required.
+
+## Continue from a terminal coding run
+
+For an endpoint service explicitly started with original review enabled, use:
+
+```sh
+agentmage-code <loopback-ip:port> <private-auth-directory> endpoint-original-apply \
+  300 <run-id> <request-digest> <absolute-original-root> <absolute-worktree-root> \
+  'Apply the reviewed changes' src/example.py
+```
+
+The time allowance, from 1 to 3600 seconds, covers the HTTP operations and
+terminal confirmations together. The command first checks the exact retained
+controlled-write request, collects its complete terminal event chain and emits
+the record to stdout. Keep that output if needed; the command creates no record
+file. Its output consumer must keep draining stdout. Record verification checks
+the canonical chain, not authenticity or referenced payload contents. A running
+or faulted prefix refuses before release. Use the separate inspection commands
+for faulted runs; this command cannot restore execution.
+
+Three independent terminal decisions follow: release the displayed run, read
+the displayed paths from both held roots, and apply the complete original diff.
+Release drops the old model ports and event record. Ordinary services discard
+repository ownership at release, so use the explicit review service. The command
+checks the locally displayed root identities before and after read consent, then
+requires the same complete pending preview at the exact apply decision. Source
+drift and the original native refusals still apply. There is no automatic retry,
+cancellation, cleanup or new model call. After a lost reply, inspect state and
+disk; a write may have completed even though the command reports an error.
+
+Declining release keeps the old record. Declining reads or the diff after
+release leaves the original owner available for separate inspection; an inert
+preview may remain pending. Use the ordinary original-apply commands to inspect
+and resolve it. Interrupting a confirmation or exhausting the allowance sends
+no later approval. A previously dispatched native write remains non-interruptible.
+Applying recorded lineage after cancellation or failure establishes no test pass
+or task success. Worktree bytes, unrelated original files and the index remain
+under the existing native protections. Commit, push and durable recovery remain
+open work.
