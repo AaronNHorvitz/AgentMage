@@ -15,6 +15,10 @@ use agentmage_kernel_engine::{
     runtime_loop::{runtime_action_id, runtime_tool_references},
 };
 
+#[path = "coding_repository_endpoint_boundary.rs"]
+mod boundary;
+pub use boundary::LinuxCodingEndpointEditBoundary;
+
 const ENDPOINT_EDIT: &str = "agentmage.code.apply-prepared-edit";
 const INPUT: &str = r#"{"type":"object","required":["preview"],"additionalProperties":false,"properties":{"preview":{"type":"object"}}}"#;
 const OUTPUT: &str = r#"{"type":"object"}"#;

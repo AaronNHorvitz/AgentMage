@@ -48,7 +48,9 @@ mod command;
 mod create;
 #[path = "coding_repository_edit.rs"]
 mod edit;
-pub use edit::{LinuxCodingEndpointEdit, linux_coding_endpoint_edit_registry};
+pub use edit::{
+    LinuxCodingEndpointEdit, LinuxCodingEndpointEditBoundary, linux_coding_endpoint_edit_registry,
+};
 #[path = "coding_repository_runtime.rs"]
 mod runtime;
 pub use create::LinuxCodingRuntimeCreateDriver;

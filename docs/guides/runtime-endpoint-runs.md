@@ -21,8 +21,8 @@ control. A matching decision spends the handle before any further dependency;
 denial, stop, error or unwind cannot authorize a second attempt. A malformed or
 foreign response leaves the original pending decision intact.
 
-The original `decide_edit` owns grant issuance, single-use consumption, atomic
-write, preimage/link checks and reconciliation. Inspect the original native result
+For direct `decide`, the original `decide_edit` owns grant issuance, single-use
+consumption, atomic write, preimage/link checks and reconciliation. Inspect the original native result
 with `inspect`; its actual per-operation receipt chain is returned unchanged.
 The bounded transaction is non-interruptible once admitted. A lost result never
 means no effect. There is no retry, recovery or secure-erasure claim.
@@ -32,10 +32,11 @@ separately approved later work. It drops any pending edit while preserving nativ
 results and successful lineage. It cannot restore an old preview or reconstruct
 ownership from a path, receipt or restart.
 
-This is a library decision handoff, with no `RuntimeToolBoundary` implementation
-or service activation yet. The native coordinator adapter, controlled endpoint
-startup, model-driven edit/test loop, recovery, approved Git and measurements
-remain unfinished. Real file-write tests use synthetic creation provenance and
+The [scoped coordinator adapter](#original-native-edit-through-the-coordinator)
+now connects this same live handle to `RuntimeToolBoundary`. This remains library
+composition without service activation. Controlled endpoint startup, general
+model-driven edit/test execution, recovery, approved Git and measurements remain
+unfinished. Real file-write tests use synthetic creation provenance and
 do not demonstrate native Git creation or local-model coding. T-303/T-306 remain
 open. See [Decision 0167](../decisions/0167-native-endpoint-edit-decision.md).
 
@@ -934,3 +935,37 @@ independently certify the recorded terminal state. Those limits appear in the
 replay output. No grant, pending approval, live port, budget, payload or execution
 cursor is reconstructed. Execution recovery, full tool-output retention and
 durable service storage remain open under T-303/T-306.
+
+## Original native edit through the coordinator
+
+A trusted library caller can consume its `LinuxCodingEndpointEdit` into
+`LinuxCodingEndpointEditBoundary` with `into_boundary`, retaining the original
+continuous run control and epoch clock. The scoped coordinator port accepts only
+that original sealed endpoint request, exact tool definition, canonical call and
+protected challenge. Its native-family methods refuse. This one prepared-edit
+adapter does not discover sources, generate a replacement diff or activate an
+HTTP service.
+
+Evaluation asks for the original challenge. Resolving an exact Allow issues the
+original kernel write grant and returns its actual authority binding; no file is
+written yet. Execution consumes that grant through the existing native atomic
+writer, with original expiry, preimage and link checks. It observes original
+control, cancellation and clock before dispatch. Denial, stop or dependency
+failure spends the matching stage; invalid substituted inputs stay inert.
+A previously spent direct-decision handle cannot become a fresh boundary.
+
+The output retains the original native result and full operation receipt chain.
+Its coordinator receipt uses the final chain entry's real digest and a descriptive
+`transaction:sequence` identity. It is process-held evidence, without a durable
+coordinator transaction. An output-budget refusal after writing reports uncertain
+execution; inspect the original native record and disk before further action.
+No automatic replay occurs. Returning the same live repository drops any pending
+preview or grant while preserving successful lineage and existing results.
+
+The coordinator fixture uses synthetic endpoint and creation provenance with
+real native writes. Its deliberate later model refusal yields a non-successful
+run, even after a committed edit. It establishes no model-driven coding result,
+native Git creation, tests or coding score. Trusted controlled startup, general
+edit/test execution, durable recovery, approved Git and parent measurements
+remain open under T-303/T-306. See
+[Decision 0168](../decisions/0168-native-endpoint-edit-coordinator.md).

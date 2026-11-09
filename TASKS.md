@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The predecessor's [independent core review](docs/reviews/e4a92e4b6a48-local-coding-native-endpoint-edit.txt)
+has **Verdict: PASS** for exact commit
+`e4a92e4b6a486484108262cb42c09c8a2a05113d`, with no high/medium finding.
+Low L1 (reachable protected-directory refusal coverage), L2 (literal path
+semantics and wording) and L3 (spent-handle state display) remain same-row
+backlog with earlier lows. Both parent rows remain open; no row is closed.
+
+The [native endpoint coordinator boundary](docs/decisions/0168-native-endpoint-edit-coordinator.md)
+connects one original prepared edit to the shared scoped tool port. Exact
+approval issues the original kernel grant without writing; dispatch consumes it
+through the original atomic writer. Controlled service startup, general model
+edit/test execution, recovery, approved Git and measurements remain open.
+Nine new methods pass in the complete scoped gate, including real native writes
+through a synthetic endpoint/creation fixture. Formatting and Clippy pass; the
+gate remains FAIL with exactly the 72 inherited failures and no new failures.
+See the [builder record](docs/evidence/t303-native-endpoint-boundary-2026-11-08.md).
+Independent core review is required. T-303/T-306 stay open; no row is added
+or closed.
+
 The controlled-write composition's [independent core review](docs/reviews/bc98651997e9-local-coding-endpoint-write.txt)
 has **Verdict: PASS** for exact commit
 `bc98651997e99c19fd3ddb6b3a58c01a09f21c77`, with no high/medium finding.
@@ -19,10 +38,11 @@ real native writes with synthetic creation provenance. Formatting and Clippy
 pass; the complete scoped gate remains FAIL with exactly the 72 inherited
 failure identities and no new failures. See the
 [builder record](docs/evidence/t303-native-endpoint-edit-2026-11-08.md).
-This is a library handoff; the coordinator adapter, controlled service startup,
-model-driven edit/test execution, recovery, approved Git and measurements remain
-unfinished. Independent core review is required. T-303/T-306 remain open;
-no row or sub-row is added or closed.
+The direct handoff is library-only. The scoped adapter above covers one prepared
+edit; controlled service startup, general model-driven edit/test execution,
+recovery, approved Git and measurements remain unfinished. Its independent core
+review is recorded above. T-303/T-306 remain open; no row or sub-row is added
+or closed.
 
 The runtime-budget increment's [independent core review](docs/reviews/10036f5e293c-local-coding-runtime-budget.txt)
 has **Verdict: PASS** for exact commit

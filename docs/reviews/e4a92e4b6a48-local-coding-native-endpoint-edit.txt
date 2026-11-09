@@ -1,0 +1,166 @@
+Commit: e4a92e4b6a486484108262cb42c09c8a2a05113d
+Scope: local-coding-native-endpoint-edit
+
+# Independent core review: native endpoint prepared-edit decision handoff
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only on the repository.
+This is a same-model review; a cross-model review is still required before any public release.
+Checkout: /lane/review-checkout. `git rev-parse HEAD` and `git rev-parse e4a92e4b…` both return
+`e4a92e4b6a486484108262cb42c09c8a2a05113d`. The parent is `bc98651997e99c19fd3ddb6b3a58c01a09f21c77`,
+one commit (`git rev-list --count` = 1), so no history was moved. Rows: T-303 / T-306. This increment
+does not close a row, and both parents stay OPEN.
+
+## Methods
+
+- Read the full ten-file diff over bc98651: five Rust files
+  (`coding_repository_endpoint_edit.rs`, its tests, and three one-line re-exports in
+  `coding_repository.rs`, `coding_repository_edit.rs` and `lib.rs`), TASKS, the guide, Decision 0167,
+  the builder evidence and the copied predecessor report.
+- Read the native owner it depends on: `coding_repository_edit.rs` (`prepare_edit`, `inspect_edit`,
+  `decide_edit`), `coding_workspace_write.rs` (`execute`, where the grant is issued and the
+  transaction runs), `write_approval.rs` (`WriteApprovalPreview.files`), `runtime_coordinator.rs`
+  (`seal_/verify_runtime_approval_challenge`, `verify_runtime_approval_response`), the work-packet
+  validator (`validate_disjoint_file_declarations`) and `WorkspacePath`/`validate_component`.
+- Ran every command in the request, using a fresh output directory and a separate target.
+- Reproduced the escape attempts myself. I appended six probe tests to a `git archive` copy of the
+  exact commit at `/lane/state/tmp/review-probe-e4a92e4b6a48`, which is outside the repository and
+  never committed. The probe test file's SHA256 is `2f4a17c5…d75c2`.
+
+## Commands and results (exits preserved)
+
+| Command | Result |
+| --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-native-endpoint-edit/review-inputs.sha256` | exit 0. The manifest has 35 lines and SHA256 `acb96ddba8dd4ae7d4846bed3d81a88d40e1256d2f2ced029e9bb712e91754c2`, matching the request |
+| `/lane/state/tmp/t303-endpoint-write/tooling/node --version` | exit 0, `v24.15.0` |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-native-endpoint-edit-e4a92e4b6a48` | **exit 1** as expected: `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`, 476.98 s including reservations. The seven RESULT exits were 0, 0, 0, 0, 0 (fmt, 217.88 s including the slot wait), 0 (clippy `-D warnings`, 54.06 s) and 101 (full all-target tests, 203.41 s), then `FAST GATE: FAIL`. fast.log SHA256 is `0dc2280f…8d615` |
+| `python3 -B …/audit.py <out>` | exit 0, `DATA_AUDIT_PASS_SCOPE_PRIVACY_LEDGER_FREEZE__FULL_GATE_REMAINS_FAIL`. It found 25 targets with totals 1106 passed, 72 failed, 63 ignored, 0 measured and 0 filtered; 72 inherited failures and 0 new; 8 new methods; source unchanged. Baseline SHA256 is `d615eaf0…f19e` |
+| `python3 -B …/light.py` | exit 0, `CURRENT_LIGHT_CHECKS_PASS` |
+| `cmp …/validation-final/source-freeze.json <out>/source-freeze.json` | exit 0 (identical) |
+| `git diff --check bc98651… --` | exit 0 |
+| `git status --short` | exit 0 with empty output (clean) |
+
+Independent cross-checks:
+
+- All eight `endpoint_native_edit_*` methods appear as `... ok` in my unfiltered gate log.
+- My `failure-identities.json` is byte-identical to the builder's `validation-final/failure-identities.json`.
+- I re-ran the audit's identity logic: the failure set equals the 72 baseline names at bc98651, with
+  none new and none missing. By binary they are linux_coding_runtime 42, repository_safety 13,
+  linux_read 10, command_runner 2, local_commit 2, secret_service 2 and linux_repository_map 1.
+- Every target summary reports 0 filtered.
+
+Run namespace: `/tmp/ne-_5kskh8y` was retained by run.py because it was not empty. It holds 22 entries
+(4 files, 36 bytes), all inherited `agentmage-host-*` fixtures. No `agentmage-endpoint-edit-*`
+residue was left, because the new fixtures clean up after themselves. This matches the builder's
+record, and I deleted nothing in it. My own probe TMPDIR `/tmp/ne-review-probe` was empty, so I
+removed it with `rmdir`.
+
+Probe run, in the scratch copy only:
+`TMPDIR=/tmp/ne-review-probe CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=/lane/state/review-target/probe-e4a92e4b6a48 bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib -- endpoint_native_edit probe_ --nocapture --test-threads 4`
+exited 0 with 15 passed, 0 failed, 1 ignored (inherited, live Secret Service) and 329 filtered.
+That filter applies only to my probe run; the gate above used none. My first attempt passed two
+positional filters to cargo, which rejected the argv with exit 1 before building, so I re-ran it as
+above.
+
+| Probe | Observation |
+| --- | --- |
+| Protected directory: sealed request with mutable `sub/x.py` and protected `sub` | The work-packet validator seals it, because it checks only exact overlap. The handoff refuses with `code.endpoint-edit.binding`. In the control runs, protected `other` and protected `su` (a prefix that is not a directory) are both accepted, so the refusal comes from the `starts_with("{protected}/")` rule |
+| Symlinked parent swap after the challenge (`sub` → outside directory) | `decide(Allow)` returns `Err("code.write.transaction")`. The outside file, the moved real file and the original checkout are unchanged, and the handle cannot be decided again |
+| Deny while the control is stopped | `code.endpoint-edit.stopped` is returned and the handle is spent. A later Allow is refused, nothing is written, and after `into_repository` the native `decide_edit(digest)` is refused |
+| Call with an action id from another run | The handoff refuses it |
+| Response to challenge A presented to challenge B (different turn) | Refused, B is not spent and nothing is written |
+| Protected `*.py` (a non-bare glob component) | It seals and the handoff accepts, so the rule is applied literally. See L2 |
+
+## Assessment against the request's claims
+
+- **Ownership.** `into_endpoint_edit(self, …)` consumes the live `LinuxCodingRepository` and needs
+  `verify_created()` plus a pending native edit. Nothing in it builds authority from a path or a
+  receipt. On refusal it returns `(Self, error)` with `latest` unset and no write; the 23-case test
+  and my probes confirm this.
+- **Binding.** The constructor checks:
+  - the request verifies, its mode is ControlledWrite and it has no event cursor;
+  - the workspace equals the held worktree identity;
+  - `visible_tools` equals the one-tool registry's references;
+  - the creation receipt matches;
+  - the call's tool id, version, schema, media type, exact bytes and sha256 equal those of
+    `{"preview": <original preview>}`, and its action id is inside the run's tool-call range;
+  - every `WriteApprovalPreview.files` entry (all operation paths) is exactly mutable and not under
+    a protected path;
+  - every declaration passes `WorkspacePath::new`, which rejects `..`, `.`, empty components,
+    leading `/`, bare `*`/`**` and non-canonical Unicode.
+- **Challenge.** It is sealed with `seal_runtime_approval_challenge`. Its presentation arguments are
+  the complete preview, and `preview_sha256` is the native digest. `approval-{change_set_id}` and
+  `write-{change_set_id}` match `LinuxCodingPendingWrite::execute`
+  (`coding_workspace_write.rs:339,349`), and the multi-file test asserts that every receipt carries
+  `proposed_grant_id`. No grant exists before `decide_edit`.
+- **Decision ordering.** A Narrow response, or any response that fails
+  `verify_runtime_approval_response`, returns before `spent = true`; the eight-probe test confirms
+  that a later correct response still commits. A matching response sets `spent` before the first
+  `control.remaining_ms()`, so a panic, stop or stale result cannot reopen the handle (unwind and
+  stop-after-inspection tests, plus my deny-while-stopped probe). Only `decide_edit` takes the edit,
+  issues and consumes the grant, writes atomically and reconciles. That code is unchanged; its
+  epoch and monotonic (`Instant` deadline) expiry, preimage, symlink and hardlink checks and lineage
+  invalidation still apply.
+- **`into_repository`** drops `edit` and keeps `edit_result` and `created.edits`. The test confirms
+  that the old digest cannot be decided afterwards.
+- **Honest labelling.** The new test module and the docs label creation provenance as SYNTHETIC,
+  while the descriptors, native grants and atomic writes are real. None of them claims native Git
+  creation, model coding, test execution, completion, scores or release readiness, and nothing
+  claims a `RuntimeToolBoundary` implementation or service activation.
+- **Delivery and evaluation integrity.** No row or sub-row is added or closed; the audit asserts
+  that the TASKS ledger rows are unchanged and I confirmed it in the diff. No hidden, held-out,
+  task, scorer, threshold, dependency, Cargo.lock or SBOM path is touched.
+- **Privacy and IP.** The added lines contain no private host path, username, hostname, credential,
+  personal data, sibling-project name or third-party branding. The copied predecessor report
+  contains `/lane/…` sandbox paths, as about 130 existing reports at bc98651 already do. The
+  predecessor report is byte-identical (`cmp`) to `/lane/reviews/bc98651997e9-local-coding-endpoint-write.md`.
+- **Gate.** The failed ordinary gate is reported as FAIL everywhere. The data audit is not presented
+  as a green gate.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test coverage)**, `platforms/linux/src/coding_repository_endpoint_edit_tests.rs:509-531`
+  together with `coding_repository_endpoint_edit.rs:148-153`.
+  - No committed test reaches the handoff's protected-path refusal with a request that seals.
+  - The exact-equality branch is unreachable for sealed requests, because the packet validator
+    refuses exact overlap.
+  - Case 3 is refused by the request-digest check, since the request is unsealable. Cases 18–21
+    are refused by `WorkspacePath::new`.
+  - The only reachable branch, an edited file inside a protected directory, is therefore never
+    exercised, and deleting the protected clause would not fail any committed test.
+  - My probe shows that the rule works today, so this is not a bypass. Mutable-file membership and
+    exact human approval remain in force.
+  - Fix: add a case with mutable `sub/x.py` and protected `sub` that seals and is refused, and keep
+    the `su` prefix control. Same-row backlog.
+- **L2 (low, scope semantics and wording)**, `coding_repository_endpoint_edit.rs:118-131`.
+  - The comment says declarations are "never patterns", but only bare `*`/`**` components are
+    rejected. `*.py` or `src/*.rs` seal and are treated literally: protected `*.py` does not protect
+    `one.py`, as my probe shows.
+  - No consumer in the repository reads these fields as globs, and the contract calls them
+    candidate file declarations, so nothing can be bypassed today.
+  - Fix: refuse any mutable or protected entry containing glob metacharacters (`*?[]{}`), or reword
+    the comment and the guide to say "literal paths". Backlog.
+- **L3 (low, state display)**, `coding_repository_endpoint_edit.rs:259-270`.
+  - When the control is stopped after a matching response, `decide` returns before `decide_edit`.
+  - `inspect()` therefore still shows the native `pending` preview, and `latest` is unchanged, even
+    though the handle is spent and cannot act on it.
+  - A UI that renders `inspect()` could offer a decision that can no longer be taken.
+  - Fix: record a terminal `{"outcome":"stopped","effect":"none"}` in the result or the inspect
+    projection once the handle is spent. Backlog.
+- The predecessor's L1 and L2 remain same-row backlog as stated.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing increment, local-coding-native-endpoint-edit):** accepted.
+  - The trusted library handoff does what the request claims at this exact commit.
+  - Confinement behaves as described when probed with traversal, symlinked parents, hardlinks,
+    preimage drift, foreign calls and responses, stops and unwinding.
+  - The complete ordinary gate is FAIL (exit 1), and its failures are exactly the 72 inherited T-301
+    baseline identities with zero new ones.
+  - All eight new methods pass unfiltered.
+  - Both parent rows remain OPEN. The coordinator edit/test adapter, controlled startup,
+    native/model workflow success, durable recovery, approved Git and measurements are still
+    required. This PASS does not certify production native acceptance, model coding or a green gate.
+
+Verdict: PASS

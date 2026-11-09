@@ -6,7 +6,9 @@ use crate::{LinuxCodingPendingWrite, LinuxCodingReplacement};
 
 #[path = "coding_repository_endpoint_edit.rs"]
 mod endpoint;
-pub use endpoint::{LinuxCodingEndpointEdit, linux_coding_endpoint_edit_registry};
+pub use endpoint::{
+    LinuxCodingEndpointEdit, LinuxCodingEndpointEditBoundary, linux_coding_endpoint_edit_registry,
+};
 
 pub(super) struct PendingEdit {
     scope: LinuxCodingReadScope,

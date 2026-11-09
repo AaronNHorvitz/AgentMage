@@ -15,9 +15,9 @@ use agentmage_kernel_engine::policy::{
 };
 use agentmage_kernel_engine::write_approval::{
     ShadowChangeSet, ShadowChangeSetRequest, ShadowWriteDraft, WriteApprovalDecision,
-    WriteApprovalPreview, WriteArtifactClass, WriteChangeScope, WriteGrantRequest,
-    WriteLineEndings, WriteReviewNarrative, WriteSyntax, build_shadow_change_set,
-    issue_write_grant, render_write_preview,
+    WriteApprovalPreview, WriteApprovalReceipt, WriteArtifactClass, WriteChangeScope,
+    WriteGrantRequest, WriteLineEndings, WriteReviewNarrative, WriteSyntax,
+    build_shadow_change_set, issue_write_grant, render_write_preview,
 };
 use agentmage_kernel_engine::write_transaction::{
     AtomicWriteDriver, WriteTransactionOutcome, WriteTransactionRequest, WriteTransactionResult,
@@ -71,7 +71,8 @@ pub struct LinuxCodingReplacement<'a> {
     pub content: &'a str,
 }
 
-/// Non-cloneable, process-only shadow edit. No write grant exists until `apply`.
+/// Non-cloneable, process-only shadow edit. Public callers issue a grant in `apply`;
+/// the internal endpoint boundary can issue it at protected approval resolution.
 /// Dropping this object is inert. Applying consumes it even on a refusal.
 pub struct LinuxCodingPendingWrite {
     issuer: GrantIssuer,
@@ -82,6 +83,7 @@ pub struct LinuxCodingPendingWrite {
     expires_at_epoch_ms: u64,
     deadline: Instant,
     workspace_root_sha256: String,
+    approval: Option<WriteApprovalReceipt>,
 }
 
 fn digest(bytes: &[u8]) -> String {
@@ -256,6 +258,7 @@ impl LinuxCodingReadScope {
             expires_at_epoch_ms: expiry,
             deadline,
             workspace_root_sha256: self.workspace.root_path_sha256().into(),
+            approval: None,
         })
     }
 }
@@ -315,18 +318,19 @@ impl LinuxCodingPendingWrite {
         "tested":false,"isolation_verified":false,"retention":"process-only"}))
     }
 
-    fn execute<D: AtomicWriteDriver>(
-        mut self,
-        scope: &LinuxCodingReadScope,
+    /// Issue the original one-use grant without dispatch. Never replaces an
+    /// existing grant. Kept crate-private: only the original protected edit
+    /// owner may split approval from execution.
+    pub(crate) fn approve(
+        &mut self,
         change_set_sha256: &str,
         preview_sha256: &str,
         now_epoch_ms: u64,
-        driver: &mut D,
-    ) -> Result<WriteTransactionResult, LinuxCodingWriteError> {
-        use LinuxCodingWriteError::{Approval, Transaction};
-        if now_epoch_ms >= self.expires_at_epoch_ms
+    ) -> Result<&WriteApprovalReceipt, LinuxCodingWriteError> {
+        use LinuxCodingWriteError::Approval;
+        if self.approval.is_some()
+            || now_epoch_ms >= self.expires_at_epoch_ms
             || Instant::now() >= self.deadline
-            || scope.workspace.root_path_sha256() != self.workspace_root_sha256
         {
             return Err(Approval);
         }
@@ -345,7 +349,7 @@ impl LinuxCodingPendingWrite {
                 user_confirmed: true,
             },
             WriteGrantRequest {
-                parent_grant_id: self.parent,
+                parent_grant_id: self.parent.clone(),
                 grant_id: GrantId::from_raw(format!("write-{id}")),
                 action_id: ActionId::from_raw("local-coding-write"),
                 action_kind: ActionKind::DeterministicTool,
@@ -356,6 +360,32 @@ impl LinuxCodingPendingWrite {
             },
         )
         .map_err(|_| Approval)?;
+        self.approval = Some(approval);
+        self.approval.as_ref().ok_or(Approval)
+    }
+
+    fn execute<D: AtomicWriteDriver>(
+        mut self,
+        scope: &LinuxCodingReadScope,
+        change_set_sha256: &str,
+        preview_sha256: &str,
+        now_epoch_ms: u64,
+        driver: &mut D,
+    ) -> Result<WriteTransactionResult, LinuxCodingWriteError> {
+        use LinuxCodingWriteError::{Approval, Transaction};
+        if now_epoch_ms >= self.expires_at_epoch_ms
+            || Instant::now() >= self.deadline
+            || scope.workspace.root_path_sha256() != self.workspace_root_sha256
+            || change_set_sha256 != self.change_set.change_set_sha256()
+            || preview_sha256 != self.preview.preview_sha256
+        {
+            return Err(Approval);
+        }
+        if self.approval.is_none() {
+            self.approve(change_set_sha256, preview_sha256, now_epoch_ms)?;
+        }
+        let approval = self.approval.take().ok_or(Approval)?;
+        let id = self.change_set.change_set_id();
         execute_write_transaction(
             &mut self.issuer,
             &self.policy,

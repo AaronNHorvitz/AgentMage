@@ -635,3 +635,6 @@ fn endpoint_native_edit_returning_live_owner_discards_unexecuted_preview() {
     assert!(owner.created.as_ref().unwrap().edits.is_empty());
     f.assert_unwritten();
 }
+
+#[path = "coding_repository_endpoint_boundary_tests.rs"]
+mod boundary_tests;
