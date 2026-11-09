@@ -1101,6 +1101,38 @@ and the final escaped output are bounded to 4 MiB. Refusal emits no record on
 stdout; shell redirection may already have created an empty destination file.
 Export before release: the service does not retain events after releasing them.
 
+To save through the terminal client with explicit consent and private file
+permissions, first create a private directory, then run:
+
+```sh
+mkdir -m 700 <private-record-directory>
+agentmage-code <loopback-ip:port> <private-auth-directory> \
+  endpoint-record-save <run-id> <request-digest> <absolute-private-record-directory>
+agentmage-code endpoint-replay < <private-record-directory>/<request-digest>.json
+```
+
+Pass an existing canonical directory (use `realpath` to obtain its spelling).
+The directory must belong to the current user and have mode 0700. The command
+displays the exact destination and byte count and requires
+`save-record <request-digest>` in the controlling terminal. It refuses piped
+consent, aliases and unsafe directory modes. The 180-second allowance covers
+collection and confirmation. A changed directory identity refuses before
+creation. Saving never releases the run or contacts the model.
+
+The file is plaintext, mode 0600, named `<request-digest>.json`. Exclusive
+no-follow creation refuses every existing name, including a previous record,
+symlink or hard link. Neither truncation nor cleanup is automatic. The file
+and directory are synchronized before the saved-file receipt is printed.
+Retain that receipt; a crash, interruption or lost output can leave a complete
+or partial file without a receipt. Inspect the displayed destination and replay
+it before another action. Path checks are non-atomic observations. Retention
+does not encrypt data or protect against another process with the same user
+authority. Choose a private location and delete retained records yourself when
+no longer needed. No new service-side store or execution checkpoint is created.
+Filesystem writes and synchronization are bounded in bytes but can delay stop
+while an operating-system call is blocked. Interruption after creation requires
+the same disk inspection; it does not establish that no file was written.
+
 Offline replay needs no service, address, credentials or model. It reads at most
 4 MiB plus one oversize-detection byte from explicitly supplied stdin, rejects
 duplicate/unknown members and positional objects, and checks the original

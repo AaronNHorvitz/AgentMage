@@ -4,7 +4,7 @@
 use super::*;
 use agentmage_kernel_contracts::{WorkspaceId, WorkspacePath};
 
-pub(super) fn run(client: &Client, args: &[String]) -> Result<()> {
+pub(super) fn run(client: &Client, args: &[String], archive: Option<&Path>) -> Result<()> {
     let [seconds, run, hash, original, worktree, task, paths @ ..] = args else {
         return Err(());
     };
@@ -58,13 +58,19 @@ pub(super) fn run(client: &Client, args: &[String]) -> Result<()> {
         if request.mode != agentmage_kernel_contracts::RuntimeSessionMode::ControlledWrite {
             return Err(());
         }
-        // This must finish and flush before release is offered. The caller may
-        // retain stdout; no file is created and no durability is implied.
-        record::export_observed(client, request.clone())?;
+        // Complete and flush the stdout record or explicitly approved private
+        // save receipt before release is offered. Neither restores execution.
+        if let Some(directory) = archive {
+            record::save_observed(client, request.clone(), directory)?;
+        } else {
+            record::export_observed(client, request.clone())?;
+        }
         client.confirm(
             &json!({"request":request,"repository":original,"worktree":worktree,
                 "paths":paths,"task":task,
-                "warning":"The complete terminal event record was emitted to stdout, not saved to a file. Retain it before continuing. Releases this exact run and its process-only events and model ports. Requires a service started for original review; ordinary services discard ownership. Fresh read consent and exact diff approval follow. Release grants no write, test pass, new model run, commit or push. After a lost reply inspect service state and disk; never repeat automatically."}),
+                "record_saved_to_private_directory":archive,
+                "record_retention":if archive.is_some() {"private-file"} else {"stdout-only-retain-before-release"},
+                "warning":"Retain the preceding complete terminal record or saved-file receipt before continuing. Releases this exact run and its process-only events and model ports. Requires a service started for original review; ordinary services discard ownership. Fresh read consent and exact diff approval follow. Release grants no write, test pass, new model run, commit or push. After a lost reply inspect service state and disk; never repeat automatically."}),
             &format!("release {hash}"),
         )?;
         let released = client.json(

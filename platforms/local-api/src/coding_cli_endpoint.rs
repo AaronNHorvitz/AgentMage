@@ -171,7 +171,10 @@ pub(super) fn event_page(
 
 pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result<()> {
     match (command, args) {
-        ("endpoint-original-apply", args) => super::endpoint_transfer::run(client, args),
+        ("endpoint-original-apply", args) => super::endpoint_transfer::run(client, args, None),
+        ("endpoint-original-apply-saved", [directory, args @ ..]) => {
+            super::endpoint_transfer::run(client, args, Some(Path::new(directory)))
+        }
         ("endpoint", []) => show(
             &json!({"request":selected(client, true)?,"retention":"process-only","configuration":"fixed-for-service"}),
         ),
@@ -234,6 +237,15 @@ pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result
             let request = checked_selection(client, run, hash, true)?;
             super::record::export(client, request)
         }
+        ("endpoint-record-save", [run, hash, directory]) => {
+            if !std::io::stdin().is_terminal() {
+                return Err(());
+            }
+            let request = checked_selection(client, run, hash, true)?;
+            workflow::bounded(client, 180, |client| {
+                super::record::save_observed(client, request, Path::new(directory))
+            })
+        }
         ("endpoint-cancel", [run, hash]) => {
             // Cancellation itself discloses nothing to a model and needs no
             // terminal. The original owner checks this exact binding.
@@ -266,7 +278,7 @@ pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result
         }
         _ => {
             eprintln!(
-                "Endpoint commands: endpoint | endpoint-step <run-id> <request-digest> | endpoint-approve|endpoint-deny <run-id> <request-digest> <challenge-json> | endpoint-events <run-id> <request-digest> <index> | endpoint-record <run-id> <request-digest> | endpoint-cancel|endpoint-release <run-id> <request-digest> | endpoint-original-apply <seconds> <run-id> <request-digest> <repository> <worktree> <task> <paths...>. Offline: agentmage-code endpoint-replay < record.json"
+                "Endpoint commands: endpoint | endpoint-step <run-id> <request-digest> | endpoint-approve|endpoint-deny <run-id> <request-digest> <challenge-json> | endpoint-events <run-id> <request-digest> <index> | endpoint-record <run-id> <request-digest> | endpoint-record-save <run-id> <request-digest> <private-directory> | endpoint-cancel|endpoint-release <run-id> <request-digest> | endpoint-original-apply <seconds> <run-id> <request-digest> <repository> <worktree> <task> <paths...> | endpoint-original-apply-saved <private-directory> <same-transfer-arguments...>. Offline: agentmage-code endpoint-replay < record.json"
             );
             Err(())
         }

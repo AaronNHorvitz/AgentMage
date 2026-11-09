@@ -79,6 +79,13 @@ pub(super) fn export(client: &Client, request: RuntimeEndpointRunRequest) -> Res
 /// The guided continuation retains its original deadline and interruption latch.
 /// Emission succeeds before it can ask to discard the process-held record.
 pub(super) fn export_observed(client: &Client, request: RuntimeEndpointRunRequest) -> Result<()> {
+    let encoded = collect(client, request)?;
+    let mut output = std::io::stdout().lock();
+    writeln!(output, "{encoded}").map_err(|_| ())?;
+    output.flush().map_err(|_| ())
+}
+
+fn collect(client: &Client, request: RuntimeEndpointRunRequest) -> Result<String> {
     let mut record = Record {
         version: 1,
         request,
@@ -128,9 +135,113 @@ pub(super) fn export_observed(client: &Client, request: RuntimeEndpointRunReques
         return Err(());
     }
     client.check_running()?;
-    let mut output = std::io::stdout().lock();
-    writeln!(output, "{encoded}").map_err(|_| ())?;
-    output.flush().map_err(|_| ())
+    Ok(encoded)
+}
+
+/// Explicit local record retention, not an execution checkpoint. Hold the
+/// selected private directory across confirmation and never replace a name.
+pub(super) fn save_observed(
+    client: &Client,
+    request: RuntimeEndpointRunRequest,
+    directory: &Path,
+) -> Result<()> {
+    use rustix::fs::{Mode, OFlags, openat};
+    use std::fs::File;
+    use std::os::unix::fs::MetadataExt;
+
+    fn selected(path: &Path) -> Result<File> {
+        if !path.is_absolute()
+            || path.as_os_str().len() > 4096
+            || std::fs::canonicalize(path).map_err(|_| ())?.as_os_str() != path.as_os_str()
+        {
+            return Err(());
+        }
+        crate::protected_directory(path).map_err(|_| ())
+    }
+    fn same_directory(path: &Path, held: &File) -> Result<()> {
+        let current = selected(path)?.metadata().map_err(|_| ())?;
+        let held = held.metadata().map_err(|_| ())?;
+        if (current.dev(), current.ino(), current.mode(), current.uid())
+            != (held.dev(), held.ino(), held.mode(), held.uid())
+        {
+            return Err(());
+        }
+        Ok(())
+    }
+
+    let held = selected(directory)?;
+    let name = format!("{}.json", request.request_sha256);
+    let destination = directory.join(&name);
+    let mut encoded = Zeroizing::new(collect(client, request.clone())?);
+    encoded.push('\n');
+    client.confirm(
+        &json!({"operation":"save-terminal-record","request":request,
+            "destination":destination,"byte_size":encoded.len(),
+            "warning":"Saves the complete terminal event record as plaintext in this existing private directory. It may contain task and tool observations. Creates one owner-only file, never overwrites. No model, tool, release or execution recovery. A failure after creation may leave a partial file; inspect disk, never automatically retry."}),
+        &format!("save-record {}", request.request_sha256),
+    )?;
+    client.check_running()?;
+    if client
+        .deadline
+        .is_some_and(|deadline| Instant::now() >= deadline)
+    {
+        return Err(());
+    }
+    same_directory(directory, &held)?;
+    let mut file = File::from(
+        openat(
+            &held,
+            name.as_str(),
+            OFlags::WRONLY | OFlags::CREATE | OFlags::EXCL | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+            Mode::RUSR | Mode::WUSR,
+        )
+        .map_err(|_| ())?,
+    );
+    // Once the name is created all errors are potentially effectful. Retain it
+    // for inspection; cleanup could delete a later user replacement. No retry.
+    let saved = (|| -> Result<()> {
+        file.write_all(encoded.as_bytes()).map_err(|_| ())?;
+        file.sync_all().map_err(|_| ())?;
+        held.sync_all().map_err(|_| ())?;
+        same_directory(directory, &held)?;
+        let metadata = file.metadata().map_err(|_| ())?;
+        if !metadata.is_file()
+            || metadata.mode() & 0o7777 != 0o600
+            || metadata.uid() != rustix::process::geteuid().as_raw()
+            || metadata.nlink() != 1
+            || metadata.len() != encoded.len() as u64
+        {
+            return Err(());
+        }
+        let named = File::from(
+            openat(
+                &held,
+                name.as_str(),
+                OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC,
+                Mode::empty(),
+            )
+            .map_err(|_| ())?,
+        )
+        .metadata()
+        .map_err(|_| ())?;
+        if (named.dev(), named.ino()) != (metadata.dev(), metadata.ino()) {
+            return Err(());
+        }
+        Ok(())
+    })();
+    if saved.is_err() {
+        eprintln!(
+            "record-save.uncertain: inspect the displayed destination; do not retry automatically"
+        );
+        return Err(());
+    }
+    client.check_running()?;
+    show(&json!({"operation":"save-terminal-record","saved":true,
+        "destination":destination,"byte_size":encoded.len(),
+        "request_sha256":request.request_sha256,"plaintext":true,
+        "resumes_execution":false,"authenticity_verified":false,
+        "referenced_payloads_verified":false}))?;
+    std::io::stdout().flush().map_err(|_| ())
 }
 
 /// Reads only bounded explicitly supplied stdin, before any API client/auth.

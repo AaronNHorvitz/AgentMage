@@ -161,6 +161,29 @@ directory metadata. Missing roots, non-directories, symlinked roots or ancestors
 and non-canonical spellings refuse while the run remains held. These checks do
 not establish source eligibility or protect against later filesystem changes;
 the existing held-root checks still apply before reads and writes.
+Pass canonical root spellings, obtainable with `realpath`; an alias to a home
+directory can refuse even when it names the intended checkout.
+
+To retain the record in a private file before release, use the saved variant:
+
+```sh
+agentmage-code <loopback-ip:port> <private-auth-directory> endpoint-original-apply-saved \
+  <absolute-private-record-directory> 300 <run-id> <request-digest> \
+  <absolute-original-root> <absolute-worktree-root> \
+  'Apply the reviewed changes' src/example.py
+```
+
+The existing canonical private directory must have mode 0700. This variant adds
+one exact save confirmation before the three decisions below. It creates
+`<request-digest>.json` with mode 0600, never replaces an existing name, and
+synchronizes the record and directory before offering release. A declined or
+failed save stops while the run remains held. Declining release after saving
+keeps both the file and run. Inspect the file; another save to that same name
+refuses. Use ordinary release or a fresh private directory after inspection.
+See [record retention](runtime-endpoint-runs.md#export-and-replay-a-terminal-event-record)
+for plaintext, partial-file and offline replay limits. Saved records restore
+no execution or approvals, and a cancelled record remains cancelled after a
+separately approved successful original transfer.
 
 Three independent terminal decisions follow: release the displayed run, read
 the displayed paths from both held roots, and apply the complete original diff.

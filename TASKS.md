@@ -2,6 +2,20 @@
 
 ## Active queue: local agent mission
 
+The [private-record increment](docs/evidence/t303-private-records-2026-11-09.md)
+adds explicit terminal save consent, owner-only record files and offline replay
+after shutdown. The saved-transfer command synchronizes the record before
+offering release, then retains the separate read and exact diff approvals.
+This is private record retention, not execution recovery. T-303/T-306 stay open;
+no row or sub-row is added or closed. Independent core review is required.
+The preceding release-response and original-recovery reviews both have
+**Verdict: PASS** for their exact commits with no high or medium finding; links
+and remaining same-row low backlog are in the evidence. Native/model
+measurements, approved Git and durable execution recovery remain open.
+The complete affected API gate passes 243 tests across eleven unfiltered targets,
+with no failures or ignores; formatting and Clippy pass and five Rust hashes
+stay fixed. Earlier host/Linux failures remain outside this selection.
+
 The [original-transfer recovery repair](docs/evidence/t306-original-recovery-2026-11-09.md)
 rejects missing, non-directory, symlinked and non-canonical root selections
 before collecting a run record or offering release. Standalone original

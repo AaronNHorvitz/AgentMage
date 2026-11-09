@@ -1,0 +1,184 @@
+Commit: b31925c3655a6ca0d19a324cc1733539e1f6050e
+Scope: local-coding-original-recovery
+
+# Independent core review: original-transfer root preflight and standalone recovery
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Same-model review.
+Rows: T-303 / T-306, non-closing increment. Both parents remain OPEN.
+
+## Methods
+
+- Confirmed the pinned checkout: `git rev-parse HEAD` in /lane/review-checkout returned
+  `b31925c3655a6ca0d19a324cc1733539e1f6050e`. `git status --short` is empty.
+- Read the bundle's README.md, run.py, check.py, parse_gate.py and light.py before running anything.
+  - run.py prepends only the retained Node binary and its LICENSE to PATH.
+  - Every Cargo command reserves the build slot itself. I did not outer-wrap run.py.
+  - The bundle filters nothing in the complete gate.
+- Read the full diff from base `af9d467237845456a883eb948e91e3fe7bf7e9c0`. It touches 5 files:
+  - `TASKS.md`: prose only. Row lines are unchanged, which check.py asserts.
+  - the new evidence file;
+  - the guide;
+  - `coding_cli_endpoint_transfer.rs` (+4 lines of logic);
+  - the PTY test support file.
+- Read the preceding review's L1/L2 (`c86aabe0bb9c-…`) and checked that each is addressed. The base
+  review `af9d46723784-local-coding-release-response.md` has since arrived. It is a PASS with two
+  low coverage findings, so nothing from the base blocks this increment.
+- Read the native helpers the change depends on: `original_apply_prepare_observed` (it runs
+  `verify_root` on both roots before and after read consent), `original_apply_decide_observed`,
+  `checked_selection`, and the launch-time canonical-root rule in `coding_endpoint_edit_launch.rs:155-168`.
+- Wrote and ran my own adversarial probe. It lives in a scratch `git archive` extract of this
+  commit (/lane/state/tmp/review-probe-b31925c3655a), not the repository.
+- No GPU, model or download was used, and the repository was not modified.
+
+## Exact commands and results (run from /lane/review-checkout)
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-original-recovery/review-inputs.sha256` | 0 | All inputs match. Manifest SHA-256 is `b23671a1411d68535f4dbfe645da57f914a54282c265c93553b2683a81e37e34`, as stated. |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-original-recovery-b31925c3655a` (fresh output directory) | 0 | `exit 0`, `source_unchanged true`, 146.81 s including reservations. Raw log `ac3733f4ab096e9f455c1cbdf51ccab81cfe603627a4b1121900433c72851d93`; timing and log hash differ from the builder's, as expected. |
+| `python3 -B …/check.py /lane/state/tmp/review-original-recovery-b31925c3655a` | 0 | Gate PASS. 11 targets equal `expected-targets.json`. Totals are 241 passed, 0 failed, 0 ignored, 0 measured, 0 filtered. All 8 named methods are `ok`. All 6 plan commands exit 0. Cargo commands match the current plan. Path list matches. Both Rust hashes are fixed. The privacy and `#[ignore` scan passes. |
+| `python3 -B …/light.py` | 0 | `git diff --check`, untracked lint and markdownlint (0 issues in 3 files) all exit 0. |
+| `cmp …/validation-final/source-freeze.json …/review-original-recovery-b31925c3655a/source-freeze.json` | 0 | Identical. |
+| `cmp docs/reviews/c86aabe0bb9c-local-coding-terminal-original-transfer.txt /lane/reviews/c86aabe0bb9c-local-coding-terminal-original-transfer.md` | 0 | Identical. |
+| `git diff --check af9d467237845456a883eb948e91e3fe7bf7e9c0 --` | 0 | No output. |
+| `git status --short` | 0 | Empty. |
+
+Cargo commands in the gate:
+
+- `cargo fmt -p agentmage-local-api -- --check`
+- `cargo clippy --locked --offline -p agentmage-local-api --all-targets -- -D warnings`
+- `cargo test --locked --offline -p agentmage-local-api --all-targets --no-fail-fast`
+
+My gate times were 27.40 s, 31.90 s and 86.04 s including reservation waits. The builder's were
+11.37 s, 1.85 s and 50.11 s. The difference comes from slot waits and build cache, not from counts.
+
+The new method
+`endpoint_prepared::strict_return::original_review::terminal::standalone_original_commands_resolve_post_release_declines_on_both_review_services`
+is `ok` in my raw log, as is the extended invalid-input method.
+
+### Reviewer probe
+
+Command, run from the scratch extract:
+
+```sh
+CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 TMPDIR=/tmp \
+  bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api \
+  --test coding_endpoint_http reviewer_probe -- --nocapture
+```
+
+Result: exit 0, 1 passed, 31 filtered out. The probe drives the real `agentmage-code` binary under a
+PTY against the strict review service, after cancelling the run.
+
+| Root argument (original, worktree) | Observed |
+| --- | --- |
+| dangling symlink as original | status 1, no prompts, events still 200, sentinels intact |
+| symlink loop (`loop-a` ↔ `loop-b`) | status 1, no prompts, record held |
+| `/proc/self/root<abs>/original` (magic-link ancestor) | status 1, no prompts, record held |
+| original == worktree (`owned/worktree` twice) | status 1, no prompts |
+| original `owned` containing worktree `owned/worktree` | status 1, no prompts |
+| relative `original` | status 1, no prompts |
+| `<abs>/original/../original` | status 1, no prompts |
+| canonical but wrong directory `other` | release prompted and performed, then native `verify_root` refuses before read consent. No write. Owner retained (`available_paths ["one.py"]`, pending null). See L1. |
+| after that: standalone `original-prepare` with canonical roots | status 0, exactly one `read <repo-sha> <tree-sha>` prompt |
+| standalone `original-apply <symlink-to-original>` | status 1, no prompts, no write, preview still pending |
+| standalone `original-apply <canonical original>` | status 0, one `apply-original <preview-sha>` prompt, `one.py` becomes `first\n`, human and index sentinels intact |
+
+The upstream model endpoint received no connection (`WouldBlock`).
+
+## Assessment
+
+- **L1 repair (prior review).** `coding_cli_endpoint_transfer.rs:26-27` adds two checks:
+  `symlink_metadata(root).is_dir()` (so a final-component symlink, a missing root or a non-directory
+  refuses) and `canonicalize(root) == root` (ancestor symlinks, `.`/`..`, doubled or trailing
+  slashes). Both run inside the existing loop, before `workflow::bounded`, so they come before
+  `record::export_observed` and before the release confirmation.
+  - The new regression asserts four things for 12 cases: no prompts, transcript beginning
+    `Coding request failed` (no record emitted), events still 200 (run held) and
+    `GET /v1/code/repository/apply` 428 (original apply unavailable).
+  - My probe adds loops, dangling links, `/proc/self/root` and `..`. All of them refuse early.
+  - Canonical roots also make the later `starts_with` overlap check sound against aliases.
+  - Errors map to `Err(())`, with nothing panicking or leaked. The code reads no file contents and
+    turns no alias into an accepted selection.
+  - The comment, the guide and the evidence all describe the checks honestly as metadata-only and
+    non-atomic. Native `verify_root` still runs before and after read consent.
+- **L2 repair.** The new test is real end to end. For each review service (strict and checked),
+  after decline-2 (read) and decline-3 (apply), it does the following:
+  1. Drives `original` and compares the output with the server's exact `GET` state.
+  2. Checks `pending`/`latest`.
+  3. After a read decline only, runs `original-prepare` and requires exactly one `read <repo> <tree>`
+     prompt.
+  4. Runs `original-apply` (one exact `apply-original <sha>` prompt and a `write_preview` transcript)
+     or `original-deny` (no prompt).
+  5. Asserts `latest.outcome` (`committed`/`denied`) and `available_paths` (empty after commit,
+     retained after deny).
+  6. Requires a repeated `original-apply` to refuse with no prompt and an unchanged state.
+  7. Shows events and release still 409 (no run restoration), the sentinels preserved and no
+     upstream connection.
+
+  That covers all 8 combinations claimed. The guide's new recovery text matches this behaviour.
+- **Confinement.** No new write, network or command surface. Client root arguments are still used
+  only for local identity checks and display. The server keeps its own held roots.
+- **Honesty and labelling.** The evidence states the limits accurately: synthetic creation
+  provenance, a run cancelled before model or tool dispatch, no native Git, model or test execution,
+  and no score. The counts and the method list are consistent with my independent run.
+- **Evaluation integrity.** The diff touches no frozen, hidden or held-out input, scorer, prompt,
+  threshold, dependency, SBOM, status model or scoreboard. No test is weakened or ignored. Existing
+  interruption, drift, lost-reply and three-decision tests are unchanged and pass.
+- **Public-repository hygiene.** The added lines contain no private path, username, hostname,
+  credential or product branding (checked with check.py's scan plus my own grep of the added lines).
+- **Delivery.** No row or sub-row added. Same-row repair of reviewed lows with runnable,
+  measured tests.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, ordering residual):** `platforms/local-api/src/coding_cli_endpoint_transfer.rs:15-38`
+  and `:59-77`.
+  - Problem: a canonical, existing directory that is not the held root (for example a mistyped
+    sibling checkout) still passes preflight. Release is then offered and performed, and only the
+    post-release `verify_root` refuses it. Reproduced above (`other`).
+  - Impact: limited. The record was already emitted to stdout, the review service retains the
+    owner, nothing is written, and the standalone commands now tested recover the transfer. But the
+    process-held events and model ports are dropped for input that is wrong.
+  - Why the client cannot catch it today: before release the client has no root identity to check
+    against. `GET /v1/code/repository/apply` returns 428, and `checked_selection` carries no root
+    digests.
+  - Fix: expose the held repository and worktree root digests before release, for example in the
+    endpoint selection or a control-only status. Then run `LinuxCodingReadScope::verify_root` on
+    both arguments before `record::export_observed` and the release confirmation, and add the
+    wrong-canonical-directory case to the invalid-input test.
+  - Severity: same-row backlog.
+- **L2 (low, usability/docs):** the refusal is a bare `Coding request failed`, with no reason and no
+  way to tell an alias apart from other refusals.
+  - On Fedora Kinoite, `/home` is a symlink to `var/home`, so the natural spelling of a home-directory
+    checkout is non-canonical. It now refuses before release, which is correct and consistent with the
+    launch-time canonical-root rule.
+  - Neither `docs/guides/coding-original-apply.md:159-163` nor the standalone `original-apply` text
+    tells the user to pass the canonical path.
+  - Fix: add one guide sentence such as "pass the output of `realpath`; `/home/...` on Kinoite
+    must be given as `/var/home/...`". Optionally print a fixed, content-free reason such as
+    `root must be an existing canonical directory`.
+  - Severity: same-row backlog.
+- Carried forward unchanged: the base review's L1/L2 (extraction-refusal coverage) and earlier L3
+  (combined native model-edit/test transfer). These remain same-row backlog.
+- Out of scope (backlog, pre-existing since 2026-09-21, not in this diff):
+  `docs/guides/codex-coding-implementation-brief.md` and several planning files name the external
+  implementing tool. It is not branding or a product comparison in this increment, but it should be
+  checked against the public-release naming rule before any release.
+
+## Per-row result
+
+- **T-303 / T-306 increment (local-coding-original-recovery):** PASS for this non-closing same-row
+  repair.
+  - Every requested command exits 0, and counts, targets, methods, Cargo commands and source hashes
+    match.
+  - Prior L1 is fixed for symlinked, aliased, missing and non-directory roots, with a residual low
+    noted above.
+  - Prior L2 is fixed by real PTY plus HTTP plus native coverage of the standalone recovery commands
+    on both review services.
+- **Parents:** T-303 and T-306 remain OPEN. Native trust and model measurements, approved Git,
+  durable recovery, inherited host/Linux failures and scores are unaffected. This review approves no
+  row closure.
+
+Verdict: PASS

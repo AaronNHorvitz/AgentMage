@@ -1,0 +1,165 @@
+Commit: af9d467237845456a883eb948e91e3fe7bf7e9c0
+Scope: local-coding-release-response
+
+# Independent core review: release extraction-failure response (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only access. The model is the
+same as the builder's; a cross-model review is still required before any public release.
+Date: 2026-11-09.
+
+## Methods
+
+- `git rev-parse HEAD` in /lane/review-checkout gives `af9d467237845456a883eb948e91e3fe7bf7e9c0`.
+  The parent is `c86aabe0bb9cc47c515a2a6fb278c2b239d161f6` (the requested base). The tree was clean
+  before and after the review.
+- I read the bundle's README.md, run.py, check.py, parse_gate.py and light.py before running anything.
+  They only call `scripts/local_agent_fast_gate.py` (plan, gate, lint), git and markdownlint. The
+  only PATH addition is `/lane/state/tmp/t303-endpoint-write/tooling`, which contains just an ELF
+  `node` binary and the Node.js LICENSE. That matches "retained Node/LICENSE only".
+- I read the full diff of all 8 changed files (685+/5-):
+  - `coding_endpoint_api.rs`
+  - the new `coding_endpoint_release_tests.rs`
+  - `tests/support/coding_endpoint_cli.rs`
+  - two guides, the evidence file, TASKS.md and the retained base review.
+- I read the surrounding handler, the `serve_connections` concurrency, `handle_repository`, the CLI
+  `client.json` refusal path and `safe()` escaping, and both terminal commands that call release
+  (`endpoint-release` and the `endpoint-original-apply` transfer flow). I also checked the existing
+  original-review and lost-effect regressions.
+- I checked the change against the earlier finding it claims to fix: L1 in
+  `/lane/reviews/24633619dec4-local-coding-original-review.md`, carried as base L1 in the c86aabe0bb9c
+  review.
+
+## Commands and results (all from /lane/review-checkout)
+
+| # | Command | Result |
+| --- | --- | --- |
+| 1 | `sha256sum --quiet -c /lane/state/tmp/t303-release-response/review-inputs.sha256` | exit 0. 30 lines. The manifest's own SHA-256 is `bd1ce14c1acf49513a443cf073a0cae9f8743b2342a947632e339761a3e8bb43` (matches the request). |
+| 2 | `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py <out>` | See the deviation below. Fresh run: exit 0, `source_unchanged: true`, 780.33 s including reservations, raw log SHA-256 `6831c4cd8700d21ad0000654a4984f41a39d4047169931e1af583bfdfd5a04be`. |
+| 3 | `python3 -B .../check.py <out>` | exit 0. gate PASS. 11 targets match `expected-targets.json`. Totals 240/0/0/0/0. All 7 named methods `... ok`. 7 command RESULT lines, all exit 0. Cargo commands and expected paths match the current plan. The TASKS.md row table is unchanged against the base. The retained review is byte-identical. The privacy patterns and the `#[ignore` check pass. |
+| 4 | `python3 -B .../light.py` | exit 0. Four LIGHT_EXIT 0 lines: diff --check, lint-untracked, lint-reviews (retained report), markdownlint (4 files). |
+| 5 | `cmp .../validation-final/source-freeze.json <out>/source-freeze.json` | exit 0. The three Rust hashes are identical. `plan.json` is also byte-identical to the builder's validation-final. |
+| 6 | `cmp docs/reviews/c86aabe0bb9c-local-coding-terminal-original-transfer.txt /lane/reviews/c86aabe0bb9c-local-coding-terminal-original-transfer.md` | exit 0 |
+| 7 | `git diff --check c86aabe0bb9cc47c515a2a6fb278c2b239d161f6 --` | exit 0 |
+| 8 | `git status --short` | empty |
+
+**Deviation (procedural, not a code finding):**
+
+- The requested output directory `/lane/state/tmp/review-release-response-af9d46723784` already
+  existed before this session. Its files are dated 13:37–13:55 on 2026-11-09. Its `result.json`
+  shows exit 0, 1076.9 s and raw log `54f77130…`, which suggests an earlier, interrupted reviewer
+  attempt. `run.py` correctly refused it (`FileExistsError`, exit 1).
+- I did not delete it, and I did not rely on it.
+- I ran the identical command into a fresh directory,
+  `/lane/state/tmp/review-release-response-af9d46723784-fresh2`, and ran every later command against
+  that one.
+
+Timings differ from the builder's (Clippy 645.38 s and tests 98.65 s on a cold separate target, against
+1.80 s and 51.18 s), and so does the raw-log hash. Both are expected. Counts, targets, methods, Cargo
+commands, paths and source hashes all match. I found no other mismatch.
+
+## Code assessment
+
+The repair is in `platforms/local-api/src/coding_endpoint_api.rs:552-590`.
+
+- **Ordering.** The review-state mutex is now taken with `try_lock` before
+  `release_with_tool_boundary`:
+  - `WouldBlock` gives 409 and `Poisoned` gives 500. Neither consumes the run.
+  - Already-published state gives `NotHeld` before consumption.
+  - This removes the old post-consumption `500` branch, which silently dropped an extracted owner
+    (part of earlier L1).
+- **Locks.** The only lock order is session then review. The repository routes
+  (`handle_repository`) take only review, so the change adds no deadlock.
+- **Error response.** A `convert` failure after a successful release now writes a complete HTTP 409:
+  - `error` is the fixed `code.endpoint.original-review-unavailable`;
+  - `released: true` and `original_review_available: false`;
+  - a fixed instruction message.
+  - The converter error is dropped with `Err(_)`, so no diagnostics, paths or private content leak.
+  - `released: true` is accurate: `convert` is reachable only after `release_with_tool_boundary`
+    returns `Ok`.
+- **Scope.** The Discard and Return dispositions are untouched. Nothing restores the run, grants
+  authority, approves anything, writes the original checkout or retries.
+- **Service test** (`coding_endpoint_release_tests.rs`). It drives the real `serve_admitted_endpoint_inner`
+  over TCP with an actual coordinator admission. For both a Configuration-refusing and an IO-refusing
+  converter it checks:
+  - the observer token gets 403;
+  - a foreign digest and an unstarted run each get 409 with zero conversions;
+  - cancel, then a terminal CANCELLED outcome;
+  - a non-empty event prefix;
+  - the release 409 with the exact body fields;
+  - exactly one conversion;
+  - release, events and advance then each return exactly `{"error":"code.endpoint.not-held"}`;
+  - the apply GET and prepare routes return 428;
+  - the listener stays usable;
+  - the non-blocking upstream listener has no pending connection, so the model was never contacted.
+  - Every `Boundary` method panics, so tool dispatch is excluded. It is labelled SYNTHETIC.
+- **Terminal test.** The CLI test uses a SYNTHETIC 409 peer. It shows a visible escaped refusal
+  (`safe()` escapes non-ASCII and DEL), a nonzero exit, one confirmation, and exactly the two requests
+  (selection and release) with the exact binding body.
+- **Repeated release after a successful publish** goes through the new pre-check branch. The existing
+  `endpoint_original_review_requires_terminal_release_fresh_read_and_exact_apply` exercises it at
+  `tests/support/coding_endpoint_original_review.rs:125` (status 409). The `NotHeld` code is the same
+  as the code that path returned before the change.
+- **Labelling.** The docs (evidence, `coding-runtime-api.md`, `coding-original-apply.md`) are honest:
+  - the test is not a combined native extraction-failure terminal test;
+  - process-only ownership can still be lost;
+  - a lost reply remains ambiguous.
+- **Integrity and safety.**
+  - No evaluation, frozen, hidden, held-out, scorer, threshold, prompt, dependency, SBOM, status or
+    scoreboard file is in the diff.
+  - No test is ignored or weakened.
+  - No private path, username, hostname, credential or other-product name appears in the added lines
+    (my own grep, plus check.py).
+  - No row or sub-row is added or closed. The TASKS.md row table is identical to the base.
+
+This change fully resolves earlier L1 (from 24633619dec4, carried in c86aabe0bb9c). That review asked
+for:
+
+- an explicit response instead of a dropped connection: done;
+- removal of the silent-drop 500 branch: done;
+- a refusing-extraction test: done.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, coverage):** `platforms/local-api/tests/support/coding_endpoint_cli.rs:373-407` drives
+  the new 409 through `endpoint-release`. That command never sends an apply request after release, so
+  "no follow-on" is trivially true there.
+  - **Uncovered path.** The transfer command `endpoint-original-apply`
+    (`src/coding_cli_endpoint_transfer.rs:66-74`) is the one that would continue to
+    `original_apply_prepare_observed`. Its 409 handling is established only by code reading:
+    `client.json(...)?` returns `Err` on any non-200, after printing the escaped refusal. The existing
+    lost-reply regression `terminal_original_transfer_lost_effect_reply_never_retries_or_claims_success`
+    also covers it.
+  - **Effect.** There is no current defect.
+  - **Fix.** Add a case that runs `endpoint-original-apply` against a peer returning the new 409, and
+    assert that no `/v1/code/repository/apply*` request follows.
+  - **Severity.** Same-row backlog.
+- **L2 (low, coverage):** `coding_endpoint_api.rs:555-559` has two untested branches: `WouldBlock`
+  (409) and `Poisoned` (500) on the review mutex. Both return before consumption, which is what makes
+  them safe.
+  - **Reachability.** WouldBlock is reachable when an apply-route request on another connection holds
+    the review state, because `serve_connections` handles connections on scoped worker threads.
+  - **Fix.** Add a test that holds the review state while release is attempted, then show that the
+    run is still releasable.
+  - **Severity.** Same-row backlog.
+- Carried unchanged (same-row backlog, not touched by this commit):
+  - c86aabe0bb9c L1: root-alias preflight;
+  - c86aabe0bb9c L2: standalone recovery-client coverage;
+  - combined native model-edit/test/extraction-failure execution;
+  - older lows.
+
+## Per-row result
+
+- **T-303 / T-306 increment (local-coding-release-response):** PASS for this non-closing same-row
+  repair.
+  - All eight requested commands exit 0. The run.py output directory was a fresh sibling, because the
+    requested path pre-existed.
+  - Counts, targets, methods, Cargo commands and source hashes match.
+  - Both new tests and the five named existing regressions pass in my run.
+- **Parents:** T-303 and T-306 remain OPEN. Their native trust blocker, model/native execution, scores,
+  approved Git and durable recovery are all still open. This review closes no row.
+
+I approved nothing in the repository and modified nothing in it.
+
+Verdict: PASS

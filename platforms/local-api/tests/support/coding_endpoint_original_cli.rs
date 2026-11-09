@@ -314,6 +314,114 @@ fn preserved(fixture: &Fixture, original: &[u8]) {
 }
 
 #[test]
+fn saved_terminal_transfer_retains_replayable_record_before_release_on_both_services() {
+    use std::os::unix::fs::PermissionsExt;
+    for checked in [false, true] {
+        let fixture = Fixture::new();
+        let (api, upstream) = start(&fixture, checked);
+        let request = api.request();
+        cancel(&api, &request);
+        let archive = fixture.0.join("records");
+        fs::create_dir(&archive).unwrap();
+        fs::set_permissions(&archive, fs::Permissions::from_mode(0o700)).unwrap();
+        let args = [
+            "endpoint-original-apply-saved",
+            archive.to_str().unwrap(),
+            "30",
+            request["run_id"].as_str().unwrap(),
+            request["request_sha256"].as_str().unwrap(),
+            fixture.0.join("original").to_str().unwrap(),
+            fixture.0.join("owned/worktree").to_str().unwrap(),
+            "Transfer approved changes",
+            "one.py",
+        ]
+        .map(str::to_owned);
+        let args = args.iter().map(String::as_str).collect::<Vec<_>>();
+        let declined = terminal_command(api.address, &fixture, "decline-1", &args);
+        assert_ne!(declined["status"], 0, "{declined}");
+        assert_eq!(declined["prompts"].as_array().unwrap().len(), 1);
+        assert_eq!(fs::read_dir(&archive).unwrap().count(), 0);
+        assert_eq!(api.bind("events", &request).0, 200);
+        preserved(&fixture, b"before\n");
+        let destination = archive.join(format!(
+            "{}.json",
+            request["request_sha256"].as_str().unwrap()
+        ));
+        fs::write(&destination, b"human record sentinel").unwrap();
+        let collision = terminal_command(api.address, &fixture, "allow", &args);
+        assert_ne!(collision["status"], 0, "{collision}");
+        assert_eq!(collision["prompts"].as_array().unwrap().len(), 1);
+        assert_eq!(api.bind("events", &request).0, 200);
+        assert_eq!(fs::read(&destination).unwrap(), b"human record sentinel");
+        preserved(&fixture, b"before\n");
+        fs::remove_file(&destination).unwrap();
+        // Save succeeds but release is declined: the record survives and the
+        // run is still held. Reusing the same filename must stop before release.
+        let declined = terminal_command(api.address, &fixture, "decline-2", &args);
+        assert_ne!(declined["status"], 0, "{declined}");
+        assert_eq!(declined["prompts"].as_array().unwrap().len(), 2);
+        let bytes = fs::read(&destination).unwrap();
+        let record: Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(record["request"], request);
+        assert_eq!(api.bind("events", &request).0, 200);
+        preserved(&fixture, b"before\n");
+        let collision = terminal_command(api.address, &fixture, "allow", &args);
+        assert_ne!(collision["status"], 0);
+        assert_eq!(collision["prompts"].as_array().unwrap().len(), 1);
+        assert_eq!(fs::read(&destination).unwrap(), bytes);
+        // The person chooses a fresh private directory for a new exact save.
+        let fresh = fixture.0.join("fresh-records");
+        fs::create_dir(&fresh).unwrap();
+        fs::set_permissions(&fresh, fs::Permissions::from_mode(0o700)).unwrap();
+        let mut fresh_args = args.clone();
+        fresh_args[1] = fresh.to_str().unwrap();
+        let output = terminal_command(api.address, &fixture, "allow", &fresh_args);
+        assert_eq!(output["status"], 0, "{output}");
+        let prompts = output["prompts"].as_array().unwrap();
+        assert_eq!(prompts.len(), 4);
+        assert!(prompts[0].as_str().unwrap().starts_with("save-record "));
+        assert!(prompts[1].as_str().unwrap().starts_with("release "));
+        assert!(prompts[2].as_str().unwrap().starts_with("read "));
+        assert!(prompts[3].as_str().unwrap().starts_with("apply-original "));
+        let transcript = output["transcript"].as_str().unwrap();
+        assert!(
+            transcript.find("\"saved\": true").unwrap()
+                < transcript.find("Type exactly release ").unwrap()
+        );
+        assert!(transcript.contains("endpoint-original-transfer"));
+        assert_eq!(
+            fs::read(fresh.join(destination.file_name().unwrap())).unwrap(),
+            bytes
+        );
+        assert_eq!(api.bind("events", &request).0, 409);
+        preserved(&fixture, b"first\n");
+        drop(api);
+        let retained = fs::read(fresh.join(destination.file_name().unwrap())).unwrap();
+        assert_eq!(retained, bytes);
+        let mut child = Command::new(env!("CARGO_BIN_EXE_agentmage-code"))
+            .arg("endpoint-replay")
+            .env_clear()
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        child.stdin.take().unwrap().write_all(&retained).unwrap();
+        let output = child.wait_with_output().unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let replay: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(replay["record"], record);
+        assert_eq!(replay["recorded_terminal_state"], "CANCELLED");
+        assert_eq!(replay["resumes_execution"], false);
+        assert!(matches!(upstream.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock));
+    }
+}
+
+#[test]
 fn terminal_original_transfer_exports_controlled_record_then_requires_three_fresh_decisions() {
     for checked in [false, true] {
         let fixture = Fixture::new();
