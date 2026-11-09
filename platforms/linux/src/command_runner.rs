@@ -25,6 +25,9 @@ use sha2::{Digest, Sha256};
 
 use crate::{LinuxAuthorizedWorkspace, sandbox::compile_seccomp_policy};
 
+#[path = "command_runner_worktree.rs"]
+pub(crate) mod worktree;
+
 const MAX_ARTIFACT_BYTES: u64 = 256 * 1024 * 1024;
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
 const GUEST_EXECUTABLE: &str = "/app/command";
@@ -174,6 +177,7 @@ impl fmt::Debug for LinuxCommandManifest {
 pub struct LinuxBoundedCommandExecutor {
     manifest: Arc<LinuxCommandManifest>,
     seccomp_bpf: Vec<u8>,
+    sealed_worktree: bool,
 }
 
 impl LinuxBoundedCommandExecutor {
@@ -184,7 +188,14 @@ impl LinuxBoundedCommandExecutor {
         Ok(Self {
             manifest: Arc::new(manifest),
             seccomp_bpf,
+            sealed_worktree: false,
         })
+    }
+
+    /// Internal validation composition only; grants no launch authority.
+    pub(crate) fn with_sealed_worktree(mut self) -> Self {
+        self.sealed_worktree = true;
+        self
     }
 
     fn run(
@@ -220,6 +231,22 @@ impl LinuxBoundedCommandExecutor {
             return failed("linux.command.worktree.changed");
         }
 
+        let sealed_worktree = if self.sealed_worktree {
+            if command.working_directory != CommandWorkingDirectory::OwnedWorktree {
+                return failed("linux.command.snapshot.scope");
+            }
+            let Some(sealed) =
+                worktree::SealedWorktree::capture(held_working_directory, cancellation, deadline)
+            else {
+                // Never fall back to the mutable root, even for a partial,
+                // cancelled, timed-out, unsafe or over-budget capture.
+                return failed("linux.command.snapshot.unavailable");
+            };
+            Some(sealed)
+        } else {
+            None
+        };
+
         let Ok(unit_stem) = random_unit_name() else {
             return failed("linux.command.unit.identity");
         };
@@ -229,6 +256,7 @@ impl LinuxBoundedCommandExecutor {
         let parent_pid = std::process::id();
         let held_worktree = match command.working_directory {
             CommandWorkingDirectory::EmptyScratch => None,
+            CommandWorkingDirectory::OwnedWorktree if sealed_worktree.is_some() => None,
             CommandWorkingDirectory::OwnedWorktree => {
                 let Ok(descriptor) = held_working_directory.reopen_root_directory() else {
                     return failed("linux.command.worktree.descriptor");
@@ -238,12 +266,15 @@ impl LinuxBoundedCommandExecutor {
         };
         let filter_pipe =
             crate::sandbox::supervision::FilterPipe::new().map_err(supervision_failure)?;
-        let open_files = open_file_properties(
+        let mut open_files = open_file_properties(
             parent_pid,
             artifact.descriptor.as_raw_fd(),
             filter_pipe.read_descriptor(),
             held_worktree.as_ref().map(AsRawFd::as_raw_fd),
         );
+        if let Some(sealed) = &sealed_worktree {
+            open_files.extend(sealed.open_file_properties(parent_pid));
+        }
         let command_descriptor_argument = COMMAND_DESCRIPTOR.to_string();
         let seccomp_descriptor_argument = SECCOMP_DESCRIPTOR.to_string();
         let worktree_descriptor_argument = WORKTREE_DESCRIPTOR.to_string();
@@ -329,7 +360,10 @@ impl LinuxBoundedCommandExecutor {
             command_descriptor_argument.as_str(),
             GUEST_EXECUTABLE,
         ]);
-        if command.working_directory == CommandWorkingDirectory::OwnedWorktree {
+        if let Some(sealed) = &sealed_worktree {
+            // No worktree descriptor precedes these sealed source descriptors.
+            sealed.mount_arguments(&mut process, WORKTREE_DESCRIPTOR);
+        } else if command.working_directory == CommandWorkingDirectory::OwnedWorktree {
             process.args([
                 "--ro-bind-fd",
                 worktree_descriptor_argument.as_str(),
@@ -352,11 +386,15 @@ impl LinuxBoundedCommandExecutor {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
+        let projections = sealed_worktree.map_or_else(
+            || held_worktree.into_iter().collect(),
+            worktree::SealedWorktree::into_descriptors,
+        );
         let result = crate::sandbox::supervision::run_owned(
             process,
             crate::sandbox::supervision::Launch {
                 owner: crate::sandbox::supervision::LaunchOwner::Command(self.manifest.clone()),
-                projections: held_worktree.into_iter().collect(),
+                projections,
                 unit,
                 deadline,
                 stdout_limit: command.bounds.stdout_bytes as usize,

@@ -667,11 +667,25 @@ impl<C: RuntimeClock> RuntimeToolBoundary for LinuxCodingEndpointCommandBoundary
         call: &ToolCall,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> std::result::Result<RuntimeToolExecution, RuntimePortFailure> {
+        let validation = self
+            .command
+            .repository
+            .command
+            .as_ref()
+            .is_some_and(|pending| pending.validation.is_some());
         self.execute_using(
             scope,
             (evaluation, definition, call),
             cancellation,
-            native_executor,
+            |registry| {
+                native_executor(registry).map(|executor| {
+                    if validation {
+                        executor.with_sealed_worktree()
+                    } else {
+                        executor
+                    }
+                })
+            },
         )
     }
     fn evaluate(

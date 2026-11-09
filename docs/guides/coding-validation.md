@@ -49,7 +49,7 @@ Execution shows the complete escaped preview and requires exact
 `test <preview-sha256>` consent on the controlling terminal. The client verifies
 the displayed root before and after consent and sends once. The outer digest
 binds the command, template, minimum count, root, creation receipt, prior receipt,
-attempt, budget and expiry. Models and ordinary client tokens have no authority
+attempt, budget, sealed input mode and bounds, and expiry. Models and ordinary client tokens have no authority
 over these routes. `approve_definition: true` alone cannot execute anything.
 
 | Route | Request/result |
@@ -185,14 +185,15 @@ linked repair and a current source snapshot remains separate work.
 
 The optional `workspace_binding` ties the final linked pass to bounded local
 whole-worktree observations. Observation begins only inside the original kernel
-command permit, immediately around the unchanged native executor; ordinary
+command permit, immediately around the native executor; ordinary
 commands do not scan. Every regular file is content-hashed, and every directory,
 including empty directories, contributes identity and metadata. Hidden files,
 tests, configuration and generated files are included. A local Git pointer is
 hashed as a file; its target is never followed. Symbolic/hard links, special
 objects, unsafe names, inaccessible files and exhausted limits make the binding
-unavailable; no partial tree counts. The approved test still runs unchanged and
-its result remains visible even when observation is unavailable.
+unavailable; no partial tree counts. Failure of this observation wrapper alone
+does not change the command result. Native validation separately requires the
+complete sealed capture described below; its capture failure refuses launch.
 
 Each capture requires two identical complete scans with a shared cooperative
 two-second deadline. Ceilings are 4,096 entries, 256 directories including the
@@ -200,8 +201,10 @@ root, directory depth 16, 16 MiB per file and 64 MiB of file bytes per scan.
 Each directory admits at most 256 KiB of UTF-8 names. These local hashes and
 metadata stay process-only; the API returns only digests and counts. File and
 directory identities, modes, sizes, modification times and change times are
-bound, so restoring old bytes alone cannot revive the old observation. The
-capture immediately before execution must match the capture after it. The
+bound. Restoring old bytes is detectable when the filesystem advances the
+recorded change times. Coarse timestamps can miss a write-and-restore within
+one tick; the observation remains sampled and non-atomic. The capture immediately
+before execution must match the capture after it. The
 binding also identifies the exact creation receipt and final validation receipt.
 Inspection rechecks the current held root and the complete tree.
 
@@ -212,7 +215,7 @@ null must never establish current-source acceptance. `atomic_snapshot` and
 `independent_task_grade` are explicitly false. The existing
 `current_workspace_verified` and `test_suite_verified` remain false even with a
 matching observation, and the completion/development verifiers stay unchanged.
-Immutable execution inputs and reviewed acceptance integration remain open.
+Projection receipt binding and reviewed acceptance integration remain open.
 Observations add bounded local work outside the runner's elapsed-time receipt;
 blocked filesystem calls can delay cancellation/deadlines. No raw file content
 is newly disclosed to a model or client, no command authority is created, and no
@@ -233,3 +236,37 @@ the latest retryable failure to the configured model, once per failed receipt.
 It prepares an inert diff; writes and test reruns retain their separate exact
 approvals. Failure excerpts and the spent-request marker are process-only, and
 successful results retain no excerpts.
+
+## Sealed native validation inputs
+
+Native validation now selects a complete sealed copy instead of mounting the
+live worktree. Its exact approval includes `workspace_input` with mode
+`sealed-read-only-tree-v1` and the capture bounds. The original kernel permit,
+command and trusted native supervisor remain required. Direct and retained
+endpoint validation select the same mode; ordinary commands keep their existing
+mount behavior.
+
+Every regular file is copied through its held descriptor into a sealed memory
+file. A second complete observation must match the first; nothing is silently
+excluded. The original supervisor retains these descriptors until cleanup.
+The sandbox constructs a private directory tree, mounts copied file contents
+read-only, restores ordinary permission bits and remounts all directories
+read-only. The live worktree root is never passed to the validation child.
+Edits to the host files after capture cannot change the sealed bytes.
+
+The additional file-descriptor bound is 128 regular files. Other limits remain
+256 directories including root, 4,096 entries, depth 16, 16 MiB per file and
+64 MiB total file bytes, with a cooperative capture deadline of two seconds or
+the remaining command deadline, whichever comes first. Links, unsupported names,
+special files or special permission bits, races, unavailable cancellation and
+exhausted limits refuse without launch or a mutable fallback. Blocking filesystem
+calls can delay cancellation or deadlines. A consumed validation attempt remains
+spent when capture fails.
+
+The sandbox copy preserves file bytes, directory names and ordinary modes;
+inodes, timestamps and ownership differ. Sealed contents are immutable, while
+capture is not an atomic snapshot of the source filesystem. The command receipt
+does not yet include a projection digest. The existing workspace observation
+remains a sampled comparison, both completion verifiers remain unchanged, and
+`current_workspace_verified` and `test_suite_verified` remain false. Native/model
+workflow evidence and reviewed acceptance integration are still open.

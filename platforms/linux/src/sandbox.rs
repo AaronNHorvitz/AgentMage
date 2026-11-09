@@ -1588,7 +1588,7 @@ fn valid_input_guest_path(path: &str) -> bool {
     matches!(path, "/input/object" | "/input/request" | "/input/snapshot")
 }
 
-fn file_projection(held: &LinuxHeldObject) -> Result<OwnedFd, LinuxSandboxError> {
+pub(super) fn file_projection(held: &LinuxHeldObject) -> Result<OwnedFd, LinuxSandboxError> {
     let expected = held
         .preimage()
         .ok_or_else(|| error(LinuxSandboxErrorKind::TargetMismatch))?;

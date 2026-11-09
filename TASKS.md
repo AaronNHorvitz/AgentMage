@@ -2,6 +2,24 @@
 
 ## Active queue: local agent mission
 
+The [sealed-validation input work](docs/evidence/t303-sealed-validation-2026-11-09.md) replaces the live source mount for native
+project tests with complete bounded sealed file copies and a read-only sandbox
+directory tree. The exact original approval displays this mode; incomplete or
+unsafe captures refuse without launching. Ordinary commands retain their existing
+behavior. Formatting and Clippy pass. The complete scoped gate remains FAIL:
+1,210 passed, exactly 72 inherited failures and none new, 63 existing ignored
+across 26 unfiltered targets. All four new component methods and the four
+existing workspace-binding methods pass; six Rust hashes stay fixed. Independent
+core review is required. T-303/T-306 remain open; no row or sub-row
+is added or closed. Projection receipt binding, completion acceptance,
+native/model execution, durable recovery, approved Git and measurements remain
+open. The [whole-worktree independent review](docs/reviews/699e99afe3b5-local-coding-workspace-observation.txt)
+has **Verdict: PASS** for exact commit
+`699e99afe3b524f5bee1908bb566a8e911fc87a3`, with no high/medium finding.
+Low L1 inspection cost and L3 observation coverage remain same-row backlog.
+Low L2 timestamp precision is qualified in the guide in this batch. Neither
+parent closes.
+
 The [whole-worktree observation binding](docs/evidence/t303-workspace-observation-2026-11-09.md)
 connects local whole-tree observations to the original command permit, final
 linked validation receipt and worktree creation receipt. It includes hidden,

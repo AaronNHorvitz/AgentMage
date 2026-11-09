@@ -159,7 +159,7 @@ impl LinuxCodingRepository {
         };
         self.verify_created()?;
         let registry = command_registry(pending.prepared.command().clone())?;
-        let executor = native_executor(&registry)?;
+        let executor = native_executor(&registry)?.with_sealed_worktree();
         self.run_command_with_cancellation(pending, executor, now, cancellation)
     }
 
@@ -226,8 +226,13 @@ impl LinuxCodingRepository {
         pending.preview["prior_receipt_sha256"] = json!(prior);
         pending.preview["attempt"] = json!(attempts + 1);
         pending.preview["maximum_attempts"] = json!(MAX_ATTEMPTS);
+        pending.preview["workspace_input"] = json!({"mode":"sealed-read-only-tree-v1",
+            "maximum_files":128,"maximum_directories":256,"maximum_entries":4096,
+            "maximum_depth":16,"maximum_file_bytes":16*1024*1024,
+            "maximum_total_bytes":64*1024*1024,"capture_timeout_ms":2000,
+            "incomplete_capture":"refuse-without-launch","live_root_mount":false});
         pending.preview["warning"] = json!(
-            "Runs this exact approved test definition offline in the read-only created worktree. Bounded whole-worktree observations hash all files, including hidden files, tests and configuration, locally around execution; unavailable or changed observations cannot bind a pass to source. These are not atomic snapshots or task grades. Output and failed names are untrusted. At most three attempts; each needs fresh consent. No automatic model retry, commit or push."
+            "Runs this exact approved test definition offline on a complete sealed read-only copy of the created worktree. Every file counts, including hidden files, tests and configuration. Unsafe, changed or over-budget captures refuse without launching; the live worktree is never mounted for validation. Source observations and parsed results are not task grades. Output and failed names are untrusted. At most three attempts; each needs fresh consent. No automatic model retry, commit or push."
         );
         pending
             .preview

@@ -1,0 +1,145 @@
+Commit: 699e99afe3b524f5bee1908bb566a8e911fc87a3
+Scope: local-coding-workspace-observation
+
+# Independent core review: whole-worktree observations around approved validation
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only on the repository.
+Rows: T-303 / T-306. This increment does not close a row. Both parents remain OPEN. Same-model review.
+
+## Methods
+
+- Pinned checkout `/lane/review-checkout`. `git rev-parse HEAD` returned
+  `699e99afe3b524f5bee1908bb566a8e911fc87a3`. `git diff --stat 682c79cf..HEAD` lists exactly the 8 declared
+  paths (845 insertions, 6 deletions).
+- I read README.md, run.py, check.py and light.py before running anything. run.py was not outer-wrapped; each
+  Cargo call reserves the shared slot itself. The tooling PATH contains only the retained `node` ELF and its
+  LICENSE; there is no shim. I used no GPU, no model and no download.
+- Code read in full: `coding_repository_validation_workspace.rs` (new), the diffs to
+  `coding_repository_command.rs` and `coding_repository_validation.rs`, and all new and expanded tests. I also
+  read the existing code the scan depends on: `LinuxPathAdapter::resolve` (O_PATH|NOFOLLOW per component,
+  symlink/mount-crossing refusal, `admitted_kind` refusing special objects and multiply-linked regular files),
+  `observe_directory_names` (errors on overflow rather than truncating; refuses non-UTF-8), `hash_preimage`
+  (size cap, post-read stat equality), `LinuxHeldObject::revalidate`, `verify_created`,
+  `consume_validation`, and `verify_bounded_validation_history` (its last attempt must be a full pass).
+- I wrote my own probe test in a scratch copy made with `git archive` at
+  `/lane/state/tmp/review-probe-699e99afe3b5`, outside the repository, and ran it with the same target dir.
+
+## Commands and results (all from `/lane/review-checkout`)
+
+| Command | Expected | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c .../review-inputs.sha256` | 0 | 0. Manifest SHA-256 `74ab1d886153464ac1e8f47540fbaf187b66de5db731a0dd442d9bb3a5553f5c` matches the request |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-workspace-observation-699e99afe3b5` | 1 | **1**: `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`. 251.0 s including reservations |
+| `python3 -B .../check.py <fresh out>` | 0 | 0. 26 targets, 1206/72/63/0/0, 72 inherited identities, 0 new, 5 methods present, `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL` |
+| `python3 -B .../light.py` | 0 | 0. diff-check, lint-untracked, lint-reviews (incoming .txt) and markdownlint (3 files, 0 issues) |
+| `cmp .../validation-final/source-freeze.json <fresh out>/source-freeze.json` | 0 | 0 |
+| `cmp docs/reviews/682c79cf8992-local-coding-completion-encoding.txt /lane/reviews/682c79cf8992-local-coding-completion-encoding.md` | 0 | 0 (retained verbatim) |
+| `git diff --check 682c79cf8992c406bfb8b48a70d64816dea8e6b5 --` | 0 | 0 |
+| `git status --short` | empty | empty |
+
+Gate command exits in my run: diff-check 0, lint-untracked 0, lint-reviews 0, markdownlint 0, fmt 0 (1.30 s),
+clippy 0 (36.12 s, cold review target), tests 101 (212.00 s).
+
+My raw log SHA-256 is `834ae1b2415d0cc61e19601c985750c258175d0aa73a5199ae137023dcec70f2`. It differs from the
+builder's because it contains timings. I re-parsed the builder's retained log read-only (its SHA-256
+`db4d8da5…a4da8c` matches the request). Both logs have 26 summaries totalling [1206, 72, 63, 0, 0] and
+identical 72-name failure sets, which equal the unchanged T-301 baseline.
+
+The builder's plan has 6 commands. Mine has 7, because the incoming `.txt` review adds `--lint-reviews`. That
+matches the README's explanation. The Cargo commands are identical, and check.py asserts this.
+
+All five named methods pass in my full run. Exactly 11 inherited fixture directories remain in my run's private
+TMPDIR.
+
+### Reviewer probe (scratch copy, not the repository)
+
+`TMPDIR=<private> CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib -- review_probe validation_workspace_binding --nocapture --test-threads=4`
+returned 5 passed, 0 failed, 380 filtered.
+
+The probe `review_probe_workspace_observation_edges` showed:
+
+- **Binding is null after a full pass for each of these trees:** a nested relative symlink (`sub/link -> ../sentinel`), a
+  symlink to a directory outside the worktree, a dangling absolute symlink, a FIFO, a Unix socket, a mode-000
+  directory and a mode-000 file. The original pass still shows `linked_pass_verified: true`, and the executor
+  ran exactly once. Each case finished in 30–48 ms, so the FIFO did not block: resolution opens O_PATH, and
+  the kind check runs before any blocking open.
+- **A bound tree then fails on change:** after changing the `.git` pointer bytes (target never opened),
+  removing an empty directory, or changing a directory's mode, `matches_current_observation` is false. The
+  historical pass is kept.
+- **Nothing private is exposed:** the inspection output contains neither the pointer contents nor the
+  worktree path.
+
+## Assessment against the request
+
+- **Inside the permit, delegated once.** `ValidationObservedExecutor::execute` receives the kernel's
+  `CommandLaunchPermit` from the unchanged `CommandEffectDriver`. It moves that permit, the workspace and the
+  cancellation into `native.execute` exactly once, and returns the native result unchanged. Scanning happens
+  only when `validation.is_some()`. An observation is stored only when the before capture exists, the native
+  result is `Ok`, and the after capture is identical. No authority, receipt or result is created or rewritten.
+- **Whole tree, nothing excluded.** There is no name filter. Every directory (including empty ones) and every
+  regular file is recorded with dev/ino/nlink/mode/size/mount/mtime/ctime, plus a content hash for files. The
+  root stat is also bound. A tree that changes during enumeration fails through the directory `revalidate`
+  checks and the root before/after equality. A capture requires two identical scans under a shared 2 s
+  deadline.
+- **Fail closed, never a prefix.** Every failure path returns `None` via `.ok()?`: overflowing names, entries,
+  directories, depth, per-file or total bytes, unsafe names, links, special objects, inaccessible objects and
+  the deadline. I found no `unwrap` or panic on this path.
+- **Binding.** A binding is created only when `linked_pass_verified` holds; the history verifier requires the
+  last attempt to be a full pass. It records the exact creation receipt and final validation receipt.
+  `consume_validation` clears it at the start of any new attempt, so an uncertain successor also hides it
+  (attempts no longer equal history length). Inspection runs `verify_created()` and the receipt identities,
+  then repeats a full capture.
+- **Labels are honest.** `atomic_snapshot` and `independent_task_grade` are false. `current_workspace_verified`
+  and `test_suite_verified` remain false, and the completion verifiers are not touched. The guide and evidence
+  state the non-atomic and blocking-syscall limits.
+- **Evaluation integrity and delivery.** No hidden, held-out, task, scorer, pin, threshold, dependency, SBOM,
+  status, scoreboard or release path changed (check.py asserts this and the diff stat confirms it). TASKS.md row
+  lines are unchanged, so no row or sub-row was added or closed. No `#[ignore]` was added. No measurement or
+  score is claimed. Synthetic fixtures are labelled as such.
+- **Public-repository hygiene.** The added lines contain no private host path, username, hostname, credential
+  or sibling-project name. The only paths are the generic `/lane/...` reviewer paths inside the retained
+  incoming review, as in earlier committed reviews.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, efficiency/availability).** `platforms/linux/src/coding_repository_validation_workspace.rs:155-165`,
+  reached from `coding_repository_validation.rs:80-91` and `coding_repository_endpoint_command.rs:339-341`.
+  - Problem: every `GET /v1/code/repository/validation` and every endpoint `inspect()` repeats a full two-scan
+    capture. That is up to 2 × 64 MiB of hashing plus up to 2 × 4,096 stats, with a 2 s cooperative deadline
+    (blocking syscalls can exceed it). It runs synchronously while the repository owner is borrowed, with no
+    cache and no rate bound, so a client polling this route causes repeated full-tree I/O.
+  - Fix: cache the last inspection result keyed on root and directory stats with a short TTL, or require an
+    explicit `?recheck=true` for the expensive path.
+- **L2 (low, claim precision).** `docs/guides/coding-validation.md:202-203` and
+  `docs/evidence/t303-workspace-observation-2026-11-09.md:21-22`.
+  - Problem: "restoring old bytes alone cannot revive the old observation" relies on mtime/ctime advancing.
+    On filesystems with coarse timestamps and no fine-grained or multigrain update, a write-and-restore within
+    one timestamp tick could leave every recorded field identical.
+  - Fix: qualify the sentence ("on filesystems that update change times at sub-tick granularity"), or state
+    it as part of the existing "sampled, non-atomic" limitation.
+- **L3 (low, test coverage).** `platforms/linux/src/coding_repository_command_tests.rs:2011-2206`.
+  - Problem: the committed tests do not cover FIFO, socket, inaccessible directory or file, nested or
+    directory symlink, `.git` pointer change, or empty-directory removal. My probe shows each behaves
+    correctly. There is also no test asserting that ordinary (non-validation) commands perform no scan.
+  - Fix: add these cases to `validation_workspace_binding_is_unavailable_for_unsafe_or_incomplete_trees` and
+    `…detects_changes…`, and add an ordinary-command case whose tree is unsafe or oversized to show the scan
+    is not invoked.
+
+The incoming 682c79cf review's low L1 (malformed completion grammar) and L2 (verifier-test fidelity) remain
+same-row backlog, as declared.
+
+## Per-row result
+
+- **T-303 (non-closing increment):** PASS for this commit's scope. The parent row remains OPEN. Native and model
+  execution, immutable execution inputs, acceptance integration, durable recovery, approved Git and parent
+  measurements are still open.
+- **T-306 (non-closing increment):** PASS for this commit's scope. The parent row remains OPEN.
+- **Full scoped gate:** FAIL, matching the inherited baseline exactly (1206 passed, 72 baseline failures, 0 new,
+  63 existing ignored, 26 targets). That is reproduced and is not counted as a pass.
+- Low findings L1–L3 go to same-row backlog.
+
+This review certifies nothing and implies no compliance or legal clearance.
+
+Verdict: PASS
