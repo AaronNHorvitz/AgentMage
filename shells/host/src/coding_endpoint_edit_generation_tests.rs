@@ -24,6 +24,8 @@ use std::{
 
 #[path = "coding_endpoint_edit_coordinator_tests.rs"]
 mod coordinator_tests;
+#[path = "coding_endpoint_edit_preview_tests.rs"]
+mod preview_tests;
 
 struct Control(AtomicBool);
 impl Control {
@@ -598,7 +600,9 @@ fn endpoint_strict_generation_uses_run_text_ceiling_for_preview_and_refuses_over
                             TransportError::Limit
                         ))
                     ));
-                    assert!(text.len() <= cap);
+                    // Synthetic SSE deltas are 8192 bytes. The transport
+                    // refuses the entire first delta crossing the ceiling.
+                    assert_eq!(text, expected_answer[..cap / 8192 * 8192]);
                     assert_eq!(generated.usage().completed_response_text_bytes, None);
                     assert_eq!(generated.usage().completed_dispatch_elapsed_ms, None);
                     assert_eq!(

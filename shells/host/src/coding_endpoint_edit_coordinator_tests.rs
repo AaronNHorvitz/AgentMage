@@ -300,6 +300,10 @@ fn strict_generation_uses_original_coordinator_ledger_and_never_self_approves() 
             .to_string();
             let second = if case == 6 { "x".repeat(65537) } else { good() };
             let expected_output = first.len() + if case == 0 { second.len() } else { 0 };
+            let expected_user =
+                proposal_context(&startup.request().task.objective, &[("two.py", "two\n")])
+                    .user_message()
+                    .to_owned();
             let peer = thread::spawn(move || {
                 for i in 0..expected_requests {
                     let mut stream = accept(&listener);
@@ -309,6 +313,9 @@ fn strict_generation_uses_original_coordinator_ledger_and_never_self_approves() 
                         CODING_PROPOSAL_INSTRUCTION
                     );
                     assert_eq!(request["model"], "synthetic-model");
+                    assert_eq!(request["messages"][1]["content"], expected_user);
+                    assert!(!expected_user.contains("one.py"));
+                    assert!(!expected_user.contains("first"));
                     respond(
                         &mut stream,
                         if i == 0 { &first } else { &second },

@@ -1313,3 +1313,40 @@ in one coordinator, cumulative exhaustion and cancellation, stale approval refus
 and refused unverified edit text. A fixture also composes an actual native edit
 under its exact protected approval before a strict turn. Creation provenance
 and endpoint replies remain synthetic; no real-model coding score is established.
+
+## Strict answers to native previews in the same run
+
+Trusted composition can create `CodingEndpointEditPreviews::new(startup,
+repository, control, clock)` and keep its paired `CodingEndpointEditBoundary`
+as the coordinator's tool boundary. Supply the original live created repository,
+instruction-narrowed edit startup, continuous control and shared epoch clock.
+Cloning this clock must share the original epoch owner; it must not reset time.
+The constructor does no source read or write. Equal workspace labels do not
+identify the original owner; trusted startup must supply the correct one.
+
+Prepare the disclosure-approved strict generation through `previews.startup()`.
+From the original turn port, use `into_coordinator_edit_turn(input, control,
+completion_schema, &mut previews)`. The complete normally terminated answer is
+accounted by the original coordinator before the response callback runs. Partial,
+overflowing, limited and stopped answers cannot enter preview preparation.
+Tool/event capacity is checked first. Under the same borrowed control, the host
+re-reads every context file, checks complete preimages and the strict edit format,
+enforces mutable/protected paths, then prepares the original complete native diff.
+Prior read consent must cover those fresh reads; the callback grants no consent.
+
+The callback returns an inert tool proposal with the original native preview.
+The coordinator still encodes and charges its arguments, checks the catalog and
+asks for the exact protected approval. The original native boundary alone issues
+and consumes the grant and runs the atomic writer. Invalid approvals are inert;
+each later preview requires its own approval. Callback refusal cannot fall back
+to a model-authored tool envelope or completion claim.
+
+Only an observed successful native edit makes the same original repository ready
+for another preview. Pending, failed, uncertain and spent effects remain held;
+lock poisoning refuses. All turns, approvals and effects retain the same
+coordinator, ledger and continuous control. Native edit lineage stays with the
+repository; terminal owner return and a fresh ledger are not used for continuation.
+Current snapshots and consent remain caller-owned. The ordinary service factory
+does not select this path automatically. General edit/test/retry scheduling,
+durable recovery, approved Git and measured coding-task success remain open.
+See [Decision 0171](../decisions/0171-strict-response-native-preview-in-one-coordinator.md).

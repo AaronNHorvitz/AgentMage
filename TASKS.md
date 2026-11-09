@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The [coordinator-generation independent core review](docs/reviews/f4aa4b43f398-local-coding-coordinator-generation.txt)
+has **Verdict: PASS** for exact commit
+`f4aa4b43f39821c47c1ee300e8999a3b23d467b0`, with no high/medium finding.
+Its low L1 exact-prompt assertion and the earlier host overflow-prefix assertion
+are strengthened in the current batch. Neither parent closes; the new native
+preview connection requires its own independent core review.
+
+The [strict response/native preview connection](docs/evidence/t303-live-edit-response-2026-11-09.md)
+keeps strict generation, original native previews and separately approved edits
+inside one coordinator and cumulative ledger. The complete scoped gate remains
+FAIL: 2,796 passed, exactly 72 inherited host/Linux failures and none new, 71
+existing ignored across 45 unfiltered targets. Formatting and Clippy pass;
+all nine Rust hashes stay unchanged. Independent core review is required.
+T-303/T-306 remain open, with automatic
+service selection, general edit/test/retry, durable recovery, approved Git and
+parent measurements still open. No row or sub-row is added or closed.
+
 The [text-ceiling independent core review](docs/reviews/c425b77ec89e-local-coding-generation-ceiling.txt)
 has **Verdict: PASS** for exact commit
 `c425b77ec89ec989b807ce42fc75fe70c1965bf2`, with no high/medium finding.

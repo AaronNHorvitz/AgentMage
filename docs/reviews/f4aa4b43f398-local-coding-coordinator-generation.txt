@@ -1,0 +1,160 @@
+Commit: f4aa4b43f39821c47c1ee300e8999a3b23d467b0
+Scope: local-coding-coordinator-generation
+
+# Independent core review: strict request coordinator handoff (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (separate session, read-only repository access), 2026-11-09.
+Tier: core. Base: c425b77ec89ec989b807ce42fc75fe70c1965bf2. Both parent rows stay OPEN; this
+review does not close a row or sub-row.
+
+## Methods
+
+1. Confirmed the commit: `git rev-parse HEAD` in /lane/review-checkout gives
+   f4aa4b43f39821c47c1ee300e8999a3b23d467b0. The tree is clean. The diff against the base touches
+   exactly the eight requested paths (3 added, 5 modified). No row is added or closed (check.py
+   compares the TASKS.md row lines). There is no history rewrite: the base is the direct parent.
+2. Before running anything, read README.md, run.py, check.py and light.py under
+   /lane/state/tmp/t303-coordinator-generation. run.py prepends
+   /lane/state/tmp/t303-endpoint-write/tooling to PATH. I inspected it: it holds only a Node binary
+   and its LICENSE (used for markdownlint), with no cargo or python shim.
+3. Read IP-POLICY.md, the newest decision titles and the top of TASKS.md.
+4. Read the whole production diff:
+   - `shells/host/src/coding_endpoint_edit_generation.rs`: new `into_coordinator_turn` and the
+     `CoordinatorDispatch` adapter.
+   - `shells/host/src/coding_endpoint.rs`: `transport_failure` widened to `pub(super)`.
+   I traced the handoff through the unchanged kernel:
+   - `kernel/engine/src/runtime_loop/coordinator_endpoint.rs:322-704`
+   - `RuntimeEndpointModelPhase::new`/`for_run`/`execute` in `kernel/engine/src/runtime_loop/endpoint.rs:105-310`
+   - `verify_runtime_endpoint_run_request` in `kernel/engine/src/runtime_coordinator/endpoint.rs:20`
+   - the turn-start budget check at `kernel/engine/src/runtime_loop.rs:2250-2262`
+5. Read the new 511-line test file and the two-line test-module hook. I mapped each claim in the
+   request to an assertion.
+6. Ran the requested commands in the pinned checkout, with fresh output and a separate target.
+7. Mutation probes in a `git archive` copy outside the repository
+   (/lane/state/tmp/review-mut-f4aa4b43f398). The copy was restored to the committed bytes afterwards
+   and kept.
+8. Hygiene scan of every added line: private paths/usernames/hosts, credentials, and other agent
+   products or trademarks.
+
+## Exact commands and results (all run from /lane/review-checkout)
+
+| Command | Exit | Result |
+|---|---|---|
+| `sha256sum --quiet -c /lane/state/tmp/t303-coordinator-generation/review-inputs.sha256` | 0 | all 31 inputs match; the manifest's own SHA-256 is 60721c10a3909904d0d9b4f0f6c6d0dc20c4c0ab866d9b62bb9f224f3c33b27f, as stated |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-coordinator-generation-f4aa4b43f398` | 1 | expected. Printed `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True` and `FAST GATE: FAIL`. Per-command exits 0,0,0,0, then fmt 0 (221.66 s including build-slot wait), clippy 0 (39.32 s), tests 101 (175.78 s); 438.61 s total including reservations |
+| `python3 -B .../check.py /lane/state/tmp/review-coordinator-generation-f4aa4b43f398` | 0 | 20 targets. Totals: 852 passed, 53 failed, 11 ignored, 0 measured, 0 filtered. The 53 failure identities equal the T-301 host baseline exactly, with none new or missing. Both named methods are `ok`. Raw log sha256 102d8c09ed2625e2af582a7449c060526822e29f95a7f1f5802f5be9344dd4e6 |
+| `python3 -B .../light.py` | 0 | diff-check, untracked lint, review lint and markdownlint (0 issues in 3 files) all exit 0 |
+| `cmp .../validation/source-freeze.json <fresh>/source-freeze.json` | 0 | the four Rust input hashes are identical to the builder's freeze |
+| `cmp docs/reviews/c425b77ec89e-local-coding-generation-ceiling.txt /lane/reviews/c425b77ec89e-local-coding-generation-ceiling.md` | 0 | the predecessor review is retained byte-identically |
+| `git diff --check c425b77ec89ec989b807ce42fc75fe70c1965bf2 --` | 0 | no whitespace errors |
+| `git status --short` | 0 | empty |
+
+All results match the request: run.py exits 1 and every other command exits 0. My counts are
+identical to the builder's. Timings differ only through build-slot waiting and machine load. My
+run's temp namespace (/tmp/cg-ievt7e1s) holds 22 entries including 4 files, the same shape as the
+builder's inherited inventory. It is retained untouched. The inherited-failure comparison is data
+only; the full gate remains FAIL.
+
+Mutation probes (`bash /tools/build-slot cargo test --locked --offline -p agentmage-host --lib coordinator_tests`,
+`CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 CARGO_TARGET_DIR=/lane/state/review-target`, run in the
+copy):
+
+- M1, removing `self.startup_sha256 != input.request.request_sha256` from `into_coordinator_turn`:
+  exit 101. `strict_coordinator_conversion_refuses_foreign_invalid_turn_and_stopped_input_inertly`
+  FAILS at coordinator_tests.rs:258. Log: /lane/state/tmp/review-mut-f4aa4b43f398.M1.log.
+  This check is load-bearing. The kernel's `RuntimeEndpointModelPhase::for_run` binds only
+  endpoint/model and per-phase ceilings. Without the check, a strict request frozen under a
+  different, validly sealed run with the same endpoint/model would be accepted by the coordinator.
+- M2, removing the `control.remaining_ms()` check: exit 101. The same method FAILS on the
+  cancelled-control case. Log: /lane/state/tmp/review-mut-f4aa4b43f398.M2.log.
+
+## Analysis against the request
+
+- **Conversion checks.** In order, the conversion:
+  - re-verifies the complete sealed run digest (`verify_runtime_endpoint_run_request`)
+  - requires equality with the startup digest frozen at preparation
+  - requires a turn in `1..=max_turns`
+  - requires the current borrowed control
+
+  It returns the original `PreparedEndpointChat`, which keeps the original credential owner, frozen
+  body and narrowed text ceiling from the predecessor commit. It also returns the context packet
+  framed at preparation. No socket is opened; the tests assert `WouldBlock` on the listener after
+  all refusals. The unused standalone `RuntimeEndpointModelPhase` is dropped; its usage is never
+  read or imported.
+- **Coordinator ownership.** The existing coordinator re-frames the descriptor with
+  `RuntimeEndpointModelPhase::for_run` against its own request. That check covers endpoint/model
+  binding, `request.context == context.messages()` and per-phase ceilings. Before
+  `ModelRequested`, the coordinator then reserves input body, model call, response text limit
+  (the ≤64 KiB narrowed ceiling) and total timeout against its cumulative ledger. It charges the
+  attempt and input before dispatch. Completed output/time are charged only on success, and the
+  admitted attempt is rolled back only if `dispatch_attempts == 0`. Continuous control is the
+  coordinator's `RuntimePhaseControl`. No new ledger, route, executor, loop or authority is added.
+  `CoordinatorDispatch` only maps `TransportError` through the existing content-free
+  `transport_failure`.
+- **No interpretation.** The returned text follows the existing paths:
+  - Tool-call JSON goes through registry, permission and exact-approval checks.
+  - Other text goes through a completion claim and the caller's independent verifier.
+
+  No strict-edit parsing or native preview happens in the conversion. A prompt-injected tool call
+  from disclosed source text would therefore meet the unchanged registry/permission/approval
+  boundary. The fixture exercises exactly this: the model-authored apply-prepared-edit call is
+  refused under a stale approval and runs only under the exact one.
+- **Regression fidelity.** I checked each case of
+  `strict_generation_uses_original_coordinator_ledger_and_never_self_approves` against the kernel
+  code; the expected values follow from the kernel rather than from fixture convenience:
+  - output reservation: case 1
+  - time reservation: case 2
+  - model-call turn-start check, `runtime_loop.rs:2251`, giving prepared=1: case 3
+  - epoch expiry after the native write: case 4
+  - incomplete stream that keeps both attempts with no completed output: case 5
+  - transport text overflow that keeps both attempts: case 6
+  - cancellation after the edit: case 7
+
+  In case 0, the verifier refuses completion and there is no second write. Each case runs in both
+  borrowed and shared forms. The cumulative InputBytes/OutputBytes assertions include the native
+  tool arguments/result. The test checks that a stale approval leaves events unchanged and does not
+  write, that the exact approval runs the native writer exactly once, and that `one.py` holds
+  `first\n` after every terminal. Terminal rereads keep the same events and ledger. The event
+  sequence verifies.
+- **Honest claims.** The fixtures label creation provenance and endpoint replies as synthetic. There
+  is no real-model, Git, command-success, grade or score claim. The guide states that the retained
+  service factory does not select this path automatically and that general edit/test/retry remains
+  open. Development failures are retained: focused-conversion.log and focused-3.log are compile
+  errors, focused-2.log is the assertion failure, and focused-4.log has 2 passed / 686 filtered /
+  3.45 s, all as described. The production diff only adds the conversion and widens a visibility.
+  No denial or failure behavior changed.
+- **Evaluation integrity / scope.** No hidden tests, held-out tasks, scorer, task pin, threshold,
+  dependency/SBOM, status or scoreboard path is touched. Cargo.lock is unchanged.
+- **Hygiene.** There is no private host path, username, hostname, credential or personal data in
+  the added lines. The only `/lane/...` sandbox paths and the reviewer attribution are inside the
+  byte-identical predecessor review, following the same convention as earlier committed reviews.
+  No other agent product or trademark is named.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test precision), `shells/host/src/coding_endpoint_edit_coordinator_tests.rs:307-311`.**
+  The fixture peer asserts only the system instruction and model on the wire. The claim that only
+  the unchanged `two.py` is disclosed in both strict prompts therefore holds by construction
+  (`proposal_context(..., &[("two.py", "two\n")])` at :337), not by assertion of the frozen bytes.
+  Fix: assert that `request["messages"][1]["content"]` equals the expected
+  `context.user_message()` for the two.py-only context, and that it does not contain `one.py` or
+  `first`. Same-row test backlog.
+- **Observation (not a finding; caller-owned per the request).** Strict requests are frozen at
+  preparation. A turn port that prepares a request before an earlier turn's native write, and
+  includes the written file, would disclose pre-edit bytes. The guide assigns source freshness to
+  the trusted turn port; the fixture avoids this by disclosing only the unchanged file.
+
+## Per-row result
+
+- T-303 (non-closing): this handoff increment is acceptable, with no open high or medium finding.
+  The row stays OPEN.
+- T-306 (non-closing): this handoff increment is acceptable, with no open high or medium finding.
+  The row stays OPEN.
+
+The full scoped gate is FAIL only on the 53 inherited host failures, with none new or missing. The
+retained predecessor PASS and its lows are unchanged backlog. This verdict does not accept
+automatic service selection or general edit/test/retry, and it does not close either parent.
+
+Verdict: PASS

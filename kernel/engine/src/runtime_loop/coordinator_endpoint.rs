@@ -71,7 +71,44 @@ pub struct RuntimePreparedEndpointTurn<'a> {
     context: RuntimeEndpointContextPacket,
     port: Box<dyn PreparedDispatch + 'a>,
     completion_schema: SchemaReference,
+    tool_preparation: Option<Box<ToolPreparation<'a>>>,
 }
+
+/// Original coordinator identities for interpreting a completed answer. This
+/// input carries no permission, grant or executable authority.
+pub struct RuntimeEndpointToolPreparationInput<'a> {
+    /// Complete original sealed request.
+    pub request: &'a RuntimeEndpointRunRequest,
+    /// Fully received, accounted, normally terminated untrusted model text.
+    pub text: &'a str,
+    /// Current turn identity.
+    pub turn_id: &'a RuntimeTurnId,
+    /// Next operation identity, fixed by the coordinator.
+    pub operation_id: &'a RuntimeOperationId,
+    /// Next call identity, fixed by the coordinator.
+    pub tool_call_id: &'a ToolCallId,
+    /// Original run correlation identity.
+    pub correlation_id: &'a CorrelationId,
+    /// Next action identity, fixed by the coordinator.
+    pub action_id: &'a ActionId,
+}
+
+/// Inert proposal produced by trusted interpretation. The registry, cumulative
+/// budgets and original tool permission boundary must still admit it.
+pub struct RuntimeEndpointToolProposal {
+    /// Registered model-proposable tool.
+    pub tool_id: ToolId,
+    /// Exact registered version.
+    pub tool_version: String,
+    /// Untrusted argument values; the registry owns their payload schema.
+    pub arguments: serde_json::Value,
+}
+
+type ToolPreparation<'a> = dyn FnOnce(
+        RuntimeEndpointToolPreparationInput<'_>,
+        &dyn ModelOperationControl,
+    ) -> Result<RuntimeEndpointToolProposal, RuntimePortFailure>
+    + 'a;
 impl<'a> RuntimePreparedEndpointTurn<'a> {
     /// Retains a single-use prepared transport, with no dispatch or authority grant.
     pub fn new<P: RuntimeEndpointModelPort<Error = RuntimePortFailure> + 'a>(
@@ -83,7 +120,27 @@ impl<'a> RuntimePreparedEndpointTurn<'a> {
             context,
             port: Box::new(Prepared(port)),
             completion_schema,
+            tool_preparation: None,
         }
+    }
+
+    /// Opt into trusted interpretation of a normally completed answer. Called
+    /// once under the ORIGINAL borrowed control, after model accounting and
+    /// before tool admission. Refusal is terminal; no partial answer or model
+    /// failure enters this callback. It may prepare an inert preview under prior
+    /// source-read consent, but MUST NOT execute effects or confer authority.
+    /// No wire/model field can select or construct this process-local callback.
+    #[must_use]
+    pub fn with_tool_preparation<F>(mut self, prepare: F) -> Self
+    where
+        F: FnOnce(
+                RuntimeEndpointToolPreparationInput<'_>,
+                &dyn ModelOperationControl,
+            ) -> Result<RuntimeEndpointToolProposal, RuntimePortFailure>
+            + 'a,
+    {
+        self.tool_preparation = Some(Box::new(prepare));
+        self
     }
 }
 
@@ -408,6 +465,7 @@ impl<
             context,
             port,
             completion_schema,
+            tool_preparation,
         } = prepared;
         let descriptor = port.request().clone();
         let mut phase = match RuntimeEndpointModelPhase::for_run(&request, &descriptor, context) {
@@ -573,8 +631,83 @@ impl<
         self.state
             .transition(AgentStateKind::Validation)
             .map_err(|_| RuntimeLoopError::State)?;
-        if let Ok(tool) = serde_json::from_str::<EndpointToolProposal>(&text) {
-            if !crate::tooling::is_closed_json(text.as_bytes()) {
+        let interpreted = if let Some(prepare) = tool_preparation {
+            let closing_sha256 = observation_sha256(&accepted)?;
+            if self.tool_budget_exhausted(&turn_id, &closing_sha256)? {
+                return Ok(());
+            }
+            let operation_id = RuntimeOperationId::from_raw(derived_id(
+                "operation",
+                request.run_id.as_str(),
+                u64::from(self.tool_call_count) + 1,
+            ));
+            let tool_call_id = ToolCallId::from_raw(derived_id(
+                "endpoint-call",
+                request.run_id.as_str(),
+                u64::from(self.turn_count),
+            ));
+            let action_id = runtime_action_id(&request.run_id, self.tool_call_count + 1);
+            let (proposal, stop) = {
+                let control = RuntimePhaseControl::for_run_limits(
+                    &mut self.clock,
+                    &request.task.task_id,
+                    request.limits.max_elapsed_ms,
+                    &self.correlation_id,
+                    self.started_at_epoch_ms
+                        .ok_or(RuntimeLoopError::InvalidBoundaryResult)?,
+                    self.events.last().map_or(0, |e| e.occurred_at_epoch_ms),
+                    &self.last_phase_observed_at,
+                    cancellation,
+                );
+                let proposal = control.check().and_then(|_| {
+                    prepare(
+                        RuntimeEndpointToolPreparationInput {
+                            request: &request,
+                            text: &text,
+                            turn_id: &turn_id,
+                            operation_id: &operation_id,
+                            tool_call_id: &tool_call_id,
+                            correlation_id: &self.correlation_id,
+                            action_id: &action_id,
+                        },
+                        &control,
+                    )
+                });
+                if proposal.is_ok() {
+                    let _ = control.check();
+                }
+                (proposal, control.into_stop())
+            };
+            self.latch_phase_cancellation(stop.as_ref());
+            if let Some(stop) = stop {
+                if let Err(error) = &proposal
+                    && *error != stop.port_failure()
+                {
+                    return self.finish_model_failure(&turn_id, *error);
+                }
+                return self.finish_phase_stop(stop, false);
+            }
+            match proposal {
+                Ok(proposal) => Some(EndpointToolProposal {
+                    tool_call: EndpointToolArguments {
+                        tool_id: proposal.tool_id,
+                        tool_version: proposal.tool_version,
+                        arguments: proposal.arguments,
+                    },
+                }),
+                Err(_) => {
+                    return self
+                        .finish_refused_proposal(&turn_id, "runtime.proposal.preparation-refused");
+                }
+            }
+        } else {
+            None
+        };
+        let was_interpreted = interpreted.is_some();
+        if let Some(tool) =
+            interpreted.or_else(|| serde_json::from_str::<EndpointToolProposal>(&text).ok())
+        {
+            if !was_interpreted && !crate::tooling::is_closed_json(text.as_bytes()) {
                 return self
                     .finish_refused_proposal(&turn_id, "runtime.proposal.arguments-invalid");
             }

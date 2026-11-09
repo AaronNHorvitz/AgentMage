@@ -5,8 +5,8 @@ use super::*;
 use crate::runtime_loop::{
     RuntimeCompletionProposal, RuntimeCompletionVerificationInput,
     RuntimeEndpointCoordinatorStep as EndpointStep, RuntimeEndpointDriver,
-    RuntimeEndpointPreparationInput, RuntimeEndpointTurnPort, RuntimeNoNativeContext,
-    RuntimePreparedEndpointTurn, RuntimeRunScope,
+    RuntimeEndpointPreparationInput, RuntimeEndpointToolProposal, RuntimeEndpointTurnPort,
+    RuntimeNoNativeContext, RuntimePreparedEndpointTurn, RuntimeRunScope,
     endpoint::{
         RuntimeEndpointContextPacket, RuntimeEndpointMessage, RuntimeEndpointMessageRole,
         RuntimeEndpointModelPort,
@@ -498,6 +498,146 @@ fn terminal(coordinator: &mut Coordinator) -> crate::runtime_coordinator::Runtim
         panic!("terminal expected")
     };
     outcome
+}
+
+struct InterpretedPort {
+    inner: EndpointPort,
+    interpreted: Arc<AtomicUsize>,
+    mode: u8,
+}
+impl RuntimeEndpointTurnPort for InterpretedPort {
+    fn model_binding(&self) -> RuntimeModelBinding<'_> {
+        self.inner.model_binding()
+    }
+    fn prepare<'a>(
+        &mut self,
+        input: RuntimeEndpointPreparationInput<'_>,
+        control: &dyn ModelOperationControl,
+    ) -> Result<RuntimePreparedEndpointTurn<'a>, RuntimePortFailure>
+    where
+        Self: 'a,
+    {
+        let first = input.turn == 1;
+        let request = input.request.clone();
+        let mode = self.mode;
+        let interpreted = self.interpreted.clone();
+        let clock = self.inner.clock.clone();
+        let turn = self.inner.prepare(input, control)?;
+        if !first {
+            return Ok(turn);
+        }
+        Ok(turn.with_tool_preparation(move |input, control| {
+            assert_eq!(input.request, &request);
+            assert_eq!(input.text, r#"{"answer":"done"}"#);
+            assert_eq!(
+                input.turn_id.as_str(),
+                derived_id("turn", request.run_id.as_str(), 1)
+            );
+            assert_eq!(
+                input.operation_id.as_str(),
+                derived_id("operation", request.run_id.as_str(), 1)
+            );
+            assert_eq!(
+                input.tool_call_id.as_str(),
+                derived_id("endpoint-call", request.run_id.as_str(), 1)
+            );
+            assert_eq!(input.action_id, &runtime_action_id(&request.run_id, 1));
+            control.remaining_ms().unwrap();
+            interpreted.fetch_add(1, Ordering::SeqCst);
+            if mode == 1 {
+                return Err(RuntimePortFailure::Invalid);
+            }
+            if mode == 2 {
+                clock.store(1_000_000, Ordering::SeqCst);
+            }
+            Ok(RuntimeEndpointToolProposal {
+                tool_id: ToolId::from_raw(if mode == 3 {
+                    "unoffered.tool"
+                } else {
+                    "fixture.read"
+                }),
+                tool_version: "1.0.0".into(),
+                arguments: if mode == 4 {
+                    serde_json::json!({"path":7})
+                } else {
+                    serde_json::json!({"path":"fixture.txt"})
+                },
+            })
+        }))
+    }
+}
+
+#[test]
+fn endpoint_interpretation_is_after_accounting_and_before_original_tool_admission() {
+    for mode in 0..9 {
+        let response = match mode {
+            5 => Response::Failure,
+            6 => Response::Limited,
+            7 => Response::Overflow,
+            _ => Response::Answer,
+        };
+        let mut request = endpoint_request();
+        if mode == 8 {
+            request.limits.max_tool_calls = 0;
+            request =
+                crate::runtime_coordinator::seal_runtime_endpoint_run_request(request).unwrap();
+        }
+        let base = build(request.clone(), [response, Response::Answer], true).unwrap();
+        let interpreted = Arc::new(AtomicUsize::new(0));
+        let executions = base.tool_boundary.executions.clone();
+        let mut c = ReusableRuntimeCoordinator::new_endpoint(
+            request,
+            InterpretedPort {
+                inner: base.model.0,
+                interpreted: interpreted.clone(),
+                mode,
+            },
+            registry_for_operation(GrantOperation::WorkspaceRead),
+            base.tool_boundary,
+            base.verifier,
+            base.clock,
+        )
+        .unwrap();
+        let step = c.run_endpoint_until_boundary(None, None).unwrap();
+        assert_eq!(interpreted.load(Ordering::SeqCst), usize::from(mode < 5));
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        if mode == 0 {
+            let EndpointStep::AwaitingApproval { challenge } = step else {
+                panic!("original permission required")
+            };
+            assert_eq!(
+                c.resource_snapshot().cumulative[&BudgetResource::ModelCalls],
+                1
+            );
+            assert_eq!(
+                c.resource_snapshot().cumulative[&BudgetResource::OutputBytes],
+                17
+            );
+            let response = RuntimeApprovalResponse {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                run_id: challenge.run_id.clone(),
+                approval_id: challenge.approval_id.clone(),
+                disposition: RuntimeApprovalDisposition::Allow,
+                challenge_sha256: challenge.challenge_sha256.clone(),
+                grant_id: Some(challenge.proposed_grant_id.clone()),
+                selection: None,
+            };
+            let EndpointStep::Complete { outcome } = c
+                .run_endpoint_until_boundary(Some(&response), None)
+                .unwrap()
+            else {
+                panic!("terminal expected")
+            };
+            assert_eq!(executions.load(Ordering::SeqCst), 1);
+            assert_eq!(outcome.outcome.model_call_count, 2);
+        } else {
+            assert!(matches!(step, EndpointStep::Complete { .. }));
+        }
+        let mut sequence = RuntimeEventSequence::new();
+        for event in c.events() {
+            sequence.push(event).unwrap();
+        }
+    }
 }
 
 #[test]

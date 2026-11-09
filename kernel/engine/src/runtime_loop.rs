@@ -10,7 +10,8 @@ mod coordinator_request;
 pub use completion_claim::{RuntimeCompletionClaim, RuntimeCompletionProposal};
 pub use coordinator_endpoint::{
     RuntimeCoordinatorModelPort, RuntimeEndpointCoordinatorStep, RuntimeEndpointDriver,
-    RuntimeEndpointPreparationInput, RuntimeEndpointTurnPort, RuntimeNoNativeContext,
+    RuntimeEndpointPreparationInput, RuntimeEndpointToolPreparationInput,
+    RuntimeEndpointToolProposal, RuntimeEndpointTurnPort, RuntimeNoNativeContext,
     RuntimePreparedEndpointTurn,
 };
 use coordinator_request::CoordinatorRequest;

@@ -205,6 +205,45 @@ impl CodingEndpointEditGeneration<'_> {
     where
         Self: 'a,
     {
+        self.check_coordinator_input(&input, control)?;
+        Ok(self.coordinator_turn(completion_schema))
+    }
+
+    /// Interpret the complete strict answer into the next original native
+    /// preview INSIDE the same coordinator. Prior consent must cover re-reading
+    /// all context files. Only this process-local composition selects the
+    /// interpreter. Separate exact approval still controls the original writer.
+    pub fn into_coordinator_edit_turn<'a, C>(
+        self,
+        input: RuntimeEndpointPreparationInput<'_>,
+        control: &dyn ModelOperationControl,
+        completion_schema: SchemaReference,
+        previews: &mut crate::coding_endpoint_edit_previews::CodingEndpointEditPreviews<C>,
+    ) -> Result<RuntimePreparedEndpointTurn<'a>, CodingEndpointGenerationError>
+    where
+        Self: 'a,
+        C: agentmage_kernel_engine::runtime_loop::RuntimeClock + Clone + 'a,
+    {
+        self.check_coordinator_input(&input, control)?;
+        let prepare = previews
+            .response(&self.startup_sha256, self.context)
+            .map_err(CodingEndpointGenerationError::Preparation)?;
+        Ok(RuntimePreparedEndpointTurn::new(
+            self.phase.context().clone(),
+            CoordinatorDispatch(Dispatch {
+                prepared: self.prepared,
+                cancellation: ChatCancellation::default(),
+            }),
+            completion_schema,
+        )
+        .with_tool_preparation(prepare))
+    }
+
+    fn check_coordinator_input(
+        &self,
+        input: &RuntimeEndpointPreparationInput<'_>,
+        control: &dyn ModelOperationControl,
+    ) -> Result<(), CodingEndpointGenerationError> {
         use CodingEndpointGenerationError as Error;
         agentmage_kernel_engine::runtime_coordinator::verify_runtime_endpoint_run_request(
             input.request,
@@ -220,14 +259,24 @@ impl CodingEndpointEditGeneration<'_> {
             .remaining_ms()
             .map_err(control_failure)
             .map_err(Error::Preparation)?;
-        Ok(RuntimePreparedEndpointTurn::new(
+        Ok(())
+    }
+
+    fn coordinator_turn<'a>(
+        self,
+        completion_schema: SchemaReference,
+    ) -> RuntimePreparedEndpointTurn<'a>
+    where
+        Self: 'a,
+    {
+        RuntimePreparedEndpointTurn::new(
             self.phase.context().clone(),
             CoordinatorDispatch(Dispatch {
                 prepared: self.prepared,
                 cancellation: ChatCancellation::default(),
             }),
             completion_schema,
-        ))
+        )
     }
 
     /// Dispatch once under the original borrowed run control. Stream fragments

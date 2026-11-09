@@ -49,6 +49,7 @@ pub mod coding_endpoint_context;
 #[cfg(target_os = "linux")]
 /// Single-use strict edit generation through the original endpoint phase.
 pub mod coding_endpoint_edit_generation;
+pub mod coding_endpoint_edit_previews;
 #[cfg(target_os = "linux")]
 /// Exact granted Linux file reads for configured-endpoint runs.
 pub mod coding_endpoint_files;
