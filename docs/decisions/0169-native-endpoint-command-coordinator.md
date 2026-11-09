@@ -11,7 +11,13 @@ Move the original live repository owner and its prepared command or validation
 into a non-cloneable endpoint handle. Require the complete sealed controlled-write
 request, exact catalog, canonical proposed call, held worktree and original
 creation receipt. Command memory, process and timeout ceilings must fit the
-sealed run. The trusted caller retains instruction narrowing, original admission,
+sealed run. Before handoff, require room for decimal-byte JSON channels and a
+fixed metadata allowance: `4 * (stdout_bytes + stderr_bytes) + 16384`, with
+checked arithmetic. Refusal returns the same owner before authority or attempt
+consumption. This minimum reservation does not bound every parsed validation
+result; the original post-dispatch complete-output check remains authoritative.
+CPU and scratch/disk preflight remain open. The trusted caller retains
+instruction narrowing, original admission,
 source consent and model disclosure responsibilities. Native-family calls refuse.
 
 An exact protected Allow issues the original durable kernel operation grant

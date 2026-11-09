@@ -2,6 +2,18 @@
 
 ## Active queue: local agent mission
 
+The [command output reservation](docs/evidence/t303-command-output-reservation-2026-11-08.md)
+refuses an undersized sealed result limit before native handoff, grant issuance
+or validation-attempt consumption. It accounts for decimal-byte JSON channels
+and a fixed metadata allowance, returning the original repository unchanged on
+refusal. Actual post-dispatch projection checks remain; parsed validation
+metadata and aggregate remaining budgets can still refuse. CPU and scratch/disk
+preflight remain backlog. Independent core review is required; T-303/T-306 stay
+open. No row or sub-row is added or closed. Three added regression methods pass
+in the unfiltered 25-target run: 1,151 passed, exactly 72 inherited failures and
+none new, 63 existing ignored. Formatting and Clippy pass; the complete gate
+remains FAIL.
+
 The [terminal tool-owner return](docs/decisions/0170-terminal-endpoint-tool-owner-return.md)
 lets trusted hosts retire an exact completed endpoint run and recover its
 original tool boundary for separately admitted later work. Live approvals,

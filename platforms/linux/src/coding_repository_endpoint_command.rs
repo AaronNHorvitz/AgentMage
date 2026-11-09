@@ -22,6 +22,19 @@ use agentmage_kernel_engine::{
 };
 use std::sync::Arc;
 
+// Captured channels are serialized as JSON byte arrays: each byte can require
+// three decimal digits and a separator. Reserve metadata room as well, before
+// an approval or process effect. This is a minimum admission reservation, not
+// an upper bound on arbitrary parsed validation metadata; project() must still
+// check the actual complete result after dispatch.
+const COMMAND_PROJECTION_ALLOWANCE: u64 = 16 * 1024;
+fn output_reservation(stdout_bytes: u64, stderr_bytes: u64) -> Option<u64> {
+    stdout_bytes
+        .checked_add(stderr_bytes)?
+        .checked_mul(4)?
+        .checked_add(COMMAND_PROJECTION_ALLOWANCE)
+}
+
 struct EndpointCommandTool(ToolDefinition);
 impl EndpointCommandTool {
     fn new() -> Self {
@@ -157,6 +170,8 @@ impl LinuxCodingRepository {
                     > budget(agentmage_kernel_contracts::BudgetResource::MemoryBytes)
                 || u64::from(bounds.task_count)
                     > budget(agentmage_kernel_contracts::BudgetResource::ProcessCount)
+                || output_reservation(bounds.stdout_bytes, bounds.stderr_bytes)
+                    .is_none_or(|bytes| bytes > request.limits.max_output_bytes)
             {
                 return Err(err("code.endpoint-command.bounds"));
             }

@@ -96,10 +96,18 @@ Cancellation observed before endpoint native preflight retires dispatch without
 launch or validation-attempt consumption. A grant already issued remains recorded
 until its ordinary expiry; cancellation is not revocation. During dispatch, the
 original supervisor and authority/command receipts determine the outcome. An
-acknowledgement alone does not establish that a child stopped. A small result
-budget can still cause post-dispatch projection refusal; preflight coverage of
-output, CPU and disk ceilings remains backlog. Inspect actual retained state;
-refusal does not establish that no process effect occurred.
+acknowledgement alone does not establish that a child stopped.
+
+Before handoff, command admission reserves
+`4 * (stdout_bytes + stderr_bytes) + 16384` bytes within the sealed per-result
+output limit. Channels are JSON byte arrays, so the reservation includes decimal
+expansion and a fixed 16 KiB metadata allowance. Overflow or an insufficient limit returns the original
+repository intact, without a grant or validation attempt. This is a minimum
+reservation, not a complete bound on parsed validation metadata or the run's
+remaining aggregate output budget. The actual complete projection is still
+checked after dispatch; refusal retains the original result and never replays.
+CPU and scratch/disk preflight coverage remains backlog. Inspect actual retained
+state; refusal does not establish that no process effect occurred.
 
 ## Native prepared-edit decision handoff
 

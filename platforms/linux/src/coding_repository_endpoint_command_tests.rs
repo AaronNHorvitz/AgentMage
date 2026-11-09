@@ -317,6 +317,7 @@ fn resolve(
 struct Synthetic {
     calls: Arc<AtomicUsize>,
     stdout: Vec<u8>,
+    stderr: Vec<u8>,
     exit: i32,
     stop: Option<(Arc<Control>, ModelOperationStop)>,
     panic: bool,
@@ -331,6 +332,7 @@ impl Synthetic {
         Self {
             calls: calls.clone(),
             stdout,
+            stderr: vec![],
             exit: i32::from(!pass),
             stop: None,
             panic: false,
@@ -375,9 +377,9 @@ impl BoundedCommandExecutor for Synthetic {
                 hash(&self.stdout)
             },
             stdout_total_bytes: self.stdout.len() as u64,
-            stderr: vec![],
-            stderr_sha256: hash(b""),
-            stderr_total_bytes: 0,
+            stderr: self.stderr.clone(),
+            stderr_sha256: hash(&self.stderr),
+            stderr_total_bytes: self.stderr.len() as u64,
             elapsed_ms: 1,
             resource_usage: None,
             descendants_terminated: true,
@@ -1222,6 +1224,138 @@ fn endpoint_command_sealed_run_cannot_understate_command_resource_ceilings() {
         assert!(owner.command.as_ref().unwrap().issued.is_none());
     }
 }
+
+fn with_output_limit(
+    mut request: RuntimeEndpointRunRequest,
+    bytes: u64,
+) -> RuntimeEndpointRunRequest {
+    request.limits.max_output_bytes = bytes;
+    for budget in &mut request.work_packet.budgets {
+        if matches!(
+            budget.resource,
+            BudgetResource::OutputBytes | BudgetResource::DiskBytes
+        ) {
+            budget.limit = bytes;
+        }
+    }
+    seal_runtime_endpoint_run_request(request).unwrap()
+}
+
+#[test]
+fn endpoint_command_output_reservation_refuses_before_authority_and_preserves_original_preview() {
+    for validation in [false, true] {
+        let f = Fixture::new();
+        let original = owner(&f, validation, None);
+        let before = original.inspect().unwrap();
+        let command_before = original.inspect_command().unwrap();
+        let validation_before = original.inspect_validation().unwrap();
+        let cancellation = original
+            .command_cancellation(original.command.as_ref().unwrap().hash.as_str())
+            .unwrap();
+        let (request, call) = binding(&original);
+        // 24 KiB covers two 1 KiB channels in decimal-byte JSON plus 16 KiB
+        // metadata. The adjacent lower ceiling must refuse even empty output.
+        let request = with_output_limit(request, 24 * 1024 - 1);
+        let (original, error) = original
+            .into_endpoint_command(
+                request,
+                RuntimeTurnId::from_raw("turn"),
+                RuntimeOperationId::from_raw("op"),
+                call,
+            )
+            .err()
+            .unwrap();
+        assert_eq!(error.code(), "code.endpoint-command.bounds");
+        assert_eq!(original.inspect().unwrap(), before);
+        assert_eq!(original.inspect_command().unwrap(), command_before);
+        assert_eq!(original.inspect_validation().unwrap(), validation_before);
+        assert!(original.command.as_ref().unwrap().issued.is_none());
+        assert!(
+            original.inspect().unwrap()["receipts"]
+                .as_array()
+                .unwrap()
+                .is_empty()
+        );
+        // Refusal does not spend or replace the original pending attempt or its
+        // cancellation owner. A separately admitted wider request can use it.
+        cancellation.cancel().unwrap();
+        let (request, call) = binding(&original);
+        let handed = original
+            .into_endpoint_command(
+                with_output_limit(request, 24 * 1024),
+                RuntimeTurnId::from_raw("turn"),
+                RuntimeOperationId::from_raw("op"),
+                call,
+            )
+            .ok()
+            .unwrap();
+        let pending = handed.repository.command.as_ref().unwrap();
+        assert!(
+            LinuxCodingCommandCancellation::for_pending(pending)
+                .observe_effect_cancellation()
+                .unwrap()
+                .is_some()
+        );
+        assert_eq!(handed.repository.inspect().unwrap(), before);
+        assert_eq!(
+            handed.repository.inspect_validation().unwrap(),
+            validation_before
+        );
+    }
+}
+
+#[test]
+fn endpoint_command_full_byte_channels_fit_reserved_projection_without_reencoding_loss() {
+    for validation in [false, true] {
+        let f = Fixture::new();
+        let calls = Arc::new(AtomicUsize::new(0));
+        let original = owner(&f, validation, None);
+        let (request, call) = binding(&original);
+        let handed = original
+            .into_endpoint_command(
+                with_output_limit(request, 24 * 1024),
+                RuntimeTurnId::from_raw("turn"),
+                RuntimeOperationId::from_raw("op"),
+                call,
+            )
+            .ok()
+            .unwrap();
+        let mut b = handed.into_boundary(
+            Arc::new(Control::new()),
+            Clock(Arc::new(AtomicU64::new(NOW))),
+        );
+        ask(&mut b);
+        let evaluation = resolve(&mut b, true).unwrap();
+        let mut runner = Synthetic::new(&calls, true);
+        runner.stdout = vec![255; 1024];
+        runner.stderr = vec![255; 1024];
+        let result = execute(&mut b, &evaluation, runner, None).unwrap();
+        let payload = result.result.output.unwrap();
+        assert!(payload.bytes.len() <= 24 * 1024);
+        assert_eq!(payload.sha256, hash(&payload.bytes));
+        let value: Value = serde_json::from_slice(&payload.bytes).unwrap();
+        assert_eq!(value["stdout"], json!(vec![255_u8; 1024]));
+        assert_eq!(value["stderr"], json!(vec![255_u8; 1024]));
+        if validation {
+            // Arbitrary bytes are not a test pass, even with a zero exit.
+            assert_eq!(value["validation"]["validation_passed"], false);
+            assert_eq!(value["validation"]["attempt"], 1);
+        } else {
+            assert!(value["validation"].is_null());
+        }
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+        assert!(execute(&mut b, &evaluation, Synthetic::new(&calls, true), None).is_err());
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+    }
+}
+
+#[test]
+fn endpoint_command_output_reservation_overflow_refuses_instead_of_wrapping() {
+    assert_eq!(output_reservation(u64::MAX, 1), None);
+    assert_eq!(output_reservation(u64::MAX / 4, 1), None);
+    assert_eq!(output_reservation(u64::MAX / 4, 0), None);
+}
+
 #[test]
 fn endpoint_command_live_bridge_preserves_deadline_reason_and_rejects_late_foreign_signals() {
     for stop in [
