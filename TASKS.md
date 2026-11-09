@@ -2,6 +2,26 @@
 
 ## Active queue: local agent mission
 
+The [fixed-test startup core review](docs/reviews/b0905e920f75-local-coding-fixed-test-launch.txt)
+has **Verdict: PASS** for exact commit
+`b0905e920f75490a2cee9663c25456617642ad02`, with no high/medium finding.
+Low L1 content-free validation-refusal diagnostics and L2 broader executable
+invalid-definition ordering coverage remain same-row backlog. Neither parent
+closes; native/model measurements and current-source verification remain open.
+
+The [completion-turn repair](docs/evidence/t303-completion-turn-repair-2026-11-09.md)
+addresses medium M1 from the [combined-cycle core review](docs/reviews/bb7678ee37c5-local-coding-edit-test-cycle.txt)
+for exact commit `bb7678ee37c520b5e41c12b6ec8ddd3fddc351c6`.
+That non-closing review has **Verdict: PASS**, with M1 explicitly blocking parent
+closure. The final prompt now offers only a completion candidate, and the original
+coordinator records tool-shaped answers as terminal refusals before permission
+or execution. All completion regression methods pass; the complete scoped gate
+remains FAIL: 2,829 passed, exactly 72 inherited failures and none new, 71
+existing ignored across 46 unfiltered targets. Formatting and Clippy pass;
+independent core re-review is required. T-303/T-306 remain open. Low L1 host command-owner transition
+coverage and L2 repair-context headroom remain same-row backlog with earlier lows.
+No row or sub-row is added or closed.
+
 The [executable fixed-test development startup](docs/evidence/t303-coding-launch-2026-11-09.md)
 selects the existing combined edit/test/repair coordinator from a private fixed
 validation definition and the original exact worktree-creation decision. Each

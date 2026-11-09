@@ -1522,8 +1522,14 @@ labels diagnostics as untrusted data. The immutable validation series links each
 rerun to the failed receipt and still permits at most three admitted attempts.
 An invalid, interrupted, lost or oversized model response restores no selection.
 
-A successful command proceeds only to an ordinary completion candidate with
-complete actual tool history. The supplied independent verifier decides whether
+A successful command proceeds only to a completion candidate with complete
+actual tool history. The final prompt offers no tools or tool input schemas.
+The original coordinator narrows this turn to completion only: a tool-shaped
+answer records `runtime.proposal.completion-only` and a terminal failure before
+permission or execution. No attached tool interpreter runs in that turn; a valid
+completion candidate still goes to the original verifier. This restriction is
+process-local, not a model or HTTP choice.
+The supplied independent verifier decides whether
 the task is satisfied. A process exit or parsed test pass alone cannot certify
 the task or current source. Every turn shares the same coordinator, cumulative
 ledger, continuous control and epoch clock; approvals do not renew them.

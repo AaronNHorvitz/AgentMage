@@ -1,0 +1,157 @@
+Commit: bb7678ee37c520b5e41c12b6ec8ddd3fddc351c6
+Scope: local-coding-edit-test-cycle
+
+# Independent core review: combined edit/test/repair coordinator (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only on the repository. I judged the
+pinned checkout `/lane/review-checkout` at exactly `bb7678ee37c520b5e41c12b6ec8ddd3fddc351c6`
+(`git rev-parse HEAD` printed that SHA; its single parent is `d2ddd2dcd701fbdfbdd4a52cd95be1a6bc2eeabd`,
+`git rev-list --count d2ddd2dcd701..bb7678ee` = 1). The build target was `/lane/state/review-target`. I used
+no GPU or model process and did not modify the repository.
+
+## Methods
+
+1. Read IP-POLICY.md, Decision 0173, the new TASKS.md queue prose, the evidence note, the guide section and
+   the bundle README/run.py/check.py/light.py before running anything.
+2. Read the whole production diff (23 paths, +2053/-133) against the base: native combined catalog and
+   binders (`coding_repository_endpoint_command.rs`, `coding_repository_endpoint_edit.rs`), host owner state
+   machine (`coding_endpoint_edit_previews.rs`), turn scheduler (`coding_endpoint_edit_generation.rs`),
+   startup kind (`coding_endpoint_prepared_startup.rs`), context continuation (`coding_endpoint_context.rs`)
+   and the new HTTP factory (`platforms/local-api/src/coding_endpoint_prepared.rs`). I also read the kernel
+   paths it relies on: `coordinator_endpoint.rs` (tool-preparation vs raw `tool_call` parsing, refusals) and
+   `runtime_loop.rs` (failure-observation admission at ~4125, `evaluate_scoped` error mapping at ~3506).
+3. Ran the requested commands from the pinned checkout with a fresh output directory and separate target.
+4. Ran one reviewer probe in a scratch export (`git archive` of the pinned commit into
+   `/lane/state/tmp/review-probe-bb7678ee37c5`, not the repository) to check the new Completion turn.
+
+## Commands and results
+
+| Command (cwd `/lane/review-checkout`) | Result |
+| --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-edit-test-cycle/review-inputs.sha256` | exit 0; 117 entries; manifest SHA-256 `d78796ec60a9cb4411f4c8807f072455d9c2b840c1a9b4cb3db4cb49c95c37bb` matches the request |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-edit-test-cycle/run.py /lane/state/tmp/review-edit-test-cycle-bb7678ee37c5` | exit **1** as expected: `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`; 672.95 s including reservations; command exits 0,0,0,0, fmt 0 (416.52 s incl. slot wait), clippy 0 (36.91 s), test 101 (217.68 s); raw log SHA-256 `fa7f834f04c07abb2b1a61e6c65be32cdf438159efac9b3e8fd4ecca088146c6` |
+| `python3 -B /lane/state/tmp/t303-edit-test-cycle/check.py <same output>` | exit 0; data comparison only: 26 targets; 1196 passed / 72 failed / 63 ignored / 0 measured / 0 filtered; 72 failure identities exactly equal the unchanged T-301 baseline, 0 new; all 8 named methods `ok`; path set, TASKS row lines and predecessor review bytes unchanged |
+| `python3 -B /lane/state/tmp/t303-edit-test-cycle/light.py` | exit 0 (diff-check, untracked lint, review lint, markdownlint 0 issues in 4 files) |
+| `cmp .../validation-final2/source-freeze.json <fresh>/source-freeze.json` | exit 0 (18 Rust/TOML hashes identical to the builder's final run) |
+| `cmp docs/reviews/d2ddd2dcd701-local-coding-failed-test-feedback.txt /lane/reviews/d2ddd2dcd701-local-coding-failed-test-feedback.md` | exit 0 (predecessor review retained byte-identically) |
+| `git diff --check d2ddd2dcd701fbdfbdd4a52cd95be1a6bc2eeabd --` | exit 0 |
+| `git status --short` | empty (clean) |
+| Leftovers in my run's namespace `/tmp/ec-ehgeulns` | exactly the 11 known inherited-failure fixture dirs (`agentmage-host-*-3488-1..11`); left in place, nothing else touched |
+
+The builder's `validation-final2` log independently shows fmt 0 (1.20 s), clippy 0 (0.50 s), test 101
+(180.16 s), consistent with the claim. My counts match it exactly; only wall times differ (slot waits).
+
+### Reviewer probe (scratch export only)
+
+Appended one test to the scratch copy of `shells/host/src/coding_endpoint_edit_cycle_tests.rs` that places a
+combined owner in `Next::Completion` (via the existing cfg(test) helper) and has the synthetic endpoint answer
+the Completion turn with a raw `{"tool_call":{...,"arguments":{"preview":{}}}}` for each of the two tools.
+Command: `CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot cargo test --locked --offline -p
+agentmage-host --lib reviewer_probe -- --nocapture --test-threads=1` (after `touch`ing the probe file; cargo
+otherwise reused the gate build). Output, both tools:
+`step=Err(Dependency(Invalid))`, `tool_started=0`, worktree bytes unchanged, a second advance
+`Err(InvalidBoundaryResult)`. So the attempt is fail-closed (no effect), but see M1.
+
+## What I verified
+
+- **Catalog/binding exactness.** `linux_coding_endpoint_coding_registry` registers the unchanged
+  `EndpointEditTool` and `EndpointCommandTool`; the new `into_endpoint_coding_{edit,command}` share the
+  original binders with only the registry swapped, so every original check (sealed request, ControlledWrite,
+  no cursor, workspace id, exact `visible_tools`, root/creation-receipt hashes, exact argument bytes/hash,
+  action-id range, resource bounds) still applies. Legacy single-effect binders still refuse the combined
+  catalog and vice versa (native test variants 0..3, and `apply()` asserts the legacy refusal each time).
+- **Startup.** `EditAndTest` refuses any `ExcludeScope` (`Error::Source`) and either `DisableTool`
+  (`NoTools`, via the new post-narrowing `visible_tools` equality, which only tightens Edit/Command too).
+  `new_coding` requires the combined `visible_tools`, which only an `EditAndTest` startup can produce, so the
+  edit-only `new` and the combined constructor cannot be crossed. The one-shot prepared path returns
+  `Binding` for `EditAndTest`.
+- **No model/HTTP command selector.** The Test turn accepts only `{"validate":true}` (serde
+  `deny_unknown_fields`; extra/duplicate members, `false` or non-bool refuse) and always prepares
+  `state.validation`, a process-local `CodingEndpointValidation` from the trusted factory. No wire field
+  reaches it. Each edit and test presents its own exact native challenge; stale/foreign decisions are
+  refused (native test reuses the old decision against the rerun; host/API tests replay the edit approval).
+- **Failure-to-repair handoff.** The native boundary consumes the original repair selection before
+  admission and records it; `into_repair_repository` releases the owner only when `Spent` and the feedback
+  was admitted, otherwise returns the boundary unchanged. The host sets `prior_receipt` from the consumed
+  receipt so the rerun is linked; the three-attempt ceiling stays in the native series (native test: attempt
+  2 links `prior_receipt_sha256`, pass cannot mint feedback, calls counted).
+- **Prompt-injection posture.** Diagnostics are wrapped as `untrusted_validation_feedback` with a warning;
+  whatever they say can only influence the next strict edit proposal, which still needs an exact approval
+  and the original mutable/protected-path checks. The Test prompt carries only the instruction and objective.
+- **Raw tool calls.** Edit and Test turns use `tool_preparation`, so raw model `tool_call` JSON is ignored
+  there. In the Completion turn it is parsed, but the host boundary refuses `evaluate_scoped` while the owner
+  is `Ready` (probe above): no grant, start or write.
+- **Verifier.** Completion only builds an ordinary context over actual history; acceptance remains with the
+  supplied verifier. The existing `CodingCompletionVerifier` still rejects any failed history; nothing claims
+  otherwise.
+- **Honest labelling.** Evidence, Decision 0173, guide and TASKS prose state that native fixtures synthesize
+  creation/process observations, that host repair/completion phases are seeded through a cfg(test)-only helper
+  (`synthetic_observation` is `#[cfg(test)]`), that host/API test turns launch no command, and that no
+  complete native/model workflow, coding score or parent acceptance is claimed. The executable still selects
+  edit-only. I found no claim that outruns the runs.
+- **Integrity/hygiene.** No held-out/hidden task, scorer, pin, threshold, dependency, Cargo.lock, SBOM,
+  status model or scoreboard change; no `#[ignore]` added; one commit, no row/sub-row added or closed; task
+  table rows identical to the base. Added lines contain no private home path, username, hostname, credential,
+  personal data, sibling-project name, third-party product comparison or trademark branding. `/lane/...` paths
+  appear only in the retained predecessor review, as accepted previously.
+
+## Findings
+
+### M1 (medium, correctness): the new Completion turn invites tool calls it cannot honor and faults the run
+
+`shells/host/src/coding_endpoint_edit_generation.rs:189-214` builds the Completion turn with
+`CodingEndpointContext::new(input.request, &linux_coding_endpoint_coding_registry()?, &[], ...)`. That context
+(`shells/host/src/coding_endpoint_context.rs:37`, `:150-165`) lists both tools and instructs the model to
+return "either {\"tool_call\":...} ... or a completion candidate", and the turn has no `tool_preparation`. A
+model that follows the prompt and asks to re-run the test or make one more edit (a plausible step after a
+pass) reaches `request_tool`; `CodingEndpointEditBoundary::evaluate_scoped`
+(`shells/host/src/coding_endpoint_edit_previews.rs:497-501`) returns `Invalid` for a `Ready` owner, which
+`runtime_loop.rs:3506-3516` maps to `RuntimeLoopError::Dependency`. The run gets no recorded refusal and no
+terminal outcome. A second advance returns `InvalidBoundaryResult` (reproduced above). This is fail-closed and
+has no security effect. But the Completion turn is the only route to verifier acceptance in this composition,
+and the shipped prompt steers the model into a fault there. The fixtures never hit it because the completion
+fixture's model always returns a completion candidate.
+**Fix:** make the Completion turn completion-only. Either build its context from an empty tool list with a
+completion-only instruction, or attach a `tool_preparation` that always refuses so the kernel records
+`finish_refused_proposal`. Add a test where the Completion-turn model returns a `tool_call` for each tool and
+assert a recorded terminal refusal (not an `Err`) with no grant/start/write.
+Severity is medium because it blocks closing T-303/T-306 until fixed. It does not affect this non-closing
+verdict.
+
+### L1 (low, test coverage): the host-level Command-owner transitions are not executed by any test
+
+`execute_scoped` Command→`Completion`, `permits_failure_observation` Command→`Ready`+feedback+`prior_receipt`,
+and the repair-then-retest sequence in `coding_endpoint_edit_previews.rs:450-483`, `:533-557` run in no test in
+any environment. The host and API fixtures either hit native preparation refusal or deny the command challenge,
+and the repair and completion fixtures enter their phases through `synthetic_observation`, which skips these
+transitions. In this lane the native manifest refuses before any test approval, because the sandbox binaries
+are not uid 0 (`platforms/linux/src/command_runner.rs:511`, `:534`). So the host/API "admitted → deny" branch is
+not exercised here either. I read the transitions and found them correct. The builder discloses this, and it
+extends the predecessor's L2. Backlog, same row: cover these transitions with a trusted host-side observation
+seam or an environment-qualified run before claiming the composed workflow.
+
+### L2 (low, robustness): repair prompts have no headroom reserved for diagnostics
+
+`take_feedback` consumes the held feedback (`coding_endpoint_edit_generation.rs:144`) before
+`prepare_edit_generation_with_feedback` wraps a source context, sized only by `source_budget` (allowed up to
+32 KiB, `coding_endpoint_edit_previews.rs:160`), together with the feedback. If the result exceeds the
+request's context budget, `freeze_messages`/`for_run` refuses and the repair selection is gone. That is
+fail-closed and consistent with the documented "restores no selection". But a host can pick a source budget
+that makes every repair fail. Backlog: reserve the feedback size when sizing the repair source context, or
+refuse at startup when `source_budget` plus the feedback ceiling exceeds the context budget.
+
+The predecessor's L1–L4 and earlier lows remain same-row backlog unchanged.
+
+## Per-row result
+
+- **T-303 (non-closing increment):** PASS for this exact commit. No high finding; M1 is open and must be
+  fixed in-row before T-303 can close. T-303 remains OPEN as requested.
+- **T-306 (non-closing increment):** PASS for this exact commit, same condition (M1 blocks closure). T-306
+  remains OPEN.
+
+Confinement: the new code adds no executor, grant, path adoption or network path. Every effect still goes
+through the original native binders and exact approvals. I did not re-run path-traversal or symlink escape
+probes against the unchanged native write/command code; this commit does not touch it, and the predecessor
+reviews cover it.
+
+Verdict: PASS

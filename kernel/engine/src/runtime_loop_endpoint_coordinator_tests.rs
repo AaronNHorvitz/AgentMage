@@ -533,6 +533,106 @@ struct InterpretedPort {
     interpreted: Arc<AtomicUsize>,
     mode: u8,
 }
+
+struct CompletionOnlyPort {
+    inner: EndpointPort,
+    narrow_first: bool,
+}
+impl RuntimeEndpointTurnPort for CompletionOnlyPort {
+    fn model_binding(&self) -> RuntimeModelBinding<'_> {
+        self.inner.model_binding()
+    }
+    fn prepare<'a>(
+        &mut self,
+        input: RuntimeEndpointPreparationInput<'_>,
+        control: &dyn ModelOperationControl,
+    ) -> Result<RuntimePreparedEndpointTurn<'a>, RuntimePortFailure>
+    where
+        Self: 'a,
+    {
+        let turn = self.inner.prepare(input, control)?;
+        let turn = if self.narrow_first {
+            turn.completion_only()
+        } else {
+            turn
+        };
+        let turn =
+            turn.with_tool_preparation(|_, _| panic!("completion must not invoke an interpreter"));
+        Ok(if self.narrow_first {
+            turn
+        } else {
+            turn.completion_only()
+        })
+    }
+}
+
+#[test]
+fn endpoint_completion_only_narrows_before_interpretation_and_preserves_verification() {
+    for narrow_first in [false, true] {
+        for response in [Response::Read, Response::BadArguments(2), Response::Answer] {
+            let mut original = coordinator([response, Response::Read], true);
+            original.verifier.expected_results = 0;
+            let calls = original.model.0.calls.clone();
+            let executions = original.tool_boundary.executions.clone();
+            let mut c = ReusableRuntimeCoordinator::new_endpoint(
+                endpoint_request(),
+                CompletionOnlyPort {
+                    inner: original.model.0,
+                    narrow_first,
+                },
+                original.registry,
+                original.tool_boundary,
+                original.verifier,
+                original.clock,
+            )
+            .unwrap();
+            let EndpointStep::Complete { outcome } =
+                c.run_endpoint_until_boundary(None, None).unwrap()
+            else {
+                panic!("completion-only terminal")
+            };
+            if matches!(response, Response::Answer) {
+                // The original verifier still refuses missing postcondition
+                // evidence; completion-only is no substitute for that proof.
+                assert_eq!(outcome.outcome.state, AgentStateKind::Failed);
+                assert_eq!(
+                    outcome.outcome.unresolved_codes,
+                    ["runtime.verification.failed"]
+                );
+            } else {
+                assert_eq!(outcome.outcome.state, AgentStateKind::Failed);
+                assert_eq!(
+                    outcome.outcome.unresolved_codes,
+                    ["runtime.proposal.completion-only"]
+                );
+                assert!(outcome.outcome.output.is_none());
+            }
+            assert_eq!(calls.load(Ordering::SeqCst), 1);
+            assert_eq!(executions.load(Ordering::SeqCst), 0);
+            assert_eq!(outcome.outcome.tool_call_count, 0);
+            assert!(c.events().iter().all(|e| !matches!(
+                e.kind,
+                RuntimeEventKind::PermissionRequested { .. }
+                    | RuntimeEventKind::PermissionDecided { .. }
+                    | RuntimeEventKind::ToolStarted { .. }
+                    | RuntimeEventKind::ToolCompleted { .. }
+            )));
+            let mut sequence = RuntimeEventSequence::new();
+            for event in c.events() {
+                sequence.push(event).unwrap();
+            }
+            assert!(matches!(&c.events().last().unwrap().kind,
+                RuntimeEventKind::RunTerminal { outcome_sha256, .. } if outcome_sha256 == &outcome.outcome.outcome_sha256));
+            let events = c.events().to_vec();
+            assert_eq!(
+                c.run_endpoint_until_boundary(None, None).unwrap(),
+                EndpointStep::Complete { outcome }
+            );
+            assert_eq!(c.events(), events);
+            assert_eq!(calls.load(Ordering::SeqCst), 1);
+        }
+    }
+}
 impl RuntimeEndpointTurnPort for InterpretedPort {
     fn model_binding(&self) -> RuntimeModelBinding<'_> {
         self.inner.model_binding()

@@ -193,13 +193,13 @@ impl<C: RuntimeClock + Clone> RuntimeEndpointTurnPort for CodingEndpointStrictEd
                     .map_err(|_| RuntimePortFailure::Invalid)?;
                 // Completion uses actual complete tool history. No additional
                 // source disclosure or parsed pass can certify the task.
-                let mut context = crate::coding_endpoint_context::CodingEndpointContext::new(
-                    input.request,
-                    &registry,
-                    &[],
-                    self.source_budget,
-                )?
-                .at_turn(input.turn, input.request)?;
+                let mut context =
+                    crate::coding_endpoint_context::CodingEndpointContext::completion_only(
+                        input.request,
+                        &registry,
+                        self.source_budget,
+                    )?
+                    .at_turn(input.turn, input.request)?;
                 let request = input.request;
                 let messages = context.build_messages(input, control)?;
                 let (packet, prepared) =
@@ -211,7 +211,8 @@ impl<C: RuntimeClock + Clone> RuntimeEndpointTurnPort for CodingEndpointStrictEd
                         cancellation: ChatCancellation::default(),
                     }),
                     crate::coding_verifier::coding_completion_schema(),
-                ))
+                )
+                .completion_only())
             }
         }
     }

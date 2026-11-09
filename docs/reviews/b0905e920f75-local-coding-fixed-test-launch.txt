@@ -1,0 +1,170 @@
+Commit: b0905e920f75490a2cee9663c25456617642ad02
+Scope: local-coding-fixed-test-launch
+
+# Independent core review: executable fixed-test development startup
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only
+pinned checkout `/lane/review-checkout`. Tier: core. Rows: T-303 / T-306
+(non-closing increment; both parent rows remain OPEN).
+
+## Commit identity and scope
+
+- `git rev-parse HEAD` in the pinned checkout gives
+  `b0905e920f75490a2cee9663c25456617642ad02`, the requested commit.
+- The diff against immutable base `bb7678ee37c520b5e41c12b6ec8ddd3fddc351c6`
+  touches exactly 9 paths: TASKS.md (prose paragraph only; no row line
+  changed), Decision 0174 (new), evidence `t303-coding-launch-2026-11-09.md`
+  (new), runtime-endpoint-runs guide, and five Rust files in
+  `platforms/local-api` (`coding_endpoint_edit_launch.rs`, its unit tests,
+  `lib.rs`, `main.rs`, `tests/coding_endpoint_edit_launch.rs`).
+- No change to scripts, Cargo manifests or lockfile, tasks, hidden/held-out
+  tests, scorer, pins, thresholds, SBOM, status or scoreboard. No `#[ignore]`
+  added. No row or sub-row added or closed.
+
+## Method
+
+1. Read the review bundle README, run.py, check.py and light.py before running
+   anything. run.py wraps only the repository's fast gate, which reserves
+   `/tools/build-slot` itself for each Cargo command
+   (`scripts/local_agent_fast_gate.py:203,304`). Nothing was outer-wrapped. The
+   PATH prepend holds only the retained Node binary and its LICENSE; there is
+   no shim.
+2. Ran the exact commands from the request in the pinned checkout with a
+   separate target directory and a fresh output directory.
+3. Read the full source diff and the predecessor code it composes:
+   - `serve_coding_endpoint_edits_and_tests` and `CodingEndpointEditPreviews::new_coding`/`new_inner`
+   - `CommandSpec::verify`/`validate_spec_shape`
+   - `ValidationKind::is_test`, `ValidationParserKind`
+   - `object_json`
+4. Ran my own probes against the built binary, using a scratch directory
+   outside the repository that I removed afterwards.
+
+## Exact commands and results (all from /lane/review-checkout)
+
+| Command | Result |
+| --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-coding-launch/review-inputs.sha256` | exit 0 (all 19 inputs match; manifest SHA-256 `0652e2f1…6a82a66` as stated) |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-fixed-test-launch-b0905e920f75` | exit 0; `GATE_EXIT 0 SOURCE_FREEZE_UNCHANGED True`; six gate commands all `RESULT exit=0` (fmt 5.26s, clippy 32.11s, tests 81.39s; total 120.29s including reservations); `FAST GATE: PASS` |
+| `python3 -B …/check.py /lane/state/tmp/review-fixed-test-launch-b0905e920f75` | exit 0; 11 unfiltered targets, totals 222 passed / 0 failed / 0 ignored / 0 measured / 0 filtered; my raw log SHA-256 `a30017161df2ed385d905112be7b61f5b570aa243f9c62387fe919dc3440b596` |
+| `python3 -B …/light.py` | exit 0; diff-check, untracked lint and markdownlint (4 files, 0 issues) pass |
+| `cmp …/validation-final/source-freeze.json …/review-fixed-test-launch-b0905e920f75/source-freeze.json` | exit 0 (identical five Rust hashes) |
+| `git diff --check bb7678ee37c520b5e41c12b6ec8ddd3fddc351c6 --` | exit 0, no output |
+| `git status --short` | exit 0, empty |
+
+Each expected 0 was observed. The per-target counts in my run are
+50/0/0/0/14/4/21/4/69/20/40, which match the builder's totals. All four added
+methods and the expanded shared entry-point tests report `ok` in my log. The
+private TMPDIR (`/tmp/coding-launch-owm1wgcu`) removed itself. The builder's
+`validation-final` artifacts are consistent: result exit 0, 222 tests,
+six exit-0 commands with the stated timings and the stated raw-log hash.
+`focus.log` shows 10 passed, 40 filtered, so it is correctly labelled as
+focused and not the full gate.
+
+## Own probes (built binary, scratch dir outside repo)
+
+- `serve-endpoint-coding-development 0.0.0.0:0 …` refuses before binding
+  (exit 1).
+- A top-level JSON array launch, a symlinked launch path and a relative launch
+  path each refuse (exit 1) with no stdout preview and no creation prompt.
+- An extra trailing argument falls through to the usage text.
+
+## Review findings by area
+
+**Authorization and confinement.**
+- `Validation` is a private struct under `deny_unknown_fields`. It is read
+  only from the private launch file through the existing `private_bytes`
+  reader (no alias, mode check). `CodingEndpointValidation` has no
+  `Deserialize`, so no HTTP or model path can construct it.
+- `into_native` runs `CommandSpec::verify`. This re-checks the shape
+  (`grant_required`, `!interactive`, `!network`, `!inherit_environment`,
+  environment allowlist `LANG/LC_ALL/NO_COLOR/TZ`, prohibited shell
+  executable names, bounds) and the canonical digest. It also requires
+  `OwnedWorktree`, a test kind and a positive minimum, and rejects
+  `ProcessExitV1`.
+- The order inside the factory is correct:
+  `load → prepare (catalog/kind) → into_native → ApprovalInput → LinuxCodingRepository::open/prepare`.
+  So refusal happens before any state write or native inspection. The
+  executable test confirms this for `minimum_test_count: 0`: no
+  `code.endpoint.edit-startup` stderr, empty state and owned directories, and
+  no model connection.
+- Exact combined-catalog enforcement holds at two layers: `prepare` with
+  `EditAndTest` (tested by the wrong-catalog case) and the predecessor
+  `new_inner` `visible_tools` equality.
+- Native executable trust, manifest and resource admission, per-test exact
+  approval, the stdin creation decision and delayed credential reads are
+  unchanged.
+- The legacy edit-only path refuses any `validation` key, including `null`.
+  The `as_object().unwrap()` cannot panic, because a non-object top level has
+  already been refused by the `shape["request"].is_object()` check and by
+  `object_json`.
+
+**Untrusted-input parsing.**
+- Duplicate struct fields are refused by serde's derive.
+- Positional-array forms are refused by explicit shape checks for every
+  nested struct in `CommandSpec`: the validation object, the command, the
+  bounds and the environment map. The remaining fields are strings, unit
+  enums or a string array.
+- Duplicate keys inside the `environment` map are last-wins, but the seal is
+  computed over the typed value that is actually used, so what is verified and
+  what is executed cannot diverge.
+
+**Secrets and logging.** No new logging of private content. The credential
+is still read only after observed creation success.
+
+**Evidence and claims.**
+- The evidence, guide and decision describe the change accurately.
+- Synthetic unit metadata (`/usr/bin/true`, digest `a…a`) is labelled
+  synthetic.
+- The executable test claims only the unchanged native Git artifact refusal.
+- No successful native or model workflow, score or completion certification
+  is claimed. The verifier for the new command is the existing refusing
+  `UnverifiedEdits`, under a distinct id `strict-coding-unverified`.
+- No private host path, username, hostname, credential or third-party
+  branding in the committed diff.
+
+**Supply chain.** No dependency or lockfile change. The retained Node binary
+and LICENSE are unchanged; no download.
+
+**Evaluation integrity.** No task, hidden/held-out test, scorer, pin or
+threshold touched. Nothing in this diff is tuned to held-out content.
+
+**Delivery.** No new row or sub-row. The increment ends in a runnable CLI
+command exercised by an executable test.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (backlog; do not block):
+
+1. **L1 — opaque refusal diagnostics.**
+   `platforms/local-api/src/coding_endpoint_edit_launch.rs:52-70,87-97`. Every
+   malformed or unsafe validation definition maps to `ApiError::Configuration`.
+   The operator sees only the generic "Local API failed" line, so they cannot
+   tell whether the problem is the seal, the working directory, the parser,
+   the kind or the shape.
+   Fix: emit a fixed, content-free reason code to stderr for each refusal
+   class, for example `code.endpoint.validation: seal|scope|kind|parser|shape`.
+   Do not echo values.
+2. **L2 — executable-level ordering covers only one invalid field.**
+   `platforms/local-api/tests/coding_endpoint_edit_launch.rs:157-183`. Only
+   `minimum_test_count: 0` is driven through the actual executable to show
+   there are no state writes, no native inspection and no model contact. Stale
+   seal, `EmptyScratch`, `network: true` and `ProcessExitV1` are refused only
+   at the `into_native` unit level. They share the same call site, so the
+   ordering is structurally equivalent.
+   Fix: loop two or three of these variants through the same executable
+   assertion block.
+
+## Per-row result
+
+- **T-303 / T-306 (this increment, local-coding-fixed-test-launch): PASS.**
+  The exact commit meets the increment's stated claims, with no high or medium
+  finding.
+- This PASS does not close T-303 or T-306. It does not qualify successful
+  native or model coding execution, linked-pass/current-source verification,
+  durable recovery, approved Git, task completion or any coding score; all of
+  these remain OPEN. The predecessor bb7678ee review is a separate matter and
+  this review does not judge it.
+
+Verdict: PASS

@@ -74,6 +74,7 @@ pub struct RuntimePreparedEndpointTurn<'a> {
     port: Box<dyn PreparedDispatch + 'a>,
     completion_schema: SchemaReference,
     tool_preparation: Option<Box<ToolPreparation<'a>>>,
+    completion_only: bool,
 }
 
 /// Original coordinator identities for interpreting a completed answer. This
@@ -123,7 +124,18 @@ impl<'a> RuntimePreparedEndpointTurn<'a> {
             port: Box::new(Prepared(port)),
             completion_schema,
             tool_preparation: None,
+            completion_only: false,
         }
+    }
+
+    /// Narrow this turn to a completion candidate for the original verifier.
+    /// Tool-shaped answers terminate with a recorded refusal before admission.
+    /// No tool interpreter is invoked, even if one was attached to this turn.
+    /// This process-local restriction cannot be selected by model or wire data.
+    #[must_use]
+    pub fn completion_only(mut self) -> Self {
+        self.completion_only = true;
+        self
     }
 
     /// Opt into trusted interpretation of a normally completed answer. Called
@@ -132,6 +144,7 @@ impl<'a> RuntimePreparedEndpointTurn<'a> {
     /// failure enters this callback. It may prepare an inert preview under prior
     /// source-read consent, but MUST NOT execute effects or confer authority.
     /// No wire/model field can select or construct this process-local callback.
+    /// A completion-only restriction takes precedence over this callback.
     #[must_use]
     pub fn with_tool_preparation<F>(mut self, prepare: F) -> Self
     where
@@ -468,6 +481,7 @@ impl<
             port,
             completion_schema,
             tool_preparation,
+            completion_only,
         } = prepared;
         let descriptor = port.request().clone();
         let mut phase = match RuntimeEndpointModelPhase::for_run(&request, &descriptor, context) {
@@ -633,6 +647,17 @@ impl<
         self.state
             .transition(AgentStateKind::Validation)
             .map_err(|_| RuntimeLoopError::State)?;
+        if completion_only
+            && serde_json::from_str::<serde_json::Value>(&text)
+                .is_ok_and(|value| value.get("tool_call").is_some())
+        {
+            return self.finish_refused_proposal(&turn_id, "runtime.proposal.completion-only");
+        }
+        let tool_preparation = if completion_only {
+            None
+        } else {
+            tool_preparation
+        };
         let interpreted = if let Some(prepare) = tool_preparation {
             let closing_sha256 = observation_sha256(&accepted)?;
             if self.tool_budget_exhausted(&turn_id, &closing_sha256)? {
