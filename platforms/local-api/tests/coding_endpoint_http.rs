@@ -12,7 +12,8 @@ use agentmage_kernel_engine::{
 };
 use agentmage_local_api::{
     ApiError, ApiTokens, CodingEndpointHttpRun, CodingEndpointObservationAccess,
-    serve_coding_endpoint, serve_coding_endpoint_with_observation_access,
+    serve_admitted_coding_endpoint, serve_coding_endpoint,
+    serve_coding_endpoint_with_observation_access,
 };
 
 #[path = "support/coding_endpoint_mcp.rs"]
@@ -732,4 +733,101 @@ fn endpoint_http_rejects_foreign_factory_identity_before_serving_or_dispatch() {
         upstream.accept().unwrap_err().kind(),
         std::io::ErrorKind::WouldBlock
     );
+}
+
+#[test]
+fn endpoint_http_original_admission_serves_same_owner_and_original_controls() {
+    let executions = Arc::new(AtomicUsize::new(0));
+    let model = TcpListener::bind("127.0.0.1:0").unwrap();
+    model.set_nonblocking(true).unwrap();
+    let endpoint =
+        LocalChatEndpoint::parse(&format!("http://{}/v1", model.local_addr().unwrap())).unwrap();
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let address = listener.local_addr().unwrap();
+    let stop = Arc::new(AtomicBool::new(false));
+    let worker_stop = stop.clone();
+    let count = executions.clone();
+    let admissions = Arc::new(AtomicUsize::new(0));
+    let observed = admissions.clone();
+    let worker = thread::spawn(move || {
+        serve_admitted_coding_endpoint(
+            listener,
+            ApiTokens::new(CLIENT.into(), CONTROL.into()).unwrap(),
+            worker_stop,
+            CodingEndpointObservationAccess::ControlOnly,
+            |id, session, runs| {
+                observed.fetch_add(1, Ordering::SeqCst);
+                let input = compose(id, session, endpoint, count);
+                let request = input.request.clone();
+                runs.admit(
+                    agentmage_host::coding_endpoint_owner::CodingEndpointAdmission {
+                        request: input.request,
+                        connection: input.connection,
+                        registry: input.registry,
+                        sources: &input.sources,
+                        source_budget: input.source_budget,
+                        include_usage: input.include_usage,
+                        tool_boundary: input.tool_boundary,
+                        verifier: input.verifier,
+                        clock: input.clock,
+                    },
+                )
+                .map_err(|_| ApiError::Configuration)?;
+                Ok(request)
+            },
+        )
+    });
+    let api = Api {
+        address,
+        stop,
+        worker: Some(worker),
+    };
+    let request = api.request();
+    assert_eq!(admissions.load(Ordering::SeqCst), 1);
+    assert_eq!(
+        api.call("GET", "/v1/code/endpoint/request", CLIENT, None).0,
+        403
+    );
+    assert_eq!(api.advance(&request, Value::Null, false).0, 403);
+    assert_eq!(api.bind("cancel", &request).0, 200);
+    assert_eq!(api.advance(&request, Value::Null, false).0, 200);
+    assert_eq!(api.bind("release", &request).0, 200);
+    assert_eq!(admissions.load(Ordering::SeqCst), 1);
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    assert!(matches!(model.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock));
+}
+
+#[test]
+fn endpoint_http_original_admission_refuses_unheld_or_substituted_request_before_serving() {
+    for substituted in [false, true] {
+        let model = TcpListener::bind("127.0.0.1:0").unwrap();
+        model.set_nonblocking(true).unwrap();
+        let endpoint =
+            LocalChatEndpoint::parse(&format!("http://{}/v1", model.local_addr().unwrap()))
+                .unwrap();
+        let executions = Arc::new(AtomicUsize::new(0));
+        let result = serve_admitted_coding_endpoint::<Boundary, Verifier, Clock>(
+            TcpListener::bind("127.0.0.1:0").unwrap(),
+            ApiTokens::new(CLIENT.into(), CONTROL.into()).unwrap(),
+            Arc::new(AtomicBool::new(false)),
+            CodingEndpointObservationAccess::ControlOnly,
+            |id, session, _runs| {
+                let input = compose(
+                    if substituted {
+                        RuntimeRunId::from_raw("foreign-run")
+                    } else {
+                        id
+                    },
+                    session,
+                    endpoint,
+                    executions.clone(),
+                );
+                // A sealed request cannot reconstruct a held coordinator.
+                Ok(input.request)
+            },
+        );
+        assert!(matches!(result, Err(ApiError::Configuration)));
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert!(matches!(model.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock));
+    }
 }

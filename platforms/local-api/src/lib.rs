@@ -11,8 +11,8 @@ mod coding_endpoint_launch;
 pub use coding_endpoint_launch::serve_coding_endpoint_read_development;
 mod coding_owned_api;
 pub use coding_endpoint_api::{
-    CodingEndpointHttpRun, CodingEndpointObservationAccess, serve_coding_endpoint,
-    serve_coding_endpoint_with_observation_access,
+    CodingEndpointHttpRun, CodingEndpointObservationAccess, serve_admitted_coding_endpoint,
+    serve_coding_endpoint, serve_coding_endpoint_with_observation_access,
 };
 mod coding_repair_api;
 mod coding_repository_api;

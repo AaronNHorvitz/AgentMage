@@ -1,5 +1,63 @@
 # Endpoint run framing
 
+## Trusted startup for an original prepared effect
+
+`CodingEndpointPreparedStartup` composes one original prepared edit or command
+with the retained configured-endpoint coordinator. The trusted host supplies
+current repository instruction provenance, selects the exact catalog and obtains
+source-read and model-disclosure consent. `prepare` checks the original seal and
+catalog, compiles the existing narrowing rules, reduces limits and reseals the
+request with the narrowing identity. It performs no source read or effect.
+
+Edit exclusions remove paths from the explicit mutable set. The original native
+constructor then refuses any diff touching a removed or protected path. Source
+snapshots under excluded scopes refuse the entire admission. Commands refuse
+per-directory read exclusions because the original offline command worker can
+read the whole held worktree. Required verification also refuses here: this
+factory has no independently bound completion-validation registry. A prepared
+test command alone cannot satisfy that requirement.
+
+Use the final `request` to construct the original canonical call, then `bind`
+with the live `LinuxCodingRepository` and original coordinator turn/operation
+identities. The native adapter checks creation ownership and the full preview,
+including command ceilings against the narrowed run. A binding refusal returns
+the repository intact. Request policy metadata is preserved; it is not used as
+a substitute for the native owner's actual kernel policy or exact grants.
+
+`CodingEndpointPrepared::admit` checks every supplied source path before context
+composition and moves the original effect owner into `CodingEndpointRuns`.
+The coordinator and native boundary share one epoch-clock owner; neither clones
+a clock nor renews a budget. Clock poisoning refuses both consumers. The host
+also supplies the original continuous control and independent verifier. Model
+advances still need separate disclosure consent, and every effect still needs
+its original protected decision. The selected edit or command adapter delegates
+all effect stages to the original native owner, without another executor.
+
+Construction and admission perform no model/tool dispatch. Admission failure
+drops the process-held owner and does not clean up or adopt the worktree.
+Abandoning a bound preparation returns that same owner with the pending effect
+dropped. There is no replay or durable recovery. This is a single-prepared-effect
+library composition; executable controlled startup, general model-driven
+edit/test/retry, recovery, approved Git and coding measurements remain open.
+Positive native admission through this factory has not been demonstrated.
+T-303/T-306 remain open.
+
+Trusted hosts can call the exported `serve_admitted_coding_endpoint` with a
+factory that uses its fresh service-issued run/session identities to prepare,
+bind and admit the original native owner. The returned request must identify an
+actually held run with those exact identities. The original authenticated HTTP
+service then owns the same coordinator; no port is extracted or reconstructed.
+All existing routes, startup observation policy, disclosure consent, exact
+approvals, cancellation and release checks stay in the same service path. This
+is an embedding API, not an executable controlled-write launch command.
+
+The original command adapter's endpoint cancellation paths are the retained run
+control and scoped probe. Cancellation handles obtained before handoff through
+`command_cancellation` are not connected to this endpoint path. A small result
+budget can still cause post-dispatch projection refusal; preflight coverage of
+output, CPU and disk ceilings remains backlog. Inspect actual retained state;
+refusal does not establish that no process effect occurred.
+
 ## Native prepared-edit decision handoff
 
 Trusted Linux hosts can consume a `LinuxCodingRepository` with its original

@@ -1,0 +1,187 @@
+Commit: 07ab1d6f398777a35c47ef81aba43bed09894ded
+Scope: local-coding-endpoint-command
+
+# Independent core review: endpoint command/test coordinator boundary
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only on the repository.
+Pinned checkout: /lane/review-checkout. `git rev-parse HEAD 07ab1d6f398777a35c47ef81aba43bed09894ded`
+prints the full SHA twice. Its parent is 04eb70a5162ed0385e3d2e199427340174fa2fec.
+Rows: T-303 / T-306. This increment does not close a row, and both parent rows remain OPEN.
+
+## Methods
+
+1. Read the helper README, run.py, audit.py and light.py before running anything. They are benign:
+   they make no network call and no repository write, and the only deletion is `rmdir` of an empty
+   owned `/tmp/nc-*` directory.
+2. Read the whole eleven-file diff over 04eb70a5. Reviewed in full:
+   `coding_repository_endpoint_command.rs` (new, 645 lines), the `ExactEffect` issue/consume split in
+   `coding_repository.rs`, the `PendingCommand.issued`, `command_effect`, `issue_command` and
+   `run_command_observed` changes in `coding_repository_command.rs`, the visibility-only test changes,
+   the `lib.rs` exports, all fifteen new tests, the decision, the guide section, the evidence and the
+   TASKS edits.
+3. Traced the kernel paths that the claims depend on:
+   - `CommandEffectDriver::execute` (`kernel/engine/src/command_runner.rs:845-900`): the authority
+     operation, held-root and argument binding, then a scoped cancellation observation in which an
+     error fails closed.
+   - `ScopedEffectCancellation` / `observe_effect_cancellation` (`propagation.rs:290`): task and
+     correlation validation.
+   - The validation attempt selection and consumption (`coding_repository_validation.rs:240-290`).
+4. Ran the requested commands from the pinned checkout. The gate ran with a fresh output directory
+   and a separate target.
+5. Wrote six probes that are reviewer-only and not in the repository. They ran in a `git archive`
+   copy at /lane/state/tmp/review-scratch-07ab1d6f3987 under build-slot.
+6. Scanned the added lines for private paths, usernames, hostnames, credentials, and product or
+   trademark names. The only `/lane/...` paths are in the retained predecessor report, which follows
+   the established review-report practice. There is no `/var/home`, no username and no hostname.
+
+## Commands and results (all run in /lane/review-checkout)
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-endpoint-command/review-inputs.sha256` | 0 | All 11 inputs match. |
+| `/lane/state/tmp/t303-endpoint-write/tooling/node --version` | 0 | v24.15.0 |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-endpoint-command-07ab1d6f3987` | 1 | `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`. The seven commands exited 0,0,0,0,0,0,101: diff-check 0.10s, lint-untracked 0.10s, lint-reviews 0.10s, markdownlint 1.40s, fmt 214.96s (mostly reservation wait), clippy -D warnings 42.54s, all-target tests 219.44s. Total 478.71s including reservations. `FAST GATE: FAIL`. No timeout, so no 124. |
+| `python3 -B .../audit.py <out>` | 0 | 25 targets. Totals: 1130 passed, 72 failed, 63 ignored, 0 measured, 0 filtered. 72 inherited identities, 0 new and 0 missing; baseline sha256 d615eaf0…f19e. All 15 new methods `... ok`. Source unchanged. Ledger rows unchanged. Privacy patterns absent. This is a DATA audit only and the gate remains FAIL. |
+| `python3 -B .../light.py` | 0 | `CURRENT_LIGHT_CHECKS_PASS` |
+| `cmp .../validation-final2/source-freeze.json <out>/source-freeze.json` | 0 | The six Rust input hashes are identical to the builder's final freeze. |
+| `git diff --check 04eb70a5… --` | 0 | Clean. |
+| `git status --short` | 0 | Empty. |
+| Scratch: `TMPDIR=<owned> CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib reviewer_ -- --nocapture` | 0 | 6 passed, 0 failed, 364 filtered. These are reviewer-only tests in the scratch copy. Their owned TMPDIR was empty and was removed. |
+
+**No build-slot rerun of the plan.** The gate completed without a timeout, so the conditional rerun
+of the identical plan.json Cargo argv under build-slot was not needed.
+
+**Temporary namespace.** The owned namespace `/tmp/nc-9j0lbk3k` holds 22 entries. Four of them are
+inherited host-fixture files totalling 36 bytes:
+- `agentmage-host-generic-denials-*`: outside.txt, alpha.txt
+- `agentmage-host-generic-preview-*`: zeta.txt, alpha.txt
+
+This matches the builder's report. I retained it without cleanup. The new command fixtures left no
+residue.
+
+**Predecessor report.** `docs/reviews/04eb70a5162e-local-coding-native-endpoint-boundary.txt` is
+byte-identical to `/lane/reviews/04eb70a5162e-local-coding-native-endpoint-boundary.md` (`cmp` exit 0).
+
+## Reviewer probes (scratch copy only)
+
+1. **Model-altered preview is inert.** I altered the preview's command and re-hashed it consistently,
+   making it a self-consistent forged call. All three stages refused it:
+   - evaluate refused it with the stage still `Ready`;
+   - resolve refused it with the stage still `Asked`, and preflight was never reached;
+   - execute refused it with zero executor calls.
+
+   The original call then executed once.
+2. **Abandoned issue.** I issued an Allow, called `into_repository`, then prepared again. The old
+   evaluation cannot execute on the fresh boundary. A second Allow has a distinct grant ID. Zero
+   executor calls.
+3. **No second dispatch.** After a successful execution, a second execute refuses. A direct
+   `decide_command` on the returned owner also refuses. There is exactly one authority receipt and one
+   executor call.
+4. **Pre-handoff cancellation handle.** I obtained a handle with `command_cancellation(digest)`
+   before handoff and called `cancel()`, which returned Ok. Execution then still dispatched:
+   `execute ok=true calls=1`. See L1.
+5. **Minimum projection size.** A zero-stdout successful projection is 2,766 bytes. See L2.
+6. **Expired response.** A response at `now == expires_at` refuses, and no grant is issued.
+
+## Assessment against the request
+
+- **Binding.** `into_endpoint_command` (`coding_repository_endpoint_command.rs:105-203`) binds all of
+  the following, and returns the original owner unchanged on refusal:
+  - the verified sealed request, ControlledWrite mode, no cursor;
+  - the workspace ID and the exact one-tool catalog;
+  - the held-root and creation-receipt pins;
+  - `issued == None`;
+  - canonical call bytes, hash, schema and media type;
+  - the run-derived action ID.
+
+  Memory, process count and timeout must fit the sealed request, and a missing budget counts as 0,
+  which fails closed.
+- **Issue and consume.** `ExactEffect::issue` and `IssuedExactEffect::execute`
+  (`coding_repository.rs:611-792`) are a pure split of the previous single path:
+  - direct commands and worktree creation call `issue(..)?.execute(..)` with identical inputs;
+  - the issued state is private and non-Clone, and lives only in `PendingCommand`;
+  - nothing reconstructs it from wire data;
+  - execution re-checks the grant's time window and updates only `context.now_epoch_ms`;
+  - network, credential and publication scopes stay `deny_all`.
+- **Stage discipline.**
+  - Every matching call sets `Spent` before control, clock, owner or preflight dependencies.
+  - Mismatched scope, definition, call, challenge or response returns before the stage changes.
+  - Narrow refuses.
+  - Deny consumes the pending command without dispatch and spends no attempt.
+  - After Allow, `issued.grant_id == proposed_grant_id`, and `authority_sha256` is the canonical
+    digest of the issued grant.
+- **Dispatch.** Execution follows this order:
+  1. re-checks the clock and `now >= resolved_at`, plus held root, creation receipt and deadline;
+  2. takes the pending command, then makes a pre-dispatch cancellation observation;
+  3. calls `native_executor` again for the public path;
+  4. passes through `run_command_observed`, which consumes the validation attempt and then the issued
+     grant through the original driver.
+
+  The native manifest, sandbox and offline worker are unchanged. Command output is retained in
+  `last_result`. Output over `max_output_bytes` returns Uncertain and is never re-dispatched.
+- **Cancellation bridge.** `CommandControl` turns the original control's Cancelled or TimedOut into
+  the command's attempt-scoped signal, with `DeadlineReached` kept for TimedOut. Unavailable and
+  Invalid fail closed. A probe signal whose task or correlation does not match returns
+  ScopeMismatch. The kernel driver turns any observation error into `CancellationUnavailable` before
+  launch.
+- **Prompt injection.** Command output is untrusted, response-only data. After one use the boundary
+  is `Spent`, so any tool call proposed later by the model, including one injected through command
+  output, gets `Invalid`. The catalog has exactly one operation. The test-only preflight and executor
+  seams are private methods and have no production hook.
+- **Evaluation integrity.** No held-out, hidden-test, task, scorer, threshold, model, dependency or
+  lockfile file is in the diff. No score is claimed. The TASKS row lines are unchanged (audit
+  assertion), and no sub-row was added.
+- **Honest labelling.** The creation, endpoint and command observations are labelled SYNTHETIC in the
+  test header, the guide, the decision and the evidence. The shared-coordinator test uses the
+  explicitly synthetic `SyntheticBoundary` and deliberately refuses upstream, so the outcome is
+  asserted to be non-success. The guide states that native admission still refuses in this lane, and
+  `endpoint_command_native_admission_refusal_...` exercises the public `resolve_scoped` and accepts
+  either outcome honestly. The evidence numbers (1130/72/63/0/0, 25 targets, 72 identities, 15 new
+  methods) match my independent run. My timings differ only by reservation wait.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low).** A cancellation handle obtained before handoff is silently disconnected.
+  - **Where:** `coding_repository_endpoint_command.rs:422`.
+  - **What happens:** `execute_using` creates a new token with
+    `LinuxCodingCommandCancellation::for_pending(&pending)`. A handle the caller obtained earlier
+    from the public `command_cancellation(digest)` has the same attempt ID but a different token. Its
+    `cancel()` returns Ok, yet the command still dispatches (probe 4).
+  - **Why it is only low:** no claim covers that handle. The `command_cancellation` docs say a handle
+    connects only through `decide_*_with_cancellation`, and the documented endpoint stop paths (run
+    control and probe) work.
+  - **Wording issue:** the evidence phrase "through the command's attempt-scoped cancellation handle"
+    could be read as covering this handle.
+  - **Fix:** do one of the following:
+    - accept an optional `&LinuxCodingCommandCancellation` in `into_boundary`, verify it with
+      `verify_command_cancellation`, and reuse its token in the bridge;
+    - make `command_cancellation` refuse once `issued` is Some or the owner has been handed off, and
+      document in the guide that pre-handoff handles are not connected.
+- **L2 (low).** The output, CPU and disk ceilings are not checked before dispatch.
+  - **Where:** `coding_repository_endpoint_command.rs:146-162`.
+  - **What happens:** construction checks memory, task count and timeout against the sealed request.
+    It does not check `max_output_bytes` against the fixed projection overhead (about 2.8 KB with
+    empty output, per probe 5) plus `stdout_bytes + stderr_bytes`. It also does not check CPU or
+    `DiskBytes`. A sealed run with a small output budget can therefore be approved and dispatch a
+    real offline process whose result is certain to be refused as Uncertain.
+  - **Why it is only low:** this fails closed with no confinement impact, and the
+    post-dispatch-refusal behaviour is documented.
+  - **Fix:** refuse at construction when `stdout_bytes + stderr_bytes + a fixed projection allowance`
+    exceeds `request.limits.max_output_bytes`, and add a test case.
+
+The predecessor's L1 and L2 remain backlog as stated. I saw nothing new on them: errors before
+dispatch still map conservatively to Uncertain (`execute_using`, line 445).
+
+## Per-row result
+
+- **T-303 / T-306, increment "local-coding-endpoint-command":** PASS for this non-closing increment.
+  There are no open high or medium findings. L1 and L2 go to the same-row backlog.
+- **Both parent rows remain OPEN.** The following are still unimplemented or unmeasured: trusted
+  controlled startup, native execution admission in this lane, general model-driven coding, durable
+  recovery, approved Git, and parent measurements.
+- The ordinary complete gate remains FAIL with exactly the 72 inherited T-301 failures. This PASS is
+  not a green gate.
+
+Verdict: PASS

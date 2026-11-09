@@ -17,6 +17,8 @@ use std::{
 };
 
 type Error = CodingEndpointStartupError;
+#[path = "coding_endpoint_prepared_startup_tests.rs"]
+mod prepared_tests;
 #[path = "coding_endpoint_read_verifier_tests.rs"]
 mod read_verifier_tests;
 struct Fixture {

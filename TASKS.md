@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The [command/test adapter independent core review](docs/reviews/07ab1d6f3987-local-coding-endpoint-command.txt)
+has **Verdict: PASS** for exact commit
+`07ab1d6f398777a35c47ef81aba43bed09894ded`, with no high/medium finding.
+Low L1 (pre-handoff cancellation handles are not connected to endpoint execution)
+and L2 (conservative output/CPU/disk preflight bounds) remain same-row backlog.
+Both parent rows remain open; no row is closed.
+
+The [prepared-effect startup](docs/guides/runtime-endpoint-runs.md#trusted-startup-for-an-original-prepared-effect)
+composes trusted instruction narrowing and the original native edit/command
+owners with the retained endpoint coordinator. It preserves exact approvals,
+native admission and one shared epoch-clock owner. This is single-effect library
+composition; executable controlled startup, general model-driven coding,
+recovery, approved Git and measurements remain open. The
+[builder record](docs/evidence/t303-prepared-startup-2026-11-08.md) records tests
+and limitations. Independent core review is required. T-303/T-306 remain open;
+no row or sub-row is added or closed. Twelve added methods pass; formatting and
+Clippy pass. The complete scoped gate remains FAIL with exactly the 72 inherited
+failures and no new failure identities.
+
 The [native edit boundary independent core review](docs/reviews/04eb70a5162e-local-coding-native-endpoint-boundary.txt)
 has **Verdict: PASS** for exact commit
 `04eb70a5162ed0385e3d2e199427340174fa2fec`, with no high/medium finding.
@@ -19,7 +38,7 @@ Git and parent measurements remain open. Fifteen new methods pass; formatting
 and Clippy pass. The complete scoped gate remains FAIL with exactly 72 inherited
 failures and no new failure identities. See the
 [builder record](docs/evidence/t303-endpoint-command-2026-11-08.md).
-Independent core review is required. T-303/T-306 stay open; no row is added
+Independent core review is recorded above. T-303/T-306 stay open; no row is added
 or closed.
 
 The predecessor's [independent core review](docs/reviews/e4a92e4b6a48-local-coding-native-endpoint-edit.txt)

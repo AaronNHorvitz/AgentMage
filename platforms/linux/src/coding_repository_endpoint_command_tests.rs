@@ -1315,3 +1315,22 @@ fn endpoint_command_live_bridge_preserves_deadline_reason_and_rejects_late_forei
         }
     }
 }
+
+#[test]
+fn endpoint_command_abandon_original_prepared_handle_returns_same_unissued_owner() {
+    for validation in [false, true] {
+        let f = Fixture::new();
+        let owner = owner(&f, validation, None);
+        let before = owner.inspect().unwrap();
+        let prepared = handoff(owner);
+        let owner = prepared.into_repository();
+        assert_eq!(owner.inspect().unwrap(), before);
+        assert!(owner.inspect_command().unwrap()["pending"].is_null());
+        assert!(owner.inspect_validation().unwrap()["pending"].is_null());
+        owner.verify_created().unwrap();
+        assert_eq!(
+            fs::read(f.0.join("owned/worktree/sentinel")).unwrap(),
+            b"preserve"
+        );
+    }
+}

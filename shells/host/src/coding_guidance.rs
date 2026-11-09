@@ -180,9 +180,10 @@ pub fn compile_coding_guidance(
     )
 }
 
-/// Compiles the same trusted narrowing for a file-only composition. With no
-/// validation worker registered, every RequireVerification constraint refuses;
-/// an invalid or synthetic validation registry is never constructed.
+/// Compiles the same trusted narrowing without a completion-validation registry.
+/// File-only and single prepared-effect startup use this path. Every
+/// RequireVerification constraint refuses; a prepared command is not an
+/// independently bound validation registry and cannot satisfy that requirement.
 pub fn compile_coding_read_guidance(
     workspace_id: &WorkspaceId,
     ledger: &InstructionEvidenceLedger,

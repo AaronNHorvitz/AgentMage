@@ -198,9 +198,15 @@ where
     )
 }
 
-// Trusted startup may consume its held native preparation directly into the
-// very same owner served here. No extraction or reconstruction of live ports.
-pub(crate) fn serve_admitted_coding_endpoint<T, V, C>(
+/// Hosts an original trusted admission directly in the same retained owner
+/// served by the authenticated endpoint API. The factory runs once with fresh
+/// service-issued identities. It may consume an original native preparation via
+/// its trusted startup factory; no live ports are extracted or reconstructed.
+/// The returned request must match both identities and an actually held run.
+/// This grants no inspection, model disclosure, effect or recovery authority.
+/// All HTTP routes, the explicit startup observation policy, per-advance
+/// disclosure consent and exact approval checks use the existing service path.
+pub fn serve_admitted_coding_endpoint<T, V, C>(
     listener: TcpListener,
     tokens: ApiTokens,
     stop: Arc<AtomicBool>,

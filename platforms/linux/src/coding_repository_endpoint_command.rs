@@ -203,6 +203,15 @@ impl LinuxCodingRepository {
     }
 }
 impl LinuxCodingEndpointCommand {
+    /// Abandons this original pending command or validation and returns the same
+    /// live repository owner. No grant is issued, effect dispatched or preview
+    /// restored. Existing command/validation results remain inspectable.
+    #[must_use]
+    pub fn into_repository(mut self) -> LinuxCodingRepository {
+        self.repository.command = None;
+        self.repository
+    }
+
     /// Original sealed request, without endpoint credential material.
     pub const fn request(&self) -> &RuntimeEndpointRunRequest {
         &self.request
@@ -259,9 +268,8 @@ impl<C: RuntimeClock> LinuxCodingEndpointCommandBoundary<C> {
     /// Returns the same live owner, abandoning any pending preview or issued grant
     /// handle. Durable authority remains recorded and expires normally; no replay.
     #[must_use]
-    pub fn into_repository(mut self) -> LinuxCodingRepository {
-        self.command.repository.command = None;
-        self.command.repository
+    pub fn into_repository(self) -> LinuxCodingRepository {
+        self.command.into_repository()
     }
     fn check(
         &self,
