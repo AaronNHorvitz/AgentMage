@@ -10,7 +10,8 @@ use agentmage_kernel_engine::{
 };
 use agentmage_local_api::{
     ApiError, ApiTokens, serve_coding_endpoint_coding_development,
-    serve_coding_endpoint_edit_development,
+    serve_coding_endpoint_coding_review_development, serve_coding_endpoint_edit_development,
+    serve_coding_endpoint_edit_review_development,
 };
 use fixture::{Fixture, private_file};
 use serde_json::json;
@@ -28,6 +29,8 @@ fn executable_strict_edit_launch_requires_explicit_inspection_consent() {
     for command in [
         "serve-endpoint-edit-development",
         "serve-endpoint-coding-development",
+        "serve-endpoint-edit-review-development",
+        "serve-endpoint-coding-review-development",
     ] {
         for approval in [None, Some("--approve-workspace-state-and-endpoint")] {
             let mut cmd = Command::new(env!("CARGO_BIN_EXE_agentmage-local-api"));
@@ -48,6 +51,8 @@ fn strict_edit_launch_refuses_listener_and_stop_before_private_configuration() {
     for serve in [
         serve_coding_endpoint_edit_development,
         serve_coding_endpoint_coding_development,
+        serve_coding_endpoint_edit_review_development,
+        serve_coding_endpoint_coding_review_development,
     ] {
         for (address, stopping) in [("0.0.0.0:0", false), ("127.0.0.1:0", true)] {
             assert_eq!(
@@ -79,7 +84,16 @@ fn executable_checked_coding_launch_preserves_original_native_refusal() {
 }
 
 fn exercise_native_refusal(coding: bool, checked: bool) {
-    let command = if coding {
+    exercise_native_refusal_command(coding, checked, false);
+    exercise_native_refusal_command(coding, checked, true);
+}
+
+fn exercise_native_refusal_command(coding: bool, checked: bool, review: bool) {
+    let command = if review && coding {
+        "serve-endpoint-coding-review-development"
+    } else if review {
+        "serve-endpoint-edit-review-development"
+    } else if coding {
         "serve-endpoint-coding-development"
     } else {
         "serve-endpoint-edit-development"

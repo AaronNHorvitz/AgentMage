@@ -1,0 +1,164 @@
+Commit: e83b092b2dc96c10dc08d72a10a1e2d13698dc4d
+Scope: local-coding-strict-owner-return
+
+# Independent core review: original strict coding owner return (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate read-only session, extra-high effort. I reviewed the pinned
+checkout `/lane/review-checkout` at the exact commit only. Base
+`3a99b52ba39f5d333acde8b20384b31e38addc96`. Tier core. Both parents stay OPEN and no row or sub-row
+is added or closed (`check.py` asserts the TASKS.md table rows match the base byte-for-byte).
+
+## Methods
+
+1. Confirmed the commit: `git rev-parse HEAD` returned
+   `e83b092b2dc96c10dc08d72a10a1e2d13698dc4d`, and the working tree was clean before and after.
+2. Read IP-POLICY.md, the newest decisions list (0175 to 0177), the new TASKS.md block and the
+   request. Read README.md, run.py, check.py, parse_gate.py, baseline.py and light.py before running
+   anything. They only write to the fresh output directory and run the plan from
+   `scripts/local_agent_fast_gate.py`. The prepended PATH directory holds only the retained Node
+   binary and its LICENSE.
+3. Read the full diff (16 files) and, beyond the diff, the relevant code:
+   - host `CodingEndpointEditBoundary::try_into_repository` / `take_repository` and the `State` /
+     `Owner` layout
+   - `CodingEndpointRuns::release_with_tool_boundary`
+   - engine `try_into_endpoint_tool_boundary` (unchanged)
+   - the shared `serve_admitted_endpoint_inner` HTTP release path
+   - Linux `abandon_pending_decisions` and the edit/command boundary `into_repository`
+   - `decide_edit` / `decide_apply` uncertainty recording
+   - the `ValidationSeries` layout and the `Drop` impls
+4. Reasoned through the escape and bypass attempts listed under Security analysis.
+5. Ran every requested command myself, with a separate target and a fresh output directory.
+
+## Exact commands and results (from /lane/review-checkout)
+
+| Command | Expected | Observed |
+| --- | --- | --- |
+| `sha256sum --quiet -c .../review-inputs.sha256` | 0 | 0 (51 entries; manifest SHA256 `da15fe12…d5e1` matches the request) |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-strict-owner-return-e83b092b2dc9` | 1 | `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True` (output dir absent beforehand) |
+| `python3 -B .../check.py <out>` | 0 | 0; 26 targets, totals `[1236, 72, 64, 0, 0]`, 72 inherited identities, 0 new, 14 named methods ok |
+| `python3 -B .../light.py` | 0 | 0 (diff-check, untracked lint, review lint, markdownlint 0 issues in 4 files) |
+| `cmp validation-final/source-freeze.json <out>/source-freeze.json` | 0 | 0 (ten Rust hashes identical) |
+| `cmp docs/reviews/9ac41a62c209-…txt /lane/reviews/9ac41a62c209-…md` | 0 | 0 |
+| `cmp docs/reviews/3a99b52ba39f-…txt /lane/reviews/3a99b52ba39f-…md` | 0 | 0 |
+| `git diff --check 3a99b52b… --` | 0 | 0 |
+| `git status --short` | empty | empty |
+
+My gate command results:
+
+- fmt: exit 0, 51.44 s
+- clippy `-D warnings`, all targets: exit 0, 35.91 s
+- tests, `--no-fail-fast`: exit 101, 231.59 s
+- total, including reservations: 320.51 s
+- `FAST GATE: FAIL`
+- the 72 `FAILED` lines are exactly the 72 baseline identities from
+  `docs/evidence/t301-baseline-failures-2026-10-25.md`, which is byte-identical to base
+
+Differences from the builder's run (all expected):
+
+- **Raw log hash.** Mine is `87e525ec78a4674e6633816a6db9767f1ee1faf35d2f78e38f92a5ca8af9f760`,
+  because timings and paths differ between runs. I confirmed that the builder's retained
+  `validation-final/fast.log` hashes to the claimed
+  `c2ada0bf37ba0a9edde8f088f24c1e346a5425596179cca0a75b8fe01f97fe39`.
+- **Timings.** fmt, clippy and test times differ from the builder's 84.60 / 11.47 / 198.48 /
+  296.48 s. These are published measurements, not gates.
+- **Everything else is identical:** per-target counts, failure and ignore identities, the command
+  list and the source freeze.
+
+Each of the four new methods passed (`... ok`) in my unfiltered log:
+
+- `strict_owner_return_refuses_live_previews_and_completion_callbacks_without_losing_owner`
+- `endpoint_strict_return_preserves_approved_lineage_and_abandons_denied_preview`
+- `endpoint_checked_return_requires_release_and_drops_original_verifier_references`
+- `abandoned_original_apply_decision_cannot_write_and_keeps_verified_edit_lineage`
+
+Focused-failure provenance: `focused.log:116-135` shows the claimed failure
+(`left: "denied"`, `right: "committed"`, 3 passed and 1 failed). I diffed the retained
+`focused-source/` against the commit. The only difference is the one corrected line,
+`coding_endpoint_strict_return.rs:195`, where `"committed"` became `"denied"`. No assertion was
+removed, and the lineage (`available_paths == ["one.py"]`) and original-byte (`first\n`) assertions
+remain. The correction is right on the merits: `decide_edit` records
+`{"outcome":"denied"}` into `edit_result` for the later denial.
+
+## Security analysis (confinement and ownership boundary)
+
+- **No wire selection of the return policy.** `return_repository` is a compile-time `bool` passed
+  only by the four library entry points (`coding_endpoint_prepared.rs`). The HTTP handlers have no
+  field that reaches it. Release still requires the control token: the observation credential gets
+  403, which is tested. The exact `run_id`/`request_sha256` binding gets 409 for a foreign digest,
+  also tested.
+- **Release preconditions.** These are unchanged and shared. `release_with_tool_boundary` refuses
+  `Released`, `faulted`, and outcome-less entries (`coding_endpoint_owner.rs:315-344`). Engine
+  `try_into_endpoint_tool_boundary` refuses non-terminal, `Uncertain`, unpublished-terminal,
+  pending, suspended and reconciliation-required coordinators (`coordinator_endpoint.rs:321-339`).
+  The custom-turn returning variant passes `TerminalToolDisposition::Return` into the same
+  `serve_admitted_endpoint_inner`, so no separate path exists.
+- **Sole-owner extraction** (`coding_endpoint_edit_previews.rs:548-569`):
+  - It checks `Arc::strong_count == 1` on an owned `self`.
+  - The module creates no `Weak` references, and `CodingEndpointEditBoundary` is not `Clone`, so
+    no other reference can appear after the check.
+  - A poisoned mutex or an empty `owner` slot (an operation in flight, or a panic while the owner
+    was taken) refuses.
+  - Port, verifier and completion-check clones are dropped with the consumed coordinator before
+    extraction. The checked service test returns `Some` for the cancel, deny and ready-preview
+    release cases, which shows they really are dropped.
+- **Abandonment** (`coding_repository.rs:170-175`):
+  - It clears only the process-local `pending`/`command`/`edit`/`apply` previews. Validation
+    commands are previewed through `command`.
+  - Uncertainty is recorded in the retained `edit_result`/`apply_result` (`effect: unknown`).
+  - Uncertain edits remove their postimage from `created.edits` before dispatch
+    (`coding_repository_edit.rs:153-163`), and apply is checked against that lineage plus a
+    worktree re-hash (`coding_repository_apply.rs:229-246`). Clearing previews therefore cannot hide
+    an uncertain effect or allow a write from an abandoned preview. The Linux apply test confirms
+    that the old digest is refused and the original bytes and index are unchanged.
+- **Drop on error.** No `Drop` impl for `LinuxCodingRepository` deletes or writes anything, so an
+  error that drops the owner loses process-local continuation only. This is documented.
+- **No restored authority.** No run, grant, budget, disclosure consent, connection, path adoption
+  or durable recovery is restored. A later diff needs fresh read-consent identities
+  (`prepare_apply` with root digests), and applying it needs `decide_apply`'s separate approval.
+  Nothing commits or pushes.
+- **Privacy and branding.** No private host path, username, hostname, credential, personal data,
+  private sibling-project name, or other agent product name appears in added lines (`check.py`
+  scan plus my own grep). No dependency, lockfile, SBOM, status-model, scoreboard, held-out,
+  hidden-test, scorer or threshold change (`check.py` path assertions and my own diff review).
+- **Evaluation integrity.** Nothing is touched. No score, model qualification or positive
+  original-owner acceptance is claimed. `MustNotCheck` panics if dispatched, and it never is.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog): `released:true` can be followed by owner loss without a client signal.**
+  Location: `platforms/local-api/src/coding_endpoint_prepared.rs:379-385`.
+  - If `try_into_repository` fails after a successful HTTP release (for example a poisoned strict
+    state from a panic that left the run terminal and non-faulted), the service returns
+    `ApiError::Configuration` and drops the original owner.
+  - The person-facing client has already been told `{"released":true}`.
+  - This is documented ("service errors can drop ownership") and loses no data, but no test covers
+    this path.
+  - Fix: add a test that poisons the strict state before release. Also consider making
+    `release_with_tool_boundary` refuse when extraction would fail, so the run stays held for
+    inspection instead.
+- **L2 (low, backlog): the non-turn returning service lost its direct socket tests.**
+  - The `coding_endpoint_tool_return.rs` socket tests now exercise only
+    `serve_admitted_coding_endpoint_with_turns_returning_tool`.
+  - The older `serve_admitted_coding_endpoint_returning_tool` is a thin wrapper over the same inner
+    function and is still exercised through the prepared service
+    (`endpoint_prepared_service_native_edit_returns_original_lineage_and_needs_new_approval`
+    passes).
+  - Its direct fault, uncertainty and no-release socket coverage is now indirect only.
+  - Fix: parameterize the tool-return fixture over both entry points.
+
+Prior same-row lows remain backlog as stated. Correlation L2 (guide wrapping) is fixed at
+`docs/guides/coding-validation.md:21-22`.
+
+## Per-row result
+
+- T-303 / T-306 continuation increment (local-coding-strict-owner-return): **PASS for this
+  increment, non-closing.**
+  - The claims match the code and runs.
+  - The affected gate is honestly reported as FAIL, with exactly the 72 inherited failures and no
+    new failure, ignore or filter.
+  - Both parents remain OPEN: native Git, command and model execution, positive original-owner
+    acceptance, durable recovery and approved Git are not established by this commit.
+
+Verdict: PASS

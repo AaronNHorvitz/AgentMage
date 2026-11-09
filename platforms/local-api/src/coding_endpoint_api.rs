@@ -67,10 +67,10 @@ struct Session<
     returned: Option<T>,
 }
 
-#[derive(Clone, Copy)]
-enum TerminalToolDisposition {
+enum TerminalToolDisposition<T> {
     Discard,
     Return,
+    RepositoryReview(fn(T) -> Result<LinuxCodingRepository, ApiError>),
 }
 
 #[derive(Deserialize)]
@@ -351,6 +351,35 @@ where
     )
 }
 
+pub(super) fn serve_admitted_coding_endpoint_with_repository_review<T, V, C, P>(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    access: CodingEndpointObservationAccess,
+    factory: impl FnOnce(
+        RuntimeRunId,
+        SessionId,
+        &mut CodingEndpointRuns<'static, T, V, C, P>,
+    ) -> Result<RuntimeEndpointRunRequest, ApiError>,
+    convert: fn(T) -> Result<LinuxCodingRepository, ApiError>,
+) -> Result<(), ApiError>
+where
+    T: RuntimeToolBoundary + Send + 'static,
+    V: RuntimeVerifierPort + Send + 'static,
+    C: RuntimeClock + Send + 'static,
+    P: RuntimeEndpointTurnPort + Send + 'static,
+{
+    serve_admitted_endpoint_inner(
+        listener,
+        tokens,
+        stop,
+        access,
+        factory,
+        TerminalToolDisposition::RepositoryReview(convert),
+    )
+    .map(|_| ())
+}
+
 fn serve_admitted_endpoint_inner<T, V, C, P>(
     listener: TcpListener,
     tokens: ApiTokens,
@@ -361,7 +390,7 @@ fn serve_admitted_endpoint_inner<T, V, C, P>(
         SessionId,
         &mut CodingEndpointRuns<'static, T, V, C, P>,
     ) -> Result<RuntimeEndpointRunRequest, ApiError>,
-    disposition: TerminalToolDisposition,
+    disposition: TerminalToolDisposition<T>,
 ) -> Result<Option<T>, ApiError>
 where
     T: RuntimeToolBoundary + Send + 'static,
@@ -394,6 +423,9 @@ where
         returned: None,
     });
     let cancelled = AtomicBool::new(false);
+    // This state receives only the original released owner. No endpoint, run,
+    // source selection, pending approval or grant is reconstructed here.
+    let review = Mutex::new(State::default());
     serve_connections(
         listener,
         stop,
@@ -402,6 +434,19 @@ where
                 Ok(req) => req,
                 Err(status) => return error(socket, status),
             };
+            if matches!(&disposition, TerminalToolDisposition::RepositoryReview(_))
+                && matches!(
+                    (req.method.as_str(), req.path.as_str()),
+                    ("GET", "/v1/code/repository/apply")
+                        | ("POST", "/v1/code/repository/apply/prepare")
+                        | ("POST", "/v1/code/repository/apply/decide")
+                )
+            {
+                // Reuse the original control authentication, explicit read
+                // consent and exact native diff approval. No other manual
+                // tool, creation, command or fresh model run is exposed.
+                return coding_repository_api::handle_repository(socket, &req, &review, stop);
+            }
             let observation = matches!(
                 (req.method.as_str(), req.path.as_str()),
                 ("GET", "/v1/code/endpoint/request") | ("POST", "/v1/code/endpoint/events")
@@ -497,12 +542,26 @@ where
                         Err(TryLockError::Poisoned(_)) => return error(socket, 500),
                     };
                     if req.path.ends_with("/release") {
-                        let released = match disposition {
+                        let released = match &disposition {
                             TerminalToolDisposition::Discard => guard.runs.release(&request),
                             TerminalToolDisposition::Return => {
                                 guard.runs.release_with_tool_boundary(&request).map(|tool| {
                                     guard.returned = Some(tool);
                                 })
+                            }
+                            TerminalToolDisposition::RepositoryReview(convert) => {
+                                match guard.runs.release_with_tool_boundary(&request) {
+                                    Ok(tool) => {
+                                        let repository = convert(tool)?;
+                                        let mut review = review.lock().map_err(|_| ApiError::Io)?;
+                                        if review.repository.is_some() {
+                                            return error(socket, 500);
+                                        }
+                                        review.repository = Some(Arc::new(Mutex::new(repository)));
+                                        Ok(())
+                                    }
+                                    Err(error) => Err(error),
+                                }
                             }
                         };
                         return match released {
@@ -528,7 +587,13 @@ where
                 _ => error(socket, 404),
             }
         },
-        || Ok(()),
+        || {
+            review
+                .lock()
+                .map_err(|_| ApiError::Io)?
+                .cancel_active(true)
+                .map(|_| ())
+        },
     )?;
     let session = session.into_inner().map_err(|_| ApiError::Io)?;
     Ok(session.returned)

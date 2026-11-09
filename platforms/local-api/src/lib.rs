@@ -13,7 +13,8 @@ mod coding_endpoint_launch;
 #[path = "../tests/support/endpoint_launch.rs"]
 mod endpoint_launch_fixture;
 pub use coding_endpoint_edit_launch::{
-    serve_coding_endpoint_coding_development, serve_coding_endpoint_edit_development,
+    serve_coding_endpoint_coding_development, serve_coding_endpoint_coding_review_development,
+    serve_coding_endpoint_edit_development, serve_coding_endpoint_edit_review_development,
 };
 mod coding_endpoint_prepared;
 pub use coding_endpoint_launch::serve_coding_endpoint_read_development;
@@ -21,8 +22,10 @@ pub use coding_endpoint_prepared::{
     CodingEndpointPreparedHttpRun, CodingEndpointStrictHttpRun,
     serve_coding_endpoint_edits_and_checked_tests,
     serve_coding_endpoint_edits_and_checked_tests_returning_repository,
+    serve_coding_endpoint_edits_and_checked_tests_with_repository_review,
     serve_coding_endpoint_edits_and_tests, serve_coding_endpoint_prepared,
     serve_coding_endpoint_strict_edits, serve_coding_endpoint_strict_edits_returning_repository,
+    serve_coding_endpoint_strict_edits_with_repository_review,
 };
 mod coding_owned_api;
 pub use coding_endpoint_api::{

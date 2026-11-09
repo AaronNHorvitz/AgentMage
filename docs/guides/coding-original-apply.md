@@ -130,3 +130,9 @@ approval boundaries, not native Git creation or a real-model coding workflow.
 `tested` remains false: applying a diff does not prove tests passed. Commit,
 push, durable recovery, configured-endpoint composition and measured parent
 acceptance remain open. No public release is authorized.
+
+An explicit [endpoint review service](coding-runtime-api.md#review-the-original-diff-in-the-endpoint-service)
+also exposes these three routes after exact terminal release of its strict
+coding run. It retains the same original repository and recorded successful edit
+lineage; it does not adopt a worktree path or enable other manual tools. The
+read consent and exact apply decision described above are still required.

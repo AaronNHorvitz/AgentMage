@@ -460,3 +460,40 @@ Show the complete diff and obtain its separate exact approval before writing.
 Continuation restores no old run, grant, disclosure consent, budget or endpoint
 connection. It is process-local: service errors can drop ownership and process
 termination cannot reconstruct it. Commit/push and durable recovery remain open.
+
+## Review the original diff in the endpoint service
+
+For explicit development continuation, choose either new command instead of
+its ordinary discard variant:
+
+```sh
+agentmage-local-api serve-endpoint-edit-review-development <loopback-ip:port> <private-auth-directory> <private-launch.json> --approve-inspection-state-and-endpoint
+agentmage-local-api serve-endpoint-coding-review-development <loopback-ip:port> <private-auth-directory> <private-launch-with-validation.json> --approve-inspection-state-and-endpoint
+```
+
+Launch configuration, native admission, stdin creation approval, per-turn
+model disclosure and exact edit/test approvals stay unchanged. After exporting
+canonical events, explicitly release the exact terminal run. Only successful
+release makes its same original repository available through the three
+[original apply routes and terminal commands](coding-original-apply.md).
+Before release, those routes have no repository. No other manual tool or fresh
+model run becomes available. The listener, authentication and process stop latch
+stay the same; shutdown does not start another service.
+
+Use `agentmage-code <loopback-ip:port> <private-auth-directory> original` to
+inspect eligibility, then `original-prepare` and `original-apply` as described
+in the linked guide. Preparation needs fresh read consent for both displayed
+root identities; application needs its complete diff and exact approval.
+A declined or cancelled run may have earlier successful edits; release does not
+certify those edits, any test result or the task. Empty lineage cannot transfer
+arbitrary worktree bytes. No commit or push occurs.
+
+Embedding callers may choose
+`serve_coding_endpoint_strict_edits_with_repository_review` or
+`serve_coding_endpoint_edits_and_checked_tests_with_repository_review`.
+These explicit variants leave the ordinary service and returned-owner variants
+unchanged. The run and its connection are dropped on release; pending decisions
+are abandoned. No old approval, grant, budget or disclosure is renewed. Export
+events first, inspect after a lost reply, and never retry an effect automatically.
+Extraction errors may lose ownership; this remains process-local continuation,
+with durable recovery, native/model measurements and both parents open.

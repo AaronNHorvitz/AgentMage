@@ -134,7 +134,7 @@ where
         tokens,
         stop,
         access,
-        false,
+        RepositoryDisposition::Discard,
         |id, session| factory(id, session).map(|run| (run, None)),
         |_, verifier| Ok(verifier),
     )
@@ -171,7 +171,7 @@ where
         tokens,
         stop,
         access,
-        false,
+        RepositoryDisposition::Discard,
         |id, session| factory(id, session).map(|(run, validation)| (run, Some(validation))),
         |_, verifier| Ok(verifier),
     )
@@ -208,7 +208,7 @@ where
         tokens,
         stop,
         access,
-        false,
+        RepositoryDisposition::Discard,
         |id, session| factory(id, session).map(|(run, validation)| (run, Some(validation))),
         |previews, verifier| {
             previews
@@ -240,7 +240,7 @@ where
         tokens,
         stop,
         access,
-        true,
+        RepositoryDisposition::Return,
         |id, session| factory(id, session).map(|run| (run, None)),
         |_, verifier| Ok(verifier),
     )
@@ -276,7 +276,7 @@ where
         tokens,
         stop,
         access,
-        true,
+        RepositoryDisposition::Return,
         |id, session| factory(id, session).map(|(run, validation)| (run, Some(validation))),
         |previews, verifier| {
             previews
@@ -286,12 +286,85 @@ where
     )
 }
 
+/// Serve strict edits and, after exact terminal release, expose only the
+/// original owner's apply inspection, preparation and decision routes on the
+/// same listener. Fresh read consent and exact native apply approval remain
+/// mandatory. No new run, grant, budget, model connection or recovery is created.
+pub fn serve_coding_endpoint_strict_edits_with_repository_review<V, C>(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    access: CodingEndpointObservationAccess,
+    factory: impl FnOnce(RuntimeRunId, SessionId) -> Result<CodingEndpointStrictHttpRun<V, C>, ApiError>,
+) -> Result<(), ApiError>
+where
+    V: RuntimeVerifierPort + Send + 'static,
+    C: RuntimeClock + Send + 'static,
+{
+    serve_coding_endpoint_edits_and_tests_inner(
+        listener,
+        tokens,
+        stop,
+        access,
+        RepositoryDisposition::Review,
+        |id, session| factory(id, session).map(|run| (run, None)),
+        |_, verifier| Ok(verifier),
+    )
+    .map(|_| ())
+}
+
+/// Combined edit/test service with the same original-owner checker and explicit
+/// post-release diff review. Only the original apply routes are added; releasing
+/// a cancelled or declined run does not certify its edits or approve transfer.
+pub fn serve_coding_endpoint_edits_and_checked_tests_with_repository_review<V, C>(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    access: CodingEndpointObservationAccess,
+    factory: impl FnOnce(
+        RuntimeRunId,
+        SessionId,
+    ) -> Result<
+        (
+            CodingEndpointStrictHttpRun<V, C>,
+            agentmage_host::coding_endpoint_edit_previews::CodingEndpointValidation,
+        ),
+        ApiError,
+    >,
+) -> Result<(), ApiError>
+where
+    V: CodingEndpointAcceptancePort + Send + 'static,
+    C: RuntimeClock + Send + 'static,
+{
+    serve_coding_endpoint_edits_and_tests_inner(
+        listener,
+        tokens,
+        stop,
+        access,
+        RepositoryDisposition::Review,
+        |id, session| factory(id, session).map(|(run, validation)| (run, Some(validation))),
+        |previews, verifier| {
+            previews
+                .completion_verifier(verifier)
+                .map_err(|_| ApiError::Configuration)
+        },
+    )
+    .map(|_| ())
+}
+
+#[derive(Clone, Copy)]
+enum RepositoryDisposition {
+    Discard,
+    Return,
+    Review,
+}
+
 fn serve_coding_endpoint_edits_and_tests_inner<V, C, W>(
     listener: TcpListener,
     tokens: ApiTokens,
     stop: Arc<AtomicBool>,
     access: CodingEndpointObservationAccess,
-    return_repository: bool,
+    disposition: RepositoryDisposition,
     factory: impl FnOnce(
         RuntimeRunId,
         SessionId,
@@ -370,13 +443,29 @@ where
             .map_err(|_| ApiError::Configuration)?;
         Ok(request)
     };
-    let boundary = if return_repository {
-        serve_admitted_coding_endpoint_with_turns_returning_tool(
+    let boundary = match disposition {
+        RepositoryDisposition::Return => serve_admitted_coding_endpoint_with_turns_returning_tool(
             listener, tokens, stop, access, admit,
-        )?
-    } else {
-        serve_admitted_coding_endpoint_with_turns(listener, tokens, stop, access, admit)?;
-        None
+        )?,
+        RepositoryDisposition::Discard => {
+            serve_admitted_coding_endpoint_with_turns(listener, tokens, stop, access, admit)?;
+            None
+        }
+        RepositoryDisposition::Review => {
+            coding_endpoint_api::serve_admitted_coding_endpoint_with_repository_review(
+                listener,
+                tokens,
+                stop,
+                access,
+                admit,
+                |boundary| {
+                    boundary
+                        .try_into_repository()
+                        .map_err(|_| ApiError::Configuration)
+                },
+            )?;
+            None
+        }
     };
     boundary
         .map(|boundary| {

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 //! Synthetic creation/model; real HTTP, native edits and original-owner return.
 use super::*;
+
+#[path = "coding_endpoint_original_review.rs"]
+mod original_review;
 use agentmage_host::coding_endpoint_edit_previews::{
     CodingEndpointAcceptancePort, CodingEndpointValidation,
 };

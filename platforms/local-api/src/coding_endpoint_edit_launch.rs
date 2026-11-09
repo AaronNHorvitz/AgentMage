@@ -339,6 +339,7 @@ pub fn serve_coding_endpoint_edit_development(
         stop,
         launch_file,
         CodingEndpointPreparedKind::Edit,
+        false,
     )
 }
 
@@ -365,6 +366,46 @@ pub fn serve_coding_endpoint_coding_development(
         stop,
         launch_file,
         CodingEndpointPreparedKind::EditAndTest,
+        false,
+    )
+}
+
+/// Explicit development strict-edit service with post-release original diff
+/// review on the same authenticated listener. Startup consent is unchanged;
+/// original reads and writes need their own subsequent consent and approval.
+pub fn serve_coding_endpoint_edit_review_development(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    launch_file: &Path,
+) -> Result<(), ApiError> {
+    serve_development(
+        listener,
+        tokens,
+        stop,
+        launch_file,
+        CodingEndpointPreparedKind::Edit,
+        true,
+    )
+}
+
+/// Combined coding development service with explicit original-diff review.
+/// Exact terminal release drops the original run and connection, then retains
+/// its original repository solely for separately consented/approved apply.
+/// No test pass is inferred from release. No commit, push or recovery is added.
+pub fn serve_coding_endpoint_coding_review_development(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    launch_file: &Path,
+) -> Result<(), ApiError> {
+    serve_development(
+        listener,
+        tokens,
+        stop,
+        launch_file,
+        CodingEndpointPreparedKind::EditAndTest,
+        true,
     )
 }
 
@@ -374,6 +415,7 @@ fn serve_development(
     stop: Arc<AtomicBool>,
     launch_file: &Path,
     kind: CodingEndpointPreparedKind,
+    repository_review: bool,
 ) -> Result<(), ApiError> {
     // The service checks listener and stop before invoking any launch factory.
     let secret = tokens.control.clone();
@@ -488,14 +530,22 @@ fn serve_development(
         ))
     };
     match kind {
-        CodingEndpointPreparedKind::Edit => serve_coding_endpoint_strict_edits(
+        CodingEndpointPreparedKind::Edit => (if repository_review {
+            serve_coding_endpoint_strict_edits_with_repository_review
+        } else {
+            serve_coding_endpoint_strict_edits
+        })(
             listener,
             tokens,
             stop,
             CodingEndpointObservationAccess::ControlOnly,
             |run, session| factory(run, session).map(|(run, _)| run),
         ),
-        CodingEndpointPreparedKind::EditAndTest => serve_coding_endpoint_edits_and_checked_tests(
+        CodingEndpointPreparedKind::EditAndTest => (if repository_review {
+            serve_coding_endpoint_edits_and_checked_tests_with_repository_review
+        } else {
+            serve_coding_endpoint_edits_and_checked_tests
+        })(
             listener,
             tokens,
             stop,

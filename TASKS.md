@@ -2,6 +2,30 @@
 
 ## Active queue: local agent mission
 
+The [strict-owner independent core review](docs/reviews/e83b092b2dc9-local-coding-strict-owner-return.txt)
+has **Verdict: PASS** for exact commit
+`e83b092b2dc96c10dc08d72a10a1e2d13698dc4d`, with no high/medium
+finding. Its low L1 (returned-owner extraction failure after release response)
+and L2 (direct non-turn service socket coverage) stay same-row backlog.
+Both parents remain open; this review closes no row.
+
+The [original diff review continuation](docs/evidence/t306-original-review-2026-11-09.md)
+adds explicit endpoint review development commands. Exact terminal release
+retains the same original repository solely for original-apply inspection,
+fresh read consent and exact diff approval on the same authenticated listener.
+No new model run or other manual tool is enabled. The original run and its
+connection are dropped; stop/cancellation are never reset. Ordinary commands
+retain their existing discard behavior. Independent core review is required;
+T-303/T-306 stay open, with no row or sub-row added or closed. Native/model
+measurement, durable recovery and approved Git remain open. The complete
+affected API gate passes: 231 tests across 11 unfiltered targets, with zero
+failures or ignores, formatting and Clippy green and eight Rust hashes fixed.
+The initial fixture and native validation-preparation failures are retained;
+the final combined fixture claims only actual prior lineage and a denied edit,
+not native test execution. The formatting reservation waited 914 seconds;
+no resource rule was bypassed. Earlier host/Linux failures remain outside this
+API-only gate and are not cleared.
+
 The [correlation independent core re-review](docs/reviews/3a99b52ba39f-local-coding-evidence-correlation-repair.txt)
 has **Verdict: PASS** for exact commit
 `3a99b52ba39f5d333acde8b20384b31e38addc96`, accepting the prior medium

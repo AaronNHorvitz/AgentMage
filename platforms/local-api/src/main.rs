@@ -7,7 +7,8 @@ use std::sync::{Arc, atomic::AtomicBool};
 
 use agentmage_local_api::{
     ApiTokens, CodingRuntimeDevelopment, serve, serve_coding,
-    serve_coding_endpoint_coding_development, serve_coding_endpoint_edit_development,
+    serve_coding_endpoint_coding_development, serve_coding_endpoint_coding_review_development,
+    serve_coding_endpoint_edit_development, serve_coding_endpoint_edit_review_development,
     serve_coding_endpoint_read_development, serve_coding_runtime_development,
 };
 
@@ -78,7 +79,9 @@ fn run() -> Result<(), ()> {
         }
         [command, address, directory, launch, approval]
             if (command == "serve-endpoint-edit-development"
-                || command == "serve-endpoint-coding-development")
+                || command == "serve-endpoint-coding-development"
+                || command == "serve-endpoint-edit-review-development"
+                || command == "serve-endpoint-coding-review-development")
                 && approval == "--approve-inspection-state-and-endpoint" =>
         {
             let address = address.parse::<SocketAddr>().map_err(|_| ())?;
@@ -87,14 +90,20 @@ fn run() -> Result<(), ()> {
             }
             let tokens = ApiTokens::load(Path::new(directory)).map_err(|_| ())?;
             let listener = TcpListener::bind(address).map_err(|_| ())?;
-            let coding = command == "serve-endpoint-coding-development";
+            let coding = command.starts_with("serve-endpoint-coding-");
+            let review = command.contains("-review-");
             if coding {
                 eprintln!(
-                    "Starting disposable strict edits and fixed tests: inspect the entire repository with native offline Git and create private state. Worktree creation requires its exact stdin decision; each model disclosure, edit and test requires separate HTTP approval. No verified completion, apply, commit, push or recovery."
+                    "Starting disposable strict edits and fixed tests: inspect the entire repository with native offline Git and create private state. Worktree creation requires its exact stdin decision; each model disclosure, edit and test requires separate HTTP approval. No automatic completion, transfer, commit, push or recovery."
                 );
             } else {
                 eprintln!(
-                    "Starting disposable strict edits: inspect the entire repository with native offline Git and create private state. Worktree creation requires its exact stdin decision; each model disclosure and edit requires separate HTTP approval. No tests, apply, commit, push or recovery."
+                    "Starting disposable strict edits: inspect the entire repository with native offline Git and create private state. Worktree creation requires its exact stdin decision; each model disclosure and edit requires separate HTTP approval. No tests, automatic transfer, commit, push or recovery."
+                );
+            }
+            if review {
+                eprintln!(
+                    "After exact terminal release, the same service retains the original repository for diff review. Each original diff read and apply requires separate consent and exact approval; release does not certify tests or approve transfer."
                 );
             }
             eprintln!(
@@ -102,7 +111,11 @@ fn run() -> Result<(), ()> {
                 listener.local_addr().map_err(|_| ())?
             );
             with_stop_signals(|stop| {
-                let serve = if coding {
+                let serve = if review && coding {
+                    serve_coding_endpoint_coding_review_development
+                } else if review {
+                    serve_coding_endpoint_edit_review_development
+                } else if coding {
                     serve_coding_endpoint_coding_development
                 } else {
                     serve_coding_endpoint_edit_development
@@ -168,7 +181,7 @@ fn run() -> Result<(), ()> {
         }
         _ => {
             eprintln!(
-                "Usage: agentmage-local-api init-auth <new-private-directory> | serve <loopback-ip:port> <private-directory> | serve-coding <loopback-ip:port> <private-directory> <existing-private-state-root> | serve-endpoint-read-development <loopback-ip:port> <private-directory> <private-launch.json> --approve-workspace-state-and-endpoint | serve-endpoint-edit-development <loopback-ip:port> <private-directory> <private-launch.json> --approve-inspection-state-and-endpoint | serve-endpoint-coding-development <loopback-ip:port> <private-directory> <private-launch-with-validation.json> --approve-inspection-state-and-endpoint | serve-runtime-development <loopback-ip:port> <private-directory> <state-root> <disposable-root> <marked-workspace> <muse|gpt-oss> <new|resume> [failed-test-repair|python-project|python-root-project]"
+                "Usage: agentmage-local-api init-auth <new-private-directory> | serve <loopback-ip:port> <private-directory> | serve-coding <loopback-ip:port> <private-directory> <existing-private-state-root> | serve-endpoint-read-development <loopback-ip:port> <private-directory> <private-launch.json> --approve-workspace-state-and-endpoint | serve-endpoint-edit-development <loopback-ip:port> <private-directory> <private-launch.json> --approve-inspection-state-and-endpoint | serve-endpoint-coding-development <loopback-ip:port> <private-directory> <private-launch-with-validation.json> --approve-inspection-state-and-endpoint | serve-endpoint-edit-review-development <loopback-ip:port> <private-directory> <private-launch.json> --approve-inspection-state-and-endpoint | serve-endpoint-coding-review-development <loopback-ip:port> <private-directory> <private-launch-with-validation.json> --approve-inspection-state-and-endpoint | serve-runtime-development <loopback-ip:port> <private-directory> <state-root> <disposable-root> <marked-workspace> <muse|gpt-oss> <new|resume> [failed-test-repair|python-project|python-root-project]"
             );
             Err(())
         }
