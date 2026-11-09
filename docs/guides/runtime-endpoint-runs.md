@@ -1522,8 +1522,25 @@ labels diagnostics as untrusted data. The immutable validation series links each
 rerun to the failed receipt and still permits at most three admitted attempts.
 An invalid, interrupted, lost or oversized model response restores no selection.
 
-A successful command proceeds only to a completion candidate with complete
-actual tool history. The final prompt offers no tools or tool input schemas.
+Before requesting a completion candidate after a successful command, the
+original owner now checks its complete retained validation series, including
+failed attempts and exact rerun links. The latest receipt must be the final
+linked full pass. Its exact original command and sealed source record must
+match the retained source observation and held creation identity, and a fresh
+bounded complete worktree observation must still agree. Pending effects, missing
+seals, incomplete observations, altered history and changed source refuse before
+another model request. Earlier failures and their inputs remain in history.
+
+The trusted host must have prior consent for this complete worktree inspection,
+including hidden files, configuration and tests. The development launch's
+inspection scope includes that final reinspection. The check adds no source
+bytes to model context and supplies no grant or independent task grade. It is a
+non-atomic sample before prompt preparation; subsequent changes remain possible.
+Neither verification flag becomes true, and the independent verifier remains
+responsible for task acceptance.
+
+An admitted completion candidate uses complete actual tool history. The final
+prompt offers no tools or tool input schemas.
 The original coordinator narrows this turn to completion only: a tool-shaped
 answer records `runtime.proposal.completion-only` and a terminal failure before
 permission or execution. No attached tool interpreter runs in that turn; a valid

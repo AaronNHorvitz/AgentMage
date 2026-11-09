@@ -28,6 +28,19 @@ use crate::{LinuxAuthorizedWorkspace, sandbox::compile_seccomp_policy};
 #[path = "command_runner_worktree.rs"]
 pub(crate) mod worktree;
 
+// Keep the production mode/count choice over the original capture object. The
+// same object supplies the record and descriptors; no wire metadata selects it.
+fn command_projection_policy(
+    sealed: Option<&worktree::SealedWorktree>,
+) -> crate::sandbox::supervision::CommandProjections {
+    use crate::sandbox::supervision::CommandProjections;
+    sealed.map_or(CommandProjections::Live, |capture| {
+        CommandProjections::Sealed {
+            files: capture.input_record().files as usize,
+        }
+    })
+}
+
 const MAX_ARTIFACT_BYTES: u64 = 256 * 1024 * 1024;
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
 const GUEST_EXECUTABLE: &str = "/app/command";
@@ -389,12 +402,7 @@ impl LinuxBoundedCommandExecutor {
         let sealed_workspace_input = sealed_worktree
             .as_ref()
             .map(worktree::SealedWorktree::input_record);
-        let projection_policy = sealed_workspace_input.as_ref().map_or(
-            crate::sandbox::supervision::CommandProjections::Live,
-            |input| crate::sandbox::supervision::CommandProjections::Sealed {
-                files: input.files as usize,
-            },
-        );
+        let projection_policy = command_projection_policy(sealed_worktree.as_ref());
         let projections = sealed_worktree.map_or_else(
             || held_worktree.into_iter().collect(),
             worktree::SealedWorktree::into_descriptors,

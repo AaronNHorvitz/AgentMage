@@ -90,7 +90,10 @@ impl<C: RuntimeClock + Clone> CodingEndpointEditPreviews<C> {
 
     /// One original owner alternates strict edits and this frozen validation.
     /// Must use the explicit combined startup; commands with read exclusions
-    /// refuse there. No command, grant or model request occurs during construction.
+    /// refuse there. Prior inspection consent must also cover bounded complete
+    /// worktree reads before the completion summary, including hidden files,
+    /// configuration and tests. Those bytes are not added to model context.
+    /// No command, grant or model request occurs during construction.
     pub fn new_coding(
         startup: CodingEndpointPreparedStartup,
         repository: LinuxCodingRepository,
@@ -226,6 +229,15 @@ impl<C: RuntimeClock + Clone> CodingEndpointEditPreviews<C> {
         state.control.remaining_ms().map_err(control_failure)?;
         if !matches!(state.owner, Some(Owner::Ready(_))) {
             return Err(RuntimePortFailure::Invalid);
+        }
+        if state.next == Next::Completion {
+            let Some(Owner::Ready(repository)) = state.owner.as_ref() else {
+                return Err(RuntimePortFailure::Invalid);
+            };
+            repository
+                .check_completion_validation()
+                .map_err(|_| RuntimePortFailure::Invalid)?;
+            state.control.remaining_ms().map_err(control_failure)?;
         }
         Ok(state.next)
     }

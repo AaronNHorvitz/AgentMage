@@ -84,8 +84,9 @@ Fourteen source/contract/fixture input hashes stayed fixed throughout the final
 run: three Rust files, the receipt schema, three gate/consumer test inputs and
 seven changed current producer fixtures. The producer regeneration ran once
 after source edits, writing nine current files; seven differ only in derived
-hashes. No literal copy of the old schema hash remains in current repository
-files. Both independent reports are retained byte-for-byte. The private final
+hashes. No live pin of the old schema hash remains; the historical Sprint 41
+snapshot keeps its recorded value. Both independent reports are retained
+byte-for-byte. The private final
 runtime namespace retains exactly eleven inherited-failure fixture directories.
 The raw final gate log SHA-256 is
 `681c01046d4207febe72e9257ee39170ef681abf2451da444287afb884134564`.

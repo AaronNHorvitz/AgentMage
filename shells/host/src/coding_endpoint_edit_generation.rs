@@ -187,35 +187,49 @@ impl<C: RuntimeClock + Clone> RuntimeEndpointTurnPort for CodingEndpointStrictEd
                 )
                 .with_tool_preparation(self.previews.validation_response()?))
             }
-            Next::Completion => {
-                use crate::coding_endpoint::CodingEndpointContextPort;
-                let registry = agentmage_platform_linux::linux_coding_endpoint_coding_registry()
-                    .map_err(|_| RuntimePortFailure::Invalid)?;
-                // Completion uses actual complete tool history. No additional
-                // source disclosure or parsed pass can certify the task.
-                let mut context =
-                    crate::coding_endpoint_context::CodingEndpointContext::completion_only(
-                        input.request,
-                        &registry,
-                        self.source_budget,
-                    )?
-                    .at_turn(input.turn, input.request)?;
-                let request = input.request;
-                let messages = context.build_messages(input, control)?;
-                let (packet, prepared) =
-                    freeze_messages(connection, request, &messages, self.include_usage)?;
-                Ok(RuntimePreparedEndpointTurn::new(
-                    packet,
-                    CoordinatorDispatch(Dispatch {
-                        prepared,
-                        cancellation: ChatCancellation::default(),
-                    }),
-                    crate::coding_verifier::coding_completion_schema(),
-                )
-                .completion_only())
-            }
+            Next::Completion => prepare_coding_completion(
+                connection,
+                input,
+                self.source_budget,
+                self.include_usage,
+                control,
+            ),
         }
     }
+}
+
+// The trusted turn owner must check original validation/source readiness first.
+// This shared framing helper grants no completion or execution authority.
+pub(super) fn prepare_coding_completion<'a, 'config: 'a>(
+    connection: CodingEndpointConnection<'config>,
+    input: RuntimeEndpointPreparationInput<'_>,
+    source_budget: usize,
+    include_usage: bool,
+    control: &dyn ModelOperationControl,
+) -> Result<RuntimePreparedEndpointTurn<'a>, RuntimePortFailure> {
+    use crate::coding_endpoint::CodingEndpointContextPort;
+    let registry = agentmage_platform_linux::linux_coding_endpoint_coding_registry()
+        .map_err(|_| RuntimePortFailure::Invalid)?;
+    // Actual complete tool history; no additional source disclosure. Readiness
+    // was sampled before framing and cannot certify current state or task success.
+    let mut context = crate::coding_endpoint_context::CodingEndpointContext::completion_only(
+        input.request,
+        &registry,
+        source_budget,
+    )?
+    .at_turn(input.turn, input.request)?;
+    let request = input.request;
+    let messages = context.build_messages(input, control)?;
+    let (packet, prepared) = freeze_messages(connection, request, &messages, include_usage)?;
+    Ok(RuntimePreparedEndpointTurn::new(
+        packet,
+        CoordinatorDispatch(Dispatch {
+            prepared,
+            cancellation: ChatCancellation::default(),
+        }),
+        crate::coding_verifier::coding_completion_schema(),
+    )
+    .completion_only())
 }
 
 /// Content-free refusal. Generation never grants an edit or establishes success.

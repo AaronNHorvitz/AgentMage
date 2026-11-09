@@ -285,7 +285,9 @@ pub fn serve_coding_endpoint_edit_development(
 
 /// Start the original strict edit/test/repair coordinator from a private launch
 /// document with a fixed validation definition and the explicit combined catalog.
-/// Launch consent permits inspection and private state only. Original worktree
+/// Launch inspection consent includes bounded whole-worktree reinspection
+/// before the final summary, including hidden files, configuration and tests;
+/// it permits no disclosure of those additional bytes. Original worktree
 /// creation needs its exact stdin decision; every model disclosure, edit and test
 /// needs separate HTTP approval. Native Git, command, worker and budget checks
 /// remain mandatory. The development verifier refuses completion certification;

@@ -2045,6 +2045,10 @@ fn sealed_validation_receipts_preserve_failed_inputs_and_bind_the_final_source_o
     let mut owner = f.open();
     f.synthetic_created(&mut owner);
     let calls = Arc::new(AtomicUsize::new(0));
+    assert_eq!(
+        owner.check_completion_validation().unwrap_err().code(),
+        "code.completion.validation-required"
+    );
     let mut results = Vec::new();
     for attempt in 0..2 {
         let prior = results.last().map(|value: &Value| {
@@ -2079,9 +2083,14 @@ fn sealed_validation_receipts_preserve_failed_inputs_and_bind_the_final_source_o
                 .unwrap(),
         );
         if !passed {
+            assert_eq!(
+                owner.check_completion_validation().unwrap_err().code(),
+                "code.completion.linked-pass-required"
+            );
             fs::write(f.0.join("owned/worktree/sentinel"), b"repair").unwrap();
         }
     }
+    owner.check_completion_validation().unwrap();
     let inspected = owner.inspect_validation().unwrap();
     assert_eq!(calls.load(Ordering::Relaxed), 2);
     assert_eq!(
@@ -2120,6 +2129,10 @@ fn sealed_validation_receipts_preserve_failed_inputs_and_bind_the_final_source_o
         false
     );
     assert_eq!(stale["command_history"], inspected["command_history"]);
+    assert_eq!(
+        owner.check_completion_validation().unwrap_err().code(),
+        "code.completion.source-binding"
+    );
 }
 
 #[test]
@@ -2150,6 +2163,10 @@ fn sealed_validation_input_cannot_replace_a_missing_or_mismatched_source_observa
             )
             .unwrap();
         assert_eq!(result["validation"]["linked_pass_verified"], true);
+        assert_eq!(
+            owner.check_completion_validation().unwrap_err().code(),
+            "code.completion.source-binding"
+        );
         let inspected = owner.inspect_validation().unwrap();
         assert!(inspected["command_history"][0]["sealed_workspace_input"].is_object());
         if changed_after_capture {
@@ -2361,5 +2378,87 @@ fn validation_workspace_binding_is_unavailable_for_unsafe_or_incomplete_trees() 
             "{case}"
         );
         assert_eq!(calls.load(Ordering::Relaxed), 1, "{case}");
+    }
+}
+
+#[test]
+fn completion_validation_refuses_missing_seals_pending_effects_and_changed_sources() {
+    for case in [
+        "legacy", "pending", "creation", "hidden", "test", "mode", "unsafe",
+    ] {
+        let f = Fixture::new();
+        let mut owner = f.open();
+        f.synthetic_created(&mut owner);
+        let calls = Arc::new(AtomicUsize::new(0));
+        let digest = validation_pending(&mut owner, None).unwrap();
+        let pending = owner.take_command(&digest, true, NOW).unwrap().unwrap();
+        let inner = Envelope {
+            calls: calls.clone(),
+            stdout: envelope("passed", 2, 0, 0),
+            stderr: vec![],
+            exit: 0,
+            corrupt: false,
+        };
+        if case == "legacy" {
+            owner.run_command(pending, inner, NOW).unwrap();
+        } else {
+            owner
+                .run_command(
+                    pending,
+                    SealedEnvelope {
+                        inner,
+                        mutate_after_capture: None,
+                        mismatched_observation: false,
+                    },
+                    NOW,
+                )
+                .unwrap();
+            owner.check_completion_validation().unwrap();
+        }
+        let before = owner.inspect_validation().unwrap();
+        match case {
+            "legacy" => {}
+            "hidden" => {
+                fs::write(f.0.join("owned/worktree/.config"), b"new").unwrap();
+            }
+            "test" => {
+                fs::create_dir(f.0.join("owned/worktree/tests")).unwrap();
+                fs::write(f.0.join("owned/worktree/tests/check.py"), b"changed").unwrap();
+            }
+            "mode" => {
+                fs::set_permissions(
+                    f.0.join("owned/worktree/sentinel"),
+                    fs::Permissions::from_mode(0o600),
+                )
+                .unwrap();
+            }
+            "unsafe" => {
+                symlink("sentinel", f.0.join("owned/worktree/link")).unwrap();
+            }
+            "pending" => {
+                owner.command = Some(
+                    owner
+                        .command_preview(&command_registry(spec()).unwrap(), NOW)
+                        .unwrap(),
+                );
+            }
+            "creation" => {
+                owner.created.as_mut().unwrap().creation_receipt_sha256 = hash(b"foreign creation");
+            }
+            _ => unreachable!(),
+        }
+        assert!(owner.check_completion_validation().is_err(), "{case}");
+        // Refusal does not dispatch another command or erase retained history.
+        assert_eq!(calls.load(Ordering::Relaxed), 1, "{case}");
+        assert_eq!(
+            owner.inspect_validation().unwrap()["attempts"],
+            before["attempts"],
+            "{case}"
+        );
+        assert_eq!(
+            fs::read(f.0.join("owned/worktree/sentinel")).unwrap(),
+            b"preserve",
+            "{case}"
+        );
     }
 }

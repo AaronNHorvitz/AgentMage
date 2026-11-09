@@ -398,11 +398,13 @@ mod tests {
             }
             let capture = seal(&tree).unwrap();
             let input = capture.input_record();
+            let admission = super::super::command_projection_policy(Some(&capture));
+            assert!(
+                matches!(admission, CommandProjections::Sealed { files: count } if count == files)
+            );
+            assert_eq!(input.files as usize, files);
             let descriptors = capture.into_descriptors();
             assert_eq!(descriptors.len(), files);
-            let admission = CommandProjections::Sealed {
-                files: input.files as usize,
-            };
             for actual in [
                 0,
                 1,
@@ -425,8 +427,10 @@ mod tests {
             assert!(!admission.accepts(UNIT, files));
             assert!(!admission.accepts(UNIT, 2));
         }
+        let live = super::super::command_projection_policy(None);
+        assert!(matches!(live, CommandProjections::Live));
         for actual in [0, 1, 2, MAX_SEALED_FILES, MAX_SEALED_FILES + 1] {
-            assert_eq!(CommandProjections::Live.accepts(UNIT, actual), actual <= 1);
+            assert_eq!(live.accepts(UNIT, actual), actual <= 1);
         }
     }
 

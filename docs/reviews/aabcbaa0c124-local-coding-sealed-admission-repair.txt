@@ -1,0 +1,181 @@
+Commit: aabcbaa0c12433aa6951fdcfb7054e351fddf8bf
+Scope: local-coding-sealed-admission-repair
+
+# Independent re-review: sealed-command admission and receipt-schema repair (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only on the repository.
+Tier: core. Base: a5594787b4ec4f25553332c63a91d14cad91e4ee. Parent rows T-303/T-306 stay OPEN.
+Scope of this re-review:
+
+- H1, shared by dc5cb4532d97 and a5594787b4ec: supervisor admission refused sealed captures of two or more files.
+- M1 from a5594787b4ec: the published command-receipt schema rejected extended receipts.
+
+## Methods
+
+- Confirmed the pinned checkout: `git rev-parse HEAD` is aabcbaa0c12433aa6951fdcfb7054e351fddf8bf, and the status is clean.
+  History is linear over 699e99af → dc5cb453 → a5594787 → aabcbaa0.
+- Read IP-POLICY.md, the Decision 0175 addendum, the TASKS.md top note, the new evidence file, the edits to both earlier
+  evidence files and the guide, and the bundle README/run.py/check.py/light.py/native.py before running anything.
+  - run.py prepends only `/lane/state/tmp/t303-endpoint-write/tooling`, which holds just the retained `node` and `LICENSE`.
+  - It sets two build jobs and four test threads, and each Cargo command reserves its own build slot. I did not outer-wrap
+    either driver.
+- Read the full diff of all 22 paths and traced the repaired admission path:
+  `SealedWorktree::capture` → `input_record()` (`files = self.files.len()`) → `CommandProjections::Sealed { files }`
+  (`command_runner.rs:392-397`) → `into_descriptors()` (one descriptor per `self.files` entry, same object) →
+  `run_owned` → `LaunchOwner::accepts` → `CommandProjections::accepts` (`sandbox_supervision.rs:85-95`).
+  - `run_owned` rejects on admission before taking the attempt slot or spawning (`sandbox_supervision.rs:907-916`).
+  - The admitted descriptors are retained in `Attempt::_projections` until cleanup, unchanged.
+- Checked authority: `CommandProjections` is `pub(crate)` and constructed in production only at `command_runner.rs:392-397`.
+  The mode follows `sealed_worktree`, which is selected by the trusted executor flag (`with_sealed_worktree`), never by
+  model or request JSON.
+  - `Live` keeps `<= 1`.
+  - `Sealed` requires `files <= MAX_SEALED_FILES (128)` and `projections == files`, plus the exact
+    `agentmage-command-` prefix and nonce check through `unit_name_with_prefix`.
+  - Capture already refuses a 129th file (`command_runner_worktree.rs:273`), so the count bound is enforced twice.
+  - No other owner, manifest, permit, filter, cleanup or cancellation code changed.
+- Compared the published schema with the kernel validator `SealedCommandWorkspaceInput::valid`
+  (`kernel/engine/src/command_runner.rs:527-537`). The version, the three digest shapes (`^[0-9a-f]{64}$`), files 0..128,
+  directories 1..256, bytes 0..64 MiB and the zero-files-implies-zero-bytes rule all match. The schema's launch-failure
+  exclusion matches `validate_platform_result`.
+- Checked the producer fixtures: a word diff of all seven changed v5 fixtures contains only 64-hex tokens (19 replaced
+  hashes), with no structural change.
+- Searched for literal copies of the old schema SHA-256 `1fd93b8d…58ee` (see L1).
+- Reproduced the sealed mount shape now admitted for many files with a real nested Bubblewrap 0.13.1, in scratch outside
+  the repository: `/lane/state/tmp/rv-bwrap-aabc/t.py`.
+  - Setup: sealed memfds reopened read-only through `/proc/self/fd` (as `OpenFile=` reopens them) and placed at
+    consecutive descriptors from 5 (`WORKTREE_DESCRIPTOR`). It used the executor's flags and argument order: `--tmpfs /work`,
+    `--dir` per directory, `--perms`/`--ro-bind-data` per file, `--chmod` in reverse, root chmod, `--remount-ro /work`.
+  - Ran with 0, 2 and 128 files.
+- Ran every command in the request (below). No GPU, model, download, shim, limit change or trust exception was used.
+  There is no user systemd session on this host (`systemctl --user is-system-running` → `offline`).
+
+## Exact commands and results (from /lane/review-checkout)
+
+| Command | Expected | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-sealed-admission-repair/review-inputs.sha256` | 0 | 0; 80 lines; manifest SHA-256 `301dfff6fae7e9887f5379f0f7e9575101a98d8bc11d0d854a7622d310b4f5c8` (matches request) |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-sealed-admission-aabcbaa0c124` (fresh dir) | 1 | `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`; producer reproduction 0 (86.29 s), fmt 0 (1.25 s), clippy 0 (35.86 s), tests 101 (177.52 s); total 306.71 s incl. reservations |
+| `python3 -B …/check.py /lane/state/tmp/review-sealed-admission-aabcbaa0c124` | 0 | 0; 26 targets; 1214 passed / 72 failed / 64 ignored / 0 measured / 0 filtered; 72 inherited identities, 0 new; all 9 named methods ok; 79 schema tests, 36 unit tests, 9 producer files; "FULL GATE REMAINS FAIL" |
+| `python3 -B …/light.py` | 0 | 0 (diff-check, untracked lint, review lint, markdownlint: 0 issues in 6 files) |
+| `cmp …/validation-final/source-freeze.json …/review-sealed-admission-aabcbaa0c124/source-freeze.json` | 0 | 0 (14 hashes) |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/native.py /lane/state/tmp/review-sealed-admission-aabcbaa0c124-native` | 0 (collection only) | 0. Individual results below: both 101, not passes |
+| `cmp docs/reviews/dc5cb4532d97-local-coding-sealed-validation.txt /lane/reviews/dc5cb4532d97-local-coding-sealed-validation.md` | 0 | 0 |
+| `cmp docs/reviews/a5594787b4ec-local-coding-sealed-input-receipts.txt /lane/reviews/a5594787b4ec-local-coding-sealed-input-receipts.md` | 0 | 0 |
+| `git diff --check a5594787b4ec4f25553332c63a91d14cad91e4ee --` | 0 | 0 |
+| `git status --short` | empty | empty |
+
+Notes on the gate run:
+
+- My raw gate log SHA-256 is `fec52be4910eb430e6fccacf4b246a5328d49b064f9fddc5edb28c2cf0ddc7ed`. It differs from the
+  builder's `681c0104…4564` only in timings.
+- The sorted `test … ok|FAILED|ignored` identity lines of both logs hash identically (`c224008b…2c31e`), and `plan.json` is
+  byte-identical to the builder's.
+- My private runtime namespace retained exactly 11 inherited-failure fixture directories, which matches the claim.
+- In my log, `sealed_worktree_admission_requires_exact_bounded_projection_count … ok`. The new native test and the
+  owner matrix are both `ignored`.
+
+Native collection, individual results:
+
+- `command_runner::tests::live_sealed_worktree_reads_multiple_files_refuses_writes_and_consumes_descriptors`: exit 101,
+  31.04 s.
+  - Panic at `command_runner.rs:1660`: `manifest: LinuxCommandRunnerError { kind: InvalidManifest }`.
+  - 0 passed, 1 failed, 392 filtered.
+- `sandbox::supervision::tests::closed_owners_reject_cross_variant_names_and_projection_cardinalities`: exit 101, 0.08 s.
+  - Panic at `sandbox_supervision.rs:1319`: `LinuxSandboxError { kind: InvalidManifest }`.
+  - 0 passed, 1 failed, 392 filtered.
+- Both stop at trusted-manifest verification before any launch, so **no native assertion was observed**. A real sealed
+  launch, its read-only behaviour, agreement of the full returned record and descriptor cleanup remain unobserved on
+  this lane. The evidence and guide say exactly this.
+
+Nested Bubblewrap reproduction (emulation, not a native launch):
+
+| Files | Name/mode listing digest | Concatenated bytes digest | Create `/work/x` | Append to a sealed file | Guest descriptors |
+| --- | --- | --- | --- | --- | --- |
+| 0 | equals expected | equals expected | Read-only file system | refused (no file) | 4 (0–2 + enumerator) |
+| 2 | equals expected | equals expected | Read-only file system | Read-only file system | 4 |
+| 128 | equals expected | equals expected | Read-only file system | Read-only file system | 4 |
+
+So the argument shape the repaired admission now lets through is sound at the maximum count.
+
+## Confinement and integrity checks
+
+- **No widened authority.**
+  - `Live` admission is byte-for-byte the old rule (`<= 1`).
+  - A sealed count above 128 is refused even if the counts agree (both tests cover 129 and `usize::MAX`).
+  - The unit prefix cannot cross variants: the `agentmage-worker-` and wildcard names are refused for every count.
+  - The model cannot select the sealed mode or the count. The count is derived from the same capture object whose
+    descriptors are then moved, so the check is an internal consistency check, not a trust input.
+- **No mutable fallback.** In sealed mode `held_worktree` is `None` (`command_runner.rs:258`). Only the sealed descriptors go
+  in `projections`, and the mount arguments contain no `--ro-bind-fd … /work`. This is unchanged from dc5cb453.
+- **Schema (M1).**
+  - The property is optional, closed and nested-closed.
+  - It is excluded on `launch_failed` via `properties: {sealed_workspace_input: false}`, an equivalent strict-mode form.
+  - `null` is rejected, which matches serde's `skip_serializing_if` (the field is absent, never null).
+  - The 79 schema tests include the new accept/reject matrix (legacy, extended, both boundaries, 13 malformed shapes, each
+    of the 7 missing fields, null, and launch failure).
+  - The gate now maps `command-receipt.schema.json` to host dependants, the producer contract and read-only fixture
+    reproduction. Its unit test checks both schemas.
+  - The embedded digests follow `include_bytes!`/`include_str!` (`coding_repository_command.rs:552`,
+    `shells/host/src/coding_tools.rs:51`), and the regenerated v5 fixtures reproduce read-only (9 files).
+  - Historical fixture versions are untouched.
+- **Honest claims.**
+  - The dc5cb453 evidence, the a5594787 evidence, Decision 0175 and the guide now state that the earlier retention and
+    launch statements were intended behaviour, not observation. Native launch is explicitly left open.
+  - The native helper's exit 0 is explicitly not presented as a pass.
+  - The one inaccurate sentence is L1.
+- **Evaluation integrity and delivery.**
+  - No task, hidden or held-out test, scorer, pin, threshold, dependency (Cargo.toml/Cargo.lock), SBOM, status model,
+    scoreboard or release path is in the diff.
+  - TASKS.md row lines are unchanged (check.py assertion).
+  - The only added `#[ignore]` is the supported-host native test, with the standard reason.
+  - No row or sub-row was added or closed. Both prior FINDINGS reports are retained byte-for-byte.
+  - Both completion verifiers and both verification flags are unchanged.
+- **Privacy and branding.** The added lines contain no private path, username, hostname, credential or sibling-project
+  name. The only model name is the reviewer attribution inside the retained review files. No trademark is used as branding.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **dc5cb453 H1 / a5594787 inherited H1: repaired.** The closed command owner carries an explicit `Live`/`Sealed`
+  projection policy with an exact, bounded count. The non-ignored real-capture regression passes for 0, 2 and 128 files,
+  and the ignored owner matrix and the host-gated sealed launch test exist as requested. The remaining gap is the
+  supported-host observation, which this lane cannot provide. The evidence states that honestly, and it is a condition for
+  closing the parent rows (below), not a defect in this commit.
+- **a5594787 M1: repaired** as specified (schema property, contract tests, gate mapping, derived digests). The wording now
+  names the updated in-repository schema and limits the remaining update need to external readers of the old schema.
+
+### L1 — Low (claim accuracy): "No literal copy of the old schema hash remains in current repository files" is not true
+
+- Where: `docs/evidence/t303-sealed-admission-repair-2026-11-09.md` ("No literal copy of the old schema hash remains…")
+  versus `artifacts/sprints/sprint-41/local-evidence-report.json:12`, which still records
+  `"schemas/runtime/command-receipt.schema.json": "1fd93b8d40418f11071c3ddf68d95f9c00b864012633c3053e0f9e57254a58ee"`
+  (the base hash).
+- Impact: none functional. It is a historical Sprint 41 snapshot, and 7 of its 15 recorded source hashes were already
+  stale before this commit. No current check compares it with live files.
+- Fix: reword to "no live pin of the old schema hash remains; the historical Sprint 41 snapshot keeps its recorded value".
+  Backlog, same row.
+
+### L2 — Low (test gap): the executor's production wiring of the projection policy is covered only by an ignored test
+
+- Where: `platforms/linux/src/command_runner.rs:392-397` maps `sealed_workspace_input` to
+  `CommandProjections::Sealed { files }`, and the absence of a record to `Live`.
+- Gap: the non-ignored regression exercises `CommandProjections::accepts` directly with real captures. If this mapping
+  regressed (for example, sealed launches given `Live`), every non-ignored test would still pass, and only the host-gated
+  native test would catch it.
+- Fix: factor the policy choice into a small function over `Option<&SealedWorktree>` and assert it in the existing
+  non-ignored test. This can be done together with dc5cb453 L2 (route-selection coverage). Backlog, same row.
+
+Earlier low findings remain same-row backlog: dc5cb453 L1/L2, a5594787 L1, and 699e99 L1/L3.
+
+## Per-row result
+
+- T-303: stays OPEN (non-closing scope). H1 and M1 are repaired at this exact commit, and the gate reproduces exactly:
+  FAIL with only the 72 inherited failures, 0 new, and all named methods passing. Before the sealed-validation claim
+  supports closing the row, a supported-host run must still show:
+  - `live_sealed_worktree_reads_multiple_files_refuses_writes_and_consumes_descriptors` passing;
+  - `closed_owners_reject_cross_variant_names_and_projection_cardinalities` passing;
+  - the rest of the open parent measurements.
+- T-306: stays OPEN for the same reasons. The endpoint validation route shares the repaired admission and schema.
+
+Verdict: PASS

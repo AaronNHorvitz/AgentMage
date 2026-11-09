@@ -2,6 +2,27 @@
 
 ## Active queue: local agent mission
 
+The [sealed-admission independent core re-review](docs/reviews/aabcbaa0c124-local-coding-sealed-admission-repair.txt)
+has **Verdict: PASS** for exact commit
+`aabcbaa0c12433aa6951fdcfb7054e351fddf8bf`, with no high/medium finding.
+It accepts H1 and M1's same-row repairs. Low L1's historical-hash wording is
+corrected; low L2's production policy selection is factored into the existing
+non-ignored real-capture admission test in this batch. Independent review of
+these low repairs and the completion check is required. Both parents stay open.
+
+The [completion source check](docs/evidence/t303-completion-source-check-2026-11-09.md)
+rechecks the original linked validation history, final sealed input and complete
+current worktree observation before requesting the final coding summary. Missing,
+incomplete or changed inputs and pending effects refuse before another model
+call. This is a non-atomic inspection, not independent acceptance; both
+verification flags and completion verifiers remain unchanged. Formatting and
+Clippy pass. The full affected gate remains FAIL: 1,216 passed, exactly 72 inherited
+failures and none new, 64 existing ignored across 26 unfiltered targets. All seven
+checked methods pass; nine Rust hashes stay fixed. Independent core review is
+required. T-303/T-306 remain open; no row
+or sub-row is added or closed. Native/model execution, completion acceptance,
+durable recovery, approved Git and measurements remain open.
+
 The [sealed-input receipt review](docs/reviews/a5594787b4ec-local-coding-sealed-input-receipts.txt)
 has **Verdict: FINDINGS** for exact commit
 `a5594787b4ec4f25553332c63a91d14cad91e4ee`. Its inherited H1 shares the

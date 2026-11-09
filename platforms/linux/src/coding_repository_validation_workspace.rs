@@ -39,17 +39,8 @@ impl ValidationWorkspaceBinding {
         created: &CreatedWorktree,
         receipt: &str,
     ) -> Value {
-        let matches = self.creation_receipt == created.creation_receipt_sha256
-            && self.validation_receipt == receipt
-            && WorkspaceObservation::capture(&created.held)
-                .is_some_and(|now| now == self.observation);
-        let sealed_matches = self.sealed_input.as_ref().is_some_and(|input| {
-            input.worktree_root_sha256 == self.observation.root
-                && input.observation_sha256 == self.observation.digest
-                && u64::from(input.files) + u64::from(input.directories) - 1
-                    == self.observation.entries as u64
-                && input.file_bytes == self.observation.bytes
-        });
+        let matches = self.matches_current(created, receipt);
+        let sealed_matches = self.sealed_matches_observation();
         json!({"version":1,"scope":"whole-worktree-observation",
             "validation_receipt_sha256":self.validation_receipt,
             "command_receipt_sha256":self.command_receipt,
@@ -61,6 +52,35 @@ impl ValidationWorkspaceBinding {
             "entries":self.observation.entries,"file_bytes":self.observation.bytes,
             "matches_current_observation":matches,"atomic_snapshot":false,
             "independent_task_grade":false})
+    }
+
+    pub(in crate::coding_repository) fn permits_completion_summary(
+        &self,
+        created: &CreatedWorktree,
+        receipt: &str,
+        command: &CommandReceipt,
+    ) -> bool {
+        self.command_receipt == command.receipt_sha256
+            && self.sealed_input == command.sealed_workspace_input
+            && self.sealed_matches_observation()
+            && self.matches_current(created, receipt)
+    }
+
+    fn matches_current(&self, created: &CreatedWorktree, receipt: &str) -> bool {
+        self.creation_receipt == created.creation_receipt_sha256
+            && self.validation_receipt == receipt
+            && WorkspaceObservation::capture(&created.held)
+                .is_some_and(|now| now == self.observation)
+    }
+
+    fn sealed_matches_observation(&self) -> bool {
+        self.sealed_input.as_ref().is_some_and(|input| {
+            input.worktree_root_sha256 == self.observation.root
+                && input.observation_sha256 == self.observation.digest
+                && u64::from(input.files) + u64::from(input.directories) - 1
+                    == self.observation.entries as u64
+                && input.file_bytes == self.observation.bytes
+        })
     }
 }
 

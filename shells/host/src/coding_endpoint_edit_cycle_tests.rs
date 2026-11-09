@@ -97,6 +97,107 @@ fn digest(bytes: &[u8]) -> String {
         .collect()
 }
 
+// Exercise the exact production completion framer and coordinator guard without
+// pretending this synthetic phase has a native validated source binding.
+struct CompletionFramingFixture {
+    request: RuntimeEndpointRunRequest,
+    connection: CodingEndpointConnection<'static>,
+}
+impl agentmage_kernel_engine::runtime_loop::RuntimeEndpointTurnPort for CompletionFramingFixture {
+    fn model_binding(&self) -> agentmage_kernel_contracts::RuntimeModelBinding<'_> {
+        agentmage_kernel_contracts::RuntimeModelBinding::SelectedEndpoint {
+            endpoint: &self.request.model_selection.endpoint,
+            model: &self.request.model_selection.model,
+        }
+    }
+    fn prepare<'a>(
+        &mut self,
+        input: agentmage_kernel_engine::runtime_loop::RuntimeEndpointPreparationInput<'_>,
+        control: &dyn ModelOperationControl,
+    ) -> Result<
+        agentmage_kernel_engine::runtime_loop::RuntimePreparedEndpointTurn<'a>,
+        RuntimePortFailure,
+    >
+    where
+        Self: 'a,
+    {
+        assert_eq!(input.request, &self.request);
+        let CodingEndpointConnection::Shared {
+            transport,
+            approval,
+        } = &self.connection
+        else {
+            panic!("owned synthetic transport")
+        };
+        crate::coding_endpoint_edit_generation::prepare_coding_completion(
+            CodingEndpointConnection::Shared {
+                transport: transport.clone(),
+                approval: approval.clone(),
+            },
+            input,
+            2048,
+            true,
+            control,
+        )
+    }
+}
+
+#[test]
+fn coding_cycle_refuses_completion_without_original_linked_sealed_validation_before_model_call() {
+    let f = generation_fixture();
+    let (listener, endpoint) = socket();
+    let startup = coding_startup(&f, &endpoint);
+    let request = startup.request().clone();
+    let clock = Clock(Arc::new(AtomicU64::new(1000)));
+    let (previews, boundary) = CodingEndpointEditPreviews::new_coding(
+        startup,
+        owner(&f),
+        Arc::new(Control::new()),
+        clock.clone(),
+        validation(),
+    )
+    .unwrap();
+    // Phase selection alone must never manufacture a native pass or binding.
+    previews.synthetic_observation(Next::Completion, None);
+    let port = CodingEndpointStrictEdits::new(
+        previews,
+        connection(configured_transport(endpoint.clone()), endpoint),
+        vec!["one.py".into()],
+        2048,
+        true,
+    )
+    .unwrap();
+    let mut coordinator = ReusableRuntimeCoordinator::new_endpoint(
+        request,
+        port,
+        linux_coding_endpoint_coding_registry().unwrap(),
+        boundary,
+        NeverVerify(VerifierId::from_raw("missing-validation-must-not-verify")),
+        clock,
+    )
+    .unwrap();
+    let RuntimeEndpointCoordinatorStep::Complete { outcome } =
+        coordinator.run_endpoint_until_boundary(None, None).unwrap()
+    else {
+        panic!("terminal refusal")
+    };
+    assert_eq!(outcome.outcome.state, AgentStateKind::Failed);
+    assert_eq!(outcome.outcome.model_call_count, 0);
+    assert_eq!(outcome.outcome.tool_call_count, 0);
+    assert!(outcome.outcome.output.is_none());
+    assert_eq!(
+        fs::read(f.root.join("owned/worktree/one.py")).unwrap(),
+        b"one\n"
+    );
+    assert!(matches!(listener.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock));
+    let events = coordinator.events().to_vec();
+    assert_eq!(
+        coordinator.run_endpoint_until_boundary(None, None).unwrap(),
+        RuntimeEndpointCoordinatorStep::Complete { outcome }
+    );
+    assert_eq!(coordinator.events(), events);
+}
+
 #[test]
 fn coding_cycle_schedules_fixed_test_after_approved_edit_in_the_same_coordinator() {
     for invalid_ack in [false, true] {
@@ -400,14 +501,10 @@ fn coding_cycle_completion_is_only_a_candidate_for_the_supplied_independent_veri
     // Synthetic host phase, never a native successful validation claim.
     previews.synthetic_observation(Next::Completion, None);
     fs::remove_file(f.root.join("owned/worktree/one.py")).unwrap();
-    let port = CodingEndpointStrictEdits::new(
-        previews,
-        connection(configured_transport(endpoint.clone()), endpoint),
-        vec!["one.py".into()],
-        2048,
-        true,
-    )
-    .unwrap();
+    let port = CompletionFramingFixture {
+        request: request.clone(),
+        connection: connection(configured_transport(endpoint.clone()), endpoint),
+    };
     let objective = digest(request.task.objective.as_bytes());
     let peer = thread::spawn(move || {
         let mut stream = accept(&listener);
@@ -483,14 +580,10 @@ fn coding_cycle_completion_tool_requests_record_terminal_refusal_without_effects
             .unwrap();
             // Synthetic phase selection; no successful native test is claimed.
             previews.synthetic_observation(Next::Completion, None);
-            let port = CodingEndpointStrictEdits::new(
-                previews,
-                connection(configured_transport(endpoint.clone()), endpoint),
-                vec!["one.py".into()],
-                2048,
-                true,
-            )
-            .unwrap();
+            let port = CompletionFramingFixture {
+                request: request.clone(),
+                connection: connection(configured_transport(endpoint.clone()), endpoint),
+            };
             let call = json!({
                 "tool_id":tool.tool_id, "tool_version":tool.tool_version,
                 "arguments":{"preview":{}}

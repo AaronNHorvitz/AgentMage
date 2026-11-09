@@ -105,6 +105,46 @@ impl LinuxCodingRepository {
             "repair_proposal_requires_consent":true}))
     }
 
+    /// Recheck the original linked pass and sealed source inputs before asking
+    /// for a completion summary. Requires prior consent to inspect the complete
+    /// worktree, including hidden/configuration/test files. Reads no original
+    /// checkout and grants no model disclosure or effect authority.
+    ///
+    /// Success is only a bounded, non-atomic source observation. It does not
+    /// verify the task, the test oracle or source state after this call. The
+    /// independent completion verifier remains required.
+    pub fn check_completion_validation(&self) -> Result<()> {
+        let created = self.verify_created()?;
+        if self.command.is_some() || self.edit.is_some() || self.apply.is_some() {
+            return Err(err("code.completion.pending-effect"));
+        }
+        let series = self
+            .validation
+            .as_ref()
+            .ok_or(err("code.completion.validation-required"))?;
+        let latest = series
+            .latest
+            .as_ref()
+            .ok_or(err("code.completion.validation-required"))?;
+        let final_attempt = series
+            .history
+            .last()
+            .ok_or(err("code.completion.validation-required"))?;
+        if !series.linked_pass_verified() || latest != &final_attempt.validation {
+            return Err(err("code.completion.linked-pass-required"));
+        }
+        if !series.workspace_binding.as_ref().is_some_and(|binding| {
+            binding.permits_completion_summary(
+                created,
+                &latest.receipt_sha256,
+                &final_attempt.command,
+            )
+        }) {
+            return Err(err("code.completion.source-binding"));
+        }
+        Ok(())
+    }
+
     /// Caller explicitly confirms the exact test definition, then separately
     /// approves its prepared execution. Only closed built-in output formats are
     /// admitted. This starts one immutable definition per created worktree; a
