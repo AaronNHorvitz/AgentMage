@@ -1639,3 +1639,41 @@ durable recovery and approved Git remain open. No coding score is claimed.
 The lane's executable fixture observes the original native Git artifact trust
 refusal before creation, credential reads or model dispatch. It does not replace
 that refusal or claim a successful native workflow. T-303/T-306 remain open.
+
+## Trusted completion checker connection
+
+Library callers composing the combined fixed-test owner can call
+`CodingEndpointEditPreviews::completion_verifier(checker)` before moving the
+previews into `CodingEndpointStrictEdits`. Pass that returned adapter as the
+existing coordinator's verifier. The checker explicitly implements
+`CodingEndpointAcceptancePort`; no accepting implementation is supplied by
+the development executable or selected through HTTP or model text.
+
+The adapter checks the complete original endpoint request and claim scope,
+original completion phase, ready owner and continuous control. Only then does
+the original repository issue borrowed `LinuxCodingValidationEvidence`:
+the immutable test template, complete command/validation attempts including
+failures, consecutive rerun plans and original worktree creation receipt.
+Issuance requires the existing linked full pass, sealed input binding, no
+pending effects and matching bounded whole-worktree observation. The checker
+must independently correlate these records with the coordinator's observations
+and verify every actual task criterion. A test process or parsed full pass is
+still insufficient to certify an arbitrary coding task.
+
+The original owner remains locked while the checker runs; the checker must not
+reenter its previews or boundary. Consent must already cover the records and
+whole-worktree reads. No source bytes are added to model context. A checker
+error stops immediately; any returned candidate, including a failed candidate,
+requires a second original source/validation inspection before it can reach
+the existing verifier registry. Continuous control is checked around dispatch
+and after inspection. These samples remain non-atomic; later drift is possible.
+The borrowed view has no caller constructor, cloning or wire representation,
+and cannot reconstruct ownership or approve an effect.
+
+Endpoint verifier errors now close the accounted turn with the corresponding
+non-success outcome and no answer; original cancellation and deadline checks
+retain precedence. Repeated advance returns that terminal record without
+another verifier or model call. This repairs the dependency-error path exposed
+by the adapter's refusal test. Concrete independent task checking, a positive
+native/model workflow, durable recovery, approved Git and measurements remain
+open. The development executable still refuses task certification.

@@ -2,6 +2,31 @@
 
 ## Active queue: local agent mission
 
+The [readiness independent core review](docs/reviews/a12ff17b7011-local-coding-completion-readiness.txt)
+has **Verdict: PASS** for exact commit
+`a12ff17b7011720864dd2d583333eb05095d0a3d`, with no high/medium finding.
+Low L1 is repaired in this same-row batch: a validly resealed substitute isolates
+the token's request comparison from downstream digest refusal. Low L2's positive
+original-owner issuance remains blocked on native execution. Both parents stay
+open; the new fixture repair requires independent review.
+
+The [original-owner verifier connection](docs/evidence/t303-owned-completion-verifier-2026-11-09.md)
+supplies a caller-provided independent checker with borrowed original validation
+records, including failed attempts, through the existing completion boundary.
+Every candidate needs a fresh original source/validation post-check; callback
+errors stop immediately. The same-row endpoint repair records verifier errors
+as terminal non-success after original stop/deadline checks. It adds no accepting
+checker or executable certification. Both inspection flags remain false and the
+existing completion verifiers are unchanged. Formatting, Clippy and all ten
+checked methods pass. The full affected gate remains FAIL: 2,854 passed, exactly
+72 inherited failures and none new, 72 existing ignored across 46 unfiltered
+targets. Ten Rust source hashes remain fixed. Earlier compile, owner-contract
+and long-temporary-path failures are retained with their same-row repairs;
+all 14 original owner fault assertions remain. Independent core review is
+required. T-303/T-306 stay open; no row or sub-row is added or closed.
+Native/model execution, concrete task acceptance, durable recovery, approved Git
+and measurements remain open.
+
 The [post-generation independent core review](docs/reviews/d0d7dc0f643e-local-coding-completion-recheck.txt)
 has **Verdict: PASS** for exact commit
 `d0d7dc0f643e264036c5f1744ed2b2010dd5afaf`, with no high/medium finding.

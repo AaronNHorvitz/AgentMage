@@ -901,18 +901,25 @@ impl<
             postconditions: postconditions.clone(),
         })
         .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
-        let candidate = self
-            .verifier
-            .verify_completion(RuntimeVerificationInput {
-                request: self.request.scope()?,
-                proposal: claim,
-                state_revision: self.state.revision(),
-                postconditions: &postconditions,
-                evidence: &self.evidence,
-                tool_results: &self.tool_results,
-                receipt_ids: &self.receipt_ids,
-            })
-            .map_err(RuntimeLoopError::Dependency)?;
+        let candidate = self.verifier.verify_completion(RuntimeVerificationInput {
+            request: self.request.scope()?,
+            proposal: claim,
+            state_revision: self.state.revision(),
+            postconditions: &postconditions,
+            evidence: &self.evidence,
+            tool_results: &self.tool_results,
+            receipt_ids: &self.receipt_ids,
+        });
+        // A verifier refusal is a recorded non-success, not a dependency error
+        // that strands an already accounted turn in Verification. Original
+        // cancellation/deadline controls still take precedence after the call.
+        if self.stop_before_phase(cancellation, false)? {
+            return Ok(());
+        }
+        let candidate = match candidate {
+            Ok(candidate) => candidate,
+            Err(error) => return self.finish_model_failure(&turn_id, error),
+        };
         let completion = match registry.verify(&candidate) {
             Ok(value) => value,
             Err(_) => {

@@ -162,12 +162,13 @@ fn coding_completion_readiness_refuses_another_request_or_turn_before_transport(
     let request = startup.request();
     for case in ["request", "turn"] {
         // Explicit synthetic issuance exercises consumption scope only, never
-        // original native readiness. Preserve the old seal in the request case
-        // to prove that the token binds the complete request, not just its hash.
+        // original native readiness. Reseal the alternate request so downstream
+        // digest validation cannot mask a missing token request comparison.
         let ready = CompletionReady::synthetic_for_framing(request, 1, |_| Ok(()));
         let mut substituted = request.clone();
         if case == "request" {
             substituted.task.objective.push_str(" substituted");
+            substituted = seal_runtime_endpoint_run_request(substituted).unwrap();
         }
         let input = RuntimeEndpointPreparationInput {
             request: &substituted,
@@ -707,6 +708,108 @@ fn coding_cycle_completion_is_only_a_candidate_for_the_supplied_independent_veri
         1
     );
     peer.join().unwrap();
+}
+
+#[test]
+fn coding_owned_verifier_refuses_unready_original_owner_without_calling_acceptance() {
+    use crate::coding_endpoint_edit_previews::CodingEndpointAcceptancePort;
+    use agentmage_kernel_engine::runtime_loop::RuntimeCompletionVerificationInput;
+    use agentmage_platform_linux::LinuxCodingValidationEvidence;
+    struct MustNotCheck(VerifierId, Arc<AtomicUsize>);
+    impl CodingEndpointAcceptancePort for MustNotCheck {
+        fn verifier_id(&self) -> &VerifierId {
+            &self.0
+        }
+        fn verify_coding_completion(
+            &mut self,
+            _: RuntimeCompletionVerificationInput<'_>,
+            _: LinuxCodingValidationEvidence<'_>,
+        ) -> Result<VerifierCandidate, RuntimePortFailure> {
+            self.1.fetch_add(1, Ordering::SeqCst);
+            panic!("unready owner must not reach independent acceptance")
+        }
+    }
+    for case in ["edit", "test", "missing-validation", "cancelled", "request"] {
+        let f = generation_fixture();
+        let (listener, endpoint) = socket();
+        let startup = coding_startup(&f, &endpoint);
+        let mut request = startup.request().clone();
+        let clock = Clock(Arc::new(AtomicU64::new(1000)));
+        let control = Arc::new(Control::new());
+        let (previews, boundary) = CodingEndpointEditPreviews::new_coding(
+            startup,
+            owner(&f),
+            control.clone(),
+            clock.clone(),
+            validation(),
+        )
+        .unwrap();
+        previews.synthetic_observation(
+            match case {
+                "edit" => Next::Edit,
+                "test" => Next::Test,
+                _ => Next::Completion,
+            },
+            None,
+        );
+        let calls = Arc::new(AtomicUsize::new(0));
+        let verifier = previews
+            .completion_verifier(MustNotCheck(
+                VerifierId::from_raw("original-owner-acceptance"),
+                calls.clone(),
+            ))
+            .unwrap();
+        assert_eq!(verifier.verifier_id().as_str(), "original-owner-acceptance");
+        if case == "request" {
+            request.task.objective.push_str(" substituted");
+            request = seal_runtime_endpoint_run_request(request).unwrap();
+        }
+        let port = CompletionFramingFixture {
+            request: request.clone(),
+            connection: connection(configured_transport(endpoint.clone()), endpoint),
+            check: None,
+        };
+        let objective = digest(request.task.objective.as_bytes());
+        let peer = thread::spawn(move || {
+            let mut stream = accept(&listener);
+            let _ = body(&mut stream);
+            if case == "cancelled" {
+                control.0.store(true, Ordering::SeqCst);
+            }
+            respond(&mut stream, &json!({"schema_version":1,"objective_sha256":objective,"terminal_claim":"changed","summary":"untrusted success","checks_not_run":[],"residual_risks":[]}).to_string(), "stop", true);
+        });
+        let mut coordinator = ReusableRuntimeCoordinator::new_endpoint(
+            request,
+            port,
+            linux_coding_endpoint_coding_registry().unwrap(),
+            boundary,
+            verifier,
+            clock,
+        )
+        .unwrap();
+        let RuntimeEndpointCoordinatorStep::Complete { outcome } =
+            coordinator.run_endpoint_until_boundary(None, None).unwrap()
+        else {
+            panic!("refusal")
+        };
+        assert_eq!(outcome.outcome.state, AgentStateKind::Failed, "{case}");
+        assert!(outcome.outcome.output.is_none(), "{case}");
+        assert_eq!(outcome.outcome.model_call_count, 1, "{case}");
+        assert_eq!(outcome.outcome.tool_call_count, 0, "{case}");
+        assert_eq!(calls.load(Ordering::SeqCst), 0, "{case}");
+        assert_eq!(
+            fs::read(f.root.join("owned/worktree/one.py")).unwrap(),
+            b"one\n",
+            "{case}"
+        );
+        let events = coordinator.events().to_vec();
+        assert_eq!(
+            coordinator.run_endpoint_until_boundary(None, None).unwrap(),
+            RuntimeEndpointCoordinatorStep::Complete { outcome }
+        );
+        assert_eq!(coordinator.events(), events);
+        peer.join().unwrap();
+    }
 }
 
 #[test]

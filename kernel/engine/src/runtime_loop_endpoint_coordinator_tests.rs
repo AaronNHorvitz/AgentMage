@@ -705,6 +705,115 @@ struct CountCompletionVerifier {
     inner: Verifier,
     calls: Arc<AtomicUsize>,
 }
+
+#[test]
+fn endpoint_completion_verifier_errors_close_accounted_turn_and_preserve_deadline_precedence() {
+    struct Refuse {
+        id: VerifierId,
+        failure: RuntimePortFailure,
+        calls: Arc<AtomicUsize>,
+        clock: Option<Arc<AtomicU64>>,
+    }
+    impl RuntimeVerifierPort for Refuse {
+        fn verifier_id(&self) -> &VerifierId {
+            &self.id
+        }
+        fn verify(
+            &mut self,
+            _: RuntimeVerificationInput<'_>,
+        ) -> Result<VerifierCandidate, RuntimePortFailure> {
+            panic!("endpoint-only verifier")
+        }
+        fn verify_completion(
+            &mut self,
+            _: RuntimeCompletionVerificationInput<'_>,
+        ) -> Result<VerifierCandidate, RuntimePortFailure> {
+            self.calls.fetch_add(1, Ordering::SeqCst);
+            if let Some(clock) = &self.clock {
+                clock.store(1_000_000, Ordering::SeqCst);
+            }
+            Err(self.failure)
+        }
+    }
+    for failure in [
+        RuntimePortFailure::Invalid,
+        RuntimePortFailure::Unavailable,
+        RuntimePortFailure::Cancelled,
+        RuntimePortFailure::TimedOut,
+        RuntimePortFailure::ResourceExhausted,
+        RuntimePortFailure::Uncertain,
+        RuntimePortFailure::ReadProjectionUnavailable,
+    ] {
+        for late in [false, true] {
+            let original = coordinator([Response::Answer], false);
+            let calls = Arc::new(AtomicUsize::new(0));
+            let verifier = Refuse {
+                id: original.verifier.id.clone(),
+                failure,
+                calls: calls.clone(),
+                clock: late.then(|| original.clock.0.clone()),
+            };
+            let mut c = ReusableRuntimeCoordinator::new_endpoint(
+                endpoint_request(),
+                original.model.0,
+                original.registry,
+                original.tool_boundary,
+                verifier,
+                original.clock,
+            )
+            .unwrap();
+            let EndpointStep::Complete { outcome } =
+                c.run_endpoint_until_boundary(None, None).unwrap()
+            else {
+                panic!("terminal refusal")
+            };
+            assert_eq!(
+                outcome.outcome.state,
+                if late
+                    || matches!(
+                        failure,
+                        RuntimePortFailure::TimedOut | RuntimePortFailure::ResourceExhausted
+                    )
+                {
+                    AgentStateKind::Exhausted
+                } else {
+                    AgentStateKind::Failed
+                }
+            );
+            if !late {
+                assert_eq!(outcome.outcome.unresolved_codes, [failure.code()]);
+            }
+            assert!(outcome.outcome.output.is_none());
+            assert!(outcome.answer_evidence.is_none());
+            assert_eq!(outcome.outcome.model_call_count, 1);
+            assert_eq!(outcome.outcome.tool_call_count, 0);
+            assert_eq!(
+                c.resource_snapshot().cumulative[&BudgetResource::ModelCalls],
+                1
+            );
+            assert!(
+                c.events()
+                    .iter()
+                    .any(|e| matches!(e.kind, RuntimeEventKind::ModelCompleted { .. }))
+            );
+            assert!(c.events().iter().all(|e| !matches!(
+                e.kind,
+                RuntimeEventKind::PermissionRequested { .. } | RuntimeEventKind::ToolStarted { .. }
+            )));
+            let mut sequence = RuntimeEventSequence::new();
+            for event in c.events() {
+                sequence.push(event).unwrap();
+            }
+            let events = c.events().to_vec();
+            assert_eq!(
+                c.run_endpoint_until_boundary(None, None).unwrap(),
+                EndpointStep::Complete { outcome }
+            );
+            assert_eq!(c.events(), events);
+            assert_eq!(calls.load(Ordering::SeqCst), 1);
+        }
+    }
+}
 impl RuntimeVerifierPort for CountCompletionVerifier {
     fn verifier_id(&self) -> &VerifierId {
         self.inner.verifier_id()

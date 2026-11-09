@@ -2092,6 +2092,32 @@ fn sealed_validation_receipts_preserve_failed_inputs_and_bind_the_final_source_o
     }
     owner.check_completion_validation().unwrap();
     let inspected = owner.inspect_validation().unwrap();
+    // Same production checker dispatch as the host adapter: exact original
+    // references, actual held files/seals, synthetic creation/process results.
+    // Returning a marker here is not an independent task acceptance claim.
+    let checked = owner
+        .with_completion_validation_evidence(|evidence| {
+            evidence.assert_original_for_test(&owner);
+            assert_eq!(
+                evidence.creation_receipt_sha256(),
+                owner.created.as_ref().unwrap().creation_receipt_sha256
+            );
+            assert_eq!(evidence.attempts().len(), 2);
+            assert_eq!(evidence.reruns().len(), 1);
+            assert!(!evidence.attempts()[0].validation.is_full_pass());
+            assert!(evidence.attempts()[1].validation.is_full_pass());
+            assert!(
+                agentmage_kernel_engine::validation_result::verify_bounded_validation_history(
+                    evidence.template(),
+                    evidence.attempts(),
+                    evidence.reruns()
+                )
+            );
+            Ok::<_, ()>("independent-checker-marker")
+        })
+        .unwrap()
+        .unwrap();
+    assert_eq!(checked, "independent-checker-marker");
     assert_eq!(calls.load(Ordering::Relaxed), 2);
     assert_eq!(
         inspected["command_history"],
@@ -2122,7 +2148,32 @@ fn sealed_validation_receipts_preserve_failed_inputs_and_bind_the_final_source_o
     assert_eq!(binding["matches_current_observation"], true);
     assert_eq!(inspected["current_workspace_verified"], false);
     assert_eq!(inspected["test_suite_verified"], false);
-    fs::write(f.0.join("owned/worktree/sentinel"), b"later source").unwrap();
+    let refused = owner
+        .with_completion_validation_evidence(|_| Err::<(), _>("checker-refused"))
+        .unwrap();
+    assert_eq!(refused, Err("checker-refused"));
+    // A callback return cannot certify source changed during independent
+    // checking. The exact production post-check overrides even a success marker.
+    let mut checker_called = false;
+    let drift = owner.with_completion_validation_evidence(|_| {
+        checker_called = true;
+        fs::write(f.0.join("owned/worktree/sentinel"), b"later source").unwrap();
+        Ok::<_, ()>("must-not-escape")
+    });
+    assert!(checker_called);
+    assert_eq!(drift.unwrap_err().code(), "code.completion.source-binding");
+    let mut stale_called = false;
+    assert_eq!(
+        owner
+            .with_completion_validation_evidence(|_| {
+                stale_called = true;
+                Ok::<_, ()>(())
+            })
+            .unwrap_err()
+            .code(),
+        "code.completion.source-binding"
+    );
+    assert!(!stale_called);
     let stale = owner.inspect_validation().unwrap();
     assert_eq!(
         stale["workspace_binding"]["matches_current_observation"],

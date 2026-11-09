@@ -7,7 +7,7 @@ use crate::coding_endpoint_owner::{
 };
 use agentmage_kernel_contracts::{
     BoundaryKind, CancellationId, CancellationReason, CancellationSignal, CorrelationId,
-    RuntimeApprovalChallenge, RuntimeEventKind,
+    ModelCancellationProbe, RuntimeApprovalChallenge, RuntimeEventKind,
 };
 
 type Runs<'a> = CodingEndpointRuns<'a, ReadBoundary, ContextVerifier, TestClock>;
@@ -201,122 +201,253 @@ fn endpoint_owner_rejects_foreign_resealed_and_unsealed_requests_without_mutatio
 
 #[test]
 fn endpoint_owner_latches_boundary_errors_and_preserves_events_without_redispatch() {
-    let (listener, endpoint) = listener();
-    let transport = transport(endpoint.clone());
-    let approval = LocalChatApproval::for_endpoint(endpoint);
-    let worker = thread::spawn(move || {
-        let mut socket = accept(&listener);
-        read_context_request(&mut socket);
-        respond(&mut socket, &read_proposal(), "stop", true);
-        drop(socket);
-        let mut socket = accept(&listener);
-        read_context_request(&mut socket);
-        respond(&mut socket, "fixture verifier is unavailable", "stop", true);
-        listener
-    });
-    struct UnavailableVerifier(VerifierId);
-    impl RuntimeVerifierPort for UnavailableVerifier {
-        fn verifier_id(&self) -> &VerifierId {
-            &self.0
-        }
-        fn verify(
+    struct Boundary(ReadBoundary, bool);
+    impl RuntimeToolBoundary for Boundary {
+        fn evaluate(
             &mut self,
-            _: RuntimeVerificationInput<'_>,
-        ) -> Result<VerifierCandidate, RuntimePortFailure> {
+            _: &RuntimeRunRequest,
+            _: &RuntimeOperationId,
+            _: &ToolDefinition,
+            _: &ToolCall,
+            _: u64,
+        ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
             panic!("native family")
         }
-        fn verify_completion(
+        fn resolve(
             &mut self,
-            _: RuntimeCompletionVerificationInput<'_>,
-        ) -> Result<VerifierCandidate, RuntimePortFailure> {
-            Err(RuntimePortFailure::Unavailable)
+            _: &RuntimeRunRequest,
+            _: &RuntimeApprovalChallenge,
+            _: &RuntimeApprovalResponse,
+            _: &ToolDefinition,
+            _: &ToolCall,
+            _: u64,
+        ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
+            panic!("native family")
+        }
+        fn execute(
+            &mut self,
+            _: &RuntimeRunRequest,
+            _: &RuntimePermissionEvaluation,
+            _: &ToolDefinition,
+            _: &ToolCall,
+            _: Option<&dyn ModelCancellationProbe>,
+        ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+            panic!("native family")
+        }
+        fn evaluate_scoped(
+            &mut self,
+            scope: RuntimeRunScope<'_>,
+            operation: &RuntimeOperationId,
+            definition: &ToolDefinition,
+            call: &ToolCall,
+            now: u64,
+        ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
+            self.0
+                .evaluate_scoped(scope, operation, definition, call, now)
+        }
+        fn resolve_scoped(
+            &mut self,
+            scope: RuntimeRunScope<'_>,
+            challenge: &RuntimeApprovalChallenge,
+            response: &RuntimeApprovalResponse,
+            definition: &ToolDefinition,
+            call: &ToolCall,
+            now: u64,
+        ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
+            self.0
+                .resolve_scoped(scope, challenge, response, definition, call, now)
+        }
+        fn execute_scoped(
+            &mut self,
+            scope: RuntimeRunScope<'_>,
+            evaluation: &RuntimePermissionEvaluation,
+            definition: &ToolDefinition,
+            call: &ToolCall,
+            cancellation: Option<&dyn ModelCancellationProbe>,
+        ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+            let result =
+                self.0
+                    .execute_scoped(scope, evaluation, definition, call, cancellation)?;
+            if self.1 {
+                Err(RuntimePortFailure::Unavailable)
+            } else {
+                Ok(result)
+            }
         }
     }
-    let executions = Arc::new(AtomicUsize::new(0));
-    let request = selected_request(&transport, "faulted-owner-run");
-    let mut runs = CodingEndpointRuns::default();
-    runs.admit(CodingEndpointAdmission {
-        request: request.clone(),
-        connection: crate::coding_endpoint::CodingEndpointConnection::Borrowed {
-            transport: &transport,
-            approval: &approval,
-        },
-        registry: registry(),
-        sources: &[],
-        source_budget: 2048,
-        include_usage: true,
-        tool_boundary: ReadBoundary(executions.clone()),
-        verifier: UnavailableVerifier(VerifierId::from_raw("unavailable-verifier")),
-        clock: TestClock(1000),
-    })
-    .unwrap();
-    let RuntimeEndpointCoordinatorStep::AwaitingApproval { challenge } =
-        runs.advance(&request, None, None).unwrap()
-    else {
-        panic!("approval expected")
-    };
-    assert_eq!(
-        runs.advance(&request, Some(&allow(&challenge)), None),
-        Err(Error::Coordinator(
-            agentmage_kernel_engine::runtime_loop::RuntimeLoopError::Dependency(
-                RuntimePortFailure::Unavailable
-            )
-        ))
-    );
-    let events = runs.events(&request).unwrap().to_vec();
-    assert!(
-        !events
-            .iter()
-            .any(|e| matches!(e.kind, RuntimeEventKind::RunTerminal { .. }))
-    );
-    assert_eq!(executions.load(Ordering::SeqCst), 1);
-    assert_eq!(runs.advance(&request, None, None), Err(Error::Faulted));
-    assert!(matches!(
-        runs.release_with_tool_boundary(&request),
-        Err(Error::Faulted)
-    ));
-    assert_eq!(
-        runs.advance(&request, Some(&allow(&challenge)), None),
-        Err(Error::Faulted)
-    );
-    assert_eq!(runs.events(&request).unwrap(), events);
-    let inert = |request| CodingEndpointAdmission {
-        request,
-        connection: crate::coding_endpoint::CodingEndpointConnection::Borrowed {
-            transport: &transport,
-            approval: &approval,
-        },
-        registry: registry(),
-        sources: &[],
-        source_budget: 2048,
-        include_usage: true,
-        tool_boundary: ReadBoundary(executions.clone()),
-        verifier: UnavailableVerifier(VerifierId::from_raw("unavailable-verifier")),
-        clock: TestClock(1000),
-    };
-    for i in 0..3 {
-        runs.admit(inert(selected_request(
-            &transport,
-            &format!("beside-faulted-run-{i}"),
-        )))
+
+    for verifier_failure in [false, true] {
+        let (listener, endpoint) = listener();
+        let transport = transport(endpoint.clone());
+        let approval = LocalChatApproval::for_endpoint(endpoint);
+        let worker = thread::spawn(move || {
+            let mut socket = accept(&listener);
+            read_context_request(&mut socket);
+            respond(&mut socket, &read_proposal(), "stop", true);
+            drop(socket);
+            if verifier_failure {
+                let mut socket = accept(&listener);
+                read_context_request(&mut socket);
+                respond(&mut socket, "fixture verifier is unavailable", "stop", true);
+            }
+            listener
+        });
+        struct UnavailableVerifier(VerifierId, Arc<AtomicUsize>);
+        impl RuntimeVerifierPort for UnavailableVerifier {
+            fn verifier_id(&self) -> &VerifierId {
+                &self.0
+            }
+            fn verify(
+                &mut self,
+                _: RuntimeVerificationInput<'_>,
+            ) -> Result<VerifierCandidate, RuntimePortFailure> {
+                panic!("native family")
+            }
+            fn verify_completion(
+                &mut self,
+                _: RuntimeCompletionVerificationInput<'_>,
+            ) -> Result<VerifierCandidate, RuntimePortFailure> {
+                self.1.fetch_add(1, Ordering::SeqCst);
+                Err(RuntimePortFailure::Unavailable)
+            }
+        }
+        let executions = Arc::new(AtomicUsize::new(0));
+        let verifier_calls = Arc::new(AtomicUsize::new(0));
+        let request = selected_request(&transport, "faulted-owner-run");
+        let mut runs = CodingEndpointRuns::default();
+        runs.admit(CodingEndpointAdmission {
+            request: request.clone(),
+            connection: crate::coding_endpoint::CodingEndpointConnection::Borrowed {
+                transport: &transport,
+                approval: &approval,
+            },
+            registry: registry(),
+            sources: &[],
+            source_budget: 2048,
+            include_usage: true,
+            tool_boundary: Boundary(ReadBoundary(executions.clone()), !verifier_failure),
+            verifier: UnavailableVerifier(
+                VerifierId::from_raw("unavailable-verifier"),
+                verifier_calls.clone(),
+            ),
+            clock: TestClock(1000),
+        })
         .unwrap();
+        let RuntimeEndpointCoordinatorStep::AwaitingApproval { challenge } =
+            runs.advance(&request, None, None).unwrap()
+        else {
+            panic!("approval expected")
+        };
+        if verifier_failure {
+            let RuntimeEndpointCoordinatorStep::Complete { outcome } = runs
+                .advance(&request, Some(&allow(&challenge)), None)
+                .unwrap()
+            else {
+                panic!("terminal verifier refusal")
+            };
+            assert_eq!(outcome.outcome.state, AgentStateKind::Failed);
+            assert_eq!(
+                outcome.outcome.unresolved_codes,
+                ["runtime.port.unavailable"]
+            );
+            assert_eq!(outcome.outcome.model_call_count, 2);
+            assert_eq!(outcome.outcome.tool_call_count, 1);
+            assert!(outcome.outcome.output.is_none());
+            assert!(outcome.answer_evidence.is_none());
+            let events = runs.events(&request).unwrap().to_vec();
+            assert_eq!(
+                events
+                    .iter()
+                    .filter(|e| matches!(e.kind, RuntimeEventKind::RunTerminal { .. }))
+                    .count(),
+                1
+            );
+            let mut sequence = agentmage_kernel_engine::runtime_event::RuntimeEventSequence::new();
+            for event in &events {
+                sequence.push(event).unwrap();
+            }
+            assert_eq!(
+                runs.advance(&request, None, None).unwrap(),
+                RuntimeEndpointCoordinatorStep::Complete { outcome }
+            );
+            assert_eq!(runs.events(&request).unwrap(), events);
+            assert_eq!(executions.load(Ordering::SeqCst), 1);
+            assert_eq!(verifier_calls.load(Ordering::SeqCst), 1);
+            runs.release(&request).unwrap();
+            assert_eq!(runs.advance(&request, None, None), Err(Error::NotHeld));
+            assert_eq!(
+                worker.join().unwrap().accept().unwrap_err().kind(),
+                std::io::ErrorKind::WouldBlock
+            );
+            continue;
+        }
+        assert_eq!(verifier_calls.load(Ordering::SeqCst), 0);
+        assert_eq!(
+            runs.advance(&request, Some(&allow(&challenge)), None),
+            Err(Error::Coordinator(
+                agentmage_kernel_engine::runtime_loop::RuntimeLoopError::Dependency(
+                    RuntimePortFailure::Unavailable
+                )
+            ))
+        );
+        let events = runs.events(&request).unwrap().to_vec();
+        assert!(
+            !events
+                .iter()
+                .any(|e| matches!(e.kind, RuntimeEventKind::RunTerminal { .. }))
+        );
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        assert_eq!(runs.advance(&request, None, None), Err(Error::Faulted));
+        assert!(matches!(
+            runs.release_with_tool_boundary(&request),
+            Err(Error::Faulted)
+        ));
+        assert_eq!(
+            runs.advance(&request, Some(&allow(&challenge)), None),
+            Err(Error::Faulted)
+        );
+        assert_eq!(runs.events(&request).unwrap(), events);
+        let inert = |request| CodingEndpointAdmission {
+            request,
+            connection: crate::coding_endpoint::CodingEndpointConnection::Borrowed {
+                transport: &transport,
+                approval: &approval,
+            },
+            registry: registry(),
+            sources: &[],
+            source_budget: 2048,
+            include_usage: true,
+            tool_boundary: Boundary(ReadBoundary(executions.clone()), !verifier_failure),
+            verifier: UnavailableVerifier(
+                VerifierId::from_raw("unavailable-verifier"),
+                verifier_calls.clone(),
+            ),
+            clock: TestClock(1000),
+        };
+        for i in 0..3 {
+            runs.admit(inert(selected_request(
+                &transport,
+                &format!("beside-faulted-run-{i}"),
+            )))
+            .unwrap();
+        }
+        let fifth = selected_request(&transport, "after-faulted-release");
+        assert_eq!(runs.admit(inert(fifth.clone())), Err(Error::Capacity));
+        assert_eq!(runs.events(&request).unwrap(), events);
+        runs.release(&request).unwrap();
+        runs.admit(inert(fifth.clone())).unwrap();
+        assert!(runs.events(&fifth).unwrap().is_empty());
+        assert_eq!(
+            runs.admit(inert(request.clone())),
+            Err(Error::AlreadyAdmitted)
+        );
+        assert_eq!(runs.advance(&request, None, None), Err(Error::NotHeld));
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        assert_eq!(
+            worker.join().unwrap().accept().unwrap_err().kind(),
+            std::io::ErrorKind::WouldBlock
+        );
     }
-    let fifth = selected_request(&transport, "after-faulted-release");
-    assert_eq!(runs.admit(inert(fifth.clone())), Err(Error::Capacity));
-    assert_eq!(runs.events(&request).unwrap(), events);
-    runs.release(&request).unwrap();
-    runs.admit(inert(fifth.clone())).unwrap();
-    assert!(runs.events(&fifth).unwrap().is_empty());
-    assert_eq!(
-        runs.admit(inert(request.clone())),
-        Err(Error::AlreadyAdmitted)
-    );
-    assert_eq!(runs.advance(&request, None, None), Err(Error::NotHeld));
-    assert_eq!(executions.load(Ordering::SeqCst), 1);
-    assert_eq!(
-        worker.join().unwrap().accept().unwrap_err().kind(),
-        std::io::ErrorKind::WouldBlock
-    );
 }
 
 #[test]

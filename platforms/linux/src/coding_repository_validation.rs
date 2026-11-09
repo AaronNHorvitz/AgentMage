@@ -63,6 +63,52 @@ pub(super) struct ValidationSeries {
     workspace_binding: Option<ValidationWorkspaceBinding>,
 }
 
+/// Borrowed original-owner inputs for an independent completion checker.
+/// Issuance requires a linked full pass and a matching current sealed-source
+/// observation. This view is neither a task grade nor proof of later source
+/// state. It cannot be constructed, deserialized or restored by a caller.
+pub struct LinuxCodingValidationEvidence<'a> {
+    series: &'a ValidationSeries,
+    creation_receipt_sha256: &'a str,
+}
+
+impl LinuxCodingValidationEvidence<'_> {
+    /// Original immutable, person-selected test definition.
+    #[must_use]
+    pub fn template(&self) -> &ValidationTemplate {
+        &self.series.template
+    }
+
+    /// Complete bounded history, including every original failed attempt.
+    /// Command records retain the sealed input projection used for each attempt.
+    #[must_use]
+    pub fn attempts(&self) -> &[ValidationAttemptEvidence] {
+        &self.series.history
+    }
+
+    /// Original consecutive failure-to-retry links, never a replacement history.
+    #[must_use]
+    pub fn reruns(&self) -> &[ValidationRerunPlan] {
+        &self.series.reruns
+    }
+
+    /// Original held worktree creation receipt, not path-derived ownership.
+    #[must_use]
+    pub fn creation_receipt_sha256(&self) -> &str {
+        self.creation_receipt_sha256
+    }
+
+    #[cfg(test)]
+    pub(super) fn assert_original_for_test(&self, owner: &LinuxCodingRepository) {
+        // Keep private-field identity assertions in the owning module without
+        // exposing ValidationSeries fields or weakening the sibling fixture.
+        let original = owner.validation.as_ref().unwrap();
+        assert!(std::ptr::eq(self.template(), &original.template));
+        assert!(std::ptr::eq(self.attempts(), original.history.as_slice()));
+        assert!(std::ptr::eq(self.reruns(), original.reruns.as_slice()));
+    }
+}
+
 impl LinuxCodingRepository {
     /// Obtains cancellation for an exact pending validation, preserving the
     /// validation route's typed precondition before the shared command binding.
@@ -143,6 +189,38 @@ impl LinuxCodingRepository {
             return Err(err("code.completion.source-binding"));
         }
         Ok(())
+    }
+
+    /// Inspect original typed evidence under the same prior whole-worktree read
+    /// consent as `check_completion_validation`. Reads no original checkout and
+    /// authorizes no effect or model disclosure. The borrow prevents repository
+    /// mutation through this owner while the checker runs; external filesystem
+    /// changes remain possible and require another inspection afterwards.
+    pub fn completion_validation_evidence(&self) -> Result<LinuxCodingValidationEvidence<'_>> {
+        self.check_completion_validation()?;
+        Ok(LinuxCodingValidationEvidence {
+            series: self
+                .validation
+                .as_ref()
+                .ok_or(err("code.completion.validation-required"))?,
+            creation_receipt_sha256: &self.verify_created()?.creation_receipt_sha256,
+        })
+    }
+
+    /// Invoke a trusted independent checker with the original borrowed records,
+    /// then recheck source/validation readiness before releasing any candidate.
+    /// A callback error stops immediately, without further source inspection.
+    /// A candidate cannot bypass a failed post-check. These non-atomic samples
+    /// do not implement independent acceptance.
+    pub fn with_completion_validation_evidence<T, E>(
+        &self,
+        check: impl FnOnce(LinuxCodingValidationEvidence<'_>) -> std::result::Result<T, E>,
+    ) -> Result<std::result::Result<T, E>> {
+        let result = check(self.completion_validation_evidence()?);
+        if result.is_ok() {
+            self.check_completion_validation()?;
+        }
+        Ok(result)
     }
 
     /// Caller explicitly confirms the exact test definition, then separately

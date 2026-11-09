@@ -61,7 +61,7 @@ pub use command::{
     linux_coding_endpoint_coding_registry, linux_coding_endpoint_command_registry,
 };
 pub use runtime::{LinuxCodingRuntimeWriteDriver, LinuxCodingWorktreeLease};
-pub use validation::LinuxCodingTestFormat;
+pub use validation::{LinuxCodingTestFormat, LinuxCodingValidationEvidence};
 
 const TOOL: &str = "local-coding-worktree-create";
 

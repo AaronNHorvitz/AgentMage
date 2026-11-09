@@ -1,0 +1,176 @@
+Commit: a12ff17b7011720864dd2d583333eb05095d0a3d
+Scope: local-coding-completion-readiness
+
+# Independent core review: original-owner completion readiness token (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate read-only session, pinned checkout `/lane/review-checkout`.
+Base: `d0d7dc0f643e264036c5f1744ed2b2010dd5afaf`. Tier: core.
+
+## Methods
+
+- Confirmed the commit: `git rev-parse HEAD` and `git rev-parse a12ff17b` both return
+  `a12ff17b7011720864dd2d583333eb05095d0a3d`. The pinned checkout is clean.
+- Read IP-POLICY.md, the top of TASKS.md, the request, README.md, run.py, check.py and light.py
+  before running them. The scripts only run the unchanged `scripts/local_agent_fast_gate.py`
+  (unchanged from the base), hash sources and compare logs. They do not touch the network, the GPU
+  or a model, and they do not modify the repository.
+- Read the whole diff from the base (9 files, +599/−58). I checked the token design against the
+  callers in the coordinator (`kernel/engine/src/runtime_loop/coordinator_endpoint.rs`), the Edit
+  and Test turn framing, `check_completion_validation` and `ValidationWorkspaceBinding`.
+- Read the two earlier reviews whose lows this batch claims to address:
+  `/lane/reviews/8aa5d391f0d8-…-source-check.md` (L2, L3) and
+  `/lane/reviews/d0d7dc0f643e-…-recheck.md` (L1, L2).
+- Ran every requested command myself, with a fresh output directory and a separate target.
+- Ran my own mutation tests on a `git archive` copy of the commit at
+  `/lane/state/tmp/review-a12ff-mutant`, outside the repository, built through
+  `/tools/build-slot` with `CARGO_TARGET_DIR=/lane/state/review-target`. The repository was not
+  modified.
+- Scanned the added lines for private paths, usernames, hostnames, credentials, personal data and
+  product or trademark names.
+
+## Exact commands and results (all run from /lane/review-checkout)
+
+| Command | Expected | Observed |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-completion-readiness/review-inputs.sha256` | 0 | 0. The manifest's own SHA-256 is `506672e15d0292d2eb8aa3dab0263c850ed7d0f56d0fc2b402ce0fc59a0d03aa`, as stated. Its relative entries match the nine committed blobs in the pinned checkout. |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-completion-readiness-a12ff17b7011` | 1 | 1: `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True` |
+| `python3 -B …/check.py /lane/state/tmp/review-completion-readiness-a12ff17b7011` | 0 | 0: gate FAIL; 26 targets; totals [1219 passed, 72 failed, 64 ignored, 0 measured, 0 filtered]; 72 inherited identities; 0 new; 8 checked methods; source unchanged |
+| `python3 -B …/light.py` | 0 | 0: diff-check, lint-untracked, lint-reviews and markdownlint all exit 0 (0 issues in 3 files) |
+| `cmp …/validation-repaired/source-freeze.json /lane/state/tmp/review-completion-readiness-a12ff17b7011/source-freeze.json` | 0 | 0 |
+| `cmp docs/reviews/d0d7dc0f643e-local-coding-completion-recheck.txt /lane/reviews/d0d7dc0f643e-local-coding-completion-recheck.md` | 0 | 0 (retained byte-for-byte) |
+| `git diff --check d0d7dc0f643e264036c5f1744ed2b2010dd5afaf --` | 0 | 0 |
+| `git status --short` | empty | empty |
+
+These are my gate timings. They are lower than the builder's because there was no slot queue:
+
+- `git diff --check`, lint-untracked and lint-reviews: 0.10 s each.
+- markdownlint: 1.25 s.
+- `cargo fmt --check`: exit 0, 1.25 s.
+- `cargo clippy --all-targets -D warnings`: exit 0, 36.51 s.
+- `cargo test --all-targets --no-fail-fast`: exit 101, 215.92 s.
+- Total: 255.31 s including reservations.
+
+My raw log SHA-256 is `7f7e0ba620158c085eca1dee259853e024fb5075631e957a5fd4da4b5c3465cb`. It differs
+from the builder's `ba2e4265…` because the log includes timings. The counts, the failure identities
+and the ignore identities match exactly. All eight named methods report `ok`. As stated, the full
+gate stays FAIL: the matching comparison does not make it green.
+
+### Mutation runs (my own, on an out-of-repo copy)
+
+First run: `cargo test --locked --offline --no-fail-fast -p agentmage-host -p agentmage-platform-linux --lib -- <5 names>`,
+exit 101. Four mutations were applied together:
+
+1. **Removed the framer's installation of the check** (`.with_completion_check(check)`) in
+   `prepare_coding_completion`.
+   - `coding_cycle_post_generation_guard_refuses_original_missing_validation_or_revoked_control`
+     **FAILED**.
+   - It failed at `coding_endpoint_edit_cycle_tests.rs:308` with `unwrap()` on
+     `Err(Dependency(Invalid))`, so it failed before reaching the new counter assertion. Without the
+     check, the fixture's verifier is reached and errors. The removal is still detected, so d0d L1 is
+     effectively resolved.
+2. **Removed the binding's `command_receipt ==` clause** in `permits_completion_summary`.
+   - `completion_binding_independently_refuses_command_and_sealed_input_substitution` **FAILED**
+     at line 218.
+   - This confirms the command-receipt clause is isolated (8aa L3).
+3. **Removed `edit`/`apply` from the pending-effect guard** in `check_completion_validation`.
+   - `completion_validation_refuses_missing_seals_pending_effects_and_changed_sources` **FAILED**
+     (`unwrap_err()` on `Ok`).
+   - This confirms the pending-edit/apply cases are real (8aa L3).
+4. **Removed the token's request comparison** in `CompletionReady::into_check`, keeping the turn
+   comparison.
+   - `coding_completion_readiness_refuses_another_request_or_turn_before_transport` **still
+     PASSED**. See L1 below.
+
+Second run: on top of mutation 4, I also disabled the turn comparison (`if false && …`). The same
+test **FAILED** at line 180 with message `turn`, so the turn clause is isolated.
+
+## Design assessment
+
+**Token construction.** `CompletionReady` (`shells/host/src/coding_endpoint_edit_previews.rs:64-96`)
+has private fields and no `Clone`, `Debug`, `Serialize` or `Deserialize`. It has two constructors:
+- the production construction inside `next()` (lines 302-309), reached only after the original
+  owner is `Ready`, `check_completion_validation()` has succeeded and both controls have been
+  re-sampled;
+- `synthetic_for_framing`, which is `#[cfg(test)]`.
+
+**Consumption.** `into_check` consumes the token and compares the complete request and the turn.
+`prepare_coding_completion` (`coding_endpoint_edit_generation.rs:204-237`) consumes it as its
+first statement, before the registry, context or transport preparation. It then installs the
+returned check on the completion-only turn. This resolves 8aa L2: the framer can no longer be
+called without the original owner's token.
+
+**The installed check.** It is the original owner's `completion_check()`. That closure inspects
+current shared state (`next`, `owner`, both controls, and `check_completion_validation`), not a
+captured pass flag.
+
+**Edit and Test turns.** I checked whether a model could emit a completion claim in an Edit or Test
+turn and so avoid the token. Both turns attach a trusted `with_tool_preparation` callback. Its
+refusal is terminal (`runtime.proposal.preparation-refused`, coordinator around lines 711-748), so
+no unchecked completion path exists. This was not changed by this commit.
+
+**Confinement and data handling.** This commit changes no confinement boundary: no new filesystem,
+command, network or approval path. The token holds a cloned request in process memory only and has
+no `Debug`, so it cannot be logged by accident.
+
+**Claims.** The claims of no new executor, grant, effect, wire field or source disclosure match the
+diff. Both verification flags and both completion verifiers are unchanged.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test precision / comment overclaim):** `shells/host/src/coding_endpoint_edit_cycle_tests.rs:164-166`
+  and `:170-172`.
+  - **The overclaim.** The comment says that keeping the old seal in the "request" case proves
+    "that the token binds the complete request, not just its hash". It does not.
+  - **Why.** The substituted request keeps a stale `request_sha256`. `CodingEndpointContext::completion_only`
+    then refuses it on its own, through `verify_runtime_endpoint_run_request`
+    (`kernel/engine/src/runtime_coordinator/endpoint.rs:20-30`, `DigestMismatch` → `Invalid`).
+  - **Reproduction.** Mutation 4: with `self.request.as_ref() != input.request` deleted from
+    `into_check` (`coding_endpoint_edit_previews.rs:75`), the test still passes. The token's
+    request clause is untested.
+  - **Impact.** The production caller passes the same `input` it issued the token for, and the
+    substitution is still refused before transport. This is a gap in defence in depth and test
+    precision, not a reachable bypass.
+  - **Fix.** Give the "request" case a validly resealed substitute: change the objective, zero
+    `request_sha256`, recompute it with the canonical digest, then assert `Invalid`. Alternatively,
+    call `ready.into_check(&input)` directly and assert `Err(Invalid)`. Either way, correct the
+    comment. Backlog, same row.
+- **L2 (low, carried; acknowledged by the builder):** `shells/host/src/coding_endpoint_edit_previews.rs:304-308`.
+  - **The gap.** Positive production issuance is still unobserved. If `next()` issued its token
+    with a no-op check instead of `self.completion_check()`, no test would fail.
+  - **Why.** Only `#[cfg(test)]` issuance reaches the framer in tests, and the production
+    `Next::Completion` path needs a native linked pass, which T-301.1 blocks.
+  - **Disclosure.** The evidence, TASKS.md and the request state this openly. It remains backlog
+    for the native workflow.
+- **Wording note (no finding).** The evidence says "Removing the framer's installation would fail the
+  invocation assertion". In my mutation run the test fails one line earlier, at the coordinator
+  `unwrap()`. Removal is detected either way.
+
+Earlier same-row lows, other than those resolved here (8aa L2 and L3; d0d L1 and L2 as far as the
+synthetic path allows), remain backlog as the builder states.
+
+## Evaluation integrity and honesty checks
+
+- No hidden, held-out or frozen task content, scorer, pin, threshold, dependency, `Cargo.lock`,
+  SBOM, status model or scoreboard file is in the diff (also checked by check.py).
+- No TASKS.md table row changed (check.py compares every `| [` line with the base).
+- No score or measurement is claimed. The gate failure is reported as FAIL with exactly the
+  inherited 72 identities.
+- The initial failed compile (missing `AtomicUsize` import) is disclosed and retained. It is not
+  classified as inherited.
+- Privacy: the added lines contain no private home path, username, hostname, credential or personal
+  data. The only `/lane/…` paths and reviewer model name are in the retained review copy, which
+  follows established repository precedent (160 of 168 retained reviews). No trademark is used as
+  branding. No other agent product is named or compared.
+
+## Per-row result
+
+- **T-303 / T-306** (non-closing increment; both parents remain OPEN): PASS for this commit's scope.
+  - There is no high or medium finding. L1 and L2 are low, same-row backlog.
+  - Every required run reproduced as expected: run.py 1; check, light, manifest, both `cmp`,
+    diff-check and status 0.
+  - Native/model workflow, completion acceptance, durable recovery, approved Git and parent
+    measurements remain open, as stated.
+
+Verdict: PASS

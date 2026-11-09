@@ -24,6 +24,10 @@ use crate::{
     coding_endpoint_prepared_startup::CodingEndpointPreparedStartup,
 };
 
+#[path = "coding_endpoint_completion_verifier.rs"]
+mod completion_verifier;
+pub use completion_verifier::{CodingEndpointAcceptancePort, CodingEndpointOwnedVerifier};
+
 enum Owner<C> {
     Ready(Box<LinuxCodingRepository>),
     Pending(Box<LinuxCodingEndpointEditBoundary<C>>),
