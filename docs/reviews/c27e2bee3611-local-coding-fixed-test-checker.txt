@@ -1,0 +1,136 @@
+Commit: c27e2bee3611f384bb57be96f15a07a929ec074f
+Scope: local-coding-fixed-test-checker
+
+# Independent core review: explicit fixed-test completion checker (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Pinned checkout
+`/lane/review-checkout`; `git rev-parse HEAD` = `c27e2bee3611f384bb57be96f15a07a929ec074f`.
+Base `d4467998f3da2e8e36e0e9d7bd226cb0df3b75dd`. Diff: 8 files (TASKS.md, two evidence notes,
+`docs/guides/coding-validation.md`, retained base review, `shells/host/src/lib.rs`, new
+`coding_endpoint_fixed_test_verifier.rs` and its tests). I read IP-POLICY.md, the newest decisions
+index, the top of TASKS.md, the request, and then the bundle README/run.py/check.py/light.py before
+running anything. The scripts only run the repository's fast gate under the pinned checkout. They
+make no outer build-slot wrap, add no model, GPU or download step, and write nothing to the repository.
+
+## Methods
+
+- Line-by-line read of the new checker against the real producers of its inputs: the original
+  coordinator (`kernel/engine/src/runtime_loop.rs` tool-result recording and `verify_completion`),
+  the native edit/command projections (`platforms/linux/src/coding_repository_endpoint_boundary.rs`,
+  `coding_repository_endpoint_command.rs`, `coding_repository_command.rs`), the borrowed
+  original-owner evidence (`platforms/linux/src/coding_repository_validation.rs`), the owned-verifier
+  adapter (`shells/host/src/coding_endpoint_completion_verifier.rs`), the combined owner's
+  Edit→Test→(Edit|Completion) state machine (`coding_endpoint_edit_previews.rs`) and
+  `verify_bounded_validation_history`/`is_full_pass`.
+- The builder's exact commands from the pinned checkout, with a fresh output directory.
+- An out-of-repository reproduction: `git archive` of the exact commit into
+  `/lane/state/tmp/review-repro-c27e2bee3611`, plus one appended test, built in the separate target
+  `/lane/state/review-target/repro-c27e2bee3611` through `/tools/build-slot`. The repository was not
+  modified.
+
+## Commands and results
+
+| Command (from `/lane/review-checkout`) | Expected | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c …/review-inputs.sha256` (manifest file SHA-256 `f7a73741…aafe37` confirmed) | 0 | 0 |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-fixed-test-checker-c27e2bee3611` | 1 | 1, `SOURCE_FREEZE_UNCHANGED True` |
+| `python3 -B …/check.py /lane/state/tmp/review-fixed-test-checker-c27e2bee3611` | 0 | 0 |
+| `python3 -B …/light.py` | 0 | 0, all four light commands exit 0, same as builder |
+| `cmp …/validation-final/source-freeze.json …/review-fixed-test-checker-c27e2bee3611/source-freeze.json` | 0 | 0 |
+| `cmp docs/reviews/d4467998f3da-local-coding-owned-completion-verifier.txt /lane/reviews/d4467998f3da-local-coding-owned-completion-verifier.md` | 0 | 0 |
+| `git diff --check d4467998f3da2e8e36e0e9d7bd226cb0df3b75dd --` | 0 | 0 |
+| `git status --short` | empty | empty |
+
+My gate: 21 unfiltered targets, totals 884 passed / 53 failed / 11 ignored / 0 measured / 0 filtered.
+The 53 failures are exactly the baseline host-library identities, with none new. The ignores are the
+same 11, and all ten checked methods report `ok`. Command exits were 0,0,0,0, fmt 0 (504.48 s), clippy
+0 (787.92 s) and tests 101 (193.83 s), 1487.9 s in total. These times are longer than the builder's
+because they include waiting for shared reservations. My raw log SHA-256 is
+`41886aba11d66228038464552f62152a17fcd483a3d79cdc0932b9c357965dc4`. It differs from the builder's
+`c9b48c50…` only because timings are in the log, and the parsed counts and identities are identical.
+The full gate is FAIL, as the builder states; the comparison does not make it green.
+
+Privacy and other checks: the added lines contain no private paths, usernames, hostnames, credentials
+or email addresses. No trademark branding or other product names appear. No dependency, lockfile,
+SBOM, status model, scoreboard, T-311 task, hidden test, held-out content, scorer or threshold
+changed. TASKS.md table rows are unchanged, and no row or sub-row was added or closed. The evaluation
+integrity checks find nothing.
+
+## Confinement and trust boundary (checked, no finding)
+
+- `LinuxCodingValidationEvidence` has private fields and is issued only by the original repository
+  (`completion_validation_evidence`). It is passed to the checker only inside
+  `with_completion_validation_evidence`, with readiness rechecked on success. A caller cannot forge
+  the original history through the adapter.
+- The checker performs no file read, network access, effect or grant, and adds no wire field. A
+  failed candidate carries empty evidence. Unsupported cases refuse construction: the JSON
+  self-report parser, non-test kinds, a zero minimum, a non-worktree directory, extra criteria,
+  read-only mode, a changed catalog and other evidence contracts. Every mismatch I could construct
+  fails closed.
+- The development executable and both existing verifiers are unchanged.
+
+## Findings
+
+### M1 (medium, correctness, claim vs evidence): positional evidence correlation contradicts the coordinator's sorted evidence, so the checker refuses every real run
+
+- Location: `shells/host/src/coding_endpoint_fixed_test_verifier.rs:195` and `:237`
+  (`input.evidence[index] != *evidence`). This conflicts with `kernel/engine/src/runtime_loop.rs:4176`
+  (`self.evidence.sort_by(evidence_id)` after every admitted tool result).
+- Mechanism: the native projections name evidence `native-edit:<digest32>`
+  (`platforms/linux/src/coding_repository_endpoint_boundary.rs:382`) and `native-command:<digest32>`
+  (`platforms/linux/src/coding_repository_endpoint_command.rs:802`). The coordinator passes its
+  sorted `self.evidence` to `verify_completion`. Because `c` sorts before `e`, all command evidence
+  precedes all edit evidence. The checker expects the evidence at index 0 to be the first edit's, but
+  the coordinator always puts a command's evidence there. Every genuine 1–3-attempt history is
+  therefore marked `Failed`.
+- Why the tests pass: the fixture names evidence `evidence-call-N` and appends it in tool order
+  without sorting. The coordinator probe runs `NoTools` and replaces every record with synthetic
+  ones. No test feeds the checker evidence in the order the coordinator actually produces. The
+  guide (`docs/guides/coding-validation.md`), the evidence note and TASKS.md say the checker
+  "correlates every original attempt … with the coordinator's edit/test observations" and tell
+  embedders to wire it through `previews.completion_verifier(verifier)`. On that surface it can
+  never accept.
+- Reproduction (scratch copy, not committed): I appended
+  `reviewer_repro_coordinator_sorted_native_evidence` to the copied test file. It builds
+  `Fixture::new(count)` for counts 1–3 and renames each evidence ID to the native form
+  `native-{edit|command}:<first 32 hex of payload sha256>` in both `results[i].evidence[0]` and
+  `f.evidence[i]`. It verifies once, then sorts `f.evidence` by `evidence_id` as the coordinator does
+  and verifies again. The command was
+  `CARGO_TARGET_DIR=/lane/state/review-target/repro-c27e2bee3611 CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 bash /tools/build-slot cargo test --locked --offline -p agentmage-host --lib -- fixed_test_checker reviewer_repro --nocapture`,
+  and the log is `/lane/state/tmp/review-repro-c27e2bee3611.log`. Output:
+  - `REPRO count=1 … unsorted=Success coordinator_sorted=Failed`
+  - `REPRO count=2 … unsorted=Success coordinator_sorted=Failed`
+  - `REPRO count=3 … unsorted=Success coordinator_sorted=Failed`
+
+  The five committed checker tests still pass in the same run.
+- Impact: this fails closed, so there is no false acceptance and no confinement issue. However, the
+  feature this batch delivers cannot accept any real coordinator run, and the claim that it
+  correlates with the coordinator's records is not supported by any test using coordinator-shaped
+  input. That is a correctness defect plus an evidence gap, so it is medium.
+- Fix: keep positional correlation for tool results and receipt IDs, which the coordinator records in
+  tool order. Correlate evidence by identity instead: require `input.evidence` to be exactly the set
+  of `result.evidence[0]` values, with each result's evidence present by ID and byte-equal, and keep
+  the existing uniqueness and length checks. Add a regression test whose records carry native-form
+  evidence IDs sorted by `evidence_id`. Better still, obtain the records from the original
+  coordinator through a synthetic tool boundary that returns native-projected edit/test results, so
+  the input shape comes from the producer rather than the fixture. Correct the guide, evidence note
+  and TASKS.md claim in the same batch.
+
+### L1 (low, usability/honesty): the criterion shown to the person is an opaque digest
+
+`coding_endpoint_fixed_test_verifier.rs:74-81` produces "Observe a complete passing offline test run
+for fixed definition SHA-256 <hex> …". The guide tells the embedder to "Show `check.criterion()` to
+the person". A digest does not let the person see which command, kind, parser or minimum count they
+are approving. Fix: include the readable command, kind, parser and minimum in the criterion alongside
+the digest, or have the guide require showing the definition next to the criterion. Backlog.
+
+No other findings. The incoming base review's L1/L2 and earlier lows remain the builder's declared
+same-row backlog. I did not re-litigate them.
+
+## Per-row result
+
+- **T-303 (non-closing increment): FINDINGS.** Medium M1 blocks this increment. Confinement,
+  evaluation integrity, privacy and gate parity are otherwise as claimed. T-303 stays OPEN.
+- **T-306 (non-closing increment): FINDINGS.** Same medium M1. T-306 stays OPEN.
+
+Verdict: FINDINGS

@@ -13,10 +13,12 @@ terminal approval tests use a synthetic HTTP peer.
 The host library also offers `CodingEndpointFixedTestCheck` and
 `CodingEndpointFixedTestVerifier` for an explicit, limited acceptance criterion.
 Create the check from the same `CodingEndpointValidation` supplied to the combined
-owner. Show `check.criterion()` to the person and use it verbatim as the only
-entry in both the task's acceptance criteria and the work packet's acceptance
-checks before sealing the request. Use the combined tool catalog, controlled
-write mode, execution authority class and `ToolOutput` evidence requirement.
+owner. Show the complete selected command (executable and arguments), test kind,
+parser and minimum test count alongside `check.criterion()` before approval.
+Render these values as escaped data; the criterion digest alone is not a
+readable command preview. Use the criterion verbatim as the only entry in both
+the task's acceptance criteria and the work packet's acceptance checks before
+sealing the request. Use the combined tool catalog, controlled write mode, execution authority class and `ToolOutput` evidence requirement.
 After startup has narrowed and resealed the request, construct the verifier with
 `for_request(previews.startup().request(), check)`, then connect it using
 `previews.completion_verifier(verifier)` before moving those previews into the
@@ -47,9 +49,13 @@ It requires the original linked history to end in a complete pass of the exact
 command, kind, parser and minimum count. Every original attempt, including every
 failed one, must correspond to an edit/test pair in the coordinator's records.
 Exact command and normalized validation receipts, authority identities, output
-schema and digest, evidence, receipt identities and ordering must match. Each
-edit must have a successful changed result from the original native tool family;
-the final test must be the last tool result. A contradictory no-op or unrun-check
+schema and digest must match. Tool results and receipt identities retain their
+original edit/test order. Aggregate evidence is correlated by unique identity
+and complete reference equality, independent of its order: the coordinator
+sorts evidence by ID, putting native command IDs before native edit IDs.
+Missing, extra, duplicated or altered references refuse. Each edit must have a
+successful changed result from the original native tool family; the final test
+must be the last tool result. A contradictory no-op or unrun-check
 claim fails. Failed candidates carry no passing evidence. The existing verifier
 registry remains responsible for accepting the resulting candidate.
 

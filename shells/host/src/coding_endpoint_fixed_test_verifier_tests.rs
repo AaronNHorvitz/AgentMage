@@ -345,6 +345,10 @@ impl Fixture {
             &f.attempts,
             &f.reruns
         ));
+        // Match the native producers' IDs and the original coordinator's
+        // evidence_id sort, independently of edit/test result order.
+        f.evidence
+            .sort_by(|a, b| a.evidence_id.as_str().cmp(b.evidence_id.as_str()));
         f
     }
     fn push(
@@ -359,7 +363,15 @@ impl Fixture {
         let bytes = serde_json::to_vec(&value).unwrap();
         let evidence = EvidenceReference {
             schema_version: CONTRACT_SCHEMA_VERSION,
-            evidence_id: EvidenceId::from_raw(format!("evidence-{id}")),
+            evidence_id: EvidenceId::from_raw(format!(
+                "native-{}:{}",
+                if state_change == StateChange::Changed {
+                    "edit"
+                } else {
+                    "command"
+                },
+                &hash(&bytes)[..32]
+            )),
             kind: EvidenceKind::ToolOutput,
             source_id: format!(
                 "native:{}@{}",
@@ -606,6 +618,85 @@ fn fixed_test_checker_accepts_only_exact_correlated_one_to_three_attempt_records
 }
 
 #[test]
+fn fixed_test_checker_correlates_native_ids_in_coordinator_sorted_and_permuted_evidence() {
+    for count in 1..=3 {
+        let mut f = Fixture::new(count);
+        assert!(
+            f.evidence[0]
+                .evidence_id
+                .as_str()
+                .starts_with("native-command:")
+        );
+        assert!(
+            f.results[0].evidence[0]
+                .evidence_id
+                .as_str()
+                .starts_with("native-edit:")
+        );
+        assert!(
+            f.evidence
+                .windows(2)
+                .all(|pair| pair[0].evidence_id.as_str() < pair[1].evidence_id.as_str())
+        );
+        let original_results = f.results.clone();
+        let original_receipts = f.receipts.clone();
+        // The aggregate is a set; tool results and receipt IDs keep their
+        // original chronological order, including earlier failed validations.
+        for shift in 0..f.evidence.len() {
+            f.evidence.rotate_left(shift);
+            let candidate = f.verify(CodingTerminalClaim::Changed, vec![]).unwrap();
+            assert_eq!(
+                candidate.disposition,
+                VerifierDisposition::Success,
+                "{count}:{shift}"
+            );
+            assert_eq!(candidate.postconditions[0].evidence, f.evidence);
+        }
+        f.evidence.reverse();
+        assert_eq!(
+            f.verify(CodingTerminalClaim::Changed, vec![])
+                .unwrap()
+                .disposition,
+            VerifierDisposition::Success
+        );
+        assert_eq!(f.results, original_results);
+        assert_eq!(f.receipts, original_receipts);
+    }
+}
+
+#[test]
+fn fixed_test_checker_requires_exact_evidence_set_but_ordered_results_and_receipts() {
+    for mutation in 0..10 {
+        let mut f = Fixture::new(2);
+        match mutation {
+            0 => {
+                f.evidence.pop();
+            }
+            1 => f.evidence.push(f.evidence[0].clone()),
+            2 => f.evidence[1] = f.evidence[0].clone(),
+            3 => f.evidence[0].evidence_id = EvidenceId::from_raw("foreign-evidence"),
+            // A matching ID must match the complete original reference, not
+            // just its payload digest or source family.
+            4 => f.evidence[0].object_id = "foreign-call".into(),
+            5 => f.evidence[0].source_id = "foreign-source".into(),
+            6 => f.evidence[0].observed_revision = Some("foreign-revision".into()),
+            7 => f.results[1].evidence[0] = f.results[0].evidence[0].clone(),
+            8 => f.results.swap(1, 3),
+            9 => f.receipts.swap(1, 3),
+            _ => unreachable!(),
+        }
+        let candidate = f.verify(CodingTerminalClaim::Changed, vec![]).unwrap();
+        assert_eq!(
+            candidate.disposition,
+            VerifierDisposition::Failed,
+            "mutation {mutation}"
+        );
+        assert!(!candidate.postconditions[0].passed);
+        assert!(candidate.postconditions[0].evidence.is_empty());
+    }
+}
+
+#[test]
 fn fixed_test_checker_refuses_unrun_or_no_op_claims_and_changed_original_history() {
     let f = Fixture::new(2);
     for (kind, checks) in [
@@ -688,7 +779,11 @@ fn fixed_test_checker_refuses_coordinator_record_substitution_or_missing_failed_
                 output.bytes = serde_json::to_vec(&value).unwrap();
                 output.sha256 = hash(&output.bytes);
                 f.results[3].evidence[0].content_sha256 = output.sha256.clone();
-                f.evidence[3] = f.results[3].evidence[0].clone();
+                let changed = &f.results[3].evidence[0];
+                *f.evidence
+                    .iter_mut()
+                    .find(|e| e.evidence_id == changed.evidence_id)
+                    .unwrap() = changed.clone();
             }
             _ => unreachable!(),
         }

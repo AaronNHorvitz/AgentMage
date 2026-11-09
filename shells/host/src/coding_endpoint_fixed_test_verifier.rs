@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //! Explicit fixed-test criteria, not semantic certification of arbitrary tasks.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use agentmage_kernel_contracts::*;
 use agentmage_kernel_engine::{
@@ -69,7 +69,8 @@ impl CodingEndpointFixedTestCheck {
         })
     }
 
-    /// The complete supported acceptance criterion, shown before run sealing.
+    /// Stable acceptance criterion; display the selected definition alongside it
+    /// before run sealing so the person can read more than its digest.
     #[must_use]
     pub fn criterion(&self) -> String {
         let definition = json!({"command": self.command, "kind": self.kind,
@@ -199,6 +200,15 @@ impl CodingEndpointFixedTestVerifier {
         {
             return false;
         }
+        // The coordinator sorts aggregate evidence by ID, independently of
+        // chronological tool results/receipts. Require an exact identity set
+        // with complete reference equality; never correlate it by position.
+        let evidence_by_id: BTreeMap<_, _> = input
+            .evidence
+            .iter()
+            .map(|e| (e.evidence_id.as_str(), e))
+            .collect();
+        let mut result_evidence_ids = BTreeSet::new();
         let Ok(registry) = linux_coding_endpoint_coding_registry() else {
             return false;
         };
@@ -234,7 +244,8 @@ impl CodingEndpointFixedTestVerifier {
                 return false;
             }
             let evidence = &result.evidence[0];
-            if input.evidence[index] != *evidence
+            if !result_evidence_ids.insert(evidence.evidence_id.as_str())
+                || evidence_by_id.get(evidence.evidence_id.as_str()).copied() != Some(evidence)
                 || evidence.schema_version != CONTRACT_SCHEMA_VERSION
                 || evidence.kind != EvidenceKind::ToolOutput
                 || evidence.fragment.is_some()

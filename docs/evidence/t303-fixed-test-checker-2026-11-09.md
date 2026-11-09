@@ -38,6 +38,14 @@ Whole-worktree source samples remain non-atomic. No evaluation task, hidden test
 held-out content, scorer, threshold, dependency, supply-chain output, status or
 score is changed.
 
+Subsequent independent review found medium M1: this initial checker used
+positional evidence correlation, contradicting the original coordinator's
+ID-sorted aggregate. Its original sequential-ID fixtures did not expose that
+false refusal. The [same-row repair](t303-evidence-correlation-repair-2026-11-09.md)
+uses exact identity-set correlation and native-form sorted regression fixtures.
+The measurements below describe the original component tests, not successful
+original-owner or native execution. Independent re-review of the repair is required.
+
 ## Verification scope
 
 The synthetic component fixture prepares exact commands, normalizes selected

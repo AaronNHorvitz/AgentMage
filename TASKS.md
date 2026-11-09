@@ -2,6 +2,24 @@
 
 ## Active queue: local agent mission
 
+The [fixed-test independent core review](docs/reviews/c27e2bee3611-local-coding-fixed-test-checker.txt)
+has **Verdict: FINDINGS** for exact commit
+`c27e2bee3611f384bb57be96f15a07a929ec074f`. Medium M1 found that the
+checker wrongly compared evidence positionally, although the coordinator sorts
+it by ID; genuine native-form records therefore refused. The
+[same-row correlation repair](docs/evidence/t303-evidence-correlation-repair-2026-11-09.md)
+uses exact identity-set correlation while preserving tool/receipt chronology.
+Regression fixtures now use native-form IDs and coordinator-sorted evidence,
+including failed attempts. Low L1 is addressed by requiring a readable selected
+definition alongside the criterion digest in the embedding guide. Independent
+core re-review is required; T-303/T-306 remain open with no added sub-row.
+Native/model execution, original-owner positive acceptance and measurements
+remain unobserved; fixtures establish only component record checks.
+The final affected gate remains FAIL: 891 passed, exactly 53 inherited host
+failures and 11 existing ignores across 21 unfiltered targets. All 12 checked
+methods, formatting, Clippy and final prose checks pass; both Rust hashes stay
+fixed. The initial Markdown blank-line failure is corrected and retained.
+
 The [explicit fixed-test launch selection](docs/evidence/t303-checked-launch-2026-11-09.md)
 connects the private development command to the original owner's concrete checker.
 Opt-in requires its single exact test-run criterion in both acceptance lists;
