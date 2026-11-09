@@ -2,6 +2,29 @@
 
 ## Active queue: local agent mission
 
+The [original-owner independent core review](docs/reviews/d4467998f3da-local-coding-owned-completion-verifier.txt)
+has **Verdict: PASS** for exact commit
+`d4467998f3da2e8e36e0e9d7bd226cb0df3b75dd`, with no high/medium finding.
+Low L3's garbled evidence sentence is corrected in this batch. Low L1's precise
+refusal-code and positive adapter-guard isolation and L2's late cancellation
+precedence test remain same-row backlog, alongside positive native issuance
+and earlier lows. Neither parent closes.
+
+The [explicit fixed-test checker](docs/evidence/t303-fixed-test-checker-2026-11-09.md)
+is a library opt-in for one declared criterion: a complete passing run of the
+exact person-selected test definition. It correlates every original attempt,
+including failures and reruns, with the coordinator's edit/test observations;
+extra criteria, changed records and unsupported claims refuse. It cannot
+certify coverage or arbitrary task meaning. Original source checks still bracket
+dispatch; the development executable keeps its refusing verifier. Formatting,
+Clippy and all ten checked methods pass. The full affected gate remains FAIL:
+884 passed, exactly 53 inherited host failures and none new, 11 existing ignored
+across 21 unfiltered targets. Three Rust source hashes stay fixed. Earlier
+compile and fixture failures are retained with same-row repairs. Independent
+core review is required. T-303/T-306 stay open; no row or sub-row is added or
+closed. Positive native/model execution, durable
+recovery, approved Git and measurements remain open.
+
 The [readiness independent core review](docs/reviews/a12ff17b7011-local-coding-completion-readiness.txt)
 has **Verdict: PASS** for exact commit
 `a12ff17b7011720864dd2d583333eb05095d0a3d`, with no high/medium finding.

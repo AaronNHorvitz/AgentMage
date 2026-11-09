@@ -10,6 +10,44 @@ terminal approval tests use a synthetic HTTP peer.
 
 ## Definition and approval
 
+The host library also offers `CodingEndpointFixedTestCheck` and
+`CodingEndpointFixedTestVerifier` for an explicit, limited acceptance criterion.
+Create the check from the same `CodingEndpointValidation` supplied to the combined
+owner. Show `check.criterion()` to the person and use it verbatim as the only
+entry in both the task's acceptance criteria and the work packet's acceptance
+checks before sealing the request. Use the combined tool catalog, controlled
+write mode, execution authority class and `ToolOutput` evidence requirement.
+After startup has narrowed and resealed the request, construct the verifier with
+`for_request(previews.startup().request(), check)`, then connect it using
+`previews.completion_verifier(verifier)` before moving those previews into the
+turn port. Construction reads no file and grants no authority. This is a library
+opt-in; the development executable retains its refusing verifier.
+
+This checker supports the two built-in per-test text protocols. It refuses the
+self-reported JSON protocol, non-test definitions, a zero minimum, other working
+directories, additional criteria, changed requests and mismatched postconditions.
+It requires the original linked history to end in a complete pass of the exact
+command, kind, parser and minimum count. Every original attempt, including every
+failed one, must correspond to an edit/test pair in the coordinator's records.
+Exact command and normalized validation receipts, authority identities, output
+schema and digest, evidence, receipt identities and ordering must match. Each
+edit must have a successful changed result from the original native tool family;
+the final test must be the last tool result. A contradictory no-op or unrun-check
+claim fails. Failed candidates carry no passing evidence. The existing verifier
+registry remains responsible for accepting the resulting candidate.
+
+Use this checker only when that declared test-run criterion is the actual
+acceptance check. It does not certify test coverage, test integrity or arbitrary
+prose objectives. Project tests and their output remain untrusted input; printed
+test results cannot independently establish functional correctness. The original
+owner's source inspections still bracket dispatch and remain non-atomic. This
+checker performs no file reads itself and receives no new execution authority.
+The embedding host must supply the original coordinator observations, not
+caller-invented transcripts. Synthetic checker tests establish this component's
+record checks; positive original-owner dispatch and native/model execution
+remain unobserved under the existing host-trust blocker. Neither parent row nor
+any evaluation score is qualified by this library addition.
+
 Only a worktree successfully created and held by this running service can supply
 execution scope. Start with an exact sealed `CommandSpec`, as documented for
 ordinary commands. The definition request is a closed JSON object:

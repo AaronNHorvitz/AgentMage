@@ -93,7 +93,7 @@ scorer, dependency, supply-chain output, status or score is changed.
 The complete affected gate remains **FAIL**: 46 unfiltered Rust targets,
 2,854 passed, exactly 72 inherited failures and none new, 72 existing ignored,
 zero measured and zero filtered. All ten checked methods pass, including the
-both additional failures from the preceding run. The exact failure and ignore identity
+two tests that failed in the preceding run. The exact failure and ignore identity
 comparison passes; this does not make the full gate green.
 
 | Check | Exit | Seconds including reservation |

@@ -55,6 +55,10 @@ pub mod coding_endpoint_edit_previews;
 #[cfg(target_os = "linux")]
 /// Exact granted Linux file reads for configured-endpoint runs.
 pub mod coding_endpoint_files;
+
+#[cfg(target_os = "linux")]
+/// Explicit fixed-test acceptance over original native validation records.
+pub mod coding_endpoint_fixed_test_verifier;
 #[cfg(target_os = "linux")]
 /// Exclusive retained ownership for configured-endpoint coding runs.
 pub mod coding_endpoint_owner;

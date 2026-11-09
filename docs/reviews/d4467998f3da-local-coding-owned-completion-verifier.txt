@@ -1,0 +1,131 @@
+Commit: d4467998f3da2e8e36e0e9d7bd226cb0df3b75dd
+Scope: local-coding-owned-completion-verifier
+
+# Independent core review: original-owner completion verifier (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate read-only session, pinned checkout `/lane/review-checkout`.
+`git rev-parse HEAD` = `d4467998f3da2e8e36e0e9d7bd226cb0df3b75dd`; parent/base
+`a12ff17b7011720864dd2d583333eb05095d0a3d`. The repository was not modified. No GPU, model or
+download was used. Build output went to `CARGO_TARGET_DIR=/lane/state/review-target`; every Cargo
+command took its own `/tools/build-slot` reservation inside the gate driver, which was not
+outer-wrapped.
+
+## Method
+
+- Read IP-POLICY.md, the top of TASKS.md, the bundle README and every helper before running it
+  (`run.py`, `check.py`, `light.py`, `audit_repair.py`, `audit_owner.py`). The PATH prefix in
+  `run.py`/`light.py` holds only the retained Node binary and its LICENSE.
+- Read the whole 14-file diff `a12ff17b..d4467998`. The production code reviewed was:
+  `platforms/linux/src/coding_repository_validation.rs` (new `LinuxCodingValidationEvidence`,
+  `completion_validation_evidence`, `with_completion_validation_evidence`),
+  `shells/host/src/coding_endpoint_completion_verifier.rs` (new adapter),
+  `shells/host/src/coding_endpoint_edit_previews.rs` (module hook), and
+  `kernel/engine/src/runtime_loop/coordinator_endpoint.rs` (verifier-error lifecycle). I also read
+  the surrounding `finish_model_failure`, `stop_before_phase`, `finish_phase_stop`
+  (`kernel/engine/src/runtime_loop.rs`) and `check_completion_validation`.
+- Checked all new and changed tests against the claims, and checked the evidence note, guide and
+  TASKS prose against the code and the runs.
+- Ran the exact requested commands into a fresh output directory.
+
+## Exact commands and results (all run from /lane/review-checkout)
+
+| Command | Expected | Observed |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-owned-completion-verifier/review-inputs.sha256` | 0 | 0, run before and after the gate. The manifest has 105 entries and its own SHA-256 is `19d80713a453ad9ad2caeed833ed276bc8f8315c2be632e7a47e3a32ffbabb3e`, as stated. |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-owned-completion-verifier-d4467998f3da` | 1 | 1: `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`. Command exits were 0,0,0,0 (light), fmt 0 (18.24 s), clippy 0 (47.05 s), tests 101 (421.81 s); 488.72 s in total including reservations. The temporary root was `/tmp/ocv-9wfttlg0` (short prefix). |
+| `python3 -B …/check.py <output>` | 0 | 0. Gate FAIL; 46 targets; totals [2854 passed, 72 failed, 72 ignored, 0 measured, 0 filtered]; 72 inherited identities, 0 new; 10 checked methods ok; source unchanged. My raw-log SHA-256 is `9d5d30e6…e361`. It differs from the builder's `7e4628d7…` only because timings are embedded in the log; counts and identities match exactly. |
+| `python3 -B …/light.py` | 0 | 0. diff-check, lint-untracked, lint-reviews and markdownlint (0 issues in 3 files) all pass. |
+| `python3 -B …/audit_repair.py` | 0 | 0 (`REPAIR AUDIT PASS …`) |
+| `python3 -B …/audit_owner.py` | 0 | 0 (`OWNER ASSERTION AUDIT PASS: 14 …`) |
+| `cmp …/validation-complete/source-freeze.json <output>/source-freeze.json` | 0 | 0 (ten Rust hashes identical) |
+| `cmp docs/reviews/a12ff17b7011-local-coding-completion-readiness.txt /lane/reviews/a12ff17b7011-local-coding-completion-readiness.md` | 0 | 0 (incoming PASS retained byte-for-byte) |
+| `git diff --check a12ff17b… --` | 0 | 0 |
+| `git status --short` | empty | empty |
+
+No result differed from the builder's stated expectations. Wall-clock times are longer than the
+builder's (cold review target); this is not a discrepancy.
+
+## Review of claims
+
+- **Borrowed view and issuance.** `LinuxCodingValidationEvidence` has private fields, no derives and
+  no public constructor, and it borrows the original `ValidationSeries`. Issuance goes through
+  `check_completion_validation()`, which requires no pending command/edit/apply, a linked full pass
+  equal to the final attempt and a matching workspace binding (`coding_repository_validation.rs:162-208`).
+  `attempts()` returns the full `history`, failures included. `reruns()` and `template()` are the
+  original references; the platform test checks them by pointer equality in a `cfg(test)` helper
+  inside the owning module.
+- **Post-check before releasing any candidate.** `with_completion_validation_evidence` re-runs
+  `check_completion_validation` on every `Ok` return before it releases the value. On an `Err`
+  return it stops with no further inspection (`:215-224`). The platform test shows that source
+  drift during a successful callback overrides the returned marker (`code.completion.source-binding`),
+  and that a later stale issuance refuses without calling the checker. If the post-check were
+  removed, `drift.unwrap_err()` would panic, so the test would catch that regression.
+- **Adapter binding** (`coding_endpoint_completion_verifier.rs:77-105`). The adapter compares the
+  complete endpoint request with the startup request and checks `proposal.matches_scope`, the
+  continuous control, `Next::Completion` and `Owner::Ready`. It then calls the original-owner
+  dispatch and checks control before and after the callback and after the post-check. The native
+  `verify` path refuses. The mutex is held throughout, so the tool boundary cannot run an effect
+  concurrently. Reentry would self-deadlock; this is documented as unsupported. The adapter adds no
+  accepting implementation, grant, executor, wire field or model disclosure. The candidate still goes
+  through `VerifierRegistry::verify` (`coordinator_endpoint.rs:923`).
+- **Kernel lifecycle.** A verifier error now runs `stop_before_phase` first: original stop and
+  deadline checks keep precedence. The error then goes to `finish_model_failure`, which
+  transitions to the terminal state, closes the accounted turn and records the typed code. The
+  kernel test covers all seven `RuntimePortFailure` values, with and without expiry during
+  verification. It checks Exhausted vs Failed mapping, codes, model-call accounting, no
+  tool/permission event, valid `RuntimeEventSequence` ordering, a single verifier call and an
+  idempotent repeated advance. All dependents of `run_endpoint_until_boundary` (kernel/engine,
+  platforms/linux, shells/host) are in the gate's test set.
+- **Confinement.** This commit adds no file-write, command, network or Git path. No security
+  boundary is widened. The checker is trusted caller code; the only new data it receives is
+  borrowed, typed, original records.
+- **Integrity and honesty.** No evaluation, held-out, hidden-test, scorer, threshold, dependency,
+  SBOM, status or score file changed. The TASKS row lines are identical to the base (checked by
+  `check.py`). No row or sub-row is added or closed. The prose accurately states that the gate
+  stays FAIL, that fixtures are synthetic, that no task acceptance happens and that positive
+  host/native dispatch is unobserved. The evidence note itself discloses that the host negative
+  cases "do not independently isolate every later readiness clause".
+- **Privacy and IP.** No private host path, username, hostname, credential or personal data appears
+  in the added lines. The `/lane/...` paths in the retained review copy follow the existing
+  convention of earlier committed reviews. No other product is named or compared, and no
+  trademark is used as branding.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test coverage).** `shells/host/src/coding_endpoint_edit_cycle_tests.rs:732-795`: the
+  five host refusal cases ("edit", "test", "missing-validation", "cancelled", "request") all use a
+  fresh `owner(&f)` that has never run a validation. The original pre-check inside
+  `with_completion_validation_evidence` (`code.completion.validation-required`) therefore refuses
+  every case before the callback. If any one adapter guard were deleted (`state.next` check at
+  `coding_endpoint_completion_verifier.rs:91`, the request comparison, or the first control check),
+  the test would still pass. The test also asserts only `AgentStateKind::Failed` and not the
+  unresolved code, so the "cancelled" case cannot be told apart from Invalid. The limitation is
+  disclosed in the evidence note. Fix: assert `outcome.outcome.unresolved_codes` per case (for
+  example the cancelled code vs `runtime.port.invalid`). Once positive original issuance exists
+  (prior L2), isolate each guard on an owner that has a linked pass.
+- **L2 (low, test coverage).** `kernel/engine/src/runtime_loop_endpoint_coordinator_tests.rs:747`:
+  the verifier-error test covers deadline precedence but not cancellation-probe precedence. The new
+  `stop_before_phase(cancellation, …)` at `coordinator_endpoint.rs:916` has a cancellation branch
+  that no test reaches. Fix: add a `late` variant that passes a probe signalling cancellation
+  during `verify_completion`, and assert the cancel terminal and its event.
+- **L3 (low, prose).** `docs/evidence/t303-owned-completion-verifier-2026-11-09.md:95-96`: "All ten
+  checked methods pass, including the both additional failures from the preceding run" is garbled.
+  It should say that the methods include the two tests that failed in the preceding run.
+- Carried backlog, unchanged: L2 from the incoming review (positive original native issuance) and
+  the earlier same-row lows. Incoming L1 (substitute request resealed) is repaired as described;
+  `audit_repair.py` confirms that the exact fixture change is the only host assertion-file change.
+
+## Per-row result
+
+- **T-303 (non-closing, stays OPEN): PASS for this scope.** The original-owner verifier connection,
+  the post-check-before-release rule and the typed borrowed evidence are implemented and tested as
+  claimed. The gate matches the inherited baseline exactly, with no new failures or ignores.
+  Concrete task acceptance, native/model execution, durable recovery, approved Git and measurements
+  remain open.
+- **T-306 (non-closing, stays OPEN): PASS for this scope.** The kernel verifier-error lifecycle repair
+  is correct, keeps stop/deadline precedence and is covered for all seven failure kinds.
+  Parent-row requirements remain open.
+
+Verdict: PASS
