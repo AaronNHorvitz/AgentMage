@@ -251,6 +251,8 @@ impl LinuxCodingEndpointCommand {
             clock,
             stage: Stage::Ready,
             result: None,
+            failure_observations: false,
+            observed_elapsed_ms: None,
         }
     }
 }
@@ -272,8 +274,21 @@ pub struct LinuxCodingEndpointCommandBoundary<C> {
     clock: C,
     stage: Stage,
     result: Option<Value>,
+    failure_observations: bool,
+    observed_elapsed_ms: Option<u64>,
 }
 impl<C: RuntimeClock> LinuxCodingEndpointCommandBoundary<C> {
+    /// Explicit trusted composition for bounded test-failure feedback in the
+    /// SAME endpoint coordinator. The default boundary still stops on failure.
+    /// Later model disclosure requires separate consent. This does not dispatch
+    /// a retry, return the owner or renew any budget. Admission consumes the
+    /// original repair-feedback selection once, even if later dispatch stops.
+    #[must_use]
+    pub fn with_failure_observations(mut self) -> Self {
+        self.failure_observations = true;
+        self
+    }
+
     /// Original command/test state and last result, including post-dispatch output refusal.
     pub fn inspect(&self) -> Result<Value> {
         Ok(json!({"command":self.command.repository.inspect_command()?,
@@ -467,16 +482,75 @@ impl<C: RuntimeClock> LinuxCodingEndpointCommandBoundary<C> {
             .run_command_observed(pending, executor, now, bridge)
             .map_err(|_| RuntimePortFailure::Uncertain)?;
         self.result = Some(value.clone());
-        project(
+        let execution = project(
             &self.command.request,
             definition,
             call,
             value,
             started.elapsed(),
-        )
+        )?;
+        self.observed_elapsed_ms = Some(execution.result.elapsed_ms);
+        Ok(execution)
     }
 }
 impl<C: RuntimeClock> RuntimeToolBoundary for LinuxCodingEndpointCommandBoundary<C> {
+    fn permits_failure_observation(
+        &mut self,
+        scope: RuntimeRunScope<'_>,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        execution: &RuntimeToolExecution,
+    ) -> std::result::Result<bool, RuntimePortFailure> {
+        self.check(scope, definition, call)?;
+        if !self.failure_observations
+            || !matches!(self.stage, Stage::Spent)
+            || execution.result.outcome != OperationOutcome::Failed
+            || execution.result.state_change != StateChange::NotChanged
+        {
+            return Ok(false);
+        }
+        let Some(value) = &self.result else {
+            return Ok(false);
+        };
+        if self.observed_elapsed_ms != Some(execution.result.elapsed_ms) {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        // Reproject the ORIGINAL retained result, not a caller's receipt or
+        // validation-pass claim. Matching covers channels, hashes, schemas,
+        // identity, authority receipt, evidence and the entire output payload.
+        let original = project(
+            &self.command.request,
+            definition,
+            call,
+            value.clone(),
+            Duration::from_millis(execution.result.elapsed_ms),
+        )?;
+        if &original != execution {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        // Reuse the existing parser/receipt/three-attempt eligibility, including
+        // one repair selection per failed receipt. Ordinary commands, malformed
+        // results, empty/skipped-only test runs, exhausted or consumed failures refuse.
+        // A parsed compile failure is eligible without claiming any tests ran.
+        let Ok(feedback) = self.command.repository.repair_feedback() else {
+            return Ok(false);
+        };
+        let receipt = feedback["receipt_sha256"]
+            .as_str()
+            .ok_or(RuntimePortFailure::Invalid)?;
+        let digest = feedback["feedback_sha256"]
+            .as_str()
+            .ok_or(RuntimePortFailure::Invalid)?;
+        // Spend the ORIGINAL selection before admitting it to coordinator
+        // history. A lost/stopped next model turn cannot restore a parallel
+        // single-proposal selection. This consumes no test attempt or grant.
+        self.command
+            .repository
+            .consume_repair_feedback(receipt, digest)
+            .map_err(|_| RuntimePortFailure::Invalid)?;
+        Ok(true)
+    }
+
     fn evaluate_scoped(
         &mut self,
         scope: RuntimeRunScope<'_>,

@@ -914,6 +914,7 @@ struct SyntheticPort {
     arguments: Value,
     calls: Arc<AtomicU64>,
     preparations: Arc<AtomicU64>,
+    expected_outcome: OperationOutcome,
 }
 struct Dispatch {
     request: EndpointModelRequest,
@@ -966,7 +967,7 @@ impl RuntimeEndpointTurnPort for SyntheticPort {
             .map_err(|_| RuntimePortFailure::Cancelled)?;
         if input.turn != 1 {
             assert_eq!(input.tool_results.len(), 1);
-            assert_eq!(input.tool_results[0].outcome, OperationOutcome::Succeeded);
+            assert_eq!(input.tool_results[0].outcome, self.expected_outcome);
             assert_eq!(input.tool_results[0].state_change, StateChange::NotChanged);
             assert_eq!(input.completed_tool_calls.len(), 1);
             // Deliberate upstream refusal after observing the synthetic command transaction.
@@ -1028,8 +1029,20 @@ fn derived(prefix: &str, req: &RuntimeEndpointRunRequest, seq: u64) -> String {
 struct SyntheticBoundary {
     inner: LinuxCodingEndpointCommandBoundary<Clock>,
     calls: Arc<AtomicUsize>,
+    pass: bool,
 }
 impl RuntimeToolBoundary for SyntheticBoundary {
+    fn permits_failure_observation(
+        &mut self,
+        scope: RuntimeRunScope<'_>,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        execution: &RuntimeToolExecution,
+    ) -> std::result::Result<bool, RuntimePortFailure> {
+        self.inner
+            .permits_failure_observation(scope, definition, call, execution)
+    }
+
     fn evaluate_scoped(
         &mut self,
         scope: RuntimeRunScope<'_>,
@@ -1060,7 +1073,7 @@ impl RuntimeToolBoundary for SyntheticBoundary {
         call: &ToolCall,
         cancel: Option<&dyn ModelCancellationProbe>,
     ) -> std::result::Result<RuntimeToolExecution, RuntimePortFailure> {
-        let runner = Synthetic::new(&self.calls, true);
+        let runner = Synthetic::new(&self.calls, self.pass);
         self.inner
             .execute_using(scope, (e, def, call), cancel, |_| Ok(runner))
     }
@@ -1098,87 +1111,120 @@ impl RuntimeToolBoundary for SyntheticBoundary {
 }
 #[test]
 fn endpoint_command_actual_coordinator_uses_exact_challenge_and_original_command_receipt() {
-    for allow in [false, true] {
-        let f = Fixture::new();
-        let owner = owner(&f, true, None);
-        let (req, mut call) = binding(&owner);
-        call.tool_call_id = ToolCallId::from_raw(derived("endpoint-call", &req, 1));
-        call.correlation_id = CorrelationId::from_raw(derived("correlation", &req, 0));
-        let handoff = owner
-            .into_endpoint_command(
-                req.clone(),
-                RuntimeTurnId::from_raw(derived("turn", &req, 1)),
-                RuntimeOperationId::from_raw(derived("operation", &req, 1)),
-                call.clone(),
+    for (pass, feedback) in [(true, false), (false, false), (false, true)] {
+        for allow in [false, true] {
+            let f = Fixture::new();
+            let owner = owner(&f, true, None);
+            let (req, mut call) = binding(&owner);
+            call.tool_call_id = ToolCallId::from_raw(derived("endpoint-call", &req, 1));
+            call.correlation_id = CorrelationId::from_raw(derived("correlation", &req, 0));
+            let handoff = owner
+                .into_endpoint_command(
+                    req.clone(),
+                    RuntimeTurnId::from_raw(derived("turn", &req, 1)),
+                    RuntimeOperationId::from_raw(derived("operation", &req, 1)),
+                    call.clone(),
+                )
+                .ok()
+                .unwrap();
+            let c = handoff.challenge.clone();
+            let control = Arc::new(Control::new());
+            let mut inner = handoff.into_boundary(control, Clock(Arc::new(AtomicU64::new(NOW))));
+            if feedback {
+                inner = inner.with_failure_observations();
+            }
+            let r = response(&inner, allow);
+            let calls = Arc::new(AtomicUsize::new(0));
+            let boundary = SyntheticBoundary {
+                inner,
+                calls: calls.clone(),
+                pass,
+            };
+            let models = Arc::new(AtomicU64::new(0));
+            let preparations = Arc::new(AtomicU64::new(0));
+            let port = SyntheticPort {
+                selection: req.model_selection.clone(),
+                arguments: serde_json::from_slice(&call.arguments.bytes).unwrap(),
+                calls: models.clone(),
+                preparations: preparations.clone(),
+                expected_outcome: if pass {
+                    OperationOutcome::Succeeded
+                } else {
+                    OperationOutcome::Failed
+                },
+            };
+            let mut coordinator = ReusableRuntimeCoordinator::new_endpoint(
+                req,
+                port,
+                linux_coding_endpoint_command_registry().unwrap(),
+                boundary,
+                NoCompletion(VerifierId::from_raw("fixture-no-completion")),
+                Clock(Arc::new(AtomicU64::new(NOW))),
             )
-            .ok()
             .unwrap();
-        let c = handoff.challenge.clone();
-        let control = Arc::new(Control::new());
-        let inner = handoff.into_boundary(control, Clock(Arc::new(AtomicU64::new(NOW))));
-        let r = response(&inner, allow);
-        let calls = Arc::new(AtomicUsize::new(0));
-        let boundary = SyntheticBoundary {
-            inner,
-            calls: calls.clone(),
-        };
-        let models = Arc::new(AtomicU64::new(0));
-        let preparations = Arc::new(AtomicU64::new(0));
-        let port = SyntheticPort {
-            selection: req.model_selection.clone(),
-            arguments: serde_json::from_slice(&call.arguments.bytes).unwrap(),
-            calls: models.clone(),
-            preparations: preparations.clone(),
-        };
-        let mut coordinator = ReusableRuntimeCoordinator::new_endpoint(
-            req,
-            port,
-            linux_coding_endpoint_command_registry().unwrap(),
-            boundary,
-            NoCompletion(VerifierId::from_raw("fixture-no-completion")),
-            Clock(Arc::new(AtomicU64::new(NOW))),
-        )
-        .unwrap();
-        let RuntimeEndpointCoordinatorStep::AwaitingApproval { challenge: actual } =
-            coordinator.run_endpoint_until_boundary(None, None).unwrap()
-        else {
-            panic!("original challenge");
-        };
-        assert_eq!(actual, c);
-        assert_eq!(calls.load(Ordering::SeqCst), 0);
-        let RuntimeEndpointCoordinatorStep::Complete { outcome } = coordinator
-            .run_endpoint_until_boundary(Some(&r), None)
-            .unwrap()
-        else {
-            panic!("terminal");
-        };
-        assert!(!outcome.outcome.state.is_success());
-        assert_eq!(outcome.outcome.receipt_ids.len(), usize::from(allow));
-        assert_eq!(calls.load(Ordering::SeqCst), usize::from(allow));
-        assert_eq!(models.load(Ordering::SeqCst), 1);
-        assert_eq!(
-            preparations.load(Ordering::SeqCst),
-            if allow { 2 } else { 1 }
-        );
-        assert_eq!(
-            coordinator.run_endpoint_until_boundary(None, None).unwrap(),
-            RuntimeEndpointCoordinatorStep::Complete { outcome }
-        );
-        assert_eq!(calls.load(Ordering::SeqCst), usize::from(allow));
-        let boundary = Box::new(coordinator)
-            .try_into_endpoint_tool_boundary()
-            .ok()
-            .unwrap();
-        let owner = boundary.inner.into_repository();
-        let validation = owner.inspect_validation().unwrap();
-        assert!(validation["pending"].is_null());
-        assert_eq!(validation["attempts"], usize::from(allow));
-        assert_eq!(validation["maximum_attempts"], 3);
-        assert_eq!(validation["latest"].is_object(), allow);
-        assert_eq!(calls.load(Ordering::SeqCst), usize::from(allow));
-        assert_eq!(models.load(Ordering::SeqCst), 1);
+            let RuntimeEndpointCoordinatorStep::AwaitingApproval { challenge: actual } =
+                coordinator.run_endpoint_until_boundary(None, None).unwrap()
+            else {
+                panic!("original challenge");
+            };
+            assert_eq!(actual, c);
+            assert_eq!(calls.load(Ordering::SeqCst), 0);
+            let RuntimeEndpointCoordinatorStep::Complete { outcome } = coordinator
+                .run_endpoint_until_boundary(Some(&r), None)
+                .unwrap()
+            else {
+                panic!("terminal");
+            };
+            assert!(!outcome.outcome.state.is_success());
+            assert_eq!(outcome.outcome.receipt_ids.len(), usize::from(allow));
+            assert_eq!(calls.load(Ordering::SeqCst), usize::from(allow));
+            assert_eq!(models.load(Ordering::SeqCst), 1);
+            assert_eq!(
+                preparations.load(Ordering::SeqCst),
+                if allow && (pass || feedback) { 2 } else { 1 }
+            );
+            if allow && !pass {
+                assert!(
+                    coordinator
+                        .events()
+                        .iter()
+                        .any(|event| matches!(&event.kind,
+                RuntimeEventKind::ToolFailed { tool_call_id, receipt_id: Some(_), .. }
+                if tool_call_id == &call.tool_call_id))
+                );
+                assert!(!coordinator.events().iter().any(|event| matches!(&event.kind,
+                RuntimeEventKind::ToolCompleted { tool_call_id, .. } if tool_call_id == &call.tool_call_id)));
+                assert_eq!(
+                    coordinator
+                        .ended_tool_boundary()
+                        .unwrap()
+                        .inner
+                        .inspect()
+                        .unwrap()["validation"]["attempts"],
+                    1
+                );
+            }
+            assert_eq!(
+                coordinator.run_endpoint_until_boundary(None, None).unwrap(),
+                RuntimeEndpointCoordinatorStep::Complete { outcome }
+            );
+            assert_eq!(calls.load(Ordering::SeqCst), usize::from(allow));
+            let boundary = Box::new(coordinator)
+                .try_into_endpoint_tool_boundary()
+                .ok()
+                .unwrap();
+            let owner = boundary.inner.into_repository();
+            let validation = owner.inspect_validation().unwrap();
+            assert!(validation["pending"].is_null());
+            assert_eq!(validation["attempts"], usize::from(allow));
+            assert_eq!(validation["maximum_attempts"], 3);
+            assert_eq!(validation["latest"].is_object(), allow);
+            assert_eq!(calls.load(Ordering::SeqCst), usize::from(allow));
+            assert_eq!(models.load(Ordering::SeqCst), 1);
+        }
     }
 }
+
 #[test]
 fn endpoint_command_sealed_run_cannot_understate_command_resource_ceilings() {
     for case in 0..3 {
@@ -1733,4 +1779,152 @@ fn endpoint_command_failed_validation_handle_cannot_cancel_the_exact_fresh_retry
     assert_eq!(passed["rerun_plan"]["prior_receipt_sha256"], prior);
     assert_eq!(passed["validation"]["current_workspace_verified"], false);
     assert_eq!(calls.load(Ordering::SeqCst), 2);
+}
+
+fn failure_feedback(
+    b: &mut LinuxCodingEndpointCommandBoundary<Clock>,
+    result: &RuntimeToolExecution,
+) -> std::result::Result<bool, RuntimePortFailure> {
+    let req = b.command.request.clone();
+    let call = b.command.call.clone();
+    b.permits_failure_observation(
+        RuntimeRunScope::endpoint(&req).unwrap(),
+        &EndpointCommandTool::new().0,
+        &call,
+        result,
+    )
+}
+
+#[test]
+fn endpoint_command_failure_feedback_requires_optin_original_validation_and_retryable_receipt() {
+    for validation in [false, true] {
+        for enabled in [false, true] {
+            for pass in [false, true] {
+                let f = Fixture::new();
+                let calls = Arc::new(AtomicUsize::new(0));
+                let mut b = boundary(owner(&f, validation, None));
+                if enabled {
+                    b = b.with_failure_observations();
+                }
+                ask(&mut b);
+                let e = resolve(&mut b, true).unwrap();
+                let result = execute(&mut b, &e, Synthetic::new(&calls, pass), None).unwrap();
+                let mut expected = b.inspect().unwrap();
+                let eligible = validation && enabled && !pass;
+                assert_eq!(failure_feedback(&mut b, &result), Ok(eligible));
+                if eligible {
+                    expected["validation"]["repair_requested"] = json!(true);
+                }
+                assert_eq!(b.inspect().unwrap(), expected);
+                assert_eq!(failure_feedback(&mut b, &result), Ok(false));
+                assert_eq!(b.inspect().unwrap(), expected);
+                assert_eq!(calls.load(Ordering::SeqCst), 1);
+                assert!(execute(&mut b, &e, Synthetic::new(&calls, true), None).is_err());
+                assert_eq!(calls.load(Ordering::SeqCst), 1);
+            }
+        }
+    }
+}
+
+#[test]
+fn endpoint_command_failure_feedback_rejects_substituted_execution_and_consumed_selection() {
+    let f = Fixture::new();
+    let calls = Arc::new(AtomicUsize::new(0));
+    let mut b = boundary(owner(&f, true, None)).with_failure_observations();
+    ask(&mut b);
+    let e = resolve(&mut b, true).unwrap();
+    let result = execute(&mut b, &e, Synthetic::new(&calls, false), None).unwrap();
+    for case in 0..7 {
+        let mut changed = result.clone();
+        match case {
+            0 => changed.receipt_id = ReceiptId::from_raw("foreign-receipt"),
+            1 => changed.receipt_sha256 = hash(b"foreign receipt"),
+            2 => changed.result.tool_call_id = ToolCallId::from_raw("foreign-call"),
+            3 => changed.result.evidence.clear(),
+            4 => {
+                changed.result.output.as_mut().unwrap().schema.schema_id =
+                    SchemaId::from_raw("foreign-schema")
+            }
+            6 => changed.result.elapsed_ms += 1,
+            5 => {
+                let output = changed.result.output.as_mut().unwrap();
+                let mut value: Value = serde_json::from_slice(&output.bytes).unwrap();
+                value["validation"]["validation_passed"] = json!(true);
+                output.bytes = serde_json::to_vec(&value).unwrap();
+                output.sha256 = hash(&output.bytes);
+            }
+            _ => unreachable!(),
+        }
+        assert_eq!(
+            failure_feedback(&mut b, &changed),
+            Err(RuntimePortFailure::Invalid)
+        );
+        assert_eq!(
+            b.inspect().unwrap()["validation"]["repair_requested"],
+            false
+        );
+    }
+    let feedback = b.command.repository.repair_feedback().unwrap();
+    b.command
+        .repository
+        .consume_repair_feedback(
+            feedback["receipt_sha256"].as_str().unwrap(),
+            feedback["feedback_sha256"].as_str().unwrap(),
+        )
+        .unwrap();
+    assert_eq!(failure_feedback(&mut b, &result), Ok(false));
+    assert_eq!(b.inspect().unwrap()["validation"]["attempts"], 1);
+    assert_eq!(calls.load(Ordering::SeqCst), 1);
+}
+
+#[test]
+fn endpoint_command_failure_feedback_never_extends_three_attempts_or_malformed_tests() {
+    let f = Fixture::new();
+    let calls = Arc::new(AtomicUsize::new(0));
+    let mut original = owner(&f, true, None);
+    for attempt in 1..=3 {
+        let mut b = boundary(original).with_failure_observations();
+        ask(&mut b);
+        let e = resolve(&mut b, true).unwrap();
+        let result = execute(&mut b, &e, Synthetic::new(&calls, false), None).unwrap();
+        assert_eq!(failure_feedback(&mut b, &result), Ok(attempt < 3));
+        assert_eq!(b.inspect().unwrap()["validation"]["attempts"], attempt);
+        let value: Value =
+            serde_json::from_slice(&result.result.output.as_ref().unwrap().bytes).unwrap();
+        original = b.into_repository();
+        if attempt < 3 {
+            prepare(
+                &mut original,
+                true,
+                value["validation"]["receipt"]["receipt_sha256"].as_str(),
+            );
+        }
+    }
+    assert!(original.repair_feedback().is_err());
+    assert_eq!(calls.load(Ordering::SeqCst), 3);
+    // Compilation can be eligible without inventing executed tests. Empty,
+    // skipped-only or prose-only test runs do not become assertion failures.
+    for (status, passed, failed, skipped, names, eligible) in [
+        ("compile_failed", 0, 0, 0, vec![], true),
+        ("passed", 0, 0, 0, vec![], false),
+        ("assertion_failed", 1, 1, 1, vec!["synthetic.test"], true),
+        ("passed", 0, 0, 2, vec![], false),
+        ("malformed", 0, 0, 0, vec![], false),
+    ] {
+        let f = Fixture::new();
+        let mut b = boundary(owner(&f, true, None)).with_failure_observations();
+        ask(&mut b);
+        let e = resolve(&mut b, true).unwrap();
+        let mut runner = Synthetic::new(&calls, false);
+        runner.stdout = if status == "malformed" {
+            b"untrusted assertion prose".to_vec()
+        } else {
+            serde_json::to_vec(&json!({"schema_version":1,"status":status,
+            "passed":passed,"failed":failed,"skipped":skipped,"duration_ms":1,
+            "failed_names":names,"artifact_ids":[],"retry_count":0,"initial_failure_sha256":null}))
+            .unwrap()
+        };
+        let result = execute(&mut b, &e, runner, None).unwrap();
+        assert_eq!(failure_feedback(&mut b, &result), Ok(eligible), "{status}");
+    }
 }

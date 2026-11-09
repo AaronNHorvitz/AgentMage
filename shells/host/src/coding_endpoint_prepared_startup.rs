@@ -320,6 +320,7 @@ impl CodingEndpointPreparedStartup {
         Ok(CodingEndpointPrepared {
             startup: self,
             tool,
+            failure_observations: false,
         })
     }
 }
@@ -334,6 +335,7 @@ enum NativePrepared {
 pub struct CodingEndpointPrepared {
     startup: CodingEndpointPreparedStartup,
     tool: NativePrepared,
+    failure_observations: bool,
 }
 
 /// Trusted ports and already consented snapshots for the retained coordinator.
@@ -379,6 +381,16 @@ impl<C: RuntimeClock> RuntimeClock for CodingEndpointPreparedClock<C> {
 }
 
 impl CodingEndpointPrepared {
+    /// Trusted opt-in to retaining an eligible failed validation as feedback
+    /// inside the SAME coordinator. Edits keep their terminal-failure behavior.
+    /// No effect, disclosure consent, retry, successful check or renewed budget
+    /// follows from this selection. Each later advance still needs consent.
+    #[must_use]
+    pub fn with_failure_observations(mut self) -> Self {
+        self.failure_observations = true;
+        self
+    }
+
     /// Exact final request. No native model profile or execution grant is inferred.
     #[must_use]
     pub const fn request(&self) -> &RuntimeEndpointRunRequest {
@@ -427,7 +439,12 @@ impl CodingEndpointPrepared {
                 CodingEndpointPreparedBoundary::Edit(t.into_boundary(input.control, clock))
             }
             NativePrepared::Command(t) => {
-                CodingEndpointPreparedBoundary::Command(t.into_boundary(input.control, clock))
+                let boundary = t.into_boundary(input.control, clock);
+                CodingEndpointPreparedBoundary::Command(if self.failure_observations {
+                    boundary.with_failure_observations()
+                } else {
+                    boundary
+                })
             }
         };
         let request = self.startup.request;
@@ -470,6 +487,19 @@ impl<C: RuntimeClock> CodingEndpointPreparedBoundary<C> {
     }
 }
 impl<C: RuntimeClock> RuntimeToolBoundary for CodingEndpointPreparedBoundary<C> {
+    fn permits_failure_observation(
+        &mut self,
+        s: RuntimeRunScope<'_>,
+        d: &ToolDefinition,
+        c: &ToolCall,
+        execution: &RuntimeToolExecution,
+    ) -> Result<bool, RuntimePortFailure> {
+        match self {
+            Self::Edit(_) => Ok(false),
+            Self::Command(t) => t.permits_failure_observation(s, d, c, execution),
+        }
+    }
+
     fn evaluate_scoped(
         &mut self,
         s: RuntimeRunScope<'_>,

@@ -39,6 +39,7 @@ struct EndpointPort {
     expire_in_prepare: bool,
     expire_in_stream: bool,
     output_limit: usize,
+    observed_results: Arc<Mutex<Vec<ToolResult>>>,
 }
 struct Dispatch {
     request: EndpointModelRequest,
@@ -143,6 +144,7 @@ impl RuntimeEndpointTurnPort for EndpointPort {
         Self: 'a,
     {
         self.preparations.fetch_add(1, Ordering::SeqCst);
+        *self.observed_results.lock().unwrap() = input.tool_results.to_vec();
         assert_eq!(input.request.model_selection, self.selection);
         assert_eq!(input.turn as usize, self.calls.load(Ordering::SeqCst) + 1);
         if !input.tool_results.is_empty() {
@@ -214,6 +216,9 @@ struct Boundary {
     ask: bool,
     scope_digest: String,
     result_override: Option<(OperationOutcome, StateChange)>,
+    failure_observation: Result<bool, RuntimePortFailure>,
+    failure_observation_calls: usize,
+    feedback_output: bool,
 }
 impl Boundary {
     fn check(&self, scope: RuntimeRunScope<'_>) {
@@ -222,6 +227,20 @@ impl Boundary {
     }
 }
 impl RuntimeToolBoundary for Boundary {
+    fn permits_failure_observation(
+        &mut self,
+        scope: RuntimeRunScope<'_>,
+        _: &ToolDefinition,
+        call: &ToolCall,
+        execution: &RuntimeToolExecution,
+    ) -> Result<bool, RuntimePortFailure> {
+        self.check(scope);
+        assert_eq!(execution.result.tool_call_id, call.tool_call_id);
+        assert_eq!(execution.result.outcome, OperationOutcome::Failed);
+        self.failure_observation_calls += 1;
+        self.failure_observation
+    }
+
     fn evaluate(
         &mut self,
         _: &RuntimeRunRequest,
@@ -324,7 +343,12 @@ impl RuntimeToolBoundary for Boundary {
                 tool_call_id: call.tool_call_id.clone(),
                 correlation_id: call.correlation_id.clone(),
                 outcome,
-                output: None,
+                output: self.feedback_output.then(|| {
+                    payload(
+                        "fixture.output",
+                        br#"{"diagnostic":"synthetic failed assertion"}"#,
+                    )
+                }),
                 validation_issues: vec![],
                 evidence: if outcome == OperationOutcome::Uncertain
                     && definition.required_grant.operation.operation()
@@ -344,7 +368,7 @@ impl RuntimeToolBoundary for Boundary {
             },
             receipt_id: ReceiptId::from_raw(format!("receipt-{}", call.tool_call_id.as_str())),
             receipt_sha256: sha256(b"actual synthetic read"),
-            result_output_kind: None,
+            result_output_kind: self.feedback_output.then_some(RuntimeArtifactKind::Report),
             artifact_candidates: vec![],
         })
     }
@@ -471,6 +495,7 @@ fn build_registry(
             expire_in_prepare: false,
             expire_in_stream: false,
             output_limit: 2048,
+            observed_results: Arc::new(Mutex::new(Vec::new())),
         },
         registry,
         Boundary {
@@ -478,6 +503,9 @@ fn build_registry(
             ask,
             scope_digest: request.request_sha256,
             result_override: None,
+            failure_observation: Ok(false),
+            failure_observation_calls: 0,
+            feedback_output: false,
         },
         Verifier {
             id: VerifierId::from_raw("endpoint-fixture-verifier"),

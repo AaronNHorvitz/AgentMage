@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The [executable startup independent core review](docs/reviews/3f8d1f2219a6-local-coding-edit-launch.txt)
+has **Verdict: PASS** for exact commit
+`3f8d1f2219a6ee27a5d15ba9b7d067c0ab42a05c`, with no high/medium finding.
+Low L1 executable-test portability, L2 shared terminal nonblocking robustness,
+L3 approval-window start and L4 committed root-escape cases remain same-row
+backlog with earlier lows. Neither parent closes.
+
+The [failed-test feedback connection](docs/evidence/t303-failed-test-feedback-2026-11-09.md)
+allows an explicitly opted-in original native validation to return its unchanged
+failed result to the same endpoint coordinator. Each later effect still needs
+fresh exact approval; cumulative budgets and the three-attempt ceiling remain.
+The complete scoped fast gate remains FAIL: 2,815 passed, exactly 72 inherited
+host/Linux failures and none new, 71 existing ignored across 46 unfiltered
+targets. Formatting and Clippy pass. Seven new methods and the expanded native
+coordinator method pass. Independent core review is required.
+T-303/T-306 remain open; no row or sub-row is added or closed. General repair
+scheduling, native startup, durable recovery, approved Git and measurements
+remain open.
+
 The [strict HTTP service independent core review](docs/reviews/8e12c7055b31-local-coding-strict-http.txt)
 has **Verdict: PASS** for exact commit
 `8e12c7055b311794f926931be90e671236edbaf1`, with no high/medium finding.
@@ -13,8 +32,8 @@ connects the original native creation preview and exact stdin decision to the
 same live owner in the retained strict HTTP coordinator. Source disclosure and
 every edit still need separate HTTP approval. The scoped fast gate passes:
 217 tests passed across 11 unfiltered targets, with zero failures or ignores;
-formatting and Clippy pass. Independent core review is required. Successful
-native startup remains unobserved in this lane. T-303/T-306 stay open;
+formatting and Clippy pass. Independent core review passed as recorded above.
+Successful native startup remains unobserved in this lane. T-303/T-306 stay open;
 no row or sub-row is added or closed. General edit/test/retry, durable recovery,
 approved Git and parent measurements remain open.
 

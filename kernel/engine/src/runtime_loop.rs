@@ -630,6 +630,24 @@ pub struct RuntimeToolExecution {
 
 /// Trusted grant, policy, and worker boundary used only after registry validation.
 pub trait RuntimeToolBoundary {
+    /// Opt into feeding one completed failed validation back to an endpoint
+    /// coordinator. Default is terminal. This is an observation, never a grant,
+    /// retry dispatch or success: the original Failed result and receipt remain
+    /// unchanged. Implementations must bind the complete execution to their
+    /// privately retained result and require their original retry eligibility.
+    /// The coordinator additionally restricts this to offline controlled-write
+    /// command failures with known unchanged workspace state. Native/durable
+    /// runs, denial, cancellation, timeout and uncertainty cannot opt in.
+    fn permits_failure_observation(
+        &mut self,
+        _scope: RuntimeRunScope<'_>,
+        _definition: &ToolDefinition,
+        _call: &ToolCall,
+        _execution: &RuntimeToolExecution,
+    ) -> Result<bool, RuntimePortFailure> {
+        Ok(false)
+    }
+
     /// Model-independent entry point. Existing boundaries retain their exact
     /// native request and refuse endpoint runs unless they explicitly opt in.
     fn evaluate_scoped(
@@ -4104,15 +4122,42 @@ where
                 }
             }
         }
+        // Only a trusted original executor can admit a failed test observation.
+        // Keep the failed result/receipt and its audit artifact verbatim. No
+        // approval, effect, call count or cumulative budget is renewed here.
+        let failure_observation = !terminal_event_emitted
+            && self.request.scope()?.endpoint_request().is_some()
+            && self.request.mode == RuntimeSessionMode::ControlledWrite
+            && definition.required_grant.operation.operation() == GrantOperation::CommandExecute
+            && execution.result.outcome == OperationOutcome::Failed
+            && execution.result.state_change == StateChange::NotChanged
+            && execution.result.output.is_some()
+            && execution.result_output_kind == Some(RuntimeArtifactKind::Report)
+            && execution.artifact_candidates.is_empty()
+            && self
+                .tool_boundary
+                .permits_failure_observation(self.request.scope()?, &definition, &call, &execution)
+                .map_err(RuntimeLoopError::Dependency)?;
         match execution.result.outcome {
-            OperationOutcome::Succeeded => {
+            OperationOutcome::Succeeded | OperationOutcome::Failed
+                if failure_observation
+                    || execution.result.outcome == OperationOutcome::Succeeded =>
+            {
                 let result_sha256 = contract_sha256(&execution.result)?;
                 if !terminal_event_emitted {
                     self.emit(
-                        RuntimeEventKind::ToolCompleted {
-                            tool_call_id: call.tool_call_id.clone(),
-                            receipt_id: execution.receipt_id.clone(),
-                            result_sha256,
+                        if failure_observation {
+                            RuntimeEventKind::ToolFailed {
+                                tool_call_id: call.tool_call_id.clone(),
+                                receipt_id: Some(execution.receipt_id.clone()),
+                                failure_code: "runtime.tool.failed".into(),
+                            }
+                        } else {
+                            RuntimeEventKind::ToolCompleted {
+                                tool_call_id: call.tool_call_id.clone(),
+                                receipt_id: execution.receipt_id.clone(),
+                                result_sha256,
+                            }
                         },
                         Some(&turn_id),
                         Some(&operation_id),
@@ -4168,6 +4213,7 @@ where
                     self.persist_safe_boundary()
                 }
             }
+            OperationOutcome::Succeeded => unreachable!("success always enters observation"),
             OperationOutcome::Denied => self.finish_tool_non_success(
                 execution,
                 call,

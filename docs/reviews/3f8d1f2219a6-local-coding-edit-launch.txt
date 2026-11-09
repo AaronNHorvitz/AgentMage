@@ -1,0 +1,141 @@
+Commit: 3f8d1f2219a6ee27a5d15ba9b7d067c0ab42a05c
+Scope: local-coding-edit-launch
+
+# Independent core review: executable strict-edit development startup
+
+Reviewer: Claude Opus 5.5 (separate session, read-only repository access), 2026-11-09.
+Tier: core. Rows: T-303 / T-306 (non-closing; both parents remain OPEN).
+
+## Methods
+
+- Confirmed the pinned checkout: `git rev-parse HEAD` in `/lane/review-checkout` gives
+  `3f8d1f2219a6ee27a5d15ba9b7d067c0ab42a05c`; working tree clean before and after.
+- Read IP-POLICY.md, the top of TASKS.md, decisions 0169-0171 listing, the request, and the
+  harness README.md/run.py/check.py/light.py before running anything. run.py was not outer-wrapped;
+  each Cargo command reserved its own slot.
+- Read the full diff over `8e12c7055b311794f926931be90e671236edbaf1` (11 paths, +1099/-9):
+  `coding_endpoint_edit_launch.rs` (new), its unit tests, the executable integration test,
+  `lib.rs`/`main.rs` wiring, visibility changes in `coding_endpoint_launch.rs`, the evidence file,
+  the guide section, TASKS.md prose and the retained predecessor review copy.
+- Traced the reused paths this command depends on: `serve_coding_endpoint_strict_edits` and
+  `serve_admitted_endpoint_inner` (factory runs once, after the loopback/stop check and before any
+  connection is served), `private_bytes`/`bind_identities` (seal verified before rebinding),
+  `LocalChatEndpoint::parse` (numeric loopback only), `LinuxCodingRepository::{prepare,decide,
+  created_workspace_id}` (pending preview is process-only; denial consumes; expiry rechecked),
+  native Git artifact trust (`verify_git_artifact`, root-owned path requirement) and native child
+  stdin (`Stdio::null()`).
+- Ran my own escape attempts in a throwaway `git archive` copy outside the repository (removed
+  afterwards), with the review target directory.
+
+## Commands and results
+
+| Command (from the pinned checkout) | Result |
+| --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-edit-launch/review-inputs.sha256` | exit 0; 44 entries; manifest SHA-256 `5a31c1b0821f69488cb425ee30dd24dc277e9f57e66bfae07d55d538c4a58f10` matches |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-edit-launch/run.py /lane/state/tmp/review-edit-launch-3f8d1f2219a6` | exit 0: `GATE_EXIT 0 SOURCE_UNCHANGED True`; 384.35 s including reservations |
+| `python3 -B /lane/state/tmp/t303-edit-launch/check.py /lane/state/tmp/review-edit-launch-3f8d1f2219a6` | exit 0; FAST GATE PASS; 11 targets; 217 passed / 0 failed / 0 ignored / 0 measured / 0 filtered; 7 command exits all 0 (fmt 271.06 s incl. slot wait, clippy 31.66 s, tests 79.80 s); all 10 new methods `ok`; raw log SHA-256 `f33ccd309618e373fd38b2aadea9263b47a87ef22425d6076cdbd933ff7e4f65` |
+| `python3 -B /lane/state/tmp/t303-edit-launch/light.py` | exit 0 (diff-check, untracked lint, review lint, markdownlint 0 issues) |
+| `cmp .../validation-final/source-freeze.json .../review-edit-launch-3f8d1f2219a6/source-freeze.json` | exit 0 |
+| `cmp docs/reviews/8e12c7055b31-local-coding-strict-http.txt /lane/reviews/8e12c7055b31-local-coding-strict-http.md` | exit 0 (predecessor review retained byte-identically) |
+| `git diff --check 8e12c7055b311794f926931be90e671236edbaf1 --` | exit 0 |
+| `git status --short` | empty |
+| Scratch: `cargo test --locked --offline -p agentmage-local-api --lib reviewer_edit_launch_escape_attempts` | after correcting one wrong case of my own (a disjoint `disposable` repository root is correctly accepted by `prepare`; native inspection refuses it later), 1 passed |
+| Scratch: `cargo test --locked --offline -p agentmage-local-api --test coding_endpoint_edit_launch` with stdin swapped for a socket preloaded with `approve <64 zeros>` | 3 passed; the real executable still reached the same native refusal, and fd flags inherited from the parent were byte-equal after exit |
+
+All requested commands produced their expected results. No GPU or model process was used. There are no
+UI screens in this scope.
+
+### Reviewer escape attempts (scratch only, never committed)
+
+- Root nesting and aliasing: `owned_root` inside `repository_root`, `state_root` inside `owned_root`,
+  `owned_root` as an ancestor of all roots, a relative `repository_root`, a `..`-containing
+  `repository_root`, and a missing root were all refused before encrypted state was opened (state
+  directory still empty). Symlink alias and equality are already covered by the committed test.
+- Credential: a nonexistent `credential_file` does not affect `prepare`. In the code, the file is read only
+  after `decide` returns `succeeded` and `created_workspace_id()` matches.
+- Decision parser: a leading space, an uppercase digest, a double space, an embedded NUL,
+  `deny ` with a trailing space, a leading blank line and a non-hex expected digest were all refused.
+  The committed test covers a wrong digest, missing newline, CRLF, overlong input and EOF.
+- Prompt injection or HTTP reaching creation approval: not possible by construction. The factory
+  runs before `serve_connections`, no model request is made during startup, and native Git children
+  get `/dev/null` stdin. Only the operator's stdin can supply `approve <digest>`, and the native
+  owner rechecks the digest, expiry, held roots and Git observations.
+- Executable stdin: the approval reader set O_NONBLOCK and restored the inherited flags on the refusal path
+  in the real binary.
+
+Successful native creation, the preview prompt and handing the owner to the strict coordinator could not be run
+in this lane. `/usr/bin/git` is owned by `nfsnobody` here, so native artifact trust refuses, as it did
+for the builder. The evidence, guide and TASKS state this plainly and claim no successful workflow,
+test or score.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, test portability): the executable test only passes on hosts where Git is untrusted.**
+  `platforms/local-api/tests/coding_endpoint_edit_launch.rs:119-123` always asserts
+  `linux.repository.git_artifact.invalid`. On the target Fedora host, `/usr/bin/git` is root-owned, so
+  native trust passes. `prepare` would then refuse the synthetic `.git`/`"a"*40` base with a different
+  code, and the test would fail. The sibling tests branch on this condition
+  (`tests/coding_worktree.rs:340`, `src/coding_repository_tests.rs:401`).
+  Fix: branch on `fs::metadata("/usr/bin/git").uid() != 0` (or `LinuxGitArtifact::verify`). In the
+  trusted branch, assert the observation refusal and keep the same invariants: empty stdout, no
+  credential read, unopened model socket, empty owned root, unchanged source and HEAD.
+- **L2 (low, robustness): making stdin nonblocking also affects the terminal's stdout and stderr.**
+  `src/coding_endpoint_edit_launch.rs:141-152,236`. On an interactive terminal, fds 0/1/2 share one
+  open file description, so O_NONBLOCK applies to stdout/stderr and to any process sharing the tty
+  (for example `| tee`) for the whole approval window. I reproduced this with a pty and a duplicated
+  descriptor: the flag carried over, and a write returned EAGAIN after 12,288 bytes once the output
+  buffer filled. During that window, `eprintln!` (lines 240, 252, 263, 279) panics instead of
+  returning an error if the output is paused or slow. This fails closed: no effect happens before
+  `decide`, and unwinding restores the flags. Fix: keep the descriptor blocking and wait with
+  `poll(2)` using a short timeout to observe stop/expiry. Alternatively, write diagnostics with
+  error-returning `writeln!` while the flag is set.
+- **L3 (low, usability): the 120-second approval deadline starts too early.**
+  `src/coding_endpoint_edit_launch.rs:236`. The deadline starts when `ApprovalInput::new` runs,
+  before encrypted state opens and before the full-repository native inspection. A slow inspection
+  eats into the operator's window, or uses it all up, before the preview is printed. The guide's
+  "within 120 seconds" reads as measured from the prompt. Fix: create the reader, or reset `deadline`,
+  right after the preview and prompt are flushed. The native preview expiry still applies.
+- **L4 (low, coverage): nested-root and `..` cases are not committed tests.**
+  `src/coding_endpoint_edit_launch_tests.rs:237-251` tests only equal roots and a symlink alias.
+  The nested-root and `..` refusals I showed above should be committed. They belong in the same backlog as the
+  predecessor's L2 (committed service escape cases).
+
+Earlier same-row lows (stale shared-clock wording, committed service escape cases, native held-owner,
+kernel refusal reasons, schema and command-resource lows) remain backlog. This change does not affect them.
+
+## Other checks
+
+- Confinement: no new tool, executor, permission policy or path adoption. The native edit registry
+  is narrowed through the original instruction guidance. Each HTTP advance still needs
+  `approve_model_context`, and each edit needs its own exact protected approval (unchanged service path).
+  The endpoint must be a canonical numeric loopback address. The listener must be loopback.
+- Secrets and logging: the launch and credential files go through the original `private_bytes`
+  checks (owner, 0600, single link, no symlink, canonical parent, bounded, zeroized buffer).
+  Errors print only native error codes. The preview printed to stdout contains the operator's own roots
+  and the native preview, with no credential. The state key is the control token, as in the existing
+  `serve-coding`.
+- Recovery: the pending preview is process-only, so timeout, stop or a wrong digest leaves no persisted pending
+  state. A post-dispatch failure may leave a worktree, as the guide says; no automatic retry or
+  cleanup.
+- Evaluation integrity: no hidden, held-out, scorer, task pin, threshold, scoreboard or
+  dependency change (no Cargo.toml/Cargo.lock in the diff). No score is claimed.
+- Delivery: no row or sub-row was added or closed. TASKS.md table rows are identical to the base
+  (check.py asserts this). The change ships a runnable command with measured refusals, not only plans.
+- Public hygiene: no private host path, username, hostname, credential or personal data in the
+  added lines. The `/lane/...` paths and the reviewer-model name appear only in the retained predecessor
+  review copy, following the established convention. No third-party product branding or comparison.
+  New files have SPDX headers.
+- Evidence matches the code and runs: there are 7 new unit tests and 3 executable tests, and 217/0/0
+  across 11 targets reproduced. The builder's timings differ from mine only because of slot waits.
+  The evidence's claim that credentials stay unread until creation and its "no startup model
+  socket" claim hold in the code and in the refusal run.
+
+## Per-row result
+
+- T-303 (non-closing increment, local-coding-edit-launch): PASS; no high/medium; L1-L4 low backlog.
+  The row remains OPEN. Successful native creation-to-model startup is still unobserved.
+- T-306 (non-closing increment): PASS for this scope; no high/medium. Remains OPEN.
+
+Verdict: PASS

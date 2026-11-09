@@ -1,5 +1,38 @@
 # Endpoint run framing
 
+## Failed test observations inside the same coordinator
+
+Trusted in-process factories may select
+`CodingEndpointPrepared::with_failure_observations()` before admitting a prepared
+validation, or `LinuxCodingEndpointCommandBoundary::with_failure_observations()`
+when composing its original native boundary directly. Default failure handling
+still terminates the run. This option is process-local; no HTTP or model field
+can enable it. Edits retain terminal failure handling.
+
+For the opt-in command boundary, the original retained execution and parsed
+validation must agree exactly, and the existing repair-feedback rules must still
+permit another attempt. Completed assertion and compilation failures with known unchanged workspace
+state are eligible under the original receipt rules. Compilation failure does
+not claim any tests ran. Ordinary commands, malformed results, empty or skipped-only
+test runs, cancellation, timeout, uncertainty, consumed repair selections and
+the three-attempt ceiling do not gain continuation. Native admission,
+protected decisions, durable grant consumption and confinement remain unchanged.
+
+An eligible result stays `Failed` in both the next turn's observations and the
+verifier's history. Its original receipt and complete bounded output are retained
+in process; the event remains `ToolFailed`. Admission consumes the original repair-feedback selection once; a later lost
+model turn cannot restore a parallel proposal selection. This does not spend
+another test attempt. The coordinator charges output and keeps its cumulative
+ledger, controls and event sequence. A model can propose a
+next step, but cannot reuse the old approval or declare the failed check passed.
+Cancellation, exhaustion and independent completion checks still apply. Native
+and durable run families cannot select this continuation.
+
+This connects failed-test observations to the original coordinator. It does not
+schedule another command, return the native owner to editing, select a fresh
+source context, implement a repair prompt, or establish a successful coding
+workflow. The strict edit/test scheduler and its measurements remain open.
+
 ## Return the original tool owner after a terminal run
 
 Trusted in-process hosts can use

@@ -467,3 +467,273 @@ fn endpoint_controlled_write_refuses_every_other_operation_class_before_model_di
         );
     }
 }
+
+#[test]
+fn endpoint_failed_test_observation_keeps_failure_and_demands_fresh_edit_approval() {
+    let mut c = build(
+        &[
+            GrantOperation::CommandExecute,
+            GrantOperation::WorkspaceWrite,
+        ],
+        [
+            Response::Effect(GrantOperation::CommandExecute),
+            Response::Effect(GrantOperation::WorkspaceWrite),
+            Response::Answer,
+        ],
+    );
+    c.tool_boundary.failure_observation = Ok(true);
+    c.tool_boundary.feedback_output = true;
+    c.tool_boundary.result_override = Some((OperationOutcome::Failed, StateChange::NotChanged));
+    let test = approval(&mut c);
+    let response = decide(&test, RuntimeApprovalDisposition::Allow);
+    let EndpointStep::AwaitingApproval { challenge: edit } = c
+        .run_endpoint_until_boundary(Some(&response), None)
+        .unwrap()
+    else {
+        panic!("fresh edit approval")
+    };
+    assert_eq!(edit.operation, GrantOperation::WorkspaceWrite);
+    assert_ne!(test.challenge_sha256, edit.challenge_sha256);
+    assert_ne!(test.tool_call_id, edit.tool_call_id);
+    assert_eq!(c.tool_boundary.executions.load(Ordering::SeqCst), 1);
+    assert_eq!(c.tool_boundary.failure_observation_calls, 1);
+    let observed = c.model.0.observed_results.lock().unwrap().clone();
+    assert_eq!(observed.len(), 1);
+    assert_eq!(observed[0].outcome, OperationOutcome::Failed);
+    assert_eq!(observed[0].state_change, StateChange::NotChanged);
+    assert_eq!(
+        observed[0].output.as_ref().unwrap().bytes,
+        br#"{"diagnostic":"synthetic failed assertion"}"#
+    );
+    assert_eq!(c.tool_results, observed);
+    assert!(c.events().iter().any(|e| matches!(&e.kind,
+        RuntimeEventKind::ToolFailed { tool_call_id, receipt_id: Some(_), failure_code }
+        if tool_call_id == &test.tool_call_id && failure_code == "runtime.tool.failed")));
+    assert!(!c.events().iter().any(|e| matches!(&e.kind,
+        RuntimeEventKind::ToolCompleted { tool_call_id, .. } if tool_call_id == &test.tool_call_id)));
+    let events = c.events().to_vec();
+    let resources = c.resource_snapshot().clone();
+    assert!(
+        c.run_endpoint_until_boundary(Some(&response), None)
+            .is_err()
+    );
+    assert_eq!(c.events(), events);
+    assert_eq!(c.resource_snapshot(), &resources);
+    c.tool_boundary.result_override = None;
+    let outcome = finish(&mut c, &edit);
+    // This fixture verifier requires all observed checks to pass. Failed tests
+    // remain failed even after a later edit; model prose cannot erase them.
+    assert_eq!(outcome.outcome.state, AgentStateKind::Failed);
+    assert_eq!(
+        (
+            outcome.outcome.model_call_count,
+            outcome.outcome.tool_call_count
+        ),
+        (3, 2)
+    );
+    assert_eq!(outcome.outcome.receipt_ids.len(), 2);
+    assert!(outcome.answer_evidence.is_none());
+    assert_eq!(
+        c.resource_snapshot().cumulative[&BudgetResource::ToolCalls],
+        2
+    );
+    assert_eq!(
+        c.resource_snapshot().cumulative[&BudgetResource::ModelCalls],
+        3
+    );
+    assert_terminal(&mut c, &outcome);
+}
+
+#[test]
+fn endpoint_failure_feedback_is_explicit_and_never_admits_other_outcomes_or_effects() {
+    for (operation, outcome, output, permit, expected_hook) in [
+        (
+            GrantOperation::CommandExecute,
+            OperationOutcome::Failed,
+            true,
+            false,
+            1,
+        ),
+        (
+            GrantOperation::CommandExecute,
+            OperationOutcome::Failed,
+            false,
+            true,
+            0,
+        ),
+        (
+            GrantOperation::WorkspaceWrite,
+            OperationOutcome::Failed,
+            true,
+            true,
+            0,
+        ),
+        (
+            GrantOperation::CommandExecute,
+            OperationOutcome::Denied,
+            true,
+            true,
+            0,
+        ),
+        (
+            GrantOperation::CommandExecute,
+            OperationOutcome::Cancelled,
+            true,
+            true,
+            0,
+        ),
+        (
+            GrantOperation::CommandExecute,
+            OperationOutcome::TimedOut,
+            true,
+            true,
+            0,
+        ),
+        (
+            GrantOperation::CommandExecute,
+            OperationOutcome::Uncertain,
+            true,
+            true,
+            0,
+        ),
+    ] {
+        let mut c = build(
+            &[operation],
+            [Response::Effect(operation), Response::Answer],
+        );
+        c.tool_boundary.feedback_output = output;
+        c.tool_boundary.failure_observation = Ok(permit);
+        c.tool_boundary.result_override = Some((
+            outcome,
+            if outcome == OperationOutcome::Uncertain {
+                StateChange::Uncertain
+            } else {
+                StateChange::NotChanged
+            },
+        ));
+        let ch = approval(&mut c);
+        let result = finish(&mut c, &ch);
+        assert!(!result.outcome.state.is_success());
+        assert_eq!(result.outcome.model_call_count, 1);
+        assert_eq!(c.tool_boundary.executions.load(Ordering::SeqCst), 1);
+        assert_eq!(c.tool_boundary.failure_observation_calls, expected_hook);
+        assert!(c.model.0.observed_results.lock().unwrap().is_empty());
+        assert_terminal(&mut c, &result);
+    }
+}
+
+#[test]
+fn endpoint_failed_test_observation_cannot_renew_model_budget_or_mask_classifier_error() {
+    for error in [false, true] {
+        let operations = [GrantOperation::CommandExecute];
+        let mut r = request(&operations);
+        r.limits.max_model_calls = 1;
+        let r = crate::runtime_coordinator::seal_runtime_endpoint_run_request(r).unwrap();
+        let mut c = build_registry(
+            r,
+            [Response::Effect(operations[0]), Response::Answer],
+            true,
+            registry(&operations),
+        )
+        .unwrap();
+        c.tool_boundary.feedback_output = true;
+        c.tool_boundary.failure_observation = if error {
+            Err(RuntimePortFailure::Unavailable)
+        } else {
+            Ok(true)
+        };
+        c.tool_boundary.result_override = Some((OperationOutcome::Failed, StateChange::NotChanged));
+        let ch = approval(&mut c);
+        let response = decide(&ch, RuntimeApprovalDisposition::Allow);
+        let result = c.run_endpoint_until_boundary(Some(&response), None);
+        if error {
+            assert_eq!(
+                result,
+                Err(RuntimeLoopError::Dependency(
+                    RuntimePortFailure::Unavailable
+                ))
+            );
+            assert!(c.requires_reconciliation());
+            assert!(c.run_endpoint_until_boundary(None, None).is_err());
+        } else {
+            let EndpointStep::Complete { outcome } = result.unwrap() else {
+                panic!("exhausted")
+            };
+            assert_eq!(outcome.outcome.state, AgentStateKind::Exhausted);
+            assert_eq!(outcome.outcome.receipt_ids.len(), 1);
+            assert_eq!(c.tool_results[0].outcome, OperationOutcome::Failed);
+            assert_terminal(&mut c, &outcome);
+        }
+        assert_eq!(c.model.0.calls.load(Ordering::SeqCst), 1);
+        assert_eq!(c.tool_boundary.executions.load(Ordering::SeqCst), 1);
+    }
+}
+
+#[test]
+fn endpoint_failed_test_feedback_preserves_cancellation_and_output_exhaustion() {
+    struct AfterExecution {
+        calls: Arc<AtomicUsize>,
+        signal: CancellationSignal,
+    }
+    impl agentmage_kernel_contracts::ModelCancellationProbe for AfterExecution {
+        fn observe(
+            &self,
+        ) -> Result<Option<CancellationSignal>, agentmage_kernel_contracts::ModelRuntimeFailure>
+        {
+            Ok((self.calls.load(Ordering::SeqCst) > 0).then(|| self.signal.clone()))
+        }
+    }
+    for cancel in [false, true] {
+        let operation = GrantOperation::CommandExecute;
+        let mut c = build(
+            &[operation],
+            [Response::Effect(operation), Response::Answer],
+        );
+        c.tool_boundary.feedback_output = true;
+        c.tool_boundary.failure_observation = Ok(true);
+        c.tool_boundary.result_override = Some((OperationOutcome::Failed, StateChange::NotChanged));
+        let ch = approval(&mut c);
+        let response = decide(&ch, RuntimeApprovalDisposition::Allow);
+        let probe = AfterExecution {
+            calls: c.tool_boundary.executions.clone(),
+            signal: CancellationSignal {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                cancellation_id: CancellationId::from_raw("feedback-stop"),
+                correlation_id: c.correlation_id().clone(),
+                task_id: c.request.task.task_id.clone(),
+                reason: CancellationReason::UserRequested,
+                requested_by: BoundaryKind::Shell,
+            },
+        };
+        if !cancel {
+            let remaining = c.request.limits.max_output_bytes
+                - c.resource_snapshot().cumulative[&BudgetResource::OutputBytes];
+            c.resources
+                .consume(BudgetResource::OutputBytes, remaining - 1)
+                .unwrap();
+        }
+        let EndpointStep::Complete { outcome } = c
+            .run_endpoint_until_boundary(
+                Some(&response),
+                cancel.then_some(&probe as &dyn agentmage_kernel_contracts::ModelCancellationProbe),
+            )
+            .unwrap()
+        else {
+            panic!("stop before a fresh dispatch")
+        };
+        assert_eq!(
+            outcome.outcome.state,
+            if cancel {
+                AgentStateKind::Cancelled
+            } else {
+                AgentStateKind::Exhausted
+            }
+        );
+        assert_eq!(outcome.outcome.model_call_count, 1);
+        assert_eq!(outcome.outcome.tool_call_count, 1);
+        assert!(outcome.answer_evidence.is_none());
+        assert_eq!(c.tool_boundary.executions.load(Ordering::SeqCst), 1);
+        assert!(c.model.0.observed_results.lock().unwrap().is_empty());
+        assert_terminal(&mut c, &outcome);
+    }
+}

@@ -18,7 +18,9 @@ pub struct RuntimeEndpointPreparationInput<'a> {
     pub request: &'a RuntimeEndpointRunRequest,
     /// Current turn ordinal under the coordinator's exclusive mutable owner.
     pub turn: u32,
-    /// Successful calls actually observed by this coordinator.
+    /// Completed calls actually observed by this coordinator, including a
+    /// failed validation explicitly admitted for feedback by the trusted tool.
+    /// Inspect each corresponding result's outcome; completion is not success.
     pub completed_tool_calls: &'a [ToolCall],
     /// Actual tool results, separate from untrusted model text.
     pub tool_results: &'a [ToolResult],
