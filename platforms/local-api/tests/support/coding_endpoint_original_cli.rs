@@ -82,6 +82,29 @@ fn terminal_at(
     seconds: &str,
     path: &str,
 ) -> Value {
+    terminal_command(
+        address,
+        fixture,
+        scenario,
+        &[
+            "endpoint-original-apply",
+            seconds,
+            request["run_id"].as_str().unwrap(),
+            request["request_sha256"].as_str().unwrap(),
+            fixture.0.join("original").to_str().unwrap(),
+            fixture.0.join("owned/worktree").to_str().unwrap(),
+            "Transfer approved changes",
+            path,
+        ],
+    )
+}
+
+fn terminal_command(
+    address: SocketAddr,
+    fixture: &Fixture,
+    scenario: &str,
+    args: &[&str],
+) -> Value {
     const PTY: &str = r#"
 import errno, fcntl, json, os, pty, select, signal, subprocess, sys, termios, time
 from pathlib import Path
@@ -132,15 +155,8 @@ finally:
             env!("CARGO_BIN_EXE_agentmage-code"),
             &address.to_string(),
             fixture.0.join("auth").to_str().unwrap(),
-            "endpoint-original-apply",
-            seconds,
-            request["run_id"].as_str().unwrap(),
-            request["request_sha256"].as_str().unwrap(),
-            fixture.0.join("original").to_str().unwrap(),
-            fixture.0.join("owned/worktree").to_str().unwrap(),
-            "Transfer approved changes",
-            path,
         ])
+        .args(args)
         .output()
         .unwrap();
     assert!(
@@ -409,6 +425,143 @@ fn terminal_original_transfer_declines_release_read_and_apply_without_writes() {
 }
 
 #[test]
+fn standalone_original_commands_resolve_post_release_declines_on_both_review_services() {
+    for checked in [false, true] {
+        for decision in [2, 3] {
+            for approve in [false, true] {
+                let fixture = Fixture::new();
+                let (api, upstream) = start(&fixture, checked);
+                let request = api.request();
+                cancel(&api, &request);
+                let declined = terminal(
+                    &api,
+                    &fixture,
+                    &request,
+                    &format!("decline-{decision}"),
+                    "30",
+                    "one.py",
+                );
+                assert_ne!(declined["status"], 0, "{declined}");
+                assert_eq!(declined["prompts"].as_array().unwrap().len(), decision);
+                preserved(&fixture, b"before\n");
+                assert_eq!(api.bind("events", &request).0, 409);
+
+                let inspect = || {
+                    let output = terminal_command(api.address, &fixture, "allow", &["original"]);
+                    assert_eq!(output["status"], 0, "{output}");
+                    assert_eq!(output["prompts"], json!([]));
+                    let inspected: Value =
+                        serde_json::from_str(output["transcript"].as_str().unwrap()).unwrap();
+                    assert_eq!(
+                        inspected,
+                        api.call("GET", "/v1/code/repository/apply", CONTROL, None)
+                            .1
+                    );
+                    inspected
+                };
+                let status = inspect();
+                assert_eq!(status["pending"].is_null(), decision == 2);
+                assert!(status["latest"].is_null());
+                assert_eq!(status["available_paths"], json!(["one.py"]));
+
+                if decision == 2 {
+                    let prepared = terminal_command(
+                        api.address,
+                        &fixture,
+                        "allow",
+                        &[
+                            "original-prepare",
+                            fixture.0.join("original").to_str().unwrap(),
+                            fixture.0.join("owned/worktree").to_str().unwrap(),
+                            "Review retained changes",
+                            "one.py",
+                        ],
+                    );
+                    assert_eq!(prepared["status"], 0, "{prepared}");
+                    let prompts = prepared["prompts"].as_array().unwrap();
+                    assert_eq!(prompts.len(), 1);
+                    assert_eq!(
+                        prompts[0],
+                        format!(
+                            "read {} {}",
+                            status["repository_root_sha256"].as_str().unwrap(),
+                            status["worktree_root_sha256"].as_str().unwrap()
+                        )
+                    );
+                    preserved(&fixture, b"before\n");
+                }
+                let preview = inspect()["pending"].clone();
+                assert_eq!(preview["operation"], "apply-to-original");
+                assert_eq!(preview["tested"], false);
+                let original = fixture.0.join("original");
+                let args = if approve {
+                    vec!["original-apply", original.to_str().unwrap()]
+                } else {
+                    vec!["original-deny"]
+                };
+                let output = terminal_command(api.address, &fixture, "allow", &args);
+                assert_eq!(output["status"], 0, "{output}");
+                if approve {
+                    assert_eq!(
+                        output["prompts"],
+                        json!([format!(
+                            "apply-original {}",
+                            preview["preview_sha256"].as_str().unwrap()
+                        )])
+                    );
+                    assert!(
+                        output["transcript"]
+                            .as_str()
+                            .unwrap()
+                            .contains("write_preview")
+                    );
+                } else {
+                    assert_eq!(output["prompts"], json!([]));
+                }
+                preserved(&fixture, if approve { b"first\n" } else { b"before\n" });
+                let status = inspect();
+                assert!(status["pending"].is_null());
+                assert_eq!(
+                    status["latest"]["outcome"],
+                    if approve { "committed" } else { "denied" }
+                );
+                assert_eq!(
+                    status["latest"]["preview_sha256"],
+                    preview["preview_sha256"]
+                );
+                assert_eq!(
+                    status["available_paths"],
+                    if approve {
+                        json!([])
+                    } else {
+                        json!(["one.py"])
+                    }
+                );
+
+                // The consumed decision cannot be applied a second time, and
+                // standalone recovery never restores the cancelled run.
+                let repeated = terminal_command(
+                    api.address,
+                    &fixture,
+                    "allow",
+                    &["original-apply", original.to_str().unwrap()],
+                );
+                assert_ne!(repeated["status"], 0, "{repeated}");
+                assert_eq!(repeated["prompts"], json!([]));
+                assert_eq!(inspect(), status);
+                assert_eq!(api.bind("events", &request).0, 409);
+                assert_eq!(api.bind("release", &request).0, 409);
+                preserved(&fixture, if approve { b"first\n" } else { b"before\n" });
+                drop(api);
+                assert!(
+                    matches!(upstream.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock)
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn terminal_original_transfer_interrupt_deadline_and_original_drift_preserve_human_bytes() {
     for scenario in ["interrupt-apply", "timeout-read", "drift-apply"] {
         let fixture = Fixture::new();
@@ -482,6 +635,61 @@ fn terminal_original_transfer_refuses_unstarted_foreign_or_invalid_input_before_
         let output = terminal(&api, &fixture, &request, "allow", seconds, path);
         assert_ne!(output["status"], 0, "{output}");
         assert_eq!(output["prompts"], json!([]));
+    }
+    std::os::unix::fs::symlink(fixture.0.join("original"), fixture.0.join("original-alias"))
+        .unwrap();
+    std::os::unix::fs::symlink(&fixture.0, fixture.0.join("root-alias")).unwrap();
+    std::os::unix::fs::symlink(fixture.0.join("owned"), fixture.0.join("owned-alias")).unwrap();
+    std::os::unix::fs::symlink(
+        fixture.0.join("owned/worktree"),
+        fixture.0.join("worktree-alias"),
+    )
+    .unwrap();
+    fs::write(fixture.0.join("not-a-directory"), b"sentinel").unwrap();
+    for (original, worktree) in [
+        ("original-alias", "owned/worktree"),
+        ("root-alias/original", "owned/worktree"),
+        ("original", "worktree-alias"),
+        ("original", "owned-alias/worktree"),
+        ("original/.", "owned/worktree"),
+        ("original/", "owned/worktree"),
+        ("original", "owned//worktree"),
+        ("original", "owned/worktree/"),
+        ("missing", "owned/worktree"),
+        ("original", "missing"),
+        ("not-a-directory", "owned/worktree"),
+        ("original", "not-a-directory"),
+    ] {
+        let output = terminal_command(
+            api.address,
+            &fixture,
+            "allow",
+            &[
+                "endpoint-original-apply",
+                "30",
+                request["run_id"].as_str().unwrap(),
+                request["request_sha256"].as_str().unwrap(),
+                fixture.0.join(original).to_str().unwrap(),
+                fixture.0.join(worktree).to_str().unwrap(),
+                "Transfer approved changes",
+                "one.py",
+            ],
+        );
+        assert_ne!(output["status"], 0, "{original} {worktree}: {output}");
+        assert_eq!(output["prompts"], json!([]));
+        assert!(
+            output["transcript"]
+                .as_str()
+                .unwrap()
+                .starts_with("Coding request failed")
+        );
+        assert_eq!(api.bind("events", &request).0, 200);
+        assert_eq!(
+            api.call("GET", "/v1/code/repository/apply", CONTROL, None)
+                .0,
+            428
+        );
+        preserved(&fixture, b"before\n");
     }
     let output = Command::new(env!("CARGO_BIN_EXE_agentmage-code"))
         .args([

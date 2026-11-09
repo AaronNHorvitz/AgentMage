@@ -156,6 +156,12 @@ the canonical chain, not authenticity or referenced payload contents. A running
 or faulted prefix refuses before release. Use the separate inspection commands
 for faulted runs; this command cannot restore execution.
 
+Before collecting the record or offering release, the command checks only root
+directory metadata. Missing roots, non-directories, symlinked roots or ancestors,
+and non-canonical spellings refuse while the run remains held. These checks do
+not establish source eligibility or protect against later filesystem changes;
+the existing held-root checks still apply before reads and writes.
+
 Three independent terminal decisions follow: release the displayed run, read
 the displayed paths from both held roots, and apply the complete original diff.
 Release drops the old model ports and event record. Ordinary services discard
@@ -174,8 +180,22 @@ the service cannot reconstruct ownership from the exported record.
 
 Declining release keeps the old record. Declining reads or the diff after
 release leaves the original owner available for separate inspection; an inert
-preview may remain pending. Use the ordinary original-apply commands to inspect
-and resolve it. Interrupting a confirmation or exhausting the allowance sends
+preview may remain pending. Inspect and resolve it with the ordinary commands:
+
+```sh
+agentmage-code <loopback-ip:port> <private-auth-directory> original
+```
+
+After a declined read, use `original-prepare` from the terminal workflow above
+for fresh two-root read consent, then inspect the resulting preview. After a
+declined apply, the existing preview can be inspected and resolved directly.
+Use `original-apply <absolute-original-root>` for fresh exact diff approval, or
+`original-deny` to consume the preview without writing. Denial retains eligible
+changes for a later separately prepared preview. Each decision is consumed once;
+none of these commands restores the released run, its events or model ports.
+A lost reply still requires disk and state inspection before any new action.
+
+Interrupting a confirmation or exhausting the allowance sends
 no later approval. A previously dispatched native write remains non-interruptible.
 Applying recorded lineage after cancellation or failure establishes no test pass
 or task success. Worktree bytes, unrelated original files and the index remain

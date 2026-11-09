@@ -2,6 +2,19 @@
 
 ## Active queue: local agent mission
 
+The [original-transfer recovery repair](docs/evidence/t306-original-recovery-2026-11-09.md)
+rejects missing, non-directory, symlinked and non-canonical root selections
+before collecting a run record or offering release. Standalone original
+inspection, preparation, apply and denial are exercised after post-release
+read/apply declines against both review services. This addresses the preceding
+terminal-transfer review's low L1/L2 findings, pending independent core review.
+T-303/T-306 remain open; no row or sub-row is added or closed. Native/model
+measurement, approved Git and durable recovery remain open. Verification is
+recorded in the linked evidence; no coding score is inferred from these tests.
+The affected API gate passes all 241 tests across eleven unfiltered targets,
+with no failures or ignores. Formatting and Clippy pass; both Rust hashes
+remain unchanged across validation. Earlier host/Linux failures are not cleared.
+
 The [release-extraction response repair](docs/evidence/t306-release-response-2026-11-09.md)
 returns an explicit HTTP refusal when terminal release succeeds but original
 repository extraction fails. The terminal displays the failure and stops;

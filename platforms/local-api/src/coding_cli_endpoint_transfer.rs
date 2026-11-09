@@ -9,8 +9,9 @@ pub(super) fn run(client: &Client, args: &[String]) -> Result<()> {
         return Err(());
     };
     endpoint::binding(run, hash)?;
-    // Reject malformed selections before offering irreversible release. These
-    // are shape checks only; the original owner still decides all eligibility.
+    // Inspect directory metadata only before offering irreversible release.
+    // Refuse aliases without resolving them into an accepted selection. The
+    // original owner still checks held identities and all source eligibility.
     for root in [original, worktree] {
         let root = Path::new(root);
         if !root.is_absolute()
@@ -22,6 +23,8 @@ pub(super) fn run(client: &Client, args: &[String]) -> Result<()> {
                     std::path::Component::RootDir | std::path::Component::Normal(_)
                 )
             })
+            || !std::fs::symlink_metadata(root).map_err(|_| ())?.is_dir()
+            || std::fs::canonicalize(root).map_err(|_| ())?.as_os_str() != root.as_os_str()
         {
             return Err(());
         }
