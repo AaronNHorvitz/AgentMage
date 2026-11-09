@@ -1249,3 +1249,11 @@ startup, durable recovery, approved Git and T-303/T-306 measurements remain open
 Socket tests use synthetic endpoint answers and creation provenance, including
 native writes through separate protected HTTP approvals. They establish no
 actual local-model result, native Git creation, test-worker success or score.
+
+The strict-preparation review records a low workspace-binding limitation:
+preview preparation checks the startup's task and exclusions but does not
+compare its workspace identity with the native owner before reads/replacement.
+Trusted callers must supply the correct original owner. The original native
+`bind` still refuses a foreign workspace before write authority. The generation
+helper retains this precondition; adding the earlier content-free workspace
+check remains same-row backlog.

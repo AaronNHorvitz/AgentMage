@@ -15,6 +15,15 @@ exactly 53 inherited host failures and none new, 11 existing ignored across
 new methods and the strengthened HTTP fixture pass. Independent core review
 is required. T-303/T-306 remain open; no row or sub-row is added or closed.
 
+The [strict-preparation independent core review](docs/reviews/3e2f9b9a95e7-local-coding-strict-preparation.txt)
+has **Verdict: PASS** for exact commit
+`3e2f9b9a95e7c52af7bcfc5365ce4159b9343aa3`, with no high/medium finding.
+Low L1 (workspace identity check before preview reads/replacement) remains
+same-row backlog: trusted callers supply the original owner; native binding
+still refuses a foreign workspace before write authority. The generation
+helper retains this precondition. Schema-ID constants and earlier lows remain
+backlog. Neither parent closes.
+
 The [strict prepared-edit bridge](docs/evidence/t303-strict-prepared-edits-2026-11-08.md)
 connects original bounded proposal context and strict model edit checking to
 fresh reads from the original live worktree owner and its native complete diff.

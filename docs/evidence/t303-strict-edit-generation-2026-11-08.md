@@ -88,3 +88,22 @@ Both owned temporary namespaces are retained for inspection. Each has
 other worker, resource ceiling or unrelated temporary directory was changed.
 Final documentation, whitespace and public-hygiene checks are recorded with the
 commit inputs in the private verification bundle.
+
+## Predecessor review received before handoff
+
+The independent core review for exact predecessor
+`3e2f9b9a95e7c52af7bcfc5365ce4159b9343aa3` arrived after the generation
+implementation commit. It has **Verdict: PASS**, no high/medium finding and
+leaves both parent rows open. Its report is retained byte-identically. Low L1
+adds the content-free workspace check before preview reads/replacement to
+same-row backlog. Until that check is added, the trusted caller must supply
+the correct original owner; the original native binding still refuses a
+foreign workspace before write authority. The generation helper retains this
+precondition. Schema-ID constants and earlier lows remain backlog.
+
+Retaining this verdict and clarification changes documentation only, on top
+of the generation commit. The six Rust hashes remain identical to the final
+full run; its frozen nine-path plan is preserved. A separate post-gate plan
+adds only the retained report path and its review-text lint. Documentation,
+review-text, whitespace and public-hygiene checks are repeated before the
+handoff commit. No source gate or review result is promoted to row closure.

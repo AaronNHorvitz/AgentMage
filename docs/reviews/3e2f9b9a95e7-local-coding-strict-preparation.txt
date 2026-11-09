@@ -1,0 +1,126 @@
+Commit: 3e2f9b9a95e7c52af7bcfc5365ce4159b9343aa3
+Scope: local-coding-strict-preparation
+
+# Independent core review: strict prepared edits (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only on the repository.
+Pinned checkout: /lane/review-checkout (`git rev-parse HEAD` = 3e2f9b9a95e7c52af7bcfc5365ce4159b9343aa3).
+Predecessor: d2f6f2d667bdbcfc576ba21791ae79e0b8a28dd4. The diff covers exactly ten files: six Rust files, TASKS.md,
+the guide, the evidence record and the retained predecessor review. 822 lines added, 23 removed.
+
+## Methods
+
+1. I read the builder's README.md, run.py, audit.py and light.py before running anything. run.py prepends
+   only the installed Node tooling directory, which contains `node` and its LICENSE. It creates an owned
+   /tmp/se-* namespace and removes it only if empty. audit.py compares data only: it asserts a gate exit of 1,
+   the six-file source freeze, exact equality with the 53 inherited host failure identities, zero filtered or
+   measured, that the five named methods pass, unchanged TASKS ledger rows, a privacy grep and a
+   byte-identical retained review.
+2. Line by line, I read the production diff (`coding_proposal.rs` `task()` accessor and
+   `CodingEndpointPreparedStartup::prepare_edit_proposal`). I also read the code it relies on:
+   `check_coding_proposal`, `prepare_coding_proposal`, `LinuxCodingRepository::select_created_sources` /
+   `prepare_edit`, the native `bind` mutable/protected check, and startup's exclusion filtering of
+   `mutable_files`.
+3. I read the four new unit methods, the strengthened two-service HTTP fixture, the Drop guard and the
+   disconnect fixture change (including its existing 3 s read timeout).
+4. I ran every requested command from the pinned checkout. I also wrote my own escape probes as an extra
+   test in a scratch copy produced by `git archive` (/lane/state/tmp/review-probe-3e2f9b9a95e7, outside the
+   repository), built with a target subdirectory /lane/state/review-target/probe-3e2f9b9a95e7. A separate
+   target is needed because `git archive` mtimes would otherwise make the shared target treat probe
+   artifacts as fresh for the pinned checkout.
+
+## Commands and results
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c .../review-inputs.sha256` | 0 | All 32 manifest entries match |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-strict-preparation-3e2f9b9a95e7` | 1 (expected) | `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`; 738.34 s including reservations. Light commands 0; fmt 0 (532.55 s incl. wait); clippy 0 (34.46 s); tests 101 (169.15 s); `FAST GATE: FAIL` |
+| `python3 -B .../audit.py <out>` | 0 | 27 targets, 925 passed / 53 failed / 11 ignored / 0 measured / 0 filtered. 53 failures = exact inherited host T-301 set; 0 new, 0 missing. `DATA_AUDIT_PASS__FULL_GATE_REMAINS_FAIL` (data only) |
+| `python3 -B .../light.py` | 0 | diff check, untracked lint, review lint, markdownlint all 0 |
+| `cmp validation-retry/source-freeze.json <out>/source-freeze.json` | 0 | Identical six-file Rust freeze |
+| `git diff --check d2f6f2d6... --` | 0 | Clean |
+| `git status --short` | 0 | Empty |
+| `cmp docs/reviews/d2f6f2d667bd-local-coding-prepared-http.txt /lane/reviews/d2f6f2d667bd-local-coding-prepared-http.md` | 0 | Byte-identical |
+| Reviewer probe: `cargo test -p agentmage-host --lib review_probe -- --nocapture` (scratch copy, via build-slot) | 0 | See probe results below |
+
+All four new methods and the strengthened native HTTP method
+(`endpoint_prepared_service_native_edit_returns_original_lineage_and_needs_new_approval`) report `ok` in my log.
+The previously flaky `runtime_budget::pending_selection_preparation_and_start_reads_stop_on_deadline_and_every_signal`
+also passes.
+
+The owned gate namespace /tmp/se-hnxm9573 holds 22 entries: 4 inherited host fixture files totalling 36 bytes
+(generic-preview and generic-denials). This matches the builder's inventory in shape. It is non-empty, so I left it in place.
+My probe namespace /tmp/se-probe-so7n was empty and I removed it. I touched no other /tmp entries.
+
+## Reviewer escape probes (scratch copy, not committed)
+
+- P1, foreign-workspace startup. A startup sealed for a different `workspace_id` than the owner's
+  created worktree **succeeds** and **replaces** the owner's pending preview (`ok=true replaced=true`). See L1.
+- P2, existing excluded file. Context contains `private/secret.py` with exact content, the edit
+  targets only `one.py`, and `private` is excluded. Result: `Err(Scope)` before any read.
+- P3, injected path spellings (`./one.py`, `/one.py`, `one.py/../two.py`, `ONE.py`, `one.py\0`, `two.py/`):
+  every one is refused with `Proposal(Edit)`. Edit paths must equal a freshly read source path exactly.
+- P4, trailing-slash protected spelling `private/`: startup refuses it, so `"{protected}/"` prefix matching
+  cannot be bypassed by spelling.
+- P5, worktree directory `private` replaced by a symlink to an outside directory: `Err(Native)`. The outside file
+  is unchanged.
+
+The commit's own tests also cover a symlinked file, stale unedited files, duplicate/positional/fenced/unknown-key
+answers, overlapping and duplicate edits, `../` paths, a protected file, a protected directory over a mutable file,
+an unlisted path, a wrong-kind startup and a foreign task.
+
+## Assessment
+
+- **Confinement.** Every changed path is a path from a fresh native read of the held worktree. It must be
+  literally in the exclusion-filtered `mutable_files` and outside every protected file or directory. This is the
+  same predicate the native `bind` applies again later. Exclusions are checked against the metadata of every
+  outline path before `select_created_sources`/`read`. Every source yields an outline in
+  `prepare_coding_proposal`, so no context file is opened without that check. No write, grant, model request,
+  command or wire tool is added. The native writer still owns preimage checks, the exact approval and the
+  atomic write.
+- **Refusal semantics.** `PendingEdit` is replaced only at the end of a successful native `prepare_edit`. Every
+  earlier refusal leaves it intact, as tested.
+- **Disconnect fixture change.** It accepts `Ok(0)` or `ConnectionReset`. Data bytes, the existing 3 s
+  `TimedOut`/`WouldBlock` and every other error still panic. Closing a socket with unread inbound data causes a
+  TCP RST on Linux, so this is a correct fixture fix, not a weakened assertion. Production code is unchanged.
+- **Drop guard.** It suppresses the cleanup unwrap only while already panicking. Normal cleanup errors still fail.
+- **Honest labelling.** The evidence, guide and TASKS consistently state that creation, strict answers,
+  endpoint, guidance, control and verifier are synthetic. They say the endpoint does not generate the edit
+  answer, that completion stays failed/unverified, and that no model, native Git, command factory, score or
+  general loop is claimed. The numbers match my reproduction (925/53/11/0/0, 27 targets).
+- **Evaluation integrity.** No hidden, held-out, task, scorer or threshold file is in the diff.
+- **Delivery.** No row or sub-row is added or closed (the audit compares the ledger rows), and the parents
+  stay OPEN.
+- **Public repository.** The added lines contain no private path, username, hostname, credential or other
+  product names. "secret" appears only as synthetic fixture content.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low): `prepare_edit_proposal` does not bind the startup to the owner's workspace.**
+  Location: `shells/host/src/coding_endpoint_prepared_startup.rs:210-282`.
+  The method checks kind and task but never compares `self.request.workspace_id` with the repository's created
+  `held.workspace_id()`. So a startup sealed for another workspace, carrying that workspace's exclusion policy,
+  re-reads files from this owner and replaces its pending preview (probe P1: `ok=true replaced=true`).
+  The native `bind` still refuses the workspace mismatch (`platforms/linux/src/coding_repository_endpoint_edit.rs:142`, the
+  `request.workspace_id != *created.held.workspace_id()` check). The caller is trusted, holds `&mut owner` and
+  already holds the context bytes. So there is no write, grant or disclosure bypass, only a discarded preview
+  and reads under the wrong narrowing policy.
+  The commit's `narrowed` exclusion test also relies on this mismatch: the startup it uses could never bind.
+  Fix: expose a content-free workspace check on `LinuxCodingRepository` (or check during `select_created_sources`)
+  and refuse with `Scope` before any read. Then build the `narrowed` test's exclusion ledger for the owner's workspace.
+- L3 from the predecessor review (schema-ID constants) and the earlier lows remain same-row backlog, as the
+  builder records.
+
+## Per-row result
+
+- T-303: this increment PASSES review. The row remains OPEN; nothing closes.
+- T-306: this increment PASSES review. The row remains OPEN; nothing closes.
+
+The full ordinary gate remains FAIL (exit 1) only because of the 53 inherited host T-301 failures, exactly as
+the builder recorded. I did not rerun the Linux unit package or its 19 inherited failures, because they are out
+of the selection. No long or full-workspace acceptance run was performed or claimed. No GPU, model or download
+was used.
+
+Verdict: PASS
