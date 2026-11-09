@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 //! One strict edit generation through the original controlled endpoint phase.
 //!
-//! This is a trusted composition primitive, not a coordinator or retry loop.
-//! The caller owns prior source/disclosure consent and cumulative accounting.
+//! Trusted composition, with either standalone phase execution or dispatch by
+//! the existing coordinator. The caller owns prior source/disclosure consent.
 
 use agentmage_capability_repository_map::coding_proposal::{
     CODING_PROPOSAL_INSTRUCTION, CodingProposalContext,
 };
 use agentmage_kernel_contracts::{
     EndpointModelFinish, EndpointModelRequest, EndpointModelResult, ModelOperationControl,
+    SchemaReference,
 };
 use agentmage_kernel_engine::runtime_loop::{
-    RuntimePortFailure,
+    RuntimeEndpointPreparationInput, RuntimePortFailure, RuntimePreparedEndpointTurn,
     endpoint::{
         RuntimeEndpointContextPacket, RuntimeEndpointMessage, RuntimeEndpointMessageRole,
         RuntimeEndpointModelPhase, RuntimeEndpointModelPort, RuntimeEndpointPhaseFailure,
@@ -25,7 +26,7 @@ use agentmage_platform_linux_inference::{
 };
 
 use crate::{
-    coding_endpoint::{CodingEndpointConnection, control_failure},
+    coding_endpoint::{CodingEndpointConnection, control_failure, transport_failure},
     coding_endpoint_prepared_startup::{
         CodingEndpointEditProposalError, CodingEndpointPreparedStartup,
     },
@@ -61,10 +62,11 @@ impl CodingEndpointPreparedStartup {
     /// consent. Checks task, exclusions, model and sealed per-phase ceilings
     /// before any socket is opened. Does not read or prepare a native edit.
     ///
-    /// The existing run owner MUST reserve and account for this extra model
-    /// phase cumulatively before execution. This helper does not integrate it
-    /// into an admitted coordinator or renew any budget. Inspect `binding()`
-    /// before dispatch and retain `usage()` even when parsing later refuses.
+    /// For coordinator-owned execution, consume this request with
+    /// `into_coordinator_turn` from the original turn port. For standalone
+    /// `execute`, the caller MUST reserve and account cumulatively: inspect
+    /// `binding()` before dispatch and retain `usage()` on refusal. Preparation
+    /// alone neither admits a coordinator nor renews a budget.
     pub fn prepare_edit_generation<'config>(
         &self,
         connection: CodingEndpointConnection<'config>,
@@ -142,6 +144,25 @@ struct Dispatch<'config> {
     prepared: PreparedEndpointChat<'config>,
     cancellation: ChatCancellation,
 }
+
+// Only adapts the transport's closed error vocabulary. The coordinator frames
+// and executes the original request itself, with its own control and ledger.
+struct CoordinatorDispatch<'config>(Dispatch<'config>);
+impl RuntimeEndpointModelPort for CoordinatorDispatch<'_> {
+    type Error = RuntimePortFailure;
+
+    fn request(&self) -> &EndpointModelRequest {
+        self.0.request()
+    }
+
+    fn dispatch(
+        self,
+        control: &dyn ModelOperationControl,
+        text: &mut dyn FnMut(&str),
+    ) -> Result<EndpointModelResult, Self::Error> {
+        self.0.dispatch(control, text).map_err(transport_failure)
+    }
+}
 impl RuntimeEndpointModelPort for Dispatch<'_> {
     type Error = TransportError;
     fn request(&self) -> &EndpointModelRequest {
@@ -162,6 +183,51 @@ impl CodingEndpointEditGeneration<'_> {
     #[must_use]
     pub fn binding(&self) -> &EndpointModelRequest {
         self.prepared.binding()
+    }
+
+    /// Hand the ORIGINAL frozen request to an existing coordinator's turn port.
+    /// Call from `RuntimeEndpointTurnPort::prepare` with its original input and
+    /// borrowed control. The exact sealed startup must match. This consumes the
+    /// unexecuted standalone phase; it does not dispatch or import phase usage.
+    /// The coordinator alone frames, reserves and charges this request against
+    /// its cumulative model/input/output/time ledger and continuous control.
+    ///
+    /// The returned text remains an untrusted proposal. This does not interpret
+    /// strict edits, prepare a native preview, grant authority or certify a
+    /// completion. The trusted caller selects the completion schema and original
+    /// independent verifier. General edit/test/retry scheduling remains separate.
+    pub fn into_coordinator_turn<'a>(
+        self,
+        input: RuntimeEndpointPreparationInput<'_>,
+        control: &dyn ModelOperationControl,
+        completion_schema: SchemaReference,
+    ) -> Result<RuntimePreparedEndpointTurn<'a>, CodingEndpointGenerationError>
+    where
+        Self: 'a,
+    {
+        use CodingEndpointGenerationError as Error;
+        agentmage_kernel_engine::runtime_coordinator::verify_runtime_endpoint_run_request(
+            input.request,
+        )
+        .map_err(|_| Error::Scope)?;
+        if self.startup_sha256 != input.request.request_sha256
+            || input.turn == 0
+            || input.turn > input.request.limits.max_turns
+        {
+            return Err(Error::Scope);
+        }
+        control
+            .remaining_ms()
+            .map_err(control_failure)
+            .map_err(Error::Preparation)?;
+        Ok(RuntimePreparedEndpointTurn::new(
+            self.phase.context().clone(),
+            CoordinatorDispatch(Dispatch {
+                prepared: self.prepared,
+                cancellation: ChatCancellation::default(),
+            }),
+            completion_schema,
+        ))
     }
 
     /// Dispatch once under the original borrowed run control. Stream fragments

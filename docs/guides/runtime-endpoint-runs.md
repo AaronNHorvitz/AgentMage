@@ -1256,9 +1256,9 @@ kernel grants, atomic writes and terminal owner return remain unchanged.
 
 This is a library composition primitive. It does not add an HTTP route or
 activate a model during ordinary service admission. Cumulative budgeting across
-generation and coordinator work remains the trusted caller's responsibility;
-passing the same sealed request to a new service does not account for an earlier
-phase. General model-driven edit/test/retry scheduling, executable controlled
+standalone generation and coordinator work remains the trusted caller's
+responsibility; passing the same sealed request to a new service does not account
+for an earlier phase. General model-driven edit/test/retry scheduling, executable controlled
 startup, durable recovery, approved Git and T-303/T-306 measurements remain open.
 Socket tests use synthetic endpoint answers and creation provenance, including
 native writes through separate protected HTTP approvals. They establish no
@@ -1281,3 +1281,35 @@ original native reader still revalidates held roots and selected paths, and
 `bind` still checks the original complete request and creation receipt. Callers
 must still supply the correct live owner and prior source/disclosure consent.
 Generation without a repository owner cannot establish workspace ownership.
+
+## Strict requests inside the original coordinator
+
+A trusted `RuntimeEndpointTurnPort::prepare` implementation can consume the
+unexecuted generation with `into_coordinator_turn(input, control,
+completion_schema)`. Pass the original coordinator preparation input and
+borrowed control. Conversion verifies the complete sealed request and exact
+startup digest, a nonzero turn within its ceiling, and current control. It
+retains the original frozen body, context, credential owner and narrowed text
+ceiling. It opens no socket and consumes no model attempt.
+
+The returned `RuntimePreparedEndpointTurn` is dispatched by the existing
+coordinator. Its original cumulative ledger reserves and charges the model
+attempt, frozen body, completed output and dispatch time alongside prior turns.
+Its original continuous control bounds the transport and callbacks. A new
+per-phase ledger is only the existing kernel's independent static check; no
+standalone phase usage is imported, and no run budget is renewed. Failed or
+incomplete dispatches keep their admitted attempt and input observations;
+missing completed output/time stays unknown. The existing coordinator preserves
+those distinctions in its events and accounting.
+
+Conversion does not interpret the answer as an edit, prepare a native preview
+or supply tool authority. Ordinary registry validation, exact effect approvals
+and the original independent verifier still apply. The trusted turn port owns
+source freshness and disclosure consent. This library path is available to
+trusted composition; the current retained service factory does not select it
+automatically. General scheduling from generated text through native previews,
+test failures and retries remains open. Synthetic socket tests cover two turns
+in one coordinator, cumulative exhaustion and cancellation, stale approval refusal
+and refused unverified edit text. A fixture also composes an actual native edit
+under its exact protected approval before a strict turn. Creation provenance
+and endpoint replies remain synthetic; no real-model coding score is established.

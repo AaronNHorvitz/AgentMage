@@ -1,0 +1,158 @@
+Commit: c425b77ec89ec989b807ce42fc75fe70c1965bf2
+Scope: local-coding-generation-ceiling
+
+# Independent core review: strict-generation text ceiling (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (separate session, read-only repository access), 2026-11-09.
+Tier: core. Base: immutable 37207e27bb0dfd5b68cf18f80f9e50570742453d. Implementation
+a5923bebfa9fa1b60ecc2cac4ff2613d2c811803; the tip c425b77e changes documentation only (verified with
+`git diff --stat a5923beb c425b77e`: TASKS.md, evidence, guide and the retained review, with no Rust).
+Both parent rows stay OPEN. This review closes nothing.
+
+## Methods
+
+1. Confirmed the commit: `git rev-parse HEAD` in /lane/review-checkout gives
+   c425b77ec89ec989b807ce42fc75fe70c1965bf2. The base resolves to 37207e27bb0d...; the tree is clean.
+   `git diff --stat base HEAD` shows exactly the eight paths named in the request.
+2. Read README.md, run.py, check.py and light.py under /lane/state/tmp/t303-text-ceiling before running
+   anything. run.py does three things: it plans the gate, hash-freezes the four Rust inputs, and runs
+   `scripts/local_agent_fast_gate.py --base 37207e27 --timeout 600` with two jobs, four test threads and
+   TMPDIR set to a fresh `tc-*` namespace. check.py compares data only: summaries, the 53 inherited
+   identities, the nine named methods, unchanged task rows, hygiene patterns and `#[ignore]` absence.
+   light.py runs the gate's non-Cargo commands. None of the three modifies the repository.
+3. Read the complete diff of the four Rust files. I also read the code they depend on, which this
+   change does not touch:
+   - `kernel/contracts/src/endpoint_model.rs` (`from_prepared_body`, limits)
+   - `kernel/engine/src/runtime_loop/endpoint.rs` (`new`, `for_run`, `execute`)
+   - `kernel/engine/src/runtime_hardening.rs` (`for_endpoint_model`)
+   - `platforms/linux-inference/src/local_chat.rs` (the codec's `MAX_TEXT_BYTES` of 1 MiB)
+   - the `prepare_chat` / `prepare_chat_shared` / `execute_inner` / `chat_encoded` paths
+4. Ran the requested command set (results below). Ran one mutation of my own in a separate archive
+   copy, outside the repository.
+5. Read the TASKS.md, guide and evidence diffs against the code and the run data. Checked the retained
+   predecessor review byte for byte, and checked public hygiene.
+
+## Exact commands and results (all run from /lane/review-checkout)
+
+| Command | Exit | Result |
+|---|---|---|
+| `sha256sum --quiet -c /lane/state/tmp/t303-text-ceiling/review-inputs.sha256` | 0 | all 28 inputs match; the manifest's own SHA-256 is f9331819...c531 as stated |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-generation-ceiling-c425b77ec89e` | 1 | expected; `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`, `FAST GATE: FAIL`; per-command exits 0,0,0,0 (fmt 1.25 s), 0 (clippy 5.01 s), 0 (33.67 s build step), 101 (tests 157.26 s); 197.56 s total with reservations |
+| `python3 -B .../check.py /lane/state/tmp/review-generation-ceiling-c425b77ec89e` | 0 | 29 targets; totals 1070 passed / 53 failed / 19 ignored / 0 measured / 0 filtered; the 53 failure identities equal the T-301 host baseline exactly, with none new or missing; all 9 named methods `ok`; raw log sha256 4378002115b9...c147 |
+| `python3 -B .../light.py` | 0 | diff-check, untracked lint, review lint and markdownlint (3 files, 0 issues) all 0 |
+| `cmp .../validation/source-freeze.json <out>/source-freeze.json` | 0 | the four Rust hashes are identical to the builder's freeze |
+| `cmp docs/reviews/37207e27bb0d-local-coding-preview-workspace.txt /lane/reviews/37207e27bb0d-local-coding-preview-workspace.md` | 0 | byte-identical retention |
+| `git diff --check 37207e27bb0dfd5b68cf18f80f9e50570742453d --` | 0 | clean |
+| `git status --short` | 0 | empty |
+
+The count totals match the builder's evidence, which reports 1,070 / 53 / 19 across 29 targets. The
+timings differ, as expected on a shared host. These numbers are data, not a gate pass. The owned
+namespace `/tmp/tc-__b5qm7f` is retained. It holds 22 recursive entries and 11 top-level host-test
+directories, with four inherited files totalling 36 bytes. That matches the builder's 22 entries,
+4 files and 36 bytes.
+
+The newly added and changed methods all report `ok` in my log:
+- `prepared_text_ceiling_only_narrows_without_connecting_or_changing_body`
+- `narrowed_text_ceiling_counts_utf8_across_fragments_before_callbacks`
+- `endpoint_strict_generation_uses_run_text_ceiling_for_preview_and_refuses_overflow`
+- `endpoint_strict_generation_original_control_stops_dispatch_callbacks_and_preview`
+
+### Reviewer mutation (independent of builder evidence)
+
+The copy is `git archive HEAD` extracted to /lane/state/tmp/review-mut-c425b77ec89e; I left it in
+place. The mutation, M1, moves `text(&value)` in `chat_encoded` ahead of the cumulative ceiling check,
+so an overflowing fragment reaches the callback before refusal. Command:
+`CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux-inference --test local_chat_transport narrowed_text_ceiling`
+Result: exit 101. `narrowed_text_ceiling_counts_utf8_across_fragments_before_callbacks` FAILED at
+tests/local_chat_transport.rs:1941 with `left: "éa€" right: "éa"`. The test detects the
+callback-before-check regression. The log is /lane/state/tmp/review-mut-c425b77ec89e.M1.log.
+
+## Analysis
+
+- **Narrowing only, inert.** `PreparedEndpointChat::with_response_text_limit`
+  (platforms/linux-inference/src/local_chat_transport.rs:298-311) does the following:
+  - It refuses `0` and anything above the current `response_text_limit_bytes` with `Configuration`.
+  - It does no I/O. The test asserts `accept()` returns `WouldBlock` after all borrowed and shared
+    cases.
+  - It rebuilds the descriptor through `from_prepared_body`, using the same transport's
+    `model_selection(model)` (the same `endpoint.base_url()`) and cloned context and body
+    fingerprints. Only the text limit changes.
+  - It leaves `self.body` (the zeroized frozen bytes) and `self.transport` (the borrowed or shared
+    credential owner) untouched.
+  - `verified_input_tokens` is reset to `None`, but it is always `None` at preparation (contracts
+    endpoint_model.rs:91), so the descriptor is unchanged otherwise. The test compares the full
+    serialized binding with only `response_text_limit_bytes` changed, and equal-cap identity.
+- **Enforced in the transport before the callback.** `chat_encoded` (local_chat_transport.rs:612-663)
+  now takes the binding and checks the cumulative `value.len()` (UTF-8 bytes of the decoded `String`)
+  with `checked_add(...).filter(<= limit)` before `text(&value)`. Overflow returns `Limit`, which drops
+  the wire and socket, and no `EndpointModelResult` is produced. The 1 MiB codec bound and the 4 MiB
+  stream bound remain. At the default ceiling the new check equals the codec's, so ordinary chat
+  behaviour is unchanged. The codec uses `provider_usage_requested` and `requested_max_output_tokens`
+  from the binding, which equal the values previously passed by argument.
+- **Kernel admission.** `RuntimeEndpointModelPhase::for_run` (kernel/engine/src/runtime_loop/endpoint.rs:142-177)
+  refuses `response_text_limit_bytes > run.limits.max_output_bytes`. That check explains the old
+  `ResourceExhausted` refusal for runs under 1 MiB. Narrowing now happens before `for_run`
+  (shells/host/src/coding_endpoint_edit_generation.rs:121-130), so the phase admits the actual frozen
+  envelope. The phase's `port.request() != &self.request` check compares the narrowed descriptor on
+  both sides, and its independent per-fragment count (endpoint.rs:220-226) stays in force. The
+  `min(64 KiB)` happens before the `as usize` cast, so nothing truncates. A zero `max_output_bytes`
+  refuses as `Preparation(Invalid)`.
+- **Strict collector.** It now uses the frozen `answer_limit` (coding_endpoint_edit_generation.rs:183,193).
+  With a real transport the transport refuses first, so this bound remains as defence in depth.
+  `prepare_preview` still requires `!oversized && Ok(result) && finish == Stop` before any read.
+- **Tests match their claims.** The host test streams 8 KiB fragments, which exercises
+  multi-fragment accounting at the 64 KiB cap. It covers 4 KiB, 64 KiB and 2 MiB runs, borrowed and
+  shared connections, at and one byte over the cap. In each case:
+  - Overflow gives `Dependency(Limit)`, completed counts `None`, preview `Incomplete`, and the prior
+    pending preview and source bytes unchanged.
+  - An exact answer prepares a one-file native diff without writing.
+  The cancellation assertions are now exact. In the callback-cancel case,
+  `Dependency(OperationStopped(Cancelled))` comes from the transport's `control.remaining()` after the
+  callback, ahead of the phase's later check, and preview returns `Incomplete`. Cancelling after EOF
+  gives `Preparation(Cancelled)`. No production cancellation code changed.
+  The test that previously asserted `ResourceExhausted` for a 4 KiB run now asserts successful
+  preparation at 4096. Other `ResourceExhausted` coverage, such as the content-budget case, remains.
+- **Confinement and authority.** The change adds no route, tool, grant, executor, retry, recovery or
+  network destination. A malicious endpoint that streams an oversized answer is refused before any
+  over-limit text reaches the consumer, and no native read occurs. Worktree confinement, native
+  reader, approval and writer paths are untouched.
+- **Documentation honesty.** The guide (docs/guides/runtime-endpoint-runs.md:1222-1242) and the
+  evidence describe the code accurately. Fixtures are labelled synthetic, and the evidence makes no
+  real-model, task-score or native-Git claim. The guide's new statement that all created owners share
+  `local-coding-worktree-create` matches the predecessor review's L1. TASKS.md row lines are unchanged
+  (check.py), and no sub-row is added. The retained review contains `/lane/...` sandbox paths. More
+  than 140 committed docs at the base already do, and these are not personal host paths, usernames or
+  credentials. Commit authorship is the repository owner's public identity. I found no private home
+  path, hostname, credential or other-product branding in the added lines.
+- **Evaluation integrity.** The change touches no hidden or held-out task, scorer, task pin, threshold,
+  dependency, SBOM or score, and adds no `#[ignore]` or filter.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog): the host overflow test checks the delivered-text prefix loosely.** At
+  shells/host/src/coding_endpoint_edit_generation_tests.rs (the overflow branch of
+  `endpoint_strict_generation_uses_run_text_ceiling_for_preview_and_refuses_overflow`), the test asserts
+  `text.len() <= cap`. With 8 KiB fragments, a regression that dropped one earlier admitted fragment,
+  or suppressed all text, would still pass. The transport integration test does pin the exact prefix
+  (`"éa"`), so the boundary itself is covered. Fix: assert
+  `text == expected_answer[..cap - cap % 8192]`, or the exact concatenation of the whole fragments
+  that fit, for each ceiling.
+
+The older schema-ID and command-preflight lows stay in the same-row backlog as the builder states.
+
+## Per-row result
+
+- T-303 (strict-generation text-ceiling repair, non-closing): the repair is accepted at this exact
+  commit, with no high or medium finding. The row stays OPEN. Cumulative generation and coordinator
+  accounting, general edit/test/retry, the command factory, recovery, approved Git and parent
+  measurements remain open.
+- T-306: the repair is accepted for the shared generation path, non-closing. The row stays OPEN.
+- The retained predecessor review (37207e27bb0d preview-workspace) is byte-identical. Its L1
+  clarification in the guide is accurate.
+
+This verdict concerns the reviewed scope only. It is not a certification or a release approval, and
+the full scoped gate remains FAIL on 53 inherited host failures.
+
+Verdict: PASS

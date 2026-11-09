@@ -22,6 +22,9 @@ use std::{
     time::{Duration, Instant},
 };
 
+#[path = "coding_endpoint_edit_coordinator_tests.rs"]
+mod coordinator_tests;
+
 struct Control(AtomicBool);
 impl Control {
     fn new() -> Self {

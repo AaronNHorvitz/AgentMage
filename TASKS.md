@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The [text-ceiling independent core review](docs/reviews/c425b77ec89e-local-coding-generation-ceiling.txt)
+has **Verdict: PASS** for exact commit
+`c425b77ec89ec989b807ce42fc75fe70c1965bf2`, with no high/medium finding.
+Low L1 (pin the host overflow test's exact delivered prefix) remains same-row
+test backlog with earlier schema and command-preflight lows. Neither parent
+closes; the coordinator handoff below requires its own independent core review.
+
+The [strict request coordinator handoff](docs/evidence/t303-coordinator-generation-2026-11-09.md)
+allows a trusted turn port to hand the original frozen strict-edit request to
+the existing coordinator, which owns cumulative accounting and continuous
+control. Conversion grants no native preview, effect or verified completion;
+automatic service selection and general edit/test/retry remain open. Independent
+core review is required. T-303/T-306 remain open; no row or sub-row is added or
+closed. Both added methods pass. The complete scoped gate remains FAIL: 852
+passed, exactly 53 inherited host failures and none new, 11 existing ignored
+across 20 targets. Formatting and Clippy pass.
+
 The [strict-generation text envelope repair](docs/evidence/t303-generation-text-ceiling-2026-11-09.md)
 freezes the smaller of 64 KiB and the sealed run output ceiling in the original
 prepared transport. UTF-8 overflow refuses before the caller callback, with no

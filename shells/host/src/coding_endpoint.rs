@@ -242,7 +242,7 @@ pub(super) fn control_failure(stop: ModelOperationStop) -> RuntimePortFailure {
     }
 }
 
-fn transport_failure(error: TransportError) -> RuntimePortFailure {
+pub(super) fn transport_failure(error: TransportError) -> RuntimePortFailure {
     match error {
         TransportError::OperationStopped(stop) => control_failure(stop),
         TransportError::Cancelled => RuntimePortFailure::Cancelled,
