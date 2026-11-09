@@ -44,6 +44,211 @@ fn waiting(r: &RuntimeEndpointRunRequest) -> Value {
 }
 
 #[test]
+fn guided_endpoint_two_operations_keep_separate_exact_and_disclosure_decisions() {
+    let f = Fixture::new();
+    let mut r = request();
+    r.mode = RuntimeSessionMode::ControlledWrite;
+    let r = seal_runtime_endpoint_run_request(r).unwrap();
+    let first = approval(&r);
+    let mut second = first.clone();
+    second.approval_id = ApprovalId::from_raw("second-approval");
+    second.proposed_grant_id = GrantId::from_raw("second-grant");
+    second.operation_id = RuntimeOperationId::from_raw("second-operation");
+    second.tool_call_id = ToolCallId::from_raw("second-call");
+    let second = seal_runtime_approval_challenge(second).unwrap();
+    // Repetition stops the new client after two dispatched decisions. This
+    // recording peer does not claim tool execution or task completion.
+    let peer = f.peer(vec![
+        selection(&r),
+        waiting(&r),
+        json!({"state":"awaiting_approval","challenge":second}),
+        waiting(&r),
+    ]);
+    let output = f.tty(
+        peer.address,
+        &["endpoint-run", "10", "run", &r.request_sha256],
+        "approve",
+    );
+    assert_ne!(output["status"], 0, "{output}");
+    assert_eq!(output["answered"], 5, "{output}");
+    let text = output["transcript"].as_str().unwrap();
+    assert_eq!(text.matches("Type exactly allow ").count(), 2);
+    assert_eq!(text.matches("Type exactly share ").count(), 3);
+    let calls = peer.finish();
+    assert_eq!(calls.len(), 4);
+    assert!(calls[1]["body"]["response"].is_null());
+    for (call, challenge) in calls[2..].iter().zip([first, second]) {
+        assert_eq!(call["route"], "POST /v1/code/endpoint/advance HTTP/1.1");
+        assert_eq!(call["body"]["approve_model_context"], true);
+        assert_eq!(call["body"]["request_sha256"], r.request_sha256);
+        assert_eq!(
+            call["body"]["response"],
+            json!({
+                "schema_version":CONTRACT_SCHEMA_VERSION,"run_id":challenge.run_id,
+                "approval_id":challenge.approval_id,"challenge_sha256":challenge.challenge_sha256,
+                "disposition":"allow","grant_id":challenge.proposed_grant_id
+            })
+        );
+    }
+}
+
+#[test]
+fn guided_endpoint_declines_and_interruptions_send_no_later_approval() {
+    let f = Fixture::new();
+    let r = request();
+    for (mode, seconds, prompts, calls) in [
+        ("deny-at-0", "10", 1, 1),
+        ("deny-at-1", "10", 2, 2),
+        ("deny-at-2", "10", 3, 2),
+        ("workflow-stop:1:SIGINT", "10", 2, 2),
+        ("workflow-stop:2:SIGTERM", "10", 3, 2),
+        ("workflow-stop:2:SIGHUP", "10", 3, 2),
+        ("workflow-stop:2:wait", "1", 3, 2),
+    ] {
+        let peer = f.peer(vec![selection(&r), waiting(&r)]);
+        let output = f.tty(
+            peer.address,
+            &["endpoint-run", seconds, "run", &r.request_sha256],
+            mode,
+        );
+        assert_ne!(output["status"], 0, "{mode}: {output}");
+        assert_eq!(output["answered"], prompts, "{mode}: {output}");
+        let seen = peer.finish();
+        assert_eq!(seen.len(), calls, "{mode}: {seen:?}");
+        assert!(seen.iter().all(|call| call["body"]["response"].is_null()));
+    }
+}
+
+#[test]
+fn guided_endpoint_refuses_invalid_selection_input_and_uncertain_replies_without_retry() {
+    let f = Fixture::new();
+    let r = request();
+    for seconds in ["0", "3601", "-1", "invalid"] {
+        let peer = f.peer(vec![]);
+        let output = f.tty(
+            peer.address,
+            &["endpoint-run", seconds, "run", &r.request_sha256],
+            "approve",
+        );
+        assert_ne!(output["status"], 0);
+        assert_eq!(output["answered"], 0);
+        assert!(peer.finish().is_empty());
+    }
+    let peer = f.peer(vec![]);
+    assert!(
+        !f.cli(
+            peer.address,
+            &["endpoint-run", "10", "run", &r.request_sha256]
+        )
+        .status
+        .success()
+    );
+    assert!(peer.finish().is_empty());
+    let mut wrong = approval(&r);
+    wrong.task_id = TaskId::from_raw("foreign-task");
+    let wrong = seal_runtime_approval_challenge(wrong).unwrap();
+    for reply in [
+        json!({"test_peer_close":true}),
+        json!({"test_peer_status":409,"body":{"error":"code.endpoint.refused"}}),
+        json!({"state":"terminal","outcome":null}),
+        json!({"state":"awaiting_approval","challenge":wrong}),
+    ] {
+        let peer = f.peer(vec![selection(&r), reply]);
+        let output = f.tty(
+            peer.address,
+            &["endpoint-run", "10", "run", &r.request_sha256],
+            "approve",
+        );
+        assert_ne!(output["status"], 0, "{output}");
+        assert_eq!(output["answered"], 1);
+        assert_eq!(peer.finish().len(), 2);
+    }
+    for (run, hash) in [
+        ("foreign", r.request_sha256.as_str()),
+        (
+            "run",
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        ),
+    ] {
+        let peer = f.peer(vec![selection(&r)]);
+        let output = f.tty(peer.address, &["endpoint-run", "10", run, hash], "approve");
+        assert_ne!(output["status"], 0);
+        assert_eq!(output["answered"], 0);
+        assert_eq!(peer.finish().len(), 1);
+    }
+}
+
+#[test]
+fn guided_endpoint_budget_and_lost_approved_replies_never_send_another_decision() {
+    for limit in [0, 1] {
+        let f = Fixture::new();
+        let mut r = request();
+        r.limits.max_tool_calls = limit;
+        let r = seal_runtime_endpoint_run_request(r).unwrap();
+        let mut next = approval(&r);
+        next.approval_id = ApprovalId::from_raw("over-budget-approval");
+        let next = seal_runtime_approval_challenge(next).unwrap();
+        let peer = f.peer(vec![
+            selection(&r),
+            waiting(&r),
+            json!({"state":"awaiting_approval","challenge":next}),
+        ]);
+        let output = f.tty(
+            peer.address,
+            &["endpoint-run", "10", "run", &r.request_sha256],
+            "approve",
+        );
+        assert_ne!(output["status"], 0, "{output}");
+        assert_eq!(output["answered"], 1 + 2 * limit);
+        let calls = peer.finish();
+        assert_eq!(calls.len(), 2 + limit as usize);
+        assert_eq!(
+            calls
+                .iter()
+                .filter(|call| call["body"]["response"].is_object())
+                .count(),
+            limit as usize
+        );
+    }
+    for (reply, mode, seconds) in [
+        (json!({"test_peer_close":true}), "approve", "10"),
+        (
+            json!({"test_peer_status":409,"body":{"error":"code.endpoint.refused"}}),
+            "approve",
+            "10",
+        ),
+        (json!({"test_peer_stall":"header"}), "approve", "1"),
+        (
+            json!({"test_peer_stall":"body"}),
+            "workflow-socket:SIGINT",
+            "10",
+        ),
+    ] {
+        let f = Fixture::new();
+        let r = request();
+        let peer = f.peer(vec![selection(&r), waiting(&r), reply]);
+        let output = f.tty(
+            peer.address,
+            &["endpoint-run", seconds, "run", &r.request_sha256],
+            mode,
+        );
+        assert_ne!(output["status"], 0, "{output}");
+        assert_eq!(output["answered"], 3, "{output}");
+        let calls = peer.finish();
+        assert_eq!(calls.len(), 3);
+        assert!(calls[1]["body"]["response"].is_null());
+        assert_eq!(calls[2]["body"]["response"]["disposition"], "allow");
+        assert_eq!(
+            calls[2]["body"]["response"]["challenge_sha256"],
+            approval(&r).challenge_sha256
+        );
+        if mode.starts_with("workflow-socket:") || seconds == "1" {
+            assert_eq!(calls[2]["test_peer_disconnected"], true);
+        }
+    }
+}
+
+#[test]
 fn endpoint_terminal_controlled_mode_keeps_exact_tool_and_disclosure_consent() {
     let f = Fixture::new();
     let mut r = request();

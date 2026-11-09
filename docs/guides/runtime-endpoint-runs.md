@@ -1717,3 +1717,47 @@ another verifier or model call. This repairs the dependency-error path exposed
 by the adapter's refusal test. Concrete independent task checking, a positive
 native/model workflow, durable recovery, approved Git and measurements remain
 open. The development executable still refuses task certification.
+
+## Guided terminal continuation
+
+After explicitly starting the configured endpoint service and inspecting its
+request with `endpoint`, run:
+
+```sh
+agentmage-code <loopback-ip:port> <private-auth-directory> endpoint-run \
+  300 <run-id> <request-digest>
+```
+
+This command advances the existing read-only or controlled coding coordinator
+and displays each returned step. It removes the need to copy challenge JSON
+between invocations. Type the exact displayed `share <request-digest>` before
+each advance, and `allow <challenge-digest>` for each proposed tool operation.
+These are separate decisions: declining disclosure after typing `allow` sends
+no approval. Each operation displays its complete challenge and decoded
+arguments. The same native permission, preimage, sandbox and expiry checks
+apply in a coding service. The command supplies no session-wide permission.
+
+Any declined confirmation stops this client and leaves the service run held.
+To explicitly deny a pending operation and continue, use the individual
+`endpoint-deny` command, including its separate disclosure confirmation. The
+seconds allowance is 1 to 3600 and includes prompts and HTTP operations.
+Interrupting or reaching it stops the client without automatic retry,
+cancellation or release. A request already sent may still be running or may
+have produced effects. Inspect events and disk before further action; never
+repeat an uncertain approval. Use `endpoint-cancel` separately when needed.
+
+After inspecting a stopped client, the same command in a fresh terminal process
+can continue a still-held run with fresh consent. Its service counters and
+pending challenge remain intact. This is process-held continuation: stopping
+the service loses that ownership. Saved terminal records cannot restart it.
+The client refuses repeated approval identities and bounds its requests by the
+original tool budget plus one terminal observation. It never renews the
+coordinator's elapsed time, model, tool or retry budgets.
+
+A terminal envelope is labeled `service-observation-only`. Client exit zero
+means the envelope was received and scoped, including a `FAILED` or `CANCELLED`
+state; read that state to assess the run. It is no independent task-success
+claim. Records and original transfer remain explicit separate commands. Keep the
+output consumer draining; synchronous stdout writes can delay stop.
+Native/model execution, approved Git, durable execution recovery and parent
+measurement remain open. See [Decision 0180](../decisions/0180-guided-endpoint-terminal-continuation.md).

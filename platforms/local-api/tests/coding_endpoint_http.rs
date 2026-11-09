@@ -16,6 +16,8 @@ use agentmage_local_api::{
     serve_coding_endpoint_with_observation_access,
 };
 
+#[path = "support/coding_endpoint_guided.rs"]
+mod endpoint_guided;
 #[path = "support/coding_endpoint_mcp.rs"]
 mod endpoint_mcp;
 #[path = "support/coding_endpoint_prepared.rs"]

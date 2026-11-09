@@ -96,10 +96,10 @@ fn advance(
     client: &Client,
     request: &RuntimeEndpointRunRequest,
     response: Option<RuntimeApprovalResponse>,
-) -> Result<()> {
+) -> Result<Step> {
     // Each command is a fresh disclosure decision, including deny: advancing
     // after a denied tool can still send observations to the selected model.
-    confirm(
+    client.confirm(
         &json!({"request":request,"response":response,
         "warning":"Shares this run's task, consented source excerpts and current tool observations with the displayed endpoint. Advances the same retained coordinator until a tool approval or terminal observation. No automatic tool approval, retry or transcript retention. A lost reply is uncertain: inspect events before any further action."}),
         &format!("share {}", request.request_sha256),
@@ -108,8 +108,9 @@ fn advance(
     body["approve_model_context"] = json!(true);
     body["response"] = serde_json::to_value(response).map_err(|_| ())?;
     let observed = client.json("POST", "/v1/code/endpoint/advance", true, Some(body))?;
-    match serde_json::from_value::<Step>(observed.clone()).map_err(|_| ())? {
-        Step::AwaitingApproval { challenge } => check_challenge(request, &challenge)?,
+    let step = serde_json::from_value::<Step>(observed.clone()).map_err(|_| ())?;
+    match &step {
+        Step::AwaitingApproval { challenge } => check_challenge(request, challenge)?,
         Step::Terminal { outcome } => {
             let outcome = &outcome.outcome;
             if outcome.schema_version != CONTRACT_SCHEMA_VERSION
@@ -126,7 +127,57 @@ fn advance(
     }
     // A wire response cannot recreate the coordinator's accepted completion
     // claim. Preserve the envelope; never present it as independent verification.
-    show(&json!({"step":observed,"verification":"service-observation-only"}))
+    show(&json!({"step":observed,"verification":"service-observation-only"}))?;
+    Ok(step)
+}
+
+/// Schedule only fresh explicit decisions against the same process-held owner.
+/// Stopping leaves the run held; no retry, cancellation or release is implicit.
+fn guided(client: &Client, seconds: &str, run: &str, hash: &str) -> Result<()> {
+    binding(run, hash)?;
+    workflow::bounded(client, seconds.parse().map_err(|_| ())?, |client| {
+        let request = checked_selection(client, run, hash, true)?;
+        let mut response = None;
+        let mut seen = BTreeSet::new();
+        // A conforming owner can request at most its admitted tool budget, then
+        // terminate. Bound even an authenticated but inconsistent HTTP peer.
+        for _ in 0..=request.limits.max_tool_calls {
+            client.check_running()?;
+            match advance(client, &request, response.take())? {
+                Step::Terminal { .. } => return Ok(()),
+                Step::AwaitingApproval { challenge } => {
+                    if !seen.insert(challenge.approval_id.clone())
+                        || seen.len() as u64 > u64::from(request.limits.max_tool_calls)
+                    {
+                        return Err(());
+                    }
+                    let arguments: Value = agentmage_host::runtime_transport::decode_exact(
+                        &challenge.presentation.arguments.bytes,
+                    )
+                    .ok_or(())?;
+                    if !arguments.is_object() {
+                        return Err(());
+                    }
+                    std::io::stdout().flush().map_err(|_| ())?;
+                    client.confirm(
+                        &json!({"request":request,"challenge":challenge,"arguments_json":arguments,
+                        "warning":"Approves only this exact displayed operation. Separate model disclosure consent follows; declining it sends no approval. Any declined confirmation stops this client and leaves the service run held. Inspect events after interruption or a lost reply; never resend automatically."}),
+                        &format!("allow {}", challenge.challenge_sha256),
+                    )?;
+                    response = Some(RuntimeApprovalResponse {
+                        schema_version: CONTRACT_SCHEMA_VERSION,
+                        run_id: challenge.run_id,
+                        approval_id: challenge.approval_id,
+                        challenge_sha256: challenge.challenge_sha256,
+                        disposition: RuntimeApprovalDisposition::Allow,
+                        grant_id: Some(challenge.proposed_grant_id),
+                        selection: None,
+                    });
+                }
+            }
+        }
+        Err(())
+    })
 }
 
 /// Fetches and checks one canonical page. This proves individual event hashes
@@ -171,6 +222,7 @@ pub(super) fn event_page(
 
 pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result<()> {
     match (command, args) {
+        ("endpoint-run", [seconds, run, hash]) => guided(client, seconds, run, hash),
         ("endpoint-original-apply", args) => super::endpoint_transfer::run(client, args, None),
         ("endpoint-original-apply-saved", [directory, args @ ..]) => {
             super::endpoint_transfer::run(client, args, Some(Path::new(directory)))
@@ -183,7 +235,7 @@ pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result
                 return Err(());
             }
             let request = checked_selection(client, run, hash, true)?;
-            advance(client, &request, None)
+            advance(client, &request, None).map(|_| ())
         }
         ("endpoint-approve" | "endpoint-deny", [run, hash, input]) => {
             if !std::io::stdin().is_terminal() || input.len() > MAX_REQUEST {
@@ -226,7 +278,7 @@ pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result
                 grant_id: allow.then_some(challenge.proposed_grant_id),
                 selection: None,
             };
-            advance(client, &request, Some(response))
+            advance(client, &request, Some(response)).map(|_| ())
         }
         ("endpoint-events", [run, hash, index]) => {
             let after = index.parse::<usize>().map_err(|_| ())?;
@@ -278,7 +330,7 @@ pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result
         }
         _ => {
             eprintln!(
-                "Endpoint commands: endpoint | endpoint-step <run-id> <request-digest> | endpoint-approve|endpoint-deny <run-id> <request-digest> <challenge-json> | endpoint-events <run-id> <request-digest> <index> | endpoint-record <run-id> <request-digest> | endpoint-record-save <run-id> <request-digest> <private-directory> | endpoint-cancel|endpoint-release <run-id> <request-digest> | endpoint-original-apply <seconds> <run-id> <request-digest> <repository> <worktree> <task> <paths...> | endpoint-original-apply-saved <private-directory> <same-transfer-arguments...>. Offline: agentmage-code endpoint-replay < record.json"
+                "Endpoint commands: endpoint | endpoint-run <seconds> <run-id> <request-digest> | endpoint-step <run-id> <request-digest> | endpoint-approve|endpoint-deny <run-id> <request-digest> <challenge-json> | endpoint-events <run-id> <request-digest> <index> | endpoint-record <run-id> <request-digest> | endpoint-record-save <run-id> <request-digest> <private-directory> | endpoint-cancel|endpoint-release <run-id> <request-digest> | endpoint-original-apply <seconds> <run-id> <request-digest> <repository> <worktree> <task> <paths...> | endpoint-original-apply-saved <private-directory> <same-transfer-arguments...>. Offline: agentmage-code endpoint-replay < record.json"
             );
             Err(())
         }

@@ -2,6 +2,21 @@
 
 ## Active queue: local agent mission
 
+The [guided endpoint continuation](docs/evidence/t303-guided-endpoint-2026-11-09.md)
+adds one terminal command over the retained coordinator, with separate exact
+tool and model disclosure confirmations at every step. Fresh terminal processes
+can continue the same held run without resetting its counters. Service restart
+recovery, native/model measurement and approved Git remain open. T-303/T-306
+stay open; no row or sub-row is added or closed. Independent core review of this
+increment is required. The preceding [private-record review](docs/reviews/d580df2cdf3e-local-coding-private-records.txt)
+has **Verdict: PASS** for exact commit
+`d580df2cdf3e53cf87c9e81448b863cb97df4d15`, with no high/medium finding.
+Its low archive-directory placement and collision-assertion findings remain
+same-row backlog, together with inherited lows. This review closes no row.
+The affected API gate passes 248 tests across eleven unfiltered targets, with
+no failures or ignores. Formatting and Clippy pass; five Rust hashes stay fixed.
+Earlier host/Linux failures remain outside this selection.
+
 The [private-record increment](docs/evidence/t303-private-records-2026-11-09.md)
 adds explicit terminal save consent, owner-only record files and offline replay
 after shutdown. The saved-transfer command synchronizes the record before

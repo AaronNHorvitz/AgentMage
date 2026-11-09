@@ -1,0 +1,159 @@
+Commit: d580df2cdf3e53cf87c9e81448b863cb97df4d15
+Scope: local-coding-private-records
+
+# Independent review: explicit private terminal-record retention and saved original transfer
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only on the repository.
+Tier: core. Rows: T-303 / T-306 (non-closing; both parents stay OPEN). Base:
+b31925c3655a6ca0d19a324cc1733539e1f6050e.
+
+## Methods
+
+- Ran `git rev-parse HEAD` in /lane/review-checkout. It printed
+  `d580df2cdf3e53cf87c9e81448b863cb97df4d15`. `git status --short` printed nothing.
+  The commit changes exactly the 12 files listed in `expected-paths.json`: 3 source files,
+  2 test-support files, TASKS.md prose, decision 0179, the evidence file, 2 guides and 2 retained
+  review reports. Cargo.toml, Cargo.lock, the status model, the scoreboard, the frozen/hidden/
+  held-out inputs, the scorers, thresholds and prompts are unchanged.
+- Read README.md, run.py, check.py, parse_gate.py, light.py, expected-*.json and
+  initial-focus-observation.md before running anything. They only call the repository fast gate,
+  git and markdownlint. The only PATH addition is the retained Node/LICENSE directory.
+  No other wrapper or engine is involved.
+- Read the full source diff: `coding_cli_record.rs` (`collect`/`save_observed`),
+  `coding_cli_endpoint.rs` (new `endpoint-record-save` and `endpoint-original-apply-saved`
+  dispatch), `coding_cli_endpoint_transfer.rs` (save before release). Also read the code they call:
+  `protected_directory` (lib.rs:214), `Client::confirm`/driver confirm (`/dev/tty`, exact
+  challenge, stop latch), `workflow::bounded`, `binding`/`digest`, `checked_selection`.
+- Read the two new tests and the PTY harness changes. Read the decision, evidence, guide and
+  TASKS.md prose, and checked each claim against the code and logs.
+- Ran my own escape probes in a scratch copy made with `git archive` of the exact commit at
+  /lane/state/tmp/review-probe-d580df2cdf3e. The repository was not modified. Results are below.
+
+## Exact commands and results (from /lane/review-checkout)
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-private-records/review-inputs.sha256` | 0 | 42 lines. The manifest's own SHA-256 is `afaee8ef1c505b1b92fc05ca73cf9ee944e638d102e85bd79f63dca43249b3ca`, as stated. |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-private-records-d580df2cdf3e` (fresh, did not exist before) | 0 | `exit 0`, `source_unchanged true`, 121.49 s including reservations. Raw log `9dae57b44fce7daf55cad96f8ae253d52cf1cf65770221940aa5c5463011a7a4`. Timing and hash differ from the builder's, as expected. All 7 plan commands exit 0. |
+| `python3 -B …/check.py /lane/state/tmp/review-private-records-d580df2cdf3e` | 0 | Gate PASS. 11 targets equal `expected-targets.json`. Totals are 243/0/0/0/0. All 10 named methods are `ok`. Cargo commands equal the current plan. Paths match. All 5 Rust hashes are fixed. Existing test lines are not deleted. TASKS rows are unchanged. The privacy and `#[ignore` scan passes. |
+| `python3 -B …/light.py` | 0 | git diff --check, lint-untracked, lint-reviews and markdownlint (5 files, 0 issues) all exit 0. |
+| `cmp …/validation-final-reread/source-freeze.json …/review-private-records-d580df2cdf3e/source-freeze.json` | 0 | Identical. |
+| `cmp docs/reviews/af9d46723784-local-coding-release-response.txt /lane/reviews/af9d46723784-local-coding-release-response.md` | 0 | Identical. |
+| `cmp docs/reviews/b31925c3655a-local-coding-original-recovery.txt /lane/reviews/b31925c3655a-local-coding-original-recovery.md` | 0 | Identical. |
+| `git diff --check b31925c3655a6ca0d19a324cc1733539e1f6050e --` | 0 | Clean. |
+| `git status --short` | 0 | Empty. |
+
+Builder evidence trace: `validation-final-reread/fast.log` hashes to
+`739c81df810511665a0539ee3e887d35bb2a9f51f120cee5c4da7a974efd984f`. Its RESULT lines are fmt
+0.30, clippy 0.50 and tests 43.20, and result.json gives 45.58 s. These match the evidence table.
+The preliminary `validation-final/fast.log` hashes to the disclosed
+`401cfa52827d…0316fcc`. The cached-versus-cold timing difference (my clippy took 32.50 s) does not
+affect the counts.
+
+### Reviewer probes (scratch copy, not committed)
+
+Command:
+`CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 bash /tools/build-slot cargo test --locked --offline -p agentmage-local-api --test coding_endpoint_http reviewer_probe -- --nocapture`.
+Result: exit 0, 2 passed. Each probe ran through an actual PTY against the authenticated HTTP
+service.
+
+- **Directory selection.** Each of these refused before any prompt, and nothing was written:
+  - a symlinked parent component (`link/archive`)
+  - a trailing slash
+  - a doubled `//`
+  - a relative path
+  - a `real/../real/archive` spelling
+  - modes 01700, 02700, 0710, 0701 and 0600
+- **Swap during consent.** The selected directory was renamed and replaced by a symlink to itself
+  while the prompt was open. The save refused after consent. The held directory stayed empty.
+- **FIFO during consent.** A FIFO planted at `<digest>.json` while the prompt was open made the
+  exclusive create refuse without hanging. No uncertain-write path was taken.
+- **Restrictive umask (0277).** The file was created as 0400 and failed the 0600 post-check. The
+  command reported `record-save.uncertain` and exited nonzero. The file was retained for
+  inspection, as the guide documents. Nothing was deleted or retried.
+- **Saved transfer with an invalid archive.** An 0755 directory, an alias symlink and a missing
+  directory each refused with zero prompts, so release was never offered. The run stayed held
+  (events 200), the original and worktree sentinels were preserved, and the model endpoint
+  received no connection.
+- **Escape sequences.** Prompts and transcripts contain no ESC bytes, which the harness asserts.
+
+## Analysis
+
+- **Authorization and consent.** `endpoint-record-save` refuses non-terminal stdin and runs under
+  `workflow::bounded` (180 s, signal latch). The exact `save-record <digest>` challenge is read
+  from `/dev/tty`. After consent, the stop latch and deadline are rechecked before creation. Saved
+  transfer calls `save_observed` before the release `confirm`, so a save that declines or fails
+  never reaches release. Tests and probes confirm this. Four separate decisions, in order, are
+  asserted on both review services.
+- **Filename injection.** The name comes from `request.request_sha256`. `binding()` validates the
+  supplied digest with `digest()`, and `checked_selection` requires an exact match, so only hex
+  reaches `openat`. A path component cannot be injected.
+- **Confinement of the write.**
+  - The path must be absolute and equal to its canonical form.
+  - It is opened with `O_DIRECTORY|O_NOFOLLOW` and checked for the current user and mode 0700
+    exactly.
+  - The directory fd is held across consent. Identity (dev, ino, mode, uid) is rechecked through
+    the path before the write and again after it.
+  - `openat(held, name, O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC, 0600)` never replaces or
+    follows a name.
+  - After writing, the file is checked for regular type, 0600, the current user, nlink 1 and exact
+    length. A `NONBLOCK` reopen of the name compares dev/ino.
+  - `fsync` is called on the file and on the directory before the receipt is printed.
+
+  I found no bypass. The decision correctly describes the path rechecks as non-atomic observations.
+- **Crash and partial-failure handling.** After creation, errors are reported as uncertain. Nothing
+  is cleaned up or retried, which the decision, guide and probe all reflect. The documentation
+  discloses that blocking filesystem calls can delay stop.
+- **Private content and logging.** The record is written only to the owner-only file and to
+  stdout/tty, as before. The receipt prints the destination, size and flags. Neither tokens nor the
+  auth directory appear in the record or the receipt. Plaintext storage is disclosed in the
+  prompt, decision and guides.
+- **Claims and labelling.** The evidence says creation provenance is synthetic, runs are
+  cancelled before the model or tools run, and the upstream receives no request. The tests assert
+  this: `executions == 0`, and `accept()` returns WouldBlock. No native Git, model, coding score,
+  row close or restored authority is claimed. The 243/11/10/5 counts are traced to the raw logs.
+  The account of the initial new-assertion failure and the preliminary run is accurate, and
+  check.py confirms no existing test line was removed.
+- **Public repository hygiene.** No private host path, username, hostname, credential or personal
+  data is added. `/lane/...` paths in the retained reports follow the established
+  review-retention convention and contain no user identity. No trademark is used as branding, and
+  no other agent product is named.
+- **Delivery.** No row or sub-row is added. The increment ends in a runnable, measured command
+  path.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low): saved transfer accepts an archive directory inside the original or worktree root.**
+  Location: `platforms/local-api/src/coding_cli_endpoint_transfer.rs:62-64`, which passes
+  `directory` unchecked to `coding_cli_record.rs:172`.
+  - Scenario: a user passes the original checkout itself as the private directory. Root
+    checkouts are often mode 0700 under a home directory. The plaintext record, which may contain
+    task and tool observations, is then created as an untracked file inside the human
+    repository. A later `git add -A` could publish it.
+  - Mitigation: the user must pass the path explicitly, and the exact prompt displays the full
+    destination. That is why this is low, not medium.
+  - Fix: in `run`, refuse an `archive` that equals, or `starts_with`, `original` or `worktree`
+    (both are already canonical). Add one PTY case.
+- **L2 (low, test precision): standalone collision cases do not assert where the refusal
+  happens.** Location: `platforms/local-api/tests/support/coding_endpoint_record.rs:147-162`.
+  - The regular-file, symlink, hard-link and directory collision cases assert only a nonzero
+    status and preserved sentinels. They do not assert `prompts == 1`, so they do not prove the
+    refusal comes from the post-consent exclusive create. A regression that refused earlier for
+    an unrelated reason would still pass.
+  - The saved-transfer test does pin `prompts == 1` for its collision case.
+  - Fix: add `assert_eq!(output["prompts"], 1)` to each of the four cases.
+
+Inherited lows from the af9d4672 and b31925c3 reviews stay as same-row backlog, as stated.
+
+## Per-row result
+
+- T-303: increment PASS. The parent stays OPEN. Native/model workflow and measurements,
+  approved Git and durable execution recovery remain open.
+- T-306: increment PASS. The parent stays OPEN. The native executable-trust blocker and inherited
+  host/Linux failures remain open.
+
+This review closes no row. It makes no certification, compliance or legal claim.
+
+Verdict: PASS
