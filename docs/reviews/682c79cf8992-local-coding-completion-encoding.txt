@@ -1,0 +1,153 @@
+Commit: 682c79cf8992c406bfb8b48a70d64816dea8e6b5
+Scope: local-coding-completion-encoding
+
+# Independent core re-review: completion-only positional tool refusal (repair of 1828e7e4eeaa M1-R; T-303 / T-306, non-closing)
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort), read-only, pinned checkout
+`/lane/review-checkout` at `682c79cf8992c406bfb8b48a70d64816dea8e6b5` (`git rev-parse HEAD` confirmed).
+The parent is exactly `ba2da239258dda7efb8b2109db86f4a556ec41c2`. The single commit touches exactly the nine
+declared paths. Separate target `/lane/state/review-target`; fresh output directory. I used no GPU, no model,
+no shim and no download.
+
+## Methods
+
+1. I read the request, the bundle README, run.py, check.py and light.py. The scripts only run the repository
+   fast gate with each Cargo command in its own shared build slot, compare data and run lint commands. The
+   PATH tooling directory holds only the retained Node binary and its LICENSE.
+2. I read the full source diff (4 Rust files) and the documentation diff (TASKS.md, the new evidence file,
+   the guide, and the two retained reviews). I compared it with my own M1-R, L1 and L2 text in
+   `/lane/reviews/1828e7e4eeaa-local-coding-completion-turn.md`.
+3. I traced the completion-only path in `kernel/engine/src/runtime_loop/coordinator_endpoint.rs:647-805`
+   (guard, interpreter drop, closed fallback, `tool_call` refusal, claim, original verifier). I also read the
+   terminal helpers `finish_refused_proposal` / `finish_invalid_proposal` (`runtime_loop.rs:4666-4687`), the
+   claim constructor (`completion_claim.rs:98-133`) and the trait default `verify_completion`
+   (`runtime_loop.rs:1218-1233`).
+4. I ran every requested command, then adversarial probes in a scratch copy made with `git archive HEAD` into
+   `/lane/state/tmp/review-probe-682c79cf8992`. That copy is outside the repository, and the repository was
+   not modified.
+
+## Requested commands and results (all from the pinned checkout)
+
+| Command | Expected | Result |
+|---|---|---|
+| `sha256sum --quiet -c .../review-inputs.sha256` | 0 | 0; manifest has 30 lines, SHA-256 `517ea05b...13ee42` matches the request |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-completion-encoding-682c79cf8992` | 1 | **1**: `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True` |
+| `python3 -B .../check.py <out>` | 0 | 0: 46 targets, totals [2833, 72, 71, 0, 0], 72 inherited identities, 0 new, 3 named methods ok; commands 0,0,0,0, fmt 0 (398.62 s), clippy 0 (53.10 s), tests 101 (388.83 s); total 842.22 s including reservations |
+| `python3 -B .../light.py` | 0 | 0 (diff check, untracked lint, review lint, markdownlint: 0 issues in 3 files) |
+| `cmp validation-final/source-freeze.json <out>/source-freeze.json` | 0 | 0 |
+| `cmp docs/reviews/1828e7e4eeaa-...txt /lane/reviews/1828e7e4eeaa-...md` | 0 | 0 |
+| `cmp docs/reviews/ba2da239258d-...txt /lane/reviews/ba2da239258d-...md` | 0 | 0 |
+| `git diff --check ba2da239... --` | 0 | 0 |
+| `git status --short` | empty | empty |
+
+My raw gate log SHA-256 is `a168fa2da60575324100ad2a67893d24d1600f76802921334e2bdea9a560a064`. It differs
+from the builder's `24553d16...` only in timings; the counts and the 72 failure identities match exactly.
+The gate's private TMPDIR keeps exactly 11 inherited-failure fixture directories, as the builder reported.
+The git blob IDs of all nine paths at HEAD equal the bundle's `committed-blobs.json`. The builder's numbers
+are reproduced.
+
+## Adversarial probes (scratch copy only)
+
+**P1, kernel edge forms (completion-only, both attachment orders, the commit's `CompletionOnlyPort` with a
+panicking interpreter).**
+Command: `cd /lane/state/tmp/review-probe-682c79cf8992 && TMPDIR=<private> CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 bash /tools/build-slot cargo test -p agentmage-kernel-engine --lib -- review_probe --nocapture --test-threads=4`
+Result: `2 passed`. Every one of 18 runs had zero permission/tool events, zero executions, one model call,
+no output, a terminal outcome and an `Ok` re-advance.
+- These forms recorded `runtime.proposal.completion-only`: whitespace-padded `[[id,ver,{..}]]`; combined
+  `{"answer":..,"tool_call":{..}}`; positional `fixture.write`; `{"tool_call":["fixture.command",..]}`;
+  positional `fixture.read` with `{"path":"../../etc/passwd"}`.
+- Forms that are not valid tool proposals went to the original verifier as completion candidates and were
+  refused with `runtime.verification.failed`: an extra element, a missing arguments element, `[{"tool_call":..}]`
+  and a triple-nested array. Nothing was admitted.
+
+**P2, kernel ordinary turn (not completion-only), positional forms 0-2.** Each still reaches permission
+admission (1 permission event). The ordinary-turn grammar is unchanged, as the commit claims; that is L1
+backlog.
+
+**P3, host composition, both shipped tools.** This copies the commit's
+`coding_cycle_completion_tool_requests_record_terminal_refusal_without_effects` and keeps all of its
+assertions except the refusal-code equality. The four forms are: an extra element, a missing arguments
+element, `[{"tool_call":call}]` and `[[positional]]`.
+Command: same build-slot form, `cargo test -p agentmage-host --lib -- review_probe_host_completion_edge_forms --nocapture --test-threads=4`
+- With the test's `NeverVerify`, the first run returned `Err(Dependency(Invalid))`. I traced this to the
+  fixture: `NeverVerify` implements only `verify`, and the trait default `verify_completion` refuses endpoint
+  input (`runtime_loop.rs:1222-1229`). Any plain completion answer behaves the same way with that fixture. No
+  production path is involved.
+- With a verifier that handles completion input (the commit's own `Reject` pattern from
+  `coding_cycle_completion_is_only_a_candidate_for_the_supplied_independent_verifier`), all 8 runs ended in
+  `Failed ["runtime.verification.failed"]`, with one verifier call each and one model call. There was no
+  permission, start or write event, no output, `one.py` was unchanged, the re-advance was identical and the
+  listener saw no second connection.
+
+My 1828e7e4eeaa probes P1 (`[[...]]` in the kernel) and P2 (`[[...]]` in the host for both tools) are now
+exact cases in the commit's own tests (`PositionalTool(0)` and host `form 1`), and both pass in my gate run.
+
+## Findings
+
+No critical, high or medium finding.
+
+### L1 (low, backlog; extends 1828e7e4eeaa L1): malformed tool-like answers in a completion-only turn become verifier candidates rather than a uniform completion-only refusal
+
+`coordinator_endpoint.rs:650-654` refuses with `runtime.proposal.completion-only` only for text that parses
+as `EndpointToolProposal` or has a top-level `tool_call` member. Text that looks like a tool call but does
+not parse (P1/P3: extra or missing positional elements, `[{"tool_call":..}]`) falls through to
+`RuntimeCompletionClaim::endpoint`. That constructor checks only binding, size and schema identity, not
+content. The text then reaches the supplied verifier. That matches the documented contract: the verifier owns
+acceptance, and nothing reaches admission because the fallback is closed at `:739-743`. It means the refusal
+code depends on the verifier, though, and a lenient verifier receives junk candidates.
+**Fix (with L1):** reject non-object top-level completion text before claim construction, or validate the
+claim against the completion schema, so the completion-only and ordinary grammars are both object-only.
+
+### L2 (low, backlog, test fidelity): the host "terminal refusal" test's verifier cannot handle completion input
+
+`shells/host/src/coding_endpoint_edit_cycle_tests.rs:28-39`, `NeverVerify`, implements only `verify`. Today
+this is correct, because every tested form must refuse before verification. A future regression that let a
+tool-shaped answer reach claim construction would show up as `Err(Dependency(Invalid))` from the trait
+default, not as a clear verifier-call assertion.
+**Fix:** give `NeverVerify` a `verify_completion` that panics with a clear message, as the preview-test
+variant at `coding_endpoint_edit_preview_tests.rs:156` does.
+
+## What I verified as sound
+
+- **M1-R repaired.** Under `completion_only` the guard also refuses any text that the original fallback
+  parser accepts (`:653`). The `or_else` fallback cannot produce a proposal at all (`:739-743`), and
+  `tool_preparation` is dropped (`:657-661`), so `interpreted` is `None`. Together these close every route to
+  `request_tool` (the only call is `:792`) in a completion-only turn. All four outer/nested object/array
+  combinations are tested in both kernel attachment orders and for both shipped host tools. The tests require
+  the terminal code, one dispatch, zero permission/tool events, zero executions, no output, an unchanged file
+  and an idempotent terminal re-advance with identical events.
+- The interpreter is still never called in either attachment order (the panic closure passes).
+- A valid candidate still reaches the original verifier. The missing-postcondition `Answer` case refuses with
+  `runtime.verification.failed`, and the host candidate test asserts one verifier call. No verifier condition
+  is changed and no existing assertion is weakened. The host loop wraps the original body unchanged and adds
+  only the encoding selector and the absent-`tool_schema_lookup` assertion.
+- **L2 (1828e7e4eeaa) addressed.** `tool_schema_lookup` is emitted only when `!completion_only`
+  (`coding_endpoint_context.rs:186-190`). Both host completion methods assert that it is absent on the wire.
+  Ordinary-turn prompt content is unchanged apart from the key order of a JSON object.
+- **Ordinary-turn grammar unchanged** (P2). No change to permissions, grants, budgets, native execution,
+  credential ownership or confinement. Native write and command boundaries are untouched, so I did not re-run
+  traversal or symlink probes on unchanged code; a traversal path inside a positional completion-only answer
+  is refused before admission (P1).
+- **Documentation is now accurate.** The guide addition (`runtime-endpoint-runs.md:1532-1535`) and the
+  evidence file claim refusal for object and positional proposals and a closed fallback; P1-P3 confirm this.
+  TASKS.md now says the previous repair covered only object-form answers and that the claim was incomplete.
+  The evidence labels everything as synthetic and qualifies no native process or model.
+- **Evaluation integrity and delivery.** The TASKS.md row table is byte-identical to the base (check.py), and
+  no row or sub-row is added or closed. No hidden, held-out, task, scorer, threshold, scoreboard,
+  status-model, dependency, `Cargo.*` or SBOM path is touched. No `#[ignore]` is added. The retained reviews
+  are byte-identical to the originals.
+- **Public hygiene.** The added lines contain no private path, username, hostname, credential, private
+  sibling-project name, other agent product name or trademark used as branding. The reviewer model names
+  appear only as reviewer identification inside the retained review texts.
+
+## Per-row result
+
+- **T-303 (non-closing increment): PASS.** M1-R from 1828e7e4eeaa is fixed and verified. The new L1/L2 above
+  are low and go to backlog. T-303 remains OPEN: current-source verification and runtime acceptance, the
+  native/model workflow, durable recovery, approved Git and parent measurements are still outstanding.
+- **T-306 (non-closing increment): PASS.** The same repair applies; T-306 remains OPEN.
+
+The full scoped gate is still FAIL only because of the 72 inherited T-301 baseline failures (0 new),
+reproduced exactly. This verdict qualifies no coding workflow, model, score or certification.
+
+Verdict: PASS

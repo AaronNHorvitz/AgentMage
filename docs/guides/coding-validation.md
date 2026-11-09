@@ -54,7 +54,7 @@ over these routes. `approve_definition: true` alone cannot execute anything.
 
 | Route | Request/result |
 | --- | --- |
-| `GET /v1/code/repository/validation` | No body; process-only preview, last receipt, complete bounded receipt history, rerun plans, linked-pass check, attempt count and limits |
+| `GET /v1/code/repository/validation` | No body; process-only preview, last receipt, complete bounded receipt history, rerun plans, linked-pass check, optional whole-worktree observation binding, attempt count and limits |
 | `POST /v1/code/repository/validation/prepare` | Exact definition object above; returns an inert preview |
 | `POST /v1/code/repository/validation/decide` | Exact `preview_sha256` and Boolean `approve`; returns both command and validation outcomes |
 
@@ -182,6 +182,42 @@ This check describes only the recorded command series. It does not verify
 current source, independent task acceptance or suite coverage. The coding
 completion verifier continues refusing failed tool history; acceptance of a
 linked repair and a current source snapshot remains separate work.
+
+The optional `workspace_binding` ties the final linked pass to bounded local
+whole-worktree observations. Observation begins only inside the original kernel
+command permit, immediately around the unchanged native executor; ordinary
+commands do not scan. Every regular file is content-hashed, and every directory,
+including empty directories, contributes identity and metadata. Hidden files,
+tests, configuration and generated files are included. A local Git pointer is
+hashed as a file; its target is never followed. Symbolic/hard links, special
+objects, unsafe names, inaccessible files and exhausted limits make the binding
+unavailable; no partial tree counts. The approved test still runs unchanged and
+its result remains visible even when observation is unavailable.
+
+Each capture requires two identical complete scans with a shared cooperative
+two-second deadline. Ceilings are 4,096 entries, 256 directories including the
+root, directory depth 16, 16 MiB per file and 64 MiB of file bytes per scan.
+Each directory admits at most 256 KiB of UTF-8 names. These local hashes and
+metadata stay process-only; the API returns only digests and counts. File and
+directory identities, modes, sizes, modification times and change times are
+bound, so restoring old bytes alone cannot revive the old observation. The
+capture immediately before execution must match the capture after it. The
+binding also identifies the exact creation receipt and final validation receipt.
+Inspection rechecks the current held root and the complete tree.
+
+`workspace_binding.matches_current_observation` is an observation result, not an
+atomic filesystem snapshot: concurrent writers can race any traversal, and this
+is not a security boundary against a privileged filesystem adversary. False or
+null must never establish current-source acceptance. `atomic_snapshot` and
+`independent_task_grade` are explicitly false. The existing
+`current_workspace_verified` and `test_suite_verified` remain false even with a
+matching observation, and the completion/development verifiers stay unchanged.
+Immutable execution inputs and reviewed acceptance integration remain open.
+Observations add bounded local work outside the runner's elapsed-time receipt;
+blocked filesystem calls can delay cancellation/deadlines. No raw file content
+is newly disclosed to a model or client, no command authority is created, and no
+receipt is rewritten. Denial/expiry/cancellation before launch produce no binding;
+an uncertain successor clears any binding while retaining the completed history.
 
 The budget, bounded history, rerun plans and normalized last receipt are process-only. A new successfully
 created worktree starts a new series. Restart loses ownership, previews, results

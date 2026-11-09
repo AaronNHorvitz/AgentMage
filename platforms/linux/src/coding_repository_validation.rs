@@ -17,6 +17,10 @@ use agentmage_kernel_engine::validation_template::{
     ValidationTemplateSource, seal_validation_template,
 };
 
+#[path = "coding_repository_validation_workspace.rs"]
+pub(super) mod workspace;
+use workspace::{ValidationWorkspaceBinding, WorkspaceObservation};
+
 /// Explicit person-selected output protocol; never inferred from process prose.
 #[derive(Clone, Copy, Default)]
 pub enum LinuxCodingTestFormat {
@@ -56,6 +60,7 @@ pub(super) struct ValidationSeries {
     repair_requested: bool,
     history: Vec<ValidationAttemptEvidence>,
     reruns: Vec<ValidationRerunPlan>,
+    workspace_binding: Option<ValidationWorkspaceBinding>,
 }
 
 impl LinuxCodingRepository {
@@ -69,13 +74,21 @@ impl LinuxCodingRepository {
     }
 
     /// Shows only process-retained validation state. A pass refers to the exact
-    /// approved command result, never the current repository or an independent
-    /// task grade. Bounded failure excerpts are retained separately for explicit
+    /// approved command result. A separate bounded worktree observation is not
+    /// an atomic snapshot or independent task grade. Failure excerpts need explicit
     /// model disclosure. Restart cannot restore or rerun them.
     pub fn inspect_validation(&self) -> Result<Value> {
         self.authority
             .revalidate_root()
             .map_err(|_| err("code.repository.state"))?;
+        let workspace_binding = self.validation.as_ref().and_then(|series| {
+            let binding = series.workspace_binding.as_ref()?;
+            let latest = series.latest.as_ref()?;
+            let created = self.verify_created().ok()?;
+            series
+                .linked_pass_verified()
+                .then(|| binding.inspect(created, &latest.receipt_sha256))
+        });
         Ok(json!({"version":1,
             "pending":self.command.as_ref().filter(|p| p.validation.is_some()).map(|p| &p.preview),
             "latest":self.validation.as_ref().and_then(|s| s.latest.as_ref()),
@@ -85,6 +98,7 @@ impl LinuxCodingRepository {
             "history":self.validation.as_ref().map(|s| s.history.iter().map(|a| &a.validation).collect::<Vec<_>>()).unwrap_or_default(),
             "rerun_plans":self.validation.as_ref().map(|s| s.reruns.as_slice()).unwrap_or_default(),
             "linked_pass_verified":self.validation.as_ref().is_some_and(ValidationSeries::linked_pass_verified),
+            "workspace_binding":workspace_binding,
             "current_workspace_verified":false,"test_suite_verified":false,
             "automatic_replay":false,"model_retry_connected":false,"automatic_model_retry":false,
             "repair_proposal_requires_consent":true}))
@@ -213,7 +227,7 @@ impl LinuxCodingRepository {
         pending.preview["attempt"] = json!(attempts + 1);
         pending.preview["maximum_attempts"] = json!(MAX_ATTEMPTS);
         pending.preview["warning"] = json!(
-            "Runs this exact approved test definition offline in the read-only created worktree. Selected output-protocol checks do not independently grade the task or verify current source. Output and failed names are untrusted. At most three attempts; each needs fresh consent. No automatic model retry, commit or push."
+            "Runs this exact approved test definition offline in the read-only created worktree. Bounded whole-worktree observations hash all files, including hidden files, tests and configuration, locally around execution; unavailable or changed observations cannot bind a pass to source. These are not atomic snapshots or task grades. Output and failed names are untrusted. At most three attempts; each needs fresh consent. No automatic model retry, commit or push."
         );
         pending
             .preview
@@ -302,6 +316,7 @@ impl LinuxCodingRepository {
             repair_requested: false,
             history,
             reruns,
+            workspace_binding: None,
         });
         Ok(rerun)
     }
@@ -313,6 +328,7 @@ impl LinuxCodingRepository {
         command: &CommandReceipt,
         output: &CommandCapturedOutput,
         approval: &str,
+        workspace_observation: Option<WorkspaceObservation>,
     ) -> Result<Value> {
         let receipt = normalize_validation_result(
             &validation.template,
@@ -348,8 +364,27 @@ impl LinuxCodingRepository {
             validation: receipt.clone(),
         });
         let linked_pass_verified = series.linked_pass_verified();
+        series.workspace_binding = if linked_pass_verified {
+            workspace_observation.and_then(|observation| {
+                self.created.as_ref().map(|created| {
+                    ValidationWorkspaceBinding::new(
+                        observation,
+                        &created.creation_receipt_sha256,
+                        &receipt.receipt_sha256,
+                    )
+                })
+            })
+        } else {
+            None
+        };
+        let workspace_binding = series.workspace_binding.as_ref().and_then(|binding| {
+            self.created
+                .as_ref()
+                .map(|created| binding.inspect(created, &receipt.receipt_sha256))
+        });
         let value = json!({"receipt":receipt,"validation_passed":receipt.is_full_pass(),
             "linked_pass_verified":linked_pass_verified,
+            "workspace_binding":workspace_binding,
             "prior_receipt_sha256":validation.prior_receipt_sha256,
             "attempt":series.attempts,"maximum_attempts":MAX_ATTEMPTS,
             "verification_scope": if validation.template.parser == ValidationParserKind::AgentMageJsonV1 {

@@ -2,6 +2,30 @@
 
 ## Active queue: local agent mission
 
+The [whole-worktree observation binding](docs/evidence/t303-workspace-observation-2026-11-09.md)
+connects local whole-tree observations to the original command permit, final
+linked validation receipt and worktree creation receipt. It includes hidden,
+test, configuration and generated files, refuses incomplete observations, and
+rechecks on inspection. Matching samples are explicitly non-atomic and cannot
+grade a task: `current_workspace_verified` and `test_suite_verified` stay false,
+and both completion verifiers remain unchanged. Formatting and Clippy pass;
+the complete scoped gate remains FAIL: 1,206 passed, exactly 72 inherited
+failures and none new, 63 existing ignored across 26 unfiltered targets. All four
+new methods and the expanded denial/expiry history method pass. Independent
+core review is required. T-303/T-306 remain open; no row or sub-row is added or
+closed. Immutable execution inputs, runtime acceptance, native/model workflow,
+durable recovery, approved Git and parent measurements remain open. The
+validation-history review's low L1 denial/expiry history assertions are included
+in this same batch. The completion-encoding repair has the independent PASS
+recorded below.
+
+The [completion-encoding independent core re-review](docs/reviews/682c79cf8992-local-coding-completion-encoding.txt)
+has **Verdict: PASS** for exact commit
+`682c79cf8992c406bfb8b48a70d64816dea8e6b5`, with no high/medium finding.
+It accepts the M1-R repair. Low L1 malformed completion grammar and L2 host
+verifier-test fidelity remain same-row backlog. Both parents stay open; no
+workflow, model or score is qualified.
+
 The [completion-encoding repair](docs/evidence/t303-completion-encoding-repair-2026-11-09.md)
 addresses M1-R from the [independent completion-turn review](docs/reviews/1828e7e4eeaa-local-coding-completion-turn.txt),
 which has **Verdict: FINDINGS** for exact commit
@@ -10,8 +34,8 @@ recognizes positional tool encodings, and its fallback cannot enter tool
 admission. Both kernel attachment orders and both shipped tools exercise all
 object/array combinations. Low L2's stale tool-schema wording is removed from
 the completion prompt; low L1's ordinary-turn positional grammar remains
-same-row backlog. Independent core re-review is required. T-303/T-306 remain
-open; no row or sub-row is added or closed. Formatting and Clippy pass; all
+same-row backlog. The independent core re-review above accepts this repair.
+T-303/T-306 remain open; no row or sub-row is added or closed. Formatting and Clippy pass; all
 three affected completion methods pass. The complete scoped gate remains FAIL:
 2,833 passed, exactly 72 inherited failures and none new, 71 existing ignored
 across 46 unfiltered targets.

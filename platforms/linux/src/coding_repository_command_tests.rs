@@ -1038,6 +1038,12 @@ fn validation_three_attempt_budget_survives_denial_and_cannot_reset_definition()
         "denied"
     );
     assert_eq!(owner.inspect_validation().unwrap()["attempts"], 0);
+    assert_eq!(owner.inspect_validation().unwrap()["history"], json!([]));
+    assert_eq!(
+        owner.inspect_validation().unwrap()["rerun_plans"],
+        json!([])
+    );
+    assert!(owner.inspect_validation().unwrap()["workspace_binding"].is_null());
     let first = validation_pending(&mut owner, None).unwrap();
     assert_eq!(
         owner
@@ -1047,6 +1053,12 @@ fn validation_three_attempt_budget_survives_denial_and_cannot_reset_definition()
         "code.command.expired"
     );
     assert_eq!(owner.inspect_validation().unwrap()["attempts"], 0);
+    assert_eq!(owner.inspect_validation().unwrap()["history"], json!([]));
+    assert_eq!(
+        owner.inspect_validation().unwrap()["rerun_plans"],
+        json!([])
+    );
+    assert!(owner.inspect_validation().unwrap()["workspace_binding"].is_null());
     let mut prior = None;
     for attempt in 1..=3 {
         let digest = validation_pending(&mut owner, prior.as_deref()).unwrap();
@@ -1920,4 +1932,275 @@ fn validation_history_retains_failed_prefix_when_successor_is_uncertain() {
         "code.validation.uncertain"
     );
     assert_eq!(calls.load(Ordering::Relaxed), 2);
+}
+
+#[test]
+fn validation_workspace_binding_keeps_failed_history_and_binds_only_the_final_pass() {
+    let f = Fixture::new();
+    let mut owner = f.open();
+    f.synthetic_created(&mut owner);
+    let root = f.0.join("owned/worktree");
+    fs::create_dir(root.join("tests")).unwrap();
+    fs::create_dir(root.join("empty")).unwrap();
+    fs::write(
+        root.join("tests/test_example.py"),
+        b"untrusted project test",
+    )
+    .unwrap();
+    fs::write(root.join(".config"), b"hidden configuration").unwrap();
+    // Hash the pointer bytes without opening its target.
+    fs::write(root.join(".git"), b"gitdir: /unavailable/external-metadata").unwrap();
+    let calls = Arc::new(AtomicUsize::new(0));
+    let first = validation_pending(&mut owner, None).unwrap();
+    let failed = validation_execute(
+        &mut owner,
+        &first,
+        envelope("assertion_failed", 1, 1, 0),
+        1,
+        &calls,
+        false,
+    )
+    .unwrap();
+    assert!(failed["validation"]["workspace_binding"].is_null());
+    let prior = failed["validation"]["receipt"]["receipt_sha256"]
+        .as_str()
+        .unwrap();
+    fs::write(root.join("sentinel"), b"repaired source").unwrap();
+    let second = validation_pending(&mut owner, Some(prior)).unwrap();
+    let passed = validation_execute(
+        &mut owner,
+        &second,
+        envelope("passed", 2, 0, 0),
+        0,
+        &calls,
+        false,
+    )
+    .unwrap();
+    let binding = &passed["validation"]["workspace_binding"];
+    assert_eq!(binding["matches_current_observation"], true);
+    assert_eq!(binding["entries"], 6);
+    assert_eq!(binding["atomic_snapshot"], false);
+    assert_eq!(binding["independent_task_grade"], false);
+    assert_eq!(
+        binding["validation_receipt_sha256"],
+        passed["validation"]["receipt"]["receipt_sha256"]
+    );
+    let inspected = owner.inspect_validation().unwrap();
+    assert_eq!(inspected["workspace_binding"], *binding);
+    assert_eq!(
+        inspected["history"],
+        json!([
+            failed["validation"]["receipt"],
+            passed["validation"]["receipt"]
+        ])
+    );
+    assert_eq!(inspected["rerun_plans"], json!([passed["rerun_plan"]]));
+    assert_eq!(inspected["linked_pass_verified"], true);
+    assert_eq!(inspected["current_workspace_verified"], false);
+    assert_eq!(inspected["test_suite_verified"], false);
+    assert_eq!(calls.load(Ordering::Relaxed), 2);
+    // Creation provenance and the final exact receipt remain essential.
+    owner.created.as_mut().unwrap().creation_receipt_sha256 = hash(b"foreign creation");
+    assert_eq!(
+        owner.inspect_validation().unwrap()["workspace_binding"]["matches_current_observation"],
+        false
+    );
+}
+
+#[test]
+fn validation_workspace_binding_detects_changes_outside_selected_source_and_restored_bytes() {
+    for case in [
+        "source",
+        "hidden",
+        "tests",
+        "addition",
+        "deletion",
+        "rename",
+        "mode",
+        "replacement",
+        "restored-bytes",
+        "transient-name",
+        "root",
+    ] {
+        let f = Fixture::new();
+        let mut owner = f.open();
+        f.synthetic_created(&mut owner);
+        let root = f.0.join("owned/worktree");
+        fs::create_dir(root.join("tests")).unwrap();
+        fs::write(root.join("tests/check.py"), b"test").unwrap();
+        fs::write(root.join(".config"), b"configuration").unwrap();
+        let calls = Arc::new(AtomicUsize::new(0));
+        let digest = validation_pending(&mut owner, None).unwrap();
+        let passed = validation_execute(
+            &mut owner,
+            &digest,
+            envelope("passed", 2, 0, 0),
+            0,
+            &calls,
+            false,
+        )
+        .unwrap();
+        assert_eq!(
+            passed["validation"]["workspace_binding"]["matches_current_observation"], true,
+            "{case}"
+        );
+        match case {
+            "source" => fs::write(root.join("sentinel"), b"changed").unwrap(),
+            "hidden" => fs::write(root.join(".config"), b"changed").unwrap(),
+            "tests" => fs::write(root.join("tests/check.py"), b"changed").unwrap(),
+            "addition" => fs::write(root.join("new.py"), b"new").unwrap(),
+            "deletion" => fs::remove_file(root.join("tests/check.py")).unwrap(),
+            "rename" => {
+                fs::rename(root.join("tests/check.py"), root.join("tests/renamed.py")).unwrap()
+            }
+            "mode" => fs::set_permissions(root.join("sentinel"), fs::Permissions::from_mode(0o600))
+                .unwrap(),
+            "replacement" => {
+                fs::write(root.join("replacement"), b"preserve").unwrap();
+                fs::rename(root.join("replacement"), root.join("sentinel")).unwrap();
+            }
+            "restored-bytes" => {
+                fs::write(root.join("sentinel"), b"changed").unwrap();
+                fs::write(root.join("sentinel"), b"preserve").unwrap();
+            }
+            "transient-name" => {
+                fs::write(root.join("tests/transient"), b"temporary").unwrap();
+                fs::remove_file(root.join("tests/transient")).unwrap();
+            }
+            "root" => {
+                fs::rename(&root, f.0.join("old-worktree")).unwrap();
+                fs::create_dir(&root).unwrap();
+            }
+            _ => unreachable!(),
+        }
+        let state = owner.inspect_validation().unwrap();
+        assert_ne!(
+            state["workspace_binding"]["matches_current_observation"], true,
+            "{case}"
+        );
+        // Historical pass and raw result are never erased or relabelled.
+        assert_eq!(state["linked_pass_verified"], true, "{case}");
+        assert_eq!(state["latest"], passed["validation"]["receipt"], "{case}");
+        assert_eq!(state["current_workspace_verified"], false, "{case}");
+        assert_eq!(calls.load(Ordering::Relaxed), 1, "{case}");
+    }
+}
+
+struct MutatingValidation {
+    inner: Envelope,
+    root: PathBuf,
+    restore: bool,
+}
+impl BoundedCommandExecutor for MutatingValidation {
+    type WorkingDirectory = LinuxAuthorizedWorkspace;
+    fn execute(
+        &mut self,
+        permit: CommandLaunchPermit<'_>,
+        workspace: &LinuxAuthorizedWorkspace,
+        cancellation: &dyn EffectCancellationObservation,
+    ) -> std::result::Result<CommandPlatformResult, CommandExecutionFailure> {
+        fs::write(self.root.join("sentinel"), b"mutated during command").unwrap();
+        if self.restore {
+            fs::write(self.root.join("sentinel"), b"preserve").unwrap();
+        }
+        self.inner.execute(permit, workspace, cancellation)
+    }
+}
+
+#[test]
+fn validation_workspace_binding_refuses_changes_during_the_original_execution() {
+    for restore in [false, true] {
+        let f = Fixture::new();
+        let mut owner = f.open();
+        f.synthetic_created(&mut owner);
+        let calls = Arc::new(AtomicUsize::new(0));
+        let digest = validation_pending(&mut owner, None).unwrap();
+        let pending = owner.take_command(&digest, true, NOW).unwrap().unwrap();
+        let passed = owner
+            .run_command(
+                pending,
+                MutatingValidation {
+                    inner: Envelope {
+                        calls: calls.clone(),
+                        stdout: envelope("passed", 2, 0, 0),
+                        stderr: vec![],
+                        exit: 0,
+                        corrupt: false,
+                    },
+                    root: f.0.join("owned/worktree"),
+                    restore,
+                },
+                NOW,
+            )
+            .unwrap();
+        assert_eq!(passed["validation"]["linked_pass_verified"], true);
+        assert!(passed["validation"]["workspace_binding"].is_null());
+        assert!(owner.inspect_validation().unwrap()["workspace_binding"].is_null());
+        assert_eq!(calls.load(Ordering::Relaxed), 1);
+    }
+}
+
+#[test]
+fn validation_workspace_binding_is_unavailable_for_unsafe_or_incomplete_trees() {
+    use std::os::unix::ffi::OsStringExt;
+    for case in [
+        "symlink",
+        "hardlink",
+        "non-utf8",
+        "large-file",
+        "deep",
+        "directories",
+        "entries",
+    ] {
+        let f = Fixture::new();
+        let mut owner = f.open();
+        f.synthetic_created(&mut owner);
+        let root = f.0.join("owned/worktree");
+        match case {
+            "symlink" => symlink(f.0.join("state"), root.join("linked")).unwrap(),
+            "hardlink" => fs::hard_link(root.join("sentinel"), root.join("linked")).unwrap(),
+            "non-utf8" => fs::write(
+                root.join(std::ffi::OsString::from_vec(vec![0xff])),
+                b"unsafe name",
+            )
+            .unwrap(),
+            "large-file" => fs::File::create(root.join("large"))
+                .unwrap()
+                .set_len(16 * 1024 * 1024 + 1)
+                .unwrap(),
+            "deep" => fs::create_dir_all(root.join(["nested"; 17].join("/"))).unwrap(),
+            "directories" => {
+                for i in 0..256 {
+                    fs::create_dir(root.join(format!("dir{i}"))).unwrap();
+                }
+            }
+            "entries" => {
+                for i in 0..4096 {
+                    fs::write(root.join(format!("file{i}")), b"").unwrap();
+                }
+            }
+            _ => unreachable!(),
+        }
+        let calls = Arc::new(AtomicUsize::new(0));
+        let digest = validation_pending(&mut owner, None).unwrap();
+        let passed = validation_execute(
+            &mut owner,
+            &digest,
+            envelope("passed", 2, 0, 0),
+            0,
+            &calls,
+            false,
+        )
+        .unwrap();
+        assert_eq!(passed["validation"]["linked_pass_verified"], true, "{case}");
+        assert!(
+            passed["validation"]["workspace_binding"].is_null(),
+            "{case}"
+        );
+        assert!(
+            owner.inspect_validation().unwrap()["workspace_binding"].is_null(),
+            "{case}"
+        );
+        assert_eq!(calls.load(Ordering::Relaxed), 1, "{case}");
+    }
 }

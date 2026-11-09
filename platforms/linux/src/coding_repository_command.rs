@@ -402,6 +402,12 @@ impl LinuxCodingRepository {
             .created
             .as_ref()
             .ok_or(err("code.command.worktree-required"))?;
+        let mut workspace_observation = None;
+        let executor = super::validation::workspace::ValidationObservedExecutor {
+            native: executor,
+            enabled: validation.is_some(),
+            observation: &mut workspace_observation,
+        };
         let mut driver =
             CommandEffectDriver::new(executor, &created.held, prepared.clone(), cancellation);
         let receipt = match issued {
@@ -440,6 +446,7 @@ impl LinuxCodingRepository {
                     &command_receipt,
                     &output,
                     &pending.hash,
+                    workspace_observation,
                 )
             })
             .transpose()?;
