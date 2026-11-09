@@ -215,22 +215,12 @@ impl CodingEndpointPreparedStartup {
         now_epoch_ms: u64,
     ) -> Result<serde_json::Value, CodingEndpointEditProposalError> {
         use CodingEndpointEditProposalError as Refusal;
-        if self.kind != CodingEndpointPreparedKind::Edit
-            || context.task() != self.request.task.objective
-        {
-            return Err(Refusal::Scope);
-        }
+        self.check_edit_context(context)?;
         let paths = context
             .outlines()
             .iter()
             .map(|outline| outline.path.clone())
             .collect::<Vec<_>>();
-        // Check only metadata here; excluded files must not be opened to decide
-        // whether they match an otherwise valid proposal.
-        paths
-            .iter()
-            .try_for_each(|path| self.check_source_path(path))
-            .map_err(|_| Refusal::Scope)?;
         let scope = repository
             .select_created_sources(&paths)
             .map_err(|_| Refusal::Native)?;
@@ -279,6 +269,24 @@ impl CodingEndpointPreparedStartup {
                 now_epoch_ms,
             )
             .map_err(|_| Refusal::Native)
+    }
+
+    // Shared by strict generation and native preparation: check exclusions
+    // before either model disclosure or file reads, using only context metadata.
+    pub(super) fn check_edit_context(
+        &self,
+        context: &CodingProposalContext,
+    ) -> Result<(), CodingEndpointEditProposalError> {
+        if self.kind != CodingEndpointPreparedKind::Edit
+            || context.task() != self.request.task.objective
+        {
+            return Err(CodingEndpointEditProposalError::Scope);
+        }
+        context
+            .outlines()
+            .iter()
+            .try_for_each(|outline| self.check_source_path(&outline.path))
+            .map_err(|_| CodingEndpointEditProposalError::Scope)
     }
 
     /// Consume the original live creation owner and its exact prepared call.

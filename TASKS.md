@@ -2,6 +2,19 @@
 
 ## Active queue: local agent mission
 
+The [strict generation composition](docs/evidence/t303-strict-edit-generation-2026-11-08.md)
+connects a consented strict-edit context to the original credential-owning
+transport and single-use kernel model phase, then to the original native diff.
+It retains actual usage for failed or rejected answers and refuses partial,
+limited, stale or substituted preparation. Native edits still require exact
+approval. This is trusted library composition: cumulative model budgeting and
+general edit/test/retry scheduling remain caller-owned and open. The final
+scoped gate has 846 passed,
+exactly 53 inherited host failures and none new, 11 existing ignored across
+20 targets. Formatting and Clippy pass; the full gate remains FAIL. All four
+new methods and the strengthened HTTP fixture pass. Independent core review
+is required. T-303/T-306 remain open; no row or sub-row is added or closed.
+
 The [strict prepared-edit bridge](docs/evidence/t303-strict-prepared-edits-2026-11-08.md)
 connects original bounded proposal context and strict model edit checking to
 fresh reads from the original live worktree owner and its native complete diff.

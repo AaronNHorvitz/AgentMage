@@ -178,13 +178,15 @@ fn prepared_input(
     let startup =
         CodingEndpointPreparedStartup::prepare(request, CodingEndpointPreparedKind::Edit, &ledger)
             .unwrap();
+    let control = Arc::new(Control);
     let mut consented_sources = vec![];
     if let Some(answer) = model_edit {
         use agentmage_capability_repository_map::coding_proposal::{
             CodingSource, prepare_coding_proposal,
         };
-        // Explicit fixture read consent; proposal bytes are synthetic, never
-        // described as a real model-generated edit or a task grade.
+        // Explicit fixture read AND generation disclosure consent. This extra
+        // phase is separate from endpoint coordinator accounting below. The
+        // socket peer is synthetic, never an actual model or task grade.
         let paths = vec!["one.py".into()];
         let sources = owner
             .select_created_sources(&paths)
@@ -199,8 +201,28 @@ fn prepared_input(
             .collect::<Vec<_>>();
         let context =
             prepare_coding_proposal(&startup.request().task.objective, &sources, 2048).unwrap();
-        startup
-            .prepare_edit_proposal(&mut owner, &context, answer, 1000)
+        let connection = match &input.connection {
+            CodingEndpointConnection::Shared {
+                transport,
+                approval,
+            } => CodingEndpointConnection::Shared {
+                transport: transport.clone(),
+                approval: approval.clone(),
+            },
+            CodingEndpointConnection::Borrowed { .. } => {
+                panic!("fixture must retain configuration")
+            }
+        };
+        let mut streamed = String::new();
+        let generated = startup
+            .prepare_edit_generation(connection, context, true)
+            .unwrap()
+            .execute(control.as_ref(), |s| streamed.push_str(s));
+        assert_eq!(streamed, answer);
+        assert!(generated.result().is_ok());
+        assert_eq!(generated.usage().dispatch_attempts, 1);
+        generated
+            .prepare_preview(&startup, &mut owner, control.as_ref(), 1000)
             .unwrap();
         consented_sources = sources;
     }
@@ -235,7 +257,7 @@ fn prepared_input(
         CodingEndpointPreparedHttpRun {
             prepared,
             connection: input.connection,
-            control: Arc::new(Control),
+            control,
             clock: SharedClock(clock),
             verifier: input.verifier,
             sources: consented_sources,
@@ -253,7 +275,22 @@ fn endpoint_prepared_service_native_edit_returns_original_lineage_and_needs_new_
     let (upstream, endpoint) = upstream();
     let (proposal_tx, proposal_rx) = mpsc::sync_channel::<String>(1);
     let model = thread::spawn(move || {
-        for _ in 0..2 {
+        for (old, new) in [("before\n", "first\n"), ("first\n", "second\n")] {
+            let mut socket = accept(&upstream);
+            let generation = read_upstream(&mut socket);
+            assert_eq!(
+                generation["messages"][0]["content"],
+                agentmage_capability_repository_map::coding_proposal::CODING_PROPOSAL_INSTRUCTION
+            );
+            let source: Value =
+                serde_json::from_str(generation["messages"][1]["content"].as_str().unwrap())
+                    .unwrap();
+            assert_eq!(source["excerpts"][0]["text"], old);
+            respond(
+                &mut socket,
+                &json!({"edits":[{"path":"one.py","old":old,"new":new}]}).to_string(),
+            );
+            drop(socket);
             let proposal = proposal_rx.recv_timeout(Duration::from_secs(10)).unwrap();
             let mut socket = accept(&upstream);
             read_upstream(&mut socket);

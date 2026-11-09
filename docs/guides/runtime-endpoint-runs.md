@@ -1208,3 +1208,44 @@ use synthetic strict answers and endpoint responses with real native writes
 through two HTTP services. Native Git creation, positive command-factory
 admission, executable controlled startup, model quality, recovery, approved Git
 and T-303/T-306 measurements remain open.
+
+## Strict generation before native preview
+
+Trusted library callers can use `prepare_edit_generation(connection, context,
+include_usage)` on an edit-kind `CodingEndpointPreparedStartup`. Supply the
+original consented `CodingProposalContext`, credential-owning connection and
+exact destination approval. It freezes the original strict-edit instruction
+and exact context message; it checks the task, exclusions, selected endpoint
+and model, and sealed per-phase context, request, output and time ceilings.
+Preparation opens no socket and reads no file.
+
+Inspect the returned `binding()` and reserve its model call and frozen body
+in the existing owner's cumulative budget before calling `execute` with the
+original continuous run control. Execution consumes the frozen request once,
+through the existing kernel endpoint phase and controlled streaming transport.
+It never selects tools, issues authority or automatically retries. Streamed
+text is provisional. Answers over 64 KiB cancel the generation; partial or
+output-token-limited answers cannot prepare a native edit.
+
+The returned observation retains `result()` and `usage()` even when the model
+answer is malformed or later source checks fail. Missing completed counts
+remain absent; optional token counts remain provider reports. These are
+single-phase observations, without a task grade or independent verification.
+
+After separate consent to re-read every original context file, call
+`prepare_preview` with the same sealed startup, original live repository owner,
+original run control and fresh time. A different startup seal, failed generation
+or stopped control refuses before reads. The original strict parser rechecks
+full snapshots, including unedited context files, and mutable/protected paths.
+Only a valid answer prepares the complete native diff. Exact approval, original
+kernel grants, atomic writes and terminal owner return remain unchanged.
+
+This is a library composition primitive. It does not add an HTTP route or
+activate a model during ordinary service admission. Cumulative budgeting across
+generation and coordinator work remains the trusted caller's responsibility;
+passing the same sealed request to a new service does not account for an earlier
+phase. General model-driven edit/test/retry scheduling, executable controlled
+startup, durable recovery, approved Git and T-303/T-306 measurements remain open.
+Socket tests use synthetic endpoint answers and creation provenance, including
+native writes through separate protected HTTP approvals. They establish no
+actual local-model result, native Git creation, test-worker success or score.

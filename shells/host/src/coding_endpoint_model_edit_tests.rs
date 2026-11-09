@@ -7,6 +7,9 @@ use agentmage_capability_repository_map::coding_proposal::{
 };
 use serde_json::{Value, json};
 
+#[path = "coding_endpoint_edit_generation_tests.rs"]
+mod generation_tests;
+
 fn owner(f: &Fixture) -> LinuxCodingRepository {
     for dir in [
         "state",
