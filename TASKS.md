@@ -2,6 +2,19 @@
 
 ## Active queue: local agent mission
 
+The [bounded validation-history connection](docs/evidence/t303-validation-history-2026-11-09.md)
+retains completed original command/validation receipts and exact rerun plans in
+the same native owner. Its linked-pass check requires the full series, fresh
+approvals/attempt identities, exact consecutive failure links and a final full
+pass, within the original three-attempt ceiling. Failed history stays unchanged;
+a missing/uncertain successor cannot verify. Current-source checking and runtime
+completion acceptance remain open; the development verifier still refuses all
+certification. Formatting and Clippy pass. The complete scoped gate remains
+FAIL: 2,833 passed, exactly 72 inherited failures and none new, 71 existing
+ignored across 46 unfiltered targets. All four new methods and two expanded
+history methods pass. Independent core review is required; T-303/T-306 remain
+open, with no row or sub-row added or closed.
+
 The [fixed-test startup core review](docs/reviews/b0905e920f75-local-coding-fixed-test-launch.txt)
 has **Verdict: PASS** for exact commit
 `b0905e920f75490a2cee9663c25456617642ad02`, with no high/medium finding.

@@ -8,9 +8,9 @@ use agentmage_kernel_engine::command_runner::{
     CommandCapturedOutput, CommandReceipt, CommandSpec, PreparedCommand,
 };
 use agentmage_kernel_engine::validation_result::{
-    ValidationObservation, ValidationOutputClassification, ValidationReceipt, ValidationRerunPlan,
-    normalize_validation_result, plan_failed_test_rerun, verify_rerun_plan,
-    verify_validation_receipt,
+    ValidationAttemptEvidence, ValidationObservation, ValidationOutputClassification,
+    ValidationReceipt, ValidationRerunPlan, normalize_validation_result, plan_failed_test_rerun,
+    verify_bounded_validation_history, verify_rerun_plan, verify_validation_receipt,
 };
 use agentmage_kernel_engine::validation_template::{
     ValidationKind, ValidationParserKind, ValidationTemplate, ValidationTemplateInput,
@@ -54,6 +54,8 @@ pub(super) struct ValidationSeries {
     latest: Option<ValidationReceipt>,
     feedback: Option<Value>,
     repair_requested: bool,
+    history: Vec<ValidationAttemptEvidence>,
+    reruns: Vec<ValidationRerunPlan>,
 }
 
 impl LinuxCodingRepository {
@@ -80,6 +82,9 @@ impl LinuxCodingRepository {
             "attempts":self.validation.as_ref().map_or(0, |s| s.attempts),
             "maximum_attempts":MAX_ATTEMPTS,"retention":"process-only",
             "repair_requested":self.validation.as_ref().is_some_and(|s| s.repair_requested),
+            "history":self.validation.as_ref().map(|s| s.history.iter().map(|a| &a.validation).collect::<Vec<_>>()).unwrap_or_default(),
+            "rerun_plans":self.validation.as_ref().map(|s| s.reruns.as_slice()).unwrap_or_default(),
+            "linked_pass_verified":self.validation.as_ref().is_some_and(ValidationSeries::linked_pass_verified),
             "current_workspace_verified":false,"test_suite_verified":false,
             "automatic_replay":false,"model_retry_connected":false,"automatic_model_retry":false,
             "repair_proposal_requires_consent":true}))
@@ -279,12 +284,24 @@ impl LinuxCodingRepository {
             attempt,
             approval,
         )?;
+        // Preserve every completed attempt and its original rerun edge. Spend
+        // before dispatch: an uncertain/lost successor can never leave a linked
+        // pass, even though the earlier receipts remain inspectable.
+        let (history, mut reruns) = self.validation.take().map_or_else(
+            || (Vec::new(), Vec::new()),
+            |series| (series.history, series.reruns),
+        );
+        if let Some(plan) = &rerun {
+            reruns.push(plan.clone());
+        }
         self.validation = Some(ValidationSeries {
             template: validation.template.clone(),
             attempts: validation.expected_attempts + 1,
             latest: None,
             feedback: None,
             repair_requested: false,
+            history,
+            reruns,
         });
         Ok(rerun)
     }
@@ -325,7 +342,14 @@ impl LinuxCodingRepository {
             .validation
             .as_mut()
             .ok_or(err("code.validation.uncertain"))?;
+        series.history.push(ValidationAttemptEvidence {
+            prepared: prepared.clone(),
+            command: command.clone(),
+            validation: receipt.clone(),
+        });
+        let linked_pass_verified = series.linked_pass_verified();
         let value = json!({"receipt":receipt,"validation_passed":receipt.is_full_pass(),
+            "linked_pass_verified":linked_pass_verified,
             "prior_receipt_sha256":validation.prior_receipt_sha256,
             "attempt":series.attempts,"maximum_attempts":MAX_ATTEMPTS,
             "verification_scope": if validation.template.parser == ValidationParserKind::AgentMageJsonV1 {
@@ -394,6 +418,13 @@ impl LinuxCodingRepository {
             .ok_or(err("code.repair.failure-required"))?
             .repair_requested = true;
         Ok(value)
+    }
+}
+
+impl ValidationSeries {
+    fn linked_pass_verified(&self) -> bool {
+        usize::from(self.attempts) == self.history.len()
+            && verify_bounded_validation_history(&self.template, &self.history, &self.reruns)
     }
 }
 

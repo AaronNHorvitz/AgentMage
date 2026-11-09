@@ -18,6 +18,10 @@ use crate::validation_template::{
 #[path = "validation_result_text.rs"]
 mod text;
 
+#[path = "validation_result_history.rs"]
+mod history;
+pub use history::{ValidationAttemptEvidence, verify_bounded_validation_history};
+
 const VALIDATION_RESULT_SCHEMA_VERSION: u16 = 1;
 const MAX_RESULT_BYTES: usize = 256 * 1024;
 const MAX_FAILED_NAMES: usize = 2_048;
@@ -2060,6 +2064,239 @@ mod tests {
                 )
                 .status,
                 ValidationStatus::Malformed
+            );
+        }
+    }
+
+    fn history_attempt(
+        template: &ValidationTemplate,
+        index: u8,
+        status: &str,
+    ) -> ValidationAttemptEvidence {
+        let registry = CommandRegistry::build(vec![template.command.clone()]).unwrap();
+        let prepared = prepare_command(
+            &registry,
+            CommandRequest::new(format!("history-command-{index}"), &template.command),
+        )
+        .unwrap();
+        let passed = status == "passed";
+        let compile = status == "compile_failed";
+        let output = envelope(
+            status,
+            u32::from(passed),
+            u32::from(!passed && !compile),
+            0,
+            if passed || compile {
+                &[]
+            } else {
+                &["suite::fails"]
+            },
+            0,
+            None,
+        );
+        let mut command = command_receipt(
+            &prepared,
+            &output,
+            &[],
+            CommandTermination::Exited,
+            Some(if passed { 0 } else { 1 }),
+            None,
+            false,
+            "fixture.history",
+        );
+        command.authority_transaction_id = format!("history-transaction-{index}");
+        command.operation_attempt_id = format!("history-operation-{index}");
+        command.receipt_sha256 = "0".repeat(64);
+        command.receipt_sha256 = sha256_json(&command).unwrap();
+        let mut observation = observation(output);
+        observation.validation_attempt_id = format!("history-validation-{index}");
+        observation.approval_sha256 = sha256_hex(format!("history-approval-{index}").as_bytes());
+        let validation =
+            normalize_validation_result(template, &prepared, &command, observation).unwrap();
+        ValidationAttemptEvidence {
+            prepared,
+            command,
+            validation,
+        }
+    }
+
+    fn history_plans(
+        template: &ValidationTemplate,
+        attempts: &[ValidationAttemptEvidence],
+    ) -> Vec<ValidationRerunPlan> {
+        attempts
+            .windows(2)
+            .map(|p| {
+                plan_failed_test_rerun(
+                    template,
+                    &p[0].validation,
+                    &p[1].validation.validation_attempt_id,
+                    &p[1].validation.approval_sha256,
+                )
+                .unwrap()
+            })
+            .collect()
+    }
+
+    #[test]
+    fn bounded_history_accepts_exact_single_and_linked_passes_without_erasing_failure() {
+        let t = template();
+        for statuses in [
+            vec!["passed"],
+            vec!["assertion_failed", "passed"],
+            vec!["compile_failed", "assertion_failed", "passed"],
+        ] {
+            let attempts: Vec<_> = statuses
+                .iter()
+                .enumerate()
+                .map(|(i, s)| history_attempt(&t, i as u8, s))
+                .collect();
+            let plans = history_plans(&t, &attempts);
+            let before =
+                serde_json::to_vec(&attempts.iter().map(|a| &a.validation).collect::<Vec<_>>())
+                    .unwrap();
+            assert!(verify_bounded_validation_history(&t, &attempts, &plans));
+            assert_eq!(
+                before,
+                serde_json::to_vec(&attempts.iter().map(|a| &a.validation).collect::<Vec<_>>())
+                    .unwrap()
+            );
+            for a in &attempts[..attempts.len() - 1] {
+                assert!(!a.validation.is_full_pass());
+            }
+        }
+    }
+
+    #[test]
+    fn bounded_history_refuses_missing_reordered_foreign_and_replayed_links() {
+        let t = template();
+        let attempts = vec![
+            history_attempt(&t, 0, "assertion_failed"),
+            history_attempt(&t, 1, "passed"),
+        ];
+        let plans = history_plans(&t, &attempts);
+        assert!(verify_bounded_validation_history(&t, &attempts, &plans));
+        assert!(!verify_bounded_validation_history(&t, &[], &[]));
+        assert!(!verify_bounded_validation_history(&t, &attempts[..1], &[]));
+        assert!(!verify_bounded_validation_history(&t, &attempts, &[]));
+        let mut bad_hash = attempts.clone();
+        bad_hash[0].validation.receipt_sha256 = "9".repeat(64);
+        assert!(!verify_bounded_validation_history(&t, &bad_hash, &plans));
+        for mutation in 0..14 {
+            let mut a = attempts.clone();
+            let mut p = plans.clone();
+            let mut template = t.clone();
+            match mutation {
+                0 => a.reverse(),
+                1 => a[1] = a[0].clone(),
+                2 => a[0].validation.execution_authority = true,
+                3 => a[1].command.exit_code = Some(1),
+                4 => a[1].validation.execution_scope_sha256 = "9".repeat(64),
+                5 => template.template_sha256 = "9".repeat(64),
+                6 => p[0].prior_receipt_sha256 = "9".repeat(64),
+                7 => p[0].approval_sha256 = a[0].validation.approval_sha256.clone(),
+                8 => p[0].validation_attempt_id = a[0].validation.validation_attempt_id.clone(),
+                9 => p[0].execution_authority = true,
+                10 => p[0].failed_names_sha256 = "9".repeat(64),
+                11 => a[1] = history_attempt(&t, 2, "passed"),
+                12 => {
+                    a[1].validation.coverage = ValidationCoverageStatus::Partial;
+                    a[1].validation.unverified_kinds = vec![ValidationKind::Security];
+                    a[1].validation.receipt_sha256 =
+                        validation_receipt_digest(&a[1].validation).unwrap();
+                    assert!(verify_validation_receipt(
+                        &t,
+                        &a[1].prepared,
+                        &a[1].command,
+                        &a[1].validation
+                    ));
+                }
+                13 => {
+                    a = (0..4)
+                        .map(|i| {
+                            history_attempt(
+                                &t,
+                                i,
+                                if i == 3 { "passed" } else { "assertion_failed" },
+                            )
+                        })
+                        .collect()
+                }
+                _ => unreachable!(),
+            }
+            // Re-seal mutations to ensure hash checks alone cannot conceal a
+            // broken edge or a structurally invalid validation receipt.
+            for attempt in &mut a {
+                attempt.validation.receipt_sha256 =
+                    validation_receipt_digest(&attempt.validation).unwrap();
+            }
+            for plan in &mut p {
+                plan.rerun_sha256 = rerun_digest(plan).unwrap();
+            }
+            assert!(
+                !verify_bounded_validation_history(&template, &a, &p),
+                "mutation {mutation}"
+            );
+        }
+        let mut four: Vec<_> = (0..4)
+            .map(|i| history_attempt(&t, i, if i == 3 { "passed" } else { "assertion_failed" }))
+            .collect();
+        let links = history_plans(&t, &four);
+        assert!(!verify_bounded_validation_history(&t, &four, &links));
+        four.pop();
+        assert!(!verify_bounded_validation_history(&t, &four, &links[..2]));
+    }
+
+    #[test]
+    fn bounded_history_requires_fresh_approval_and_attempt_identities_even_when_resealed() {
+        let t = template();
+        for field in 0..5 {
+            let mut a = vec![
+                history_attempt(&t, 0, "assertion_failed"),
+                history_attempt(&t, 1, "passed"),
+            ];
+            let first = a[0].validation.clone();
+            match field {
+                0 => a[1].validation.approval_sha256 = first.approval_sha256,
+                1 => a[1].validation.validation_attempt_id = first.validation_attempt_id,
+                2 => {
+                    a[1].command.authority_transaction_id = first.authority_transaction_id;
+                }
+                3 => {
+                    a[1].command.operation_attempt_id = first.operation_attempt_id;
+                }
+                4 => {
+                    a[1].prepared = a[0].prepared.clone();
+                    a[1].command.command_attempt_id = first.command_attempt_id;
+                    a[1].command.request_sha256 = a[0].command.request_sha256.clone();
+                    a[1].command.preview_sha256 = a[0].command.preview_sha256.clone();
+                }
+                _ => unreachable!(),
+            }
+            let next = &mut a[1];
+            next.command.receipt_sha256 = "0".repeat(64);
+            next.command.receipt_sha256 = sha256_json(&next.command).unwrap();
+            next.validation.authority_transaction_id =
+                next.command.authority_transaction_id.clone();
+            next.validation.operation_attempt_id = next.command.operation_attempt_id.clone();
+            next.validation.command_attempt_id = next.command.command_attempt_id.clone();
+            next.validation.command_request_sha256 = next.command.request_sha256.clone();
+            next.validation.command_preview_sha256 = next.command.preview_sha256.clone();
+            next.validation.command_receipt_sha256 = next.command.receipt_sha256.clone();
+            next.validation.receipt_sha256 = validation_receipt_digest(&next.validation).unwrap();
+            // Both attempts still independently verify; the series refuses reuse.
+            for attempt in &a {
+                assert!(verify_validation_receipt(
+                    &t,
+                    &attempt.prepared,
+                    &attempt.command,
+                    &attempt.validation
+                ));
+            }
+            let plans = history_plans(&t, &a);
+            assert!(
+                !verify_bounded_validation_history(&t, &a, &plans),
+                "field {field}"
             );
         }
     }

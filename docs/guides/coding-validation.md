@@ -54,7 +54,7 @@ over these routes. `approve_definition: true` alone cannot execute anything.
 
 | Route | Request/result |
 | --- | --- |
-| `GET /v1/code/repository/validation` | No body; process-only pending preview, last normalized receipt, attempt count and limits |
+| `GET /v1/code/repository/validation` | No body; process-only preview, last receipt, complete bounded receipt history, rerun plans, linked-pass check, attempt count and limits |
 | `POST /v1/code/repository/validation/prepare` | Exact definition object above; returns an inert preview |
 | `POST /v1/code/repository/validation/decide` | Exact `preview_sha256` and Boolean `approve`; returns both command and validation outcomes |
 
@@ -169,7 +169,21 @@ receipt passes, and it cannot select failed-test repair or rerun eligibility.
 Unknown cleanup leaves canonical uncertainty and no fabricated command result.
 Cancellation does not release the API lease or restore a consumed approval.
 
-The budget and normalized last receipt are process-only. A new successfully
+The validation result and inspection include `linked_pass_verified`. It is true
+only when every admitted attempt completed with retained original command and
+validation receipts, each earlier eligible failure has its exact immediate
+rerun plan, all attempts have separate approvals and identities, and the final
+result is a complete pass. Inspection keeps the original receipts in `history`
+and the original edges in `rerun_plans`; earlier failures are never rewritten.
+There are at most three attempts. A missing or uncertain successor leaves this
+check false while retaining the completed prefix. Denied previews add no edge.
+
+This check describes only the recorded command series. It does not verify
+current source, independent task acceptance or suite coverage. The coding
+completion verifier continues refusing failed tool history; acceptance of a
+linked repair and a current source snapshot remains separate work.
+
+The budget, bounded history, rerun plans and normalized last receipt are process-only. A new successfully
 created worktree starts a new series. Restart loses ownership, previews, results
 and budgets; it cannot restore command authority from receipts. These limits
 bound this manual validation series, not a durable coding run or the separate

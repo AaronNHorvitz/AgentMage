@@ -791,6 +791,11 @@ fn validation_failure_feedback_then_exact_fresh_rerun_passes_without_task_grade(
     );
     assert_eq!(failed["validation"]["receipt"]["approval_sha256"], first);
     assert_eq!(failed["validation"]["validation_passed"], false);
+    assert_eq!(failed["validation"]["linked_pass_verified"], false);
+    assert_eq!(
+        owner.inspect_validation().unwrap()["history"],
+        json!([failed["validation"]["receipt"]])
+    );
     assert_eq!(
         failed["validation"]["receipt"]["failure_classification"],
         "unclassified"
@@ -820,6 +825,17 @@ fn validation_failure_feedback_then_exact_fresh_rerun_passes_without_task_grade(
     )
     .unwrap();
     assert_eq!(passed["validation"]["validation_passed"], true);
+    assert_eq!(passed["validation"]["linked_pass_verified"], true);
+    let history = owner.inspect_validation().unwrap();
+    assert_eq!(history["linked_pass_verified"], true);
+    assert_eq!(
+        history["history"],
+        json!([
+            failed["validation"]["receipt"],
+            passed["validation"]["receipt"]
+        ])
+    );
+    assert_eq!(history["rerun_plans"], json!([passed["rerun_plan"]]));
     assert_eq!(passed["validation"]["attempt"], 2);
     assert_eq!(passed["rerun_plan"]["prior_receipt_sha256"], prior);
     assert_eq!(passed["rerun_plan"]["approval_sha256"], second);
@@ -847,6 +863,9 @@ fn validation_failure_feedback_then_exact_fresh_rerun_passes_without_task_grade(
     assert!(state["latest"].is_null());
     assert!(state["pending"].is_null());
     assert_eq!(state["attempts"], 0);
+    assert_eq!(state["history"], json!([]));
+    assert_eq!(state["rerun_plans"], json!([]));
+    assert_eq!(state["linked_pass_verified"], false);
     assert_eq!(reopened.inspect().unwrap()["receipts"], receipts);
     assert!(reopened.created.is_none());
 }
@@ -958,6 +977,10 @@ fn repair_feedback_consumes_exact_failure_once_preserving_test_budget_and_write_
         "code.repair.budget"
     );
     assert_eq!(calls.load(Ordering::Relaxed), 3);
+    let history = owner.inspect_validation().unwrap();
+    assert_eq!(history["history"].as_array().unwrap().len(), 3);
+    assert_eq!(history["rerun_plans"].as_array().unwrap().len(), 2);
+    assert_eq!(history["linked_pass_verified"], false);
 }
 
 #[test]
@@ -1849,4 +1872,52 @@ fn selected_project_output_formats_bind_the_preview_and_keep_exact_retry_budget(
         assert_eq!(owner.inspect_validation().unwrap()["attempts"], 2);
         assert_eq!(calls.load(Ordering::Relaxed), 2);
     }
+}
+
+#[test]
+fn validation_history_retains_failed_prefix_when_successor_is_uncertain() {
+    let f = Fixture::new();
+    let mut owner = f.open();
+    f.synthetic_created(&mut owner);
+    let calls = Arc::new(AtomicUsize::new(0));
+    let first = validation_pending(&mut owner, None).unwrap();
+    let failed = validation_execute(
+        &mut owner,
+        &first,
+        envelope("assertion_failed", 1, 1, 0),
+        1,
+        &calls,
+        false,
+    )
+    .unwrap();
+    let prior = failed["validation"]["receipt"]["receipt_sha256"]
+        .as_str()
+        .unwrap();
+    let second = validation_pending(&mut owner, Some(prior)).unwrap();
+    assert!(
+        validation_execute(
+            &mut owner,
+            &second,
+            envelope("passed", 2, 0, 0),
+            0,
+            &calls,
+            true
+        )
+        .is_err()
+    );
+    let history = owner.inspect_validation().unwrap();
+    assert_eq!(history["attempts"], 2);
+    assert_eq!(history["history"], json!([failed["validation"]["receipt"]]));
+    assert_eq!(history["rerun_plans"].as_array().unwrap().len(), 1);
+    assert_eq!(history["rerun_plans"][0]["prior_receipt_sha256"], prior);
+    assert_eq!(history["linked_pass_verified"], false);
+    assert_eq!(history["current_workspace_verified"], false);
+    assert!(history["latest"].is_null());
+    assert_eq!(
+        validation_pending(&mut owner, Some(prior))
+            .unwrap_err()
+            .code(),
+        "code.validation.uncertain"
+    );
+    assert_eq!(calls.load(Ordering::Relaxed), 2);
 }
