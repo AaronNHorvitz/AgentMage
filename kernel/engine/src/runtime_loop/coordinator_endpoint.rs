@@ -75,6 +75,7 @@ pub struct RuntimePreparedEndpointTurn<'a> {
     completion_schema: SchemaReference,
     tool_preparation: Option<Box<ToolPreparation<'a>>>,
     completion_only: bool,
+    completion_check: Option<Box<CompletionCheck<'a>>>,
 }
 
 /// Original coordinator identities for interpreting a completed answer. This
@@ -112,6 +113,8 @@ type ToolPreparation<'a> = dyn FnOnce(
         &dyn ModelOperationControl,
     ) -> Result<RuntimeEndpointToolProposal, RuntimePortFailure>
     + 'a;
+type CompletionCheck<'a> =
+    dyn FnOnce(&dyn ModelOperationControl) -> Result<(), RuntimePortFailure> + 'a;
 impl<'a> RuntimePreparedEndpointTurn<'a> {
     /// Retains a single-use prepared transport, with no dispatch or authority grant.
     pub fn new<P: RuntimeEndpointModelPort<Error = RuntimePortFailure> + 'a>(
@@ -125,6 +128,7 @@ impl<'a> RuntimePreparedEndpointTurn<'a> {
             completion_schema,
             tool_preparation: None,
             completion_only: false,
+            completion_check: None,
         }
     }
 
@@ -135,6 +139,22 @@ impl<'a> RuntimePreparedEndpointTurn<'a> {
     #[must_use]
     pub fn completion_only(mut self) -> Self {
         self.completion_only = true;
+        self
+    }
+
+    /// Recheck process-held completion prerequisites after a normally completed,
+    /// accounted model response and before calling the independent verifier.
+    /// This single-use trusted callback grants no authority and cannot accept a
+    /// task. It must only inspect previously consented state under the original
+    /// control. Tool proposals, invalid claim envelopes, malformed/duplicate-key
+    /// JSON and incomplete responses never invoke it. The verifier still owns
+    /// schema semantics. No model or wire field can install or skip this check.
+    #[must_use]
+    pub fn with_completion_check<F>(mut self, check: F) -> Self
+    where
+        F: FnOnce(&dyn ModelOperationControl) -> Result<(), RuntimePortFailure> + 'a,
+    {
+        self.completion_check = Some(Box::new(check));
         self
     }
 
@@ -482,6 +502,7 @@ impl<
             completion_schema,
             tool_preparation,
             completion_only,
+            completion_check,
         } = prepared;
         let descriptor = port.request().clone();
         let mut phase = match RuntimeEndpointModelPhase::for_run(&request, &descriptor, context) {
@@ -807,6 +828,13 @@ impl<
         {
             return self.finish_refused_proposal(&turn_id, "runtime.proposal.arguments-invalid");
         }
+        // Checked completion turns require one unambiguous JSON value before
+        // inspecting prerequisites. The verifier still owns schema semantics.
+        // Keep legacy clients' completion handling unchanged when no check is
+        // installed; model text cannot select or disable this restriction.
+        if completion_check.is_some() && !crate::tooling::is_closed_json(text.as_bytes()) {
+            return self.finish_invalid_proposal(&turn_id);
+        }
         let owned = OwnedEndpointClaim {
             turn: accepted,
             text,
@@ -816,6 +844,44 @@ impl<
             Ok(claim) => claim,
             Err(_) => return self.finish_invalid_proposal(&turn_id),
         };
+        if let Some(check) = completion_check {
+            let (checked, stop) = {
+                let control = RuntimePhaseControl::for_run_limits(
+                    &mut self.clock,
+                    &request.task.task_id,
+                    request.limits.max_elapsed_ms,
+                    &self.correlation_id,
+                    self.started_at_epoch_ms
+                        .ok_or(RuntimeLoopError::InvalidBoundaryResult)?,
+                    self.events.last().map_or(0, |e| e.occurred_at_epoch_ms),
+                    &self.last_phase_observed_at,
+                    cancellation,
+                );
+                let checked = control.check().and_then(|_| check(&control));
+                // Always observe control again, including after refusal.
+                // Preserve the original stop/failure precedence below.
+                let _ = control.check();
+                (checked, control.into_stop())
+            };
+            self.latch_phase_cancellation(stop.as_ref());
+            if let Some(stop) = stop {
+                if let Err(error) = &checked
+                    && *error != stop.port_failure()
+                {
+                    return self.finish_model_failure(&turn_id, *error);
+                }
+                return self.finish_phase_stop(stop, false);
+            }
+            if let Err(error) = checked {
+                if error == RuntimePortFailure::Invalid {
+                    return self.finish_refused_proposal(
+                        &turn_id,
+                        "runtime.proposal.completion-check-refused",
+                    );
+                }
+                return self.finish_model_failure(&turn_id, error);
+            }
+        }
         for state in [
             AgentStateKind::Approval,
             AgentStateKind::Execution,

@@ -72,8 +72,9 @@ observes terminal refusal before any socket, model call or tool call; repeating
 advance preserves the same terminal events. The existing completion grammar and
 verifier fixtures now call the exact production framing helper from a synthetic
 turn port. Their original schema, no-tool, outcome, event and verifier assertions
-remain. They do not bypass the production owner's new validation check or claim
-a native validation pass. The previous private-field test compilation error is
+remain. These fixtures intentionally skip the owner check, which only the
+production StrictEdits port performs; they do not weaken it or claim a native
+validation pass. The previous private-field test compilation error is
 retained privately; the repair keeps validation fields private and uses the
 original kernel history checker rather than adding a test mutation interface.
 

@@ -1533,9 +1533,17 @@ another model request. Earlier failures and their inputs remain in history.
 
 The trusted host must have prior consent for this complete worktree inspection,
 including hidden files, configuration and tests. The development launch's
-inspection scope includes that final reinspection. The check adds no source
-bytes to model context and supplies no grant or independent task grade. It is a
-non-atomic sample before prompt preparation; subsequent changes remain possible.
+inspection scope includes reinspections before and after summary generation.
+After a normally completed, accounted response, the same original owner repeats
+its typed validation/source check before the candidate can reach the verifier.
+A refusal records `runtime.proposal.completion-check-refused`, terminates the run
+and retains the completed model call and output-byte accounting. Tool-shaped,
+incomplete and invalid responses do not invoke this completion check. Original
+control is checked around inspection; stopped continuous control retains its
+cancellation or timeout code.
+The check adds no source bytes to model context and supplies no grant or
+independent task grade. Both inspections are non-atomic samples; subsequent
+changes remain possible.
 Neither verification flag becomes true, and the independent verifier remains
 responsible for task acceptance.
 

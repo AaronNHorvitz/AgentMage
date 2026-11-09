@@ -193,7 +193,8 @@ impl<C: RuntimeClock + Clone> RuntimeEndpointTurnPort for CodingEndpointStrictEd
                 self.source_budget,
                 self.include_usage,
                 control,
-            ),
+            )
+            .map(|turn| turn.with_completion_check(self.previews.completion_check())),
         }
     }
 }

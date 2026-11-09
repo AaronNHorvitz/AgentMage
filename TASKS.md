@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The [completion-source independent core review](docs/reviews/8aa5d391f0d8-local-coding-completion-source-check.txt)
+has **Verdict: PASS** for exact commit
+`8aa5d391f0d8e207d38f20d2b57f9377e6b47ea8`, with no high/medium finding.
+Low L1's framing-fixture wording is corrected in this batch. Low L2's typed
+readiness token and L3's isolated refusal coverage remain same-row backlog.
+Both parents remain open.
+
+The [post-generation completion check](docs/evidence/t303-completion-recheck-2026-11-09.md)
+repeats the original owner's typed source/validation inspection after a normally
+completed and accounted summary, before independent verifier dispatch. Refusal
+retains model accounting and cannot invoke tools or certify a task. The sample
+is non-atomic; both completion verifiers and verification flags are unchanged.
+The repaired full affected gate remains FAIL: 2,850 passed, exactly 72 inherited
+failures and none new, 72 existing ignored across 46 unfiltered targets. All
+seven named methods, formatting and Clippy pass; five Rust hashes stay fixed.
+An initial malformed-JSON regression is repaired without weakening its assertion;
+both runs are retained. Independent core review is required. T-303/T-306 remain
+open; no row or sub-row is added or closed.
+
 The [sealed-admission independent core re-review](docs/reviews/aabcbaa0c124-local-coding-sealed-admission-repair.txt)
 has **Verdict: PASS** for exact commit
 `aabcbaa0c12433aa6951fdcfb7054e351fddf8bf`, with no high/medium finding.

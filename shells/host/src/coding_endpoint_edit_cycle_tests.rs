@@ -198,6 +198,129 @@ fn coding_cycle_refuses_completion_without_original_linked_sealed_validation_bef
     assert_eq!(coordinator.events(), events);
 }
 
+// Synthetic framing deliberately skips the pre-generation readiness check, so
+// this fixture can exercise the ORIGINAL post-generation owner guard without
+// manufacturing native execution or exposing private validation mutation.
+struct CheckedCompletionFramingFixture<F> {
+    inner: CompletionFramingFixture,
+    check: Option<F>,
+}
+impl<F> agentmage_kernel_engine::runtime_loop::RuntimeEndpointTurnPort
+    for CheckedCompletionFramingFixture<F>
+where
+    F: FnOnce(&dyn ModelOperationControl) -> Result<(), RuntimePortFailure>,
+{
+    fn model_binding(&self) -> agentmage_kernel_contracts::RuntimeModelBinding<'_> {
+        self.inner.model_binding()
+    }
+    fn prepare<'a>(
+        &mut self,
+        input: agentmage_kernel_engine::runtime_loop::RuntimeEndpointPreparationInput<'_>,
+        control: &dyn ModelOperationControl,
+    ) -> Result<
+        agentmage_kernel_engine::runtime_loop::RuntimePreparedEndpointTurn<'a>,
+        RuntimePortFailure,
+    >
+    where
+        Self: 'a,
+    {
+        let check = self.check.take().expect("single completion check");
+        self.inner
+            .prepare(input, control)
+            .map(|turn| turn.with_completion_check(check))
+    }
+}
+
+#[test]
+fn coding_cycle_post_generation_guard_refuses_original_missing_validation_or_revoked_control() {
+    for stopped in [false, true] {
+        let f = generation_fixture();
+        let (listener, endpoint) = socket();
+        let startup = coding_startup(&f, &endpoint);
+        let request = startup.request().clone();
+        let clock = Clock(Arc::new(AtomicU64::new(1000)));
+        let continuous = Arc::new(Control::new());
+        let (previews, boundary) = CodingEndpointEditPreviews::new_coding(
+            startup,
+            owner(&f),
+            continuous.clone(),
+            clock.clone(),
+            validation(),
+        )
+        .unwrap();
+        // Capture the original shared owner before changing its phase. The
+        // callback must see current state, never a captured approval/pass flag.
+        let check = previews.completion_check();
+        previews.synthetic_observation(Next::Completion, None);
+        let port = CheckedCompletionFramingFixture {
+            inner: CompletionFramingFixture {
+                request: request.clone(),
+                connection: connection(configured_transport(endpoint.clone()), endpoint),
+            },
+            check: Some(check),
+        };
+        let objective = digest(request.task.objective.as_bytes());
+        let peer = thread::spawn(move || {
+            let mut stream = accept(&listener);
+            let _ = body(&mut stream);
+            if stopped {
+                continuous.0.store(true, Ordering::SeqCst);
+            }
+            respond(&mut stream, &json!({"schema_version":1,"objective_sha256":objective,"terminal_claim":"changed","summary":"untrusted success","checks_not_run":[],"residual_risks":[]}).to_string(), "stop", true);
+        });
+        let mut coordinator = ReusableRuntimeCoordinator::new_endpoint(
+            request,
+            port,
+            linux_coding_endpoint_coding_registry().unwrap(),
+            boundary,
+            NeverVerify(VerifierId::from_raw(
+                "post-generation-guard-must-not-verify",
+            )),
+            clock,
+        )
+        .unwrap();
+        let RuntimeEndpointCoordinatorStep::Complete { outcome } =
+            coordinator.run_endpoint_until_boundary(None, None).unwrap()
+        else {
+            panic!("terminal refusal")
+        };
+        assert_eq!(outcome.outcome.state, AgentStateKind::Failed);
+        assert_eq!(
+            outcome.outcome.unresolved_codes,
+            [if stopped {
+                "runtime.port.cancelled"
+            } else {
+                "runtime.proposal.completion-check-refused"
+            }]
+        );
+        assert_eq!(outcome.outcome.model_call_count, 1);
+        assert_eq!(outcome.outcome.tool_call_count, 0);
+        assert!(outcome.outcome.output.is_none());
+        assert_eq!(
+            coordinator.resource_snapshot().cumulative[&BudgetResource::ModelCalls],
+            1
+        );
+        assert!(coordinator.resource_snapshot().cumulative[&BudgetResource::OutputBytes] > 0);
+        assert!(
+            coordinator
+                .events()
+                .iter()
+                .any(|e| matches!(e.kind, RuntimeEventKind::ModelCompleted { .. }))
+        );
+        assert_eq!(
+            fs::read(f.root.join("owned/worktree/one.py")).unwrap(),
+            b"one\n"
+        );
+        let events = coordinator.events().to_vec();
+        assert_eq!(
+            coordinator.run_endpoint_until_boundary(None, None).unwrap(),
+            RuntimeEndpointCoordinatorStep::Complete { outcome }
+        );
+        assert_eq!(coordinator.events(), events);
+        peer.join().unwrap();
+    }
+}
+
 #[test]
 fn coding_cycle_schedules_fixed_test_after_approved_edit_in_the_same_coordinator() {
     for invalid_ack in [false, true] {

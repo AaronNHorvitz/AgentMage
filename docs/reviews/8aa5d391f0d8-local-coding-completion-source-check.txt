@@ -1,0 +1,157 @@
+Commit: 8aa5d391f0d8e207d38f20d2b57f9377e6b47ea8
+Scope: local-coding-completion-source-check
+
+# Independent core review: completion source check (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only, pinned checkout `/lane/review-checkout`.
+Base: `aabcbaa0c12433aa6951fdcfb7054e351fddf8bf`. Both parent rows remain OPEN; this review closes no row.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `8aa5d391f0d8e207d38f20d2b57f9377e6b47ea8`; the working tree was clean before and after.
+- Read README.md, run.py, check.py and light.py in `/lane/state/tmp/t303-completion-source-check` before running them.
+  They only read the repository, write to the fresh output directory and the TMPDIR namespace, and run the repository's
+  fast gate. Nothing was outer-wrapped: each Cargo command takes its own shared build reservation through the gate.
+- Read the whole Rust diff (`git diff aabcbaa0..8aa5d391 -- '*.rs'`) and its context:
+  `ValidationSeries`, `linked_pass_verified`, `verify_bounded_validation_history` (kernel), `finish_validation`,
+  `verify_created`, `WorkspaceObservation::capture/scan`, `CodingEndpointEditPreviews::{next, execute_scoped}`,
+  `CodingEndpointStrictEdits::prepare`, and the launch doc comments.
+- Searched for every production caller of `prepare_coding_completion`, `.completion_only()` and `Next::Completion`.
+- Checked the prose and doc diff (TASKS.md, two evidence files, runtime guide) against the code and the prior review's
+  L1/L2, and checked the diff for private paths, usernames, credentials, sibling-project names and product names.
+
+## Exact commands and results (all run in the pinned checkout)
+
+| Command | Result |
+| --- | --- |
+| `sha256sum --quiet -c …/review-inputs.sha256` (manifest SHA-256 `19de65f6…2259b6` confirmed) | exit 0 |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-completion-source-8aa5d391f0d8` | exit 1 (EXPECT1): `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True` |
+| `python3 -B …/check.py /lane/state/tmp/review-completion-source-8aa5d391f0d8` | exit 0, `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL` |
+| `python3 -B …/light.py` | exit 0 (diff-check, untracked lint, review lint, markdownlint 0 issues in 4 files) |
+| `cmp …/validation-final/source-freeze.json <out>/source-freeze.json` | exit 0 |
+| `cmp docs/reviews/aabcbaa0c124-local-coding-sealed-admission-repair.txt /lane/reviews/aabcbaa0c124-local-coding-sealed-admission-repair.md` | exit 0 (byte-for-byte) |
+| `git diff --check aabcbaa0c12433aa6951fdcfb7054e351fddf8bf --` | exit 0 |
+| `git status --short` | empty |
+
+My gate run produced 26 unfiltered targets with totals 1216 passed / 72 failed / 64 ignored / 0 measured / 0 filtered.
+The failure set equals exactly the 72 inherited baseline identities, with none new. The ignored set equals the retained
+list. All seven named methods report `ok`. Command exits were 0,0,0,0,0,0 and 101 for tests; Clippy took 35.46 s and
+tests 220.97 s. The total was 279.29 s including reservations; the builder's 612.10 s included longer queueing. The
+plan is byte-identical to the builder's (`cmp` exit 0). The nine-file source freeze is unchanged. The runtime
+namespace retains exactly 11 inherited-failure fixture directories. My raw log SHA-256 is
+`76b7278cd811289f83928a4d57453907ccad4e5599b31966980673277880ae6e`. It differs from the builder's `3522f48b…` only
+because timings differ; check.py compares the identities, not the bytes. **The full gate remains FAIL; the matching
+comparison does not make it green.**
+
+No model, GPU, download, shim or trust exception was used. No native workflow was run: it is unavailable under the
+unchanged T-301.1 blocker, and none is claimed.
+
+## Review of the change
+
+**Production guard placement (correct).** `CodingEndpointEditPreviews::next()` (`shells/host/src/coding_endpoint_edit_previews.rs:224-243`)
+now calls `LinuxCodingRepository::check_completion_validation()` whenever `state.next == Next::Completion`. It checks
+control before and after that call. `CodingEndpointStrictEdits::prepare` (`coding_endpoint_edit_generation.rs:121`)
+calls `next()` before any connection use or framing. `prepare_coding_completion` has exactly one production caller,
+the guarded `Next::Completion` arm at line 190. `Next` is internal process state, set only by `execute_scoped` after
+a successful original command boundary (line 565). No HTTP or model field selects it or alters the source scope.
+A refusal maps to `RuntimePortFailure::Invalid` before any socket use. The new host regression confirms this: zero
+model calls, zero tool calls, no accepted connection, the file unchanged, and idempotent terminal events.
+
+**Owner check (correct, typed).** `check_completion_validation` (`platforms/linux/src/coding_repository_validation.rs:116-146`)
+does the following, in order:
+1. `verify_created` revalidates the authority root, the held and owned descriptors and the root path hashes.
+2. It refuses any pending command, edit or apply. These fields are the `Pending*` types; the retained `*_result`
+   fields are separate.
+3. It requires a series, a `latest` receipt and a final history attempt.
+4. It requires `linked_pass_verified()`: attempts equal history length, and the kernel `verify_bounded_validation_history`
+   checks every receipt, unique IDs, approvals and transactions, each rerun link, and that the last attempt is a full pass.
+5. It requires `latest == final_attempt.validation`.
+6. It calls `permits_completion_summary`, which requires all of: the binding's command receipt equals the final
+   attempt's command receipt; the binding's sealed input equals that command's `sealed_workspace_input`; the sealed
+   record agrees with the binding observation (root, digest, entry count, bytes); the binding's creation and validation
+   receipts equal the current ones; and a fresh two-scan `WorkspaceObservation::capture` of the held root equals the
+   retained observation.
+
+All of this runs on private typed state; no inspection JSON is parsed. The fresh capture goes through the existing
+confined adapter. It counts hidden files and refuses symlinks and replacement between the metadata and content reads.
+It has a 2 s deadline and existing bounds. Nothing captured is returned or added to model context; the function
+returns `Result<()>`.
+
+**Confinement and escape attempts.** No new path, argument or untrusted input reaches this code. The only new file
+access is the existing bounded observation of the already-held worktree. The platform matrix
+(`completion_validation_refuses_missing_seals_pending_effects_and_changed_sources`) creates real files and refuses
+each of these: a hidden `.config` added, a `tests/` file added, a 0600 mode change, an in-tree symlink, a pending
+command, a changed creation receipt, and a legacy run without seals. In each case it checks that no extra dispatch
+happens, attempts are preserved and the sentinel bytes are unchanged. The previously reviewed sealed-capture and
+command sandbox are unchanged apart from the factored policy helper.
+
+**L2 repair (correct).** `command_projection_policy(sealed_worktree.as_ref())` (`platforms/linux/src/command_runner.rs:31-42,405`)
+is now the one production choice, made over the same capture object that later yields the descriptors. The
+non-ignored `sealed_worktree_admission_requires_exact_bounded_projection_count` calls that exact function for `None`
+(Live) and for real 0/2/`MAX_SEALED_FILES` captures. It asserts Sealed with the exact count and keeps the original
+admission bounds. The test passed in my run.
+
+**L1 repair (correct).** `docs/evidence/t303-sealed-admission-repair-2026-11-09.md` now says "No live pin of the old
+schema hash remains; the historical Sprint 41 snapshot keeps its recorded value". `git grep 1fd93b8d` finds only
+`artifacts/sprints/sprint-41/local-evidence-report.json:12` and the retained review, so the new wording is accurate.
+
+**Completion fixtures.** The two existing completion tests now use `CompletionFramingFixture`, which calls the
+production `prepare_coding_completion` directly. Their grammar, no-tool, outcome, event and verifier assertions are
+unchanged in the diff. The fixture asserts the exact request. This is honest, and needed, because a positive native
+binding cannot be produced without the native workflow. But see L1 below on wording.
+
+**Honest labelling and integrity.** Both verification flags (`current_workspace_verified`, `test_suite_verified`)
+remain hard-coded `false`. The completion verifiers are untouched, and the docs describe the check as non-atomic and
+not an independent grade. check.py confirmed several things. The task-row table lines are unchanged. The changed
+paths equal the expected list and exclude Cargo files, the status model and the scoreboard. No `#[ignore` was added.
+No private path or username appears. My own grep of the diff found no credential, hostname, sibling-project or
+product name. No held-out, hidden, frozen-task, scorer, pin, threshold, dependency or score input changed. The
+retained prior review is byte-identical.
+
+## Findings
+
+No critical, high or medium finding.
+
+### L1 — Low (claim accuracy): the evidence says the framing fixtures "do not bypass" the new check
+
+- Where: `docs/evidence/t303-completion-source-check-2026-11-09.md` (host regression paragraph: "They do not bypass the
+  production owner's new validation check or claim a native validation pass").
+- Reasoning: `CompletionFramingFixture::prepare` (`shells/host/src/coding_endpoint_edit_cycle_tests.rs:113-141`) never
+  calls `CodingEndpointEditPreviews::next()`, so these two tests do skip the check. The intended meaning is that
+  production is not weakened, which is true. Coverage of the guarded positive completion path through
+  `CodingEndpointStrictEdits` is now absent until a native binding exists.
+- Fix: reword to "These fixtures intentionally skip the owner check, which only the production StrictEdits port
+  performs; they do not weaken it or claim a native validation pass." Backlog, same row.
+
+### L2 — Low (defence in depth): the completion framer is crate-visible without any proof of the check
+
+- Where: `shells/host/src/coding_endpoint_edit_generation.rs:203` — `pub(super) fn prepare_coding_completion`. Its
+  parent is the crate root, so the function is visible crate-wide.
+- Reasoning: today there is exactly one production caller, and it is guarded. A future in-crate caller could frame a
+  completion turn without the source check, and only a comment warns against that.
+- Fix: have `next()` return a non-constructible readiness token for `Next::Completion` (for example,
+  `CompletionReady(())` with a private constructor) and require it as a `prepare_coding_completion` parameter. The
+  test fixture would then need an explicit `#[cfg(test)]` constructor. Backlog, same row.
+
+### L3 — Low (test gap): some refusal clauses are only asserted as `is_err()` or not exercised
+
+- Where: `platforms/linux/src/coding_repository_command_tests.rs` (the new matrix asserts `is_err()` only) and
+  `coding_repository_validation_workspace.rs:57-66`.
+- Gap: the matrix does not check per-case error codes, for example `pending-effect` versus `source-binding`. A pending
+  edit or apply is not exercised; only a pending command is. The `command_receipt ==` and `sealed_input ==` equality
+  clauses of `permits_completion_summary` have no isolated negative case. If any of them were dropped, only the other
+  conjuncts would still catch the mismatch.
+- Fix: assert the expected code per case, and add pending-edit and pending-apply cases if the fixture can stage them
+  without widening fields. Backlog, same row.
+
+Earlier low findings remain same-row backlog as recorded: dc5cb453 L1/L2, a5594787 L1 and 699e99 L1/L3. aabcbaa0 L1
+and L2 are resolved by this commit.
+
+## Per-row result
+
+- **T-303** (non-closing increment): PASS for this commit's scope. There is no high or medium finding; L1 to L3 are
+  same-row backlog. The row stays OPEN. Completion acceptance, the native/model workflow, durable recovery, approved
+  Git and measurements are still outstanding, and the full affected gate is still FAIL on 72 inherited failures.
+- **T-306** (non-closing increment): PASS for this commit's scope, with the same qualifications. The row stays OPEN.
+
+Verdict: PASS

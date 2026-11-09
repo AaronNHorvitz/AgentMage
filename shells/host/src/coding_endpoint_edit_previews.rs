@@ -91,7 +91,7 @@ impl<C: RuntimeClock + Clone> CodingEndpointEditPreviews<C> {
     /// One original owner alternates strict edits and this frozen validation.
     /// Must use the explicit combined startup; commands with read exclusions
     /// refuse there. Prior inspection consent must also cover bounded complete
-    /// worktree reads before the completion summary, including hidden files,
+    /// worktree reads before and after summary generation, including hidden files,
     /// configuration and tests. Those bytes are not added to model context.
     /// No command, grant or model request occurs during construction.
     pub fn new_coding(
@@ -240,6 +240,31 @@ impl<C: RuntimeClock + Clone> CodingEndpointEditPreviews<C> {
             state.control.remaining_ms().map_err(control_failure)?;
         }
         Ok(state.next)
+    }
+
+    /// Retain only a reference to the original owner for a second inspection
+    /// after model generation. This cannot restore ownership or create a pass.
+    pub(super) fn completion_check(
+        &self,
+    ) -> impl FnOnce(&dyn ModelOperationControl) -> Result<(), RuntimePortFailure> + use<C> {
+        let state = self.state.clone();
+        move |control| {
+            control.remaining_ms().map_err(control_failure)?;
+            let state = state.lock().map_err(|_| RuntimePortFailure::Unavailable)?;
+            state.control.remaining_ms().map_err(control_failure)?;
+            if state.next != Next::Completion {
+                return Err(RuntimePortFailure::Invalid);
+            }
+            let Some(Owner::Ready(repository)) = state.owner.as_ref() else {
+                return Err(RuntimePortFailure::Invalid);
+            };
+            let checked = repository
+                .check_completion_validation()
+                .map_err(|_| RuntimePortFailure::Invalid);
+            control.remaining_ms().map_err(control_failure)?;
+            state.control.remaining_ms().map_err(control_failure)?;
+            checked
+        }
     }
 
     // This exact native selection was consumed when the failed observation was

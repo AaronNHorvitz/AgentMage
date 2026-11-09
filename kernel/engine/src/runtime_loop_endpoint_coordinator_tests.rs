@@ -18,7 +18,7 @@ use agentmage_kernel_contracts::{
     RuntimeModelBinding,
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 enum Response {
     Read,
     Effect(GrantOperation),
@@ -26,6 +26,8 @@ enum Response {
     Limited,
     WrongDigest,
     MalformedTool,
+    MalformedCompletion,
+    DuplicateCompletion,
     PositionalTool(u8),
     BadArguments(u8),
     Failure,
@@ -99,6 +101,8 @@ impl RuntimeEndpointModelPort for Dispatch {
                 };
                 serde_json::json!({"tool_call": {"tool_id":id,"tool_version":"1.0.0","arguments":{"path":"fixture.txt"}}}).to_string()
             }
+            Response::MalformedCompletion => "{".into(),
+            Response::DuplicateCompletion => r#"{"answer":"done","answer":"other"}"#.into(),
             Response::Overflow => "x".repeat(self.request.limits().response_text_limit_bytes + 1),
             Response::BadArguments(kind) => match kind {
                 0 => r#"{"tool_call":{"tool_id":"fixture.read","tool_version":"1.0.0","arguments":{"path":"fixture.txt","path":"elsewhere"}}}"#.into(),
@@ -653,6 +657,177 @@ fn endpoint_completion_only_narrows_before_interpretation_and_preserves_verifica
         }
     }
 }
+// Synthetic process-held prerequisite; never an oracle or execution grant.
+struct CheckedCompletionPort {
+    inner: EndpointPort,
+    checks: Arc<AtomicUsize>,
+    mode: u8,
+}
+impl RuntimeEndpointTurnPort for CheckedCompletionPort {
+    fn model_binding(&self) -> RuntimeModelBinding<'_> {
+        self.inner.model_binding()
+    }
+    fn prepare<'a>(
+        &mut self,
+        input: RuntimeEndpointPreparationInput<'_>,
+        control: &dyn ModelOperationControl,
+    ) -> Result<RuntimePreparedEndpointTurn<'a>, RuntimePortFailure>
+    where
+        Self: 'a,
+    {
+        let checks = self.checks.clone();
+        let calls = self.inner.calls.clone();
+        let clock = self.inner.clock.clone();
+        let mode = self.mode;
+        Ok(self
+            .inner
+            .prepare(input, control)?
+            .completion_only()
+            .with_completion_check(move |control| {
+                assert_eq!(calls.load(Ordering::SeqCst), 1, "check follows dispatch");
+                control
+                    .remaining_ms()
+                    .map_err(|_| RuntimePortFailure::Cancelled)?;
+                checks.fetch_add(1, Ordering::SeqCst);
+                if mode == 2 || mode == 3 {
+                    clock.store(1_000_000, Ordering::SeqCst);
+                }
+                match mode {
+                    1 | 3 => Err(RuntimePortFailure::Invalid),
+                    4 => Err(RuntimePortFailure::Cancelled),
+                    5 => Err(RuntimePortFailure::TimedOut),
+                    _ => Ok(()),
+                }
+            }))
+    }
+}
+struct CountCompletionVerifier {
+    inner: Verifier,
+    calls: Arc<AtomicUsize>,
+}
+impl RuntimeVerifierPort for CountCompletionVerifier {
+    fn verifier_id(&self) -> &VerifierId {
+        self.inner.verifier_id()
+    }
+    fn verify(
+        &mut self,
+        _: RuntimeVerificationInput<'_>,
+    ) -> Result<VerifierCandidate, RuntimePortFailure> {
+        panic!("native verification not used")
+    }
+    fn verify_completion(
+        &mut self,
+        input: RuntimeCompletionVerificationInput<'_>,
+    ) -> Result<VerifierCandidate, RuntimePortFailure> {
+        self.calls.fetch_add(1, Ordering::SeqCst);
+        self.inner.verify_completion(input)
+    }
+}
+
+#[test]
+fn endpoint_completion_check_runs_once_after_accounting_and_before_verification() {
+    for mode in 0..6 {
+        for response in [
+            Response::Answer,
+            Response::Read,
+            Response::PositionalTool(0),
+            Response::Limited,
+            Response::WrongDigest,
+            Response::Failure,
+            Response::MalformedCompletion,
+            Response::DuplicateCompletion,
+        ] {
+            let original = coordinator([response], false);
+            let checks = Arc::new(AtomicUsize::new(0));
+            let verifier_calls = Arc::new(AtomicUsize::new(0));
+            let mut c = ReusableRuntimeCoordinator::new_endpoint(
+                endpoint_request(),
+                CheckedCompletionPort {
+                    inner: original.model.0,
+                    checks: checks.clone(),
+                    mode,
+                },
+                original.registry,
+                original.tool_boundary,
+                CountCompletionVerifier {
+                    inner: original.verifier,
+                    calls: verifier_calls.clone(),
+                },
+                original.clock,
+            )
+            .unwrap();
+            let EndpointStep::Complete { outcome } =
+                c.run_endpoint_until_boundary(None, None).unwrap()
+            else {
+                panic!("terminal")
+            };
+            let answer = matches!(response, Response::Answer);
+            assert_eq!(
+                checks.load(Ordering::SeqCst),
+                usize::from(answer),
+                "mode {mode}, response {response:?}"
+            );
+            assert_eq!(
+                verifier_calls.load(Ordering::SeqCst),
+                usize::from(answer && mode == 0)
+            );
+            assert_eq!(outcome.outcome.model_call_count, 1);
+            assert_eq!(outcome.outcome.tool_call_count, 0);
+            assert!(outcome.outcome.output.is_none());
+            if answer && mode == 1 {
+                assert_eq!(
+                    outcome.outcome.unresolved_codes,
+                    ["runtime.proposal.completion-check-refused"]
+                );
+            }
+            if answer && (mode == 2 || mode == 5) {
+                assert_eq!(outcome.outcome.state, AgentStateKind::Exhausted);
+            }
+            if answer && mode == 3 {
+                assert_eq!(outcome.outcome.unresolved_codes, ["runtime.port.invalid"]);
+            }
+            if answer && mode == 4 {
+                assert_eq!(outcome.outcome.unresolved_codes, ["runtime.port.cancelled"]);
+            }
+            if answer && mode == 5 {
+                assert_eq!(outcome.outcome.unresolved_codes, ["runtime.port.timed_out"]);
+            }
+            assert!(!outcome.outcome.state.is_success());
+            assert_eq!(
+                c.resource_snapshot().cumulative[&BudgetResource::ModelCalls],
+                1
+            );
+            if answer {
+                assert!(c.resource_snapshot().cumulative[&BudgetResource::OutputBytes] >= 17);
+                assert!(
+                    c.events()
+                        .iter()
+                        .any(|e| matches!(e.kind, RuntimeEventKind::ModelCompleted { .. }))
+                );
+            }
+            assert!(c.events().iter().all(|e| !matches!(
+                e.kind,
+                RuntimeEventKind::PermissionRequested { .. } | RuntimeEventKind::ToolStarted { .. }
+            )));
+            let mut sequence = RuntimeEventSequence::new();
+            for event in c.events() {
+                sequence.push(event).unwrap();
+            }
+            let events = c.events().to_vec();
+            assert_eq!(
+                c.run_endpoint_until_boundary(None, None).unwrap(),
+                EndpointStep::Complete { outcome }
+            );
+            assert_eq!(c.events(), events);
+            assert_eq!(
+                checks.load(Ordering::SeqCst),
+                usize::from(answer),
+                "mode {mode}, response {response:?}"
+            );
+        }
+    }
+}
+
 impl RuntimeEndpointTurnPort for InterpretedPort {
     fn model_binding(&self) -> RuntimeModelBinding<'_> {
         self.inner.model_binding()
