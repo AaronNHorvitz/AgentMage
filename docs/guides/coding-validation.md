@@ -20,8 +20,25 @@ write mode, execution authority class and `ToolOutput` evidence requirement.
 After startup has narrowed and resealed the request, construct the verifier with
 `for_request(previews.startup().request(), check)`, then connect it using
 `previews.completion_verifier(verifier)` before moving those previews into the
-turn port. Construction reads no file and grants no authority. This is a library
-opt-in; the development executable retains its refusing verifier.
+turn port. Construction reads no file and grants no authority.
+
+The combined `serve-endpoint-coding-development` command can explicitly select
+this checker with `"completion_check": "fixed_test_run_v1"` in its private launch
+file. Generate the exact criterion as above and put it in both acceptance lists
+before sealing the launch request. Startup preserves those lists and the objective;
+it binds the checker to the final instruction-narrowed request with fresh run and
+session identities. Unsupported definitions or broader criteria refuse before
+encrypted state, native inspection or credentials are opened. Omit the field to
+keep non-certifying development behavior. Null, unknown choices and the field on
+the edit-only command refuse. No HTTP request or model output can opt in.
+
+Embedding programs can use
+`serve_coding_endpoint_edits_and_checked_tests` with a caller-selected
+`CodingEndpointAcceptancePort`; it attaches the checker to the same original
+preview owner before the turn port takes ownership. The existing generic
+`serve_coding_endpoint_edits_and_tests` keeps its caller-supplied verifier.
+All existing launch inspection consent, separate model disclosure consent and
+exact creation/edit/test approvals remain required.
 
 This checker supports the two built-in per-test text protocols. It refuses the
 self-reported JSON protocol, non-test definitions, a zero minimum, other working

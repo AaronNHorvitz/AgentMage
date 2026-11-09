@@ -65,15 +65,20 @@ fn strict_edit_launch_refuses_listener_and_stop_before_private_configuration() {
 
 #[test]
 fn executable_strict_edit_launch_reaches_actual_native_refusal_before_credentials_or_model() {
-    exercise_native_refusal(false);
+    exercise_native_refusal(false, false);
 }
 
 #[test]
 fn executable_coding_launch_reaches_actual_native_refusal_before_credentials_or_model() {
-    exercise_native_refusal(true);
+    exercise_native_refusal(true, false);
 }
 
-fn exercise_native_refusal(coding: bool) {
+#[test]
+fn executable_checked_coding_launch_preserves_original_native_refusal() {
+    exercise_native_refusal(true, true);
+}
+
+fn exercise_native_refusal(coding: bool, checked: bool) {
     let command = if coding {
         "serve-endpoint-coding-development"
     } else {
@@ -134,6 +139,27 @@ fn exercise_native_refusal(coding: bool) {
         .unwrap();
         value["validation"] = json!({"command":spec,"kind":"unit","minimum_test_count":1,"output_format":ValidationParserKind::AgentMageJsonV1});
     }
+    if checked {
+        use agentmage_host::{
+            coding_endpoint_edit_previews::CodingEndpointValidation,
+            coding_endpoint_fixed_test_verifier::CodingEndpointFixedTestCheck,
+        };
+        value["validation"]["output_format"] = json!("python_unittest_text_v1");
+        let definition = CodingEndpointValidation {
+            command: serde_json::from_value(value["validation"]["command"].clone()).unwrap(),
+            kind: agentmage_kernel_engine::validation_template::ValidationKind::Unit,
+            minimum_test_count: 1,
+            output_format: agentmage_platform_linux::LinuxCodingTestFormat::PythonUnittestTextV1,
+        };
+        let check = CodingEndpointFixedTestCheck::new(&definition).unwrap();
+        let mut request: RuntimeEndpointRunRequest =
+            serde_json::from_value(value["request"].clone()).unwrap();
+        request.task.acceptance_criteria = vec![check.criterion()];
+        request.work_packet.acceptance_checks = vec![check.criterion()];
+        request.work_packet.required_capability_class = AuthorityClass::Execute;
+        value["request"] = json!(seal_runtime_endpoint_run_request(request).unwrap());
+        value["completion_check"] = json!("fixed_test_run_v1");
+    }
     let launch = f.root.join("edit.json");
     private_file(&launch, &serde_json::to_vec(&value).unwrap());
     let auth = f.root.join("auth");
@@ -157,6 +183,33 @@ fn exercise_native_refusal(coding: bool) {
     if coding {
         let mut invalid = value.clone();
         invalid["validation"]["minimum_test_count"] = json!(0);
+        private_file(&launch, &serde_json::to_vec(&invalid).unwrap());
+        let result = Command::new(env!("CARGO_BIN_EXE_agentmage-local-api"))
+            .args([command, "127.0.0.1:0"])
+            .arg(&auth)
+            .arg(&launch)
+            .arg("--approve-inspection-state-and-endpoint")
+            .stdin(Stdio::null())
+            .output()
+            .unwrap();
+        assert_eq!(result.status.code(), Some(1));
+        assert!(result.stdout.is_empty());
+        assert!(
+            !String::from_utf8(result.stderr)
+                .unwrap()
+                .contains("code.endpoint.edit-startup:")
+        );
+        assert_eq!(fs::read_dir(f.root.join("state")).unwrap().count(), 0);
+        assert_eq!(fs::read_dir(&owned).unwrap().count(), 0);
+        assert_eq!(
+            model.accept().unwrap_err().kind(),
+            std::io::ErrorKind::WouldBlock
+        );
+        private_file(&launch, &serde_json::to_vec(&value).unwrap());
+    }
+    if checked {
+        let mut invalid = value.clone();
+        invalid["validation"]["output_format"] = json!("agent_mage_json_v1");
         private_file(&launch, &serde_json::to_vec(&invalid).unwrap());
         let result = Command::new(env!("CARGO_BIN_EXE_agentmage-local-api"))
             .args([command, "127.0.0.1:0"])
@@ -215,4 +268,30 @@ fn exercise_native_refusal(coding: bool) {
     );
     // Opening encrypted state was explicitly authorized. No native creation,
     // model run, exact approval or repository mutation succeeded in this lane.
+}
+
+#[test]
+fn checked_service_refuses_listener_and_stop_before_calling_factory() {
+    use agentmage_host::{
+        coding_development_runtime::OsRuntimeClock,
+        coding_endpoint_fixed_test_verifier::CodingEndpointFixedTestVerifier,
+    };
+    use agentmage_local_api::{
+        CodingEndpointObservationAccess, serve_coding_endpoint_edits_and_checked_tests,
+    };
+    for (address, stopping) in [("0.0.0.0:0", false), ("127.0.0.1:0", true)] {
+        assert_eq!(
+            serve_coding_endpoint_edits_and_checked_tests::<
+                CodingEndpointFixedTestVerifier,
+                OsRuntimeClock,
+            >(
+                TcpListener::bind(address).unwrap(),
+                ApiTokens::new("a".repeat(64), "b".repeat(64)).unwrap(),
+                Arc::new(AtomicBool::new(stopping)),
+                CodingEndpointObservationAccess::ControlOnly,
+                |_, _| panic!("invalid listener/stop must precede checked factory"),
+            ),
+            Err(ApiError::Configuration)
+        );
+    }
 }

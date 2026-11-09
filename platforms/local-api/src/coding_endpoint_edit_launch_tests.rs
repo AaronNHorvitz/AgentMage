@@ -455,3 +455,153 @@ fn coding_launch_refuses_stale_command_unsafe_flags_non_tests_and_exit_only_pars
     assert_eq!(fs::read_dir(f.root.join("state")).unwrap().count(), 0);
     assert_eq!(fs::read_dir(f.root.join("owned")).unwrap().count(), 0);
 }
+
+// Only the acceptance criterion is generated; the objective and every other
+// acceptance entry are never silently rewritten by startup.
+fn checked_coding_launch(f: &Fixture, parser: ValidationParserKind) -> Value {
+    let mut value = coding_launch(f);
+    value["validation"]["output_format"] = json!(parser);
+    let definition: Validation = serde_json::from_value(value["validation"].clone()).unwrap();
+    let check = CodingEndpointFixedTestCheck::new(&definition.into_native().unwrap()).unwrap();
+    let mut request: RuntimeEndpointRunRequest =
+        serde_json::from_value(value["request"].clone()).unwrap();
+    request.task.acceptance_criteria = vec![check.criterion()];
+    request.work_packet.acceptance_checks = vec![check.criterion()];
+    request.work_packet.required_capability_class = AuthorityClass::Execute;
+    value["request"] = json!(seal_runtime_endpoint_run_request(request).unwrap());
+    value["completion_check"] = json!("fixed_test_run_v1");
+    value
+}
+
+fn selected_acceptance(f: &Fixture, value: &Value) -> Result<LaunchAcceptance, ApiError> {
+    let mut launch = load(&write(f, value), CodingEndpointPreparedKind::EditAndTest)?;
+    let startup = prepare(
+        &launch,
+        RuntimeRunId::from_raw("fresh-checked-run"),
+        SessionId::from_raw("fresh-checked-session"),
+        CodingEndpointPreparedKind::EditAndTest,
+    )?;
+    let validation = launch.validation.take().unwrap().into_native()?;
+    acceptance(launch.completion_check.take(), &startup, Some(&validation))
+}
+
+#[test]
+fn coding_launch_explicit_fixed_check_binds_final_narrowed_request_without_effects() {
+    for parser in [
+        ValidationParserKind::RustLibtestTextV1,
+        ValidationParserKind::PythonUnittestTextV1,
+    ] {
+        let f = Fixture::new();
+        let value = checked_coding_launch(&f, parser);
+        let selected = selected_acceptance(&f, &value).unwrap();
+        assert!(matches!(selected, LaunchAcceptance::Fixed(_)));
+        let mut input = load(&write(&f, &value), CodingEndpointPreparedKind::EditAndTest).unwrap();
+        let startup = prepare(
+            &input,
+            RuntimeRunId::from_raw("fresh-checked-run"),
+            SessionId::from_raw("fresh-checked-session"),
+            CodingEndpointPreparedKind::EditAndTest,
+        )
+        .unwrap();
+        let native = input.validation.take().unwrap().into_native().unwrap();
+        let expected = CodingEndpointFixedTestVerifier::for_request(
+            startup.request(),
+            CodingEndpointFixedTestCheck::new(&native).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(
+            CodingEndpointAcceptancePort::verifier_id(&selected),
+            expected.verifier_id()
+        );
+        let original: RuntimeEndpointRunRequest =
+            serde_json::from_value(value["request"].clone()).unwrap();
+        let original_checker = CodingEndpointFixedTestVerifier::for_request(
+            &original,
+            CodingEndpointFixedTestCheck::new(&native).unwrap(),
+        )
+        .unwrap();
+        assert_ne!(
+            CodingEndpointAcceptancePort::verifier_id(&selected),
+            original_checker.verifier_id()
+        );
+        assert_eq!(
+            startup.request().task.acceptance_criteria,
+            original.task.acceptance_criteria
+        );
+        assert_eq!(startup.request().task.objective, original.task.objective);
+        assert_eq!(fs::read_dir(f.root.join("state")).unwrap().count(), 0);
+        assert_eq!(fs::read_dir(f.root.join("owned")).unwrap().count(), 0);
+    }
+}
+
+#[test]
+fn coding_launch_fixed_check_refuses_unsupported_or_broader_claims_before_state() {
+    let f = Fixture::new();
+    let value = checked_coding_launch(&f, ValidationParserKind::PythonUnittestTextV1);
+    for pointer in [
+        "/task/acceptance_criteria",
+        "/work_packet/acceptance_checks",
+    ] {
+        let mut bad = value.clone();
+        let mut request = bad["request"].clone();
+        request
+            .pointer_mut(pointer)
+            .unwrap()
+            .as_array_mut()
+            .unwrap()
+            .push(json!("arbitrary task meaning"));
+        bad["request"] = json!(
+            seal_runtime_endpoint_run_request(serde_json::from_value(request).unwrap()).unwrap()
+        );
+        assert!(selected_acceptance(&f, &bad).is_err(), "{pointer}");
+    }
+    for (pointer, replacement) in [
+        (
+            "/validation/output_format",
+            json!(ValidationParserKind::AgentMageJsonV1),
+        ),
+        ("/validation/minimum_test_count", json!(2)),
+        ("/validation/kind", json!(ValidationKind::Integration)),
+    ] {
+        let mut bad = value.clone();
+        *bad.pointer_mut(pointer).unwrap() = replacement;
+        assert!(selected_acceptance(&f, &bad).is_err(), "{pointer}");
+    }
+    for replacement in [
+        json!(null),
+        json!(false),
+        json!({}),
+        json!([]),
+        json!("unknown"),
+    ] {
+        let mut bad = value.clone();
+        bad["completion_check"] = replacement;
+        assert!(load(&write(&f, &bad), CodingEndpointPreparedKind::EditAndTest).is_err());
+    }
+    for replacement in [json!(null), json!("fixed_test_run_v1")] {
+        let mut bad = launch(&f);
+        bad["completion_check"] = replacement;
+        assert!(load(&write(&f, &bad), CodingEndpointPreparedKind::Edit).is_err());
+    }
+    let text = serde_json::to_string(&value).unwrap().replace(
+        "\"completion_check\":\"fixed_test_run_v1\"",
+        "\"completion_check\":\"fixed_test_run_v1\",\"completion_check\":\"fixed_test_run_v1\"",
+    );
+    let path = f.root.join("duplicate-check.json");
+    private_file(&path, text.as_bytes());
+    assert!(load(&path, CodingEndpointPreparedKind::EditAndTest).is_err());
+    assert_eq!(fs::read_dir(f.root.join("state")).unwrap().count(), 0);
+    assert_eq!(fs::read_dir(f.root.join("owned")).unwrap().count(), 0);
+}
+
+#[test]
+fn coding_launch_without_opt_in_keeps_non_certifying_selection() {
+    let f = Fixture::new();
+    let value = coding_launch(&f);
+    let selected = selected_acceptance(&f, &value).unwrap();
+    assert!(matches!(selected, LaunchAcceptance::Disabled(_)));
+    assert_eq!(
+        CodingEndpointAcceptancePort::verifier_id(&selected).as_str(),
+        "strict-coding-unverified"
+    );
+}

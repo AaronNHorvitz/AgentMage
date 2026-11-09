@@ -2,6 +2,20 @@
 
 ## Active queue: local agent mission
 
+The [explicit fixed-test launch selection](docs/evidence/t303-checked-launch-2026-11-09.md)
+connects the private development command to the original owner's concrete checker.
+Opt-in requires its single exact test-run criterion in both acceptance lists;
+unsupported definitions and broader criteria refuse before opening state.
+Default launch stays non-certifying. Original native trust, disclosure consent,
+effect approvals and source checks remain required. Independent core review is
+required. T-303/T-306 stay open; no row or sub-row is added or closed. Positive
+native/model execution, durable recovery, approved Git and measurements remain
+open. The base checker commit remains immutable while its review is in flight.
+The full affected local API gate passes: 227 tests across 11 unfiltered targets,
+zero failures or ignores, with formatting and Clippy green and five source
+hashes fixed. This does not clear the earlier host failures. Executable tests
+observe the original native trust refusal; no native success or score is claimed.
+
 The [original-owner independent core review](docs/reviews/d4467998f3da-local-coding-owned-completion-verifier.txt)
 has **Verdict: PASS** for exact commit
 `d4467998f3da2e8e36e0e9d7bd226cb0df3b75dd`, with no high/medium finding.

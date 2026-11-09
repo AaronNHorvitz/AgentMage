@@ -4,7 +4,10 @@
 use super::*;
 use agentmage_host::{
     coding_endpoint::CodingEndpointConnection,
-    coding_endpoint_prepared_startup::{CodingEndpointPrepared, CodingEndpointPreparedInput},
+    coding_endpoint_edit_previews::{CodingEndpointAcceptancePort, CodingEndpointEditPreviews},
+    coding_endpoint_prepared_startup::{
+        CodingEndpointPrepared, CodingEndpointPreparedClock, CodingEndpointPreparedInput,
+    },
 };
 use agentmage_kernel_contracts::{ModelOperationControl, RuntimeRunId, SessionId};
 use agentmage_kernel_engine::runtime_loop::{RuntimeClock, RuntimeVerifierPort};
@@ -126,9 +129,14 @@ where
     V: RuntimeVerifierPort + Send + 'static,
     C: RuntimeClock + Send + 'static,
 {
-    serve_coding_endpoint_edits_and_tests_inner(listener, tokens, stop, access, |id, session| {
-        factory(id, session).map(|run| (run, None))
-    })
+    serve_coding_endpoint_edits_and_tests_inner(
+        listener,
+        tokens,
+        stop,
+        access,
+        |id, session| factory(id, session).map(|run| (run, None)),
+        |_, verifier| Ok(verifier),
+    )
 }
 
 /// Explicit fixed-test coding composition over the same local API. The factory
@@ -156,12 +164,56 @@ where
     V: RuntimeVerifierPort + Send + 'static,
     C: RuntimeClock + Send + 'static,
 {
-    serve_coding_endpoint_edits_and_tests_inner(listener, tokens, stop, access, |id, session| {
-        factory(id, session).map(|(run, validation)| (run, Some(validation)))
-    })
+    serve_coding_endpoint_edits_and_tests_inner(
+        listener,
+        tokens,
+        stop,
+        access,
+        |id, session| factory(id, session).map(|(run, validation)| (run, Some(validation))),
+        |_, verifier| Ok(verifier),
+    )
 }
 
-fn serve_coding_endpoint_edits_and_tests_inner<V, C>(
+/// Serve fixed-test coding with an explicit independent checker over the SAME
+/// original owner's records. The original owner checks linked validation and
+/// current sealed inputs before and after dispatch. The registry still checks
+/// the candidate. The factory must bind its checker to the final narrowed
+/// request; this grants no effect or disclosure permission and adds no recovery.
+pub fn serve_coding_endpoint_edits_and_checked_tests<V, C>(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    access: CodingEndpointObservationAccess,
+    factory: impl FnOnce(
+        RuntimeRunId,
+        SessionId,
+    ) -> Result<
+        (
+            CodingEndpointStrictHttpRun<V, C>,
+            agentmage_host::coding_endpoint_edit_previews::CodingEndpointValidation,
+        ),
+        ApiError,
+    >,
+) -> Result<(), ApiError>
+where
+    V: CodingEndpointAcceptancePort + Send + 'static,
+    C: RuntimeClock + Send + 'static,
+{
+    serve_coding_endpoint_edits_and_tests_inner(
+        listener,
+        tokens,
+        stop,
+        access,
+        |id, session| factory(id, session).map(|(run, validation)| (run, Some(validation))),
+        |previews, verifier| {
+            previews
+                .completion_verifier(verifier)
+                .map_err(|_| ApiError::Configuration)
+        },
+    )
+}
+
+fn serve_coding_endpoint_edits_and_tests_inner<V, C, W>(
     listener: TcpListener,
     tokens: ApiTokens,
     stop: Arc<AtomicBool>,
@@ -176,9 +228,13 @@ fn serve_coding_endpoint_edits_and_tests_inner<V, C>(
         ),
         ApiError,
     >,
+    select_verifier: impl FnOnce(
+        &CodingEndpointEditPreviews<CodingEndpointPreparedClock<C>>,
+        V,
+    ) -> Result<W, ApiError>,
 ) -> Result<(), ApiError>
 where
-    V: RuntimeVerifierPort + Send + 'static,
+    W: RuntimeVerifierPort + Send + 'static,
     C: RuntimeClock + Send + 'static,
 {
     use agentmage_host::{
@@ -224,6 +280,7 @@ where
                 )
             }
             .map_err(|_| ApiError::Configuration)?;
+            let verifier = select_verifier(&previews, input.verifier)?;
             let port = CodingEndpointStrictEdits::new(
                 previews,
                 input.connection,
@@ -232,15 +289,8 @@ where
                 input.include_usage,
             )
             .map_err(|_| ApiError::Configuration)?;
-            runs.admit_turn_port(
-                request.clone(),
-                port,
-                registry,
-                boundary,
-                input.verifier,
-                clock,
-            )
-            .map_err(|_| ApiError::Configuration)?;
+            runs.admit_turn_port(request.clone(), port, registry, boundary, verifier, clock)
+                .map_err(|_| ApiError::Configuration)?;
             Ok(request)
         },
     )

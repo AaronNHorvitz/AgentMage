@@ -5,7 +5,10 @@ use super::*;
 use agentmage_host::{
     coding_development_runtime::OsRuntimeClock,
     coding_endpoint::CodingEndpointConnection,
-    coding_endpoint_edit_previews::CodingEndpointValidation,
+    coding_endpoint_edit_previews::{CodingEndpointAcceptancePort, CodingEndpointValidation},
+    coding_endpoint_fixed_test_verifier::{
+        CodingEndpointFixedTestCheck, CodingEndpointFixedTestVerifier,
+    },
     coding_endpoint_prepared_startup::{CodingEndpointPreparedKind, CodingEndpointPreparedStartup},
 };
 use agentmage_kernel_contracts::{
@@ -34,6 +37,14 @@ struct Launch {
     paths: Vec<String>,
     source_budget: usize,
     validation: Option<Validation>,
+    completion_check: Option<CompletionCheck>,
+}
+
+// Explicit private launch choice, never a model/HTTP field or a default.
+#[derive(Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum CompletionCheck {
+    FixedTestRunV1,
 }
 
 // Private startup metadata only. Neither HTTP nor a model can supply this
@@ -86,12 +97,15 @@ fn load(path: &Path, kind: CodingEndpointPreparedKind) -> Result<Launch, ApiErro
     }
     match kind {
         CodingEndpointPreparedKind::Edit
-            if !shape.as_object().unwrap().contains_key("validation") => {}
+            if !shape.as_object().unwrap().contains_key("validation")
+                && !shape.as_object().unwrap().contains_key("completion_check") => {}
         CodingEndpointPreparedKind::EditAndTest
             if shape["validation"].is_object()
                 && shape["validation"]["command"].is_object()
                 && shape["validation"]["command"]["bounds"].is_object()
-                && shape["validation"]["command"]["environment"].is_object() => {}
+                && shape["validation"]["command"]["environment"].is_object()
+                && (!shape.as_object().unwrap().contains_key("completion_check")
+                    || shape["completion_check"].is_string()) => {}
         _ => return Err(ApiError::Configuration),
     }
     Ok(launch)
@@ -241,18 +255,63 @@ impl ModelOperationControl for RunControl {
     }
 }
 
-// Neither development command binds an independent task/current-source checker.
-// Even a parsed test pass cannot certify any completion candidate.
-struct UnverifiedEdits(VerifierId);
-impl RuntimeVerifierPort for UnverifiedEdits {
+// A disabled selection never certifies completion. A fixed selection is used
+// only through the original owner's completion adapter, never as a direct port.
+enum LaunchAcceptance {
+    Disabled(VerifierId),
+    Fixed(Box<CodingEndpointFixedTestVerifier>),
+}
+impl RuntimeVerifierPort for LaunchAcceptance {
     fn verifier_id(&self) -> &VerifierId {
-        &self.0
+        CodingEndpointAcceptancePort::verifier_id(self)
     }
     fn verify(
         &mut self,
         _: RuntimeVerificationInput<'_>,
     ) -> Result<VerifierCandidate, RuntimePortFailure> {
         Err(RuntimePortFailure::Invalid)
+    }
+}
+impl CodingEndpointAcceptancePort for LaunchAcceptance {
+    fn verifier_id(&self) -> &VerifierId {
+        match self {
+            Self::Disabled(id) => id,
+            Self::Fixed(checker) => checker.verifier_id(),
+        }
+    }
+    fn verify_coding_completion(
+        &mut self,
+        input: agentmage_kernel_engine::runtime_loop::RuntimeCompletionVerificationInput<'_>,
+        validation: agentmage_platform_linux::LinuxCodingValidationEvidence<'_>,
+    ) -> Result<VerifierCandidate, RuntimePortFailure> {
+        match self {
+            Self::Disabled(_) => Err(RuntimePortFailure::Invalid),
+            Self::Fixed(checker) => checker.verify_coding_completion(input, validation),
+        }
+    }
+}
+
+fn acceptance(
+    selection: Option<CompletionCheck>,
+    startup: &CodingEndpointPreparedStartup,
+    validation: Option<&CodingEndpointValidation>,
+) -> Result<LaunchAcceptance, ApiError> {
+    match selection {
+        None => Ok(LaunchAcceptance::Disabled(VerifierId::from_raw(
+            if validation.is_some() {
+                "strict-coding-unverified"
+            } else {
+                "strict-edits-unverified"
+            },
+        ))),
+        Some(CompletionCheck::FixedTestRunV1) => {
+            let check =
+                CodingEndpointFixedTestCheck::new(validation.ok_or(ApiError::Configuration)?)
+                    .map_err(|_| ApiError::Configuration)?;
+            let verifier = CodingEndpointFixedTestVerifier::for_request(startup.request(), check)
+                .map_err(|_| ApiError::Configuration)?;
+            Ok(LaunchAcceptance::Fixed(Box::new(verifier)))
+        }
     }
 }
 
@@ -290,8 +349,10 @@ pub fn serve_coding_endpoint_edit_development(
 /// it permits no disclosure of those additional bytes. Original worktree
 /// creation needs its exact stdin decision; every model disclosure, edit and test
 /// needs separate HTTP approval. Native Git, command, worker and budget checks
-/// remain mandatory. The development verifier refuses completion certification;
-/// there is no apply, commit, push, cleanup or durable recovery.
+/// remain mandatory. Completion refuses by default. An explicit private
+/// `completion_check: "fixed_test_run_v1"` selects the original-owner checker
+/// for its single exact declared test-run criterion, never arbitrary task meaning.
+/// There is no apply, commit, push, cleanup or durable recovery.
 pub fn serve_coding_endpoint_coding_development(
     listener: TcpListener,
     tokens: ApiTokens,
@@ -328,6 +389,11 @@ fn serve_development(
             .take()
             .map(Validation::into_native)
             .transpose()?;
+        let verifier = acceptance(
+            launch.completion_check.take(),
+            &startup,
+            validation.as_ref(),
+        )?;
         let mut reader = ApprovalInput::new(io::stdin(), startup_stop.clone())?;
         let mut repository =
             LinuxCodingRepository::open(&launch.state_root, secret.as_bytes(), clock_ms()?)
@@ -413,13 +479,7 @@ fn serve_development(
                 connection,
                 control,
                 clock: OsRuntimeClock,
-                verifier: UnverifiedEdits(VerifierId::from_raw(
-                    if kind == CodingEndpointPreparedKind::Edit {
-                        "strict-edits-unverified"
-                    } else {
-                        "strict-coding-unverified"
-                    },
-                )),
+                verifier,
                 paths: launch.paths,
                 source_budget: launch.source_budget,
                 include_usage: true,
@@ -435,7 +495,7 @@ fn serve_development(
             CodingEndpointObservationAccess::ControlOnly,
             |run, session| factory(run, session).map(|(run, _)| run),
         ),
-        CodingEndpointPreparedKind::EditAndTest => serve_coding_endpoint_edits_and_tests(
+        CodingEndpointPreparedKind::EditAndTest => serve_coding_endpoint_edits_and_checked_tests(
             listener,
             tokens,
             stop,
