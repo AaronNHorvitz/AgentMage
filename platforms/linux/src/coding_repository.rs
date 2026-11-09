@@ -161,6 +161,19 @@ pub struct LinuxCodingRepository {
 }
 
 impl LinuxCodingRepository {
+    /// Abandon process-local creation, command, validation-command, edit and
+    /// apply previews without dispatching or recording a synthetic result.
+    /// Held creation authority, successful edit lineage, validation history and
+    /// actual result records stay intact. Old decisions require a new preview
+    /// and exact approval; this does not cancel a running executor or reconcile
+    /// uncertain effects. Call only while holding exclusive repository ownership.
+    pub fn abandon_pending_decisions(&mut self) {
+        self.pending = None;
+        self.command = None;
+        self.edit = None;
+        self.apply = None;
+    }
+
     /// TEST SUPPORT ONLY: attach synthetic creation provenance to held fixture
     /// directories. This does not execute Git or demonstrate native creation.
     /// Unavailable unless the explicit `test-support` feature is enabled.

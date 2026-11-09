@@ -2,6 +2,32 @@
 
 ## Active queue: local agent mission
 
+The [correlation independent core re-review](docs/reviews/3a99b52ba39f-local-coding-evidence-correlation-repair.txt)
+has **Verdict: PASS** for exact commit
+`3a99b52ba39f5d333acde8b20384b31e38addc96`, accepting the prior medium
+finding's repair with no new high/medium finding. Both parents remain open.
+Its low L1 (coordinator-produced positive checker records) stays same-row
+backlog; low L2's guide wrapping is corrected in this increment.
+
+The [launch-selection independent core review](docs/reviews/9ac41a62c209-local-coding-checked-launch.txt)
+has **Verdict: PASS** for exact commit
+`9ac41a62c20998d96709cbd0a658fecfbfc4b973`, with no high/medium finding.
+Its low L1 (default verifier's unused evidence sampling) and L2 (positive
+launch acceptance under native trust) remain same-row backlog. Neither parent
+closes. The [strict-owner continuation](docs/evidence/t306-strict-owner-return-2026-11-09.md)
+adds explicit library service variants that return the same original repository
+after exact terminal release and joined shutdown. Pending decisions are
+abandoned; successful lineage remains available for a separately consented
+original diff and exact apply approval. Existing service and executable discard
+behavior is unchanged. This is process-local continuation; native/model
+measurement, durable crash recovery, approved Git and T-303/T-306 stay open.
+Independent core review of this increment is required; no row or sub-row closes.
+The affected gate remains FAIL: 1,236 passed, exactly 72 inherited failures and
+64 existing ignores across 26 unfiltered targets. All four new methods and all
+14 named checks pass; formatting and Clippy pass with ten Rust hashes fixed.
+The initial latest-result fixture expectation is corrected and its failure
+retained, without removing lineage or original-byte assertions.
+
 The [fixed-test independent core review](docs/reviews/c27e2bee3611-local-coding-fixed-test-checker.txt)
 has **Verdict: FINDINGS** for exact commit
 `c27e2bee3611f384bb57be96f15a07a929ec074f`. Medium M1 found that the

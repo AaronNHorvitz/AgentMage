@@ -134,9 +134,11 @@ where
         tokens,
         stop,
         access,
+        false,
         |id, session| factory(id, session).map(|run| (run, None)),
         |_, verifier| Ok(verifier),
     )
+    .map(|_| ())
 }
 
 /// Explicit fixed-test coding composition over the same local API. The factory
@@ -169,9 +171,11 @@ where
         tokens,
         stop,
         access,
+        false,
         |id, session| factory(id, session).map(|(run, validation)| (run, Some(validation))),
         |_, verifier| Ok(verifier),
     )
+    .map(|_| ())
 }
 
 /// Serve fixed-test coding with an explicit independent checker over the SAME
@@ -204,6 +208,75 @@ where
         tokens,
         stop,
         access,
+        false,
+        |id, session| factory(id, session).map(|(run, validation)| (run, Some(validation))),
+        |previews, verifier| {
+            previews
+                .completion_verifier(verifier)
+                .map_err(|_| ApiError::Configuration)
+        },
+    )
+    .map(|_| ())
+}
+
+/// Return the original strict-edit repository after explicit checked terminal
+/// release and joined HTTP shutdown. Live, uncertain and faulted runs refuse
+/// release; stopping without release returns `None`. Pending decisions are
+/// abandoned, while edit lineage and observations survive for separately
+/// approved original-checkout apply. No run, grant or crash state is resumed.
+pub fn serve_coding_endpoint_strict_edits_returning_repository<V, C>(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    access: CodingEndpointObservationAccess,
+    factory: impl FnOnce(RuntimeRunId, SessionId) -> Result<CodingEndpointStrictHttpRun<V, C>, ApiError>,
+) -> Result<Option<LinuxCodingRepository>, ApiError>
+where
+    V: RuntimeVerifierPort + Send + 'static,
+    C: RuntimeClock + Send + 'static,
+{
+    serve_coding_endpoint_edits_and_tests_inner(
+        listener,
+        tokens,
+        stop,
+        access,
+        true,
+        |id, session| factory(id, session).map(|run| (run, None)),
+        |_, verifier| Ok(verifier),
+    )
+}
+
+/// Return the SAME original combined edit/test repository after exact terminal
+/// release and joined shutdown. Completion still uses its original-owner
+/// checker. All authority and release checks match the strict-edit return path;
+/// nothing is returned without explicit successful release. Later apply needs
+/// a fresh original diff and exact approval. This is process-local continuation.
+pub fn serve_coding_endpoint_edits_and_checked_tests_returning_repository<V, C>(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    access: CodingEndpointObservationAccess,
+    factory: impl FnOnce(
+        RuntimeRunId,
+        SessionId,
+    ) -> Result<
+        (
+            CodingEndpointStrictHttpRun<V, C>,
+            agentmage_host::coding_endpoint_edit_previews::CodingEndpointValidation,
+        ),
+        ApiError,
+    >,
+) -> Result<Option<LinuxCodingRepository>, ApiError>
+where
+    V: CodingEndpointAcceptancePort + Send + 'static,
+    C: RuntimeClock + Send + 'static,
+{
+    serve_coding_endpoint_edits_and_tests_inner(
+        listener,
+        tokens,
+        stop,
+        access,
+        true,
         |id, session| factory(id, session).map(|(run, validation)| (run, Some(validation))),
         |previews, verifier| {
             previews
@@ -218,6 +291,7 @@ fn serve_coding_endpoint_edits_and_tests_inner<V, C, W>(
     tokens: ApiTokens,
     stop: Arc<AtomicBool>,
     access: CodingEndpointObservationAccess,
+    return_repository: bool,
     factory: impl FnOnce(
         RuntimeRunId,
         SessionId,
@@ -232,7 +306,7 @@ fn serve_coding_endpoint_edits_and_tests_inner<V, C, W>(
         &CodingEndpointEditPreviews<CodingEndpointPreparedClock<C>>,
         V,
     ) -> Result<W, ApiError>,
-) -> Result<(), ApiError>
+) -> Result<Option<LinuxCodingRepository>, ApiError>
 where
     W: RuntimeVerifierPort + Send + 'static,
     C: RuntimeClock + Send + 'static,
@@ -242,56 +316,73 @@ where
         coding_endpoint_edit_previews::CodingEndpointEditPreviews,
         coding_endpoint_prepared_startup::CodingEndpointPreparedClock,
     };
-    serve_admitted_coding_endpoint_with_turns(
-        listener,
-        tokens,
-        stop,
-        access,
-        |id, session, runs| {
-            let (input, validation) = factory(id.clone(), session.clone())?;
-            let request = input.startup.request().clone();
-            if request.run_id != id || request.session_id != session {
-                return Err(ApiError::Configuration);
-            }
-            let registry = if validation.is_some() {
-                agentmage_platform_linux::linux_coding_endpoint_coding_registry()
-            } else {
-                agentmage_platform_linux::linux_coding_endpoint_edit_registry()
-            }
-            .map_err(|_| ApiError::Configuration)?;
-            // Preserve the narrowed catalog rather than exposing the full registry.
-            let mut registry = registry;
-            input.startup.guidance().restrict_registry(&mut registry);
-            let clock = CodingEndpointPreparedClock::new(input.clock);
-            let (previews, boundary) = if let Some(validation) = validation {
-                CodingEndpointEditPreviews::new_coding(
-                    input.startup,
-                    input.repository,
-                    input.control,
-                    clock.clone(),
-                    validation,
-                )
-            } else {
-                CodingEndpointEditPreviews::new(
-                    input.startup,
-                    input.repository,
-                    input.control,
-                    clock.clone(),
-                )
-            }
-            .map_err(|_| ApiError::Configuration)?;
-            let verifier = select_verifier(&previews, input.verifier)?;
-            let port = CodingEndpointStrictEdits::new(
-                previews,
-                input.connection,
-                input.paths,
-                input.source_budget,
-                input.include_usage,
+    let admit = |id: RuntimeRunId,
+                 session: SessionId,
+                 runs: &mut agentmage_host::coding_endpoint_owner::CodingEndpointRuns<
+        'static,
+        _,
+        _,
+        _,
+        _,
+    >| {
+        let (input, validation) = factory(id.clone(), session.clone())?;
+        let request = input.startup.request().clone();
+        if request.run_id != id || request.session_id != session {
+            return Err(ApiError::Configuration);
+        }
+        let registry = if validation.is_some() {
+            agentmage_platform_linux::linux_coding_endpoint_coding_registry()
+        } else {
+            agentmage_platform_linux::linux_coding_endpoint_edit_registry()
+        }
+        .map_err(|_| ApiError::Configuration)?;
+        // Preserve the narrowed catalog rather than exposing the full registry.
+        let mut registry = registry;
+        input.startup.guidance().restrict_registry(&mut registry);
+        let clock = CodingEndpointPreparedClock::new(input.clock);
+        let (previews, boundary) = if let Some(validation) = validation {
+            CodingEndpointEditPreviews::new_coding(
+                input.startup,
+                input.repository,
+                input.control,
+                clock.clone(),
+                validation,
             )
+        } else {
+            CodingEndpointEditPreviews::new(
+                input.startup,
+                input.repository,
+                input.control,
+                clock.clone(),
+            )
+        }
+        .map_err(|_| ApiError::Configuration)?;
+        let verifier = select_verifier(&previews, input.verifier)?;
+        let port = CodingEndpointStrictEdits::new(
+            previews,
+            input.connection,
+            input.paths,
+            input.source_budget,
+            input.include_usage,
+        )
+        .map_err(|_| ApiError::Configuration)?;
+        runs.admit_turn_port(request.clone(), port, registry, boundary, verifier, clock)
             .map_err(|_| ApiError::Configuration)?;
-            runs.admit_turn_port(request.clone(), port, registry, boundary, verifier, clock)
-                .map_err(|_| ApiError::Configuration)?;
-            Ok(request)
-        },
-    )
+        Ok(request)
+    };
+    let boundary = if return_repository {
+        serve_admitted_coding_endpoint_with_turns_returning_tool(
+            listener, tokens, stop, access, admit,
+        )?
+    } else {
+        serve_admitted_coding_endpoint_with_turns(listener, tokens, stop, access, admit)?;
+        None
+    };
+    boundary
+        .map(|boundary| {
+            boundary
+                .try_into_repository()
+                .map_err(|_| ApiError::Configuration)
+        })
+        .transpose()
 }

@@ -466,3 +466,41 @@ fn strict_preview_coordinator_keeps_original_owner_and_each_exact_approval() {
         }
     }
 }
+
+#[test]
+fn strict_owner_return_refuses_live_previews_and_completion_callbacks_without_losing_owner() {
+    let f = generation_fixture();
+    let repository = owner(&f);
+    let before = repository.inspect_edit().unwrap();
+    let (_listener, endpoint) = socket();
+    let startup = generation_startup(&f, &endpoint, &f.empty_ledger());
+    let (previews, boundary) = CodingEndpointEditPreviews::new(
+        startup,
+        repository,
+        Arc::new(Control::new()),
+        Clock(Arc::new(AtomicU64::new(1000))),
+    )
+    .unwrap();
+    let boundary = boundary
+        .try_into_repository()
+        .err()
+        .expect("live previews must refuse");
+    assert_eq!(boundary.inspect().unwrap(), before);
+    let callback = previews.completion_check();
+    drop(previews);
+    let boundary = boundary
+        .try_into_repository()
+        .err()
+        .expect("live callback must refuse");
+    assert_eq!(boundary.inspect().unwrap(), before);
+    drop(callback);
+    let repository = boundary
+        .try_into_repository()
+        .ok()
+        .expect("sole original owner");
+    assert_eq!(repository.inspect_edit().unwrap(), before);
+    assert_eq!(
+        fs::read(f.root.join("owned/worktree/one.py")).unwrap(),
+        b"one\n"
+    );
+}

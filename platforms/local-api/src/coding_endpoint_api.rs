@@ -319,6 +319,38 @@ where
     .map(|_| ())
 }
 
+/// Return the original tool after checked terminal release of a custom-turn
+/// run and joined shutdown. Uses the same terminal, uncertainty, authentication
+/// and worker checks as `serve_admitted_coding_endpoint_returning_tool`.
+/// Without explicit successful release returns `None`. The old turn port,
+/// verifier, connection and budgets are discarded; no crash recovery is added.
+pub fn serve_admitted_coding_endpoint_with_turns_returning_tool<T, V, C, P>(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    access: CodingEndpointObservationAccess,
+    factory: impl FnOnce(
+        RuntimeRunId,
+        SessionId,
+        &mut CodingEndpointRuns<'static, T, V, C, P>,
+    ) -> Result<RuntimeEndpointRunRequest, ApiError>,
+) -> Result<Option<T>, ApiError>
+where
+    T: RuntimeToolBoundary + Send + 'static,
+    V: RuntimeVerifierPort + Send + 'static,
+    C: RuntimeClock + Send + 'static,
+    P: RuntimeEndpointTurnPort + Send + 'static,
+{
+    serve_admitted_endpoint_inner(
+        listener,
+        tokens,
+        stop,
+        access,
+        factory,
+        TerminalToolDisposition::Return,
+    )
+}
+
 fn serve_admitted_endpoint_inner<T, V, C, P>(
     listener: TcpListener,
     tokens: ApiTokens,

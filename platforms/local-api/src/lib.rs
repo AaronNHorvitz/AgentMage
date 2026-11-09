@@ -19,14 +19,17 @@ mod coding_endpoint_prepared;
 pub use coding_endpoint_launch::serve_coding_endpoint_read_development;
 pub use coding_endpoint_prepared::{
     CodingEndpointPreparedHttpRun, CodingEndpointStrictHttpRun,
-    serve_coding_endpoint_edits_and_checked_tests, serve_coding_endpoint_edits_and_tests,
-    serve_coding_endpoint_prepared, serve_coding_endpoint_strict_edits,
+    serve_coding_endpoint_edits_and_checked_tests,
+    serve_coding_endpoint_edits_and_checked_tests_returning_repository,
+    serve_coding_endpoint_edits_and_tests, serve_coding_endpoint_prepared,
+    serve_coding_endpoint_strict_edits, serve_coding_endpoint_strict_edits_returning_repository,
 };
 mod coding_owned_api;
 pub use coding_endpoint_api::{
     CodingEndpointHttpRun, CodingEndpointObservationAccess, serve_admitted_coding_endpoint,
     serve_admitted_coding_endpoint_returning_tool, serve_admitted_coding_endpoint_with_turns,
-    serve_coding_endpoint, serve_coding_endpoint_with_observation_access,
+    serve_admitted_coding_endpoint_with_turns_returning_tool, serve_coding_endpoint,
+    serve_coding_endpoint_with_observation_access,
 };
 mod coding_repair_api;
 mod coding_repository_api;

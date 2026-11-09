@@ -18,7 +18,8 @@ parser and minimum test count alongside `check.criterion()` before approval.
 Render these values as escaped data; the criterion digest alone is not a
 readable command preview. Use the criterion verbatim as the only entry in both
 the task's acceptance criteria and the work packet's acceptance checks before
-sealing the request. Use the combined tool catalog, controlled write mode, execution authority class and `ToolOutput` evidence requirement.
+sealing the request. Use the combined tool catalog, controlled write mode,
+execution authority class and `ToolOutput` evidence requirement.
 After startup has narrowed and resealed the request, construct the verifier with
 `for_request(previews.startup().request(), check)`, then connect it using
 `previews.completion_verifier(verifier)` before moving those previews into the

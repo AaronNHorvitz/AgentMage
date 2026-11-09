@@ -2,7 +2,7 @@
 //! Real service ownership, synthetic tools/endpoint; no native or model score.
 use super::*;
 use agentmage_host::coding_endpoint_owner::CodingEndpointAdmission;
-use agentmage_local_api::serve_admitted_coding_endpoint_returning_tool;
+use agentmage_local_api::serve_admitted_coding_endpoint_with_turns_returning_tool;
 
 struct ReturningBoundary {
     inner: Boundary,
@@ -96,7 +96,7 @@ fn returning_api(
     let worker_stop = stop.clone();
     let (tx, rx) = mpsc::sync_channel(1);
     let worker = thread::spawn(move || {
-        let returned = serve_admitted_coding_endpoint_returning_tool(
+        let returned = serve_admitted_coding_endpoint_with_turns_returning_tool(
             listener,
             ApiTokens::new(CLIENT.into(), CONTROL.into()).unwrap(),
             worker_stop,

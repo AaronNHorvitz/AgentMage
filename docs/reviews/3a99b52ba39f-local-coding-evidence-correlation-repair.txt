@@ -1,0 +1,132 @@
+Commit: 3a99b52ba39f5d333acde8b20384b31e38addc96
+Scope: local-coding-evidence-correlation-repair
+
+# Independent core re-review: fixed-test evidence correlation repair (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Pinned checkout
+`/lane/review-checkout`; `git rev-parse HEAD` = `3a99b52ba39f5d333acde8b20384b31e38addc96`.
+Base `9ac41a62c20998d96709cbd0a658fecfbfc4b973`, which is under separate review and was not judged
+here. The diff has 7 files: TASKS.md (prose only, table rows unchanged), a new evidence note, an
+appended paragraph in the earlier checker evidence note, `docs/guides/coding-validation.md`, the
+retained c27e2bee review, `shells/host/src/coding_endpoint_fixed_test_verifier.rs` (+17/−2) and its
+tests (+99/−2). I read IP-POLICY.md, the newest decisions index, the top of TASKS.md and the
+request. I also read the bundle README/run.py/check.py/light.py before running anything. The
+scripts only run the repository's affected fast gate. run.py prepends the retained Node binary
+(MIT-style Node.js LICENSE alongside). There is no outer build-slot wrap and no model, GPU or
+download step, and the scripts write nothing to the repository.
+
+## Methods
+
+- Line-by-line read of the repaired `correlates` against the producer of its input: the original
+  coordinator (`kernel/engine/src/runtime_loop.rs:4166-4178`). There, receipt IDs and tool results
+  are pushed in tool order. Evidence is deduplicated by ID and re-sorted by `evidence_id` after
+  every admitted result. Receipt IDs are sorted only in `finish_terminal` (`:4828`), after
+  `verify_completion` (`:3060-3075`), so their positional check is valid at verification time. I
+  also checked the native ID forms `native-edit:<digest[..32]>`
+  (`platforms/linux/src/coding_repository_endpoint_boundary.rs:382`) and
+  `native-command:<digest[..32]>` (`platforms/linux/src/coding_repository_endpoint_command.rs:802`)
+  against the new fixture's IDs (`coding_endpoint_fixed_test_verifier_tests.rs:363-374`). They
+  match: same prefixes and the same payload-SHA-256 prefix.
+- Bijection argument for the new check (`coding_endpoint_fixed_test_verifier.rs:193-260`). It
+  requires `|evidence| == |results|`, unique aggregate IDs (checked before the map is built, so
+  `BTreeMap` collapse cannot hide duplicates), unique result-reference IDs via
+  `result_evidence_ids.insert`, and full `EvidenceReference` equality on lookup. Together these
+  make the aggregate exactly the set of the results' single references. Tool results, receipt
+  IDs, attempts and reruns are still correlated chronologically, and every per-field check from
+  c27e2bee is kept. The check still fails closed: a coordinator dedup of a colliding ID shortens
+  the aggregate and is refused.
+- Provenance of the pre-fix regression. `before-coding_endpoint_fixed_test_verifier.rs` is
+  SHA-256 `81c82312…`, identical to the base's checker. `before-…_tests.rs` differs from the
+  committed tests only by rustfmt layout. `regression-before.log` shows the two positive tests
+  failing at lines 597/630 (5 pass / 2 fail / 698 filtered). `regression-after.log` shows 7/0/698.
+- Independent reproduction outside the repository: a `git archive` of the exact commit into
+  `/lane/state/tmp/review-repro-3a99b52ba39f`, plus one appended reviewer test, built in the
+  separate target `/lane/state/review-target/repro-3a99b52ba39f`. For 1–3 attempts it checks that
+  tool-order (unsorted) evidence is accepted, then tries every permutation of the aggregate
+  (2, 24 and 720) and expects all to be accepted. It then makes four same-ID-set cross-field
+  mutations and expects each to be refused: swapped `object_id`, swapped `content_sha256`, a
+  changed `kind`, and result references swapped between results.
+  Command: `CARGO_TARGET_DIR=/lane/state/review-target/repro-3a99b52ba39f CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 bash /tools/build-slot cargo test --locked --offline -p agentmage-host --lib -- fixed_test_checker reviewer_repro --nocapture`.
+  Result: exit 0, 8 passed / 0 failed / 698 filtered.
+  `REVIEWER count=1 tool_order=Success permutations_ok=2/2 cross_refusals=[true, true, true, true]`.
+  Counts 2 and 3 gave 24/24 and 720/720 with the same refusals. Log:
+  `/lane/state/tmp/review-repro-3a99b52ba39f.log`. The repository was not modified.
+
+## Commands and results (from `/lane/review-checkout`)
+
+| Command | Expected | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c …/review-inputs.sha256` (manifest 37 lines, SHA-256 `f1f71745…6e3c` confirmed) | 0 | 0 |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-evidence-correlation-3a99b52ba39f` (fresh dir) | 1 | 1, `SOURCE_FREEZE_UNCHANGED True` |
+| `python3 -B …/check.py /lane/state/tmp/review-evidence-correlation-3a99b52ba39f` | 0 | 0 |
+| `python3 -B …/light.py` | 0 | 0, all four light commands exit 0 (markdownlint 0 issues in 4 files) |
+| `cmp …/validation-complete/source-freeze.json …/review-evidence-correlation-3a99b52ba39f/source-freeze.json` | 0 | 0 |
+| `cmp docs/reviews/c27e2bee3611-local-coding-fixed-test-checker.txt /lane/reviews/c27e2bee3611-local-coding-fixed-test-checker.md` | 0 | 0 |
+| `git diff --check 9ac41a62c20998d96709cbd0a658fecfbfc4b973 --` | 0 | 0 |
+| `git status --short` | empty | empty |
+
+My gate had 21 unfiltered targets with totals of 891 passed, 53 failed, 11 ignored and 0 measured
+or filtered. The 53 failures are exactly the inherited host-library baseline identities, with none
+new, and the 11 ignores are the same as before. All 12 checked methods report `ok`, including the
+seven checker methods. Command exits were 0,0,0,0, fmt 0 (26.05 s), clippy 0 (35.92 s) and tests
+101 (167.51 s), for 231.15 s including reservations. My raw log SHA-256 is `ac5df3d2…8dd4`. The
+builder's retained `validation-complete/fast.log` hashes to the claimed `b09e98e9…c3dee011`. The
+two logs have identical per-target count lines and identical FAILED/ignored identity sets; they
+differ only in timings. The full gate is FAIL, as the builder states; the comparison does not make
+it green.
+
+Privacy, IP and integrity: the added lines contain no private home paths, usernames, hostnames,
+credentials or email addresses. No trademark branding or other product names appear. No
+dependency, lockfile, SBOM, status model, scoreboard, T-311 task, hidden test, held-out content,
+scorer or threshold changed. TASKS.md table rows are byte-identical to the base's (check.py), and
+no row or sub-row was added or closed. No `#[ignore]` was added and no assertion was weakened: the
+only edit to an existing test replaces a positional aggregate write with an ID lookup, which is
+needed now that the aggregate is sorted.
+
+## Confinement and trust boundary (checked, no finding)
+
+The repair touches only an in-memory comparison inside a deterministic checker. It adds no file,
+network, process, effect, grant, wire field or trust exception. Evidence is still issued only by
+the original repository's private-field `LinuxCodingValidationEvidence`. A failed candidate still
+carries empty evidence. Every relaxation is limited to the order of the aggregate evidence set.
+Missing, extra, duplicate, foreign, field-altered and cross-swapped references all refuse, in the
+builder's tests and in mine.
+
+## Prior findings
+
+- **c27e2bee M1 (medium): resolved.** Identity-set correlation now accepts coordinator-sorted,
+  native-form evidence for 1–3-attempt histories, including failed attempts and reruns. The builder's
+  pre-fix log and my reproduction both confirm this. The guide, both evidence notes and TASKS.md
+  now describe identity correlation correctly. They also say honestly that the base launch
+  connection inherited the defect and that only component fixtures are exercised.
+- **c27e2bee L1 (low): addressed as guidance only.** The guide now requires showing the command,
+  arguments, kind, parser and minimum next to the digest, as escaped data. The criterion bytes
+  are unchanged and no UI claim is made. This is acceptable for a low finding.
+
+## Findings
+
+### L1 (low, test coverage): positive acceptance still uses fixture-shaped, not coordinator-produced, records
+
+`coding_endpoint_fixed_test_verifier_tests.rs:345-351` sorts the fixture aggregate to imitate the
+coordinator. No test feeds the checker records that the original `runtime_loop` produced through a
+synthetic edit/command boundary. A future change in coordinator bookkeeping (dedup, sorting, or
+receipt order at verification time) would therefore go unnoticed while these tests stay green. It
+fails closed and is honestly labelled, so it is backlog only. Fix: add one engine-driven test in
+which a synthetic tool port returns native-projected edit/test results and the coordinator calls
+this verifier.
+
+### L2 (low, cosmetic): unwrapped guide line
+
+`docs/guides/coding-validation.md:21` is 139 characters, against roughly 80 in the
+surrounding paragraph (markdownlint passes). Re-wrap it. Backlog.
+
+No high or medium findings. Prior same-row lows remain the builder's declared backlog.
+
+## Per-row result
+
+- **T-303 (non-closing repair increment): PASS.** M1 is resolved with no new high or medium finding.
+  T-303 stays OPEN. Native/model execution, original-owner positive acceptance, durable recovery
+  and approved Git remain unobserved.
+- **T-306 (non-closing repair increment): PASS.** T-306 stays OPEN.
+
+Verdict: PASS

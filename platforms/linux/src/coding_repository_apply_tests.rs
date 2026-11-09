@@ -101,6 +101,35 @@ impl Drop for Fixture {
     }
 }
 
+#[test]
+fn abandoned_original_apply_decision_cannot_write_and_keeps_verified_edit_lineage() {
+    let f = Fixture::new();
+    let mut owner = f.owner();
+    f.edit(&mut owner, "one.py", "approved worktree change\n");
+    let actual_edit = owner.inspect_edit().unwrap()["latest"].clone();
+    let preview = f.prepare(&mut owner);
+    let digest = preview["preview_sha256"].as_str().unwrap();
+    assert!(!owner.inspect_apply().unwrap()["pending"].is_null());
+    owner.abandon_pending_decisions();
+    assert!(owner.inspect_apply().unwrap()["pending"].is_null());
+    assert!(owner.decide_apply(digest, true, NOW).is_err());
+    assert_eq!(owner.inspect_edit().unwrap()["latest"], actual_edit);
+    assert_eq!(
+        owner.inspect_apply().unwrap()["available_paths"],
+        json!(["one.py"])
+    );
+    assert!(owner.inspect_apply().unwrap()["latest"].is_null());
+    assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+    assert_eq!(
+        fs::read(f.0.join("owned/worktree/one.py")).unwrap(),
+        b"approved worktree change\n"
+    );
+    f.assert_preserved();
+    // Fresh consent can prepare a new diff; abandonment is never apply approval.
+    assert!(f.prepare(&mut owner)["preview_sha256"].as_str().is_some());
+    f.assert_preserved();
+}
+
 // Test convenience only: existing tests use the owner's current identities.
 // Production callers must supply the identities displayed before read consent.
 trait CurrentApply {

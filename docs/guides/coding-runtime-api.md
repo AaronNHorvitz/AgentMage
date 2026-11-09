@@ -432,3 +432,31 @@ tests check rejection between two endpoint runs and between the native and
 endpoint families, with a passing control for each. Full endpoint coordinator
 and API composition must preserve that binding. It remains open, along with
 T-303/T-306; these boundary tests establish no executable coding workflow or score.
+
+## Return the strict coding owner for later apply
+
+An embedding host can explicitly choose
+`serve_coding_endpoint_strict_edits_returning_repository` or
+`serve_coding_endpoint_edits_and_checked_tests_returning_repository`. The latter
+attaches the supplied checker to the same original edit/test owner. Existing
+service functions and development commands keep their discard behavior.
+
+Export canonical events first. The person-facing control client must release
+the exact terminal run through `POST /v1/code/endpoint/release`. Running,
+faulted, uncertain or incompletely published runs refuse return. A known
+terminal failure, denial or cancellation can return ownership; return never
+means task success. The service returns `Some` only after successful release
+and joined HTTP shutdown. Stopping without release returns `None`.
+
+The original repository retains successful edit lineage, validation history and
+actual result records. Its pending decisions are abandoned without dispatch or
+fabricated results. Remaining live previews, completion callbacks, verifiers or
+poisoned strict-owner state refuse extraction. No path, serialized receipt or
+HTTP field can supply a substitute owner or select the return policy.
+
+Obtain fresh read consent for the original checkout and worktree before using
+that owner to prepare an [original apply preview](coding-original-apply.md).
+Show the complete diff and obtain its separate exact approval before writing.
+Continuation restores no old run, grant, disclosure consent, budget or endpoint
+connection. It is process-local: service errors can drop ownership and process
+termination cannot reconstruct it. Commit/push and durable recovery remain open.

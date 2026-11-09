@@ -1,0 +1,147 @@
+Commit: 9ac41a62c20998d96709cbd0a658fecfbfc4b973
+Scope: local-coding-checked-launch
+
+Reviewer: independent core review (Claude Opus 5.5, separate session, read-only, pinned checkout
+/lane/review-checkout). Tier: core. Rows: T-303 / T-306. This increment does not close either row.
+Base: c27e2bee3611f384bb57be96f15a07a929ec074f (its own review is still in flight and is not judged here).
+
+## Methods
+
+1. Confirmed that `git rev-parse HEAD` in the pinned checkout is
+   9ac41a62c20998d96709cbd0a658fecfbfc4b973 and that the parent commit is c27e2bee. The working
+   tree is clean.
+2. Read IP-POLICY.md, the new TASKS.md queue text, decision 0177, the evidence note, the guide
+   change and the helper bundle (README.md, run.py, check.py, light.py) before running anything.
+   The helpers only plan and run the repository fast gate, freeze source hashes and assert on
+   the log. They do not modify the repository.
+3. Read the full source diff (9 files, +521/-43). I followed the new path into the host owner,
+   `CodingEndpointEditPreviews::completion_verifier`, `CodingEndpointOwnedVerifier`,
+   `CodingEndpointFixedTestVerifier::for_request` and `verify_records`/`correlates`, the
+   Linux-platform `with_completion_validation_evidence`, and the engine's default
+   `RuntimeVerifierPort::verify_completion`.
+4. Searched the whole tree for every selection or use of `completion_check`,
+   `fixed_test_run_v1`, `serve_coding_endpoint_edits_and_checked_tests` and
+   `CodingEndpointFixedTestVerifier` to see whether HTTP or model input could reach the checker.
+5. Grepped the added lines for private paths, usernames, e-mail addresses, credentials and
+   third-party product names.
+6. Ran the requested reproduction with a separate target and a fresh output directory.
+
+## Exact commands and results (from /lane/review-checkout)
+
+```text
+sha256sum --quiet -c /lane/state/tmp/t303-checked-launch/review-inputs.sha256         -> exit 0
+CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-checked-launch/run.py \
+    /lane/state/tmp/review-checked-launch-9ac41a62c209                                   -> exit 0
+    GATE_EXIT 0 SOURCE_FREEZE_UNCHANGED True
+    RESULT lines: diff-check 0, lint-untracked 0, markdownlint 0, fmt 0 (0.25s), clippy 0 (32.12s),
+    tests 0 (81.35s); total 115.13s including reservations
+    11 test targets: 53+0+0+0+14+6+21+4+69+20+40 = 227 passed, 0 failed, 0 ignored,
+    0 measured, 0 filtered
+python3 -B /lane/state/tmp/t303-checked-launch/check.py /lane/state/tmp/review-checked-launch-9ac41a62c209
+                                                                                          -> exit 0
+    gate PASS, 11 targets, totals [227,0,0,0,0], all 10 named methods "ok", source_unchanged true,
+    TASKS.md row table unchanged, plan paths == expected-paths.json, no Cargo/status/scoreboard path,
+    no private-path pattern or #[ignore] in added lines
+    review raw log SHA-256 b79683140cbeaa7463a62d8861fa8566a8e26c7c1bff9adf664f0e41f614c1e0
+    (differs from the builder's d052a52a... as expected: timings and compile lines differ;
+    the counts and per-method results match)
+python3 -B /lane/state/tmp/t303-checked-launch/light.py                                    -> exit 0
+    (diff-check 0, lint-untracked 0, markdownlint "0 issues in 0 files")
+cmp .../validation-final/source-freeze.json .../review-checked-launch-9ac41a62c209/source-freeze.json
+                                                                                          -> exit 0
+cmp .../validation-final/plan.json .../review-checked-launch-9ac41a62c209/plan.json      -> exit 0 (extra check)
+git diff --check c27e2bee3611f384bb57be96f15a07a929ec074f --                                -> exit 0, no output
+git status --short                                                                          -> empty
+```
+
+Differences from the builder's report: my timings are lower because the shared reservation
+wait was shorter (fmt 0.25s against 613.51s), and my raw log hash differs. Everything else
+matches: pass, fail, ignore and filter counts, the methods checked and the source freeze.
+Nothing used the GPU or a model, and nothing was downloaded.
+
+## Review analysis
+
+- **Selection surface.** `completion_check` is read only from the private launch file
+  (`coding_endpoint_edit_launch.rs:40`, loaded through the existing `private_bytes` and
+  `object_json` path). No HTTP request type, wire field or model-output parser refers to it.
+  The tree search found no use outside the launch module.
+- **Closed parsing.**
+  - The enum is unit-only: `CompletionCheck::FixedTestRunV1` (`coding_endpoint_edit_launch.rs:44-48`).
+  - The shape gate (`:99-111`) refuses the key entirely for Edit, including `null`. For
+    EditAndTest it requires the value to be a JSON string, so `null`, the map form
+    `{"fixed_test_run_v1": null}` (which serde would otherwise accept for a unit variant),
+    booleans, objects and arrays all refuse.
+  - Unknown strings fail serde, and duplicate keys fail `object_json`.
+  - Unit tests cover each of these cases (`coding_endpoint_edit_launch_tests.rs:536-563`).
+- **Ordering.** `acceptance()` (`coding_endpoint_edit_launch.rs:294-316`) runs at `:392-396`,
+  after `prepare()` and `Validation::into_native` and before `ApprovalInput`,
+  `LinuxCodingRepository::open`, native `prepare` and the credential read. This matches the
+  claim that refusal happens before state, native Git or credentials. The executable test
+  (`tests/coding_endpoint_edit_launch.rs:210-236`) supports it: the unsupported-parser case
+  leaves stdout empty, writes no `code.endpoint.edit-startup:` line, keeps `state/` and
+  `owned/` empty and leaves the model socket unaccepted. The supported case reaches the
+  inherited native refusal.
+- **Request binding.** The checker binds to `startup.request()`, the request after identity
+  binding and narrowing. `for_request` requires both acceptance lists to equal exactly
+  `[criterion]` and the other fields (Execute class, ToolOutput evidence, no authoritative
+  evidence, full coding visible tools). The owned adapter checks
+  `input.request.endpoint_request() == self.startup.request()`, and the checker checks its
+  own copy. Both come from the same `startup`, which is moved into previews. The unit test
+  shows the verifier id differs from one bound to the pre-binding request, and that the
+  objective and acceptance criteria are preserved.
+- **Same owner.** `serve_coding_endpoint_edits_and_checked_tests` calls
+  `previews.completion_verifier(verifier)` on the previews of the same owner before
+  `CodingEndpointStrictEdits::new` takes them (`coding_endpoint_prepared.rs:283`).
+  `completion_verifier` refuses any owner without validation. The generic
+  `serve_coding_endpoint_edits_and_tests` and `..._edits_and_tests_inner` callers pass
+  their verifier through unchanged (`:138`, `:173`). `admit_turn_port` and the original
+  registry still admit every candidate.
+- **Default stays non-certifying.** The `Disabled` variant returns `Invalid` from both
+  `RuntimeVerifierPort::verify` and `verify_coding_completion`. The verifier ids
+  (`strict-edits-unverified` and `strict-coding-unverified`) are the same as at the base.
+  The Edit kind can never build `Fixed`, because `acceptance()` refuses without validation and
+  `load` refuses the key. Even if the Edit path used `LaunchAcceptance` directly, the engine's
+  default `verify_completion` refuses endpoint requests (`kernel/engine/src/runtime_loop.rs:1218-1229`).
+- **Authority.** No new effect, grant, disclosure or wire field is added, and nothing touches
+  Git. All approvals for creation, disclosure, edits and tests are unchanged.
+- **Claims.** The decision, evidence and guide wording match the code. The evidence calls
+  the executable observations refusals, not native success. No score, model admission or
+  closure is claimed. The commit touches no evaluation task, hidden or held-out test, scorer,
+  threshold, dependency, SBOM, status model or scoreboard. check.py and my reading of the
+  9-path diff both confirm this.
+- **Privacy and IP.** The added lines contain no private host paths, usernames, hostnames,
+  credentials or other products' names. The commit author is the repository owner's own
+  identity, as in the preceding commits.
+- **Delivery.** No row or sub-row is added or closed. The TASKS.md row table is unchanged
+  (check.py assertion). The increment ends in code that runs and is tested.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **LOW L1 (backlog)**, `platforms/local-api/src/coding_endpoint_edit_launch.rs:498` with
+  `shells/host/src/coding_endpoint_completion_verifier.rs:95`. Default (no opt-in) EditAndTest
+  launches now go through `CodingEndpointOwnedVerifier`. At completion, the owner therefore
+  builds `completion_validation_evidence()` (original records and current-source samples)
+  before the `Disabled` port refuses. At the base, refusal happened immediately in the
+  engine's default `verify_completion`. The outcome is the same (refusal, no disclosure,
+  post-check skipped on `Err`), and launch consent already covers bounded reinspection.
+  Still, the default path now does read-only work that it cannot use.
+  Fix: in `serve_development`, call `serve_coding_endpoint_edits_and_tests` when the
+  selection is `Disabled`, or short-circuit `Disabled` before the owner locks. Then add a
+  test that a default launch never invokes the evidence sampler.
+- **LOW L2 (backlog, informational)**: no test exercises the `Fixed` selection through the
+  full launch to a positive or negative candidate. The executable test stops at the inherited
+  native trust refusal, which the evidence states honestly. Positive acceptance remains open
+  under T-301.1, as recorded.
+
+## Per-row result
+
+- T-303 (non-closing increment): PASS for this commit's scope. The explicit launch selection,
+  closed parsing, the refusal order and attachment to the same owner are correct and tested.
+  The row remains OPEN.
+- T-306 (non-closing increment): PASS for this commit's scope. The default stays
+  non-certifying, no new authority is added and the checker cannot be selected from HTTP or
+  model input. The row remains OPEN.
+
+Verdict: PASS

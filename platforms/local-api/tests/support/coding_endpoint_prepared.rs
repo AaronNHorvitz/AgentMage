@@ -16,6 +16,9 @@ use agentmage_platform_linux::{
 };
 use std::{collections::BTreeMap, fs, os::unix::fs::PermissionsExt, path::PathBuf};
 
+#[path = "coding_endpoint_strict_return.rs"]
+mod strict_return;
+
 struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {

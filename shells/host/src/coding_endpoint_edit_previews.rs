@@ -538,6 +538,36 @@ impl<C: RuntimeClock + Clone> CodingEndpointEditPreviews<C> {
 }
 
 impl<C: RuntimeClock> CodingEndpointEditBoundary<C> {
+    /// Consume the sole remaining reference to the original live owner. After
+    /// admission, obtain this boundary only through checked terminal release.
+    /// Live previews, completion callbacks, verifiers and poisoned state refuse
+    /// without changing ownership. Pending native decisions are abandoned by
+    /// their original boundaries; successful lineage and observations survive.
+    /// This restores no run, grant, budget or process-crash state. Later work
+    /// requires fresh admission and exact approval.
+    pub fn try_into_repository(mut self) -> Result<LinuxCodingRepository, Self> {
+        match self.take_repository() {
+            Ok(repository) => Ok(repository),
+            Err(()) => Err(self),
+        }
+    }
+
+    fn take_repository(&mut self) -> Result<LinuxCodingRepository, ()> {
+        // No other reference may prepare a later effect or inspect a consumed
+        // owner. With one strong reference, no caller can create another one.
+        if Arc::strong_count(&self.state) != 1 {
+            return Err(());
+        }
+        let mut state = self.state.lock().map_err(|_| ())?;
+        let mut repository = match state.owner.take().ok_or(())? {
+            Owner::Ready(repository) => *repository,
+            Owner::Pending(boundary) => (*boundary).into_repository(),
+            Owner::Command(boundary) => (*boundary).into_repository(),
+        };
+        repository.abandon_pending_decisions();
+        Ok(repository)
+    }
+
     /// Inert inspection of the original preview and actual last native result.
     pub fn inspect(&self) -> Result<serde_json::Value, RuntimePortFailure> {
         let state = self
