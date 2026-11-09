@@ -149,6 +149,7 @@ mod tests {
             held: held_root(&root.join("owned/worktree")).unwrap(),
             owned: held_root(&root.join("owned")).unwrap(),
             creation_receipt_sha256: hash(b"synthetic creation"),
+            git_creation: None,
             edits: BTreeMap::new(),
         };
         let observation = WorkspaceObservation::capture(&created.held).unwrap();

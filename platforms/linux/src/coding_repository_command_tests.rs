@@ -115,6 +115,7 @@ impl Fixture {
             path,
             owned: held_root(&self.0.join("owned")).unwrap(),
             creation_receipt_sha256: hash(b"synthetic creation"),
+            git_creation: None,
         });
     }
     fn pending(&self, owner: &mut LinuxCodingRepository) -> String {

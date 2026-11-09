@@ -413,6 +413,8 @@ fn native_worktree_path_runs_or_retains_the_exact_trust_refusal() {
                 .is_empty()
         );
         assert!(!owned.join("worktree").exists());
+        assert!(owner.created_git_identity().is_err());
+        assert!(owner.inspect_apply().unwrap()["git_creation"].is_null());
         println!("native creation not measured: exact system Git trust refusal retained");
         return;
     }
@@ -485,6 +487,22 @@ fn native_worktree_path_runs_or_retains_the_exact_trust_refusal() {
         .decide(preview["preview_sha256"].as_str().unwrap(), true, NOW)
         .unwrap();
     assert_eq!(result["outcome"], "succeeded");
+    let identity = owner.created_git_identity().unwrap();
+    assert_eq!(identity.branch_ref(), "refs/heads/agentmage/tasks/native");
+    assert_eq!(identity.base_object(), base);
+    assert_eq!(identity.plan_sha256(), preview["plan"]["plan_sha256"]);
+    assert_eq!(
+        identity.authority_receipt_sha256(),
+        result["receipt"]["receipt_sha256"]
+    );
+    assert_eq!(
+        identity.repository_receipt_sha256(),
+        result["repository_receipt"]["receipt_sha256"]
+    );
+    assert_eq!(
+        owner.inspect_apply().unwrap()["git_creation"],
+        identity.inspection()
+    );
     assert_eq!(
         fs::read(owned.join("worktree/sentinel")).unwrap(),
         b"preserve human work"
@@ -511,4 +529,267 @@ fn native_worktree_path_runs_or_retains_the_exact_trust_refusal() {
             .decide(preview["preview_sha256"].as_str().unwrap(), true, NOW)
             .is_err()
     );
+}
+
+// Synthetic executor observations exercise correlation and owner lifetime only.
+// They never claim a native branch, Git execution, signature or commit approval.
+fn synthetic_creation_observations(
+    f: &Fixture,
+) -> (
+    LinuxCodingRepository,
+    agentmage_kernel_engine::repository_safety::RepositoryOperationPlan,
+    agentmage_kernel_contracts::Receipt,
+    agentmage_kernel_engine::repository_safety::RepositoryOperationReceipt,
+) {
+    let mut owner = f.open();
+    let repository = f.native();
+    let (prepared, before) = f.plan("synthetic-git-identity");
+    let plan = prepared.plan().clone();
+    let (authority, specialized) = dispatch(
+        owner.authority.authority_mut(),
+        &repository,
+        f.metadata(&repository),
+        prepared,
+        before,
+        hash(b"synthetic exact decision"),
+        NOW + LIFETIME_MS,
+        NOW,
+        Synthetic {
+            calls: Arc::new(AtomicUsize::new(0)),
+            corrupt: false,
+            crash: false,
+        },
+    )
+    .unwrap();
+    (owner, plan, authority, specialized.unwrap())
+}
+
+fn owner_with_synthetic_git_observations(f: &Fixture) -> LinuxCodingRepository {
+    let (mut owner, plan, authority, repository) = synthetic_creation_observations(f);
+    fs::create_dir(f.root.join("owned/worktree")).unwrap();
+    owner.created = Some(CreatedWorktree {
+        original_path: f.root.join("repo"),
+        original: f.native(),
+        path: f.root.join("owned/worktree"),
+        held: held_root(&f.root.join("owned/worktree")).unwrap(),
+        owned: held_root(&f.root.join("owned")).unwrap(),
+        creation_receipt_sha256: authority.receipt_sha256.clone(),
+        git_creation: Some(
+            LinuxCodingGitCreation::from_dispatch(&plan, &authority, Some(&repository)).unwrap(),
+        ),
+        edits: BTreeMap::new(),
+    });
+    owner
+}
+
+#[test]
+fn git_creation_identity_correlates_original_plan_and_both_dispatch_receipts() {
+    let f = Fixture::new();
+    let (_owner, plan, authority, repository) = synthetic_creation_observations(&f);
+    let identity =
+        LinuxCodingGitCreation::from_dispatch(&plan, &authority, Some(&repository)).unwrap();
+    assert_eq!(
+        identity.branch_ref(),
+        "refs/heads/agentmage/tasks/component"
+    );
+    assert_eq!(identity.base_object(), "1".repeat(40));
+    assert_eq!(identity.plan_sha256(), plan.plan_sha256);
+    assert_eq!(
+        identity.authority_receipt_sha256(),
+        authority.receipt_sha256
+    );
+    assert_eq!(
+        identity.repository_receipt_sha256(),
+        repository.receipt_sha256
+    );
+    assert_eq!(identity.inspection()["current_git_state_verified"], false);
+    assert_eq!(identity.inspection()["commit_authority"], false);
+    assert_eq!(identity.inspection()["publication_authority"], false);
+    assert!(!f.root.join("owned/worktree").exists());
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"preserve human work"
+    );
+}
+
+#[test]
+fn git_creation_identity_refuses_missing_failed_or_uncorrelated_dispatch_results() {
+    use agentmage_kernel_engine::repository_safety::RepositoryOperation;
+    let f = Fixture::new();
+    let (_owner, plan, authority, repository) = synthetic_creation_observations(&f);
+    assert!(LinuxCodingGitCreation::from_dispatch(&plan, &authority, None).is_err());
+    for case in 0..14 {
+        let mut plan = plan.clone();
+        let mut authority = authority.clone();
+        let mut repository = repository.clone();
+        match case {
+            0 => authority.outcome = OperationOutcome::Failed,
+            1 => authority.operation = OperationBinding::new(GrantOperation::GitBranchFastForward),
+            2 => repository.outcome = OperationOutcome::Failed,
+            3 => repository.operation = RepositoryOperation::Fetch,
+            4 => repository.cleanup_verified = false,
+            5 => repository.repository_transaction_id = "foreign-transaction".into(),
+            6 => repository.plan_sha256 = hash(b"foreign plan"),
+            7 => repository.before_manifest_sha256 = hash(b"foreign manifest"),
+            8 => repository.authority_transaction_id = "foreign-authority".into(),
+            9 => repository.operation_attempt_id = "foreign-attempt".into(),
+            10 => plan.branch_ref = Some("refs/heads/main".into()),
+            11 => plan.expected_new_object = Some("2".repeat(40)),
+            12 => plan.operation = RepositoryOperation::Fetch,
+            13 => {
+                authority.authority_transaction_id =
+                    AuthorityTransactionId::from_raw("foreign-pair");
+                repository.authority_transaction_id = "foreign-pair".into();
+            }
+            _ => unreachable!(),
+        }
+        assert_eq!(
+            LinuxCodingGitCreation::from_dispatch(&plan, &authority, Some(&repository))
+                .err()
+                .unwrap()
+                .code(),
+            "code.repository.git-provenance",
+            "case {case}"
+        );
+    }
+}
+
+#[test]
+fn git_creation_identity_survives_same_owner_handoff_but_not_record_reopen() {
+    let f = Fixture::new();
+    let owner = owner_with_synthetic_git_observations(&f);
+    let expected = owner.created_git_identity().unwrap().inspection();
+    assert_eq!(owner.inspect_apply().unwrap()["git_creation"], expected);
+    let root = owner
+        .created
+        .as_ref()
+        .unwrap()
+        .held
+        .root_path_sha256()
+        .to_owned();
+    let lease = match owner.into_runtime_worktree(&root) {
+        Ok(lease) => lease,
+        Err(_) => panic!("synthetic held fixture must transfer"),
+    };
+    let other = lease.clone();
+    let lease = match lease.try_into_repository() {
+        Err(lease) => lease,
+        Ok(_) => panic!("live reference must prevent owner return"),
+    };
+    drop(other);
+    let returned = match lease.try_into_repository() {
+        Ok(owner) => owner,
+        Err(_) => panic!("last live reference must return same owner"),
+    };
+    assert_eq!(
+        returned.created_git_identity().unwrap().inspection(),
+        expected
+    );
+    assert_eq!(returned.inspect_apply().unwrap()["git_creation"], expected);
+    let receipts = returned.inspect().unwrap()["receipts"].clone();
+    drop(returned);
+    let reopened = f.open();
+    assert_eq!(reopened.inspect().unwrap()["receipts"], receipts);
+    assert!(reopened.inspect_apply().unwrap()["git_creation"].is_null());
+    assert!(reopened.created_git_identity().is_err());
+    assert!(f.root.join("owned/worktree").is_dir());
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"preserve human work"
+    );
+}
+
+#[test]
+fn git_creation_identity_refuses_synthetic_creation_and_changed_held_roots() {
+    for case in 0..5 {
+        let f = Fixture::new();
+        let mut owner = owner_with_synthetic_git_observations(&f);
+        match case {
+            0 => owner.created.as_mut().unwrap().git_creation = None,
+            1 => owner.created.as_mut().unwrap().creation_receipt_sha256 = hash(b"substitution"),
+            2..=4 => {
+                let path = match case {
+                    2 => "repo",
+                    3 => "owned/worktree",
+                    _ => "owned",
+                };
+                fs::rename(f.root.join(path), f.root.join("retained-before")).unwrap();
+                fs::create_dir_all(f.root.join(path)).unwrap();
+            }
+            _ => unreachable!(),
+        }
+        assert!(owner.created_git_identity().is_err(), "case {case}");
+        assert!(!f.root.join("owned/worktree/.git").exists());
+    }
+}
+
+#[test]
+fn git_creation_identity_is_bound_into_separately_approved_original_diff() {
+    let f = Fixture::new();
+    let mut owner = owner_with_synthetic_git_observations(&f);
+    let expected = owner.created_git_identity().unwrap().inspection();
+    let original = f.root.join("repo/sentinel");
+    let worktree = f.root.join("owned/worktree/sentinel");
+    let initial = fs::read(&original).unwrap();
+    fs::write(&worktree, &initial).unwrap();
+    fs::write(f.root.join("repo/.git/index"), b"human index sentinel").unwrap();
+    fs::write(f.root.join("repo/untracked"), b"human untracked sentinel").unwrap();
+    let paths = vec!["sentinel".into()];
+    let scope = owner.select_created_sources(&paths).unwrap();
+    let edit = owner
+        .prepare_edit(
+            scope,
+            &[crate::LinuxCodingReplacement {
+                path: "sentinel",
+                before_sha256: &hash(&initial),
+                content: "approved repair\n",
+            }],
+            "Synthetic creation; real native edit",
+            NOW,
+        )
+        .unwrap();
+    assert_eq!(
+        owner
+            .decide_edit(edit["preview_sha256"].as_str().unwrap(), true, NOW)
+            .unwrap()["outcome"],
+        "committed"
+    );
+    let status = owner.inspect_apply().unwrap();
+    let preview = owner
+        .prepare_apply(
+            &paths,
+            "Separately approve original diff",
+            status["repository_root_sha256"].as_str().unwrap(),
+            status["worktree_root_sha256"].as_str().unwrap(),
+            NOW,
+        )
+        .unwrap();
+    assert_eq!(preview["git_creation"], expected);
+    let mut bound = preview.clone();
+    bound.as_object_mut().unwrap().remove("preview_sha256");
+    assert_eq!(
+        preview["preview_sha256"],
+        hash(&serde_json::to_vec(&bound).unwrap())
+    );
+    bound["git_creation"]["base_object"] = json!("2".repeat(40));
+    let wrong = hash(&serde_json::to_vec(&bound).unwrap());
+    assert!(owner.decide_apply(&wrong, true, NOW).is_err());
+    assert_eq!(fs::read(&original).unwrap(), initial);
+    let result = owner
+        .decide_apply(preview["preview_sha256"].as_str().unwrap(), true, NOW)
+        .unwrap();
+    assert_eq!(result["outcome"], "committed");
+    assert_eq!(fs::read(&original).unwrap(), b"approved repair\n");
+    assert_eq!(fs::read(&worktree).unwrap(), b"approved repair\n");
+    assert_eq!(
+        fs::read(f.root.join("repo/.git/index")).unwrap(),
+        b"human index sentinel"
+    );
+    assert_eq!(
+        fs::read(f.root.join("repo/untracked")).unwrap(),
+        b"human untracked sentinel"
+    );
+    assert_eq!(owner.created_git_identity().unwrap().inspection(), expected);
+    assert_eq!(owner.inspect_apply().unwrap()["git_creation"], expected);
+    assert!(!f.root.join("owned/worktree/.git").exists());
 }

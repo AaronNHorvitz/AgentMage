@@ -55,6 +55,7 @@ impl Fixture {
             held: held_root(&path).unwrap(),
             owned: held_root(&self.0.join("owned")).unwrap(),
             creation_receipt_sha256: hash(b"synthetic-successful-creation"),
+            git_creation: None,
             edits: BTreeMap::new(),
         });
         owner

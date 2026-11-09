@@ -2,6 +2,18 @@
 
 ## Active queue: local agent mission
 
+The [Git identity increment](docs/evidence/t306-git-identity-2026-11-09.md)
+retains the verified native creation plan's branch, immutable base and correlated
+receipts across the same owner's coding handoff and return. Original diff
+inspection and previews show this historical provenance without claiming
+current Git state or Git approval. Synthetic creation and reopened records
+cannot restore it. Independent core review is required; T-303/T-306 remain open,
+with no row or sub-row added or closed. Native/model measurements, approved Git
+execution and durable recovery remain open. The complete affected gate remains
+**FAIL**: 1,267 passed, exactly 72 inherited failures and 64 existing ignores
+across 26 unfiltered targets. All five new tests pass; formatting and Clippy
+pass, and nine Rust file hashes remain fixed during verification.
+
 The [guided coding and transfer increment](docs/evidence/t303-guided-transfer-2026-11-09.md)
 connects the retained run, private terminal record and separately approved
 original diff through one terminal command and one deadline. Saved-transfer

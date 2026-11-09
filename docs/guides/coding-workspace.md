@@ -213,3 +213,19 @@ Workspace operations share the single active-operation budget; status and
 cancellation stay available. The latest 128 activity events record action,
 outcome and workspace/settings revisions, without root, source, model answer or
 credentials. They have process-only retention; durable runs/replay remain open.
+
+## Historical branch identity
+
+The original live repository owner retains the exact native-created task branch
+and immutable base across a coding runtime handoff and exclusive owner return.
+Its `created_git_identity()` library method revalidates both held roots before
+returning a borrowed typed view. Existing original-apply inspection and exact
+diff previews include an optional `git_creation` description with the plan and
+both receipt digests. Synthetic creation fixtures and reopened authority records
+have no such provenance.
+
+This describes the original creation only. `current_git_state_verified`,
+`commit_authority` and `publication_authority` are false. Displaying the branch
+does not verify current refs or approve a commit or push. Future Git operations
+require fresh native state checks and the existing separate authority contracts.
+Serialized records and filesystem paths cannot construct or recover the view.

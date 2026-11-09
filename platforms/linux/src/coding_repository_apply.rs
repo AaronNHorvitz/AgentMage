@@ -50,7 +50,7 @@ pub(super) struct PendingApply {
 }
 
 impl LinuxCodingRepository {
-    fn verify_apply_roots(&self) -> Result<&CreatedWorktree> {
+    pub(super) fn verify_apply_roots(&self) -> Result<&CreatedWorktree> {
         let created = self.verify_created()?;
         created
             .original
@@ -75,6 +75,7 @@ impl LinuxCodingRepository {
             "latest":self.apply_result,"retention":"process-only","automatic_replay":false,
             "repository_root_sha256":self.created.as_ref().map(|c| c.original.root_path_sha256()),
             "worktree_root_sha256":self.created.as_ref().map(|c| c.held.root_path_sha256()),
+            "git_creation":self.created.as_ref().and_then(|c| c.git_creation.as_ref()).map(LinuxCodingGitCreation::inspection),
             "available_paths":self.created.as_ref().map(|c| c.edits.keys().collect::<Vec<_>>()),
             "available_changes":self.created.as_ref().map(|c| c.edits.iter().map(|(path, edit)|
                 json!({"path":path,"kind":if edit.created_mode.is_some() {"create"} else {"edit"},
@@ -183,6 +184,7 @@ impl LinuxCodingRepository {
         let mut preview = json!({"version":1,"operation":"apply-to-original",
             "repository_root_sha256":original.root_sha256(),"worktree_root_sha256":worktree.root_sha256(),
             "creation_receipt_sha256":created.creation_receipt_sha256,
+            "git_creation":created.git_creation.as_ref().map(LinuxCodingGitCreation::inspection),
             "write_preview":write.preview(),"created_at_epoch_ms":now,"expires_at_epoch_ms":write.expires_at_epoch_ms(),
             "retention":"process-only","tested":false,"automatic_replay":false,
             "warning":"Writes only this complete displayed diff in the original checkout. Requires separate exact approval. No index change, commit, push or test claim. Inspect disk after a lost reply; never resend approval."});

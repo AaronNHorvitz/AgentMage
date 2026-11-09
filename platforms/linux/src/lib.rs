@@ -48,7 +48,8 @@ pub use coding_repository::{
     LinuxCodingEndpointEdit, LinuxCodingEndpointEditBoundary, linux_coding_endpoint_edit_registry,
 };
 pub use coding_repository::{
-    LinuxCodingRuntimeCreateDriver, LinuxCodingRuntimeWriteDriver, LinuxCodingWorktreeLease,
+    LinuxCodingGitCreation, LinuxCodingRuntimeCreateDriver, LinuxCodingRuntimeWriteDriver,
+    LinuxCodingWorktreeLease,
 };
 pub use coding_workspace::{
     LinuxCodingPendingWrite, LinuxCodingReadError, LinuxCodingReadScope, LinuxCodingReplacement,

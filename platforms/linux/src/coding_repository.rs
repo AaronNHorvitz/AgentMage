@@ -46,6 +46,9 @@ mod apply;
 mod command;
 #[path = "coding_repository_create.rs"]
 mod create;
+#[path = "coding_repository_git_identity.rs"]
+mod git_identity;
+pub use git_identity::LinuxCodingGitCreation;
 #[path = "coding_repository_edit.rs"]
 mod edit;
 pub use edit::{
@@ -86,6 +89,7 @@ struct CreatedWorktree {
     held: LinuxAuthorizedWorkspace,
     owned: LinuxAuthorizedWorkspace,
     creation_receipt_sha256: String,
+    git_creation: Option<LinuxCodingGitCreation>,
 }
 const LIFETIME_MS: u64 = 120_000;
 
@@ -191,6 +195,7 @@ impl LinuxCodingRepository {
             path,
             owned: held_root(owned)?,
             creation_receipt_sha256: hash(b"synthetic-test-creation-not-native-git"),
+            git_creation: None,
             edits: BTreeMap::new(),
         });
         Ok(self)
@@ -427,6 +432,9 @@ impl LinuxCodingRepository {
         if Instant::now() >= pending.deadline || dispatch_now >= pending.expires_at {
             return Err(err("code.repository.expired"));
         }
+        // Preserve the exact verified plan across its consuming dispatch. Never
+        // reconstruct a created branch or base from a path or terminal record.
+        let creation_plan = pending.prepared.plan().clone();
         let (receipt, specialized) = dispatch(
             self.authority.authority_mut(),
             &pending.repository,
@@ -458,6 +466,11 @@ impl LinuxCodingRepository {
         let repository_root_sha256 = pending.repository.root_path_sha256().to_owned();
         let worktree_root_sha256 =
             if receipt.outcome == agentmage_kernel_contracts::OperationOutcome::Succeeded {
+                let git_creation = LinuxCodingGitCreation::from_dispatch(
+                    &creation_plan,
+                    &receipt,
+                    specialized.as_ref(),
+                )?;
                 let held = held_root(&pending.destination)
                     .map_err(|_| err("code.repository.uncertain"))?;
                 let identity = held.root_path_sha256().to_owned();
@@ -477,6 +490,7 @@ impl LinuxCodingRepository {
                     held,
                     owned: pending.owned,
                     creation_receipt_sha256: receipt.receipt_sha256.clone(),
+                    git_creation: Some(git_creation),
                 });
                 Some(identity)
             } else {
