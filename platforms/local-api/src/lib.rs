@@ -12,7 +12,9 @@ mod coding_endpoint_launch;
 #[cfg(test)]
 #[path = "../tests/support/endpoint_launch.rs"]
 mod endpoint_launch_fixture;
-pub use coding_endpoint_edit_launch::serve_coding_endpoint_edit_development;
+pub use coding_endpoint_edit_launch::{
+    serve_coding_endpoint_coding_development, serve_coding_endpoint_edit_development,
+};
 mod coding_endpoint_prepared;
 pub use coding_endpoint_launch::serve_coding_endpoint_read_development;
 pub use coding_endpoint_prepared::{

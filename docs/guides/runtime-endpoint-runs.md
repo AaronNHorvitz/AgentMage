@@ -1503,8 +1503,8 @@ Trusted hosts can select `CodingEndpointPreparedKind::EditAndTest` and construct
 `CodingEndpointEditPreviews::new_coding` with the original live repository and a
 `CodingEndpointValidation`: one explicit command definition, test kind, minimum
 count and closed output parser. `serve_coding_endpoint_edits_and_tests` supplies
-this composition through the existing local API. It is a library factory;
-the development executable still selects its existing edit-only path.
+this composition through the existing local API. The separate development
+command below selects it with the same original native startup owner.
 
 The combined catalog contains the original edit and command definitions.
 Single-effect admission still refuses a combined catalog. Startup refuses read
@@ -1538,8 +1538,9 @@ no model or HTTP argument can replace either native executor or original owner.
 Native command admission can refuse before a test approval in this lane.
 Synthetic creation/model/process fixtures are component evidence, not a
 successful native coding workflow or a model score. Complete native/model
-execution, executable coding-cycle selection, durable recovery, approved Git and
-T-303/T-306 acceptance remain open.
+execution, durable recovery, approved Git and T-303/T-306 acceptance remain open.
+Executable coding-cycle selection is available through the command below;
+successful native admission remains unobserved in this lane.
 
 The existing `CodingCompletionVerifier` rejects any non-success tool result,
 including an earlier failed check followed by a full pass. This composition does
@@ -1547,3 +1548,51 @@ not change that rule or supply linked-pass supersession. Its completion route
 alone cannot qualify the repair workflow. A reviewed verifier that explicitly
 binds a later pass to the original failed validation and current source remains
 open work; earlier failures must stay in the run record.
+
+## Executable development startup for fixed tests and repair
+
+The separate command selects the combined strict edit/test/repair service:
+
+```sh
+agentmage-local-api serve-endpoint-coding-development 127.0.0.1:8008 \
+  <private-auth-directory> <absolute-private-launch-with-validation.json> \
+  --approve-inspection-state-and-endpoint
+```
+
+It reuses the strict-edit launch fields and private-file rules above, with two
+changes. The sealed `request` must use the original combined edit/command
+catalog. The launch document must also contain a `validation` object with these
+fields; the edit-only command refuses that field, including `null`, and the
+coding command refuses its absence.
+
+| Field | Meaning |
+| --- | --- |
+| `command` | Complete originally sealed `CommandSpec`; fixed executable path/hash, literal arguments, replacement environment and exact resource bounds |
+| `kind` | `unit`, `integration`, or `end_to_end` |
+| `minimum_test_count` | Positive integer; unchanged for every attempt |
+| `output_format` | `agent_mage_json_v1`, `rust_libtest_text_v1`, or `python_unittest_text_v1` |
+
+The command must select `owned_worktree`, require a grant, remain offline and
+noninteractive, and inherit no environment. Its original canonical seal is
+verified before state writes or native inspection. The native owner still
+verifies executable/launcher trust and command ceilings at test preparation and
+dispatch; private launch parsing does not establish admission or execution.
+Process-exit-only results cannot be selected as tests. Unknown fields,
+positional struct arrays and stale command seals refuse. No HTTP or model field
+can select or replace the fixed definition or parser.
+
+Startup keeps the original exact stdin worktree-creation decision. Credentials
+remain unread until observed native creation success. No model call or test
+runs at startup. Every HTTP advance requires consent covering selected source,
+diagnostics and observations it may disclose; every edit and test separately
+requires its complete exact native approval. Failed checks retain their actual
+failed results. Eligible repair uses the original feedback classifier, fixed
+validation series and three-attempt ceiling, within one cumulative run.
+
+The command deliberately supplies the existing refusing development verifier.
+A parsed test pass cannot certify task completion or current source. Linked-pass
+and current-source acceptance verification, successful native/model execution,
+durable recovery and approved Git remain open. No coding score is claimed.
+The lane's executable fixture observes the original native Git artifact trust
+refusal before creation, credential reads or model dispatch. It does not replace
+that refusal or claim a successful native workflow. T-303/T-306 remain open.

@@ -2,6 +2,17 @@
 
 ## Active queue: local agent mission
 
+The [executable fixed-test development startup](docs/evidence/t303-coding-launch-2026-11-09.md)
+selects the existing combined edit/test/repair coordinator from a private fixed
+validation definition and the original exact worktree-creation decision. Each
+disclosure, edit and test still needs separate approval. The development verifier
+refuses certification. The scoped fast gate passes: 222 tests across 11
+unfiltered targets, with zero failures or ignores; formatting and Clippy pass.
+Independent core review is required. T-303/T-306 remain open; no row or sub-row
+is added or closed.
+Successful native/model execution, linked-pass/current-source verification,
+durable recovery, approved Git and parent measurements remain open.
+
 The [failed-feedback independent core review](docs/reviews/d2ddd2dcd701-local-coding-failed-test-feedback.txt)
 has **Verdict: PASS** for exact commit
 `d2ddd2dcd701fbdfbdd4a52cd95be1a6bc2eeabd`, with no high/medium finding.

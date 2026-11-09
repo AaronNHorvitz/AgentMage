@@ -5,14 +5,17 @@ use super::*;
 use agentmage_host::{
     coding_development_runtime::OsRuntimeClock,
     coding_endpoint::CodingEndpointConnection,
+    coding_endpoint_edit_previews::CodingEndpointValidation,
     coding_endpoint_prepared_startup::{CodingEndpointPreparedKind, CodingEndpointPreparedStartup},
 };
 use agentmage_kernel_contracts::{
     RuntimeEndpointRunRequest, RuntimeRunId, SessionId, VerifierCandidate, VerifierId,
 };
 use agentmage_kernel_engine::{
+    command_runner::{CommandSpec, CommandWorkingDirectory},
     instruction_provenance::InstructionEvidenceLedger,
     runtime_loop::{RuntimePortFailure, RuntimeVerificationInput, RuntimeVerifierPort},
+    validation_template::{ValidationKind, ValidationParserKind},
 };
 use coding_endpoint_launch::{bind_identities, private_bytes};
 use std::{collections::BTreeSet, io, os::fd::AsFd, path::PathBuf};
@@ -30,14 +33,66 @@ struct Launch {
     instructions: InstructionEvidenceLedger,
     paths: Vec<String>,
     source_budget: usize,
+    validation: Option<Validation>,
 }
 
-fn load(path: &Path) -> Result<Launch, ApiError> {
+// Private startup metadata only. Neither HTTP nor a model can supply this
+// definition, and parsing it grants no command execution authority.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Validation {
+    command: CommandSpec,
+    kind: ValidationKind,
+    minimum_test_count: u32,
+    output_format: ValidationParserKind,
+}
+
+impl Validation {
+    fn into_native(self) -> Result<CodingEndpointValidation, ApiError> {
+        self.command.verify().map_err(|_| ApiError::Configuration)?;
+        if self.command.working_directory != CommandWorkingDirectory::OwnedWorktree
+            || !self.kind.is_test()
+            || self.minimum_test_count == 0
+        {
+            return Err(ApiError::Configuration);
+        }
+        let output_format = match self.output_format {
+            ValidationParserKind::AgentMageJsonV1 => {
+                agentmage_platform_linux::LinuxCodingTestFormat::AgentMageJsonV1
+            }
+            ValidationParserKind::RustLibtestTextV1 => {
+                agentmage_platform_linux::LinuxCodingTestFormat::RustLibtestTextV1
+            }
+            ValidationParserKind::PythonUnittestTextV1 => {
+                agentmage_platform_linux::LinuxCodingTestFormat::PythonUnittestTextV1
+            }
+            ValidationParserKind::ProcessExitV1 => return Err(ApiError::Configuration),
+        };
+        Ok(CodingEndpointValidation {
+            command: self.command,
+            kind: self.kind,
+            minimum_test_count: self.minimum_test_count,
+            output_format,
+        })
+    }
+}
+
+fn load(path: &Path, kind: CodingEndpointPreparedKind) -> Result<Launch, ApiError> {
     let bytes = private_bytes(path, 1024 * 1024)?;
     let launch: Launch = object_json(&bytes).map_err(|_| ApiError::Configuration)?;
     let shape: Value = serde_json::from_slice(&bytes).map_err(|_| ApiError::Configuration)?;
     if launch.version != 1 || !shape["request"].is_object() || !shape["instructions"].is_object() {
         return Err(ApiError::Configuration);
+    }
+    match kind {
+        CodingEndpointPreparedKind::Edit
+            if !shape.as_object().unwrap().contains_key("validation") => {}
+        CodingEndpointPreparedKind::EditAndTest
+            if shape["validation"].is_object()
+                && shape["validation"]["command"].is_object()
+                && shape["validation"]["command"]["bounds"].is_object()
+                && shape["validation"]["command"]["environment"].is_object() => {}
+        _ => return Err(ApiError::Configuration),
     }
     Ok(launch)
 }
@@ -46,14 +101,11 @@ fn prepare(
     launch: &Launch,
     run: RuntimeRunId,
     session: SessionId,
+    kind: CodingEndpointPreparedKind,
 ) -> Result<CodingEndpointPreparedStartup, ApiError> {
     let request = bind_identities(launch.request.clone(), run, session)?;
-    let startup = CodingEndpointPreparedStartup::prepare(
-        request,
-        CodingEndpointPreparedKind::Edit,
-        &launch.instructions,
-    )
-    .map_err(|_| ApiError::Configuration)?;
+    let startup = CodingEndpointPreparedStartup::prepare(request, kind, &launch.instructions)
+        .map_err(|_| ApiError::Configuration)?;
     // Refuse unusable source metadata before native inspection or state writes.
     if launch.paths.is_empty()
         || launch.paths.len() > 128
@@ -189,8 +241,8 @@ impl ModelOperationControl for RunControl {
     }
 }
 
-// Strict text only prepares edits. No independent task/test checker is bound
-// by this development command, so it cannot certify any completion candidate.
+// Neither development command binds an independent task/current-source checker.
+// Even a parsed test pass cannot certify any completion candidate.
 struct UnverifiedEdits(VerifierId);
 impl RuntimeVerifierPort for UnverifiedEdits {
     fn verifier_id(&self) -> &VerifierId {
@@ -222,108 +274,177 @@ pub fn serve_coding_endpoint_edit_development(
     stop: Arc<AtomicBool>,
     launch_file: &Path,
 ) -> Result<(), ApiError> {
-    // The service checks listener and stop before invoking any launch factory.
-    let secret = tokens.control.clone();
-    let startup_stop = stop.clone();
-    serve_coding_endpoint_strict_edits(
+    serve_development(
         listener,
         tokens,
         stop,
-        CodingEndpointObservationAccess::ControlOnly,
-        |run, session| {
-            let launch = load(launch_file)?;
-            let startup = prepare(&launch, run, session)?;
-            let mut reader = ApprovalInput::new(io::stdin(), startup_stop.clone())?;
-            let mut repository =
-                LinuxCodingRepository::open(&launch.state_root, secret.as_bytes(), clock_ms()?)
-                    .map_err(|error| {
-                        eprintln!("code.endpoint.edit-startup: {}", error.code());
-                        ApiError::Configuration
-                    })?;
-            let preview = repository
-                .prepare(
-                    &launch.repository_root,
-                    &launch.owned_root,
-                    &format!("task-{}", &startup.request().request_sha256[..32]),
-                    &launch.base_commit,
-                    clock_ms()?,
-                )
+        launch_file,
+        CodingEndpointPreparedKind::Edit,
+    )
+}
+
+/// Start the original strict edit/test/repair coordinator from a private launch
+/// document with a fixed validation definition and the explicit combined catalog.
+/// Launch consent permits inspection and private state only. Original worktree
+/// creation needs its exact stdin decision; every model disclosure, edit and test
+/// needs separate HTTP approval. Native Git, command, worker and budget checks
+/// remain mandatory. The development verifier refuses completion certification;
+/// there is no apply, commit, push, cleanup or durable recovery.
+pub fn serve_coding_endpoint_coding_development(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    launch_file: &Path,
+) -> Result<(), ApiError> {
+    serve_development(
+        listener,
+        tokens,
+        stop,
+        launch_file,
+        CodingEndpointPreparedKind::EditAndTest,
+    )
+}
+
+fn serve_development(
+    listener: TcpListener,
+    tokens: ApiTokens,
+    stop: Arc<AtomicBool>,
+    launch_file: &Path,
+    kind: CodingEndpointPreparedKind,
+) -> Result<(), ApiError> {
+    // The service checks listener and stop before invoking any launch factory.
+    let secret = tokens.control.clone();
+    let startup_stop = stop.clone();
+    let factory = |run, session| {
+        let mut launch = load(launch_file, kind)?;
+        let startup = prepare(&launch, run, session, kind)?;
+        // Freeze and check the private definition before opening state or
+        // native inspection. Actual manifest/resource checks still run in
+        // the original native owner at every test preparation and dispatch.
+        let validation = launch
+            .validation
+            .take()
+            .map(Validation::into_native)
+            .transpose()?;
+        let mut reader = ApprovalInput::new(io::stdin(), startup_stop.clone())?;
+        let mut repository =
+            LinuxCodingRepository::open(&launch.state_root, secret.as_bytes(), clock_ms()?)
                 .map_err(|error| {
                     eprintln!("code.endpoint.edit-startup: {}", error.code());
                     ApiError::Configuration
                 })?;
-            let digest = preview["preview_sha256"]
-                .as_str()
-                .ok_or(ApiError::Configuration)?;
-            {
-                let mut output = io::stdout().lock();
-                writeln!(output, "{}", json!({"repository_root":launch.repository_root,"owned_root":launch.owned_root,"preview":preview}))
+        let preview = repository
+            .prepare(
+                &launch.repository_root,
+                &launch.owned_root,
+                &format!("task-{}", &startup.request().request_sha256[..32]),
+                &launch.base_commit,
+                clock_ms()?,
+            )
+            .map_err(|error| {
+                eprintln!("code.endpoint.edit-startup: {}", error.code());
+                ApiError::Configuration
+            })?;
+        let digest = preview["preview_sha256"]
+            .as_str()
+            .ok_or(ApiError::Configuration)?;
+        {
+            let mut output = io::stdout().lock();
+            writeln!(output, "{}", json!({"repository_root":launch.repository_root,"owned_root":launch.owned_root,"preview":preview}))
                     .map_err(|_| ApiError::Io)?;
-                output.flush().map_err(|_| ApiError::Io)?;
-            }
-            eprintln!(
-                "Review the native creation preview. Enter approve {digest} or deny. No later action is approved by this decision."
-            );
-            let approved = creation_decision(&mut reader, digest)?;
-            if startup_stop.load(Ordering::Acquire) {
-                return Err(ApiError::Configuration);
-            }
-            let result = repository
-                .decide(digest, approved, clock_ms()?)
-                .map_err(|error| {
-                    eprintln!("code.endpoint.edit-startup: {}", error.code());
-                    ApiError::Configuration
-                })?;
-            if !approved
-                || result["outcome"] != "succeeded"
-                || repository.created_workspace_id() != Some(&startup.request().workspace_id)
-            {
-                return Err(ApiError::Configuration);
-            }
-            drop(reader);
-            // Keep credentials unread until original native creation succeeds.
-            let endpoint = LocalChatEndpoint::parse(&startup.request().model_selection.endpoint)
-                .map_err(|_| ApiError::Configuration)?;
-            let credential = launch
-                .credential_file
-                .as_deref()
-                .map(|path| {
-                    let bytes = private_bytes(path, 4096)?;
-                    BearerKey::new(
-                        std::str::from_utf8(&bytes)
-                            .map_err(|_| ApiError::Configuration)?
-                            .to_owned(),
-                    )
-                    .map_err(|_| ApiError::Configuration)
-                })
-                .transpose()?;
-            let connection = CodingEndpointConnection::Shared {
-                approval: Arc::new(LocalChatApproval::for_endpoint(endpoint.clone())),
-                transport: Arc::new(
-                    LocalChatTransport::new(endpoint, credential, TransportLimits::default())
-                        .map_err(|_| ApiError::Configuration)?,
-                ),
-            };
-            let control = Arc::new(RunControl {
-                deadline: ProposalDispatchControl {
-                    started: Instant::now(),
-                    total: Duration::from_millis(startup.request().limits.max_elapsed_ms),
-                },
-                stop: startup_stop,
-            });
-            Ok(CodingEndpointStrictHttpRun {
+            output.flush().map_err(|_| ApiError::Io)?;
+        }
+        eprintln!(
+            "Review the native creation preview. Enter approve {digest} or deny. No later action is approved by this decision."
+        );
+        let approved = creation_decision(&mut reader, digest)?;
+        if startup_stop.load(Ordering::Acquire) {
+            return Err(ApiError::Configuration);
+        }
+        let result = repository
+            .decide(digest, approved, clock_ms()?)
+            .map_err(|error| {
+                eprintln!("code.endpoint.edit-startup: {}", error.code());
+                ApiError::Configuration
+            })?;
+        if !approved
+            || result["outcome"] != "succeeded"
+            || repository.created_workspace_id() != Some(&startup.request().workspace_id)
+        {
+            return Err(ApiError::Configuration);
+        }
+        drop(reader);
+        // Keep credentials unread until original native creation succeeds.
+        let endpoint = LocalChatEndpoint::parse(&startup.request().model_selection.endpoint)
+            .map_err(|_| ApiError::Configuration)?;
+        let credential = launch
+            .credential_file
+            .as_deref()
+            .map(|path| {
+                let bytes = private_bytes(path, 4096)?;
+                BearerKey::new(
+                    std::str::from_utf8(&bytes)
+                        .map_err(|_| ApiError::Configuration)?
+                        .to_owned(),
+                )
+                .map_err(|_| ApiError::Configuration)
+            })
+            .transpose()?;
+        let connection = CodingEndpointConnection::Shared {
+            approval: Arc::new(LocalChatApproval::for_endpoint(endpoint.clone())),
+            transport: Arc::new(
+                LocalChatTransport::new(endpoint, credential, TransportLimits::default())
+                    .map_err(|_| ApiError::Configuration)?,
+            ),
+        };
+        let control = Arc::new(RunControl {
+            deadline: ProposalDispatchControl {
+                started: Instant::now(),
+                total: Duration::from_millis(startup.request().limits.max_elapsed_ms),
+            },
+            stop: startup_stop,
+        });
+        Ok((
+            CodingEndpointStrictHttpRun {
                 startup,
                 repository,
                 connection,
                 control,
                 clock: OsRuntimeClock,
-                verifier: UnverifiedEdits(VerifierId::from_raw("strict-edits-unverified")),
+                verifier: UnverifiedEdits(VerifierId::from_raw(
+                    if kind == CodingEndpointPreparedKind::Edit {
+                        "strict-edits-unverified"
+                    } else {
+                        "strict-coding-unverified"
+                    },
+                )),
                 paths: launch.paths,
                 source_budget: launch.source_budget,
                 include_usage: true,
-            })
-        },
-    )
+            },
+            validation,
+        ))
+    };
+    match kind {
+        CodingEndpointPreparedKind::Edit => serve_coding_endpoint_strict_edits(
+            listener,
+            tokens,
+            stop,
+            CodingEndpointObservationAccess::ControlOnly,
+            |run, session| factory(run, session).map(|(run, _)| run),
+        ),
+        CodingEndpointPreparedKind::EditAndTest => serve_coding_endpoint_edits_and_tests(
+            listener,
+            tokens,
+            stop,
+            CodingEndpointObservationAccess::ControlOnly,
+            |run, session| {
+                let (run, validation) = factory(run, session)?;
+                Ok((run, validation.ok_or(ApiError::Configuration)?))
+            },
+        ),
+        CodingEndpointPreparedKind::Command => Err(ApiError::Configuration),
+    }
 }
 
 #[cfg(test)]

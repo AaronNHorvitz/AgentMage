@@ -8,7 +8,10 @@ use agentmage_kernel_engine::{
     runtime_coordinator::{runtime_tool_catalog_sha256, seal_runtime_endpoint_run_request},
     runtime_loop::runtime_tool_references,
 };
-use agentmage_local_api::{ApiError, ApiTokens, serve_coding_endpoint_edit_development};
+use agentmage_local_api::{
+    ApiError, ApiTokens, serve_coding_endpoint_coding_development,
+    serve_coding_endpoint_edit_development,
+};
 use fixture::{Fixture, private_file};
 use serde_json::json;
 use std::{
@@ -22,41 +25,60 @@ use std::{
 
 #[test]
 fn executable_strict_edit_launch_requires_explicit_inspection_consent() {
-    for approval in [None, Some("--approve-workspace-state-and-endpoint")] {
-        let mut cmd = Command::new(env!("CARGO_BIN_EXE_agentmage-local-api"));
-        cmd.args([
-            "serve-endpoint-edit-development",
-            "127.0.0.1:0",
-            "/missing-auth",
-            "/missing-launch",
-        ]);
-        if let Some(approval) = approval {
-            cmd.arg(approval);
+    for command in [
+        "serve-endpoint-edit-development",
+        "serve-endpoint-coding-development",
+    ] {
+        for approval in [None, Some("--approve-workspace-state-and-endpoint")] {
+            let mut cmd = Command::new(env!("CARGO_BIN_EXE_agentmage-local-api"));
+            cmd.args([command, "127.0.0.1:0", "/missing-auth", "/missing-launch"]);
+            if let Some(approval) = approval {
+                cmd.arg(approval);
+            }
+            let result = cmd.stdin(Stdio::null()).output().unwrap();
+            assert_eq!(result.status.code(), Some(1));
+            assert!(String::from_utf8(result.stderr).unwrap().contains("Usage:"));
+            assert!(result.stdout.is_empty());
         }
-        let result = cmd.stdin(Stdio::null()).output().unwrap();
-        assert_eq!(result.status.code(), Some(1));
-        assert!(String::from_utf8(result.stderr).unwrap().contains("Usage:"));
-        assert!(result.stdout.is_empty());
     }
 }
 
 #[test]
 fn strict_edit_launch_refuses_listener_and_stop_before_private_configuration() {
-    for (address, stopping) in [("0.0.0.0:0", false), ("127.0.0.1:0", true)] {
-        assert_eq!(
-            serve_coding_endpoint_edit_development(
-                TcpListener::bind(address).unwrap(),
-                ApiTokens::new("a".repeat(64), "b".repeat(64)).unwrap(),
-                Arc::new(AtomicBool::new(stopping)),
-                std::path::Path::new("/missing-launch"),
-            ),
-            Err(ApiError::Configuration)
-        );
+    for serve in [
+        serve_coding_endpoint_edit_development,
+        serve_coding_endpoint_coding_development,
+    ] {
+        for (address, stopping) in [("0.0.0.0:0", false), ("127.0.0.1:0", true)] {
+            assert_eq!(
+                serve(
+                    TcpListener::bind(address).unwrap(),
+                    ApiTokens::new("a".repeat(64), "b".repeat(64)).unwrap(),
+                    Arc::new(AtomicBool::new(stopping)),
+                    std::path::Path::new("/missing-launch"),
+                ),
+                Err(ApiError::Configuration)
+            );
+        }
     }
 }
 
 #[test]
 fn executable_strict_edit_launch_reaches_actual_native_refusal_before_credentials_or_model() {
+    exercise_native_refusal(false);
+}
+
+#[test]
+fn executable_coding_launch_reaches_actual_native_refusal_before_credentials_or_model() {
+    exercise_native_refusal(true);
+}
+
+fn exercise_native_refusal(coding: bool) {
+    let command = if coding {
+        "serve-endpoint-coding-development"
+    } else {
+        "serve-endpoint-edit-development"
+    };
     let f = Fixture::new();
     let read_launch = f.write();
     let owned = f.root.join("owned");
@@ -71,7 +93,12 @@ fn executable_strict_edit_launch_reaches_actual_native_refusal_before_credential
     request.work_packet.mutable_files = vec!["sentinel".into()];
     request.work_packet.protected_files.clear();
     request.model_selection.endpoint = format!("http://{}/v1", model.local_addr().unwrap());
-    let registry = agentmage_platform_linux::linux_coding_endpoint_edit_registry().unwrap();
+    let registry = if coding {
+        agentmage_platform_linux::linux_coding_endpoint_coding_registry()
+    } else {
+        agentmage_platform_linux::linux_coding_endpoint_edit_registry()
+    }
+    .unwrap();
     request.visible_tools = runtime_tool_references(&registry).unwrap();
     request.tool_catalog_sha256 =
         runtime_tool_catalog_sha256(&request.tool_catalog_id, &request.visible_tools).unwrap();
@@ -84,15 +111,35 @@ fn executable_strict_edit_launch_reaches_actual_native_refusal_before_credential
         &BTreeMap::new(),
     )
     .unwrap();
-    let value = json!({"version":1,"state_root":f.root.join("state"),"repository_root":f.root.join("disposable/workspace"),
+    let mut value = json!({"version":1,"state_root":f.root.join("state"),"repository_root":f.root.join("disposable/workspace"),
         "owned_root":owned,"base_commit":"a".repeat(40),"credential_file":f.root.join("must-not-read"),
         "request":request,"instructions":instructions,"paths":["sentinel"],"source_budget":4096});
+    if coding {
+        use agentmage_kernel_engine::{
+            command_runner::{CommandBounds, CommandRisk, CommandSpec, CommandWorkingDirectory},
+            validation_template::ValidationParserKind,
+        };
+        // Synthetic executable digest; no test process can be admitted here.
+        let spec = CommandSpec::seal(
+            "fixed-test",
+            "1.0.0",
+            "/usr/bin/true",
+            "a".repeat(64),
+            vec![],
+            CommandWorkingDirectory::OwnedWorktree,
+            BTreeMap::new(),
+            CommandRisk::Moderate,
+            CommandBounds::new(1000, 1024, 1024, 128 * 1024 * 1024, 8, 100).unwrap(),
+        )
+        .unwrap();
+        value["validation"] = json!({"command":spec,"kind":"unit","minimum_test_count":1,"output_format":ValidationParserKind::AgentMageJsonV1});
+    }
     let launch = f.root.join("edit.json");
     private_file(&launch, &serde_json::to_vec(&value).unwrap());
     let auth = f.root.join("auth");
     ApiTokens::initialize(&auth).unwrap();
     let legacy = Command::new(env!("CARGO_BIN_EXE_agentmage-local-api"))
-        .args(["serve-endpoint-edit-development", "127.0.0.1:0"])
+        .args([command, "127.0.0.1:0"])
         .arg(&auth)
         .arg(read_launch)
         .arg("--approve-inspection-state-and-endpoint")
@@ -107,8 +154,35 @@ fn executable_strict_edit_launch_reaches_actual_native_refusal_before_credential
             .contains("code.endpoint.edit-startup:")
     );
     assert_eq!(fs::read_dir(f.root.join("state")).unwrap().count(), 0);
+    if coding {
+        let mut invalid = value.clone();
+        invalid["validation"]["minimum_test_count"] = json!(0);
+        private_file(&launch, &serde_json::to_vec(&invalid).unwrap());
+        let result = Command::new(env!("CARGO_BIN_EXE_agentmage-local-api"))
+            .args([command, "127.0.0.1:0"])
+            .arg(&auth)
+            .arg(&launch)
+            .arg("--approve-inspection-state-and-endpoint")
+            .stdin(Stdio::null())
+            .output()
+            .unwrap();
+        assert_eq!(result.status.code(), Some(1));
+        assert!(result.stdout.is_empty());
+        assert!(
+            !String::from_utf8(result.stderr)
+                .unwrap()
+                .contains("code.endpoint.edit-startup:")
+        );
+        assert_eq!(fs::read_dir(f.root.join("state")).unwrap().count(), 0);
+        assert_eq!(fs::read_dir(&owned).unwrap().count(), 0);
+        assert_eq!(
+            model.accept().unwrap_err().kind(),
+            std::io::ErrorKind::WouldBlock
+        );
+        private_file(&launch, &serde_json::to_vec(&value).unwrap());
+    }
     let result = Command::new(env!("CARGO_BIN_EXE_agentmage-local-api"))
-        .args(["serve-endpoint-edit-development", "127.0.0.1:0"])
+        .args([command, "127.0.0.1:0"])
         .arg(auth)
         .arg(launch)
         .arg("--approve-inspection-state-and-endpoint")
