@@ -81,7 +81,7 @@ model bytes, not native Git creation, real inference or project test execution.
 The other retained-service cases decline every phase on both original-review
 services, check one deadline across disclosure and saving, interrupt release,
 and reject archive directories inside either checkout and aliases before any
-model disclosure or release. Three recording-peer methods test nonterminal,
+model disclosure or release. Three recording-peer methods test non-TTY invocation,
 invalid-budget and noncontrolled selections; lost, refused or stalled replies
 after an approved tool request; and an earlier disclosure line queued after
 tool approval. The last case presents distinct step tokens and sends no held

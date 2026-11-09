@@ -2,6 +2,28 @@
 
 ## Active queue: local agent mission
 
+The [live candidate-review bridge](docs/evidence/t306-candidate-review-2026-11-09.md)
+connects the original owner's edit lineage and sealed test evidence to the
+existing typed review-packet and candidate-tree planner. Fresh original and
+linked-task Git observations must match before and after planning. This internal
+library composition creates no candidate tree, commit, approval or publication;
+its caller-supplied review metadata still needs provenance before execution.
+T-303/T-306 remain open; no row or sub-row is added or closed. Independent core
+review is required. Native/model measurement, approved Git execution and durable
+recovery remain open. Verification is recorded in the linked evidence.
+
+The [guided-transfer independent review](docs/reviews/55b674a02340-local-coding-guided-transfer.txt)
+has **Verdict: PASS** for exact commit
+`55b674a02340c6db4d6c83e6cfc853147f7bc906`, with no high or medium finding.
+Its low L1 wording is corrected to say non-TTY invocation in the evidence;
+older low findings remain same-row backlog. This review closes no row. The
+Git-identity increment was under review when work began; its
+[independent core review](docs/reviews/b777008eb0aa-local-coding-git-identity.txt)
+now has **Verdict: PASS** for exact commit
+`b777008eb0aa7f6fb2f32d4260965f2bc85c3831`, with no high or medium finding.
+Its low L1 post-success uncertainty diagnostic and L2 redundant digest assertion
+remain same-row backlog. Neither parent closes.
+
 The [Git identity increment](docs/evidence/t306-git-identity-2026-11-09.md)
 retains the verified native creation plan's branch, immutable base and correlated
 receipts across the same owner's coding handoff and return. Original diff

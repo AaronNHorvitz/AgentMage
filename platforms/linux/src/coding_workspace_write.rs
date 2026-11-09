@@ -264,6 +264,11 @@ impl LinuxCodingReadScope {
 }
 
 impl LinuxCodingPendingWrite {
+    #[cfg(test)]
+    pub(crate) fn change_set_for_review_test(&self) -> &ShadowChangeSet {
+        &self.change_set
+    }
+
     /// Complete escaped before/after diff and its kernel-computed exact hashes.
     #[must_use]
     pub const fn preview(&self) -> &WriteApprovalPreview {

@@ -21,6 +21,15 @@ pub(super) struct PendingEdit {
     edits: BTreeMap<String, AppliedEdit>,
 }
 
+#[cfg(test)]
+impl PendingEdit {
+    pub(in crate::coding_repository) fn change_set_for_review_test(
+        &self,
+    ) -> &agentmage_kernel_engine::write_approval::ShadowChangeSet {
+        self.write.change_set_for_review_test()
+    }
+}
+
 impl LinuxCodingRepository {
     /// Content-free label of this process's held created worktree. Does not
     /// inspect files, revalidate roots or confer source/write authority. Equal

@@ -17,11 +17,11 @@ use std::sync::{
 static NEXT: AtomicU64 = AtomicU64::new(0);
 const KEY: &[u8] = b"synthetic-test-control-secret-not-a-real-credential";
 const NOW: u64 = 1_000;
-struct Fixture {
-    root: PathBuf,
+pub(super) struct Fixture {
+    pub(super) root: PathBuf,
 }
 impl Fixture {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         let root = std::env::temp_dir().join(format!(
             "agentmage-repository-owner-{}-{}",
             std::process::id(),
@@ -70,7 +70,7 @@ impl Drop for Fixture {
     }
 }
 
-fn manifest() -> RepositoryPreservationManifest {
+pub(super) fn manifest() -> RepositoryPreservationManifest {
     RepositoryPreservationManifest::seal(RepositoryPreservationManifest {
         schema_version: 0,
         repository_sha256: hash(b"repo"),
@@ -564,7 +564,7 @@ fn synthetic_creation_observations(
     (owner, plan, authority, specialized.unwrap())
 }
 
-fn owner_with_synthetic_git_observations(f: &Fixture) -> LinuxCodingRepository {
+pub(super) fn owner_with_synthetic_git_observations(f: &Fixture) -> LinuxCodingRepository {
     let (mut owner, plan, authority, repository) = synthetic_creation_observations(f);
     fs::create_dir(f.root.join("owned/worktree")).unwrap();
     owner.created = Some(CreatedWorktree {

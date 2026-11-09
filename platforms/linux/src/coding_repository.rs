@@ -49,6 +49,8 @@ mod create;
 #[path = "coding_repository_git_identity.rs"]
 mod git_identity;
 pub use git_identity::LinuxCodingGitCreation;
+#[path = "coding_repository_commit_review.rs"]
+mod commit_review;
 #[path = "coding_repository_edit.rs"]
 mod edit;
 pub use edit::{

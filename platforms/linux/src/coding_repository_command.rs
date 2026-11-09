@@ -558,4 +558,4 @@ fn command_tool(prepared: &PreparedCommand) -> RepositoryTool {
 
 #[cfg(test)]
 #[path = "coding_repository_command_tests.rs"]
-mod tests;
+pub(super) mod tests;

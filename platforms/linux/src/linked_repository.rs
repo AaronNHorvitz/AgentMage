@@ -44,6 +44,19 @@ impl PartialEq for LinuxLinkedRepository {
 impl Eq for LinuxLinkedRepository {}
 
 impl LinuxLinkedRepository {
+    /// Discover only the metadata pointer of a live owner's created worktree.
+    /// The caller must already own this worktree and authorize reading its Git
+    /// metadata. The ordinary verifier checks the pointer, layout and backlink
+    /// against the original repository's exact common directory before use.
+    pub(crate) fn verify_owned_worktree(worktree: &Path, common: &Path) -> Result<Self> {
+        let root = directory(worktree)?;
+        let (pointer, _, _) = regular(&root, ".git")?;
+        let git = line(&pointer)?
+            .strip_prefix("gitdir: ")
+            .ok_or_else(denied)?;
+        Self::verify(worktree, Path::new(git), common)
+    }
+
     /// Checks canonical current-user-owned roots, single-link bounded pointer
     /// files, the exact `worktrees/<name>` layout, common-dir link and backlink.
     /// Relative gitdir pointers, aliases, nested links and writable metadata

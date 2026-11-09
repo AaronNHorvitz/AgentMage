@@ -1,0 +1,172 @@
+Commit: b777008eb0aa7f6fb2f32d4260965f2bc85c3831
+Scope: local-coding-git-identity
+
+# Review: retained native worktree Git creation identity (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only on the repository.
+Pinned checkout: /lane/review-checkout. `git rev-parse HEAD` and `git rev-parse b777008e...` both return
+b777008eb0aa7f6fb2f32d4260965f2bc85c3831. Base 55b674a02340c6db4d6c83e6cfc853147f7bc906.
+
+## Incoming verdicts
+
+- `/lane/reviews/55b674a02340-local-coding-guided-transfer.md` (the immediate base): `Verdict: PASS`, with no
+  high or medium finding. Its L1 is a low wording item and stays in the backlog.
+- `/lane/reviews/ad9a20492b2d-local-coding-guided-endpoint.md`: `Verdict: PASS`.
+  The earlier parents (d580df2c, b31925c3) also have review files.
+
+## Methods
+
+- Read IP-POLICY.md, Decisions 0181 and 0182, the top of TASKS.md and the request. Read README.md, run.py,
+  native.py, check.py, parse_gate.py and light.py in /lane/state/tmp/t306-git-identity before running them.
+  The scripts only run the repository's own fast gate and read-only checks. They write only into the fresh
+  output directory and private `/tmp` namespaces.
+- Read the complete 13-file diff against the base: `coding_repository_git_identity.rs` (new),
+  `coding_repository.rs` `execute`, `coding_repository_apply.rs` inspection and preview, five fixture
+  constructors, `lib.rs` export, the new tests and docs. Traced the consumers of the apply inspection and
+  preview: `coding_repository_api.rs:197-223` (GET/POST `/v1/code/repository/apply*`) and
+  `coding_cli.rs:584-689` (`show(&preview)` and `confirm` with the full preview). Also traced
+  `dispatch`/`ExactEffect` (`coding_repository.rs:605-650`) and `RepositoryOperationPlan::verify`
+  (`kernel/engine/src/repository_safety.rs:575-620`).
+- Checks:
+  - Can any serialized or caller-supplied input construct `LinuxCodingGitCreation`?
+  - Does provenance survive runtime handoff, and is it lost on reopen?
+  - Does a refusal fail closed?
+  - Is the preview digest binding real?
+  - Integrity paths, privacy and branding in added lines.
+
+## Exact commands and results (from /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-git-identity/review-inputs.sha256`: exit 0. The manifest file's
+   SHA-256 is 17a8cc2f2a5e7ff4d8854e232090201546b822b85b57f30ffdbf47c59d3dc9c6, matching the request.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-git-identity/run.py
+   /lane/state/tmp/review-git-identity-b777008eb0aa` (fresh directory, confirmed absent beforehand): **exit 1,
+   as expected**. Result: `{"exit": 1, "source_unchanged": true, "seconds_including_reservations": 592.80,
+   "raw_log_sha256": "47e2f9f44aa12edc2e22ddc827d5300dfdc8a5e5d498105ca2ebc7aec8b9e43b"}`.
+   - Per-command results: diff-check 0; untracked lint 0; markdownlint 0 (4 files, 0 issues); `cargo fmt --check`
+     0 (283.07 s including reservation wait); `cargo clippy ... --all-targets -D warnings` 0 (36.86 s);
+     `cargo test ... --all-targets --no-fail-fast` 101 (271.38 s).
+   - Ends with `FAST GATE: FAIL`.
+3. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-git-identity/native.py
+   /lane/state/tmp/review-git-identity-b777008eb0aa`: exit 0. Raw log SHA-256
+   252539b9afb733d19fa7635c86c5dee41cf9d5cf7eee5733d3667a2c69846e24.
+   - Log: `native creation not measured: exact system Git trust refusal retained`, then
+     `test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 400 filtered out`.
+   - `RESULT exit=0 seconds=1800.09` includes the shared-slot wait. The test itself took 0.11 s and the
+     process exited 0, so it was not a timeout kill.
+   - The wrapper prints `FAST GATE: PASS` for this filtered one-test run. That line is in the private log
+     only. The committed evidence correctly says the diagnostic does not replace the full gate.
+4. `python3 -B /lane/state/tmp/t306-git-identity/check.py /lane/state/tmp/review-git-identity-b777008eb0aa`:
+   exit 0, ending `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL`.
+   - Totals: 26 targets, [1267 passed, 72 failed, 64 ignored, 0 measured, 0 filtered].
+   - All 26 targets match `expected-targets.json` exactly, including the per-target failed and ignored identity
+     lists.
+   - The failed set equals the 72 identities in the unchanged baseline
+     `docs/evidence/t301-baseline-failures-2026-10-25.md`. No new failure.
+   - All 11 named methods (5 new and 6 existing regressions) report `ok`.
+   - The `| [` ledger lines are unchanged from the base. No line was removed from any existing test file. No
+     `#[ignore` was added. The added-line privacy patterns are absent.
+5. `python3 -B /lane/state/tmp/t306-git-identity/light.py`: exit 0 (all three light checks report
+   `LIGHT_EXIT 0`).
+6. `cmp /lane/state/tmp/t306-git-identity/validation-1/source-freeze.json
+   /lane/state/tmp/review-git-identity-b777008eb0aa/source-freeze.json`: exit 0. The 9 Rust source hashes
+   are identical to the builder's.
+7. `git diff --check 55b674a02340c6db4d6c83e6cfc853147f7bc906 --`: exit 0, no output.
+8. `git status --short`: empty. The checkout was not modified.
+
+Reproduction matches the builder's claims on paths, targets, counts, failure identities, methods and
+source hashes. Timings and log hashes differ, as expected.
+
+Additional reviewer checks:
+
+- I grepped the added lines for usernames, private paths, email addresses, hostnames, credentials, product
+  and vendor names, and the host OS name. Nothing matched.
+- Changed paths include no evaluation, benchmark, held-out, hidden, scorer, Cargo manifest/lock, SBOM or
+  status files.
+- TASKS.md adds prose only. No row or sub-row is added or closed.
+
+## Analysis
+
+- **Construction is closed.** `LinuxCodingGitCreation` has private fields and no `Clone`, `Debug`,
+  `Serialize` or `Deserialize`. Its only constructor, `from_dispatch`, is `pub(super)`. In product code it
+  is called once, in `execute` (`coding_repository.rs:469`), with the plan cloned before the consuming
+  `dispatch` and the receipts that `dispatch` returns.
+  - No API or CLI route accepts `git_creation`. The CLI only compares the server's pending preview against
+    the preview it received earlier (`coding_cli.rs:638-640`).
+  - The test-only `with_test_created_worktree` path (`coding_repository.rs:198`) and all four test fixtures
+    set `None`.
+- **Correlation is real.**
+  - `from_dispatch` re-runs `plan.verify()`, which recomputes the plan digest. That is why the branch, base
+    and operation substitutions (cases 10-12) are refused.
+  - It requires a WorktreeCreate operation and two Succeeded outcomes, plus `cleanup_verified`.
+  - It requires matching transaction, plan, manifest, authority-transaction and attempt IDs across the plan,
+    canonical receipt and specialized receipt.
+  - The 14 substitutions plus the missing-receipt case each exercise at least one of these checks.
+- **The accessor revalidates roots.** `created_git_identity` calls `verify_apply_roots`, which checks the
+  original, worktree and management roots. It then requires the authority receipt digest to equal
+  `creation_receipt_sha256`. The tests replace each of the three roots, change the receipt and drop the
+  provenance; every case is refused.
+- **Lifetime.** Provenance lives inside `CreatedWorktree`, so it moves with the owner through
+  `into_runtime_worktree` and `try_into_repository`. The busy return (a second live lease) is refused.
+  Reopening the store restores the receipts but not `git_creation`. All of this is tested.
+- **Fails closed.** If correlation fails after a successful dispatch, `execute` returns an error before
+  `self.created` is set. The native worktree exists on disk, but this owner never adopts it, and nothing is
+  mislabelled as attached. See L1 for the diagnostic code.
+- **Surface and claims.**
+  - `inspect_apply` and the apply preview carry the historical object with
+    `current_git_state_verified`, `commit_authority` and `publication_authority` all false.
+  - The preview digest covers the object: the test recomputes `preview_sha256` over the body that includes
+    `git_creation`.
+  - Both values reach the existing API GET and prepare routes unchanged, and the CLI shows them in `show`
+    and in the apply confirmation.
+  - No new route, Git command, commit, push or signer was added.
+  - The evidence honestly labels the creation observations as SYNTHETIC and reports that no native creation
+    was measured in this lane. The supported-host branch of the native test (new identity assertions) has
+    still never executed here. That is inherited prior-review backlog, and the docs disclose it.
+- **Confinement.** No new filesystem, network or command path is added. The edit and transfer in the new test
+  go through the existing approved edit and original-apply contracts. The test preserves the human index and
+  untracked sentinels and creates no `.git` in the worktree.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, diagnostics): post-success provenance refusal is not reported as uncertain.**
+  Location: `platforms/linux/src/coding_repository.rs:469-473`, `coding_repository_git_identity.rs:32-58`.
+  - Problem: `from_dispatch` runs after a durable `Succeeded` canonical receipt. A refusal there returns
+    `code.repository.git-provenance`, which reads like a pre-effect refusal, even though the native worktree
+    and branch were created. The evidence sentence ("does not establish absence of native effects") is
+    correct, but the error code does not say so. Prior review 8d5c8dd8761b L3 fixed this same pattern for
+    `held_root` by mapping it to `code.repository.uncertain`.
+  - Reachability: correct `dispatch` output does not reach this path today, which is why this is low.
+  - Test gap: the five new tests call `from_dispatch` directly, so the `execute`-level refusal is not tested.
+  - Fix: map this call's error to `code.repository.uncertain`, or keep the specific code but return it with
+    the receipt and an explicit effect-unknown marker. Add an `execute`-level test with a synthetic executor
+    that yields an uncorrelated specialized receipt, and assert that `created` stays `None`.
+- **L2 (low, test strength): the wrong-digest assertion proves nothing on its own.**
+  Location: `platforms/linux/src/coding_repository_tests.rs`, in
+  `git_creation_identity_is_bound_into_separately_approved_original_diff`.
+  - Problem: computing a "wrong" digest with a modified `base_object` and asserting that `decide_apply`
+    refuses it is tautological, because any digest other than the pending one is refused. The binding is
+    actually shown by the preceding recomputation of `preview_sha256` over the body that includes
+    `git_creation`, so the claim is supported.
+  - Fix: drop the wrong-digest assertion or describe it accurately. Optionally assert that the digest
+    changes when `git_creation` is removed.
+
+The inherited low findings from earlier reviews in these rows stay in the backlog.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing increment):** PASS for this exact commit,
+  b777008eb0aa7f6fb2f32d4260965f2bc85c3831.
+  - No high or medium finding; L1 and L2 are low backlog.
+  - No row or sub-row is added or closed, and this review closes no row. Both parents stay OPEN.
+  - Still open: the native executable trust blocker on the owner host, measured native and model workflow,
+    approved signed Git execution, durable execution recovery, and the inherited host/Linux failures.
+  - The complete affected gate remains FAIL with the 72 inherited failures. That is not a passing gate and
+    not parent acceptance.
+- **Evaluation integrity:** no held-out, hidden, frozen, scorer, threshold, prompt or score change. Nothing
+  to violate.
+
+I made no change to the repository.
+
+Verdict: PASS

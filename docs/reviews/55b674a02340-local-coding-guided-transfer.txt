@@ -1,0 +1,137 @@
+Commit: 55b674a02340c6db4d6c83e6cfc853147f7bc906
+Scope: local-coding-guided-transfer
+
+Tier: core. Rows: T-303 / T-306 (non-closing; both parents stay OPEN).
+Base: ad9a20492b2db26fddd6e30ce6bbf32f9914aeb4 (immutable).
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only on the repository.
+
+## Methods
+
+- Read IP-POLICY.md, Decision 0181, the top of TASKS.md and the request. Read the bundle's
+  README.md, run.py, check.py, parse_gate.py and light.py before running anything. They only call the
+  existing fast gate, hash files and run read-only git/markdown checks. run.py creates its output
+  directory with `exist_ok=False`, and the output path did not exist beforehand.
+- `git rev-parse HEAD` in /lane/review-checkout is 55b674a02340c6db4d6c83e6cfc853147f7bc906. The diff
+  against the base has exactly the 13 paths in expected-paths.json. There are no Cargo.toml, Cargo.lock,
+  frozen-task, hidden-test, held-out, scorer, threshold, prompt, status or scoreboard changes.
+- Read the full source diff (`coding_cli.rs`, `coding_cli_endpoint.rs`, `coding_cli_endpoint_transfer.rs`)
+  and the reused helpers: `coding_cli_record.rs::save_observed`, `lib.rs::protected_directory`,
+  `coding_cli_workflow.rs::bounded`, `coding_cli_driver.rs` confirm, and `coding_cli.rs::safe`/`show`.
+  Read all seven new tests, the PTY harness edits and the five strengthened collision assertions.
+- Ran every requested command, a black-box archive-placement probe against the built binary, and two
+  source mutations in a scratch export outside the repository.
+
+## Exact commands and results (run in /lane/review-checkout unless noted)
+
+| Command | Result |
+| --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-guided-transfer/review-inputs.sha256` | exit 0 |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-guided-transfer/run.py /lane/state/tmp/review-guided-transfer-55b674a02340` (fresh output) | exit 0; `FAST GATE: PASS`; all 7 commands exit 0 (fmt 52.56 s, clippy 38.62 s, tests 107.60 s, including reservation waits); source_unchanged true; 200.76 s total; raw log SHA-256 75f9cbaa276f18cd91082e6d1d6cfa595d059277b9bc624f0c1b3a31ff450534 (differs from the builder's, as expected) |
+| `python3 -B .../check.py /lane/state/tmp/review-guided-transfer-55b674a02340` | exit 0; 11 targets; totals [255,0,0,0,0]; 12 named methods ok; 8 frozen Rust hashes; ledger rows unchanged; retained report byte-identical; privacy scan clean |
+| `python3 -B .../light.py` | exit 0; markdownlint reports 0 issues in 4 files |
+| `cmp .../validation-1/source-freeze.json .../review-guided-transfer-55b674a02340/source-freeze.json` | identical |
+| `cmp docs/reviews/ad9a20492b2d-local-coding-guided-endpoint.txt /lane/reviews/ad9a20492b2d-local-coding-guided-endpoint.md` | identical |
+| `git diff --check ad9a20492b2db26fddd6e30ce6bbf32f9914aeb4 --` | exit 0 |
+| `git status --short` | empty (also empty after all probes) |
+
+Traceability: the builder's validation-1/fast.log matches its stated hash 828b9573…. Its RESULT lines
+(0.10/0.10/0.10/1.25/2.30/1.90/57.37 s) match the evidence table, and result.json reports 63.20 s.
+Parsed per-target counts from the builder's log and from mine are identical, with 255 tests in total.
+
+### Reviewer probes (not committed)
+
+1. Black-box archive placement (`/lane/state/tmp/review-probe-55b674a02340/probe.py`). It runs the built
+   `agentmage-code endpoint-run-apply-saved` under a real PTY, with owner-only token files, against a
+   loopback listener that records any connection. Each archive path:
+   - outside directory (positive control): connects (`GET /v1/code/endpoint/request`);
+   - sibling `original-records`, a string prefix but not a path component: connects, correctly;
+   - `records/` with a trailing slash, `worktree/../../original/records`, `original//records`, a
+     symlinked ancestor into original, `original/.git` and a relative path: all exit 1 with no
+     connection, so they are refused before any HTTP, disclosure or release.
+2. Mutations in a scratch `git archive` export (`/lane/state/tmp/review-mutation-55b674a02340`, run
+   through `bash /tools/build-slot cargo test ... --no-fail-fast -- <two tests>`):
+   - (a) guided disclosure token reverted to `share <digest>`: the queued-token regression fails
+     (`coding_endpoint_cli.rs:1003`).
+   - (b) `archive_scope` returning Ok unconditionally: the archive-placement test fails
+     (`coding_endpoint_run_transfer.rs:286`).
+
+   Both regressions detect removal of their fix. Mutation (a) is caught first by the prompt-text
+   assertion. On the base token, the queued `share <digest>` line equals the step-1 challenge. It would
+   therefore approve disclosure and POST the held `allow`, a third call, which the `calls.len() == 2`
+   assertion also forbids.
+
+## Analysis
+
+- **Composition and consent.** `endpoint-run-apply-saved` routes to `endpoint_transfer::run(.., drive=true)`
+  (`coding_cli_endpoint.rs:246`). Inside the single `workflow::bounded` guard, it checks the selection
+  and controlled mode, then calls the same `guided_steps` used by `endpoint-run`
+  (`coding_cli_endpoint.rs:151`). After that come `save_observed`, the release confirmation, the
+  original read and the apply decision. All steps share one `Client` with the guard's deadline and
+  signal latch. Every confirmation still goes through `Client::confirm`, which returns Err on deny or
+  stop and re-checks running. Each exact token is distinct: `share <digest> step-N`, `allow <challenge>`,
+  `save-record <digest>`, `release <digest>`, then the existing read/apply tokens. The main PTY test
+  shows the seven prompts in order. It also shows the record saved before the release prompt and the
+  write preview before the apply prompt.
+- **No implicit actions.** Every error path returns `Err(())`; there is no retry, cancel or release
+  path. The four uncertain-reply cases (close, 409, header stall with a 1 s deadline, SIGINT during a
+  body stall) stop after the third call, and no record is written. Declines at each of the five phases on
+  both service types leave the original and worktree preserved. Event-state and repository-apply status
+  match the phase reached. The upstream model listener sees no connection on a cancelled run.
+- **Archive placement.** `archive_scope` (`coding_cli_endpoint_transfer.rs:10`) requires an absolute,
+  canonical path, refuses a `Path::starts_with` (component-wise) match against either root, and
+  requires a 0700 owner directory. Both roots were already verified canonical and symlink-free at lines
+  39-54, so component-prefix comparison is sound. It runs before any HTTP (line 81), before and after
+  saving (96/98), and after the release confirmation (112). `save_observed` independently holds the
+  directory fd and rechecks dev/ino/mode/uid. This addresses private-record review L1. The documented
+  limit, that metadata checks give no lease against concurrent ancestry moves, is accurate.
+- **Step-bound tokens.** The token now includes the local loop index. A queued earlier token fails the
+  next disclosure, so the held `allow` is never sent. This addresses guided-endpoint review L1.
+  Single-shot `endpoint-step`/`endpoint-approve`/`endpoint-deny` keep `share <digest>` (`None`), as
+  claimed. Residual note, not a finding: the counter restarts at step-0 in each new process and confirm
+  does not discard pending terminal input. A line queued into one chained command could therefore
+  satisfy step-0 of the next. At step-0 the response is `None`, so no tool approval can be carried, and
+  an interactive shell would normally consume leftover input first.
+- **Honest labelling.** The observed terminal envelope is shown in the release review and the final
+  summary, with `verification: service-observation-only`, `original_checkout_tested: false` and
+  `git_commit_created: false`. The main test keeps `FAILED` as the last saved event while transferring
+  the reviewed diff. Exit 0 is documented as "transfer reply observed", not a task grade. Model-controlled
+  strings reach the terminal only through `safe()`, so JSON escaping plus non-ASCII escaping prevents
+  terminal-control injection. The evidence's fixture claims (synthetic creation/model, no native Git,
+  real model or project tests) match the tests.
+- **Confinement.** There are no service-side, tool-executor, sandbox or route changes. The native edit in
+  the main test goes through the existing exact tool approval and original-owner checks. Only selected
+  paths are offered for transfer.
+- **Collision strengthening.** check.py confirms the five old assertions are replaced exactly by
+  refusal, plus `prompts == 1`, with all sentinel checks kept. This addresses private-record review L2.
+- **Public-repo hygiene.** No home paths, usernames, hostnames or credentials appear in added lines.
+  `/lane/...` sandbox paths appear only inside the retained review copy, which follows an established
+  convention in 172 existing files. The only third-party name is the factual reviewer attribution line in
+  the retained review, not branding. The new source file carries an SPDX header, and no dependency
+  changes.
+- **Delivery.** No row or sub-row is added or closed (ledger rows are byte-identical). The increment ends
+  in a runnable, tested command.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, wording): "nonterminal" in the evidence is ambiguous.**
+  `docs/evidence/t303-guided-transfer-2026-11-09.md:84` and the test name
+  `guided_transfer_refuses_nonterminal_budget_and_noncontrolled_selection_before_advancing`
+  (`platforms/local-api/tests/support/coding_endpoint_cli.rs:910`) use "nonterminal" to mean stdin that
+  is not a TTY. In this document "terminal" usually means a terminal run state, so a reader can take it
+  to mean "a non-terminal run is refused". That would be the opposite of the command's purpose, since
+  drive mode advances non-terminal runs. Fix: say "non-TTY invocation" in the evidence text (and
+  optionally in the test name). Same-row backlog.
+
+The inherited low findings from earlier reviews remain same-row backlog, as the evidence states.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing increment `local-coding-guided-transfer`): PASS for exact commit
+  55b674a02340c6db4d6c83e6cfc853147f7bc906. There is no high or medium finding; L1 is low backlog. Both
+  parent rows remain OPEN. Native trust, measured native/model workflow, approved signed Git, durable
+  execution recovery and inherited host/Linux failures are not addressed by this commit, and this
+  review closes no row.
+
+Verdict: PASS

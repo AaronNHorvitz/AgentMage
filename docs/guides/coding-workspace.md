@@ -229,3 +229,30 @@ This describes the original creation only. `current_git_state_verified`,
 does not verify current refs or approve a commit or push. Future Git operations
 require fresh native state checks and the existing separate authority contracts.
 Serialized records and filesystem paths cannot construct or recover the view.
+
+## Internal candidate review
+
+After explicit consent to inspect both complete checkouts and their Git metadata
+and run offline Git reads, the same live owner's `plan_reviewed_candidate_tree()`
+library method can check an existing typed `LocalReviewPacket`. It requires the
+exact original repository and native-created base, every retained existing-file
+edit's first preimage and final postimage, and the current sealed worktree
+observation. The validation projection must equal the owner's original final
+full-pass receipt; failed attempts and retry links remain retained and checked.
+Visible medium, high and critical findings refuse planning.
+
+The existing original-repository preservation collector and confined linked
+inventory must show the same task branch and base, preservation manifest,
+linked metadata identity and task inventory on both sides of planning. The
+method checks held roots and sealed source binding again before returning the
+kernel's inert `CandidateTreePlan`. Modes come from the observed owner's
+executable bit; private file permissions do not become Git modes. New-file
+lineage is refused until its distinct transaction proof is connected.
+
+This is internal library composition, with no HTTP or terminal command yet.
+The method does not authenticate caller-supplied reviewer output, write receipt
+identities or artifact metadata, and the returned plan grants no execution.
+Candidate construction, signed commit and publication still require full
+provenance, fresh native postconditions and separate exact approvals. These
+observations provide no atomic lease over a concurrently changing repository.
+The native executable trust refusal in this lane remains in force.

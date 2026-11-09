@@ -68,6 +68,23 @@ impl Drop for Fixture {
 }
 
 #[test]
+fn owned_worktree_metadata_discovery_checks_the_original_common_root_and_backlink() {
+    let f = Fixture::new();
+    let binding = LinuxLinkedRepository::verify_owned_worktree(&f.root, &f.common).unwrap();
+    assert_eq!(binding, f.verify());
+    let foreign = Fixture::new();
+    assert!(LinuxLinkedRepository::verify_owned_worktree(&f.root, &foreign.common).is_err());
+    fs::write(
+        f.git.join("gitdir"),
+        format!("{}\n", foreign.root.join(".git").display()),
+    )
+    .unwrap();
+    assert!(LinuxLinkedRepository::verify_owned_worktree(&f.root, &f.common).is_err());
+    fs::write(f.root.join(".git"), "gitdir: ../../external\n").unwrap();
+    assert!(LinuxLinkedRepository::verify_owned_worktree(&f.root, &f.common).is_err());
+}
+
+#[test]
 fn exact_linked_layout_binds_roots_and_pointer_objects_but_not_head_contents() {
     let f = Fixture::new();
     let binding = f.verify();

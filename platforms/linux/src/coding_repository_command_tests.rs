@@ -2017,6 +2017,102 @@ struct SealedEnvelope {
     mutate_after_capture: Option<PathBuf>,
     mismatched_observation: bool,
 }
+
+// Actual native edit and memfd projection; Git creation and process output
+// remain synthetic. Only sibling review tests can request this fixture.
+pub(in crate::coding_repository) fn candidate_review_fixture() -> (
+    crate::coding_repository::tests::Fixture,
+    LinuxCodingRepository,
+    agentmage_kernel_engine::write_approval::ShadowChangeSet,
+) {
+    candidate_review_fixture_with_mode(0o644)
+}
+
+pub(in crate::coding_repository) fn candidate_review_fixture_with_mode(
+    mode: u32,
+) -> (
+    crate::coding_repository::tests::Fixture,
+    LinuxCodingRepository,
+    agentmage_kernel_engine::write_approval::ShadowChangeSet,
+) {
+    let f = crate::coding_repository::tests::Fixture::new();
+    let mut owner = crate::coding_repository::tests::owner_with_synthetic_git_observations(&f);
+    let common = f.root.join("repo/.git");
+    let git = common.join("worktrees/worktree");
+    fs::create_dir_all(&git).unwrap();
+    fs::write(
+        f.root.join("owned/worktree/.git"),
+        format!("gitdir: {}\n", git.display()),
+    )
+    .unwrap();
+    fs::write(git.join("commondir"), "../..\n").unwrap();
+    fs::write(
+        git.join("gitdir"),
+        format!("{}\n", f.root.join("owned/worktree/.git").display()),
+    )
+    .unwrap();
+    fs::write(
+        git.join("HEAD"),
+        "ref: refs/heads/agentmage/tasks/component\n",
+    )
+    .unwrap();
+    fs::write(
+        f.root.join("owned/worktree/sentinel"),
+        b"preserve human work",
+    )
+    .unwrap();
+    fs::set_permissions(
+        f.root.join("owned/worktree/sentinel"),
+        fs::Permissions::from_mode(mode),
+    )
+    .unwrap();
+    let scope = owner.select_created_sources(&["sentinel".into()]).unwrap();
+    let preview = owner
+        .prepare_edit(
+            scope,
+            &[crate::LinuxCodingReplacement {
+                path: "sentinel",
+                before_sha256: &hash(b"preserve human work"),
+                content: "reviewed change",
+            }],
+            "synthetic review fixture",
+            NOW,
+        )
+        .unwrap();
+    let change_set = owner
+        .edit
+        .as_ref()
+        .unwrap()
+        .change_set_for_review_test()
+        .clone();
+    assert_eq!(
+        owner
+            .decide_edit(preview["preview_sha256"].as_str().unwrap(), true, NOW)
+            .unwrap()["outcome"],
+        "committed"
+    );
+    let digest = validation_pending(&mut owner, None).unwrap();
+    let pending = owner.take_command(&digest, true, NOW).unwrap().unwrap();
+    owner
+        .run_command(
+            pending,
+            SealedEnvelope {
+                inner: Envelope {
+                    calls: Arc::new(AtomicUsize::new(0)),
+                    stdout: envelope("passed", 2, 0, 0),
+                    stderr: vec![],
+                    exit: 0,
+                    corrupt: false,
+                },
+                mutate_after_capture: None,
+                mismatched_observation: false,
+            },
+            NOW,
+        )
+        .unwrap();
+    owner.check_completion_validation().unwrap();
+    (f, owner, change_set)
+}
 impl BoundedCommandExecutor for SealedEnvelope {
     type WorkingDirectory = LinuxAuthorizedWorkspace;
     fn execute(
