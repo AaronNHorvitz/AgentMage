@@ -648,8 +648,9 @@ impl<
             .transition(AgentStateKind::Validation)
             .map_err(|_| RuntimeLoopError::State)?;
         if completion_only
-            && serde_json::from_str::<serde_json::Value>(&text)
+            && (serde_json::from_str::<serde_json::Value>(&text)
                 .is_ok_and(|value| value.get("tool_call").is_some())
+                || serde_json::from_str::<EndpointToolProposal>(&text).is_ok())
         {
             return self.finish_refused_proposal(&turn_id, "runtime.proposal.completion-only");
         }
@@ -731,9 +732,16 @@ impl<
             None
         };
         let was_interpreted = interpreted.is_some();
-        if let Some(tool) =
-            interpreted.or_else(|| serde_json::from_str::<EndpointToolProposal>(&text).ok())
-        {
+        // Completion-only turns never enter tool admission, including through
+        // serde's positional struct encoding. Keep the fallback closed even if
+        // the proposal parser later accepts another representation.
+        if let Some(tool) = interpreted.or_else(|| {
+            if completion_only {
+                None
+            } else {
+                serde_json::from_str::<EndpointToolProposal>(&text).ok()
+            }
+        }) {
             if !was_interpreted && !crate::tooling::is_closed_json(text.as_bytes()) {
                 return self
                     .finish_refused_proposal(&turn_id, "runtime.proposal.arguments-invalid");

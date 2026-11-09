@@ -416,6 +416,7 @@ fn coding_cycle_completion_is_only_a_candidate_for_the_supplied_independent_veri
             serde_json::from_str(b["messages"][0]["content"].as_str().unwrap()).unwrap();
         assert_eq!(system["tools"], json!([]));
         assert_eq!(system["input_schemas"], json!({}));
+        assert!(system.get("tool_schema_lookup").is_none());
         assert!(
             system["instruction"]
                 .as_str()
@@ -466,86 +467,97 @@ fn coding_cycle_completion_tool_requests_record_terminal_refusal_without_effects
         .unwrap()
         .list_tools()
     {
-        let f = generation_fixture();
-        let (listener, endpoint) = socket();
-        let startup = coding_startup(&f, &endpoint);
-        let request = startup.request().clone();
-        let clock = Clock(Arc::new(AtomicU64::new(1000)));
-        let (previews, boundary) = CodingEndpointEditPreviews::new_coding(
-            startup,
-            owner(&f),
-            Arc::new(Control::new()),
-            clock.clone(),
-            validation(),
-        )
-        .unwrap();
-        // Synthetic phase selection; no successful native test is claimed.
-        previews.synthetic_observation(Next::Completion, None);
-        let port = CodingEndpointStrictEdits::new(
-            previews,
-            connection(configured_transport(endpoint.clone()), endpoint),
-            vec!["one.py".into()],
-            2048,
-            true,
-        )
-        .unwrap();
-        let answer = json!({"tool_call":{
-            "tool_id":tool.tool_id, "tool_version":tool.tool_version,
-            "arguments":{"preview":{}}
-        }})
-        .to_string();
-        let peer = thread::spawn(move || {
-            let mut stream = accept(&listener);
-            let b = body(&mut stream);
-            let system: Value =
-                serde_json::from_str(b["messages"][0]["content"].as_str().unwrap()).unwrap();
-            assert_eq!(system["tools"], json!([]));
-            assert_eq!(system["input_schemas"], json!({}));
-            respond(&mut stream, &answer, "stop", true);
-            listener
-        });
-        let mut coordinator = ReusableRuntimeCoordinator::new_endpoint(
-            request,
-            port,
-            linux_coding_endpoint_coding_registry().unwrap(),
-            boundary,
-            NeverVerify(VerifierId::from_raw("completion-tool-must-not-verify")),
-            clock,
-        )
-        .unwrap();
-        let RuntimeEndpointCoordinatorStep::Complete { outcome } =
-            coordinator.run_endpoint_until_boundary(None, None).unwrap()
-        else {
-            panic!("terminal refusal")
-        };
-        assert_eq!(outcome.outcome.state, AgentStateKind::Failed);
-        assert_eq!(
-            outcome.outcome.unresolved_codes,
-            ["runtime.proposal.completion-only"]
-        );
-        assert_eq!(outcome.outcome.tool_call_count, 0);
-        assert_eq!(outcome.outcome.model_call_count, 1);
-        assert!(outcome.outcome.output.is_none());
-        assert_eq!(
-            fs::read(f.root.join("owned/worktree/one.py")).unwrap(),
-            b"one\n"
-        );
-        assert!(coordinator.events().iter().all(|e| !matches!(
-            e.kind,
-            RuntimeEventKind::ToolStarted { .. }
-                | RuntimeEventKind::ToolCompleted { .. }
-                | RuntimeEventKind::PermissionRequested { .. }
-                | RuntimeEventKind::PermissionDecided { .. }
-        )));
-        assert!(matches!(&coordinator.events().last().unwrap().kind,
+        for form in 0..4 {
+            let f = generation_fixture();
+            let (listener, endpoint) = socket();
+            let startup = coding_startup(&f, &endpoint);
+            let request = startup.request().clone();
+            let clock = Clock(Arc::new(AtomicU64::new(1000)));
+            let (previews, boundary) = CodingEndpointEditPreviews::new_coding(
+                startup,
+                owner(&f),
+                Arc::new(Control::new()),
+                clock.clone(),
+                validation(),
+            )
+            .unwrap();
+            // Synthetic phase selection; no successful native test is claimed.
+            previews.synthetic_observation(Next::Completion, None);
+            let port = CodingEndpointStrictEdits::new(
+                previews,
+                connection(configured_transport(endpoint.clone()), endpoint),
+                vec!["one.py".into()],
+                2048,
+                true,
+            )
+            .unwrap();
+            let call = json!({
+                "tool_id":tool.tool_id, "tool_version":tool.tool_version,
+                "arguments":{"preview":{}}
+            });
+            let positional = json!([tool.tool_id, tool.tool_version, {"preview":{}}]);
+            let answer = match form {
+                0 => json!({"tool_call":call}),
+                1 => json!([positional]),
+                2 => json!({"tool_call":positional}),
+                3 => json!([call]),
+                _ => unreachable!(),
+            }
+            .to_string();
+            let peer = thread::spawn(move || {
+                let mut stream = accept(&listener);
+                let b = body(&mut stream);
+                let system: Value =
+                    serde_json::from_str(b["messages"][0]["content"].as_str().unwrap()).unwrap();
+                assert_eq!(system["tools"], json!([]));
+                assert_eq!(system["input_schemas"], json!({}));
+                assert!(system.get("tool_schema_lookup").is_none());
+                respond(&mut stream, &answer, "stop", true);
+                listener
+            });
+            let mut coordinator = ReusableRuntimeCoordinator::new_endpoint(
+                request,
+                port,
+                linux_coding_endpoint_coding_registry().unwrap(),
+                boundary,
+                NeverVerify(VerifierId::from_raw("completion-tool-must-not-verify")),
+                clock,
+            )
+            .unwrap();
+            let RuntimeEndpointCoordinatorStep::Complete { outcome } =
+                coordinator.run_endpoint_until_boundary(None, None).unwrap()
+            else {
+                panic!("terminal refusal")
+            };
+            assert_eq!(outcome.outcome.state, AgentStateKind::Failed);
+            assert_eq!(
+                outcome.outcome.unresolved_codes,
+                ["runtime.proposal.completion-only"]
+            );
+            assert_eq!(outcome.outcome.tool_call_count, 0);
+            assert_eq!(outcome.outcome.model_call_count, 1);
+            assert!(outcome.outcome.output.is_none());
+            assert_eq!(
+                fs::read(f.root.join("owned/worktree/one.py")).unwrap(),
+                b"one\n"
+            );
+            assert!(coordinator.events().iter().all(|e| !matches!(
+                e.kind,
+                RuntimeEventKind::ToolStarted { .. }
+                    | RuntimeEventKind::ToolCompleted { .. }
+                    | RuntimeEventKind::PermissionRequested { .. }
+                    | RuntimeEventKind::PermissionDecided { .. }
+            )));
+            assert!(matches!(&coordinator.events().last().unwrap().kind,
             RuntimeEventKind::RunTerminal { outcome_sha256, .. } if outcome_sha256 == &outcome.outcome.outcome_sha256));
-        let events = coordinator.events().to_vec();
-        assert_eq!(
-            coordinator.run_endpoint_until_boundary(None, None).unwrap(),
-            RuntimeEndpointCoordinatorStep::Complete { outcome }
-        );
-        assert_eq!(coordinator.events(), events);
-        let listener = peer.join().unwrap();
-        assert!(matches!(listener.accept(),Err(e) if e.kind()==std::io::ErrorKind::WouldBlock));
+            let events = coordinator.events().to_vec();
+            assert_eq!(
+                coordinator.run_endpoint_until_boundary(None, None).unwrap(),
+                RuntimeEndpointCoordinatorStep::Complete { outcome }
+            );
+            assert_eq!(coordinator.events(), events);
+            let listener = peer.join().unwrap();
+            assert!(matches!(listener.accept(),Err(e) if e.kind()==std::io::ErrorKind::WouldBlock));
+        }
     }
 }

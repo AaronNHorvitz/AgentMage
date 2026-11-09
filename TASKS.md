@@ -2,6 +2,27 @@
 
 ## Active queue: local agent mission
 
+The [completion-encoding repair](docs/evidence/t303-completion-encoding-repair-2026-11-09.md)
+addresses M1-R from the [independent completion-turn review](docs/reviews/1828e7e4eeaa-local-coding-completion-turn.txt),
+which has **Verdict: FINDINGS** for exact commit
+`1828e7e4eeaa264087c90189ff175f8620c18f82`. The completion-only guard now
+recognizes positional tool encodings, and its fallback cannot enter tool
+admission. Both kernel attachment orders and both shipped tools exercise all
+object/array combinations. Low L2's stale tool-schema wording is removed from
+the completion prompt; low L1's ordinary-turn positional grammar remains
+same-row backlog. Independent core re-review is required. T-303/T-306 remain
+open; no row or sub-row is added or closed. Formatting and Clippy pass; all
+three affected completion methods pass. The complete scoped gate remains FAIL:
+2,833 passed, exactly 72 inherited failures and none new, 71 existing ignored
+across 46 unfiltered targets.
+
+The [validation-history independent core review](docs/reviews/ba2da239258d-local-coding-validation-history.txt)
+has **Verdict: PASS** for exact commit
+`ba2da239258dda7efb8b2109db86f4a556ec41c2`, with no high/medium finding.
+Low L1 denial/expiry empty-history assertions remain same-row backlog. Low L2
+reiterates that linked-pass verification needs separate current-source binding
+before acceptance. Both parents remain open; no workflow or model is qualified.
+
 The [bounded validation-history connection](docs/evidence/t303-validation-history-2026-11-09.md)
 retains completed original command/validation receipts and exact rerun plans in
 the same native owner. Its linked-pass check requires the full series, fresh
@@ -23,12 +44,14 @@ invalid-definition ordering coverage remain same-row backlog. Neither parent
 closes; native/model measurements and current-source verification remain open.
 
 The [completion-turn repair](docs/evidence/t303-completion-turn-repair-2026-11-09.md)
-addresses medium M1 from the [combined-cycle core review](docs/reviews/bb7678ee37c5-local-coding-edit-test-cycle.txt)
+attempted to address medium M1 from the [combined-cycle core review](docs/reviews/bb7678ee37c5-local-coding-edit-test-cycle.txt)
 for exact commit `bb7678ee37c520b5e41c12b6ec8ddd3fddc351c6`.
 That non-closing review has **Verdict: PASS**, with M1 explicitly blocking parent
 closure. The final prompt now offers only a completion candidate, and the original
 coordinator records tool-shaped answers as terminal refusals before permission
-or execution. All completion regression methods pass; the complete scoped gate
+or execution for object-form answers. The independent re-review above found
+an uncovered positional encoding (M1-R); that claim was incomplete. All original
+completion regression methods passed; the complete scoped gate
 remains FAIL: 2,829 passed, exactly 72 inherited failures and none new, 71
 existing ignored across 46 unfiltered targets. Formatting and Clippy pass;
 independent core re-review is required. T-303/T-306 remain open. Low L1 host command-owner transition

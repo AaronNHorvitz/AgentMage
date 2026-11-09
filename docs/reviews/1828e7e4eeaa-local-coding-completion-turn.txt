@@ -1,0 +1,144 @@
+Commit: 1828e7e4eeaa264087c90189ff175f8620c18f82
+Scope: local-coding-completion-turn
+
+# Independent core re-review: completion-turn repair of bb7678ee37c5 M1 (T-303 / T-306, non-closing)
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort), read-only, pinned checkout
+`/lane/review-checkout` at `1828e7e4eeaa264087c90189ff175f8620c18f82` (`git rev-parse HEAD` confirmed).
+Base `b0905e920f75490a2cee9663c25456617642ad02`. Separate target `/lane/state/review-target`. I used no GPU,
+no model, no shim and no download.
+
+## Methods
+
+1. I read IP-POLICY.md, the newest decisions listing (0172-0174), the TASKS.md active-queue head, the
+   request, the bundle README and the bundle scripts run.py, check.py and light.py. The scripts only run the
+   repository gate, compare data and run lint commands. The PATH tooling holds only the retained Node binary
+   and its LICENSE.
+2. I read the full source diff (5 Rust files) and the documentation diff (TASKS.md, the evidence file, the
+   guide, and the two retained reviews). I also read the original M1 text in
+   `/lane/reviews/bb7678ee37c5-local-coding-edit-test-cycle.md`.
+3. I traced the kernel validation path after the new guard (`coordinator_endpoint.rs:647-760`) and the host
+   boundary owner states (`coding_endpoint_edit_previews.rs:485-557`).
+4. I ran the requested commands, then two probes in a scratch copy of the commit made with
+   `git archive HEAD` into `/lane/state/tmp/review-probe-1828e7e4eeaa` (outside the repository; the
+   repository was not modified).
+
+## Requested commands and results (all from the pinned checkout)
+
+| Command | Expected | Result |
+|---|---|---|
+| `sha256sum --quiet -c .../review-inputs.sha256` | 0 | 0 (29 inputs) |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-completion-turn-1828e7e4eeaa` | 1 | **1**: `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True` |
+| `python3 -B .../check.py <out>` | 0 | 0: 46 targets, totals [2829, 72, 71, 0, 0], 72 inherited identities, 0 new, 3 named methods ok, commands 0,0,0,0,0,0 then 101 (407.64 s), total 484.82 s |
+| `python3 -B .../light.py` | 0 | 0 (diff check, untracked lint, review lint, markdownlint 0 issues) |
+| `cmp validation-final/source-freeze.json <out>/source-freeze.json` | 0 | 0 |
+| `cmp docs/reviews/bb7678ee37c5-...txt /lane/reviews/bb7678ee37c5-...md` | 0 | 0 |
+| `cmp docs/reviews/b0905e920f75-...txt /lane/reviews/b0905e920f75-...md` | 0 | 0 |
+| `git diff --check b0905e920f75... --` | 0 | 0 |
+| `git status --short` | empty | empty |
+
+My raw gate log has SHA-256 `a456c956537aec30cbbf34828196839d67ffe9e9578615751b16804b7fe938d0`. It differs
+from the builder's `bf45ed73...` only because timings differ; the counts and failure identities match. The
+gate's private TMPDIR keeps exactly 11 inherited-failure fixture directories, as the builder reported. The
+builder's numbers are reproduced.
+
+## Adversarial probes (scratch copy only)
+
+**P1, kernel.** I added a synthetic response `SeqRead` whose text is
+`[["fixture.read","1.0.0",{"path":"fixture.txt"}]]`. This is the positional (sequence) encoding of the
+original `EndpointToolProposal` wire form. I drove it through the commit's own `CompletionOnlyPort`, which
+calls `.completion_only()`, in both attachment orders.
+Command: `cd /lane/state/tmp/review-probe-1828e7e4eeaa && TMPDIR=<private> CARGO_TARGET_DIR=/lane/state/review-target CARGO_BUILD_JOBS=2 bash /tools/build-slot cargo test -p agentmage-kernel-engine --lib -- review_probe_sequence_form --nocapture --test-threads=4`
+Result for both `narrow_first=false` and `narrow_first=true`: `step=Ok(AwaitingApproval { challenge ... })`,
+`permission_events=1`, `model_calls=1`. A completion-only turn admitted the tool call and presented a
+permission challenge. It did not record `runtime.proposal.completion-only`.
+
+**P2, host composition.** I copied the commit's new
+`coding_cycle_completion_tool_requests_record_terminal_refusal_without_effects`. The only change is that the
+answer is `json!([[tool_id, tool_version, {"preview":{}}]])`, sent for each shipped tool.
+Command: same build-slot form, `cargo test -p agentmage-host --lib -- review_probe_completion_turn_sequence_form --nocapture --test-threads=4`
+Result for both `agentmage.code.apply-prepared-edit` and `agentmage.code.run-prepared-command`:
+`first=Err(Dependency(Invalid)) terminal_event=false second=Err(InvalidBoundaryResult) file="one\n"`.
+This is exactly the M1 failure: no recorded refusal, no terminal outcome, and a faulted coordinator on the
+next advance. There is no write and no effect, so it fails closed.
+
+## Findings
+
+### M1-R (medium, correctness): the completion-only guard does not cover every tool-call form the coordinator accepts, so bb7678ee37c5 M1 is still reproducible
+
+`kernel/engine/src/runtime_loop/coordinator_endpoint.rs:650-655` refuses only when the text parses as a
+`serde_json::Value` with a top-level `"tool_call"` member. When `completion_only` is set, the original
+fallback parser at `coordinator_endpoint.rs:735` (`serde_json::from_str::<EndpointToolProposal>(&text)`)
+still runs. `EndpointToolProposal` and `EndpointToolArguments` are serde-derived structs. serde_json's
+`deserialize_struct` accepts a JSON array and derived structs implement `visit_seq`. `deny_unknown_fields`
+does not apply to that form. So `[["<tool_id>","<version>",{...}]]` is a valid tool proposal that the guard
+does not see (`Value::get("tool_call")` on an array is `None`). It then passes `is_closed_json`,
+`is_model_proposable` and `validate_arguments` and goes on to permission evaluation.
+
+- Kernel: the documented contract of `completion_only()` (`:131-135`, "Tool-shaped answers terminate with a
+  recorded refusal before admission") does not hold. P1 shows permission requested and `AwaitingApproval` in
+  both attachment orders.
+- Host: the final coding-cycle turn (`shells/host/src/coding_endpoint_edit_generation.rs:196-215`) faults
+  exactly as in the original M1 (P2). Model output, possibly steered by untrusted tool output or diagnostics
+  in the replayed history, can still take the only route to verifier acceptance into an unrecorded
+  `Dependency` fault.
+- Evidence and docs overstate the repair. The evidence file says the restriction "records
+  `runtime.proposal.completion-only` for tool-shaped answers before interpreter, permission, grant or native
+  dispatch". `docs/guides/runtime-endpoint-runs.md:1527-1529` and the TASKS.md paragraph make the same claim.
+  These claims are false for this input.
+
+This is not high. All authority checks still apply. The shipped host boundary refuses because its owner is
+`Ready`, P2 shows no file effect, and in the kernel any execution would still need the exact approval.
+
+**Fix:** under `completion_only`, refuse with `runtime.proposal.completion-only` whenever the text is
+tool-shaped in any form the coordinator accepts. At minimum, also refuse when
+`serde_json::from_str::<EndpointToolProposal>(&text).is_ok()`. A stronger option is to skip the `or_else`
+fallback at `:735` entirely when `completion_only` is set, so that non-completion text reaches the existing
+completion refusal. Add the sequence form (and a nested-sequence `tool_call` variant) to
+`endpoint_completion_only_narrows_before_interpretation_and_preserves_verification` and to
+`coding_cycle_completion_tool_requests_record_terminal_refusal_without_effects`. Then correct the three
+documentation claims if the scope changes.
+
+### L1 (low, backlog): the default tool wire form silently accepts an undocumented positional encoding
+
+This is the root cause of M1-R, and it exists in ordinary turns too (`coordinator_endpoint.rs:340-352`,
+`:735`). Every downstream check still applies there, so it has no effect in default turns. Still, the
+accepted wire grammar is wider than the documented object form. Consider rejecting non-object top-level
+text, or deserializing through a map-only visitor, so the accepted grammar matches the documentation.
+
+### L2 (low, backlog): stale tool wording in the completion-only system context
+
+`shells/host/src/coding_endpoint_context.rs:187` still sends `tool_schema_lookup` text that describes tools
+and `input_schemas` in a turn that offers neither. It is inert, but it slightly contradicts "No tools are
+offered". Omit it when `completion_only` is set.
+
+## What I verified as sound
+
+- The final context still runs `model_visible_coding_tools(registry)` and the exact `visible_tools`
+  equality before clearing, so the original sealed catalog is checked. It offers `[]` tools and `{}` input
+  schemas, and the host tests assert both on the wire.
+- Object-form `{"tool_call":...}` answers for both shipped tools record a terminal
+  `runtime.proposal.completion-only` refusal, with no permission, start or write events and a stable,
+  idempotent terminal outcome (the commit's tests, which pass in my gate run).
+- When `completion_only` is set, the attached interpreter is dropped in either attachment order. The kernel
+  test's panic-closure proves the interpreter is never invoked.
+- A valid candidate still reaches the original verifier, and a candidate without postcondition evidence is
+  refused with `runtime.verification.failed`. The fixture-expectation corrections described in the evidence
+  match the code. The initial log is retained, no verifier condition is changed and no existing test is
+  weakened.
+- No new executor, grant, wire field, network path, dependency or `#[ignore]`. The TASKS.md row table is
+  identical to the base. No hidden, held-out, scorer, scoreboard, status-model or SBOM change. No private
+  path, username, hostname, credential or third-party product name was found in the added lines.
+- Confinement: this commit does not touch the native write and command boundaries. I did not re-run path
+  traversal or symlink probes against unchanged code; predecessor reviews cover them.
+
+## Per-row result
+
+- **T-303 (non-closing increment): FINDINGS.** Medium M1-R: the M1 repair is incomplete and the fault is
+  still reproducible. It must be fixed in-row before T-303 can close. T-303 remains OPEN.
+- **T-306 (non-closing increment): FINDINGS.** Same medium M1-R. T-306 remains OPEN.
+
+The retained bb7678ee37c5 and b0905e920f75 reports are byte-identical to the originals. This verdict
+qualifies no coding workflow, score or certification.
+
+Verdict: FINDINGS

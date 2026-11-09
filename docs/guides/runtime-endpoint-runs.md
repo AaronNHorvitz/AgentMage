@@ -1529,6 +1529,10 @@ answer records `runtime.proposal.completion-only` and a terminal failure before
 permission or execution. No attached tool interpreter runs in that turn; a valid
 completion candidate still goes to the original verifier. This restriction is
 process-local, not a model or HTTP choice.
+The restriction covers object and positional-array tool proposals, including
+either encoding of the nested call. Completion-only turns cannot enter the
+fallback tool-admission path, and their prompt omits tool-schema lookup text.
+The ordinary tool-turn wire grammar is unchanged.
 The supplied independent verifier decides whether
 the task is satisfied. A process exit or parsed test pass alone cannot certify
 the task or current source. Every turn shares the same coordinator, cumulative

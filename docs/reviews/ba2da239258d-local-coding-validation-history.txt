@@ -1,0 +1,127 @@
+Commit: ba2da239258dda7efb8b2109db86f4a556ec41c2
+Scope: local-coding-validation-history
+
+# Independent core review: original bounded validation history
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only, pinned checkout
+`/lane/review-checkout`. Tier: core. Rows: T-303 / T-306. This increment does not close either row; both stay OPEN.
+
+## Methods
+
+1. Confirmed the pinned commit: `git rev-parse HEAD` printed `ba2da239258dda7efb8b2109db86f4a556ec41c2`. Base
+   `1828e7e4eeaa264087c90189ff175f8620c18f82` is the parent. The diff touches exactly 7 paths, matching the
+   request: TASKS.md, the evidence file, docs/guides/coding-validation.md,
+   kernel/engine/src/validation_result.rs (tests only plus a module include and re-export), the new
+   kernel/engine/src/validation_result_history.rs, platforms/linux/src/coding_repository_validation.rs, and
+   platforms/linux/src/coding_repository_command_tests.rs.
+2. Read the bundle README, run.py, check.py and light.py before running anything. run.py prepends a tooling
+   directory to PATH. That directory holds only the retained Node ELF binary and its LICENSE, so there is no
+   shim. Every Cargo command reserves the build slot itself, and I did not wrap run.py in anything.
+3. Read the whole native validation owner (`coding_repository_validation.rs`), the dispatch path
+   (`coding_repository_command.rs:370-450`) and the kernel `verify_validation_receipt`, `plan_failed_test_rerun`,
+   `verify_rerun_plan` and `retryable_failure`. I also found every reset of `self.validation`
+   (`coding_repository.rs:454`, `coding_repository_runtime.rs:59,152`) and every consumer of
+   `inspect_validation` (local-api GET route `coding_repository_api.rs:312`, endpoint coordinator
+   `inspect` `coding_repository_endpoint_command.rs:341`).
+4. Searched the added lines for private paths, usernames, hostnames, credentials, other agent product names,
+   held-out or hidden test content and `#[ignore]`.
+5. Ran the exact required commands, listed below.
+
+## Commands and results (pinned checkout, CARGO_TARGET_DIR=/lane/state/review-target, fresh output dir)
+
+| Command | Expected | Observed |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-validation-history/review-inputs.sha256` | 0 | 0. The manifest's own SHA-256 is `573a4b1b2ae7fb7d88e49978d21af4ce9495aaddbe653a8b26ce3fb42b904085`, matching the request |
+| `run.py /lane/state/tmp/review-validation-history-ba2da239258d` | 1 | 1. `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True` |
+| `check.py <out>` | 0 | 0. 46 targets; totals 2833 passed / 72 failed / 71 ignored / 0 measured / 0 filtered; 72 inherited failure identities, 0 new; 6 named methods ok |
+| `light.py` | 0 | 0. git diff --check 0, lint-untracked 0, markdownlint: 0 issues in 3 files |
+| `cmp validation-final/source-freeze.json <out>/source-freeze.json` | 0 | 0. The four Rust/TOML hashes are identical to the builder's |
+| `git diff --check 1828e7e4… --` | 0 | 0 |
+| `git status --short` | 0, empty | 0, empty |
+
+Gate sub-command exits: git diff --check 0 (0.40 s), lint-untracked 0 (0.10 s), markdownlint 0 (1.25 s),
+cargo fmt 0 (59.41 s), cargo clippy `-D warnings` 0 (47.00 s), cargo test `--no-fail-fast` 101 (399.20 s).
+The total including reservations was 507.73 s. My raw log SHA-256 is
+`6c3ac3afdf9fb241c652dc3b77123697d6513ffa23123e20c595e528e7a6cca1`. It differs from the builder's
+`3b4ae2d2…` only because the logs contain timings. Every count and failure identity matches. The six named
+methods pass in my run:
+`bounded_history_accepts_exact_single_and_linked_passes_without_erasing_failure`,
+`bounded_history_refuses_missing_reordered_foreign_and_replayed_links`,
+`bounded_history_requires_fresh_approval_and_attempt_identities_even_when_resealed`,
+`validation_history_retains_failed_prefix_when_successor_is_uncertain`,
+`validation_failure_feedback_then_exact_fresh_rerun_passes_without_task_grade` and
+`repair_feedback_consumes_exact_failure_once_preserving_test_budget_and_write_consent`.
+My runtime TMPDIR (`/tmp/vh-ipyir3sw`) kept exactly 11 entries, matching the builder's 11 inherited
+failure fixture directories. No GPU, model or download was used.
+
+## Analysis
+
+- **Kernel check** (`validation_result_history.rs:30-67`) does the following:
+  - It requires 1 to 3 attempts and exactly `n-1` plans.
+  - It re-runs `verify_validation_receipt` against the single template, the original `PreparedCommand` and
+    the original `CommandReceipt`. That covers template, command, scope, parser and digest binding.
+  - It rejects any repeat of validation ids, command ids, approval digests, authority transactions or
+    operation ids.
+  - For each edge it requires `verify_rerun_plan` (prior receipt digest, failed-names digest, retryable
+    failure, command spec and plan digest). The plan's attempt id and approval must equal the immediate
+    successor's.
+  - The last receipt must be `is_full_pass` (Passed with Complete coverage).
+  - A pass cannot sit in the middle of a series, because `retryable_failure` requires a non-zero exit while
+    a pass requires exit 0.
+  - The check takes only shared references and mutates nothing.
+- **Native owner:**
+  - `consume_validation` (`coding_repository_validation.rs:274-307`) carries history and plans forward only
+    on a rerun. `check_validation_selection` admits an existing series only when the template is identical
+    and the attempt count matches. A fresh series starts only when `self.validation` is `None` and attempts
+    is 0, so templates cannot be mixed.
+  - The edge is recorded and the attempt counted before dispatch (`coding_repository_command.rs:394-399`).
+  - `finish_validation` appends evidence only after `verify_validation_receipt` succeeds.
+  - `linked_pass_verified` also requires `attempts == history.len()`, so a lost, uncertain or corrupted
+    successor keeps the check false permanently. The next prepare is refused with `code.validation.uncertain`.
+  - The attempt id and approval recorded in the plan (`command_attempt_id`, `pending.hash`) are the same
+    values used in the observation, so real flows can link.
+  - A denial returns before `consume_validation`, so it adds no edge.
+  - Worktree creation, lease transfer and poison recovery clear the whole series, history included.
+- **No new authority:** No executor, permission, grant, parser, budget, replay or restore path is added. The
+  only new state is two vectors capped at 3 entries and 2 plans. Inspection exposes `ValidationReceipt`s that
+  were already exposed one at a time as `latest`, so no new class of private content is disclosed.
+  `linked_pass_verified` has no consumer besides inspection and the result JSON. The completion and
+  development verifiers are unchanged. `current_workspace_verified` and `test_suite_verified` stay hard-coded
+  false.
+- **Parser hash:** `PARSER` hashes `validation_result.rs`, so the appended tests change the template
+  `parser_sha256`. No committed fixture pins that hash, and the full gate shows no new failure.
+- **Evaluation integrity:** The diff makes no change to held-out tasks, hidden tests, tasks, scorers, pins,
+  thresholds, dependencies, SBOM, status model, scoreboard or release files. TASKS.md row lines are
+  unchanged (check.py asserts this). No new row or sub-row is added and nothing closes. No score is claimed.
+- **Honest labelling:** The evidence and guide say plainly that the fixtures synthesize kernel receipts and
+  native executor observations. They claim no native project-test process, model workflow or score, and they
+  state the full gate is FAIL with exactly the inherited failures. Every number in the evidence matches my run
+  apart from timing.
+- **Public hygiene:** The added content has no private paths, usernames, hostnames, credentials, product
+  names or `#[ignore]`.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog):** The guide line "Denied previews add no edge" (`docs/guides/coding-validation.md`,
+  linked-pass paragraph) is true by construction, because `decide_validation_with_cancellation` returns
+  before `consume_validation`. No test asserts it. The existing denial test
+  `validation_three_attempt_budget_survives_denial_and_cannot_reset_definition`
+  (`coding_repository_command_tests.rs:1030`) checks only `attempts == 0`. Fix: in that test, also assert
+  that `history` and `rerun_plans` are empty after the denial and after the expiry.
+- **L2 (low, informational):** `linked_pass_verified` can be true for a series where repair writes changed
+  the worktree between attempts. This is the intended meaning, and the docs say it is not current-source or
+  task acceptance. Any future acceptance integration must not treat this Boolean as a grade without the
+  separate current-source binding, which the builder already lists as open.
+
+## Per-row result
+
+- T-303: PASS for this non-closing increment. The row stays OPEN; this increment does not close it.
+- T-306: PASS for this non-closing increment. The row stays OPEN; this increment does not close it.
+
+This PASS covers only exact commit ba2da239258dda7efb8b2109db86f4a556ec41c2 at scope
+local-coding-validation-history. It does not qualify any coding workflow, model or score, and it implies no
+certification or compliance.
+
+Verdict: PASS

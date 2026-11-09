@@ -26,6 +26,7 @@ enum Response {
     Limited,
     WrongDigest,
     MalformedTool,
+    PositionalTool(u8),
     BadArguments(u8),
     Failure,
     Overflow,
@@ -77,6 +78,18 @@ impl RuntimeEndpointModelPort for Dispatch {
                     serde_json::from_slice::<serde_json::Value>(&args.bytes).unwrap()
                 };
                 serde_json::json!({"tool_call": {"tool_id":"fixture.read", "tool_version":"1.0.0", "arguments":arguments}}).to_string()
+            }
+            Response::PositionalTool(form) => {
+                let arguments = serde_json::json!({"path":"fixture.txt"});
+                let call = serde_json::json!(["fixture.read", "1.0.0", arguments]);
+                match form {
+                    0 => serde_json::json!([call]),
+                    1 => serde_json::json!({"tool_call":call}),
+                    2 => serde_json::json!([{
+                        "tool_id":"fixture.read", "tool_version":"1.0.0", "arguments":arguments
+                    }]),
+                    _ => panic!("unknown positional tool form"),
+                }.to_string()
             }
             Response::Effect(operation) => {
                 let id = match operation {
@@ -569,7 +582,14 @@ impl RuntimeEndpointTurnPort for CompletionOnlyPort {
 #[test]
 fn endpoint_completion_only_narrows_before_interpretation_and_preserves_verification() {
     for narrow_first in [false, true] {
-        for response in [Response::Read, Response::BadArguments(2), Response::Answer] {
+        for response in [
+            Response::Read,
+            Response::BadArguments(2),
+            Response::PositionalTool(0),
+            Response::PositionalTool(1),
+            Response::PositionalTool(2),
+            Response::Answer,
+        ] {
             let mut original = coordinator([response, Response::Read], true);
             original.verifier.expected_results = 0;
             let calls = original.model.0.calls.clone();
