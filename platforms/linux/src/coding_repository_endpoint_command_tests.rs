@@ -1334,3 +1334,257 @@ fn endpoint_command_abandon_original_prepared_handle_returns_same_unissued_owner
         );
     }
 }
+
+#[test]
+fn endpoint_command_original_handles_share_one_signal_without_explicit_direct_attachment() {
+    for validation in [false, true] {
+        let f = Fixture::new();
+        let mut owner = owner(&f, validation, None);
+        let digest = owner.command.as_ref().unwrap().hash.clone();
+        let first = owner.command_cancellation(&digest).unwrap();
+        let second = if validation {
+            owner.validation_cancellation(&digest).unwrap()
+        } else {
+            owner.command_cancellation(&digest).unwrap()
+        };
+        assert!(second.observe_effect_cancellation().unwrap().is_none());
+        first.shutdown().unwrap();
+        second.cancel().unwrap();
+        for handle in [&first, &second] {
+            let signal = handle.observe_effect_cancellation().unwrap().unwrap();
+            assert_eq!(signal.reason, CancellationReason::Shutdown);
+            assert_eq!(signal.task_id.as_str(), first.attempt_id);
+            assert_eq!(signal.correlation_id.as_str(), first.attempt_id);
+        }
+        let calls = Arc::new(AtomicUsize::new(0));
+        let pending = owner.take_command(&digest, true, NOW).unwrap().unwrap();
+        // Same default observer used by direct decisions with no explicit handle.
+        let result = owner
+            .run_command(pending, Synthetic::new(&calls, true), NOW)
+            .unwrap();
+        assert_eq!(calls.load(Ordering::SeqCst), 0);
+        assert_eq!(result["receipt"]["outcome"], "cancelled");
+        assert_eq!(result["command_receipt"]["termination"], "cancelled");
+        if validation {
+            assert_eq!(result["validation"]["validation_passed"], false);
+            assert_eq!(owner.inspect_validation().unwrap()["attempts"], 1);
+        }
+        assert!(owner.command_cancellation(&digest).is_err());
+    }
+}
+
+#[test]
+fn endpoint_command_original_handle_cancels_after_handoff_before_native_preflight() {
+    for validation in [false, true] {
+        for shutdown in [false, true] {
+            let f = Fixture::new();
+            let owner = owner(&f, validation, None);
+            let digest = owner.command.as_ref().unwrap().hash.clone();
+            let handle = owner.command_cancellation(&digest).unwrap();
+            let mut b = boundary(owner);
+            ask(&mut b);
+            let evaluation = resolve(&mut b, true).unwrap();
+            if shutdown {
+                handle.shutdown().unwrap();
+            } else {
+                handle.cancel().unwrap();
+            }
+            let req = b.command.request.clone();
+            let call = b.command.call.clone();
+            let result = b.execute_using::<Synthetic>(
+                RuntimeRunScope::endpoint(&req).unwrap(),
+                (&evaluation, &EndpointCommandTool::new().0, &call),
+                None,
+                |_| panic!("original cancellation must stop before native preflight"),
+            );
+            assert_eq!(result.err(), Some(RuntimePortFailure::Cancelled));
+            assert!(matches!(b.stage, Stage::Spent));
+            assert!(b.command.repository.command.is_none());
+            assert!(b.inspect().unwrap()["last_result"].is_null());
+            assert_eq!(b.inspect().unwrap()["validation"]["attempts"], 0);
+            no_receipts(&b);
+            let calls = Arc::new(AtomicUsize::new(0));
+            assert!(execute(&mut b, &evaluation, Synthetic::new(&calls, true), None).is_err());
+            assert_eq!(calls.load(Ordering::SeqCst), 0);
+            assert!(resolve(&mut b, true).is_err());
+        }
+    }
+}
+
+struct OriginalHandleCancellation {
+    inner: Synthetic,
+    entered: std::sync::mpsc::SyncSender<()>,
+    cancelled: std::sync::mpsc::Receiver<()>,
+    expected: CancellationSignal,
+}
+impl BoundedCommandExecutor for OriginalHandleCancellation {
+    type WorkingDirectory = LinuxAuthorizedWorkspace;
+    fn execute(
+        &mut self,
+        permit: CommandLaunchPermit<'_>,
+        root: &LinuxAuthorizedWorkspace,
+        observer: &dyn EffectCancellationObservation,
+    ) -> std::result::Result<CommandPlatformResult, CommandExecutionFailure> {
+        // The synthetic executor has entered with no cancellation. The public
+        // pre-handoff handle is then signalled by another thread, without sleeps.
+        let mut result = self.inner.execute(permit, root, observer)?;
+        self.entered.send(()).unwrap();
+        self.cancelled.recv_timeout(Duration::from_secs(5)).unwrap();
+        assert_eq!(
+            observer.observe_effect_cancellation().unwrap(),
+            Some(self.expected.clone())
+        );
+        result.termination = CommandTermination::Cancelled;
+        result.exit_code = None;
+        Ok(result)
+    }
+}
+
+#[test]
+fn endpoint_command_original_handle_reaches_live_supervisor_observation_from_another_thread() {
+    for validation in [false, true] {
+        for shutdown in [false, true] {
+            let f = Fixture::new();
+            let owner = owner(&f, validation, None);
+            let handle = owner
+                .command_cancellation(&owner.command.as_ref().unwrap().hash)
+                .unwrap();
+            let expected = CancellationSignal {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                cancellation_id: CancellationId::from_raw(format!("cancel-{}", handle.attempt_id)),
+                correlation_id: CorrelationId::from_raw(&handle.attempt_id),
+                task_id: TaskId::from_raw(&handle.attempt_id),
+                reason: if shutdown {
+                    CancellationReason::Shutdown
+                } else {
+                    CancellationReason::UserRequested
+                },
+                requested_by: BoundaryKind::Shell,
+            };
+            let mut b = boundary(owner);
+            ask(&mut b);
+            let evaluation = resolve(&mut b, true).unwrap();
+            let calls = Arc::new(AtomicUsize::new(0));
+            let (entered, wait_entered) = std::sync::mpsc::sync_channel(0);
+            let (cancelled, wait_cancelled) = std::sync::mpsc::sync_channel(0);
+            std::thread::scope(|scope| {
+                let canceller = scope.spawn(move || {
+                    wait_entered.recv_timeout(Duration::from_secs(5)).unwrap();
+                    if shutdown {
+                        handle.shutdown().unwrap();
+                    } else {
+                        handle.cancel().unwrap();
+                    }
+                    cancelled.send(()).unwrap();
+                });
+                let req = b.command.request.clone();
+                let call = b.command.call.clone();
+                let result = b
+                    .execute_using(
+                        RuntimeRunScope::endpoint(&req).unwrap(),
+                        (&evaluation, &EndpointCommandTool::new().0, &call),
+                        None,
+                        |_| {
+                            Ok(OriginalHandleCancellation {
+                                inner: Synthetic::new(&calls, true),
+                                entered,
+                                cancelled: wait_cancelled,
+                                expected,
+                            })
+                        },
+                    )
+                    .unwrap();
+                canceller.join().unwrap();
+                assert_eq!(result.result.outcome, OperationOutcome::Cancelled);
+                let value: Value =
+                    serde_json::from_slice(&result.result.output.unwrap().bytes).unwrap();
+                assert_eq!(value["receipt"]["outcome"], "cancelled");
+                assert_eq!(value["command_receipt"]["termination"], "cancelled");
+                if validation {
+                    assert_eq!(value["validation"]["validation_passed"], false);
+                    assert_eq!(value["validation"]["attempt"], 1);
+                }
+            });
+            assert!(matches!(b.stage, Stage::Spent));
+            assert_eq!(calls.load(Ordering::SeqCst), 1);
+            assert!(execute(&mut b, &evaluation, Synthetic::new(&calls, true), None).is_err());
+            assert_eq!(calls.load(Ordering::SeqCst), 1);
+            assert!(b.inspect().unwrap()["last_result"].is_object());
+        }
+    }
+}
+
+#[test]
+fn endpoint_command_abandoned_handle_never_cancels_a_fresh_attempt() {
+    for validation in [false, true] {
+        for issued in [false, true] {
+            let f = Fixture::new();
+            let owner = owner(&f, validation, None);
+            let old = owner
+                .command_cancellation(&owner.command.as_ref().unwrap().hash)
+                .unwrap();
+            let mut b = boundary(owner);
+            if issued {
+                ask(&mut b);
+                resolve(&mut b, true).unwrap();
+            }
+            let mut owner = b.into_repository();
+            prepare(&mut owner, validation, None);
+            let digest = owner.command.as_ref().unwrap().hash.clone();
+            let fresh = owner.command_cancellation(&digest).unwrap();
+            old.shutdown().unwrap();
+            assert!(fresh.observe_effect_cancellation().unwrap().is_none());
+            assert_ne!(fresh.attempt_id, old.attempt_id);
+            assert_eq!(
+                owner
+                    .verify_command_cancellation(&digest, Some(&old))
+                    .unwrap_err()
+                    .code(),
+                "code.command.cancellation-stale"
+            );
+            let calls = Arc::new(AtomicUsize::new(0));
+            let mut b = boundary(owner);
+            ask(&mut b);
+            let e = resolve(&mut b, true).unwrap();
+            let result = execute(&mut b, &e, Synthetic::new(&calls, true), None).unwrap();
+            assert_eq!(result.result.outcome, OperationOutcome::Succeeded);
+            assert_eq!(calls.load(Ordering::SeqCst), 1);
+        }
+    }
+}
+
+#[test]
+fn endpoint_command_failed_validation_handle_cannot_cancel_the_exact_fresh_retry() {
+    let f = Fixture::new();
+    let owner = owner(&f, true, None);
+    let old = owner
+        .validation_cancellation(&owner.command.as_ref().unwrap().hash)
+        .unwrap();
+    let calls = Arc::new(AtomicUsize::new(0));
+    let mut b = boundary(owner);
+    ask(&mut b);
+    let e = resolve(&mut b, true).unwrap();
+    let result = execute(&mut b, &e, Synthetic::new(&calls, false), None).unwrap();
+    let result: Value = serde_json::from_slice(&result.result.output.unwrap().bytes).unwrap();
+    let prior = result["validation"]["receipt"]["receipt_sha256"]
+        .as_str()
+        .unwrap();
+    let mut owner = b.into_repository();
+    prepare(&mut owner, true, Some(prior));
+    let fresh = owner
+        .validation_cancellation(&owner.command.as_ref().unwrap().hash)
+        .unwrap();
+    old.cancel().unwrap();
+    assert!(fresh.observe_effect_cancellation().unwrap().is_none());
+    assert_ne!(old.attempt_id, fresh.attempt_id);
+    let mut b = boundary(owner);
+    ask(&mut b);
+    let e = resolve(&mut b, true).unwrap();
+    let passed = execute(&mut b, &e, Synthetic::new(&calls, true), None).unwrap();
+    let passed: Value = serde_json::from_slice(&passed.result.output.unwrap().bytes).unwrap();
+    assert_eq!(passed["validation"]["validation_passed"], true);
+    assert_eq!(passed["validation"]["attempt"], 2);
+    assert_eq!(passed["rerun_plan"]["prior_receipt_sha256"], prior);
+    assert_eq!(passed["validation"]["current_workspace_verified"], false);
+    assert_eq!(calls.load(Ordering::SeqCst), 2);
+}

@@ -2,11 +2,24 @@
 
 ## Active queue: local agent mission
 
+The [original command cancellation repair](docs/evidence/t303-original-cancellation-2026-11-08.md)
+keeps one token in the original pending attempt. Pre-handoff command/validation
+handles, repeated lookups, default direct decisions and endpoint supervisor
+observations share that signal. Fresh preparations and validation retries remain
+isolated; original grants, approvals and sandbox admission are unchanged.
+Independent core review is required. T-303/T-306 remain open; no row or sub-row
+is added or closed. Five added regression methods pass; formatting and Clippy
+pass. The complete scoped gate remains FAIL with exactly the 72 inherited
+failure identities and none new (1,147 passed, 63 inherited ignored).
+Executable controlled startup, general model-driven coding, recovery, approved
+Git and parent measurements remain open.
+
 The [command/test adapter independent core review](docs/reviews/07ab1d6f3987-local-coding-endpoint-command.txt)
 has **Verdict: PASS** for exact commit
 `07ab1d6f398777a35c47ef81aba43bed09894ded`, with no high/medium finding.
-Low L1 (pre-handoff cancellation handles are not connected to endpoint execution)
-and L2 (conservative output/CPU/disk preflight bounds) remain same-row backlog.
+Low L1 (disconnected pre-handoff cancellation handles) is addressed by the
+repair above, pending independent review. Low L2 (conservative output/CPU/disk
+preflight bounds) remains same-row backlog.
 Both parent rows remain open; no row is closed.
 
 The [prepared-effect startup](docs/guides/runtime-endpoint-runs.md#trusted-startup-for-an-original-prepared-effect)

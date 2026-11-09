@@ -35,11 +35,7 @@ impl LinuxCodingCommandCancellation {
         let attempt_id = pending.prepared.preview().command_attempt_id.clone();
         Self {
             preview_sha256: pending.hash.clone(),
-            token: CancellationToken::root(
-                BoundaryKind::Shell,
-                TaskId::from_raw(&attempt_id),
-                CorrelationId::from_raw(&attempt_id),
-            ),
+            token: pending.cancellation.clone(),
             attempt_id,
         }
     }
@@ -126,12 +122,17 @@ pub(super) struct PendingCommand {
     expires_at: u64,
     deadline: Instant,
     issued: Option<IssuedExactEffect>,
+    // One signal owner for this original attempt, including endpoint handoff.
+    // Validation refines the preview hash before any handle is exposed; it
+    // keeps this same attempt token. Fresh preparations get fresh roots.
+    cancellation: CancellationToken,
 }
 
 impl LinuxCodingRepository {
     /// Obtains an inert cancellation handle for the exact pending command or
     /// validation. This grants no execution authority and consumes no approval.
-    /// Pass it to the matching `decide_*_with_cancellation` method to connect it.
+    /// All handles share this attempt's original signal, including after native
+    /// endpoint handoff and when a direct decision omits an explicit handle.
     pub fn command_cancellation(&self, digest: &str) -> Result<LinuxCodingCommandCancellation> {
         let pending = self
             .command
@@ -276,10 +277,17 @@ impl LinuxCodingRepository {
             "retention":"canonical-authority","preview_retention":"process-only"});
         let digest = hash(&serde_json::to_vec(&preview).map_err(|_| err("code.repository.state"))?);
         preview["preview_sha256"] = json!(digest);
+        let attempt_id = &prepared.preview().command_attempt_id;
+        let cancellation = CancellationToken::root(
+            BoundaryKind::Shell,
+            TaskId::from_raw(attempt_id),
+            CorrelationId::from_raw(attempt_id),
+        );
         Ok(PendingCommand {
             prepared,
             validation: None,
             issued: None,
+            cancellation,
             preview,
             hash: digest,
             created_at: now,

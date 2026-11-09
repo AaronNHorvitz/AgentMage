@@ -51,9 +51,20 @@ All existing routes, startup observation policy, disclosure consent, exact
 approvals, cancellation and release checks stay in the same service path. This
 is an embedding API, not an executable controlled-write launch command.
 
-The original command adapter's endpoint cancellation paths are the retained run
-control and scoped probe. Cancellation handles obtained before handoff through
-`command_cancellation` are not connected to this endpoint path. A small result
+The original command attempt owns one cancellation token. Handles obtained
+through `command_cancellation` or `validation_cancellation` before handoff share
+it with the endpoint supervisor bridge. Repeated lookups and direct decisions
+without an explicit handle also observe that same token. The retained run
+control and scoped probe still validate their original scopes and signal the
+same attempt; the first accepted reason remains authoritative. Cancellation
+cannot approve execution or reopen a spent decision. A fresh preparation or
+validation retry owns a fresh token; old handles cannot cancel it.
+
+Cancellation observed before endpoint native preflight retires dispatch without
+launch or validation-attempt consumption. A grant already issued remains recorded
+until its ordinary expiry; cancellation is not revocation. During dispatch, the
+original supervisor and authority/command receipts determine the outcome. An
+acknowledgement alone does not establish that a child stopped. A small result
 budget can still cause post-dispatch projection refusal; preflight coverage of
 output, CPU and disk ceilings remains backlog. Inspect actual retained state;
 refusal does not establish that no process effect occurred.

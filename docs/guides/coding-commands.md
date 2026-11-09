@@ -117,6 +117,15 @@ fail-closed termination, never an uncancelled observation or proof of cleanup.
 Invalid signals and scope mismatches are not retried. The kernel still checks
 every signal against the consumed attempt, and native cleanup owns the outcome.
 
+Library consumers can obtain `command_cancellation` (or
+`validation_cancellation`) before handing the original repository owner to the
+endpoint coordinator. Every lookup shares the pending attempt's original
+signal. The direct default decision path and endpoint command supervisor both
+observe it, even when no explicit handle is passed to the direct decision.
+The first accepted cancellation reason persists. A fresh preparation, including
+a validation retry, has its own token; abandoning an attempt does not transfer
+its cancellation to the next one. These handles grant no execution authority.
+
 Previews and ownership are process-only; command output is response-only.
 Canonical content-free authority receipts survive restart. There is no durable
 coding-run resume/replay or automatic retry. After interruption or a lost reply,
