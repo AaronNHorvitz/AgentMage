@@ -1,0 +1,154 @@
+Commit: dc5cb4532d97431fef5f58fe7f8a12c266c1ab19
+Scope: local-coding-sealed-validation
+
+# Independent review: sealed worktree inputs for native validation (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only on the repository.
+Tier: core. Base: 699e99afe3b524f5bee1908bb566a8e911fc87a3. Parent rows T-303/T-306 stay OPEN.
+
+## Methods
+
+- Confirmed the pinned checkout: `git rev-parse HEAD` = dc5cb4532d97431fef5f58fe7f8a12c266c1ab19; clean status.
+- Read IP-POLICY.md, Decision 0175, the TASKS.md top note, the evidence file, the guide diff, README/run.py/check.py/light.py.
+- Read the full diff of all 11 paths, including the new `platforms/linux/src/command_runner_worktree.rs`. Compared the factored
+  `WorkspaceObservation::scan` line by line with the removed copy in `coding_repository_validation_workspace.rs`.
+- Traced the sealed path end to end: `decide_validation_with_cancellation` / endpoint `execute` → `with_sealed_worktree` →
+  `LinuxBoundedCommandExecutor::run` → `SealedWorktree::capture` → `OpenFile=` properties → bwrap mount arguments →
+  `sandbox::supervision::run_owned` admission.
+- Reproduced the exact sealed mount-argument shape with a real nested Bubblewrap 0.13.1 (scratch outside the repository,
+  `/lane/state/tmp/rv-bwrap-dc5c/t.py`). Each source was a sealed memfd reopened through `/proc/self/fd` the way systemd's
+  `OpenFile=` reopens it. Same flags as the executor: `--unshare-all --unshare-user --disable-userns --cap-drop ALL`,
+  `--tmpfs /work`, `--dir`, `--perms`/`--ro-bind-data`, `--chmod`, `--remount-ro /work`.
+- Ran the required gate, comparison, light checks and byte comparisons below, plus one extra ignored supervisor test.
+
+## Exact commands and results (from /lane/review-checkout)
+
+| Command | Expected | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-sealed-validation/review-inputs.sha256` | 0 | 0; 38 lines; manifest file SHA-256 `7664860da78cf6bd952a94726c95bd64276cf3072c1106f968d663692123c458` (matches request) |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-sealed-validation-dc5cb4532d97` | 1 | `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`; fmt 0 (337.20 s incl. slot wait), clippy 0 (36.86 s), tests 101 (212.74 s), total 588.44 s |
+| `python3 -B …/check.py /lane/state/tmp/review-sealed-validation-dc5cb4532d97` | 0 | 0; 26 targets, totals 1210 passed / 72 failed / 63 ignored / 0 measured / 0 filtered; 72 inherited identities, 0 new; all 8 named methods ok; "FULL GATE REMAINS FAIL" |
+| `python3 -B …/light.py` | 0 | 0 (diff-check, untracked lint, review lint, markdownlint 0 issues in 4 files) |
+| `cmp …/validation-final/source-freeze.json …/review-sealed-validation-dc5cb4532d97/source-freeze.json` | 0 | 0 |
+| `cmp docs/reviews/699e99afe3b5-local-coding-workspace-observation.txt /lane/reviews/699e99afe3b5-local-coding-workspace-observation.md` | 0 | 0 (retained byte-for-byte) |
+| `git diff --check 699e99afe3b524f5bee1908bb566a8e911fc87a3 --` | 0 | 0 |
+| `git status --short` | empty | empty |
+
+My raw log SHA-256 is `2a40683be0920019b98808eb5be3a3e7744b4c5be83ae86c7ef5481bb2b8e9d7`. It differs from the builder's
+`cac0a673…` only because timings differ; the summary counts and failure identities match exactly.
+
+Extra run: `bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib -- --ignored
+closed_owners_reject_cross_variant_names_and_projection_cardinalities` failed at `sandbox_supervision.rs:1295`
+(`LinuxSandboxError { kind: InvalidManifest }` from manifest verification of host launchers). That is environmental: the test
+never reached its cardinality assertions on this host. No user systemd session exists here
+(`systemctl --user is-system-running` → `offline`), so I could not run any real native launch. No GPU, model or download was used.
+
+Nested Bubblewrap reproduction results:
+
+- Sealed bytes arrived intact, including the empty file.
+- `--perms` was honored for `--ro-bind-data`: 0644, 0751 and 0600 came through.
+- `--chmod` set the directory modes 0755/0750, with the root at 0700.
+- Inside the sandbox, creating, appending, `mkdir`, `rm` and `mount -o remount,rw /work` were all refused.
+- The guest descriptor table held only 0–2 plus the enumerator, so every data descriptor was consumed.
+- No host path appeared in the mount table.
+
+That shape is therefore sound once it gets past admission (see H1).
+
+## Confinement and escape attempts
+
+- **Path traversal and odd names.** Names come only from held directory listings and pass `WorkspacePath`. The new
+  fixtures show that invalid UTF-8 and `:` names refuse the whole capture. An option-like name (`--options data`) goes to
+  bwrap as a single literal destination argument; I confirmed this in the nested run.
+- **Symlinks, hard links, FIFOs, sockets, setuid/setgid/sticky bits.** All of them refuse the whole capture without a
+  prefix (new fixture cases 0, 1, 3, 7 and 8, plus the root-mode check). Pointer targets are never followed.
+- **Mutable source.** In sealed mode no root descriptor is opened (`command_runner.rs:259`), and the mount arguments never
+  contain `--ro-bind-fd … /work` (asserted by the fixture; confirmed by reading `command_runner.rs:363-372`).
+- **Environment and network.** `env_clear`, `--clearenv`, `RestrictAddressFamilies`, `--unshare-all` and seccomp are unchanged.
+- **Prompt-injected or model authority.** `with_sealed_worktree` is `pub(crate)` and called only at
+  `coding_repository_validation.rs:162` and `coding_repository_endpoint_command.rs:670-689`. Selection is keyed to the
+  user-approved pending validation, so the model cannot pick the mode or the projection. Sealed mode is strictly more
+  restrictive than the live mount.
+- **Approval binding.** `workspace_input` is set before `preview_sha256` is computed (`coding_repository_validation.rs:229-245`),
+  so the exact consent digest binds the mode and bounds.
+- **Factoring.** With `sealed=None` and `cancellation=None`, `available()` reduces to the original `Instant::now() < deadline`.
+  The rest of the scan is identical, so the 699e99 binding, limits and full-tree checks are not weakened. Two of the
+  refusals are not separately tested at the exact boundary: 255 directories plus the root succeeding, and depth exactly 16
+  succeeding. The code is straightforward there, so this is not a finding.
+
+No confinement escape was found. The defect below fails closed.
+
+## Findings
+
+### H1 — High (correctness; claimed feature unreachable): the original supervisor refuses every sealed launch with two or more files
+
+- Where: `platforms/linux/src/command_runner.rs:389-397` passes
+  `projections = SealedWorktree::into_descriptors()`, one sealed memfd per regular file, up to 128, to
+  `run_owned` with `owner: LaunchOwner::Command(..)`. The unchanged supervisor admission at
+  `platforms/linux/src/sandbox_supervision.rs:60` is `Self::Command(_) => ("agentmage-command-", projections <= 1)`.
+  `run_owned` checks it first, before any spawn (`sandbox_supervision.rs:883`), and returns `InvalidManifest`.
+  `supervision_failure` maps that to `CommandExecutionFailure::ExecutionFailed` (`command_runner.rs:464-473`).
+  `sandbox_supervision.rs` is not in this diff.
+- Failure scenario: any created worktree with the `.git` pointer file plus at least one other regular file, which covers
+  every realistic project with tests. The user approves `test <preview-sha256>` through the direct route or the retained
+  endpoint route. Capture succeeds and the unit identity is reported. Then the supervisor refuses on cardinality (≥2 > 1),
+  so no test process ever launches. By Decision 0175 ("A failed admitted attempt stays spent"), each attempt is consumed, and
+  three approvals exhaust the validation budget without running a test. Native project validation, which previously
+  launched with a single live read-only root descriptor, is now unreachable for every tree except those with 0 or 1 regular
+  files.
+- Why it escaped: the four new methods stop at real memfds and inert mount arguments. The only cardinality test,
+  `closed_owners_reject_cross_variant_names_and_projection_cardinalities`, is ignored, and it actually encodes the rejection:
+  `1 => count <= 1` at `sandbox_supervision.rs:1325` asserts that `Command` refuses 2, 3 and 8. No sealed launch ran, real or
+  ignored.
+- Honest-claims impact: three documents make the same false statement, as does the request text ("Only indexed sealed
+  descriptors go to the original supervisor … Retain descriptors with the original cleanup owner"):
+  - `docs/evidence/t303-sealed-validation-2026-11-09.md`: "The original supervisor retains the sealed descriptors through
+    cleanup and passes them in a fixed indexed order".
+  - `docs/guides/coding-validation.md`: "The original supervisor retains these descriptors until cleanup".
+  - `docs/decisions/0175-sealed-worktree-validation-inputs.md`: "Pass only sealed source descriptors to the original
+    supervisor and native launcher".
+
+  For any tree with two or more files this is false.
+- Concrete fix:
+  1. Give the closed owner an explicit sealed-command cardinality. For example, add a `LaunchOwner::SealedCommand(manifest,
+     expected)` variant, or carry the sealed file count in `Launch`. Accept exactly `expected` descriptors with
+     `1..=MAX_SEALED_FILES` (and 0 for an empty tree if it is supported), and keep `Command` at `<= 1` for ordinary commands.
+  2. Update the cardinality test.
+  3. Add a non-ignored admission test showing that the descriptor count of a ≥2-file sealed capture is accepted and 129 is
+     refused.
+  4. Add a launch test of the sealed mode, ignored only on unsupported hosts like the existing launch tests. It should run a
+     ≥2-file worktree end to end and assert the bytes, the read-only `/work` and `assert_exact_guest_descriptor_table`.
+  5. Correct the three documents until that evidence exists.
+
+### L1 — Low: approval bounds are duplicated literals, not the enforced constants
+
+- `coding_repository_validation.rs:229-233` hard-codes 128/256/4096/16/16 MiB/64 MiB/2000 ms. The enforced values live in
+  `command_runner_worktree.rs:26-31` and `:54`, and no test asserts the displayed `workspace_input`. If the two drift, the
+  user approves bounds that are not the ones enforced.
+- Fix: export the constants (or a `SealedWorktree::bounds()` JSON) and build the preview from them. Assert the preview
+  fields in a command test.
+
+### L2 — Low: no test pins which paths select sealed mode
+
+- The selection at `coding_repository_validation.rs:162` and `coding_repository_endpoint_command.rs:670-689` is untested. A
+  regression back to the live mount, or to sealed mode for ordinary commands, would pass the gate.
+- Fix: expose a test-only accessor on the executor flag, or test through the generic seam, and assert sealed mode for
+  validation and live mode for ordinary commands. This can be done together with the H1 fix.
+
+Earlier low findings, including 699e99 L1 and L3, remain same-row backlog. The 699e99 L2 qualification in the guide is
+accurate.
+
+## Other checks
+
+- Privacy and branding: the diff contains no private host path, username, hostname, credential or sibling-project name. The
+  only product or model name is the reviewer attribution inside the retained review file. No trademark is used as branding.
+- Evaluation integrity: no held-out, hidden-test, task, scorer, pin, threshold, dependency, SBOM, status, scoreboard or
+  release change appears in the 11 paths. TASKS.md row lines are unchanged (check.py assertion), and no `#[ignore]` was added.
+- Delivery: no row or sub-row was added or closed.
+
+## Per-row result
+
+- T-303: stays OPEN. This increment is not accepted: H1 (high) must be fixed in-row, with sealed-launch admission evidence,
+  before the sealed-validation claim can stand.
+- T-306: stays OPEN, for the same reason. The endpoint validation path shares H1.
+
+Verdict: FINDINGS

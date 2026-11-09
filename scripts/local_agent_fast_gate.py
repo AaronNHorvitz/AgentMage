@@ -20,10 +20,11 @@ import tokenize
 
 
 ROOT = Path(__file__).resolve().parents[1]
-# Keep this exact schema and its consumer tests checked without accepting
+# Keep these exact schemas and their consumer tests checked without accepting
 # arbitrary JSON/JavaScript changes as documentation-only work.
 VALIDATION_SCHEMA_INPUTS = {
     "schemas/runtime/validation-receipt.schema.json",
+    "schemas/runtime/command-receipt.schema.json",
     "tests/test_planning_schemas.mjs",
 }
 RUNTIME_PRODUCER_FIXTURE_INPUTS = {
@@ -38,6 +39,7 @@ RUNTIME_PRODUCER_FIXTURE_INPUTS = {
 # and read-only fixture reproduction, even when no crate source changed.
 HOST_CATALOG_INPUTS = RUNTIME_PRODUCER_FIXTURE_INPUTS | {
     "schemas/runtime/validation-receipt.schema.json",
+    "schemas/runtime/command-receipt.schema.json",
 }
 CRATE_INPUT_SUFFIXES = {".rs", ".toml", ".json", ".sql", ".txt"}
 CRATE_EXTENSIONLESS_INPUTS = {

@@ -1,0 +1,155 @@
+Commit: a5594787b4ec4f25553332c63a91d14cad91e4ee
+Scope: local-coding-sealed-input-receipts
+
+# Independent review: sealed source inputs in original command receipts (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only on the repository.
+Tier: core. Base: dc5cb4532d97431fef5f58fe7f8a12c266c1ab19. Parent rows T-303/T-306 stay OPEN.
+
+## Methods
+
+- Confirmed the pinned checkout: `git rev-parse HEAD` = a5594787b4ec4f25553332c63a91d14cad91e4ee; status clean.
+- Read IP-POLICY.md, Decision 0176, the TASKS.md top note, the new evidence file, the guide diff, and the bundle's
+  README/run.py/check.py/light.py before running anything. run.py prepends only the retained original `node` + `LICENSE`
+  directory to PATH, sets two jobs and four test threads, and uses its own Cargo build-slot reservations. I did not wrap it.
+- Read the full diff of all 14 paths. I traced the record from `SealedWorktree::capture` (scan with
+  `file_projection` copy + digest check) through `input_record`, then `LinuxBoundedCommandExecutor::run`
+  (`command_runner.rs:389-397`: the record is taken from the same `SealedWorktree` before `into_descriptors` moves its
+  descriptors into `run_owned`), then kernel `validate_platform_result`/`seal_receipt`/`verify_command_receipt`, then
+  `finish_validation`, `ValidationWorkspaceBinding::new/inspect` and `inspect_validation`.
+- Checked the record against the mount arguments it describes. `root_mode`, the ordered `directories` map and the sorted
+  files (path, mode, verified preimage) are exactly the inputs to `mount_arguments`. The manifest is canonical JSON with
+  array-delimited path components, so names cannot be ambiguous. `FilePreimage` is (byte_len, sha256), and
+  `file_projection` (`sandbox.rs:1591-1629`) checks it against the bytes it wrote into the sealed memfd.
+- Re-read the parent review `/lane/reviews/dc5cb4532d97-local-coding-sealed-validation.md` (written after this commit). I
+  checked whether its H1 still holds at this commit.
+- Looked for strict readers of `CommandReceipt` outside Rust and validated an extended receipt against the published
+  schema with the repository's own Ajv (scratch outside the repository: `/lane/state/tmp/rv-a559-schema/t.mjs`).
+- Ran every command the request requires (below).
+
+## Exact commands and results (from /lane/review-checkout)
+
+| Command | Expected | Result |
+| --- | --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-sealed-input-receipts/review-inputs.sha256` | 0 | 0; 43 lines; manifest SHA-256 `8cec4d1dc32f2f53c4f938b204472f94ba4e5dfc8b4ba1a4cd6bb6b8c7aca366` (matches request) |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-sealed-input-receipts-a5594787b4ec` (fresh dir) | 1 | `GATE_EXIT 1 SOURCE_FREEZE_UNCHANGED True`; diff-check 0, untracked lint 0, markdownlint 0, fmt 0 (2.30 s), clippy 0 (48.84 s), tests 101 (370.45 s); total 423.18 s |
+| `python3 -B …/check.py /lane/state/tmp/review-sealed-input-receipts-a5594787b4ec` | 0 | 0; 46 targets; 2845 passed / 72 failed / 71 ignored / 0 / 0; 72 inherited identities, 0 new; all 7 named methods ok; "FULL GATE REMAINS FAIL" |
+| `python3 -B …/light.py` | 0 | 0 (diff-check, untracked lint, markdownlint: 0 issues in 4 files) |
+| `cmp …/validation-final/source-freeze.json …/review-sealed-input-receipts-a5594787b4ec/source-freeze.json` | 0 | 0 (10 Rust hashes) |
+| `git diff --check dc5cb4532d97431fef5f58fe7f8a12c266c1ab19 --` | 0 | 0 |
+| `git status --short` | empty | empty |
+
+- My raw log SHA-256 is `0d23d3207780b619760177fa8b30a0bc86d3b4b0fb5603032c8dcf974fefbf0a`. It differs from the builder's
+  `ed238f82…` only in timings: the sorted `test … ok|FAILED|ignored` lines of both logs hash identically
+  (`bfac3e95…`), and `plan.json` is byte-identical.
+- My run's private temp namespace kept exactly 11 inherited-failure fixture directories, which matches the claim.
+- No GPU, model, download, shim or limit change was used.
+- I could not run a real native launch: this host has no user systemd session (as the parent review recorded). Every new
+  receipt test uses a synthetic executor, as the evidence honestly labels.
+
+## Confinement and integrity checks
+
+- **Who can create a record.** Only the trusted executor puts a record into `CommandPlatformResult`. The model and request
+  JSON cannot supply one. `CommandReceipt` gains one `#[serde(default, skip_serializing_if)]` field, and
+  `deny_unknown_fields` still applies.
+- **Kernel shape checks.**
+  - `validate_platform_result` rejects a bad version, bad digests, files > 128, directories outside 1..=256,
+    file_bytes > 64 MiB, a byte count with no files, and any record on `LaunchFailed`.
+  - `seal_receipt` rejects a record on a non-owned-worktree command. Post-launch it becomes canonical `Uncertain` with no
+    receipt or output (tested for both cases).
+  - `verify_command_receipt` repeats the same checks, and the receipt digest covers the field (tamper cases 0–7 tested).
+  - An absent field keeps the legacy wire bytes and verifies.
+- **No authority change.** The permit, manifest, command, environment, seccomp, mount arguments, supervisor and cleanup
+  are unchanged. The record is computed before the descriptors move and is not re-derived from the host afterwards.
+- **No content disclosure.** `command_history` exposes only content-free receipts: digests, counts and codes. The root
+  appears only as a digest. No path or bytes are added.
+- **Match flag cannot be forced.** `sealed_input_matches_observation` uses `is_some_and`, so an absent record gives
+  `false`. A mismatched observation gives `false` (tested). A source change after capture leaves no binding (tested).
+  Later drift flips `matches_current_observation` without changing `command_history` (tested).
+  `current_workspace_verified` and `test_suite_verified` stay literally `false`, and both completion verifiers are untouched.
+- **Evaluation integrity and delivery.**
+  - No task, hidden/held-out test, scorer, pin, threshold, dependency, SBOM, status, scoreboard or release path is in the
+    diff.
+  - TASKS.md row lines are unchanged, no `#[ignore]` was added, and no row or sub-row was added or closed.
+- **Privacy and branding.** The added lines contain no private path, username, hostname, credential or sibling-project
+  name. No trademark is used as branding.
+
+## Findings
+
+### H1 — High (inherited from dc5cb453 H1, still open at this commit; the new claims depend on it): the supervisor refuses every sealed launch with two or more files, so the new native record is never produced for a real worktree
+
+- **Where.**
+  - `platforms/linux/src/sandbox_supervision.rs:60`: `Self::Command(_) => ("agentmage-command-", projections <= 1)`.
+  - `sandbox_supervision.rs:883`: the cardinality check runs before any spawn and returns `InvalidManifest`.
+  - `platforms/linux/src/command_runner.rs:392-397`: one sealed memfd per regular file is passed as `projections`.
+  - `command_runner.rs:410` (`map_err(supervision_failure)`) turns the refusal into `CommandExecutionFailure::ExecutionFailed`.
+  - `git diff --stat dc5cb453 HEAD -- platforms/linux/src/sandbox_supervision.rs` is empty, so this commit did not fix it.
+- **Failure scenario.**
+  - A created worktree always holds the `.git` pointer file (it is made by `git worktree add`). With any one source file,
+    capture yields at least 2 sealed descriptors.
+  - The supervisor refuses before launch, so no command runs and no `CommandPlatformResult` is returned. The new
+    `sealed_workspace_input` never reaches a receipt, `command_history` or the workspace binding.
+  - The new evidence says "The original native executor now records the complete sealed source projection it hands to the
+    original supervisor" and "The record enters the original platform result after native supervision returns". The guide
+    says it "describes the descriptors handed to the original supervisor". All of these are vacuous for every tree with two
+    or more files.
+  - The four new methods pass only because `SealedEnvelope` (`coding_repository_command_tests.rs:2013-2038`) calls
+    `capture_input_for_test` and bypasses `LinuxBoundedCommandExecutor::run` and `run_owned`. The wiring at
+    `command_runner.rs:389-391` is not exercised by any test.
+- **Fix.** Apply the parent review's H1 fix in this row:
+  1. Add an explicit sealed-command owner or cardinality accepting exactly the sealed file count (1..=128, plus 0 if empty
+     trees stay supported), keeping `Command` at `<= 1`.
+  2. Update the ignored cardinality test.
+  3. Add a non-ignored admission test (≥2 accepted, 129 refused).
+  4. Add a host-gated end-to-end sealed launch test on a worktree with two or more files. It should also assert that the
+     returned `CommandPlatformResult.sealed_workspace_input` equals the capture's `input_record()`.
+  5. Until then, qualify the three new or edited documents.
+
+### M1 — Medium (published contract broken): the repository's own closed command-receipt schema rejects every extended receipt, yet it is still the declared output schema of the command tools that now emit them
+
+- **Where.**
+  - `schemas/runtime/command-receipt.schema.json:6` has `"additionalProperties": false`, with no `sealed_workspace_input`
+    property.
+  - The schema's hash is the declared `output_schema` (`command-receipt-v1`) of the validation command tool at
+    `platforms/linux/src/coding_repository_command.rs:548-553`. That tool's `ExactEffect` is approved for both the direct
+    and endpoint validation routes, which use `with_sealed_worktree`.
+  - It is also the host's `BOUNDED_COMMAND_OUTPUT_SCHEMA_JSON` (`shells/host/src/coding_tools.rs:50-51`).
+  - Neither the schema nor its example/tests are in the diff.
+- **Reproduction.** I compiled the schema with the repository's Ajv 2020 (`node_modules/ajv`):
+  - `schemas/runtime/examples/command-receipt.valid.json` validates as `true`.
+  - The same example plus a well-formed `sealed_workspace_input` (version 1, three 64-hex digests, files 2, directories 3,
+    file_bytes 25) validates as `false` with
+    `{"keyword":"additionalProperties","params":{"additionalProperty":"sealed_workspace_input"}}`.
+  - So every sealed-validation receipt in `command_receipt`, `command_history` and the validation response violates the
+    schema its approved tool definition binds.
+- **Why it matters.** The decision and guide say "older strict readers cannot consume extended receipts". The strict reader
+  here is not an older external client. It is the in-repository published contract, pinned by digest into the approval's
+  tool definition. Any consumer that validates against it rejects the new receipts.
+- **Fix.**
+  1. Add an optional closed `sealed_workspace_input` property to `command-receipt.schema.json`: `schema_version` const 1,
+     three `#/$defs/sha256` fields, `files` 0..128, `directories` 1..256, `file_bytes` 0..67108864,
+     `additionalProperties: false`. Keep it out of `required`.
+  2. Add a valid extended example and an invalid one (unknown nested key, directories 0) to
+     `tests/test_planning_schemas.mjs`.
+  3. Let the pinned schema hashes follow `include_bytes!`. Check for any literal copy of the old hash.
+  4. Reword the "older strict readers" sentence to name this schema as updated.
+
+### L1 — Low (test gap)
+
+- The legacy/absent-record case of `sealed_input_matches_observation == false` is never asserted, although the test name
+  `sealed_validation_input_cannot_replace_a_missing_or_mismatched_source_observation` claims it.
+  `validation_workspace_binding_keeps_failed_history_and_binds_only_the_final_pass` could assert it in one line.
+- `seal_receipt`'s non-owned-worktree rejection (`kernel/engine/src/command_runner.rs:1020-1024`) is tested only through
+  `verify_command_receipt`, not through the sealing path.
+- Fix: add the two assertions. Backlog, same row.
+
+Earlier low findings (dc5cb453 L1/L2 and 699e99 L1/L3) remain same-row backlog.
+
+## Per-row result
+
+- T-303: stays OPEN. The additive receipt binding is otherwise correct and fails closed. The gate reproduces exactly: FAIL
+  with only the 72 inherited failures, and all 7 named methods pass. But inherited H1 is still open at this exact commit
+  and makes the new native claim unreachable, and M1 blocks the row.
+- T-306: stays OPEN, for the same reasons. The endpoint validation route shares H1 and M1.
+
+Verdict: FINDINGS

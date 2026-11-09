@@ -2,6 +2,31 @@
 
 ## Active queue: local agent mission
 
+The [sealed-input receipt review](docs/reviews/a5594787b4ec-local-coding-sealed-input-receipts.txt)
+has **Verdict: FINDINGS** for exact commit
+`a5594787b4ec4f25553332c63a91d14cad91e4ee`. Its inherited H1 shares the
+admission repair below. M1 is repaired in the same batch by admitting the optional
+closed input record in the published command-receipt schema and testing its
+legacy and extended contracts. Host/native-tool schema hashes follow the updated
+bytes; current producer fixtures are refreshed. Low L1 missing-input and
+non-worktree sealing coverage remains same-row backlog. Neither parent closes.
+
+The [sealed-validation independent review](docs/reviews/dc5cb4532d97-local-coding-sealed-validation.txt)
+has **Verdict: FINDINGS** for exact commit
+`dc5cb4532d97431fef5f58fe7f8a12c266c1ab19`. H1 found that original supervisor
+admission rejected sealed worktrees with two or more files before launch.
+The [same-row admission repair](docs/evidence/t303-sealed-admission-repair-2026-11-09.md)
+adds an exact bounded sealed-command count while preserving ordinary command
+admission. Native launch remains unobserved. Low L1 displayed-bound duplication
+and L2 path-selection coverage remain same-row backlog. T-303/T-306 remain
+open; no row or sub-row is added or closed. Independent core re-review is required.
+The final expanded gate remains FAIL: 1,214 Rust passes, exactly 72 inherited
+failures and none new, 64 ignored (63 inherited, one new supported-host test).
+All 79 schema tests, 36 gate/producer unit tests, producer reproduction,
+formatting and Clippy pass. Both explicit native attempts refuse at original
+trusted-manifest admission; successful native execution remains unobserved.
+Fourteen source/contract/fixture hashes stay fixed through the final run.
+
 The [sealed-input receipt connection](docs/evidence/t303-sealed-input-receipts-2026-11-09.md)
 binds the native source projection to the original canonical command receipt
 and retained validation history. Failed inputs remain unchanged. Final bindings

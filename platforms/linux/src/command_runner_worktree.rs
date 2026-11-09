@@ -29,7 +29,7 @@ const MAX_DIRECTORIES: usize = 256;
 const MAX_DEPTH: usize = 16;
 const MAX_FILE_BYTES: u64 = 16 * 1024 * 1024;
 const MAX_TOTAL_BYTES: u64 = 64 * 1024 * 1024;
-const MAX_SEALED_FILES: usize = 128;
+pub(crate) const MAX_SEALED_FILES: usize = 128;
 
 struct SealedFile {
     path: Vec<String>,
@@ -385,6 +385,49 @@ mod tests {
             assert_eq!(pread(descriptor, &mut bytes, 0).unwrap(), size);
         }
         bytes
+    }
+
+    #[test]
+    fn sealed_worktree_admission_requires_exact_bounded_projection_count() {
+        use crate::sandbox::supervision::CommandProjections;
+        const UNIT: &str = "agentmage-command-0123456789abcdef01234567.service";
+        for files in [0, 2, MAX_SEALED_FILES] {
+            let tree = Tree::new();
+            for index in 0..files {
+                fs::write(tree.0.join(format!("file-{index}")), b"source").unwrap();
+            }
+            let capture = seal(&tree).unwrap();
+            let input = capture.input_record();
+            let descriptors = capture.into_descriptors();
+            assert_eq!(descriptors.len(), files);
+            let admission = CommandProjections::Sealed {
+                files: input.files as usize,
+            };
+            for actual in [
+                0,
+                1,
+                2,
+                3,
+                MAX_SEALED_FILES,
+                MAX_SEALED_FILES + 1,
+                usize::MAX,
+            ] {
+                assert_eq!(admission.accepts(UNIT, actual), actual == files);
+                assert!(
+                    !admission.accepts("agentmage-worker-0123456789abcdef01234567.service", actual)
+                );
+                assert!(!admission.accepts("agentmage-command-*.service", actual));
+            }
+            assert!(admission.accepts(UNIT, descriptors.len()));
+        }
+        for files in [MAX_SEALED_FILES + 1, usize::MAX] {
+            let admission = CommandProjections::Sealed { files };
+            assert!(!admission.accepts(UNIT, files));
+            assert!(!admission.accepts(UNIT, 2));
+        }
+        for actual in [0, 1, 2, MAX_SEALED_FILES, MAX_SEALED_FILES + 1] {
+            assert_eq!(CommandProjections::Live.accepts(UNIT, actual), actual <= 1);
+        }
     }
 
     #[test]

@@ -82,11 +82,36 @@
         { "type": "null" }
       ]
     },
+    "sealed_workspace_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version", "worktree_root_sha256", "observation_sha256",
+        "projection_sha256", "files", "directories", "file_bytes"
+      ],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "worktree_root_sha256": { "$ref": "#/$defs/sha256" },
+        "observation_sha256": { "$ref": "#/$defs/sha256" },
+        "projection_sha256": { "$ref": "#/$defs/sha256" },
+        "files": { "type": "integer", "minimum": 0, "maximum": 128 },
+        "directories": { "type": "integer", "minimum": 1, "maximum": 256 },
+        "file_bytes": { "type": "integer", "minimum": 0, "maximum": 67108864 }
+      },
+      "allOf": [{
+        "if": { "properties": { "files": { "const": 0 } }, "required": ["files"] },
+        "then": { "properties": { "file_bytes": { "const": 0 } } }
+      }]
+    },
     "descendants_terminated": { "type": "boolean" },
     "platform_code": { "$ref": "#/$defs/identifier" },
     "receipt_sha256": { "$ref": "#/$defs/sha256" }
   },
   "allOf": [
+    {
+      "if": { "properties": { "termination": { "const": "launch_failed" } }, "required": ["termination"] },
+      "then": { "properties": { "sealed_workspace_input": false } }
+    },
     {
       "if": { "properties": { "termination": { "const": "exited" } }, "required": ["termination"] },
       "then": { "properties": { "exit_code": { "type": "integer" } } },

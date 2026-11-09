@@ -5,6 +5,13 @@ Date: 2026-11-09. Base:
 Scope: non-closing core increment under
 [Decision 0176](../decisions/0176-sealed-validation-input-receipts.md).
 
+The [sealed-validation review](../reviews/dc5cb4532d97-local-coding-sealed-validation.txt)
+found a pre-existing supervisor admission defect: captures with two or more
+files were rejected before launch. The receipt behavior below was verified by
+components, not a successful native sealed launch. The
+[same-row admission repair](t303-sealed-admission-repair-2026-11-09.md) corrects
+that count check; native workflow measurement remains open.
+
 The original native executor now records the complete sealed source projection
 it hands to the original supervisor. The canonical command receipt includes a
 typed optional input record: format version, held-root digest, complete capture
@@ -24,7 +31,10 @@ introduced. Ordinary commands and kernel cancellation before executor entry
 have no sealed record. A record identifies selected source inputs, not proof
 that the child entered its command body.
 Absent records preserve legacy canonical bytes; older strict receipt readers
-need an update to read the additive extension.
+need an update to read the additive extension. The independent review also
+found that the in-repository published schema itself was stale (M1). The
+[same-row repair](t303-sealed-admission-repair-2026-11-09.md) updates that schema,
+its contract tests and current embedded tool/producer digests.
 
 The original owner retains failed and successful command receipts in its bounded
 history. Inspection exposes `command_history` alongside the original validation

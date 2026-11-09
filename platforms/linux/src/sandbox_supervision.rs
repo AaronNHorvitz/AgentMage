@@ -24,7 +24,10 @@ mod resource_usage;
 // Closed owner set; callers cannot inject a control path or another process owner.
 pub(crate) enum LaunchOwner {
     Read(Arc<LinuxSandboxManifest>),
-    Command(Arc<crate::command_runner::LinuxCommandManifest>),
+    Command(
+        Arc<crate::command_runner::LinuxCommandManifest>,
+        CommandProjections,
+    ),
     Git(Arc<crate::repository_safety::LinuxRepositoryInspectionManifest>),
     LinkedGit(
         Arc<crate::repository_safety::LinuxRepositoryInspectionManifest>,
@@ -45,7 +48,7 @@ impl LaunchOwner {
                     .as_deref()
                     .ok_or_else(failure)
             }
-            Self::Command(manifest) => manifest.control_path().map_err(|_| failure()),
+            Self::Command(manifest, _) => manifest.control_path().map_err(|_| failure()),
             Self::Git(manifest) | Self::LinkedGit(manifest, _) => {
                 manifest.control_path().map_err(|_| failure())
             }
@@ -57,7 +60,7 @@ impl LaunchOwner {
     fn accepts(&self, unit: &str, projections: usize) -> bool {
         let (prefix, cardinality) = match self {
             Self::Read(_) => ("agentmage-worker-", (1..=8).contains(&projections)),
-            Self::Command(_) => ("agentmage-command-", projections <= 1),
+            Self::Command(_, input) => return input.accepts(unit, projections),
             Self::Git(_) => ("agentmage-git-inspection-", projections == 1),
             Self::LinkedGit(_, linked) => (
                 "agentmage-git-inspection-",
@@ -67,6 +70,27 @@ impl LaunchOwner {
             Self::Research(_) => ("agentmage-research-", projections == 3),
         };
         cardinality && unit_name_with_prefix(unit, prefix)
+    }
+}
+
+// The source mode is selected by the original native executor, never a model.
+// Ordinary commands retain their live-root limit; a sealed launch must match
+// the file count of its complete capture, including the supported empty tree.
+#[derive(Clone, Copy)]
+pub(crate) enum CommandProjections {
+    Live,
+    Sealed { files: usize },
+}
+
+impl CommandProjections {
+    pub(crate) fn accepts(self, unit: &str, projections: usize) -> bool {
+        let count_matches = match self {
+            Self::Live => projections <= 1,
+            Self::Sealed { files } => {
+                files <= crate::command_runner::worktree::MAX_SEALED_FILES && projections == files
+            }
+        };
+        count_matches && unit_name_with_prefix(unit, "agentmage-command-")
     }
 }
 
@@ -1294,7 +1318,7 @@ mod tests {
             )
             .unwrap(),
         ));
-        let command = LaunchOwner::Command(Arc::new(
+        let command_manifest = Arc::new(
             crate::command_runner::LinuxCommandManifest::verify(
                 "/usr/bin/systemd-run",
                 "/usr/bin/systemctl",
@@ -1302,7 +1326,24 @@ mod tests {
                 &CommandRegistry::build(vec![command_spec]).unwrap(),
             )
             .unwrap(),
-        ));
+        );
+        let command = LaunchOwner::Command(command_manifest.clone(), CommandProjections::Live);
+        for expected in [0, 1, 2, 8, 128, 129] {
+            let sealed = LaunchOwner::Command(
+                command_manifest.clone(),
+                CommandProjections::Sealed { files: expected },
+            );
+            for count in [0, 1, 2, 3, 8, 128, 129, usize::MAX] {
+                assert_eq!(
+                    sealed.accepts("agentmage-command-0123456789abcdef01234567.service", count),
+                    expected <= crate::command_runner::worktree::MAX_SEALED_FILES
+                        && count == expected,
+                );
+                assert!(!sealed.accepts(UNIT, count));
+                assert!(!sealed.accepts("agentmage-command-*.service", count));
+            }
+            assert!(sealed.control_path().unwrap().is_absolute());
+        }
         let git = LaunchOwner::Git(Arc::new(
             crate::repository_safety::LinuxRepositoryInspectionManifest::verify(
                 "/usr/bin/systemd-run",

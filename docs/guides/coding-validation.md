@@ -253,8 +253,10 @@ mount behavior.
 
 Every regular file is copied through its held descriptor into a sealed memory
 file. A second complete observation must match the first; nothing is silently
-excluded. The original supervisor retains these descriptors until cleanup.
-The sandbox constructs a private directory tree, mounts copied file contents
+excluded. The closed command owner now admits exactly the sealed capture count,
+up to 128 files (including zero for an empty tree). Ordinary commands keep their
+existing limit of at most one source descriptor. The supervisor is responsible
+for retaining admitted descriptors until cleanup. Its sandbox arguments construct a private directory tree, mounts copied file contents
 read-only, restores ordinary permission bits and remounts all directories
 read-only. The live worktree root is never passed to the validation child.
 Edits to the host files after capture cannot change the sealed bytes.
@@ -287,9 +289,17 @@ receipts alongside `history`, in the same bounded order, retaining failed inputs
 unchanged. The immediate validation result also exposes the sealed record.
 Missing legacy records remain absent and cannot establish a sealed-input match.
 The optional receipt extension preserves absent-field canonical bytes; older
-strict readers require an update to read extended receipts. Digests are integrity
+external readers retaining the old closed schema require an update. The
+published command-receipt schema and current host/native-tool digests include
+this optional closed record and enforce its version, fields and bounds. Digests are integrity
 bindings, not authentication for caller-supplied receipts or task grades.
 
 The existing workspace observation remains a sampled comparison, both completion verifiers remain unchanged, and
 `current_workspace_verified` and `test_suite_verified` remain false. Native/model
 workflow evidence and reviewed acceptance integration are still open.
+
+The [sealed-validation review](../reviews/dc5cb4532d97-local-coding-sealed-validation.txt)
+found that earlier supervisor admission rejected every capture of two or more
+files before launch. The [same-row admission repair](../evidence/t303-sealed-admission-repair-2026-11-09.md)
+corrects that count check. Native sealed launch, read-only behavior and descriptor
+cleanup still require a supported host run; component tests are not that evidence.

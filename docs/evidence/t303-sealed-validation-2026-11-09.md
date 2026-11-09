@@ -4,6 +4,17 @@ T-303/T-306 remain open. Independent core review is required. No row or sub-row
 is added or closed. This increment implements
 [Decision 0175](../decisions/0175-sealed-worktree-validation-inputs.md).
 
+## Independent review correction
+
+The [independent core review](../reviews/dc5cb4532d97-local-coding-sealed-validation.txt)
+has **Verdict: FINDINGS** for exact commit
+`dc5cb4532d97431fef5f58fe7f8a12c266c1ab19`. H1 found that the unchanged
+supervisor rejected every sealed capture with two or more files before launch.
+Consequently the retention and sandbox construction below described intended
+behavior, not observed native execution. Those claims are superseded by the
+[admission repair evidence](t303-sealed-admission-repair-2026-11-09.md).
+The component measurements below remain historical; neither parent closes.
+
 ## Behavior
 
 Direct native validation and retained endpoint native validation select an
@@ -22,8 +33,8 @@ is excluded, and pointer targets are never followed. Every unsafe, incomplete,
 changed or over-budget capture refuses before process launch; no mutable
 fallback exists.
 
-The original supervisor retains the sealed descriptors through cleanup and
-passes them in a fixed indexed order. The native sandbox constructs a private
+The intended native path retains sealed descriptors through cleanup and
+passes them in a fixed indexed order. Its sandbox arguments construct a private
 tmpfs directory tree, mounts each copied file read-only, restores ordinary
 permission bits and remounts the whole directory tree read-only. No live source
 root descriptor is passed to this validation child. Original command bytes,

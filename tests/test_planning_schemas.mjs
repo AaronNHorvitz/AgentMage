@@ -965,6 +965,54 @@ test("command runtime schemas reject authority and outcome ambiguity", () => {
   );
 });
 
+test("command receipts accept optional sealed inputs and reject malformed projections", () => {
+  const legacy = JSON.parse(fs.readFileSync(
+    path.join(ROOT, "schemas/runtime/examples/command-receipt.valid.json"), "utf8",
+  ));
+  assert.equal(validateRuntimeRecord("command-receipt", legacy, runtimeValidators).valid, true);
+  const extended = {
+    ...legacy,
+    sealed_workspace_input: {
+      schema_version: 1,
+      worktree_root_sha256: "a".repeat(64),
+      observation_sha256: "b".repeat(64),
+      projection_sha256: "c".repeat(64),
+      files: 2, directories: 3, file_bytes: 25,
+    },
+  };
+  assert.equal(validateRuntimeRecord("command-receipt", extended, runtimeValidators).valid, true);
+  for (const boundary of [
+    { files: 0, directories: 1, file_bytes: 0 },
+    { files: 128, directories: 256, file_bytes: 67108864 },
+  ]) {
+    const candidate = structuredClone(extended);
+    Object.assign(candidate.sealed_workspace_input, boundary);
+    assert.equal(validateRuntimeRecord("command-receipt", candidate, runtimeValidators).valid, true);
+  }
+  for (const invalid of [
+    { unknown: true }, { directories: 0 }, { directories: 257 },
+    { files: -1 }, { files: 129 }, { files: 1.5 },
+    { file_bytes: -1 }, { file_bytes: 67108865 }, { files: 0, file_bytes: 1 },
+    { schema_version: 2 }, { projection_sha256: "invalid" },
+    { observation_sha256: "A".repeat(64) }, { worktree_root_sha256: "" },
+  ]) {
+    const candidate = structuredClone(extended);
+    Object.assign(candidate.sealed_workspace_input, invalid);
+    assert.equal(validateRuntimeRecord("command-receipt", candidate, runtimeValidators).valid, false);
+  }
+  for (const key of Object.keys(extended.sealed_workspace_input)) {
+    const candidate = structuredClone(extended);
+    delete candidate.sealed_workspace_input[key];
+    assert.equal(validateRuntimeRecord("command-receipt", candidate, runtimeValidators).valid, false);
+  }
+  const noLaunch = { ...legacy, termination: "launch_failed", outcome: "failed", exit_code: null };
+  assert.equal(validateRuntimeRecord("command-receipt", noLaunch, runtimeValidators).valid, true);
+  assert.equal(validateRuntimeRecord("command-receipt",
+    { ...noLaunch, sealed_workspace_input: extended.sealed_workspace_input }, runtimeValidators).valid, false);
+  assert.equal(validateRuntimeRecord("command-receipt",
+    { ...legacy, sealed_workspace_input: null }, runtimeValidators).valid, false);
+});
+
 test("write-aware checkpoint schema rejects ambiguous completion", () => {
   const source = JSON.parse(
     fs.readFileSync(

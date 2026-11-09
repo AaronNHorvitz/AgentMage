@@ -38,3 +38,12 @@ test oracle or task grade. This increment does not bind a projection digest into
 the command receipt or change either completion verifier. Current-source
 acceptance, native/model execution evidence, durable recovery, approved Git and
 parent measurements remain open. No row, model or release is qualified.
+
+Implementation correction: the independent review of
+`dc5cb4532d97431fef5f58fe7f8a12c266c1ab19` found that the original supervisor
+rejected captures with two or more regular files. The native launch and
+retention above are requirements, not evidence that such launches succeeded.
+The [same-row repair](../evidence/t303-sealed-admission-repair-2026-11-09.md)
+adds an explicit sealed-command projection count to the closed command owner;
+it must equal the complete capture and stay within the existing file bound.
+Ordinary command admission is unchanged. Native launch evidence remains open.

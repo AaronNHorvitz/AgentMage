@@ -389,6 +389,12 @@ impl LinuxBoundedCommandExecutor {
         let sealed_workspace_input = sealed_worktree
             .as_ref()
             .map(worktree::SealedWorktree::input_record);
+        let projection_policy = sealed_workspace_input.as_ref().map_or(
+            crate::sandbox::supervision::CommandProjections::Live,
+            |input| crate::sandbox::supervision::CommandProjections::Sealed {
+                files: input.files as usize,
+            },
+        );
         let projections = sealed_worktree.map_or_else(
             || held_worktree.into_iter().collect(),
             worktree::SealedWorktree::into_descriptors,
@@ -396,7 +402,10 @@ impl LinuxBoundedCommandExecutor {
         let result = crate::sandbox::supervision::run_owned(
             process,
             crate::sandbox::supervision::Launch {
-                owner: crate::sandbox::supervision::LaunchOwner::Command(self.manifest.clone()),
+                owner: crate::sandbox::supervision::LaunchOwner::Command(
+                    self.manifest.clone(),
+                    projection_policy,
+                ),
                 projections,
                 unit,
                 deadline,
@@ -2056,6 +2065,62 @@ mod tests {
         assert_eq!(result.exit_code, Some(0), "{result:?}");
         let listing = String::from_utf8(result.stdout.clone()).expect("UTF-8 guest listing");
         assert_exact_guest_descriptor_table(&listing);
+    }
+
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_sealed_worktree_reads_multiple_files_refuses_writes_and_consumes_descriptors() {
+        let (temporary, held) = held_worktree();
+        let root = temporary.0.join("owned-worktree");
+        fs::write(root.join(".git"), b"gitdir: /unavailable\n").unwrap();
+        for (index, executable, arguments) in [
+            (0, "/usr/bin/cat", vec!["marker.txt", ".git"]),
+            (1, "/usr/bin/touch", vec!["forbidden.txt"]),
+            (2, "/usr/bin/ls", vec!["-l", "/proc/self/fd"]),
+        ] {
+            let executable = fs::canonicalize(executable).unwrap();
+            let (command, executor) = owned_worktree_fixture(
+                &format!("fixture.sealed-worktree-{index}"),
+                executable.to_str().unwrap(),
+                arguments.into_iter().map(str::to_owned).collect(),
+                CommandRisk::Moderate,
+            );
+            let expected_input = super::worktree::capture_input_for_test(
+                &held,
+                &worktree_token(&format!("sealed-capture-{index}")),
+            )
+            .expect("complete expected capture");
+            let result = executor
+                .with_sealed_worktree()
+                .run(&command, &held, &worktree_token(&format!("sealed-{index}")))
+                .expect("original sealed command completes through original supervisor");
+            assert_eq!(result.termination, CommandTermination::Exited, "{result:?}");
+            assert!(result.descendants_terminated, "{result:?}");
+            assert_eq!(expected_input.files, 2);
+            assert_eq!(
+                result.sealed_workspace_input.as_ref(),
+                Some(&expected_input)
+            );
+            if index == 1 {
+                assert_ne!(result.exit_code, Some(0), "{result:?}");
+                assert!(String::from_utf8_lossy(&result.stderr).contains("Read-only file system"));
+                assert!(!root.join("forbidden.txt").exists());
+            } else {
+                assert_eq!(result.exit_code, Some(0), "{result:?}");
+                if index == 0 {
+                    assert_eq!(result.stdout, b"agentmagegitdir: /unavailable\n");
+                } else {
+                    assert_exact_guest_descriptor_table(
+                        std::str::from_utf8(&result.stdout).unwrap(),
+                    );
+                }
+            }
+        }
+        assert_eq!(fs::read(root.join("marker.txt")).unwrap(), b"agentmage");
+        assert_eq!(
+            fs::read(root.join(".git")).unwrap(),
+            b"gitdir: /unavailable\n"
+        );
     }
 
     #[test]
