@@ -844,3 +844,168 @@ fn endpoint_terminal_terminal_envelope_is_preserved_without_an_independent_succe
     assert_ne!(output["status"], 0);
     assert_eq!(peer.finish().len(), 2);
 }
+
+#[test]
+fn guided_transfer_uncertain_advance_stops_before_any_save_release_or_diff() {
+    use std::os::unix::fs::PermissionsExt;
+    for (reply, mode, seconds) in [
+        (json!({"test_peer_close":true}), "approve", "10"),
+        (
+            json!({"test_peer_status":409,"body":{"error":"code.endpoint.refused"}}),
+            "approve",
+            "10",
+        ),
+        (json!({"test_peer_stall":"header"}), "approve", "1"),
+        (
+            json!({"test_peer_stall":"body"}),
+            "workflow-socket:SIGINT",
+            "10",
+        ),
+    ] {
+        let f = Fixture::new();
+        for directory in ["original", "worktree", "records"] {
+            fs::create_dir(f.root.join(directory)).unwrap();
+            fs::set_permissions(f.root.join(directory), fs::Permissions::from_mode(0o700)).unwrap();
+        }
+        let mut r = request();
+        r.mode = RuntimeSessionMode::ControlledWrite;
+        let r = seal_runtime_endpoint_run_request(r).unwrap();
+        let peer = f.peer(vec![selection(&r), waiting(&r), reply]);
+        let output = f.tty(
+            peer.address,
+            &[
+                "endpoint-run-apply-saved",
+                f.root.join("records").to_str().unwrap(),
+                seconds,
+                "run",
+                &r.request_sha256,
+                f.root.join("original").to_str().unwrap(),
+                f.root.join("worktree").to_str().unwrap(),
+                "Review changes",
+                "one.py",
+            ],
+            mode,
+        );
+        assert_ne!(output["status"], 0, "{output}");
+        assert_eq!(output["answered"], 3, "{output}");
+        let calls = peer.finish();
+        assert_eq!(calls.len(), 3);
+        assert_eq!(calls[0]["route"], "GET /v1/code/endpoint/request HTTP/1.1");
+        assert_eq!(calls[1]["route"], "POST /v1/code/endpoint/advance HTTP/1.1");
+        assert_eq!(calls[2]["route"], calls[1]["route"]);
+        assert!(calls[1]["body"]["response"].is_null());
+        assert_eq!(calls[2]["body"]["response"]["disposition"], "allow");
+        assert_eq!(
+            calls[2]["body"]["response"]["challenge_sha256"],
+            approval(&r).challenge_sha256
+        );
+        assert_eq!(fs::read_dir(f.root.join("records")).unwrap().count(), 0);
+        if mode.starts_with("workflow-socket:") || seconds == "1" {
+            assert_eq!(calls[2]["test_peer_disconnected"], true);
+        }
+    }
+}
+
+#[test]
+fn guided_transfer_refuses_nonterminal_budget_and_noncontrolled_selection_before_advancing() {
+    use std::os::unix::fs::PermissionsExt;
+    let f = Fixture::new();
+    for directory in ["original", "worktree", "records"] {
+        fs::create_dir(f.root.join(directory)).unwrap();
+        fs::set_permissions(f.root.join(directory), fs::Permissions::from_mode(0o700)).unwrap();
+    }
+    let arguments = |seconds: &str, hash: &str| {
+        [
+            "endpoint-run-apply-saved".to_owned(),
+            f.root.join("records").to_str().unwrap().into(),
+            seconds.to_owned(),
+            "run".into(),
+            hash.to_owned(),
+            f.root.join("original").to_str().unwrap().into(),
+            f.root.join("worktree").to_str().unwrap().into(),
+            "Review changes".into(),
+            "one.py".into(),
+        ]
+    };
+    let r = request();
+    for seconds in ["0", "3601", "invalid"] {
+        let args = arguments(seconds, &r.request_sha256);
+        let args = args.iter().map(String::as_str).collect::<Vec<_>>();
+        let peer = f.peer(vec![]);
+        let output = f.tty(peer.address, &args, "approve");
+        assert_ne!(output["status"], 0);
+        assert_eq!(output["answered"], 0);
+        assert!(peer.finish().is_empty());
+    }
+    let args = arguments("10", &r.request_sha256);
+    let args = args.iter().map(String::as_str).collect::<Vec<_>>();
+    let peer = f.peer(vec![]);
+    assert!(!f.cli(peer.address, &args).status.success());
+    assert!(peer.finish().is_empty());
+    for mode in [
+        RuntimeSessionMode::EphemeralReadOnly,
+        RuntimeSessionMode::DurableReadOnly,
+    ] {
+        let mut r = request();
+        r.mode = mode;
+        let r = seal_runtime_endpoint_run_request(r).unwrap();
+        let args = arguments("10", &r.request_sha256);
+        let args = args.iter().map(String::as_str).collect::<Vec<_>>();
+        let peer = f.peer(vec![selection(&r)]);
+        let output = f.tty(peer.address, &args, "approve");
+        assert_ne!(output["status"], 0);
+        assert_eq!(output["answered"], 0);
+        assert_eq!(peer.finish().len(), 1);
+    }
+    assert_eq!(fs::read_dir(f.root.join("records")).unwrap().count(), 0);
+}
+
+#[test]
+fn guided_disclosure_step_refuses_queued_prior_token_before_sending_held_tool_approval() {
+    use std::os::unix::fs::PermissionsExt;
+    let f = Fixture::new();
+    for directory in ["original", "worktree", "records"] {
+        fs::create_dir(f.root.join(directory)).unwrap();
+        fs::set_permissions(f.root.join(directory), fs::Permissions::from_mode(0o700)).unwrap();
+    }
+    let mut r = request();
+    r.mode = RuntimeSessionMode::ControlledWrite;
+    let r = seal_runtime_endpoint_run_request(r).unwrap();
+    for transfer in [false, true] {
+        let peer = f.peer(vec![selection(&r), waiting(&r)]);
+        let args = if transfer {
+            [
+                "endpoint-run-apply-saved",
+                f.root.join("records").to_str().unwrap(),
+                "10",
+                "run",
+                &r.request_sha256,
+                f.root.join("original").to_str().unwrap(),
+                f.root.join("worktree").to_str().unwrap(),
+                "Review changes",
+                "one.py",
+            ]
+            .map(str::to_owned)
+            .to_vec()
+        } else {
+            vec![
+                "endpoint-run".into(),
+                "10".into(),
+                "run".into(),
+                r.request_sha256.clone(),
+            ]
+        };
+        let args = args.iter().map(String::as_str).collect::<Vec<_>>();
+        let output = f.tty(peer.address, &args, "duplicate-disclosure");
+        assert_ne!(output["status"], 0, "{output}");
+        assert_eq!(output["answered"], 3, "{output}");
+        let text = output["transcript"].as_str().unwrap();
+        assert!(text.contains(&format!("Type exactly share {} step-0", r.request_sha256)));
+        assert!(text.contains(&format!("Type exactly share {} step-1", r.request_sha256)));
+        let calls = peer.finish();
+        assert_eq!(calls.len(), 2);
+        assert!(calls[1]["body"]["response"].is_null());
+        assert_eq!(calls[1]["body"]["approve_model_context"], true);
+        assert_eq!(fs::read_dir(f.root.join("records")).unwrap().count(), 0);
+    }
+}

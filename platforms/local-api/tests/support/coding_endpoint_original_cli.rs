@@ -3,6 +3,9 @@
 use super::*;
 use std::process::{Command, Stdio};
 
+#[path = "coding_endpoint_run_transfer.rs"]
+mod guided_transfer;
+
 fn start(fixture: &Fixture, checked: bool) -> (Api, TcpListener) {
     fs::create_dir(fixture.0.join("original/.git")).unwrap();
     fs::write(fixture.0.join("original/.git/index"), b"index sentinel").unwrap();
@@ -130,6 +133,9 @@ try:
         if transcript.count(b'anything else declines:') > len(prompts):
             prompt = transcript.rsplit(b'Type exactly ', 1)[1].split(b' to approve;')[0]
             prompts.append(prompt.decode())
+            if sys.argv[1] == 'delay-each': time.sleep(1.1)
+            if sys.argv[1] == 'interrupt-release' and prompt.startswith(b'release '):
+                os.killpg(p.pid, signal.SIGTERM); continue
             if sys.argv[1] == 'timeout-read' and len(prompts) == 2: continue
             if sys.argv[1] == 'interrupt-apply' and len(prompts) == 3:
                 os.killpg(p.pid, signal.SIGINT); continue

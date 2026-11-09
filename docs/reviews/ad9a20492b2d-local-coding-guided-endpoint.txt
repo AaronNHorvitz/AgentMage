@@ -1,0 +1,123 @@
+Commit: ad9a20492b2db26fddd6e30ce6bbf32f9914aeb4
+Scope: local-coding-guided-endpoint
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only on the repository.
+Tier: core. Rows: T-303 / T-306 (non-closing; both parents stay OPEN).
+
+## Methods
+
+- Confirmed the pinned checkout: `git rev-parse HEAD` = ad9a20492b2db26fddd6e30ce6bbf32f9914aeb4, clean
+  `git status --short`, exactly 10 changed paths against base d580df2cdf3e53cf87c9e81448b863cb97df4d15.
+- Read the bundle README.md, run.py, check.py, parse_gate.py and light.py before running anything.
+  run.py runs only the existing `scripts/local_agent_fast_gate.py` (plan, then gate) with
+  CARGO_BUILD_JOBS=2, RUST_TEST_THREADS=4 and the retained Node/LICENSE directory added to PATH. It does not
+  filter tests and does not wrap build-slot itself. check.py checks exit/freeze/log hash, 248/0/0/0/0
+  over 11 targets, 10 named methods, the exact path and Cargo-command set, no removed test lines, unchanged
+  ledger rows, the byte-identical retained report, and a privacy scan of added lines.
+- Read the whole source diff (`coding_cli.rs` usage text, `coding_cli_endpoint.rs` `advance` / `guided`)
+  and the helpers it relies on: `Client::confirm` / `check_running` / `call` (coding_cli.rs), `confirm` /
+  `show` / `safe`, `workflow::bounded`, `driver::Signals::confirm`, `checked_selection`, `check_challenge`
+  and the existing `endpoint-approve` path, for parity.
+- Read all four new recording-peer PTY tests and the new retained-service PTY test, plus the TASKS.md,
+  decision 0180, guide and evidence prose.
+
+## Commands and results (all run in /lane/review-checkout)
+
+| Command | Result |
+| --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t303-guided-endpoint/review-inputs.sha256` | exit 0 (all 26 entries) |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-guided-endpoint-ad9a20492b2d` (fresh output dir; did not exist beforehand) | exit 0; `FAST GATE: PASS`; source_unchanged true; 227.74 s including reservations; raw log SHA-256 d01127114a0a968b144f3975368c6b8dc8366df90aa7f17660532175f8a41a0b (differs from the builder's log, as expected) |
+| gate steps | diff-check 0, lint-untracked 0, lint-reviews 0, markdownlint 4 files 0 issues, fmt 0 (95.60 s), clippy -D warnings 0 (41.57 s), test all-targets no-fail-fast 0 (88.83 s) |
+| per-target test counts | 54, 0, 0, 0, 14, 6, 34, 4, 76, 20, 40 = 248 passed, 0 failed/ignored/measured/filtered, 11 targets |
+| `python3 -B .../check.py <out>` | exit 0; gate PASS, 11 targets, totals [248,0,0,0,0], 10 checked methods |
+| `python3 -B .../light.py` | all four non-Cargo commands exit 0 |
+| `cmp .../validation-final/source-freeze.json <out>/source-freeze.json` | identical (5 Rust hashes) |
+| `cmp .../validation-final/plan.json <out>/plan.json` | identical (paths and commands) |
+| `cmp docs/reviews/d580df2cdf3e-local-coding-private-records.txt /lane/reviews/d580df2cdf3e-local-coding-private-records.md` | identical |
+| `git diff --check d580df2cdf3e53cf87c9e81448b863cb97df4d15 --` | exit 0 |
+| `git status --short` (after all runs) | empty |
+| grep of added lines for home paths, usernames, credentials, other agent product names | no hits except the reviewer-identity line inside the retained review report (attribution, not branding) |
+
+All five new methods pass in my run: the four `endpoint::guided_endpoint_*` peer tests and
+`endpoint_guided::guided_terminal_restarts_continue_same_owner_without_repeating_tool_or_resetting_counts`.
+
+## Analysis
+
+Consent and confinement:
+- `guided` (coding_cli_endpoint.rs:136-181) only builds an Allow response from a challenge that this
+  process just got back from `advance`. That challenge has already passed `check_challenge` in `advance`
+  (signature/seal, run id, task id and visible tool/version). Before any approval is sent, the exact
+  `allow <challenge_sha256>` confirmation (:165) and then the `share <request_sha256>` disclosure
+  confirmation (:105) must both succeed. If either is declined, the client returns Err without
+  sending a Deny, so the challenge stays pending on the service. The `deny-at-2` case (approval
+  held, disclosure declined, 2 calls, no response object sent) and the live first-terminal decline
+  (0 executions, same challenge later) cover this.
+- The tool arguments are decoded with `decode_exact` and must be a JSON object, as in
+  `endpoint-approve`. All review text goes through `safe()`, which escapes non-ASCII and DEL, and
+  serde escapes control characters. The live PTY test asserts that no ESC byte reaches the terminal,
+  so model-controlled challenge text cannot inject terminal escape sequences.
+- Bounds: with N = `max_tool_calls`, the loop runs N+1 times; a repeated approval id or an
+  (N+1)th distinct challenge returns Err before any prompt. I traced the N=0 and N=1 tests (1 and 3
+  prompts, 2 and 2+N calls) and the repeat test (5 prompts, 4 calls); they match the code. A
+  self-inconsistent authenticated peer cannot make the client loop.
+- Interruption: `workflow::bounded` installs the existing SIGINT/SIGTERM/SIGHUP latch and deadline.
+  `check_running` runs each iteration and inside every `call`. The driver confirm returns Stopped on
+  the latch. Tests cover a signal at a prompt, deadline at a prompt, a stalled header with the deadline
+  and a stalled body with SIGINT after an approval was sent. In each case no further request is made.
+  `test_peer_disconnected` confirms the socket was closed, not retried.
+- `advance` now uses `client.confirm`. For the single-shot commands (`endpoint-step`/`approve`/`deny`)
+  the client has no controls, so the call falls through to the unchanged `confirm`. Their behaviour
+  does not change.
+- No new tool, route, model transport, file read or grant is added. Workspace, sandbox and network
+  confinement stay with the unchanged service. I found nothing in this diff that would let a
+  prompt-injected tool call skip the per-operation exact approval.
+
+Recovery and honesty:
+- The live test drives three separate client processes against one retained HTTP service. The
+  results show the same pending challenge across a client exit (`prompts[1]` equal), one execution,
+  two model connections (the upstream listener has no third connection), FAILED with 2 model / 1
+  tool calls, exit 0 labelled `service-observation-only` with no `verified-outcome`, a canonical
+  record accepted by `RuntimeEventSequence`, and an explicit release. The prose correctly limits this
+  to process-held continuation and says plainly that a zero exit is not task success.
+- Evidence numbers trace to the bundle's raw log. My reproduction agrees on counts, targets, methods,
+  paths, commands and source hashes. Timings and log hash differ, as expected.
+- Evaluation integrity: no frozen, hidden or held-out task, scorer, threshold, prompt, dependency,
+  SBOM, status model or scoreboard path changed (check.py asserts this, and the path list confirms it).
+  No row or sub-row was added or closed; the `| [` ledger rows are byte-identical to the base.
+- Licences: the new file has an SPDX Apache-2.0 header. No new dependency (Cargo.lock/Cargo.toml untouched).
+
+## Findings
+
+No critical, high or medium findings.
+
+L1 (low) — the disclosure token is the same at every step, and pending terminal input is not flushed.
+`platforms/local-api/src/coding_cli_endpoint.rs:105` uses `share <request_sha256>` for every advance.
+That digest is fixed for the run and is already on the command line. `driver::Signals::confirm`
+(`coding_cli_driver.rs`) reads from /dev/tty without discarding queued input. The single-shot commands
+already had this design. With `endpoint-run`, several disclosure prompts now come in one process, so a
+line typed ahead or pasted twice (`share <digest>\n`) is silently used by the next disclosure prompt
+once the user has approved a tool. That prompt is meant to be a fresh decision. The tool approval itself
+is still unique per challenge, so no unapproved tool operation can result. Fix: bind the disclosure
+token to the step, e.g. `share <request-digest> <challenge-digest|start>` or a step counter, and/or
+`tcflush(TCIFLUSH)` before each prompt. Add a PTY test that pre-queues two share lines and expects the
+second disclosure prompt to block or decline. Same-row backlog.
+
+Inherited lows L1/L2 from the d580df2cdf3e private-record review, and earlier inherited lows, remain
+same-row backlog as the evidence states.
+
+Observation, not a finding: exit 0 for a FAILED or CANCELLED terminal envelope is a deliberate,
+documented choice (decision 0180, the guide and the evidence) and is labelled in the output. A later
+increment may want a distinct exit code for non-success terminal states for scripting consumers.
+
+## Per-row result
+
+- T-303 (OPEN, non-closing increment): increment accepted. The guided continuation is reachable
+  through the claimed terminal surface, is tested against a recording peer and an actual retained
+  service, and is honestly labelled. The row stays open (native trust owner blocker, measured
+  native/model loop, approved signed Git, durable recovery, inherited host/Linux failures).
+- T-306 (OPEN, non-closing increment): increment accepted on the same basis. It does not close the row.
+
+I did no UI-screen review (not applicable: terminal client only), no GPU, model or native execution, and
+made no change to the repository.
+
+Verdict: PASS

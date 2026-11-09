@@ -1371,6 +1371,13 @@ try:
             prompt_bytes.append(len(raw)-review_start);review_start=len(raw)
             prompt=raw.split(b'Type exactly ')[-1].split(b' to approve;')[0]
             mode=sys.argv[1];tool=prompt.startswith(b'allow ')
+            if mode=='duplicate-disclosure':
+                if answered==0:
+                    first_disclosure=prompt;os.write(master,prompt+b'\n')
+                elif tool:os.write(master,prompt+b'\n'+first_disclosure+b'\n')
+                # At the next disclosure, give no fresh answer. The queued
+                # earlier token must be declined without sending the approval.
+                answered+=1;continue
             if mode=='runtime-clock':
                 if answered==0:time.sleep(.7);os.write(master,prompt+b'\n')
                 answered+=1;continue

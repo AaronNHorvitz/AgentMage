@@ -1730,8 +1730,8 @@ agentmage-code <loopback-ip:port> <private-auth-directory> endpoint-run \
 
 This command advances the existing read-only or controlled coding coordinator
 and displays each returned step. It removes the need to copy challenge JSON
-between invocations. Type the exact displayed `share <request-digest>` before
-each advance, and `allow <challenge-digest>` for each proposed tool operation.
+between invocations. Type the exact displayed `share <request-digest> step-<number>` before
+each guided advance, and `allow <challenge-digest>` for each proposed tool operation.
 These are separate decisions: declining disclosure after typing `allow` sends
 no approval. Each operation displays its complete challenge and decoded
 arguments. The same native permission, preimage, sandbox and expiry checks
@@ -1761,3 +1761,44 @@ claim. Records and original transfer remain explicit separate commands. Keep the
 output consumer draining; synchronous stdout writes can delay stop.
 Native/model execution, approved Git, durable execution recovery and parent
 measurement remain open. See [Decision 0180](../decisions/0180-guided-endpoint-terminal-continuation.md).
+
+## Guided run, saved record and original diff review
+
+For a controlled coding service explicitly started for original repository
+review, the following command combines execution and separately approved
+transfer:
+
+```sh
+agentmage-code <loopback-ip:port> <private-auth-directory> \
+  endpoint-run-apply-saved <absolute-private-record-directory> \
+  300 <run-id> <request-digest> <absolute-original-repository> \
+  <absolute-created-worktree> 'Review the changes' <paths...>
+```
+
+The record directory must already exist, be private and canonical, and be
+outside both checkouts. This location rule also applies to
+`endpoint-original-apply-saved`. It prevents this command from writing a
+transcript into code or test input. Placement is rechecked before saving and
+release; concurrent directory moves are not locked out. Standalone
+`endpoint-record-save` still uses its explicitly selected private directory.
+
+One deadline, from 1 to 3600 seconds, covers model calls, confirmations, record
+collection, saving and diff review. The command uses the same service run,
+counters and permission checks as `endpoint-run`. Synchronous record writes,
+filesystem synchronization or blocked stdout can delay stop; keep output draining.
+Every tool and model sharing
+step retains its separate exact confirmation. Guided disclosure tokens include
+the step number so a queued earlier answer cannot approve a later disclosure.
+After observing a terminal state,
+it asks to save the complete record, then to release the run, then to read the
+two checkouts, then to apply the complete displayed diff. Saving completes and
+synchronizes before release is offered. Declining any step stops the command.
+
+Inspect the terminal state even when transfer completes: a failed or cancelled
+run can have useful earlier edits. Separate apply consent transfers only its
+eligible diff and supplies no test or task-success claim. The saved record
+keeps the failure. An uncertain request is never retried. Before release, inspect
+the still-held service; after release, use the existing standalone `original`
+commands to inspect and prepare a fresh decision. A saved-name collision stops
+before release; choose a fresh directory after inspection. Service restart
+recovery, native/model qualification and approved commit/push remain open.

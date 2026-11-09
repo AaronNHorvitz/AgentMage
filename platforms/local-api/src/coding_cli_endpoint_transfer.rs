@@ -4,7 +4,31 @@
 use super::*;
 use agentmage_kernel_contracts::{WorkspaceId, WorkspacePath};
 
-pub(super) fn run(client: &Client, args: &[String], archive: Option<&Path>) -> Result<()> {
+// Check before any model disclosure, again before saving, and before release.
+// Canonical private paths prevent a saved transcript from becoming repository
+// input. These are sampled checks; they do not lease directory ancestry.
+fn archive_scope(directory: &Path, original: &str, worktree: &str) -> Result<()> {
+    if !directory.is_absolute()
+        || directory.as_os_str().len() > 4096
+        || std::fs::canonicalize(directory)
+            .map_err(|_| ())?
+            .as_os_str()
+            != directory.as_os_str()
+        || directory.starts_with(original)
+        || directory.starts_with(worktree)
+    {
+        return Err(());
+    }
+    crate::protected_directory(directory).map_err(|_| ())?;
+    Ok(())
+}
+
+pub(super) fn run(
+    client: &Client,
+    args: &[String],
+    archive: Option<&Path>,
+    drive: bool,
+) -> Result<()> {
     let [seconds, run, hash, original, worktree, task, paths @ ..] = args else {
         return Err(());
     };
@@ -53,15 +77,25 @@ pub(super) fn run(client: &Client, args: &[String], archive: Option<&Path>) -> R
             return Err(());
         }
     }
+    if let Some(directory) = archive {
+        archive_scope(directory, original, worktree)?;
+    }
     workflow::bounded(client, seconds.parse().map_err(|_| ())?, |client| {
         let request = endpoint::checked_selection(client, run, hash, true)?;
         if request.mode != agentmage_kernel_contracts::RuntimeSessionMode::ControlledWrite {
             return Err(());
         }
+        let terminal = if drive {
+            Some(endpoint::guided_steps(client, &request)?)
+        } else {
+            None
+        };
         // Complete and flush the stdout record or explicitly approved private
         // save receipt before release is offered. Neither restores execution.
         if let Some(directory) = archive {
+            archive_scope(directory, original, worktree)?;
             record::save_observed(client, request.clone(), directory)?;
+            archive_scope(directory, original, worktree)?;
         } else {
             record::export_observed(client, request.clone())?;
         }
@@ -69,10 +103,14 @@ pub(super) fn run(client: &Client, args: &[String], archive: Option<&Path>) -> R
             &json!({"request":request,"repository":original,"worktree":worktree,
                 "paths":paths,"task":task,
                 "record_saved_to_private_directory":archive,
+                "observed_terminal":terminal,
                 "record_retention":if archive.is_some() {"private-file"} else {"stdout-only-retain-before-release"},
                 "warning":"Retain the preceding complete terminal record or saved-file receipt before continuing. Releases this exact run and its process-only events and model ports. Requires a service started for original review; ordinary services discard ownership. Fresh read consent and exact diff approval follow. Release grants no write, test pass, new model run, commit or push. After a lost reply inspect service state and disk; never repeat automatically."}),
             &format!("release {hash}"),
         )?;
+        if let Some(directory) = archive {
+            archive_scope(directory, original, worktree)?;
+        }
         let released = client.json(
             "POST",
             "/v1/code/endpoint/release",
@@ -99,6 +137,7 @@ pub(super) fn run(client: &Client, args: &[String], archive: Option<&Path>) -> R
         show(
             &json!({"workflow":"endpoint-original-transfer", "run_id":run,
             "request_sha256":hash,"paths":paths,"outcome":result["outcome"],
+            "observed_terminal":terminal,"verification":"service-observation-only",
             "preview_sha256":result["preview_sha256"],
             "original_checkout_tested":false,"current_workspace_verified":false,
             "git_commit_created":false,

@@ -146,19 +146,27 @@ fn private_terminal_record_save_requires_consent_preserves_collisions_and_replay
     ));
     // Existing regular files, symlinks, hard links and directories never change.
     fs::write(&destination, b"existing sentinel").unwrap();
-    assert_ne!(run(&archive, "allow")["status"], 0);
+    let collision = run(&archive, "allow");
+    assert_ne!(collision["status"], 0);
+    assert_eq!(collision["prompts"], 1);
     assert_eq!(fs::read(&destination).unwrap(), b"existing sentinel");
     fs::remove_file(&destination).unwrap();
     symlink(&file, &destination).unwrap();
-    assert_ne!(run(&archive, "allow")["status"], 0);
+    let collision = run(&archive, "allow");
+    assert_ne!(collision["status"], 0);
+    assert_eq!(collision["prompts"], 1);
     assert_eq!(fs::read(&file).unwrap(), b"sentinel");
     fs::remove_file(&destination).unwrap();
     fs::hard_link(&file, &destination).unwrap();
-    assert_ne!(run(&archive, "allow")["status"], 0);
+    let collision = run(&archive, "allow");
+    assert_ne!(collision["status"], 0);
+    assert_eq!(collision["prompts"], 1);
     assert_eq!(fs::read(&file).unwrap(), b"sentinel");
     fs::remove_file(&destination).unwrap();
     fs::create_dir(&destination).unwrap();
-    assert_ne!(run(&archive, "allow")["status"], 0);
+    let collision = run(&archive, "allow");
+    assert_ne!(collision["status"], 0);
+    assert_eq!(collision["prompts"], 1);
     fs::remove_dir(&destination).unwrap();
     let no_terminal = Command::new(env!("CARGO_BIN_EXE_agentmage-code"))
         .args([
@@ -189,7 +197,9 @@ fn private_terminal_record_save_requires_consent_preserves_collisions_and_replay
     );
     let record: Value = serde_json::from_slice(&bytes).unwrap();
     assert_eq!(record["request"], request);
-    assert_ne!(run(&archive, "allow")["status"], 0);
+    let collision = run(&archive, "allow");
+    assert_ne!(collision["status"], 0);
+    assert_eq!(collision["prompts"], 1);
     assert_eq!(fs::read(&destination).unwrap(), bytes);
     assert_eq!(api.bind("events", &request).0, 200); // Save never releases.
     assert_eq!(executions.load(Ordering::SeqCst), 0);

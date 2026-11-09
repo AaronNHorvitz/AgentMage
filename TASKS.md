@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The [guided coding and transfer increment](docs/evidence/t303-guided-transfer-2026-11-09.md)
+connects the retained run, private terminal record and separately approved
+original diff through one terminal command and one deadline. Saved-transfer
+archives must stay outside both checkouts. Failure records remain failures;
+transferring a diff certifies no task or test. Independent core review is
+required. T-303/T-306 remain open; no row or sub-row is added or closed.
+Native/model measurements, approved Git and durable execution recovery remain
+open. Verification is recorded in the linked evidence. The
+[base guided-endpoint review](docs/reviews/ad9a20492b2d-local-coding-guided-endpoint.txt)
+has **Verdict: PASS** for exact commit
+`ad9a20492b2db26fddd6e30ce6bbf32f9914aeb4`, with no high/medium finding.
+Its low queued-disclosure finding is addressed by step-bound tokens and a PTY
+regression, pending independent review. Older lows remain same-row backlog.
+The affected API gate passes 255 tests across eleven unfiltered targets, with
+no failures or ignores; formatting and Clippy pass and eight Rust hashes stay
+fixed. Earlier host/Linux failures remain outside this selection.
+
 The [guided endpoint continuation](docs/evidence/t303-guided-endpoint-2026-11-09.md)
 adds one terminal command over the retained coordinator, with separate exact
 tool and model disclosure confirmations at every step. Fresh terminal processes
