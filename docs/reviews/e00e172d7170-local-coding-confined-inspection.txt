@@ -1,0 +1,180 @@
+Commit: e00e172d717066000767cb697194aad1766ba368
+Scope: local-coding-confined-inspection
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Pinned checkout
+`/lane/review-checkout`. Row: T-303 / T-306, tier core, non-closing increment.
+
+## Methods
+
+- `git rev-parse HEAD` and `git rev-parse e00e172d` both return
+  `e00e172d717066000767cb697194aad1766ba368`. The tree was clean before and after the review.
+- Before running anything I read IP-POLICY.md, Decision 0193, the Decision 0192 diff, the TASKS.md diff,
+  `docs/evidence/t306-confined-inspection-2026-11-10.md`, the guide diff, and the bundle README, run.py,
+  check.py, parse_gate.py and light.py.
+- I read the whole new module `platforms/linux/src/local_commit_inspection.rs`, its tests, and the diffs to
+  `local_commit.rs`, `local_commit_verification.rs`, `sandbox_supervision.rs` and
+  `repository_candidate_tests.rs`. I compared the new worker command, line by line, with the commit-verification
+  worker that was already reviewed.
+- I ran disposable real-GnuPG probes (installed gpg 2.4.9) in a private `/tmp` home, then killed their agent and
+  deleted the home.
+- I ran mutation probes on a private `git archive HEAD` copy outside the repository. They went through
+  `/tools/build-slot` with `CARGO_TARGET_DIR=/lane/state/review-target/mut`, a subdirectory, so the shared
+  review target was not touched. I deleted the copy afterwards.
+- I used no GPU, made no download and did no push. I did not modify the repository.
+
+## Exact commands and results (from `/lane/review-checkout`)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-confined-inspection/review-inputs.sha256`: exit 0. Manifest
+   SHA-256 is `023036ca57e82c7ccf117795d3d12e4a39085e38c7ad0d647af8faaefdc1eb3c`, as requested.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-confined-inspection/run.py
+   /lane/state/tmp/review-confined-inspection-full-e00e172d7170` (a fresh path, not outer-wrapped): exit 1,
+   `FAST GATE: FAIL`, `source_unchanged: true`.
+   - Time: 1187.71 s including reservations. Most of the wait fell under formatting (865.43 s with slot wait),
+     then Clippy 41.20 s and Rust tests 279.24 s (exit 101). No timeout.
+   - Raw log SHA-256: `74908cada075aef22d3f4cd20c0c354306b6c9990143097c83fa5713de35997d`. It differs from the
+     builder's hash because timings differ.
+3. `python3 -B .../check.py /lane/state/tmp/review-confined-inspection-full-e00e172d7170`: exit 0. Results:
+   - 26 targets, totals `[1378, 72, 64, 0, 0]`. The first six commands exit 0 and the test command exits 101.
+   - All 18 named methods pass. The TASKS rows are unchanged, and the retained review copies are
+     byte-identical to `/lane/reviews`.
+   - It prints `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL`. The data comparison passes; the full gate still
+     fails.
+4. `cmp .../validation-1/source-freeze.json .../review-confined-inspection-full-e00e172d7170/source-freeze.json`:
+   exit 0. All six source hashes match the builder's run.
+5. `python3 -B .../light.py`: exit 0. That covers diff check, untracked lint, review lint, and markdownlint
+   (0 issues in 5 files).
+6. `git diff --check f8236c01f04ccb92e0bae03caa546151efcb6f52 --`: exit 0.
+7. `git status --short`: empty.
+
+I also compared every target independently with `parse_gate.targets` against the builder's
+`validation-1/fast.log`. Target names, counts, and failure and ignore identities are equal (`True`, 26 targets).
+- The 72 failures all sit in inherited modules: command_runner, linux_coding_runtime, linux_read,
+  linux_repository_map, local_commit, repository_safety and secret_service.
+- No new test fails or is ignored.
+- All 8 new methods pass in my run, as does the strengthened `candidate_setup_retains_nonempty_or_changed_mode_claims_after_failure`.
+
+The gate's TMPDIR namespace `/tmp/si-myoa1nv0` kept 11 `agentmage-host-*` fixture directories from inherited
+host tests. It holds no `si-*` inspection fixture, and `pgrep gpg-agent` / `pgrep keyboxd` are empty after
+the run. This is pre-existing test-teardown behaviour, not from this increment. I left the directory in place
+as run output.
+
+### Mutation probes (private copy, one build, 30.7 s in slot)
+
+I applied four mutations together. Each targets a different test:
+
+| Mutation | Test | Result |
+| --- | --- | --- |
+| Remove post-capture `claim.revalidate()?` (`repository_candidate.rs:157`) | `candidate_setup_retains_nonempty_or_changed_mode_claims_after_failure` | FAILED at its `.is_err()` assertion (session created) |
+| Drop `&& primary_usable` from the subkey eligibility (`local_commit_inspection.rs:277`) | `signer_inspection_requires_exact_attached_current_signing_fingerprint` | FAILED |
+| Skip the listing eligibility check before export (`:197`) | `signer_inspection_orders_both_workers_over_the_same_snapshot_and_stops_on_failure` | FAILED |
+| Swap precedence to `pubring.gpg` first (`:58`) | `signer_inspection_refuses_missing_empty_special_symlink_oversize_and_writable_databases` | FAILED (`symlink` case) |
+
+So candidate review L1 is addressed: the new `mode-after-capture` case actually reaches and depends on the
+post-capture check.
+
+### Real-GnuPG probe
+
+I made a disposable key with a designated revoker (`addrevoker` through `--edit-key --command-fd`). I listed it
+with the exact fixed inspection options (`--no-options … --no-default-keyring --keyring <kbx> --lock-never
+--with-colons --fixed-list-mode --with-fingerprint --with-subkey-fingerprint --list-keys <fpr>`). Output order:
+`pub`, `rvk:…:<revoker fingerprint>:80:`, `fpr`, `uid`. The `rvk` record comes between `pub` and its `fpr`
+(see L1).
+
+## Review of the requested semantics
+
+- **Public-only.** Production `LinuxOpenPgpSigner::inspect` (`local_commit.rs:293-346`) now calls only
+  `inspection::inspect`.
+  - The old `--list-secret-keys` path is gone. `run_gpg` is `#[cfg(test)]` (`local_commit.rs:797-798`), and
+    Clippy `-D warnings --all-targets`, which includes the non-test lib, passes. So there is no production
+    direct fallback.
+  - The doc comment, Decision 0193, the evidence, the guide and TASKS all say clearly that this proves neither
+    private-key possession, signing availability nor usable-key admission.
+  - Signed creation stays direct and dormant. No host agent socket is projected and the socket filter is
+    unchanged: `RestrictAddressFamilies` and `--seccomp 4` match the reviewed verification worker byte for
+    byte. Labelling is honest.
+- **Held-directory, bounded, no-follow capture** (`:36-107`).
+  - `verify_private_keyring` must return the same canonical path. The directory is opened
+    `NOFOLLOW|DIRECTORY` and its dev/ino/uid/mode are revalidated before and after reading.
+  - The database is opened `openat(held, name, NOFOLLOW|NONBLOCK)`. It must be a regular file owned by the
+    user, with no group/other write, and size 1..=4 MiB. It is read completely with `pread`.
+  - After the read, fstat and a no-follow `statat` re-check name, size, mode, uid, mtime and ctime. The bytes
+    are then sealed into a memfd; seals SEAL/SHRINK/GROW/WRITE are asserted in the test.
+  - Any open error other than ENOENT on `pubring.kbx` refuses and does not fall back, which the symlink case
+    tests. The non-atomicity against concurrent same-user edits is disclosed.
+- **Same sealed snapshot.** Each worker gets a fresh `dupfd` of the single memfd (`:187-188`). Export happens
+  only after `signing_identity` succeeds over the listing. The evidence digest binds the version tag, database
+  hash, listing hash, export hash and fingerprint (`:204-213`).
+- **Exact attached/current fingerprint and primary** (`:246-302`).
+  - Only an `fpr` immediately after its own `pub`/`sub` qualifies. It requires the lowercase own-key `s`
+    capability, a validity outside r/e/i/d, an unexpired date, no `D`, and a usable primary. Exactly one match
+    is allowed, the listing must end in a newline, and NUL/CR are refused.
+  - A fingerprint in a `uid`, an `rvk`, prose or stderr cannot qualify: stderr is never parsed.
+- **Ordered listing/export, bounds, digests, deadline.** `validate_result` requires all of the following:
+  - a successful outcome and zero exit, complete output, and total ≤ limit;
+  - total == retained length, and matching SHA-256 on both streams;
+  - no cancellation and no expiry.
+
+  One `deadline` is created in the constructor and shared by capture and both workers. Per-unit
+  `RuntimeMaxSec=31s` is the systemd backstop.
+- **Cleanup uncertainty.** `capture_error` keeps the CleanupUncertain class from both `run_owned` errors and
+  `result.outcome` errors. Dispatch-level propagation is tested; see L2.
+- **Closed owner.** `LaunchOwner::SignerInspection` accepts exactly one projection and the
+  `agentmage-signer-inspection-<24 hex>.service` shape only. It is distinct from commit verification in both
+  directions, which is tested. The prefix is added to `unit_name`.
+- **Executables.** `verify_executable` is re-run for each worker: root-owned held `systemd-run`, `systemctl`,
+  `bwrap`, and the gpg with its pinned digest. Then admission snapshot, then the policy compile. Widening the
+  manifest fields to `pub(super)` exposes them only to sibling modules.
+- **Evaluation integrity and scope.** The diff touches only the 13 listed files. There is no
+  evaluation/frozen/hidden/held-out/scorer/prompt/threshold/dependency/SBOM/scoreboard/release change, no new
+  row or sub-row (TASKS row lines unchanged), and both parents stay open.
+- **Public content and IP.** Added lines contain no private host path, username, hostname, credential or
+  personal data. The `/lane/...` paths and reviewer attribution follow earlier committed reviews. No product
+  comparison or branding was found.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, backlog):** `platforms/linux/src/local_commit_inspection.rs:293-296`. Any key with a designated
+  revoker is refused.
+  - **Problem.** GnuPG prints `rvk` between `pub` and its `fpr` (real-GnuPG probe above). At that point
+    `pending` is set, so `signing_identity` returns false. This fails closed, so it is not a confinement
+    issue, but a valid public identity cannot be pinned.
+  - **Fix.** Accept `rvk` while a `pub` is pending, without consuming `pending` and without treating its
+    field 10 as the key fingerprint. Add a real-GnuPG case with a designated revoker and assert that the
+    revoker's fingerprint alone never qualifies.
+- **L2 (low, backlog):** `platforms/linux/src/local_commit_inspection.rs:222-226` and `:165`. The
+  CleanupUncertain mapping from a `LinuxSandboxError`, in `result.outcome` or from `run_owned`, is not
+  exercised.
+  - **Problem.** Tests cover only a dispatch closure that returns a `LinuxLocalCommitError` directly. If
+    either `capture_error(...)` were replaced by `denied()`, cleanup uncertainty would be silently
+    reclassified and no test would notice. The verification module has the same pattern and it was accepted;
+    the evidence discloses that the constructor was not widened.
+  - **Fix.** Add a `#[cfg(test)]` crate-visible sandbox-error constructor, or reuse an existing test seam, and
+    assert `CleanupUncertain` for `outcome: Err(CleanupUncertain)` in `validate_result`.
+- **L3 (low, backlog):** `platforms/linux/src/local_commit_inspection.rs:58-68`. A keybox-daemon store is
+  "unsupported" but not detected.
+  - **Problem.** If the selected home uses `use-keyboxd` (`common.conf`, `public-keys.d/`) and still holds a
+    stale `pubring.kbx` from before migration, capture pins the stale public material. A revocation or
+    expiry recorded only in the daemon store is then missed.
+  - **Impact.** Low: the keyring is user-selected, outside the repository, and the adapter is dormant.
+  - **Fix.** Refuse capture when `public-keys.d` exists, or when `common.conf` enables `use-keyboxd`, with a
+    test.
+
+Inherited backlog (unchanged, still open): candidate initial-open failure coverage, and the earlier same-row
+native, retained-child and fixture-teardown lows.
+
+## Per-row result
+
+- **T-303:** increment accepted. It has no high or medium finding, and the row does **not** close.
+  Candidate/reviewer/artifact authority, approval composition, approved commit/push, durable recovery and
+  native/model measurements remain open.
+- **T-306:** increment accepted. Public identity inspection is confined to offline workers over a sealed
+  public snapshot, with no production direct fallback. The row does **not** close: confined signed creation,
+  usable private-key access and native admission remain open.
+
+The complete affected gate itself remains FAIL with exactly the inherited 72 failures and 64 ignores. That is
+the documented, expected state, not a pass. This verdict covers the increment's correctness and honest
+labelling at this exact commit only.
+
+Verdict: PASS

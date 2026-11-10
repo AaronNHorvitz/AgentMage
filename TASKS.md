@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The retained [public-inspection review](docs/reviews/e00e172d7170-local-coding-confined-inspection.txt)
+has **Verdict: PASS** for exact commit
+`e00e172d717066000767cb697194aad1766ba368`, with no high or medium finding.
+Its three low findings are addressed together in the
+[inspection findings repair](docs/evidence/t306-inspection-findings-2026-11-10.md):
+refuse daemon-store indicators before accepting a legacy public snapshot,
+accept designated revokers without confusing their fingerprint with the signer,
+and exercise cleanup uncertainty at both worker error boundaries. The retained
+[control review](docs/reviews/4bcf4fb34053-local-coding-inspection-control.txt)
+also has **Verdict: PASS** for exact commit
+`4bcf4fb34053afe00accd65cfce99b374d0c9c44`, with no high or medium finding.
+Its low L1 checkpoint coverage and L2 synchronous admission-hash latency remain
+same-row backlog. T-303/T-306 remain open;
+no row or sub-row is added. Confined usable signed creation and the complete
+measured workflow remain open. The complete affected gate remains **FAIL**:
+1,384 passes, the exact inherited 72 failures and 64 ignores over 26 unfiltered
+targets. All three new methods, 21 controls, formatting and Clippy pass; all
+three source hashes remain fixed. Independent core review is required.
+
 The [inspection control repair](docs/evidence/t306-inspection-control-2026-11-10.md)
 adds caller cancellation through public-key capture and the offline workers, with
 bounded read checkpoints and stricter primary/subkey creation dates. It extends

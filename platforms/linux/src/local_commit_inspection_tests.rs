@@ -226,6 +226,115 @@ fn signer_inspection_refuses_missing_empty_special_symlink_oversize_and_writable
 }
 
 #[test]
+fn signer_inspection_refuses_daemon_markers_even_with_a_valid_legacy_database() {
+    for marker in ["common.conf", "public-keys.d"] {
+        for kind in ["file", "directory", "symlink", "socket"] {
+            let f = Fixture::new();
+            fs::write(f.0.join("pubring.kbx"), b"stale public database").unwrap();
+            fs::write(f.0.join("pubring.gpg"), b"stale fallback").unwrap();
+            let path = f.0.join(marker);
+            let mut socket = None;
+            match kind {
+                "file" => fs::write(&path, b"use-keyboxd\n").unwrap(),
+                "directory" => fs::create_dir(&path).unwrap(),
+                "symlink" => symlink("absent-target", &path).unwrap(),
+                _ => socket = Some(std::os::unix::net::UnixListener::bind(&path).unwrap()),
+            }
+            assert!(PublicDatabase::capture(&f.0).is_err(), "{marker}/{kind}");
+            drop(socket);
+        }
+        // Recheck both after the file read and after sealing: a migration
+        // starting during capture must not return a stale public snapshot.
+        for create_at in [3, 4] {
+            let f = Fixture::new();
+            fs::write(f.0.join("pubring.kbx"), b"legacy").unwrap();
+            let mut checks = 0;
+            assert!(
+                PublicDatabase::capture_checked(&f.0, || {
+                    checks += 1;
+                    if checks == create_at {
+                        fs::write(f.0.join(marker), b"use-keyboxd\n").unwrap();
+                    }
+                    Ok(())
+                })
+                .is_err(),
+                "{marker}/{create_at}"
+            );
+            assert_eq!(checks, create_at);
+        }
+    }
+    let f = Fixture::new();
+    fs::write(f.0.join("pubring.kbx"), b"legacy").unwrap();
+    // Refusal of all common configuration is intentional, even if empty.
+    fs::write(f.0.join("common.conf"), b"").unwrap();
+    assert!(PublicDatabase::capture(&f.0).is_err());
+}
+
+#[test]
+fn signer_inspection_distinguishes_designated_revokers_from_signing_fingerprints() {
+    let fp = "a".repeat(40);
+    let revoker = "b".repeat(40);
+    let rvk = format!("rvk:::22::::::{revoker}:80:\n");
+    let listed = String::from_utf8(listing(&fp, "pub", "u", "", "s"))
+        .unwrap()
+        .replace("\nfpr:", &format!("\n{rvk}fpr:"));
+    assert!(signing_identity(listed.as_bytes(), &fp, 100));
+    assert!(!signing_identity(listed.as_bytes(), &revoker, 100));
+    assert!(!signing_identity(
+        listed
+            .replace(&format!("fpr:::::::::{fp}:\n"), "")
+            .as_bytes(),
+        &fp,
+        100
+    ));
+    let sub = String::from_utf8(listing(&revoker, "sub", "u", "", "s"))
+        .unwrap()
+        .replace("\nfpr:", &format!("\n{rvk}fpr:"));
+    assert!(!signing_identity(
+        &[listed.as_bytes(), sub.as_bytes()].concat(),
+        &revoker,
+        100
+    ));
+}
+
+#[test]
+fn signer_inspection_preserves_sandbox_cleanup_errors_at_both_worker_boundaries() {
+    use crate::sandbox::{LinuxSandboxError, LinuxSandboxErrorKind};
+    for kind in [
+        LinuxSandboxErrorKind::CleanupUncertain,
+        LinuxSandboxErrorKind::InvalidManifest,
+    ] {
+        let expected = if kind == LinuxSandboxErrorKind::CleanupUncertain {
+            LinuxLocalCommitErrorKind::CleanupUncertain
+        } else {
+            LinuxLocalCommitErrorKind::ArtifactDenied
+        };
+        assert_eq!(
+            map_dispatch(Err(LinuxSandboxError::for_test(kind)))
+                .err()
+                .unwrap()
+                .kind(),
+            expected
+        );
+        let mut captured = result(b"public output");
+        captured.outcome = Err(LinuxSandboxError::for_test(kind));
+        assert_eq!(
+            validate_result(captured, &token(), Instant::now() + Duration::from_secs(5))
+                .unwrap_err()
+                .kind(),
+            expected
+        );
+    }
+    assert_eq!(
+        map_dispatch(Ok(result(b"public output")))
+            .unwrap()
+            .stdout
+            .retained,
+        b"public output"
+    );
+}
+
+#[test]
 fn signer_inspection_requires_exact_attached_current_signing_fingerprint() {
     let fingerprint = "a".repeat(40);
     let valid = listing(&fingerprint, "pub", "-", "", "scSC");
@@ -561,6 +670,80 @@ fn signer_inspection_installed_gpg_reads_sealed_public_identity_without_an_agent
         .output()
         .unwrap();
     assert!(added.status.success());
+    let revoker_created = Command::new("/usr/bin/gpg")
+        .env_clear()
+        .env("PATH", "/usr/bin")
+        .env("LANG", "C")
+        .arg("--homedir")
+        .arg(&f.0)
+        .args([
+            "--no-options",
+            "--batch",
+            "--no-tty",
+            "--pinentry-mode",
+            "loopback",
+            "--passphrase",
+            "",
+            "--quick-generate-key",
+            "Revoker <revoker@example.invalid>",
+            "ed25519",
+            "cert",
+            "1d",
+        ])
+        .output()
+        .unwrap();
+    assert!(revoker_created.status.success());
+    let revoker_listed = Command::new("/usr/bin/gpg")
+        .arg("--homedir")
+        .arg(&f.0)
+        .args([
+            "--no-options",
+            "--batch",
+            "--with-colons",
+            "--list-keys",
+            "revoker@example.invalid",
+        ])
+        .output()
+        .unwrap();
+    assert!(revoker_listed.status.success());
+    let revoker = String::from_utf8(revoker_listed.stdout)
+        .unwrap()
+        .lines()
+        .find(|l| l.starts_with("fpr:"))
+        .unwrap()
+        .split(':')
+        .nth(9)
+        .unwrap()
+        .to_owned();
+    let script = crate::sandbox::sealed_payload(
+        "revoker-script",
+        format!("addrevoker\n{revoker}\ny\nsave\n").as_bytes(),
+    )
+    .unwrap();
+    let mut edit = Command::new("/usr/bin/gpg");
+    edit.env_clear()
+        .env("PATH", "/usr/bin")
+        .env("LANG", "C")
+        .arg("--homedir")
+        .arg(&f.0)
+        .args([
+            "--no-options",
+            "--batch",
+            "--no-tty",
+            "--expert",
+            "--command-fd",
+            "0",
+            "--edit-key",
+            &fingerprint,
+        ])
+        .stdin(Stdio::from(fs::File::from(script)));
+    let edited = crate::sandbox::supervision::capture_local_commit_process(
+        edit,
+        None,
+        Instant::now() + Duration::from_secs(10),
+    )
+    .unwrap();
+    assert!(edited.status.success());
     let both = Command::new("/usr/bin/gpg")
         .env_clear()
         .env("LANG", "C")
@@ -572,10 +755,26 @@ fn signer_inspection_installed_gpg_reads_sealed_public_identity_without_an_agent
             "--with-colons",
             "--with-subkey-fingerprint",
             "--list-keys",
+            &fingerprint,
         ])
         .output()
         .unwrap();
     assert!(both.status.success());
+    assert!(
+        both.stdout
+            .split(|b| *b == b'\n')
+            .any(|l| l.starts_with(b"rvk:"))
+    );
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    assert!(signing_identity(&both.stdout, &fingerprint, now));
+    assert!(!signing_identity(
+        &both.stdout,
+        &revoker.to_ascii_lowercase(),
+        now
+    ));
     let fingerprints: Vec<_> = String::from_utf8(both.stdout)
         .unwrap()
         .lines()

@@ -1,0 +1,152 @@
+Commit: 4bcf4fb34053afe00accd65cfce99b374d0c9c44
+Scope: local-coding-inspection-control
+
+# Independent review: caller-controlled public signer inspection (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate read-only session, pinned checkout /lane/review-checkout.
+This review judges this commit only. It is a non-closing repair increment on the immutable base
+e00e172d717066000767cb697194aad1766ba368. The base's own review is separate and is not judged here.
+
+## Methods
+
+- Confirmed the commit: `git rev-parse HEAD` gives 4bcf4fb34053afe00accd65cfce99b374d0c9c44. Its parent is
+  e00e172d. The diff against the base touches 6 files: TASKS.md, the evidence file, the guide,
+  local_commit.rs, local_commit_inspection.rs and local_commit_inspection_tests.rs.
+- Read IP-POLICY.md, Decision 0193, docs/evidence/t306-inspection-control-2026-11-10.md, the guide
+  and TASKS.md diffs, and the bundle README.md, run.py, check.py, parse_gate.py and light.py before
+  running anything.
+- Read the full source diff and the surrounding code:
+  - `LinuxOpenPgpSigner::inspect` and `inspect_cancellable`
+  - `verify_root_executable_checked`
+  - `PublicDatabase::capture` / `capture_until` / `capture_checked`
+  - `inspect`, `inspect_with`, `validate_result` and `signing_identity`
+  - `VerifierManifest::verify_executable`
+  - the precancellation path of `sandbox_supervision::run_owned`
+- Compared the inherited failures against the pinned baseline log, including their panic reasons.
+
+## Commands and results (all run in /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-inspection-control/review-inputs.sha256`: exit 0. The manifest's
+   own SHA-256 is a52ce87fbe376cbe3abf2803459eca3a1526e05c28c2322ac40c36011a0d3b7e, as stated in the request.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-inspection-control/run.py /lane/state/tmp/review-inspection-control-full-4bcf4fb34053`
+   (not outer-wrapped): exit 1, as expected. Results:
+   - `{"exit": 1, "source_unchanged": true, "seconds_including_reservations": 279.28, "raw_log_sha256": "0607200757e56189ef1568ff9effbb4681dcf56b21442372a70d3f0a29efeb8d"}`.
+   - Gate commands: diff-check, untracked lint, markdownlint, fmt and Clippy all exit 0
+     (fmt 1.30 s, Clippy 36.43 s). `cargo test` exits 101 after 239.54 s. The log reads `FAST GATE: FAIL`.
+   - The raw-log hash differs from the builder's (a18e18b4…) only because of timings and thread IDs. The counts match.
+3. `check.py` on that output: exit 0. Totals [1381, 72, 64, 0, 0] over 26 targets, 3 source files unchanged,
+   21 affected methods `ok`, and `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL`. Per-target counts and the
+   identities of every failure and every ignore equal the pinned baseline, plus 3 passes in the linux
+   lib unittests.
+4. `cmp` of validation-1/source-freeze.json against my source-freeze.json: exit 0 (identical).
+5. `light.py`: exit 0. Three `LIGHT_EXIT 0` lines (diff-check, untracked lint, markdownlint).
+6. `git diff --check e00e172d717066000767cb697194aad1766ba368 --`: exit 0, no output.
+7. `git status --short`: empty.
+
+These new methods pass in my run:
+- `local_commit_public_inspection_caller_cancellation_precedes_path_access`
+- `signer_inspection_capture_observes_control_before_reads_and_after_sealing`
+- `signer_inspection_refuses_future_or_inconsistent_primary_and_subkey_dates`
+
+The real-GnuPG control `signer_inspection_installed_gpg_reads_sealed_public_identity_without_an_agent`
+also passes.
+
+Two inherited failures are in local_commit:
+- `native_candidate_tree_…` fails on `InvalidGitArtifact`.
+- `native_signed_commit_…` fails on `inspect fixture signer: ArtifactDenied`.
+
+The baseline has the same two failures with the same panic messages. The failure mode has not changed and
+no failure is suppressed. I did not use the GPU, download anything or push.
+
+## Review of the requested points
+
+- **Token propagation.** `inspect` builds an internal root token and delegates to `inspect_cancellable`.
+  `inspect_cancellable` passes the caller's `&CancellationToken` through `inspection::inspect` to
+  `capture_until` and to `inspect_with`. Both workers receive it as
+  `SandboxCancellation::Observed(cancellation)`, and `validate_result` rechecks it after each worker.
+  `run_owned` refuses to launch when the token is already cancelled or the deadline has passed
+  (sandbox_supervision.rs:1059-1061). The constructor no longer creates its own token. Both workers
+  share one thirty-second deadline, created once.
+- **Checkpoints.**
+  - `check_control` runs before either path is consulted (local_commit.rs:329). The new test proves this
+    with an `AsRef<Path>` that panics if called.
+  - Checks also run at entry to `verify_root_executable_checked`, before every 64-KiB executable read
+    and after hashing (local_commit.rs:890, 916, 932).
+  - In the capture, checks run at entry, before every bounded `pread` (now capped at 64 KiB per call),
+    before sealing and after sealing (local_commit_inspection.rs:74, 119, 143, 146).
+  - Further checks run after the evidence digest (inspection.rs:258) and after `PinnedCommitSigner::seal`,
+    before `Ok` (local_commit.rs:367).
+  - Every failure maps to `ArtifactDenied` and returns no signer.
+- **Bounded reads.** A short read loops, a zero-length read is refused, and the size and metadata
+  comparison after the read is unchanged. The test uses 2×64 KiB + 1 bytes, so it observes exactly
+  6 checkpoints and compares all bytes and the digest.
+- **Sealed descriptor cleanup.** When a check after sealing fails, the local `OwnedFd` is dropped and
+  closed before `Self` is built. Duplicated worker payloads are moved into `dispatch`/`Launch` and dropped
+  on every error path. No raw descriptor escapes. This rests on ownership semantics; no test counts
+  descriptors (see L1).
+- **Creation and expiry checks.**
+  - Fields 6 and 7 (0-indexed [5] and [6]) must be ASCII digits only, which rejects `+1`, `-1` and
+    non-numeric text.
+  - Creation must parse as u64: an empty value and a value past 2^64 are refused.
+  - A key is usable only if `created <= now`, the expiry is 0 or later than now, and the expiry is
+    0 or later than the creation time.
+  - `primary_usable` is reset on every `pub`, so a subkey cannot qualify under a future-dated, expired
+    or malformed primary.
+  - A malformed date on any record, not only the selected one, refuses the whole listing. This fails
+    closed.
+  - The test checks every case on the primary, on a subkey and on the primary of a selected subkey.
+    Positive controls cover creation exactly at `now` and epoch-zero keys. The `listing` helper's
+    `:1:` pattern is replaced for real: the `("101","")` negative case and the positive controls
+    would fail if it were not.
+- **Confinement.** The private-key and agent boundary is unchanged:
+  - there is no new projection, socket or filter change, and no direct-inspection fallback in production;
+  - the public-only claim is still not presented as signing availability;
+  - the signing-pipe probe stays in the private bundle and is not product code.
+- **Honest claims.** The evidence, guide and TASKS text say the gate is FAIL, that no row or sub-row is
+  added and that neither parent closes. They state that individual filesystem, hash and seal calls are
+  not interruptible. My run confirms the numbers they give.
+- **Public content.** The diff and commit message contain no username, home path, hostname, credential
+  or private sibling name. The `/lane/state/tmp/...` bundle path in the evidence file follows a
+  long-standing repository convention (197 docs files at the base) and contains no username. GnuPG is
+  named as a tool, not used as branding.
+- **Evaluation integrity.** The commit does not touch evaluation tasks, frozen, hidden or held-out
+  inputs, the scorer, prompts, thresholds, dependencies or the SBOM, and adds no `#[ignore`. check.py
+  confirms that the TASKS.md row lines are unchanged.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test coverage) — local_commit.rs:916, 932, 367; local_commit_inspection.rs:258.** Several
+  checkpoints are correct by inspection but no test exercises them:
+  - the per-chunk and post-hash checks in `verify_root_executable_checked`;
+  - the final `check_control` before `inspect_cancellable` returns a pin;
+  - the check after the evidence digest in `inspect_with`.
+
+  A cancellation raised during Export is already caught by `validate_result`, so the worker-order test
+  cannot tell whether the later check exists. If any of these lines were deleted, all current tests
+  would still pass.
+
+  Fix: add a counting-closure test of `verify_root_executable_checked` against a root-owned file larger
+  than 64 KiB, in the style of the capture test. Add a test seam that cancels after a successful
+  `inspect_with` and before the pin is returned.
+- **L2 (low, latency note) — local_commit_inspection.rs:175-178.** For each worker,
+  `VerifierManifest::verify_executable` re-hashes systemd-run, systemctl, bwrap and gpg with no
+  checkpoint during the hashing. This is bounded, and `run_owned` refuses before launch on cancellation
+  or deadline, so no worker runs after cancellation. Cancellation latency still includes up to four
+  full executable hashes.
+
+  This matches the stated limitation that hashing is synchronous. Optionally thread the control check
+  into `LinuxGitArtifact::verify` for this path.
+
+## Per-row result
+
+- T-303 / T-306 (this non-closing increment, scope local-coding-inspection-control): the requested
+  repair is correct, tested apart from L1, and the claims are honestly labelled.
+  - Every required command ran with the expected outcome.
+  - The complete affected gate remains FAIL with exactly the inherited 72 failures and 64 ignores.
+  - No row closes or is ticked on this increment. Both parents stay open, with the previously recorded
+    same-row backlog.
+  - L1 and L2 go to the backlog.
+
+Verdict: PASS

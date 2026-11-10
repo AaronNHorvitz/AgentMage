@@ -89,6 +89,15 @@ impl PublicDatabase {
             {
                 return Err(denied());
             }
+            // A legacy public database may be stale after daemon migration.
+            // Refuse common configuration entirely rather than interpret its
+            // directives, includes or future options in this capture path.
+            for marker in ["public-keys.d", "common.conf"] {
+                match statat(&directory, marker, AtFlags::SYMLINK_NOFOLLOW) {
+                    Err(rustix::io::Errno::NOENT) => (),
+                    _ => return Err(denied()),
+                }
+            }
             Ok(())
         };
         revalidate()?;
@@ -139,11 +148,12 @@ impl PublicDatabase {
         {
             return Err(denied());
         }
-        revalidate()?;
         check()?;
+        revalidate()?;
         let payload = crate::sandbox::sealed_payload("agentmage-inspection-public", &bytes)
             .map_err(|_| denied())?;
         check()?;
+        revalidate()?;
         Ok(Self {
             sha256: hash(&bytes),
             payload,
@@ -192,7 +202,7 @@ pub(super) fn inspect(
                 &filter,
             );
             manifest.control_path()?;
-            crate::sandbox::supervision::run_owned(
+            map_dispatch(crate::sandbox::supervision::run_owned(
                 command,
                 Launch {
                     owner: LaunchOwner::SignerInspection(manifest),
@@ -205,10 +215,15 @@ pub(super) fn inspect(
                 },
                 &policy,
                 &crate::sandbox::SandboxCancellation::Observed(cancellation),
-            )
-            .map_err(|e| capture_error(e.kind(), LinuxLocalCommitErrorKind::ArtifactDenied))
+            ))
         },
     )
+}
+
+fn map_dispatch(
+    result: Result<SupervisedResult, crate::sandbox::LinuxSandboxError>,
+) -> Result<SupervisedResult, LinuxLocalCommitError> {
+    result.map_err(|e| capture_error(e.kind(), LinuxLocalCommitErrorKind::ArtifactDenied))
 }
 
 fn inspect_with(
@@ -329,10 +344,13 @@ fn signing_identity(listing: &[u8], fingerprint: &str, now: u64) -> bool {
                 if kind == "pub" {
                     primary_usable = usable;
                 }
-                pending = Some(usable && primary_usable && fields[11].contains('s'));
+                pending = Some((
+                    usable && primary_usable && fields[11].contains('s'),
+                    kind == "pub",
+                ));
             }
             Some("fpr") => {
-                let Some(usable) = pending.take() else {
+                let Some((usable, _)) = pending.take() else {
                     return false;
                 };
                 if fields.len() < 10 || !valid_fingerprint(&fields[9].to_ascii_lowercase()) {
@@ -345,7 +363,17 @@ fn signing_identity(listing: &[u8], fingerprint: &str, now: u64) -> bool {
                     matches += 1;
                 }
             }
-            Some("tru" | "uid" | "uat" | "grp" | "rvk") => {
+            Some("rvk") => {
+                // A designated revoker precedes its primary's fpr in fixed
+                // listings. Its own fingerprint never identifies the signer.
+                if matches!(pending, Some((_, false)))
+                    || fields.len() < 10
+                    || !valid_fingerprint(&fields[9].to_ascii_lowercase())
+                {
+                    return false;
+                }
+            }
+            Some("tru" | "uid" | "uat" | "grp") => {
                 if pending.is_some() {
                     return false;
                 }

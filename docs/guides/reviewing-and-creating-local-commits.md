@@ -200,7 +200,11 @@ the approved private keyring directory and opens the public database relative
 to it without following symlinks. Special files, unsafe ownership or modes,
 empty files, changed metadata and databases larger than four MiB refuse capture.
 This is a bounded public-file snapshot, not an atomic transaction against
-concurrent same-user edits. Keybox-daemon stores are unsupported.
+concurrent same-user edits. Homes containing `public-keys.d` or `common.conf`
+are refused, including dangling symlinks and empty configuration. This
+conservatively excludes common configuration instead of interpreting it, so a
+legacy database left after keybox-daemon migration cannot qualify through this
+capture path. Markers are rechecked before and after sealing.
 
 Neither worker receives the live keyring directory, private keys, option files,
 trust database or host agent sockets. Fixed GnuPG options prevent option-file
@@ -210,8 +214,9 @@ with that key's own signing capability, no revocation, disablement or expiry,
 and a current primary key. Creation must be an unsigned decimal timestamp;
 expiry may be empty or decimal zero for no expiry. A selected identity or its
 primary created in the future, or expiring before creation, is refused.
-A fingerprint in a user ID or diagnostic cannot
-qualify. Export follows only a successful eligible listing, over the same sealed
+Designated revoker records may precede a primary fingerprint; the revoker
+fingerprint never qualifies the signer. A fingerprint in a user ID or diagnostic
+cannot qualify. Export follows only a successful eligible listing, over the same sealed
 snapshot. The inspection digest binds the snapshot, listing, public export and
 fingerprint. Bounded stderr remains diagnostic only.
 

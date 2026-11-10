@@ -182,6 +182,11 @@ pub struct LinuxSandboxError {
 }
 
 impl LinuxSandboxError {
+    #[cfg(test)]
+    pub(crate) const fn for_test(kind: LinuxSandboxErrorKind) -> Self {
+        Self { kind }
+    }
+
     /// Returns the stable failure category.
     #[must_use]
     pub const fn kind(self) -> LinuxSandboxErrorKind {

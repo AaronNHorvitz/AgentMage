@@ -30,6 +30,12 @@ secret-key listing without an agent may succeed with no keys. Do not connect
 to a host agent or relax the worker's socket-denying policy to avoid this.
 The old direct inspection helper is retained only for disposable tests, with
 no production fallback. Keybox-daemon stores are unsupported by this capture.
+Refuse any `public-keys.d` or `common.conf` entry in the held directory, including
+symlinks and empty configuration. This deliberately conservative rule avoids
+interpreting common configuration and accepting a stale legacy database after
+migration. Recheck these indicators before and after sealing. Designated
+revoker records may precede the primary fingerprint, but their own fingerprints
+never qualify the signer.
 
 Use held root-owned installed executables, the original thirty-second total
 deadline, independent output bounds and digests, resource limits, withheld
