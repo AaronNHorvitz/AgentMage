@@ -12,7 +12,11 @@ use std::fs;
 use std::os::unix::fs::PermissionsExt;
 
 fn base_file(sha256: String, mode: CommitFileMode) -> Option<BaseFilePreimage> {
-    Some(BaseFilePreimage { sha256, mode })
+    Some(BaseFilePreimage {
+        sha256,
+        mode,
+        bytes: Vec::new(),
+    })
 }
 
 fn observation(owner: &LinuxCodingRepository) -> GitObservation {
@@ -43,6 +47,8 @@ fn observation(owner: &LinuxCodingRepository) -> GitObservation {
                     (edit.before_sha256 != "0".repeat(64)).then(|| BaseFilePreimage {
                         sha256: edit.before_sha256.clone(),
                         mode: CommitFileMode::Regular,
+                        bytes: fs::read(owner.created.as_ref().unwrap().original_path.join(path))
+                            .unwrap(),
                     }),
                 )
             })
@@ -1326,6 +1332,61 @@ fn creation_review_candidate_plan_binds_mixed_original_history_and_creation_mode
         assert_eq!(packet.change_set.files()[i].preimage_sha256, preimage);
     }
     assert!(!candidate.network_authority && !candidate.hooks_enabled && !candidate.filters_enabled);
+    let mut checker = CandidateChecker(|input: LinuxCodingCandidateReviewEvidence<'_>| {
+        let sources = input.sources();
+        assert_eq!(sources.len(), 3);
+        assert_eq!(sources[0].path(), "new.py");
+        assert_eq!(sources[0].preimage(), None);
+        assert_eq!(sources[0].postimage(), b"created final\n");
+        assert_eq!(sources[0].mode(), CommitFileMode::Regular);
+        assert_eq!(sources[1].path(), "other.py");
+        assert_eq!(sources[1].preimage(), None);
+        assert_eq!(sources[1].postimage(), b"executable\n");
+        assert_eq!(sources[1].mode(), CommitFileMode::Executable);
+        assert_eq!(
+            sources[2].preimage(),
+            Some(b"preserve human work".as_slice())
+        );
+        assert_eq!(sources[2].postimage(), b"reviewed change");
+        Ok(())
+    });
+    selected_review(&owner)
+        .verify_candidate_tree_with(
+            &packet,
+            &packet.commit_plan.groups[0].group_id,
+            "review-mixed-sources",
+            &mut checker,
+            &review_token(),
+            || Ok(observation(&owner)),
+        )
+        .unwrap();
+    let split_projection = owner
+        .capture_applied_write_review(
+            (0..3)
+                .map(|i| ChangePurposeAssignment {
+                    operation_id: format!("history-{i}"),
+                    purpose: if i == 1 {
+                        CommitChangePurpose::Formatting
+                    } else {
+                        CommitChangePurpose::Behavior
+                    },
+                })
+                .collect(),
+        )
+        .unwrap();
+    let split_packet = packet_from_projection(&owner, split_projection);
+    assert_eq!(split_packet.commit_plan.groups.len(), 2);
+    let split = selected_review(&owner)
+        .verify_candidate_tree_with(
+            &split_packet,
+            &split_packet.commit_plan.groups[0].group_id,
+            "review-split-sources",
+            &mut checker,
+            &review_token(),
+            || Ok(observation(&owner)),
+        )
+        .unwrap();
+    assert_eq!(split.candidate().files.len(), 2);
     // Absence is required at the immutable base, not just at the original
     // filesystem creation dispatch. Even an empty base blob is occupied.
     for occupied in [hash(b"base content\n"), hash(b""), "0".repeat(64)] {
@@ -1444,6 +1505,19 @@ fn candidate_checker_receives_original_records_and_releases_only_rechecked_inert
             input.creation().authority_receipt_sha256()
         );
         assert_eq!(input.candidate().review_packet_sha256, p.packet_sha256);
+        let sources = input.sources();
+        assert_eq!(sources.len(), 1);
+        assert_eq!(
+            sources[0].operation_id(),
+            p.change_set.files()[0].operation_id
+        );
+        assert_eq!(sources[0].path(), "sentinel");
+        assert_eq!(
+            sources[0].preimage(),
+            Some(b"preserve human work".as_slice())
+        );
+        assert_eq!(sources[0].postimage(), b"reviewed change");
+        assert_eq!(sources[0].mode(), CommitFileMode::Regular);
         assert_eq!(
             input.candidate().parent_object,
             input.creation().base_object()
@@ -1759,4 +1833,86 @@ fn candidate_checker_public_native_path_keeps_artifact_admission_and_does_not_in
         fs::read(f.root.join("repo/sentinel")).unwrap(),
         b"preserve human work"
     );
+}
+
+#[test]
+fn candidate_checker_refuses_hash_only_base_proofs_before_invoking_reviewer() {
+    for bytes in [b"".as_slice(), b"different base", b"preserve human work\0"] {
+        let (f, owner, changes) = command::tests::candidate_review_fixture();
+        let p = packet(&owner, &changes);
+        let calls = Cell::new(0);
+        let mut checker = CandidateChecker(|_: LinuxCodingCandidateReviewEvidence<'_>| {
+            panic!("a digest without its exact captured base bytes cannot reach review")
+        });
+        let result = selected_review(&owner).verify_candidate_tree_with(
+            &p,
+            &p.commit_plan.groups[0].group_id,
+            "review-base-content",
+            &mut checker,
+            &review_token(),
+            || {
+                calls.set(calls.get() + 1);
+                let mut value = observation(&owner);
+                value
+                    .base_preimages
+                    .get_mut("sentinel")
+                    .unwrap()
+                    .as_mut()
+                    .unwrap()
+                    .bytes = bytes.to_vec();
+                Ok(value)
+            },
+        );
+        assert_eq!(result.err().unwrap().code(), "code.commit.review-source");
+        assert_eq!(calls.get(), 2);
+        assert!(
+            !f.root
+                .join("owned/candidate-index-review-base-content")
+                .exists()
+        );
+    }
+}
+
+#[test]
+fn candidate_review_source_capture_refuses_changed_postimage_and_missing_base() {
+    for case in ["postimage", "missing", "absence", "extra", "base-bytes"] {
+        let (f, owner, changes) = command::tests::candidate_review_fixture();
+        let p = packet(&owner, &changes);
+        let mut observed = observation(&owner);
+        match case {
+            "postimage" => {
+                fs::write(f.root.join("owned/worktree/sentinel"), b"external edit").unwrap()
+            }
+            "missing" => {
+                observed.base_preimages.clear();
+            }
+            "absence" => {
+                observed.base_preimages.insert("sentinel".into(), None);
+            }
+            "extra" => {
+                observed.base_preimages.insert("other.py".into(), None);
+            }
+            "base-bytes" => {
+                observed
+                    .base_preimages
+                    .get_mut("sentinel")
+                    .unwrap()
+                    .as_mut()
+                    .unwrap()
+                    .bytes
+                    .clear();
+            }
+            _ => unreachable!(),
+        }
+        assert!(
+            owner
+                .capture_candidate_review_sources(&p, &observed)
+                .is_err(),
+            "{case}"
+        );
+        assert_eq!(
+            fs::read(f.root.join("repo/sentinel")).unwrap(),
+            b"preserve human work"
+        );
+    }
 }

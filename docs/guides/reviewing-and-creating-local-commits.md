@@ -419,3 +419,27 @@ candidate construction, signer capture, artifact capture/scanning, the original
 owner or the manual approval channel. Those remain mandatory for the eventual
 product composition. No API, MCP, CLI or native execution is activated, and
 there is no commit or push authority from these values alone.
+
+## Exact source pairs for the trusted checker
+
+`LinuxCodingCandidateReviewEvidence::sources()` provides an ordered source pair
+for every file in the complete packet, including files outside the selected
+logical commit group. Each pair exposes its original operation, relative path,
+immutable-base bytes, current owned-worktree bytes and candidate Git mode.
+An absent base is `None`; an existing empty base is `Some(&[])`. New files retain
+their separately approved mode. No source bytes appear in debug output or a
+serialized receipt, and source pairs have no public constructor.
+
+The base bytes come from the existing bounded offline Git collector, with its
+original object-identity, path and size checks. Current source reads use the
+existing held worktree scope. Both contents must match their exact packet hashes
+before the checker is called. All complete pre/post observations also compare
+the retained base bytes; successful review still needs the original full source,
+mode, validation and ownership rechecks. This is bounded observation, not an
+atomic lease against concurrent filesystem changes.
+
+These bytes are untrusted local input. An installed checker must obtain separate
+authority before sending them to any model or service; the two-root read selection
+does not grant disclosure. This supplies review material, not an independent
+checker implementation, artifact/scanner provenance, person approval or a Git
+effect. The checked result remains inert, and T-303/T-306 remain open.

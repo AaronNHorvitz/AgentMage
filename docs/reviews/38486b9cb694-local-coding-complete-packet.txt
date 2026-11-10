@@ -1,0 +1,187 @@
+Commit: 38486b9cb6941123b88f917170b91957cdd0607e
+Scope: local-coding-complete-packet
+
+# Independent review: T-303 / T-306 complete-packet commit preparation
+
+Reviewer: Claude Opus 5.5, extra-high effort, in a separate session with read-only use of the
+pinned checkout `/lane/review-checkout`. Same-model review; a cross-model review must still
+happen before any public release.
+
+## Methods
+
+- Confirmed the commit. `git rev-parse HEAD` gives `38486b9cb6941123b88f917170b91957cdd0607e`,
+  and its parent is `e0702bdd9b4523668bc075ff09e940290e23a3f7`, the stated base. The diff
+  against the base touches exactly 8 paths: `TASKS.md`, the evidence note, the guide, two
+  retained review copies, `kernel/engine/src/local_commit.rs`, `review_packet.rs` and the new
+  `local_commit_review_preparation_tests.rs`.
+- Read IP-POLICY.md and all of the private bundle's scripts before running them: README,
+  `run.py`, `check.py`, `parse_gate.py`, `light.py` and `stage_check.py`. They do the following
+  and nothing else:
+  - run the repository fast gate;
+  - hash the 3 source files before and after the run;
+  - compare per-target counts and failure/ignore identities with the hash-pinned baseline;
+  - check docs/reviews bytes and the unchanged TASKS row lines;
+  - check the added lines for private paths.
+
+  None of them writes to the repository, uses the network, pushes or uses the GPU.
+- Read the full source diff, the four new tests, the evidence note, and the TASKS and guide
+  additions. Also read the surrounding code that the new checks rely on:
+  - `verify_local_commit_review`, `plan_local_commit`, `verify_local_commit_plan` and
+    `reconcile_local_commit`;
+  - the driver constructor and `EffectDriver::execute`;
+  - `verify_review_packet` (it rebuilds the whole packet and compares it, so `group_sha256`,
+    `proposed_message` and the findings are all canonical);
+  - the `FindingSeverity` enum.
+- Searched for callers. `PreparedLocalCommit::new` and `LocalCommitEffectDriver` have no caller
+  outside `kernel/engine/src/local_commit.rs`. In `platforms/linux/src/local_commit.rs`, the
+  legacy `record_manual_commit_approval` is used only inside `#[cfg(test)] mod tests` (lines
+  947 onward). No product route was added.
+- Ran mutation probes on a scratch copy (`git archive` into `/tmp/rv-probe`, outside the
+  repository). See below.
+
+## Commands and results (all run from the pinned checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-complete-packet/review-inputs.sha256`: exit 0.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-complete-packet/run.py /lane/state/tmp/review-complete-packet-full-38486b9cb694`
+   exits 1, as expected. Output:
+   `{"exit": 1, "source_unchanged": true, "seconds_including_reservations": 446.8429197749938, "raw_log_sha256": "db2e56d753cc978af33e2d46187b58a964ef166197f8aa188d14ea4114fafe1f"}`.
+   - Command results: the first 6 exit 0 (diff-check, lint-untracked, lint-reviews,
+     markdownlint, fmt 2.40 s, Clippy `-D warnings` 48.13 s). `cargo test` exits 101 after
+     394.69 s. The log ends `FAST GATE: FAIL`. No timeout.
+   - The 72 failures are all in unchanged Linux modules: 42 linux_coding_runtime,
+     13 repository_safety, 10 linux_read, 2 secret_service, 2 local_commit, 2 command_runner and
+     1 linux_repository_map.
+   - The two `local_commit` failures are the platform-native fixtures
+     (`platforms/linux/src/local_commit.rs:1897`, `:1909`). They fail with `ArtifactDenied` and
+     `InvalidGitArtifact` on this host, as in the baseline. None of the failures is in the
+     kernel engine.
+3. `python3 -B /lane/state/tmp/t306-complete-packet/check.py /lane/state/tmp/review-complete-packet-full-38486b9cb694`
+   exits 0. This is a data comparison only, not a gate pass. Output: 46 targets, totals
+   `[3073, 72, 72, 0, 0]`, 3 source files, 13 affected methods. The per-target failure and
+   ignore identities match the baseline exactly, with +6 Linux passes from the base and
+   +4 kernel passes from this batch.
+4. `cmp .../validation-1/source-freeze.json .../review-complete-packet-full-38486b9cb694/source-freeze.json`:
+   exit 0.
+5. `python3 -B /lane/state/tmp/t306-complete-packet/light.py`: exit 0. Diff-check,
+   lint-untracked, lint-reviews and markdownlint all pass (0 issues in 3 files).
+6. `git diff --check e0702bdd9b4523668bc075ff09e940290e23a3f7 --`: exit 0.
+7. `cmp docs/reviews/b43c967558b3-local-coding-commit-findings.txt /lane/reviews/b43c967558b3-local-coding-commit-findings.md`:
+   exit 0.
+8. `cmp docs/reviews/e0702bdd9b45-local-coding-candidate-checker.txt /lane/reviews/e0702bdd9b45-local-coding-candidate-checker.md`:
+   exit 0.
+9. `git status --short`: empty, both before and after all runs.
+
+All 4 new methods and the 9 existing methods in the three affected sources report `ok` in my
+log. A count of `#[test]` attributes (4 + 4 + 5) agrees with check.py's 13.
+
+### Mutation probes (scratch copy, `cargo test -p agentmage-kernel-engine --lib local_commit::` through build-slot)
+
+I applied each mutation alone to `kernel/engine/src/local_commit.rs` in the copy, then
+restored the file and confirmed it was byte-identical to HEAD afterwards.
+
+| Mutation | Result |
+| --- | --- |
+| M1: drop the `review_packet_sha256` binding | killed (binding-drift test) |
+| M2: drop the repository binding | killed |
+| M3: drop the parent binding | killed |
+| M4: drop the message binding | killed (binding-drift and retained-drift tests) |
+| M5: accept any group (`.next()`) instead of the exact `group_sha256` | killed |
+| M6: `PreparedLocalCommit::new` uses the raw receipt check | killed (material and binding tests) |
+| M7: `verify_at` uses the raw receipt check | killed |
+| M8: driver constructor uses the raw check | killed |
+| M9: delete the dispatch-site `verify_at` call in `execute` | **survived** (see L-1) |
+| M10: ignore suppressed findings | killed (40-combination and retained-drift tests) |
+| M11: `record_reviewed_…` skips the packet | killed |
+| M12: `verify_reviewed_…` skips the packet | killed |
+
+### Adversarial reasoning
+
+- **No way around the packet requirement.** `PreparedLocalCommit`'s fields are private. It has
+  no `Deserialize`, no `Default` and no other constructor, so `new` is the only way in, and
+  `new` requires the full packet.
+  - A forged packet would have to satisfy `verify_review_packet`, which rebuilds the packet and
+    compares the whole struct and its digest. Self-hashing therefore cannot hide a material
+    finding.
+  - Suppressed duplicate and low-confidence findings are checked, and the 40-case test (and
+    M10) prove it.
+  - The request bytes do not change: the plan plus the approval digest. The plan's
+    `review_packet_sha256` binds the retained packet into the grant-bound request hash.
+- **Test-only bridge.** `commit_packet_for_test` is `#[cfg(test)] pub(crate)`. The fixture is
+  promoted only to `pub(super)` inside `#[cfg(test)] mod tests`, and no product constructor is
+  compiled.
+- **Debug output.** The manual `Debug` impl prints only `transaction_id`. Before this change,
+  the derived `Debug` printed the full plan, including the message.
+- **Documentation claims.** The evidence note and guide accurately say this is packet admission
+  only, not reviewer, artifact, candidate, signer, owner or consent provenance. They also say
+  no product, API, MCP, CLI or native route is enabled. The claim that the check is repeated
+  "immediately before issuing its executor permit" is true of the code (`local_commit.rs:1279`).
+  The tests exercise the shared `verify_at` guard rather than `execute`, and the note says so.
+- **Earlier low addressed.** The first low in the retained b43c967558b3 report (admission only
+  at planning; a bare packet hash carried to approval and launch) is addressed as that report
+  suggested: the exact packet is now required and checked at preparation and launch. The
+  exhaustive-severity low stays open: `matches!` at `local_commit.rs:150-154` is unchanged,
+  and the builder says so.
+- **Evaluation integrity, delivery, public content and IP.**
+  - No evaluator, task, held-out, hidden-test, scorer, prompt, threshold, dependency, SBOM or
+    scoreboard path changed.
+  - The TASKS row lines are byte-identical to the base (check.py), and no new row or sub-row
+    was added.
+  - The added lines contain no private host path, username, hostname, credential or personal
+    data. The bundle path `/lane/state/tmp/...` follows existing precedent and has no user
+    component.
+  - No trademark is used as branding, and no other product is named or compared.
+  - The commit author metadata is the repository owner's usual Git identity, as in the
+    preceding commits.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L-1 (low, backlog, same row).** The dispatch-site packet recheck has no test and adds no
+  protection.
+  - **Location:** `kernel/engine/src/local_commit.rs:1279` (`self.prepared.verify_at(self.now_epoch_ms)`
+    in `EffectDriver::execute`).
+  - **Test gap.** Mutation M9 deletes this call and every test still passes. The tests reach
+    only `verify_at` directly and the constructor.
+  - **No added protection.** `prepared` and `now_epoch_ms` are private and immutable after
+    `LocalCommitEffectDriver::new`, which has already run the same check with the same
+    timestamp. The dispatch recheck is therefore deterministic and cannot fail if
+    construction succeeded.
+  - **Pre-existing expiry issue (since be075e8b).** The approval-expiry part of this recheck
+    uses the construction-time clock. An approval that expires between driver construction and
+    dispatch is not refused by the kernel; only the platform's own deadline applies. This is not
+    exploitable today: there is no product caller, and the full approval composition is
+    documented as open.
+  - **Fix when composing execution:**
+    - take the current trusted time at `execute`, or bound it from the `EffectAuthorization`;
+    - re-run `verify_at` with that time;
+    - add a driver-`execute` test with a consumed-grant fixture. It should show refusal on
+      expiry after construction and on any drift, with the executor never invoked.
+- **L-2 (low, observation).** `reconcile_local_commit` (`local_commit.rs:996-1004`) is still a
+  public raw-receipt path.
+  - It mints a `LocalCommitReceipt` from a plan and a raw approval without the packet.
+  - It is post-effect reconciliation, not an effect, and its only in-tree caller is the
+    driver, which already holds an admitted `PreparedLocalCommit`.
+  - **Fix during product composition:** make it crate-private, or take the
+    `PreparedLocalCommit` instead. Then no receipt can be produced for a plan that never passed
+    packet admission.
+- Earlier same-row lows remain backlog: the exhaustive-severity low from b43c967558b3, L1 and
+  L2 from e0702bdd9b45, and the earlier T-306 lows.
+
+## Per-row result
+
+- **T-303:** no change to row status. Acceptable non-closing core increment; the row remains
+  OPEN.
+- **T-306:** no change to row status. Acceptable non-closing core increment; the row remains
+  OPEN.
+  - L-1 and L-2 join the same-row backlog.
+  - These still remain open: native admission, actual independent checker and artifact
+    integration, full live-owner approval composition, a trusted approval channel, durable
+    recovery, model measurements and approved push.
+- **Delivery:** no new row or sub-row, and the increment runs and is measured. No Delivery or
+  REFOCUS finding.
+- The complete affected gate is still FAIL on inherited environmental failures. This PASS
+  applies to this exact commit's increment only; it is not a gate pass and does not close
+  either row.
+
+Verdict: PASS

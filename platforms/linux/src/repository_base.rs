@@ -24,10 +24,20 @@ struct Entry {
 
 /// Exact content and Git mode of an ordinary file at the immutable base.
 /// Absence is represented separately by the containing `Option`.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub(crate) struct BaseFilePreimage {
     pub(crate) sha256: String,
     pub(crate) mode: CommitFileMode,
+    pub(crate) bytes: Vec<u8>,
+}
+
+impl std::fmt::Debug for BaseFilePreimage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("BaseFilePreimage")
+            .field("sha256", &self.sha256)
+            .field("mode", &self.mode)
+            .finish_non_exhaustive()
+    }
 }
 
 impl LinuxRepositoryCollector {
@@ -119,6 +129,7 @@ fn collect_with(
                         .map(|b| format!("{b:02x}"))
                         .collect(),
                     mode: entry.mode.ok_or_else(failed)?,
+                    bytes,
                 })
             }
             Some(_) => return Err(failed()),

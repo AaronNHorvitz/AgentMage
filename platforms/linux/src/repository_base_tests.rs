@@ -11,6 +11,7 @@ fn preimage(bytes: &[u8], mode: CommitFileMode) -> Option<BaseFilePreimage> {
     Some(BaseFilePreimage {
         sha256: digest(bytes),
         mode,
+        bytes: bytes.to_vec(),
     })
 }
 
@@ -83,6 +84,17 @@ fn base_preimages_bind_exact_blobs_and_distinguish_absence_from_empty() {
                 .all(|(args, _)| !args.contains(&":(glob)*.py".into()))
         );
     }
+}
+
+#[test]
+fn base_preimage_debug_omits_retained_source_bytes() {
+    let value = preimage(b"private source sentinel", CommitFileMode::Regular).unwrap();
+    assert_eq!(value.bytes, b"private source sentinel");
+    let debug = format!("{value:?}");
+    assert!(debug.contains(&value.sha256));
+    assert!(!debug.contains("private source sentinel"));
+    assert!(!debug.contains("bytes"));
+    assert!(!debug.contains("112, 114, 105"));
 }
 
 #[test]

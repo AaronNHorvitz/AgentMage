@@ -40,6 +40,7 @@ pub use coding_repository::{
     LINUX_CODING_PREPARED_INPUT_SCHEMA_JSON, LinuxCodingCandidateReviewEvidence,
     LinuxCodingCandidateReviewFailure, LinuxCodingCandidateReviewPort, LinuxCodingCheckedCandidate,
     LinuxCodingCommitReview, LinuxCodingRepository, LinuxCodingRepositoryError,
+    LinuxCodingReviewSource,
 };
 /// Closed output protocols for separately approved project tests.
 pub use coding_repository::{

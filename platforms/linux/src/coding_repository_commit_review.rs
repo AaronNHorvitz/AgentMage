@@ -11,6 +11,7 @@ use agentmage_kernel_engine::repository_safety::RepositoryPreservationManifest;
 use agentmage_kernel_engine::review_packet::{
     ChangePurposeAssignment, LocalReviewPacket, ReviewableChangeSet, bind_validation_evidence,
 };
+use std::cell::RefCell;
 
 #[derive(Clone, PartialEq, Eq)]
 struct GitObservation {
@@ -39,6 +40,50 @@ pub struct LinuxCodingCandidateReviewEvidence<'a> {
     candidate: &'a CandidateTreePlan,
     creation: &'a LinuxCodingGitCreation,
     validation: LinuxCodingValidationEvidence<'a>,
+    sources: &'a [LinuxCodingReviewSource],
+}
+
+/// Exact bounded source pair captured under the original two-root read scope.
+/// Bytes are untrusted local data, not model disclosure or execution authority.
+/// No serialization or content-bearing debug representation is provided.
+pub struct LinuxCodingReviewSource {
+    operation_id: String,
+    path: String,
+    preimage: Option<Vec<u8>>,
+    postimage: Vec<u8>,
+    mode: CommitFileMode,
+}
+
+impl LinuxCodingReviewSource {
+    /// Original write operation in the complete packet.
+    #[must_use]
+    pub fn operation_id(&self) -> &str {
+        &self.operation_id
+    }
+
+    /// Exact repository-relative path.
+    #[must_use]
+    pub fn path(&self) -> &str {
+        &self.path
+    }
+
+    /// Immutable-base bytes; absence differs from an existing empty file.
+    #[must_use]
+    pub fn preimage(&self) -> Option<&[u8]> {
+        self.preimage.as_deref()
+    }
+
+    /// Current owned-worktree bytes, checked against the original write history.
+    #[must_use]
+    pub fn postimage(&self) -> &[u8] {
+        &self.postimage
+    }
+
+    /// Candidate Git mode, including the separately approved mode for creation.
+    #[must_use]
+    pub const fn mode(&self) -> CommitFileMode {
+        self.mode
+    }
 }
 
 impl LinuxCodingCandidateReviewEvidence<'_> {
@@ -65,6 +110,13 @@ impl LinuxCodingCandidateReviewEvidence<'_> {
     pub fn validation(&self) -> &LinuxCodingValidationEvidence<'_> {
         &self.validation
     }
+
+    /// Complete packet source pairs, including files outside the selected group.
+    /// Captured locally; the checker needs separate authority for any disclosure.
+    #[must_use]
+    pub fn sources(&self) -> &[LinuxCodingReviewSource] {
+        self.sources
+    }
 }
 
 /// Content-free outcome from an explicitly installed trusted reviewer.
@@ -83,6 +135,8 @@ pub enum LinuxCodingCandidateReviewFailure {
 /// validation history, completeness of findings and trusted provenance/scanning
 /// of EVERY artifact claim. Missing evidence must refuse. A matching hash,
 /// passing tests, empty findings or a caller's scanner flag cannot accept.
+/// Source pairs are untrusted local input. Sending them to a model or another
+/// service requires separate disclosure authority; read selection is insufficient.
 /// There is no default accepting implementation or automatic reviewer selection.
 /// This interface does not authenticate the installed implementation itself.
 pub trait LinuxCodingCandidateReviewPort {
@@ -175,11 +229,12 @@ impl<'owner> LinuxCodingCommitReview<'owner> {
         // Candidate plans omit some inventory/link observations. Compare the
         // complete private observation across ALL pre/post samples as well;
         // equal plan hashes alone cannot hide drift across the checker call.
-        let mut baseline = None;
+        let baseline = RefCell::new(None);
         let mut stable_observe = || {
             check_cancelled()?;
             let observed = observe()?;
             check_cancelled()?;
+            let mut baseline = baseline.borrow_mut();
             if baseline.as_ref().is_some_and(|first| first != &observed) {
                 return Err(err("code.commit.review-drift"));
             }
@@ -193,11 +248,20 @@ impl<'owner> LinuxCodingCommitReview<'owner> {
             &mut stable_observe,
         )?;
         check_cancelled()?;
+        let sources = self.owner.capture_candidate_review_sources(
+            packet,
+            baseline
+                .borrow()
+                .as_ref()
+                .ok_or(err("code.commit.review-source"))?,
+        )?;
+        check_cancelled()?;
         let outcome = reviewer.verify_candidate(LinuxCodingCandidateReviewEvidence {
             packet,
             candidate: &before,
             creation: self.owner.created_git_identity()?,
             validation: self.owner.completion_validation_evidence()?,
+            sources: &sources,
         });
         outcome.map_err(|failure| {
             err(match failure {
@@ -247,6 +311,61 @@ impl<'owner> LinuxCodingCommitReview<'owner> {
 }
 
 impl LinuxCodingRepository {
+    fn capture_candidate_review_sources(
+        &self,
+        packet: &LocalReviewPacket,
+        observed: &GitObservation,
+    ) -> Result<Vec<LinuxCodingReviewSource>> {
+        let created = self.verify_apply_roots()?;
+        let files = packet.change_set.files();
+        let paths = files.iter().map(|f| f.path.clone()).collect::<Vec<_>>();
+        let scope = self.select_created_sources(&paths)?;
+        let current = scope.read(&paths).map_err(|e| err(e.code()))?;
+        if current.len() != files.len() || observed.base_preimages.len() != files.len() {
+            return Err(err("code.commit.review-source"));
+        }
+        let mut sources = Vec::with_capacity(files.len());
+        for (file, source) in files.iter().zip(current) {
+            if file.path != source.path || hash(source.content.as_bytes()) != file.postimage_sha256
+            {
+                return Err(err("code.commit.review-source"));
+            }
+            let edit = created
+                .edits
+                .get(&file.path)
+                .ok_or(err("code.commit.review-source"))?;
+            let (preimage, mode) = match observed.base_preimages.get(&file.path) {
+                Some(Some(base))
+                    if hash(&base.bytes) == file.preimage_sha256
+                        && base.sha256 == file.preimage_sha256 =>
+                {
+                    (Some(base.bytes.clone()), base.mode)
+                }
+                Some(None) if file.preimage_sha256 == "0".repeat(64) => {
+                    let mode = edit.created_mode.ok_or(err("code.commit.review-source"))?;
+                    (
+                        None,
+                        if mode & 0o100 == 0 {
+                            CommitFileMode::Regular
+                        } else {
+                            CommitFileMode::Executable
+                        },
+                    )
+                }
+                _ => return Err(err("code.commit.review-source")),
+            };
+            sources.push(LinuxCodingReviewSource {
+                operation_id: file.operation_id.clone(),
+                path: file.path.clone(),
+                preimage,
+                postimage: source.content.into_bytes(),
+                mode,
+            });
+        }
+        self.verify_apply_roots()?;
+        Ok(sources)
+    }
+
     /// Binds trusted-caller consent to the exact original and worktree roots
     /// displayed by `inspect_apply`, before source reads or Git inspection.
     /// Consent must cover complete source/metadata reads and offline Git reads;

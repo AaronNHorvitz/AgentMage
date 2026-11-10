@@ -54,6 +54,7 @@ mod commit_review;
 pub use commit_review::{
     LinuxCodingCandidateReviewEvidence, LinuxCodingCandidateReviewFailure,
     LinuxCodingCandidateReviewPort, LinuxCodingCheckedCandidate, LinuxCodingCommitReview,
+    LinuxCodingReviewSource,
 };
 #[path = "coding_repository_edit.rs"]
 mod edit;

@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The retained [complete-packet review](docs/reviews/38486b9cb694-local-coding-complete-packet.txt)
+has **Verdict: PASS** for exact commit
+`38486b9cb6941123b88f917170b91957cdd0607e`, with no high or medium finding.
+Its low L-1 (construction-time approval clock and dispatch-site coverage) and
+L-2 (raw post-effect reconciliation visibility) remain same-row backlog for
+execution composition. Neither T-303 nor T-306 closes.
+
+The [exact review-source increment](docs/evidence/t306-review-source-pairs-2026-11-10.md)
+provides complete bounded immutable-base/current source pairs to the explicitly
+installed original-owner checker, including files outside the selected group.
+Bytes must match the packet; base absence and empty content remain distinct.
+Read consent supplies no model/service disclosure authority. The complete affected
+gate remains **FAIL**: 1,430 passes, the exact inherited 72 failures and 64 ignores
+over 26 unfiltered targets of three affected crates. All three new methods,
+54 controls, formatting and Clippy pass; six source hashes stay fixed.
+Independent core review is required. T-303/T-306 stay open without new rows;
+native admission, actual checker/artifact integration, complete live-owner
+approval composition, recovery, measurements and approved push remain open.
+
 The [complete-packet preparation increment](docs/evidence/t306-complete-packet-preparation-2026-11-10.md)
 retains the exact typed packet through dormant commit preparation and rechecks
 its integrity, material findings and commit bindings at driver construction and
