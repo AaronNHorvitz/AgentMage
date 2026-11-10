@@ -1,0 +1,185 @@
+Commit: 6033f03afb9e19874cdc67df22fc13f23c83e817
+Scope: local-coding-commit-io
+
+# Independent review: confined non-signing local-commit I/O (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session with read-only access to the repository.
+This is a same-model review. Review checkout: the pinned exact checkout (current directory). No file in
+the repository was modified.
+
+## Scope and inputs
+
+- `git rev-parse HEAD` and `git rev-parse 6033f03a…` both resolve to
+  `6033f03afb9e19874cdc67df22fc13f23c83e817`. `git status --short` is empty.
+- The diff from base `de4f3fd311de56bd2b1adc86f508b7ce5959990f` touches 11 files (+1307/−89). The bundle's
+  `final-blobs.json` holds content SHA-256s for exactly those 11 paths, and all 11 equal
+  `sha256(git show HEAD:<path>)`.
+- The bundle manifest `review-inputs.sha256` has SHA-256 `d9a79114…60047539dd`, which matches the request.
+- I read IP-POLICY.md; Decision 0191; docs/evidence/t306-commit-io-2026-11-10.md; the guide section;
+  the TASKS.md diff; and the bundle's README.md, run.py, check.py, parse_gate.py and light.py. I read the
+  full source diff of `local_commit.rs`, `repository_commit_io.rs` and `repository_commit_io_tests.rs`, the
+  small visibility changes in `repository_candidate.rs`, `repository_execution.rs` and `repository_safety.rs`,
+  and the kernel's `verify_local_commit_plan`, `valid_task_branch` and `reconcile_local_commit`.
+
+## Commands and results (all run in the pinned checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-commit-io/review-inputs.sha256`: exit 0.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-commit-io-full-6033f03afb9e`
+   (fresh output directory that did not exist beforehand; not wrapped in build-slot): exit 1.
+   `{"exit": 1, "source_unchanged": true, "seconds_including_reservations": 1058.63,
+   "raw_log_sha256": "4da226f53898e0489befd9634baa399a7e348becce53b7b13599fdab400b7ea5"}`. `FAST GATE: FAIL`.
+   Per-command exits: four light commands 0; `cargo fmt --check` 0; Clippy 0; `cargo test` 101. No timeout.
+   My wall time is longer than the builder's 228.97 s because of reservation waits on the shared slot.
+3. `python3 -B …/check.py <out>`: exit 0. It reports 26 targets and totals
+   `[1346, 72, 64, 0, 0]` (pass/fail/ignore/measured/filtered), 6 frozen sources unchanged and all 15
+   required methods `ok`. It prints `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL`. This is per-target data
+   only. It is **not** a passing full gate.
+4. `cmp …/validation-2/source-freeze.json <out>/source-freeze.json`: exit 0. My six frozen source hashes
+   equal the builder's.
+5. `python3 -B …/light.py`: exit 0. Four commands exit 0: `git diff --check`, `--lint-untracked`,
+   `--lint-reviews` and markdownlint.
+6. `git diff --check de4f3fd311de56bd2b1adc86f508b7ce5959990f --`: exit 0.
+7. `git status --short`: empty, exit 0.
+
+Evidence traceability:
+- The builder's retained `validation-2/fast.log` SHA-256 is `a15b6072…88e687e93`, which matches the claim.
+  Its result.json reports `source_unchanged: true` and 228.97 s.
+- `validation-1/fast.log` SHA-256 is `cf40c673…5755384b47`, which matches the claim. Its result.json reports
+  `source_unchanged: false`, so it is correctly labelled diagnostic.
+- Its only failure that is not in the baseline is
+  `local_commit_raw_verifier_matches_real_git_message_and_identity_encoding`. That test panicked on the
+  `"One line"` case (no final newline). The final test still asserts that case, so the assertion was kept,
+  not weakened.
+- `baseline-fast.log` (`04227c2a…0d165`) is the base-commit gate that the retained prior review already
+  verified (1335/72/64). 1335 + 11 new methods = 1346.
+- check.py compares failure and ignore identities per target, so the 72 failures are the exact inherited set.
+  They are 42 linux_coding_runtime, 13 repository_safety, 10 linux_read, and 2 each in secret_service,
+  local_commit and command_runner, plus 1 in linux_repository_map. All stop at the existing executable-ownership
+  refusal or native-admission refusal.
+- No `#[ignore` is added, and nothing is filtered or measured.
+
+## Method: what I verified beyond the harness
+
+**Closed worker session (`repository_commit_io.rs`).**
+- `CommitIoSession::new` re-runs `verify_local_commit_plan` (sealed hash, all authority flags false, network
+  false). It also binds `plan.repository_sha256` to the scope's path identity and captures the
+  already-reviewed `LinuxRepositoryMutationScope`.
+- `perform` (lines 111–184) enforces Branch → Commit → Update(object) → Terminal. Any error sets
+  `Stage::Terminal` (lines 104–108), so there is no retry.
+- Commands are built from the plan, not from caller strings:
+  - `rev-parse --verify <task_branch>`, with output that must equal `parent\n` exactly;
+  - `cat-file commit <object>`, where the object must be lowercase hex, the same length as the parent and not
+    all zeros, so `--help`-style option injection is refused (tested);
+  - `update-ref --no-deref <task_branch> <read object> <parent>`, with output that must be empty.
+- `task_branch` must start with `refs/heads/agentmage/tasks/` (kernel `valid_task_branch`), so the default
+  branch is unreachable. The test covers `refs/heads/main`.
+- The update target is the object that was read, not one the caller supplies again. The only caller
+  (`local_commit.rs:424–492`) runs update after `verify_raw_commit` and `verify_signature_status` both pass.
+- Dispatch goes through `run_worker`: the reviewed closed offline supervisor, systemd/bwrap/seccomp,
+  `LaunchOwner::RepositoryGit`, with limits on both streams. The worker uses `candidate_environment()` with no
+  GNUPGHOME and no index file.
+- Roots are revalidated before and after dispatch.
+- A result is refused if it is incomplete, unsuccessful, oversized, truncated (`total != retained.len()`),
+  cancelled or past the deadline.
+- The 30 s deadline is fixed at construction and shared with the direct signer runner.
+
+**Raw content verification (`local_commit.rs:765–801`).**
+- It requires exact header order: tree, a single parent, author, committer, then
+  `gpgsig -----BEGIN PGP SIGNATURE-----`.
+- Every following header line must be a space-prefixed continuation line ending in the END armor line.
+  Any extra parent, tree, identity, `encoding` or other header refuses.
+- Headers must be UTF-8, and the message bytes must match exactly.
+- I reproduced this with installed Git 2.56.0 and GnuPG 2.4.9, using a throwaway key in a throwaway
+  GNUPGHOME and repository under /tmp, deleted afterwards. A real signed SHA-1 commit created from stdin `msg`
+  has exactly that header layout, and its message is `b'msg'` with no final newline added. This confirms the
+  corrected stdin-byte assumption.
+
+**Signature status (`local_commit.rs:803–833`).**
+- With a primary-key signature, real `verify-commit --raw` output goes to stderr only (stdout 0 bytes). Its
+  VALIDSIG record has 11 fields, and field 1 is the full fingerprint, so the parser accepts it.
+- The parser refuses:
+  - prose or `warning:` prefixes;
+  - GOODSIG without VALIDSIG;
+  - a longer fingerprint that shares the pinned prefix;
+  - duplicate VALIDSIG records;
+  - NUL bytes;
+  - any listed failure, revocation or expiry record.
+- Separating stdout from stderr removes the old combined-stream substring match.
+
+**Other changes.**
+- `SignedGitRunner` is restricted to `commit-tree` and `verify-commit` as the first argument.
+- It pins `gpg.program`, `gpg.openpgp.program`, `gpg.format` and `i18n.commitEncoding`.
+- `--no-replace-objects` is added to the shared hardened prefix.
+- The message is supplied through a sealed memory descriptor, so the parent no longer blocks writing to a
+  pipe.
+
+**Failure classification.**
+- `failed_commit_result` is `Denied` and now carries `cleanup_verified: false`.
+- `uncertain_commit_result` is `Failed` with unverified cleanup and is used after dispatch begins.
+  `reconcile_local_commit` requires `Succeeded` and `cleanup_verified`.
+- The new kernel-control test shows that otherwise passing observations are refused for each of failed,
+  unverified, or success-only cases, and that the full control reconciles.
+
+**Honest labelling.**
+- The decision, evidence, guide and TASKS text state that the worker tests use synthetic supervisor results,
+  and that the installed-Git test uses synthetic armor.
+- They state that the signer remains direct and dormant, that inherited descendant pipes are an open
+  limitation, and that no row closes.
+- The table rows are unchanged (check.py).
+- The retained review is byte-identical to `/lane/reviews/de4f3fd311de-local-coding-confined-candidate.md`.
+- The privacy and trademark sweep of added lines found no private host path, username, hostname, credential
+  or third-party branding.
+- The diff contains no evaluation, frozen-task, hidden or held-out, scorer, prompt, threshold, dependency or
+  scoreboard change.
+
+**Not established (correctly disclosed, not counted against this batch).**
+- The native end-to-end test `native_signed_commit_verifies_exact_content_and_only_updates_task_branch` is
+  among the inherited failures. It stops at `inspect fixture signer: ArtifactDenied` (executable ownership)
+  before reaching the new session.
+- The integration of `CommitIoSession` with `run_plan` therefore has no native positive run in this lane.
+- No GPU or model process was used by me.
+
+## Findings
+
+No critical, high or medium findings.
+
+**L1 (low): SHA-256 repositories can never pass raw verification.**
+- Location: `platforms/linux/src/local_commit.rs:792`.
+- The verifier hard-codes the `gpgsig` header. Installed Git 2.56.0 writes `gpgsig-sha256` in a
+  `--object-format=sha256` repository, which I reproduced with a fake signing program.
+- The kernel plan, the worker and `object_output` all accept 64-hex objects. In a SHA-256 repository the
+  adapter would therefore create a signed object and then always refuse it as `verification_failed`. The
+  result is an unreferenced object, a Failed/uncertain result and no ref move.
+- This fails closed and is not a regression: the old `starts_with("gpgsig ")` check had the same gap.
+- Fix: choose the header from the object length (40 → `gpgsig`, 64 → `gpgsig-sha256`). Refuse the other
+  name. Add a SHA-256 case to the installed-Git encoding test.
+
+**L2 (low): a signing subkey makes a primary-key pin always fail.**
+- Locations: `platforms/linux/src/local_commit.rs:819` and `:442`.
+- The status check compares VALIDSIG field 1, which is the fingerprint of the key that actually signed.
+  Signing uses `-S<fpr>` without `!`, so GnuPG picks the newest signing subkey. Inspection (`:299–318`,
+  pre-existing) accepts any `fpr` in the listing.
+- I reproduced this with GnuPG 2.4.9: after adding a signing subkey, VALIDSIG field 1 became the subkey
+  fingerprint, and the primary moved to field 10. A primary-key pin would always be refused.
+- This fails closed and is not a security issue.
+- Fix: before activation, either sign with `-S<fpr>!` and keep the field-1 equality, or have inspection
+  resolve and pin the exact signing-capable key and compare field 1 to it (optionally also field 10 to the
+  primary).
+
+**Retained backlog.** L1 and L2 from the base review are unchanged and remain same-row backlog: scratch
+retained after a failed post-claim constructor, and descriptor binding from claim to capture. The pre-activation
+prerequisites stated by the builder also remain open: signer confinement, whole-unit descendant cleanup and
+the inherited output-pipe limitation.
+
+## Per-row result
+
+- T-303 / T-306, this non-closing same-row batch:
+  - **PASS** for the reviewed scope: closed ordered non-signing commit I/O, exact raw headers and message
+    bytes, exact status-record fingerprint, sealed signing input and uncertain failure classification.
+  - No high or medium finding. L1 and L2 above are low backlog.
+  - The complete affected gate remains **FAIL** on the exact 72 inherited failures. The check.py comparison
+    is data only.
+- Neither parent row closes. Candidate activation, signer confinement, reviewer and artifact provenance,
+  approved commit and push, recovery, and native and model measurements remain OPEN.
+
+Verdict: PASS

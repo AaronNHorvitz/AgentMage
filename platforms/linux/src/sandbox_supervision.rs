@@ -363,13 +363,17 @@ struct Control {
 
 impl Control {
     fn initialize(&mut self) -> Result<(), LinuxSandboxError> {
+        self.initialize_with_limit(CONTROL_BYTES)
+    }
+
+    fn initialize_with_limit(&mut self, limit: usize) -> Result<(), LinuxSandboxError> {
         self.stdout = Some(Capture::new(
             self.child.stdout.take().ok_or_else(failure)?,
-            CONTROL_BYTES,
+            limit,
         )?);
         self.stderr = Some(Capture::new(
             self.child.stderr.take().ok_or_else(failure)?,
-            CONTROL_BYTES,
+            limit,
         )?);
         Ok(())
     }
@@ -412,6 +416,97 @@ impl Control {
             && self.stdout.as_ref().is_some_and(|s| s.eof)
             && self.stderr.as_ref().is_some_and(|s| s.eof))
     }
+}
+
+// Single-child accounting for the existing DORMANT direct signer boundary.
+// This is not sandbox admission or a descendant-cleanup receipt. In particular,
+// EOF and reaping the immediate child do not prove that its descendants died.
+// Do not reuse this boundary to execute product tools: those use run_owned.
+static LOCAL_COMMIT_CHILD: Mutex<Option<Control>> = Mutex::new(None);
+const LOCAL_COMMIT_CAPTURE_BYTES: usize = 4 * 1024 * 1024;
+
+pub(crate) struct LocalCommitCapture {
+    pub status: ExitStatus,
+    pub stdout: Vec<u8>,
+    pub stderr: Vec<u8>,
+}
+
+pub(crate) fn capture_local_commit_process(
+    command: Command,
+    cancellation: Option<&agentmage_kernel_engine::propagation::CancellationToken>,
+    deadline: Instant,
+) -> Result<LocalCommitCapture, LinuxSandboxError> {
+    capture_local_commit_process_in(&LOCAL_COMMIT_CHILD, command, cancellation, deadline)
+}
+
+fn capture_local_commit_process_in(
+    owner: &Mutex<Option<Control>>,
+    mut command: Command,
+    cancellation: Option<&agentmage_kernel_engine::propagation::CancellationToken>,
+    deadline: Instant,
+) -> Result<LocalCommitCapture, LinuxSandboxError> {
+    // Keep the opaque Child in the slot before initializing either pipe. A
+    // poisoned/retained slot refuses admission, including after unwinding.
+    let mut slot = owner.try_lock().map_err(|_| failure())?;
+    if slot.is_some()
+        || cancellation.is_some_and(|token| token.is_cancelled())
+        || Instant::now() >= deadline
+    {
+        return Err(failure());
+    }
+    command.stdout(Stdio::piped()).stderr(Stdio::piped());
+    *slot = Some(Control {
+        child: command.spawn().map_err(|_| failure())?,
+        stdout: None,
+        stderr: None,
+        status: None,
+    });
+    finish_local_commit_capture(&mut slot, cancellation, deadline)
+}
+
+fn finish_local_commit_capture(
+    slot: &mut Option<Control>,
+    cancellation: Option<&agentmage_kernel_engine::propagation::CancellationToken>,
+    deadline: Instant,
+) -> Result<LocalCommitCapture, LinuxSandboxError> {
+    let child = slot.as_mut().ok_or_else(failure)?;
+    let result = (|| {
+        child.initialize_with_limit(LOCAL_COMMIT_CAPTURE_BYTES)?;
+        loop {
+            // Test these even after the child exited: an inherited pipe can
+            // remain open indefinitely. Each poll bounds bytes AND syscalls.
+            if cancellation.is_some_and(|token| token.is_cancelled()) || Instant::now() >= deadline
+            {
+                return Err(failure());
+            }
+            let complete = child.poll()?;
+            if cancellation.is_some_and(|token| token.is_cancelled()) || Instant::now() >= deadline
+            {
+                return Err(failure());
+            }
+            if complete {
+                return Ok(());
+            }
+            let now = Instant::now();
+            std::thread::sleep(POLL_TIME.min(deadline.saturating_duration_since(now)));
+        }
+    })();
+    // Never wait(), join a reader thread, signal a looked-up PID/group or drop
+    // an unreaped child. Failure closes pipes only after bounded exact-child
+    // teardown; an unresolved child remains retained and blocks the next call.
+    if !child
+        .abort_and_reap(Instant::now() + REAP_TIME)
+        .unwrap_or(false)
+    {
+        return Err(error(LinuxSandboxErrorKind::CleanupUncertain));
+    }
+    let child = slot.take().ok_or_else(failure)?;
+    result?;
+    Ok(LocalCommitCapture {
+        status: child.status.ok_or_else(failure)?,
+        stdout: child.stdout.ok_or_else(failure)?.retained,
+        stderr: child.stderr.ok_or_else(failure)?.retained,
+    })
 }
 
 struct OwnedGroup {
@@ -1986,6 +2081,352 @@ mod tests {
         let _ = hung.abort_and_reap(Instant::now()).unwrap();
         assert!(hung.abort_and_reap(Instant::now() + REAP_TIME).unwrap());
         assert!(hung.status.is_some());
+    }
+
+    // These are actual local child/pipe experiments, not native signer or
+    // sandbox admission. Every fixture owns and reaps its own extra child.
+    struct CommitChildFixture(Option<Control>);
+
+    impl CommitChildFixture {
+        fn new(program: &str, arguments: &[&str]) -> Self {
+            let child = Command::new(program)
+                .env_clear()
+                .args(arguments)
+                .stdin(Stdio::null())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .unwrap();
+            Self(Some(Control {
+                child,
+                stdout: None,
+                stderr: None,
+                status: None,
+            }))
+        }
+    }
+
+    impl Drop for CommitChildFixture {
+        fn drop(&mut self) {
+            if let Some(control) = &mut self.0 {
+                assert!(control.abort_and_reap(Instant::now() + REAP_TIME).unwrap());
+            }
+        }
+    }
+
+    fn commit_capture_token() -> agentmage_kernel_engine::propagation::CancellationToken {
+        use agentmage_kernel_contracts::{BoundaryKind, CorrelationId, TaskId};
+        agentmage_kernel_engine::propagation::CancellationToken::root(
+            BoundaryKind::Shell,
+            TaskId::from_raw("capture-commit"),
+            CorrelationId::from_raw("capture-commit"),
+        )
+    }
+
+    fn cancel_commit_capture(token: &agentmage_kernel_engine::propagation::CancellationToken) {
+        use agentmage_kernel_contracts::*;
+        token
+            .cancel(CancellationSignal {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                cancellation_id: CancellationId::from_raw("cancel-capture-commit"),
+                task_id: TaskId::from_raw("capture-commit"),
+                correlation_id: CorrelationId::from_raw("capture-commit"),
+                reason: CancellationReason::UserRequested,
+                requested_by: BoundaryKind::Shell,
+            })
+            .unwrap();
+    }
+
+    #[test]
+    fn local_commit_capture_keeps_separate_complete_streams_and_exact_exit_status() {
+        for code in [0, 7] {
+            let mut fixture = CommitChildFixture::new(
+                "/bin/sh",
+                &[
+                    "-c",
+                    &format!("printf 'object\\n'; printf 'status\\n' >&2; exit {code}"),
+                ],
+            );
+            let capture = finish_local_commit_capture(
+                &mut fixture.0,
+                None,
+                Instant::now() + Duration::from_secs(2),
+            )
+            .unwrap();
+            assert_eq!(capture.status.code(), Some(code));
+            assert_eq!(capture.stdout, b"object\n");
+            assert_eq!(capture.stderr, b"status\n");
+            assert!(fixture.0.is_none());
+        }
+    }
+
+    #[test]
+    fn local_commit_capture_accepts_exact_limits_and_refuses_either_stream_overflow() {
+        let n = LOCAL_COMMIT_CAPTURE_BYTES;
+        let mut exact = CommitChildFixture::new(
+            "/bin/sh",
+            &[
+                "-c",
+                &format!("/usr/bin/head -c {n} /dev/zero; exec /usr/bin/head -c {n} /dev/zero >&2"),
+            ],
+        );
+        let captured = finish_local_commit_capture(
+            &mut exact.0,
+            None,
+            Instant::now() + Duration::from_secs(15),
+        )
+        .unwrap();
+        assert!(captured.status.success());
+        assert_eq!(captured.stdout, vec![0; n]);
+        assert_eq!(captured.stderr, vec![0; n]);
+        for redirect in ["", " >&2"] {
+            let mut overflow = CommitChildFixture::new(
+                "/bin/sh",
+                &[
+                    "-c",
+                    &format!("exec /usr/bin/head -c {} /dev/zero{redirect}", n + 1),
+                ],
+            );
+            assert_eq!(
+                finish_local_commit_capture(
+                    &mut overflow.0,
+                    None,
+                    Instant::now() + Duration::from_secs(15),
+                )
+                .err()
+                .unwrap()
+                .kind(),
+                LinuxSandboxErrorKind::OutputLimitExceeded,
+            );
+            assert!(overflow.0.is_none());
+        }
+    }
+
+    #[test]
+    fn local_commit_capture_deadline_still_applies_after_child_exit_without_pipe_eof() {
+        for stdout in [true, false] {
+            let mut writer = CommitChildFixture::new("/usr/bin/sleep", &["5"]);
+            let mut primary = CommitChildFixture::new("/usr/bin/true", &[]);
+            if stdout {
+                primary.0.as_mut().unwrap().child.stdout =
+                    writer.0.as_mut().unwrap().child.stdout.take();
+            } else {
+                primary.0.as_mut().unwrap().child.stderr =
+                    writer.0.as_mut().unwrap().child.stderr.take();
+            }
+            // This independent owned writer models a pipe inherited by a
+            // descendant after the immediate child exits. It is deliberately
+            // NOT killed by the capture helper; this fixture reaps it on Drop.
+            let started = Instant::now();
+            assert!(
+                finish_local_commit_capture(
+                    &mut primary.0,
+                    None,
+                    started + Duration::from_millis(100),
+                )
+                .is_err()
+            );
+            assert!(started.elapsed() < Duration::from_secs(1));
+            assert!(primary.0.is_none());
+            assert!(
+                writer
+                    .0
+                    .as_mut()
+                    .unwrap()
+                    .child
+                    .try_wait()
+                    .unwrap()
+                    .is_none()
+            );
+        }
+    }
+
+    #[test]
+    fn local_commit_capture_live_cancellation_kills_and_reaps_only_its_owned_child() {
+        let token = commit_capture_token();
+        let request = token.clone();
+        let requester = std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(50));
+            cancel_commit_capture(&request);
+        });
+        let mut fixture = CommitChildFixture::new("/usr/bin/sleep", &["5"]);
+        let started = Instant::now();
+        let result = finish_local_commit_capture(
+            &mut fixture.0,
+            Some(&token),
+            started + Duration::from_secs(4),
+        );
+        requester.join().unwrap();
+        assert!(result.is_err());
+        assert!(started.elapsed() < Duration::from_secs(1));
+        assert!(fixture.0.is_none());
+    }
+
+    #[test]
+    fn local_commit_capture_continuous_output_cannot_starve_deadline_or_cancellation() {
+        for cancel in [true, false] {
+            let token = commit_capture_token();
+            let request = token.clone();
+            let requester = std::thread::spawn(move || {
+                if cancel {
+                    std::thread::sleep(Duration::from_millis(40));
+                    cancel_commit_capture(&request);
+                }
+            });
+            let mut fixture = CommitChildFixture::new("/usr/bin/yes", &[]);
+            let started = Instant::now();
+            let deadline = started
+                + if cancel {
+                    Duration::from_secs(4)
+                } else {
+                    Duration::from_millis(100)
+                };
+            assert!(finish_local_commit_capture(&mut fixture.0, Some(&token), deadline).is_err());
+            requester.join().unwrap();
+            assert!(started.elapsed() < Duration::from_secs(1));
+            assert!(fixture.0.is_none());
+        }
+    }
+
+    #[test]
+    fn local_commit_capture_retained_busy_poisoned_cancelled_and_expired_owners_refuse() {
+        let owner = Mutex::new(None);
+        let token = commit_capture_token();
+        cancel_commit_capture(&token);
+        for (token, deadline) in [
+            (Some(&token), Instant::now() + Duration::from_secs(2)),
+            (None, Instant::now()),
+        ] {
+            assert!(
+                capture_local_commit_process_in(
+                    &owner,
+                    Command::new("/usr/bin/true"),
+                    token,
+                    deadline
+                )
+                .is_err()
+            );
+            assert!(owner.lock().unwrap().is_none());
+        }
+        let mut fixture = CommitChildFixture::new("/usr/bin/sleep", &["5"]);
+        *owner.lock().unwrap() = fixture.0.take();
+        assert!(
+            capture_local_commit_process_in(
+                &owner,
+                Command::new("/usr/bin/true"),
+                None,
+                Instant::now() + Duration::from_secs(2)
+            )
+            .is_err()
+        );
+        let held = owner.lock().unwrap();
+        let started = Instant::now();
+        assert!(
+            capture_local_commit_process_in(
+                &owner,
+                Command::new("/usr/bin/true"),
+                None,
+                Instant::now() + Duration::from_secs(2)
+            )
+            .is_err()
+        );
+        assert!(started.elapsed() < Duration::from_secs(1));
+        drop(held);
+        assert!(
+            owner
+                .lock()
+                .unwrap()
+                .as_mut()
+                .unwrap()
+                .child
+                .try_wait()
+                .unwrap()
+                .is_none()
+        );
+        fixture.0 = owner.lock().unwrap().take();
+
+        let poisoned = Arc::new(Mutex::new(None));
+        let guard = poisoned.clone();
+        assert!(
+            std::thread::spawn(move || {
+                let _lock = guard.lock().unwrap();
+                panic!("synthetic poisoned capture owner");
+            })
+            .join()
+            .is_err()
+        );
+        assert!(
+            capture_local_commit_process_in(
+                &poisoned,
+                Command::new("/usr/bin/true"),
+                None,
+                Instant::now() + Duration::from_secs(2)
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn local_commit_capture_reuses_original_deadline_and_recovers_after_failure() {
+        let owner = Mutex::new(None);
+        let started = Instant::now();
+        let deadline = started + Duration::from_millis(150);
+        let mut first = Command::new("/bin/sh");
+        first
+            .args(["-c", "sleep 0.05; printf 'first'"])
+            .stdin(Stdio::null());
+        assert_eq!(
+            capture_local_commit_process_in(&owner, first, None, deadline)
+                .unwrap()
+                .stdout,
+            b"first"
+        );
+        let mut second = Command::new("/usr/bin/sleep");
+        second.arg("5").stdin(Stdio::null());
+        assert!(capture_local_commit_process_in(&owner, second, None, deadline).is_err());
+        assert!(started.elapsed() < Duration::from_secs(1));
+        assert!(owner.lock().unwrap().is_none());
+        assert!(
+            capture_local_commit_process_in(
+                &owner,
+                Command::new("/nonexistent/agentmage-capture-fixture"),
+                None,
+                Instant::now() + Duration::from_secs(2)
+            )
+            .is_err()
+        );
+        assert!(owner.lock().unwrap().is_none());
+        assert!(
+            capture_local_commit_process_in(
+                &owner,
+                Command::new("/usr/bin/true"),
+                None,
+                Instant::now() + Duration::from_secs(2)
+            )
+            .unwrap()
+            .status
+            .success()
+        );
+    }
+
+    #[test]
+    fn local_commit_capture_pipe_initialization_failure_still_reaps_the_child() {
+        for stdout in [true, false] {
+            let mut fixture = CommitChildFixture::new("/usr/bin/sleep", &["5"]);
+            if stdout {
+                drop(fixture.0.as_mut().unwrap().child.stdout.take());
+            } else {
+                drop(fixture.0.as_mut().unwrap().child.stderr.take());
+            }
+            let started = Instant::now();
+            assert!(finish_local_commit_capture(
+                &mut fixture.0,
+                None,
+                started + Duration::from_secs(4),
+            ).is_err());
+            assert!(started.elapsed() < Duration::from_secs(1));
+            assert!(fixture.0.is_none());
+        }
     }
 
     #[test]

@@ -118,8 +118,20 @@ failed result do not establish preserved postflight state or a successful receip
 
 External signer inspection, signed creation and signature verification remain
 direct subprocesses in this dormant adapter. Their complete confinement and
-descendant cleanup are still prerequisites for activation. The shared deadline
-does not bound a descendant holding an inherited output pipe. Synthetic worker
-results, parser fixtures and installed-Git message tests establish component
-behavior only. Native workflow, independent reviewer/artifact provenance, exact
+descendant cleanup are still prerequisites for activation. Their output capture
+now uses bounded nonblocking reads with the same four-MiB ceiling on each stream.
+Cancellation and the original deadline remain observable after the immediate
+child exits, including when another process holds an inherited output pipe.
+Signer inspection shares one thirty-second deadline across listing and export;
+signed creation and verification retain the original commit-session deadline.
+Failure discards partial output and allows at most half a second to kill and
+reap the exact owned child. An unreaped child remains retained and refuses later
+direct capture attempts; a busy or poisoned capture owner also refuses.
+
+This bounds capture and immediate-child teardown, not descendant lifetime.
+An open-pipe failure closes the local readers without proving that the remaining
+writer died. No capture result establishes sandbox admission or whole-unit
+cleanup. Actual local child/pipe tests, synthetic worker results, parser fixtures
+and installed-Git message tests establish component behavior only. Native
+workflow, signer confinement, independent reviewer/artifact provenance, exact
 approval composition and measured model acceptance remain open.

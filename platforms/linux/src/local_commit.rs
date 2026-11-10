@@ -8,8 +8,7 @@ use std::io::Read;
 use std::os::unix::ffi::OsStrExt as _;
 use std::os::unix::fs::MetadataExt as _;
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command, ExitStatus, Stdio};
-use std::thread;
+use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
 use agentmage_kernel_contracts::OperationOutcome;
@@ -24,7 +23,6 @@ use sha2::{Digest, Sha256};
 
 use crate::repository_safety::{LinuxGitArtifact, LinuxRepositoryCollector, LinuxRepositoryScope};
 
-const MAX_CAPTURE_BYTES: usize = 4 * 1024 * 1024;
 const MAX_POSTIMAGE_BYTES: usize = 64 * 1024 * 1024;
 #[allow(
     dead_code,
@@ -32,7 +30,6 @@ const MAX_POSTIMAGE_BYTES: usize = 64 * 1024 * 1024;
 )]
 const MAX_TOTAL_POSTIMAGE_BYTES: usize = 256 * 1024 * 1024;
 const MAX_TRUSTED_EXECUTABLE_BYTES: u64 = 64 * 1024 * 1024;
-const POLL_INTERVAL: Duration = Duration::from_millis(10);
 
 /// Stable Linux local-commit adapter failure class.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -288,6 +285,7 @@ impl LinuxOpenPgpSigner {
         key_fingerprint: &str,
         repository_scope: &LinuxRepositoryScope,
     ) -> Result<Self, LinuxLocalCommitError> {
+        let deadline = Instant::now() + Duration::from_secs(30);
         let (executable, executable_sha256) = verify_root_executable(executable.as_ref())?;
         let keyring = verify_private_keyring(keyring.as_ref())?;
         if keyring.starts_with(repository_scope.checkout_root())
@@ -309,6 +307,7 @@ impl LinuxOpenPgpSigner {
                 "--list-secret-keys",
                 &fingerprint,
             ],
+            deadline,
         )?;
         let listing_text = String::from_utf8_lossy(&listing).to_ascii_lowercase();
         if !listing_text
@@ -317,7 +316,7 @@ impl LinuxOpenPgpSigner {
         {
             return Err(error(LinuxLocalCommitErrorKind::ArtifactDenied));
         }
-        let public_key = run_gpg(&executable, &keyring, &["--export", &fingerprint])?;
+        let public_key = run_gpg(&executable, &keyring, &["--export", &fingerprint], deadline)?;
         if public_key.is_empty() {
             return Err(error(LinuxLocalCommitErrorKind::ArtifactDenied));
         }
@@ -556,7 +555,7 @@ impl<'a> SignedGitRunner<'a> {
         arguments: &[&str],
         input: &[u8],
         cancellation: &CancellationToken,
-    ) -> Result<CapturedProcess, LinuxLocalCommitError> {
+    ) -> Result<crate::sandbox::supervision::LocalCommitCapture, LinuxLocalCommitError> {
         self.run_with_environment(arguments, input, cancellation, &BTreeMap::new())
     }
 
@@ -566,7 +565,7 @@ impl<'a> SignedGitRunner<'a> {
         input: &[u8],
         cancellation: &CancellationToken,
         extra_environment: &BTreeMap<String, String>,
-    ) -> Result<CapturedProcess, LinuxLocalCommitError> {
+    ) -> Result<crate::sandbox::supervision::LocalCommitCapture, LinuxLocalCommitError> {
         if cancellation.is_cancelled()
             || Instant::now() >= self.deadline
             || input.len() > MAX_POSTIMAGE_BYTES
@@ -619,87 +618,17 @@ impl<'a> SignedGitRunner<'a> {
             .stdin(Stdio::from(fs::File::from(payload)))
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
-        let mut child = command
-            .spawn()
-            .map_err(|_| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
-        let captured = wait_capture(&mut child, cancellation, self.deadline)?;
+        let captured = crate::sandbox::supervision::capture_local_commit_process(
+            command,
+            Some(cancellation),
+            self.deadline,
+        )
+        .map_err(|_| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
         if captured.status.success() {
             Ok(captured)
         } else {
             Err(error(LinuxLocalCommitErrorKind::ExecutionFailed))
         }
-    }
-}
-
-struct CapturedProcess {
-    status: ExitStatus,
-    stdout: Vec<u8>,
-    stderr: Vec<u8>,
-}
-
-fn wait_capture(
-    child: &mut Child,
-    cancellation: &CancellationToken,
-    deadline: Instant,
-) -> Result<CapturedProcess, LinuxLocalCommitError> {
-    let stdout = child
-        .stdout
-        .take()
-        .ok_or_else(|| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
-    let stderr = child
-        .stderr
-        .take()
-        .ok_or_else(|| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
-    let stdout_reader = thread::spawn(move || read_bounded(stdout));
-    let stderr_reader = thread::spawn(move || read_bounded(stderr));
-    let status = loop {
-        match child.try_wait() {
-            Ok(Some(status)) => break Some(status),
-            Ok(None) if cancellation.is_cancelled() || Instant::now() >= deadline => {
-                let _ = child.kill();
-                let _ = child.wait();
-                break None;
-            }
-            Ok(None) => thread::sleep(POLL_INTERVAL),
-            Err(_) => {
-                let _ = child.kill();
-                let _ = child.wait();
-                break None;
-            }
-        }
-    };
-    let stdout = stdout_reader
-        .join()
-        .ok()
-        .and_then(Result::ok)
-        .ok_or_else(|| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
-    let stderr = stderr_reader
-        .join()
-        .ok()
-        .and_then(Result::ok)
-        .ok_or_else(|| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
-    let status = status.ok_or_else(|| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
-    Ok(CapturedProcess {
-        status,
-        stdout,
-        stderr,
-    })
-}
-
-fn read_bounded(mut input: impl Read) -> Result<Vec<u8>, LinuxLocalCommitError> {
-    let mut output = Vec::new();
-    let mut buffer = [0_u8; 64 * 1024];
-    loop {
-        let count = input
-            .read(&mut buffer)
-            .map_err(|_| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
-        if count == 0 {
-            return Ok(output);
-        }
-        if output.len().saturating_add(count) > MAX_CAPTURE_BYTES {
-            return Err(error(LinuxLocalCommitErrorKind::ExecutionFailed));
-        }
-        output.extend_from_slice(&buffer[..count]);
     }
 }
 
@@ -846,8 +775,10 @@ fn run_gpg(
     executable: &Path,
     keyring: &Path,
     arguments: &[&str],
+    deadline: Instant,
 ) -> Result<Vec<u8>, LinuxLocalCommitError> {
-    let output = Command::new(executable)
+    let mut command = Command::new(executable);
+    command
         .env_clear()
         .env("GNUPGHOME", keyring)
         .env("HOME", "/nonexistent")
@@ -855,13 +786,10 @@ fn run_gpg(
         .env("LC_ALL", "C")
         .args(["--batch", "--no-tty", "--no-auto-key-retrieve"])
         .args(arguments)
-        .stdin(Stdio::null())
-        .output()
+        .stdin(Stdio::null());
+    let output = crate::sandbox::supervision::capture_local_commit_process(command, None, deadline)
         .map_err(|_| error(LinuxLocalCommitErrorKind::ArtifactDenied))?;
-    if !output.status.success()
-        || output.stdout.len() > MAX_CAPTURE_BYTES
-        || output.stderr.len() > MAX_CAPTURE_BYTES
-    {
+    if !output.status.success() {
         return Err(error(LinuxLocalCommitErrorKind::ArtifactDenied));
     }
     Ok(output.stdout)

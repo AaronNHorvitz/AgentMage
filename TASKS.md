@@ -2,6 +2,24 @@
 
 ## Active queue: local agent mission
 
+The retained [non-signing commit I/O review](docs/reviews/6033f03afb9e-local-coding-commit-io.txt)
+returns **Verdict: PASS** for exact commit
+`6033f03afb9e19874cdc67df22fc13f23c83e817`, with no high or medium finding.
+Low L1 (SHA-256 signature-header selection) and L2 (exact signing-key selection)
+remain same-row backlog, alongside the earlier candidate scratch/descriptor
+findings. Neither parent row closes.
+
+The [dormant signer capture repair](docs/evidence/t306-signer-capture-2026-11-10.md)
+replaces blocking output collection with bounded nonblocking reads and exact-child
+reaping. Shared deadlines and cancellation remain observable after child exit
+without pipe EOF; an unreaped child stays retained and refuses another capture.
+The complete affected gate remains **FAIL**: 1,354 Rust passes, the exact same
+72 inherited failures and 64 existing ignores across 26 unfiltered targets.
+All eight new methods, five controls, formatting and Clippy pass; both source
+hashes remain fixed. Signer confinement and whole-unit cleanup remain required
+before activation. Independent core review is required; T-303/T-306 remain open,
+with no new or closed row or sub-row.
+
 The retained [candidate confinement review](docs/reviews/de4f3fd311de-local-coding-confined-candidate.txt)
 returns **Verdict: PASS** for exact commit
 `de4f3fd311de56bd2b1adc86f508b7ce5959990f`, with no high or medium finding.
