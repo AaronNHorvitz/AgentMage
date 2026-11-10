@@ -1,0 +1,142 @@
+Commit: 69ead845774654de33f76e74a56824e5b3a3d467
+Scope: local-coding-signer-capture
+
+# Independent review: bounded dormant signer capture (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only, pinned checkout
+`/lane/review-checkout`. Date 2026-11-10.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `69ead845774654de33f76e74a56824e5b3a3d467`; working tree clean.
+- Read IP-POLICY.md, Decision 0191, the evidence note
+  `docs/evidence/t306-signer-capture-2026-11-10.md`, the changed guide section, the TASKS.md
+  additions, and the bundle README.md, run.py, check.py, parse_gate.py and light.py before
+  running anything. The scripts only plan/run the repository fast gate, hash sources, compare the
+  per-target counts and failure identities with the base baseline log, and run the lint commands.
+  They do not modify the repository.
+- Read the full diff against base `6033f03afb9e19874cdc67df22fc13f23c83e817`: six files
+  (`local_commit.rs`, `sandbox_supervision.rs`, TASKS.md, evidence, guide, retained review).
+- Traced the new `capture_local_commit_process[_in]` / `finish_local_commit_capture` against
+  the existing `Capture`, `Control::poll`, `Control::reap` and `Control::abort_and_reap`
+  primitives, and both production callers (`run_gpg` for listing/export, `SignedGitRunner` for
+  `commit-tree -S` and `verify-commit --raw`).
+- Independent probe (outside the repo, temporary GNUPGHOME, removed afterwards): real
+  `/usr/bin/gpg --batch --no-tty --no-auto-key-retrieve` listing and export with a freshly
+  generated key reached EOF on both pipes in about 0.01 s with gpg-agent started, so the
+  agent does not hold the inherited output pipes and the new deadline does not misfire.
+- Checked which tests reach the global `LOCAL_COMMIT_CHILD` owner: only
+  `native_signed_commit_verifies_exact_content_and_only_updates_task_branch`, which is an
+  inherited failure. All new tests use private owners or fixture slots, so the global busy
+  refusal cannot cause parallel-test flakes.
+- `rustfmt --check` (edition 2024) on `sandbox_supervision.rs` reports nothing.
+
+## Commands and results
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-signer-capture/review-inputs.sha256`: exit 0.
+   The manifest file's own SHA-256 is
+   `1d7880cedd04fb92d7b8ad29fa837c1bdde786a11a2966b673b6d2136732882d`, as stated in the request.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-signer-capture/run.py /lane/state/tmp/review-signer-capture-full-69ead8457746`:
+   exit 1, as expected. `FAST GATE: FAIL`; `source_unchanged: true`; 497.54 s including
+   reservation waits; raw log SHA-256
+   `460a2fca972205688f6d4b8a20d1e6f799529bd235a7423fc2c2a2fd7eccc7b3`. These results differ
+   from the builder's run, as expected for a separate run. The diff check, untracked lint,
+   review lint and markdownlint all exit 0. fmt exits 0 (194.99 s), Clippy `-D warnings` exits 0
+   (39.71 s) and cargo test exits 101 (261.06 s). No command timed out.
+3. `python3 -B /lane/state/tmp/t306-signer-capture/check.py <out>`: exit 0. It reports 26 targets
+   with totals [1354 pass, 72 fail, 64 ignored, 0 measured, 0 filtered]. All 13 named methods
+   (8 new and 5 controls) are `ok`, the per-target data equals the baseline plus 8 lib passes,
+   the task-table rows are unchanged, the retained review is byte-identical and the privacy
+   scan passes. Like the builder's check, this is data only: the full gate still fails.
+4. `cmp validation-1/source-freeze.json <out>/source-freeze.json`: exit 0 (identical).
+5. `python3 -B /lane/state/tmp/t306-signer-capture/light.py`: exit 0 (all four light
+   commands exit 0; markdownlint found 0 issues).
+6. `git diff --check 6033f03afb9e19874cdc67df22fc13f23c83e817 --`: exit 0.
+7. `git status --short`: empty.
+
+Additional checks:
+
+- My run's sorted `... FAILED` identities are identical to the builder's validation-1 log:
+  42 linux_coding_runtime, 13 repository_safety, 10 linux_read, 2 command_runner,
+  2 local_commit, 2 secret_service and 1 linux_repository_map.
+- `final-blobs.json`: all six hashes match `git show HEAD:<path>`, and the set equals the
+  base..HEAD changed-file set.
+- `docs/reviews/6033f03afb9e-local-coding-commit-io.txt` is byte-identical to
+  `/lane/reviews/6033f03afb9e-local-coding-commit-io.md` (`cmp`). It begins with the correct
+  Commit/Scope lines and ends with `Verdict: PASS`.
+- A privacy/trademark sweep of the added lines found no private host path, username,
+  hostname, credential, personal data, private sibling project or third-party branding. Only
+  the generic lane paths quoted from the retained review appear, as in earlier retained reviews.
+
+## Analysis
+
+- **Bounded memory:** each stream uses the existing `Capture` with a 4 MiB limit
+  (`LOCAL_COMMIT_CAPTURE_BYTES` equals `sandbox::MAX_OUTPUT_BYTES`, so `Capture::new` accepts it).
+  Bytes past the limit are never retained, and overflow returns `OutputLimitExceeded` during
+  the read, not after allocation. This replaces the unbounded `Command::output()` in `run_gpg`.
+  An exact-limit capture passes and limit+1 on either stream fails (test).
+- **Fairness:** each poll does at most 8×8 KiB reads per stream, followed by a sleep of at most
+  10 ms. Cancellation and deadline are checked before and after every poll, including after the
+  immediate child has been reaped. `yes` cannot starve either check (test).
+- **Teardown:** `abort_and_reap` signals only the opaque owned `Child`, and only while it is
+  still unreaped (std `Child::kill` on an unreaped child cannot hit a reused PID). It polls
+  `try_wait` for at most 500 ms, with no blocking `wait`, no thread join and no PID or group
+  lookup. If reaping fails, `CleanupUncertain` is returned and the `Control` (child and pipes)
+  stays in the slot. On success the slot is taken, and partial output is dropped on failure.
+- **Admission:** `try_lock` refuses both busy (WouldBlock) and poisoned owners. A retained
+  slot refuses before spawn. Pre-cancelled or expired requests refuse before spawn. Spawn
+  failure leaves the slot empty. The child sits in the slot before pipe initialisation, so a
+  missing pipe still leads to bounded kill/reap (test).
+- **Deadlines:** listing and export share one 30 s deadline created at the start of
+  `inspect`. Signed creation and verification reuse `io.deadline()` from the
+  `CommitIoSession`, the original session deadline. Failures after signing begins still
+  map to `uncertain_commit_result`, so cleanup is never reported as verified. The control
+  `CONTROL_BYTES` limit (8 KiB) is unchanged; `initialize()` delegates to
+  `initialize_with_limit(CONTROL_BYTES)`.
+- **Honest scope:** the evidence, guide, TASKS text and code comment all state that this is
+  not signer confinement, descendant cleanup, offline proof or activation. The inherited-pipe
+  test keeps the separate writer alive after the refusal, which shows that limit rather than
+  hiding it. No row or sub-row is added or closed. TASKS row lines are byte-identical to the
+  base. No evaluation, held-out, hidden-test, prompt, threshold, dependency, model or GPU change.
+  The confinement boundaries for product tools (`run_owned` / closed supervisor) are untouched.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, test coverage)** `platforms/linux/src/local_commit.rs:774-795` and `:621-626`.
+  No passing test runs the production wiring of `run_gpg` or `SignedGitRunner` through the new
+  capture. The only native test (`native_signed_commit_verifies_exact_content_and_only_updates_task_branch`)
+  is an inherited failure: in this environment `/usr/bin/gpg` is `nfsnobody`-owned, so
+  `verify_root_executable` returns `ArtifactDenied` before any capture. The evidence labels the
+  eight methods as component tests honestly, and my gpg probe shows prompt EOF, so this does not
+  block. Fix: add a unit test that calls `run_gpg` (or a thin wrapper) on a fixture script for
+  deadline, overflow and non-zero exit, asserting the `ArtifactDenied` mapping and an empty
+  `LOCAL_COMMIT_CHILD`.
+- **L2 (low, diagnostics)** `platforms/linux/src/sandbox_supervision.rs:449-455`. A retained,
+  unresolved child returns `ExecutionFailed`, not `CleanupUncertain` (unlike
+  `admission_snapshot_of`). Both callers then flatten every capture error, to `ExecutionFailed`
+  in signed Git and to `ArtifactDenied` in inspection. A later signer inspection after an
+  unreaped child therefore reports an artifact denial. This fails closed but misattributes the
+  cause. Fix: return `CleanupUncertain` for a retained or poisoned owner and preserve that kind
+  in the local-commit error mapping.
+- **L3 (low, availability)** `platforms/linux/src/sandbox_supervision.rs:449-451`. A retained
+  child is never re-polled, so a child that is only briefly unreapable (for example in D state
+  for more than 500 ms) disables direct signer capture for the rest of the process. This matches
+  the existing `OWNED_ATTEMPT` design and fails closed. Optional fix: try one nonblocking
+  `try_wait` on the retained child before refusing, and clear the slot only on a positive reap.
+
+The base-review lows (SHA-256 signature-header selection, exact signing-key selection) and the
+earlier candidate scratch/descriptor lows remain same-row backlog, unchanged by this commit.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing same-row capture repair):** PASS for this increment. The claimed
+  bounded nonblocking capture, shared deadlines, cancellation after child exit without EOF,
+  exact-child bounded teardown, retained ownership on unresolved reap and busy/poisoned refusal
+  are implemented, tested by actual local child/pipe methods, and reproduced in my own full run.
+  Both parent rows remain OPEN, as the commit states. Signer confinement, whole-unit descendant
+  cleanup, activation, provenance, approvals, durable recovery, native workflow and model
+  measurements are still required before either row can close.
+
+Verdict: PASS

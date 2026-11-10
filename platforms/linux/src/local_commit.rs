@@ -438,7 +438,7 @@ impl LinuxLocalCommitExecutor {
             &self.signer,
             io.deadline(),
         );
-        let signed = format!("-S{}", plan.signer.key_fingerprint);
+        let arguments = signed_commit_arguments(plan);
         let mut environment = BTreeMap::new();
         environment.insert("GIT_AUTHOR_NAME".to_owned(), plan.author.name.clone());
         environment.insert("GIT_AUTHOR_EMAIL".to_owned(), plan.author.email.clone());
@@ -452,13 +452,7 @@ impl LinuxLocalCommitExecutor {
         environment.insert("GIT_COMMITTER_DATE".to_owned(), date);
         let commit = runner
             .run_with_environment(
-                &[
-                    "commit-tree",
-                    &signed,
-                    &plan.candidate_tree,
-                    "-p",
-                    &plan.parent_object,
-                ],
+                &arguments.each_ref().map(String::as_str),
                 plan.message.as_bytes(),
                 cancellation,
                 &environment,
@@ -691,6 +685,20 @@ fn object_output(output: Vec<u8>) -> Result<String, LinuxLocalCommitError> {
     }
 }
 
+fn signed_commit_arguments(
+    plan: &agentmage_kernel_engine::local_commit::LocalCommitPlan,
+) -> [String; 5] {
+    // Pin the actual signing key, including when the selected fingerprint is
+    // a primary with newer signing subkeys. Verification checks that exact key.
+    [
+        "commit-tree".into(),
+        format!("-S{}!", plan.signer.key_fingerprint),
+        plan.candidate_tree.clone(),
+        "-p".into(),
+        plan.parent_object.clone(),
+    ]
+}
+
 fn verify_raw_commit(
     raw: &[u8],
     plan: &agentmage_kernel_engine::local_commit::LocalCommitPlan,
@@ -711,6 +719,11 @@ fn verify_raw_commit(
         "committer {} <{}> {} {timezone}",
         plan.committer.name, plan.committer.email, plan.timestamp_epoch_seconds
     );
+    let signature_header = match (plan.parent_object.len(), plan.candidate_tree.len()) {
+        (40, 40) => "gpgsig -----BEGIN PGP SIGNATURE-----",
+        (64, 64) => "gpgsig-sha256 -----BEGIN PGP SIGNATURE-----",
+        _ => return false,
+    };
     // Exact singleton headers: finding one approved parent among additional
     // parents, identities or trees cannot verify the planned commit.
     let mut lines = headers.split('\n');
@@ -718,7 +731,7 @@ fn verify_raw_commit(
         || lines.next() != Some(format!("parent {}", plan.parent_object).as_str())
         || lines.next() != Some(author.as_str())
         || lines.next() != Some(committer.as_str())
-        || lines.next() != Some("gpgsig -----BEGIN PGP SIGNATURE-----")
+        || lines.next() != Some(signature_header)
         || message != plan.message.as_bytes()
     {
         return false;
@@ -1043,6 +1056,44 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn local_commit_verifier_binds_signature_header_to_both_object_formats() {
+        for (size, header, other) in [
+            (40, "gpgsig", "gpgsig-sha256"),
+            (64, "gpgsig-sha256", "gpgsig"),
+        ] {
+            let mut plan = synthetic_plan(&hash(b"repository"));
+            plan.parent_object = "b".repeat(size);
+            plan.candidate_tree = "c".repeat(size);
+            let raw = String::from_utf8(raw_commit(&plan)).unwrap();
+            let raw = raw.replacen("\ngpgsig ", &format!("\n{header} "), 1);
+            assert!(verify_raw_commit(raw.as_bytes(), &plan));
+            for changed in [
+                raw.replacen(&format!("\n{header} "), &format!("\n{other} "), 1),
+                raw.replacen(
+                    &format!("\n{header} "),
+                    &format!("\n{other} -----BEGIN PGP SIGNATURE-----\n{header} "),
+                    1,
+                ),
+                raw.replacen(
+                    &format!("\n{header} "),
+                    &format!("\n{header} -----BEGIN PGP SIGNATURE-----\n{header} "),
+                    1,
+                ),
+            ] {
+                assert!(!verify_raw_commit(changed.as_bytes(), &plan));
+            }
+            // Even exact headers cannot make mixed object formats admissible.
+            plan.candidate_tree = "c".repeat(if size == 40 { 64 } else { 40 });
+            let mixed = String::from_utf8(raw_commit(&plan)).unwrap().replacen(
+                "\ngpgsig ",
+                &format!("\n{header} "),
+                1,
+            );
+            assert!(!verify_raw_commit(mixed.as_bytes(), &plan));
+        }
+    }
+
+    #[test]
     fn local_commit_signature_verifier_requires_one_exact_status_fingerprint() {
         let fingerprint = "a".repeat(40);
         let status = format!(
@@ -1171,6 +1222,140 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn local_commit_installed_git_signs_with_exact_primary_or_subkey_in_both_formats() {
+        // Actual disposable Git/GnuPG signatures with a synthetic plan. This
+        // exercises argument construction and verification, not product artifact
+        // admission, confinement, approvals or the native adapter workflow.
+        for format in ["sha1", "sha256"] {
+            let fixture = Fixture::with_object_format(format);
+            let (keyring, primary) = generate_fixture_key(&fixture);
+            let added = fixture_gpg(&keyring)
+                .args([
+                    "--pinentry-mode",
+                    "loopback",
+                    "--passphrase",
+                    "",
+                    "--quick-add-key",
+                    &primary,
+                    "ed25519",
+                    "sign",
+                    "1d",
+                ])
+                .output()
+                .expect("add fixture signing subkey");
+            assert!(added.status.success(), "fixture subkey generation failed");
+            let listed = fixture_gpg(&keyring)
+                .args([
+                    "--with-colons",
+                    "--with-subkey-fingerprint",
+                    "--list-secret-keys",
+                    &primary,
+                ])
+                .output()
+                .unwrap();
+            assert!(listed.status.success());
+            let fingerprints: Vec<_> = String::from_utf8(listed.stdout)
+                .unwrap()
+                .lines()
+                .filter_map(|line| {
+                    let fields: Vec<_> = line.split(':').collect();
+                    (fields.first() == Some(&"fpr"))
+                        .then(|| fields.get(9).map(|s| s.to_ascii_lowercase()))
+                        .flatten()
+                })
+                .collect();
+            assert_eq!(fingerprints.len(), 2);
+            assert_eq!(fingerprints[0], primary);
+            assert_ne!(fingerprints[0], fingerprints[1]);
+            let mut plan = synthetic_plan(&hash(b"repository"));
+            plan.parent_object =
+                object_output(run_fixture(&fixture.checkout, &["rev-parse", "HEAD"])).unwrap();
+            plan.candidate_tree = object_output(run_fixture(
+                &fixture.checkout,
+                &["rev-parse", "HEAD^{tree}"],
+            ))
+            .unwrap();
+            let fixture_command = || {
+                let mut command = Command::new("/usr/bin/git");
+                let date =
+                    format_git_date(plan.timestamp_epoch_seconds, plan.timezone_offset_minutes);
+                command
+                    .env_clear()
+                    .env("HOME", "/nonexistent")
+                    .env("GNUPGHOME", &keyring)
+                    .env("GIT_CONFIG_NOSYSTEM", "1")
+                    .env("GIT_CONFIG_GLOBAL", "/dev/null")
+                    .env("GIT_AUTHOR_NAME", &plan.author.name)
+                    .env("GIT_AUTHOR_EMAIL", &plan.author.email)
+                    .env("GIT_COMMITTER_NAME", &plan.committer.name)
+                    .env("GIT_COMMITTER_EMAIL", &plan.committer.email)
+                    .env("GIT_AUTHOR_DATE", &date)
+                    .env("GIT_COMMITTER_DATE", &date)
+                    .args(hardened_git_prefix())
+                    .args([
+                        "-c",
+                        "gpg.program=/usr/bin/gpg",
+                        "-c",
+                        "gpg.openpgp.program=/usr/bin/gpg",
+                        "-c",
+                        "gpg.format=openpgp",
+                        "-c",
+                        "i18n.commitEncoding=UTF-8",
+                    ])
+                    .current_dir(&fixture.checkout);
+                command
+            };
+            let commit_and_verify = |arguments: &[String], message: &str| {
+                let payload =
+                    crate::sandbox::sealed_payload("fixture-signed-message", message.as_bytes())
+                        .unwrap();
+                let output = fixture_command()
+                    .args(arguments)
+                    .stdin(Stdio::from(fs::File::from(payload)))
+                    .output()
+                    .unwrap();
+                assert!(output.status.success(), "fixture signing failed");
+                let object = object_output(output.stdout).unwrap();
+                let raw = run_fixture(&fixture.checkout, &["cat-file", "commit", &object]);
+                let verification = fixture_command()
+                    .args(["verify-commit", "--raw", &object])
+                    .output()
+                    .unwrap();
+                assert!(verification.status.success(), "fixture signature failed");
+                assert!(verification.stdout.is_empty());
+                (raw, verification.stderr)
+            };
+            // Without exact selection, GnuPG chooses the newer signing subkey.
+            let mut unpinned = signed_commit_arguments(&plan);
+            unpinned[1] = format!("-S{primary}");
+            let (_, status) = commit_and_verify(&unpinned, &plan.message);
+            assert!(verify_signature_status(&status, &fingerprints[1]));
+            assert!(!verify_signature_status(&status, &primary));
+            for fingerprint in &fingerprints {
+                for message in ["One line", "One line\n", "First\n\nSecond\n\n"] {
+                    let mut selected = plan.clone();
+                    selected.signer.key_fingerprint = fingerprint.clone();
+                    selected.message = message.into();
+                    let (raw, status) =
+                        commit_and_verify(&signed_commit_arguments(&selected), message);
+                    assert!(verify_raw_commit(&raw, &selected), "{format} {message:?}");
+                    assert!(verify_signature_status(&status, fingerprint));
+                    let other = fingerprints
+                        .iter()
+                        .find(|other| *other != fingerprint)
+                        .unwrap();
+                    assert!(!verify_signature_status(&status, other));
+                }
+            }
+            assert_eq!(
+                object_output(run_fixture(&fixture.checkout, &["rev-parse", "HEAD"])).unwrap(),
+                plan.parent_object,
+                "component signing must not move the fixture branch"
+            );
+        }
+    }
+
+    #[test]
     fn local_commit_uncertain_effect_cannot_reconcile_as_a_verified_preservation_receipt() {
         use agentmage_kernel_engine::repository_safety::RepositoryPreservationManifest;
         let before: RepositoryPreservationManifest = serde_json::from_str(include_str!(
@@ -1240,6 +1425,10 @@ pub(crate) mod tests {
 
     impl Fixture {
         fn new() -> Self {
+            Self::with_object_format("sha1")
+        }
+
+        fn with_object_format(format: &str) -> Self {
             let nonce = TEMP_ID.fetch_add(1, Ordering::Relaxed);
             let root = std::env::temp_dir().join(format!(
                 "agentmage-local-commit-{}-{nonce}",
@@ -1254,7 +1443,14 @@ pub(crate) mod tests {
             fs::set_permissions(&owned, fs::Permissions::from_mode(0o700))
                 .expect("private owned root");
             fs::write(checkout.join("src/lib.rs"), b"old\n").expect("fixture source");
-            run_fixture(&checkout, &["init", "--initial-branch=main"]);
+            run_fixture(
+                &checkout,
+                &[
+                    "init",
+                    "--initial-branch=main",
+                    &format!("--object-format={format}"),
+                ],
+            );
             run_fixture(&checkout, &["add", "--", "src/lib.rs"]);
             run_fixture(
                 &checkout,
@@ -1318,20 +1514,30 @@ pub(crate) mod tests {
         )
     }
 
-    fn generate_signer(fixture: &Fixture, scope: &LinuxRepositoryScope) -> LinuxOpenPgpSigner {
-        let keyring = fixture.root.join("keyring");
-        fs::create_dir(&keyring).expect("keyring");
-        fs::set_permissions(&keyring, fs::Permissions::from_mode(0o700))
-            .expect("keyring permissions");
-        let generated = Command::new("/usr/bin/gpg")
+    fn fixture_gpg(keyring: &Path) -> Command {
+        let mut command = Command::new("/usr/bin/gpg");
+        command
             .env_clear()
-            .env("GNUPGHOME", &keyring)
+            .env("GNUPGHOME", keyring)
             .env("HOME", "/nonexistent")
             .env("LANG", "C")
             .env("LC_ALL", "C")
             .args([
                 "--batch",
                 "--no-tty",
+                "--no-options",
+                "--no-auto-key-retrieve",
+            ]);
+        command
+    }
+
+    fn generate_fixture_key(fixture: &Fixture) -> (PathBuf, String) {
+        let keyring = fixture.root.join("keyring");
+        fs::create_dir(&keyring).expect("keyring");
+        fs::set_permissions(&keyring, fs::Permissions::from_mode(0o700))
+            .expect("keyring permissions");
+        let generated = fixture_gpg(&keyring)
+            .args([
                 "--pinentry-mode",
                 "loopback",
                 "--passphrase",
@@ -1345,16 +1551,8 @@ pub(crate) mod tests {
             .output()
             .expect("generate fixture key");
         assert!(generated.status.success(), "fixture key generation failed");
-        let listed = Command::new("/usr/bin/gpg")
-            .env_clear()
-            .env("GNUPGHOME", &keyring)
-            .env("HOME", "/nonexistent")
-            .args([
-                "--batch",
-                "--with-colons",
-                "--fingerprint",
-                "--list-secret-keys",
-            ])
+        let listed = fixture_gpg(&keyring)
+            .args(["--with-colons", "--fingerprint", "--list-secret-keys"])
             .output()
             .expect("list fixture key");
         assert!(listed.status.success(), "fixture key listing failed");
@@ -1369,6 +1567,11 @@ pub(crate) mod tests {
             })
             .expect("fixture fingerprint")
             .to_ascii_lowercase();
+        (keyring, fingerprint)
+    }
+
+    fn generate_signer(fixture: &Fixture, scope: &LinuxRepositoryScope) -> LinuxOpenPgpSigner {
+        let (keyring, fingerprint) = generate_fixture_key(fixture);
         LinuxOpenPgpSigner::inspect(
             "signer-fixture-0001",
             "/usr/bin/gpg",

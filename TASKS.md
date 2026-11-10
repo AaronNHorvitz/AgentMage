@@ -2,12 +2,31 @@
 
 ## Active queue: local agent mission
 
+The retained [signer-capture review](docs/reviews/69ead8457746-local-coding-signer-capture.txt)
+returns **Verdict: PASS** for exact commit
+`69ead845774654de33f76e74a56824e5b3a3d467`, with no high or medium finding.
+Low L1 (production capture wiring coverage), L2 (cleanup diagnostics) and L3
+(retained-child availability) remain same-row backlog with the earlier candidate
+scratch/descriptor lows. Neither parent row closes.
+
+The [exact-key and object-format repair](docs/evidence/t306-exact-signer-2026-11-10.md)
+addresses low L1 and L2 from the retained non-signing commit I/O review in the
+same T-303/T-306 rows. The dormant signer requests the exact pinned primary key
+or subkey; raw verification requires the signature header for the selected
+object format. Disposable installed-Git/GnuPG tests exercise both formats and
+both key selections. The complete affected gate remains **FAIL**: 1,356 Rust
+passes, the exact same 72 inherited failures and 64 existing ignores across 26
+unfiltered targets. Both new methods, six controls, formatting and Clippy pass;
+the source hash stays fixed. Independent core review is required. Signer
+confinement and activation remain open; neither parent closes.
+
 The retained [non-signing commit I/O review](docs/reviews/6033f03afb9e-local-coding-commit-io.txt)
 returns **Verdict: PASS** for exact commit
 `6033f03afb9e19874cdc67df22fc13f23c83e817`, with no high or medium finding.
 Low L1 (SHA-256 signature-header selection) and L2 (exact signing-key selection)
-remain same-row backlog, alongside the earlier candidate scratch/descriptor
-findings. Neither parent row closes.
+have the implementation repair above, pending independent review. The earlier
+candidate scratch/descriptor findings remain same-row backlog. Neither parent
+row closes.
 
 The [dormant signer capture repair](docs/evidence/t306-signer-capture-2026-11-10.md)
 replaces blocking output collection with bounded nonblocking reads and exact-child

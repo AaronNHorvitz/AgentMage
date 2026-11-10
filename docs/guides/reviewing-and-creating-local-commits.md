@@ -41,6 +41,10 @@ program, an unknown keyring, or an unsigned fallback.
 Private keys and keyring paths must not appear in the packet, chat, logs,
 diagnostics, exports, or receipts.
 
+The pinned fingerprint identifies the exact key that must sign, whether a primary
+key or a signing subkey. A primary-key selection does not delegate to a newer
+subkey. If that exact key cannot sign, creation fails without trying another key.
+
 ## Approve the Exact Commit
 
 The final manual preview binds all of these values together:
@@ -105,7 +109,9 @@ projections. No direct fallback runs these three operations.
 
 The content verifier requires exact singleton headers and message bytes. An
 additional parent, identity, tree or other header refuses verification. Signature
-verification requires one complete pinned fingerprint in a GnuPG status record;
+headers are bound to the object format: `gpgsig` for SHA-1 and `gpgsig-sha256`
+for SHA-256. The other header, duplicate headers and mixed object lengths refuse.
+Signature verification requires one complete pinned fingerprint in a GnuPG status record;
 a substring in prose cannot suffice, and failure/revocation/expiry records refuse.
 Signed stdout and stderr remain separate, both signer configuration keys are
 pinned, and replacement objects are disabled. Sealed memory input replaces the
