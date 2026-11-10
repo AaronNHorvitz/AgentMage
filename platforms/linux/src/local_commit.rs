@@ -755,15 +755,22 @@ fn verify_signature_status(status: &[u8], fingerprint: &str) -> bool {
     let Ok(status) = std::str::from_utf8(status) else {
         return false;
     };
-    if !valid_fingerprint(fingerprint) || status.contains('\0') {
+    if !valid_fingerprint(fingerprint)
+        || status.len() > crate::sandbox::MAX_OUTPUT_BYTES
+        || !status.ends_with('\n')
+        || status.contains(['\0', '\r'])
+    {
         return false;
     }
     let mut valid = 0;
     for line in status.lines() {
         let Some(record) = line.strip_prefix("[GNUPG:] ") else {
-            continue;
+            return false;
         };
         let fields: Vec<_> = record.split_ascii_whitespace().collect();
+        if fields.is_empty() {
+            return false;
+        }
         match fields.first().copied() {
             Some("VALIDSIG") => {
                 if !(10..=11).contains(&fields.len())
@@ -1403,8 +1410,11 @@ pub(crate) mod tests {
                         &token,
                     )
                     .expect("public-only component verification");
-                    assert!(verification.stdout.is_empty());
-                    (raw, verification.stderr)
+                    assert!(!verification.stdout.is_empty());
+                    // Human log lines stay separate from status in the real
+                    // installed-GnuPG component path as well as the guest argv.
+                    assert!(verification.stderr.starts_with(b"gpg: "));
+                    (raw, verification.stdout)
                 };
             // Without exact selection, GnuPG chooses the newer signing subkey.
             let mut unpinned = signed_commit_arguments(&plan);

@@ -93,8 +93,8 @@ fn result(status: &[u8]) -> SupervisedResult {
     SupervisedResult {
         outcome: Ok(OperationOutcome::Succeeded),
         status: Some(std::process::ExitStatus::from_raw(0)),
-        stdout: stream(&[]),
-        stderr: stream(status),
+        stdout: stream(status),
+        stderr: stream(b"gpg: diagnostic only\n"),
         resources: None,
         output_complete: true,
     }
@@ -215,7 +215,7 @@ fn commit_verification_requires_complete_success_and_exact_status_after_cleanup(
     let (_, plan) = fixture();
     let status = status(&plan);
     let deadline = Instant::now() + Duration::from_secs(5);
-    for case in 0..14 {
+    for case in 0..18 {
         let mut r = result(&status);
         match case {
             0 => r.outcome = Ok(OperationOutcome::Failed),
@@ -239,6 +239,10 @@ fn commit_verification_requires_complete_success_and_exact_status_after_cleanup(
                         .into_bytes(),
                 )
             }
+            14 => r.stdout.total = LIMIT + 1,
+            15 => r.stdout.total -= 1,
+            16 => r.stdout.sha256 = [0; 32],
+            17 => r.stderr.retained.push(0),
             _ => unreachable!(),
         }
         assert!(
@@ -260,6 +264,90 @@ fn commit_verification_requires_complete_success_and_exact_status_after_cleanup(
     );
     validate_result(
         result(&status),
+        &plan.signer.key_fingerprint,
+        &token(),
+        deadline,
+    )
+    .unwrap();
+}
+
+#[test]
+fn commit_verification_never_uses_diagnostics_as_signature_authority() {
+    let (_, plan) = fixture();
+    let good = status(&plan);
+    let fingerprint = &plan.signer.key_fingerprint;
+    let deadline = Instant::now() + Duration::from_secs(5);
+    let check = |r| validate_result(r, fingerprint, &token(), deadline);
+    // A complete successful process and valid-looking diagnostics cannot stand
+    // in for machine status, including a swapped pair of authentic streams.
+    for stdout in [
+        Vec::new(),
+        b"gpg: verified\n".to_vec(),
+        b"[GNUPG:] GOODSIG x\n".to_vec(),
+    ] {
+        let mut r = result(&stdout);
+        r.stderr = result(&good).stdout;
+        assert!(check(r).is_err());
+    }
+    // Conversely neither failure-looking status, human logs nor malformed bytes
+    // on stderr can override an authentic valid status stream. Stderr remains
+    // length/hash checked and bounded, but it is not parsed for a verdict.
+    for diagnostics in [
+        b"".as_slice(),
+        b"[GNUPG:] BADSIG x\n".as_slice(),
+        good.as_slice(),
+        b"human log without trailing newline",
+        &[0, 255, b'\r', b'\n'],
+    ] {
+        let mut r = result(&good);
+        r.stderr = result(diagnostics).stdout;
+        check(r).unwrap();
+    }
+}
+
+#[test]
+fn commit_verification_status_stream_refuses_mixed_partial_and_malformed_records() {
+    let (_, plan) = fixture();
+    let good = status(&plan);
+    let deadline = Instant::now() + Duration::from_secs(5);
+    for bytes in [
+        [b"gpg: human diagnostic\n".as_slice(), &good].concat(),
+        [&good, b"human suffix\n".as_slice()].concat(),
+        [&good, b"\n".as_slice()].concat(),
+        [&good, b"[GNUPG:] \n".as_slice()].concat(),
+        [&good, b"[GNUPG:] KEY_CONSIDERED partial".as_slice()].concat(),
+        good[..good.len() - 1].to_vec(),
+        [&good, b"\0\n".as_slice()].concat(),
+        [good.as_slice(), &[255, b'\n']].concat(),
+        good.iter()
+            .flat_map(|b| {
+                if *b == b'\n' {
+                    vec![b'\r', b'\n']
+                } else {
+                    vec![*b]
+                }
+            })
+            .collect::<Vec<u8>>(),
+    ] {
+        assert!(
+            validate_result(
+                result(&bytes),
+                &plan.signer.key_fingerprint,
+                &token(),
+                deadline
+            )
+            .is_err()
+        );
+    }
+    // Additional complete status records are expected in real GnuPG output.
+    let complete = [
+        b"[GNUPG:] NEWSIG\n".as_slice(),
+        &good,
+        b"[GNUPG:] TRUST_UNDEFINED 0 pgp\n".as_slice(),
+    ]
+    .concat();
+    validate_result(
+        result(&complete),
         &plan.signer.key_fingerprint,
         &token(),
         deadline,
@@ -319,6 +407,7 @@ fn commit_verification_command_has_no_repository_private_keyring_or_host_socket_
         "--no-options",
         "--no-autostart",
         "--no-auto-key-retrieve",
+        "--status-fd=1",
     ] {
         assert!(args.contains(&mandatory), "{mandatory}");
     }
@@ -331,6 +420,7 @@ fn commit_verification_command_has_no_repository_private_keyring_or_host_socket_
         "DBUS_SESSION_BUS_ADDRESS",
         "--git-dir",
         "--work-tree",
+        "--status-fd=2",
     ] {
         assert!(!args[guest..].contains(&forbidden), "{forbidden}");
     }

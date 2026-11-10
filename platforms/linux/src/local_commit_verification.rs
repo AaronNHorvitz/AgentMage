@@ -160,13 +160,13 @@ fn validate_result(
         || !matches!(result.outcome, Ok(OperationOutcome::Succeeded))
         || !result.output_complete
         || !result.status.is_some_and(|s| s.success())
-        || result.stdout.total != 0
-        || !result.stdout.retained.is_empty()
+        || result.stdout.total > LIMIT
+        || result.stdout.total != result.stdout.retained.len()
         || result.stderr.total > LIMIT
         || result.stderr.total != result.stderr.retained.len()
         || result.stdout.sha256 != Sha256::digest(&result.stdout.retained).as_slice()
         || result.stderr.sha256 != Sha256::digest(&result.stderr.retained).as_slice()
-        || !verify_signature_status(&result.stderr.retained, fingerprint)
+        || !verify_signature_status(&result.stdout.retained, fingerprint)
     {
         return Err(error(LinuxLocalCommitErrorKind::VerificationFailed));
     }
@@ -235,7 +235,9 @@ fn gpg_arguments<'a>(
         "--no-default-keyring",
         "--keyring",
         public,
-        "--status-fd=2",
+        // Verification emits no content on stdout. Reserve it exclusively for
+        // machine status; bounded stderr is diagnostic only and has no authority.
+        "--status-fd=1",
         "--verify",
         signature,
         content,

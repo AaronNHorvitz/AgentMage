@@ -2,6 +2,18 @@
 
 ## Active queue: local agent mission
 
+The [dedicated verification-status repair](docs/evidence/t306-verification-status-2026-11-10.md)
+addresses signature-verification review low L2 in the existing T-303/T-306 rows:
+only complete machine-status records on stdout carry a verdict; bounded stderr
+is diagnostic only. Mixed or partial status output refuses verification. The
+immutable candidate-setup base remains under independent review at session start.
+Neither row closes, and no new row or sub-row is added. Signer inspection and
+signed creation confinement remain open. The complete affected gate remains
+**FAIL**: 1,370 passes, the exact same 72 inherited failures and 64 existing
+ignores across 26 unfiltered targets. Both new methods, eleven controls,
+formatting and Clippy pass; all three source hashes stay fixed. Independent
+core review is required.
+
 The [candidate-setup repair](docs/evidence/t306-candidate-setup-2026-11-10.md)
 addresses retained low L1/L2 from the candidate-confinement review: worker capture
 must match the child descriptor opened through the held parent, and failed setup

@@ -177,7 +177,10 @@ projected. The worker has a private temporary home, fixed options disabling opti
 files, agent startup and key retrieval, and the existing socket-denying seccomp
 policy. The verified executables, original commit deadline, resource limits,
 bounded output and whole-unit descendant cleanup remain under the same supervisor.
-Only a successful complete result with no stdout and the exact pinned signing
+Machine status uses stdout exclusively (`--status-fd=1`); stderr contains bounded
+diagnostics and cannot supply a verification verdict. Every stdout line must be
+a complete machine-status record. Both streams must have consistent lengths and
+digests. Only a successful complete result with the exact pinned signing
 fingerprint can permit the next task-branch step. A verification failure or
 uncertain cleanup cannot update the task branch or produce a successful receipt.
 
