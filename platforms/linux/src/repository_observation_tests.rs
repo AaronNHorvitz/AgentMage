@@ -7,6 +7,88 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
+#[test]
+fn preservation_worker_deadline_never_renews_or_extends_the_inspection_limit() {
+    let start = Instant::now();
+    let own_limit = start + INSPECTION_PROCESS_TIMEOUT;
+    assert_eq!(inspection_deadline(start, None).unwrap(), own_limit);
+    assert_eq!(
+        inspection_deadline(start, Some(own_limit + PROCESS_TIMEOUT)).unwrap(),
+        own_limit
+    );
+    let collection_limit = start + Duration::from_secs(1);
+    assert_eq!(
+        inspection_deadline(start, Some(collection_limit)).unwrap(),
+        collection_limit
+    );
+    let next_worker_start = start + Duration::from_millis(900);
+    assert_eq!(
+        inspection_deadline(next_worker_start, Some(collection_limit)).unwrap(),
+        collection_limit
+    );
+    for expired in [start, start - Duration::from_secs(1)] {
+        assert!(inspection_deadline(start, Some(expired)).is_err());
+    }
+}
+
+#[test]
+fn preservation_observation_forwards_deadline_and_refuses_expired_success_or_missing_ref() {
+    let f = Fixture::new();
+    let expired = Instant::now();
+    assert!(
+        observe_until_with(
+            &f.scope,
+            &["ls-files"],
+            1024,
+            None,
+            Some(expired),
+            |_, _| { panic!("expired request cannot reach a worker") }
+        )
+        .is_err()
+    );
+    let future = Instant::now() + PROCESS_TIMEOUT;
+    assert_eq!(
+        observe_until_with(
+            &f.scope,
+            &["ls-files"],
+            1024,
+            None,
+            Some(future),
+            |request, _| {
+                assert_eq!(request.deadline, Some(future));
+                Ok(result(0))
+            }
+        )
+        .unwrap()
+        .unwrap(),
+        b"worker output\n"
+    );
+    for code in [0, 1, 128] {
+        let deadline = Instant::now() + Duration::from_secs(1);
+        let mut calls = 0;
+        let observed = observe_until_with(
+            &f.scope,
+            &["ls-files"],
+            1024,
+            None,
+            Some(deadline),
+            |request, token| {
+                calls += 1;
+                assert_eq!(request.deadline, Some(deadline));
+                std::thread::sleep(deadline.saturating_duration_since(Instant::now()));
+                assert!(!token.is_cancelled());
+                Ok(result(code))
+            },
+        );
+        assert_eq!(
+            observed.unwrap_err().kind(),
+            LinuxRepositoryErrorKind::ObservationFailed
+        );
+        assert_eq!(calls, 1);
+        f.unchanged();
+    }
+}
+
 struct Fixture {
     base: PathBuf,
     scope: LinuxRepositoryScope,

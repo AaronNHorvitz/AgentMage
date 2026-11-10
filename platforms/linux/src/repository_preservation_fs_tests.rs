@@ -306,6 +306,54 @@ fn preservation_fs_cancellation_stops_chunk_reads_and_all_local_scan_entries() {
 }
 
 #[test]
+fn preservation_fs_shared_deadline_stops_chunks_and_every_scan_entry_without_cancelling() {
+    let f = Fixture::new();
+    fs::write(
+        f.root.join("repo/source"),
+        vec![b'x'; HASH_BUFFER_BYTES * 2],
+    )
+    .unwrap();
+    let token = token();
+    let deadline = Instant::now() + Duration::from_secs(1);
+    let files = Files::new_until(&f.scope, Some(&token), deadline).unwrap();
+    let held = entry(&files.checkout, "source").unwrap().unwrap();
+    let checks = Cell::new(0);
+    denied(read_regular(
+        &files.checkout,
+        "source",
+        &fstat(&held).unwrap(),
+        || {
+            checks.set(checks.get() + 1);
+            if checks.get() == 3 {
+                // Initial check, first chunk precheck, first chunk postcheck.
+                // Stop after reading a real chunk, before the next one.
+                std::thread::sleep(deadline.saturating_duration_since(Instant::now()));
+            }
+            files.check()
+        },
+        || Ok(()),
+    ));
+    assert_eq!(checks.get(), 3);
+    denied(files.worktree());
+    denied(files.metadata("missing"));
+    denied(files.reflogs("missing", true));
+    denied(files.read_optional(false, "missing"));
+    denied(files.hash_optional(true, "index"));
+    denied(files.operations());
+    denied(files.hooks());
+    denied(files.exists("shallow"));
+    denied(files.common_identity());
+    denied(files.revalidate());
+    denied(Files::new_until(&f.scope, Some(&token), deadline));
+    assert!(!token.is_cancelled());
+    assert_eq!(
+        fs::metadata(f.root.join("repo/source")).unwrap().len(),
+        (HASH_BUFFER_BYTES * 2) as u64
+    );
+    f.unchanged_outside();
+}
+
+#[test]
 fn preservation_fs_symlinked_metadata_ancestors_and_special_files_refuse() {
     let f = Fixture::new();
     let files = f.files();

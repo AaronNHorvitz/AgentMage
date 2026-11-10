@@ -12,6 +12,7 @@ struct InventoryRequest {
     environment: BTreeMap<String, String>,
     stdout_limit: usize,
     workspace: crate::LinuxAuthorizedWorkspace,
+    deadline: Option<Instant>,
 }
 
 impl LinuxRepositoryCollector {
@@ -22,11 +23,23 @@ impl LinuxRepositoryCollector {
         maximum_bytes: usize,
         cancellation: Option<&CancellationToken>,
     ) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
-        observe_with(
+        self.observe_confined_inventory_until(scope, arguments, maximum_bytes, cancellation, None)
+    }
+
+    pub(super) fn observe_confined_inventory_until(
+        &self,
+        scope: &LinuxRepositoryScope,
+        arguments: &[&str],
+        maximum_bytes: usize,
+        cancellation: Option<&CancellationToken>,
+        deadline: Option<Instant>,
+    ) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
+        observe_until_with(
             scope,
             arguments,
             maximum_bytes,
             cancellation,
+            deadline,
             |request, token| {
                 revalidate_git_artifact(&self.git)?;
                 let manifest = LinuxRepositoryInspectionManifest::verify(
@@ -49,6 +62,7 @@ impl LinuxRepositoryCollector {
                         request.stdout_limit,
                         &request.workspace,
                         token,
+                        request.deadline,
                     )
                     .map_err(|_| failed())
             },
@@ -59,6 +73,7 @@ impl LinuxRepositoryCollector {
 // Private seam for worker-result and race tests. No product caller can supply
 // an executor or substitute a Git observation; both collector entry paths above
 // dispatch only through the existing trusted inspection owner.
+#[cfg(test)]
 fn observe_with(
     scope: &LinuxRepositoryScope,
     arguments: &[&str],
@@ -69,6 +84,21 @@ fn observe_with(
         &CancellationToken,
     ) -> Result<RepositoryInspectionPlatformResult, LinuxRepositoryError>,
 ) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
+    observe_until_with(scope, arguments, maximum_bytes, cancellation, None, execute)
+}
+
+fn observe_until_with(
+    scope: &LinuxRepositoryScope,
+    arguments: &[&str],
+    maximum_bytes: usize,
+    cancellation: Option<&CancellationToken>,
+    deadline: Option<Instant>,
+    execute: impl FnOnce(
+        &InventoryRequest,
+        &CancellationToken,
+    ) -> Result<RepositoryInspectionPlatformResult, LinuxRepositoryError>,
+) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
+    check_deadline(deadline)?;
     scope.revalidate_linked()?;
     if maximum_bytes == 0
         || maximum_bytes > crate::repository_inventory::MAX_INVENTORY_BYTES
@@ -127,6 +157,7 @@ fn observe_with(
         .collect(),
         stdout_limit: linked_inventory_limit(maximum_bytes),
         workspace,
+        deadline,
     };
     let fallback = CancellationToken::root(
         BoundaryKind::Shell,
@@ -134,7 +165,9 @@ fn observe_with(
         CorrelationId::from_raw("repository-observation"),
     );
     let token = cancellation.unwrap_or(&fallback);
+    check_deadline(deadline)?;
     let result = execute(&request, token)?;
+    check_deadline(deadline)?;
     revalidate_scope(scope)?;
     request.workspace.revalidate().map_err(|_| failed())?;
     if token.is_cancelled()
@@ -151,6 +184,13 @@ fn observe_with(
         Some(1 | 128) => Ok(None),
         _ => Err(failed()),
     }
+}
+
+fn check_deadline(deadline: Option<Instant>) -> Result<(), LinuxRepositoryError> {
+    if deadline.is_some_and(|limit| Instant::now() >= limit) {
+        return Err(failed());
+    }
+    Ok(())
 }
 
 fn revalidate_scope(scope: &LinuxRepositoryScope) -> Result<(), LinuxRepositoryError> {

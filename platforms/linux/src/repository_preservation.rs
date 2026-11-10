@@ -11,22 +11,38 @@ pub(super) fn check(cancellation: Option<&CancellationToken>) -> Result<(), Linu
     }
 }
 
+pub(super) fn check_until(
+    cancellation: Option<&CancellationToken>,
+    deadline: Instant,
+) -> Result<(), LinuxRepositoryError> {
+    check(cancellation)?;
+    if Instant::now() >= deadline {
+        return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+    }
+    Ok(())
+}
+
 // Private seam: production supplies only the existing confined collector.
 // Tests can cancel while a synthetic worker returns without native admission.
 struct Observer<'a, F> {
     cancellation: Option<&'a CancellationToken>,
+    deadline: Instant,
     execute: F,
 }
 impl<F> Observer<'_, F>
 where
-    F: FnMut(&[&str], Option<&CancellationToken>) -> Result<Option<Vec<u8>>, LinuxRepositoryError>,
+    F: FnMut(
+        &[&str],
+        Option<&CancellationToken>,
+        Instant,
+    ) -> Result<Option<Vec<u8>>, LinuxRepositoryError>,
 {
     fn check(&self) -> Result<(), LinuxRepositoryError> {
-        check(self.cancellation)
+        check_until(self.cancellation, self.deadline)
     }
     fn optional(&mut self, arguments: &[&str]) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
         self.check()?;
-        let output = (self.execute)(arguments, self.cancellation)?;
+        let output = (self.execute)(arguments, self.cancellation, self.deadline)?;
         self.check()?;
         Ok(output)
     }
@@ -43,20 +59,40 @@ where
     }
 }
 
-pub(super) fn collect_with(
+#[cfg(test)]
+fn collect_with(
     scope: &LinuxRepositoryScope,
     cancellation: Option<&CancellationToken>,
-    execute: impl FnMut(
+    mut execute: impl FnMut(
         &[&str],
         Option<&CancellationToken>,
     ) -> Result<Option<Vec<u8>>, LinuxRepositoryError>,
 ) -> Result<RepositoryPreservationManifest, LinuxRepositoryError> {
+    collect_until(
+        scope,
+        cancellation,
+        Instant::now() + PROCESS_TIMEOUT,
+        |args, token, _| execute(args, token),
+    )
+}
+
+pub(super) fn collect_until(
+    scope: &LinuxRepositoryScope,
+    cancellation: Option<&CancellationToken>,
+    deadline: Instant,
+    execute: impl FnMut(
+        &[&str],
+        Option<&CancellationToken>,
+        Instant,
+    ) -> Result<Option<Vec<u8>>, LinuxRepositoryError>,
+) -> Result<RepositoryPreservationManifest, LinuxRepositoryError> {
     let mut observe = Observer {
         cancellation,
+        deadline,
         execute,
     };
     observe.check()?;
-    let files = preservation_fs::Files::new(scope, cancellation)?;
+    let files = preservation_fs::Files::new_until(scope, cancellation, deadline)?;
     let object_format = text_required(observe.required(&["rev-parse", "--show-object-format"])?)?;
     let head_object = observe
         .optional(&["rev-parse", "--verify", "HEAD"])?

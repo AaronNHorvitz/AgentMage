@@ -246,3 +246,68 @@ fn preservation_root_replacement_during_git_reads_cannot_release_a_manifest() {
         }
     }
 }
+
+#[test]
+fn preservation_collection_keeps_one_deadline_for_every_worker_and_the_complete_manifest() {
+    let f = Fixture::new();
+    let token = token();
+    let before = collect_with(&f.scope, Some(&token), |args, _| Ok(reply(args))).unwrap();
+    let deadline = Instant::now() + PROCESS_TIMEOUT;
+    let mut calls = 0;
+    let bounded = collect_until(
+        &f.scope,
+        Some(&token),
+        deadline,
+        |args, forwarded, limit| {
+            assert_eq!(limit, deadline, "no new budget at a worker boundary");
+            assert!(std::ptr::eq(forwarded.unwrap(), &token));
+            calls += 1;
+            Ok(reply(args))
+        },
+    )
+    .unwrap();
+    assert_eq!(calls, 17);
+    assert_eq!(
+        before, bounded,
+        "deadline does not change manifest bindings"
+    );
+    f.unchanged();
+}
+
+#[test]
+fn preservation_collection_expiry_rejects_late_worker_success_without_later_reads() {
+    let f = Fixture::new();
+    let token = token();
+    for forwarded in [None, Some(&token)] {
+        for stop in [1, 17] {
+            let deadline = Instant::now() + Duration::from_secs(1);
+            let mut calls = 0;
+            let observed = collect_until(&f.scope, forwarded, deadline, |args, _, limit| {
+                calls += 1;
+                assert_eq!(limit, deadline);
+                if calls == stop {
+                    // Use the real monotonic deadline, including at the final
+                    // worker. This successful output must never be accepted.
+                    std::thread::sleep(limit.saturating_duration_since(Instant::now()));
+                }
+                Ok(reply(args))
+            });
+            assert_eq!(
+                observed.unwrap_err().kind(),
+                LinuxRepositoryErrorKind::ObservationFailed
+            );
+            assert_eq!(calls, stop, "no next observation or final manifest");
+            assert!(!token.is_cancelled(), "expiry must not cancel the caller");
+            f.unchanged();
+        }
+    }
+    // An expired budget stops before filesystem access, not just before Git.
+    fs::remove_dir_all(f.root.join("repo")).unwrap();
+    let observed = collect_until(&f.scope, None, Instant::now(), |_, _, _| {
+        panic!("expired collection cannot invoke a worker")
+    });
+    assert_eq!(
+        observed.unwrap_err().kind(),
+        LinuxRepositoryErrorKind::ObservationFailed
+    );
+}

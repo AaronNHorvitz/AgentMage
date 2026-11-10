@@ -2,6 +2,19 @@
 
 ## Active queue: local agent mission
 
+The [preservation collection deadline batch](docs/evidence/t306-preservation-deadline-2026-11-10.md)
+shares one 30-second observation budget across executable admission, all Git
+reads and local scans in each complete collection. Workers keep their existing
+15-second cap and also inherit the collection deadline. Late results refuse;
+mandatory cleanup and individual syscalls remain outside preemption. Complete
+manifest bindings remain unchanged. The complete affected gate remains
+**FAIL**: 1,455 passes, the exact inherited 72 failures and 64 ignores over
+26 unfiltered targets. All five new methods, formatting and Clippy pass; seven
+source hashes stay fixed. An initial Markdown blank-line error is corrected
+and separate final light checks pass. Independent core review is required. T-303/T-306 remain open without new rows or
+sub-rows. The preceding commit is still under independent review and its
+history is preserved. Native execution and model measurements remain open.
+
 The retained [preservation scan review](docs/reviews/62fe004514d2-local-coding-preservation-files.txt)
 has **Verdict: PASS** for exact commit
 `62fe004514d20a346ce877bbbf7b397ff5127a1c`, with no high or medium finding.

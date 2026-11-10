@@ -604,3 +604,26 @@ their original record format without reading file content. These are separate
 per-traversal resource limits; they add no whole-collection time guarantee.
 The skipped top-level `.git` entry consumes one of the 16,384 entries and its
 four relative-name bytes, leaving at most 16,383 other listed entries.
+
+## Preservation collection time budget
+
+Each complete preservation collection starts one monotonic 30-second budget
+before executable admission. All Git observations and local filesystem scans
+share that absolute deadline. Each confined inspection worker uses the earlier
+of its existing 15-second deadline and the collection deadline; later workers
+receive only the remaining collection time. Ordinary inventory and separately
+approved inspection retain their existing per-worker limits.
+
+Expiry refuses before the next observation, around local read chunks and before
+returning a manifest. A late successful worker, including a missing-reference
+exit, cannot supply accepted evidence. Expiry does not cancel the caller's token
+or grant retry authority. Existing complete manifest inputs, encodings and
+content/path/entry limits remain unchanged.
+
+This is a cooperative observation budget, not a hard return-time guarantee:
+individual admission or filesystem calls are not preempted, and mandatory
+supervisor cleanup can finish after the observation deadline. A complete
+original-owner review performs multiple collections and has no shared review
+deadline yet. Installed checker time remains the host's responsibility. An
+expired post-effect collection establishes no rollback or safe automatic retry;
+the existing uncertain-effect handling still applies.

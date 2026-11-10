@@ -53,14 +53,24 @@ pub(super) struct Files<'a> {
     git: OwnedFd,
     scope: &'a LinuxRepositoryScope,
     cancellation: Option<&'a CancellationToken>,
+    deadline: Instant,
 }
 
 impl<'a> Files<'a> {
-    pub(super) fn new(
+    #[cfg(test)]
+    fn new(
         scope: &'a LinuxRepositoryScope,
         cancellation: Option<&'a CancellationToken>,
     ) -> Result<Self, LinuxRepositoryError> {
-        preservation::check(cancellation)?;
+        Self::new_until(scope, cancellation, Instant::now() + PROCESS_TIMEOUT)
+    }
+
+    pub(super) fn new_until(
+        scope: &'a LinuxRepositoryScope,
+        cancellation: Option<&'a CancellationToken>,
+        deadline: Instant,
+    ) -> Result<Self, LinuxRepositoryError> {
+        preservation::check_until(cancellation, deadline)?;
         let checkout = absolute_directory(&scope.checkout_root)?;
         let relative = scope
             .git_directory
@@ -72,13 +82,14 @@ impl<'a> Files<'a> {
             git,
             scope,
             cancellation,
+            deadline,
         };
         files.revalidate()?;
         Ok(files)
     }
 
     fn check(&self) -> Result<(), LinuxRepositoryError> {
-        preservation::check(self.cancellation)
+        preservation::check_until(self.cancellation, self.deadline)
     }
 
     pub(super) fn revalidate(&self) -> Result<(), LinuxRepositoryError> {

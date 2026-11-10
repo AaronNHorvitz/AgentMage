@@ -353,15 +353,29 @@ impl LinuxRepositoryCollector {
         scope: &LinuxRepositoryScope,
         cancellation: Option<&CancellationToken>,
     ) -> Result<RepositoryPreservationManifest, LinuxRepositoryError> {
-        preservation::check(cancellation)?;
+        // One collection budget, including admission, local scans and all Git
+        // reads. Individual syscalls and mandatory cleanup are not preempted.
+        let deadline = Instant::now() + PROCESS_TIMEOUT;
+        preservation::check_until(cancellation, deadline)?;
         // Full manifests still belong only to the ordinary mutating owner.
         if scope.linked_read_only.is_some() {
             return Err(error(LinuxRepositoryErrorKind::PlanDenied));
         }
         revalidate_git_artifact(&self.git)?;
-        preservation::collect_with(scope, cancellation, |arguments, token| {
-            self.observe_inventory_optional(scope, arguments, MAX_OBSERVATION_BYTES, token)
-        })
+        preservation::collect_until(
+            scope,
+            cancellation,
+            deadline,
+            |arguments, token, deadline| {
+                self.observe_confined_inventory_until(
+                    scope,
+                    arguments,
+                    MAX_OBSERVATION_BYTES,
+                    token,
+                    Some(deadline),
+                )
+            },
+        )
     }
 
     pub(crate) fn observe_inventory(
@@ -511,6 +525,7 @@ impl LinuxBoundedRepositoryInspectionExecutor {
             MAX_OBSERVATION_BYTES,
             working_directory,
             cancellation,
+            None,
         )
     }
 
@@ -521,11 +536,10 @@ impl LinuxBoundedRepositoryInspectionExecutor {
         stdout_limit: usize,
         working_directory: &crate::LinuxAuthorizedWorkspace,
         cancellation: &dyn EffectCancellationObservation,
+        collection_deadline: Option<Instant>,
     ) -> Result<RepositoryInspectionPlatformResult, RepositoryInspectionExecutionFailure> {
         let started = Instant::now();
-        let deadline = started
-            .checked_add(INSPECTION_PROCESS_TIMEOUT)
-            .ok_or(RepositoryInspectionExecutionFailure::ExecutionFailed)?;
+        let deadline = inspection_deadline(started, collection_deadline)?;
         crate::sandbox::supervision::admission_snapshot()
             .map_err(inspection_supervision_failure)?;
         if revalidate_git_artifact(&self.manifest.systemd_run).is_err()
@@ -727,6 +741,20 @@ impl LinuxBoundedRepositoryInspectionExecutor {
             .to_owned(),
         })
     }
+}
+
+fn inspection_deadline(
+    started: Instant,
+    collection_deadline: Option<Instant>,
+) -> Result<Instant, RepositoryInspectionExecutionFailure> {
+    let worker_deadline = started
+        .checked_add(INSPECTION_PROCESS_TIMEOUT)
+        .ok_or(RepositoryInspectionExecutionFailure::ExecutionFailed)?;
+    let deadline = collection_deadline.map_or(worker_deadline, |outer| outer.min(worker_deadline));
+    if deadline <= started {
+        return Err(RepositoryInspectionExecutionFailure::ExecutionFailed);
+    }
+    Ok(deadline)
 }
 
 fn inspection_supervision_failure(
