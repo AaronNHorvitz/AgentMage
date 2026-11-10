@@ -1741,7 +1741,7 @@ fn seal_projection(
     .map_err(|_| error(error_kind))
 }
 
-fn sealed_payload(name: &str, bytes: &[u8]) -> Result<OwnedFd, LinuxSandboxError> {
+pub(crate) fn sealed_payload(name: &str, bytes: &[u8]) -> Result<OwnedFd, LinuxSandboxError> {
     let descriptor = projection_descriptor(name, LinuxSandboxErrorKind::FileProjectionFailed)?;
     write_all_projection(
         &descriptor,

@@ -71,3 +71,24 @@ A successful local-commit receipt must show:
 Failure, timeout, cancellation, stale state, signature mismatch, branch movement,
 or uncertain cleanup is not success. Preserve the owned worktree and evidence for
 inspection; do not retry or clean up by reset, discard, force, or hidden stash.
+
+## Dormant Linux candidate construction
+
+The candidate builder now dispatches its fixed Git steps through the offline
+worker supervisor. It exposes source read-only, exact selected metadata writable,
+and a new private candidate directory writable. Other owned worktrees and scratch
+siblings are not projected. Its temporary-index identity names `index` inside
+`candidate-index-<build-id>`; stale flat-index plans and occupied directories refuse.
+Postimages are sealed memory input, and each resulting blob must match those
+exact bytes. A single thirty-second deadline covers the candidate sequence.
+
+Incomplete supervision, changed directory identities or unknown scratch contents
+prevent successful cleanup. Such scratch is retained for explicit recovery;
+reusing the same build identity does not replace it. The user index, source and
+refs must still satisfy the existing complete preservation reconciliation.
+
+This adapter remains dormant: there is no API or coordinator activation and a
+review packet still grants no build authority. The direct signing runner also
+remains inactive pending its own confinement and exact approval composition.
+Synthetic tests and mount experiments do not establish native admission or model
+acceptance; the lane's executable trust and user-bus refusals remain unchanged.

@@ -53,7 +53,7 @@ mod observation;
 
 #[path = "repository_execution.rs"]
 mod execution;
-pub(crate) use execution::LinuxRepositoryMutationScope;
+pub(crate) use execution::{CandidateSession, LinuxRepositoryMutationScope, candidate_index_path};
 
 /// Stable failure class at the Linux repository boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

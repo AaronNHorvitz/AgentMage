@@ -94,3 +94,9 @@ native/model measurement remain open. No model or GPU process starts. Frozen,
 hidden and held-out tasks, scorers, prompts, thresholds, dependencies, supply-chain
 outputs, lifecycle and scoreboard are unchanged. No release or owner readiness
 is claimed. Independent core review is required.
+
+The subsequent independent core review returns **Verdict: PASS** for exact commit
+`a0acdf0e978d80c07c540da18c1d4d679910c0e2`, with no high or medium finding.
+Its low L1 clarification: the moved concurrency regression remains one of the
+72 inherited failures at executable-ownership admission; its new observation
+seam has not executed in this lane. Parent rows remain open.

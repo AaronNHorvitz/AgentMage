@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The [dormant candidate confinement increment](docs/evidence/t306-confined-candidate-2026-11-10.md)
+replaces the temporary-index builder's direct Git process path with the offline
+closed supervisor, an exclusive private index directory, sealed postimages and
+exact ordered blob verification. The complete affected gate remains **FAIL**:
+1,335 Rust passes, the exact same 72 inherited failure identities and 64 existing
+ignores across 26 unfiltered targets. All eight new methods, seven affected
+controls, formatting and Clippy pass; seven source hashes remain fixed.
+The adapter remains inactive; candidate authority, native/model measurement,
+separately approved commit/push and durable recovery remain open. Independent
+core review is required.
+T-303/T-306 remain open, with no new or closed row or sub-row.
+
+The retained [local Git effects review](docs/reviews/a0acdf0e978d-local-coding-confined-effects.txt)
+returns **Verdict: PASS** for exact commit
+`a0acdf0e978d80c07c540da18c1d4d679910c0e2`, with no high or medium finding.
+Its low L1 is clarified: the moved concurrency regression's new seam remains
+unexercised behind executable admission. Low L2 is addressed by documenting and
+asserting the existing explicit work-tree override. Neither parent closes.
+
 The [confined approved local Git change](docs/evidence/t306-confined-effects-2026-11-10.md)
 routes existing worktree and local compare-and-swap effects through the offline
 supervisor. The checkout is read-only; only the exact selected metadata and

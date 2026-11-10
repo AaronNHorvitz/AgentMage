@@ -28,7 +28,9 @@ thirty-second operation deadline; the enclosing unit has a thirty-one-second
 failsafe. There is no direct-process retry. The closed supervisor owner has its
 own nonce prefix and exactly three projections; inspection owners retain their
 existing shapes and read-only behavior. Disable replacement objects for these
-local effects. Preserve exact selected metadata rather than discovering `.git`.
+local effects. Supply `--work-tree=<checkout-root>` explicitly outside the
+sealed invocation arguments to bind Git to the selected read-only checkout
+and override an ambient `core.worktree` configuration. Preserve exact selected metadata rather than discovering `.git`.
 Mount the held Git executable read-only at `/app/git` and create a guest
 `/usr/bin/git` symlink to it: installed helper symlinks used by worktree creation
 can point back to `/usr/bin/git`. Bubblewrap consumes each bind-fd source, so

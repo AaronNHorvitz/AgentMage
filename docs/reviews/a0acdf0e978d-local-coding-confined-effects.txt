@@ -1,0 +1,162 @@
+Commit: a0acdf0e978d80c07c540da18c1d4d679910c0e2
+Scope: local-coding-confined-effects
+
+# Independent review: approved local worktree/CAS Git through the offline supervisor
+
+Reviewer: Claude Opus 5.5, separate session, read-only pinned checkout `/lane/review-checkout`.
+Row: T-303 / T-306 (core tier). This is a non-closing prerequisite under Decision 0189; the parent rows stay OPEN.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `a0acdf0e978d80c07c540da18c1d4d679910c0e2`; the base is
+  `d5452baf777b7f6cdc6aaca06883da5cf4298fbb`. Nine files change (+1245/-110).
+- Read IP-POLICY.md, Decision 0189, docs/evidence/t306-confined-effects-2026-11-10.md, the TASKS.md
+  and guide diffs, plus the bundle README.md, run.py, check.py, parse_gate.py, light.py and
+  layout-symlink.py. All write only to their output directories, run the repository's own fast gate,
+  and do not weaken any threshold. The manifest SHA-256 is `4d7726f1…f39151`, as requested.
+- Line-by-line review of `platforms/linux/src/repository_execution.rs` (new),
+  `repository_execution_tests.rs` (new), and the `repository_safety.rs` / `sandbox_supervision.rs` diffs.
+  Traced the code the change depends on: `map_arguments`, the kernel
+  `HardenedGitInvocation::seal/verify`, `hardened_environment`, `add_inspection_runtime_mounts`,
+  `run_owned`, the `Attempt::execute` / `cleanup` error paths and the `LinuxRepositoryExecutor::run`
+  post-invocation reconciliation.
+- Ran my own escape reproductions with bubblewrap and disposable fixtures under `/tmp`, outside
+  the repository (described below).
+- Checked that the retained review is byte-identical (`cmp` against
+  `/lane/reviews/d5452baf777b-local-coding-confined-observations.md`: identical). Checked that all nine
+  entries in `final-blobs.json` match `git show HEAD:<path>`: 9/9 true.
+- Privacy and trademark sweep over all added lines: no private host path, username, hostname,
+  credential, personal data or other product's name. The only `/lane/…` strings are generic lane paths
+  inside the retained review copy, as in earlier accepted retained reviews.
+
+## Exact commands and results (run from /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-confined-effects/review-inputs.sha256`: exit 0.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-confined-effects/run.py /lane/state/tmp/review-confined-effects-full-a0acdf0e978d`:
+   exit 1, as expected. Output: `{"exit": 1, "source_unchanged": true, "seconds_including_reservations": 602.22,
+   "raw_log_sha256": "53d770ee92d426cdaedc27a006802bd8e60c560b2a56c7a844003fb3bb2ffdc3"}`, ending in `FAST GATE: FAIL`.
+   - Lint, markdownlint, `cargo fmt --check` and Clippy `-D warnings` all exit 0.
+   - `cargo test` exits 101.
+   - My wall time is longer than the builder's 250.23 s because of reservation queueing.
+3. `python3 -B …/check.py <out>`: exit 0, which is a DATA comparison only.
+   - Results: `targets 26`, `totals [1327, 72, 64, 0, 0]`, 4 source files unchanged, 9 affected methods
+     present and passing, command exits `0,0,0,0,0,0,101`.
+   - Output ends `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL`.
+   - Independently, the sorted FAILED+ignored identity set in my log equals the builder's
+     validation-6 log exactly (`diff` empty).
+   - All six new methods report `... ok` in my log:
+     - the five `repository_safety::execution::tests::worktree_effect_*` tests;
+     - `sandbox::supervision::tests::repository_git_observations_require_the_separate_closed_nonce`.
+4. `cmp …/validation-6/source-freeze.json <out>/source-freeze.json`: exit 0.
+5. `python3 -B …/light.py`: exit 0. Diff check, untracked lint and review lint pass; markdownlint
+   reports 0 issues in 4 files.
+6. `git diff --check d5452baf777b7f6cdc6aaca06883da5cf4298fbb --`: exit 0.
+7. `git status --short`: empty (clean).
+8. Optional: `bash /tools/build-slot python3 -B …/layout-symlink.py /lane/state/tmp/review-confined-effects-layout-a0acdf0e978d`:
+   exit 0, `LAYOUT ONLY PASS`. Results:
+   - Worktree add, merge-base and CAS update-ref exit 0; worktree remove exits 0.
+   - Hash-object through a scratch symlink to an external host file exits 128 (absent in the guest).
+   - `config --file` on the checkout exits 255 with `Read-only file system`.
+   - The host sentinels are unchanged.
+   - This is a synthetic bwrap-only layout check. It does not cover systemd, seccomp or product admission.
+
+## Own escape reproductions (bubblewrap with the product's mount shape)
+
+- **Descriptor leak:**
+  - Setup: checkout `--ro-bind-fd`, metadata and owned root `--bind-fd`, with the directory fds passed in.
+  - In the guest, `/proc/self/fd` lists only 0, 1, 2 and the listing fd. bwrap closes the bind-fd
+    sources before exec, so `openat` on a leaked host-writable directory fd cannot bypass the
+    read-only checkout.
+  - Direct write to the checkout: EROFS. Write to the metadata: allowed, as designed.
+- **Writable-metadata pivots:**
+  - Rename of metadata to checkout, hardlink of checkout to metadata, and rename of checkout to
+    metadata all fail with EXDEV.
+  - A relative symlink in the metadata pointing at a checkout file fails with EROFS on write.
+  - An absolute symlink in the metadata to a host file outside the projections resolves inside the
+    guest's own root tmpfs. The host file is unchanged. A mkdir at a host-ancestor path likewise lands
+    only in the guest tmpfs, and the host is unchanged.
+- **Environment:**
+  - The guest runs with `--clearenv` plus only the fixed kernel `hardened_environment()`, which
+    `verify()` re-checks (no PATH, `GIT_CONFIG_NOSYSTEM`, `GIT_CONFIG_GLOBAL=/dev/null`,
+    `HOME=/nonexistent`).
+  - systemd-run gets only `XDG_RUNTIME_DIR`/`DBUS_SESSION_BUS_ADDRESS` (asserted by the inert test).
+  - `--expand-environment=no` disables `$` expansion of the host paths that now enter the ExecStart argv.
+- **Network:** `--unshare-all` (network namespace), `RestrictAddressFamilies=AF_UNIX AF_NETLINK`,
+  network invocations refused in both `run` and `execute_with`, `protocol.allow=never` in the sealed prefix.
+- **Prompt-injection reachability:** this path only executes kernel-sealed, approved plan invocations.
+  - `invocation.verify()` re-checks the hash, environment and prohibited operations.
+  - `map_arguments` rejects stray `/repo` and `/owned/` tokens and wrong-kind arguments.
+  - Model or document text cannot add an argument.
+
+## Assessment
+
+- **Authority:** strictly reduced relative to the PASS base. The base spawned Git directly on the
+  host with the user's full filesystem authority. Now:
+  - The checkout is read-only.
+  - Only the held selected metadata (which must lie strictly inside the checkout) and the owned root
+    are writable, and no host ancestor is mounted.
+  - Linked read-only scopes, `git_directory == checkout_root`, nested or overlapping owned roots,
+    non-normal path components and control characters are refused, as are reserved runtime prefixes
+    and their ancestors (including `/`).
+- **Fail-closed outcomes:**
+  - All three held identities (dev, inode, uid, mode, directory type and canonical spelling) are
+    rechecked at capture, before projection, before launch, at admission (`accepts`), immediately
+    before seccomp release and after supervision.
+  - A post-run mismatch returns `CleanupFailed` regardless of the worker result.
+  - Incomplete output returns `CleanupFailed`. Oversize returns `OutputLimit`.
+  - Cancellation observed after a successful exit returns `Cancelled`.
+  - In-loop revalidation errors flow through the existing `Attempt::cleanup`.
+  - The caller still re-collects the preservation manifest after any non-success and reports
+    `Uncertain` on change. Kernel reconciliation is untouched.
+- **No fallback:** the direct-spawn helpers (`wait_bounded`, `terminate_child`, `read_bounded`) are
+  deleted. The non-test `report_invocation_spawned` stub is gone, and the remaining seam is `#[cfg(test)]` only.
+- **Evaluation integrity:** no frozen, hidden or held-out task, scorer, prompt, threshold or
+  scoreboard file is touched (the nine changed files are listed above). `check.py` confirms the
+  TASKS.md table rows are unchanged and no `#[ignore` is added. Failures are counted, not dropped:
+  72 identical identities. No sub-row is added.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, honest labelling)**
+  - Locations: docs/decisions/0189-confine-approved-local-worktree-git.md:38-42 and the bundle
+    README describe the concurrency regression in the present tense ("observes the admitted worker
+    … stops that worker, mutates … resumes it"). The seam is platforms/linux/src/sandbox_supervision.rs:752-758.
+  - Problem: in this lane, `concurrent_user_changes_survive_worktree_removal_and_cleanup` panics at
+    `LinuxGitArtifact::verify("/usr/bin/git")` (platforms/linux/src/repository_safety.rs:2085,
+    `InvalidGitArtifact`) before any effect. It is one of the 72 inherited failures at both base and
+    head, so the new seam has never executed. The evidence does say that none of the new methods
+    establish native execution, but it never states that this moved regression is itself unexercised.
+  - Fix: add one sentence to the evidence file saying the moved concurrency regression remains among
+    the inherited failures at executable-ownership admission, and that its new seam is unexercised
+    until native admission works.
+- **L2 (low, undocumented invocation change)**
+  - Location: platforms/linux/src/repository_execution.rs:327-330.
+  - Problem: every approved local invocation now gets `--work-tree=<checkout_root>` outside the
+    kernel-sealed argument list. The base ran with the owned root as cwd and no work tree option.
+    Decision 0189 documents only `--no-replace-objects`.
+  - Not a confinement risk: the checkout is mounted read-only, and an explicit option overrides any
+    `core.worktree` in the user's config. But it changes what Git treats as the main work tree for
+    add, remove and CAS, and the inert-plan test does not assert it.
+  - Fix: document the option and its reason in Decision 0189 or the guide, and assert it in
+    `worktree_effect_worker_projects_only_exact_metadata_and_owned_roots_writable`.
+- **Residual, disclosed and not a finding:**
+  - The positive supervised path is not exercised in this lane. That covers systemd OpenFile directory
+    projection, the existing seccomp policy permitting the syscalls `worktree add` needs, and the guest
+    `/usr/bin/git` helper symlink under the real launcher. Native executable-ownership admission and the
+    user bus are unavailable here, and the evidence states this.
+  - `/tmp` is not in the reserved-prefix list. This is benign because `--tmpfs /tmp` is ordered
+    before the projection binds.
+
+## Per-row result
+
+- T-303 / T-306, non-closing prerequisite "local-coding-confined-effects": PASS.
+  - The claimed confinement exists and holds against my escape attempts. Failure handling is fail-closed.
+  - Evidence numbers reproduce: 1327 / 72 / 64 across 26 targets, all six new methods and three
+    controls passing, fmt and Clippy passing, four source hashes fixed.
+  - Claims are labelled as non-native and non-closing. L1 and L2 are backlog.
+- Parent rows T-303 and T-306 remain OPEN. This review grants no closure, native admission, model or
+  coding-score claim, candidate or local-commit activation, push, release or certification.
+
+Verdict: PASS

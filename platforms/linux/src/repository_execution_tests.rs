@@ -151,7 +151,7 @@ fn worktree_effect_worker_projects_only_exact_metadata_and_owned_roots_writable(
         &inert_manifest(),
         &owner,
         &map_arguments(&invocation, &f.scope).unwrap(),
-        &invocation,
+        &invocation.environment,
         "agentmage-repository-git-0123456789abcdef01234567.service",
         &filter,
     );
@@ -192,6 +192,7 @@ fn worktree_effect_worker_projects_only_exact_metadata_and_owned_roots_writable(
     assert_eq!(args.iter().filter(|a| **a == "--bind-fd").count(), 2);
     assert!(!args.contains(&"--bind"));
     assert!(args.contains(&format!("--git-dir={}", f.scope.git_directory.display()).as_str()));
+    assert!(args.contains(&format!("--work-tree={}", f.scope.checkout_root.display()).as_str()));
     assert!(args.contains(&f.scope.worktree_path().to_str().unwrap()));
     assert!(args.contains(&"--no-replace-objects"));
     let properties: Vec<_> = args

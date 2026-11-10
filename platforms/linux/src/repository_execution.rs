@@ -109,44 +109,66 @@ pub(super) fn execute(
     cancellation: &CancellationToken,
 ) -> InvocationStatus {
     execute_with(scope, invocation, cancellation, |owner, arguments| {
-        revalidate_git_artifact(git).map_err(|_| InvocationStatus::Denied)?;
-        let manifest = Arc::new(
-            LinuxRepositoryInspectionManifest::verify(
-                "/usr/bin/systemd-run",
-                "/usr/bin/systemctl",
-                "/usr/bin/bwrap",
-                git.launch_path(),
-            )
-            .map_err(|_| InvocationStatus::Denied)?,
-        );
-        let policy = compile_seccomp_policy().map_err(|_| InvocationStatus::Denied)?;
-        crate::sandbox::supervision::admission_snapshot().map_err(supervision_failure)?;
-        let deadline = Instant::now()
-            .checked_add(PROCESS_TIMEOUT)
-            .ok_or(InvocationStatus::Denied)?;
-        let mut nonce = [0_u8; 12];
-        getrandom(&mut nonce, GetRandomFlags::empty()).map_err(|_| InvocationStatus::Denied)?;
-        let unit = format!("agentmage-repository-git-{}.service", hex(&nonce));
-        let projections = owner.projections().map_err(|_| InvocationStatus::Denied)?;
-        let filter = crate::sandbox::supervision::FilterPipe::new().map_err(supervision_failure)?;
-        let command = worker_command(&manifest, &owner, arguments, invocation, &unit, &filter);
-        owner.revalidate().map_err(|_| InvocationStatus::Denied)?;
-        crate::sandbox::supervision::run_owned(
-            command,
-            Launch {
-                owner: LaunchOwner::RepositoryGit(manifest, owner),
-                projections,
-                unit,
-                deadline,
-                stdout_limit: MAX_OBSERVATION_BYTES,
-                stderr_limit: MAX_OBSERVATION_BYTES,
-                filter_pipe: Some(filter),
-            },
-            &policy,
-            &crate::sandbox::SandboxCancellation::Observed(cancellation),
+        run_worker(
+            git,
+            owner,
+            arguments,
+            &invocation.environment,
+            None,
+            cancellation,
+            Instant::now() + PROCESS_TIMEOUT,
         )
-        .map_err(supervision_failure)
     })
+}
+
+// The closed worker is shared by existing approved local effects and dormant
+// exact candidate construction. No caller-selected program or host fallback.
+fn run_worker(
+    git: &LinuxGitArtifact,
+    owner: Arc<LinuxRepositoryMutationScope>,
+    arguments: &[String],
+    environment: &std::collections::BTreeMap<String, String>,
+    input: Option<OwnedFd>,
+    cancellation: &CancellationToken,
+    deadline: Instant,
+) -> Result<SupervisedResult, InvocationStatus> {
+    revalidate_git_artifact(git).map_err(|_| InvocationStatus::Denied)?;
+    let manifest = Arc::new(
+        LinuxRepositoryInspectionManifest::verify(
+            "/usr/bin/systemd-run",
+            "/usr/bin/systemctl",
+            "/usr/bin/bwrap",
+            git.launch_path(),
+        )
+        .map_err(|_| InvocationStatus::Denied)?,
+    );
+    let policy = compile_seccomp_policy().map_err(|_| InvocationStatus::Denied)?;
+    crate::sandbox::supervision::admission_snapshot().map_err(supervision_failure)?;
+    let mut nonce = [0_u8; 12];
+    getrandom(&mut nonce, GetRandomFlags::empty()).map_err(|_| InvocationStatus::Denied)?;
+    let unit = format!("agentmage-repository-git-{}.service", hex(&nonce));
+    let projections = owner.projections().map_err(|_| InvocationStatus::Denied)?;
+    let filter = crate::sandbox::supervision::FilterPipe::new().map_err(supervision_failure)?;
+    let mut command = worker_command(&manifest, &owner, arguments, environment, &unit, &filter);
+    if let Some(input) = input {
+        command.stdin(Stdio::from(fs::File::from(input)));
+    }
+    owner.revalidate().map_err(|_| InvocationStatus::Denied)?;
+    crate::sandbox::supervision::run_owned(
+        command,
+        Launch {
+            owner: LaunchOwner::RepositoryGit(manifest, owner),
+            projections,
+            unit,
+            deadline,
+            stdout_limit: MAX_OBSERVATION_BYTES,
+            stderr_limit: MAX_OBSERVATION_BYTES,
+            filter_pipe: Some(filter),
+        },
+        &policy,
+        &crate::sandbox::SandboxCancellation::Observed(cancellation),
+    )
+    .map_err(supervision_failure)
 }
 
 // Private deterministic seam: product dispatch above always uses the closed worker.
@@ -223,7 +245,7 @@ fn worker_command(
     manifest: &LinuxRepositoryInspectionManifest,
     owner: &LinuxRepositoryMutationScope,
     arguments: &[String],
-    invocation: &HardenedGitInvocation,
+    environment: &std::collections::BTreeMap<String, String>,
     unit: &str,
     filter: &crate::sandbox::supervision::FilterPipe,
 ) -> Command {
@@ -282,7 +304,7 @@ fn worker_command(
         "--die-with-parent",
         "--clearenv",
     ]);
-    for (key, value) in &invocation.environment {
+    for (key, value) in environment {
         c.arg("--setenv").arg(key).arg(value);
     }
     c.args([
@@ -338,3 +360,9 @@ fn worker_command(
 #[cfg(test)]
 #[path = "repository_execution_tests.rs"]
 mod tests;
+
+#[path = "repository_candidate.rs"]
+mod candidate;
+pub(crate) use candidate::CandidateSession;
+
+pub(crate) use candidate::index_path as candidate_index_path;

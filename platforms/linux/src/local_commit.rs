@@ -14,8 +14,8 @@ use std::time::{Duration, Instant};
 use agentmage_kernel_contracts::OperationOutcome;
 use agentmage_kernel_engine::local_commit::{
     BoundedLocalCommitExecutor, CandidateTreeBlob, CandidateTreePlan, CandidateTreePlatformResult,
-    CommitFileMode, CommitSignerKind, LocalCommitLaunchPermit, LocalCommitPlatformResult,
-    PinnedCommitSigner, SignerInspectionSource, verify_candidate_tree_plan,
+    CommitSignerKind, LocalCommitLaunchPermit, LocalCommitPlatformResult, PinnedCommitSigner,
+    SignerInspectionSource, verify_candidate_tree_plan,
 };
 use agentmage_kernel_engine::propagation::CancellationToken;
 use rustix::process::getuid;
@@ -141,19 +141,9 @@ pub fn linux_candidate_index_path_sha256(
     scope: &LinuxRepositoryScope,
     candidate_build_id: &str,
 ) -> Result<String, LinuxLocalCommitError> {
-    if candidate_build_id.is_empty()
-        || candidate_build_id.len() > 128
-        || candidate_build_id.contains('/')
-    {
-        return Err(error(LinuxLocalCommitErrorKind::ScopeDenied));
-    }
-    Ok(hash(
-        scope
-            .owned_root()
-            .join(format!("candidate-index-{candidate_build_id}"))
-            .as_os_str()
-            .as_bytes(),
-    ))
+    let index = crate::repository_safety::candidate_index_path(scope, candidate_build_id)
+        .ok_or_else(|| error(LinuxLocalCommitErrorKind::ScopeDenied))?;
+    Ok(hash(index.as_os_str().as_bytes()))
 }
 
 /// Linux candidate-tree builder using only an AgentMage-owned temporary index.
@@ -189,29 +179,31 @@ impl LinuxCandidateTreeBuilder {
         postimages: Vec<LinuxApprovedPostimage>,
         cancellation: &CancellationToken,
     ) -> Result<CandidateTreePlatformResult, LinuxLocalCommitError> {
+        if cancellation.is_cancelled() {
+            return Err(error(LinuxLocalCommitErrorKind::ExecutionFailed));
+        }
         verify_candidate_tree_plan(plan)
             .map_err(|_| error(LinuxLocalCommitErrorKind::PlanDenied))?;
         let before = self
             .collector
             .collect(&self.scope)
             .map_err(|_| error(LinuxLocalCommitErrorKind::PlanDenied))?;
-        let temporary_index = self
-            .scope
-            .owned_root()
-            .join(format!("candidate-index-{}", plan.candidate_build_id));
+        let temporary_index_sha256 =
+            linux_candidate_index_path_sha256(&self.scope, &plan.candidate_build_id)?;
         if before.manifest_sha256 != plan.preservation_manifest_sha256
             || before.repository_sha256 != plan.repository_sha256
             || before.index_sha256 != plan.user_index_sha256
-            || plan.temporary_index_path_sha256 != hash(temporary_index.as_os_str().as_bytes())
-            || temporary_index.exists()
+            || plan.temporary_index_path_sha256 != temporary_index_sha256
         {
             return Err(error(LinuxLocalCommitErrorKind::PlanDenied));
         }
+        let count = postimages.len();
         let postimages = postimages
             .into_iter()
             .map(|postimage| (postimage.operation_id, postimage.bytes))
             .collect::<BTreeMap<_, _>>();
-        if postimages.len() != plan.files.len()
+        if count != postimages.len()
+            || postimages.len() != plan.files.len()
             || postimages
                 .values()
                 .try_fold(0_usize, |total, bytes| total.checked_add(bytes.len()))
@@ -228,32 +220,17 @@ impl LinuxCandidateTreeBuilder {
             }
         }
 
-        let runner = GitRunner::new(
-            self.collector.git(),
-            &self.scope,
-            Some(&temporary_index),
-            None,
-        );
+        let mut session = crate::repository_safety::CandidateSession::new(&self.scope, plan)
+            .map_err(|_| error(LinuxLocalCommitErrorKind::ScopeDenied))?;
         let operation = (|| {
-            runner.run(&["read-tree", &plan.parent_object], &[], cancellation)?;
+            session.read_tree(self.collector.git(), cancellation)?;
             let mut blobs = Vec::with_capacity(plan.files.len());
             for file in &plan.files {
-                let bytes = postimages
-                    .get(&file.operation_id)
-                    .ok_or_else(|| error(LinuxLocalCommitErrorKind::PlanDenied))?;
-                let blob = object_output(runner.run(
-                    &["hash-object", "-w", "--stdin"],
+                let bytes = &postimages[&file.operation_id];
+                let blob = session.add_postimage(
+                    self.collector.git(),
+                    &file.operation_id,
                     bytes,
-                    cancellation,
-                )?)?;
-                let mode = match file.mode {
-                    CommitFileMode::Regular => "100644",
-                    CommitFileMode::Executable => "100755",
-                };
-                let cache_info = format!("{mode},{blob},{}", file.path);
-                runner.run(
-                    &["update-index", "--add", "--cacheinfo", &cache_info],
-                    &[],
                     cancellation,
                 )?;
                 blobs.push(CandidateTreeBlob {
@@ -263,11 +240,11 @@ impl LinuxCandidateTreeBuilder {
                 });
             }
             blobs.sort();
-            let tree = object_output(runner.run(&["write-tree"], &[], cancellation)?)?;
-            Ok::<_, LinuxLocalCommitError>((tree, blobs))
-        })();
-        let cleanup_verified = !temporary_index.exists()
-            || fs::remove_file(&temporary_index).is_ok() && !temporary_index.exists();
+            let tree = session.write_tree(self.collector.git(), cancellation)?;
+            Ok::<_, crate::repository_safety::LinuxRepositoryError>((tree, blobs))
+        })()
+        .map_err(|_| error(LinuxLocalCommitErrorKind::ExecutionFailed));
+        let cleanup_verified = session.cleanup();
         let after = self
             .collector
             .collect(&self.scope)
@@ -444,7 +421,7 @@ impl LinuxLocalCommitExecutor {
         {
             return failed_commit_result(&before, "linux.git.commit.plan_denied");
         }
-        let runner = GitRunner::new(self.collector.git(), &self.scope, None, Some(&self.signer));
+        let runner = GitRunner::new(self.collector.git(), &self.scope, Some(&self.signer));
         let branch_before = runner
             .run(
                 &["rev-parse", "--verify", &plan.task_branch],
@@ -558,7 +535,6 @@ impl BoundedLocalCommitExecutor for LinuxLocalCommitExecutor {
 struct GitRunner<'a> {
     git: &'a LinuxGitArtifact,
     scope: &'a LinuxRepositoryScope,
-    temporary_index: Option<&'a Path>,
     signer: Option<&'a LinuxOpenPgpSigner>,
 }
 
@@ -566,15 +542,9 @@ impl<'a> GitRunner<'a> {
     const fn new(
         git: &'a LinuxGitArtifact,
         scope: &'a LinuxRepositoryScope,
-        temporary_index: Option<&'a Path>,
         signer: Option<&'a LinuxOpenPgpSigner>,
     ) -> Self {
-        Self {
-            git,
-            scope,
-            temporary_index,
-            signer,
-        }
+        Self { git, scope, signer }
     }
 
     fn run(
@@ -619,9 +589,6 @@ impl<'a> GitRunner<'a> {
                 "--work-tree={}",
                 self.scope.checkout_root().display()
             ));
-        if let Some(index) = self.temporary_index {
-            command.env("GIT_INDEX_FILE", index);
-        }
         if let Some(signer) = self.signer {
             command
                 .env("GNUPGHOME", &signer.keyring)
@@ -728,7 +695,7 @@ fn read_bounded(mut input: impl Read) -> Result<Vec<u8>, LinuxLocalCommitError> 
     }
 }
 
-fn hardened_git_prefix() -> [&'static str; 35] {
+pub(crate) fn hardened_git_prefix() -> [&'static str; 35] {
     [
         "--no-pager",
         "-c",
@@ -972,8 +939,8 @@ mod tests {
 
     use agentmage_kernel_contracts::{BoundaryKind, CorrelationId, TaskId};
     use agentmage_kernel_engine::local_commit::{
-        CommitIdentity, LocalCommitPlan, ManualCommitApprovalDecision, reconcile_candidate_tree,
-        reconcile_local_commit, record_manual_commit_approval,
+        CommitFileMode, CommitIdentity, LocalCommitPlan, ManualCommitApprovalDecision,
+        reconcile_candidate_tree, reconcile_local_commit, record_manual_commit_approval,
     };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
