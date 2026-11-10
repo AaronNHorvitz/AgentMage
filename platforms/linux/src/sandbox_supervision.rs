@@ -37,6 +37,7 @@ pub(crate) enum LaunchOwner {
         Arc<crate::repository_safety::LinuxRepositoryInspectionManifest>,
         Arc<crate::repository_safety::LinuxRepositoryMutationScope>,
     ),
+    CommitVerification(Arc<crate::local_commit::verification::VerifierManifest>),
     #[cfg(feature = "public-research-worker")]
     Research(Arc<super::research::LinuxPublicResearchManifest>),
 }
@@ -56,6 +57,7 @@ impl LaunchOwner {
             Self::Git(manifest)
             | Self::LinkedGit(manifest, _)
             | Self::RepositoryGit(manifest, _) => manifest.control_path().map_err(|_| failure()),
+            Self::CommitVerification(manifest) => manifest.control_path().map_err(|_| failure()),
             #[cfg(feature = "public-research-worker")]
             Self::Research(manifest) => manifest.control_path(),
         }
@@ -74,11 +76,16 @@ impl LaunchOwner {
                 "agentmage-repository-git-",
                 projections == 3 && scope.revalidate().is_ok(),
             ),
+            Self::CommitVerification(_) => return commit_verification_shape(unit, projections),
             #[cfg(feature = "public-research-worker")]
             Self::Research(_) => ("agentmage-research-", projections == 3),
         };
         cardinality && unit_name_with_prefix(unit, prefix)
     }
+}
+
+fn commit_verification_shape(unit: &str, projections: usize) -> bool {
+    projections == 3 && unit_name_with_prefix(unit, "agentmage-commit-verification-")
 }
 
 // The source mode is selected by the original native executor, never a model.
@@ -429,6 +436,15 @@ pub(crate) struct LocalCommitCapture {
     pub status: ExitStatus,
     pub stdout: Vec<u8>,
     pub stderr: Vec<u8>,
+}
+
+impl LocalCommitCapture {
+    // Direct signing/inspection consume stdout only. Verification diagnostics
+    // now come from the separate offline owner, never this direct boundary.
+    pub(crate) fn into_stdout(self) -> Vec<u8> {
+        drop(self.stderr);
+        self.stdout
+    }
 }
 
 pub(crate) fn capture_local_commit_process(
@@ -1206,6 +1222,7 @@ fn unit_name(value: &str) -> bool {
         "agentmage-command-",
         "agentmage-git-inspection-",
         "agentmage-repository-git-",
+        "agentmage-commit-verification-",
         #[cfg(feature = "public-research-worker")]
         "agentmage-research-",
     ]
@@ -1400,6 +1417,27 @@ mod tests {
         }
         assert!(parse_unit_observation(&unit, running().as_bytes()).is_err());
     }
+    #[test]
+    fn commit_verification_owner_requires_exact_nonce_and_three_public_projections() {
+        let unit = "agentmage-commit-verification-0123456789abcdef01234567.service";
+        for count in [0, 1, 2, 3, 4, 5, usize::MAX] {
+            assert_eq!(commit_verification_shape(unit, count), count == 3);
+        }
+        let properties = running().replace(UNIT, unit);
+        assert!(parse_unit_observation(unit, properties.as_bytes()).is_ok());
+        assert!(parse_unit_observation(unit, running().as_bytes()).is_err());
+        for bad in [
+            UNIT.to_owned(),
+            unit.replace(".service", ".scope"),
+            unit.replace("0123456789abcdef01234567", "*"),
+            unit.replace("0123456789abcdef01234567", "0123456789abcdef0123456G"),
+            unit.replace("0123456789abcdef01234567", "0123456789abcdef0123456"),
+            unit.replace("0123456789abcdef01234567", "0123456789abcdef012345678"),
+        ] {
+            assert!(!commit_verification_shape(&bad, 3));
+        }
+    }
+
     fn absent() -> String {
         format!(
             "Id={UNIT}\nLoadState=not-found\nActiveState=inactive\nSubState=dead\nJob=\nTransient=no\nInvocationID=\nMainPID=0\nControlPID=0\nResult=success\nControlGroup=\n"

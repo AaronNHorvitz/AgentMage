@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The [offline signature-verification increment](docs/evidence/t306-confined-verification-2026-11-10.md)
+uses the existing supervisor with sealed public key, signature and exact signed
+content. No repository or private keyring enters this worker; direct Git
+verification is removed. Signer inspection and signed creation still require
+confinement before activation. The final complete affected gate remains **FAIL**:
+1,364 passes, the exact same 72 inherited failures and 64 existing ignores across
+26 unfiltered targets. Six new methods, twelve controls, formatting and Clippy
+pass; five source hashes stay fixed. The earlier own Clippy failure is corrected
+without suppression and retained as superseded evidence. Independent core review
+is required; T-303/T-306 remain open, with no row or sub-row changes.
+
+The retained [production-caller review](docs/reviews/ee9835574916-local-coding-signer-callers.txt)
+returns **Verdict: PASS** for exact commit
+`ee983557491646b712acfc9d624f740b665cbbb0`, with no high or medium finding.
+Low L1 retained-child injection through native `run_plan` and L2 poisoned-owner
+diagnostics remain same-row backlog, alongside the existing native signatures,
+fixture teardown, usable-key inspection, availability and candidate-directory
+findings. Neither T-303 nor T-306 closes.
+
 The [production signer-capture repair](docs/evidence/t306-signer-callers-2026-11-10.md)
 preserves uncertain child cleanup through inspection, signed creation and
 verification diagnostics. Disposable signatures now exercise the production

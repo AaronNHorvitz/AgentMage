@@ -122,19 +122,19 @@ signature verification. After worker dispatch or signing begins, failures report
 failed execution and unverified cleanup. Last-observation manifest fields in a
 failed result do not establish preserved postflight state or a successful receipt.
 
-External signer inspection, signed creation and signature verification remain
-direct subprocesses in this dormant adapter. Their complete confinement and
-descendant cleanup are still prerequisites for activation. Their output capture
+External signer inspection and signed creation remain direct subprocesses in
+this dormant adapter. Their complete confinement and descendant cleanup are
+still prerequisites for activation. Their output capture
 now uses bounded nonblocking reads with the same four-MiB ceiling on each stream.
 Cancellation and the original deadline remain observable after the immediate
 child exits, including when another process holds an inherited output pipe.
 Signer inspection shares one thirty-second deadline across listing and export;
-signed creation and verification retain the original commit-session deadline.
+signed creation retains the original commit-session deadline.
 Failure discards partial output and allows at most half a second to kill and
 reap the exact owned child. An unreaped child remains retained and refuses later
 direct capture attempts; a busy or poisoned capture owner also refuses.
 A retained child reports `linux.local_commit.cleanup.uncertain` through both
-inspection and signing callers. Signed creation or verification with that
+inspection and signing callers. Signed creation with that
 failure reports `linux.git.commit.signer_cleanup_uncertain`, failed execution
 and unverified cleanup. It cannot produce a successful commit receipt or
 proceed to the task-branch update. Other capture failures keep their existing
@@ -145,9 +145,36 @@ An open-pipe failure closes the local readers without proving that the remaining
 writer died. No capture result establishes sandbox admission or whole-unit
 cleanup. Actual local child/pipe tests, synthetic worker results, parser fixtures
 and installed-Git message tests establish component behavior only. Disposable
-signatures now also traverse the production direct signing and verification
-capture methods; key listing and export traverse the production inspection
-helper. Those component tests supply synthetic private artifact fields. They
+signatures traverse the production direct signing capture method; key listing
+and export traverse the production inspection helper. Verification uses the
+public-only payload reconstruction and fixed GnuPG options directly in these
+cryptographic component tests. Those tests supply synthetic private artifact fields. They
 do not pass the product's executable trust checks or exercise approval and
 preservation composition. Native workflow, signer confinement, independent reviewer/artifact provenance, exact
 approval composition and measured model acceptance remain open.
+
+## Offline signature verification
+
+The dormant adapter now verifies signatures through a standalone GnuPG worker
+in the existing offline supervisor. It no longer launches Git verification
+directly. The worker receives exactly three sealed public-material descriptors:
+the inspected public-key export, detached signature and exact signed content.
+The public-key bytes must match the pinned inspection digest. Signature extraction
+first checks the entire raw commit against the approved plan, including the
+object-format-specific signature header and all message bytes.
+
+No repository, private keyring, host home, agent socket or user configuration is
+projected. The worker has a private temporary home, fixed options disabling option
+files, agent startup and key retrieval, and the existing socket-denying seccomp
+policy. The verified executables, original commit deadline, resource limits,
+bounded output and whole-unit descendant cleanup remain under the same supervisor.
+Only a successful complete result with no stdout and the exact pinned signing
+fingerprint can permit the next task-branch step. A verification failure or
+uncertain cleanup cannot update the task branch or produce a successful receipt.
+
+Synthetic supervisor tests prove result validation and launch construction, not
+native admission. Disposable installed-Git signatures test both object formats,
+exact primary/subkey selection and message reconstruction against the worker's
+public-only GnuPG options. The complete native workflow remains unverified in the
+lane. Signer inspection and signed creation still need confinement before any
+activation; this change does not grant commit or push authority.

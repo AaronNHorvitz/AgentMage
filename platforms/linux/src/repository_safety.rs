@@ -135,6 +135,14 @@ impl LinuxGitArtifact {
     pub(crate) fn launch_path(&self) -> &Path {
         &self.launch_path
     }
+
+    pub(crate) fn held_descriptor(&self) -> &OwnedFd {
+        &self.descriptor
+    }
+
+    pub(crate) fn revalidate(&self) -> Result<(), LinuxRepositoryError> {
+        revalidate_git_artifact(self)
+    }
 }
 
 impl fmt::Debug for LinuxGitArtifact {

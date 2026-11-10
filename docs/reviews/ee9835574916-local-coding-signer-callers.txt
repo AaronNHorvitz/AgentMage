@@ -1,0 +1,137 @@
+Commit: ee983557491646b712acfc9d624f740b665cbbb0
+Scope: local-coding-signer-callers
+
+# Independent core review: production signer callers and cleanup diagnostics
+
+Reviewer: Claude Opus 5.5 at extra-high effort. This was a separate session with read-only use of the
+pinned checkout `/lane/review-checkout`, on 2026-11-10. The request is a non-closing same-row repair
+for T-303 / T-306 (core tier). No row or sub-row changes.
+
+## Methods
+
+- Read IP-POLICY.md, the top of TASKS.md, `docs/evidence/t306-signer-callers-2026-11-10.md`, the
+  changed guide, and the bundle README.md, run.py, check.py, parse_gate.py and light.py before running
+  anything. `git rev-parse HEAD` returns `ee983557491646b712acfc9d624f740b665cbbb0`. It is the only
+  commit after base `53a86bfc297a0a951c835fc6972bd07b09d1bcfe`. The manifest's SHA-256 is
+  `1bc42acd637bdd99376ce1f51a263ef9cf080b5aa99fe61b4dd85e1e7cf75d32`, as stated.
+- Read the full base..HEAD diff, which touches six files. Also read the surrounding production code:
+  `LinuxOpenPgpSigner::inspect`, `run_plan`, `SignedGitRunner::run_with_environment`, `run_gpg`,
+  `uncertain_commit_result`, `capture_local_commit_process_in`, `finish_local_commit_capture`, and the
+  kernel's `valid_platform_code` and receipt reconciliation.
+- Searched the whole workspace for every caller of `capture_local_commit_process` and
+  `LOCAL_COMMIT_CHILD`, every external user of `LinuxLocalCommitErrorKind`, and every test that reaches
+  the production capture owner. This checked caller propagation and test serialization.
+- Compared the native-fixture failure causes in my run with the bundle's baseline log.
+- Scanned the added lines for private paths, the username, the hostname and personal data. Checked the
+  retained review byte-for-byte against `/lane/reviews/53a86bfc297a-local-coding-exact-signer.md`.
+  Checked that `final-blobs.json` (SHA-256 of content) matches every committed file at HEAD.
+- No GPU, model, download, push or repository modification.
+
+## Commands and results (all run in the pinned checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-signer-callers/review-inputs.sha256`: exit 0.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-signer-callers/run.py /lane/state/tmp/review-signer-callers-full-ee9835574916`:
+   exit 1, which is the expected FULL GATE FAIL, with `source_unchanged: true`. It took 314.49 seconds
+   including reservations, and no command timed out. The raw log SHA-256 is
+   `80970ee10e93208f352a6b3f43fb9cc863472024f44771f371a8607f4fc2108b`, which differs from the builder's
+   log as expected for a fresh run. Command exits were 0, 0, 0, 0, 0 (formatting 23.40 seconds),
+   0 (Clippy 43.70 seconds) and 101 (Rust tests 245.54 seconds).
+3. `python3 -B /lane/state/tmp/t306-signer-callers/check.py <out>`: exit 0. Results: 26 targets with
+   totals of 1,358 passed, 72 failed, 64 ignored, 0 measured and 0 filtered. Per-target failure
+   identities match the baseline exactly, plus the 2 new passes. All 11 named methods are `ok`: both new
+   methods plus the 9 controls, including the strengthened retained-child test and the
+   disposable-signature test. This is data comparison only; the full gate remains FAIL.
+4. `cmp .../validation-2/source-freeze.json <out>/source-freeze.json`: exit 0. Both runtime source
+   hashes are identical to the builder's frozen values.
+5. `python3 -B /lane/state/tmp/t306-signer-callers/light.py`: exit 0. That covers the diff check,
+   untracked lint, review lint and markdownlint of the three changed documents.
+6. `git diff --check 53a86bfc297a0a951c835fc6972bd07b09d1bcfe --`: exit 0.
+7. `git status --short`: empty, exit 0.
+
+The two native fixtures fail as before, and this is inherited. `native_candidate_tree_...` reports
+`InvalidGitArtifact` and `native_signed_commit_...` reports `inspect fixture signer: ArtifactDenied`.
+My log and `baseline-fast.log` show the same panic sites and messages, only shifted by line offsets.
+The existing native executable-trust refusal is unchanged, and the new test mutex does not mask or alter
+it.
+
+## Review of the claims
+
+- **Classifying a retained child** (`sandbox_supervision.rs:451-456`): a slot that already holds a
+  child now returns `CleanupUncertain` before any cancellation or deadline check, and nothing is
+  spawned. A busy slot (`try_lock` WouldBlock) and a poisoned slot still return the ordinary
+  `ExecutionFailed`. A failed spawn leaves the slot empty. A failed reap during teardown leaves the
+  child in the slot and already returned `CleanupUncertain` at the base commit. No retry, recovery,
+  clearing or PID lookup was added.
+- **Propagation through callers**: `capture_error` (`local_commit.rs:831`) maps only `CleanupUncertain`
+  and keeps each caller's fallback otherwise: `ArtifactDenied` for `run_gpg` and `ExecutionFailed` for
+  the signing runner. `inspect` propagates both `run_gpg` calls with `?` (`local_commit.rs:304,322`),
+  so the class reaches the public inspection result. No other production caller of the capture owner
+  exists: grep shows only `local_commit.rs:628` and `:818`.
+- **Failed local-commit results** (`local_commit.rs:464-489,844`): failures during signed creation and
+  `verify-commit` go through `failed_signer_result`, which wraps `uncertain_commit_result`. The result
+  is Failed, `cleanup_verified=false`, `signature_verified=false`, no commit object, and an early return
+  before `update_task_branch`, so the guide's "cannot ... proceed to the task-branch update" is
+  accurate. `linux.git.commit.signer_cleanup_uncertain` passes the kernel's `valid_platform_code`
+  character set and the schema identifier pattern. Failed outcomes are never reconciled as success.
+  The diagnostic is a fixed code; no child bytes, key material or keyring path enter it.
+- **Production capture wiring in tests**: the disposable-signature method now signs and verifies
+  through `SignedGitRunner::run_with_environment` and `run`. It lists and exports keys through
+  `run_gpg` with one inspection deadline, and checks the export byte-for-byte against direct `gpg`.
+  The matrix is unchanged: two formats × two exact keys × three message cases = 12, plus the unpinned
+  controls, wrong-key refusal and unchanged-branch assertions. Replacing `git: &LinuxGitArtifact` with
+  `git_path: &Path` keeps the product constructor `SignedGitRunner::new(&LinuxGitArtifact, ...)` as the
+  only non-test construction. The struct and the `LinuxOpenPgpSigner` fields are module-private, so no
+  public way exists to bypass artifact or signer admission. `revalidate()` is still called before
+  signing in `run_plan`.
+- **Bounds test**: real `/bin/sh` children go through both production callers. The cases are complete
+  output, exit 7 with partial output, overflow of 4 MiB + 1 byte on stdout and on stderr, and a
+  100-millisecond deadline. Live cancellation is witnessed by a readiness file before `cancel`. A final
+  real `run_gpg --version` call proves the global owner is not retained afterwards. Elapsed-time bounds
+  hold. These tests show immediate-child accounting only, as the evidence says.
+- **Test serialization**: exactly three tests reach the production owner: the disposable-signature
+  test, the new bounds test, and the native signed-commit test through `generate_signer` → `inspect`.
+  All three take `DIRECT_CAPTURE_TEST`. Poison recovery (`PoisonError::into_inner`) applies only to that
+  `Mutex<()>`. The production `LOCAL_COMMIT_CHILD` still refuses when poisoned. The supervisor tests use
+  local owners.
+- **Integrity and scope**: the diff touches no evaluation, frozen, hidden or held-out data, scorer,
+  prompt, threshold, dependency, SBOM, lifecycle, scoreboard or release file, and does not change
+  `scripts/local_agent_fast_gate.py`. The task table is unchanged (check.py). No `#[ignore]` was added.
+  Every number in the evidence and TASKS.md matches the builder's sealed validation-2 result.json, and
+  my independent run matches the counts and identities. The retained exact-signer review is
+  byte-identical. The added lines contain no private host path, username, hostname, credential or
+  personal data. The `/lane/...` paths appear only inside the retained review's own command record, as
+  in earlier retained reviews. There is no trademark branding and no comparison with other products.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog; part of the existing native `run_plan` low).** `local_commit.rs:464-489`: only
+  reading the code and the separate unit tests of `capture_error` and `failed_signer_result`
+  (`local_commit.rs:1580-1613`) connect a real retained production owner to the `run_plan` result. The
+  public wrapper `capture_local_commit_process` fixes the owner to the global static, so no test
+  injects a retained slot under `SignedGitRunner::run`, `run_gpg` or `run_plan`. The wiring is short
+  and correct as read. Fix: when the native `run_plan` signature test lands, add a test-only seam that
+  passes an owner holding a retained fixture child. Assert `signer_cleanup_uncertain` from `run_plan`
+  and `CleanupUncertain` from `inspect`.
+- **L2 (low, backlog).** `sandbox_supervision.rs:450`: a poisoned production owner maps to ordinary
+  `ExecutionFailed`, so it surfaces as `ArtifactDenied`, `creation_failed` or `verification_failed`
+  rather than cleanup-uncertain. Poisoning means a panic happened while the guard was held, and that
+  can leave a child in the slot; the slot is never dropped. Every outcome still fails closed:
+  inspection refuses, and signing returns Failed with `cleanup_verified=false`. Only the diagnostic
+  under-reports, and I found no reachable panic in the critical section. Fix: on
+  `TryLockError::Poisoned(guard)`, return `CleanupUncertain` when `guard.is_some()`, without clearing
+  the slot or reusing it.
+
+## Per-row result
+
+- T-303 / T-306, scope `local-coding-signer-callers`: the repair does what it claims. The production
+  capture callers preserve retained-child uncertainty through inspection, signed creation and
+  verification. Failed results carry a redacted diagnostic. Actual signatures go through the production
+  runner and `run_gpg`. The full affected gate is FAIL only through the exact inherited 72 failures,
+  which is disclosed and not presented as a pass. This is a non-closing PASS; neither parent row
+  closes. Still open: native `run_plan` signatures, fixture-agent teardown, usable-key inspection,
+  retained-child availability, candidate scratch and descriptor lows, signer confinement and whole-unit
+  cleanup, approvals, durable recovery and measurements.
+
+Verdict: PASS

@@ -31,6 +31,9 @@ const MAX_POSTIMAGE_BYTES: usize = 64 * 1024 * 1024;
 const MAX_TOTAL_POSTIMAGE_BYTES: usize = 256 * 1024 * 1024;
 const MAX_TRUSTED_EXECUTABLE_BYTES: u64 = 64 * 1024 * 1024;
 
+#[path = "local_commit_verification.rs"]
+pub(crate) mod verification;
+
 /// Stable Linux local-commit adapter failure class.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LinuxLocalCommitErrorKind {
@@ -276,6 +279,7 @@ pub struct LinuxOpenPgpSigner {
     executable: PathBuf,
     executable_sha256: String,
     keyring: PathBuf,
+    public_key: Vec<u8>,
     pinned: PinnedCommitSigner,
 }
 
@@ -344,6 +348,7 @@ impl LinuxOpenPgpSigner {
             executable,
             executable_sha256,
             keyring,
+            public_key,
             pinned,
         })
     }
@@ -460,7 +465,7 @@ impl LinuxLocalCommitExecutor {
                 cancellation,
                 &environment,
             )
-            .and_then(|captured| object_output(captured.stdout));
+            .and_then(|captured| object_output(captured.into_stdout()));
         let commit_object = match commit {
             Ok(object) => object,
             Err(failure) => {
@@ -473,22 +478,10 @@ impl LinuxLocalCommitExecutor {
         if !verify_raw_commit(&raw, plan) {
             return uncertain_commit_result(&before, "linux.git.commit.verification_failed");
         }
-        let signature = match runner.run(
-            &["verify-commit", "--raw", &commit_object],
-            &[],
-            cancellation,
-        ) {
-            Ok(signature) => signature,
-            Err(failure) => {
-                return failed_signer_result(
-                    &before,
-                    failure,
-                    "linux.git.commit.verification_failed",
-                );
-            }
-        };
-        if !verify_signature_status(&signature.stderr, &plan.signer.key_fingerprint) {
-            return uncertain_commit_result(&before, "linux.git.commit.verification_failed");
+        if let Err(failure) =
+            verification::verify(&self.signer, &raw, plan, cancellation, io.deadline())
+        {
+            return failed_signer_result(&before, failure, "linux.git.commit.verification_failed");
         }
         if io
             .update_task_branch(self.collector.git(), cancellation)
@@ -557,6 +550,7 @@ impl<'a> SignedGitRunner<'a> {
         }
     }
 
+    #[cfg(test)]
     fn run(
         &self,
         arguments: &[&str],
@@ -576,7 +570,7 @@ impl<'a> SignedGitRunner<'a> {
         if cancellation.is_cancelled()
             || Instant::now() >= self.deadline
             || input.len() > MAX_POSTIMAGE_BYTES
-            || !matches!(arguments.first(), Some(&"commit-tree" | &"verify-commit"))
+            || arguments.first() != Some(&"commit-tree")
         {
             return Err(error(LinuxLocalCommitErrorKind::ExecutionFailed));
         }
@@ -822,7 +816,7 @@ fn run_gpg(
     if !output.status.success() {
         return Err(error(LinuxLocalCommitErrorKind::ArtifactDenied));
     }
-    Ok(output.stdout)
+    Ok(output.into_stdout())
 }
 
 // Preserve the only cleanup claim made by direct capture. Other errors retain
@@ -1362,6 +1356,7 @@ pub(crate) mod tests {
                 executable: PathBuf::from("/usr/bin/gpg"),
                 executable_sha256: hash(b"synthetic signer artifact"),
                 keyring,
+                public_key: exported.clone(),
                 pinned: plan.signer.clone(),
             };
             let runner = SignedGitRunner {
@@ -1380,27 +1375,41 @@ pub(crate) mod tests {
                 ("GIT_AUTHOR_DATE".into(), date.clone()),
                 ("GIT_COMMITTER_DATE".into(), date),
             ]);
-            let commit_and_verify = |arguments: &[String], message: &str| {
-                let output = runner
-                    .run_with_environment(
-                        &arguments.iter().map(String::as_str).collect::<Vec<_>>(),
-                        message.as_bytes(),
+            let verification_home = fixture.root.join("public-verification-home");
+            fs::create_dir(&verification_home).unwrap();
+            fs::set_permissions(&verification_home, fs::Permissions::from_mode(0o700)).unwrap();
+            let commit_and_verify =
+                |selected: &agentmage_kernel_engine::local_commit::LocalCommitPlan,
+                 arguments: &[String],
+                 message: &str| {
+                    let output = runner
+                        .run_with_environment(
+                            &arguments.iter().map(String::as_str).collect::<Vec<_>>(),
+                            message.as_bytes(),
+                            &token,
+                            &environment,
+                        )
+                        .expect("production runner signs fixture");
+                    let object = object_output(output.stdout).unwrap();
+                    let raw = run_fixture(&fixture.checkout, &["cat-file", "commit", &object]);
+                    // Exercise the worker's public-only payload reconstruction and
+                    // fixed GnuPG options directly. This is cryptographic component
+                    // evidence; native supervisor admission remains a distinct test.
+                    let verification = verification::fixture_verify(
+                        &raw,
+                        selected,
+                        &exported,
+                        &verification_home,
                         &token,
-                        &environment,
                     )
-                    .expect("production runner signs fixture");
-                let object = object_output(output.stdout).unwrap();
-                let raw = run_fixture(&fixture.checkout, &["cat-file", "commit", &object]);
-                let verification = runner
-                    .run(&["verify-commit", "--raw", &object], &[], &token)
-                    .expect("production runner verifies fixture");
-                assert!(verification.stdout.is_empty());
-                (raw, verification.stderr)
-            };
+                    .expect("public-only component verification");
+                    assert!(verification.stdout.is_empty());
+                    (raw, verification.stderr)
+                };
             // Without exact selection, GnuPG chooses the newer signing subkey.
             let mut unpinned = signed_commit_arguments(&plan);
             unpinned[1] = format!("-S{primary}");
-            let (_, status) = commit_and_verify(&unpinned, &plan.message);
+            let (_, status) = commit_and_verify(&plan, &unpinned, &plan.message);
             assert!(verify_signature_status(&status, &fingerprints[1]));
             assert!(!verify_signature_status(&status, &primary));
             for fingerprint in &fingerprints {
@@ -1409,7 +1418,7 @@ pub(crate) mod tests {
                     selected.signer.key_fingerprint = fingerprint.clone();
                     selected.message = message.into();
                     let (raw, status) =
-                        commit_and_verify(&signed_commit_arguments(&selected), message);
+                        commit_and_verify(&selected, &signed_commit_arguments(&selected), message);
                     assert!(verify_raw_commit(&raw, &selected), "{format} {message:?}");
                     assert!(verify_signature_status(&status, fingerprint));
                     let other = fingerprints
@@ -1417,6 +1426,32 @@ pub(crate) mod tests {
                         .find(|other| *other != fingerprint)
                         .unwrap();
                     assert!(!verify_signature_status(&status, other));
+                    // A newly approved message with the old signature must
+                    // still fail cryptographically after structural checks.
+                    let mut changed = selected.clone();
+                    changed.message.push_str("changed");
+                    let mut tampered = raw.clone();
+                    tampered.extend_from_slice(b"changed");
+                    assert!(
+                        verification::fixture_verify(
+                            &tampered,
+                            &changed,
+                            &exported,
+                            &verification_home,
+                            &token,
+                        )
+                        .is_err()
+                    );
+                    assert!(
+                        verification::fixture_verify(
+                            &raw,
+                            &selected,
+                            b"not a public key",
+                            &verification_home,
+                            &token,
+                        )
+                        .is_err()
+                    );
                 }
             }
             assert_eq!(
@@ -1424,6 +1459,12 @@ pub(crate) mod tests {
                 plan.parent_object,
                 "component signing must not move the fixture branch"
             );
+            for private in ["S.gpg-agent", "S.gpg-agent.extra", "private-keys-v1.d"] {
+                assert!(
+                    !verification_home.join(private).exists(),
+                    "public verification must not create an agent or private keys"
+                );
+            }
         }
     }
 
@@ -1446,6 +1487,7 @@ pub(crate) mod tests {
             executable: PathBuf::from("/usr/bin/gpg"),
             executable_sha256: hash(b"synthetic signer artifact"),
             keyring: fixture.root.clone(),
+            public_key: Vec::new(),
             pinned: synthetic_plan(&hash(b"repository")).signer,
         };
         for (body, succeeds, timeout) in [
@@ -1480,7 +1522,11 @@ pub(crate) mod tests {
                     run_gpg(&program, &fixture.root, &["--export"], deadline)
                 } else {
                     runner
-                        .run(&["verify-commit", "--raw", &"b".repeat(40)], &[], &token)
+                        .run(
+                            &["commit-tree", &"b".repeat(40), "-p", &"c".repeat(40)],
+                            &[],
+                            &token,
+                        )
                         .map(|captured| {
                             assert_eq!(captured.stderr, b"status\n");
                             captured.stdout
@@ -1543,7 +1589,7 @@ pub(crate) mod tests {
             deadline: started + Duration::from_secs(4),
         };
         let result = runner.run_with_environment(
-            &["verify-commit", "--raw", &"b".repeat(40)],
+            &["commit-tree", &"b".repeat(40), "-p", &"c".repeat(40)],
             &[],
             &token,
             &BTreeMap::from([(
