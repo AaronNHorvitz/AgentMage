@@ -42,6 +42,8 @@ pub enum LinuxLocalCommitErrorKind {
     PlanDenied,
     /// A bounded local process failed or exceeded its resource boundary.
     ExecutionFailed,
+    /// A signer child may remain owned and cleanup cannot be confirmed.
+    CleanupUncertain,
     /// Independent commit or signature verification failed.
     VerificationFailed,
 }
@@ -55,6 +57,7 @@ impl LinuxLocalCommitErrorKind {
             Self::ScopeDenied => "linux.local_commit.scope.denied",
             Self::PlanDenied => "linux.local_commit.plan.denied",
             Self::ExecutionFailed => "linux.local_commit.execution.failed",
+            Self::CleanupUncertain => "linux.local_commit.cleanup.uncertain",
             Self::VerificationFailed => "linux.local_commit.verification.failed",
         }
     }
@@ -458,8 +461,11 @@ impl LinuxLocalCommitExecutor {
                 &environment,
             )
             .and_then(|captured| object_output(captured.stdout));
-        let Ok(commit_object) = commit else {
-            return uncertain_commit_result(&before, "linux.git.commit.creation_failed");
+        let commit_object = match commit {
+            Ok(object) => object,
+            Err(failure) => {
+                return failed_signer_result(&before, failure, "linux.git.commit.creation_failed");
+            }
         };
         let Ok(raw) = io.read_commit(self.collector.git(), &commit_object, cancellation) else {
             return uncertain_commit_result(&before, "linux.git.commit.verification_failed");
@@ -467,12 +473,19 @@ impl LinuxLocalCommitExecutor {
         if !verify_raw_commit(&raw, plan) {
             return uncertain_commit_result(&before, "linux.git.commit.verification_failed");
         }
-        let Ok(signature) = runner.run(
+        let signature = match runner.run(
             &["verify-commit", "--raw", &commit_object],
             &[],
             cancellation,
-        ) else {
-            return uncertain_commit_result(&before, "linux.git.commit.verification_failed");
+        ) {
+            Ok(signature) => signature,
+            Err(failure) => {
+                return failed_signer_result(
+                    &before,
+                    failure,
+                    "linux.git.commit.verification_failed",
+                );
+            }
         };
         if !verify_signature_status(&signature.stderr, &plan.signer.key_fingerprint) {
             return uncertain_commit_result(&before, "linux.git.commit.verification_failed");
@@ -523,21 +536,21 @@ impl BoundedLocalCommitExecutor for LinuxLocalCommitExecutor {
 }
 
 struct SignedGitRunner<'a> {
-    git: &'a LinuxGitArtifact,
+    git_path: &'a Path,
     scope: &'a LinuxRepositoryScope,
     signer: &'a LinuxOpenPgpSigner,
     deadline: Instant,
 }
 
 impl<'a> SignedGitRunner<'a> {
-    const fn new(
+    fn new(
         git: &'a LinuxGitArtifact,
         scope: &'a LinuxRepositoryScope,
         signer: &'a LinuxOpenPgpSigner,
         deadline: Instant,
     ) -> Self {
         Self {
-            git,
+            git_path: git.launch_path(),
             scope,
             signer,
             deadline,
@@ -567,7 +580,7 @@ impl<'a> SignedGitRunner<'a> {
         {
             return Err(error(LinuxLocalCommitErrorKind::ExecutionFailed));
         }
-        let mut command = Command::new(self.git.launch_path());
+        let mut command = Command::new(self.git_path);
         command
             .env_clear()
             .env("GIT_CONFIG_NOSYSTEM", "1")
@@ -617,7 +630,9 @@ impl<'a> SignedGitRunner<'a> {
             Some(cancellation),
             self.deadline,
         )
-        .map_err(|_| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
+        .map_err(|failure| {
+            capture_error(failure.kind(), LinuxLocalCommitErrorKind::ExecutionFailed)
+        })?;
         if captured.status.success() {
             Ok(captured)
         } else {
@@ -801,11 +816,43 @@ fn run_gpg(
         .args(arguments)
         .stdin(Stdio::null());
     let output = crate::sandbox::supervision::capture_local_commit_process(command, None, deadline)
-        .map_err(|_| error(LinuxLocalCommitErrorKind::ArtifactDenied))?;
+        .map_err(|failure| {
+            capture_error(failure.kind(), LinuxLocalCommitErrorKind::ArtifactDenied)
+        })?;
     if !output.status.success() {
         return Err(error(LinuxLocalCommitErrorKind::ArtifactDenied));
     }
     Ok(output.stdout)
+}
+
+// Preserve the only cleanup claim made by direct capture. Other errors retain
+// their caller's existing redacted class; no partial bytes or host paths escape.
+fn capture_error(
+    kind: crate::sandbox::LinuxSandboxErrorKind,
+    fallback: LinuxLocalCommitErrorKind,
+) -> LinuxLocalCommitError {
+    error(
+        if kind == crate::sandbox::LinuxSandboxErrorKind::CleanupUncertain {
+            LinuxLocalCommitErrorKind::CleanupUncertain
+        } else {
+            fallback
+        },
+    )
+}
+
+fn failed_signer_result(
+    before: &agentmage_kernel_engine::repository_safety::RepositoryPreservationManifest,
+    failure: LinuxLocalCommitError,
+    fallback: &str,
+) -> LocalCommitPlatformResult {
+    uncertain_commit_result(
+        before,
+        if failure.kind() == LinuxLocalCommitErrorKind::CleanupUncertain {
+            "linux.git.commit.signer_cleanup_uncertain"
+        } else {
+            fallback
+        },
+    )
 }
 
 fn verify_root_executable(path: &Path) -> Result<(PathBuf, String), LinuxLocalCommitError> {
@@ -948,6 +995,10 @@ pub(crate) mod tests {
     };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
+    // Serialize fixtures that share the production owner's refusal of concurrent
+    // admission; supervisor tests own local slots. Fixture assertion failures may
+    // poison THIS test mutex, not the independent production capture owner.
+    static DIRECT_CAPTURE_TEST: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
     // Inert input for parser and supervised-result tests. This is neither a
     // signer inspection nor a native execution/review/approval capability.
@@ -1224,8 +1275,13 @@ pub(crate) mod tests {
     #[test]
     fn local_commit_installed_git_signs_with_exact_primary_or_subkey_in_both_formats() {
         // Actual disposable Git/GnuPG signatures with a synthetic plan. This
-        // exercises argument construction and verification, not product artifact
-        // admission, confinement, approvals or the native adapter workflow.
+        // exercises the production signing/inspection capture paths and exact
+        // verification, not product artifact admission, confinement, approvals
+        // or the native adapter workflow. Private fields below hold fixture
+        // inputs only; the product constructor still requires a verified artifact.
+        let _capture = DIRECT_CAPTURE_TEST
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         for format in ["sha1", "sha256"] {
             let fixture = Fixture::with_object_format(format);
             let (keyring, primary) = generate_fixture_key(&fixture);
@@ -1244,17 +1300,38 @@ pub(crate) mod tests {
                 .output()
                 .expect("add fixture signing subkey");
             assert!(added.status.success(), "fixture subkey generation failed");
-            let listed = fixture_gpg(&keyring)
-                .args([
+            // Exercise the actual listing/export call path, with one original
+            // inspection deadline. Fixture key generation is separate setup.
+            let inspection_deadline = Instant::now() + Duration::from_secs(10);
+            let listed = run_gpg(
+                Path::new("/usr/bin/gpg"),
+                &keyring,
+                &[
                     "--with-colons",
                     "--with-subkey-fingerprint",
                     "--list-secret-keys",
                     &primary,
-                ])
-                .output()
-                .unwrap();
-            assert!(listed.status.success());
-            let fingerprints: Vec<_> = String::from_utf8(listed.stdout)
+                ],
+                inspection_deadline,
+            )
+            .unwrap();
+            let exported = run_gpg(
+                Path::new("/usr/bin/gpg"),
+                &keyring,
+                &["--export", &primary],
+                inspection_deadline,
+            )
+            .unwrap();
+            assert!(!exported.is_empty());
+            assert_eq!(
+                exported,
+                fixture_gpg(&keyring)
+                    .args(["--export", &primary])
+                    .output()
+                    .unwrap()
+                    .stdout
+            );
+            let fingerprints: Vec<_> = String::from_utf8(listed)
                 .unwrap()
                 .lines()
                 .filter_map(|line| {
@@ -1275,53 +1352,48 @@ pub(crate) mod tests {
                 &["rev-parse", "HEAD^{tree}"],
             ))
             .unwrap();
-            let fixture_command = || {
-                let mut command = Command::new("/usr/bin/git");
-                let date =
-                    format_git_date(plan.timestamp_epoch_seconds, plan.timezone_offset_minutes);
-                command
-                    .env_clear()
-                    .env("HOME", "/nonexistent")
-                    .env("GNUPGHOME", &keyring)
-                    .env("GIT_CONFIG_NOSYSTEM", "1")
-                    .env("GIT_CONFIG_GLOBAL", "/dev/null")
-                    .env("GIT_AUTHOR_NAME", &plan.author.name)
-                    .env("GIT_AUTHOR_EMAIL", &plan.author.email)
-                    .env("GIT_COMMITTER_NAME", &plan.committer.name)
-                    .env("GIT_COMMITTER_EMAIL", &plan.committer.email)
-                    .env("GIT_AUTHOR_DATE", &date)
-                    .env("GIT_COMMITTER_DATE", &date)
-                    .args(hardened_git_prefix())
-                    .args([
-                        "-c",
-                        "gpg.program=/usr/bin/gpg",
-                        "-c",
-                        "gpg.openpgp.program=/usr/bin/gpg",
-                        "-c",
-                        "gpg.format=openpgp",
-                        "-c",
-                        "i18n.commitEncoding=UTF-8",
-                    ])
-                    .current_dir(&fixture.checkout);
-                command
+            let scope = LinuxRepositoryScope::verify(
+                &fixture.checkout,
+                fixture.checkout.join(".git"),
+                &fixture.owned,
+            )
+            .unwrap();
+            let signer = LinuxOpenPgpSigner {
+                executable: PathBuf::from("/usr/bin/gpg"),
+                executable_sha256: hash(b"synthetic signer artifact"),
+                keyring,
+                pinned: plan.signer.clone(),
             };
+            let runner = SignedGitRunner {
+                git_path: Path::new("/usr/bin/git"),
+                scope: &scope,
+                signer: &signer,
+                deadline: Instant::now() + Duration::from_secs(20),
+            };
+            let token = cancellation("production-signed-capture");
+            let date = format_git_date(plan.timestamp_epoch_seconds, plan.timezone_offset_minutes);
+            let environment = BTreeMap::from([
+                ("GIT_AUTHOR_NAME".into(), plan.author.name.clone()),
+                ("GIT_AUTHOR_EMAIL".into(), plan.author.email.clone()),
+                ("GIT_COMMITTER_NAME".into(), plan.committer.name.clone()),
+                ("GIT_COMMITTER_EMAIL".into(), plan.committer.email.clone()),
+                ("GIT_AUTHOR_DATE".into(), date.clone()),
+                ("GIT_COMMITTER_DATE".into(), date),
+            ]);
             let commit_and_verify = |arguments: &[String], message: &str| {
-                let payload =
-                    crate::sandbox::sealed_payload("fixture-signed-message", message.as_bytes())
-                        .unwrap();
-                let output = fixture_command()
-                    .args(arguments)
-                    .stdin(Stdio::from(fs::File::from(payload)))
-                    .output()
-                    .unwrap();
-                assert!(output.status.success(), "fixture signing failed");
+                let output = runner
+                    .run_with_environment(
+                        &arguments.iter().map(String::as_str).collect::<Vec<_>>(),
+                        message.as_bytes(),
+                        &token,
+                        &environment,
+                    )
+                    .expect("production runner signs fixture");
                 let object = object_output(output.stdout).unwrap();
                 let raw = run_fixture(&fixture.checkout, &["cat-file", "commit", &object]);
-                let verification = fixture_command()
-                    .args(["verify-commit", "--raw", &object])
-                    .output()
-                    .unwrap();
-                assert!(verification.status.success(), "fixture signature failed");
+                let verification = runner
+                    .run(&["verify-commit", "--raw", &object], &[], &token)
+                    .expect("production runner verifies fixture");
                 assert!(verification.stdout.is_empty());
                 (raw, verification.stderr)
             };
@@ -1352,6 +1424,191 @@ pub(crate) mod tests {
                 plan.parent_object,
                 "component signing must not move the fixture branch"
             );
+        }
+    }
+
+    #[test]
+    fn local_commit_production_capture_callers_bound_output_exit_deadline_and_cancellation() {
+        // Real child processes through both production call paths, with synthetic
+        // executable fields. No artifact admission or sandbox claim is made.
+        let _capture = DIRECT_CAPTURE_TEST
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let fixture = Fixture::new();
+        let scope = LinuxRepositoryScope::verify(
+            &fixture.checkout,
+            fixture.checkout.join(".git"),
+            &fixture.owned,
+        )
+        .unwrap();
+        let program = fixture.root.join("component-process");
+        let signer = LinuxOpenPgpSigner {
+            executable: PathBuf::from("/usr/bin/gpg"),
+            executable_sha256: hash(b"synthetic signer artifact"),
+            keyring: fixture.root.clone(),
+            pinned: synthetic_plan(&hash(b"repository")).signer,
+        };
+        for (body, succeeds, timeout) in [
+            ("printf 'object\n'; printf 'status\n' >&2", true, false),
+            (
+                "printf 'partial'; printf 'failure' >&2; exit 7",
+                false,
+                false,
+            ),
+            ("exec /usr/bin/head -c 4194305 /dev/zero", false, false),
+            ("exec /usr/bin/head -c 4194305 /dev/zero >&2", false, false),
+            ("exec /usr/bin/sleep 5", false, true),
+        ] {
+            fs::write(&program, format!("#!/bin/sh\n{body}\n")).unwrap();
+            fs::set_permissions(&program, fs::Permissions::from_mode(0o700)).unwrap();
+            for inspection in [true, false] {
+                let token = cancellation("production-capture-bound");
+                let started = Instant::now();
+                let deadline = started
+                    + if timeout {
+                        Duration::from_millis(100)
+                    } else {
+                        Duration::from_secs(5)
+                    };
+                let runner = SignedGitRunner {
+                    git_path: &program,
+                    scope: &scope,
+                    signer: &signer,
+                    deadline,
+                };
+                let result = if inspection {
+                    run_gpg(&program, &fixture.root, &["--export"], deadline)
+                } else {
+                    runner
+                        .run(&["verify-commit", "--raw", &"b".repeat(40)], &[], &token)
+                        .map(|captured| {
+                            assert_eq!(captured.stderr, b"status\n");
+                            captured.stdout
+                        })
+                };
+                if succeeds {
+                    assert_eq!(result.unwrap(), b"object\n");
+                } else {
+                    assert_eq!(
+                        result.unwrap_err().kind(),
+                        if inspection {
+                            LinuxLocalCommitErrorKind::ArtifactDenied
+                        } else {
+                            LinuxLocalCommitErrorKind::ExecutionFailed
+                        }
+                    );
+                }
+                if timeout {
+                    assert!(started.elapsed() < Duration::from_secs(1));
+                }
+            }
+        }
+        // Live cancellation of the actual production runner, not an already
+        // cancelled preflight. The script execs, so the owned child is the sleeper.
+        let ready = fixture.root.join("capture-ready");
+        fs::write(
+            &program,
+            b"#!/bin/sh\nprintf ready > \"$AGENTMAGE_COMPONENT_READY\"\nexec /usr/bin/sleep 5\n",
+        )
+        .unwrap();
+        let token = cancellation("production-capture-live-cancel");
+        let request = token.clone();
+        let observed_ready = ready.clone();
+        let requester = std::thread::spawn(move || {
+            use agentmage_kernel_contracts::*;
+            let deadline = Instant::now() + Duration::from_secs(2);
+            while !observed_ready.is_file() && Instant::now() < deadline {
+                std::thread::sleep(Duration::from_millis(1));
+            }
+            let launched = observed_ready.is_file();
+            request
+                .cancel(CancellationSignal {
+                    schema_version: CONTRACT_SCHEMA_VERSION,
+                    cancellation_id: CancellationId::from_raw("cancel-production-capture"),
+                    task_id: TaskId::from_raw("task-production-capture-live-cancel"),
+                    correlation_id: CorrelationId::from_raw(
+                        "correlation-production-capture-live-cancel",
+                    ),
+                    reason: CancellationReason::UserRequested,
+                    requested_by: BoundaryKind::Kernel,
+                })
+                .unwrap();
+            launched
+        });
+        let started = Instant::now();
+        let runner = SignedGitRunner {
+            git_path: &program,
+            scope: &scope,
+            signer: &signer,
+            deadline: started + Duration::from_secs(4),
+        };
+        let result = runner.run_with_environment(
+            &["verify-commit", "--raw", &"b".repeat(40)],
+            &[],
+            &token,
+            &BTreeMap::from([(
+                "AGENTMAGE_COMPONENT_READY".into(),
+                ready.to_str().unwrap().into(),
+            )]),
+        );
+        assert!(
+            requester.join().unwrap(),
+            "child must launch before cancellation"
+        );
+        assert_eq!(
+            result.err().unwrap().kind(),
+            LinuxLocalCommitErrorKind::ExecutionFailed
+        );
+        assert!(started.elapsed() < Duration::from_secs(1));
+        // A clean call through the original process owner can follow the failures.
+        assert!(
+            !run_gpg(
+                Path::new("/usr/bin/gpg"),
+                &fixture.root,
+                &["--version"],
+                Instant::now() + Duration::from_secs(5)
+            )
+            .unwrap()
+            .is_empty()
+        );
+    }
+
+    #[test]
+    fn local_commit_cleanup_uncertainty_survives_caller_mapping_and_receipt_failure() {
+        use crate::sandbox::LinuxSandboxErrorKind;
+        use agentmage_kernel_engine::repository_safety::RepositoryPreservationManifest;
+        let before: RepositoryPreservationManifest = serde_json::from_str(include_str!(
+            "../../../schemas/runtime/examples/repository-preservation-manifest.valid.json"
+        ))
+        .unwrap();
+        for fallback in [
+            LinuxLocalCommitErrorKind::ArtifactDenied,
+            LinuxLocalCommitErrorKind::ExecutionFailed,
+        ] {
+            let failure = capture_error(LinuxSandboxErrorKind::CleanupUncertain, fallback);
+            assert_eq!(failure.kind(), LinuxLocalCommitErrorKind::CleanupUncertain);
+            assert_eq!(failure.to_string(), "linux.local_commit.cleanup.uncertain");
+            for code in [
+                "linux.git.commit.creation_failed",
+                "linux.git.commit.verification_failed",
+            ] {
+                let result = failed_signer_result(&before, failure, code);
+                assert_eq!(
+                    result.platform_code,
+                    "linux.git.commit.signer_cleanup_uncertain"
+                );
+                assert_eq!(result.outcome, OperationOutcome::Failed);
+                assert!(!result.cleanup_verified);
+                assert!(!result.signature_verified);
+                assert!(result.commit_object.is_none());
+                assert_eq!(result.after, before);
+                let ordinary = capture_error(LinuxSandboxErrorKind::OutputLimitExceeded, fallback);
+                assert_eq!(ordinary.kind(), fallback);
+                let ordinary = failed_signer_result(&before, ordinary, code);
+                assert_eq!(ordinary.platform_code, code);
+                assert_eq!(ordinary.outcome, OperationOutcome::Failed);
+                assert!(!ordinary.cleanup_verified);
+            }
         }
     }
 
@@ -1658,6 +1915,9 @@ pub(crate) mod tests {
 
     #[test]
     fn native_signed_commit_verifies_exact_content_and_only_updates_task_branch() {
+        let _capture = DIRECT_CAPTURE_TEST
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let fixture = Fixture::new();
         let parent = String::from_utf8(run_fixture(&fixture.checkout, &["rev-parse", "HEAD"]))
             .expect("parent")

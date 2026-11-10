@@ -2,6 +2,26 @@
 
 ## Active queue: local agent mission
 
+The [production signer-capture repair](docs/evidence/t306-signer-callers-2026-11-10.md)
+preserves uncertain child cleanup through inspection, signed creation and
+verification diagnostics. Disposable signatures now exercise the production
+capture callers, with synthetic artifact fields; native trust, sandbox and
+approval admission remain open. The final complete affected gate remains **FAIL**:
+1,358 passes, the exact same 72 inherited failures and 64 existing ignores across
+26 unfiltered targets. Both new methods, nine named controls, formatting and
+Clippy pass; both source hashes stay fixed. Independent core review is required.
+T-303/T-306 remain open; no row or sub-row changes.
+
+The retained [exact-signer review](docs/reviews/53a86bfc297a-local-coding-exact-signer.txt)
+returns **Verdict: PASS** for exact commit
+`53a86bfc297a0a951c835fc6972bd07b09d1bcfe`, with no high or medium finding.
+It resolves the earlier exact-key and object-format findings. Low L1 still
+requires real signatures through the complete native `run_plan`; the current
+repair exercises its production runner only. Low L2 fixture-agent teardown
+assertions and L3 usable signing-key inspection remain same-row backlog with
+retained-child availability and the earlier candidate scratch/descriptor lows.
+Neither parent row closes.
+
 The retained [signer-capture review](docs/reviews/69ead8457746-local-coding-signer-capture.txt)
 returns **Verdict: PASS** for exact commit
 `69ead845774654de33f76e74a56824e5b3a3d467`, with no high or medium finding.
@@ -17,14 +37,14 @@ object format. Disposable installed-Git/GnuPG tests exercise both formats and
 both key selections. The complete affected gate remains **FAIL**: 1,356 Rust
 passes, the exact same 72 inherited failures and 64 existing ignores across 26
 unfiltered targets. Both new methods, six controls, formatting and Clippy pass;
-the source hash stays fixed. Independent core review is required. Signer
+the source hash stays fixed. Its independent PASS is retained above. Signer
 confinement and activation remain open; neither parent closes.
 
 The retained [non-signing commit I/O review](docs/reviews/6033f03afb9e-local-coding-commit-io.txt)
 returns **Verdict: PASS** for exact commit
 `6033f03afb9e19874cdc67df22fc13f23c83e817`, with no high or medium finding.
 Low L1 (SHA-256 signature-header selection) and L2 (exact signing-key selection)
-have the implementation repair above, pending independent review. The earlier
+have the independently reviewed implementation repair above. The earlier
 candidate scratch/descriptor findings remain same-row backlog. Neither parent
 row closes.
 

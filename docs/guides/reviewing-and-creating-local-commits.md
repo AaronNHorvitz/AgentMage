@@ -133,11 +133,21 @@ signed creation and verification retain the original commit-session deadline.
 Failure discards partial output and allows at most half a second to kill and
 reap the exact owned child. An unreaped child remains retained and refuses later
 direct capture attempts; a busy or poisoned capture owner also refuses.
+A retained child reports `linux.local_commit.cleanup.uncertain` through both
+inspection and signing callers. Signed creation or verification with that
+failure reports `linux.git.commit.signer_cleanup_uncertain`, failed execution
+and unverified cleanup. It cannot produce a successful commit receipt or
+proceed to the task-branch update. Other capture failures keep their existing
+redacted error classes. No diagnostic includes child output or keyring paths.
 
 This bounds capture and immediate-child teardown, not descendant lifetime.
 An open-pipe failure closes the local readers without proving that the remaining
 writer died. No capture result establishes sandbox admission or whole-unit
 cleanup. Actual local child/pipe tests, synthetic worker results, parser fixtures
-and installed-Git message tests establish component behavior only. Native
-workflow, signer confinement, independent reviewer/artifact provenance, exact
+and installed-Git message tests establish component behavior only. Disposable
+signatures now also traverse the production direct signing and verification
+capture methods; key listing and export traverse the production inspection
+helper. Those component tests supply synthetic private artifact fields. They
+do not pass the product's executable trust checks or exercise approval and
+preservation composition. Native workflow, signer confinement, independent reviewer/artifact provenance, exact
 approval composition and measured model acceptance remain open.

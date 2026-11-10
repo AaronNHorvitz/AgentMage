@@ -1,0 +1,133 @@
+Commit: 53a86bfc297a0a951c835fc6972bd07b09d1bcfe
+Scope: local-coding-exact-signer
+
+Independent core review of the T-303/T-306 same-row repair of lows L1 (SHA-256
+signature-header selection) and L2 (exact signing-key selection) from the retained
+6033f03afb9e commit-I/O review. Reviewer: Claude Opus 5.5, separate session, read-only,
+pinned checkout `/lane/review-checkout`. Date 2026-11-10. Non-closing request; no row
+or sub-row closure is judged or granted.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `53a86bfc297a0a951c835fc6972bd07b09d1bcfe`; clean tree.
+- Read IP-POLICY.md, the top of TASKS.md, newest decisions list, the evidence note
+  `docs/evidence/t306-exact-signer-2026-11-10.md`, the guide diff, and the bundle
+  README.md, run.py, check.py, parse_gate.py and light.py before executing anything.
+- Read the full diff against base 69ead845 (5 files: TASKS.md, evidence, guide,
+  retained review, `platforms/linux/src/local_commit.rs`). Read the surrounding
+  production code: `LinuxOpenPgpSigner::inspect` (fingerprint validation, listing,
+  export), `run_plan` (signer equality with plan, argument use, raw/status verification
+  ordering, branch CAS only after both verifications), `verify_raw_commit`,
+  `verify_signature_status`, `valid_fingerprint`, `SignedGitRunner` configuration and
+  the test `Fixture` Drop.
+- Independent reproductions in disposable `/tmp` keyrings and repositories outside the
+  repository (git 2.56.0, GnuPG 2.4.9), each agent killed and directory removed afterwards:
+  1. Primary signing key plus newer signing subkey, SHA-1 and SHA-256 repositories:
+     `commit-tree -S<primary>` → VALIDSIG = subkey (substitution reproduced);
+     `-S<primary>!` → VALIDSIG = primary; `-S<subkey>!` → VALIDSIG = subkey. Header is
+     `gpgsig` for SHA-1 and `gpgsig-sha256` for SHA-256. HEAD never moves.
+  2. Certify-only primary plus signing subkey: `-S<primary>!` exits 1 (no fallback);
+     unpinned `-S<primary>` exits 0 via the subkey. This confirms the repair turns silent
+     substitution into refusal.
+  3. `inspect`'s listing check (`--with-colons --fingerprint --list-secret-keys <subkey>`)
+     emits the subkey fingerprint as a colon field and `--export <subkey>` is non-empty,
+     so a subkey pin can be inspected; the guide's "primary key or signing subkey" claim
+     is reachable at inspection.
+- Argument safety: `plan.signer` must equal the inspected `self.signer.pinned`, whose
+  fingerprint passed `valid_fingerprint` (40/64 lowercase hex), so `-S{fpr}!` cannot
+  carry option or shell content.
+- Verifier reasoning: the header is chosen only when parent and tree lengths are both 40
+  or both 64; mixed lengths return false. A second `gpgsig`/`gpgsig-sha256` line after
+  the selected header does not start with a space, so the continuation check refuses it.
+  A compat-format commit carrying both headers therefore fails closed, as
+  `uncertain_commit_result`, before any branch update. The status verifier still binds
+  VALIDSIG field 1 (the actual signing key), not the primary-key field.
+- Mutation reasoning on the new tests: removing `!` fails the primary-pinned
+  `verify_signature_status(&status, fingerprint)` assertion. Hard-coding `gpgsig` fails
+  the SHA-256 case. Choosing the header from one length only fails the mixed-format
+  assertion. Both new tests detect a regression of their repair.
+- Privacy and IP: added lines grepped for private home paths, the owner's email and
+  username, credentials and key material: none. `/lane/...` paths in the retained review
+  are generic lane paths, as in earlier retained reviews. No third-party product names or
+  branding. The retained review `docs/reviews/69ead8457746-local-coding-signer-capture.txt`
+  is byte-identical (`cmp`) to `/lane/reviews/69ead8457746-local-coding-signer-capture.md`.
+- `final-blobs.json`: all five entries match the HEAD blobs.
+- Evaluation integrity: no evaluation task, hidden or held-out test, scorer, prompt,
+  threshold or scoreboard file changes. Task-table rows are unchanged (asserted by
+  check.py against the base).
+
+## Commands and results
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-exact-signer/review-inputs.sha256`: exit 0.
+   The manifest's own SHA-256 is
+   `2d1329c5b4e257d9364312182a9233c35c2a0765f792e213dfc23278ba581581`, as requested.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-exact-signer/run.py /lane/state/tmp/review-exact-signer-full-53a86bfc297a`:
+   exit 1, `FAST GATE: FAIL` as expected. Fresh output directory, separate target, not
+   outer-wrapped. Result: `source_unchanged: true`, 350.38 s including reservations, raw
+   log SHA-256 `6a613ac20dd75d9177a20dd7790bf4df52aa0b2a3977882eedb61de480e1993f`. The
+   digest differs from the builder's raw log as expected for a separate run with timings.
+   Command exits: six commands 0 (fmt 1.15 s, Clippy and builds 85.59 s / 36.08 s), final
+   Rust command 101 at 227.19 s. No timeout. Both new methods report `... ok`:
+   `local_commit_verifier_binds_signature_header_to_both_object_formats` and
+   `local_commit_installed_git_signs_with_exact_primary_or_subkey_in_both_formats`.
+3. `python3 -B /lane/state/tmp/t306-exact-signer/check.py <out>`: exit 0. It reports
+   26 targets, totals [1356 pass, 72 fail, 64 ignore, 0 measured, 0 filtered], 1 source
+   file unchanged, all 8 affected methods ok, then `DATA COMPARISON ONLY: FULL GATE REMAINS
+   FAIL`. This is per-target data only, not a passing gate.
+   Additionally, `parse_gate.targets()` on my log equals the builder's validation-1 log for
+   every target, count and failed/ignored identity list (True). Sampled inherited failures
+   (for example the `native_signed_commit_*` methods) fail at `inspect fixture signer:
+   ArtifactDenied` under unchanged product executable trust. They also fail in the
+   baseline log.
+4. `cmp .../validation-1/source-freeze.json <out>/source-freeze.json`: exit 0.
+5. `python3 -B /lane/state/tmp/t306-exact-signer/light.py`: exit 0. That covers
+   diff-check, untracked lint, review lint and markdownlint (0 issues in 3 files).
+6. `git diff --check 69ead845774654de33f76e74a56824e5b3a3d467 --`: exit 0.
+7. `git status --short`: empty.
+
+After the gate, no `gpg-agent` process remained and no local-commit fixture directory
+remained in the run's TMPDIR namespace. The 11 leftover entries there are pre-existing
+`agentmage-host-*` test directories, unrelated to this change.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low L1: the exact-key path is exercised through a test-local Git command, not
+  `run_plan`/`SignedGitRunner`.** At `platforms/linux/src/local_commit.rs:1278-1305` the
+  new installed-tool test builds its own `Command` with equivalent configuration and only
+  shares `signed_commit_arguments`, `verify_raw_commit` and `verify_signature_status` with
+  production. The native `run_plan` tests remain inherited failures (inspect
+  `ArtifactDenied`). So the production call site at line 441 and the SHA-256 repository
+  path through `CommitIoSession` are not run end-to-end with a real signature. The
+  evidence labels this honestly as component evidence, and it overlaps the existing
+  production-wiring backlog. Fix when signer admission lands: run one SHA-256 and one
+  subkey-pinned case through `run_plan`.
+- **Low L2: fixture agent cleanup is best effort and unasserted.** At `local_commit.rs:1478-1491`,
+  `Drop` discards the `gpgconf --kill all` result. I observed no stray agents after the run,
+  so the claim holds empirically, but a failure would go unnoticed. Fix: check the exit
+  status in the test, or after drop assert that no agent socket remains for the keyring.
+  Same family as the retained cleanup-diagnostics backlog.
+- **Low L3: a non-signing pin is not rejected at inspection.** `inspect` (lines 297-318)
+  accepts a fingerprint whose key is certify-only, or whose secret part is a stub. With
+  the new `!` selector this fails closed at commit time (reproduced: exit 1, no fallback,
+  branch unchanged), so it costs availability and diagnostics only, not safety. Fix:
+  check that the exact key or subkey record carries the `s` capability and a usable secret
+  in the colon listing.
+
+## Per-row result
+
+- T-303 / T-306 (same-row repair of retained 6033f03afb9e lows L1/L2): the repair is
+  correct and tested. Production signed arguments use the exact `<fpr>!` selector; the
+  status verifier keeps binding the actual signing fingerprint; raw headers are bound to
+  matching parent and tree lengths with the singleton `gpgsig` or `gpgsig-sha256` header;
+  wrong, duplicate and mixed formats refuse. Both new methods detect regression of their
+  repair. The gate counts and identities exactly reproduce the builder's (the gate remains
+  FAIL from 72 inherited failures, as declared). The claims are honestly labelled as
+  synthetic-plan component evidence. No confinement or authority change. The retained
+  6033f03afb9e L1/L2 are resolved; new lows L1-L3 above are same-row backlog. Not
+  closing: signer confinement and whole-unit cleanup, activation, provenance, approvals,
+  durable recovery, native workflow and model measurements remain open, as the commit
+  states. Neither parent row closes.
+
+Verdict: PASS

@@ -448,10 +448,10 @@ fn capture_local_commit_process_in(
     // Keep the opaque Child in the slot before initializing either pipe. A
     // poisoned/retained slot refuses admission, including after unwinding.
     let mut slot = owner.try_lock().map_err(|_| failure())?;
-    if slot.is_some()
-        || cancellation.is_some_and(|token| token.is_cancelled())
-        || Instant::now() >= deadline
-    {
+    if slot.is_some() {
+        return Err(error(LinuxSandboxErrorKind::CleanupUncertain));
+    }
+    if cancellation.is_some_and(|token| token.is_cancelled()) || Instant::now() >= deadline {
         return Err(failure());
     }
     command.stdout(Stdio::piped()).stderr(Stdio::piped());
@@ -2310,14 +2310,17 @@ mod tests {
         }
         let mut fixture = CommitChildFixture::new("/usr/bin/sleep", &["5"]);
         *owner.lock().unwrap() = fixture.0.take();
-        assert!(
+        assert_eq!(
             capture_local_commit_process_in(
                 &owner,
                 Command::new("/usr/bin/true"),
                 None,
                 Instant::now() + Duration::from_secs(2)
             )
-            .is_err()
+            .err()
+            .unwrap()
+            .kind(),
+            LinuxSandboxErrorKind::CleanupUncertain,
         );
         let held = owner.lock().unwrap();
         let started = Instant::now();
