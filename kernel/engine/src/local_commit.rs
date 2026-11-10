@@ -1196,7 +1196,11 @@ pub trait BoundedLocalCommitExecutor {
     ) -> LocalCommitPlatformResult;
 }
 
-/// Inert local commit driver crossing the effect boundary only with consumed authority.
+/// Inert single-attempt driver crossing the effect boundary only with consumed authority.
+/// Every first entry is final, including refusal or unwind; later entries fail
+/// before clock or executor access and preserve the original terminal evidence.
+/// This process-local latch does not prevent reconstruction in another driver
+/// or replace the host's durable approval/attempt and recovery tracking.
 pub struct LocalCommitEffectDriver<E, H, C> {
     executor: E,
     held_repository_scope: H,
@@ -1205,6 +1209,9 @@ pub struct LocalCommitEffectDriver<E, H, C> {
     cancellation: CancellationToken,
     clock: C,
     constructed_at_epoch_ms: u64,
+    // Latch before even sampling the dispatch clock. Refusal, uncertainty or an
+    // unwinding executor must never make this original driver reusable.
+    attempted: bool,
     receipt: Option<LocalCommitReceipt>,
     error: Option<LocalCommitError>,
 }
@@ -1241,17 +1248,20 @@ impl<E, H, C: RuntimeClock> LocalCommitEffectDriver<E, H, C> {
             cancellation,
             clock,
             constructed_at_epoch_ms: now_epoch_ms,
+            attempted: false,
             receipt: None,
             error: None,
         })
     }
 
-    /// Takes the terminal local commit receipt after mediated execution.
+    /// Takes the original attempt's terminal local commit receipt. Refused
+    /// reentry preserves this evidence; it never creates a second receipt.
     pub fn take_receipt(&mut self) -> Option<LocalCommitReceipt> {
         self.receipt.take()
     }
 
-    /// Takes a content-free local commit boundary error.
+    /// Takes the original attempt's content-free boundary error. Refused
+    /// reentry does not replace the original outcome or its error.
     pub fn take_error(&mut self) -> Option<LocalCommitError> {
         self.error.take()
     }
@@ -1268,6 +1278,7 @@ impl<E, H, C> fmt::Debug for LocalCommitEffectDriver<E, H, C> {
         formatter
             .debug_struct("LocalCommitEffectDriver")
             .field("transaction_id", &self.prepared.plan.commit_transaction_id)
+            .field("attempted", &self.attempted)
             .field("has_receipt", &self.receipt.is_some())
             .field("has_error", &self.error.is_some())
             .finish_non_exhaustive()
@@ -1281,6 +1292,9 @@ where
     C: RuntimeClock,
 {
     fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
+        if std::mem::replace(&mut self.attempted, true) {
+            return EffectLaunch::failed();
+        }
         let Ok(now_epoch_ms) = self.clock.now_epoch_ms() else {
             self.error = Some(LocalCommitError::ApprovalDenied);
             return EffectLaunch::failed();

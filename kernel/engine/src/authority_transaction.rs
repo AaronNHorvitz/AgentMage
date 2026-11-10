@@ -1909,11 +1909,36 @@ pub(crate) mod tests {
         synthetic_held("authorization-0001", 2)
     }
 
+    pub(crate) fn commit_other_held_fixture() -> impl HeldWorkspaceObject {
+        synthetic_held("authorization-other", 2)
+    }
+
     pub(crate) fn dispatch_commit_fixture(
         arguments: &[u8],
         driver: &mut impl EffectDriver,
     ) -> Receipt {
-        let mut fixture = fixture_with_operation(None, GrantOperation::GitCommit, arguments);
+        dispatch_commit_fixture_as(
+            arguments,
+            driver,
+            GrantOperation::GitCommit,
+            "transaction-0001",
+            "attempt-0001",
+        )
+    }
+
+    // Each invocation owns a fresh synthetic issuer/coordinator and actually
+    // consumes its grant. Distinct IDs distinguish receipts in driver reentry
+    // tests; these independent fixtures are not durable cross-store recovery.
+    pub(crate) fn dispatch_commit_fixture_as(
+        arguments: &[u8],
+        driver: &mut impl EffectDriver,
+        operation: GrantOperation,
+        transaction: &str,
+        attempt: &str,
+    ) -> Receipt {
+        let mut fixture = fixture_with_operation(None, operation, arguments);
+        fixture.transaction_id = AuthorityTransactionId::from_raw(transaction);
+        fixture.attempt_id = OperationAttemptId::from_raw(attempt);
         let mut request = request(&fixture);
         request.context.now_epoch_ms = 15_000;
         request.occurred_at_epoch_ms = 15_000;

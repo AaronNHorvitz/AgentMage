@@ -563,6 +563,348 @@ fn commit_driver_refuses_unavailable_construction_clock() {
 }
 
 #[test]
+fn commit_driver_is_single_use_after_success_uncertainty_and_prelaunch_refusal() {
+    use crate::authority_transaction::tests::{commit_held_fixture, dispatch_commit_fixture_as};
+    use crate::runtime_loop::RuntimePortFailure;
+
+    struct Executor {
+        launches: usize,
+        uncertain: bool,
+    }
+    impl BoundedLocalCommitExecutor for Executor {
+        fn execute(
+            &mut self,
+            permit: LocalCommitLaunchPermit<'_>,
+            token: &CancellationToken,
+        ) -> LocalCommitPlatformResult {
+            self.launches += 1;
+            let mut result = SyntheticExecutor::default().execute(permit, token);
+            result.cleanup_verified = !self.uncertain;
+            self.uncertain = false;
+            result
+        }
+    }
+    for field in [
+        "success",
+        "uncertain",
+        "clock",
+        "expiry",
+        "arguments",
+        "packet",
+        "cancelled",
+    ] {
+        let (prepared, before) = prepared_fixture();
+        let original = prepared.clone();
+        let arguments = prepared.request_bytes().to_vec();
+        let first_time = match field {
+            "clock" => Err(RuntimePortFailure::Unavailable),
+            "expiry" => Ok(20_000),
+            _ => Ok(15_001),
+        };
+        let mut driver = LocalCommitEffectDriver::new(
+            Executor {
+                launches: 0,
+                uncertain: field == "uncertain",
+            },
+            commit_held_fixture(),
+            prepared,
+            before,
+            cancellation(),
+            SequenceClock([Ok(15_000), first_time, Ok(15_002)].into()),
+        )
+        .unwrap();
+        if field == "packet" {
+            driver.prepared.packet.objective.push_str(" unsealed");
+        }
+        if field == "cancelled" {
+            driver
+                .cancellation
+                .cancel(agentmage_kernel_contracts::CancellationSignal {
+                    schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                    cancellation_id: agentmage_kernel_contracts::CancellationId::from_raw(
+                        "one-shot-cancel",
+                    ),
+                    task_id: agentmage_kernel_contracts::TaskId::from_raw("fixture-task"),
+                    correlation_id: agentmage_kernel_contracts::CorrelationId::from_raw(
+                        "fixture-correlation",
+                    ),
+                    requested_by: agentmage_kernel_contracts::BoundaryKind::Kernel,
+                    reason: agentmage_kernel_contracts::CancellationReason::UserRequested,
+                })
+                .unwrap();
+        }
+        let first = dispatch_commit_fixture_as(
+            if field == "arguments" {
+                b"{}"
+            } else {
+                &arguments
+            },
+            &mut driver,
+            GrantOperation::GitCommit,
+            "commit-first",
+            "attempt-first",
+        );
+        assert_eq!(
+            first.outcome == OperationOutcome::Succeeded,
+            field == "success",
+            "{field}"
+        );
+        assert_eq!(driver.clock.0.len(), 1);
+        let original_receipt = driver.receipt.clone();
+        let original_error = driver.error;
+        // Repair every first-entry refusal; the next grant must STILL refuse.
+        // These module-private substitutions cannot be performed by callers.
+        driver.prepared = original;
+        driver.cancellation = cancellation();
+        for (transaction, attempt) in [
+            ("commit-second", "attempt-second"),
+            ("commit-third", "attempt-third"),
+        ] {
+            let repeated = dispatch_commit_fixture_as(
+                &arguments,
+                &mut driver,
+                GrantOperation::GitCommit,
+                transaction,
+                attempt,
+            );
+            assert_ne!(repeated.outcome, OperationOutcome::Succeeded, "{field}");
+            assert_eq!(repeated.authority_transaction_id.as_str(), transaction);
+            assert_eq!(repeated.operation_attempt_id.as_str(), attempt);
+            assert_eq!(
+                driver.clock.0.len(),
+                1,
+                "reentry must precede clock sampling"
+            );
+            assert_eq!(
+                driver.take_receipt(),
+                if transaction == "commit-second" {
+                    original_receipt.clone()
+                } else {
+                    None
+                }
+            );
+            assert_eq!(
+                driver.take_error(),
+                if transaction == "commit-second" {
+                    original_error
+                } else {
+                    None
+                }
+            );
+        }
+        if let Some(receipt) = original_receipt {
+            assert_eq!(
+                receipt.authority_transaction_id,
+                first.authority_transaction_id.as_str()
+            );
+            assert_eq!(
+                receipt.operation_attempt_id,
+                first.operation_attempt_id.as_str()
+            );
+        }
+        assert_eq!(
+            original_error,
+            match field {
+                "success" => None,
+                "uncertain" | "cancelled" => Some(LocalCommitError::ResultDenied),
+                _ => Some(LocalCommitError::ApprovalDenied),
+            }
+        );
+        assert_eq!(
+            driver.into_executor().launches,
+            usize::from(matches!(field, "success" | "uncertain")),
+            "{field}"
+        );
+    }
+}
+
+#[test]
+fn commit_driver_cannot_relaunch_after_executor_unwinds() {
+    use crate::authority_transaction::tests::{commit_held_fixture, dispatch_commit_fixture_as};
+    struct Panics(usize);
+    impl BoundedLocalCommitExecutor for Panics {
+        fn execute(
+            &mut self,
+            _: LocalCommitLaunchPermit<'_>,
+            _: &CancellationToken,
+        ) -> LocalCommitPlatformResult {
+            self.0 += 1;
+            panic!("synthetic executor interruption; effects unknown");
+        }
+    }
+    let (prepared, before) = prepared_fixture();
+    let arguments = prepared.request_bytes().to_vec();
+    let mut driver = LocalCommitEffectDriver::new(
+        Panics(0),
+        commit_held_fixture(),
+        prepared,
+        before,
+        cancellation(),
+        SequenceClock([Ok(15_000), Ok(15_001)].into()),
+    )
+    .unwrap();
+    let interrupted = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        dispatch_commit_fixture_as(
+            &arguments,
+            &mut driver,
+            GrantOperation::GitCommit,
+            "unwind-first",
+            "unwind-first-attempt",
+        )
+    }));
+    assert!(interrupted.is_err());
+    let repeated = dispatch_commit_fixture_as(
+        &arguments,
+        &mut driver,
+        GrantOperation::GitCommit,
+        "unwind-second",
+        "unwind-second-attempt",
+    );
+    assert_ne!(repeated.outcome, OperationOutcome::Succeeded);
+    assert!(driver.take_receipt().is_none());
+    assert!(driver.take_error().is_none());
+    assert!(driver.clock.0.is_empty());
+    assert_eq!(driver.into_executor().0, 1);
+}
+
+#[test]
+fn commit_driver_latches_before_a_dispatch_clock_unwind() {
+    use crate::authority_transaction::tests::{commit_held_fixture, dispatch_commit_fixture};
+    struct Panics(u8);
+    impl RuntimeClock for Panics {
+        fn now_epoch_ms(&mut self) -> Result<u64, crate::runtime_loop::RuntimePortFailure> {
+            self.0 += 1;
+            if self.0 == 1 {
+                Ok(15_000)
+            } else {
+                panic!("synthetic clock unavailable")
+            }
+        }
+    }
+    let (prepared, before) = prepared_fixture();
+    let arguments = prepared.request_bytes().to_vec();
+    let mut driver = LocalCommitEffectDriver::new(
+        SyntheticExecutor::default(),
+        commit_held_fixture(),
+        prepared,
+        before,
+        cancellation(),
+        Panics(0),
+    )
+    .unwrap();
+    assert!(
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            dispatch_commit_fixture(&arguments, &mut driver)
+        }))
+        .is_err()
+    );
+    assert_ne!(
+        dispatch_commit_fixture(&arguments, &mut driver).outcome,
+        OperationOutcome::Succeeded
+    );
+    assert_eq!(driver.clock.0, 2);
+    assert!(driver.take_receipt().is_none());
+    assert!(driver.take_error().is_none());
+    assert_eq!(driver.into_executor().launches, 0);
+}
+
+#[test]
+fn commit_dispatch_refuses_isolated_clock_rollback_with_live_grant_and_approval() {
+    use crate::authority_transaction::tests::{commit_held_fixture, dispatch_commit_fixture};
+    for now in [15_500, 16_000] {
+        let (prepared, before) = prepared_fixture();
+        let arguments = prepared.request_bytes().to_vec();
+        let mut driver = LocalCommitEffectDriver::new(
+            SyntheticExecutor::default(),
+            commit_held_fixture(),
+            prepared,
+            before,
+            cancellation(),
+            SequenceClock([Ok(16_000), Ok(now)].into()),
+        )
+        .unwrap();
+        let receipt = dispatch_commit_fixture(&arguments, &mut driver);
+        assert_eq!(
+            receipt.outcome == OperationOutcome::Succeeded,
+            now == 16_000
+        );
+        assert_eq!(driver.take_receipt().is_some(), now == 16_000);
+        assert_eq!(
+            driver.take_error(),
+            if now == 16_000 {
+                None
+            } else {
+                Some(LocalCommitError::ApprovalDenied)
+            }
+        );
+        assert_eq!(driver.into_executor().launches, usize::from(now == 16_000));
+    }
+}
+
+#[test]
+fn commit_dispatch_refuses_other_operation_or_other_held_scope() {
+    use crate::authority_transaction::tests::{
+        commit_held_fixture, commit_other_held_fixture, dispatch_commit_fixture_as,
+    };
+    let (prepared, before) = prepared_fixture();
+    let arguments = prepared.request_bytes().to_vec();
+    let mut driver = LocalCommitEffectDriver::new(
+        SyntheticExecutor::default(),
+        commit_other_held_fixture(),
+        prepared,
+        before,
+        cancellation(),
+        SequenceClock([Ok(15_000), Ok(15_001)].into()),
+    )
+    .unwrap();
+    assert_ne!(
+        dispatch_commit_fixture_as(
+            &arguments,
+            &mut driver,
+            GrantOperation::GitCommit,
+            "scope-first",
+            "scope-attempt"
+        )
+        .outcome,
+        OperationOutcome::Succeeded
+    );
+    assert_eq!(driver.take_error(), Some(LocalCommitError::ApprovalDenied));
+    assert!(driver.take_receipt().is_none());
+    assert_eq!(driver.into_executor().launches, 0);
+    for operation in [GrantOperation::WorkspaceWrite, GrantOperation::GitCommit] {
+        let (prepared, before) = prepared_fixture();
+        let mut driver = LocalCommitEffectDriver::new(
+            SyntheticExecutor::default(),
+            commit_held_fixture(),
+            prepared,
+            before,
+            cancellation(),
+            SequenceClock([Ok(15_000), Ok(15_001)].into()),
+        )
+        .unwrap();
+        let receipt = dispatch_commit_fixture_as(
+            &arguments,
+            &mut driver,
+            operation,
+            "operation-first",
+            "operation-attempt",
+        );
+        let allowed = operation == GrantOperation::GitCommit;
+        assert_eq!(receipt.outcome == OperationOutcome::Succeeded, allowed);
+        assert_eq!(driver.take_receipt().is_some(), allowed);
+        assert_eq!(
+            driver.take_error(),
+            if allowed {
+                None
+            } else {
+                Some(LocalCommitError::ApprovalDenied)
+            }
+        );
+        assert_eq!(driver.into_executor().launches, usize::from(allowed));
+    }
+}
+
+#[test]
 fn reconciliation_requires_retained_packet_bindings_findings_and_approval() {
     for field in ["integrity", "material", "binding", "approval", "expiry"] {
         let (mut prepared, before) = prepared_fixture();

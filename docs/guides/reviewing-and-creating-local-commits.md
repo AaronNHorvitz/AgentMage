@@ -486,3 +486,25 @@ asserts an existing empty file is `Some(&[])`, and refuses an absent base before
 calling the checker. Its internal held-target fixture does not admit empty files
 through the ordinary source selector, which still refuses empty content. Neither
 observation establishes native admission or a real model coding result. T-303/T-306 remain open.
+
+## One driver, one attempt
+
+`LocalCommitEffectDriver` now accepts only its first entry. It latches before
+sampling the dispatch clock, checking authority or calling an executor. A
+refusal, failed postcondition or unwinding clock/executor leaves the original
+driver used. A later consumed grant cannot reopen it, even if the first refusal
+has been corrected. The later call fails before another clock sample or launch.
+
+The original terminal receipt and error remain available through their existing
+take methods; a refused reentry neither replaces them nor creates new evidence.
+A retained success receipt identifies its original authority transaction and
+attempt, and cannot describe the refused later call. Once taken, it stays taken.
+An unwind may leave no terminal result and must be treated as uncertain; the
+production driver does not catch panics or claim that effects were rolled back.
+
+This is a process-local guard. `PreparedLocalCommit` is an authority-free value
+that can still be cloned or reconstructed; another driver still needs exact
+kernel authority and all native checks. The eventual product owner must retain
+durable approval/attempt records and refuse replay across restart or rebuilt
+drivers. This guard supplies neither durable recovery nor approval provenance.
+No product commit route, native admission or model measurement follows from it.

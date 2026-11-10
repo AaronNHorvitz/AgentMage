@@ -2,6 +2,22 @@
 
 ## Active queue: local agent mission
 
+The retained [prepared-reconciliation review](docs/reviews/e569aa90a67b-local-coding-prepared-reconciliation.txt)
+has **Verdict: PASS** for exact commit
+`e569aa90a67bd349d6d9c7d5c4eadeb298c13a12`, with no high or medium finding.
+Its low L-1 exact absent-base refusal assertion and L-2 unexercised native
+signing reconciliation remain same-row backlog. Neither T-303 nor T-306 closes.
+
+The [single-use commit dispatch batch](docs/evidence/t306-single-use-2026-11-10.md)
+latches the dormant driver on first entry, preserves original terminal evidence
+and refuses later calls before clock/executor access. Five new methods cover
+reentry, unwind and isolated clock/operation/held-scope guards. The complete
+affected gate remains **FAIL**: 3,087 passes, the exact inherited 72 failures and
+72 ignores over 46 unfiltered targets. All five new methods and 36 changed-source
+controls, formatting and Clippy pass; three source hashes stay fixed. Independent
+core review is required. T-303/T-306 remain open with no new rows; this process-local
+guard supplies no native admission or durable recovery.
+
 The retained [dispatch-clock review](docs/reviews/2ef621110721-local-coding-dispatch-clock.txt)
 has **Verdict: PASS** for exact commit
 `2ef6211107212a6ddcd0fb008b225be96eddc06e`, with no high or medium finding.

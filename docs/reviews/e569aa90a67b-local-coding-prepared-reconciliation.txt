@@ -1,0 +1,155 @@
+Commit: e569aa90a67bd349d6d9c7d5c4eadeb298c13a12
+Scope: local-coding-prepared-reconciliation
+
+# Independent review: packet-bound commit result reconciliation (T-303 / T-306)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. I worked in the pinned
+checkout `/lane/review-checkout` with `CARGO_TARGET_DIR=/lane/state/review-target`. This is a
+non-closing same-row batch, and both rows stay OPEN.
+
+## Methods
+
+- I confirmed the commit: `git rev-parse HEAD` returns e569aa90a67bd349d6d9c7d5c4eadeb298c13a12. The
+  status was clean before and after the review.
+- I read IP-POLICY.md, the newest decision index entries (0196–0198), the evidence note
+  `docs/evidence/t306-prepared-reconciliation-2026-11-10.md`, the TASKS.md and guide diffs, and the
+  retained parent review. The parent review is byte-identical (`cmp`) to
+  `/lane/reviews/2ef621110721-local-coding-dispatch-clock.md`.
+- I read the full diff against parent 2ef62111 for all five changed Rust sources. I also read the
+  surrounding code: `PreparedLocalCommit`, `verify_reviewed_manual_commit_approval`,
+  `verify_commit_packet_binding`, `LocalCommitEffectDriver::execute`,
+  `capture_candidate_review_sources` (`platforms/linux/src/coding_repository_commit_review.rs:314-366`),
+  `select_created_sources` and `LinuxCodingReadScope::select_targets`.
+- Before running anything, I read every bundle script (README, run.py, check.py, light.py,
+  parse_gate.py, stage_check.py, focused_linux.py). They only invoke the repository's
+  `scripts/local_agent_fast_gate.py`, hash files and compare logs. None of them writes to the
+  repository.
+- 9 files changed. None is an evaluator, hidden or held-out task, scorer, prompt, threshold,
+  dependency, SBOM, lifecycle or scoreboard file.
+
+## Commands and results (exact pinned checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-prepared-reconciliation/review-inputs.sha256`: exit 0.
+   The manifest's own SHA-256 is 71a0de173f6abe6f02e38a399b7943fc1097d2e99d404d754be8d4461c378d91,
+   which matches the request.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-prepared-reconciliation-full-R1`:
+   exit 1, as expected. Output: `source_unchanged: true`, 719.30 s including shared reservations,
+   raw log SHA-256 d1dcb42eb692bc5124c1c8b7b7edf8f386668dd2a67df701dc3d21818c33d445. Per-command
+   results were 0 for git diff --check, lint-untracked, lint-reviews and markdownlint; 0 for
+   `cargo fmt --check` (280.21 s including the slot wait); 0 for Clippy `-D warnings` (47.01 s); and
+   101 for `cargo test --all-targets --no-fail-fast` (390.57 s). No timeout. Log ends `FAST GATE: FAIL`.
+3. `check.py` on the same directory: exit 0. This is a data comparison only, not a gate pass.
+   - 46 targets. Totals [3082 passed, 72 failed, 72 ignored, 0 measured, 0 filtered].
+   - Per-target failed and ignored identity lists equal the parent baseline exactly. The only count
+     changes are +2 kernel-engine passes and +1 platform-linux pass.
+   - 92 methods in the changed sources: 90 `ok`, plus the two inherited native fixtures `FAILED`.
+   - The TASKS `| [` row lines are unchanged, and the public-content scan of the added lines passes.
+4. `cmp validation-1/source-freeze.json .../review-prepared-reconciliation-full-R1/source-freeze.json`:
+   exit 0.
+5. `light.py`: exit 0 for all four light commands. markdownlint reports 0 issues in 3 files.
+6. `git diff --check 2ef6211107212a6ddcd0fb008b225be96eddc06e --`: exit 0.
+7. `git status --short`: empty.
+
+Independent cross-checks:
+
+- The bundle baseline (`baseline-fast.log`, hash f5cded5d…) totals 3079/72/72. The parent review's
+  own independent run reported the same totals.
+- In my log, these tests are `... ok`:
+  - `reconciliation_requires_retained_packet_bindings_findings_and_approval`
+  - `commit_dispatch_never_emits_success_receipt_for_unproved_platform_result`
+  - `candidate_checker_distinguishes_existing_empty_base_source_from_absence`
+  - `local_commit_uncertain_effect_cannot_reconcile_as_a_verified_preservation_receipt`
+  - `signed_commit_reconciliation_rejects_index_remote_signer_and_surface_drift`
+- The two inherited native failures panic before the migrated code runs:
+  - `native_signed_commit_verifies_exact_content_and_only_updates_task_branch` panics at
+    `platforms/linux/src/local_commit.rs:1965` with `inspect fixture signer: ArtifactDenied`.
+    `prepare_reconciliation_fixture` is called later, at line 2149.
+  - `native_candidate_tree_uses_only_owned_index_and_preserves_user_state` panics at line 1977.
+  - The evidence therefore correctly states that the migrated native signing reconciliation is not
+    exercised.
+- I ran no GPU work, used no keys, downloaded nothing and pushed nothing.
+
+## Review notes
+
+- **Boundary narrowing (correct).** `reconcile_local_commit`
+  (`kernel/engine/src/local_commit.rs:999-1009`) now takes `&PreparedLocalCommit` and first calls
+  `prepared.verify_at(now_epoch_ms)`. That re-runs the packet-binding checks
+  (`verify_local_commit_review`, then packet/plan/group/message bindings) and the full manual
+  approval check, including currentness.
+  - `PreparedLocalCommit` has private fields and no `Deserialize`. Its only constructor, `new`,
+    verifies the same predicate. An external caller therefore cannot produce an unverified value.
+  - The raw `(plan, approval)` signature is gone. The repository-wide grep finds no remaining
+    raw-pair callers.
+  - The driver passes the dispatch-time clock sample, so reconciliation neither renews authority
+    nor fails spuriously after the effect.
+- **Exhaustive severity.** `local_commit.rs:151-154` matches every `FindingSeverity` variant
+  explicitly, with no wildcard. It compiles under Clippy `-D warnings`. Admission semantics are
+  unchanged: Info and Low are admitted; Medium, High and Critical are refused.
+- **Test strength.** In `reconciliation_requires_retained_packet_bindings_findings_and_approval`,
+  every case needs the new `verify_at` call in `reconcile_local_commit` to be refused:
+  - The integrity, approval-hash and expiry cases leave a platform result that is otherwise valid
+    for the plan.
+  - Material and binding are re-sealed with a fresh approval.
+  - By reasoning, without mutating the checkout: deleting the new `verify_at` call makes this test
+    fail.
+- **Mediated dispatch test.** The post-effect test drives the real
+  issuer/policy/coordinator through `dispatch_commit_fixture`, and builds no `EffectAuthorization`
+  directly. It checks:
+  - exactly one launch per case;
+  - no success receipt for 22 invalid result variants, each with `ResultDenied`;
+  - for the valid case, that receipt IDs equal the coordinator's authority transaction and attempt.
+- **Empty-base source pair.** Capture distinguishes `hash(b"")` from the zero-sentinel absence
+  (`coding_repository_commit_review.rs:337-354`), so an existing empty base yields `Some(&[])`.
+  - The fixture asserts that the public `select_created_sources` refuses empty content
+    (`code.workspace.content`).
+  - It then uses `pub(crate) select_targets`, which already existed and is internal, so no public
+    empty-file route is added.
+  - The default `candidate_review_fixture` still writes the identical `preserve human work` bytes,
+    so existing callers are unchanged.
+- **Confinement.** No product, API, MCP or terminal route constructs the driver or calls
+  reconciliation outside tests. No workspace, sandbox, network or permission boundary is widened.
+  The change removes one way into reconciliation and adds checks.
+- **Honesty, IP and public content.** The evidence, guide and TASKS text label packets, approvals,
+  Git/process observations and checker success as synthetic. They claim no native admission, host
+  key, model result or score. There are no private paths, usernames, hostnames, credentials,
+  product comparisons or trademark branding. No sub-row is added, and the `| [` row lines are
+  byte-identical to the parent's.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L-1 (low, test coverage).**
+  - Where: `platforms/linux/src/coding_repository_commit_review_tests.rs:1950-1962`.
+  - Problem: the absent-base case asserts only `result.is_err()` plus an unchanged checker call
+    count. Any earlier refusal satisfies it, for example a root or observation mismatch, or state
+    left by the preceding successful call. So the test does not pin that refusal to the
+    absent/empty preimage distinction.
+  - Fix: assert `result.err().unwrap().code() == "code.commit.review-source"`, as the neighbouring
+    base-bytes test does at line 1866.
+  - Same-row backlog.
+- **L-2 (low, carried forward, disclosed).**
+  - Where: `platforms/linux/src/local_commit.rs:2149-2163`.
+  - Problem: the migrated native signed-commit reconciliation is never reached, because the test
+    fails earlier at signer artifact admission (line 1965). The fixture also rewrites
+    `commit_plan.message` to the synthetic packet group's proposed message before `run_plan`. When
+    artifact admission is fixed, the signed-content assertions must be re-checked against that
+    message.
+  - The evidence states this accurately. Same-row backlog.
+
+The parent's L-1 (isolated rollback guard) and L-2 (operation/held-scope dispatch) remain backlog, as
+the builder states. This batch resolves the earlier lows as claimed:
+
+- the raw-pair reconciliation entry is removed;
+- severity admission is exhaustive;
+- an explicit empty-base source-pair test exists.
+
+## Per-row result
+
+- T-303: increment PASS, no high or medium finding. The row stays OPEN, as requested.
+- T-306: increment PASS, no high or medium finding. The row stays OPEN. Trusted checker and artifact
+  integration, full original-owner approval composition, native admission, durable recovery, model
+  measurements and approved push remain open. The full affected gate remains FAIL on the exact
+  inherited 72 failures.
+
+Verdict: PASS
