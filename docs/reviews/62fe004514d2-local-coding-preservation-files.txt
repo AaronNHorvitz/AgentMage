@@ -1,0 +1,143 @@
+Commit: 62fe004514d20a346ce877bbbf7b397ff5127a1c
+Scope: local-coding-preservation-files
+
+# Independent review: descriptor-relative local preservation reads (T-303 / T-306, core)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only access to the pinned
+checkout `/lane/review-checkout`. Row: T-303 / T-306, same-row non-closing implementation batch.
+`git rev-parse HEAD` = `62fe004514d20a346ce877bbbf7b397ff5127a1c`; parent
+`0c44e944d1becfe568866f74cf2733b830825333`. Working tree clean before and after every run.
+
+## Method
+
+- Read IP-POLICY.md, the newest decisions listing, the TASKS.md diff, the evidence note
+  `docs/evidence/t306-preservation-files-2026-11-10.md`, the guide diff, the retained parent report
+  and all five changed Rust sources in full (`repository_preservation_fs.rs`, its tests, the
+  `repository_preservation.rs` and `repository_safety.rs` diffs and the new collector test).
+- Read the bundle README, `run.py`, `check.py`, `parse_gate.py` and `light.py` before running them.
+  Did not run `refine.py` or `preflight.py`. Did not outer-wrap `run.py`.
+- Compared the new encodings line by line against the removed `hash_worktree_tree`,
+  `hash_metadata_tree`, `hash_reflog_tree`, `read_optional_bounded`, `operation_metadata`,
+  `directory_has_active_hooks` and `path_identity`.
+- Ran my own adversarial tests in a scratch export (`git archive` of the pinned commit into
+  `/lane/state/tmp/review-adv-62fe004514d2`, separate target `/lane/state/review-adv-target`, through
+  `/tools/build-slot`). The repository and the pinned checkout were not modified.
+
+## Commands and results (all from /lane/review-checkout, suffix R62a)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-preservation-files/review-inputs.sha256`: exit 0. The
+   manifest's own SHA-256 is `f0df0f5f6a26ce336fe122ff860d4664b528ead0fc22b182b239071d512a7e57`,
+   matching the request.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-preservation-files/run.py /lane/state/tmp/review-preservation-files-full-R62a`:
+   exit 1 as expected; `source_unchanged: true`; 321.46 s including reservations; raw log SHA-256
+   `7fe2a66a9f33838ee472a4e9e2c77e64844112f7d6cdecb40716c3f57792a46f`. Command results: five light
+   steps 0, fmt 0 (1.40 s), Clippy 0 (40.83 s, including a cold review target), Rust tests 101
+   (277.49 s). `FAST GATE: FAIL`. No timeout.
+3. `python3 -B .../check.py /lane/state/tmp/review-preservation-files-full-R62a`: exit 0 (data
+   comparison only). 26 unfiltered targets; totals 1,446 pass / 72 fail / 64 ignore / 0 measured /
+   0 filtered; failed and ignored identities equal the hash-bound parent baseline per target; the
+   Linux library target alone gains exactly +8 passes; all 8 new methods `ok`; the 29 methods in
+   changed sources report 16 ok / 13 FAILED / 0 ignored. TASKS table rows equal the base; no private
+   path, username or new `#[ignore]` in the diff; the retained report equals `/lane/reviews`.
+4. `cmp .../validation-2/source-freeze.json .../review-preservation-files-full-R62a/source-freeze.json`:
+   exit 0. My five source hashes equal the builder's final freeze.
+5. `python3 -B /lane/state/tmp/t306-preservation-files/light.py`: exit 0 (diff check, untracked lint,
+   review lint, markdownlint 0 issues across 3 files).
+6. `cmp docs/reviews/0c44e944d1be-local-coding-checker-cancellation.txt /lane/reviews/0c44e944d1be-local-coding-checker-cancellation.md`:
+   exit 0, byte-identical (`Verdict: PASS`).
+7. `git diff --check 0c44e944d1becfe568866f74cf2733b830825333 --`: exit 0.
+8. `git status --short`: empty.
+
+The 13 failures in changed sources are `repository_safety::tests::*`, panicking at
+`repository_safety.rs:1717` with `InvalidGitArtifact`: the inherited native Git ownership refusal
+in this lane's user namespace, not a regression. My runtime (321.46 s) differs from the builder's
+277.04 s because of reservation wait and a cold review target. That is a measurement, not a gate.
+
+Adversarial scratch run:
+`CARGO_TARGET_DIR=/lane/state/review-adv-target CARGO_BUILD_JOBS=2 bash /tools/build-slot cargo test -p agentmage-platform-linux --lib -- preservation_fs --nocapture`
+exit 0, 10 passed (the 7 builder fs methods plus 3 reviewer methods):
+
+- Worktree symlink to an outside directory is recorded as link text and not traversed. The outside
+  content hash never appears. A worktree FIFO records `s` without blocking. A hooks FIFO and a hooks
+  symlink are recorded as metadata only, and the symlinked hook counts as active. A reflog FIFO, a
+  reflog symlink to an outside file, a symlinked `logs/refs/heads/agentmage` root and a symlinked
+  `.gitmodules` all refuse. Replacing `.git` with a symlink to a lookalike directory makes
+  `Files::new` refuse.
+- Concurrent race for 8 s: another thread repeatedly swaps the worktree directory `sub` for a
+  symlink to an outside lookalike tree, and the regular file `file` for a symlink to an outside
+  secret, then swaps both back. Result: 58,042 accepted scans, 106,294 refusals and 129,125 swap
+  cycles. No accepted scan bound outside content, and the outside files stayed unchanged.
+- A tree 300 directories deep succeeds and binds the leaf hash. The user-reflog scan excludes the
+  `agentmage` subtree and still binds `HEAD`.
+
+## Review findings by area
+
+- **Encoding preservation:** worktree records (path, mode, size, mtime, `d`/`f`+hash/`l`+link
+  text/`s`), metadata records (path, mode, size, mtime, with directories recorded), reflog records
+  (path+hash, directories unrecorded), operations (name, mode, size) and the common-directory
+  identity (path, dev, ino) are byte-identical to the removed functions. The fixture test checks this
+  against `std` metadata. The sort and concatenation are unchanged.
+- **Confinement:** every root and ancestor is opened component by component with
+  `O_DIRECTORY|O_NOFOLLOW`, and descendants are opened relative to held descriptors. Files are opened
+  with `O_NOFOLLOW|O_NONBLOCK` relative to the held parent and compared on the full snapshot (dev,
+  ino, mode, uid, gid, nlink, size, mtime/ctime with nanoseconds) before and after reading. Reads use
+  `pread` capped at the observed size and the 64 MiB limit, and the entry is re-checked with `statat`
+  without following links. Names that reach `entry()` are single components; multi-component paths
+  go through the component-wise walk. Every behavioural change I found refuses in more cases than
+  before. Dangling or symlinked `index.lock`, `alternates`, `hooks` and `logs` were previously
+  followed or skipped by `Path::exists`; they are now recorded or refused. Linked read-only scopes
+  are refused before collection (`repository_safety.rs:358`), so the new strip-prefix requirement in
+  `Files::new` cannot break them.
+- **Root binding:** `Files::new` runs before the first Git worker, and `revalidate()` runs after
+  `seal` and before return. Both check the held checkout and Git identities, current-user ownership,
+  absence of group/other write and the scope's path digest. The collector test replaces either root
+  at worker 1 or 17 and refuses with all 17 synthetic workers called. A swap followed by a swap back
+  between samples is not detected. The documentation states this honestly ("not an atomic snapshot").
+- **Cancellation:** checks run before and after each 64 KiB chunk, per directory entry, per pending
+  directory and around every public entry point. An individual syscall is not preempted, as
+  documented.
+- **Resource bounds:** no limit was raised. The counter now counts every listed entry, including
+  directories and excluded names, which closes the directory-only reflog loophole. Pending
+  directories hold a path and a `Stat`, not descriptors. The 16,384-entry positive case passes with
+  the lane's 1,024-descriptor limit.
+- **Evidence and claims:** every number in the evidence note and TASKS entry matches my run or the
+  hash-bound builder log, apart from wall-clock time, which is labelled as including reservations.
+  No native Git, model, coding-quality or mutation claim is made. Git outputs are labelled synthetic.
+- **Evaluation integrity / supply chain:** the diff touches only the 9 listed files: no evaluator,
+  held-out or hidden test, prompt, threshold, dependency, lockfile, SBOM or scoreboard changes. The
+  `rustix` APIs used (`Dir`, `openat`, `readlinkat`, `statat`, `pread`) are already dependencies.
+- **Public repository hygiene:** no private host path, username, hostname, credential, personal data,
+  private sibling-project name or trademark branding in the added lines. The `/lane/...` references
+  are generic lane paths, as in prior accepted evidence. IP policy: nothing third-party was read or
+  cited.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low L-1 (hardening, `platforms/linux/src/repository_preservation_fs.rs:426`):** `read_regular`
+  re-opens the entry by name after the `O_PATH` observation. A substituted device node would be opened
+  (`O_RDONLY|O_NONBLOCK`, so a driver `open` side effect can occur) before the post-open `fstat`
+  rejects it. Planting a device node on the repository filesystem needs mknod privilege, and a hard
+  link cannot cross from `/dev`, so this is not reachable by an unprivileged repository author.
+  Fix: open the content through the already-verified `O_PATH` descriptor (`/proc/self/fd/<n>` reopen
+  or `openat2` with `RESOLVE_NO_SYMLINKS|RESOLVE_BENEATH`) so the inode cannot change between
+  observation and open. Add a test that substitutes a non-regular object at that point. Backlog.
+- **Low L-2 (documentation precision, `platforms/linux/src/repository_preservation_fs.rs:164`):** the
+  worktree counter also counts the skipped top-level `.git` entry. A checkout with exactly 16,384
+  non-`.git` entries, accepted before this commit, now refuses. This fails closed, but the docs only
+  mention "directory and excluded entries". Fix: count after the `.git` skip, or state it in the
+  guide. Backlog.
+
+The parent's L-1 (mutation test-hash provenance), its L-2 (checker observer-error coverage) and the
+carried same-row lows remain backlog. This batch does not claim to address them.
+
+## Per-row result
+
+- **T-303:** increment PASS for this scope. The row stays open: native Git admission, the complete
+  coding workflow, trusted checker/artifact integration, full original-owner approval composition,
+  recovery, model measurements and approved push remain open.
+- **T-306:** increment PASS for this scope. The row stays open for the same reasons. Nothing in this
+  batch claims closure, and no new rows or sub-rows are added.
+
+Verdict: PASS

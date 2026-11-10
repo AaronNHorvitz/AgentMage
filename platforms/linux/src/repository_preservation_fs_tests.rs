@@ -367,3 +367,140 @@ fn preservation_fs_directory_only_reflog_trees_obey_existing_entry_limit() {
     );
     f.unchanged_outside();
 }
+
+#[test]
+fn preservation_fs_traversal_budgets_refuse_negative_sizes_and_counter_overflow() {
+    let mut budget = TraversalBudget::default();
+    denied(budget.content(-1));
+    let mut budget = TraversalBudget {
+        content_bytes: u64::MAX,
+        ..TraversalBudget::default()
+    };
+    denied(budget.content(1));
+    let mut budget = TraversalBudget {
+        entries: usize::MAX,
+        ..TraversalBudget::default()
+    };
+    denied(budget.entry(Path::new("file")));
+    let mut budget = TraversalBudget {
+        path_bytes: usize::MAX,
+        ..TraversalBudget::default()
+    };
+    denied(budget.entry(Path::new("file")));
+}
+
+#[test]
+fn preservation_fs_path_budget_bounds_real_walks_at_the_exact_limit() {
+    let f = Fixture::new();
+    let tree = f.root.join("repo/.git/logs");
+    fs::create_dir(&tree).unwrap();
+    fs::create_dir(tree.join("nested")).unwrap();
+    fs::write(tree.join("nested/file"), b"bounded").unwrap();
+    let files = f.files();
+    // Each stored relative name is charged once, including directory names.
+    let names = b"nested".len() + b"nested/file".len();
+    for kind in [Tree::Worktree, Tree::Metadata, Tree::Reflogs] {
+        let expected = files
+            .tree(&files.git, Path::new("logs"), kind, false)
+            .unwrap();
+        let scan = |remaining| {
+            files.tree_with_budget(
+                &files.git,
+                Path::new("logs"),
+                kind,
+                false,
+                TraversalBudget {
+                    path_bytes: MAX_TRAVERSAL_PATH_BYTES - remaining,
+                    ..TraversalBudget::default()
+                },
+            )
+        };
+        assert_eq!(scan(names).unwrap(), expected);
+        denied(scan(names - 1));
+    }
+    f.unchanged_outside();
+}
+
+#[test]
+fn preservation_fs_path_budget_charges_exclusions_before_opening_them() {
+    let f = Fixture::new();
+    let files = f.files();
+    // The only worktree child is excluded .git, still subject to both budgets.
+    let scan = |path_bytes, entries| {
+        files.tree_with_budget(
+            &files.checkout,
+            Path::new(""),
+            Tree::Worktree,
+            false,
+            TraversalBudget {
+                entries,
+                path_bytes,
+                ..TraversalBudget::default()
+            },
+        )
+    };
+    assert_eq!(
+        scan(MAX_TRAVERSAL_PATH_BYTES - 4, MAX_METADATA_ENTRIES - 1).unwrap(),
+        Vec::<u8>::new()
+    );
+    denied(scan(MAX_TRAVERSAL_PATH_BYTES - 3, 0));
+    denied(scan(0, MAX_METADATA_ENTRIES));
+    // The same accounting applies to excluded agent-owned reflog entries.
+    fs::create_dir(f.root.join("repo/.git/logs")).unwrap();
+    symlink(
+        f.root.join("outside/secret"),
+        f.root.join("repo/.git/logs/agentmage"),
+    )
+    .unwrap();
+    denied(files.tree_with_budget(
+        &files.git,
+        Path::new("logs"),
+        Tree::Reflogs,
+        true,
+        TraversalBudget {
+            path_bytes: MAX_TRAVERSAL_PATH_BYTES,
+            ..TraversalBudget::default()
+        },
+    ));
+    assert_eq!(files.reflogs("logs", true).unwrap(), Vec::<u8>::new());
+    f.unchanged_outside();
+}
+
+#[test]
+fn preservation_fs_reflogs_obey_aggregate_content_limit_with_unchanged_hashes() {
+    for agent in [false, true] {
+        let f = Fixture::new();
+        let relative = if agent {
+            "logs/refs/heads/agentmage"
+        } else {
+            "logs"
+        };
+        let logs = f.root.join("repo/.git").join(relative);
+        fs::create_dir_all(&logs).unwrap();
+        let half = MAX_HASHED_FILE_BYTES / 2;
+        for name in ["first", "second"] {
+            fs::File::create(logs.join(name))
+                .unwrap()
+                .set_len(half)
+                .unwrap();
+        }
+        let digest = hash(&vec![0; half as usize]);
+        let expected = [
+            b"first".as_slice(),
+            digest.as_bytes(),
+            b"second".as_slice(),
+            digest.as_bytes(),
+        ]
+        .concat();
+        let files = f.files();
+        assert_eq!(files.reflogs(relative, !agent).unwrap(), expected);
+        fs::OpenOptions::new()
+            .write(true)
+            .open(logs.join("second"))
+            .unwrap()
+            .set_len(half + 1)
+            .unwrap();
+        denied(files.reflogs(relative, !agent));
+        f.unchanged_outside();
+    }
+}

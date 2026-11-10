@@ -14,6 +14,40 @@ const DIRECTORY: OFlags = OFlags::RDONLY
     .union(OFlags::NOFOLLOW)
     .union(OFlags::CLOEXEC);
 
+// Separate bounds for retained relative names and content read by ONE traversal.
+// Charging names before exclusions also bounds pending-directory path storage.
+const MAX_TRAVERSAL_PATH_BYTES: usize = 64 * 1024 * 1024;
+
+#[derive(Default)]
+struct TraversalBudget {
+    entries: usize,
+    path_bytes: usize,
+    content_bytes: u64,
+}
+
+impl TraversalBudget {
+    fn entry(&mut self, path: &Path) -> Result<(), LinuxRepositoryError> {
+        self.entries = self.entries.checked_add(1).ok_or_else(failed)?;
+        self.path_bytes = self
+            .path_bytes
+            .checked_add(path.as_os_str().as_bytes().len())
+            .ok_or_else(failed)?;
+        if self.entries > MAX_METADATA_ENTRIES || self.path_bytes > MAX_TRAVERSAL_PATH_BYTES {
+            return Err(failed());
+        }
+        Ok(())
+    }
+
+    fn content(&mut self, size: i64) -> Result<(), LinuxRepositoryError> {
+        self.content_bytes = self
+            .content_bytes
+            .checked_add(u64::try_from(size).map_err(|_| failed())?)
+            .filter(|n| *n <= MAX_HASHED_FILE_BYTES)
+            .ok_or_else(failed)?;
+        Ok(())
+    }
+}
+
 pub(super) struct Files<'a> {
     checkout: OwnedFd,
     git: OwnedFd,
@@ -135,6 +169,20 @@ impl<'a> Files<'a> {
         kind: Tree,
         exclude: bool,
     ) -> Result<Vec<u8>, LinuxRepositoryError> {
+        self.tree_with_budget(parent, path, kind, exclude, TraversalBudget::default())
+    }
+
+    // The private budget argument lets tests cross the real walk's boundaries
+    // without constructing multi-gigabyte nested path fixtures. Production
+    // always starts a fresh budget with the fixed limits above.
+    fn tree_with_budget(
+        &self,
+        parent: &OwnedFd,
+        path: &Path,
+        kind: Tree,
+        exclude: bool,
+        mut budget: TraversalBudget,
+    ) -> Result<Vec<u8>, LinuxRepositoryError> {
         self.check()?;
         let root = match relative_directory_optional(parent, path)? {
             Some(root) => root,
@@ -146,8 +194,6 @@ impl<'a> Files<'a> {
         // Reopen beneath the held root and verify the original object on visit.
         let mut pending = vec![(PathBuf::new(), root_stat)];
         let mut records = Vec::new();
-        let mut entries = 0_usize;
-        let mut total_bytes = 0_u64;
         while let Some((relative, expected)) = pending.pop() {
             self.check()?;
             let directory = relative_directory(&root, &relative)?;
@@ -161,11 +207,8 @@ impl<'a> Files<'a> {
                 if matches!(name.to_bytes(), b"." | b"..") {
                     continue;
                 }
-                entries += 1;
-                if entries > MAX_METADATA_ENTRIES {
-                    return Err(failed());
-                }
                 let child = relative.join(std::ffi::OsStr::from_bytes(name.to_bytes()));
+                budget.entry(&child)?;
                 if (matches!(kind, Tree::Worktree) && child == Path::new(".git"))
                     || (exclude && child.to_string_lossy().contains("agentmage"))
                 {
@@ -191,11 +234,10 @@ impl<'a> Files<'a> {
                     }
                 } else if !matches!(kind, Tree::Metadata) {
                     if file_type == FileType::RegularFile {
+                        // Reflogs need the same aggregate read bound as source.
+                        // Reject before opening/allocating this file's content.
+                        budget.content(stat.st_size)?;
                         if matches!(kind, Tree::Worktree) {
-                            total_bytes = total_bytes
-                                .checked_add(u64::try_from(stat.st_size).map_err(|_| failed())?)
-                                .filter(|n| *n <= MAX_HASHED_FILE_BYTES)
-                                .ok_or_else(failed)?;
                             record.push(b'f');
                         }
                         let bytes =

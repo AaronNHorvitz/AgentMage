@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The retained [preservation scan review](docs/reviews/62fe004514d2-local-coding-preservation-files.txt)
+has **Verdict: PASS** for exact commit
+`62fe004514d20a346ce877bbbf7b397ff5127a1c`, with no high or medium finding.
+Low L-1 privileged device-node substitution and carried lows remain same-row
+backlog. The guide now explicitly counts the skipped top-level `.git` entry,
+addressing low L-2 documentation precision subject to the current batch's review.
+Neither T-303 nor T-306 closes.
+
+The [preservation traversal budget batch](docs/evidence/t306-preservation-budget-2026-11-10.md)
+bounds combined reflog content reads and retained relative-path lengths, including
+excluded names. Existing preservation inputs, fields and record encodings stay
+bound. Four regression methods exercise exact resource boundaries and refusal.
+The complete affected gate remains **FAIL**: 1,450 passes, the exact inherited
+72 failures and 64 ignores across 26 unfiltered targets. All four new methods,
+formatting and Clippy pass; both source hashes stay fixed. Independent core
+review is required. T-303/T-306
+remain open without new rows or sub-rows. Native execution and model measurements
+remain open.
+
 The retained [passive-checker cancellation review](docs/reviews/0c44e944d1be-local-coding-checker-cancellation.txt)
 has **Verdict: PASS** for exact commit
 `0c44e944d1becfe568866f74cf2733b830825333`, with no high or medium finding.

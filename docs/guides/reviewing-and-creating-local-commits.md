@@ -594,3 +594,13 @@ a manifest, reopen the original root paths without following links and require
 the held identities.
 These are observations, not an atomic snapshot or an interruptible filesystem
 call. They add no execution, disclosure, approval or commit authority.
+
+Each local traversal also limits the sum of retained relative-path lengths to
+64 MiB, counting directories and excluded entries before opening them. Combined
+regular-file content reads are limited to 64 MiB per traversal for user and
+agent-owned reflogs as well as the worktree. Excess, negative sizes and arithmetic
+overflow refuse without accepting partial records. Metadata-only walks retain
+their original record format without reading file content. These are separate
+per-traversal resource limits; they add no whole-collection time guarantee.
+The skipped top-level `.git` entry consumes one of the 16,384 entries and its
+four relative-name bytes, leaving at most 16,383 other listed entries.
