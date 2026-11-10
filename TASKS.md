@@ -2,6 +2,24 @@
 
 ## Active queue: local agent mission
 
+The retained [executor-sequence review](docs/reviews/9e77209e0d21-local-coding-executor-sequence.txt)
+has **Verdict: PASS** for exact commit
+`9e77209e0d2199a15c6191516db9744ce3844afb`, with no high or medium finding.
+Its low L-1 native forwarding coverage remains same-row backlog with the earlier
+lows. Neither T-303 nor T-306 closes.
+
+The [original review read-scope batch](docs/evidence/t306-review-scope-2026-11-10.md)
+binds write projection and candidate planning to both selected read roots before
+filesystem inspection. Its public borrowed view retains original-owner and
+per-use root/source/Git checks; unscoped operations stay internal. Root digests
+correlate selection, not consent authentication or execution authority.
+The complete affected gate remains **FAIL**: 1,413 passes, the exact inherited
+72 failures and 64 ignores over 26 unfiltered targets. All three new methods,
+76 controls, formatting and Clippy pass; four source hashes stay fixed.
+Independent core review is required. T-303/T-306 remain open without new rows;
+authenticated reviewer/artifact provenance, approved candidate execution, native
+admission, durable recovery, model measurements and approved push remain open.
+
 The retained [storage review](docs/reviews/bf27deb3a2db-local-coding-confined-storage.txt)
 has **Verdict: PASS** for exact commit
 `bf27deb3a2dbfb97e6a374132041990caf022aec`, with no high or medium finding.

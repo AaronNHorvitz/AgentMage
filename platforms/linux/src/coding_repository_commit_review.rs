@@ -23,7 +23,69 @@ struct GitObservation {
     base_preimages: BTreeMap<String, Option<BaseFilePreimage>>,
 }
 
+/// Borrowed read scope for the original owner's complete commit review.
+///
+/// Obtain only through `LinuxCodingRepository::consented_commit_review` after
+/// the trusted caller obtains consent for both displayed roots and offline Git
+/// inspection. This process-only view binds that selection; it is not a grant,
+/// an independent review verdict, or authority to build or commit anything.
+pub struct LinuxCodingCommitReview<'a> {
+    owner: &'a LinuxCodingRepository,
+}
+
+impl LinuxCodingCommitReview<'_> {
+    /// Reads exact approved source history under the selected held roots.
+    /// Purpose labels carry no approval or independent-review authority.
+    pub fn capture_applied_write_review(
+        &self,
+        purposes: Vec<ChangePurposeAssignment>,
+    ) -> Result<ReviewableChangeSet> {
+        self.owner.capture_applied_write_review(purposes)
+    }
+
+    /// Rechecks original writes, validation, source and offline Git observations
+    /// before returning an inert candidate plan. Caller findings and artifact
+    /// metadata remain unauthenticated; the plan grants no execution authority.
+    pub fn plan_candidate_tree(
+        &self,
+        packet: &LocalReviewPacket,
+        group_id: &str,
+        candidate_build_id: &str,
+    ) -> Result<CandidateTreePlan> {
+        self.owner
+            .plan_reviewed_candidate_tree(packet, group_id, candidate_build_id)
+    }
+}
+
 impl LinuxCodingRepository {
+    /// Binds trusted-caller consent to the exact original and worktree roots
+    /// displayed by `inspect_apply`, before source reads or Git inspection.
+    /// Consent must cover complete source/metadata reads and offline Git reads;
+    /// path digests correlate that selection and do not themselves prove consent.
+    ///
+    /// Mismatches refuse before held-root inspection. Matching roots still need
+    /// revalidation, including on every use of the returned view. The borrow
+    /// prevents replacing the owner or performing effects through it while the
+    /// view is live. External changes remain possible and are checked by the
+    /// existing source and Git observations, not an atomic filesystem lease.
+    pub fn consented_commit_review(
+        &self,
+        expected_original_root_sha256: &str,
+        expected_worktree_root_sha256: &str,
+    ) -> Result<LinuxCodingCommitReview<'_>> {
+        let created = self
+            .created
+            .as_ref()
+            .ok_or(err("code.command.worktree-required"))?;
+        if expected_original_root_sha256 != created.original.root_path_sha256()
+            || expected_worktree_root_sha256 != created.held.root_path_sha256()
+        {
+            return Err(err("code.commit.read-scope"));
+        }
+        self.verify_apply_roots()?;
+        Ok(LinuxCodingCommitReview { owner: self })
+    }
+
     /// Projects the original native write's approval and checked application
     /// receipt into an authority-free review change set. Call only after source
     /// read consent. Purposes are caller review labels, never approval evidence.
@@ -33,7 +95,7 @@ impl LinuxCodingRepository {
     /// retain each approval separately and use path-ordered `history-N` purpose
     /// identities. Incomplete chains refuse. No receipt/path/JSON
     /// can restore this process-only proof.
-    pub fn capture_applied_write_review(
+    pub(super) fn capture_applied_write_review(
         &self,
         purposes: Vec<ChangePurposeAssignment>,
     ) -> Result<ReviewableChangeSet> {
@@ -111,7 +173,7 @@ impl LinuxCodingRepository {
     /// The returned plan grants no candidate build, commit or publication. Any
     /// future executor still needs complete provenance and separate authority.
     /// Source and Git checks are bounded observations, not an atomic lease.
-    pub fn plan_reviewed_candidate_tree(
+    fn plan_reviewed_candidate_tree(
         &self,
         packet: &LocalReviewPacket,
         group_id: &str,

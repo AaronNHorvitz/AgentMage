@@ -309,3 +309,21 @@ the original kernel permit, preflight checks, closed I/O owner and one deadline.
 Only module-private tests can supply synthetic outcomes. These tests do not
 establish native admission, authenticated reviewer or artifact provenance,
 product approval composition, durable recovery, model scores or approved push.
+
+## Bind the review read selection
+
+An internal caller obtains consent for complete original-repository and owned
+worktree inspection, including metadata and offline Git reads, using the two
+root identities displayed by the existing apply inspection. It then requests
+`consented_commit_review` with those exact identities. The constructor refuses
+mismatches before filesystem inspection; a matching selection still requires
+held-root revalidation. The returned borrowed view exposes original write
+projection and inert candidate planning. Neither operation can be called
+unscoped from outside the repository owner.
+
+Each use retains the existing root and source checks. Replacement directories
+are refused and retained. The borrow prevents effects or worktree replacement
+through the same owner while the view is live; it cannot prevent external
+filesystem changes. Root digests bind selection, not consent authentication,
+independent review, artifact provenance or permission to execute a candidate.
+No product route or new execution authority follows from this view.

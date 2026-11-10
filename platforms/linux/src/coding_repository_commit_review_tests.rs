@@ -192,7 +192,14 @@ fn candidate_review_correlates_live_edit_sealed_validation_and_both_git_observat
 fn candidate_review_native_entry_retains_exact_artifact_refusal_without_git_effects() {
     let (f, owner, changes) = command::tests::candidate_review_fixture();
     let packet = packet(&owner, &changes);
-    let result = owner.plan_reviewed_candidate_tree(
+    let status = owner.inspect_apply().unwrap();
+    let review = owner
+        .consented_commit_review(
+            status["repository_root_sha256"].as_str().unwrap(),
+            status["worktree_root_sha256"].as_str().unwrap(),
+        )
+        .unwrap();
+    let result = review.plan_candidate_tree(
         &packet,
         &packet.commit_plan.groups[0].group_id,
         "native-review-build",
@@ -218,6 +225,171 @@ fn candidate_review_native_entry_retains_exact_artifact_refusal_without_git_effe
     assert_eq!(
         fs::read(f.root.join("owned/worktree/sentinel")).unwrap(),
         b"reviewed change"
+    );
+}
+
+#[test]
+fn candidate_review_scope_matches_both_selections_before_inspecting_unavailable_roots() {
+    for root in ["repo", "owned/worktree"] {
+        let (f, owner, changes) = command::tests::candidate_review_fixture();
+        let status = owner.inspect_apply().unwrap();
+        let original = status["repository_root_sha256"].as_str().unwrap();
+        let tree = status["worktree_root_sha256"].as_str().unwrap();
+        let receipts = owner.inspect().unwrap()["receipts"].clone();
+        assert!(owner.check_completion_validation().is_ok());
+        let validation_history = owner.inspect_validation().unwrap()["history"].clone();
+        let expected = packet(&owner, &changes).change_set;
+        fs::rename(f.root.join(root), f.root.join("displaced-root")).unwrap();
+        for (selected_original, selected_tree) in [
+            ("", tree),
+            (original, ""),
+            ("foreign", tree),
+            (original, "foreign"),
+            (tree, original),
+        ] {
+            assert_eq!(
+                owner
+                    .consented_commit_review(selected_original, selected_tree)
+                    .err()
+                    .unwrap()
+                    .code(),
+                "code.commit.read-scope",
+                "{root}: {selected_original} / {selected_tree}"
+            );
+            assert_eq!(owner.inspect().unwrap()["receipts"], receipts);
+            assert_eq!(owner.inspect_apply().unwrap(), status);
+        }
+        // Equal path digests do not adopt an unavailable root either.
+        assert!(owner.consented_commit_review(original, tree).is_err());
+        fs::rename(f.root.join("displaced-root"), f.root.join(root)).unwrap();
+        let review = owner.consented_commit_review(original, tree).unwrap();
+        assert_eq!(
+            review.capture_applied_write_review(purposes()).unwrap(),
+            expected
+        );
+        // The validation seal observes the worktree, not the original
+        // checkout. Moving the worktree changes that observation; restoring
+        // its directory permits historical projection but cannot revive the
+        // old completion-validation binding. Original-only moves leave that
+        // separate worktree observation intact.
+        if root == "owned/worktree" {
+            assert_eq!(
+                owner.check_completion_validation().unwrap_err().code(),
+                "code.completion.source-binding"
+            );
+        } else {
+            assert!(owner.check_completion_validation().is_ok());
+        }
+        assert_eq!(
+            owner.inspect_validation().unwrap()["history"],
+            validation_history
+        );
+        assert_eq!(owner.inspect().unwrap()["receipts"], receipts);
+        assert_eq!(owner.inspect_apply().unwrap(), status);
+    }
+}
+
+#[test]
+fn candidate_review_scope_rechecks_replaced_roots_on_each_borrowed_use() {
+    for root in ["repo", "owned", "owned/worktree"] {
+        let (f, owner, changes) = command::tests::candidate_review_fixture();
+        let packet = packet(&owner, &changes);
+        let status = owner.inspect_apply().unwrap();
+        let receipts = owner.inspect().unwrap()["receipts"].clone();
+        let review = owner
+            .consented_commit_review(
+                status["repository_root_sha256"].as_str().unwrap(),
+                status["worktree_root_sha256"].as_str().unwrap(),
+            )
+            .unwrap();
+        assert_eq!(
+            review.capture_applied_write_review(purposes()).unwrap(),
+            packet.change_set
+        );
+        fs::rename(f.root.join(root), f.root.join("displaced-root")).unwrap();
+        fs::create_dir(f.root.join(root)).unwrap();
+        fs::set_permissions(f.root.join(root), fs::Permissions::from_mode(0o700)).unwrap();
+        fs::write(f.root.join(root).join("retain"), b"unrelated replacement").unwrap();
+        let expected_error = if root == "repo" {
+            "code.apply.scope"
+        } else {
+            "code.command.scope"
+        };
+        assert_eq!(
+            review
+                .capture_applied_write_review(purposes())
+                .unwrap_err()
+                .code(),
+            expected_error
+        );
+        assert_eq!(
+            review
+                .plan_candidate_tree(&packet, &packet.commit_plan.groups[0].group_id, "scoped")
+                .unwrap_err()
+                .code(),
+            expected_error
+        );
+        // Replacement data and the displaced original remain; neither a
+        // matching path nor an old view authorizes adoption or cleanup.
+        assert_eq!(
+            fs::read(f.root.join(root).join("retain")).unwrap(),
+            b"unrelated replacement"
+        );
+        assert!(f.root.join("displaced-root").is_dir());
+        assert_eq!(owner.inspect().unwrap()["receipts"], receipts);
+        assert_eq!(owner.inspect_apply().unwrap(), status);
+    }
+}
+
+#[test]
+fn candidate_review_scope_cannot_adopt_another_owner_or_restore_missing_creation() {
+    let (f, mut owner, _) = command::tests::candidate_review_fixture();
+    let (_other, mut other_owner, _) = command::tests::candidate_review_fixture();
+    let status = owner.inspect_apply().unwrap();
+    let other_status = other_owner.inspect_apply().unwrap();
+    assert!(
+        other_owner
+            .consented_commit_review(
+                status["repository_root_sha256"].as_str().unwrap(),
+                status["worktree_root_sha256"].as_str().unwrap(),
+            )
+            .is_err()
+    );
+    // Synthetic test-only substitution stands for a later separately approved
+    // worktree creation. The public API cannot import a CreatedWorktree.
+    owner.created = other_owner.created.take();
+    assert_eq!(
+        owner
+            .consented_commit_review(
+                status["repository_root_sha256"].as_str().unwrap(),
+                status["worktree_root_sha256"].as_str().unwrap(),
+            )
+            .err()
+            .unwrap()
+            .code(),
+        "code.commit.read-scope"
+    );
+    let fresh = owner
+        .consented_commit_review(
+            other_status["repository_root_sha256"].as_str().unwrap(),
+            other_status["worktree_root_sha256"].as_str().unwrap(),
+        )
+        .unwrap();
+    assert_eq!(
+        fresh
+            .capture_applied_write_review(purposes())
+            .unwrap_err()
+            .code(),
+        "code.commit.write-provenance"
+    );
+    owner.created = None;
+    assert_eq!(
+        owner.consented_commit_review("", "").err().unwrap().code(),
+        "code.command.worktree-required"
+    );
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"preserve human work"
     );
 }
 

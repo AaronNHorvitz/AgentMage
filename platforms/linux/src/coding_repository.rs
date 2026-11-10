@@ -51,6 +51,7 @@ mod git_identity;
 pub use git_identity::LinuxCodingGitCreation;
 #[path = "coding_repository_commit_review.rs"]
 mod commit_review;
+pub use commit_review::LinuxCodingCommitReview;
 #[path = "coding_repository_edit.rs"]
 mod edit;
 pub use edit::{

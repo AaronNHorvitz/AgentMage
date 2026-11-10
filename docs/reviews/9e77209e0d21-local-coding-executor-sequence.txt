@@ -1,0 +1,125 @@
+Commit: 9e77209e0d2199a15c6191516db9744ce3844afb
+Scope: local-coding-executor-sequence
+
+# Independent review — T-303 / T-306 executor sequence coverage (storage review low L-4)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only checkout
+`/lane/review-checkout`. Same-model review; a cross-model review is still owed before any public release.
+
+## Scope and methods
+
+- Confirmed `git rev-parse HEAD` = `9e77209e0d2199a15c6191516db9744ce3844afb`; parent `5d94bca8`. Worktree clean
+  before and after.
+- Read IP-POLICY.md, Decision 0196, the new `docs/evidence/t306-executor-sequence-2026-11-10.md`, the added guide
+  section, the TASKS.md preamble, and the complete diff against `5d94bca8901722d69a6f61c0fc4a6153ced38815`
+  (8 files: `local_commit.rs`, new `local_commit_execution.rs`, new `local_commit_execution_tests.rs`, docs, two
+  retained reviews).
+- Read the bundle README, `run.py`, `check.py`, `parse_gate.py`, `light.py` and `stage_check.py` before running
+  them. They write only to the output directory and a fresh `/tmp` namespace, never into the repository. `check.py`
+  compares per-target data against the frozen baseline log and does not report a gate PASS.
+- Compared the extracted generic body (`run_with`) line by line with the deleted inline body of `run_plan`.
+  Checked each `NativeSession` method against the original call: same owner, arguments, cancellation token and
+  `io.deadline()`.
+- Checked visibility. `mod execution;` is private. `Session` and `run_with` are module-private. `run` accepts only
+  `&mut NativeSession`. `NativeSession::new` is `pub(super)` and its only caller is `run_plan` (line 472), which
+  runs after preflight collection, manifest equality, signer `revalidate()`, the exact `pinned == plan.signer`
+  check and `CommitIoSession::new`. `run_plan` is reachable only through `execute_plan`, which takes the kernel
+  `LocalCommitLaunchPermit`, plus a pre-existing `#[cfg(test)]` caller.
+- Checked the test fixtures. `fixture_verified` and `synthetic_plan` already existed and sit behind
+  `#[cfg(test)]`. No `#[ignore]` or `allow(dead_code)` was added.
+
+## Commands and results (all from the pinned checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-executor-sequence/review-inputs.sha256`: exit 0. The manifest's
+   own SHA-256 is `f2939681695ebddcca9a4be8c89fd906f2a1bf20f91d1679607e0dbc0f552e32`, as stated.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-executor-sequence/run.py /lane/state/tmp/review-executor-sequence-full-9e77209e0d21`:
+   exit 1 as expected. Output: `source_unchanged: true`, 915.28 s including reservations, raw log SHA-256
+   `3727e3585201af8bfb523894dc8d589dd4edaa920ff85aaaac9667c7f5d4ec21`. Per-command results:
+   - Five light commands: exit 0.
+   - fmt: exit 0, 636.28 s. Almost all of this was waiting for a shared reservation (the log shows the wait line).
+   - Clippy `-D warnings`: exit 0, 36.99 s.
+   - Rust tests: exit 101, 240.40 s. No timeout. The log ends with `FAST GATE: FAIL`.
+3. `python3 -B .../check.py <out>`: exit 0. Totals `[1410, 72, 64, 0, 0]` over 26 targets. Every per-target
+   failure and ignore identity matches the baseline, with exactly +4 passes in the Linux library target. All 56
+   named methods (4 new plus 52 controls) report `ok`. The script prints `DATA COMPARISON ONLY: FULL GATE REMAINS
+   FAIL`.
+4. `cmp .../validation-1/source-freeze.json <out>/source-freeze.json`: exit 0. The same three source hashes.
+5. `python3 -B .../light.py`: exit 0. git diff check, untracked lint, review lint over both retained reports,
+   and markdownlint on 3 files (0 issues).
+6. `git diff --check 5d94bca8901722d69a6f61c0fc4a6153ced38815 --`: exit 0.
+7. `cmp docs/reviews/bf27deb3a2db-local-coding-confined-storage.txt /lane/reviews/bf27deb3a2db-local-coding-confined-storage.md`:
+   exit 0.
+8. `cmp docs/reviews/5d94bca89017-local-coding-signing-escapes.txt /lane/reviews/5d94bca89017-local-coding-signing-escapes.md`:
+   exit 0.
+9. `git status --short`: empty.
+
+Additional checks:
+
+- I ran the same `check.py` on the builder's `validation-1` directory: exit 0. Its RESULT lines (fmt 1.50,
+  Clippy 9.78, tests 218.19, total 231.06 s) and raw SHA `af10c9d9…ca` match the evidence. My longer wall time
+  comes from shared-slot waiting, not from a test difference.
+- The two inherited `local_commit::tests::native_*` failures fail exactly as they do in the baseline log. One
+  stops at `inspect fixture signer: ArtifactDenied`, the other at `git artifact: InvalidGitArtifact`. The panic
+  line numbers moved by exactly −51, which is the net size of the refactor. Both stop at artifact admission
+  before `run_plan`, so the refactor did not change their behaviour.
+- TASKS.md row lines are byte-identical to the parent (130 rows). T-303 and T-306 remain `[ ]`.
+- No eval, hidden, held-out, scorer, prompt, threshold, Cargo or lockfile, or SBOM path changed.
+- The added lines contain no private host path, username, hostname, credential or sibling-project name. The
+  evidence cites only the lane bundle path, as earlier batches do.
+
+## Assessment
+
+- **Refactor equivalence:** The order of operations, failure codes and outcome classes are the same as before. A
+  branch, storage, readback, compare-and-swap or postflight failure is reported as uncertain. A signer error goes
+  through `failed_signer_result`, and `CleanupUncertain` maps to `signer_cleanup_uncertain`. The success
+  projection is field-for-field identical. Swapping `Err(_)` for `.map_err(|_| ())` and `Err(())` loses no
+  information, because the original code discarded the error too. There is no fallback and no direct signed
+  creation. I found no change to trust rules, permits or result mapping.
+- **Confinement boundary:** It is not weakened. No caller-supplied backend, bytes or session can reach
+  `run_with` outside the private module. The kernel permit, preflight equality, signer revalidation, exact pin and
+  closed I/O owner all still come before the native session is constructed.
+- **Test strength:** The four tests cover what the evidence claims.
+  - Both widths (40 and 64) are covered, and the full call order is checked with `assert_eq!` on the
+    `calls` vector.
+  - The test asserts that the exact `VerifiedCommit` bytes and object reach `write`, that the object reaches
+    `read`, and that the readback bytes reach `verify`.
+  - The postflight manifest is deliberately distinct from preflight, so forwarding is actually tested.
+  - A failure at each of the 7 stages stops with no further calls.
+  - Corrupt readback (empty, truncated, changed tree, changed message) stops before `verify` and `update`.
+  - All 6 `LinuxLocalCommitErrorKind` variants are injected at sign and at re-verification. Neither reaches
+    `update`, and an object is stored only in the verify case.
+  - A postflight failure after the synthetic CAS stays Failed, with cleanup unverified and last-observed
+    manifests.
+  - Reading the assertions, the obvious mutations of `run_with` would each be caught: reordering
+    verify/update, dropping `verify_raw_commit`, forwarding `before` instead of `after`, or retrying.
+- **Honest labelling:** The code comments, evidence, guide and TASKS say that synthetic outcomes prove control
+  flow only, not native execution, cryptography, approval or reviewer provenance. I found that accurate. Nothing
+  claims parent closure or readiness.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low L-1 (backlog, same row):** `platforms/linux/src/local_commit_execution.rs:43-87`. The `NativeSession`
+  forwarding methods have no runnable test in this lane. The only native control
+  (`native_signed_commit_verifies_exact_content_and_only_updates_task_branch`) fails at fixture-signer artifact
+  admission before `run_plan`. I verified the wiring (owner, token, deadline, git handle) only by reading it. The
+  evidence already lists native admission as open.
+  - Fix: when native artifact trust becomes available in a lane, make sure that control passes through
+    `execution::run`. Alternatively, add a test-only assertion that the native path calls `io.deadline()` and the
+    cancellation token for both sign and verify.
+
+Retained backlog stays same-row and non-blocking:
+
+- Escape review low L-1 (cancellation/deadline fixture strength).
+- The other earlier lows.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing, same-row batch):** This batch resolves storage review low L-4. The
+  post-preflight sequence now has runnable tests and the claims are accurate. The exact-commit result is PASS for
+  this scope, with no open high or medium finding. Neither parent may be ticked: native admission,
+  authenticated reviewer and artifact provenance, complete product approval composition, durable recovery, model
+  measurements and approved push all remain OPEN. No new row or sub-row was added, which is correct.
+
+Verdict: PASS
