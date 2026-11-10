@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The retained [launch observation-sharing review](docs/reviews/a3dbc1851196-local-coding-launch-observations.txt)
+has **Verdict: PASS** for exact commit
+`a3dbc1851196caac7533b1937f7bf6c0ef058869`, with no high or medium finding.
+Its low release-wording finding is corrected in this batch: only event pages
+become unavailable on release; the sealed request remains readable for the
+service lifetime. Native launch-to-service forwarding coverage remains same-row
+backlog. Neither T-303 nor T-306 closes.
+
+The [bounded terminal observation batch](docs/evidence/t303-terminal-watch-2026-11-10.md)
+adds `endpoint-watch` over the existing explicitly shared event API. It uses only
+the ordinary credential, checks a complete growing kernel event chain and leaves
+all decisions with separate controls. Time, event, request and rendered-output
+budgets apply; timeout and interruption stop only the watcher. The scoped
+fast gate passes all 266 tests across 11 unfiltered local-API targets, with
+formatting and Clippy green. Independent core review is required. T-303/T-306 remain open without new rows or sub-rows. Native execution,
+independent candidate-checker integration and model measurements remain open.
+
 The retained [complete review deadline verdict](docs/reviews/6e75e7fc1f6a-local-coding-review-deadline.txt)
 has **Verdict: PASS** for exact commit
 `6e75e7fc1f6ab3ea2eb910357804d1ffa91b63f8`, with no high or medium finding.

@@ -161,3 +161,43 @@ text to any model. The explicit MCP launch flag shares the pinned task and
 tool observations with the calling program, whose subsequent handling of them
 is outside the bridge's control. The existing workspace launch and tools keep
 their separate selection and permissions.
+
+## Follow a run in a second terminal
+
+The terminal client can follow the same shared observations without the control
+credential or an MCP caller. With observation sharing already enabled in the
+service, use its exact displayed pin:
+
+```sh
+agentmage-code <loopback-ip:port> <client-auth-directory> endpoint-watch 300 <run-id> <request-digest> --share-selected-endpoint
+```
+
+Choose a time budget from one to 3,600 seconds. This command reads only
+`client.token`; it works with piped stdin and supplies no approval. Its explicit
+sharing flag authorizes displaying the pinned run's untrusted observations.
+Choose where stdout goes: events can contain task, source and test data.
+
+The watcher starts at index zero and flushes each event as a separate escaped
+JSON object, with `verification: self-consistent-service-observation` and
+`index_is_resume_cursor: false`. It checks the complete observed prefix with the
+kernel event state machine, including its request binding, hashes, causation and
+legal transitions. It refuses shrinking totals and inconsistent pages. No
+service observation proves independent task acceptance. A terminal event ends
+the watcher with exit zero, including a failed or cancelled run; inspect the
+recorded state. The output is a sequence of pretty-printed JSON objects, not the
+single replayable record produced by `endpoint-record`.
+
+An empty active prefix or a fully framed `api.busy` HTTP 409 waits 100
+milliseconds before polling the same index. Other HTTP errors, transport errors
+and malformed data stop with a nonzero exit; no effect is retried. The watcher
+also stops on its time limit, SIGINT, SIGTERM or SIGHUP. None of these stops
+cancels, advances or releases the run. Original controls remain available in the
+other terminal. Events are observable between coordinator advances; the service
+may report busy during a model or tool call.
+
+The additional ceilings are 4,096 events, 40,096 page requests and four MiB of
+actual escaped output, also respecting the run's event limit. The original
+monotonic deadline covers HTTP polling. Blocking stdout writes and backpressure
+are not forcibly preempted; provide a draining output destination. The watcher
+writes no record file. Save a complete terminal record through the existing
+explicit retention command before releasing a run if offline replay is needed.

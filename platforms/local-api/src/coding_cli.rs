@@ -33,6 +33,8 @@ mod repository;
 mod runtime;
 #[path = "coding_cli_transfer.rs"]
 mod transfer;
+#[path = "coding_cli_watch.rs"]
+mod watch;
 #[path = "coding_cli_workflow.rs"]
 mod workflow;
 
@@ -56,6 +58,11 @@ struct Client {
     auth: std::path::PathBuf,
     deadline: Option<Instant>,
     controls: Option<driver::Signals>,
+}
+
+enum HttpReply {
+    Values(Vec<Value>),
+    ObservationBusy,
 }
 
 impl Client {
@@ -104,8 +111,28 @@ impl Client {
         path: &str,
         control: bool,
         value: Option<Value>,
-        mut observe: impl FnMut(&Value) -> Result<()>,
+        observe: impl FnMut(&Value) -> Result<()>,
     ) -> Result<Vec<Value>> {
+        match self.call_policy(method, path, control, value, observe, false)? {
+            HttpReply::Values(values) => Ok(values),
+            HttpReply::ObservationBusy => Err(()),
+        }
+    }
+
+    fn call_policy(
+        &self,
+        method: &str,
+        path: &str,
+        control: bool,
+        value: Option<Value>,
+        mut observe: impl FnMut(&Value) -> Result<()>,
+        allow_observation_busy: bool,
+    ) -> Result<HttpReply> {
+        if allow_observation_busy
+            && (method, path, control) != ("POST", "/v1/code/endpoint/events", false)
+        {
+            return Err(());
+        }
         // All callers use fixed literal methods and routes. Never follow a URL,
         // redirect, proxy setting, repository instruction or model-selected route.
         self.check_running()?;
@@ -145,7 +172,33 @@ impl Client {
         socket.write_all(header.as_bytes()).map_err(|_| ())?;
         self.check_running()?;
         socket.write_all(&body).map_err(|_| ())?;
-        receive_before(socket, &mut observe, deadline, self.controls.as_ref())
+        receive_before_policy(
+            socket,
+            &mut observe,
+            deadline,
+            self.controls.as_ref(),
+            allow_observation_busy,
+        )
+    }
+
+    // Only this fixed ordinary-credential observation route may yield busy
+    // without failing. Effect routes retain their original no-retry behavior.
+    fn observation_page(&self, body: Value) -> Result<Option<Value>> {
+        let HttpReply::Values(mut values) = self.call_policy(
+            "POST",
+            "/v1/code/endpoint/events",
+            false,
+            Some(body),
+            |_| Ok(()),
+            true,
+        )?
+        else {
+            return Ok(None);
+        };
+        if values.len() != 1 {
+            return Err(());
+        }
+        Ok(Some(values.remove(0)))
     }
 
     fn json(&self, method: &str, path: &str, control: bool, body: Option<Value>) -> Result<Value> {
@@ -179,12 +232,26 @@ fn receive(
     receive_before(socket, observe, Instant::now() + DEADLINE, None)
 }
 
+#[cfg(test)]
 fn receive_before(
-    mut socket: TcpStream,
+    socket: TcpStream,
     observe: &mut impl FnMut(&Value) -> Result<()>,
     deadline: Instant,
     controls: Option<&driver::Signals>,
 ) -> Result<Vec<Value>> {
+    match receive_before_policy(socket, observe, deadline, controls, false)? {
+        HttpReply::Values(values) => Ok(values),
+        HttpReply::ObservationBusy => Err(()),
+    }
+}
+
+fn receive_before_policy(
+    mut socket: TcpStream,
+    observe: &mut impl FnMut(&Value) -> Result<()>,
+    deadline: Instant,
+    controls: Option<&driver::Signals>,
+    allow_observation_busy: bool,
+) -> Result<HttpReply> {
     let mut header = Zeroizing::new(Vec::new());
     while !header.ends_with(b"\r\n\r\n") {
         if header.len() == 8192 {
@@ -286,12 +353,15 @@ fn receive_before(
         values.push(agentmage_host::runtime_transport::decode_exact(&bytes).ok_or(())?);
     }
     if code != 200 {
+        if allow_observation_busy && code == 409 && values[0]["error"] == "api.busy" {
+            return Ok(HttpReply::ObservationBusy);
+        }
         // Never turn a refused or uncertain operation into success or retry it.
         // Validate framing first, and render only bounded escaped JSON.
         eprintln!("API refusal ({code}): {}", safe(&values[0])?);
         return Err(());
     }
-    Ok(values)
+    Ok(HttpReply::Values(values))
 }
 
 fn read_until(

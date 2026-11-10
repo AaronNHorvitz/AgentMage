@@ -22,7 +22,8 @@ to the complete sealed request and canonical events. These can contain task,
 source and test data. The existing MCP launch still requires its exact
 run/request pin and explicit sharing flag. It opens only the client credential.
 No model disclosure, effect approval, cancellation, release, settings or
-original-diff authority is delegated. Released records remain unavailable.
+original-diff authority is delegated. Released event pages remain unavailable; the sealed request stays readable
+for the service lifetime.
 
 ## Validation
 
@@ -61,7 +62,7 @@ endpoint response, original coordinator approval, one synthetic tool observation
 and terminal rejection. An ordinary client cannot supply that approval, and MCP
 cannot advance the run. Every exported page equals the control client's original
 page and the complete kernel event sequence verifies. Observation does not turn
-the rejecting verifier into task success; release makes the record unavailable.
+the rejecting verifier into task success; release makes event pages unavailable while the sealed request stays readable.
 The existing tests also cover default refusal, stale/foreign pins, absent sharing
 consent and forbidden controls.
 

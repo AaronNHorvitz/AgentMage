@@ -13,6 +13,23 @@ static NEXT: AtomicU64 = AtomicU64::new(0);
 
 struct Delegate(std::path::PathBuf);
 impl Delegate {
+    fn watch(&self, address: SocketAddr, r: &Value, seconds: &str, consent: &str) -> Command {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_agentmage-code"));
+        command
+            .arg(address.to_string())
+            .arg(&self.0)
+            .args([
+                "endpoint-watch",
+                seconds,
+                r["run_id"].as_str().unwrap(),
+                r["request_sha256"].as_str().unwrap(),
+                consent,
+            ])
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        command
+    }
     fn new() -> Self {
         let root = std::env::temp_dir().join(format!(
             "agentmage-endpoint-mcp-{}-{}",
@@ -377,4 +394,393 @@ fn endpoint_mcp_observes_approved_tool_events_without_acquiring_control() {
         "--share-selected-endpoint",
     ));
     assert_eq!(observed[1]["result"]["isError"], true);
+}
+
+// Test-side coordination only: an explicit api.busy response precedes dispatch.
+// Never retry a transport error, another refusal or an ambiguous effect reply.
+fn when_observer_idle(mut operation: impl FnMut() -> (u16, Value)) -> Value {
+    let deadline = Instant::now() + Duration::from_secs(3);
+    loop {
+        let (status, value) = operation();
+        if status == 409 && value["error"] == "api.busy" && Instant::now() < deadline {
+            thread::sleep(Duration::from_millis(5));
+            continue;
+        }
+        assert_eq!(status, 200, "{value}");
+        return value;
+    }
+}
+
+// Keep child cleanup on every assertion path; never leave a watcher or pipe
+// reader holding the test reservation after an early failure.
+struct Watcher {
+    child: Option<std::process::Child>,
+    reader: Option<JoinHandle<Vec<u8>>>,
+}
+impl Watcher {
+    fn start(mut command: Command) -> Self {
+        Self {
+            child: Some(command.spawn().unwrap()),
+            reader: None,
+        }
+    }
+    fn ready(&mut self) {
+        use std::io::{BufRead, BufReader};
+        let stderr = self.child.as_mut().unwrap().stderr.take().unwrap();
+        let (send, receive) = mpsc::channel();
+        self.reader = Some(thread::spawn(move || {
+            let mut reader = BufReader::new(stderr);
+            let mut line = String::new();
+            reader.read_line(&mut line).unwrap();
+            let _ = send.send(line.clone());
+            let mut bytes = line.into_bytes();
+            reader.read_to_end(&mut bytes).unwrap();
+            bytes
+        }));
+        let result = receive.recv_timeout(Duration::from_secs(5));
+        if result.is_err() {
+            self.child.as_mut().unwrap().kill().unwrap();
+        }
+        assert!(
+            result
+                .unwrap()
+                .starts_with("Watching shared service observations.")
+        );
+    }
+    fn finish(mut self) -> Output {
+        let mut output = self.child.take().unwrap().wait_with_output().unwrap();
+        if let Some(reader) = self.reader.take() {
+            output.stderr = reader.join().unwrap();
+        }
+        output
+    }
+}
+impl Drop for Watcher {
+    fn drop(&mut self) {
+        if let Some(mut child) = self.child.take() {
+            let _ = child.kill();
+            child.wait().unwrap();
+        }
+        if let Some(reader) = self.reader.take() {
+            reader.join().unwrap();
+        }
+    }
+}
+fn watch_values(output: &Output) -> Vec<Value> {
+    assert!(output.stdout.is_ascii());
+    assert!(!output.stdout.contains(&0x1b));
+    serde_json::Deserializer::from_slice(&output.stdout)
+        .into_iter::<Value>()
+        .map(Result::unwrap)
+        .collect()
+}
+
+#[test]
+fn endpoint_watch_streams_a_growing_original_chain_without_control_credentials_or_effects() {
+    use agentmage_kernel_engine::runtime_event::RuntimeEventSequence;
+    let (api, model, executions) = fixture(true);
+    let r = api.request();
+    let delegate = Delegate::new();
+    let mut watcher =
+        Watcher::start(delegate.watch(api.address, &r, "10", "--share-selected-endpoint"));
+    watcher.ready();
+    // It starts with an empty prefix and can only observe another caller's
+    // cancellation and original coordinator advancement. No disclosure occurs.
+    assert_eq!(api.bind("cancel", &r).0, 200);
+    when_observer_idle(|| api.advance(&r, Value::Null, false));
+    let output = watcher.finish();
+    assert!(output.status.success());
+    let values = watch_values(&output);
+    assert!(!values.is_empty());
+    let mut chain = RuntimeEventSequence::new();
+    for (index, value) in values.iter().enumerate() {
+        let expected = api.call("POST", "/v1/code/endpoint/events", CONTROL,
+            Some(json!({"run_id":r["run_id"],"request_sha256":r["request_sha256"],"after":index}))).1;
+        assert_eq!(value["event"], expected["events"][0]);
+        assert_eq!(value["verification"], "self-consistent-service-observation");
+        assert_eq!(value["index_is_resume_cursor"], false);
+        assert_eq!(value["terminal_observed"], index == values.len() - 1);
+        chain
+            .push(&serde_json::from_value(value["event"].clone()).unwrap())
+            .unwrap();
+    }
+    assert!(chain.is_terminal());
+    assert_eq!(
+        values.last().unwrap()["event"]["kind"]["state"],
+        "CANCELLED"
+    );
+    assert!(
+        fs::symlink_metadata(delegate.0.join("control.token"))
+            .unwrap()
+            .file_type()
+            .is_symlink()
+    );
+    // A second watcher can read the same terminal chain; neither released it.
+    let second = delegate
+        .watch(api.address, &r, "10", "--share-selected-endpoint")
+        .output()
+        .unwrap();
+    assert!(second.status.success());
+    assert_eq!(second.stdout, output.stdout);
+    no_effects(&model, &executions);
+}
+
+#[test]
+fn endpoint_watch_refuses_wrong_scope_missing_delegation_and_invalid_launches() {
+    let delegate = Delegate::new();
+    for delegated in [false, true] {
+        let (api, model, executions) = fixture(delegated);
+        let r = api.request();
+        let mut foreign = r.clone();
+        foreign["run_id"] = json!("foreign-run");
+        let mut stale = r.clone();
+        stale["request_sha256"] = json!("0".repeat(64));
+        let cases = if delegated {
+            vec![foreign, stale]
+        } else {
+            vec![r.clone()]
+        };
+        for pin in cases {
+            let output = delegate
+                .watch(api.address, &pin, "10", "--share-selected-endpoint")
+                .output()
+                .unwrap();
+            assert!(!output.status.success());
+            assert!(output.stdout.is_empty());
+        }
+        for (seconds, consent) in [
+            ("0", "--share-selected-endpoint"),
+            ("3601", "--share-selected-endpoint"),
+            ("invalid", "--share-selected-endpoint"),
+            ("10", "--no-consent"),
+        ] {
+            let output = delegate
+                .watch(api.address, &r, seconds, consent)
+                .output()
+                .unwrap();
+            assert!(!output.status.success());
+            assert!(output.stdout.is_empty());
+        }
+        assert_eq!(api.bind("events", &r).1["total"], 0);
+        assert_eq!(api.bind("cancel", &r).0, 200);
+        assert_eq!(api.advance(&r, Value::Null, false).0, 200);
+        assert_eq!(api.bind("release", &r).0, 200);
+        let output = delegate
+            .watch(api.address, &r, "10", "--share-selected-endpoint")
+            .output()
+            .unwrap();
+        assert!(!output.status.success());
+        assert!(output.stdout.is_empty());
+        no_effects(&model, &executions);
+    }
+}
+
+#[test]
+fn endpoint_watch_timeout_and_signals_stop_only_the_observer() {
+    let (api, model, executions) = fixture(true);
+    let r = api.request();
+    let delegate = Delegate::new();
+    for signal in [None, Some("INT"), Some("TERM"), Some("HUP")] {
+        let started = Instant::now();
+        let mut watcher = Watcher::start(delegate.watch(
+            api.address,
+            &r,
+            if signal.is_some() { "10" } else { "1" },
+            "--share-selected-endpoint",
+        ));
+        watcher.ready();
+        if let Some(signal) = signal {
+            let id = watcher.child.as_ref().unwrap().id().to_string();
+            assert!(
+                Command::new("kill")
+                    .args(["-s", signal, &id])
+                    .status()
+                    .unwrap()
+                    .success()
+            );
+        }
+        let output = watcher.finish();
+        assert_eq!(output.status.code(), Some(1), "{output:?}");
+        assert!(output.stdout.is_empty());
+        assert!(started.elapsed() < Duration::from_secs(8));
+        assert_eq!(when_observer_idle(|| api.bind("events", &r))["total"], 0);
+    }
+    // Cancellation itself still belongs to the original control path.
+    assert_eq!(api.bind("cancel", &r).0, 200);
+    assert_eq!(api.advance(&r, Value::Null, false).0, 200);
+    no_effects(&model, &executions);
+}
+
+// A malicious authenticated peer can seal individual events. The watcher must
+// still refuse broken links, altered start bindings, decreasing totals, excess
+// budgets and trailing events beyond a terminal observation.
+#[test]
+fn endpoint_watch_refuses_self_sealed_bad_chains_and_page_bounds() {
+    use agentmage_kernel_engine::runtime_event::seal_runtime_event;
+    let (api, model, executions) = fixture(true);
+    let r = api.request();
+    assert_eq!(api.bind("cancel", &r).0, 200);
+    assert_eq!(api.advance(&r, Value::Null, false).0, 200);
+    let total = api.bind("events", &r).1["total"].as_u64().unwrap();
+    let pages: Vec<Value> = (0..total)
+        .map(|after| {
+            api.call("POST", "/v1/code/endpoint/events", CONTROL,
+        Some(json!({"run_id":r["run_id"],"request_sha256":r["request_sha256"],"after":after}))).1
+        })
+        .collect();
+    assert!(pages.len() > 2);
+    let delegate = Delegate::new();
+    for mode in [
+        "link",
+        "start",
+        "shrink",
+        "limit",
+        "run-limit",
+        "terminal-tail",
+        "foreign",
+        "sequence",
+    ] {
+        let mut bad = pages.clone();
+        let mut expected_prefix = 0;
+        match mode {
+            "start" => {
+                let mut event: RuntimeEvent =
+                    serde_json::from_value(bad[0]["events"][0].clone()).unwrap();
+                if let RuntimeEventKind::RunStarted { request_sha256 } = &mut event.kind {
+                    *request_sha256 = "f".repeat(64);
+                } else {
+                    panic!("missing original start");
+                }
+                bad[0]["events"][0] = json!(seal_runtime_event(event).unwrap());
+            }
+            "link" | "foreign" | "sequence" => {
+                let mut event: RuntimeEvent =
+                    serde_json::from_value(bad[1]["events"][0].clone()).unwrap();
+                match mode {
+                    "link" => event.previous_event_sha256 = "f".repeat(64),
+                    "foreign" => event.run_id = RuntimeRunId::from_raw("foreign-run"),
+                    _ => event.sequence += 1,
+                }
+                bad[1]["events"][0] = json!(seal_runtime_event(event).unwrap());
+                expected_prefix = 1;
+            }
+            "shrink" => {
+                bad[1]["total"] = json!(total - 1);
+                expected_prefix = 1;
+            }
+            "limit" => bad[0]["total"] = json!(4097),
+            "run-limit" => {
+                let maximum = r["limits"]["max_events"].as_u64().unwrap();
+                assert!(maximum < 4096);
+                bad[0]["total"] = json!(maximum + 1);
+            }
+            "terminal-tail" => {
+                for page in &mut bad {
+                    page["total"] = json!(total + 1);
+                }
+                expected_prefix = pages.len() - 1;
+            }
+            _ => unreachable!(),
+        }
+        bad.truncate(expected_prefix + 1);
+        let replies = bad
+            .into_iter()
+            .enumerate()
+            .map(|(after, page)| (200, page, after))
+            .collect();
+        let output = watch_peer(&delegate, &r, replies);
+        assert!(!output.status.success(), "{mode}");
+        assert_eq!(watch_values(&output).len(), expected_prefix, "{mode}");
+    }
+    no_effects(&model, &executions);
+}
+
+fn watch_peer(delegate: &Delegate, r: &Value, replies: Vec<(u16, Value, usize)>) -> Output {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let address = listener.local_addr().unwrap();
+    let selection =
+        json!({"request":r,"retention":"process-only","configuration":"fixed-for-service"});
+    let worker = thread::spawn(move || {
+        for (index, (status, reply, after)) in std::iter::once((200, selection, 0))
+            .chain(replies)
+            .enumerate()
+        {
+            let mut socket = accept(&listener);
+            socket
+                .set_read_timeout(Some(Duration::from_secs(4)))
+                .unwrap();
+            let mut header = Vec::new();
+            while !header.ends_with(b"\r\n\r\n") {
+                let mut byte = [0];
+                socket.read_exact(&mut byte).unwrap();
+                header.push(byte[0]);
+                assert!(header.len() < 4096);
+            }
+            let header = String::from_utf8(header).unwrap();
+            assert!(header.contains(&format!("Authorization: Bearer {CLIENT}\r\n")));
+            let route = if index == 0 {
+                "GET /v1/code/endpoint/request "
+            } else {
+                "POST /v1/code/endpoint/events "
+            };
+            assert!(header.starts_with(route));
+            let length: usize = header
+                .lines()
+                .find_map(|l| l.strip_prefix("Content-Length: "))
+                .unwrap()
+                .parse()
+                .unwrap();
+            let mut body = vec![0; length];
+            socket.read_exact(&mut body).unwrap();
+            if index > 0 {
+                let body: Value = serde_json::from_slice(&body).unwrap();
+                assert_eq!(body["after"], after);
+            }
+            let body = reply.to_string();
+            socket.write_all(format!("HTTP/1.1 {status} Test\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).as_bytes()).unwrap();
+        }
+    });
+    let output = delegate
+        .watch(address, r, "10", "--share-selected-endpoint")
+        .output()
+        .unwrap();
+    worker.join().unwrap();
+    output
+}
+
+#[test]
+fn endpoint_watch_waits_only_for_explicit_busy_observations_with_the_same_index() {
+    let (api, model, executions) = fixture(true);
+    let r = api.request();
+    assert_eq!(api.bind("cancel", &r).0, 200);
+    assert_eq!(api.advance(&r, Value::Null, false).0, 200);
+    let total = api.bind("events", &r).1["total"].as_u64().unwrap();
+    let delegate = Delegate::new();
+    let mut replies = Vec::new();
+    for after in 0..total {
+        replies.push((
+            409,
+            json!({"error":"api.busy","message":"synthetic busy observation"}),
+            after as usize,
+        ));
+        let page = api.call("POST", "/v1/code/endpoint/events", CONTROL,
+            Some(json!({"run_id":r["run_id"],"request_sha256":r["request_sha256"],"after":after}))).1;
+        replies.push((200, page, after as usize));
+    }
+    let output = watch_peer(&delegate, &r, replies);
+    assert!(output.status.success(), "{output:?}");
+    assert_eq!(watch_values(&output).len(), total as usize);
+    for (status, reply) in [
+        (403, json!({"error":"api.authority"})),
+        (409, json!({"error":"code.endpoint.binding"})),
+        (503, json!({"error":"api.stopping"})),
+        (200, json!({"observation_busy":true})),
+        (200, json!({"error":"api.busy"})),
+    ] {
+        let output = watch_peer(&delegate, &r, vec![(status, reply, 0)]);
+        assert_eq!(output.status.code(), Some(1));
+        assert!(output.stdout.is_empty());
+    }
+    no_effects(&model, &executions);
 }

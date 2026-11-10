@@ -31,6 +31,7 @@ workspace or access original-diff controls. The bridge opens no control credenti
 This connects the existing observation adapter to executable startup; it adds
 no agent loop, new tool, disclosure grant, restored ownership or independent
 reviewer. A terminal record is still only an observation; it cannot establish
-task success. Released runs remain unavailable. Native admission in the lane,
+task success. Released event pages remain unavailable. The sealed request stays readable
+for the service lifetime. Native admission in the lane,
 measured complete coding, commit/push and durable recovery remain open.
 T-303/T-306 stay open, with no new row or sub-row.

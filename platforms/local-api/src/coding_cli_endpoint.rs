@@ -205,6 +205,14 @@ pub(super) fn event_page(
     let mut body = binding(request.run_id.as_str(), &request.request_sha256)?;
     body["after"] = json!(after);
     let page = client.json("POST", "/v1/code/endpoint/events", control, Some(body))?;
+    checked_event_page(request, after, page)
+}
+
+pub(super) fn checked_event_page(
+    request: &RuntimeEndpointRunRequest,
+    after: usize,
+    page: Value,
+) -> Result<Value> {
     let events: Vec<RuntimeEvent> =
         serde_json::from_value(page["events"].clone()).map_err(|_| ())?;
     let total = page["total"].as_u64().ok_or(())?;
@@ -236,6 +244,9 @@ pub(super) fn event_page(
 
 pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result<()> {
     match (command, args) {
+        ("endpoint-watch", [seconds, run, hash, consent]) => {
+            super::watch::run(client, seconds, run, hash, consent)
+        }
         ("endpoint-run", [seconds, run, hash]) => guided(client, seconds, run, hash),
         ("endpoint-original-apply", args) => {
             super::endpoint_transfer::run(client, args, None, false)
@@ -349,7 +360,7 @@ pub(super) fn execute(client: &Client, command: &str, args: &[String]) -> Result
         }
         _ => {
             eprintln!(
-                "Endpoint commands: endpoint | endpoint-run <seconds> <run-id> <request-digest> | endpoint-step <run-id> <request-digest> | endpoint-approve|endpoint-deny <run-id> <request-digest> <challenge-json> | endpoint-events <run-id> <request-digest> <index> | endpoint-record <run-id> <request-digest> | endpoint-record-save <run-id> <request-digest> <private-directory> | endpoint-cancel|endpoint-release <run-id> <request-digest> | endpoint-original-apply <seconds> <run-id> <request-digest> <repository> <worktree> <task> <paths...> | endpoint-original-apply-saved <private-directory> <same-transfer-arguments...>. endpoint-run-apply-saved <private-directory> <same-transfer-arguments...>. Offline: agentmage-code endpoint-replay < record.json"
+                "Endpoint commands: endpoint | endpoint-watch <seconds> <run-id> <request-digest> --share-selected-endpoint | endpoint-run <seconds> <run-id> <request-digest> | endpoint-step <run-id> <request-digest> | endpoint-approve|endpoint-deny <run-id> <request-digest> <challenge-json> | endpoint-events <run-id> <request-digest> <index> | endpoint-record <run-id> <request-digest> | endpoint-record-save <run-id> <request-digest> <private-directory> | endpoint-cancel|endpoint-release <run-id> <request-digest> | endpoint-original-apply <seconds> <run-id> <request-digest> <repository> <worktree> <task> <paths...> | endpoint-original-apply-saved <private-directory> <same-transfer-arguments...>. endpoint-run-apply-saved <private-directory> <same-transfer-arguments...>. Offline: agentmage-code endpoint-replay < record.json"
             );
             Err(())
         }

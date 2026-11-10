@@ -1,0 +1,141 @@
+Commit: a3dbc1851196caac7533b1937f7bf6c0ef058869
+Scope: local-coding-launch-observations
+
+# Independent review: explicit endpoint launch observation sharing (T-303 / T-306, core, non-closing)
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate read-only session. This is a same-model review.
+Pinned checkout: /lane/review-checkout. `git rev-parse HEAD` gives
+a3dbc1851196caac7533b1937f7bf6c0ef058869, and `git status --short` is clean before and after the review.
+Parent: 6e75e7fc1f6ab3ea2eb910357804d1ffa91b63f8.
+
+## Methods
+
+- Read IP-POLICY.md, Decision 0199, docs/evidence/t303-launch-observations-2026-11-10.md, the full
+  diff against the parent (14 files: all 8 Rust files, both guides, TASKS.md and the retained parent
+  report), and the bundle README.md, run.py, check.py and light.py **before** running anything. The
+  scripts are benign. run.py only calls the repository fast gate, which reserves cargo through
+  /tools/build-slot internally (scripts/local_agent_fast_gate.py:301-306). run.py was not outer-wrapped.
+- Followed the production forwarding beyond the config and HTTP seams. Every hop is listed below.
+  - main.rs:58-123. All 5 commands require their approval flag, a loopback address and tokens, then
+    dispatch to the 5 launcher functions.
+  - Read launcher, coding_endpoint_launch.rs:304-315: `check_start`, then one `load`, then
+    `from_launch`. The same `launch` value moves into the admission closure, and `access` goes to
+    `serve_admitted_coding_endpoint`.
+  - Strict launchers, coding_endpoint_edit_launch.rs:423-560: `check_start`, then one `load`. The
+    factory now uses the captured `launch` and no longer re-reads the file. `access` is passed to all 4
+    variants: strict edits, checked tests, and the review version of each.
+  - coding_endpoint_prepared.rs:121-350 and the inner function at about :446-460 pass `access` to
+    `serve_admitted_coding_endpoint_with_turns` and `..._with_repository_review`.
+  - Both of those reach `serve_admitted_endpoint_inner`, coding_endpoint_api.rs:410-480. It calls
+    `check_start` again before the factory or admission. The only effect of the policy is :476-480,
+    which lets a non-control client use `GET /request` and `POST /events` only. Everything else returns
+    403 without control.
+  - Original-diff routes go to `handle_repository`, which itself refuses non-control callers with 403
+    (coding_repository_api.rs:161-163).
+  - The MCP bridge, coding_mcp.rs:15-26, opens only `client.token(false)`, which is never the control
+    token. Its catalog has no advance, approve, cancel or release tool. The new test confirms an
+    `endpoint_advance` call is refused.
+- Decoder: `Launch` keeps `deny_unknown_fields`, and the field is `#[serde(default)] bool`. Serde's
+  derived struct decoder rejects null, strings, numbers, arrays, objects and duplicate keys. The new
+  unit tests confirm this for both decoders.
+- The request carries no credential. `credential_file` is a launch-level field, opened only after
+  native creation succeeds, so sharing cannot expose the endpoint key.
+- I tried escape attempts against the freshly built binary
+  (/lane/state/review-target/debug/agentmage-local-api) in a scratch directory outside the repository,
+  deleted afterwards. With `share_run_observations:true` or `"true"`, a symlinked launch file, a 0644
+  launch file, a string value and a non-loopback address all exit 1 and print **no** sharing notice. I
+  ran these on the read launcher and the coding-review launcher. They only show that refusal happens
+  without the notice. The positive case, where the notice prints only for a complete valid private
+  document, comes from the new executable tests in the gate.
+- Checked privacy and IP by grepping all added lines and the retained report for usernames, host paths,
+  e-mail addresses and keys: none found. No other product or trademark is named. No dependency,
+  evaluation, hidden or held-out test, threshold, scoreboard or SBOM file was touched, and the TASKS.md
+  row table is unchanged (check.py confirms this).
+
+## Commands and results (all run from /lane/review-checkout, fresh suffix `r7c4a91e`)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t303-launch-observations/review-inputs.sha256`: exit 0.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t303-launch-observations/run.py /lane/state/tmp/review-launch-observations-r7c4a91e`
+   exits 0 with `{"exit": 0, "source_unchanged": true, "seconds_including_reservations": 124.45, "raw_log_sha256": "c20a601f2685bf9c34b9a9d5eeed957a46e8beaa87a8f10be56b105e8cb06e32"}`.
+   - Times: formatting 0.30 s, Clippy (`-D warnings`) 31.77 s, `cargo test --all-targets --no-fail-fast`
+     90.81 s. `FAST GATE: PASS`.
+   - The independent target was used: CARGO_TARGET_DIR was set and run.py's `setdefault` keeps it.
+   - The wall time differs from the builder's 55.41 s, as expected for an independent target. The
+     timing is published, not a gate.
+3. `check.py` on that directory exits 0: gate PASS, 11 targets, totals [261,0,0,0,0], 5 new methods, 8
+   source files unchanged, all 7 commands exit 0, and the retained report matches byte for byte.
+   - All five new tests pass:
+     - `read_launch_shares_observations_only_with_an_explicit_private_boolean`
+     - `strict_launch_observation_sharing_preserves_original_request_and_validation`
+     - `executable_observation_sharing_preserves_read_launch_native_refusal`
+     - `executable_observation_sharing_keeps_all_strict_launchers_native_refusals`
+     - `endpoint_mcp_observes_approved_tool_events_without_acquiring_control`
+   - The log contains no skip, ignore or filter.
+4. `cmp .../validation-1/source-freeze.json .../review-launch-observations-r7c4a91e/source-freeze.json`:
+   exit 0, so the 8 Rust hashes are identical.
+5. `light.py`: every check exits 0, including diff --check, lint-untracked, lint-reviews on the retained
+   report, and markdownlint (5 files, 0 issues).
+6. `cmp docs/reviews/6e75e7fc1f6a-local-coding-review-deadline.txt /lane/reviews/6e75e7fc1f6a-local-coding-review-deadline.md`:
+   exit 0.
+7. `git diff --check 6e75e7fc1f6ab3ea2eb910357804d1ffa91b63f8 --`: exit 0.
+8. `git status --short`: clean.
+
+Node: /lane/state/tmp/t306-confined-candidate/node/bin/node, v24.15.0, SHA-256
+d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c, which matches the request.
+I did not use the GPU and did not rerun the host/Linux suite. Its inherited 72 failures are outside the
+selected scope and are not claimed here.
+
+## Findings
+
+No critical, high or medium findings.
+
+### L1 (low, claim precision): the sealed request stays readable after release
+
+- Where: docs/decisions/0199-explicit-endpoint-launch-observation-sharing.md:34 ("Released runs remain
+  unavailable"), docs/evidence/t303-launch-observations-2026-11-10.md:25 ("Released records remain
+  unavailable") and :64 ("release makes the record unavailable").
+- What happens: `GET /v1/code/endpoint/request` (coding_endpoint_api.rs:488) returns the captured
+  `request` with no check for release. After an exact release, a delegated `client.token` holder can
+  still read the complete sealed task through HTTP or MCP `endpoint_request`, for as long as the service
+  runs. Only event pages become unavailable.
+- Tests: the existing and new tests check only `endpoint_events` after release
+  (tests/support/coding_endpoint_mcp.rs:268, :379).
+- Why it is low: the same data was already shared before release. The coding-mcp guide wording,
+  "Released event records are unavailable", is accurate.
+- Fix: limit the decision and evidence wording to event pages. Alternatively, make the request route
+  refuse after release and add an `endpoint_request` assertion after release.
+
+### L2 (low, coverage; joins the carried "native forwarding coverage" backlog): no behavioural test of launch-to-service forwarding
+
+- Where: coding_endpoint_edit_launch.rs:427/:544/:553 and coding_endpoint_launch.rs:308.
+- What is missing: the sharing notice is printed inside `from_launch`. If a regression computed
+  `access` but passed `ControlOnly` (or always `DelegateObservations`) to the service, all five new
+  tests would still pass. The executable tests check only the notice and native refusal. The MCP and
+  HTTP test uses the library seam.
+- Why it is low: I confirmed the forwarding by reading the code, and native refusal in this lane blocks
+  a positive launcher run. The evidence states this honestly.
+- Fix: a test that drives `serve_development` or the read launcher through a non-native or fake
+  admission seam and checks client `GET /request` returns 403 or 200 depending on the launch boolean.
+
+## Evaluation integrity and safety
+
+- No prompts, coordinator, evaluation inputs, hidden or held-out tests, thresholds or scoreboard
+  entries changed.
+- Numbers in the evidence trace to the builder's validation-1 log, and my fresh run reproduces the
+  counts.
+- Model disclosure, advance, approvals, cancel, release, settings and original-diff routes remain
+  control-only.
+- The configuration is loaded once and consumed by admission without being read again. The listener and
+  stop checks run before the configuration is read and again before admission.
+- No native launcher run, Git operation, command confinement, real inference or task grade is claimed,
+  and none was observed.
+
+## Per-row result
+
+- T-303: this same-row, non-closing batch passes. The row stays open; no closure was requested or
+  granted.
+- T-306: this same-row, non-closing batch passes. The row stays open.
+- No new rows or sub-rows were added.
+- L1 and L2 go to the same-row backlog, together with the parent's carried lows.
+
+Verdict: PASS
