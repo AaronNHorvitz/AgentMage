@@ -131,6 +131,129 @@ fn no_dispatch(
 }
 
 #[test]
+fn candidate_setup_rolls_back_empty_claim_after_capture_failure_and_allows_fresh_attempt() {
+    let f = Fixture::new(40);
+    for failure in ["before-verify", "after-verify"] {
+        assert!(
+            CandidateSession::new_with(&f.scope, &f.plan, |scratch| {
+                assert!(scratch.is_dir());
+                assert_eq!(fs::metadata(scratch).unwrap().mode() & 0o777, 0o700);
+                if failure == "after-verify" {
+                    LinuxRepositoryScope::verify(
+                        &f.scope.checkout_root,
+                        &f.scope.git_directory,
+                        scratch,
+                    )?;
+                }
+                Err(denied())
+            })
+            .is_err()
+        );
+        assert!(fs::read_dir(&f.scope.owned_root).unwrap().next().is_none());
+        let mut session = f.session();
+        assert!(session.cleanup());
+        f.unchanged();
+    }
+}
+
+#[test]
+fn candidate_setup_refuses_replacement_between_claim_and_worker_capture_without_removing_it() {
+    for replacement in ["directory", "symlink", "parent"] {
+        let f = Fixture::new(40);
+        let scratch = index_path(&f.scope, &f.plan.candidate_build_id)
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_owned();
+        let target = if replacement == "parent" {
+            f.scope.owned_root.clone()
+        } else {
+            scratch.clone()
+        };
+        let retained = target.with_extension("retained");
+        assert!(
+            CandidateSession::new_with(&f.scope, &f.plan, |path| {
+                fs::rename(&target, &retained).unwrap();
+                if replacement == "symlink" {
+                    symlink(&retained, &target).unwrap();
+                } else {
+                    fs::create_dir(&target).unwrap();
+                    fs::set_permissions(&target, fs::Permissions::from_mode(0o700)).unwrap();
+                    if replacement == "parent" {
+                        fs::create_dir(path).unwrap();
+                        fs::set_permissions(path, fs::Permissions::from_mode(0o700)).unwrap();
+                    }
+                }
+                // Leave the replacement EMPTY: rollback must refuse by identity,
+                // not merely because a sentinel makes rmdir fail.
+                let worker_scope = LinuxRepositoryScope::verify(
+                    &f.scope.checkout_root,
+                    &f.scope.git_directory,
+                    path,
+                )?;
+                LinuxRepositoryMutationScope::capture(&worker_scope)
+            })
+            .is_err(),
+            "{replacement}"
+        );
+        assert!(retained.is_dir());
+        assert!(target.symlink_metadata().is_ok());
+        assert!(scratch.symlink_metadata().is_ok());
+        assert!(CandidateSession::new(&f.scope, &f.plan).is_err());
+        f.unchanged();
+    }
+}
+
+#[test]
+fn candidate_setup_retains_nonempty_or_changed_mode_claims_after_failure() {
+    for entry in ["file", "directory", "symlink", "mode"] {
+        let f = Fixture::new(40);
+        let mut scratch = PathBuf::new();
+        assert!(
+            CandidateSession::new_with(&f.scope, &f.plan, |path| {
+                scratch = path.to_owned();
+                match entry {
+                    "file" => fs::write(path.join("unknown"), b"retain").unwrap(),
+                    "directory" => fs::create_dir(path.join("unknown")).unwrap(),
+                    "symlink" => {
+                        symlink(f.scope.git_directory.join("index"), path.join("unknown")).unwrap()
+                    }
+                    _ => fs::set_permissions(path, fs::Permissions::from_mode(0o755)).unwrap(),
+                }
+                Err(denied())
+            })
+            .is_err()
+        );
+        assert!(scratch.is_dir());
+        if entry != "mode" {
+            assert!(scratch.join("unknown").symlink_metadata().is_ok());
+        }
+        assert!(CandidateSession::new(&f.scope, &f.plan).is_err());
+        f.unchanged();
+    }
+}
+
+#[test]
+fn candidate_setup_rejects_foreign_captured_descriptor_and_rolls_back_only_its_empty_claim() {
+    let f = Fixture::new(40);
+    let other = Fixture::new(40);
+    fs::write(other.scope.owned_root.join("sentinel"), b"preserve").unwrap();
+    assert!(
+        CandidateSession::new_with(&f.scope, &f.plan, |_| {
+            LinuxRepositoryMutationScope::capture(&other.scope)
+        })
+        .is_err()
+    );
+    assert!(fs::read_dir(&f.scope.owned_root).unwrap().next().is_none());
+    assert_eq!(
+        fs::read(other.scope.owned_root.join("sentinel")).unwrap(),
+        b"preserve"
+    );
+    f.unchanged();
+    other.unchanged();
+}
+
+#[test]
 fn candidate_worker_builds_exact_ordered_plan_with_sealed_postimages_and_private_index() {
     for format in [40, 64] {
         let f = Fixture::new(format);

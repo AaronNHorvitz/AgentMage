@@ -2,6 +2,24 @@
 
 ## Active queue: local agent mission
 
+The [candidate-setup repair](docs/evidence/t306-candidate-setup-2026-11-10.md)
+addresses retained low L1/L2 from the candidate-confinement review: worker capture
+must match the child descriptor opened through the held parent, and failed setup
+rolls back only an empty, still-bound private directory. Replacements and unknown
+contents remain retained. Independent core review is required; T-303/T-306 remain
+open, without new rows or sub-rows. The complete affected gate remains **FAIL**:
+1,368 passes, the exact same 72 inherited failures and 64 existing ignores across
+26 unfiltered targets. All four new methods, nine controls, formatting and Clippy
+pass; both source hashes remain fixed.
+
+The retained [signature-verification review](docs/reviews/530aec2c97ab-local-coding-confined-verification.txt)
+returns **Verdict: PASS** for exact commit
+`530aec2c97ab745211251566433938f22231ec9e`, with no high or medium finding.
+Low L1 native verification/tamper coverage and L2 dedicated machine-status stream
+remain same-row backlog with the earlier signer and candidate findings. The
+candidate-setup repair above addresses the earlier candidate L1/L2; it does not
+close T-303 or T-306.
+
 The [offline signature-verification increment](docs/evidence/t306-confined-verification-2026-11-10.md)
 uses the existing supervisor with sealed public key, signature and exact signed
 content. No repository or private keyring enters this worker; direct Git

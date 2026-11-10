@@ -86,6 +86,15 @@ siblings are not projected. Its temporary-index identity names `index` inside
 Postimages are sealed memory input, and each resulting blob must match those
 exact bytes. A single thirty-second deadline covers the candidate sequence.
 
+Setup opens the candidate directory relative to the held parent, without
+following symlinks, before capturing the worker scope. The captured directory
+must match that descriptor's device and inode; both scopes are revalidated
+before returning the session. A failed setup removes only an empty directory
+that still matches the held identity and private permissions. Unknown entries,
+replaced roots or directories, changed permissions, or an unsuccessful initial
+descriptor open retain scratch. This is conservative rollback, not an atomic
+transaction against other processes running as the same user.
+
 Incomplete supervision, changed directory identities or unknown scratch contents
 prevent successful cleanup. Such scratch is retained for explicit recovery;
 reusing the same build identity does not replace it. The user index, source and

@@ -1,0 +1,168 @@
+Commit: 530aec2c97ab745211251566433938f22231ec9e
+Scope: local-coding-confined-verification
+
+# Independent core review: offline public-material commit signature verification (T-303 / T-306)
+
+Reviewer: independent core reviewer in a separate read-only session, at extra-high effort. I reviewed the
+pinned checkout `/lane/review-checkout` on 2026-11-10. `git rev-parse HEAD` gives
+`530aec2c97ab745211251566433938f22231ec9e`, and its parent is the immutable base
+`ee983557491646b712acfc9d624f740b665cbbb0`. The request is a non-closing same-row implementation
+increment. It changes 10 files and adds no row or sub-row. The `| [` task-table lines are unchanged
+from the base, which `check.py` asserts.
+
+## Methods
+
+- Read IP-POLICY.md, Decision 0192, `docs/evidence/t306-confined-verification-2026-11-10.md`, the
+  TASKS.md and guide diffs, and the bundle's README, `run.py`, `check.py`, `parse_gate.py` and `light.py`
+  before running anything. `run.py` reserves its heavy commands internally, so I did not wrap it.
+- Read the whole of `local_commit_verification.rs` and `local_commit_verification_tests.rs`, and the
+  diffs to `local_commit.rs`, `sandbox_supervision.rs` and `repository_safety.rs`. Compared the new worker
+  line by line with the existing closed repository-Git worker (`repository_execution.rs:245-361`): the
+  same systemd properties, `OpenFile` numbering, Bubblewrap namespace flags, runtime mounts and seccomp
+  descriptor. Also read the supervisor's owner and cardinality gate (`sandbox_supervision.rs:37-88`,
+  `1022-1046`, `1219-1243`). Checked the result mapping (`capture_error`, `failed_signer_result`,
+  `uncertain_commit_result`), the raw-commit and status parsers, and the artifact hold and revalidate
+  code (`repository_safety.rs:1582-1686`).
+- Checked for any remaining direct verification path. No product code calls `verify-commit`.
+  `SignedGitRunner::run` is now `#[cfg(test)]`, and `run_with_environment` accepts only `commit-tree`
+  (`local_commit.rs:570-576`).
+- **My own native reproduction of the guest**, in a scratch directory outside the repository, since
+  removed:
+  - Wrote the denied-syscall list from `sandbox.rs:60-123` as a classic BPF program with gcc: errno 1
+    and an x86-64 architecture check. This approximates the product filter; it is not the product's
+    compiled policy.
+  - Generated a disposable ed25519 primary key with a signing subkey. Created `commit-tree -S<fpr>!`
+    commits in SHA-1 and SHA-256 repositories with the message `First\n\nSecond\n\n`.
+  - Reproduced `split_signed_commit` line for line in Python. Ran the exact guest argv from
+    `add_guest_arguments`/`gpg_arguments` through `/usr/bin/bwrap`, with descriptors 3-7 allocated as
+    systemd would allocate them (gpg, filter, public, signature, content).
+  - Results:
+    - Both formats: exit 0, 0 stdout bytes, exactly one `VALIDSIG` naming the pinned primary
+      fingerprint.
+    - Content with `changed` appended: exit 1 with `BADSIG` and `FAILURE`.
+    - The public key replaced by `not a public key`: exit 2 with `ERRSIG`, `NO_PUBKEY` and `FAILURE`.
+    - The SHA-1 signature over the SHA-256 content: `BADSIG`.
+    - An inline-signed message by the same key, re-armored as `PGP SIGNATURE`, substituted as the
+      detached signature: exit 2 with `not a detached signature` and `FAILURE`.
+    - Every non-status stderr line carried the `gpg: ` prefix, so none can pose as a `[GNUPG:] ` record.
+  - systemd-run could not be used, because the user manager is `offline` in this lane. The lane's
+    `/usr/bin` binaries are not root-owned (`nfsnobody` inside the namespace), so product artifact
+    admission cannot pass here.
+- Public-content scan of the added lines: no private host path, username, hostname, credential or
+  personal data. The `/lane/...` paths appear only inside the retained review's own command record, as
+  in earlier retained reviews. There is no trademark branding and no comparison with other products.
+- No evaluation, frozen, hidden, held-out, scorer, prompt, threshold, dependency, SBOM, lifecycle,
+  scoreboard or release file is in the diff. I did not use the GPU and did not modify the repository.
+
+## Exact commands and results (from `/lane/review-checkout`)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-confined-verification/review-inputs.sha256`: exit 0. The
+   manifest's own SHA-256 is `bb837da66a8ae07aeaff583cc3cbbecb8e9e5e00f60dc9a069b973a371d4a1cf`, as
+   requested.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-confined-verification/run.py /lane/state/tmp/review-confined-verification-full-530aec2c97ab`:
+   exit 1 as expected, `FAST GATE: FAIL`.
+   - `{"exit": 1, "source_unchanged": true, "seconds_including_reservations": 300.20301881699925, "raw_log_sha256": "d731362541afcafe2a723a80ba34f77d8446e5bec28283e98b91330e0cd3fb65"}`.
+   - Command exits 0,0,0,0 (fmt 1.31 s), 0 (1.40 s), 0 (Clippy 43.70 s), 101 (Rust 253.42 s). No
+     timeout.
+   - Times are published measurements, not gates; they differ from the builder's 247.80 s.
+3. `python3 -B /lane/state/tmp/t306-confined-verification/check.py /lane/state/tmp/review-confined-verification-full-530aec2c97ab`:
+   exit 0. Results:
+   - 26 targets, totals `[1364, 72, 64, 0, 0]`, 5 source files unchanged.
+   - All 18 named methods pass: the six new ones plus the twelve controls.
+   - The retained review is byte-identical and the task table is unchanged.
+   - `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL`.
+   - Separately, I parsed my log and the builder's `validation-2/fast.log` with `parse_gate.targets`. The
+     two are equal per target, including every failed and ignored test name. Of the 72 inherited
+     failures, all are present in the baseline.
+4. `cmp .../validation-2/source-freeze.json .../review-confined-verification-full-530aec2c97ab/source-freeze.json`:
+   exit 0.
+5. `python3 -B /lane/state/tmp/t306-confined-verification/light.py`: exit 0. That covers the diff
+   check, untracked lint, review lint, and markdownlint (0 issues in 4 files).
+6. `git diff --check ee983557491646b712acfc9d624f740b665cbbb0 --`: exit 0.
+7. `git status --short`: empty.
+
+## What the evidence supports
+
+- **No direct verification fallback.** `execute_plan` calls `verification::verify` after
+  `verify_raw_commit` and before `update_task_branch` (`local_commit.rs:478-490`). Any error goes to
+  `failed_signer_result` and returns before the ref update. The result is Failed with
+  `cleanup_verified=false`, or `signer_cleanup_uncertain` when the error is `CleanupUncertain`.
+- **Pre-dispatch checks** (`local_commit_verification.rs:121-131`), each tested without dispatch:
+  - cancellation and the deadline;
+  - sealed-plan validity;
+  - an exact signer match and the pin's own seal;
+  - public-key bytes that are non-empty, within the bound, and whose digest equals
+    `pinned.public_key_sha256`;
+  - the raw-commit bound.
+- **Signature extraction.** `split_signed_commit` first requires `verify_raw_commit`: exact singleton
+  tree, parent, author, committer and format-specific signature header, exact message bytes, and only
+  space-continued signature lines. It then removes exactly that header block. My native run and the
+  builder's real-key test both confirm the reconstruction is byte-exact in both formats.
+- **Sealed public material.** Three sealed memfd payloads hold the retained export, the signature and
+  the content. A test confirms that writes to them fail with EPERM.
+- **Projection.** Only gpg, the filter and those three payloads are projected (descriptors 3-7).
+  - No repository, keyring, home, agent socket or configuration is mounted.
+  - `--clearenv`, a private 0700 tmpfs home, `--no-options`, `--no-autostart`,
+    `--no-auto-key-retrieve` and `--no-default-keyring --keyring /app/public.gpg`.
+  - The existing EPERM socket and connect denylist, unchanged.
+  - The same memory, task, CPU, runtime and kill-mode properties as the repository-Git worker.
+- **Executables.** systemd-run, systemctl, Bubblewrap and gpg are held and checked to be root-owned with
+  root-owned ancestors (`verify_root_owned_path`). The gpg digest must equal the inspected signer
+  digest, computed the same way. The artifacts are revalidated before launch and on every supervisor
+  control call.
+- **Closed owner.** The unit name is a new prefix plus a 24-hex nonce, and exactly three projections
+  are admitted. The prefix is added to `unit_name` for observation parsing.
+- **Result validation** (`local_commit_verification.rs:146-174`). It requires all of the following, and
+  each negative case is tested:
+  - an `Ok(Succeeded)` outcome and a successful exit status;
+  - complete output;
+  - empty stdout;
+  - stream totals and digests consistent with the retained bytes;
+  - exactly one `VALIDSIG` for the complete pinned fingerprint and no failure statuses;
+  - no cancellation and an unexpired session deadline afterwards.
+- **Labelling.** The disposable real-key method still covers both formats, both exact keys, three
+  message cases, unpinned controls, the wrong key and an unchanged branch. It now also covers altered
+  messages, an invalid key and the absence of an agent or private-key directory. It is correctly
+  labelled as component cryptography, not native admission.
+- Using the retained snapshot export instead of the live keyring does not weaken revocation handling
+  in practice. An exact-key `-S<fpr>!` signing step refuses a revoked or expired key before
+  verification, and the expiry carried in the snapshot is still evaluated.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog; part of the existing native `run_plan` / native-signature low).**
+  `local_commit_verification.rs:60-109`: no test in this lane executes the product dispatch. That covers
+  `VerifierManifest::verify`, `run_owned` with `LaunchOwner::CommitVerification`, systemd `OpenFile`
+  allocation, the real compiled filter and gpg inside the guest. The only native caller,
+  `native_signed_commit_verifies_exact_content_and_only_updates_task_branch`, is an inherited failure.
+  It stops at `inspect fixture signer: ArtifactDenied` (`local_commit.rs:1885`) because the lane's
+  binaries are not root-owned. The Rust tests check only argv shape and synthetic results. My manual
+  reproduction of the guest argv with an approximated filter succeeds and refuses correctly, but it is
+  not product evidence. The evidence documents state this honestly, and the adapter is dormant.
+  - Fix: when a host with root-owned artifacts runs the native signed-commit test, also record a
+    tampered-signature `run_plan` case. Assert `verification_failed` and an unchanged task branch.
+- **L2 (low, backlog; defence in depth).** `local_commit_verification.rs:238`: `--status-fd=2` puts
+  machine status records on the same stream as GnuPG's human log. `verify_signature_status` then relies
+  on human lines never beginning with `[GNUPG:] `. In my run they all began with `gpg: `, and gpg
+  sanitizes the strings it prints from signature subpackets. Acceptance also needs exit 0, exactly one
+  `VALIDSIG` for the pinned key and no failure status, so I found no exploitable path.
+  - Fix: use a dedicated status stream. For example, `--status-fd=1` and validate stdout as pure status
+    while ignoring stderr, or add `--quiet` with a separate `--logger-fd`. Update the empty-stdout rule
+    to match.
+
+The earlier same-row lows remain backlog unchanged: base L1 native retained-child injection, L2
+poisoned-owner diagnostic, native signatures, fixture-agent teardown, usable-key inspection,
+retained-child availability and candidate directory.
+
+## Per-row result
+
+- **T-303 / T-306 (core, non-closing increment):** PASS for this increment. No high or medium finding.
+  Confinement of the new verification worker is implemented as claimed and, as far as I could reproduce
+  it, refuses tampered content, wrong keys and substituted signatures. Labels are honest, evaluation
+  integrity is untouched, and there is no new authority or row. Both rows remain **OPEN**: signer
+  inspection and signed creation are still direct and dormant, and native admission, workflow, approval
+  and model measurement remain outstanding.
+
+Verdict: PASS

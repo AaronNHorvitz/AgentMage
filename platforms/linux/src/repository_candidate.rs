@@ -5,7 +5,7 @@ use super::*;
 use agentmage_kernel_engine::local_commit::{
     CandidateTreePlan, CommitFileMode, verify_candidate_tree_plan,
 };
-use rustix::fs::{AtFlags, mkdirat, unlinkat};
+use rustix::fs::{AtFlags, mkdirat, openat, statat, unlinkat};
 use std::collections::BTreeMap;
 
 const MAX_POSTIMAGE: usize = 64 * 1024 * 1024;
@@ -50,10 +50,73 @@ enum Step<'a> {
     WriteTree,
 }
 
+// Setup owns no worker yet. Roll back only an empty, still-bound directory;
+// unknown entries, replacements and failed identity checks retain the claim.
+struct CandidateClaim<'a> {
+    original: &'a LinuxRepositoryMutationScope,
+    directory: &'a str,
+    descriptor: OwnedFd,
+    armed: bool,
+}
+
+impl CandidateClaim<'_> {
+    fn matches(&self, descriptor: &OwnedFd) -> Result<(), LinuxRepositoryError> {
+        let held = fstat(&self.descriptor).map_err(|_| denied())?;
+        let captured = fstat(descriptor).map_err(|_| denied())?;
+        if held.st_dev != captured.st_dev || held.st_ino != captured.st_ino {
+            return Err(denied());
+        }
+        Ok(())
+    }
+
+    fn revalidate(&self) -> Result<(), LinuxRepositoryError> {
+        self.original.revalidate()?;
+        let held = fstat(&self.descriptor).map_err(|_| denied())?;
+        let named = statat(
+            &self.original.roots[2],
+            self.directory,
+            AtFlags::SYMLINK_NOFOLLOW,
+        )
+        .map_err(|_| denied())?;
+        if held.st_dev != named.st_dev
+            || held.st_ino != named.st_ino
+            || held.st_uid != getuid().as_raw()
+            || held.st_mode & 0o077 != 0
+            || FileType::from_raw_mode(held.st_mode) != FileType::Directory
+        {
+            return Err(denied());
+        }
+        Ok(())
+    }
+}
+
+impl Drop for CandidateClaim<'_> {
+    fn drop(&mut self) {
+        if self.armed && self.revalidate().is_ok() {
+            // REMOVEDIR atomically refuses nonempty directories. No recursive
+            // removal or removal of index files is authorized during setup.
+            let _ = unlinkat(&self.original.roots[2], self.directory, AtFlags::REMOVEDIR);
+        }
+    }
+}
+
 impl CandidateSession {
     pub(crate) fn new(
         scope: &LinuxRepositoryScope,
         plan: &CandidateTreePlan,
+    ) -> Result<Self, LinuxRepositoryError> {
+        Self::new_with(scope, plan, |scratch| {
+            let worker_scope =
+                LinuxRepositoryScope::verify(&scope.checkout_root, &scope.git_directory, scratch)?;
+            LinuxRepositoryMutationScope::capture(&worker_scope)
+        })
+    }
+
+    // Private setup seam; production always verifies and captures above.
+    fn new_with(
+        scope: &LinuxRepositoryScope,
+        plan: &CandidateTreePlan,
+        capture: impl FnOnce(&Path) -> Result<LinuxRepositoryMutationScope, LinuxRepositoryError>,
     ) -> Result<Self, LinuxRepositoryError> {
         verify_candidate_tree_plan(plan).map_err(|_| denied())?;
         let index = index_path(scope, &plan.candidate_build_id).ok_or_else(denied)?;
@@ -72,11 +135,29 @@ impl CandidateSession {
             Mode::from_raw_mode(0o700),
         )
         .map_err(|_| denied())?;
-        original.revalidate()?;
+        // Open through the held parent before any path-based worker capture.
+        // If opening fails, no child identity was obtained: retain rather than
+        // remove an entry whose identity cannot be checked.
+        let mut claim = CandidateClaim {
+            original: &original,
+            directory: &directory,
+            descriptor: openat(
+                &original.roots[2],
+                directory.as_str(),
+                OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+                Mode::empty(),
+            )
+            .map_err(|_| denied())?,
+            armed: true,
+        };
+        claim.revalidate()?;
         let scratch = index.parent().ok_or_else(denied)?;
-        let scope =
-            LinuxRepositoryScope::verify(&scope.checkout_root, &scope.git_directory, scratch)?;
-        let worker = Arc::new(LinuxRepositoryMutationScope::capture(&scope)?);
+        let worker = Arc::new(capture(scratch)?);
+        claim.matches(&worker.roots[2])?;
+        claim.revalidate()?;
+        worker.revalidate()?;
+        claim.armed = false;
+        drop(claim);
         Ok(Self {
             original,
             worker,
