@@ -300,6 +300,13 @@ acceptance remain open, as do T-303/T-306 and approved push.
 
 ## Executor sequence coverage
 
+The dormant executor checks cancellation before and after preservation preflight.
+It checks the original token and commit I/O deadline between every subsequent
+stage and after postflight. A stop prevents the next stage or successful receipt,
+including when the task branch has already changed. It does not imply rollback.
+Preservation collection retains its existing bounded workers; these checkpoints
+do not interrupt an individual collection or impose the I/O deadline within it.
+
 A private execution seam now exercises the dormant adapter's shared sequence:
 branch observation, independently verified signing, sealed object write, exact
 readback, content and signature verification, task-branch compare-and-swap and

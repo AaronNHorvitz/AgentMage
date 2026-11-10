@@ -451,7 +451,9 @@ impl LinuxLocalCommitExecutor {
         approved_before: &agentmage_kernel_engine::repository_safety::RepositoryPreservationManifest,
         cancellation: &CancellationToken,
     ) -> LocalCommitPlatformResult {
-        let before = match self.collector.collect(&self.scope) {
+        let before = match execution::preflight(cancellation, || {
+            self.collector.collect(&self.scope)
+        }) {
             Ok(value) => value,
             Err(_) => return failed_commit_result(approved_before, "linux.git.commit.preflight"),
         };

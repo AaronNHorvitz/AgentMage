@@ -8,6 +8,7 @@ use agentmage_kernel_engine::repository_safety::RepositoryPreservationManifest;
 // Neither the trait nor its runner is reachable outside the local-commit module.
 // Public callers cannot supply a backend, manufacture a permit or skip preflight.
 trait Session {
+    fn control_active(&self) -> bool;
     fn branch_before(&mut self) -> Result<(), ()>;
     fn sign(&mut self) -> Result<packet::VerifiedCommit, LinuxLocalCommitError>;
     fn write(&mut self, signed: &packet::VerifiedCommit) -> Result<String, ()>;
@@ -41,6 +42,9 @@ impl<'a> NativeSession<'a> {
 }
 
 impl Session for NativeSession<'_> {
+    fn control_active(&self) -> bool {
+        control_active(self.cancellation, self.io.deadline())
+    }
     fn branch_before(&mut self) -> Result<(), ()> {
         self.io
             .branch_before(self.executor.collector.git(), self.cancellation)
@@ -86,6 +90,29 @@ impl Session for NativeSession<'_> {
     }
 }
 
+fn control_active(cancellation: &CancellationToken, deadline: Instant) -> bool {
+    !cancellation.is_cancelled() && Instant::now() < deadline
+}
+
+// Collection still has its own bounded workers. These checkpoints do not make
+// a running preservation read interruptible or give it the commit I/O deadline.
+pub(super) fn preflight(
+    cancellation: &CancellationToken,
+    collect: impl FnOnce() -> Result<
+        RepositoryPreservationManifest,
+        crate::repository_safety::LinuxRepositoryError,
+    >,
+) -> Result<RepositoryPreservationManifest, ()> {
+    if cancellation.is_cancelled() {
+        return Err(());
+    }
+    let before = collect().map_err(|_| ())?;
+    if cancellation.is_cancelled() {
+        return Err(());
+    }
+    Ok(before)
+}
+
 // Production accepts only the concrete native owner. Tests invoke the same
 // private generic body, without creating native admission or approval evidence.
 pub(super) fn run(
@@ -101,35 +128,53 @@ fn run_with(
     before: RepositoryPreservationManifest,
     session: &mut impl Session,
 ) -> LocalCommitPlatformResult {
+    // Recheck between every stage, even when a worker returned success just as
+    // cancellation/deadline became observable. After any dispatch, stopped
+    // control is uncertainty: never infer rollback or a successful receipt.
+    macro_rules! check_control {
+        () => {
+            if !session.control_active() {
+                return uncertain_commit_result(&before, "linux.git.commit.control_stopped");
+            }
+        };
+    }
+    check_control!();
     if session.branch_before().is_err() {
         return uncertain_commit_result(&before, "linux.git.commit.branch_stale");
     }
+    check_control!();
     let signed = match session.sign() {
         Ok(commit) => commit,
         Err(failure) => {
             return failed_signer_result(&before, failure, "linux.git.commit.creation_failed");
         }
     };
+    check_control!();
     let commit_object = match session.write(&signed) {
         Ok(object) => object,
         Err(()) => return uncertain_commit_result(&before, "linux.git.commit.storage_failed"),
     };
+    check_control!();
     let Ok(raw) = session.read(&commit_object) else {
         return uncertain_commit_result(&before, "linux.git.commit.verification_failed");
     };
     if !verify_raw_commit(&raw, plan) {
         return uncertain_commit_result(&before, "linux.git.commit.verification_failed");
     }
+    check_control!();
     if let Err(failure) = session.verify(&raw) {
         return failed_signer_result(&before, failure, "linux.git.commit.verification_failed");
     }
+    check_control!();
     if session.update().is_err() {
         return uncertain_commit_result(&before, "linux.git.commit.compare_and_swap_failed");
     }
+    check_control!();
     let after = match session.postflight() {
         Ok(value) => value,
         Err(()) => return uncertain_commit_result(&before, "linux.git.commit.postflight"),
     };
+    check_control!();
     LocalCommitPlatformResult {
         outcome: OperationOutcome::Succeeded,
         before,

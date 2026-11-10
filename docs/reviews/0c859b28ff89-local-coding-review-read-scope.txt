@@ -1,0 +1,127 @@
+Commit: 0c859b28ff899a6608c070768f7e5d013a087884
+Scope: local-coding-review-read-scope
+
+# Independent review: original commit-review read scope (T-303 / T-306, core, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate read-only session. Same-model review
+(accepted for now; a cross-model review must come before any public release).
+
+## Methods
+
+- Ran `git rev-parse HEAD` in `/lane/review-checkout` and got
+  `0c859b28ff899a6608c070768f7e5d013a087884`. The working tree was clean before and after.
+- Read the private bundle first: README, run.py, check.py, parse_gate.py, light.py,
+  stage_check.py, focused.sh, and the focused/focused-2/focused-3 logs. Then read IP-POLICY.md,
+  Decision 0197, the new evidence file, the guide section, the TASKS.md diff, the retained
+  executor-sequence report and every changed source/test file
+  (`coding_repository.rs`, `coding_repository_commit_review.rs`,
+  `coding_repository_commit_review_tests.rs`, `lib.rs`).
+- Traced the supporting code paths: `verify_apply_roots` (coding_repository_apply.rs:53),
+  `verify_created` (coding_repository_command.rs:228), `LinuxCodingReadScope::verify_root`
+  (coding_workspace.rs:73), `authorize_workspace_root` / `workspace_path_sha256`
+  (lib.rs:500-569) and `LinuxAuthorizedWorkspace::revalidate` (lib.rs:463).
+- Searched the whole tree for callers of the de-publicised methods and for the new type.
+- Reviewed by reading for symlink, replacement, swapped-selection and foreign-owner
+  substitution. I did not write extra probe tests because the repository is read-only.
+
+## Commands and results (all run from the pinned checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-review-scope/review-inputs.sha256`: exit 0.
+   The manifest's own SHA-256 is `ae58ae1dfb9577493522fd7467723eb9dc96e497075fa8ee8e07bc9a7b21f1f9`,
+   as stated.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-review-scope/run.py /lane/state/tmp/review-read-scope-full-0c859b28ff89`:
+   exit 1, as expected. `FAST GATE: FAIL`; source_unchanged=true; 553.73 s including
+   reservation waits; no timeout. Per-command exits: 0,0,0,0 (light), 0 (fmt, 254.17 s
+   including slot wait), 0 (Clippy, 40.95 s), 101 (Rust tests, 257.08 s). My raw log
+   SHA-256 is `795ea5bb4740086707113307b5d0a2d043472b7ee452699f72306006e9375583`. It differs
+   from the builder's `adcb9bfd...` as expected, because timings and the target directory
+   differ; the data comparison is in step 3.
+3. `python3 -B /lane/state/tmp/t306-review-scope/check.py /lane/state/tmp/review-read-scope-full-0c859b28ff89`:
+   exit 0. 26 targets; totals [1413, 72, 64, 0, 0]. Per-target failure and ignore identities
+   exactly equal the executor-sequence baseline, plus 3 Linux-lib passes. All 79 affected
+   methods pass (3 new + 76 controls); 4 source files unchanged. This is a data comparison
+   only. The full gate remains FAIL.
+4. `cmp .../validation-1/source-freeze.json .../review-read-scope-full-0c859b28ff89/source-freeze.json`: exit 0.
+5. `python3 -B /lane/state/tmp/t306-review-scope/light.py`: exit 0 (diff check, untracked
+   lint, review lint, markdownlint: 0 issues in 4 files).
+6. `git diff --check 9e77209e0d2199a15c6191516db9744ce3844afb --`: exit 0.
+7. `cmp docs/reviews/9e77209e0d21-local-coding-executor-sequence.txt /lane/reviews/9e77209e0d21-local-coding-executor-sequence.md`:
+   exit 0. The retained report is byte-for-byte identical and ends `Verdict: PASS`.
+8. `git status --short`: empty.
+
+In my log, these tests pass: `candidate_review_scope_matches_both_selections_before_inspecting_unavailable_roots`,
+`candidate_review_scope_rechecks_replaced_roots_on_each_borrowed_use`,
+`candidate_review_scope_cannot_adopt_another_owner_or_restore_missing_creation`, and
+the updated control `candidate_review_native_entry_retains_exact_artifact_refusal_without_git_effects`.
+The 72 inherited failures are environment-bound (42 in linux_coding_runtime, 13 in
+repository_safety, 10 in linux_read, and others) and identical to the baseline.
+
+## Analysis
+
+- **Reachability and scoping.** `capture_applied_write_review` is now `pub(super)`, visible
+  only inside `coding_repository`. Its only non-test callers are the view and
+  `plan_reviewed_candidate_tree_with`. Sibling `apply_tests` also use it.
+  `plan_reviewed_candidate_tree` is module-private. Neither is reachable outside the crate
+  except through `LinuxCodingCommitReview`. The view's only field is private, it has no derives
+  (no Clone or serialization), and the only way to build it is `consented_commit_review`
+  (coding_repository_commit_review.rs:71-86). No HTTP, CLI or MCP route was added.
+- **Order of checks.** `consented_commit_review` reads only in-memory `self.created`, then
+  compares both caller digests with the retained `original` and `held` digests. Only after
+  that does it call `verify_apply_roots`, the first filesystem access. So a mismatch returns
+  `code.commit.read-scope` even when a root is missing, and the first new test checks exactly
+  that for both roots and for absent, empty, foreign and swapped selections.
+- **Strength of the digests.** `workspace_path_sha256` hashes the canonical path plus device
+  and inode. `authorize_workspace_root` opens each component with `O_PATH|O_DIRECTORY|O_NOFOLLOW`.
+  A replacement directory at the same path therefore gets a different digest, and a symlink
+  substitute fails to open. Those cases match test 2's `code.apply.scope` /
+  `code.command.scope` expectations. Equal digests still go through `verify_apply_roots`, and
+  `capture_applied_write_review` calls it again at the start and end of every use. Planning
+  also re-runs it before taking Git observations.
+- **Foreign owner.** The proof's `root_sha256()` is compared with `created.held` (commit_review.rs:110),
+  so a substituted `CreatedWorktree` yields `code.commit.write-provenance`, as test 3 shows.
+  Replacing `created` is possible only inside the module, because the field is private.
+- **Borrow claim.** Every effecting method on `LinuxCodingRepository` (`prepare_apply`,
+  `prepare_validation`, `decide_*`, `prepare_edit`, and others) takes `&mut self`. The
+  repository has no interior mutability: the only `Mutex` is in the runtime wrapper that owns
+  the repository by value. While the view lives, the shared borrow does block owner effects.
+  The documents correctly say external filesystem changes stay possible.
+- **Honest claims.** The decision, evidence and guide say plainly that the digests correlate
+  a selection and do not authenticate consent or grant anything. They also say Git/process
+  observations are synthetic, native admission is unavailable, and candidate execution,
+  provenance, product approval, durable recovery, model measurements and push stay open. The
+  stated counts and timings match the bundle. The two superseded focused logs (2 pass / 1 fail
+  each) are kept, and their explanation matches the final assertions: a worktree rename
+  invalidates the completion seal, while an original-only rename leaves it intact. No product
+  check or threshold changed. The diff touches only the 9 listed files.
+- **Evaluation integrity.** No evaluation, hidden, held-out, scorer, prompt, threshold,
+  scoreboard, dependency, SBOM or lifecycle change. TASKS row lines are byte-identical to the
+  base (check.py and stage_check.py), and no row or sub-row was added.
+- **Public content and IP.** The added lines contain no private host path, username, hostname,
+  credential or sibling-project name, and no other product is named. The private bundle log
+  contains a host path, but it is not committed.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L-1 (low, same-row backlog).** The comparable worktree read `select_created_sources`
+  (platforms/linux/src/coding_repository_edit.rs:47) is still `pub` and unscoped. This existed
+  before this commit. A crate-external caller can still read held-worktree sources without
+  presenting the displayed root identities. Original-checkout reads and Git reads are not
+  exposed. This does not contradict the batch's claim, which covers write projection and
+  planning only, but the guide's "consent must cover complete source reads" model is applied
+  unevenly. Fix: either route this through a digest-checked constructor like
+  `consented_commit_review`, or document why the edit flow's held-worktree selection does not
+  need correlation.
+- The earlier same-row lows, including the executor-sequence L-1 native forwarding coverage,
+  stay open as stated.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing batch):** PASS for this exact commit as a same-row increment.
+  Neither row closes, and none may be ticked. Native admission, authenticated reviewer and
+  artifact provenance, approved candidate execution, complete product approval, durable
+  recovery, model measurements and approved push remain OPEN. No release or owner readiness
+  is asserted.
+
+Verdict: PASS

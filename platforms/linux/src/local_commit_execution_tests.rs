@@ -2,6 +2,10 @@
 //! Executor ordering with synthetic outcomes, never native or approval proof.
 
 use super::*;
+use agentmage_kernel_contracts::{
+    BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason, CancellationSignal,
+    CorrelationId, TaskId,
+};
 
 const ORDER: [&str; 7] = [
     "branch",
@@ -21,6 +25,10 @@ struct SyntheticSession {
     signer_error: LinuxLocalCommitErrorKind,
     raw: Option<Vec<u8>>,
     stored: Option<(Vec<u8>, String)>,
+    cancellation: CancellationToken,
+    deadline: Instant,
+    stop_after: Option<&'static str>,
+    expire: bool,
 }
 
 impl SyntheticSession {
@@ -43,15 +51,29 @@ impl SyntheticSession {
             signer_error: LinuxLocalCommitErrorKind::VerificationFailed,
             raw: None,
             stored: None,
+            cancellation: token(),
+            deadline: Instant::now() + Duration::from_secs(30),
+            stop_after: None,
+            expire: false,
         }
     }
 
     fn step(&mut self, name: &'static str) -> Result<(), ()> {
         self.calls.push(name);
+        if self.stop_after == Some(name) {
+            self.stop_control();
+        }
         if self.fail == Some(name) {
             Err(())
         } else {
             Ok(())
+        }
+    }
+    fn stop_control(&mut self) {
+        if self.expire {
+            self.deadline = Instant::now();
+        } else {
+            cancel(&self.cancellation);
         }
     }
     fn run(&mut self) -> LocalCommitPlatformResult {
@@ -60,6 +82,9 @@ impl SyntheticSession {
 }
 
 impl Session for SyntheticSession {
+    fn control_active(&self) -> bool {
+        control_active(&self.cancellation, self.deadline)
+    }
     fn branch_before(&mut self) -> Result<(), ()> {
         self.step("branch")
     }
@@ -93,6 +118,87 @@ impl Session for SyntheticSession {
         self.step("postflight")?;
         Ok(self.after.clone())
     }
+}
+
+fn token() -> CancellationToken {
+    CancellationToken::root(
+        BoundaryKind::Kernel,
+        TaskId::from_raw("commit-control"),
+        CorrelationId::from_raw("commit-control"),
+    )
+}
+
+fn cancel(token: &CancellationToken) {
+    token
+        .cancel(CancellationSignal {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            cancellation_id: CancellationId::from_raw("cancel-commit-control"),
+            task_id: TaskId::from_raw("commit-control"),
+            correlation_id: CorrelationId::from_raw("commit-control"),
+            reason: CancellationReason::UserRequested,
+            requested_by: BoundaryKind::Kernel,
+        })
+        .unwrap();
+}
+
+#[test]
+fn commit_execution_cancellation_stops_before_every_next_stage_and_after_postflight() {
+    assert_stopped_boundaries(false);
+}
+
+#[test]
+fn commit_execution_expiry_stops_before_every_next_stage_and_after_postflight() {
+    assert_stopped_boundaries(true);
+}
+
+fn assert_stopped_boundaries(expire: bool) {
+    for width in [40, 64] {
+        for completed in 0..=ORDER.len() {
+            let mut s = SyntheticSession::new(width);
+            s.expire = expire;
+            if completed == 0 {
+                s.stop_control();
+            } else {
+                s.stop_after = Some(ORDER[completed - 1]);
+            }
+            assert_uncertain(&s.run(), "linux.git.commit.control_stopped");
+            assert_eq!(s.calls, ORDER[..completed]);
+            assert_eq!(s.stored.is_some(), completed >= 3);
+            assert_eq!(s.calls.contains(&"update"), completed >= 6);
+        }
+    }
+}
+
+#[test]
+fn commit_execution_preflight_checks_cancellation_before_and_after_collection() {
+    let t = token();
+    cancel(&t);
+    assert!(
+        preflight(&t, || panic!(
+            "cancelled preflight must not inspect Git or files"
+        ))
+        .is_err()
+    );
+
+    let t = token();
+    let propagated = t.clone();
+    assert!(
+        preflight(&t, || {
+            cancel(&propagated);
+            Ok(before())
+        })
+        .is_err()
+    );
+
+    let t = token();
+    assert_eq!(preflight(&t, || Ok(before())).unwrap(), before());
+    assert!(control_active(&t, Instant::now() + Duration::from_secs(30)));
+    assert!(!control_active(&t, Instant::now()));
+    cancel(&t);
+    assert!(!control_active(
+        &t,
+        Instant::now() + Duration::from_secs(30)
+    ));
 }
 
 fn before() -> RepositoryPreservationManifest {

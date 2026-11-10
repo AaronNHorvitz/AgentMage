@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The retained [review-read-scope report](docs/reviews/0c859b28ff89-local-coding-review-read-scope.txt)
+has **Verdict: PASS** for exact commit
+`0c859b28ff899a6608c070768f7e5d013a087884`, with no high or medium finding.
+Its low L-1 worktree read-selection consistency remains same-row backlog with
+the earlier lows. Neither T-303 nor T-306 closes.
+
+The [commit control checks](docs/evidence/t306-commit-control-2026-11-10.md)
+stop cancelled preflight and check cancellation/session expiry between all
+dormant commit stages and after final observation. A stop cannot become a
+successful receipt, including after a branch update; no rollback is inferred.
+Individual preservation reads remain bounded by their existing workers and
+are not made interruptible by these checkpoints. The complete affected gate
+remains **FAIL**: 1,416 passes, the exact inherited 72 failures and 64 ignores
+over 26 unfiltered targets. All three new methods, 79 controls, formatting and
+Clippy pass; three source hashes stay fixed. Independent core review is required.
+T-303/T-306 remain open without new rows; native admission, original
+reviewer/artifact provenance, full product approval composition, recovery,
+measurements and approved push remain open.
+
 The retained [executor-sequence review](docs/reviews/9e77209e0d21-local-coding-executor-sequence.txt)
 has **Verdict: PASS** for exact commit
 `9e77209e0d2199a15c6191516db9744ce3844afb`, with no high or medium finding.
