@@ -1,0 +1,194 @@
+Commit: d46e86f0993e9e1f7b7a35d3bf6f7a83a0433dbb
+Scope: local-coding-transaction-replay
+
+# Independent core review: bind dormant local commit dispatch to its durable transaction (T-303 / T-306)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only on the repository.
+Review tree: pinned checkout `/lane/review-checkout`. `git rev-parse HEAD` returned
+`d46e86f0993e9e1f7b7a35d3bf6f7a83a0433dbb`. Parent `a1c124d2f8b7a3eeeba0c97d22a49fa96bec5d2a`.
+`git status --short` was empty before and after every step. Nothing in the repository was modified.
+This is a non-closing same-row increment: T-303 and T-306 stay OPEN, and no row or sub-row was added
+(the `| [` row lines in TASKS.md are byte-identical to the parent's; `check.py` asserts this).
+
+## What I read
+
+- IP-POLICY.md; the TASKS.md top-of-queue addition; `docs/evidence/t306-transaction-replay-2026-11-10.md`;
+  the changed section of `docs/guides/reviewing-and-creating-local-commits.md`; the retained parent report
+  `docs/reviews/a1c124d2f8b7-local-coding-single-use.txt`. It is byte-identical (`cmp`) to
+  `/lane/reviews/a1c124d2f8b7-local-coding-single-use.md` and still ends with `Verdict: PASS`.
+- The complete diff against the parent for all three Rust sources: `kernel/engine/src/local_commit.rs`,
+  `kernel/engine/src/local_commit_review_preparation_tests.rs` and `kernel/engine/src/authority_transaction.rs`.
+  I also read the surrounding production code: `LocalCommitEffectDriver::execute`
+  (local_commit.rs:1291-1345), `verify_local_commit_plan`, whose whole-plan canonical hash includes
+  `commit_transaction_id` (local_commit.rs:684-722), `verify_manual_commit_approval`, which binds
+  `commit_plan_sha256` (local_commit.rs:827-847), and the coordinator's duplicate-transaction refusal
+  `histories.contains_key` → `InvalidIdentity` (authority_transaction.rs:604-606). That refusal runs before
+  the Prepared record, grant consumption or any driver call. I checked that `histories` is never pruned
+  (no remove/retain/clear/drain), and that `EffectAuthorization` is constructed in exactly one place
+  (authority_transaction.rs:748), which takes `transaction_id` from the request the store just recorded.
+  `LocalCommitEffectDriver` has no user outside `kernel/engine` (grep), so no product route is enabled.
+- Every bundle script before running it: README.md, run.py, check.py, light.py, parse_gate.py, stage_check.py
+  and mutations.py (read only, never run), plus `scripts/local_agent_fast_gate.py` and `/tools/build-slot`.
+  run.py writes only to its output directory and a fresh TMPDIR, reserves heavy commands through the gate's
+  own build-slot wrapper, and freezes and rechecks the three source hashes. check.py is a data comparison.
+  mutations.py edits source in place, so I did not run it.
+
+## Exact commands and results (all run in /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-transaction/review-inputs.sha256` → exit 0. The manifest's own
+   SHA-256 is `e9a277424620b8885854b9ce504ad188e68b98fd15da9385a33eef3a9d11965e`, as requested.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-transaction/run.py /lane/state/tmp/review-transaction-replay-full-FRESH`
+   → exit 1 (expected): `{"exit": 1, "source_unchanged": true, "seconds_including_reservations": 438.6561402659936,
+   "raw_log_sha256": "20c6248a918abeed7e32e2ea5868335786fc21183ff9689c73a5b78b3d3bbccc"}`.
+   It ran seven commands:
+   - `git diff --check`, untracked lint, review-text lint and markdownlint: all exit 0.
+   - `cargo fmt --check`: exit 0, 2.36 s.
+   - `cargo clippy -D warnings`: exit 0, 48.51 s.
+   - `cargo test`: exit 101, 386.28 s.
+   - `FAST GATE: FAIL`. No gate TIMEOUT or interruption occurred; the "timeout" and "interrupted" strings in
+     the log are test names only.
+3. `python3 -B /lane/state/tmp/t306-transaction/check.py /lane/state/tmp/review-transaction-replay-full-FRESH`
+   → exit 0 (data comparison only, not a gate PASS):
+   - 46 targets; totals 3090 passed / 72 failed / 72 ignored / 0 measured / 0 filtered.
+   - Every per-target failed and ignored identity matches the hash-pinned parent baseline, with +3 passes in
+     `agentmage_kernel_engine` lib tests.
+   - All 44 `#[test]` methods in the three changed sources report `ok`.
+   - Source hashes are fixed; the cargo plan is unchanged; the public-content scan of added lines passes.
+4. `cmp …/validation-1/source-freeze.json …/review-transaction-replay-full-FRESH/source-freeze.json` → exit 0.
+5. `python3 -B /lane/state/tmp/t306-transaction/light.py` → exit 0 (all four light commands exit 0;
+   markdownlint reports 0 issues in 3 files).
+6. `git diff --check a1c124d2f8b7a3eeeba0c97d22a49fa96bec5d2a --` → exit 0, no output.
+7. `git status --short` → empty.
+
+Extra cross-checks:
+
+- My per-target identities and counts equal the builder's `validation-1/fast.log` exactly (parse_gate).
+- The baseline `baseline-fast.log` (SHA-256 `229b9ea9…10f1`) has identities equal to the parent reviewer's
+  own independent run `/lane/state/tmp/review-single-use-full-OPUS1110/fast.log` (raw SHA-256 `ddd0c3b2…b04e`,
+  quoted in the parent report). So the "+3 over parent" comparison rests on an independently produced
+  baseline.
+- All 72 failures are in `agentmage_host` (53) and `agentmage_platform_linux` (19) lib tests: inherited
+  native-environment and other failures. The kernel engine has zero failures.
+
+The six new or rewired methods named in the request all show `... ok` in my log:
+
+- `local_commit_reconstruction_after_encrypted_restart_cannot_repeat_success`
+- `local_commit_reconstruction_after_each_durable_crash_boundary_cannot_launch_again`
+- `commit_dispatch_binds_reconstructed_drivers_to_the_approved_transaction`
+- `commit_driver_is_single_use_after_success_uncertainty_and_prelaunch_refusal`
+- `commit_driver_cannot_relaunch_after_executor_unwinds`
+- `commit_dispatch_refuses_other_operation_or_other_held_scope`
+
+My timings differ from the builder's (Clippy 48.51 s against 21.59 s; total 438.66 s against 399.67 s)
+because of cache state. Timings are published, not gated.
+
+The builder's validation-1 ran six commands; mine ran seven. That is because the retained parent review file
+was added after source freeze, so my plan also runs `--lint-reviews`, and it passed. check.py compares each
+run against its own plan, so the two results are consistent.
+
+### Independent mutation (scratch copies, never the review tree)
+
+I extracted the commit with `git archive d46e86f0… | tar -x` into `/lane/state/tmp/review-d46e-*` and made
+three mutants. I ran the three new methods plus the latch control:
+`cargo test --locked --offline -p agentmage-kernel-engine --lib -- local_commit_reconstruction_ commit_dispatch_binds_reconstructed commit_driver_is_single_use`
+through `bash /tools/build-slot`.
+
+| Mutant | Isolated method | Both durable methods | Latch control |
+| --- | --- | --- | --- |
+| Driver transaction guard removed (local_commit.rs:1308) | FAILED at preparation_tests.rs:590 | FAILED at authority_transaction.rs:2880 (renamed transaction now launches) | ok |
+| Store duplicate-history refusal removed (authority_transaction.rs:604-606) | ok | FAILED at authority_transaction.rs:2852 (same-ID replay no longer refused before consumption) | ok |
+| Both removed | FAILED | FAILED | ok |
+
+All three mutants are killed, and each guard is killed by the test that targets it. This shows the durable
+tests exercise the store's refusal and the driver's refusal separately, and do not pass on one masking the
+other.
+
+The builder's retained logs agree: transaction mutant, preparation_tests.rs:590 and authority_transaction.rs:2880;
+latch mutant, preparation_tests.rs:708.
+
+My first attempt at the history and both mutants reused the guard mutant's build. Cargo dep-info is relative
+to the workspace root, and the copies' mtimes were older than that build. I discarded those results, reran in
+separate target directories with recompilation confirmed ("Compiling agentmage-kernel-engine …mut-history"),
+and then ran `cargo clean -p agentmage-kernel-engine` on `/lane/state/review-target`, so no mutant artifact
+remains where a later checkout build could reuse it.
+
+## Analysis of the change
+
+- **Guard placement and strength.** `authorization.transaction_id().as_str() != self.prepared.plan.commit_transaction_id`
+  is inside the pre-launch refusal block. That block comes after the single-entry latch and the dispatch
+  clock sample, and before the cancellation check and `executor.execute`. A mismatch sets `ApprovalDenied`
+  and returns `EffectLaunch::failed()`, with no permit and no executor access.
+  - The comparison is byte-exact, with no normalisation in `AuthorityTransactionId::from_raw`.
+  - Both identifier validators accept the same alphabet (alphanumerics and `. _ : -`, at most 128 bytes; the
+    authority side also bans `*`, which the plan alphabet never allows). So every valid plan ID is also a
+    valid transaction ID and the guard cannot be dodged through validator asymmetry.
+- **Composition claim.** Within one canonical store, the first attempt at a plan durably records its
+  transaction ID at `PreparedStored`, before consumption or launch. Every later attempt with the same ID is
+  refused before consumption. Every attempt with a different ID passes the store but is refused by the
+  driver before launch. Changing the plan's ID changes `plan_sha256` (whole-plan canonical hash), which
+  breaks the manual approval binding (`approval.commit_plan_sha256`) and the exact request bytes.
+  - The new tests reproduce this across success and all six fault points, after a real encrypted reopen with
+    the original issuer and coordinator dropped. A genuinely new grant stays `Issued` on same-ID replay and is
+    `Consumed` on renamed dispatch, with zero launches. A second reopen preserves `receipts[0]` (the original
+    recovery outcome: Succeeded, Uncertain or Failed, as expected per fault) and `receipts[1]` (the refusal).
+  - If the first attempt crashed before `PreparedStored` became durable, no history exists and no effect can
+    have happened, so a same-ID retry is correctly allowed.
+- **Honest limits.** The evidence, guide and TASKS text state the limits plainly:
+  - the protection depends on retaining the same canonical store; a fresh or replaced store is not covered;
+  - consent, checker and artifact provenance are not authenticated;
+  - held objects, approval, clock and Git results are synthetic;
+  - native admission, original-owner approval, repository and signer recovery, model measures and approved
+    push remain open, and no product route is enabled.
+
+  I found no overclaim. Every number in the evidence (3,090/72/72, 46 targets, 44 = 3 new + 41 controls, the
+  timings and the raw SHA `077a2133…982a`) matches the builder's retained `validation-1/result.json` and
+  post-commit log. My independent run reproduces the counts and identities.
+- **Test-only visibility.** `pub(crate) mod review_preparation_tests` stays under `#[cfg(test)]`
+  (local_commit.rs:1883-1885). The `FixedClock` and `SyntheticExecutor` visibility changes are in that test
+  module. No production constructor, authority type or public API changed.
+- **Older tests rewired to the plan ID.** The fixture's default ID becomes `fixture-commit` in the clock,
+  scope, operation, unwind and single-use tests, so those tests still reach their intended checks instead of
+  failing on the new guard. The single-use reentry repeats `fixture-commit`, so the latch, not the guard,
+  refuses it. The latch mutant above still dies on that test, confirming this. The unwind test's second
+  dispatch with `unwind-second` asserts the dispatch clock is untouched (`driver.clock.0.is_empty()`), which
+  proves the latch refused it before the transaction guard could.
+- **Confinement, secrets and public content.** No sandbox, network, workspace-write or push path changed.
+  - Added lines contain no home paths, usernames, hostnames, credentials or personal data; `/lane/state/tmp`
+    references follow long-standing repository practice (227 earlier docs).
+  - The commit's author metadata is the repository's existing owner identity, not file content.
+  - No trademark branding, third-party code or patent material was added.
+  - No dependency, Cargo.lock, SBOM, licence, evaluator, held-out or hidden task, scorer, prompt, threshold,
+    scoreboard, GPU, host key, download, push or release change: the diff touches exactly the seven listed
+    files.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L-1 (low, carried, pre-existing, same-row backlog; unchanged by this commit):**
+  `kernel/engine/src/local_commit.rs:1339-1342`. When `reconcile_local_commit` returns an error after
+  `executor.execute` has run, the driver still returns `EffectLaunch::failed()`, so the effect is recorded as
+  Failed rather than Uncertain, even though a commit may already exist. This commit disclosed it accurately
+  and did not touch it. Its practical retry risk is now reduced, because same-plan retry within one canonical
+  store is refused by the store or the new guard. The fix is still to return an uncertain or completed-uncertain
+  launch outcome for post-executor reconciliation errors, with a test that the durable receipt is `Uncertain`.
+- **L-2 and earlier lows (carried backlog):** these are the prior reviews' wording and coverage items. They
+  are unchanged and still disclosed.
+- **Observation (not a finding):** no test targets a changed `commit_transaction_id` with the old approval
+  directly. The claim rests on the whole-plan canonical hash (local_commit.rs:718-721) plus the approval's
+  `commit_plan_sha256` binding, which existing field-tamper tests already exercise generically. This is
+  structurally sound as written.
+
+## Per-row result
+
+- **T-303 / T-306, increment "local-coding-transaction-replay": PASS.** The dormant commit driver is bound to
+  its approved plan's transaction identity. The binding is tested in isolation and through real encrypted
+  checkpoint and restart recovery at success and all six crash boundaries. Both the driver guard and the
+  store's duplicate refusal are independently shown necessary by mutation, and the claims are accurately
+  bounded.
+- **Rows remain OPEN.** This increment PASS does not close T-303 or T-306 and must not be substituted for row
+  closure. The complete affected gate remains FAIL on the exact inherited 72 failures, which are in host and
+  Linux-platform tests. Native admission, original-owner approval composition, a trusted checker and
+  artifacts, repository and signer recovery, model measurements and an approved push remain outstanding.
+
+Verdict: PASS

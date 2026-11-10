@@ -34,6 +34,11 @@ evidence: the fourteen-method run preceded the final internal-assertion removal;
 the final full gate validated the final test bytes. Other same-row lows remain
 backlog. No row closes and no new row is added.
 
+The parent transaction-binding commit receives independent **Verdict: PASS**
+for exact commit `d46e86f0993e9e1f7b7a35d3bf6f7a83a0433dbb`, with no high
+or medium finding. Its unchanged report is retained. It carries the same low
+post-executor uncertainty issue; this batch's fix still requires its own review.
+
 ## Validation
 
 The initial focused run passes all 22 commit methods: 14.35 seconds compilation
