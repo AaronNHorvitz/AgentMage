@@ -63,7 +63,8 @@ shared reservation. This is filtered component validation only. The initial
 focused compile failed on a private sandbox-error constructor referenced by the
 new test. The test now exercises cancelled/timed-out results and uses the
 existing dispatch seam for cleanup-uncertainty propagation, without widening
-production visibility. Both focused logs remain in the private review bundle.
+the sandbox-error constructor's visibility. The shared executable manifest
+intentionally exposes its verified artifacts only to sibling local-commit modules. Both focused logs remain in the private review bundle.
 The preliminary Markdown lint caught one extra blank line, which is corrected;
 its successful rerun is retained. Complete validation follows with source fixed.
 
