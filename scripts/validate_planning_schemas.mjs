@@ -540,7 +540,65 @@ function logicalCommitPlanSemanticErrors(data) {
   return errors;
 }
 
-// Structural history checks grant no native provenance or mutation authority.
+// Explicit Rust field order: JSON property insertion order is not evidence.
+function reviewFileRecord(file) {
+  return Object.fromEntries([
+    "operation_id", "path", "preimage_sha256", "postimage_sha256",
+    "artifact_class", "purpose", "generated", "complete_diff", "operation_sha256",
+  ].map((key) => [key, file[key]]));
+}
+
+function reviewTransactionRecord(transaction) {
+  return {
+    change_set_id: transaction.change_set_id,
+    change_set_sha256: transaction.change_set_sha256,
+    intent_sha256: transaction.intent_sha256,
+    plan_sha256: transaction.plan_sha256,
+    write_approval_receipt_sha256: transaction.write_approval_receipt_sha256,
+    write_application_receipt_sha256: transaction.write_application_receipt_sha256,
+    scope: transaction.scope,
+    review_hooks: transaction.review_hooks,
+    files: transaction.files.map(reviewFileRecord),
+    files_sha256: transaction.files_sha256,
+    write_authority: transaction.write_authority,
+  };
+}
+
+function reviewJsonDigest(value) {
+  return sha256String(JSON.stringify(value));
+}
+
+function compareUtf8(left, right) {
+  return Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"));
+}
+
+function completeDiffLines(file) {
+  if (typeof file.complete_diff !== "string") return null;
+  const lines = file.complete_diff.split(/\r?\n/u);
+  if (lines.at(-1) === "") lines.pop();
+  return lines.length === 5 &&
+    lines[0] === `--- ${file.path} sha256:${file.preimage_sha256}` &&
+    lines[1] === `+++ ${file.path} sha256:${file.postimage_sha256}` &&
+    lines[2] === "@@ exact-complete-postimage @@" &&
+    lines[3].startsWith('-"') && lines[3].endsWith('"') &&
+    lines[4].startsWith('+"') && lines[4].endsWith('"') ? lines : null;
+}
+
+function reviewPurposeMatches(file) {
+  const allowed = {
+    behavior: ["code", "configuration", false],
+    formatting: ["code", "configuration", false],
+    tests: ["test", false],
+    documentation: ["documentation", false],
+    migration: ["migration", false],
+    generated_output: ["generated_output", true],
+  }[file.purpose] ?? [];
+  return allowed.slice(0, -1).includes(file.artifact_class) &&
+    file.generated === allowed.at(-1);
+}
+
+// Recompose the Rust history projection. Digests prove integrity only, never
+// native execution, reviewer independence, approval or mutation authority.
 function writeHistorySemanticErrors(changeSet) {
   if (changeSet.write_history === undefined) return [];
   const history = changeSet.write_history;
@@ -550,34 +608,80 @@ function writeHistorySemanticErrors(changeSet) {
   const errors = [];
   const paths = new Map();
   const identities = new Set();
+  const hooks = new Set();
   let bytes = 0;
   for (const transaction of history) {
     if (!transaction || transaction.write_history !== undefined ||
-        !Array.isArray(transaction.files) || transaction.scope !== changeSet.scope ||
+        !Array.isArray(transaction.files) || !Array.isArray(transaction.review_hooks) || transaction.scope !== changeSet.scope ||
         identities.has(transaction.change_set_sha256)) {
       errors.push("write history must be flat, distinct and consistently classified");
       continue;
     }
     identities.add(transaction.change_set_sha256);
-    for (const file of transaction.files) {
-      bytes += Buffer.byteLength(file.complete_diff ?? "", "utf8");
+    const files = transaction.files;
+    if (!files.length || files.length > 128 ||
+        files.some((file) => !file || typeof file.path !== "string" ||
+          typeof file.complete_diff !== "string")) {
+      errors.push("write history transaction files must be complete");
+      continue;
+    }
+    bytes += files.reduce((total, file) => total + Buffer.byteLength(file.complete_diff, "utf8"), 0);
+    if (bytes > 8388608) return ["complete write history exceeds its byte bound"];
+    if (files.some((file, i) => i > 0 && compareUtf8(files[i - 1].path, file.path) >= 0) ||
+        new Set(files.map((file) => file.operation_id)).size !== files.length ||
+        !isStrictlySortedBy(transaction.review_hooks, (hook) => enumIndex(REVIEW_HOOK_ORDER, hook)) ||
+        files.some((file) => file.preimage_sha256 === file.postimage_sha256 ||
+          file.complete_diff.includes("\0") || !reviewPurposeMatches(file)) ||
+        transaction.files_sha256 !== reviewJsonDigest(files.map(reviewFileRecord))) {
+      errors.push("write history transaction ordering, classification or file digest disagrees");
+    }
+    for (const hook of transaction.review_hooks) hooks.add(hook);
+    for (const file of files) {
+      const lines = completeDiffLines(file);
+      if (!lines) {
+        errors.push("write history requires exact complete diff headers and five lines");
+        continue;
+      }
       const prior = paths.get(file.path);
-      if (prior && (prior.postimage_sha256 !== file.preimage_sha256 ||
-          prior.artifact_class !== file.artifact_class || prior.generated !== file.generated ||
-          prior.purpose !== file.purpose)) {
+      if (prior && (prior.file.postimage_sha256 !== file.preimage_sha256 ||
+          prior.file.artifact_class !== file.artifact_class || prior.file.generated !== file.generated ||
+          prior.file.purpose !== file.purpose)) {
         errors.push("write history has a missing or incompatible per-path link");
       }
-      paths.set(file.path, {...file, preimage_sha256: prior?.preimage_sha256 ?? file.preimage_sha256});
+      paths.set(file.path, {
+        file: {
+          ...file,
+          preimage_sha256: prior?.file.preimage_sha256 ?? file.preimage_sha256,
+          // Rust preserves a once-seen leaf verbatim; only a retry recomposes.
+          complete_diff: prior ? [prior.lines[0], lines[1], lines[2], prior.lines[3], lines[4]].join("\n") + "\n" : file.complete_diff,
+        },
+        lines: [prior?.lines[0] ?? lines[0], lines[1], lines[2], prior?.lines[3] ?? lines[3], lines[4]],
+        operations: [...(prior?.operations ?? []), file.operation_sha256],
+      });
     }
   }
-  if (bytes > 8388608) errors.push("complete write history exceeds its byte bound");
-  const final = [...paths.values()].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
-  if (final.length !== (changeSet.files ?? []).length || final.some((file, i) => {
-    const net = changeSet.files[i];
-    return !net || net.operation_id !== `history-${i}` ||
-      ["path", "preimage_sha256", "postimage_sha256", "artifact_class", "generated", "purpose"]
-        .some((key) => net[key] !== file[key]);
-  })) errors.push("write history must cover every complete net endpoint");
+  // Malformed leaves cannot become inputs to the serialization below.
+  if (errors.length) return errors;
+  const final = [...paths.values()].sort((a, b) => compareUtf8(a.file.path, b.file.path))
+    .map(({file, operations}, i) => reviewFileRecord({
+      ...file,
+      operation_id: `history-${i}`,
+      operation_sha256: reviewJsonDigest(operations),
+    }));
+  const orderedHooks = [...hooks].sort((a, b) => enumIndex(REVIEW_HOOK_ORDER, a) - enumIndex(REVIEW_HOOK_ORDER, b));
+  if (!final.length || final.length > 128 ||
+      final.some((file) => file.preimage_sha256 === file.postimage_sha256) ||
+      JSON.stringify(final) !== JSON.stringify((changeSet.files ?? []).map(reviewFileRecord))) {
+    errors.push("write history must reproduce every complete net file and diff");
+  }
+  if (changeSet.change_set_id !== "write-history" ||
+      changeSet.change_set_sha256 !== reviewJsonDigest(history.map(reviewTransactionRecord)) ||
+      changeSet.intent_sha256 !== reviewJsonDigest(history.map((transaction) => transaction.intent_sha256)) ||
+      changeSet.plan_sha256 !== reviewJsonDigest(history.map((transaction) => transaction.plan_sha256)) ||
+      changeSet.files_sha256 !== reviewJsonDigest(final) ||
+      JSON.stringify(changeSet.review_hooks) !== JSON.stringify(orderedHooks)) {
+    errors.push("write history composite identities and review hooks must match original transactions");
+  }
   return errors;
 }
 
@@ -593,7 +697,8 @@ function localReviewPacketSemanticErrors(data) {
   ) {
     errors.push("review_hooks must be strictly ordered");
   }
-  if (!isStrictlySortedBy(files, (file) => file.path)) {
+  if (files.some((file, i) => typeof file.path !== "string" ||
+      (i > 0 && (typeof files[i - 1].path !== "string" || compareUtf8(files[i - 1].path, file.path) >= 0)))) {
     errors.push("changed files must be strictly path ordered");
   }
   const operationIds = files.map((file) => file.operation_id);
@@ -602,33 +707,19 @@ function localReviewPacketSemanticErrors(data) {
   }
   if (
     files.reduce(
-      (total, file) => total + (file.complete_diff?.length ?? 0),
+      (total, file) => total + (typeof file.complete_diff === "string" ? Buffer.byteLength(file.complete_diff, "utf8") : 0),
       0,
     ) > 8388608
   ) {
     errors.push("complete diff bytes exceed the packet bound");
   }
-  const purposeMatches = {
-    behavior: ["code", "configuration", false],
-    formatting: ["code", "configuration", false],
-    tests: ["test", false],
-    documentation: ["documentation", false],
-    migration: ["migration", false],
-    generated_output: ["generated_output", true],
-  };
   for (const file of files) {
     if (file.preimage_sha256 === file.postimage_sha256) {
       errors.push(
         `changed file ${file.operation_id} must have distinct images`,
       );
     }
-    const allowed = purposeMatches[file.purpose] ?? [];
-    const generated = allowed.at(-1);
-    const artifacts = allowed.slice(0, -1);
-    if (
-      !artifacts.includes(file.artifact_class) ||
-      file.generated !== generated
-    ) {
+    if (!reviewPurposeMatches(file)) {
       errors.push(
         `changed file ${file.operation_id} purpose and artifact class disagree`,
       );

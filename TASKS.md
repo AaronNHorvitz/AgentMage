@@ -2,6 +2,16 @@
 
 ## Active queue: local agent mission
 
+The [review-history consumer repair](docs/evidence/t306-history-consumer-2026-11-09.md)
+addresses same-row low L1 from the write-history review: JSON consumption now
+recomposes original leaves, exact net diffs, composite hashes and review hooks.
+The complete affected consumer gate passes all 84 schema tests; both JavaScript
+source hashes stay fixed. The retained Rust mixed-history packet also passes.
+The existing native/runtime failures remain open and are outside this selection.
+T-303/T-306 remain open; no row or sub-row is added or closed. Independent core
+review is required. This does not authenticate reviewers/artifacts or enable
+candidate execution, approved Git, native/model measurement or durable recovery.
+
 The [original creation-provenance increment](docs/evidence/t306-creation-review-2026-11-09.md)
 connects checked published native source creation to the same original write
 history and candidate-review planner. Complete absent-before lineage, current

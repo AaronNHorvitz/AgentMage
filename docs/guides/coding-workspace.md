@@ -288,6 +288,16 @@ Its change-set digest identifies the whole history and grants no new approval.
 Each original projection retains those original receipt digests separately.
 Single-transaction projections keep the existing serialized field shape.
 
+The JSON consumer recomposes each history from the original projections. It
+checks every original file's ordering, unique operation identity, classification,
+complete diff headers and file digest, then requires the exact net diffs,
+operation digests, file digest, transaction/intent/plan digests and union of review
+hooks. Digests use Rust's declared field order regardless of incoming JSON key
+order. Both the retained history and net diff budgets count UTF-8 bytes. These
+are integrity checks, not proof of native execution, independent review or any
+permission. Single-transaction and whole-packet digest verification still
+belongs to the Rust verifier and live-owner checks.
+
 Missing or reordered links, duplicate transactions, nested histories, inconsistent
 breadth or file classification, and net-zero paths refuse.
 Exceeding a retention bound loses the review proof rather than dropping earlier

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
@@ -649,37 +650,187 @@ test("local review packets reject false review, validation, and change accountin
   }
 });
 
-test("local review histories retain separate receipts and reject incomplete chains", () => {
+// Independent synthetic producer: the live Rust producer is also checked by the
+// retained cross-language conformance command. These fixtures grant no authority.
+const reviewHash = (value) => createHash("sha256").update(value).digest("hex");
+const reviewHashJson = (value) => reviewHash(JSON.stringify(value));
+
+function historyLeaf(id, before, after, path = "src/lib.rs") {
+  const file = {
+    operation_id: "edit-0", path,
+    preimage_sha256: before === null ? "0".repeat(64) : reviewHash(before),
+    postimage_sha256: reviewHash(after),
+    artifact_class: "code", purpose: "behavior", generated: false,
+    complete_diff: "", operation_sha256: reviewHash(id),
+  };
+  file.complete_diff = `--- ${path} sha256:${file.preimage_sha256}\n+++ ${path} sha256:${file.postimage_sha256}\n@@ exact-complete-postimage @@\n-${JSON.stringify(before ?? "")}\n+${JSON.stringify(after)}\n`;
+  return {
+    change_set_id: id, change_set_sha256: reviewHash(id),
+    intent_sha256: reviewHash(`intent-${id}`), plan_sha256: reviewHash(`plan-${id}`),
+    write_approval_receipt_sha256: reviewHash(`approval-${id}`),
+    write_application_receipt_sha256: reviewHash(`application-${id}`),
+    scope: "minimal", review_hooks: ["security"], files: [file],
+    files_sha256: reviewHashJson([file]), write_authority: false,
+  };
+}
+
+function historyPacket(before = "original", middle = "retry", after = "final") {
   const source = JSON.parse(fs.readFileSync(path.join(ROOT,
     "schemas/runtime/examples/local-review-packet.valid.json"), "utf8"));
-  const first = structuredClone(source.change_set);
-  const second = structuredClone(first);
-  second.change_set_id = "second-change";
-  second.change_set_sha256 = "2".repeat(64);
-  second.files[0].preimage_sha256 = first.files[0].postimage_sha256;
-  second.files[0].postimage_sha256 = "3".repeat(64);
-  source.change_set.write_history = [first, second];
-  delete source.change_set.write_approval_receipt_sha256;
-  delete source.change_set.write_application_receipt_sha256;
-  source.change_set.files[0].operation_id = "history-0";
-  source.change_set.files[0].postimage_sha256 = second.files[0].postimage_sha256;
+  const history = [historyLeaf("first", before, middle), historyLeaf("second", middle, after)];
+  const net = historyLeaf("net", before, after).files[0];
+  net.operation_id = "history-0";
+  net.operation_sha256 = reviewHashJson(history.map((leaf) => leaf.files[0].operation_sha256));
+  source.change_set = {
+    change_set_id: "write-history", change_set_sha256: reviewHashJson(history),
+    intent_sha256: reviewHashJson(history.map((leaf) => leaf.intent_sha256)),
+    plan_sha256: reviewHashJson(history.map((leaf) => leaf.plan_sha256)),
+    write_history: history, scope: "minimal", review_hooks: ["security"],
+    files: [net], files_sha256: reviewHashJson([net]), write_authority: false,
+  };
+  source.commit_plan.change_set_sha256 = source.change_set.change_set_sha256;
   source.commit_plan.groups[0].operation_ids = ["history-0"];
-  assert.equal(validateRuntimeRecord("local-review-packet", source, runtimeValidators).valid, true);
+  return source;
+}
+
+function validateReview(packet) {
+  return validateRuntimeRecord("local-review-packet", packet, runtimeValidators);
+}
+
+test("local review histories retain separate receipts and reject incomplete chains", () => {
+  const source = historyPacket();
+  assert.equal(validateReview(source).valid, true);
   for (const mutation of ["version", "singular", "short", "long", "nested", "duplicate", "order", "gap", "scope", "endpoint"]) {
     const changed = structuredClone(source);
     const history = changed.change_set.write_history;
     if (mutation === "version") changed.schema_version = 1;
     if (mutation === "singular") changed.change_set.write_approval_receipt_sha256 = "1".repeat(64);
     if (mutation === "short") history.pop();
-    if (mutation === "long") history.push(...Array(63).fill(second));
-    if (mutation === "nested") history[0].write_history = [first, second];
+    if (mutation === "long") history.push(...Array(63).fill(history[1]));
+    if (mutation === "nested") history[0].write_history = structuredClone(source.change_set.write_history);
     if (mutation === "duplicate") history[1].change_set_sha256 = history[0].change_set_sha256;
     if (mutation === "order") history.reverse();
     if (mutation === "gap") history[1].files[0].preimage_sha256 = "9".repeat(64);
     if (mutation === "scope") history[1].scope = "refactor";
     if (mutation === "endpoint") changed.change_set.files[0].postimage_sha256 = "8".repeat(64);
-    assert.equal(validateRuntimeRecord("local-review-packet", changed, runtimeValidators).valid, false, mutation);
+    assert.equal(validateReview(changed).valid, false, mutation);
   }
+});
+
+test("local review histories reject altered net diffs, identities and hook unions", () => {
+  const source = historyPacket(null, "created\n", "revised\n");
+  assert.equal(validateReview(source).valid, true);
+  const mutations = {
+    id: (set) => { set.change_set_id = "forged-history"; },
+    change: (set) => { set.change_set_sha256 = "1".repeat(64); },
+    intent: (set) => { set.intent_sha256 = "1".repeat(64); },
+    plan: (set) => { set.plan_sha256 = "1".repeat(64); },
+    files: (set) => { set.files_sha256 = "1".repeat(64); },
+    operation: (set) => { set.files[0].operation_sha256 = "1".repeat(64); },
+    diff: (set) => { set.files[0].complete_diff = set.files[0].complete_diff.replace('revised', 'forged'); },
+    absent: (set) => { set.files[0].preimage_sha256 = reviewHash(""); },
+    missingHook: (set) => { set.review_hooks = []; },
+    addedHook: (set) => { set.review_hooks.push("performance"); },
+  };
+  for (const [name, mutate] of Object.entries(mutations)) {
+    const changed = structuredClone(source);
+    mutate(changed.change_set);
+    // Keep unrelated commit correlation current: rejection must be in history.
+    changed.commit_plan.change_set_sha256 = changed.change_set.change_set_sha256;
+    const result = validateReview(changed);
+    assert.equal(result.valid, false, name);
+    assert.ok(result.schemaErrors.some((error) => error.startsWith("write history")), name);
+  }
+});
+
+test("local review histories check every original file even after digest resealing", () => {
+  const source = historyPacket();
+  const mutations = {
+    purpose: (leaf) => { leaf.files[0].artifact_class = "test"; },
+    generated: (leaf) => { leaf.files[0].generated = true; },
+    sameImage: (leaf) => { leaf.files[0].postimage_sha256 = leaf.files[0].preimage_sha256; },
+    header: (leaf) => { leaf.files[0].complete_diff = leaf.files[0].complete_diff.replace("--- src", "--- other"); },
+    extraLine: (leaf) => { leaf.files[0].complete_diff += "extra\n"; },
+    firstLine: (leaf) => { leaf.files[0].complete_diff = leaf.files[0].complete_diff.replace('-"original"', '-original'); },
+    lastLine: (leaf) => { leaf.files[0].complete_diff = leaf.files[0].complete_diff.replace('+"retry"', '+retry'); },
+    unorderedHooks: (leaf) => { leaf.review_hooks = ["security", "interface"]; },
+    filesDigest: (leaf) => { leaf.files_sha256 = "1".repeat(64); },
+    unorderedFiles: (leaf) => {
+      const other = historyLeaf("other", "before", "after", "a.rs").files[0];
+      other.operation_id = "edit-1";
+      leaf.files.push(other);
+    },
+    duplicateOperation: (leaf) => {
+      leaf.files.push(historyLeaf("other", "before", "after", "z.rs").files[0]);
+    },
+  };
+  for (const [name, mutate] of Object.entries(mutations)) {
+    const changed = structuredClone(source);
+    const set = changed.change_set;
+    const leaf = set.write_history[0];
+    mutate(leaf);
+    if (name !== "filesDigest") leaf.files_sha256 = reviewHashJson(leaf.files);
+    set.change_set_sha256 = reviewHashJson(set.write_history);
+    changed.commit_plan.change_set_sha256 = set.change_set_sha256;
+    const result = validateReview(changed);
+    assert.equal(result.valid, false, name);
+    assert.ok(result.schemaErrors.some((error) => error.startsWith("write history")), name);
+  }
+  assert.equal(validateReview(historyPacket("original", "retry", "original")).valid, false);
+});
+
+test("local review history integrity ignores object key order and counts UTF-8 bytes", () => {
+  const source = historyPacket("before\n", "界😀\n", "after\n");
+  assert.equal(validateReview(source).valid, true);
+  const reorder = (value) => Array.isArray(value) ? value.map(reorder) :
+    value !== null && typeof value === "object" ? Object.fromEntries(
+      Object.entries(value).reverse().map(([key, child]) => [key, reorder(child)]),
+    ) : value;
+  assert.equal(validateReview(reorder(source)).valid, true);
+  for (const field of ["path", "complete_diff"]) {
+    const malformed = structuredClone(source);
+    malformed.change_set.files[0][field] = 7;
+    assert.equal(validateReview(malformed).valid, false, field);
+    const malformedLeaf = structuredClone(source);
+    malformedLeaf.change_set.write_history[0].files[0][field] = 7;
+    assert.equal(validateReview(malformedLeaf).valid, false, `leaf ${field}`);
+  }
+  const oversized = historyPacket("before", "界".repeat(1500000), "after");
+  assert.ok(oversized.change_set.write_history.reduce((sum, leaf) => sum + leaf.files[0].complete_diff.length, 0) < 8388608);
+  const result = validateReview(oversized);
+  assert.equal(result.valid, false);
+  assert.ok(result.schemaErrors.includes("complete write history exceeds its byte bound"));
+});
+
+test("local review histories preserve once-seen diff bytes and normalize only retries", () => {
+  const source = historyPacket();
+  const set = source.change_set;
+  const lone = historyLeaf("lone", "before", "after", "z.rs").files[0];
+  lone.operation_id = "edit-1";
+  lone.complete_diff = lone.complete_diff.trimEnd().replaceAll("\n", "\r\n");
+  set.write_history[0].files.push(lone);
+  set.write_history[0].files_sha256 = reviewHashJson(set.write_history[0].files);
+  const net = {...lone, operation_id: "history-1", operation_sha256: reviewHashJson([lone.operation_sha256])};
+  set.files.push(net);
+  set.files_sha256 = reviewHashJson(set.files);
+  set.change_set_sha256 = reviewHashJson(set.write_history);
+  source.commit_plan.change_set_sha256 = set.change_set_sha256;
+  source.commit_plan.groups[0].operation_ids.push("history-1");
+  source.commit_plan.groups[0].paths.push("z.rs");
+  source.commit_plan.groups[0].proposed_message = "feat: apply approved behavior change\n\nFiles: 2";
+  assert.equal(validateReview(source).valid, true);
+  const changed = structuredClone(source);
+  changed.change_set.files[1].complete_diff = lone.complete_diff.replaceAll("\r\n", "\n") + "\n";
+  changed.change_set.files_sha256 = reviewHashJson(changed.change_set.files);
+  assert.equal(validateReview(changed).valid, false);
+  // Retry leaves may use CRLF/no trailing newline; the recomposed net uses LF.
+  for (const leaf of set.write_history) {
+    leaf.files[0].complete_diff = leaf.files[0].complete_diff.trimEnd().replaceAll("\n", "\r\n");
+    leaf.files_sha256 = reviewHashJson(leaf.files);
+  }
+  set.change_set_sha256 = reviewHashJson(set.write_history);
+  source.commit_plan.change_set_sha256 = set.change_set_sha256;
+  assert.equal(validateReview(source).valid, true);
 });
 
 test("local commit records reject signer, approval, index, publication, and signature drift", () => {
