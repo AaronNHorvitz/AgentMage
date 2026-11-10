@@ -1,0 +1,169 @@
+Commit: 46b00efd1fb1a55c1918abbbfc97700e5810bc55
+Scope: local-coding-creation-edit-history
+
+# Independent review: creation review guard across failed later edits (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate session, read-only pinned checkout `/lane/review-checkout`.
+Tier: core. Immutable base: `8ca2251f23814bc2bb6f41cc2bdd1d7717a2661c`.
+
+## Methods
+
+- Confirmed the pinned checkout: `git rev-parse HEAD` = `46b00efd1fb1a55c1918abbbfc97700e5810bc55`.
+  `git diff --name-status` against the base lists 9 files: `TASKS.md`, a new evidence note, a guide
+  paragraph, two retained review copies, and four Linux platform sources (3 production, 1 test).
+- Read IP-POLICY.md, Decisions 0185–0187, the top of TASKS.md, the evidence note
+  `docs/evidence/t306-creation-edit-history-2026-11-09.md`, the guide change, and the bundle
+  `README.md`, `run.py`, `check.py`, `parse_gate.py` and `light.py` before running anything. The
+  runners write only into the fresh output directory and a private `/tmp` namespace. They do not
+  mutate tracked files.
+- Read the full diff and its context:
+  - `decide_edit` in `coding_repository_edit.rs`;
+  - `Attempt`, `complete` and `apply` in `coding_repository_runtime.rs`;
+  - every other writer of `creation_review_incomplete`, `applied_write` and `created.edits`
+    (create completion, original transfer, worktree creation, poisoned-lease recovery);
+  - the guard check in `capture_applied_write_review`;
+  - the test helpers. `apply_with_owned_driver(.., publish=false, ..)` skips `complete()`; all
+    writes go through the real native driver.
+- Mutation and probe runs, in scratch copies outside the repository under
+  `/lane/state/tmp/review-mutation-46b00efd1fb1/` (a `git archive` of the commit). Repository
+  files were never modified.
+
+## Exact commands and results (run from /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-creation-edit-loss/review-inputs.sha256`: exit 0.
+   Manifest SHA-256 `ce48c5a537908c33afb211ed98cbb62ef8da4304ce4aedfd6580efa289dc76b0`, as stated.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-creation-edit-history-full-46b00efd1fb1`
+   (fresh directory, not wrapped in build-slot): exit 1 (expected, inherited failures).
+   - `source_unchanged: true`. 296.62 s including reservations; no timeout.
+   - Raw log SHA-256 `c9a3a8935ebc43cc9a4432503c87253edc3620a25766f74ce874137fec28f42e`.
+   - Command exits: 0,0,0,0,0 (fmt),0 (Clippy),101 (Rust). The log says `FAST GATE: FAIL`.
+     `plan.json` is byte-identical to validation-2.
+3. `python3 -B …/check.py <out>`: exit 0. Results:
+   - 26 targets; totals 1313 pass / 72 fail / 64 ignore / 0 measured / 0 filtered.
+   - Every failure and ignore identity matches the base log, with exactly 4 extra Linux passes.
+   - All 8 affected methods are `ok`. TASKS.md row lines are unchanged. Both review copies are
+     byte-identical to `/lane/reviews/*.md`. No private path in added lines; no `#[ignore` added.
+   - It prints `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL`.
+4. `python3 -B …/light.py`: exit 0. Diff check, untracked lint, review lint, and markdownlint
+   (0 issues in 3 files) all pass.
+5. `cmp …/validation-2/source-freeze.json <out>/source-freeze.json`: exit 0. All 4 code hashes are
+   identical.
+6. `git diff --check 8ca2251f23814bc2bb6f41cc2bdd1d7717a2661c --`: exit 0. `git status --short`:
+   empty.
+7. Retained data. I parsed both retained runs with `parse_gate.py`:
+   - validation-1: 1312/73/64. Its only failure beyond the base is
+     `runtime_new_file_transfer_keeps_native_lineage_across_edits_and_fresh_original_approval`,
+     the post-transfer control. This matches the evidence's explanation.
+   - validation-2: 1313/72/64, with no failure beyond the base.
+   - Bundle `final-blobs.json` holds SHA-256 values of file content. All 9 equal the SHA-256 of
+     the committed blobs at this commit.
+8. Mutation M0, in scratch. The three production files are reverted to base and the new tests
+   kept:
+   `CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib creation_review -- --test-threads=4`
+   - Exit 101, with 6 passed and 4 failed.
+   - The failures are the 3 new loss regressions plus the strengthened existing missing-proof
+     regression. The inert-choice control passes on base, which is expected because it guards
+     against over-blocking.
+9. Reviewer probes of the observable behaviour, in scratch on base and fixed copies. These
+   appended reviewer-only tests call `capture_applied_write_review` with a single `edit-0` purpose.
+   - Process note: my first "fixed" run reused the base binary. `git archive` mtimes were older
+     than the shared target, and the log showed `Finished … 0.03s` with no `Compiling` line. I
+     touched the scratch sources and reran. Every result below comes from a run whose log shows
+     `Compiling agentmage-platform-linux (…/<tree>/platforms/linux)`.
+
+   | Case | Base production | This commit |
+   |---|---|---|
+   | A: published create, unpublished runtime edit of `new.py`, ordinary edit | `ACCEPTED [("new.py","a7ca205f")]` = sha256("unpublished\n"), relabelled as an existing-file edit | `refused code.commit.creation-provenance` |
+   | B: published create, manual edit fails on drift (`code.write.transaction`), ordinary edit | `ACCEPTED [("new.py","deed8a1a")]` = sha256("drift\n") | `refused code.commit.creation-provenance` |
+   | C: published create, native edit with substituted `issued_revision` in completion, ordinary edit | `ACCEPTED [("new.py","73cb3858")]` | `refused code.commit.creation-provenance` |
+
+   - With `history-N` purposes, the fixed copy also refuses with `creation-provenance` in two
+     more cases: an unpublished edit of the unrelated `one.py` followed by later edits of either
+     path, and a substituted `transaction_id`.
+   - Control: published create, then a published runtime edit of `one.py`. It is accepted with
+     `new.py` preimage `000…000` in both copies.
+   - So the repair closes the 81e600d0 L1 residual, and successful flows are not blocked.
+10. Restore-logic mutations, in the scratch fixed copy (originals restored and compared with `cmp`
+    afterwards):
+    - M1: always sticky; the restore is removed in both paths. Exit 101. The inert-choice /
+      successful-retry test and two existing successful creation-history tests fail. The tests
+      therefore detect over-blocking.
+    - M2: the restore ignores the earlier gap in both paths. Exit 101. Five sticky-gap regressions
+      fail, including the gap across later creation and handoff. The tests therefore detect a
+      non-sticky guard.
+
+## Analysis
+
+- **Manual path** (`coding_repository_edit.rs:168-180`, `:232-234`):
+  - The guard is raised before `applied_write.take()` and before dispatch whenever
+    `created.edits` holds a creation marker (`created_mode` or zero preimage). The marker is
+    sampled before the edited paths are removed.
+  - Every early return after dispatch leaves the guard raised: native error, uncertain root, or an
+    `Ok` outcome other than `committed`. Panic unwinding also leaves it raised.
+  - It is lowered only in the committed branch, and only to the pre-dispatch value. That requires
+    the earlier proof to have been retained and the composed `applied_write` to be `Some`.
+  - Denial, staleness and expiry return before history is taken. I checked this in the code and
+    the gate's inert-choice test passes.
+- **Runtime path** (`coding_repository_runtime.rs:379-382`, `:405`, `:293-300`):
+  - The mirrored logic applies. `attempted` is taken before the completion checks, so a rejected
+    completion cannot restore the guard.
+  - A dropped driver or `publish=false` leaves the guard raised.
+  - The owner stays locked by the driver's `MutexGuard` between `apply` and `complete`, so the
+    captured previous value cannot go stale.
+  - A failed candidate (lineage or shape) returns before history is taken and before native apply.
+- Creation markers carry forward through successful edits. `prepare_edit` and runtime `apply` copy
+  `before_sha256` and `created_mode` from the prior entry. The at-risk predicate therefore still
+  sees a creation after chained edits.
+- Original transfer clears `applied_write` without changing the guard. Any remaining creation
+  entry then makes the next edit set the guard, because no earlier proof was retained.
+- **Confinement:** no path-selection, sandbox, network, command, grant or route code changed. The
+  four new tests write only inside the fixture worktree, and each asserts that the original
+  checkout's untracked sentinel and Git index sentinel survive. The complete Linux suite, including
+  the existing confinement tests, ran in the gate. The only bypass this change concerns, relabelling
+  a creation, was reproduced on base and shown closed. I did not repeat the
+  traversal/symlink/environment escape set this round because no confinement code is touched.
+- **Evaluation integrity:** the diff touches no frozen, hidden, held-out, scorer, prompt,
+  threshold, dependency, SBOM, lifecycle or scoreboard file. No row or sub-row is added or closed;
+  `check.py` confirmed the TASKS.md row lines are unchanged.
+- **Honest claims:**
+  - Every count, timing and hash in the evidence note traces to the retained raw logs and the
+    bundle `result.json` files.
+  - The note says the gate remains FAIL and the comparison is data only.
+  - Fixtures are labelled as synthetic Git, process and publication observations with real native
+    writes, and not as native Git/model workflow admission or a coding score.
+  - The guide paragraph now matches the implemented behaviour, which resolves the claim-wording
+    part of the prior L1.
+- **Privacy and IP:**
+  - No private host path, username, hostname, credential, personal data or product name appears in
+    added lines.
+  - The `/lane/...` strings appear only inside the retained review copies, as generic lane paths,
+    and earlier reviews accepted them.
+  - The commit author metadata is the repository owner's normal identity.
+  - No third-party code or text.
+
+## Findings
+
+No critical, high or medium finding.
+
+- Observation, not a finding: two manual branches are not exercised by a test. They are a
+  `committed` outcome whose proof is `None`, and an `Ok` outcome other than `committed`. Both fail
+  closed by construction: the guard is raised before dispatch and is only lowered inside the
+  committed branch when `applied_write.is_some()`.
+- Carried same-row lows stay backlog, unchanged by this commit:
+  - base-preimage L1 (existing-file mode binding);
+  - base-preimage L2 (whole-tree availability);
+  - the reservation-timeout process note;
+  - earlier same-row lows.
+
+## Per-row result
+
+- T-303 / T-306, increment `local-coding-creation-edit-history` at
+  `46b00efd1fb1a55c1918abbbfc97700e5810bc55`: **accepted as a non-closing increment.**
+  - There is no open high or medium finding. The 81e600d0 L1 residual is closed: I reproduced it on
+    base and confirmed it is refused here, with mutation-checked regressions.
+  - The complete affected Rust gate remains FAIL on exactly the 72 inherited failures. The exact
+    comparison is data only. It is not a gate pass and does not accept either parent.
+  - Both parents remain OPEN. Still open: native and model workflow, reviewer/artifact provenance,
+    candidate execution, approved Git effects, native/model measurements and durable recovery.
+
+Verdict: PASS

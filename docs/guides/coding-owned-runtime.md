@@ -277,3 +277,15 @@ matching confirmation. A refused, malformed or lost reply is an error, never an
 automatic retry. Inspect `status` and `runtime` before choosing another action.
 The terminal contracts use synthetic HTTP peers and real controlling terminals;
 they are client evidence, not a positive native workflow or model score.
+
+Original-checkout preservation and inventory Git reads now use the same offline,
+read-only inspection worker as linked-worktree reads. The exact selected metadata
+below the original checkout is mapped into the guest workspace; configuration
+includes and object alternates cannot expose arbitrary host files. Both paths
+require the existing trusted launcher prerequisites. Ordinary observations also
+use the worker's 4 MiB output ceiling: oversize, cancellation or worker failure
+refuses collection, with no direct host-process fallback. This read confinement
+does not enable candidate construction, commits or pushes. Native positive
+execution and complete coding workflow acceptance remain unverified in this lane.
+The separate existing worktree mutation adapter still uses a bounded direct Git
+child; confining that effect path remains open.

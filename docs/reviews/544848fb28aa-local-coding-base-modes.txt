@@ -1,0 +1,159 @@
+Commit: 544848fb28aacf1d5b03afc243defb5ba25b63fe
+Scope: local-coding-base-modes
+
+# Independent review: existing-file modes bound to the immutable base (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate session, read-only pinned checkout `/lane/review-checkout`.
+Tier: core. Immutable base: `46b00efd1fb1a55c1918abbbfc97700e5810bc55`.
+
+## Base status
+
+The base review is available as `/lane/reviews/46b00efd1fb1-local-coding-creation-edit-history.md`.
+It reports `Verdict: PASS`, with no critical, high or medium finding and only same-row lows. So no
+open base finding carries into this commit.
+
+## Methods
+
+- Confirmed the commit: `git rev-parse HEAD` = `544848fb28aacf1d5b03afc243defb5ba25b63fe`.
+- The diff against the base touches 7 files:
+  - `TASKS.md`, with a queue paragraph only;
+  - Decision 0187, with an added mode paragraph;
+  - a new evidence note;
+  - `repository_base.rs` and `coding_repository_commit_review.rs` (production);
+  - their two test files.
+- Read before running anything:
+  - the 8ca2251f review's L1 (the target of this change) and the base review;
+  - the evidence note `docs/evidence/t306-base-modes-2026-11-09.md`;
+  - the bundle `README.md`, `run.py`, `check.py`, `parse_gate.py` and `light.py`.
+- The runners write only to the fresh output directory and a private `/tmp` namespace. None of
+  them mutates tracked files.
+- Read the full production diff in context:
+  - `collect_with` and `parse_tree`;
+  - the complete `plan_reviewed_candidate_tree_with` flow (mode derivation, base-preimage check,
+    group mode filtering, final `observe()` equality, validation recheck, `WorkspaceObservation`
+    recapture);
+  - `WorkspaceObservation::scan`, whose digest covers mode and ctime;
+  - operation-ID uniqueness in `kernel/engine/src/review_packet.rs:201-204`.
+- Mutation runs were done in a `git archive` scratch copy at
+  `/lane/state/tmp/review-mutation-544848fb28aa/tree`, outside the repository. Sources were
+  touched before each run, and each log shows `Compiling agentmage-platform-linux (…/tree/platforms/linux)`.
+
+## Exact commands and results (run from /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-base-modes/review-inputs.sha256`: exit 0. The
+   manifest SHA-256 is `a3e4ef8d56ab0ae87b8da221078474f587e9f09709f0e8972f45864a8d2c6d6d`, as stated.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-base-modes/run.py /lane/state/tmp/review-base-modes-full-544848fb28aa`
+   (fresh directory, not wrapped in build-slot): exit 1, which is expected for the inherited failures.
+   - `source_unchanged: true`. 289.84 s including reservations; no timeout.
+   - Raw log SHA-256 `5e32b59660a70d49f2e3493cc9480091b6f33d06fbb5ba9aff70ee8bc5592aba`.
+   - Command exits: 0, 0, 0, 0 (fmt), 0 (Clippy), 101 (Rust). The log says `FAST GATE: FAIL`.
+3. `python3 -B /lane/state/tmp/t306-base-modes/check.py <out>`: exit 0.
+   - 26 targets; totals 1316 pass / 72 fail / 64 ignore / 0 measured / 0 filtered.
+   - Every failure and ignore identity equals the base log, with exactly 3 extra Linux passes.
+   - All 7 listed methods (3 new, 4 affected) are `ok`.
+   - TASKS.md row lines are unchanged. No private path appears in added lines, and no `#[ignore`
+     was added.
+   - It prints `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL`.
+4. `python3 -B /lane/state/tmp/t306-base-modes/light.py`: exit 0. Diff check, untracked lint and
+   markdownlint (0 issues in 3 files) all pass.
+5. `cmp …/validation-2/source-freeze.json <out>/source-freeze.json`: exit 0, so all 4 code hashes are
+   identical. `plan.json` is also byte-identical to validation-2.
+6. `git diff --check 46b00efd1fb1a55c1918abbbfc97700e5810bc55 --`: exit 0. `git status --short`:
+   empty.
+7. Retained data:
+   - validation-1 `result.json` shows exit 1 after 397.10 s. Its log ends at the fmt reservation
+     wait with "Check interrupted; this check did not pass", before any compilation. This matches
+     the evidence.
+   - All 7 entries in bundle `final-blobs.json` equal the SHA-256 of the committed blobs at this
+     commit. They are exactly the 7 changed files.
+8. Mutation M1 removed the new mode clause from the base-preimage check in
+   `coding_repository_commit_review.rs`. I then ran
+   `CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib -- --test-threads=4 candidate_review_ base_preimages_ creation_review_candidate_plan`.
+   - Exit 101, with 19 passed and 1 failed:
+     `candidate_review_refuses_existing_mode_changes_even_with_approved_bytes_and_sealed_tests`.
+     Without the clause, the plan is released for a base 100644 file at 0o700, and for a base
+     100755 file at 0o600.
+   - So the new refusal is load-bearing and tested in both directions. The late-change test still
+     passes under M1. That is expected, because late changes are caught by the pre-existing
+     observation-equality and source-binding rechecks.
+9. Mutation M2 made `parse_tree` map `100755` to `Regular`, with the same command. Exit 101, with
+   17 passed and 3 failed:
+   - `base_preimages_bind_exact_blobs_and_distinguish_absence_from_empty`;
+   - `base_preimages_preserve_distinct_modes_for_identical_blob_bytes`;
+   - `base_preimages_real_git_protocol_fixture_keeps_base_independent_of_worktree_and_index`.
+
+   The real-Git fixture therefore ran and does verify that the committed `100755` survives a later
+   `--chmod=-x` in the index, a dirty worktree and a replacement ref.
+
+## Analysis
+
+- **Collector** (`repository_base.rs:162-169`, `:116-122`):
+  - The mode is taken from the `ls-tree` mode field of the exact base tree, read with
+    `--no-replace-objects`.
+  - Only `100644` and `100755` blobs produce a mode. Symlinks, gitlinks and trees are still refused
+    before a mode is needed, and a blob without a mode fails closed (`ok_or_else(failed)`).
+  - Index and worktree are not consulted, so a staged chmod cannot rewrite the base.
+- **Planner check** (`coding_repository_commit_review.rs:297-317`):
+  - For an existing base file, the candidate mode must equal `base.mode`. That mode is derived from
+    the owner-executable bit of the live worktree file (`:258-275`).
+  - A missing mode entry refuses (`is_none_or`). Operation IDs are strictly unique, so the
+    `find` lookup is unambiguous.
+  - New files keep the absence requirement and the exact `created_mode == permissions` check.
+  - No caller-supplied mode, override, route, executor, grant or effect is added.
+  - The check runs over every packet file before the group subset is filtered, so another group
+    cannot evade it.
+- **Late changes:**
+  - `GitObservation` equality now includes `BaseFilePreimage` (derived `PartialEq`), so a base mode
+    change between the two observations is `code.commit.git-drift`.
+  - A chmod of the source changes the `WorkspaceObservation` digest, which covers mode and ctime.
+    That invalidates sealed validation (`code.completion.source-binding`).
+  - A chmod between the first source capture and the metadata resolve is likewise caught by the
+    final recapture.
+  - Both paths are tested, and neither releases a candidate index.
+- **L1 closure:** the 8ca2251f L1 scenario (a base `100644` file whose execute bit is set and which
+  then enters the inert plan as `Executable` with only a content diff reviewed) now refuses with
+  `code.commit.base-preimage`. M1 shows the check is load-bearing. The reverse direction is also
+  covered. Decision 0187 states that a supported mode change needs its own approval design.
+- **Confinement:** no path-selection, sandbox, network, command, grant or route code changed.
+  - The new owner tests write only inside the fixture worktree and assert that the original
+    checkout's sentinel survives.
+  - The complete Linux suite, including the existing confinement tests, passed with the same
+    identities as the base.
+  - I did not repeat the traversal, symlink, environment and injection escape set this round,
+    because no confinement code is touched. The one bypass this change concerns, a chmod becoming
+    commit content, was reproduced by mutation and shown closed.
+- **Evaluation integrity:** no frozen, hidden, held-out, scorer, prompt, threshold, dependency,
+  SBOM, lifecycle or scoreboard file is touched. No row or sub-row is added or closed, and
+  `check.py` confirmed the TASKS.md row lines are unchanged. No model or GPU run and no score is
+  claimed.
+- **Honest claims:**
+  - Every count, hash and timing in the evidence note traces to the retained `validation-2`
+    `result.json` and `fast.log`, and the reviewer run reproduces the same per-target identities.
+  - The fixtures are labelled correctly: real native writes, synthetic Git, command and publication
+    observations, and direct Git as protocol data only.
+  - The gate is stated as FAIL, and the comparison as data only.
+- **Privacy and IP:**
+  - No private host path, username, hostname, credential, personal data or product name appears in
+    added lines (grep of added lines, plus `check.py`).
+  - The commit author metadata is the owner's normal identity.
+  - No third-party code or text.
+
+## Findings
+
+No critical, high, medium or new low finding.
+
+- Observation, not a finding: `0o610` (group-execute only) maps to `Regular`, which matches Git's
+  owner-executable rule and is now a positive control. Git cannot represent group or other
+  execute bits, and the check deliberately ignores them, as Decision 0187 states.
+- Earlier same-row lows remain backlog, including 8ca2251f L2 (whole-tree refusal broader than the
+  selected paths) and the 46b00efd L1/L2.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing prerequisite): the existing-file mode binding under Decision 0187 is
+  implemented, tested, load-bearing under mutation and reproduced in the full affected gate. It
+  resolves 8ca2251f L1.
+- Neither parent closes. Reviewer/artifact provenance, candidate execution, separately approved Git,
+  native/model measurement and durable recovery remain OPEN.
+
+Verdict: PASS

@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The [confined original-observation change](docs/evidence/t306-confined-observations-2026-11-10.md)
+routes original preservation and inventory Git reads through the existing offline,
+read-only inspection worker, with no direct-process observation fallback. Linked
+reads retain their existing metadata projection. The full affected gate remains
+**FAIL**: 1,321 Rust passes, the same 72 failure identities and 64 existing ignores
+across 26 unfiltered targets. All five new regressions, three affected controls,
+formatting and Clippy pass; three source hashes remain fixed. Independent core
+review is required; T-303/T-306 remain open. The existing approved worktree
+mutation adapter still needs confinement; candidate construction, approved local
+commit/push execution and native/model measurement remain open. The retained
+[creation-history review](docs/reviews/46b00efd1fb1-local-coding-creation-edit-history.txt)
+has **Verdict: PASS** for exact commit
+`46b00efd1fb1a55c1918abbbfc97700e5810bc55`, with no high or medium finding.
+Its carried low findings remain same-row backlog; neither parent row closes.
+The [mode-binding review](docs/reviews/544848fb28aa-local-coding-base-modes.txt)
+also returns **Verdict: PASS** for exact commit
+`544848fb28aacf1d5b03afc243defb5ba25b63fe`, with no new finding. It resolves
+the earlier base-preimage mode gap; neither parent closes.
+
 The [immutable-base mode prerequisite](docs/evidence/t306-base-modes-2026-11-09.md)
 requires existing-file text edits to preserve the committed executable bit;
 their approved source bytes cannot also authorize a mode change. New files

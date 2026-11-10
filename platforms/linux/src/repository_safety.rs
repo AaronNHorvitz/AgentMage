@@ -45,6 +45,9 @@ const INSPECTION_PROCESS_TIMEOUT: Duration = Duration::from_secs(15);
 const POLL_INTERVAL: Duration = Duration::from_millis(10);
 const GUEST_GIT_EXECUTABLE: &str = "/app/git";
 
+#[path = "repository_observation.rs"]
+mod observation;
+
 /// Stable failure class at the Linux repository boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LinuxRepositoryErrorKind {
@@ -501,39 +504,7 @@ impl LinuxRepositoryCollector {
         scope: &LinuxRepositoryScope,
         arguments: &[&str],
     ) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
-        scope.revalidate_linked()?;
-        revalidate_git_artifact(&self.git)?;
-        let output = Command::new(&self.git.launch_path)
-            .env_clear()
-            .env("GIT_CONFIG_NOSYSTEM", "1")
-            .env("GIT_CONFIG_GLOBAL", "/dev/null")
-            .env("GIT_TERMINAL_PROMPT", "0")
-            .env("GIT_OPTIONAL_LOCKS", "0")
-            .env("GIT_LFS_SKIP_SMUDGE", "1")
-            .env("GCM_INTERACTIVE", "Never")
-            .env("HOME", "/nonexistent")
-            .env("XDG_CONFIG_HOME", "/nonexistent")
-            .env("LANG", "C")
-            .env("LC_ALL", "C")
-            .args(hardened_observation_prefix())
-            .arg(format!("--git-dir={}", scope.git_directory.display()))
-            .arg(format!("--work-tree={}", scope.checkout_root.display()))
-            .args(arguments)
-            .stdin(Stdio::null())
-            .output()
-            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-        if output.stdout.len() > MAX_OBSERVATION_BYTES
-            || output.stderr.len() > MAX_OBSERVATION_BYTES
-        {
-            return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
-        }
-        if output.status.success() {
-            Ok(Some(output.stdout))
-        } else if matches!(output.status.code(), Some(1 | 128)) {
-            Ok(None)
-        } else {
-            Err(error(LinuxRepositoryErrorKind::ObservationFailed))
-        }
+        self.observe_inventory_optional(scope, arguments, MAX_OBSERVATION_BYTES, None)
     }
 
     pub(crate) fn observe_inventory(
@@ -554,124 +525,13 @@ impl LinuxRepositoryCollector {
         maximum_bytes: usize,
         cancellation: Option<&CancellationToken>,
     ) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
-        scope.revalidate_linked()?;
-        if maximum_bytes == 0 || maximum_bytes > 32 * 1024 * 1024 {
-            return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
-        }
-        revalidate_git_artifact(&self.git)?;
-        if cancellation.is_some_and(CancellationToken::is_cancelled) {
-            return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
-        }
-        if let Some(linked) = &scope.linked_read_only {
-            return self.observe_linked_inventory(linked, arguments, maximum_bytes, cancellation);
-        }
-        let mut command = Command::new(&self.git.launch_path);
-        command
-            .env_clear()
-            .env("GIT_CONFIG_NOSYSTEM", "1")
-            .env("GIT_CONFIG_GLOBAL", "/dev/null")
-            .env("GIT_TERMINAL_PROMPT", "0")
-            .env("GIT_OPTIONAL_LOCKS", "0")
-            .env("GIT_LFS_SKIP_SMUDGE", "1")
-            .env("GCM_INTERACTIVE", "Never")
-            .env("HOME", "/nonexistent")
-            .env("XDG_CONFIG_HOME", "/nonexistent")
-            .env("LANG", "C")
-            .env("LC_ALL", "C")
-            .args(hardened_observation_prefix())
-            .arg(format!("--git-dir={}", scope.git_directory.display()))
-            .arg(format!("--work-tree={}", scope.checkout_root.display()))
-            .args(arguments)
-            .stdin(Stdio::null());
-        let (status, stdout) =
-            run_inventory_process(&mut command, maximum_bytes, cancellation, PROCESS_TIMEOUT)?;
-        scope.revalidate_linked()?;
-        if status.success() {
-            Ok(Some(stdout))
-        } else if matches!(status.code(), Some(1 | 128)) {
-            Ok(None)
-        } else {
-            Err(error(LinuxRepositoryErrorKind::ObservationFailed))
-        }
-    }
-    // Startup inventory has explicit activation read consent rather than a
-    // model tool grant. Use the offline worker for linked metadata too: local
-    // config includes and object alternates must not expose arbitrary host paths.
-    fn observe_linked_inventory(
-        &self,
-        linked: &crate::LinuxLinkedRepository,
-        arguments: &[&str],
-        maximum_bytes: usize,
-        cancellation: Option<&CancellationToken>,
-    ) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
-        use agentmage_kernel_contracts::{
-            AdapterInstanceId, BoundaryKind, CorrelationId, TaskId, WorkspaceAuthorizationId,
-            WorkspaceId,
-        };
-        let manifest = LinuxRepositoryInspectionManifest::verify(
-            "/usr/bin/systemd-run",
-            "/usr/bin/systemctl",
-            "/usr/bin/bwrap",
-            self.git.launch_path(),
-        )?;
-        let executor = LinuxBoundedRepositoryInspectionExecutor::for_linked_worktree(
-            manifest,
-            linked.clone(),
-        )?;
-        let workspace = crate::authorize_workspace_root(
-            linked.worktree_root(),
-            WorkspaceId::from_raw("linked-startup-inventory"),
-            WorkspaceAuthorizationId::from_raw("linked-startup-inventory"),
-            AdapterInstanceId::from_raw("linked-startup-inventory"),
-        )
-        .map_err(|_| error(LinuxRepositoryErrorKind::InvalidPath))?;
-        let fallback = CancellationToken::root(
-            BoundaryKind::Shell,
-            TaskId::from_raw("linked-startup-inventory"),
-            CorrelationId::from_raw("linked-startup-inventory"),
-        );
-        let arguments: Vec<String> = hardened_observation_prefix()
-            .into_iter()
-            .chain(arguments.iter().copied())
-            .map(str::to_owned)
-            .collect();
-        let environment = [
-            ("GIT_CONFIG_NOSYSTEM", "1"),
-            ("GIT_CONFIG_GLOBAL", "/dev/null"),
-            ("GIT_TERMINAL_PROMPT", "0"),
-            ("GIT_OPTIONAL_LOCKS", "0"),
-            ("GIT_LFS_SKIP_SMUDGE", "1"),
-            ("GCM_INTERACTIVE", "Never"),
-            ("HOME", "/nonexistent"),
-            ("XDG_CONFIG_HOME", "/nonexistent"),
-            ("LANG", "C"),
-            ("LC_ALL", "C"),
-        ]
-        .into_iter()
-        .map(|(key, value)| (key.to_owned(), value.to_owned()))
-        .collect();
-        let result = executor
-            .run_read_only(
-                &arguments,
-                &environment,
-                linked_inventory_limit(maximum_bytes),
-                &workspace,
-                cancellation.unwrap_or(&fallback),
-            )
-            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-        if result.termination != RepositoryInspectionTermination::Exited
-            || !result.descendants_terminated
-        {
-            return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
-        }
-        match result.exit_code {
-            Some(0) => Ok(Some(result.stdout)),
-            Some(1 | 128) => Ok(None),
-            _ => Err(error(LinuxRepositoryErrorKind::ObservationFailed)),
-        }
+        self.observe_confined_inventory(scope, arguments, maximum_bytes, cancellation)
     }
 }
 
+// Retained only for the historical direct-process timeout regression. Product
+// repository observations use the confined, descendant-supervised owner above.
+#[cfg(test)]
 fn run_inventory_process(
     command: &mut Command,
     maximum_bytes: usize,
@@ -727,6 +587,7 @@ fn run_inventory_process(
     Ok((status, stdout))
 }
 
+#[cfg(test)]
 fn read_inventory_output(
     input: impl Read,
     maximum_bytes: usize,
