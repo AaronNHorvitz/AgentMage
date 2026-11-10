@@ -479,6 +479,16 @@ own process observations; this function cannot authenticate a checker, signer,
 executor, artifact scanner or approval channel. A serialized receipt and its
 public fields do not establish those provenances or grant effect authority.
 
+Once its executor returns, any reconciliation error becomes an uncertain effect,
+with both outcome and state-change classified as uncertain. The bounded result
+contains only the digest of the content-free boundary error. The driver retains
+that error and emits no local success receipt. An executor failure label, missing
+commit object, failed signature check, preservation drift or unverified cleanup
+cannot prove that a commit or ref update did not happen. The authority coordinator
+records uncertainty and marks the consumed grant uncertain; encrypted restart
+preserves it and refuses transaction replay. Pre-executor refusals still report
+an uncrossed effect boundary. No rollback or automatic retry is inferred.
+
 The Linux component tests now pass complete synthetic packet input through this
 same interface. Their synthetic packet, creation, validation, consent and process
 observations remain component fixtures. Empty-base source coverage separately

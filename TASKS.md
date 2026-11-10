@@ -2,6 +2,16 @@
 
 ## Active queue: local agent mission
 
+The [post-executor uncertainty increment](docs/evidence/t306-reconciliation-uncertainty-2026-11-10.md)
+keeps rejected commit results uncertain after executor invocation. One new method
+composes the dormant driver with encrypted-store recovery over seven synthetic
+result failures and three completion/crash paths. Existing single-use coverage
+now checks exact terminal outcomes. The complete affected gate remains **FAIL**:
+3,091 passes, the exact inherited 72 failures and 72 ignores over 46 unfiltered
+targets. All 45 changed-source methods, formatting and Clippy pass; three source
+hashes stay fixed. Independent core review is required. T-303/T-306 remain open
+without new rows; no product commit route or native admission is enabled.
+
 The retained [single-use review](docs/reviews/a1c124d2f8b7-local-coding-single-use.txt)
 has **Verdict: PASS** for exact commit
 `a1c124d2f8b7a3eeeba0c97d22a49fa96bec5d2a`, with no high or medium finding.

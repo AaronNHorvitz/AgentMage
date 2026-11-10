@@ -2702,6 +2702,219 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn local_commit_reconciliation_failure_stays_uncertain_through_encrypted_restart() {
+        use crate::local_commit::{
+            BoundedLocalCommitExecutor, LocalCommitEffectDriver, LocalCommitError,
+            LocalCommitLaunchPermit, LocalCommitPlatformResult,
+            review_preparation_tests::{FixedClock, SyntheticExecutor, prepared_fixture},
+        };
+        use crate::propagation::CancellationToken;
+        use crate::repository_safety::RepositoryPreservationManifest;
+
+        struct Executor {
+            inner: SyntheticExecutor,
+            failure: &'static str,
+        }
+        impl BoundedLocalCommitExecutor for Executor {
+            fn execute(
+                &mut self,
+                permit: LocalCommitLaunchPermit<'_>,
+                cancellation: &CancellationToken,
+            ) -> LocalCommitPlatformResult {
+                let mut result = self.inner.execute(permit, cancellation);
+                // Every case starts with an observed synthetic ref update;
+                // neither a failure label nor missing evidence proves rollback.
+                assert_ne!(result.task_branch_after, result.task_branch_before);
+                match self.failure {
+                    "cleanup" => result.cleanup_verified = false,
+                    "signature" => result.signature_verified = false,
+                    "preservation" => {
+                        result.after.index_sha256 = "e".repeat(64);
+                        result.after = RepositoryPreservationManifest::seal(result.after).unwrap();
+                    }
+                    "missing-object" => result.commit_object = None,
+                    "failed" => result.outcome = OperationOutcome::Failed,
+                    "cancelled" => result.outcome = OperationOutcome::Cancelled,
+                    "uncertain" => result.outcome = OperationOutcome::Uncertain,
+                    _ => unreachable!(),
+                }
+                result
+            }
+        }
+
+        for failure in [
+            "cleanup",
+            "signature",
+            "preservation",
+            "missing-object",
+            "failed",
+            "cancelled",
+            "uncertain",
+        ] {
+            for fault in [
+                None,
+                Some(FaultPoint::WorkerReturned),
+                Some(FaultPoint::ResultReconciled),
+            ] {
+                let (prepared, before) = prepared_fixture();
+                let mut fixture = fixture_with_operation(
+                    None,
+                    GrantOperation::GitCommit,
+                    prepared.request_bytes(),
+                );
+                fixture.transaction_id =
+                    AuthorityTransactionId::from_raw(&prepared.plan().commit_transaction_id);
+                let mut request = request(&fixture);
+                request.context.now_epoch_ms = 15_000;
+                request.occurred_at_epoch_ms = 15_000;
+                let mut driver = LocalCommitEffectDriver::new(
+                    Executor {
+                        inner: SyntheticExecutor::default(),
+                        failure,
+                    },
+                    commit_held_fixture(),
+                    prepared.clone(),
+                    before.clone(),
+                    CancellationToken::root(
+                        agentmage_kernel_contracts::BoundaryKind::Kernel,
+                        fixture.context.task_id.clone(),
+                        fixture.call.correlation_id.clone(),
+                    ),
+                    FixedClock(15_001),
+                )
+                .unwrap();
+                let directory = store_directory();
+                let path = directory.join("uncertain-commit.db");
+                let observation = store_observation();
+                let mut store =
+                    OperationalStore::open(&path, &observation, &mut TestStoreKey([47; 32]))
+                        .unwrap();
+                let mut coordinator = AuthorityTransactionCoordinator::new();
+                store
+                    .persist_authority(&fixture.issuer, &coordinator)
+                    .unwrap();
+                let result = coordinator.run_with_checkpoint(
+                    &fixture.registry,
+                    &mut fixture.issuer,
+                    &fixture.policy,
+                    &request,
+                    &mut driver,
+                    fault,
+                    &mut |issuer, coordinator| {
+                        store
+                            .persist_authority(issuer, coordinator)
+                            .map_err(|_| AuthorityTransactionError::PersistenceFailure)
+                    },
+                );
+                let original_receipt = if fault.is_some() {
+                    assert_eq!(result, Err(AuthorityTransactionError::SimulatedCrash));
+                    None
+                } else {
+                    let receipt = result.unwrap();
+                    assert_eq!(receipt.outcome, OperationOutcome::Uncertain, "{failure}");
+                    assert_eq!(
+                        receipt.error.as_ref().unwrap().code,
+                        "authority.transaction.effect_uncertain"
+                    );
+                    assert!(
+                        coordinator
+                            .current(&request.transaction_id)
+                            .unwrap()
+                            .uncertain_effect
+                    );
+                    assert_eq!(
+                        fixture.issuer.current(&request.grant_id).unwrap().status,
+                        GrantStatus::Uncertain
+                    );
+                    Some(receipt)
+                };
+                assert!(driver.take_receipt().is_none());
+                assert_eq!(driver.take_error(), Some(LocalCommitError::ResultDenied));
+                assert_eq!(driver.into_executor().inner.launches, 1);
+                drop(store);
+                drop(coordinator);
+                drop(fixture.issuer);
+
+                let mut runtime = DurableAuthorityRuntime::open(
+                    &path,
+                    &observation,
+                    &mut TestStoreKey([47; 32]),
+                    15_002,
+                )
+                .unwrap();
+                assert_eq!(runtime.receipts().len(), 1);
+                let recovered = runtime.receipts()[0].clone();
+                assert_eq!(
+                    recovered.outcome,
+                    OperationOutcome::Uncertain,
+                    "{failure}/{fault:?}"
+                );
+                assert_eq!(recovered.authority_transaction_id, request.transaction_id);
+                assert_eq!(recovered.operation_attempt_id, request.attempt_id);
+                assert!(
+                    runtime
+                        .current_transaction(&request.transaction_id)
+                        .unwrap()
+                        .uncertain_effect
+                );
+                assert_eq!(
+                    runtime.current_grant(&request.grant_id).unwrap().status,
+                    GrantStatus::Uncertain
+                );
+                if let Some(original) = original_receipt {
+                    assert_eq!(recovered, original);
+                }
+                let mut repeated = LocalCommitEffectDriver::new(
+                    SyntheticExecutor::default(),
+                    commit_held_fixture(),
+                    prepared,
+                    before,
+                    CancellationToken::root(
+                        agentmage_kernel_contracts::BoundaryKind::Kernel,
+                        fixture.context.task_id.clone(),
+                        fixture.call.correlation_id.clone(),
+                    ),
+                    FixedClock(15_003),
+                )
+                .unwrap();
+                assert_eq!(
+                    runtime.execute_effect(
+                        &fixture.registry,
+                        &fixture.policy,
+                        request.clone(),
+                        &mut repeated,
+                    ),
+                    Err(DurableAuthorityError::Transaction(
+                        AuthorityTransactionError::InvalidIdentity
+                    ))
+                );
+                assert_eq!(repeated.into_executor().launches, 0);
+                drop(runtime);
+                let reopened = DurableAuthorityRuntime::open(
+                    &path,
+                    &observation,
+                    &mut TestStoreKey([47; 32]),
+                    15_004,
+                )
+                .unwrap();
+                assert_eq!(reopened.receipts(), std::slice::from_ref(&recovered));
+                assert_eq!(
+                    reopened.current_grant(&request.grant_id).unwrap().status,
+                    GrantStatus::Uncertain
+                );
+                assert!(
+                    reopened
+                        .current_transaction(&request.transaction_id)
+                        .unwrap()
+                        .uncertain_effect
+                );
+                drop(reopened);
+                fs::remove_dir_all(directory).unwrap();
+            }
+        }
+    }
+
+    #[test]
     fn local_commit_reconstruction_after_encrypted_restart_cannot_repeat_success() {
         assert_commit_restart_refuses_reconstruction(None);
     }

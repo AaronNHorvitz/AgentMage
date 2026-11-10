@@ -1344,7 +1344,14 @@ where
             }
             Err(error) => {
                 self.error = Some(error);
-                EffectLaunch::failed()
+                // The executor already crossed the effect boundary. A rejected
+                // result cannot prove that no commit or ref update occurred.
+                // Retain only the content-free error, never unverified output.
+                EffectLaunch::completed(EffectResult::from_redacted_material(
+                    OperationOutcome::Uncertain,
+                    error.code().as_bytes(),
+                    StateChange::Uncertain,
+                ))
             }
         }
     }

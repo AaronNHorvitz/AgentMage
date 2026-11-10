@@ -680,8 +680,12 @@ fn commit_driver_is_single_use_after_success_uncertainty_and_prelaunch_refusal()
             "attempt-first",
         );
         assert_eq!(
-            first.outcome == OperationOutcome::Succeeded,
-            field == "success",
+            first.outcome,
+            match field {
+                "success" => OperationOutcome::Succeeded,
+                "uncertain" => OperationOutcome::Uncertain,
+                _ => OperationOutcome::Failed,
+            },
             "{field}"
         );
         assert_eq!(driver.clock.0.len(), 1);
