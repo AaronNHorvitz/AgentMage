@@ -1,0 +1,152 @@
+Commit: b43c967558b31bea39b0751ee0ef5b545bc2bb33
+Scope: local-coding-commit-findings
+
+# Independent review: commit finding admission (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only on the repository.
+Checkout: pinned `/lane/review-checkout`; `git rev-parse HEAD` =
+`b43c967558b31bea39b0751ee0ef5b545bc2bb33`. Base `18dd68113fc3be02da886bd7e4123cf950c2abaa`
+is the commit's direct parent. The commit changes eight files (four Rust, TASKS.md, the evidence
+file, the guide and the retained review copy). It does not rewrite the base or its ancestors.
+
+## Methods
+
+- I read IP-POLICY.md, the private bundle README, `run.py`, `check.py`, `parse_gate.py`, `light.py`
+  and `stage_check.py` before running anything. The scripts only write to the output directory and
+  a fresh TMPDIR. The fast gate reserves `/tools/build-slot` internally
+  (`scripts/local_agent_fast_gate.py:208,305`), so I did not outer-wrap it.
+- I read the full diff of `kernel/engine/src/local_commit.rs`, `kernel/engine/src/review_packet.rs`,
+  `platforms/linux/src/coding_repository_commit_review.rs` and its `_tests.rs`. I also read the
+  evidence file, the guide and the TASKS.md additions. The retained 18dd68113fc3 review was checked
+  byte-for-byte.
+- Surrounding code: `verify_review_packet` / `build_review_packet` / `verify_review_results`
+  (review_packet.rs:795-980). These rebuild the packet and re-normalize findings plus suppressed
+  entries from their inputs, so an altered inner severity fails even if the outer digest is
+  recomputed.
+- Caller sweep: `plan_candidate_tree`, `plan_local_commit`, `verify_local_commit_review`,
+  `verify_review_packet`, `plan_reviewed_candidate_tree`, `consented_commit_review` and
+  `blocking_finding_count` across all crates.
+  - The only product route is the Linux one: `LinuxCodingCommitReview::plan_candidate_tree` →
+    `plan_reviewed_candidate_tree` → `plan_reviewed_candidate_tree_with`.
+  - `plan_local_commit` has no non-test caller.
+  - `blocking_finding_count` remains a display count (validated against visible high/critical in
+    `scripts/validate_planning_schemas.mjs:861`).
+- Independent mutation probes on a scratch copy (`git archive HEAD` into /tmp, outside the
+  repository, deleted afterwards). Built through `/tools/build-slot` with
+  `CARGO_TARGET_DIR=/lane/state/review-target`:
+  1. `plan_local_commit` reverted to `verify_review_packet` only: the kernel matrix FAILS at
+     review_packet.rs:1535 with `commit: Medium/0/duplicate=false`. This proves the
+     commit-planner refusal is tested independently of candidate refusal; the builder's red.log
+     stops at the candidate assertion and does not show this.
+  2. `.chain(suppressed)` removed from `verify_local_commit_review` (visible-only check): the
+     kernel matrix FAILS at :1453, and the Linux method FAILS at tests.rs:699 with
+     `code.command.scope` instead of `code.commit.review-packet`.
+  3. The Linux check moved after `capture_applied_write_review` / before
+     `check_completion_validation`: the Linux method FAILS at :699 with `code.command.scope`.
+     This proves the ordering claim ("before held-root/source/Git inspection") is enforced by the
+     test.
+- Public content: added lines contain no home-directory path, username, e-mail, hostname,
+  credential or trademark branding. The `/lane/state/tmp/...` bundle citation in the evidence file
+  follows established precedent (213 docs files at base) and is not a private user or host path.
+  No other product is named.
+- Evaluation integrity: the diff touches no evaluation tasks, hidden or held-out tests, scorer,
+  prompts, thresholds, dependencies, Cargo.lock, SBOM or scoreboard (diff stat confirms eight
+  files only).
+
+## Commands and results (exact pinned checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-review-admission/review-inputs.sha256` → exit 0.
+   The manifest's own SHA-256 is
+   `ee5a21d45d4d5fb4a2c622e94b51771ef7ef9246f58473ffff45e603fe3ed94e`, matching the request.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-review-admission/run.py /lane/state/tmp/review-commit-findings-full-b43c967558b3`
+   → exit 1 (expected). Result: `{"exit": 1, "source_unchanged": true,
+   "seconds_including_reservations": 435.92003084599855, "raw_log_sha256":
+   "46b0df598c001ce04f96f59fe678907e260d68d062e75e17dee1796e51383560"}`.
+   - `FAST GATE: FAIL`.
+   - Seven commands: six exit 0 (diff-check, untracked lint, review lint, markdownlint, fmt 7.47 s,
+     Clippy 47.25 s); cargo test exits 101 after 379.63 s. No timeout.
+   - Both new methods are `... ok`.
+   - The 72 failures are all in unchanged Linux modules: 42 linux_coding_runtime, 13
+     repository_safety, 10 linux_read, 2 secret_service, 2 local_commit, 2 command_runner and
+     1 linux_repository_map. The sampled ones are `InvalidGitArtifact` environment failures, and
+     they are also present in the baseline log.
+   - No failure is in review_packet, the kernel's local_commit or commit_review.
+   - My timings differ from the builder's (423.66 s); these are published measurements, not gates.
+3. `python3 -B /lane/state/tmp/t306-review-admission/check.py /lane/state/tmp/review-commit-findings-full-b43c967558b3`
+   → exit 0: `{"gate": "FAIL", "targets": 46, "totals": [3063, 72, 72, 0, 0], "source_files": 4,
+   "affected_methods": 33, ...}` and `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL`.
+   - This confirms that all 26 prior targets keep identical failure and ignore identities, with +1
+     Linux pass.
+   - The 20 extra kernel targets have zero failures, and their only ignores are the 8 listed
+     helpers.
+   - Engine library: 1575 + 0 + 8 = 1583.
+   - All 33 test methods in the three affected test sources pass.
+4. `cmp .../validation-1/source-freeze.json .../review-commit-findings-full-b43c967558b3/source-freeze.json`
+   → exit 0 (identical four source hashes).
+   Observation: my `plan.json` differs from the builder's validation-1 plan. The builder's freeze
+   predates adding TASKS.md and the retained review, so my plan adds markdownlint of TASKS.md and
+   `--lint-reviews` of the retained report. Both pass in my run. The cargo commands are identical
+   (asserted by check.py). This is consistent with the README's statement that the final light
+   checks ran after the docs were added.
+5. `python3 -B /lane/state/tmp/t306-review-admission/light.py` → exit 0. Four LIGHT_EXIT 0 lines;
+   markdownlint reports 0 issues in 3 files.
+6. `git diff --check 18dd68113fc3be02da886bd7e4123cf950c2abaa --` → exit 0, no output.
+7. `cmp docs/reviews/18dd68113fc3-local-coding-worktree-read-selection.txt /lane/reviews/18dd68113fc3-local-coding-worktree-read-selection.md`
+   → exit 0.
+8. `git status --short` → empty (also empty after the mutation probes; HEAD unchanged).
+
+Retained logs: `red.log` fails both new methods (kernel :1461 candidate accepted Medium/0; Linux
+`code.command.scope`). `focused.log` has kernel ok and Linux ordering failing. `focused-2.log`
+fails on the rename-back assumption at :717 (`matches_current_observation` true vs false).
+`focused-3.log` passes both. This agrees with the narrative.
+
+## Assessment
+
+- `verify_local_commit_review` (local_commit.rs:137-160) runs full `verify_review_packet` first,
+  then refuses any Medium/High/Critical in `findings ∪ suppressed[*].finding`. This is the correct
+  complete-result policy. Confidence threshold, duplicate suppression, the display count and the
+  packet schema are untouched.
+- The check fails closed with `ReviewMismatch` and grants nothing.
+- Both kernel planners call it as their first statement (local_commit.rs:171, :617).
+- The Linux route calls it first, before `created_git_identity`, write-history capture, validation
+  checks and Git observation (coding_repository_commit_review.rs:243). Refusal therefore spends no
+  records and touches no filesystem.
+- The Linux test proves the observer never runs, retained receipts are unchanged, the original
+  write proof is reproducible, the sentinel bytes are preserved and no candidate index is created.
+- Its post-rename `code.completion.source-binding` assertion correctly treats external root drift
+  as non-recoverable, rather than relaxing a boundary.
+- Claims in the evidence, guide and TASKS.md are scoped to the planners. They explicitly disclaim
+  reviewer authentication, result completeness and artifact provenance, and keep approval
+  composition, native admission, recovery, measurements and push open. I found no overclaim.
+  Fixtures are labelled synthetic.
+- No confinement boundary is weakened. No route, permission, network or push path is added.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low (backlog).** Admission is enforced only at planning. `verify_local_commit_plan`
+  (local_commit.rs:685), `record_manual_commit_approval` (:783) and `verify_manual_commit_approval`
+  (:820) re-verify only the `LocalCommitPlan`'s own unkeyed digest and carry
+  `review_packet_sha256` as a bare hash. A plan assembled outside `plan_local_commit` with a
+  self-computed digest would reach approval without the finding check.
+  - This predates this commit, has no product caller today, and falls under the documented-open
+    "full product approval composition / approval provenance".
+  - Fix when composing execution: require the exact packet (or a keyed admission receipt) at
+    approval and effect launch, and call `verify_local_commit_review` there.
+- **Low (backlog).** The severity threshold is spelled as an explicit `matches!` list in
+  local_commit.rs:150-154, and again in the display count at review_packet.rs:809-818. A future
+  `FindingSeverity` variant would be silently admitted.
+  - Fix: use an exhaustive `match` with no wildcard, or a single `FindingSeverity::blocks_commit()`
+    helper, so the compiler forces a decision.
+
+## Per-row result
+
+- T-303: no change to row status. This batch is acceptable as non-closing core work; the row
+  remains OPEN.
+- T-306: no change to row status. This batch is acceptable as non-closing core work; the row
+  remains OPEN. The two lows above join the existing same-row backlog (including the four lows
+  from 18dd68113fc3).
+- No new row or sub-row was added, so there is no Delivery or REFOCUS finding.
+
+Verdict: PASS

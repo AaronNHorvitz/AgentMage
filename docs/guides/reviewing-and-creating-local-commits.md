@@ -394,3 +394,28 @@ executor accepts it and it authorizes no Git effect. The old `plan_candidate_tre
 method remains explanatory evidence only. No API, MCP or terminal route is added;
 installation of a real independent checker, artifact provenance, native admission
 and complete product approval composition remain open.
+
+## Retain the complete packet through commit preparation
+
+`record_reviewed_manual_commit_approval` and
+`verify_reviewed_manual_commit_approval` require the complete typed packet.
+They check packet integrity, all visible and suppressed material findings and
+the exact packet, repository, parent, logical group and proposed message against
+the commit plan. Rehashing a caller-created plan cannot replace these checks.
+The older manual-receipt primitives check integrity and exact approval fields
+only; they do not inspect a review packet or authenticate person consent.
+
+`PreparedLocalCommit::new` now requires and owns that complete packet. It
+cannot be prepared from a bare packet hash. The dormant driver repeats the
+complete check at construction and immediately before passing its launch
+permit to the executor. The request bytes still contain the exact plan and
+approval digest; the plan's packet digest binds the retained packet. Debug
+formatting omits the packet and its content. Existing expiry, held-object,
+consumed-grant, exact request, cancellation and preservation checks remain.
+
+This supplies packet admission at the dormant kernel boundary, not independent
+reviewer authentication or a product commit command. It does not authenticate
+candidate construction, signer capture, artifact capture/scanning, the original
+owner or the manual approval channel. Those remain mandatory for the eventual
+product composition. No API, MCP, CLI or native execution is activated, and
+there is no commit or push authority from these values alone.

@@ -779,7 +779,10 @@ pub struct ManualCommitApprovalReceipt {
     pub receipt_sha256: String,
 }
 
-/// Records an exact current manual approval without launching Git.
+/// Records an integrity-only manual approval without launching Git.
+/// This primitive does not inspect the packet or authenticate consent. Product
+/// composition must use `record_reviewed_manual_commit_approval`; preparation
+/// and effect launch independently require the complete exact packet as well.
 pub fn record_manual_commit_approval(
     plan: &LocalCommitPlan,
     decision: ManualCommitApprovalDecision,
@@ -847,6 +850,53 @@ pub fn verify_manual_commit_approval(
         return Err(LocalCommitError::ApprovalDenied);
     }
     Ok(())
+}
+
+/// Checks the complete packet and its exact commit-significant plan bindings.
+/// This does not authenticate the reviewer, artifact capture, candidate-tree
+/// construction, original-owner provenance or the approval channel.
+fn verify_commit_packet_binding(
+    plan: &LocalCommitPlan,
+    packet: &LocalReviewPacket,
+) -> Result<(), LocalCommitError> {
+    verify_local_commit_review(packet)?;
+    let group = packet
+        .commit_plan
+        .groups
+        .iter()
+        .find(|group| group.group_sha256 == plan.commit_group_sha256)
+        .ok_or(LocalCommitError::ReviewMismatch)?;
+    if plan.review_packet_sha256 != packet.packet_sha256
+        || plan.repository_sha256 != packet.repository_sha256
+        || plan.parent_object != packet.base_object
+        || plan.message != group.proposed_message
+    {
+        return Err(LocalCommitError::ReviewMismatch);
+    }
+    Ok(())
+}
+
+/// Records manual approval only after checking the complete exact review packet.
+/// Neither packet integrity nor this receipt authenticates consent or grants
+/// execution authority. Original-owner and trusted reviewer checks remain required.
+pub fn record_reviewed_manual_commit_approval(
+    plan: &LocalCommitPlan,
+    packet: &LocalReviewPacket,
+    decision: ManualCommitApprovalDecision,
+) -> Result<ManualCommitApprovalReceipt, LocalCommitError> {
+    verify_commit_packet_binding(plan, packet)?;
+    record_manual_commit_approval(plan, decision)
+}
+
+/// Rechecks the complete packet, plan bindings and exact current manual receipt.
+pub fn verify_reviewed_manual_commit_approval(
+    plan: &LocalCommitPlan,
+    packet: &LocalReviewPacket,
+    approval: &ManualCommitApprovalReceipt,
+    now_epoch_ms: u64,
+) -> Result<(), LocalCommitError> {
+    verify_commit_packet_binding(plan, packet)?;
+    verify_manual_commit_approval(plan, approval, now_epoch_ms)
 }
 
 /// Trusted terminal observations from one exact signed local commit attempt.
@@ -1031,22 +1081,25 @@ struct CommitExecutionRequest<'a> {
 }
 
 /// Authority-free exact bytes used for one GitCommit grant and call binding.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct PreparedLocalCommit {
     plan: LocalCommitPlan,
+    packet: LocalReviewPacket,
     approval: ManualCommitApprovalReceipt,
     request_bytes: Vec<u8>,
     request_sha256: String,
 }
 
 impl PreparedLocalCommit {
-    /// Validates and serializes one exact current manual commit request.
+    /// Validates and retains the complete exact packet before serializing a
+    /// current manual request. A bare packet hash cannot prepare an effect.
     pub fn new(
         plan: LocalCommitPlan,
+        packet: LocalReviewPacket,
         approval: ManualCommitApprovalReceipt,
         now_epoch_ms: u64,
     ) -> Result<Self, LocalCommitError> {
-        verify_manual_commit_approval(&plan, &approval, now_epoch_ms)?;
+        verify_reviewed_manual_commit_approval(&plan, &packet, &approval, now_epoch_ms)?;
         let request_bytes = serde_json::to_vec(&CommitExecutionRequest {
             plan: &plan,
             approval_receipt_sha256: &approval.receipt_sha256,
@@ -1055,6 +1108,7 @@ impl PreparedLocalCommit {
         let request_sha256 = sha256_hex(&request_bytes);
         Ok(Self {
             plan,
+            packet,
             approval,
             request_bytes,
             request_sha256,
@@ -1077,6 +1131,24 @@ impl PreparedLocalCommit {
     #[must_use]
     pub const fn plan(&self) -> &LocalCommitPlan {
         &self.plan
+    }
+
+    fn verify_at(&self, now_epoch_ms: u64) -> Result<(), LocalCommitError> {
+        verify_reviewed_manual_commit_approval(
+            &self.plan,
+            &self.packet,
+            &self.approval,
+            now_epoch_ms,
+        )
+    }
+}
+
+impl fmt::Debug for PreparedLocalCommit {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("PreparedLocalCommit")
+            .field("transaction_id", &self.plan.commit_transaction_id)
+            .finish_non_exhaustive()
     }
 }
 
@@ -1145,7 +1217,7 @@ impl<E, H> LocalCommitEffectDriver<E, H> {
         before
             .verify()
             .map_err(|_| LocalCommitError::ResultDenied)?;
-        verify_manual_commit_approval(&prepared.plan, &prepared.approval, now_epoch_ms)?;
+        prepared.verify_at(now_epoch_ms)?;
         if before.manifest_sha256 != prepared.plan.preservation_manifest_sha256
             || before.repository_sha256 != prepared.plan.repository_sha256
             || before.index_sha256 != prepared.plan.user_index_sha256
@@ -1204,12 +1276,7 @@ where
             || call.arguments.sha256 != self.prepared.request_sha256
             || call.arguments.bytes != self.prepared.request_bytes
             || sha256_hex(&call.arguments.bytes) != call.arguments.sha256
-            || verify_manual_commit_approval(
-                &self.prepared.plan,
-                &self.prepared.approval,
-                self.now_epoch_ms,
-            )
-            .is_err()
+            || self.prepared.verify_at(self.now_epoch_ms).is_err()
         {
             self.error = Some(LocalCommitError::ApprovalDenied);
             return EffectLaunch::failed();
@@ -1622,19 +1689,8 @@ mod tests {
         assert!(verify_local_commit_plan(&plan).is_ok());
         let approval = approval(&plan);
         assert!(verify_manual_commit_approval(&plan, &approval, 15_000).is_ok());
-        let prepared = PreparedLocalCommit::new(plan.clone(), approval.clone(), 15_000)
-            .expect("prepared commit");
-        assert_eq!(
-            sha256_hex(prepared.request_bytes()),
-            prepared.request_sha256()
-        );
-        assert_eq!(prepared.plan(), &plan);
-        assert_eq!(
-            PreparedLocalCommit::new(plan.clone(), approval.clone(), 20_000)
-                .expect_err("expired preparation")
-                .code(),
-            LocalCommitError::ApprovalDenied.code()
-        );
+        // Complete-packet preparation, canonical bytes and expiry are exercised
+        // by review_preparation_tests with an actual typed packet fixture.
         assert_eq!(
             verify_manual_commit_approval(&plan, &approval, 20_000),
             Err(LocalCommitError::ApprovalDenied)
@@ -1792,3 +1848,7 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+#[path = "local_commit_review_preparation_tests.rs"]
+mod review_preparation_tests;

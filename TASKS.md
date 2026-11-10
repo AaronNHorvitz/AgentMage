@@ -2,6 +2,32 @@
 
 ## Active queue: local agent mission
 
+The [complete-packet preparation increment](docs/evidence/t306-complete-packet-preparation-2026-11-10.md)
+retains the exact typed packet through dormant commit preparation and rechecks
+its integrity, material findings and commit bindings at driver construction and
+dispatch. New reviewed-manual receipt helpers require the packet too. These
+checks do not authenticate reviewer, artifact, candidate or consent provenance.
+The complete affected gate remains **FAIL**: 3,073 passes, the exact inherited
+72 failures and 72 ignores across 46 unfiltered targets, including all kernel
+targets. All four new methods, nine affected controls, formatting and Clippy
+pass; three source hashes stay fixed. Independent core review is required.
+T-303/T-306 stay open without new rows; native admission, actual checker/artifact
+integration, full live-owner approval composition, recovery, model measurements
+and approved push remain open.
+
+The retained [candidate-checker review](docs/reviews/e0702bdd9b45-local-coding-candidate-checker.txt)
+has **Verdict: PASS** for exact commit
+`e0702bdd9b4523668bc075ff09e940290e23a3f7`, with no high or medium finding.
+Its low L1 (native refusal-code coverage on an admitting host) and L2 (checker
+failure precedence over concurrent cancellation) remain same-row backlog.
+The retained [commit-finding review](docs/reviews/b43c967558b3-local-coding-commit-findings.txt)
+has **Verdict: PASS** for exact commit
+`b43c967558b31bea39b0751ee0ef5b545bc2bb33`, with no high or medium finding.
+The preparation increment above addresses packet admission at preparation and
+dispatch and offers packet-bound manual receipt helpers. Complete original-owner
+and consent provenance remain open; the low exhaustive-severity finding remains
+backlog. Neither T-303 nor T-306 closes.
+
 The [original-owner checker connection](docs/decisions/0198-original-owner-candidate-review-checker.md)
 delivers exact borrowed creation and validation records to an explicitly installed
 trusted checker and rechecks complete source/Git observations after success.

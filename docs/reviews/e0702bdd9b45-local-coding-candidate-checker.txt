@@ -1,0 +1,148 @@
+Commit: e0702bdd9b4523668bc075ff09e940290e23a3f7
+Scope: local-coding-candidate-checker
+
+# Independent review: original-owner candidate checker connection (T-303 / T-306, core, non-closing)
+
+Reviewer: Claude Opus 5.5, separate read-only session, pinned checkout `/lane/review-checkout`.
+Parent `b43c967558b31bea39b0751ee0ef5b545bc2bb33`. This review judges only the exact commit above.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `e0702bdd9b4523668bc075ff09e940290e23a3f7`; diff vs parent touches
+  8 files: TASKS.md, Decision 0198, evidence file, the local-commit guide, and four Rust files in
+  `platforms/linux/src` (`coding_repository.rs`, `coding_repository_commit_review.rs`,
+  `coding_repository_commit_review_tests.rs`, `lib.rs`). No evaluation, hidden/held-out, scorer,
+  prompt, threshold, Cargo/dependency, SBOM, lifecycle or scoreboard path changed.
+- Read the private bundle scripts (README, run.py, check.py, parse_gate.py, light.py, stage_check.py)
+  before running them, plus IP-POLICY.md, Decision 0198, the evidence file, the guide/TASKS changes,
+  and the full diff of all four Rust files and the surrounding planner
+  (`plan_reviewed_candidate_tree_with`, `capture_applied_write_review`, `consented_commit_review`,
+  `completion_validation_evidence`).
+- Checked by reading the code:
+  - Observation order. `verify_candidate_tree_with` wraps the private observer in `stable_observe`.
+    Each planning pass calls it twice, so there are four samples, and every sample is compared with
+    the first complete `GitObservation`. That covers the manifest, task head, branch, linked
+    identity, task inventory and base preimages.
+  - Plans. `before == after` is also required.
+  - Cancellation. It is checked at entry, before and after every observation, before the checker
+    runs, and after the checker succeeds.
+  - Short-circuit. Rejected and Unavailable map to distinct codes and return before any post-check
+    read.
+  - Observation substitution. It goes only through the private `verify_candidate_tree_with`, and
+    `GitObservation` is private, so public callers always use native `observe_commit_git`.
+    `observe_commit_git` is a pure extraction of the previous closure body; I compared it line by
+    line.
+  - Construction. `LinuxCodingCandidateReviewEvidence` and `LinuxCodingCheckedCandidate` have only
+    private fields, no constructor, no Clone and no Deserialize. The evidence lifetime is
+    higher-ranked in the trait method, so a checker cannot keep it.
+  - Borrows. The result borrows `'owner: 'a` and the packet, not the temporary view.
+- Re-entrancy and effect reachability. All effect methods on `LinuxCodingRepository` take `&mut self`
+  (`prepare_apply`, `prepare_edit`, `decide_command_with_cancellation`,
+  `decide_validation_with_cancellation`, among others). While the view and result are live, only
+  shared borrows of the owner exist, so neither a checker nor a caller can trigger owner effects
+  through it. External filesystem drift is still possible; the post-checks cover it, as documented.
+- Route reachability. `grep` finds `verify_candidate_tree`, `LinuxCodingCandidateReviewPort` and
+  `LinuxCodingCheckedCandidate` only in the Linux crate and its tests. Nothing in host, local-API,
+  HTTP, CLI or MCP consumes them, and no executor accepts the result. The only `impl` of the port is
+  the test-only `CandidateChecker`; there is no default accepting implementation.
+- Test discrimination (by reasoning). Take the `at = 3` cases for `linked` and `inventory`. Without
+  the new whole-observation baseline, samples 3 and 4 would match each other, and those fields are
+  not in the plan, so the call would succeed. The test expects `code.commit.review-drift`, so it
+  does discriminate the new check.
+- Public content. The added lines contain no home paths, usernames, hostnames, credentials or
+  trademarks used as branding. The evidence file cites the private bundle path under `/lane/state`;
+  that is an existing lane convention (219 docs files in the parent already do this) and is not a
+  host or user path.
+
+## Commands and results (all run from `/lane/review-checkout`)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-candidate-checker/review-inputs.sha256`
+   - Exit 0.
+   - The manifest file's own SHA-256 is
+     `af5dd77012a411b8a93b1d1d2e367923bc6489331cd605dc3ec685fd08316993`, which matches the request.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-candidate-checker/run.py /lane/state/tmp/review-candidate-checker-full-e0702bdd9b45`
+   - Exit 1, as expected.
+   - `{"exit": 1, "source_unchanged": true, "seconds_including_reservations": 339.1250192780062, "raw_log_sha256": "6e14bb53728bcf51163de33affa43a9320fe13bd203cd5e7075ec1afcbc3a605"}`
+   - Per-command results: diff-check 0 (0.40s), lint-untracked 0 (0.10s), markdownlint 0 (1.40s),
+     fmt 0 (20.50s), Clippy `-D warnings` 0 (44.11s), cargo test 101 (272.22s).
+   - `FAST GATE: FAIL`. No timeout.
+   - My wall time and raw hash differ from the builder's (298.93s,
+     `1b5c1b35…c010000`), as expected for an independent run (timings, thread ids, paths).
+3. `python3 -B /lane/state/tmp/t306-candidate-checker/check.py /lane/state/tmp/review-candidate-checker-full-e0702bdd9b45`
+   - Exit 0, and it printed `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL`.
+   - Gate FAIL across 26 targets, totals `[1427, 72, 64, 0, 0]`.
+   - Exact per-target failure and ignore identities match the retained baseline, with only +6 passes
+     in `agentmage_platform_linux`; the 20 kernel-only targets are explicitly excluded.
+   - All 30 review methods (6 new `candidate_checker_*` and 24 existing) report `... ok`.
+   - The 4 source hashes are unchanged, and the TASKS row lines are byte-identical to the parent.
+4. `cmp …/validation-1/source-freeze.json …/review-candidate-checker-full-e0702bdd9b45/source-freeze.json`
+   - Exit 0, identical.
+5. `python3 -B /lane/state/tmp/t306-candidate-checker/light.py`
+   - Exit 0: diff-check, lint-untracked, and markdownlint (0 issues in 4 files).
+6. `git diff --check b43c967558b31bea39b0751ee0ef5b545bc2bb33 --`
+   - Exit 0.
+7. `git status --short`
+   - Empty, both before and after the runs.
+
+The 72 inherited failures are environmental and match the baseline by identity. In
+`shells/host/src/linux_coding_runtime.rs:11307` they are 42 `linux_coding_runtime` tests that fail
+with `test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }`. The rest are in
+`repository_safety`, `linux_read`, `secret_service`, `local_commit`, `command_runner` and
+`linux_repository_map`. None of them is in the changed module.
+
+No UI is involved; no browser check applies. I did not use the GPU. I made no repository
+modification.
+
+## Findings
+
+No critical, high or medium finding.
+
+Low findings (same-row backlog; they do not block):
+
+- **L1** — `platforms/linux/src/coding_repository_commit_review_tests.rs:1752`.
+  - Problem: `candidate_checker_public_native_path_keeps_artifact_admission_and_does_not_invoke_checker`
+    only checks the error code when `LinuxGitArtifact::verify("/usr/bin/git")` refuses. On a host
+    where Git is admitted, it asserts only that the checker panic is not reached and that some error
+    happened. It does not pin which refusal occurred.
+  - Fix: assert an explicit expected code in the admitted branch as well. For example, the
+    synthetic-fixture `code.commit.git-state` or the equivalent native refusal.
+- **L2** — `platforms/linux/src/coding_repository_commit_review.rs:200-206`.
+  - Problem: if cancellation is requested while the checker runs and the checker then returns
+    `Rejected` or `Unavailable`, the caller sees the checker code, not `code.commit.review-cancelled`.
+    This is safe either way, because the call stops in both cases, but cancellation is not reported
+    consistently.
+  - Fix: run `check_cancelled()` before mapping a checker failure, or document that the checker code
+    takes precedence.
+
+## Claims vs evidence
+
+- **Matches the code and runs:**
+  - Exact borrowed packet, creation and validation references.
+  - Four-sample complete observation equality.
+  - Both plans must match.
+  - Rejection and unavailability stop without post-check reads.
+  - Invalid packet stops before Git and the checker.
+  - Six cancellation boundaries.
+  - No constructor, Clone or restore for the new types.
+  - No route or executor consumes them.
+- **Honestly marked as open:**
+  - The interface does not authenticate the installed checker, artifact capture or scanning.
+  - Synthetic observations are not native or model results.
+  - Native admission, actual checker and artifact integration, exact approval composition, durable
+    recovery, model measurements and approved push remain open.
+- **Supply chain, delivery and evaluation integrity:**
+  - No new rows or sub-rows; the TASKS row lines are unchanged.
+  - No supply-chain change.
+  - No evaluation-integrity surface touched.
+
+## Per-row result
+
+- **T-303:** this increment is acceptable with no high or medium finding. The row stays OPEN; it is
+  not closed by this non-closing batch, as requested.
+- **T-306:** this increment is acceptable with no high or medium finding. The row stays OPEN; it is
+  not closed by this non-closing batch, as requested.
+
+This verdict covers only commit `e0702bdd9b45`. It says nothing about parent `b43c9675`, which is
+under separate review.
+
+Verdict: PASS

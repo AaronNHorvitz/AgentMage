@@ -1147,6 +1147,13 @@ fn is_sha256(value: &str) -> bool {
             .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
 }
 
+// Shared only by kernel component tests; no fixture constructor is compiled
+// into the product and no deserialization path is introduced.
+#[cfg(test)]
+pub(crate) fn commit_packet_for_test(results: ReviewModeResults) -> LocalReviewPacket {
+    tests::commit_packet(results)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1387,7 +1394,7 @@ mod tests {
         assert!(!verify_review_packet(&sensitive));
     }
 
-    fn commit_packet(results: ReviewModeResults) -> LocalReviewPacket {
+    pub(super) fn commit_packet(results: ReviewModeResults) -> LocalReviewPacket {
         let change_set = change_set();
         build_review_packet(ReviewPacketInput {
             packet_id: "commit-review-fixture".into(),
