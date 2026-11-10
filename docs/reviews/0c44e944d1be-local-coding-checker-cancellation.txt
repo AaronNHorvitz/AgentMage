@@ -1,0 +1,153 @@
+Commit: 0c44e944d1becfe568866f74cf2733b830825333
+Scope: local-coding-checker-cancellation
+
+# Independent core review: passive original cancellation in the installed checker
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only, pinned
+checkout `/lane/review-checkout`. Row: T-303 / T-306, same-row non-closing increment.
+Parent `7f618ee04ad4c65c631cae9299bb9aea8402d981`.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `0c44e944d1becfe568866f74cf2733b830825333`; checkout
+  clean before and after all runs.
+- Read IP-POLICY.md, the newest decision index entry, TASKS.md top block, the evidence
+  file `docs/evidence/t306-checker-cancellation-2026-11-10.md`, the guide addition,
+  the full diff of both changed Rust sources, the retained parent report, and
+  `kernel/engine/src/propagation.rs` (the `EffectCancellationObservation` trait and the
+  `CancellationToken` impl).
+- Read bundle README.md, run.py, check.py, parse_gate.py, light.py, stage_check.py,
+  mutation.py and finalize_docs.py before executing anything. run.py reserves heavy
+  commands itself through the fast gate's `/tools/build-slot` wrapping. I did not
+  wrap it again. I did not run mutation.py.
+- Read the retained mutation.log/mutation.json and mutation-initial.log/json, plus the
+  validation-1 and validation-2 result, freeze and plan files.
+- Ran a separate 30-iteration stress of the checker test selection, using the review
+  target through `/tools/build-slot`.
+
+## Commands and results (all from /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-checker-cancellation/review-inputs.sha256`:
+   exit 0.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py
+   /lane/state/tmp/review-checker-cancellation-full-R1`: exit 1, as expected.
+   `{"exit": 1, "source_unchanged": true, "seconds_including_reservations": 292.83,
+   "raw_log_sha256": "2838ac3bfbe061d2dde80f4e10843776696c7e3ccf823508f6cd3e01c314fe59"}`.
+   Command results: diff-check 0, lint-untracked 0, lint-reviews 0, markdownlint 0,
+   fmt 0 (1.35 s), Clippy `-D warnings` 0 (38.23 s, fresh target), and cargo test 101
+   (251.73 s). There was no timeout. This run has seven commands, while the builder's
+   validation-2 had six. The extra one is `--lint-reviews`, added because the retained
+   report is now in the diff. The cargo commands are identical, and check.py asserts that.
+3. `python3 -B .../check.py /lane/state/tmp/review-checker-cancellation-full-R1`: exit 0.
+   Totals were [1438, 72, 64, 0, 0] over 26 targets. The per-target failed and ignored
+   identities equal the hash-verified parent baseline. The only count change is +1 pass
+   in the Linux lib target. All 35 direct methods in the two changed sources are `ok`.
+   The new method
+   `candidate_checker_running_worker_observes_original_cancellation_without_postcheck`
+   passed. TASKS row lines are unchanged, the public-data scan of the added lines is
+   clean and no `#[ignore` was added. This is a data comparison only. The full affected
+   gate remains FAIL.
+4. `cmp .../validation-2/source-freeze.json .../review-checker-cancellation-full-R1/source-freeze.json`:
+   exit 0. Production source `bcca04fb…`, test `033985b5…`. Both match the committed bytes.
+5. `python3 -B .../light.py`: exit 0. That covers diff-check, lint-untracked,
+   lint-reviews on the retained report, and markdownlint with 0 issues in 3 files.
+6. `cmp docs/reviews/7f618ee04ad4-local-coding-read-cancellation.txt
+   /lane/reviews/7f618ee04ad4-local-coding-read-cancellation.md`: exit 0, byte-identical.
+7. `git diff --check 7f618ee04ad4c65c631cae9299bb9aea8402d981 --`: exit 0.
+8. `git status --short`: empty.
+
+Extra: I ran `cargo test --locked --offline -q -p agentmage-platform-linux --lib
+candidate_checker_ -- --test-threads=8` 30 times under build-slot. All 30 runs reported
+`9 passed; 0 failed`, so 270 passes, with no flake in the new threaded test.
+
+## Analysis
+
+**Authority and confinement.** The production change
+(`platforms/linux/src/coding_repository_commit_review.rs:45,123-130,157-159,278`)
+adds one private field. It passes the caller's original `&CancellationToken`, coerced
+to `&dyn EffectCancellationObservation`, into the checker evidence.
+- The trait (`kernel/engine/src/propagation.rs:152-157`) has only
+  `observe_effect_cancellation`. It does not extend `Any`, so the checker cannot
+  downcast to the token or reach `cancel`, `derive_child` or the node.
+- The borrow lifetime is tied to the evidence. The trait's `Sync` bound makes the
+  reference `Send`, which allows only scoped-thread sharing.
+- The field is private and the evidence has one construction site, so no fresh or
+  detached scope can be injected from outside.
+- The observation is `try_lock` based. Contention gives `Unavailable`, which the doc
+  requires the checker to treat as unavailable.
+- If a checker ignores an observation error and returns success, the host's post-call
+  `check_cancelled()` uses the blocking `is_cancelled()`. It still refuses before any
+  post-check read. The host side therefore fails closed whatever the checker does.
+- No new read, command, network, disclosure or effect authority is introduced.
+
+**Failure precedence.** On `Rejected` or `Unavailable`, the existing `map_err(...)?`
+returns before `check_cancelled()`. This keeps the existing codes, and the documentation
+says so accurately.
+
+**Regression quality** (`coding_repository_commit_review_tests.rs:1814-1909`).
+- The zero-capacity `sync_channel` rendezvous orders the steps strictly. The worker
+  first observes `Ok(None)`. Then the canceller cancels and reads `signal()`, releasing
+  its locks. Only then does the worker observe again.
+- The main thread is blocked in the scope join and the token is local to the test, so
+  `try_lock` cannot meet contention. The race the builder described is therefore closed.
+- The checks include:
+  - equality of the exact signal;
+  - `calls == 2`, meaning no post-check observation;
+  - `checked == 1`;
+  - unchanged owner inspection and validation;
+  - both sentinel files;
+  - an absent candidate index.
+- Timeouts are bounded at 5 s. The detached-token mutant fails at the
+  `"caller cancellation was detached"` expectation. The existing success fixture at
+  `:1337` now requires a live observation.
+
+**Mutation provenance.**
+- mutation.log panics at test lines 1872 and 1875. Those lines are the final test's
+  `"caller cancellation was detached"` expectation and the worker `join().unwrap()`.
+- mutation-initial.log panics at 1866 and 1874, which is the earlier snapshot.
+- mutation.json's source hash equals the frozen production hash, and its log hash
+  verifies.
+- Timestamps place the repeated mutation (about 15:01:48–15:02:04) between
+  validation-1 (finished 15:01:22) and validation-2 (started 15:02:12).
+
+**Claims.** The evidence, guide and TASKS text match what I observed.
+- Gate FAIL counts, the 35 methods, the two fixed hashes, and the separation of the
+  validation-1 and validation-2 bindings are all as stated.
+- No independent checker, native admission, artifact provenance, consent composition
+  or model result is claimed.
+- The 241.08 s figure and raw SHA-256 `593745f0…` match validation-2/result.json.
+- No evaluation, hidden or held-out, scorer, prompt, threshold, dependency, SBOM,
+  scoreboard or GPU file is in the diff. Six paths changed in total.
+- No new rows or sub-rows were added, and TASKS row lines are byte-equal to the parent.
+
+**Public-repository hygiene.** The added lines contain no private host path, username,
+email, credential or trademark branding. The `/lane/state/tmp/...` reference follows
+existing precedent in docs/.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low L-1 (evidence provenance):** `/lane/state/tmp/t306-checker-cancellation/mutation.json`
+  records only the production source hash (`source_sha256`). It does not record the
+  test-file hash. Its binding to the final test bytes therefore rests on matching panic
+  line numbers and timestamps rather than a recorded hash. Fix: have mutation.py also
+  record `sha256` of `coding_repository_commit_review_tests.rs` and have check.py
+  compare it to the freeze. Backlog only.
+- **Low L-2 (coverage):** no test exercises a checker that receives
+  `Err(CancellationObservationError::Unavailable)` from the passive view and returns
+  `Unavailable`. The behaviour belongs to the checker, which is not yet built, and the
+  host fails closed after success regardless. Fix: when a real installed checker lands,
+  add a contention or poisoned-owner case. Backlog only.
+
+The parent report's L-1 to L-3 and the carried lows remain backlog. This increment does
+not claim to fix them, and none of them is addressed here.
+
+## Per-row result
+
+- **T-303:** increment PASS. The row stays open: native admission, a real checker and
+  artifacts, approval composition, recovery, model measures and an approved push are
+  still open.
+- **T-306:** increment PASS. The row stays open for the same reasons.
+
+Verdict: PASS

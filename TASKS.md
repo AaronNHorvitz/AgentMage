@@ -2,6 +2,24 @@
 
 ## Active queue: local agent mission
 
+The retained [passive-checker cancellation review](docs/reviews/0c44e944d1be-local-coding-checker-cancellation.txt)
+has **Verdict: PASS** for exact commit
+`0c44e944d1becfe568866f74cf2733b830825333`, with no high or medium finding.
+Its low L-1 mutation test-hash provenance and L-2 checker observer-error coverage
+join carried same-row backlog. Neither T-303 nor T-306 closes.
+
+The [local preservation scan batch](docs/evidence/t306-preservation-files-2026-11-10.md)
+replaces path-based local reads with held-directory traversal, no-follow file
+opens, bounded chunk reads, cancellation and detected-drift refusal. It retains
+all preservation bindings and tightens entry counting for directory-only trees.
+The final complete affected gate remains **FAIL**: 1,446 passes, the exact
+inherited 72 failures and 64 ignores across 26 unfiltered targets. All eight new
+methods, formatting, Clippy and final light checks pass; five final source hashes
+remain fixed. A directory-only tree at exactly the entry limit succeeds without
+accumulating pending descriptors; overflow refuses. Independent core review is
+required. T-303/T-306 remain open without new rows or sub-rows. Native Git
+admission, complete coding workflow and model measurements remain open.
+
 The retained [repository-read cancellation review](docs/reviews/7f618ee04ad4-local-coding-read-cancellation.txt)
 has **Verdict: PASS** for exact commit
 `7f618ee04ad4c65c631cae9299bb9aea8402d981`, with no high or medium finding.

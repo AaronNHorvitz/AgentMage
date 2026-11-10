@@ -336,9 +336,9 @@ stage and after postflight. A stop prevents the next stage or successful receipt
 including when the task branch has already changed. It does not imply rollback.
 Preservation collection now propagates the original cancellation token to every
 existing confined Git worker. Cancellation before or during a worker prevents
-later reads and accepted preservation evidence. Checkpoints also surround local
-filesystem phases; they do not preempt an individual filesystem operation or
-scan. Collection retains its existing per-worker deadlines; the commit I/O
+later reads and accepted preservation evidence. Local scans check between
+directory entries and bounded file chunks; they do not preempt an individual
+filesystem operation. Collection retains its existing per-worker deadlines; the commit I/O
 deadline is not imposed inside a collection.
 
 A private execution seam now exercises the dormant adapter's shared sequence:
@@ -573,3 +573,24 @@ the call; it also stops without post-check reads. Tests exercise these three
 outcomes with a synthetic checker whose real worker thread observes cancellation
 from another thread. No independent review verdict or native execution is
 established by this fixture.
+
+## Local preservation reads
+
+Preservation scans hold the original checkout and Git directories. Every
+ancestor and descendant directory opens without following symlinks; file
+content opens relative to its held parent with nonblocking, no-follow flags.
+The opened file must match the observed object, size, owner, mode and change
+timestamps before reading. Reads stop at the observed size, at most the existing
+64 MiB file limit, with cancellation checks around each 64 KiB chunk. Truncation,
+growth, detected replacement or metadata drift refuses the scan. Ordinary
+worktree symlinks retain their link-text binding without reading their targets.
+Symlinked metadata roots and non-regular metadata content refuse.
+
+The existing sorted record format and all preservation fields remain bound.
+The existing 16,384-entry limit now counts directory-only reflog entries and
+excluded entries too; trees that previously escaped that counter refuse.
+Directory traversal and tree entries refuse a different device. Before returning
+a manifest, reopen the original root paths without following links and require
+the held identities.
+These are observations, not an atomic snapshot or an interruptible filesystem
+call. They add no execution, disclosure, approval or commit authority.

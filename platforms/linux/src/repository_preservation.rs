@@ -56,6 +56,7 @@ pub(super) fn collect_with(
         execute,
     };
     observe.check()?;
+    let files = preservation_fs::Files::new(scope, cancellation)?;
     let object_format = text_required(observe.required(&["rev-parse", "--show-object-format"])?)?;
     let head_object = observe
         .optional(&["rev-parse", "--verify", "HEAD"])?
@@ -78,7 +79,7 @@ pub(super) fn collect_with(
 
     let index_paths = observe.required(&["ls-files", "--stage", "-z"])?;
     observe.check()?;
-    let worktree_state = hash_worktree_tree(&scope.checkout_root)?;
+    let worktree_state = files.worktree()?;
     observe.check()?;
     let untracked_paths =
         observe.required(&["ls-files", "--others", "--exclude-standard", "-z"])?;
@@ -124,20 +125,16 @@ pub(super) fn collect_with(
     let objects = observe.required(&["count-objects", "-v"])?;
 
     observe.check()?;
-    let index_sha256 = hash_optional_file(&scope.git_directory.join("index"))?;
-    let gitmodules = hash_optional_file(&scope.checkout_root.join(".gitmodules"))?;
-    let attributes_path = scope.checkout_root.join(".gitattributes");
-    let attributes = read_optional_bounded(&attributes_path)?;
-    let hooks = hash_metadata_tree(&scope.git_directory.join("hooks"), false)?;
-    let user_reflogs = hash_reflog_tree(&scope.git_directory.join("logs"), true)?;
-    let agent_reflogs = hash_reflog_tree(
-        &scope.git_directory.join("logs/refs/heads/agentmage"),
-        false,
-    )?;
+    let index_sha256 = files.hash_optional(true, "index")?;
+    let gitmodules = files.hash_optional(false, ".gitmodules")?;
+    let attributes = files.read_optional(false, ".gitattributes")?;
+    let hooks = files.metadata("hooks")?;
+    let user_reflogs = files.reflogs("logs", true)?;
+    let agent_reflogs = files.reflogs("logs/refs/heads/agentmage", false)?;
     observe.check()?;
-    let operations = operation_metadata(&scope.git_directory)?;
-    let alternates = scope.git_directory.join("objects/info/alternates").exists();
-    let shallow = scope.git_directory.join("shallow").exists();
+    let operations = files.operations()?;
+    let alternates = files.exists("objects/info/alternates")?;
+    let shallow = files.exists("shallow")?;
     let partial = contains_any(
         &config_lower,
         &[
@@ -148,7 +145,7 @@ pub(super) fn collect_with(
     );
     let executable_config = hazardous_config(&config_lower);
     let executable_attributes = attributes.as_deref().is_some_and(hazardous_attributes);
-    let hook_present = directory_has_active_hooks(&scope.git_directory.join("hooks"))?;
+    let hook_present = files.hooks()?;
     let hazardous_configuration = executable_config
         || executable_attributes
         || hook_present
@@ -161,7 +158,7 @@ pub(super) fn collect_with(
     let manifest = RepositoryPreservationManifest::seal(RepositoryPreservationManifest {
         schema_version: 0,
         repository_sha256: scope.repository_path_sha256.clone(),
-        common_directory_sha256: path_identity(&scope.git_directory)?,
+        common_directory_sha256: files.common_identity()?,
         object_format,
         safe_ownership: true,
         head_object,
@@ -195,6 +192,7 @@ pub(super) fn collect_with(
         manifest_sha256: String::new(),
     })
     .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
+    files.revalidate()?;
     observe.check()?;
     Ok(manifest)
 }

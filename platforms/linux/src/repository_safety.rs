@@ -54,6 +54,9 @@ mod observation;
 #[path = "repository_preservation.rs"]
 mod preservation;
 
+#[path = "repository_preservation_fs.rs"]
+mod preservation_fs;
+
 #[path = "repository_execution.rs"]
 mod execution;
 pub(crate) use execution::{
@@ -334,8 +337,9 @@ impl LinuxRepositoryCollector {
     }
 
     /// Collects the same complete manifest with the caller's cancellation token
-    /// propagated to every confined Git read. Local file scans have checkpoints
-    /// around bounded phases; individual filesystem operations are not preempted.
+    /// propagated to every confined Git read and local scan. Filesystem reads are
+    /// descriptor-relative and checked between bounded chunks; an individual
+    /// filesystem operation is not preempted.
     pub fn collect_cancellable(
         &self,
         scope: &LinuxRepositoryScope,
@@ -1559,224 +1563,6 @@ fn framed_observations(observations: &[(&str, &[u8])]) -> Result<Vec<u8>, LinuxR
         }
     }
     Ok(framed)
-}
-
-fn read_optional_bounded(path: &Path) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
-    if !path.exists() {
-        return Ok(None);
-    }
-    let metadata = fs::symlink_metadata(path)
-        .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-    if !metadata.is_file()
-        || metadata.file_type().is_symlink()
-        || metadata.len() > MAX_HASHED_FILE_BYTES
-    {
-        return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
-    }
-    fs::read(path)
-        .map(Some)
-        .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))
-}
-
-fn hash_optional_file(path: &Path) -> Result<String, LinuxRepositoryError> {
-    Ok(hash(
-        read_optional_bounded(path)?.as_deref().unwrap_or(b"absent"),
-    ))
-}
-
-fn hash_metadata_tree(
-    path: &Path,
-    exclude_agentmage: bool,
-) -> Result<Vec<u8>, LinuxRepositoryError> {
-    if !path.exists() {
-        return Ok(Vec::new());
-    }
-    let mut pending = vec![path.to_path_buf()];
-    let mut records = Vec::new();
-    while let Some(current) = pending.pop() {
-        let entries = fs::read_dir(&current)
-            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-        for entry in entries {
-            let entry = entry.map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-            let child = entry.path();
-            let relative = child
-                .strip_prefix(path)
-                .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-            if exclude_agentmage && relative.to_string_lossy().contains("agentmage") {
-                continue;
-            }
-            let metadata = fs::symlink_metadata(&child)
-                .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-            let mut record = Vec::new();
-            record.extend_from_slice(relative.as_os_str().as_bytes());
-            record.extend_from_slice(&metadata.mode().to_be_bytes());
-            record.extend_from_slice(&metadata.len().to_be_bytes());
-            record.extend_from_slice(&metadata.mtime().to_be_bytes());
-            records.push(record);
-            if metadata.is_dir() && !metadata.file_type().is_symlink() {
-                pending.push(child);
-            }
-            if records.len() > MAX_METADATA_ENTRIES {
-                return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
-            }
-        }
-    }
-    records.sort();
-    Ok(records.concat())
-}
-
-fn hash_worktree_tree(path: &Path) -> Result<Vec<u8>, LinuxRepositoryError> {
-    let mut pending = vec![path.to_path_buf()];
-    let mut records = Vec::new();
-    let mut total_bytes = 0_u64;
-    while let Some(current) = pending.pop() {
-        for entry in fs::read_dir(&current)
-            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?
-        {
-            let entry = entry.map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-            let child = entry.path();
-            let relative = child
-                .strip_prefix(path)
-                .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-            if relative == Path::new(".git") {
-                continue;
-            }
-            let metadata = fs::symlink_metadata(&child)
-                .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-            let mut record = Vec::new();
-            record.extend_from_slice(relative.as_os_str().as_bytes());
-            record.extend_from_slice(&metadata.mode().to_be_bytes());
-            record.extend_from_slice(&metadata.len().to_be_bytes());
-            record.extend_from_slice(&metadata.mtime().to_be_bytes());
-            if metadata.is_dir() && !metadata.file_type().is_symlink() {
-                record.push(b'd');
-                pending.push(child);
-            } else if metadata.is_file() {
-                if metadata.len() > MAX_HASHED_FILE_BYTES {
-                    return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
-                }
-                total_bytes = total_bytes
-                    .checked_add(metadata.len())
-                    .filter(|total| *total <= MAX_HASHED_FILE_BYTES)
-                    .ok_or_else(|| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-                record.push(b'f');
-                record.extend_from_slice(
-                    hash(
-                        &fs::read(&child)
-                            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?,
-                    )
-                    .as_bytes(),
-                );
-            } else if metadata.file_type().is_symlink() {
-                record.push(b'l');
-                record.extend_from_slice(
-                    fs::read_link(&child)
-                        .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?
-                        .as_os_str()
-                        .as_bytes(),
-                );
-            } else {
-                record.push(b's');
-            }
-            records.push(record);
-            if records.len() > MAX_METADATA_ENTRIES {
-                return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
-            }
-        }
-    }
-    records.sort();
-    Ok(records.concat())
-}
-
-fn hash_reflog_tree(path: &Path, exclude_agentmage: bool) -> Result<Vec<u8>, LinuxRepositoryError> {
-    if !path.exists() {
-        return Ok(Vec::new());
-    }
-    let mut pending = vec![path.to_path_buf()];
-    let mut records = Vec::new();
-    while let Some(current) = pending.pop() {
-        for entry in fs::read_dir(&current)
-            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?
-        {
-            let entry = entry.map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-            let child = entry.path();
-            let relative = child
-                .strip_prefix(path)
-                .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-            if exclude_agentmage && relative.to_string_lossy().contains("agentmage") {
-                continue;
-            }
-            let metadata = fs::symlink_metadata(&child)
-                .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-            if metadata.is_dir() && !metadata.file_type().is_symlink() {
-                pending.push(child);
-            } else {
-                let bytes = read_optional_bounded(&child)?
-                    .ok_or_else(|| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-                let mut record = Vec::new();
-                record.extend_from_slice(relative.as_os_str().as_bytes());
-                record.extend_from_slice(hash(&bytes).as_bytes());
-                records.push(record);
-            }
-            if records.len() > MAX_METADATA_ENTRIES {
-                return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
-            }
-        }
-    }
-    records.sort();
-    Ok(records.concat())
-}
-
-fn operation_metadata(git_directory: &Path) -> Result<Vec<u8>, LinuxRepositoryError> {
-    const NAMES: [&str; 14] = [
-        "MERGE_HEAD",
-        "CHERRY_PICK_HEAD",
-        "REVERT_HEAD",
-        "BISECT_START",
-        "rebase-apply",
-        "rebase-merge",
-        "sequencer",
-        "index.lock",
-        "config.lock",
-        "packed-refs.lock",
-        "shallow.lock",
-        "gc.pid",
-        "gc.log",
-        "maintenance.lock",
-    ];
-    let mut records = Vec::new();
-    for name in NAMES {
-        let path = git_directory.join(name);
-        if path.exists() {
-            let metadata = fs::symlink_metadata(&path)
-                .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-            records.extend_from_slice(name.as_bytes());
-            records.extend_from_slice(&metadata.mode().to_be_bytes());
-            records.extend_from_slice(&metadata.len().to_be_bytes());
-        }
-    }
-    Ok(records)
-}
-
-fn directory_has_active_hooks(path: &Path) -> Result<bool, LinuxRepositoryError> {
-    if !path.exists() {
-        return Ok(false);
-    }
-    for entry in
-        fs::read_dir(path).map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?
-    {
-        let entry = entry.map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-        let metadata = fs::symlink_metadata(entry.path())
-            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-        if metadata.file_type().is_symlink()
-            || (metadata.is_file()
-                && metadata.mode() & 0o111 != 0
-                && !entry.file_name().as_bytes().ends_with(b".sample"))
-        {
-            return Ok(true);
-        }
-    }
-    Ok(false)
 }
 
 fn hazardous_config(lower: &[u8]) -> bool {

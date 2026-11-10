@@ -207,3 +207,42 @@ fn preservation_cancelled_public_entry_refuses_before_untrusted_artifact_or_file
         LinuxRepositoryErrorKind::InvalidGitArtifact
     );
 }
+
+#[test]
+fn preservation_root_replacement_during_git_reads_cannot_release_a_manifest() {
+    for target in ["repo", "repo/.git"] {
+        for stop in [1, 17] {
+            let f = Fixture::new();
+            let mut calls = 0;
+            let result = collect_with(&f.scope, None, |args, _| {
+                calls += 1;
+                if calls == stop {
+                    fs::rename(f.root.join(target), f.root.join("displaced")).unwrap();
+                    fs::create_dir(f.root.join(target)).unwrap();
+                    fs::set_permissions(f.root.join(target), fs::Permissions::from_mode(0o700))
+                        .unwrap();
+                    if target == "repo" {
+                        fs::create_dir(f.root.join("repo/.git")).unwrap();
+                    }
+                }
+                Ok(reply(args))
+            });
+            assert_eq!(
+                result.unwrap_err().kind(),
+                LinuxRepositoryErrorKind::ObservationFailed,
+                "{target} at worker {stop}"
+            );
+            assert_eq!(
+                calls, 17,
+                "synthetic workers; final held-root check refuses"
+            );
+            let index = if target == "repo" {
+                "displaced/.git/index"
+            } else {
+                "displaced/index"
+            };
+            assert_eq!(fs::read(f.root.join(index)).unwrap(), b"index sentinel\n");
+            assert_eq!(fs::read_dir(f.root.join("owned")).unwrap().count(), 0);
+        }
+    }
+}
