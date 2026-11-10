@@ -24,14 +24,17 @@ no option files, no default keyring, no agent startup and no key retrieval.
 There is no direct verification fallback.
 
 Success requires complete output, successful supervision and process exit,
-no stdout, consistent retained-stream lengths and digests, and exactly one
+a dedicated complete machine-status stdout stream, consistent retained-stream
+lengths and digests, diagnostic-only stderr, and exactly one
 valid status record for the complete pinned signing fingerprint. Cancellation,
 expiry, changed public material, malformed raw bytes, partial output or failed
 verification stops before the task-branch update. Cleanup uncertainty remains
 a failed effect, never a successful commit receipt.
 
-Signed creation and external signer inspection remain direct and dormant;
-their confinement and descendant cleanup are still prerequisites for activation.
+Signed creation remains direct and dormant; its confinement and descendant
+cleanup are still prerequisites for activation. Decision 0193 moves public
+identity inspection to a separate offline worker without proving private-key
+availability.
 This does not introduce a product route, candidate authority, reviewer identity,
 approval, commit publication or push permission. Disposable cryptographic tests
 and synthetic supervisor results remain component evidence. Native artifact

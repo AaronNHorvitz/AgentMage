@@ -1,0 +1,201 @@
+Commit: 537d80000934ce4e5fe7ba474c94e40d54bb695f
+Scope: local-coding-candidate-setup
+
+# Independent core review: candidate constructor setup (T-303 / T-306, non-closing)
+
+Reviewer: independent Claude Opus 5.5 session, extra-high effort, read-only access to the repository. Pinned
+checkout `/lane/review-checkout`, reviewed on 2026-11-10. `git rev-parse HEAD` gives
+`537d80000934ce4e5fe7ba474c94e40d54bb695f`, and the parent is `530aec2c97ab745211251566433938f22231ec9e`. The
+working tree is clean.
+
+## Methods
+
+- I read IP-POLICY.md, Decision 0190, `docs/evidence/t306-candidate-setup-2026-11-10.md`, the changed guide
+  section, the TASKS.md addition, and the bundle README.md, run.py, check.py, parse_gate.py and light.py
+  before running anything.
+- I reviewed the complete source diff against the parent: `platforms/linux/src/repository_candidate.rs`
+  (+91/-5) and `platforms/linux/src/repository_candidate_tests.rs` (+123). I also read the surrounding code
+  this change depends on: `LinuxRepositoryMutationScope::capture` and `revalidate`
+  (`repository_execution.rs:15-71`), the session's `validate_scratch` and `cleanup_inner`
+  (`repository_candidate.rs:394-447`), the test `Fixture`, and the only production caller
+  (`local_commit.rs:226`).
+- I checked that the repair addresses the earlier candidate-confinement review's low findings L1 and L2
+  (`docs/reviews/de4f3fd311de-local-coding-confined-candidate.txt:142-156`).
+- I ran mutation probes on private copies made with `git archive HEAD` outside the repository, each
+  through `/tools/build-slot`. After them I rebuilt from a pristine copy, so the shared target holds an
+  artifact of the exact commit again. Then I deleted the copies.
+- I compared the failure and ignore identities with my earlier independent run of base `530aec2c`.
+
+## Exact commands and results (from `/lane/review-checkout`)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-candidate-setup/review-inputs.sha256`: exit 0. The manifest's
+   SHA-256 is `07fb040a16fc2fcb82c92a389ee923ab04a2b30958eb97657b424e10e6a4ca40`, as requested. The six
+   committed-file hashes in the manifest equal `final-blobs.json`, and the tree is clean, so stage and HEAD
+   match.
+2. The requested output path `/lane/state/tmp/review-candidate-setup-full-537d80000934` **already existed**.
+   It held a run from 05:33 to 05:53 that this session did not make. run.py calls
+   `mkdir(exist_ok=False)` and would refuse that path. To keep the output fresh I neither reused nor removed
+   it, and used a new sibling path:
+   `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-candidate-setup/run.py /lane/state/tmp/review-candidate-setup-full-537d80000934-r2`.
+   - Exit 1, as expected. Output: `{"exit": 1, "source_unchanged": true, "seconds_including_reservations": 284.44,
+     "raw_log_sha256": "cfcc5902c81e0f22c10dd0cd8a9fb583d6b01f35458aadb90c26fc2787196dd1"}`.
+   - The log ends `FAST GATE: FAIL`.
+   - Diff-check, untracked lint, review lint (on the retained base report) and markdownlint each exit 0.
+   - `cargo fmt --check` exits 0 (9.38 s). `cargo clippy --locked --offline ... --all-targets -D warnings` exits 0
+     (37.68 s).
+   - `cargo test --locked --offline ... --all-targets --no-fail-fast` exits 101 (235.64 s). No timeout.
+3. `python3 -B /lane/state/tmp/t306-candidate-setup/check.py <r2>`: exit 0.
+   - Gate FAIL across 26 unfiltered targets, totals `[1368, 72, 64, 0, 0]`
+     (passed, failed, ignored, measured, filtered).
+   - Two source files, unchanged. All 13 named methods report `ok`: the four new methods, eight candidate
+     controls and `policy_denies_every_worker_socket_and_connection_syscall`. The Cargo commands are unchanged
+     from the current plan, and the task-table rows are unchanged.
+   - The retained base review is byte-identical to `/lane/reviews/530aec2c97ab-local-coding-confined-verification.md`.
+     I also confirmed this separately with `cmp`.
+   - Prints `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL`. This is data, not a passing gate.
+4. `cmp validation-1/source-freeze.json <r2>/source-freeze.json`: exit 0, so both source hashes equal the
+   builder's. The `plan.json` files differ only by the base review path and its `--lint-reviews` command. That
+   is consistent with the disclosure that the base review arrived after the builder captured the plan.
+5. `python3 -B /lane/state/tmp/t306-candidate-setup/light.py`: exit 0. Four non-Cargo commands ran, each with
+   `LIGHT_EXIT 0`. markdownlint reports 0 issues in 3 files.
+6. `git diff --check 530aec2c97ab745211251566433938f22231ec9e --`: exit 0, no output.
+7. `git status --short`: empty.
+
+### Inherited failures
+
+The 72 failures and 64 ignores in my run match my earlier independent run of base `530aec2c`
+(`/lane/state/tmp/review-confined-verification-full-530aec2c97ab/fast.log`) by exact name. The failures fall in
+`linux_coding_runtime` (42), `repository_safety` (13), `linux_read` (10), `command_runner` (2), `local_commit` (2),
+`secret_service` (2) and `linux_repository_map` (1).
+
+The only candidate-related failure is `native_candidate_tree_uses_only_owned_index_and_preserves_user_state`. In
+both runs it panics at `local_commit.rs:1897:60` with `git artifact: InvalidGitArtifact`. That is the inherited
+executable-ownership refusal, before any setup code runs. No failure is new, and no failure is dropped.
+
+### Mutation probes
+
+Each probe ran `cargo test --locked --offline -p agentmage-platform-linux --lib -- candidate_setup` on a private
+copy. I touched the mutated file each time so cargo rebuilt it.
+
+- **M1:** remove `claim.matches(&worker.roots[2])?` (`repository_candidate.rs:156`). Result:
+  `candidate_setup_rejects_foreign_captured_descriptor...` FAILS at `repository_candidate_tests.rs:241`, because
+  a foreign capture produces a session. The other three pass.
+- **M2:** remove the `st_dev`/`st_ino` binding in `CandidateClaim::revalidate` (`repository_candidate.rs:81-82`).
+  Result: `candidate_setup_refuses_replacement_between_claim_and_worker_capture...` FAILS at line 200, because
+  rollback removes the empty replacement. The other three pass.
+- **Stale-binary note.** My first M2 run reused M1's binary through cargo's modification-time freshness check,
+  and I discarded it. The rerun shows `Compiling agentmage-platform-linux` for each copy.
+- **Restore.** The mutants shared the artifact hash in `/lane/state/review-target`. I rebuilt from a pristine,
+  freshly touched copy of the commit with `-- candidate_`: 28 pass, 1 fails (the inherited native failure above),
+  473 filtered. The target therefore holds an exact-commit artifact again.
+
+Both identity checks the repair adds are caught by the new tests. The replacement tests are empty, so the
+identity check is what prevents removal, not a sentinel blocking `rmdir`.
+
+## Review of the change
+
+### Claim and capture order
+
+1. `mkdirat(original.roots[2], directory, 0700)` relative to the held parent. This is exclusive.
+2. `openat` of the child through the same held parent descriptor, with
+   `RDONLY|DIRECTORY|NOFOLLOW|CLOEXEC`.
+3. `claim.revalidate()`. This runs the original scope's revalidation, then `statat(held parent, name,
+   SYMLINK_NOFOLLOW)`. The named entry must equal the held child's dev/ino, owner uid, directory type, and mode
+   with `& 0o077 == 0`.
+4. Capture.
+5. `claim.matches(worker.roots[2])`: the worker's scratch descriptor must have the same dev/ino as the held
+   child.
+6. `claim.revalidate()` and `worker.revalidate()`.
+7. Disarm the guard.
+
+Nothing fallible follows the disarm, since `Ok(Self{..})` cannot fail. This closes earlier L2: the worker's
+projected scratch is bound to the directory created through the held parent, not just to whatever the path names
+at capture time. The production closure (`repository_candidate.rs:108-112`) is unchanged in substance, and its
+only caller is `local_commit.rs:226`. `new_with` is private to the module, and only tests call it with a custom
+closure.
+
+### Rollback (earlier L1)
+
+`Drop for CandidateClaim` runs only while the guard is armed. It runs only if `revalidate()` passes again, then
+issues a single `unlinkat(held parent, name, REMOVEDIR)`, and ignores the error. `REMOVEDIR` cannot remove a
+nonempty directory, and nothing else is unlinked.
+
+Every failure from the initial `claim.revalidate()` through the final `worker.revalidate()` drops the guard while
+`original` is still alive. Locals drop in reverse order, so `worker` drops first. The guard also runs during a
+panic unwind from the closure.
+
+The following cases retain the directory: the initial `openat` fails (the `?` fires before a guard exists, which
+the evidence documents), the child or parent is replaced, the child is a symlink, the mode changed, or there are
+unknown entries. Even if the parent path is swapped after the check, removal acts on the held parent descriptor.
+
+### Remaining race and launch
+
+The residual same-uid race between the identity check and `unlinkat`, and between `mkdirat` and `openat`, can at
+most remove an empty directory or bind a foreign empty owner-private directory. The evidence and guide disclose
+this accurately as "not an atomic transaction". It gives the guest no authority, so it is not a finding.
+
+A failed constructor cannot launch a worker, because the constructor never dispatches. Dispatch only happens in
+`step_with`, on a returned session.
+
+### Tests
+
+- The four new methods use real temporary directories with a private capture seam. The evidence labels them
+  component evidence only, which is correct.
+- The first method exercises the production `CandidateSession::new` after an empty rollback, proving a fresh
+  attempt with the same build ID succeeds.
+- The fixtures leave no candidate residue in the run's TMPDIR namespace. The residue that is there comes from
+  inherited host tests and is out of scope.
+
+### Confinement scope
+
+There is no new API, no new caller, and no change to coordinator, candidate, artifact or reviewer authority,
+approval, or publication. Neither socket nor seccomp policy changes, and no filter is relaxed. Signer inspection
+and signed creation remain direct and dormant, and the documents say so.
+
+### Docs and claims
+
+- The evidence, guide and TASKS text match the code and my run.
+- The builder's timings (364.58 s, fmt 129.71 s including waiting) differ from mine (284.44 s, fmt 9.38 s) only
+  in reservation wait. Their raw-log hash is sealed in the verified manifest.
+- The counts 1,368 / 72 / 64 / 26 match exactly, and "four new methods, nine controls" matches check.py.
+- Decision 0190 needs no change. Its "never remove a preexisting candidate directory" still holds, because
+  rollback can only remove a directory whose identity equals the one just claimed.
+
+### Public and IP checks
+
+- Added lines contain no private host path, username, hostname, credential or personal data. The `/lane/...`
+  paths appear only inside the retained review's own command record, as accepted before.
+- No other product, trademark or patent is named.
+- No dependency, lockfile, SBOM, evaluation, frozen, hidden or held-out task, scorer, prompt, threshold,
+  scoreboard, lifecycle or release file changed. The diff stat shows six files.
+- No row or sub-row was added, and the task-table rows are byte-identical (check.py).
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog):** `platforms/linux/src/repository_candidate.rs:157`. The post-capture
+  `claim.revalidate()?` is never reached by a failing case in the tests.
+  - **Problem.** Every new test fails either inside the capture closure or at `matches`. The existing tests
+    pass the check.
+  - **Failure scenario.** The closure changes the child's mode to 0755 and then captures successfully. If the
+    post-capture check is deleted, `worker.revalidate()` accepts the result, because it only refuses
+    `& 0o022`. A session is then returned over a group/other-readable scratch directory. No test would detect
+    that deletion.
+  - **Fix.** Add one case to `candidate_setup_retains_nonempty_or_changed_mode_claims_after_failure` that
+    changes the mode, then returns `LinuxRepositoryMutationScope::capture` of the verified worker scope. Assert
+    `Err` and that the directory is retained.
+  - **Related gap.** The initial-`openat` failure branch (retain without a guard) is also untested. It is
+    documented and was checked by reasoning only.
+
+The earlier candidate L1/L2 (de4f3fd3) are addressed by this commit. The base review's L1 (native
+verification/tamper coverage) and L2 (dedicated machine-status stream) remain same-row backlog, as disclosed.
+
+## Per-row result
+
+- **T-303 / T-306 (core, non-closing repair):** PASS for this increment at the exact commit, with no high or
+  medium finding. The complete affected gate remains FAIL with only the inherited 72 failures. That gate, native
+  admission, signer confinement, approval composition, approved commit/push, durable recovery and model
+  measurements stay open, so **neither row closes**. This verdict approves nothing in the repository.
+
+Verdict: PASS

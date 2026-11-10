@@ -18,14 +18,21 @@ const LIMIT: usize = crate::sandbox::MAX_OUTPUT_BYTES;
 // The existing installed-executable verifier checks held bytes and every
 // root-owned ancestor. No caller-selected launcher or direct fallback.
 pub(crate) struct VerifierManifest {
-    systemd_run: LinuxGitArtifact,
+    pub(super) systemd_run: LinuxGitArtifact,
     systemctl: LinuxGitArtifact,
-    bubblewrap: LinuxGitArtifact,
-    gpg: LinuxGitArtifact,
+    pub(super) bubblewrap: LinuxGitArtifact,
+    pub(super) gpg: LinuxGitArtifact,
 }
 
 impl VerifierManifest {
     fn verify(signer: &LinuxOpenPgpSigner) -> Result<Self, LinuxLocalCommitError> {
+        Self::verify_executable(&signer.executable, &signer.executable_sha256)
+    }
+
+    pub(super) fn verify_executable(
+        executable: &Path,
+        expected_sha256: &str,
+    ) -> Result<Self, LinuxLocalCommitError> {
         let artifact = |path: &Path| {
             LinuxGitArtifact::verify(path)
                 .map_err(|_| error(LinuxLocalCommitErrorKind::ArtifactDenied))
@@ -34,9 +41,9 @@ impl VerifierManifest {
             systemd_run: artifact(Path::new("/usr/bin/systemd-run"))?,
             systemctl: artifact(Path::new("/usr/bin/systemctl"))?,
             bubblewrap: artifact(Path::new("/usr/bin/bwrap"))?,
-            gpg: artifact(&signer.executable)?,
+            gpg: artifact(executable)?,
         };
-        if manifest.gpg.sha256() != signer.executable_sha256 {
+        if manifest.gpg.sha256() != expected_sha256 {
             return Err(error(LinuxLocalCommitErrorKind::ArtifactDenied));
         }
         Ok(manifest)

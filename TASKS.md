@@ -2,6 +2,31 @@
 
 ## Active queue: local agent mission
 
+The retained [verification-status review](docs/reviews/f8236c01f04c-local-coding-verification-status.txt)
+returns **Verdict: PASS** for exact commit
+`f8236c01f04ccb92e0bae03caa546151efcb6f52`, with no high or medium finding.
+It independently verifies the repair of the dedicated machine-status stream.
+Native verification coverage and the existing same-row backlog remain open;
+neither T-303 nor T-306 closes.
+
+The [public identity inspection increment](docs/evidence/t306-confined-inspection-2026-11-10.md)
+moves listing and export to offline workers over one sealed public database.
+No private keys, live keyring, option files or host agent sockets are projected.
+Public identity pinning does not establish private-key usability or signing
+availability. Confined signed creation remains open; neither T-303 nor T-306
+closes, and no row or sub-row is added. The complete affected gate remains
+**FAIL**: 1,378 passes, the exact inherited 72 failures and 64 existing ignores
+across 26 unfiltered targets. All eight new methods, ten controls, formatting
+and Clippy pass; all six source hashes stay fixed. Independent core review
+is required.
+
+The retained [candidate-setup review](docs/reviews/537d80000934-local-coding-candidate-setup.txt)
+has **Verdict: PASS** for exact commit
+`537d80000934ce4e5fe7ba474c94e40d54bb695f`, with no high or medium finding.
+Its low L1 post-capture mode case is added to the existing regression method in
+this batch; the initial-open failure branch remains same-row coverage backlog.
+Neither parent row closes.
+
 The [dedicated verification-status repair](docs/evidence/t306-verification-status-2026-11-10.md)
 addresses signature-verification review low L2 in the existing T-303/T-306 rows:
 only complete machine-status records on stdout carry a verdict; bounded stderr

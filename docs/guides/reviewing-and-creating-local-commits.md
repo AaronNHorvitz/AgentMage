@@ -131,19 +131,19 @@ signature verification. After worker dispatch or signing begins, failures report
 failed execution and unverified cleanup. Last-observation manifest fields in a
 failed result do not establish preserved postflight state or a successful receipt.
 
-External signer inspection and signed creation remain direct subprocesses in
-this dormant adapter. Their complete confinement and descendant cleanup are
-still prerequisites for activation. Their output capture
+Signed creation remains a direct subprocess in this dormant adapter. Its
+complete confinement, usable private-key access and descendant cleanup are
+still prerequisites for activation. Its output capture
 now uses bounded nonblocking reads with the same four-MiB ceiling on each stream.
 Cancellation and the original deadline remain observable after the immediate
 child exits, including when another process holds an inherited output pipe.
-Signer inspection shares one thirty-second deadline across listing and export;
-signed creation retains the original commit-session deadline.
+Public identity inspection uses the offline worker described below; signed
+creation retains the original commit-session deadline.
 Failure discards partial output and allows at most half a second to kill and
 reap the exact owned child. An unreaped child remains retained and refuses later
 direct capture attempts; a busy or poisoned capture owner also refuses.
 A retained child reports `linux.local_commit.cleanup.uncertain` through both
-inspection and signing callers. Signed creation with that
+the test-only direct inspection helper and production signing caller. Signed creation with that
 failure reports `linux.git.commit.signer_cleanup_uncertain`, failed execution
 and unverified cleanup. It cannot produce a successful commit receipt or
 proceed to the task-branch update. Other capture failures keep their existing
@@ -154,8 +154,8 @@ An open-pipe failure closes the local readers without proving that the remaining
 writer died. No capture result establishes sandbox admission or whole-unit
 cleanup. Actual local child/pipe tests, synthetic worker results, parser fixtures
 and installed-Git message tests establish component behavior only. Disposable
-signatures traverse the production direct signing capture method; key listing
-and export traverse the production inspection helper. Verification uses the
+signatures traverse the production direct signing capture method; their direct
+key listing and export now use a test-only fixture helper. Verification uses the
 public-only payload reconstruction and fixed GnuPG options directly in these
 cryptographic component tests. Those tests supply synthetic private artifact fields. They
 do not pass the product's executable trust checks or exercise approval and
@@ -188,5 +188,40 @@ Synthetic supervisor tests prove result validation and launch construction, not
 native admission. Disposable installed-Git signatures test both object formats,
 exact primary/subkey selection and message reconstruction against the worker's
 public-only GnuPG options. The complete native workflow remains unverified in the
-lane. Signer inspection and signed creation still need confinement before any
-activation; this change does not grant commit or push authority.
+lane. Signed creation still needs confinement and usable private-key access
+before any activation; this change does not grant commit or push authority.
+
+## Offline public identity inspection
+
+The dormant signer constructor pins public identity through offline listing and
+export workers. Only a bounded, sealed snapshot of `pubring.kbx` (or
+`pubring.gpg` when the first name is absent) enters either worker. Capture holds
+the approved private keyring directory and opens the public database relative
+to it without following symlinks. Special files, unsafe ownership or modes,
+empty files, changed metadata and databases larger than four MiB refuse capture.
+This is a bounded public-file snapshot, not an atomic transaction against
+concurrent same-user edits. Keybox-daemon stores are unsupported.
+
+Neither worker receives the live keyring directory, private keys, option files,
+trust database or host agent sockets. Fixed GnuPG options prevent option-file
+loading, agent startup, key retrieval and use of a default keyring. Listing must
+identify exactly the selected fingerprint on its own public key/subkey record,
+with that key's own signing capability, no revocation, disablement or expiry,
+and a current primary key. A fingerprint in a user ID or diagnostic cannot
+qualify. Export follows only a successful eligible listing, over the same sealed
+snapshot. The inspection digest binds the snapshot, listing, public export and
+fingerprint. Bounded stderr remains diagnostic only.
+
+The existing supervisor requires root-owned executable admission and whole-unit
+cleanup for each worker, with the original thirty-second total deadline, resource
+bounds, output checks and socket-denying filter. No direct inspection fallback
+exists in production. The legacy synchronous constructor owns an internal
+cancellation token; it does not yet expose external cancellation control.
+
+A public pin does **not** establish private-key possession or signing availability.
+Usable private signing and confined signed creation remain prerequisites for
+activation. A disposable real-GnuPG component test exercises the fixed public-only
+options without an agent; synthetic worker tests cover the dispatch and refusal
+contracts. Neither establishes native sandbox admission or a complete approved
+commit workflow. Candidate construction, independent reviewer/artifact authority,
+approval composition, approved commit/push and model measurements remain open.

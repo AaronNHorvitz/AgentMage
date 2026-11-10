@@ -34,6 +34,9 @@ const MAX_TRUSTED_EXECUTABLE_BYTES: u64 = 64 * 1024 * 1024;
 #[path = "local_commit_verification.rs"]
 pub(crate) mod verification;
 
+#[path = "local_commit_inspection.rs"]
+pub(crate) mod inspection;
+
 /// Stable Linux local-commit adapter failure class.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LinuxLocalCommitErrorKind {
@@ -274,7 +277,7 @@ impl LinuxCandidateTreeBuilder {
     }
 }
 
-/// Verified external OpenPGP signer and keyring held outside a repository.
+/// Pinned external OpenPGP public identity; private-key usability is not admitted.
 pub struct LinuxOpenPgpSigner {
     executable: PathBuf,
     executable_sha256: String,
@@ -284,7 +287,9 @@ pub struct LinuxOpenPgpSigner {
 }
 
 impl LinuxOpenPgpSigner {
-    /// Inspects one approved external secret-key identity without exposing key material.
+    /// Pins one approved external public identity without inspecting private keys.
+    ///
+    /// This does not establish that a usable private signing key is available.
     pub fn inspect(
         signer_id: &str,
         executable: impl AsRef<Path>,
@@ -305,30 +310,19 @@ impl LinuxOpenPgpSigner {
         if !valid_fingerprint(&fingerprint) {
             return Err(error(LinuxLocalCommitErrorKind::ArtifactDenied));
         }
-        let listing = run_gpg(
+        let cancellation = CancellationToken::root(
+            agentmage_kernel_contracts::BoundaryKind::Kernel,
+            agentmage_kernel_contracts::TaskId::from_raw("local-signer-inspection"),
+            agentmage_kernel_contracts::CorrelationId::from_raw("local-signer-inspection"),
+        );
+        let (public_key, inspection) = inspection::inspect(
             &executable,
+            &executable_sha256,
             &keyring,
-            &[
-                "--with-colons",
-                "--fingerprint",
-                "--list-secret-keys",
-                &fingerprint,
-            ],
+            &fingerprint,
+            &cancellation,
             deadline,
         )?;
-        let listing_text = String::from_utf8_lossy(&listing).to_ascii_lowercase();
-        if !listing_text
-            .split(':')
-            .any(|field| field.trim() == fingerprint)
-        {
-            return Err(error(LinuxLocalCommitErrorKind::ArtifactDenied));
-        }
-        let public_key = run_gpg(&executable, &keyring, &["--export", &fingerprint], deadline)?;
-        if public_key.is_empty() {
-            return Err(error(LinuxLocalCommitErrorKind::ArtifactDenied));
-        }
-        let mut inspection = listing;
-        inspection.extend_from_slice(&public_key);
         let pinned = PinnedCommitSigner::seal(PinnedCommitSigner {
             schema_version: 0,
             signer_id: signer_id.to_owned(),
@@ -338,7 +332,7 @@ impl LinuxOpenPgpSigner {
             signer_executable_sha256: executable_sha256.clone(),
             key_fingerprint: fingerprint,
             public_key_sha256: hash(&public_key),
-            inspection_evidence_sha256: hash(&inspection),
+            inspection_evidence_sha256: inspection,
             repository_selected_program_used: false,
             unsigned_fallback: false,
             signer_sha256: String::new(),
@@ -800,6 +794,8 @@ fn git_timezone(offset_minutes: i16) -> String {
     format!("{sign}{:02}{:02}", absolute / 60, absolute % 60)
 }
 
+// Disposable cryptographic fixtures only. Product inspection has no direct fallback.
+#[cfg(test)]
 fn run_gpg(
     executable: &Path,
     keyring: &Path,
@@ -1276,7 +1272,7 @@ pub(crate) mod tests {
     #[test]
     fn local_commit_installed_git_signs_with_exact_primary_or_subkey_in_both_formats() {
         // Actual disposable Git/GnuPG signatures with a synthetic plan. This
-        // exercises the production signing/inspection capture paths and exact
+        // exercises production signing capture, fixture inspection and exact
         // verification, not product artifact admission, confinement, approvals
         // or the native adapter workflow. Private fields below hold fixture
         // inputs only; the product constructor still requires a verified artifact.
@@ -1301,8 +1297,8 @@ pub(crate) mod tests {
                 .output()
                 .expect("add fixture signing subkey");
             assert!(added.status.success(), "fixture subkey generation failed");
-            // Exercise the actual listing/export call path, with one original
-            // inspection deadline. Fixture key generation is separate setup.
+            // Direct fixture listing/export supports the signing matrix only.
+            // Product inspection instead uses the offline public-only worker.
             let inspection_deadline = Instant::now() + Duration::from_secs(10);
             let listed = run_gpg(
                 Path::new("/usr/bin/gpg"),
@@ -1480,8 +1476,8 @@ pub(crate) mod tests {
 
     #[test]
     fn local_commit_production_capture_callers_bound_output_exit_deadline_and_cancellation() {
-        // Real child processes through both production call paths, with synthetic
-        // executable fields. No artifact admission or sandbox claim is made.
+        // Real child processes through production signing and the test-only GPG
+        // fixture helper. No artifact admission or sandbox claim is made.
         let _capture = DIRECT_CAPTURE_TEST
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);

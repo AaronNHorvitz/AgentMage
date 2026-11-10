@@ -206,7 +206,7 @@ fn candidate_setup_refuses_replacement_between_claim_and_worker_capture_without_
 
 #[test]
 fn candidate_setup_retains_nonempty_or_changed_mode_claims_after_failure() {
-    for entry in ["file", "directory", "symlink", "mode"] {
+    for entry in ["file", "directory", "symlink", "mode", "mode-after-capture"] {
         let f = Fixture::new(40);
         let mut scratch = PathBuf::new();
         assert!(
@@ -220,12 +220,20 @@ fn candidate_setup_retains_nonempty_or_changed_mode_claims_after_failure() {
                     }
                     _ => fs::set_permissions(path, fs::Permissions::from_mode(0o755)).unwrap(),
                 }
+                if entry == "mode-after-capture" {
+                    let worker_scope = LinuxRepositoryScope::verify(
+                        &f.scope.checkout_root,
+                        &f.scope.git_directory,
+                        path,
+                    )?;
+                    return LinuxRepositoryMutationScope::capture(&worker_scope);
+                }
                 Err(denied())
             })
             .is_err()
         );
         assert!(scratch.is_dir());
-        if entry != "mode" {
+        if !entry.starts_with("mode") {
             assert!(scratch.join("unknown").symlink_metadata().is_ok());
         }
         assert!(CandidateSession::new(&f.scope, &f.plan).is_err());

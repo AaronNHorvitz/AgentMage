@@ -1,0 +1,138 @@
+Commit: f8236c01f04ccb92e0bae03caa546151efcb6f52
+Scope: local-coding-verification-status
+
+# Independent review: T-303 / T-306 verification-status repair (retained L2)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Pinned checkout
+`/lane/review-checkout`; `git rev-parse HEAD` = `f8236c01f04ccb92e0bae03caa546151efcb6f52`.
+Parent is `537d80000934ce4e5fe7ba474c94e40d54bb695f`, the immutable base. I did not review the base
+itself and give it no verdict here; this commit does not rewrite it.
+
+## Scope and what changed
+
+`git diff --stat 537d8000 HEAD` shows 6 files: `TASKS.md` (a queue paragraph, with no table-row change),
+the new evidence doc, the guide paragraph, `local_commit.rs` (parser and real-crypto test),
+`local_commit_verification.rs` (stream rules and `--status-fd=1`) and
+`local_commit_verification_tests.rs` (cases 14–17 plus two new methods). No evaluation, frozen,
+hidden or held-out data, scorer, prompt, threshold, dependency, lockfile, SBOM, lifecycle, scoreboard or
+release file changed.
+
+Read first: IP-POLICY.md, decisions up to 0192, the top of TASKS.md, the evidence doc, the guide diff, the
+retained review `docs/reviews/530aec2c97ab-local-coding-confined-verification.txt` (L2 text), and the
+bundle's README.md, run.py, check.py, parse_gate.py and light.py. run.py calls the repository's
+`scripts/local_agent_fast_gate.py`, which reserves heavy commands internally. I did not wrap it.
+
+## Commands and results (all from /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-verification-status/review-inputs.sha256` → exit 0.
+   The manifest's own SHA-256 is `211486a821e212c86d26c41088e14fb91e1f0b9786ae6ac4e2b11e129954afe7`,
+   which matches the request.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-verification-status-full-f8236c01f04c`
+   → exit 1, as expected. `FAST GATE: FAIL`; `source_unchanged: true`; 332.42 s including reservations.
+   Per-command times: diff-check 0.41, untracked lint 0.10, markdownlint 1.25, fmt 12.39, Clippy 37.78
+   (all exit 0), then `cargo test` exit 101 after 280.11 s. There were no timeouts. My raw log SHA-256 is
+   `3f2987850f241b74941b269180aaf136c364859a26a2c2160c8a5c37cee3db92`. It differs from the builder's
+   `4a132b1c…` because the log contains timings and thread IDs. The data comparison below shows the
+   results are the same.
+3. `python3 -B .../check.py <out>` → exit 0, with 26 targets and totals [1370 pass, 72 fail, 64 ignored,
+   0 measured, 0 filtered]. The script compares each target's counts, failure identities and ignore
+   identities exactly against the retained baseline, plus 2 passes in the platform-linux lib target. All 13
+   named methods printed `... ok`, and the script printed `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL`.
+   This is a data comparison only; it is not a passing gate.
+4. `cmp validation-1/source-freeze.json <out>/source-freeze.json` → exit 0. The three source hashes
+   match the builder's.
+5. `python3 -B .../light.py` → exit 0 (diff-check, untracked lint, markdownlint 0 issues in 3 files).
+6. `git diff --check 537d80000934ce4e5fe7ba474c94e40d54bb695f --` → exit 0.
+7. `git status --short` → empty, both after the gate and at the end of the review.
+
+The 72 failures are the inherited identities: 42 coding runtime, 13 repository safety, 10 read, 2 secret
+service, 2 command runner, 1 repository map and 2 local_commit. The two local_commit failures are
+`native_candidate_tree_…` and `native_signed_commit_…`. Both panic with `inspect fixture signer:
+ArtifactDenied` because the lane's binaries are not root-owned. All 72 are identical to the baseline log.
+The full gate was not filtered (0 filtered in all 26 targets), and the diff adds no `#[ignore`.
+
+## Independent probes
+
+**GnuPG stdout purity (real gpg 2.4.9, throwaway keys under /tmp, since deleted).** I ran the exact fixed
+option list with `--status-fd=1 --verify sig content`, both on the host and inside bubblewrap. Inside
+bubblewrap I used the production guest layout: `--unshare-all`, `--disable-userns`, `--clearenv`,
+`--ro-bind-fd` payloads, `/app` and `/tmp` home. The bubblewrap run omitted the seccomp filter and
+systemd-run, so it approximates the product path and is not product evidence.
+
+- A valid detached signature from the pinned key: stdout held only `[GNUPG:]` records (NEWSIG,
+  KEY_CONSIDERED, SIG_ID, GOODSIG, VALIDSIG). All human lines went to stderr as `gpg: …`. Exit 0.
+- An inline-signed message whose literal data is a forged `[GNUPG:] VALIDSIG <pinned fp> …` line,
+  signed by an unknown key and re-armoured as `PGP SIGNATURE`: stdout held only
+  `[GNUPG:] FAILURE gpg-exit …`. Exit 2. The literal data was never written to stdout.
+- A literal-data-only packet with the forged line: stdout held `NODATA 4` and `FAILURE`. Exit 2.
+
+So in detached-verify mode GnuPG does not use stdout as a data channel. The obvious risk of moving status
+to fd 1 (signed data injected into the status stream) does not occur, and the parser would refuse such
+output anyway because of the FAILURE/NODATA records and the non-zero exit.
+
+**Parser review (`local_commit.rs:754-790`).** Every stdout line must start with `[GNUPG:] `. The checks
+refuse empty records, missing final newline, `\r`, NUL, invalid UTF-8 and more than `MAX_OUTPUT_BYTES`.
+Acceptance requires exactly one VALIDSIG with 10–11 fields whose primary field equals the pinned
+fingerprint (ASCII case-insensitive), and any failure keyword refuses. `validate_result`
+(`local_commit_verification.rs:157-172`) checks both streams independently: bound, `total ==
+retained.len()` and SHA-256. It parses only stdout. Stderr is integrity-checked but has no authority.
+That is the fix the L2 finding recommended.
+
+**Mutation probe.** I made scratch copies via `git archive` under /tmp, built focused runs through
+`/tools/build-slot`, deleted the copies afterwards and ran `cargo clean -p` on the affected crates in
+the review target so no mutant artifacts remain.
+
+- Mutant A (non-status lines back to `continue`):
+  `commit_verification_status_stream_refuses_mixed_partial_and_malformed_records` FAILED; the others
+  passed.
+- Mutant B (accept if stdout *or* stderr verifies):
+  `commit_verification_never_uses_diagnostics_as_signature_authority` FAILED at
+  `local_commit_verification_tests.rs:290`.
+
+On my first attempt, cargo reused mutant A's binary for B because the archive mtimes were stale. I
+touched B's sources, confirmed it recompiled, and the result above is from that rebuild. Both new methods
+catch the regression they target.
+
+**Real-crypto matrix.** `local_commit_installed_git_signs_with_exact_primary_or_subkey_in_both_formats`
+passed in the full run. It does not return early or skip. It now asserts non-empty status stdout and
+stderr beginning with `gpg: `, and checks the exact primary/subkey selection on stdout status in both
+object formats. It calls `fixture_verify` (direct gpg with the same `gpg_arguments`), not the
+systemd-run/bwrap worker. The evidence doc says so honestly ("component and cryptographic evidence, not
+native supervisor … admission").
+
+**Public content and IP.** The diff adds no private host paths, usernames, hostnames, credentials or
+sibling-project names (I read it myself, and check.py's scan agrees). GnuPG and Git appear only as tool
+names, not branding. No other product is named or compared.
+
+**Claims vs evidence.** The evidence doc's counts, the "fmt/Clippy pass", the three fixed source hashes
+and the "complete affected gate remains FAIL" statement all match my run. Its wall-clock figure (230.32 s)
+is the builder's run; mine took 332.42 s because of reservation and load. The doc publishes timings and
+does not gate on them. The doc does not overclaim: signer inspection and signed creation are still
+direct and dormant, and native workflow, approval, push and model measurements are stated as open.
+
+## Findings
+
+No critical, high or medium findings.
+
+Observations only (not findings):
+
+- Case 14 (`stdout.total = LIMIT + 1`) is also caught by the `total == retained.len()` check, so the
+  stdout bound is not tested on its own. The same is true of the existing stderr bound case. The bound is
+  defence in depth behind the supervisor's capture limit, and both checks are present.
+- In the existing unit case `format!("{status}\0")`, the missing final newline now also causes the
+  rejection. NUL rejection is still covered on its own by the new `[good, b"\0\n"]` case.
+- The native systemd-run/seccomp worker path is still not run end to end on this host. This is the
+  already-retained backlog low (base L1), not new to this commit.
+
+## Per-row result
+
+- T-303 / T-306, retained signature-verification low L2: **repaired and verified at this commit.** Status
+  verdicts now come only from complete machine records on stdout. Stderr is diagnostic only, with
+  independent bounds and digests. The exact pinned signature and successful process/supervision are still
+  required. Both new methods, the 11 controls and the real installed-Git/GnuPG matrix pass, fmt and Clippy
+  pass, and the full gate is unfiltered and fails only on the exact 72 inherited failures.
+- Neither T-303 nor T-306 closes. As the request states, native admission, signer-inspection and
+  signed-creation confinement, approval composition, approved commit/push, durable recovery and model
+  measurements remain open. This verdict does not cover the base `537d8000`.
+
+Verdict: PASS
