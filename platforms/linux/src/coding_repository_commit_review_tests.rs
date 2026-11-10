@@ -1334,6 +1334,7 @@ fn creation_review_candidate_plan_binds_mixed_original_history_and_creation_mode
     assert!(!candidate.network_authority && !candidate.hooks_enabled && !candidate.filters_enabled);
     let mut checker = CandidateChecker(|input: LinuxCodingCandidateReviewEvidence<'_>| {
         let sources = input.sources();
+        assert_eq!(input.cancellation().observe_effect_cancellation(), Ok(None));
         assert_eq!(sources.len(), 3);
         assert_eq!(sources[0].path(), "new.py");
         assert_eq!(sources[0].preimage(), None);
@@ -1806,6 +1807,103 @@ fn candidate_checker_cancellation_stops_each_observation_and_checker_boundary() 
             (calls.get(), checked.get()),
             (expected_calls, expected_checks),
             "{stage}"
+        );
+    }
+}
+
+#[test]
+fn candidate_checker_running_worker_observes_original_cancellation_without_postcheck() {
+    // The checker and its worker are synthetic. A real second thread cancels
+    // the original caller scope only after the worker observes it live.
+    for (outcome, expected_code) in [
+        (Ok(()), "code.commit.review-cancelled"),
+        (
+            Err(LinuxCodingCandidateReviewFailure::Rejected),
+            "code.commit.review-rejected",
+        ),
+        (
+            Err(LinuxCodingCandidateReviewFailure::Unavailable),
+            "code.commit.review-unavailable",
+        ),
+    ] {
+        let (f, owner, changes) = command::tests::candidate_review_fixture();
+        let p = packet(&owner, &changes);
+        let token = review_token();
+        let before = owner.inspect().unwrap();
+        let validation = owner.inspect_validation().unwrap();
+        let calls = Cell::new(0);
+        let checked = Cell::new(0);
+        let (started_tx, started_rx) = std::sync::mpsc::sync_channel(0);
+        let (finished_tx, finished_rx) = std::sync::mpsc::sync_channel(0);
+        let mut finished_rx = Some(finished_rx);
+        let original = token.clone();
+        let canceller = std::thread::spawn(move || {
+            started_rx
+                .recv_timeout(Duration::from_secs(5))
+                .expect("checker worker must start");
+            cancel_review(&original);
+            let signal = original.signal().unwrap();
+            finished_tx.send(()).unwrap();
+            signal
+        });
+        let mut observed = None;
+        let mut checker = CandidateChecker(|input: LinuxCodingCandidateReviewEvidence<'_>| {
+            checked.set(checked.get() + 1);
+            assert_eq!(calls.get(), 2);
+            // Borrow only the passive observation into the worker, not the
+            // repository owner or a fresh scope supplied by this fixture.
+            observed = Some(std::thread::scope(|scope| {
+                let cancellation = input.cancellation();
+                let started_tx = &started_tx;
+                let finished_rx = finished_rx.take().expect("only one checker invocation");
+                scope
+                    .spawn(move || {
+                        assert_eq!(cancellation.observe_effect_cancellation(), Ok(None));
+                        started_tx.send(()).unwrap();
+                        // Synchronize after the canceller releases its locks.
+                        // try_lock contention must fail closed as unavailable;
+                        // this test must not mistake it for a detached scope.
+                        finished_rx
+                            .recv_timeout(Duration::from_secs(5))
+                            .expect("canceller must finish");
+                        cancellation
+                            .observe_effect_cancellation()
+                            .expect("original observer must be available")
+                            .expect("caller cancellation was detached")
+                    })
+                    .join()
+                    .unwrap()
+            }));
+            outcome
+        });
+        let result = selected_review(&owner).verify_candidate_tree_with(
+            &p,
+            &p.commit_plan.groups[0].group_id,
+            "checker-worker-cancel",
+            &mut checker,
+            &token,
+            || {
+                calls.set(calls.get() + 1);
+                Ok(observation(&owner))
+            },
+        );
+        assert_eq!(result.err().unwrap().code(), expected_code);
+        assert_eq!(observed.unwrap(), canceller.join().unwrap());
+        assert_eq!((calls.get(), checked.get()), (2, 1));
+        assert_eq!(owner.inspect().unwrap(), before);
+        assert_eq!(owner.inspect_validation().unwrap(), validation);
+        assert_eq!(
+            fs::read(f.root.join("repo/sentinel")).unwrap(),
+            b"preserve human work"
+        );
+        assert_eq!(
+            fs::read(f.root.join("owned/worktree/sentinel")).unwrap(),
+            b"reviewed change"
+        );
+        assert!(
+            !f.root
+                .join("owned/candidate-index-checker-worker-cancel")
+                .exists()
         );
     }
 }

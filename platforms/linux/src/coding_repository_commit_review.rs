@@ -7,6 +7,7 @@ use crate::repository_base::BaseFilePreimage;
 use agentmage_kernel_engine::local_commit::{
     CandidateTreePlan, CommitFileMode, plan_candidate_tree, verify_local_commit_review,
 };
+use agentmage_kernel_engine::propagation::EffectCancellationObservation;
 use agentmage_kernel_engine::repository_safety::RepositoryPreservationManifest;
 use agentmage_kernel_engine::review_packet::{
     ChangePurposeAssignment, LocalReviewPacket, ReviewableChangeSet, bind_validation_evidence,
@@ -41,6 +42,7 @@ pub struct LinuxCodingCandidateReviewEvidence<'a> {
     creation: &'a LinuxCodingGitCreation,
     validation: LinuxCodingValidationEvidence<'a>,
     sources: &'a [LinuxCodingReviewSource],
+    cancellation: &'a dyn EffectCancellationObservation,
 }
 
 /// Exact bounded source pair captured under the original two-root read scope.
@@ -117,6 +119,15 @@ impl LinuxCodingCandidateReviewEvidence<'_> {
     pub fn sources(&self) -> &[LinuxCodingReviewSource] {
         self.sources
     }
+
+    /// Passive view of the caller's original cancellation scope. Check during
+    /// bounded reviewer work and pass to existing confined worker poll loops.
+    /// Observation failure must stop review as unavailable. This view cannot
+    /// cancel the caller, create a token, or authorize a worker or disclosure.
+    #[must_use]
+    pub fn cancellation(&self) -> &dyn EffectCancellationObservation {
+        self.cancellation
+    }
 }
 
 /// Content-free outcome from an explicitly installed trusted reviewer.
@@ -143,7 +154,9 @@ pub trait LinuxCodingCandidateReviewPort {
     /// Check original borrowed records without reentering their owner. Prior
     /// read consent must cover both complete roots and offline Git observations.
     /// This grants no extra reads, commands, disclosure or effect permission.
-    /// The host remains responsible for bounding/cancelling its checker work.
+    /// Observe `evidence.cancellation()` during work; observation failure must
+    /// stop as unavailable. The host remains responsible for worker authority,
+    /// cleanup and deadlines. This synchronous call is not forcibly preempted.
     fn verify_candidate(
         &mut self,
         evidence: LinuxCodingCandidateReviewEvidence<'_>,
@@ -262,6 +275,7 @@ impl<'owner> LinuxCodingCommitReview<'owner> {
             creation: self.owner.created_git_identity()?,
             validation: self.owner.completion_validation_evidence()?,
             sources: &sources,
+            cancellation,
         });
         outcome.map_err(|failure| {
             err(match failure {

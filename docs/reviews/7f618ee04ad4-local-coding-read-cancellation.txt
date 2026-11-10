@@ -1,0 +1,185 @@
+Commit: 7f618ee04ad4c65c631cae9299bb9aea8402d981
+Scope: local-coding-read-cancellation
+
+# Independent review: cancellable original repository reads (T-303 / T-306)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only on the repository.
+Review tree: pinned checkout `/lane/review-checkout`. `git rev-parse HEAD` and
+`git rev-parse 7f618ee04ad4c65c631cae9299bb9aea8402d981` both returned
+`7f618ee04ad4c65c631cae9299bb9aea8402d981`. The working tree was clean before and after the review.
+Parent: e8edde37790ca3853f8226b6a0593c7d0fd1b44b (unchanged ancestry).
+
+This is a same-row, non-closing batch. It adds no rows or sub-rows; `check.py` confirms that every
+`| [` row line in TASKS.md is identical to the parent. T-303 and T-306 remain open.
+
+## Methods
+
+- Read IP-POLICY.md, the new TASKS.md head paragraphs, `docs/evidence/t306-read-cancellation-2026-11-10.md`,
+  the changed guide sections and the retained parent report
+  `docs/reviews/e8edde37790c-local-coding-reconciliation-uncertainty.txt`. The retained report is
+  byte-identical to `/lane/reviews/e8edde37790c-local-coding-reconciliation-uncertainty.md` (`cmp` exit 0).
+- Read the full diff against the parent for all 14 paths, including all ten changed Rust sources.
+- Read the surrounding production code:
+  - `observe_with` / `observe_confined_inventory`, which carries the token into the confined inspection
+    worker (`repository_observation.rs:18-140`);
+  - `collect_inventory_inner` (`repository_inventory.rs:84-200`);
+  - `LinuxRepositoryCollector::collect_inner` (`repository_safety.rs:329-361`);
+  - the candidate builder (`local_commit.rs:191-288`);
+  - the commit session, preflight and `run_with` (`local_commit_execution.rs`);
+  - `observe_commit_git` and `verify_candidate_tree` (`coding_repository_commit_review.rs:180-205` and `495-560`).
+- Read every bundle script before execution: `run.py`, `check.py`, `parse_gate.py`, `light.py`,
+  `manifest_fields.py` and `stage_check.py`. I also read the plan logic of the in-tree
+  `scripts/local_agent_fast_gate.py`:
+  - No script mutates source.
+  - `run.py` wraps cargo with `/tools/build-slot` internally through the gate (`local_agent_fast_gate.py:208,305`).
+    I did not wrap it again.
+  - `stage_check.py` is a pre-commit staging check and was not required to run.
+- Searched all non-test callers of `collect`, `collect_inventory`, `collect_base_preimages` and
+  `observe_commit_git`.
+- Ran six source mutants on separate `git archive` extractions under `/lane/state/tmp/review-7f61-mut`,
+  outside the checkout, with their own target directory.
+
+## Exact commands and results (all run in /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-read-cancellation/review-inputs.sha256`: exit 0. All 14 paths match.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-read-cancellation/run.py /lane/state/tmp/review-read-cancellation-full-R7F6`:
+   exit 1, as expected. `{"exit": 1, "source_unchanged": true, "seconds_including_reservations": 282.15, "raw_log_sha256": "31c73eacf100422528f76548b9facec2935c8f030e848bc396a832d8557f94a0"}`.
+   - Command exits were 0,0,0,0,0,0,101: diff-check, lint-untracked, lint-reviews, markdownlint, fmt 1.20 s,
+     Clippy 35.81 s on a cold target, Rust tests 243.47 s.
+   - `FAST GATE: FAIL`. No timeout occurred.
+3. `python3 -B /lane/state/tmp/t306-read-cancellation/check.py /lane/state/tmp/review-read-cancellation-full-R7F6`:
+   exit 0 (DATA COMPARISON ONLY).
+   - Summary: 26 targets; totals [1437, 72, 64, 0, 0]; 10 source files; 6 new methods.
+   - 82 affected methods: 67 ok, 15 FAILED, 0 ignored.
+   - Every failed and ignored identity equals the parent baseline, plus exactly six passes in
+     `unittests src/lib.rs (agentmage_platform_linux)`.
+   - All six new methods print `... ok`.
+4. `cmp /lane/state/tmp/t306-read-cancellation/validation-2/source-freeze.json /lane/state/tmp/review-read-cancellation-full-R7F6/source-freeze.json`:
+   exit 0. The ten Rust source hashes are identical to the builder's. After the review,
+   `review-inputs.sha256` still verifies.
+5. `python3 -B /lane/state/tmp/t306-read-cancellation/manifest_fields.py`: exit 0. All preservation-manifest
+   field expressions are identical to the parent, ignoring whitespace (canonical sha256 `e88099b2…79c6d`).
+6. `python3 -B /lane/state/tmp/t306-read-cancellation/light.py`: exit 0. All four light commands return 0,
+   and markdownlint reports 0 issues in 3 files.
+7. `git diff --check e8edde37790ca3853f8226b6a0593c7d0fd1b44b --`: exit 0.
+8. `git status --short`: empty.
+
+Builder evidence cross-check:
+- `validation-2/result.json` records 199.16 s, and its log hashes to the claimed
+  `76fa805c020cb134e947fb6d3922be7542a590b5d5cbf588c2db81078a095fa6`.
+- My elapsed time differs only by cold Clippy and test build time in the separate review target.
+
+The 15 failures in changed sources were classified from my raw log. Each one panics with
+`git artifact: LinuxRepositoryError { kind: InvalidGitArtifact }` (`repository_safety.rs:1931`,
+`local_commit.rs:1978`) or `inspect fixture signer: ... ArtifactDenied` (`local_commit.rs:1966`). These are
+the inherited native-admission failures, as claimed. A consequence is that no native-Git execution of the
+changed collector paths occurs in this environment. The evidence states this honestly ("No native worker
+... is demonstrated").
+
+### Mutation runs
+
+Command, run per mutant:
+
+```
+CARGO_TARGET_DIR=/lane/state/tmp/review-7f61-mut/target bash /tools/build-slot cargo test --locked --offline \
+  -p agentmage-platform-linux --lib -- preservation_ base_cancellation_reaches supplied_cancellation_reaches \
+  candidate_native_observation_precancel candidate_checker cancel
+```
+
+The first batch shared one target across extractions that had identical archive mtimes. As a result,
+m2–m6 reused m1's binary. I touched each mutated file and reran m2–m6, and confirmed
+`Compiling agentmage-platform-linux` in each log. The only result reported from the first batch is m1's,
+which was built fresh in a new target. `repository_inventory_cancellation_fails_before_git_launch` fails in
+every run; it is an inherited native-admission failure.
+
+| Mutant | Change | Result |
+|---|---|---|
+| m1 | `Observer::optional` forwards `None` instead of the token | killed: `preservation_cancellation_reaches_every_worker…` |
+| m2 | remove the post-return `self.check()` in `Observer::optional` | **survived** |
+| m3 | `collect_cancellable_with` forwards `None` to the base worker | killed: `base_cancellation_reaches_type_tree…` |
+| m4 | remove the precancel check at the top of `observe_commit_git` | killed: `candidate_native_observation_precancel…` |
+| m5 | candidate builder `after` uses no-token `collect` | **survived** |
+| m6 | `observe_commit_git` passes `None` to `collect_base_preimages` | **survived** |
+
+## Analysis
+
+- **Token reach.**
+  - `collect_inner` → `preservation::collect_with` → `observe_inventory_optional(…, token)` →
+    `observe_with`, which uses the caller's token instead of the fallback root when one is supplied.
+  - Inventory and base reads use the same path.
+  - Every one of the 17 preservation Git reads goes through `Observer`, with a check before and after each
+    worker call. There are further checkpoints around the worktree hash, the metadata/file hash phase and
+    sealing, and after sealing.
+  - No preservation Git read bypasses the observer.
+- **Manifest fields.** `manifest_fields.py` confirms the 32 field expressions are unchanged. The
+  equality test with and without a live token, together with the real source and index drift test, passes.
+  The order of the precheck in `collect_inner` changes: a cancelled linked scope now reports
+  `ObservationFailed` instead of `PlanDenied`. Both refuse, so this is harmless.
+- **Review path.**
+  - `observe_commit_git` refuses on precancel before `verify_apply_roots`. The m4 mutant proves the new
+    test discriminates this.
+  - It forwards the token to the original preservation, the linked inventory and the base reads, and
+    checks again after `linked.revalidate()`. A cancelled successful result therefore cannot yield a
+    `GitObservation`.
+  - The synchronous planner `plan_reviewed_candidate_tree` passes `None`, as documented.
+- **Commit and candidate paths.**
+  - A commit postflight failure under cancellation maps to `uncertain_commit_result(…"postflight")`. This
+    has the same outcome class as the `check_control!` that follows it, so there is no regression from
+    Uncertain to Unchanged.
+  - The candidate builder's `after` collection now refuses under cancellation. Before this commit, a
+    cancellation that landed after `write_tree` could still return `Succeeded`, so this is an improvement.
+  - Scratch cleanup (`session.cleanup()`) still precedes `after`.
+- **Not claimed and not changed.** The worktree lifecycle executor (`repository_safety.rs:1124,1158,1178,1189`)
+  and `coding_repository.rs:317,427` still collect without the token. The batch does not claim these
+  paths. The guide sentence "every existing confined Git worker" sits inside the dormant commit-executor
+  section, where it is accurate. This is noted for backlog context, not as a finding.
+- **Confinement.** Trusted executable admission, the bubblewrap/systemd inspection worker, the environment
+  scrubbing (`GIT_CONFIG_NOSYSTEM`, `HOME=/nonexistent`, and so on), output bounds and the hardened prefix
+  are unchanged. No new public substitution seam: `Observer`, `preservation::collect_with` and
+  `collect_cancellable_with` are private, `pub(super)` or module-private.
+- **Public repository hygiene.** The added lines contain no home paths, usernames, hostnames, credentials
+  or third-party product names. Only the lab path `/lane/state/tmp/...` appears, as in prior retained
+  evidence. There are no new dependencies, `#[ignore]` attributes, or changes to evaluator, hidden or
+  held-out inputs, prompts, thresholds or the scoreboard.
+- **Claims versus evidence.** Every number in the evidence and TASKS text (1,437/72/64, 26 targets, 82/67/15,
+  six new methods, ten hashes, 199.16 s, raw SHA) matches the retained logs and my independent rerun. The
+  only exception is wall time, which is environment-dependent. The fixture-synthetic labelling is accurate.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L-1 (low, test coverage, same-row backlog):** `platforms/linux/src/local_commit.rs:263-266` and
+  `platforms/linux/src/local_commit_execution.rs:85-90`. The claimed candidate and commit
+  pre/postflight token propagation has no discriminating test: mutant m5 (candidate `after` reverted to
+  no-token `collect`) survives. Native tests in this area fail at admission, so the wiring is exercised
+  only by reading the code.
+  - Fix: add a synthetic-seam test showing that a cancellation set after `write_tree` makes
+    `build` return an error rather than `Succeeded`, or route the builder's collection through a private
+    seam that a test can observe receiving `Some(token)`.
+- **L-2 (low, test coverage, same-row backlog):** `platforms/linux/src/coding_repository_commit_review.rs:520-542`.
+  The forwarding of the token from `observe_commit_git` into `collect_base_preimages` (and, by the same
+  argument, into the original and inventory collectors) is untested: mutant m6 survives. The final
+  post-check at `:545` still refuses the observation, so the cost is extra reads after a stop rather than
+  acceptance. However, the claim "no later Git read is started" is not test-backed at this layer.
+  - Fix: a private observation seam test that asserts each collector call receives the caller token.
+- **L-3 (low, test precision):** `platforms/linux/src/repository_preservation_tests.rs:91-129`. The test
+  named "…stops after its return" does not discriminate the post-return check in `Observer::optional`:
+  mutant m2 survives, because the next pre-check or the final check gives identical observable behaviour.
+  There is no behavioural gap.
+  - Fix: either rename the test, or have the stop-point assert that the error originates before any
+    subsequent local phase, for example via a counter on filesystem hashing in a test build.
+- **Carried:** the parent's L-1 (direct state-change/result-digest assertion) and earlier same-row lows
+  remain backlog. This commit does not change them.
+
+## Per-row result
+
+- **T-303:** this batch is PASS for its claimed scope (cancellable original reads through review and
+  dormant candidate/commit composition). It is non-closing; the row stays open.
+- **T-306:** same as T-303. Native admission, trusted checker/artifact integration, full original-owner
+  approval composition, repository/signer recovery, model measurements and approved push remain open, as
+  stated.
+- The complete affected gate remains FAIL (1437 pass / 72 fail / 64 ignore, all failures and ignores
+  inherited). This verdict concerns the increment, not gate success.
+
+Verdict: PASS

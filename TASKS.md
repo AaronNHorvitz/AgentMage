@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The retained [repository-read cancellation review](docs/reviews/7f618ee04ad4-local-coding-read-cancellation.txt)
+has **Verdict: PASS** for exact commit
+`7f618ee04ad4c65c631cae9299bb9aea8402d981`, with no high or medium finding.
+Its low L-1 candidate/commit forwarding coverage, L-2 original collector wiring
+coverage and L-3 post-return test precision join carried same-row backlog.
+Neither T-303 nor T-306 closes.
+
+The [installed-reviewer cancellation increment](docs/evidence/t306-checker-cancellation-2026-11-10.md)
+passes the caller's original cancellation scope to its checker as a passive
+observation. One threaded regression covers success, rejection and unavailable
+returns during cancellation, with no post-check reads or checked result. A
+detached-token mutation is caught. The final complete affected gate remains
+**FAIL**: 1,438 passes, the exact inherited 72 failures and 64 ignores over
+26 unfiltered targets. All 35 changed-source methods, formatting, Clippy and
+final light checks pass; two final source hashes stay fixed. Independent core
+review is required. T-303/T-306 remain open without new rows; native
+admission, trusted checker/artifact integration, full approval composition,
+repository/signer recovery, model measurements and approved push remain open.
+
 The retained [post-executor uncertainty review](docs/reviews/e8edde37790c-local-coding-reconciliation-uncertainty.txt)
 has **Verdict: PASS** for exact commit
 `e8edde37790ca3853f8226b6a0593c7d0fd1b44b`, with no high or medium finding.

@@ -557,3 +557,19 @@ admission, offline supervisor, output bounds and descendant cleanup remain.
 These changes add no product commit route or independent checker and establish
 no native coding or model result. Local scans and an installed blocking checker
 remain outside preemptive cancellation.
+
+The installed checker receives `LinuxCodingCandidateReviewEvidence::cancellation()`
+as a passive view of that same original caller scope. It can observe the signal
+in its own bounded work or pass the view to an already authorized confined
+worker's poll loop. The view cannot cancel the caller, mint a token or authorize
+execution or disclosure. An observation error must stop the checker as
+unavailable. The host still owns deadlines, worker authority and cleanup;
+a checker that blocks without polling is not forcibly interrupted.
+
+After checker success, an observed cancellation refuses before post-check Git
+reads or release of a checked candidate. A checker rejection or unavailable
+result retains its existing failure code even if cancellation arrived during
+the call; it also stops without post-check reads. Tests exercise these three
+outcomes with a synthetic checker whose real worker thread observes cancellation
+from another thread. No independent review verdict or native execution is
+established by this fixture.
