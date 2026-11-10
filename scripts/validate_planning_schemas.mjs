@@ -607,17 +607,18 @@ function writeHistorySemanticErrors(changeSet) {
   }
   const errors = [];
   const paths = new Map();
-  const identities = new Set();
+  const applications = new Set();
   const hooks = new Set();
   let bytes = 0;
   for (const transaction of history) {
     if (!transaction || transaction.write_history !== undefined ||
         !Array.isArray(transaction.files) || !Array.isArray(transaction.review_hooks) || transaction.scope !== changeSet.scope ||
-        identities.has(transaction.change_set_sha256)) {
+        applications.has(transaction.write_application_receipt_sha256)) {
       errors.push("write history must be flat, distinct and consistently classified");
       continue;
     }
-    identities.add(transaction.change_set_sha256);
+    // Content/intent can recur after rollback; a checked application cannot.
+    applications.add(transaction.write_application_receipt_sha256);
     const files = transaction.files;
     if (!files.length || files.length > 128 ||
         files.some((file) => !file || typeof file.path !== "string" ||

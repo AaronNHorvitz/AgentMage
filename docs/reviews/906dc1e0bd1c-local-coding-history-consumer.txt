@@ -1,0 +1,146 @@
+Commit: 906dc1e0bd1cce9b0120fc6247e7526d2905ad56
+Scope: local-coding-history-consumer
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort), read-only, pinned checkout
+`/lane/review-checkout`. Rows: T-303 / T-306, non-closing increment; both parents stay OPEN.
+No repository file was modified. No GPU or model process was started; nothing was downloaded.
+
+## Methods
+
+- **Commit and diff.** `git rev-parse HEAD` = `906dc1e0bd1cce9b0120fc6247e7526d2905ad56` and the
+  status is clean. The diff against immutable base `5cd6332a060b…` touches exactly 5 files:
+  - `TASKS.md`: prose paragraph only; table rows unchanged, confirmed by `check.py`;
+  - the new evidence note;
+  - the guide paragraph;
+  - `scripts/validate_planning_schemas.mjs`;
+  - `tests/test_planning_schemas.mjs`.
+  No Rust, schema, scorer, threshold, prompt, hidden/frozen/held-out or dependency path changed.
+- **Read before running.** IP-POLICY.md, Decision 0185 context, the TASKS.md head, the evidence note,
+  the guide diff, and all bundle runners first: README.md, run.py, check.py, light.py,
+  conformance.py, contract.mjs. None makes a network call, writes into the checkout, or nests
+  build-slot.
+- **Line-by-line comparison** of `writeHistorySemanticErrors` with
+  `kernel/engine/src/review_packet_history.rs` (`capture_reviewable_write_history`, `diff_lines`)
+  and `review_packet.rs` (`verify_single_change_set`, `sha256_json`, struct field order and serde
+  attributes). The comparison covered:
+  - **Field order:** the order in `reviewFileRecord`/`reviewTransactionRecord` equals the
+    `ReviewChangedFile`/`ReviewableChangeSet` declaration order.
+  - **Skipped fields:** `skip_serializing_if` fields (`None` receipts, empty `write_history`) are
+    reproduced as JSON absence.
+  - **Line splitting:** `str::lines()` and `split(/\r?\n/)` + pop agree on LF, CRLF and
+    trailing-newline cases.
+  - **Diff recomposition:** a once-seen leaf diff is kept verbatim (Rust `file.clone()`). Retries
+    recompose as `first[0], lines[1], lines[2], first[3], lines[4]` joined with LF.
+  - **Ordering:** path ordering compares UTF-8 bytes, matching `BTreeMap<String>` and `String <`.
+  - **Hooks:** the hook union is ordered by `REVIEW_HOOK_ORDER`, which matches the
+    `WriteReviewHook` declaration order.
+  - **Digests:** per-path operation digests are `sha256(JSON(operations))`.
+  - **Bounds:** the UTF-8 byte bound equals `MAX_DIFF_BYTES`. The file limit of 128 and the
+    history length of 2–64 also match.
+- **Independent cross-language check.** I ran the new consumer on a Rust-emitted packet that I
+  produced myself in my 5cd6332a review run
+  (`/lane/state/tmp/review-creation-focused-5cd6332a060b/0.log`). Its bytes differ from the
+  builder's pinned `original-owner.log`. Crate inputs are unchanged between 5cd6332a and 906dc1e0,
+  so that packet remains a valid sample of this commit's Rust producer.
+- **Adversarial probes.** I wrote probes under `/tmp/rv906` covering 37 mutations of both real
+  packets, plus path traversal. I ran them on this commit and on an extracted base tree (`git
+  archive` into `/tmp`, which leaves the repository untouched).
+- **Discrimination check.** I ran the new test file against the base validator, with a
+  partial-tree control.
+
+## Commands and results
+
+1. `sha256sum --quiet -c …/t306-history-consumer/review-inputs.sha256`: exit 0. The manifest
+   hashes to `49b853290f00…9619` as stated. The bundled `node/bin/node` (v24.15.0, `d1de76d8…`)
+   is present this time.
+2. `python3 -B …/run.py /lane/state/tmp/review-history-consumer-906dc1e0bd1c`: exit 0.
+   - `source_unchanged: true`; 114.68 s including reservation; raw log SHA-256 `c815183c…1f60`
+     (differs from the builder's by timing, as expected).
+   - Four commands, all `RESULT exit=0`; no Cargo command.
+   - `ℹ tests 84 / pass 84 / fail 0 / cancelled 0 / skipped 0 / todo 0`; Node body
+     1627.66 ms; `FAST GATE: PASS`.
+3. `check.py <out>`: exit 0. It reports gate PASS, 84 tests, sources unchanged and TASKS table
+   rows unchanged. Its privacy scan of the added lines passes.
+4. `conformance.py`: exit 0. The pinned original-owner mixed edit/create/retry packet passes the
+   v2 schema and semantic checks.
+5. `light.py`: exit 0. markdownlint-cli2 finds 0 issues in 3 files.
+6. `cmp validation-3/source-freeze.json <out>/source-freeze.json`: identical. Both JavaScript
+   source hashes match the builder's freeze.
+7. `git diff --check 5cd6332a… --`: exit 0. `git status --short`: empty.
+8. **Builder evidence trace.** `validation-3/fast.log` hashes to `e9ae493a…c542301`. It contains
+   84/84 with zero fail/cancel/skip/todo, `duration_ms 1437.7311` and a 637.51 s suite step;
+   `result.json` gives 638.99 s. The validation-1 and validation-2 `result.json` files show
+   `source_unchanged: false`, as disclosed. Every number in the evidence note traces to these files.
+9. **Probes on both real Rust packets, this commit.** Each probe is listed with its result.
+   - **Accepted, as required:**
+     - the unmodified packet;
+     - the packet with every object's keys reversed.
+   - **Refused, with a `write history…` diagnostic:**
+     - net diff text, first image or CRLF on a retried path;
+     - a once-seen diff missing its trailing newline;
+     - hooks dropped or added;
+     - net operation, files, intent and plan digests;
+     - absent-before turned into an existing empty file;
+     - leaf file order, classification, duplicate operation ID or unsorted hooks (all resealed);
+     - a changed retry leaf with a stale net (resealed);
+     - a replayed leaf under a new identity;
+     - a leaf `write_history: []`.
+   - **Refused through the schema:**
+     - a leaf receipt removed or set to null;
+     - leaf or composite `write_authority: true`;
+     - extra properties;
+     - a composite singular approval.
+   - **Paths:** `../escape`, `/etc/passwd`, `a/../../b`, `sub/./x`, newline and NUL paths (with
+     consistent headers and resealed digests) are refused by the schema.
+10. **Same probes on the base validator.** 14 of these tampers are **accepted**, including the net
+    diff, hooks, every composite digest, leaf order, duplicate operation IDs and a stale net. This
+    confirms that L1 was real and that this commit fixes it.
+11. **New tests on the base validator.** All 4 new history tests fail. The other 4 failures also
+    occur in the partial-tree control of this commit, which is 80/84 for missing non-script files,
+    so they are artifacts of my setup. With the commit's own validator all 4 history tests pass.
+    The tests therefore discriminate.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L3 (low, backlog), `scripts/validate_planning_schemas.mjs:674`, `:692-701`.** Three malformed
+  net-level containers make the consumer throw `TypeError` instead of returning `valid: false`:
+  - a non-array `change_set.files` (an object or a string);
+  - a `null` entry in `change_set.files`;
+  - a non-array `change_set.review_hooks`.
+  - Semantic checks run even when schema validation fails (`validateRuntimeRecord`, line 294), so
+    these inputs reach the code.
+  - This is pre-existing: the base throws on these 3 and on 3 leaf-level cases, which this commit
+    now refuses properly. It fails closed and grants no authority.
+  - Fix: add `Array.isArray`/non-null guards before the `.map`/`.some`/`isStrictlySortedBy` calls,
+    plus three regressions.
+- **L1 from the bac3866b review: resolved.** The consumer now reproduces the Rust history
+  projection, and the probes above show the earlier gaps closed.
+- **L2 (repeated-content history refusal) and earlier lows:** still backlog, unchanged by this
+  commit.
+- **Process note.** The synthetic test fixtures hash with the same `JSON.stringify` the validator
+  uses. Cross-language agreement therefore rests on the real Rust packets. Both the builder's
+  pinned packet and my own independently produced packet pass, and tampered copies refuse.
+
+## Confinement, integrity and labelling
+
+- This commit adds no new route, command, network path, Git effect, grant or mutation authority.
+  The consumer remains integrity-only, and the guide and evidence say so.
+- Labelling is honest:
+  - Git, process and publication observations are stated as synthetic;
+  - there is no fresh Rust, model, task or score claim;
+  - the 72 inherited native/runtime failures are explicitly not passed by this gate.
+- Evaluation integrity: no held-out, hidden, frozen, scorer, threshold or prompt input was touched.
+  No test was weakened; the earlier rejection cases remain.
+- No sub-row was added. No private path, username, hostname, credential or trademark branding
+  appears in the added lines.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing increment): PASS for this increment.** Every required command ran and
+  exited 0, the evidence traces exactly to raw logs, and there is no open high or medium finding.
+  Both parents remain OPEN. The open items are reviewer/artifact authentication, candidate
+  execution, approved Git, native/model measurement and recovery.
+
+Verdict: PASS

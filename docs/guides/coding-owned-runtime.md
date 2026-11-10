@@ -48,6 +48,15 @@ they do not prove native Git creation, coordinator execution or inference.
 The complete native host still encounters the deferred executable-ownership
 blocker in this lane. No new coding score or model admission is established.
 
+Original write-history review permits a retry to repeat an earlier content
+change after a rollback when each checked application is distinct. It retains
+every original approval and application separately. Reusing an application
+digest refuses even if a different change-set digest is supplied. A final
+net-zero path still refuses review; returning temporarily to the original bytes
+inside a later nonzero history is permitted. The sixty-four-transaction and
+eight-MiB history limits remain in force. This supplies no new write, test,
+reviewer, commit or push authority.
+
 ## HTTP handoff in the manual coding service
 
 `serve-coding` now has an explicit in-process path into the same native coding

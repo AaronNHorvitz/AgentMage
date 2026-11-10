@@ -717,6 +717,40 @@ test("local review histories retain separate receipts and reject incomplete chai
   }
 });
 
+test("local review retry cycles require distinct applications rather than distinct content", () => {
+  const source = historyPacket("original", "changed", "changed");
+  const first = historyLeaf("same-content", "original", "changed");
+  const rollback = historyLeaf("rollback", "changed", "original");
+  const retry = structuredClone(first);
+  retry.write_approval_receipt_sha256 = reviewHash("new original approval");
+  retry.write_application_receipt_sha256 = reviewHash("new checked application");
+  const set = source.change_set;
+  set.write_history = [first, rollback, retry];
+  set.files[0].operation_sha256 = reviewHashJson(set.write_history.map((leaf) => leaf.files[0].operation_sha256));
+  set.files_sha256 = reviewHashJson(set.files);
+  const resealHistory = (packet) => {
+    const change = packet.change_set;
+    change.change_set_sha256 = reviewHashJson(change.write_history);
+    change.intent_sha256 = reviewHashJson(change.write_history.map((leaf) => leaf.intent_sha256));
+    change.plan_sha256 = reviewHashJson(change.write_history.map((leaf) => leaf.plan_sha256));
+    packet.commit_plan.change_set_sha256 = change.change_set_sha256;
+  };
+  resealHistory(source);
+  assert.equal(validateReview(source).valid, true);
+  assert.equal(set.write_history[0].change_set_sha256, set.write_history[2].change_set_sha256);
+  assert.notEqual(first.write_application_receipt_sha256, retry.write_application_receipt_sha256);
+  for (const substituteContentIdentity of [false, true]) {
+    const replayed = structuredClone(source);
+    const last = replayed.change_set.write_history[2];
+    last.write_application_receipt_sha256 = first.write_application_receipt_sha256;
+    if (substituteContentIdentity) last.change_set_sha256 = reviewHash("substituted content identity");
+    resealHistory(replayed);
+    const result = validateReview(replayed);
+    assert.equal(result.valid, false);
+    assert(result.schemaErrors.some((error) => error.includes("write history must be flat, distinct")));
+  }
+});
+
 test("local review histories reject altered net diffs, identities and hook unions", () => {
   const source = historyPacket(null, "created\n", "revised\n");
   assert.equal(validateReview(source).valid, true);

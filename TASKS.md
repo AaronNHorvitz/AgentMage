@@ -2,6 +2,24 @@
 
 ## Active queue: local agent mission
 
+The [retry-cycle repair](docs/evidence/t306-retry-cycle-2026-11-09.md) addresses
+same-row low L2: repeated content changes can retain separate original checked
+applications after rollback; replaying an application still refuses. T-303/T-306
+remain open, with no row or sub-row added or closed. Independent core review
+is required. The full affected gate remains **FAIL**: 2,941 Rust passes, the same
+72 failures and 72 ignores, plus a schema reservation timeout. The separately
+reserved schema rerun passes 85/85; both new Rust methods, conformance, formatting
+and Clippy pass. Four code hashes remain fixed. The
+[creation-provenance review](docs/reviews/5cd6332a060b-local-coding-creation-review.txt)
+has **Verdict: PASS** for exact commit
+`5cd6332a060b4a64af7670ead09c54f3736229b5`, with no high or medium finding;
+its low L1 base-tree/preimage gap remains same-row backlog. The
+[history-consumer review](docs/reviews/906dc1e0bd1c-local-coding-history-consumer.txt)
+also returns **Verdict: PASS** for exact commit
+`906dc1e0bd1cce9b0120fc6247e7526d2905ad56`, with no high or medium finding.
+Its low L3 malformed-container diagnostic remains same-row backlog. Existing
+native/runtime failures and the remaining coding execution work stay open.
+
 The [review-history consumer repair](docs/evidence/t306-history-consumer-2026-11-09.md)
 addresses same-row low L1 from the write-history review: JSON consumption now
 recomposes original leaves, exact net diffs, composite hashes and review hooks.

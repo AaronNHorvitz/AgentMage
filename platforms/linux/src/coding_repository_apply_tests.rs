@@ -1101,6 +1101,70 @@ fn write_history_retention_limit_never_truncates_original_native_proof() {
 }
 
 #[test]
+fn write_history_retry_cycle_keeps_three_native_applications_and_separate_transfer_consent() {
+    let f = Fixture::new();
+    let mut owner = f.owner();
+    f.edit(&mut owner, "one.py", "retry change\n");
+    let lease = runtime_lease(owner);
+    runtime_edit(&f, &lease, "first\n", true);
+    let owner = recover_lease(lease);
+    // The intermediate rollback has no net diff, so review still refuses.
+    assert!(
+        owner
+            .capture_applied_write_review(history_purposes(1))
+            .is_err()
+    );
+    let lease = runtime_lease(owner);
+    runtime_edit(&f, &lease, "retry change\n", true);
+    let mut owner = recover_lease(lease);
+    let projection = owner
+        .capture_applied_write_review(history_purposes(1))
+        .unwrap();
+    let value = serde_json::to_value(&projection).unwrap();
+    let history = value["write_history"].as_array().unwrap();
+    assert_eq!(history.len(), 3);
+    println!("retry_cycle_projection_json={value}");
+    assert_eq!(
+        history
+            .iter()
+            .map(|leaf| leaf["write_application_receipt_sha256"].as_str().unwrap())
+            .collect::<BTreeSet<_>>()
+            .len(),
+        3
+    );
+    assert_eq!(projection.files()[0].preimage_sha256, hash(b"first\n"));
+    assert_eq!(
+        projection.files()[0].postimage_sha256,
+        hash(b"retry change\n")
+    );
+    assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+    let denied = f.prepare(&mut owner);
+    assert_eq!(
+        owner
+            .decide_apply(denied["preview_sha256"].as_str().unwrap(), false, NOW)
+            .unwrap()["outcome"],
+        "denied"
+    );
+    assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+    let approved = f.prepare(&mut owner);
+    assert_eq!(
+        owner
+            .decide_apply(approved["preview_sha256"].as_str().unwrap(), true, NOW)
+            .unwrap()["outcome"],
+        "committed"
+    );
+    assert_eq!(
+        fs::read(f.0.join("original/one.py")).unwrap(),
+        b"retry change\n"
+    );
+    assert!(owner.applied_write.is_none());
+    f.assert_preserved();
+    println!(
+        "retry-cycle native file components passed; Git creation and publication observations are synthetic"
+    );
+}
+
+#[test]
 fn runtime_handoff_retains_manual_review_proof_until_native_runtime_edit_dispatch() {
     use agentmage_kernel_engine::review_packet::{ChangePurposeAssignment, CommitChangePurpose};
     let purposes = || {

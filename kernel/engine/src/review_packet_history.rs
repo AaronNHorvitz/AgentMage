@@ -17,14 +17,17 @@ pub fn capture_reviewable_write_history(
     let scope = history[0].scope;
     let mut bytes = 0_usize;
     let mut files = BTreeMap::<String, (ReviewChangedFile, Vec<String>)>::new();
-    let mut identities = BTreeSet::new();
+    let mut applications = BTreeSet::new();
     let mut hooks = BTreeSet::new();
     for transaction in &history {
         // Histories are flat. Refuse before recursive verification or copying.
         if !transaction.write_history.is_empty()
             || transaction.scope != scope
             || !verify_single_change_set(transaction)
-            || !identities.insert(&transaction.change_set_sha256)
+            // A retry can apply the same content/intent again after a rollback.
+            // Its checked application must be new; content identity alone does
+            // not identify an execution. Reusing any application still refuses.
+            || !applications.insert(&transaction.write_application_receipt_sha256)
         {
             return Err(ChangeSetMismatch);
         }
@@ -239,5 +242,47 @@ mod tests {
         assert!(verify_single_change_set(&a));
         assert!(verify_single_change_set(&b));
         assert!(capture_reviewable_write_history(vec![a, b]).is_err());
+    }
+
+    #[test]
+    fn write_history_retry_cycle_distinguishes_content_from_application_identity() {
+        let first = leaf("same-content", "source.rs", "original", "changed");
+        let rollback = leaf("rollback", "source.rs", "changed", "original");
+        let mut retry = first.clone();
+        retry.write_approval_receipt_sha256 = Some(sha256_hex(b"new original approval"));
+        retry.write_application_receipt_sha256 = Some(sha256_hex(b"new checked application"));
+        let net =
+            capture_reviewable_write_history(vec![first.clone(), rollback.clone(), retry.clone()])
+                .unwrap();
+        assert!(verify_reviewable_change_set(&net));
+        assert_eq!(net.write_history, [first.clone(), rollback.clone(), retry]);
+        assert_eq!(net.files[0].preimage_sha256, sha256_hex(b"original"));
+        assert_eq!(net.files[0].postimage_sha256, sha256_hex(b"changed"));
+        assert_eq!(net.files[0].complete_diff, first.files[0].complete_diff);
+        assert!(net.write_approval_receipt_sha256.is_none());
+        assert!(net.write_application_receipt_sha256.is_none());
+        assert!(!net.write_authority);
+
+        println!(
+            "retry_cycle_projection_json={}",
+            serde_json::to_string(&net).unwrap()
+        );
+
+        // An exact replay is still a duplicate, even with a distinct change-set
+        // digest or approval. Resealing the surrounding history cannot hide it.
+        for substitute_content_identity in [false, true] {
+            let mut replay = first.clone();
+            if substitute_content_identity {
+                replay.change_set_sha256 = sha256_hex(b"substituted content identity");
+                replay.write_approval_receipt_sha256 = Some(sha256_hex(b"other approval"));
+            }
+            assert!(
+                capture_reviewable_write_history(vec![first.clone(), rollback.clone(), replay])
+                    .is_err()
+            );
+        }
+        // The temporary return to the original bytes still cannot be presented
+        // as a completed net change. It may remain inside a later nonzero history.
+        assert!(capture_reviewable_write_history(vec![first, rollback]).is_err());
     }
 }

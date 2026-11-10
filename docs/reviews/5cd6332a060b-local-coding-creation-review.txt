@@ -1,0 +1,160 @@
+Commit: 5cd6332a060b4a64af7670ead09c54f3736229b5
+Scope: local-coding-creation-review
+
+# Independent core review: original source creation provenance through candidate review
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Pinned checkout
+`/lane/review-checkout` with `CARGO_TARGET_DIR=/lane/state/review-target`. Rows: T-303 / T-306,
+reviewed as a non-closing increment. Both parents stay OPEN.
+
+## Methods
+
+- `git rev-parse HEAD` printed `5cd6332a060b4a64af7670ead09c54f3736229b5`, and the worktree was clean.
+- The diff against the immutable base `bac3866b9c48511fef1d51e3a2c8e86784faf718` is exactly 17
+  files, +1320/−43. No `| [` row line in TASKS.md changed; `check.py` asserts this.
+- I read the bundle README and all runners first: `run.py`, `check.py`, `parse_gate.py`, `focused.py`,
+  `schema.py`, `light.py` and `contract.mjs`. No runner was wrapped in another reservation.
+- I read every changed source file in full or in its full surrounding context:
+  - kernel `filesystem_control.rs` (the new `approval` field and `classification()`), plus the
+    `execute_filesystem_transaction_with_checkpoint` and binding computation;
+  - `review_packet_creation.rs`, `verify_single_change_set`, `review_packet_history.rs` and
+    `write_approval.rs::exact_diff`;
+  - Linux `coding_repository_create.rs` (the whole driver), `coding_workspace_creation_proof.rs`,
+    `coding_workspace_write_proof.rs` and `coding_repository_commit_review.rs` (capture plus the
+    planner mode and lineage checks);
+  - kernel `local_commit.rs::plan_candidate_tree`;
+  - all new or changed tests, the decision, the evidence, the guide and TASKS.
+- I confirmed the committed `docs/reviews/bac3866b9c48-local-coding-write-history.txt` is
+  byte-identical to `/lane/reviews/bac3866b9c48-local-coding-write-history.md` (`cmp`). Its
+  INCONCLUSIVE verdict is retained and not upgraded.
+- Reviewer stdout and exit codes are in `/lane/state/tmp/reviewer-logs-5cd6332a060b/`, outside the
+  repository.
+
+## Exact commands and results (run from /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-creation-review/review-inputs.sha256`: exit 0.
+   - The manifest file's own SHA-256 is `63cc5d7901f2351c1f1580ec4d12265fa474af898d508cc25b5e002b1d2fc71a`,
+     as stated.
+   - The bundled Node binary is `d1de76d8…bd932c` (v24.15.0 per `node/provenance.json`), and its
+     LICENSE is present. This was the missing input in the previous review; it is now reachable.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-creation-full-5cd6332a060b`:
+   exit 1, as expected.
+   - `source_unchanged: true`. The run took 1570.20 s including reservations; most of that was
+     queue wait plus a cold build in a separate target.
+   - The raw log SHA-256 is `cfffcb38a385f53afbb60a5e9e11c4010852f8179dfbcbab7fb66cb10e3454c3`. It
+     differs from the builder's hash, as expected from timing lines.
+   - Every gate step exited 0 except the final Rust test step, which exited 101. The log contains
+     `FAST GATE: FAIL`.
+3. `python3 -B …/check.py /lane/state/tmp/review-creation-full-5cd6332a060b`: exit 0, labelled
+   "DATA COMPARISON ONLY: FULL GATE REMAINS FAIL".
+   - 46 unfiltered targets: 2939 passed, 72 failed, 72 ignored, 0 measured, 0 filtered.
+   - Per-target counts and exact failure/ignore name lists equal the pinned parent baseline
+     (SHA-256 `109801e6…80bfe`), plus exactly 2 kernel and 5 Linux passes.
+   - All 7 new methods are reported `ok`.
+   - The 72 failures are all inherited. By module: 42 `linux_coding_runtime`, 13 `repository_safety`,
+     10 `linux_read`, 2 `secret_service`, 2 `local_commit`, 2 `command_runner` and 1
+     `linux_repository_map`. None is a creation or write-history test.
+4. `CARGO_TARGET_DIR=… python3 -B …/focused.py /lane/state/tmp/review-creation-focused-5cd6332a060b`:
+   exit 0.
+   - `creation_review` selection: kernel 2 passed and Linux 5 passed, with 0 failed and 0 ignored.
+   - `runtime_new_file` selection: 8 passed.
+   - `contract.mjs` on the bundled Node: the mixed original-owner edit/create/retry packet passes the
+     version 2 schema and semantic checks.
+5. `python3 -B …/schema.py /lane/state/tmp/review-creation-schema-5cd6332a060b`: exit 0.
+   - `tests 80, pass 80, fail 0, skipped 0`, on the bundled binary with SHA-256 `d1de76d8…`.
+   - Raw log SHA-256 `8a4ae447…0c47`.
+6. `python3 -B …/light.py`: exit 0. All 4 lightweight plan commands returned 0, including
+   markdownlint-cli2 with 0 issues on 4 files.
+7. `cmp …/validation-1/source-freeze.json …/review-creation-full-5cd6332a060b/source-freeze.json`:
+   identical. The 12 source hashes match the builder's freeze.
+8. `git diff --check bac3866b… --`: no output, exit 0.
+9. `git status --short`: empty. The checkout was not modified.
+
+The Node runs that were unavailable last time (the 80-test schema suite, markdownlint and the packet
+v2 conformance check) all ran and passed here.
+
+## Security and correctness analysis
+
+- **Authorization source.** `FilesystemApplyAuthorization` has private fields, no derives and a
+  single construction site (`filesystem_control.rs:1408`). That site runs after
+  `validate_transaction_binding`, `consume_for_execution` and the checkpoint. The borrowed `approval`
+  is therefore the exact kernel-checked receipt. Callers cannot construct or substitute it, and
+  borrowing it adds no effect authority.
+- **History handling in the creation driver** (`coding_repository_create.rs`):
+  - Candidate-shape refusals return before `applied_write.take()`, so a pre-dispatch refusal
+    preserves history.
+  - On dispatch, history moves into the attempt.
+  - A non-committed outcome, a dropped driver, an unpublished run, a mismatched completion or a
+    proof error never restore it. All of these fail closed.
+  - `(Some, None)` retires history. `append` keeps the existing root-equality, 64-transaction and
+    8 MiB bounds.
+  - `from_native_creation` is `pub(crate)` and is called only from `complete`.
+- **Proof checks** (`coding_workspace_creation_proof.rs:20-92`):
+  - The approval binding is recomputed with the same serializer and tuple as the kernel's
+    `canonical_sha256` (`filesystem_control.rs:1320`).
+  - The issued-grant digest, the consumed revision (issued + 1), the receipt chain, the per-receipt
+    transaction, grant, kind, absent source, destination, postimage and mode are all checked. Every
+    planned operation needs exactly one Verified receipt.
+  - The tests mutate each of 13 fields and every mutation refuses.
+  - Unsupported shapes (non-source, invalid UTF-8, NUL) return `Ok(None)` only after all integrity
+    checks pass.
+- **Projection** (`review_packet_creation.rs`):
+  - It refuses anything other than Create with SourceCode classification, empty content, NUL or
+    invalid UTF-8, and purposes that are wrong, duplicated or missing.
+  - Its diff uses the same `{:?}` 5-line format as `exact_diff`, so the history `diff_lines` check
+    and composition apply unchanged.
+  - The zero preimage is distinct from `sha256("")`, and the test asserts this.
+  - `verify_single_change_set` re-checks ordering, hashes and authority. `write_authority` is false.
+- **Mode binding.**
+  - Capture (`coding_repository_commit_review.rs:69-88`) and the planner (`:231-249`) require
+    current `mode & 0o7777` to equal the original approved creation mode. They also require a zero
+    preimage exactly when `created_mode` is set, and refuse set-id or sticky bits.
+  - This only adds refusals. Mode drift refuses before any Git observation, and the test confirms it.
+- **Confinement and loop safety.**
+  - There is no new route, command, network path, grant, Git effect or sandbox change.
+  - Native writes still go through `LinuxControlledFilesystemDriver` on the held workspace.
+  - The tests assert that the original repository is untouched and that no candidate index is
+    created.
+- **Test changes.** `candidate_review_fixture_before_validation` was refactored into a consuming
+  transform with identical behaviour for existing callers. No assertion was weakened, and no
+  `#[ignore` was added (`check.py` also asserts this).
+- **Labelling.** The synthetic Git, process and publication choices are stated in the code
+  comments, the evidence and the contract message. The component timings are labelled as
+  non-performance. No model, task or score claim is made.
+- **Evaluation integrity.** No frozen, hidden or held-out task, scorer, threshold, prompt,
+  dependency or SBOM file is touched; the 17-file diff contains none.
+- **Public-repo hygiene.** Scanning the added lines found no private home path, username, hostname,
+  credential or trademark branding. The `/lane/...` paths in the retained review text are generic
+  sandbox paths with ample precedent across 178 existing `docs/reviews` files.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, backlog), `platforms/linux/src/coding_repository_apply_tests.rs:1760-1773`, with
+  `local_commit.rs:132`:** an unpublished native creation leaves the file on disk without lineage.
+  - A later ordinary edit then makes that file reviewable as an existing-file edit, with preimage
+    `sha256("created\n")`. The new test asserts this behaviour.
+  - The candidate planner uses only postimages. A path absent from the Git base can therefore be
+    added to a candidate tree while the packet labels it as an edit of existing content.
+  - All committed bytes are still shown in the complete diff, and no authority is gained. That is
+    why this is low.
+  - This behaviour predates this commit; the new test documents it.
+  - Fix: when lineage begins at an untracked path, either check the first preimage against the base
+    tree, or refuse ordinary edits of paths created by an unpublished native creation.
+- The prior lows L1 (semantic-validator coverage) and L2 (refusal of repeated-content history
+  cycles) remain same-row backlog. They are unchanged by this increment.
+
+## Per-row result
+
+- T-303 / T-306, increment `local-coding-creation-review` at
+  `5cd6332a060b4a64af7670ead09c54f3736229b5`: accepted as a non-closing increment.
+  - There is no open high or medium finding. Low L1 goes to same-row backlog.
+  - Every required run reproduced, including the Node runs that were missing from the previous
+    review.
+  - The complete affected fast gate remains FAIL on the 72 inherited failures. The exact identity
+    comparison is a data comparison only, not a gate pass or parent acceptance.
+  - Both parents remain OPEN.
+  - The prior INCONCLUSIVE verdict for `bac3866b9c48…` is not changed by this report.
+
+Verdict: PASS
