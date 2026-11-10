@@ -1,0 +1,187 @@
+Commit: 5d2184140fa2b378584a2e327e4311129ce709ae
+Scope: local-coding-commit-packet
+
+# Independent review: dormant RSA commit signature assembly (T-303 / T-306)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only, pinned checkout
+`/lane/review-checkout`. Same-model review; a cross-model review must still precede any public
+release. No certification, compliance or legal clearance is claimed.
+
+## Commit and scope
+
+- `git rev-parse HEAD 5d2184140fa2b378584a2e327e4311129ce709ae` gave the same 40-character sha
+  for both. HEAD is 5d218414 (retention of the ancestor's review), its parent is f7bfd525 (the
+  implementation), and the ancestor is 907724989c81.
+- Diff 907724989c81..HEAD: TASKS.md, Decision 0195, the evidence file, the guide section, the
+  retained review `.txt`, `local_commit.rs` (+3 lines, module declaration only),
+  `local_commit_packet.rs` (new), `local_commit_packet_tests.rs` (new) and
+  `local_commit_signing.rs` (one comment change plus a test-only `fixture_sign`).
+  f7bfd525..HEAD touches only TASKS.md, the evidence file and the retained review.
+- No evaluation, frozen, hidden, held-out, scorer, prompt, threshold, dependency, SBOM, lifecycle,
+  scoreboard or release file changed. No new row or sub-row, and no row ticked (the unchanged-row
+  check in check.py passed, and I read the TASKS.md diff myself).
+
+## Methods
+
+I read IP-POLICY.md, Decision 0195, the evidence file, the TASKS.md and guide diffs,
+`local_commit_packet.rs`, `local_commit_packet_tests.rs`, the `local_commit_signing.rs` diff, the
+verifier (`local_commit_verification.rs`: `verify`, `verify_with`, `validate_result`,
+`split_signed_commit`, `gpg_arguments`), the `verify_raw_commit`, `verify_signature_status` and
+`git_timezone` helpers in `local_commit.rs`, and `verify_local_commit_plan`, `valid_identity`,
+`valid_object_id` and `valid_fingerprint` in `kernel/engine/src/local_commit.rs`. I also read the
+bundle README.md, run.py, check.py, parse_gate.py, light.py and the superseded probe log.
+
+I checked by hand the packet bytes against the protocol fields cited in the decision (the project's
+own public-specification citation; I read no other implementation): the v4 header
+`04 00 01 08`, the hashed subpacket area `00 06 | 05 02 <u32 time>`, the trailer
+`04 FF <u32 len=12>`, the unhashed issuer `00 0A | 09 10 <8-byte low fingerprint>`, the left-16 bits
+of the digest, the MPI bit count, the new-format tag `0xC2` with a five-octet length, radix-64
+padding, the CRC-24 recurrence (init 0xB704CE, poly 0x864CFB within 24 bits, which matches
+0x1864CFB) and Git header continuation (a leading space on every armor line, including the blank
+line).
+
+I also ran these independent experiments with disposable keys, outside the repository, in `/tmp`:
+
+1. **RSA scalar width from the installed agent.** I created a disposable GNUPGHOME and generated an
+   rsa2048 signing key. Using gpg-connect-agent, I ran 3,000 × `SIGKEY <grip>` /
+   `SETHASH 8 <random 32 bytes>` / `PKSIGN`, then decoded each `(7:sig-val(3:rsa(1:s<N>:...)))`.
+   Result: `sigs 3000 lengths {256: 3000} leading-zero 8`, with zero ERR lines. The agent
+   (GnuPG 2.4.9, libgcrypt 1.12.2) always emits the scalar as a fixed modulus-width octet string.
+   8 of 3,000 (0.27%) begin with a 0x00 octet.
+2. **Git signature header per object format.** In disposable SHA-1 and SHA-256 repositories,
+   `git commit-tree -S<fpr>!` writes `gpgsig` and `gpgsig-sha256` respectively. Each has a
+   ` `-prefixed blank armor line, and `verify-commit --raw` gives VALIDSIG. This matches
+   `Prepared::signature_header` and `split_signed_commit`.
+3. **Git identity acceptance** (for the low finding below). `git hash-object -t commit -w` refuses
+   `author A> <a@b.c>` and `author A <a>x@b.c>` ("refusing to create malformed object").
+   `git commit-tree` normalizes the name ` A. ` to `A.`.
+
+I stopped all disposable agents with `gpgconf --kill gpg-agent`.
+
+## Commands and results (from /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-commit-packet/review-inputs.sha256` gave exit 0.
+   The manifest itself hashes to `c29a384021c254caf550faf15931879365107bf87c86926df5570f1c13898367`
+   (matches the request).
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-commit-packet/run.py /lane/state/tmp/review-commit-packet-full-5d2184140fa2`
+   gave **exit 1**, as expected. The result was `source_unchanged: true`, 523.97 s including
+   reservation waits, raw log SHA-256
+   `703a70bf8d327cc96754de046d295f9eabf8160d14a0bea842baa39f38e2cf98`. I did not wrap run.py in an
+   outer command. The command results were: diff-check 0, lint-untracked 0, lint-reviews 0,
+   markdownlint 0, fmt 0 (256.13 s including the reservation wait), Clippy 0 (36.65 s) and cargo
+   test 101 (229.02 s). The log ends `FAST GATE: FAIL`.
+3. `python3 -B .../check.py /lane/state/tmp/review-commit-packet-full-5d2184140fa2` gave exit 0:
+   26 targets, totals `[1399, 72, 64, 0, 0]`, 4 source files unchanged, 39 named methods (6 new and
+   33 controls), each `... ok`, and `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL`. Every per-target
+   pass, fail and ignore identity equals the frozen baseline, plus six passes in the Linux library.
+4. `cmp .../validation-1/source-freeze.json .../review-commit-packet-full-5d2184140fa2/source-freeze.json`
+   gave exit 0.
+5. `python3 -B .../light.py` gave exit 0 (diff-check, lint-untracked, lint-reviews and
+   markdownlint with 0 issues).
+6. `git diff --check 907724989c8183aa96ed154f0812be3f78e18f84 --` gave exit 0.
+7. `cmp docs/reviews/907724989c81-local-coding-private-signing.txt /lane/reviews/907724989c81-local-coding-private-signing.md`
+   gave exit 0. The retained review is byte-identical.
+8. `git status --short` gave empty output.
+
+The gate is a FAIL, as the builder states, and the inherited 72 failures and 64 ignores are
+unchanged. My gate counts agree exactly with the builder's evidence. Only the elapsed times differ,
+because of reservation waiting.
+
+## What holds
+
+- **Exact content.** `Prepared::new` re-runs `verify_local_commit_plan`. It requires matching
+  parent and tree widths and a 40-hex v4 fingerprint, and refuses timestamps outside `u32` (so
+  negative times or times past 2106 are refused, not truncated). The message is inserted verbatim,
+  with no added newline and no CR normalization. The installed-Git comparison test covers both
+  formats with a missing final newline, trailing blank lines, CR and Unicode. The kernel validator
+  forbids control characters in names and the local part, and a restricted domain charset, so the
+  first `\n\n` is always the header/body separator.
+- **Signature format.** The header bytes, hashed area, trailer and left-16 bits are correct. The
+  digest covers content, hashed metadata and the v4 trailer, with no Git object framing. The
+  signing primitive sends `SETHASH 8` (SHA-256) with this complete digest.
+- **Strict parsing.** There is exactly one prefix, `(7:sig-val(3:rsa(1:s`. The decimal length has
+  no leading zeros and at most 4 digits, and is bounded by 1,024. The value must be followed by
+  exactly `)))`, with no trailing bytes. eddsa, a second `s` and `extra` are refused, and every
+  truncation is refused. Apart from the leading-zero issue below, the parser never reinterprets
+  input or reads out of bounds.
+- **Mandatory verification.** `sign_commit_with` checks control before work, after signing and
+  after verification. It checks the plan signer against the pinned signer and the public-export
+  hash, reconstructs content through `split_signed_commit`, and compares it byte-for-byte with the
+  prepared content. Only then does it call the public-only verifier (`run_owned`, no
+  repository/keyring/socket projection, `--trust-model always` over the sealed public export).
+  Identity comes from a single `VALIDSIG` whose field 1 equals the pinned full signing fingerprint.
+  The issuer key ID sits in the unhashed area and is advisory. The tests check that a sign error,
+  invalid expression, verify failure, cancellation at every stage, an expired deadline, a changed
+  public key and a changed signer all return errors. They also check that `CleanupUncertain`
+  survives unchanged, and that verification is never skipped. A deadline cap of 30 s covers both
+  stages.
+- **Real cryptography.** The disposable RSA primary/subkey test signs and verifies both object
+  formats. Changed content and a flipped scalar bit fail, and a different fingerprint fails
+  `verify_signature_status`. The labelling is honest: synthetic artifact/plan authority and direct
+  component processes, with no native admission, approval or object write.
+- **Dormancy.** `packet::sign_commit` has no caller outside its module and tests. No route,
+  approval, object write or push is added, and the direct signed-creation adapter is unchanged.
+  `fixture_sign` is `#[cfg(test)]` and writes only a disposable key into a temporary home.
+- **Public content and IP.** The diff contains no private host path, username, hostname, credential
+  or trademark branding. The `/lane/...` bundle paths are lab paths, as in earlier accepted
+  increments. The RFC citation names the public specification and incorporates no prose or code.
+  No dependency is added.
+
+## Findings
+
+### M-1 (medium, correctness): the RSA parser refuses valid agent signatures that start with a zero octet
+
+- **Location:** `platforms/linux/src/local_commit_packet.rs:125-128` (comment) and `:152`
+  (`(scalar[0] != 0).then_some(scalar)`). The tests enshrine this:
+  `local_commit_packet_tests.rs:205` asserts that `[0, 128]` and `[0, 255]` are refused. The
+  evidence file (paragraph "An earlier focused run…") and the code comment state that the agent
+  "emits unsigned RSA scalars without sign padding" and that refusing "redundant leading zeros"
+  matches the observed form.
+- **Reproduction:** experiment 1 above. The installed foreground agent's RSA `s` is always exactly
+  modulus-width (256 octets for rsa2048, in 3,000 of 3,000 signatures). Whenever the signature
+  integer is below 2^2040, the first octet is 0x00, which happened in 8 of 3,000 (≈0.27%). For such
+  output, `rsa_scalar` returns `None`, so `assemble` fails and `sign_commit` returns
+  `PlanDenied` for a correct signature over a valid plan. In production, about one approved signing
+  attempt in roughly 250–400 fails non-deterministically, with an error class that blames the plan.
+  The disposable test signs 4 times per run, so it fails about 1% of runs, which makes the
+  "all six new methods pass" claim intermittently unreproducible. The builder's single probe
+  sample (256 octets, first octet 0x9A) does not distinguish "minimal" from "fixed-width". The
+  evidence's description of the agent's form is wrong.
+- **Impact:** fail-closed, so not a confinement or authenticity break. It is a correctness and
+  reliability defect in the exact function this increment introduces, and the evidence makes a
+  false claim about the behaviour of the external tool.
+- **Fix:** accept leading 0x00 octets, bounded by `MAX_RSA_BYTES`, and preferably also require
+  `length` to equal the modulus octet length of the pinned public key, or be no greater than it.
+  Strip the leading zeros before computing the MPI bit count and body, because the MPI must be
+  minimal. Still refuse an all-zero scalar and an empty length. Change the
+  `[0, 128]`/`[0, 255]` cases at tests:205 to expect stripping. Add a deterministic test that a
+  `[0, 0x80, …]` expression assembles to the same packet as `[0x80, …]`. Make the disposable test
+  sign enough digests to cover a zero first octet, or inject one captured zero-led expression and
+  verify it with the real verifier. Correct the code comment and the evidence wording.
+
+### L-3 (low, backlog, same row): identities Git would refuse or normalize are assembled verbatim
+
+- **Location:** `local_commit_packet.rs:49-63`, relying on `kernel/engine/src/local_commit.rs:1297`
+  `valid_identity`.
+- **Reasoning and reproduction:** experiment 3. The kernel validator accepts names containing `<`
+  or `>`, names with leading or trailing whitespace, and `>` in the email local part. The assembler
+  writes these verbatim, and the verifier's `verify_raw_commit` agrees, so a signature verifies. But
+  Git refuses to write such an object, or (for whitespace and trailing punctuation) its own
+  commit-tree would have produced different bytes. With no object write in this increment, the
+  effect is a fail-closed refusal at the future write step.
+- **Fix:** in the object-write increment, refuse identities containing `<`, `>`, or leading or
+  trailing whitespace, either in the assembler or in `valid_identity`. Add one installed-Git
+  `hash-object` acceptance test for assembled raw bytes.
+
+The earlier same-row backlog (L-1 signed percent escape, L-2 invalid-keygrip fixture strength, and
+older items) remains open and unrepaired, as the request states.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing increment):** the required runs reproduce exactly, the labelling is
+  honest, and the dormancy, mandatory full-fingerprint verification, control/deadline checks and
+  cleanup-uncertainty propagation hold. However, medium M-1 is open in the reviewed parser and
+  evidence and must be fixed in-row before this increment can count toward closing either parent.
+  Neither row closes, and none was claimed.
+
+Verdict: FINDINGS

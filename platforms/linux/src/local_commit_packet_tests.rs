@@ -58,6 +58,22 @@ fn bound_plan() -> LocalCommitPlan {
     p
 }
 
+// Test-only synthetic verifier outcome. No cryptographic, native, reviewer or
+// approval authority is established by this deterministic state-machine fixture.
+pub(crate) fn fixture_verified(plan: &LocalCommitPlan) -> VerifiedCommit {
+    let mut s = signer(plan);
+    s.public_key = b"synthetic local commit".to_vec();
+    sign_commit_with(
+        &s,
+        plan,
+        &token(),
+        Instant::now() + Duration::from_secs(5),
+        |_| Ok(expression(&[1, 2, 3])),
+        |_| Ok(()),
+    )
+    .unwrap()
+}
+
 #[test]
 fn commit_packet_preserves_exact_messages_and_headers_in_both_object_formats() {
     for width in [40, 64] {
@@ -202,7 +218,7 @@ fn commit_packet_rsa_parser_refuses_ambiguity_lengths_and_other_algorithms() {
         rsa_scalar(&expression(&[127, 255])),
         Some([127, 255].as_slice())
     );
-    for bytes in [&[][..], &[0], &[0, 1], &[0, 0, 128], &[0, 128], &[0, 255]] {
+    for bytes in [&[][..], &[0], &[0, 0], &[0, 0, 0]] {
         assert!(rsa_scalar(&expression(bytes)).is_none());
     }
     let good = expression(&[1, 0, 255]);
@@ -220,6 +236,63 @@ fn commit_packet_rsa_parser_refuses_ambiguity_lengths_and_other_algorithms() {
         assert!(rsa_scalar(bad).is_none());
     }
     assert!(rsa_scalar(&expression(&vec![1; MAX_RSA_BYTES + 1])).is_none());
+}
+
+#[test]
+fn commit_packet_zero_led_rsa_values_form_the_same_minimal_packet() {
+    let prepared = Prepared::new(&plan()).unwrap();
+    for scalar in [[128, 1], [255, 255], [1, 0]] {
+        let expected = prepared.assemble(&expression(&scalar)).unwrap();
+        for padding in [1, 2, 8, MAX_RSA_BYTES - scalar.len()] {
+            let mut padded = vec![0; padding];
+            padded.extend_from_slice(&scalar);
+            assert_eq!(rsa_scalar(&expression(&padded)), Some(scalar.as_slice()));
+            assert_eq!(prepared.assemble(&expression(&padded)).unwrap(), expected);
+        }
+    }
+    for count in [1, 2, MAX_RSA_BYTES] {
+        assert!(prepared.assemble(&expression(&vec![0; count])).is_err());
+    }
+}
+
+#[test]
+fn commit_packet_refuses_unrepresentable_git_identities_before_signing() {
+    for field in [
+        "author.name",
+        "author.email",
+        "committer.name",
+        "committer.email",
+    ] {
+        for value in ["<bad", "bad>", " leading", "trailing ", "name\u{a0}"] {
+            let mut p = bound_plan();
+            let identity = if field.starts_with("author") {
+                &mut p.author
+            } else {
+                &mut p.committer
+            };
+            if field.ends_with("name") {
+                identity.name = value.into();
+            } else {
+                identity.email = format!("{value}@example.test");
+            }
+            p.identity_sha256 =
+                hash(&serde_json::to_vec(&(p.author.clone(), p.committer.clone())).unwrap());
+            reseal(&mut p);
+            let s = signer(&p);
+            assert!(
+                sign_commit_with(
+                    &s,
+                    &p,
+                    &token(),
+                    Instant::now() + Duration::from_secs(5),
+                    |_| panic!("invalid identity must not reach signer"),
+                    |_| panic!("no verifier")
+                )
+                .is_err(),
+                "{field}/{value}"
+            );
+        }
+    }
 }
 
 #[test]
@@ -475,7 +548,7 @@ fn commit_packet_disposable_rsa_primary_and_subkey_verify_exact_content_and_refu
             let verifier = Fixture::new();
             let t = token();
             let mut captured_expression = Vec::new();
-            let raw = sign_commit_with(
+            let verified = sign_commit_with(
                 &s,
                 &p,
                 &t,
@@ -495,11 +568,69 @@ fn commit_packet_disposable_rsa_primary_and_subkey_verify_exact_content_and_refu
                 },
             )
             .unwrap();
-            assert!(verify_raw_commit(&raw, &p));
+            let (raw, expected_object) = verified.for_plan(&p).unwrap();
+            assert!(verify_raw_commit(raw, &p));
             assert_eq!(
-                verification::split_signed_commit(&raw, &p).unwrap().1,
+                verification::split_signed_commit(raw, &p).unwrap().1,
                 Prepared::new(&p).unwrap().content
             );
+            let scalar = rsa_scalar(&captured_expression).unwrap();
+            let mut padded = vec![0];
+            padded.extend_from_slice(scalar);
+            let zero_led = Prepared::new(&p)
+                .unwrap()
+                .assemble(&expression(&padded))
+                .unwrap();
+            assert_eq!(zero_led, raw);
+            let output =
+                verification::fixture_verify(&zero_led, &p, &public, &verifier.0, &t).unwrap();
+            assert!(verify_signature_status(&output.stdout, fingerprint));
+            let repository = Fixture::new();
+            let format = if width == 40 { "sha1" } else { "sha256" };
+            let git = |args: &[&str], input: &[u8]| {
+                let fd = crate::sandbox::sealed_payload("stored-packet-fixture", input).unwrap();
+                let out = Command::new("/usr/bin/git")
+                    .env_clear()
+                    .env("PATH", "/usr/bin")
+                    .env("GIT_CONFIG_NOSYSTEM", "1")
+                    .env("GIT_CONFIG_GLOBAL", "/dev/null")
+                    .env("HOME", "/nonexistent")
+                    .env("XDG_CONFIG_HOME", "/nonexistent")
+                    .args(hardened_git_prefix())
+                    .arg("-C")
+                    .arg(&repository.0)
+                    .args(args)
+                    .stdin(Stdio::from(fs::File::from(fd)))
+                    .output()
+                    .unwrap();
+                assert!(out.status.success());
+                out.stdout
+            };
+            git(
+                &[
+                    "init",
+                    "--quiet",
+                    "--bare",
+                    &format!("--object-format={format}"),
+                ],
+                b"",
+            );
+            assert_eq!(
+                git(
+                    &[
+                        "hash-object",
+                        "-w",
+                        "-t",
+                        "commit",
+                        "--no-filters",
+                        "--stdin"
+                    ],
+                    raw
+                ),
+                format!("{expected_object}\n").as_bytes()
+            );
+            assert_eq!(git(&["cat-file", "commit", expected_object], b""), raw);
+            assert!(git(&["for-each-ref"], b"").is_empty());
             // Independently verify changed signed content with the old signature.
             let mut changed = p.clone();
             changed.message.push('!');
@@ -521,7 +652,7 @@ fn commit_packet_disposable_rsa_primary_and_subkey_verify_exact_content_and_refu
                 .iter()
                 .find(|other| *other != fingerprint)
                 .unwrap();
-            let output = verification::fixture_verify(&raw, &p, &public, &verifier.0, &t).unwrap();
+            let output = verification::fixture_verify(raw, &p, &public, &verifier.0, &t).unwrap();
             assert!(!verify_signature_status(&output.stdout, other));
             for home in [&worker.0, &verifier.0, &source.0] {
                 assert!(!home.join("S.gpg-agent").exists());

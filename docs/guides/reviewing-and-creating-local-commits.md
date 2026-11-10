@@ -101,20 +101,20 @@ reusing the same build identity does not replace it. The user index, source and
 refs must still satisfy the existing complete preservation reconciliation.
 
 This adapter remains dormant: there is no API or coordinator activation and a
-review packet still grants no build authority. The direct signing runner also
-remains inactive pending its own confinement and exact approval composition.
+review packet still grants no build authority. Signed creation uses the confined
+composition described below; the old direct runner is test-only.
 Synthetic tests and mount experiments do not establish native admission or model
 acceptance; the lane's executable trust and user-bus refusals remain unchanged.
 
 ## Dormant signed-commit I/O
 
-Branch lookup, raw commit reads and the final task-branch compare-and-swap now
-use the same closed offline supervisor. An immutable kernel-verified plan binds
-the held roots, branch, expected parent and returned commit object. These three
-steps run in order within one thirty-second deadline, including time spent
-signing between them. An error ends the session. Source stays read-only; exact
-selected metadata and the owned management root retain their existing writable
-projections. No direct fallback runs these three operations.
+Branch lookup, verified commit storage, raw commit reads and the final
+task-branch compare-and-swap use the same closed offline supervisor. An immutable
+kernel-verified plan binds the held roots, branch, expected parent and exact
+commit object. These four steps run in order within one thirty-second deadline,
+including time spent signing between them. An error ends the session. Source
+stays read-only; exact selected metadata and the owned management root retain their existing writable
+projections. No direct fallback runs these operations.
 
 The content verifier requires exact singleton headers and message bytes. An
 additional parent, identity, tree or other header refuses verification. Signature
@@ -122,45 +122,23 @@ headers are bound to the object format: `gpgsig` for SHA-1 and `gpgsig-sha256`
 for SHA-256. The other header, duplicate headers and mixed object lengths refuse.
 Signature verification requires one complete pinned fingerprint in a GnuPG status record;
 a substring in prose cannot suffice, and failure/revocation/expiry records refuse.
-Signed stdout and stderr remain separate, both signer configuration keys are
-pinned, and replacement objects are disabled. Sealed memory input replaces the
-parent's blocking message-pipe write.
+Stdout and stderr remain separate and replacement objects are disabled. Signed
+bytes enter Git on sealed memory input; Git never launches a signing program.
 Message checks preserve the exact approved stdin bytes, including the presence
 or absence of final newlines. A failed raw read or content check stops before
 signature verification. After worker dispatch or signing begins, failures report
 failed execution and unverified cleanup. Last-observation manifest fields in a
 failed result do not establish preserved postflight state or a successful receipt.
 
-Signed creation remains a direct subprocess in this dormant adapter. Its
-complete confinement, usable private-key access and descendant cleanup are
-still prerequisites for activation. Its output capture
-now uses bounded nonblocking reads with the same four-MiB ceiling on each stream.
-Cancellation and the original deadline remain observable after the immediate
-child exits, including when another process holds an inherited output pipe.
-Public identity inspection uses the offline worker described below; signed
-creation retains the original commit-session deadline.
-Failure discards partial output and allows at most half a second to kill and
-reap the exact owned child. An unreaped child remains retained and refuses later
-direct capture attempts; a busy or poisoned capture owner also refuses.
-A retained child reports `linux.local_commit.cleanup.uncertain` through both
-the test-only direct inspection helper and production signing caller. Signed creation with that
-failure reports `linux.git.commit.signer_cleanup_uncertain`, failed execution
-and unverified cleanup. It cannot produce a successful commit receipt or
-proceed to the task-branch update. Other capture failures keep their existing
-redacted error classes. No diagnostic includes child output or keyring paths.
-
-This bounds capture and immediate-child teardown, not descendant lifetime.
-An open-pipe failure closes the local readers without proving that the remaining
-writer died. No capture result establishes sandbox admission or whole-unit
-cleanup. Actual local child/pipe tests, synthetic worker results, parser fixtures
-and installed-Git message tests establish component behavior only. Disposable
-signatures traverse the production direct signing capture method; their direct
-key listing and export now use a test-only fixture helper. Verification uses the
-public-only payload reconstruction and fixed GnuPG options directly in these
-cryptographic component tests. Those tests supply synthetic private artifact fields. They
-do not pass the product's executable trust checks or exercise approval and
-preservation composition. Native workflow, signer confinement, independent reviewer/artifact provenance, exact
-approval composition and measured model acceptance remain open.
+The historical direct signed-creation runner now exists only in test builds.
+Its bounded immediate-child capture, inherited-pipe refusal and retained-child
+cleanup diagnostics remain component controls. They do not establish descendant
+termination, sandbox admission or approval authority. Disposable direct-signing
+fixtures use synthetic artifact fields, rather than the production trust and
+approval boundary. The dormant executor instead uses the socket-free signing
+and storage composition below. Native workflow admission, original independent
+reviewer/artifact provenance, exact product approval composition, durable
+recovery and measured model acceptance remain open.
 
 ## Offline signature verification
 
@@ -188,8 +166,9 @@ Synthetic supervisor tests prove result validation and launch construction, not
 native admission. Disposable installed-Git signatures test both object formats,
 exact primary/subkey selection and message reconstruction against the worker's
 public-only GnuPG options. The complete native workflow remains unverified in the
-lane. Signed creation still needs confinement and usable private-key access
-before any activation; this change does not grant commit or push authority.
+lane. The later confined signing/storage composition below still needs native
+admission and complete approval provenance before activation; no commit or push
+authority is granted by verification.
 
 ## Offline public identity inspection
 
@@ -230,9 +209,9 @@ delegates with an internal token. Cancellation returns no signer; an individual
 filesystem operation is not made interruptible by these checks.
 
 A public pin does **not** establish private-key possession or signing availability.
-Usable private signing and confined signed creation remain prerequisites for
-activation. A disposable real-GnuPG component test exercises the fixed public-only
-options without an agent; synthetic worker tests cover the dispatch and refusal
+Native admission of usable private signing and the composed signed-creation
+workflow remains a prerequisite for activation. A disposable real-GnuPG
+component test exercises the fixed public-only options without an agent; synthetic worker tests cover the dispatch and refusal
 contracts. Neither establishes native sandbox admission or a complete approved
 commit workflow. Candidate construction, independent reviewer/artifact authority,
 approval composition, approved commit/push and model measurements remain open.
@@ -262,9 +241,10 @@ bounds, cancellation, deadlines and whole-unit cleanup remain mandatory.
 The primitive returns only an unverified signature expression after a complete,
 phase-ordered successful response. Errors, inquiries, partial output, mismatched
 stream digests, unsuccessful exit or uncertain cleanup refuse the result.
-This is not yet an OpenPGP commit signature or an activated capability. Packet
-construction, verification, native admission and approval composition remain
-open; the existing signed-creation adapter remains dormant. Disposable agent
+This primitive alone is not an OpenPGP commit signature or an activated
+capability. The assembler and executor composition below add packet construction
+and verification; native admission and complete product approval composition
+remain open. The signed-creation adapter remains dormant. Disposable agent
 fixtures prove the primitive's protocol only, not a complete approved workflow.
 
 ## Dormant RSA signature assembly
@@ -273,15 +253,41 @@ An internal assembler now prepares exact unsigned commit bytes from a verified
 plan, preserving every message byte and using the correct signature header for
 each Git object format. It constructs a v4 binary-document signature packet
 with SHA-256 and RSA only. Unsupported algorithms and malformed signature
-expressions refuse assembly; no fallback is selected. The approved timestamp
-must fit the signature's unsigned 32-bit time field.
+expressions refuse assembly; no fallback is selected. Modulus-width unsigned
+RSA values may start with zero octets: the bounded parser strips those octets
+before forming the minimal packet integer and still refuses an all-zero value.
+The approved timestamp must fit the signature's unsigned 32-bit time field. Author and committer
+identities cannot contain angle brackets, names cannot have leading/trailing
+whitespace and email identities cannot contain whitespace. Invalid identities
+are refused before signing; accepted bytes are never silently normalized.
 
 The dormant composition sends the complete signature digest to the socket-free
 primitive, assembles armor, checks the reconstructed signed content, and calls
-the public-only offline verifier before returning raw bytes. Full-fingerprint
-verification supplies identity; the packet's issuer key ID is advisory. No
-object is written, no branch moves and no product route or permission is added.
-The old direct signed-creation adapter remains dormant. Native admission,
-confined object write and complete approval/preservation composition are still
-required. Disposable RSA primary/subkey signatures and tamper rejection are
-component evidence, not a native approved coding workflow.
+the public-only offline verifier before returning an immutable verified commit.
+Full-fingerprint verification supplies identity; the packet's issuer key ID is advisory. No
+product route or permission is added. Disposable RSA primary/subkey signatures
+and tamper rejection are component evidence, not a native approved coding workflow.
+
+## Confined storage in the dormant executor
+
+The existing dormant executor now composes that verified commit with the closed
+Git session. Direct signed creation is compiled only for disposable tests. The
+internal verified value binds one complete plan; saved JSON or caller-supplied
+bytes cannot replace it, and it grants no approval authority.
+
+The session checks the task branch's expected parent, writes the sealed signed
+bytes without filters, requires the exact locally calculated commit identifier,
+and reads back the same object byte for byte. Only then can the original exact
+task-branch compare-and-swap follow. Another public-only signature verification
+runs between readback and the ref update. One existing deadline and the same
+held roots cover the session; the Git worker has no signer, private keyring,
+credential or network projection. Failed, cancelled, incomplete or inconsistent
+results terminate the session. There is no direct retry or signing fallback.
+
+A stored object may remain unreachable after failure. Ref updates use the
+expected-parent comparison, and the original kernel permit, preflight and final
+preservation reconciliation remain required. No rollback or successful receipt
+is inferred from a partial effect. This is internal library composition without
+an HTTP, CLI or MCP commit command. Native artifact admission, complete product
+approval/reviewer/artifact provenance, durable recovery and measured coding
+acceptance remain open, as do T-303/T-306 and approved push.

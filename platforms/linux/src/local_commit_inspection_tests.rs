@@ -608,6 +608,11 @@ fn signer_inspection_command_projects_no_live_keyring_private_keys_configuration
 
 #[test]
 fn signer_inspection_installed_gpg_reads_sealed_public_identity_without_an_agent() {
+    // The disposable edit below uses the same single-child capture fixture as
+    // the signing/pipe controls. Keep their existing shared exclusion contract.
+    let _capture = super::super::tests::DIRECT_CAPTURE_TEST
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     // Real GnuPG operation with fixed worker argv, outside native sandbox/artifact
     // admission. Setup alone generates disposable secrets; inspection never gets them.
     let f = Fixture::new();

@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The [confined signed-commit storage increment](docs/evidence/t306-confined-storage-2026-11-10.md)
+composes the existing dormant executor with socket-free signing, independent
+public-only verification, sealed object storage, exact object identity/readback
+and the original task-branch compare-and-swap. Direct signed creation is now
+test-only. No product commit route or approval authority is added; native
+admission and the complete measured workflow remain open. The complete affected
+gate remains **FAIL**: 1,405 passes, the exact inherited 72 failures and 64
+ignores over 26 unfiltered targets. All six new methods, 45 controls, formatting
+and Clippy pass; all seven source hashes stay fixed. Independent core re-review
+is required. The retained
+[signature-assembly review](docs/reviews/5d2184140fa2-local-coding-commit-packet.txt)
+has **Verdict: FINDINGS** for exact commit
+`5d2184140fa2b378584a2e327e4311129ce709ae`. This same-row batch repairs
+medium M-1 (zero-led RSA values) and low L-3 (Git identity representation).
+Earlier same-row backlog remains. T-303/T-306 remain open, with no new row or
+sub-row; the reviewed base stays immutable.
+
 The [dormant RSA signature assembler](docs/evidence/t306-commit-packet-2026-11-10.md)
 prepares exact commit content and a signature packet, then requires independent
 public-only verification before returning raw bytes. It has no product caller,

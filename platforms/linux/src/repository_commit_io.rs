@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-//! Closed non-signing I/O for the dormant signed local-commit adapter.
+//! Closed object storage and branch I/O for the dormant local-commit adapter.
 
 use super::*;
+use crate::local_commit::packet::VerifiedCommit;
 use agentmage_kernel_engine::local_commit::{LocalCommitPlan, verify_local_commit_plan};
 
 /// This owner is internal plumbing, not an approval or reviewer capability.
@@ -20,13 +21,15 @@ mod tests;
 
 enum Stage {
     Branch,
-    Commit,
+    Write,
+    Commit { object: String, raw: Vec<u8> },
     Update(String),
     Terminal,
 }
 
 enum Step<'a> {
     Branch,
+    Write(&'a VerifiedCommit),
     Commit(&'a str),
     Update,
 }
@@ -69,6 +72,15 @@ impl CommitIoSession {
         self.step(git, Step::Commit(object), cancellation)
     }
 
+    pub(crate) fn write_commit(
+        &mut self,
+        git: &LinuxGitArtifact,
+        commit: &VerifiedCommit,
+        cancellation: &CancellationToken,
+    ) -> Result<String, LinuxRepositoryError> {
+        String::from_utf8(self.step(git, Step::Write(commit), cancellation)?).map_err(|_| denied())
+    }
+
     // Call only after exact raw-content and pinned-signature verification. This
     // private process-only session does not restore authority from a plan/hash.
     pub(crate) fn update_task_branch(
@@ -85,8 +97,8 @@ impl CommitIoSession {
         step: Step<'_>,
         cancellation: &CancellationToken,
     ) -> Result<Vec<u8>, LinuxRepositoryError> {
-        self.step_with(step, cancellation, |owner, args, env, deadline| {
-            run_worker(git, owner, args, env, None, cancellation, deadline)
+        self.step_with(step, cancellation, |owner, args, env, input, deadline| {
+            run_worker(git, owner, args, env, input, cancellation, deadline)
         })
     }
 
@@ -98,6 +110,7 @@ impl CommitIoSession {
             Arc<LinuxRepositoryMutationScope>,
             &[String],
             &std::collections::BTreeMap<String, String>,
+            Option<OwnedFd>,
             Instant,
         ) -> Result<SupervisedResult, InvocationStatus>,
     ) -> Result<Vec<u8>, LinuxRepositoryError> {
@@ -116,6 +129,7 @@ impl CommitIoSession {
             Arc<LinuxRepositoryMutationScope>,
             &[String],
             &std::collections::BTreeMap<String, String>,
+            Option<OwnedFd>,
             Instant,
         ) -> Result<SupervisedResult, InvocationStatus>,
     ) -> Result<Vec<u8>, LinuxRepositoryError> {
@@ -123,19 +137,37 @@ impl CommitIoSession {
             return Err(denied());
         }
         self.owner.revalidate()?;
+        let mut input = None;
         let operation: Vec<String> = match (&self.stage, &step) {
             (Stage::Branch, Step::Branch) => vec![
                 "rev-parse".into(),
                 "--verify".into(),
                 self.plan.task_branch.clone(),
             ],
-            (Stage::Commit, Step::Commit(object))
-                if object.len() == self.plan.parent_object.len()
-                    && object
-                        .bytes()
-                        .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
-                    && object.bytes().any(|b| b != b'0') =>
-            {
+            (Stage::Write, Step::Write(commit)) => {
+                let (raw, _) = commit.for_plan(&self.plan).map_err(|_| denied())?;
+                if raw.is_empty() || raw.len() > MAX_OBSERVATION_BYTES {
+                    return Err(denied());
+                }
+                input = Some(
+                    crate::sandbox::sealed_payload("agentmage-signed-commit", raw)
+                        .map_err(|_| denied())?,
+                );
+                vec![
+                    "hash-object".into(),
+                    "-w".into(),
+                    "-t".into(),
+                    "commit".into(),
+                    "--no-filters".into(),
+                    "--stdin".into(),
+                ]
+            }
+            (
+                Stage::Commit {
+                    object: expected, ..
+                },
+                Step::Commit(object),
+            ) if expected.as_str() == *object => {
                 vec!["cat-file".into(), "commit".into(), (*object).into()]
             }
             (Stage::Update(object), Step::Update) => vec![
@@ -156,7 +188,13 @@ impl CommitIoSession {
         ));
         args.extend(operation);
         let environment = candidate::candidate_environment();
-        let result = dispatch(self.owner.clone(), &args, &environment, self.deadline);
+        let result = dispatch(
+            self.owner.clone(),
+            &args,
+            &environment,
+            input,
+            self.deadline,
+        );
         self.owner.revalidate()?;
         let result = result.map_err(|_| denied())?;
         if cancellation.is_cancelled()
@@ -168,18 +206,40 @@ impl CommitIoSession {
             || result.stderr.total > MAX_OBSERVATION_BYTES
             || result.stdout.total != result.stdout.retained.len()
             || result.stderr.total != result.stderr.retained.len()
+            || result.stdout.sha256 != Sha256::digest(&result.stdout.retained).as_slice()
+            || result.stderr.sha256 != Sha256::digest(&result.stderr.retained).as_slice()
         {
             return Err(denied());
         }
-        let output = result.stdout.retained;
-        self.stage = match step {
+        let mut output = result.stdout.retained;
+        let next = match step {
             Step::Branch if output == format!("{}\n", self.plan.parent_object).as_bytes() => {
-                Stage::Commit
+                Stage::Write
             }
-            Step::Commit(object) if !output.is_empty() => Stage::Update(object.into()),
+            Step::Write(commit) => {
+                let (raw, object) = commit.for_plan(&self.plan).map_err(|_| denied())?;
+                if output != format!("{object}\n").as_bytes() {
+                    return Err(denied());
+                }
+                output = object.as_bytes().to_vec();
+                Stage::Commit {
+                    object: object.into(),
+                    raw: raw.into(),
+                }
+            }
+            Step::Commit(object) => {
+                let Stage::Commit { raw, .. } = &self.stage else {
+                    return Err(denied());
+                };
+                if output != *raw {
+                    return Err(denied());
+                }
+                Stage::Update(object.into())
+            }
             Step::Update if output.is_empty() => Stage::Terminal,
             _ => return Err(denied()),
         };
+        self.stage = next;
         Ok(output)
     }
 }

@@ -467,40 +467,17 @@ impl LinuxLocalCommitExecutor {
         {
             return uncertain_commit_result(&before, "linux.git.commit.branch_stale");
         }
-        // External signing remains dormant and requires a separate confined
-        // signer capability before product activation. Non-signing Git I/O
-        // always uses the closed offline worker, with no direct retry.
-        let runner = SignedGitRunner::new(
-            self.collector.git(),
-            &self.scope,
-            &self.signer,
-            io.deadline(),
-        );
-        let arguments = signed_commit_arguments(plan);
-        let mut environment = BTreeMap::new();
-        environment.insert("GIT_AUTHOR_NAME".to_owned(), plan.author.name.clone());
-        environment.insert("GIT_AUTHOR_EMAIL".to_owned(), plan.author.email.clone());
-        environment.insert("GIT_COMMITTER_NAME".to_owned(), plan.committer.name.clone());
-        environment.insert(
-            "GIT_COMMITTER_EMAIL".to_owned(),
-            plan.committer.email.clone(),
-        );
-        let date = format_git_date(plan.timestamp_epoch_seconds, plan.timezone_offset_minutes);
-        environment.insert("GIT_AUTHOR_DATE".to_owned(), date.clone());
-        environment.insert("GIT_COMMITTER_DATE".to_owned(), date);
-        let commit = runner
-            .run_with_environment(
-                &arguments.each_ref().map(String::as_str),
-                plan.message.as_bytes(),
-                cancellation,
-                &environment,
-            )
-            .and_then(|captured| object_output(captured.into_stdout()));
-        let commit_object = match commit {
-            Ok(object) => object,
+        // Still dormant at the product boundary. Only a live kernel permit
+        // reaches execute_plan; plan hashes cannot restore approval authority.
+        let signed = match packet::sign_commit(&self.signer, plan, cancellation, io.deadline()) {
+            Ok(commit) => commit,
             Err(failure) => {
                 return failed_signer_result(&before, failure, "linux.git.commit.creation_failed");
             }
+        };
+        let commit_object = match io.write_commit(self.collector.git(), &signed, cancellation) {
+            Ok(object) => object,
+            Err(_) => return uncertain_commit_result(&before, "linux.git.commit.storage_failed"),
         };
         let Ok(raw) = io.read_commit(self.collector.git(), &commit_object, cancellation) else {
             return uncertain_commit_result(&before, "linux.git.commit.verification_failed");
@@ -558,6 +535,7 @@ impl BoundedLocalCommitExecutor for LinuxLocalCommitExecutor {
     }
 }
 
+#[cfg(test)]
 struct SignedGitRunner<'a> {
     git_path: &'a Path,
     scope: &'a LinuxRepositoryScope,
@@ -565,21 +543,8 @@ struct SignedGitRunner<'a> {
     deadline: Instant,
 }
 
+#[cfg(test)]
 impl<'a> SignedGitRunner<'a> {
-    fn new(
-        git: &'a LinuxGitArtifact,
-        scope: &'a LinuxRepositoryScope,
-        signer: &'a LinuxOpenPgpSigner,
-        deadline: Instant,
-    ) -> Self {
-        Self {
-            git_path: git.launch_path(),
-            scope,
-            signer,
-            deadline,
-        }
-    }
-
     #[cfg(test)]
     fn run(
         &self,
@@ -706,6 +671,7 @@ pub(crate) fn hardened_git_prefix() -> [&'static str; 36] {
     ]
 }
 
+#[cfg(test)]
 fn object_output(output: Vec<u8>) -> Result<String, LinuxLocalCommitError> {
     let value = String::from_utf8(output)
         .map_err(|_| error(LinuxLocalCommitErrorKind::VerificationFailed))?
@@ -724,6 +690,7 @@ fn object_output(output: Vec<u8>) -> Result<String, LinuxLocalCommitError> {
     }
 }
 
+#[cfg(test)]
 fn signed_commit_arguments(
     plan: &agentmage_kernel_engine::local_commit::LocalCommitPlan,
 ) -> [String; 5] {
@@ -820,6 +787,7 @@ fn verify_signature_status(status: &[u8], fingerprint: &str) -> bool {
     valid == 1
 }
 
+#[cfg(test)]
 fn format_git_date(epoch_seconds: i64, offset_minutes: i16) -> String {
     format!("{epoch_seconds} {}", git_timezone(offset_minutes))
 }

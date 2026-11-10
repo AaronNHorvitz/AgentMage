@@ -2,9 +2,10 @@
 //! Real held roots and synthetic supervisor results, not native signer evidence.
 
 use super::*;
-use crate::local_commit::tests::synthetic_plan;
+use crate::local_commit::{packet::tests::fixture_verified, tests::synthetic_plan};
 use crate::sandbox::supervision::CapturedStream;
 use agentmage_kernel_contracts::{BoundaryKind, CorrelationId, TaskId};
+use std::io::{Seek as _, SeekFrom};
 use std::os::unix::fs::{PermissionsExt, symlink};
 use std::os::unix::process::ExitStatusExt;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -80,6 +81,7 @@ fn no_dispatch(
     _: Arc<LinuxRepositoryMutationScope>,
     _: &[String],
     _: &std::collections::BTreeMap<String, String>,
+    _: Option<OwnedFd>,
     _: Instant,
 ) -> Result<SupervisedResult, InvocationStatus> {
     panic!("must refuse before dispatch")
@@ -87,61 +89,117 @@ fn no_dispatch(
 fn branch(session: &mut CommitIoSession) {
     let parent = session.plan.parent_object.clone();
     session
-        .step_with(Step::Branch, &token(), |_, _, _, _| {
+        .step_with(Step::Branch, &token(), |_, _, _, _, _| {
             Ok(success(format!("{parent}\n").as_bytes()))
         })
         .unwrap();
 }
 
+fn store(session: &mut CommitIoSession) -> (String, Vec<u8>) {
+    let commit = fixture_verified(&session.plan);
+    let (raw, object) = commit.for_plan(&session.plan).unwrap();
+    let object = object.to_owned();
+    let raw = raw.to_vec();
+    let output = session
+        .step_with(Step::Write(&commit), &token(), |_, _, _, _, _| {
+            Ok(success(format!("{object}\n").as_bytes()))
+        })
+        .unwrap();
+    assert_eq!(output, object.as_bytes());
+    (object, raw)
+}
+
 #[test]
 fn commit_io_worker_binds_exact_order_ref_objects_roots_environment_and_total_deadline() {
-    let f = Fixture::new();
-    let mut s = f.session();
-    let deadline = s.deadline();
-    let object = "d".repeat(40);
-    let operations = [
-        (
-            Step::Branch,
-            vec!["rev-parse", "--verify", f.plan.task_branch.as_str()],
-            format!("{}\n", f.plan.parent_object).into_bytes(),
-        ),
-        (
-            Step::Commit(&object),
-            vec!["cat-file", "commit", object.as_str()],
-            b"raw signed commit".to_vec(),
-        ),
-        (
-            Step::Update,
-            vec![
-                "update-ref",
-                "--no-deref",
-                f.plan.task_branch.as_str(),
-                object.as_str(),
-                f.plan.parent_object.as_str(),
-            ],
-            vec![],
-        ),
-    ];
-    for (step, expected, output) in operations {
-        let got = s
-            .step_with(step, &token(), |owner, args, env, observed_deadline| {
-                assert_eq!(observed_deadline, deadline);
-                owner.revalidate().unwrap();
-                assert_eq!(owner.scope.checkout_root, f.scope.checkout_root);
-                assert_eq!(owner.scope.git_directory, f.scope.git_directory);
-                assert_eq!(owner.scope.owned_root, f.scope.owned_root);
-                assert_eq!(args[args.len() - expected.len()..], expected);
-                assert!(args.contains(&"--no-replace-objects".into()));
-                assert!(args.contains(&"protocol.allow=never".into()));
-                assert!(args.contains(&format!("--git-dir={}", f.scope.git_directory.display())));
-                assert_eq!(env, &candidate::candidate_environment());
-                assert!(!env.contains_key("GNUPGHOME") && !env.contains_key("GIT_INDEX_FILE"));
-                Ok(success(&output))
-            })
-            .unwrap();
-        assert_eq!(got, output);
+    for width in [40, 64] {
+        let mut f = Fixture::new();
+        f.plan.parent_object = "b".repeat(width);
+        f.plan.candidate_tree = "c".repeat(width);
+        f.plan.plan_sha256 = "0".repeat(64);
+        f.plan.plan_sha256 = hash(&serde_json::to_vec(&f.plan).unwrap());
+        let mut s = f.session();
+        let deadline = s.deadline();
+        let commit = fixture_verified(&f.plan);
+        let (raw, object) = commit.for_plan(&f.plan).unwrap();
+        let operations = [
+            (
+                Step::Branch,
+                vec!["rev-parse", "--verify", f.plan.task_branch.as_str()],
+                format!("{}\n", f.plan.parent_object).into_bytes(),
+            ),
+            (
+                Step::Write(&commit),
+                vec![
+                    "hash-object",
+                    "-w",
+                    "-t",
+                    "commit",
+                    "--no-filters",
+                    "--stdin",
+                ],
+                format!("{object}\n").into_bytes(),
+            ),
+            (
+                Step::Commit(object),
+                vec!["cat-file", "commit", object],
+                raw.to_vec(),
+            ),
+            (
+                Step::Update,
+                vec![
+                    "update-ref",
+                    "--no-deref",
+                    f.plan.task_branch.as_str(),
+                    object,
+                    f.plan.parent_object.as_str(),
+                ],
+                vec![],
+            ),
+        ];
+        for (step, expected, output) in operations {
+            let is_write = matches!(step, Step::Write(_));
+            let got = s
+                .step_with(
+                    step,
+                    &token(),
+                    |owner, args, env, input, observed_deadline| {
+                        assert_eq!(observed_deadline, deadline);
+                        owner.revalidate().unwrap();
+                        assert_eq!(owner.scope.checkout_root, f.scope.checkout_root);
+                        assert_eq!(owner.scope.git_directory, f.scope.git_directory);
+                        assert_eq!(owner.scope.owned_root, f.scope.owned_root);
+                        assert_eq!(args[args.len() - expected.len()..], expected);
+                        assert!(args.contains(&"--no-replace-objects".into()));
+                        assert!(args.contains(&"protocol.allow=never".into()));
+                        assert!(
+                            args.contains(&format!(
+                                "--git-dir={}",
+                                f.scope.git_directory.display()
+                            ))
+                        );
+                        assert_eq!(env, &candidate::candidate_environment());
+                        assert!(
+                            !env.contains_key("GNUPGHOME") && !env.contains_key("GIT_INDEX_FILE")
+                        );
+                        if is_write {
+                            let fd = input.expect("sealed signed bytes required");
+                            assert!(rustix::io::pwrite(&fd, b"change", 0).is_err());
+                            let mut input = fs::File::from(fd);
+                            input.seek(SeekFrom::Start(0)).unwrap();
+                            let mut bytes = Vec::new();
+                            input.read_to_end(&mut bytes).unwrap();
+                            assert_eq!(bytes, raw);
+                        } else {
+                            assert!(input.is_none());
+                        }
+                        Ok(success(&output))
+                    },
+                )
+                .unwrap();
+            assert_eq!(got, if is_write { object.as_bytes() } else { &output });
+        }
+        assert!(s.step_with(Step::Update, &token(), no_dispatch).is_err());
     }
-    assert!(s.step_with(Step::Update, &token(), no_dispatch).is_err());
 }
 
 #[test]
@@ -175,26 +233,28 @@ fn commit_io_worker_supports_sha256_and_refuses_empty_commit_or_nonempty_update_
     plan.candidate_tree = "c".repeat(64);
     plan.plan_sha256 = "0".repeat(64);
     plan.plan_sha256 = hash(&serde_json::to_vec(&plan).unwrap());
-    let object = "d".repeat(64);
     let mut s = CommitIoSession::new(&f.scope, &plan).unwrap();
     branch(&mut s);
+    let (object, _) = store(&mut s);
     assert!(
-        s.step_with(Step::Commit(&object), &token(), |_, _, _, _| Ok(success(
-            &[]
-        )))
+        s.step_with(Step::Commit(&object), &token(), |_, _, _, _, _| Ok(
+            success(&[])
+        ))
         .is_err()
     );
     assert!(s.step_with(Step::Update, &token(), no_dispatch).is_err());
 
     let mut s = CommitIoSession::new(&f.scope, &plan).unwrap();
     branch(&mut s);
-    s.step_with(Step::Commit(&object), &token(), |_, args, _, _| {
+    let (object, raw) = store(&mut s);
+    s.step_with(Step::Commit(&object), &token(), |_, args, _, input, _| {
         assert_eq!(args.last(), Some(&object));
-        Ok(success(b"raw commit"))
+        assert!(input.is_none());
+        Ok(success(&raw))
     })
     .unwrap();
     assert!(
-        s.step_with(Step::Update, &token(), |_, args, _, _| {
+        s.step_with(Step::Update, &token(), |_, args, _, _, _| {
             assert_eq!(
                 &args[args.len() - 2..],
                 &[object, plan.parent_object.clone()]
@@ -223,6 +283,7 @@ fn commit_io_worker_refuses_wrong_order_malformed_object_and_stale_branch_withou
     ] {
         let mut s = f.session();
         branch(&mut s);
+        store(&mut s);
         assert!(
             s.step_with(Step::Commit(&object), &token(), no_dispatch)
                 .is_err()
@@ -239,7 +300,7 @@ fn commit_io_worker_refuses_wrong_order_malformed_object_and_stale_branch_withou
     ] {
         let mut s = f.session();
         assert!(
-            s.step_with(Step::Branch, &token(), |_, _, _, _| Ok(success(
+            s.step_with(Step::Branch, &token(), |_, _, _, _, _| Ok(success(
                 bytes.as_bytes()
             )))
             .is_err()
@@ -251,7 +312,7 @@ fn commit_io_worker_refuses_wrong_order_malformed_object_and_stale_branch_withou
 #[test]
 fn commit_io_worker_refuses_incomplete_failed_oversized_and_cancelled_results() {
     let f = Fixture::new();
-    for case in 0..10 {
+    for case in 0..12 {
         let mut s = f.session();
         let t = token();
         let mut r = success(format!("{}\n", f.plan.parent_object).as_bytes());
@@ -265,10 +326,12 @@ fn commit_io_worker_refuses_incomplete_failed_oversized_and_cancelled_results() 
             6 => r.stdout.total += 1,
             7 => r.stderr.total += 1,
             8 => r.outcome = Ok(OperationOutcome::TimedOut),
+            10 => r.stdout.sha256 = [0; 32],
+            11 => r.stderr.sha256 = [0; 32],
             _ => (),
         }
         assert!(
-            s.step_with(Step::Branch, &t, |_, _, _, _| {
+            s.step_with(Step::Branch, &t, |_, _, _, _, _| {
                 if case == 9 {
                     cancel(&t);
                 }
@@ -281,7 +344,7 @@ fn commit_io_worker_refuses_incomplete_failed_oversized_and_cancelled_results() 
     }
     let mut s = f.session();
     assert!(
-        s.step_with(Step::Branch, &token(), |_, _, _, _| Err(
+        s.step_with(Step::Branch, &token(), |_, _, _, _, _| Err(
             InvocationStatus::CleanupFailed
         ))
         .is_err()
@@ -304,7 +367,7 @@ fn commit_io_worker_refuses_changed_roots_aliases_and_expired_or_precancelled_se
             swap();
         }
         assert!(
-            s.step_with(Step::Branch, &token(), |_, _, _, _| {
+            s.step_with(Step::Branch, &token(), |_, _, _, _, _| {
                 assert!(during);
                 swap();
                 Ok(success(format!("{}\n", f.plan.parent_object).as_bytes()))
@@ -337,4 +400,228 @@ fn commit_io_worker_refuses_changed_roots_aliases_and_expired_or_precancelled_se
     )
     .unwrap();
     assert!(s.step_with(Step::Branch, &token(), no_dispatch).is_err());
+}
+
+#[test]
+fn commit_io_storage_refuses_foreign_verified_plans_and_every_skipped_stage() {
+    let f = Fixture::new();
+    let verified = fixture_verified(&f.plan);
+    for stage in 0..4 {
+        let mut s = f.session();
+        if stage > 0 {
+            branch(&mut s);
+        }
+        let stored = if stage > 1 { Some(store(&mut s)) } else { None };
+        if stage == 3 {
+            let (object, raw) = stored.as_ref().unwrap();
+            s.step_with(Step::Commit(object), &token(), |_, _, _, _, _| {
+                Ok(success(raw))
+            })
+            .unwrap();
+        }
+        let step = match stage {
+            0 | 2 | 3 => Step::Write(&verified),
+            _ => Step::Update,
+        };
+        assert!(s.step_with(step, &token(), no_dispatch).is_err());
+        assert!(s.step_with(Step::Branch, &token(), no_dispatch).is_err());
+    }
+    for field in ["message", "transaction", "repository", "signer"] {
+        let mut plan = f.plan.clone();
+        match field {
+            "message" => {
+                plan.message.push('!');
+                plan.message_sha256 = hash(plan.message.as_bytes());
+            }
+            "transaction" => plan.commit_transaction_id = "another-transaction".into(),
+            "repository" => plan.repository_sha256 = hash(b"foreign repository"),
+            _ => {
+                plan.signer.key_fingerprint = "d".repeat(40);
+                plan.signer.signer_sha256.clear();
+                plan.signer =
+                    agentmage_kernel_engine::local_commit::PinnedCommitSigner::seal(plan.signer)
+                        .unwrap();
+            }
+        }
+        plan.plan_sha256 = "0".repeat(64);
+        plan.plan_sha256 = hash(&serde_json::to_vec(&plan).unwrap());
+        let foreign = fixture_verified(&plan);
+        let mut s = f.session();
+        branch(&mut s);
+        assert!(
+            s.step_with(Step::Write(&foreign), &token(), no_dispatch)
+                .is_err(),
+            "{field}"
+        );
+        assert!(
+            s.step_with(Step::Write(&verified), &token(), no_dispatch)
+                .is_err()
+        );
+    }
+}
+
+#[test]
+fn commit_io_storage_requires_exact_object_id_and_byte_for_byte_readback_before_ref_update() {
+    let f = Fixture::new();
+    let commit = fixture_verified(&f.plan);
+    let (raw, object) = commit.for_plan(&f.plan).unwrap();
+    for output in [
+        vec![],
+        object.as_bytes().to_vec(),
+        format!("{object}\n\n").into_bytes(),
+        format!("{}\n", object.to_ascii_uppercase()).into_bytes(),
+        format!("{}\n", "d".repeat(40)).into_bytes(),
+        format!("{}\n", "0".repeat(40)).into_bytes(),
+        format!("{}\n", "d".repeat(64)).into_bytes(),
+    ] {
+        let mut s = f.session();
+        branch(&mut s);
+        assert!(
+            s.step_with(Step::Write(&commit), &token(), |_, _, _, _, _| Ok(success(
+                &output
+            )))
+            .is_err()
+        );
+        assert!(
+            s.step_with(Step::Commit(object), &token(), no_dispatch)
+                .is_err()
+        );
+        assert!(s.step_with(Step::Update, &token(), no_dispatch).is_err());
+    }
+    for output in [
+        vec![],
+        raw[..raw.len() - 1].to_vec(),
+        [raw, b"\n"].concat(),
+        {
+            let mut changed = raw.to_vec();
+            changed[0] ^= 1;
+            changed
+        },
+    ] {
+        let mut s = f.session();
+        branch(&mut s);
+        store(&mut s);
+        assert!(
+            s.step_with(Step::Commit(object), &token(), |_, _, _, _, _| Ok(success(
+                &output
+            )))
+            .is_err()
+        );
+        assert!(s.step_with(Step::Update, &token(), no_dispatch).is_err());
+    }
+}
+
+#[test]
+fn commit_io_storage_failures_cancel_and_inconsistent_capture_cannot_advance_or_retry() {
+    let f = Fixture::new();
+    let commit = fixture_verified(&f.plan);
+    let (raw, object) = commit.for_plan(&f.plan).unwrap();
+    for stage in 0..3 {
+        for case in 0..14 {
+            let mut s = f.session();
+            branch(&mut s);
+            if stage > 0 {
+                store(&mut s);
+            }
+            if stage > 1 {
+                s.step_with(Step::Commit(object), &token(), |_, _, _, _, _| {
+                    Ok(success(raw))
+                })
+                .unwrap();
+            }
+            let step = match stage {
+                0 => Step::Write(&commit),
+                1 => Step::Commit(object),
+                _ => Step::Update,
+            };
+            let output = match stage {
+                0 => format!("{object}\n").into_bytes(),
+                1 => raw.to_vec(),
+                _ => vec![],
+            };
+            let mut result = success(&output);
+            let t = token();
+            match case {
+                0 => result.output_complete = false,
+                1 => result.status = Some(ExitStatus::from_raw(1 << 8)),
+                2 => result.outcome = Ok(OperationOutcome::Failed),
+                3 => result.status = None,
+                4 => result.stdout.total = MAX_OBSERVATION_BYTES + 1,
+                5 => result.stderr.total = MAX_OBSERVATION_BYTES + 1,
+                6 => result.stdout.total += 1,
+                7 => result.stderr.total += 1,
+                8 => result.stdout.sha256 = [0; 32],
+                9 => result.stderr.sha256 = [0; 32],
+                10 => result.outcome = Ok(OperationOutcome::TimedOut),
+                11 => cancel(&t),
+                _ => (),
+            }
+            assert!(
+                s.step_with(step, &t, |_, _, _, _, _| {
+                    assert_ne!(case, 11, "precancelled must not dispatch");
+                    if case == 12 {
+                        cancel(&t);
+                    }
+                    if case == 13 {
+                        return Err(InvocationStatus::CleanupFailed);
+                    }
+                    Ok(result)
+                })
+                .is_err(),
+                "stage{stage}/case{case}"
+            );
+            assert!(
+                s.step_with(Step::Write(&commit), &token(), no_dispatch)
+                    .is_err()
+            );
+            assert!(s.step_with(Step::Update, &token(), no_dispatch).is_err());
+        }
+    }
+}
+
+#[test]
+fn commit_io_storage_retains_replaced_roots_and_refuses_expired_dispatch() {
+    for during in [false, true] {
+        let f = Fixture::new();
+        let mut s = f.session();
+        branch(&mut s);
+        let commit = fixture_verified(&f.plan);
+        let object = commit.for_plan(&f.plan).unwrap().1;
+        let swap = || {
+            fs::rename(
+                &f.scope.git_directory,
+                f.scope.checkout_root.join("retained-metadata"),
+            )
+            .unwrap();
+            fs::create_dir(&f.scope.git_directory).unwrap();
+            fs::set_permissions(&f.scope.git_directory, fs::Permissions::from_mode(0o700)).unwrap();
+            fs::write(f.scope.git_directory.join("sentinel"), b"keep replacement").unwrap();
+        };
+        if !during {
+            swap();
+        }
+        assert!(
+            s.step_with(Step::Write(&commit), &token(), |_, _, _, _, _| {
+                assert!(during);
+                swap();
+                Ok(success(format!("{object}\n").as_bytes()))
+            })
+            .is_err()
+        );
+        assert!(s.step_with(Step::Update, &token(), no_dispatch).is_err());
+        assert_eq!(
+            fs::read(f.scope.git_directory.join("sentinel")).unwrap(),
+            b"keep replacement"
+        );
+    }
+    let f = Fixture::new();
+    let mut s = f.session();
+    branch(&mut s);
+    s.deadline = Instant::now();
+    let commit = fixture_verified(&f.plan);
+    assert!(
+        s.step_with(Step::Write(&commit), &token(), no_dispatch)
+            .is_err()
+    );
+    assert!(s.step_with(Step::Update, &token(), no_dispatch).is_err());
 }

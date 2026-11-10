@@ -440,19 +440,23 @@ impl Control {
     }
 }
 
-// Single-child accounting for the existing DORMANT direct signer boundary.
+// Historical direct-signing fixtures only; excluded from production builds.
 // This is not sandbox admission or a descendant-cleanup receipt. In particular,
 // EOF and reaping the immediate child do not prove that its descendants died.
 // Do not reuse this boundary to execute product tools: those use run_owned.
+#[cfg(test)]
 static LOCAL_COMMIT_CHILD: Mutex<Option<Control>> = Mutex::new(None);
+#[cfg(test)]
 const LOCAL_COMMIT_CAPTURE_BYTES: usize = 4 * 1024 * 1024;
 
+#[cfg(test)]
 pub(crate) struct LocalCommitCapture {
     pub status: ExitStatus,
     pub stdout: Vec<u8>,
     pub stderr: Vec<u8>,
 }
 
+#[cfg(test)]
 impl LocalCommitCapture {
     // Direct signing/inspection consume stdout only. Verification diagnostics
     // now come from the separate offline owner, never this direct boundary.
@@ -462,6 +466,7 @@ impl LocalCommitCapture {
     }
 }
 
+#[cfg(test)]
 pub(crate) fn capture_local_commit_process(
     command: Command,
     cancellation: Option<&agentmage_kernel_engine::propagation::CancellationToken>,
@@ -470,6 +475,7 @@ pub(crate) fn capture_local_commit_process(
     capture_local_commit_process_in(&LOCAL_COMMIT_CHILD, command, cancellation, deadline)
 }
 
+#[cfg(test)]
 fn capture_local_commit_process_in(
     owner: &Mutex<Option<Control>>,
     mut command: Command,
@@ -495,6 +501,7 @@ fn capture_local_commit_process_in(
     finish_local_commit_capture(&mut slot, cancellation, deadline)
 }
 
+#[cfg(test)]
 fn finish_local_commit_capture(
     slot: &mut Option<Control>,
     cancellation: Option<&agentmage_kernel_engine::propagation::CancellationToken>,

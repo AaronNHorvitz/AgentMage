@@ -1,18 +1,57 @@
 // SPDX-License-Identifier: Apache-2.0
-//! Dormant RSA/v4 signature assembly; no object write or approval authority.
+//! Dormant RSA/v4 signature assembly; no approval authority.
 //!
 //! Original implementation of the wire fields in RFC 4880 sections 3.2,
 //! 4.2.2.3, 5.2.3, 5.2.4 and 6.2-6.3. No reference code is incorporated.
-#![allow(
-    dead_code,
-    reason = "signed creation remains dormant pending native admission and approval composition"
-)]
-
 use super::*;
 use agentmage_kernel_engine::local_commit::{LocalCommitPlan, verify_local_commit_plan};
+use sha1::Digest as _;
 
 const LIMIT: usize = crate::sandbox::MAX_OUTPUT_BYTES;
 const MAX_RSA_BYTES: usize = 1024;
+
+// Process-local proof of completed independent verification. No deserialization,
+// public constructor, mutation or receipt restoration. A plan alone cannot make
+// this value. Object storage still requires the original kernel launch permit.
+pub(crate) struct VerifiedCommit {
+    plan_sha256: String,
+    raw: Vec<u8>,
+    object: String,
+}
+
+impl fmt::Debug for VerifiedCommit {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("VerifiedCommit").finish_non_exhaustive()
+    }
+}
+
+impl VerifiedCommit {
+    pub(crate) fn for_plan(
+        &self,
+        plan: &LocalCommitPlan,
+    ) -> Result<(&[u8], &str), LinuxLocalCommitError> {
+        verify_local_commit_plan(plan).map_err(|_| refused())?;
+        if plan.plan_sha256 != self.plan_sha256 {
+            return Err(refused());
+        }
+        Ok((&self.raw, &self.object))
+    }
+}
+
+fn object_id(raw: &[u8], width: usize) -> String {
+    let header = format!("commit {}\0", raw.len());
+    if width == 40 {
+        let mut digest = sha1::Sha1::new();
+        digest.update(header.as_bytes());
+        digest.update(raw);
+        hex_digest(digest.finalize())
+    } else {
+        let mut digest = Sha256::new();
+        digest.update(header.as_bytes());
+        digest.update(raw);
+        hex_digest(digest.finalize())
+    }
+}
 
 fn refused() -> LinuxLocalCommitError {
     error(LinuxLocalCommitErrorKind::PlanDenied)
@@ -33,6 +72,12 @@ impl Prepared {
         verify_local_commit_plan(plan).map_err(|_| refused())?;
         if plan.parent_object.len() != plan.candidate_tree.len()
             || plan.signer.key_fingerprint.len() != 40
+            || [&plan.author, &plan.committer].into_iter().any(|identity| {
+                [&identity.name, &identity.email]
+                    .into_iter()
+                    .any(|value| value.trim() != value.as_str() || value.contains(['<', '>']))
+                    || identity.email.chars().any(char::is_whitespace)
+            })
         {
             return Err(refused());
         }
@@ -122,10 +167,10 @@ impl Prepared {
     }
 }
 
-// Accept one bounded canonical RSA expression, with exactly one scalar and no
-// extension fields. The installed foreground agent emits unsigned, big-endian
-// scalars (including a high first bit), without a sign-padding zero. Refuse
-// zero, redundant leading zeros and trailing data; no integer reinterpretation.
+// Accept one bounded RSA expression, with exactly one unsigned scalar and no
+// extension fields. Agent output can be modulus-width, including zero leading
+// octets. Strip that padding for the minimal MPI; refuse an all-zero integer,
+// ambiguous expression lengths and trailing data. Never interpret a sign bit.
 fn rsa_scalar(expression: &[u8]) -> Option<&[u8]> {
     if expression.len() > MAX_RSA_BYTES + 64 {
         return None;
@@ -149,7 +194,8 @@ fn rsa_scalar(expression: &[u8]) -> Option<&[u8]> {
     if remainder.get(length..)? != b")))" {
         return None;
     }
-    (scalar[0] != 0).then_some(scalar)
+    let first = scalar.iter().position(|byte| *byte != 0)?;
+    Some(&scalar[first..])
 }
 
 fn radix64(bytes: &[u8]) -> Vec<u8> {
@@ -199,7 +245,7 @@ pub(super) fn sign_commit(
     plan: &LocalCommitPlan,
     cancellation: &CancellationToken,
     deadline: Instant,
-) -> Result<Vec<u8>, LinuxLocalCommitError> {
+) -> Result<VerifiedCommit, LinuxLocalCommitError> {
     let deadline = deadline.min(Instant::now() + Duration::from_secs(30));
     sign_commit_with(
         signer,
@@ -218,7 +264,7 @@ fn sign_commit_with(
     deadline: Instant,
     sign: impl FnOnce(&[u8; 32]) -> Result<Vec<u8>, LinuxLocalCommitError>,
     verify: impl FnOnce(&[u8]) -> Result<(), LinuxLocalCommitError>,
-) -> Result<Vec<u8>, LinuxLocalCommitError> {
+) -> Result<VerifiedCommit, LinuxLocalCommitError> {
     inspection::check_control(cancellation, deadline)?;
     let prepared = Prepared::new(plan)?;
     if plan.signer != signer.pinned
@@ -237,9 +283,13 @@ fn sign_commit_with(
     }
     verify(&raw)?;
     inspection::check_control(cancellation, deadline)?;
-    Ok(raw)
+    Ok(VerifiedCommit {
+        plan_sha256: plan.plan_sha256.clone(),
+        object: object_id(&raw, plan.parent_object.len()),
+        raw,
+    })
 }
 
 #[cfg(test)]
 #[path = "local_commit_packet_tests.rs"]
-mod tests;
+pub(crate) mod tests;

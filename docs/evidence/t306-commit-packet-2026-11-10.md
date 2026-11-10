@@ -1,6 +1,18 @@
 # T-303/T-306: dormant RSA commit signature assembly
 
-Status: complete affected gate remains **FAIL**; independent core review required. Neither parent
+Correction after independent review of exact commit
+`5d2184140fa2b378584a2e327e4311129ce709ae`: the retained
+[report](../reviews/5d2184140fa2-local-coding-commit-packet.txt) has
+**Verdict: FINDINGS**, with medium M-1. The installed agent can emit fixed-width
+RSA values beginning with zero octets. The earlier minimal-scalar assumption
+below was incorrect; the initial parser rejects valid signatures in that case.
+The later [storage/repair increment](t306-confined-storage-2026-11-10.md) strips
+bounded zero padding before MPI encoding and retains real verification.
+The historical counts below describe the actual run, not general reliability.
+Neither parent closes on this evidence.
+
+Status at the reviewed revision: complete affected gate **FAIL**; independent core
+review subsequently returned the findings above. Neither parent
 closes, and no row or sub-row is added. The private-signing ancestor remains
 immutable. Its independent review arrived after the implementation commit:
 the retained [report](../reviews/907724989c81-local-coding-private-signing.txt)
@@ -69,9 +81,10 @@ An earlier focused run passes all six methods, with zero failures or ignores
 and 527 filtered tests (2.53 seconds compilation; 0.33 seconds tests). This does
 not replace the complete unfiltered run above. Superseded focused failures are
 retained: the fixture needed an explicit byte slice for the zeroizing buffer,
-and the installed foreground agent emits unsigned RSA scalars without sign
-padding. The parser now requires that observed bounded canonical form, including
-high first bits, and refuses redundant leading zeros. No hidden tests or
+and the initial agent probe sampled one unsigned RSA scalar without a leading
+zero. At that revision the parser required that sampled minimal form, including
+high first bits, and refused leading zeros. Independent review disproved that
+generalization; see the correction above. No hidden tests or
 evaluation threshold is changed. Real signatures verify independently for both
 selected primary/subkey identities and both Git object formats. Changed message
 bytes and corrupted signatures fail verification; a different fingerprint
