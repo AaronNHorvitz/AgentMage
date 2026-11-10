@@ -17,6 +17,7 @@ mod lifecycle;
 mod linked_repository;
 mod local_commit;
 mod platform;
+mod repository_base;
 mod repository_inventory;
 mod repository_safety;
 mod runtime_artifact_crypto;

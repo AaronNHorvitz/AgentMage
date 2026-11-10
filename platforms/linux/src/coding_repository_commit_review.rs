@@ -19,6 +19,7 @@ struct GitObservation {
     task_branch: Option<String>,
     linked_identity: String,
     task_inventory_sha256: String,
+    base_preimages: BTreeMap<String, Option<String>>,
 }
 
 impl LinuxCodingRepository {
@@ -102,8 +103,8 @@ impl LinuxCodingRepository {
     /// There is no HTTP/terminal entry point for this internal composition yet.
     ///
     /// A packet's hashes do not establish ownership or independent review. This
-    /// method checks current content/lineage, original held validation evidence
-    /// and fresh Git observations. It does not authenticate caller-supplied
+    /// method checks current content/lineage, immutable base preimages, original
+    /// held validation evidence and fresh Git observations. It does not authenticate caller-supplied
     /// review findings or evidence artifacts. Write-approval and application
     /// identities must match the retained original native transactions exactly.
     /// The returned plan grants no candidate build, commit or publication. Any
@@ -140,6 +141,19 @@ impl LinuxCodingRepository {
             let task = collector
                 .collect_inventory(&task_scope)
                 .map_err(|e| err(e.kind().code()))?;
+            let paths = packet
+                .change_set
+                .files()
+                .iter()
+                .map(|f| f.path.clone())
+                .collect::<Vec<_>>();
+            let base_preimages = collector
+                .collect_base_preimages(
+                    &task_scope,
+                    self.created_git_identity()?.base_object(),
+                    &paths,
+                )
+                .map_err(|_| err("code.commit.base-preimage"))?;
             linked.revalidate().map_err(|e| err(e.kind().code()))?;
             if task.repository_sha256 != created.held.root_path_sha256() {
                 return Err(err("code.commit.git-state"));
@@ -150,6 +164,7 @@ impl LinuxCodingRepository {
                 task_branch: task.branch,
                 linked_identity: linked.identity_sha256().into(),
                 task_inventory_sha256: task.git_evidence_sha256,
+                base_preimages,
             })
         })
     }
@@ -274,6 +289,22 @@ impl LinuxCodingRepository {
             || before.task_head != identity.base_object()
         {
             return Err(err("code.commit.git-state"));
+        }
+        // The first approved filesystem preimage may include dirty or untracked
+        // starting content. It is not evidence that the same bytes were in the
+        // immutable creation base. Never silently commit that extra content.
+        if before.base_preimages.len() != files.len()
+            || files
+                .iter()
+                .any(|file| match before.base_preimages.get(&file.path) {
+                    Some(None) => file.preimage_sha256 != "0".repeat(64),
+                    Some(Some(digest)) => {
+                        file.preimage_sha256 == "0".repeat(64) || file.preimage_sha256 != *digest
+                    }
+                    None => true,
+                })
+        {
+            return Err(err("code.commit.base-preimage"));
         }
         // A group may select a subset of the full packet. Do not supply modes
         // for operations outside that exact group to the kernel planner.

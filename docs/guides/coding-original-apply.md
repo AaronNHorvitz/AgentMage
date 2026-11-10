@@ -146,8 +146,19 @@ diagnostic is `code.commit.creation-provenance`. Inspect the retained files and
 use a fresh service and approved worktree; restarting cannot adopt the old one.
 This conservative refusal prevents an unrecorded creation from appearing as an
 ordinary existing-file edit. It neither removes files nor changes the separate
-original-transfer permissions. It does not verify every preimage against Git's
-immutable base; that remains necessary before candidate execution.
+original-transfer permissions.
+
+The internal candidate planner also checks every reviewed first preimage against
+the exact immutable creation commit. Dirty starting content or an existing
+untracked file cannot become an ordinary base edit. A creation must be absent
+in the base; an empty base file counts as occupied. The diagnostic is
+`code.commit.base-preimage`. Selected symlinks, submodules, directories and
+descendants of non-directory entries refuse. These base reads use the existing
+offline linked worker, with replacement objects disabled and unchanged trust,
+output limits and per-command deadlines. The final Git observation repeats them
+before releasing the inert plan. This is internal library plumbing; no candidate
+executor or new terminal/API entry point is available. Reviewer/artifact
+provenance and separate Git approvals still remain necessary before execution.
 
 ## Continue from a terminal coding run
 

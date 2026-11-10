@@ -26,6 +26,19 @@ fn observation(owner: &LinuxCodingRepository) -> GitObservation {
         task_branch: Some(identity.branch_ref().into()),
         linked_identity: hash(b"synthetic linked metadata"),
         task_inventory_sha256: hash(b"synthetic task inventory"),
+        base_preimages: owner
+            .created
+            .as_ref()
+            .unwrap()
+            .edits
+            .iter()
+            .map(|(path, edit)| {
+                (
+                    path.clone(),
+                    (edit.before_sha256 != "0".repeat(64)).then(|| edit.before_sha256.clone()),
+                )
+            })
+            .collect(),
     }
 }
 
@@ -199,6 +212,71 @@ fn candidate_review_native_entry_retains_exact_artifact_refusal_without_git_effe
         fs::read(f.root.join("owned/worktree/sentinel")).unwrap(),
         b"reviewed change"
     );
+}
+
+#[test]
+fn candidate_review_refuses_dirty_untracked_missing_and_extra_base_preimages() {
+    let (f, owner, changes) = command::tests::candidate_review_fixture();
+    let packet = packet(&owner, &changes);
+    for variant in ["dirty", "untracked", "empty", "missing", "extra"] {
+        let calls = Cell::new(0);
+        let result = plan(&owner, &packet, || {
+            calls.set(calls.get() + 1);
+            let mut observed = observation(&owner);
+            match variant {
+                "dirty" => {
+                    observed
+                        .base_preimages
+                        .insert("sentinel".into(), Some(hash(b"different immutable base")));
+                }
+                "untracked" => {
+                    observed.base_preimages.insert("sentinel".into(), None);
+                }
+                "empty" => {
+                    observed
+                        .base_preimages
+                        .insert("sentinel".into(), Some(hash(b"")));
+                }
+                "missing" => {
+                    observed.base_preimages.clear();
+                }
+                "extra" => {
+                    observed.base_preimages.insert("other.py".into(), None);
+                }
+                _ => unreachable!(),
+            }
+            Ok(observed)
+        });
+        assert_eq!(
+            result.unwrap_err().code(),
+            "code.commit.base-preimage",
+            "{variant}"
+        );
+        assert_eq!(calls.get(), 1);
+    }
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"preserve human work"
+    );
+    assert!(!f.root.join("owned/candidate-index-review-build").exists());
+}
+
+#[test]
+fn candidate_review_refuses_changed_immutable_base_observation_before_releasing_plan() {
+    let (f, owner, changes) = command::tests::candidate_review_fixture();
+    let packet = packet(&owner, &changes);
+    let calls = Cell::new(0);
+    let result = plan(&owner, &packet, || {
+        calls.set(calls.get() + 1);
+        let mut observed = observation(&owner);
+        if calls.get() == 2 {
+            observed.base_preimages.insert("sentinel".into(), None);
+        }
+        Ok(observed)
+    });
+    assert_eq!(result.unwrap_err().code(), "code.commit.git-drift");
+    assert_eq!(calls.get(), 2);
+    assert!(!f.root.join("owned/candidate-index-review-build").exists());
 }
 
 #[test]
@@ -867,6 +945,18 @@ fn creation_review_candidate_plan_binds_mixed_original_history_and_creation_mode
         assert_eq!(packet.change_set.files()[i].preimage_sha256, preimage);
     }
     assert!(!candidate.network_authority && !candidate.hooks_enabled && !candidate.filters_enabled);
+    // Absence is required at the immutable base, not just at the original
+    // filesystem creation dispatch. Even an empty base blob is occupied.
+    for occupied in [hash(b"base content\n"), hash(b""), "0".repeat(64)] {
+        let result = plan(&owner, &packet, || {
+            let mut observed = observation(&owner);
+            observed
+                .base_preimages
+                .insert("new.py".into(), Some(occupied.clone()));
+            Ok(observed)
+        });
+        assert_eq!(result.unwrap_err().code(), "code.commit.base-preimage");
+    }
     assert!(!f.root.join("repo/new.py").exists());
     assert!(!f.root.join("repo/other.py").exists());
     assert_eq!(

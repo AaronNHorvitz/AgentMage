@@ -2,6 +2,21 @@
 
 ## Active queue: local agent mission
 
+The [immutable-base prerequisite](docs/evidence/t306-base-preimages-2026-11-09.md)
+binds candidate planning to the original creation commit's source bytes and
+absence, through the existing offline worker. Dirty or untracked starting
+content cannot silently become base content. The complete affected gate remains
+**FAIL**: 1,309 Rust passes, the same 72 inherited failures and 64 existing ignores
+across 26 unfiltered targets. All eight new tests, the strengthened creation
+test, formatting and Clippy pass; five code hashes stay fixed. Independent core
+review is required. T-303/T-306 remain open; no new or closed
+rows. The retained [retry-cycle review](docs/reviews/419331de0c75-local-coding-retry-cycle.txt)
+has **Verdict: PASS** for exact commit
+`419331de0c7517fcee21200fb7a34dff807b5489`, with no high or medium finding.
+Its low L4 test classification is corrected; low L5 approval-receipt reuse
+remains same-row backlog. Native execution, candidate execution and measurement
+remain open.
+
 The [review-refusal repairs](docs/evidence/t306-review-refusals-2026-11-09.md)
 address same-row creation low L1 and consumer low L3. Incomplete native creation
 publication cannot become an existing-file review through later edits, and

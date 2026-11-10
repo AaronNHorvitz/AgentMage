@@ -1,0 +1,140 @@
+Commit: 419331de0c7517fcee21200fb7a34dff807b5489
+Scope: local-coding-retry-cycle
+
+# Independent core review: T-303 / T-306 retry-cycle repair (non-closing increment)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only, pinned checkout
+`/lane/review-checkout` (`git rev-parse HEAD` = 419331de0c7517fcee21200fb7a34dff807b5489), built with
+`CARGO_TARGET_DIR=/lane/state/review-target`. Base: immutable 906dc1e0bd1cce9b0120fc6247e7526d2905ad56.
+Rows T-303 / T-306 both remain OPEN. This review neither closes nor approves a row.
+
+## Methods
+
+- Read the bundle README and every runner (run.py, check.py, parse_gate.py, focused.py, contract.mjs,
+  light.py, schema.py) before running them. None downloads, uses the GPU or writes tracked files.
+  Reservations are not nested. I did not wrap any runner in build-slot.
+- Read the whole diff (9 files): `kernel/engine/src/review_packet_history.rs`,
+  `scripts/validate_planning_schemas.mjs`, the new Rust/Linux/JS tests, TASKS.md, the evidence note,
+  the guide and the two retained reviews. I also read the surrounding code:
+  `verify_single_change_set` (`review_packet.rs:889`), native proof construction
+  (`coding_workspace_write_proof.rs:56-160`), native change-set id generation
+  (`coding_workspace_write.rs:130`) and the leaf schema (`local-review-packet.schema.json:237-258`).
+- Adversarial probes (scratch script outside the repository) against the JSON consumer, using both
+  Rust projections emitted by my focused run. Each probe mutates a projection, reseals the composite
+  digest and checks the validator's verdict.
+- Privacy, IP and evaluation-integrity scan of the added lines and changed paths.
+
+## Exact commands and results (run from /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-retry-cycle/review-inputs.sha256`: exit 0. The manifest
+   itself hashes to d38b7a45441ecfd4b738d364c46d8bb71c35c69f910cf5d48f7b871c2b656df3, as stated.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-retry-full-419331de0c75`:
+   exit 1 (expected, inherited native failures), `source_unchanged: true`, 1895.34 s including
+   reservations, raw log SHA-256 054d9b6affb80fe8f4ce2727abde636cc354bdb45edb878e9f34b3725943e0e0.
+   Steps: git diff --check, untracked lint, review lint and markdownlint all exit 0. The Node schema step
+   ran inside the gate this time: exit 0 after 1428.75 s including queue, `tests 85 / pass 85 / fail 0`.
+   cargo fmt 0 (20.43 s), Clippy `-D warnings` 0 (51.49 s), cargo test 101 (392.97 s), with failures
+   only in `agentmage-host --lib` and `agentmage-platform-linux --lib`. `FAST GATE: FAIL`.
+3. `python3 -B …/check.py /lane/state/tmp/review-retry-full-419331de0c75`: exit 0, "DATA COMPARISON
+   ONLY: FULL GATE REMAINS FAIL". 46 targets with totals 2941 passed / 72 failed / 72 ignored /
+   0 measured / 0 filtered. Every target's failure and ignore identities match the parent baseline
+   exactly, plus one kernel pass and one Linux pass. Both new methods report `ok`. 85/85 schema tests
+   ran inside the gate (`schema_retry: null`), and no explicit recovery directory was used. Exactly
+   four source files are frozen. TASKS rows are unchanged from the base. Both retained reviews are
+   byte-identical to `/lane/reviews`.
+4. Schema recovery (`schema.py`): not run, and not needed. The gate's Node step did not time out.
+5. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/focused.py /lane/state/tmp/review-retry-focused-419331de0c75`:
+   exit 0. Rust focused 0 (300.85 s including reservation, raw
+   a3527871f41eda647bedf62aa5ee8c438a1c5d006950fd32db3298a2e292d87a). Conformance 0 (0.65 s, raw
+   d24ec0f9c8f29e52bad0383888063695b850f4fdc6abad2119df5851d8079cad, byte-identical to the builder's
+   `focused-1/1.log`).
+6. `python3 -B …/light.py`: exit 0 (all four non-suite commands 0; markdownlint 0 issues).
+7. `cmp …/validation-1/source-freeze.json /lane/state/tmp/review-retry-full-419331de0c75/source-freeze.json`:
+   exit 0 (identical).
+8. `git diff --check 906dc1e0bd1cce9b0120fc6247e7526d2905ad56 --`: exit 0. `git status --short`: empty.
+
+Builder figures I could reproduce exactly: 2,941/72/72, 46 targets, 0 measured/filtered, both new
+passes, fmt/Clippy PASS, 85/85 schema, focused PASS and conformance PASS. My timings and full raw-log
+hash differ from the builder's, as expected for a separate run. The builder's Node-124 timeout and
+recovery are retained honestly in the evidence and are consistent with check.py's logic. Here the
+strict in-gate path was satisfied, so the recovery path was not exercised.
+
+## Probe results (JSON consumer, resealed composites)
+
+Kernel synthetic projection (leaves 0 and 2 share `change_set_sha256`):
+- As emitted: valid.
+- Leaf 2 reuses leaf 0's application receipt: refused with "write history must be flat, distinct and
+  consistently classified".
+- Rollback leaf removed: refused (continuity).
+- Leaf 2 reuses leaf 0's **approval** receipt while keeping a distinct application: **accepted**
+  (see L5).
+
+Native Linux projection (three actual confined writes):
+- As emitted: valid. Application replay: refused. Rollback removed: refused.
+- **All three leaves have distinct `change_set_sha256`** (ff6cfc8b…, 141b0ae5…, e10d99e9…) and random
+  `change_set_id`s, although leaves 0 and 2 have identical pre/post bytes (see L4).
+
+Rust: `verify_single_change_set` runs before the `applications.insert` short-circuit and requires
+`Some(sha256)` for both receipts, so a `None` application cannot become the dedup key. In JS the schema
+requires both receipts on every `singleChangeSet` leaf, so `undefined` cannot collide unnoticed. The
+composite `change_set_sha256` (Rust `sha256_json(&history)`; JS `reviewTransactionRecord`) includes
+every original approval and application, so replacing either changes the composite identity. No
+other code keys on per-leaf `change_set_sha256` uniqueness: I grepped `platforms/linux/src` and found
+only per-transaction approval binding and preview correlation.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L4 (low, backlog): the "Linux regression" does not exercise the repaired check.**
+  `platforms/linux/src/coding_repository_apply_tests.rs:1103-1166`, with evidence
+  `docs/evidence/t306-retry-cycle-2026-11-09.md` ("One Linux regression uses three actual confined
+  native file applications…").
+  - Native change-set ids come from `digest(&random)` (`platforms/linux/src/coding_workspace_write.rs:130`),
+    and `change_set_sha256` covers the id. Genuine native leaves therefore never repeat a change-set
+    digest, and the probe confirms the three digests are distinct.
+  - The base's `change_set_sha256` dedup would accept this history unchanged. The test passes at
+    906dc1e0 by reasoning; I did not run it there, since that needs a second checkout and build. The
+    Linux file has no other dependency on the changed lines.
+  - The repaired path is covered by the kernel test (`review_packet_history.rs:247`, where `retry`
+    clones `first`'s digest, so the base would refuse) and by the JS test. The native test is useful
+    end-to-end coverage of file components and transfer consent, but it is not a regression test for
+    this repair. It also shows that L2's repeated-digest refusal was unreachable from native writes.
+  - Fix: relabel it in the evidence and guide as native end-to-end coverage, stating that native
+    digests never repeat. Alternatively, add a case that actually reaches equal digests.
+  - This is low because the claim concerns test classification, not safety: the repair itself has
+    failing-on-base coverage in both consumers.
+- **L5 (low, backlog): approval reuse across distinct applications is not refused.**
+  `kernel/engine/src/review_packet_history.rs:30`, `scripts/validate_planning_schemas.mjs:616`.
+  - Native approval bindings include a single-use grant id (`coding_workspace_write_proof.rs:66-73`,
+    consumption revision +1). A genuine history therefore never contains the same approval twice.
+  - Both consumers accept a history in which one approval receipt is reused across two distinct
+    applications (reproduced on the kernel projection).
+  - This is not a new class: distinct-content leaves with a shared approval were also accepted before.
+    The consumer explicitly does not authenticate receipts, and the live owner still correlates its
+    own native proof. A consistency check costs nothing, though: dedup approvals alongside
+    applications, in Rust and JS.
+- Existing same-row lows remain backlog: creation L1 (base preimage) and consumer L3 (malformed-container
+  diagnostic). This commit resolves L2 as described, with the caveat in L4.
+
+Other checks:
+- **Confinement and authority:** no new effect, route, command, permission, trust exception or
+  mutation authority. The composite still has `write_authority: false` and no singular approval or
+  application. The Linux test confirms denied transfer leaves `original/` untouched and that the
+  separately approved transfer commits.
+- **Evaluation integrity:** no frozen, hidden, held-out, scorer, threshold, prompt, dependency, SBOM,
+  scoreboard or lifecycle file changed (9 changed paths, listed above). No score claimed.
+- **Honest labelling:** kernel fixtures and Git/process/publication observations are labelled
+  synthetic. There are no claims of native Git, model, score or durable recovery. The gate stays FAIL.
+- **Privacy/IP:** no private host path, username, hostname, credential or third-party product name in
+  added content. The `/lane/...` paths are generic lane paths already used in retained reviews.
+- **Delivery:** no new row or sub-row, no self-approval.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing increment, scope local-coding-retry-cycle): increment accepted, with no
+  high or medium finding. L4 and L5 are low backlog. Both parent rows remain OPEN; this review closes
+  neither. The full affected gate is FAIL on inherited native failures (72, identical to baseline);
+  the data comparison is not a gate PASS.
+
+Verdict: PASS
