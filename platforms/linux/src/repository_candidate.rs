@@ -366,7 +366,7 @@ impl CandidateSession {
     }
 }
 
-fn candidate_environment() -> BTreeMap<String, String> {
+pub(super) fn candidate_environment() -> BTreeMap<String, String> {
     [
         ("GIT_CONFIG_NOSYSTEM", "1"),
         ("GIT_CONFIG_GLOBAL", "/dev/null"),

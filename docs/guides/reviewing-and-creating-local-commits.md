@@ -92,3 +92,34 @@ review packet still grants no build authority. The direct signing runner also
 remains inactive pending its own confinement and exact approval composition.
 Synthetic tests and mount experiments do not establish native admission or model
 acceptance; the lane's executable trust and user-bus refusals remain unchanged.
+
+## Dormant signed-commit I/O
+
+Branch lookup, raw commit reads and the final task-branch compare-and-swap now
+use the same closed offline supervisor. An immutable kernel-verified plan binds
+the held roots, branch, expected parent and returned commit object. These three
+steps run in order within one thirty-second deadline, including time spent
+signing between them. An error ends the session. Source stays read-only; exact
+selected metadata and the owned management root retain their existing writable
+projections. No direct fallback runs these three operations.
+
+The content verifier requires exact singleton headers and message bytes. An
+additional parent, identity, tree or other header refuses verification. Signature
+verification requires one complete pinned fingerprint in a GnuPG status record;
+a substring in prose cannot suffice, and failure/revocation/expiry records refuse.
+Signed stdout and stderr remain separate, both signer configuration keys are
+pinned, and replacement objects are disabled. Sealed memory input replaces the
+parent's blocking message-pipe write.
+Message checks preserve the exact approved stdin bytes, including the presence
+or absence of final newlines. A failed raw read or content check stops before
+signature verification. After worker dispatch or signing begins, failures report
+failed execution and unverified cleanup. Last-observation manifest fields in a
+failed result do not establish preserved postflight state or a successful receipt.
+
+External signer inspection, signed creation and signature verification remain
+direct subprocesses in this dormant adapter. Their complete confinement and
+descendant cleanup are still prerequisites for activation. The shared deadline
+does not bound a descendant holding an inherited output pipe. Synthetic worker
+results, parser fixtures and installed-Git message tests establish component
+behavior only. Native workflow, independent reviewer/artifact provenance, exact
+approval composition and measured model acceptance remain open.

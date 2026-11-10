@@ -1,9 +1,10 @@
+// SPDX-License-Identifier: Apache-2.0
 //! Linux temporary-index construction and externally pinned OpenPGP local commits.
 
 use std::collections::BTreeMap;
 use std::fmt;
 use std::fs;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::os::unix::ffi::OsStrExt as _;
 use std::os::unix::fs::MetadataExt as _;
 use std::path::{Path, PathBuf};
@@ -31,7 +32,6 @@ const MAX_POSTIMAGE_BYTES: usize = 64 * 1024 * 1024;
 )]
 const MAX_TOTAL_POSTIMAGE_BYTES: usize = 256 * 1024 * 1024;
 const MAX_TRUSTED_EXECUTABLE_BYTES: u64 = 64 * 1024 * 1024;
-const PROCESS_TIMEOUT: Duration = Duration::from_secs(30);
 const POLL_INTERVAL: Duration = Duration::from_millis(10);
 
 /// Stable Linux local-commit adapter failure class.
@@ -421,17 +421,24 @@ impl LinuxLocalCommitExecutor {
         {
             return failed_commit_result(&before, "linux.git.commit.plan_denied");
         }
-        let runner = GitRunner::new(self.collector.git(), &self.scope, Some(&self.signer));
-        let branch_before = runner
-            .run(
-                &["rev-parse", "--verify", &plan.task_branch],
-                &[],
-                cancellation,
-            )
-            .and_then(object_output);
-        if branch_before.as_deref() != Ok(plan.parent_object.as_str()) {
-            return failed_commit_result(&before, "linux.git.commit.branch_stale");
+        let Ok(mut io) = crate::repository_safety::CommitIoSession::new(&self.scope, plan) else {
+            return failed_commit_result(&before, "linux.git.commit.plan_denied");
+        };
+        if io
+            .branch_before(self.collector.git(), cancellation)
+            .is_err()
+        {
+            return uncertain_commit_result(&before, "linux.git.commit.branch_stale");
         }
+        // External signing remains dormant and requires a separate confined
+        // signer capability before product activation. Non-signing Git I/O
+        // always uses the closed offline worker, with no direct retry.
+        let runner = SignedGitRunner::new(
+            self.collector.git(),
+            &self.scope,
+            &self.signer,
+            io.deadline(),
+        );
         let signed = format!("-S{}", plan.signer.key_fingerprint);
         let mut environment = BTreeMap::new();
         environment.insert("GIT_AUTHOR_NAME".to_owned(), plan.author.name.clone());
@@ -457,45 +464,35 @@ impl LinuxLocalCommitExecutor {
                 cancellation,
                 &environment,
             )
-            .and_then(object_output);
+            .and_then(|captured| object_output(captured.stdout));
         let Ok(commit_object) = commit else {
-            return failed_commit_result(&before, "linux.git.commit.creation_failed");
+            return uncertain_commit_result(&before, "linux.git.commit.creation_failed");
         };
-        let raw = runner.run(&["cat-file", "commit", &commit_object], &[], cancellation);
-        let signature = runner.run(
+        let Ok(raw) = io.read_commit(self.collector.git(), &commit_object, cancellation) else {
+            return uncertain_commit_result(&before, "linux.git.commit.verification_failed");
+        };
+        if !verify_raw_commit(&raw, plan) {
+            return uncertain_commit_result(&before, "linux.git.commit.verification_failed");
+        }
+        let Ok(signature) = runner.run(
             &["verify-commit", "--raw", &commit_object],
             &[],
             cancellation,
-        );
-        let (Ok(raw), Ok(signature)) = (raw, signature) else {
-            return failed_commit_result(&before, "linux.git.commit.verification_failed");
+        ) else {
+            return uncertain_commit_result(&before, "linux.git.commit.verification_failed");
         };
-        if !verify_raw_commit(&raw, plan)
-            || !String::from_utf8_lossy(&signature)
-                .to_ascii_lowercase()
-                .contains(&format!("validsig {}", plan.signer.key_fingerprint))
-        {
-            return failed_commit_result(&before, "linux.git.commit.verification_failed");
+        if !verify_signature_status(&signature.stderr, &plan.signer.key_fingerprint) {
+            return uncertain_commit_result(&before, "linux.git.commit.verification_failed");
         }
-        if runner
-            .run(
-                &[
-                    "update-ref",
-                    "--no-deref",
-                    &plan.task_branch,
-                    &commit_object,
-                    &plan.parent_object,
-                ],
-                &[],
-                cancellation,
-            )
+        if io
+            .update_task_branch(self.collector.git(), cancellation)
             .is_err()
         {
-            return failed_commit_result(&before, "linux.git.commit.compare_and_swap_failed");
+            return uncertain_commit_result(&before, "linux.git.commit.compare_and_swap_failed");
         }
         let after = match self.collector.collect(&self.scope) {
             Ok(value) => value,
-            Err(_) => return failed_commit_result(&before, "linux.git.commit.postflight"),
+            Err(_) => return uncertain_commit_result(&before, "linux.git.commit.postflight"),
         };
         LocalCommitPlatformResult {
             outcome: OperationOutcome::Succeeded,
@@ -532,19 +529,26 @@ impl BoundedLocalCommitExecutor for LinuxLocalCommitExecutor {
     }
 }
 
-struct GitRunner<'a> {
+struct SignedGitRunner<'a> {
     git: &'a LinuxGitArtifact,
     scope: &'a LinuxRepositoryScope,
-    signer: Option<&'a LinuxOpenPgpSigner>,
+    signer: &'a LinuxOpenPgpSigner,
+    deadline: Instant,
 }
 
-impl<'a> GitRunner<'a> {
+impl<'a> SignedGitRunner<'a> {
     const fn new(
         git: &'a LinuxGitArtifact,
         scope: &'a LinuxRepositoryScope,
-        signer: Option<&'a LinuxOpenPgpSigner>,
+        signer: &'a LinuxOpenPgpSigner,
+        deadline: Instant,
     ) -> Self {
-        Self { git, scope, signer }
+        Self {
+            git,
+            scope,
+            signer,
+            deadline,
+        }
     }
 
     fn run(
@@ -552,7 +556,7 @@ impl<'a> GitRunner<'a> {
         arguments: &[&str],
         input: &[u8],
         cancellation: &CancellationToken,
-    ) -> Result<Vec<u8>, LinuxLocalCommitError> {
+    ) -> Result<CapturedProcess, LinuxLocalCommitError> {
         self.run_with_environment(arguments, input, cancellation, &BTreeMap::new())
     }
 
@@ -562,8 +566,12 @@ impl<'a> GitRunner<'a> {
         input: &[u8],
         cancellation: &CancellationToken,
         extra_environment: &BTreeMap<String, String>,
-    ) -> Result<Vec<u8>, LinuxLocalCommitError> {
-        if cancellation.is_cancelled() || input.len() > MAX_POSTIMAGE_BYTES {
+    ) -> Result<CapturedProcess, LinuxLocalCommitError> {
+        if cancellation.is_cancelled()
+            || Instant::now() >= self.deadline
+            || input.len() > MAX_POSTIMAGE_BYTES
+            || !matches!(arguments.first(), Some(&"commit-tree" | &"verify-commit"))
+        {
             return Err(error(LinuxLocalCommitErrorKind::ExecutionFailed));
         }
         let mut command = Command::new(self.git.launch_path());
@@ -589,34 +597,34 @@ impl<'a> GitRunner<'a> {
                 "--work-tree={}",
                 self.scope.checkout_root().display()
             ));
-        if let Some(signer) = self.signer {
-            command
-                .env("GNUPGHOME", &signer.keyring)
-                .arg("-c")
-                .arg(format!("gpg.program={}", signer.executable.display()))
-                .arg("-c")
-                .arg("gpg.format=openpgp");
-        }
+        command
+            .env("GNUPGHOME", &self.signer.keyring)
+            .arg("-c")
+            .arg(format!("gpg.program={}", self.signer.executable.display()))
+            .arg("-c")
+            .arg(format!(
+                "gpg.openpgp.program={}",
+                self.signer.executable.display()
+            ))
+            .arg("-c")
+            .arg("gpg.format=openpgp")
+            .arg("-c")
+            .arg("i18n.commitEncoding=UTF-8");
+        // A sealed descriptor cannot block the parent writing a full pipe
+        // before stdout/stderr readers and deadline observation have started.
+        let payload = crate::sandbox::sealed_payload("agentmage-commit-message", input)
+            .map_err(|_| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
         command
             .args(arguments)
-            .stdin(Stdio::piped())
+            .stdin(Stdio::from(fs::File::from(payload)))
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
         let mut child = command
             .spawn()
             .map_err(|_| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
-        let Some(mut stdin) = child.stdin.take() else {
-            return Err(error(LinuxLocalCommitErrorKind::ExecutionFailed));
-        };
-        stdin
-            .write_all(input)
-            .map_err(|_| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
-        drop(stdin);
-        let captured = wait_capture(&mut child, cancellation)?;
+        let captured = wait_capture(&mut child, cancellation, self.deadline)?;
         if captured.status.success() {
-            let mut combined = captured.stdout;
-            combined.extend_from_slice(&captured.stderr);
-            Ok(combined)
+            Ok(captured)
         } else {
             Err(error(LinuxLocalCommitErrorKind::ExecutionFailed))
         }
@@ -632,6 +640,7 @@ struct CapturedProcess {
 fn wait_capture(
     child: &mut Child,
     cancellation: &CancellationToken,
+    deadline: Instant,
 ) -> Result<CapturedProcess, LinuxLocalCommitError> {
     let stdout = child
         .stdout
@@ -643,7 +652,6 @@ fn wait_capture(
         .ok_or_else(|| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
     let stdout_reader = thread::spawn(move || read_bounded(stdout));
     let stderr_reader = thread::spawn(move || read_bounded(stderr));
-    let deadline = Instant::now() + PROCESS_TIMEOUT;
     let status = loop {
         match child.try_wait() {
             Ok(Some(status)) => break Some(status),
@@ -695,9 +703,10 @@ fn read_bounded(mut input: impl Read) -> Result<Vec<u8>, LinuxLocalCommitError> 
     }
 }
 
-pub(crate) fn hardened_git_prefix() -> [&'static str; 35] {
+pub(crate) fn hardened_git_prefix() -> [&'static str; 36] {
     [
         "--no-pager",
+        "--no-replace-objects",
         "-c",
         "core.hooksPath=/dev/null",
         "-c",
@@ -738,12 +747,14 @@ pub(crate) fn hardened_git_prefix() -> [&'static str; 35] {
 fn object_output(output: Vec<u8>) -> Result<String, LinuxLocalCommitError> {
     let value = String::from_utf8(output)
         .map_err(|_| error(LinuxLocalCommitErrorKind::VerificationFailed))?
-        .trim()
+        .strip_suffix('\n')
+        .ok_or_else(|| error(LinuxLocalCommitErrorKind::VerificationFailed))?
         .to_owned();
     if matches!(value.len(), 40 | 64)
         && value
             .bytes()
             .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+        && value.bytes().any(|byte| byte != b'0')
     {
         Ok(value)
     } else {
@@ -758,11 +769,10 @@ fn verify_raw_commit(
     let Some(separator) = raw.windows(2).position(|window| window == b"\n\n") else {
         return false;
     };
-    let headers = String::from_utf8_lossy(&raw[..separator]);
-    let mut message = &raw[separator + 2..];
-    if message.ends_with(b"\n") {
-        message = &message[..message.len() - 1];
-    }
+    let Ok(headers) = std::str::from_utf8(&raw[..separator]) else {
+        return false;
+    };
+    let message = &raw[separator + 2..];
     let timezone = git_timezone(plan.timezone_offset_minutes);
     let author = format!(
         "author {} <{}> {} {timezone}",
@@ -772,16 +782,54 @@ fn verify_raw_commit(
         "committer {} <{}> {} {timezone}",
         plan.committer.name, plan.committer.email, plan.timestamp_epoch_seconds
     );
-    headers
-        .lines()
-        .any(|line| line == format!("tree {}", plan.candidate_tree))
-        && headers
-            .lines()
-            .any(|line| line == format!("parent {}", plan.parent_object))
-        && headers.lines().any(|line| line == author)
-        && headers.lines().any(|line| line == committer)
-        && message == plan.message.as_bytes()
-        && headers.lines().any(|line| line.starts_with("gpgsig "))
+    // Exact singleton headers: finding one approved parent among additional
+    // parents, identities or trees cannot verify the planned commit.
+    let mut lines = headers.split('\n');
+    if lines.next() != Some(format!("tree {}", plan.candidate_tree).as_str())
+        || lines.next() != Some(format!("parent {}", plan.parent_object).as_str())
+        || lines.next() != Some(author.as_str())
+        || lines.next() != Some(committer.as_str())
+        || lines.next() != Some("gpgsig -----BEGIN PGP SIGNATURE-----")
+        || message != plan.message.as_bytes()
+    {
+        return false;
+    }
+    let signature: Vec<_> = lines.collect();
+    !signature.is_empty()
+        && signature.iter().all(|line| line.starts_with(' '))
+        && signature.last() == Some(&" -----END PGP SIGNATURE-----")
+}
+
+fn verify_signature_status(status: &[u8], fingerprint: &str) -> bool {
+    let Ok(status) = std::str::from_utf8(status) else {
+        return false;
+    };
+    if !valid_fingerprint(fingerprint) || status.contains('\0') {
+        return false;
+    }
+    let mut valid = 0;
+    for line in status.lines() {
+        let Some(record) = line.strip_prefix("[GNUPG:] ") else {
+            continue;
+        };
+        let fields: Vec<_> = record.split_ascii_whitespace().collect();
+        match fields.first().copied() {
+            Some("VALIDSIG") => {
+                if !(10..=11).contains(&fields.len())
+                    || !fields[1].eq_ignore_ascii_case(fingerprint)
+                {
+                    return false;
+                }
+                valid += 1;
+            }
+            Some(
+                "BADSIG" | "ERRSIG" | "REVKEYSIG" | "EXPKEYSIG" | "EXPSIG" | "NO_PUBKEY" | "NODATA"
+                | "FAILURE" | "ERROR" | "KEYREVOKED" | "KEYEXPIRED" | "SIGEXPIRED",
+            ) => return false,
+            _ => (),
+        }
+    }
+    valid == 1
 }
 
 fn format_git_date(epoch_seconds: i64, offset_minutes: i16) -> String {
@@ -908,9 +956,24 @@ fn failed_commit_result(
         filters_executed: false,
         repository_selected_program_used: false,
         network_used: false,
-        cleanup_verified: true,
+        cleanup_verified: false,
         platform_code: code.to_owned(),
     }
+}
+
+// After worker dispatch or signing starts, cleanup may be uncertain and objects
+// or a ref may already have changed. The result
+// schema requires manifest fields: these retain the last observation only,
+// never a postflight observation. Failed outcome + unverified cleanup prevent
+// reconciliation from treating those placeholders as preserved current state.
+fn uncertain_commit_result(
+    before: &agentmage_kernel_engine::repository_safety::RepositoryPreservationManifest,
+    code: &str,
+) -> LocalCommitPlatformResult {
+    let mut result = failed_commit_result(before, code);
+    result.outcome = OperationOutcome::Failed;
+    result.cleanup_verified = false;
+    result
 }
 
 fn hash(bytes: &[u8]) -> String {
@@ -932,7 +995,7 @@ fn error(kind: LinuxLocalCommitErrorKind) -> LinuxLocalCommitError {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use std::os::unix::fs::PermissionsExt as _;
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -944,6 +1007,302 @@ mod tests {
     };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
+
+    // Inert input for parser and supervised-result tests. This is neither a
+    // signer inspection nor a native execution/review/approval capability.
+    pub(crate) fn synthetic_plan(repository_sha256: &str) -> LocalCommitPlan {
+        let h = hash(b"synthetic local commit");
+        let identity = CommitIdentity {
+            name: "Fixture User".into(),
+            email: "fixture@example.test".into(),
+        };
+        let signer = PinnedCommitSigner::seal(PinnedCommitSigner {
+            schema_version: 0,
+            signer_id: "signer-synthetic-0001".into(),
+            kind: CommitSignerKind::OpenPgp,
+            source: SignerInspectionSource::ExternalKeyring,
+            signer_path_sha256: h.clone(),
+            signer_executable_sha256: h.clone(),
+            key_fingerprint: "a".repeat(40),
+            public_key_sha256: h.clone(),
+            inspection_evidence_sha256: h.clone(),
+            repository_selected_program_used: false,
+            unsigned_fallback: false,
+            signer_sha256: String::new(),
+        })
+        .unwrap();
+        let message = "Approved fixture change".to_owned();
+        let mut plan = LocalCommitPlan {
+            schema_version: 1,
+            commit_transaction_id: "commit-synthetic-0001".into(),
+            repository_sha256: repository_sha256.into(),
+            review_packet_sha256: h.clone(),
+            candidate_tree_receipt_sha256: h.clone(),
+            commit_group_sha256: h.clone(),
+            parent_object: "b".repeat(40),
+            candidate_tree: "c".repeat(40),
+            message_sha256: hash(message.as_bytes()),
+            message,
+            author: identity.clone(),
+            committer: identity.clone(),
+            identity_sha256: hash(&serde_json::to_vec(&(identity.clone(), identity)).unwrap()),
+            timestamp_epoch_seconds: 1_787_000_000,
+            timezone_offset_minutes: -300,
+            signer,
+            task_branch: "refs/heads/agentmage/tasks/fixture".into(),
+            preservation_manifest_sha256: h.clone(),
+            user_index_sha256: h,
+            automatic_commit: false,
+            push_authority: false,
+            merge_authority: false,
+            release_authority: false,
+            history_rewrite_authority: false,
+            reset_authority: false,
+            discard_authority: false,
+            force_authority: false,
+            network_authority: false,
+            plan_sha256: "0".repeat(64),
+        };
+        plan.plan_sha256 = hash(&serde_json::to_vec(&plan).unwrap());
+        agentmage_kernel_engine::local_commit::verify_local_commit_plan(&plan).unwrap();
+        plan
+    }
+
+    fn raw_commit(plan: &LocalCommitPlan) -> Vec<u8> {
+        format!(
+            "tree {}\nparent {}\nauthor {} <{}> {} {}\ncommitter {} <{}> {} {}\ngpgsig -----BEGIN PGP SIGNATURE-----\n \n synthetic armor\n -----END PGP SIGNATURE-----\n\n{}",
+            plan.candidate_tree, plan.parent_object,
+            plan.author.name, plan.author.email, plan.timestamp_epoch_seconds,
+            git_timezone(plan.timezone_offset_minutes),
+            plan.committer.name, plan.committer.email, plan.timestamp_epoch_seconds,
+            git_timezone(plan.timezone_offset_minutes), plan.message,
+        ).into_bytes()
+    }
+
+    #[test]
+    fn local_commit_verifier_requires_exact_singleton_headers_and_message_bytes() {
+        let mut plan = synthetic_plan(&hash(b"repository"));
+        let raw = String::from_utf8(raw_commit(&plan)).unwrap();
+        assert!(verify_raw_commit(raw.as_bytes(), &plan));
+        for header in [
+            format!("parent {}", "d".repeat(40)),
+            format!("tree {}", "d".repeat(40)),
+            format!(
+                "author Other <other@example.test> {} -0500",
+                plan.timestamp_epoch_seconds
+            ),
+            "encoding ISO-8859-1".into(),
+        ] {
+            let duplicate = raw.replacen("\ngpgsig ", &format!("\n{header}\ngpgsig "), 1);
+            assert!(!verify_raw_commit(duplicate.as_bytes(), &plan), "{header}");
+        }
+        for changed in [
+            raw.replace("synthetic armor", "synthetic armor\nparent forged"),
+            raw.replace(" -----END PGP SIGNATURE-----", " missing end"),
+            format!("{raw}\n"),
+            raw[..raw.len() - 1].into(),
+            raw.replace("Fixture User", "Other User"),
+        ] {
+            assert!(!verify_raw_commit(changed.as_bytes(), &plan));
+        }
+        let mut invalid_utf8 = raw.as_bytes().to_vec();
+        invalid_utf8[0] = 255;
+        assert!(!verify_raw_commit(&invalid_utf8, &plan));
+        for message in ["Approved fixture change\n", "First line\n\nSecond line\n\n"] {
+            plan.message = message.into();
+            assert!(verify_raw_commit(&raw_commit(&plan), &plan));
+        }
+    }
+
+    #[test]
+    fn local_commit_signature_verifier_requires_one_exact_status_fingerprint() {
+        let fingerprint = "a".repeat(40);
+        let status = format!(
+            "[GNUPG:] NEWSIG\n[GNUPG:] VALIDSIG {fingerprint} 2026-11-10 1794297600 0 4 0 22 8 00 {fingerprint}\n"
+        );
+        assert!(verify_signature_status(status.as_bytes(), &fingerprint));
+        assert!(verify_signature_status(
+            status.to_ascii_uppercase().as_bytes(),
+            &fingerprint
+        ));
+        for changed in [
+            status.replace(
+                &format!("VALIDSIG {fingerprint}"),
+                &format!("VALIDSIG {fingerprint}a"),
+            ),
+            status.replace(
+                &format!("VALIDSIG {fingerprint}"),
+                &format!("VALIDSIG {}", "b".repeat(40)),
+            ),
+            status.replace("[GNUPG:] VALIDSIG", "warning: VALIDSIG"),
+            status.replace("[GNUPG:] VALIDSIG", "[GNUPG:] GOODSIG"),
+            format!("{status}{status}"),
+            format!("[GNUPG:] VALIDSIG {fingerprint}\n"),
+            format!("{status}\0"),
+        ] {
+            assert!(
+                !verify_signature_status(changed.as_bytes(), &fingerprint),
+                "{changed}"
+            );
+        }
+        for failure in [
+            "BADSIG",
+            "ERRSIG",
+            "REVKEYSIG",
+            "EXPKEYSIG",
+            "EXPSIG",
+            "NO_PUBKEY",
+            "NODATA",
+            "FAILURE",
+            "ERROR",
+            "KEYREVOKED",
+            "KEYEXPIRED",
+            "SIGEXPIRED",
+        ] {
+            assert!(!verify_signature_status(
+                format!("{status}[GNUPG:] {failure} detail\n").as_bytes(),
+                &fingerprint
+            ));
+        }
+        assert!(!verify_signature_status(&[255], &fingerprint));
+    }
+
+    #[test]
+    fn local_commit_object_output_refuses_extra_text_whitespace_and_null_object() {
+        for size in [40, 64] {
+            let object = "a".repeat(size);
+            assert_eq!(
+                object_output(format!("{object}\n").into_bytes()).unwrap(),
+                object
+            );
+            for invalid in [
+                format!(" {object}\n"),
+                format!("{object}\n\n"),
+                object.clone(),
+                format!("{object}\nwarning"),
+                format!("{}\n", "0".repeat(size)),
+                format!("{}\n", object.to_ascii_uppercase()),
+            ] {
+                assert!(object_output(invalid.into_bytes()).is_err());
+            }
+        }
+    }
+
+    #[test]
+    fn local_commit_raw_verifier_matches_real_git_message_and_identity_encoding() {
+        // Installed Git on an owned synthetic fixture, not product artifact
+        // admission or cryptographic signing. Armor is deliberately synthetic.
+        let fixture = Fixture::new();
+        let mut plan = synthetic_plan(&hash(b"repository"));
+        plan.parent_object =
+            object_output(run_fixture(&fixture.checkout, &["rev-parse", "HEAD"])).unwrap();
+        plan.candidate_tree = object_output(run_fixture(
+            &fixture.checkout,
+            &["rev-parse", "HEAD^{tree}"],
+        ))
+        .unwrap();
+        for message in ["One line", "One line\n", "First\n\nSecond\n\n"] {
+            plan.message = message.into();
+            let payload =
+                crate::sandbox::sealed_payload("fixture-message", message.as_bytes()).unwrap();
+            let date = format_git_date(plan.timestamp_epoch_seconds, plan.timezone_offset_minutes);
+            let output = Command::new("/usr/bin/git")
+                .env_clear()
+                .env("HOME", "/nonexistent")
+                .env("GIT_CONFIG_NOSYSTEM", "1")
+                .env("GIT_CONFIG_GLOBAL", "/dev/null")
+                .env("GIT_AUTHOR_NAME", &plan.author.name)
+                .env("GIT_AUTHOR_EMAIL", &plan.author.email)
+                .env("GIT_COMMITTER_NAME", &plan.committer.name)
+                .env("GIT_COMMITTER_EMAIL", &plan.committer.email)
+                .env("GIT_AUTHOR_DATE", &date)
+                .env("GIT_COMMITTER_DATE", &date)
+                .args([
+                    "-c",
+                    "commit.gpgSign=false",
+                    "-c",
+                    "i18n.commitEncoding=UTF-8",
+                    "commit-tree",
+                    &plan.candidate_tree,
+                    "-p",
+                    &plan.parent_object,
+                ])
+                .current_dir(&fixture.checkout)
+                .stdin(Stdio::from(fs::File::from(payload)))
+                .output()
+                .unwrap();
+            assert!(output.status.success());
+            let object = object_output(output.stdout).unwrap();
+            let raw = run_fixture(&fixture.checkout, &["cat-file", "commit", &object]);
+            let separator = raw.windows(2).position(|w| w == b"\n\n").unwrap();
+            let mut with_armor = raw[..separator].to_vec();
+            with_armor.extend_from_slice(b"\ngpgsig -----BEGIN PGP SIGNATURE-----\n \n synthetic armor\n -----END PGP SIGNATURE-----");
+            with_armor.extend_from_slice(&raw[separator..]);
+            assert!(verify_raw_commit(&with_armor, &plan), "{message:?}");
+        }
+    }
+
+    #[test]
+    fn local_commit_uncertain_effect_cannot_reconcile_as_a_verified_preservation_receipt() {
+        use agentmage_kernel_engine::repository_safety::RepositoryPreservationManifest;
+        let before: RepositoryPreservationManifest = serde_json::from_str(include_str!(
+            "../../../schemas/runtime/examples/repository-preservation-manifest.valid.json"
+        ))
+        .unwrap();
+        let before = RepositoryPreservationManifest::seal(before).unwrap();
+        let mut plan = synthetic_plan(&before.repository_sha256);
+        plan.preservation_manifest_sha256 = before.manifest_sha256.clone();
+        plan.user_index_sha256 = before.index_sha256.clone();
+        plan.plan_sha256 = "0".repeat(64);
+        plan.plan_sha256 = hash(&serde_json::to_vec(&plan).unwrap());
+        let approval = record_manual_commit_approval(
+            &plan,
+            ManualCommitApprovalDecision {
+                approval_id: "approval-uncertain-0001".into(),
+                approval_channel_sha256: hash(b"synthetic approval channel"),
+                approved_at_epoch_ms: 10_000,
+                expires_at_epoch_ms: 20_000,
+                human_confirmed: true,
+            },
+        )
+        .unwrap();
+        let mut result = uncertain_commit_result(&before, "linux.git.commit.postflight");
+        assert_eq!(result.outcome, OperationOutcome::Failed);
+        assert!(!result.cleanup_verified);
+        // Supply otherwise passing synthetic observations so rejection below
+        // is specifically the failed effect / unknown cleanup boundary.
+        let object = "d".repeat(40);
+        result.commit_object = Some(object.clone());
+        result.observed_parent = Some(plan.parent_object.clone());
+        result.observed_tree = Some(plan.candidate_tree.clone());
+        result.observed_message_sha256 = Some(plan.message_sha256.clone());
+        result.observed_identity_sha256 = Some(plan.identity_sha256.clone());
+        result.observed_signer_fingerprint = Some(plan.signer.key_fingerprint.clone());
+        result.signature_verified = true;
+        result.task_branch_before = Some(plan.parent_object.clone());
+        result.task_branch_after = Some(object);
+        let reconcile = |r| {
+            reconcile_local_commit(
+                &plan,
+                &approval,
+                r,
+                "authority-uncertain-0001",
+                "attempt-uncertain-0001",
+                15_000,
+            )
+        };
+        assert!(reconcile(result.clone()).is_err());
+        let mut success_only = result.clone();
+        success_only.outcome = OperationOutcome::Succeeded;
+        assert!(reconcile(success_only).is_err());
+        result.cleanup_verified = true;
+        assert!(reconcile(result.clone()).is_err());
+        result.outcome = OperationOutcome::Succeeded;
+        assert!(
+            reconcile(result).is_ok(),
+            "otherwise passing control must reconcile"
+        );
+    }
 
     struct Fixture {
         root: PathBuf,

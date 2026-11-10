@@ -366,3 +366,7 @@ mod candidate;
 pub(crate) use candidate::CandidateSession;
 
 pub(crate) use candidate::index_path as candidate_index_path;
+
+#[path = "repository_commit_io.rs"]
+mod commit_io;
+pub(crate) use commit_io::CommitIoSession;

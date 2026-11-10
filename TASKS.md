@@ -2,6 +2,24 @@
 
 ## Active queue: local agent mission
 
+The retained [candidate confinement review](docs/reviews/de4f3fd311de-local-coding-confined-candidate.txt)
+returns **Verdict: PASS** for exact commit
+`de4f3fd311de56bd2b1adc86f508b7ce5959990f`, with no high or medium finding.
+Low L1 (retained directory after a failed post-claim constructor) and L2
+(descriptor binding during child-directory capture) remain same-row backlog.
+Neither parent row closes.
+
+The [non-signing commit I/O increment](docs/evidence/t306-commit-io-2026-11-10.md)
+routes branch lookup, raw commit reads and task-branch compare-and-swap through
+the offline supervisor, with exact ordered plan bindings and a shared deadline.
+Raw commit and signature checks reject duplicate headers and fingerprint-prefix
+matches. The complete affected gate remains **FAIL**: 1,346 Rust passes, the
+exact same 72 inherited failures and 64 existing ignores across 26 unfiltered
+targets. All eleven new methods, four controls, formatting and Clippy pass;
+six source hashes remain fixed. Independent core review is required.
+External signing confinement, native/model measurement and separately approved
+commit/push remain open. T-303/T-306 remain open; no row or sub-row changes.
+
 The [dormant candidate confinement increment](docs/evidence/t306-confined-candidate-2026-11-10.md)
 replaces the temporary-index builder's direct Git process path with the offline
 closed supervisor, an exclusive private index directory, sealed postimages and
