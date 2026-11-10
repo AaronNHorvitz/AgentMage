@@ -1652,6 +1652,133 @@ fn runtime_create(
 }
 
 #[test]
+fn creation_review_retains_original_creations_and_retries_with_exact_modes() {
+    let started = Instant::now();
+    let f = Fixture::new();
+    let mut owner = f.owner();
+    f.edit(&mut owner, "one.py", "existing edited\n");
+    let lease = runtime_lease(owner);
+    runtime_create(
+        &f,
+        &lease,
+        &[
+            ("new.py", "new first\n", 0o640),
+            ("other.py", "other\n", 0o700),
+        ],
+        true,
+        None,
+    )
+    .unwrap();
+    runtime_edit_at(&f, &lease, "new.py", "new retry\n", true);
+    let mut owner = recover_lease(lease);
+    f.edit(&mut owner, "new.py", "new final\n");
+    let projection = owner
+        .capture_applied_write_review(history_purposes(3))
+        .unwrap();
+    let value = serde_json::to_value(&projection).unwrap();
+    let history = value["write_history"].as_array().unwrap();
+    assert_eq!(history.len(), 4);
+    assert!(value.get("write_approval_receipt_sha256").is_none());
+    assert_eq!(history[1]["files"].as_array().unwrap().len(), 2);
+    assert_eq!(projection.files()[0].path, "new.py");
+    assert_eq!(projection.files()[0].preimage_sha256, "0".repeat(64));
+    assert_eq!(projection.files()[0].postimage_sha256, hash(b"new final\n"));
+    assert!(
+        projection.files()[0]
+            .complete_diff
+            .contains("-\"\"\n+\"new final\\n\"")
+    );
+    assert_eq!(projection.files()[1].preimage_sha256, hash(b"first\n"));
+    assert_eq!(projection.files()[2].preimage_sha256, "0".repeat(64));
+    assert_eq!(
+        history
+            .iter()
+            .map(|t| t["write_approval_receipt_sha256"].as_str().unwrap())
+            .collect::<BTreeSet<_>>()
+            .len(),
+        4
+    );
+    fs::set_permissions(
+        f.0.join("owned/worktree/other.py"),
+        fs::Permissions::from_mode(0o600),
+    )
+    .unwrap();
+    assert_eq!(
+        owner
+            .capture_applied_write_review(history_purposes(3))
+            .unwrap_err()
+            .code(),
+        "code.commit.write-provenance"
+    );
+    fs::set_permissions(
+        f.0.join("owned/worktree/other.py"),
+        fs::Permissions::from_mode(0o700),
+    )
+    .unwrap();
+    assert_eq!(
+        owner
+            .capture_applied_write_review(history_purposes(3))
+            .unwrap(),
+        projection
+    );
+    assert!(!f.0.join("original/new.py").exists());
+    assert!(!f.0.join("original/other.py").exists());
+    assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+    f.assert_preserved();
+    println!(
+        "native_creation_review_component_us={}",
+        started.elapsed().as_micros()
+    );
+}
+
+#[test]
+fn creation_review_requires_original_proof_and_refuses_incomplete_or_unpublished_history() {
+    for publish in [false, true] {
+        let f = Fixture::new();
+        let lease = runtime_lease(f.owner());
+        runtime_create(&f, &lease, &[("new.py", "created\n", 0o600)], publish, None).unwrap();
+        let mut owner = recover_lease(lease);
+        let purposes = || {
+            vec![
+                agentmage_kernel_engine::review_packet::ChangePurposeAssignment {
+                    operation_id: "create-0".into(),
+                    purpose: agentmage_kernel_engine::review_packet::CommitChangePurpose::Behavior,
+                },
+            ]
+        };
+        if publish {
+            let first = owner.capture_applied_write_review(purposes()).unwrap();
+            assert_eq!(first.files()[0].preimage_sha256, "0".repeat(64));
+            owner.applied_write = None;
+        }
+        assert!(owner.capture_applied_write_review(purposes()).is_err());
+        f.edit(&mut owner, "new.py", "later edit\n");
+        let purposes = vec![
+            agentmage_kernel_engine::review_packet::ChangePurposeAssignment {
+                operation_id: "edit-0".into(),
+                purpose: agentmage_kernel_engine::review_packet::CommitChangePurpose::Behavior,
+            },
+        ];
+        // A later ordinary edit cannot invent the missing absent-before proof.
+        if publish {
+            assert!(owner.capture_applied_write_review(purposes).is_err());
+        } else {
+            // Unpublished native creation has no owner lineage; only this later
+            // existing-file edit is reviewable, never an absent-before creation.
+            let later = owner.capture_applied_write_review(purposes).unwrap();
+            assert_eq!(later.files()[0].preimage_sha256, hash(b"created\n"));
+            assert!(
+                owner.created.as_ref().unwrap().edits["new.py"]
+                    .created_mode
+                    .is_none()
+            );
+        }
+        assert!(!f.0.join("original/new.py").exists());
+        f.assert_preserved();
+    }
+}
+
+#[test]
 fn runtime_new_file_transfer_keeps_native_lineage_across_edits_and_fresh_original_approval() {
     let start = Instant::now();
     let f = Fixture::new();

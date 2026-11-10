@@ -235,8 +235,8 @@ Serialized records and filesystem paths cannot construct or recover the view.
 After explicit consent to inspect both complete checkouts and their Git metadata
 and run offline Git reads, the same live owner's `plan_reviewed_candidate_tree()`
 library method can check an existing typed `LocalReviewPacket`. It requires the
-exact original repository and native-created base, every retained existing-file
-edit's first preimage and final postimage, and the current sealed worktree
+exact original repository and native-created base, every retained edit or
+creation's first preimage and final postimage, and the current sealed worktree
 observation. The validation projection must equal the owner's original final
 full-pass receipt; failed attempts and retry links remain retained and checked.
 Visible medium, high and critical findings refuse planning.
@@ -246,8 +246,8 @@ inventory must show the same task branch and base, preservation manifest,
 linked metadata identity and task inventory on both sides of planning. The
 method checks held roots and sealed source binding again before returning the
 kernel's inert `CandidateTreePlan`. Modes come from the observed owner's
-executable bit; private file permissions do not become Git modes. New-file
-lineage is refused until its distinct transaction proof is connected.
+executable bit; private file permissions do not become Git modes. Created files
+also require their exact original approved permissions to remain unchanged.
 
 This is internal library composition, with no HTTP or terminal command yet.
 The method does not authenticate caller-supplied reviewer output or artifact
@@ -265,8 +265,8 @@ resealing a packet with other write receipt hashes does not satisfy provenance.
 Calling this method requires source-read consent and verifies current bytes and
 all held roots. It issues no grant and runs no Git or model request.
 
-Both prepared edits and native runtime writes can retain this proof. The kernel's
-opaque write authorization borrows the original approval only after its grant
+Prepared edits, native runtime writes and native text-source creation can retain
+this proof. The kernel's opaque write authorization borrows the original approval only after its grant
 is consumed and the required checkpoint succeeds. The runtime writer takes the
 approval from that authorization, performs the existing native transaction and
 retains proof only after terminal publication and exact completion checks.
@@ -274,9 +274,9 @@ Caller receipt arguments cannot replace the original approval.
 
 The same owner retains up to sixty-four original transactions and eight MiB of
 complete diff text, within the existing sixteen-path limit. Each retains its
-original shadow change set, approval binding and checked application-chain
-digest. `capture_applied_write_review()` composes first preimages and final
-postimages only when every per-path step connects and the complete current
+original shadow change set or creation plan, approval binding and checked
+application-chain digest. `capture_applied_write_review()` composes first
+preimages and final postimages only when every per-path step connects and the complete current
 lineage matches fresh source bytes. For multiple transactions, purpose identities
 are `history-0`, `history-1`, and so on in sorted path order. A single transaction
 keeps its original operation identities.
@@ -289,14 +289,32 @@ Each original projection retains those original receipt digests separately.
 Single-transaction projections keep the existing serialized field shape.
 
 Missing or reordered links, duplicate transactions, nested histories, inconsistent
-breadth or file classification, net-zero paths and new-file lineage refuse.
+breadth or file classification, and net-zero paths refuse.
 Exceeding a retention bound loses the review proof rather than dropping earlier
 transactions. Dispatch removes previous proof from the owner; only a checked
 successful write (and terminal publication for runtime writes) returns it with
 the next original proof. Uncertain, failed or unpublished dispatch cannot return
-history. Creation, original-apply dispatch and poisoned recovery retire it.
+history. Original-apply dispatch and poisoned recovery retire it.
 Declining a preview preserves historical proof. Idle handoff and return keep
 the same live proof. Saved JSON, copied receipt chains and a reopened store cannot
 restore it. Old version 1 packets must be rebuilt from live proof.
 This establishes original write provenance, not independent review or permission
 to construct a tree, commit or push.
+
+Creation proof comes from the original opaque filesystem authorization after
+its grant is consumed and checkpointed. The same native driver retains the
+original creation plan and approval, then checks all committed destinations,
+postimages, modes and receipt identities after publication. Nonempty UTF-8
+source-code creation can participate in review; other already supported native
+creations keep their transfer lineage but retire review history. A creation
+projection has a zero preimage digest, meaning absent rather than an existing
+empty file. Its complete diff shows the entire escaped postimage. Original plan
+and operation digests bind the approved creation mode and classification.
+
+A created source may be edited and retried through the same original history.
+Complete current lineage, fresh bytes and exact created modes must still match.
+Missing original creation proof cannot be replaced by a later ordinary edit,
+a caller-supplied receipt or a saved record. A packet or candidate plan remains
+inert: independent reviewer/artifact provenance and separately approved native
+Git execution are still required. No coding score or native Git workflow is
+established by component tests.

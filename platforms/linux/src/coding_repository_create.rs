@@ -2,13 +2,14 @@
 //! Creation lineage retained only across a verified native transaction and publication.
 
 use super::*;
+use crate::coding_workspace::LinuxCodingAppliedWrite;
 use crate::{LinuxControlledFilesystemDriver, LinuxFilesystemDriverLimits};
 use agentmage_kernel_engine::filesystem_control::{
     ControlledFilesystemDriver, FilesystemApplyAuthorization, FilesystemApplyReport,
-    FilesystemDriverError, FilesystemOperationKind, FilesystemOperationObservation,
-    FilesystemOperationStatus, FilesystemPlan, FilesystemRestoreAuthorization,
-    FilesystemRestoreReport, FilesystemTransactionOutcome, FilesystemTransactionResult,
-    verify_filesystem_receipts,
+    FilesystemApprovalReceipt, FilesystemDriverError, FilesystemOperationKind,
+    FilesystemOperationObservation, FilesystemOperationStatus, FilesystemPlan,
+    FilesystemRestoreAuthorization, FilesystemRestoreReport, FilesystemTransactionOutcome,
+    FilesystemTransactionResult, verify_filesystem_receipts,
 };
 use std::sync::MutexGuard;
 
@@ -17,6 +18,9 @@ struct CreationAttempt {
     consumed_grant: String,
     // operation -> (path, postimage, mode)
     operations: BTreeMap<String, (String, String, u32)>,
+    plan: FilesystemPlan,
+    approval: FilesystemApprovalReceipt,
+    previous_write: Option<LinuxCodingAppliedWrite>,
 }
 
 /// Native creation driver with the same live owner as structured edits. It can
@@ -122,6 +126,19 @@ impl<'a> LinuxCodingRuntimeCreateDriver<'a> {
             return Err(err("code.runtime.create-unverified"));
         }
         owner.verify_created()?;
+        let proof = LinuxCodingAppliedWrite::from_native_creation(
+            owner
+                .created
+                .as_ref()
+                .ok_or(err("code.runtime.worktree-required"))?
+                .held
+                .root_path_sha256(),
+            &attempt.transaction,
+            attempt.plan,
+            &attempt.approval,
+            result,
+        )
+        .map_err(|_| err("code.runtime.create-unverified"))?;
         let created = owner
             .created
             .as_mut()
@@ -136,6 +153,11 @@ impl<'a> LinuxCodingRuntimeCreateDriver<'a> {
                 },
             );
         }
+        owner.applied_write = match (attempt.previous_write, proof) {
+            (Some(previous), Some(proof)) => previous.append(proof),
+            (None, Some(proof)) => Some(proof),
+            (_, None) => None,
+        };
         self.applied = false;
         Ok(())
     }
@@ -195,9 +217,12 @@ impl ControlledFilesystemDriver for LinuxCodingRuntimeCreateDriver<'_> {
                     transaction: authorization.transaction_id().to_owned(),
                     consumed_grant: authorization.consumed_grant_sha256().to_owned(),
                     operations,
+                    plan: authorization.plan().clone(),
+                    approval: authorization.approval().clone(),
+                    previous_write: None,
                 })
             })();
-            let attempt = match candidate {
+            let mut attempt = match candidate {
                 Ok(a) => a,
                 Err(e) => {
                     return FilesystemApplyReport {
@@ -212,7 +237,9 @@ impl ControlledFilesystemDriver for LinuxCodingRuntimeCreateDriver<'_> {
             owner.command = None;
             owner.edit = None;
             owner.apply = None;
-            owner.applied_write = None;
+            // Remove original history before native dispatch; only checked
+            // completion after publication can restore it with this creation.
+            attempt.previous_write = owner.applied_write.take();
             // No prior path is eligible here, but do not retain it if a future
             // caller changes validation. Publication is the only insertion site.
             for (path, _, _) in attempt.operations.values() {

@@ -1,0 +1,120 @@
+Commit: bac3866b9c48511fef1d51e3a2c8e86784faf718
+Scope: local-coding-write-history
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort), read-only, pinned checkout
+`/lane/review-checkout`, `CARGO_TARGET_DIR=/lane/state/review-target`. Rows: T-303 / T-306,
+non-closing increment; both parents stay OPEN. No repository file was modified.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `bac3866b9c48511fef1d51e3a2c8e86784faf718`, clean status, and a
+  20-file diff against immutable base `b1b4454397c73f019be9c3655f51c5b65cab15f2`. Read IP-POLICY.md,
+  Decision 0185, the TASKS.md head diff, the evidence note, the guide diff and all bundle runners
+  (README.md, run.py, focused.py, check.py, parse_gate.py, light.py, contract.mjs) before running them.
+- Read in full: `kernel/engine/src/review_packet_history.rs`, the `review_packet.rs` diff,
+  `coding_workspace_write_proof.rs` (`append`, multi-write `project`), the dispatch and completion
+  paths in `coding_repository_edit.rs` and `coding_repository_runtime.rs`,
+  `capture_applied_write_review` and `plan_reviewed_candidate_tree_with`, the schema, the Node
+  validator diff, the fast-gate reservation change, and every new or changed test.
+- Worked through these adversarial cases by hand against the code:
+  - lost history followed by a later write on the same path or another path;
+  - a pending manual edit racing a runtime write;
+  - unpublished or uncommitted runtime completion;
+  - a second `apply` before `complete`;
+  - root mismatch, a bound overflow on `append`, and a net-zero cycle;
+  - a duplicate transaction, nesting, purpose or scope drift;
+  - restoring a saved packet or JSON. `ReviewableChangeSet` is `Serialize` only and has no
+    `Deserialize`, so this is not possible.
+  - forging a composite approval. The verifier recomposes from `write_history` and requires full
+    equality; the planner compares the packet with a fresh live capture.
+
+## Commands and results
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-write-history/review-inputs.sha256`: the manifest
+   itself hashes to `9830ece6…94d` as stated. All bundle entries match, but the three
+   `/lane/state/tooling/node-v24.15.0-linux-x64/{bin/node,LICENSE}` and `node-provenance.json`
+   entries are **missing in the reviewer sandbox**. `/lane/state/tooling` does not exist, and no
+   `node` binary exists anywhere on this host image. Per the rules, nothing was downloaded.
+2. `run.py /lane/state/tmp/review-write-history-bac3866b9c48`: exit 1 (expected 1). The source
+   freeze is unchanged; total time 608.32 s including reservations; raw log SHA-256
+   `20e6ff28ea95d8709b8c2c8eeab9912aeadb79e535951a8868447b220a1472ca`; `FAST GATE: FAIL`.
+   - Step exits: diff-check 0, untracked lint 0, review lint 0.
+   - **markdownlint 127 and `node --test` 127, because node is missing.**
+   - Python lint 0; Python unittest 0 (28 tests); `cargo fmt` 0; clippy `-D warnings` 0 (47.68 s).
+   - `cargo test` 101 (381.86 s). Failure modules: linux_coding_runtime 42, repository_safety 13,
+     linux_read 10, command_runner 2, local_commit 2, secret_service 2, linux_repository_map 1.
+     These are the inherited set.
+3. `check.py <out>`: **exit 1, only at the exit-vector assertion (line 25)** because of the two Node
+   127 exits. All earlier assertions passed, including the exact per-target comparison with the
+   hash-pinned baseline (46 targets, identical failure and ignore identities, +3 kernel/+4 Linux
+   passes). I then ran a copy in `/tmp` with only line 25 changed to expect
+   `['0','0','0','127','127','0','0','0','0','101']`; it exits 0.
+   - Gate FAIL; 46 targets; totals 2932 passed / 72 failed / 72 ignored / 0 measured / 0 filtered.
+   - All 7 new methods `ok`; 15 source hashes fixed.
+   - Ledger rows are unchanged, and the retained review is byte-identical to
+     `/lane/reviews/b1b4454397c7-local-coding-runtime-write-provenance.md`.
+   - The privacy scan of added lines passes.
+   - This matches the builder's 2932/72/72.
+4. `focused.py /lane/state/tmp/review-write-history-focused-bac3866b9c48`: exit 1.
+   - The kernel and Linux `write_history` run passes 3/3 (1576 filtered) and 4/4 (424 filtered).
+   - The 4 existing `runtime_native_review` methods pass (424 filtered).
+   - **`contract.mjs` (packet v2 schema and semantic conformance) exit 127, no node.**
+   - One `write_history_packet_json=` record is emitted. By hand I checked its shape: version 2, the
+     composite has no singular approval or application digest, there are 2 flat original
+     transactions each with its own digests, and the endpoints chain a8ce3ee2→8eb06d4f→2c205e43 into
+     the net `history-0` a8ce3ee2→2c205e43. No JSON Schema engine is available in Python here, so
+     this is not a substitute for the conformance run.
+   - Mixed four-write component: 615656 µs (component setup/projection only, not a model, task or
+     score number).
+5. `light.py`: exit 1 at markdownlint (`FileNotFoundError: 'node'`); the first three lints pass.
+6. `cmp validation-1/source-freeze.json <out>/source-freeze.json`: identical.
+7. `git diff --check b1b4454397c7…`: exit 0. `git status --short`: empty.
+
+## Findings
+
+No critical, high or medium finding in the code.
+
+- **L1 (low, backlog), `scripts/validate_planning_schemas.mjs:544`**: the Node semantic validator is
+  weaker than the Rust verifier.
+  - Checks the Rust verifier makes and this validator does not:
+    - per-transaction file ordering and purpose/artifact agreement inside `write_history`;
+    - the composed net `complete_diff` (first-preimage and final-postimage lines);
+    - the union of `review_hooks`;
+    - the composite `operation_sha256` and `files_sha256`.
+  - Effect: a JSON consumer can accept a history packet that `verify_review_packet` refuses. No
+    authority follows from this, because the Linux planner recaptures from live proof.
+  - Fix: mirror those checks, or label the validator a shape check only.
+- **L2 (low, backlog), `kernel/engine/src/review_packet_history.rs:27`**: duplicates are detected
+  only by `change_set_sha256`.
+  - A legitimate content cycle such as a→b, b→c, c→b is accepted. A cycle that repeats the same
+    content and intent (a→b, b→a, a→b) refuses the whole history as a duplicate.
+  - This fails closed, so it is not a safety problem, but the refusal reason is opaque. Consider
+    documenting it or including the application digest in identity.
+- **Process note (not a code finding)**: the review bundle depends on an untracked Node install at
+  `/lane/state/tooling` that is not present in the reviewer sandbox. Every Node-dependent required
+  run is therefore unreproducible here.
+
+Confinement and loop safety for this increment:
+- History leaves the owner before every native dispatch (`coding_repository_edit.rs:168`,
+  `coding_repository_runtime.rs:392`).
+- It returns only through `append` after a checked committed manual result, or after a runtime
+  `complete` with matching transaction, grant and receipts (`coding_repository_runtime.rs:291`).
+  The runtime path requires the coordinator's terminal publication.
+- Denial, expiry and candidate errors before dispatch preserve history. A root mismatch or a bound
+  overflow retires it (`coding_workspace_write_proof.rs:110`).
+- Capture still requires exact complete lineage, fresh bytes and held roots.
+- No new route, command, network path, Git effect or grant. No hidden, frozen or held-out input,
+  scorer, threshold or prompt is touched.
+- Labelling is honest: synthetic Git, process and publication choices are stated, and there is no
+  model or score claim.
+- No private path, username, hostname, credential or trademark branding appears in the added lines.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing increment): code review PASS-quality, with no high or medium finding,
+  and the Rust gate reproduced exactly. However, the required Node runs could not be executed: the
+  80-test schema suite including the new history test, the changed validator, markdownlint, and the
+  packet v2 conformance check. Not closable on this review; both parents remain OPEN.
+
+Verdict: INCONCLUSIVE
+Required Node runs (schema suite with new history test, markdownlint, contract.mjs v2 conformance) could not run: retained Node v24.15.0 at /lane/state/tooling is absent in the reviewer sandbox and no download is permitted; all Rust/Python runs reproduced the builder's evidence with no high/medium finding.

@@ -3,9 +3,10 @@
 
 use super::*;
 use agentmage_kernel_contracts::to_canonical_json;
+use agentmage_kernel_engine::filesystem_control::{FilesystemApprovalReceipt, FilesystemPlan};
 use agentmage_kernel_engine::review_packet::{
     ChangePurposeAssignment, ReviewableChangeSet, capture_reviewable_change_set,
-    capture_reviewable_write_history,
+    capture_reviewable_creation, capture_reviewable_write_history,
 };
 use agentmage_kernel_engine::write_transaction::{WriteOperationStatus, verify_write_receipts};
 
@@ -17,10 +18,41 @@ pub(crate) struct LinuxCodingAppliedWrite {
 
 struct NativeWrite {
     root_sha256: String,
-    changes: ShadowChangeSet,
+    changes: NativeChanges,
+    diff_bytes: usize,
     approval_sha256: String,
     application_sha256: String,
 }
+
+enum NativeChanges {
+    Edit(ShadowChangeSet),
+    Create(FilesystemPlan),
+}
+
+impl NativeChanges {
+    fn operations(&self) -> Vec<(&str, &str)> {
+        match self {
+            Self::Edit(changes) => changes
+                .operations()
+                .iter()
+                .map(|op| (op.operation_id(), op.path()))
+                .collect(),
+            Self::Create(plan) => plan
+                .operations()
+                .iter()
+                .map(|op| {
+                    (
+                        op.operation_id(),
+                        op.destination_path().expect("checked creation"),
+                    )
+                })
+                .collect(),
+        }
+    }
+}
+
+#[path = "coding_workspace_creation_proof.rs"]
+mod creation;
 
 impl LinuxCodingAppliedWrite {
     pub(crate) fn from_native_result(
@@ -92,7 +124,12 @@ impl LinuxCodingAppliedWrite {
         Ok(Self {
             writes: vec![NativeWrite {
                 root_sha256: root_sha256.into(),
-                changes,
+                diff_bytes: changes
+                    .operations()
+                    .iter()
+                    .map(|op| op.complete_diff().len())
+                    .sum(),
+                changes: NativeChanges::Edit(changes),
                 approval_sha256: approval.binding_sha256.clone(),
                 // The last digest binds the entire checked application receipt chain.
                 application_sha256: result
@@ -115,10 +152,7 @@ impl LinuxCodingAppliedWrite {
             .writes
             .iter()
             .chain(&next.writes)
-            .flat_map(|write| write.changes.operations())
-            .try_fold(0_usize, |total, op| {
-                total.checked_add(op.complete_diff().len())
-            })?;
+            .try_fold(0_usize, |total, write| total.checked_add(write.diff_bytes))?;
         if bytes > 8 * 1024 * 1024 {
             return None;
         }
@@ -141,7 +175,7 @@ impl LinuxCodingAppliedWrite {
             .writes
             .iter()
             .flat_map(|w| w.changes.operations())
-            .map(|op| op.path())
+            .map(|(_, path)| path)
             .collect::<BTreeSet<_>>();
         let by_id = purposes
             .iter()
@@ -169,10 +203,10 @@ impl LinuxCodingAppliedWrite {
                     write
                         .changes
                         .operations()
-                        .iter()
-                        .map(|op| ChangePurposeAssignment {
-                            operation_id: op.operation_id().into(),
-                            purpose: by_path[op.path()],
+                        .into_iter()
+                        .map(|(id, path)| ChangePurposeAssignment {
+                            operation_id: id.into(),
+                            purpose: by_path[path],
                         })
                         .collect(),
                 )
@@ -187,12 +221,20 @@ impl NativeWrite {
         &self,
         purposes: Vec<ChangePurposeAssignment>,
     ) -> Result<ReviewableChangeSet, LinuxCodingWriteError> {
-        capture_reviewable_change_set(
-            &self.changes,
-            purposes,
-            &self.approval_sha256,
-            &self.application_sha256,
-        )
+        match &self.changes {
+            NativeChanges::Edit(changes) => capture_reviewable_change_set(
+                changes,
+                purposes,
+                &self.approval_sha256,
+                &self.application_sha256,
+            ),
+            NativeChanges::Create(plan) => capture_reviewable_creation(
+                plan,
+                purposes,
+                &self.approval_sha256,
+                &self.application_sha256,
+            ),
+        }
         .map_err(|_| LinuxCodingWriteError::Input)
     }
 }

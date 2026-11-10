@@ -2,6 +2,27 @@
 
 ## Active queue: local agent mission
 
+The [original creation-provenance increment](docs/evidence/t306-creation-review-2026-11-09.md)
+connects checked published native source creation to the same original write
+history and candidate-review planner. Complete absent-before lineage, current
+bytes and exact original creation modes remain required. T-303/T-306 remain
+open; no row or sub-row is added or closed. The complete affected gate remains
+**FAIL**: 2,939 passed, the same 72 inherited failures and 72 existing ignores
+across 46 unfiltered targets. All seven new Rust methods, eight existing
+new-file methods, 80 schema tests, formatting and Clippy pass; twelve source
+hashes remain fixed. Independent core review is required. Reviewer/artifact
+provenance, candidate execution, approved Git, native/model measurement and
+durable recovery remain open.
+
+The [preceding independent core report](docs/reviews/bac3866b9c48-local-coding-write-history.txt)
+returns **Verdict: INCONCLUSIVE** for exact commit
+`bac3866b9c48511fef1d51e3a2c8e86784faf718`: no high or medium code finding,
+but the reviewer could not access the retained Node runtime. That verdict is
+preserved. The current review bundle carries the existing licensed runtime
+inside its shared private directory, with byte hashes, for independent
+reproduction. Its low L1 semantic-validator coverage and L2 repeated-content
+history refusal findings remain same-row backlog. Neither parent closes.
+
 The [original write-history increment](docs/evidence/t306-write-history-2026-11-09.md)
 retains separate checked native approval/application identities across existing-file
 retries and composes their complete net diff for the same candidate planner.

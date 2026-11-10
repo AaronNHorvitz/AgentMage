@@ -2048,6 +2048,22 @@ pub(in crate::coding_repository) fn candidate_review_fixture_before_validation(
     LinuxCodingRepository,
     agentmage_kernel_engine::write_approval::ShadowChangeSet,
 ) {
+    candidate_review_fixture_transform_before_validation(mode, |mut owner| {
+        edit(&mut owner);
+        owner
+    })
+}
+
+// Consuming transformation permits the same actual runtime handoff and return
+// before the first synthetic validation. It cannot reset validation authority.
+pub(in crate::coding_repository) fn candidate_review_fixture_transform_before_validation(
+    mode: u32,
+    edit: impl FnOnce(LinuxCodingRepository) -> LinuxCodingRepository,
+) -> (
+    crate::coding_repository::tests::Fixture,
+    LinuxCodingRepository,
+    agentmage_kernel_engine::write_approval::ShadowChangeSet,
+) {
     let f = crate::coding_repository::tests::Fixture::new();
     let mut owner = crate::coding_repository::tests::owner_with_synthetic_git_observations(&f);
     let common = f.root.join("repo/.git");
@@ -2104,7 +2120,7 @@ pub(in crate::coding_repository) fn candidate_review_fixture_before_validation(
             .unwrap()["outcome"],
         "committed"
     );
-    edit(&mut owner);
+    owner = edit(owner);
     candidate_review_validate(&mut owner);
     (f, owner, change_set)
 }

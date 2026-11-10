@@ -351,3 +351,7 @@ impl LinuxCodingPendingCreate {
         Ok(result)
     }
 }
+
+#[cfg(test)]
+#[path = "coding_workspace_creation_proof_tests.rs"]
+mod tests;

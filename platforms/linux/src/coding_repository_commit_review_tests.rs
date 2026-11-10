@@ -755,3 +755,150 @@ fn write_history_candidate_plan_uses_complete_original_chain_and_fresh_validatio
     );
     assert!(!f.root.join("owned/candidate-index-review-build").exists());
 }
+
+#[test]
+fn creation_review_candidate_plan_binds_mixed_original_history_and_creation_modes() {
+    let (f, owner, _) = command::tests::candidate_review_fixture_transform_before_validation(
+        0o644,
+        |owner| {
+            let root = owner.created.as_ref().unwrap().path.clone();
+            let binding = owner
+                .created
+                .as_ref()
+                .unwrap()
+                .held
+                .root_path_sha256()
+                .to_owned();
+            let lease = match owner.into_runtime_worktree(&binding) {
+                Ok(lease) => lease,
+                Err(_) => panic!("original owner handoff failed"),
+            };
+            let paths = vec!["new.py".into(), "other.py".into()];
+            let scope = LinuxCodingReadScope::select_targets(&root, &paths).unwrap();
+            let result = scope
+                .prepare_create(
+                    &[
+                        ("new.py", "created first\n", 0o640),
+                        ("other.py", "executable\n", 0o700),
+                    ],
+                    "Create exact source files",
+                    1000,
+                )
+                .unwrap()
+                .apply_with_owned_driver(&scope, &lease, 1000, true, None)
+                .unwrap();
+            assert_eq!(result.outcome, agentmage_kernel_engine::filesystem_control::FilesystemTransactionOutcome::Committed);
+            let mut owner = match lease.try_into_repository() {
+                Ok(owner) => owner,
+                Err(_) => panic!("creation driver must release owner"),
+            };
+            let scope = owner.select_created_sources(&["new.py".into()]).unwrap();
+            let preview = owner
+                .prepare_edit(
+                    scope,
+                    &[crate::LinuxCodingReplacement {
+                        path: "new.py",
+                        before_sha256: &hash(b"created first\n"),
+                        content: "created final\n",
+                    }],
+                    "Retry created source",
+                    1000,
+                )
+                .unwrap();
+            assert_eq!(
+                owner
+                    .decide_edit(preview["preview_sha256"].as_str().unwrap(), true, 1000)
+                    .unwrap()["outcome"],
+                "committed"
+            );
+            owner
+        },
+    );
+    let projection = owner
+        .capture_applied_write_review(
+            (0..3)
+                .map(|i| ChangePurposeAssignment {
+                    operation_id: format!("history-{i}"),
+                    purpose: CommitChangePurpose::Behavior,
+                })
+                .collect(),
+        )
+        .unwrap();
+    let packet = packet_from_projection(&owner, projection);
+    assert!(verify_review_packet(&packet));
+    println!(
+        "creation_review_packet_json={}",
+        serde_json::to_string(&packet).unwrap()
+    );
+    let calls = Cell::new(0);
+    let candidate = plan(&owner, &packet, || {
+        calls.set(calls.get() + 1);
+        Ok(observation(&owner))
+    })
+    .unwrap();
+    assert_eq!(calls.get(), 2);
+    assert_eq!(candidate.files.len(), 3);
+    for (i, (path, mode, preimage, content)) in [
+        (
+            "new.py",
+            CommitFileMode::Regular,
+            "0".repeat(64),
+            b"created final\n".as_slice(),
+        ),
+        (
+            "other.py",
+            CommitFileMode::Executable,
+            "0".repeat(64),
+            b"executable\n".as_slice(),
+        ),
+        (
+            "sentinel",
+            CommitFileMode::Regular,
+            hash(b"preserve human work"),
+            b"reviewed change".as_slice(),
+        ),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        assert_eq!(candidate.files[i].path, path);
+        assert_eq!(candidate.files[i].mode, mode);
+        assert_eq!(candidate.files[i].postimage_sha256, hash(content));
+        assert_eq!(packet.change_set.files()[i].preimage_sha256, preimage);
+    }
+    assert!(!candidate.network_authority && !candidate.hooks_enabled && !candidate.filters_enabled);
+    assert!(!f.root.join("repo/new.py").exists());
+    assert!(!f.root.join("repo/other.py").exists());
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"preserve human work"
+    );
+    assert!(!f.root.join("owned/candidate-index-review-build").exists());
+    fs::set_permissions(
+        f.root.join("owned/worktree/other.py"),
+        fs::Permissions::from_mode(0o600),
+    )
+    .unwrap();
+    assert_eq!(
+        plan(&owner, &packet, || panic!(
+            "mode drift must refuse before Git"
+        ))
+        .unwrap_err()
+        .code(),
+        "code.commit.write-provenance"
+    );
+    fs::set_permissions(
+        f.root.join("owned/worktree/other.py"),
+        fs::Permissions::from_mode(0o700),
+    )
+    .unwrap();
+    fs::write(f.root.join("owned/worktree/new.py"), b"foreign source\n").unwrap();
+    assert_eq!(
+        plan(&owner, &packet, || panic!(
+            "source drift must refuse before Git"
+        ))
+        .unwrap_err()
+        .code(),
+        "code.commit.write-provenance"
+    );
+}

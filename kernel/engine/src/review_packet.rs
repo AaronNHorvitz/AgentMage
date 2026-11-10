@@ -874,6 +874,10 @@ pub fn verify_review_packet(packet: &LocalReviewPacket) -> bool {
 mod history;
 pub use history::capture_reviewable_write_history;
 
+#[path = "review_packet_creation.rs"]
+mod creation;
+pub use creation::capture_reviewable_creation;
+
 fn verify_reviewable_change_set(change_set: &ReviewableChangeSet) -> bool {
     if !change_set.write_history.is_empty() {
         return capture_reviewable_write_history(change_set.write_history.clone()).as_ref()

@@ -27,9 +27,9 @@ impl LinuxCodingRepository {
     /// read consent. Purposes are caller review labels, never approval evidence.
     ///
     /// Retained original native transactions must cover the complete current
-    /// existing-file lineage from first preimage to final postimage. Histories
+    /// edit or absent-before creation lineage through final postimage. Histories
     /// retain each approval separately and use path-ordered `history-N` purpose
-    /// identities. New files and incomplete chains refuse. No receipt/path/JSON
+    /// identities. Incomplete chains refuse. No receipt/path/JSON
     /// can restore this process-only proof.
     pub fn capture_applied_write_review(
         &self,
@@ -51,8 +51,7 @@ impl LinuxCodingRepository {
             || files.len() != created.edits.len()
             || files.iter().any(|f| {
                 created.edits.get(&f.path).is_none_or(|edit| {
-                    edit.created_mode.is_some()
-                        || edit.before_sha256 != f.preimage_sha256
+                    edit.before_sha256 != f.preimage_sha256
                         || edit.after_sha256 != f.postimage_sha256
                 })
             })
@@ -66,6 +65,26 @@ impl LinuxCodingRepository {
             file.path != source.path || file.postimage_sha256 != hash(source.content.as_bytes())
         }) {
             return Err(err("code.commit.write-provenance"));
+        }
+        // Creation mode was part of the original approval. A later metadata
+        // change cannot silently replace it, even when the bytes still match.
+        for file in files {
+            if let Some(mode) = created.edits[&file.path].created_mode {
+                let path =
+                    WorkspacePath::new(created.held.workspace_id.clone(), file.path.split('/'))
+                        .map_err(|_| err("code.commit.mode"))?;
+                let target =
+                    LinuxPathAdapter::new(created.held.adapter_instance_id.clone(), 128 * 1024)
+                        .resolve(&created.held, &path, PathResolutionIntent::Metadata)
+                        .map_err(|_| err("code.commit.mode"))?;
+                if file.preimage_sha256 != "0".repeat(64)
+                    || target.object_snapshot.mode & 0o7777 != mode
+                {
+                    return Err(err("code.commit.write-provenance"));
+                }
+            } else if file.preimage_sha256 == "0".repeat(64) {
+                return Err(err("code.commit.write-provenance"));
+            }
         }
         self.verify_apply_roots()?;
         Ok(projected)
@@ -209,9 +228,9 @@ impl LinuxCodingRepository {
                 || file.preimage_sha256 != edit.before_sha256
                 || file.postimage_sha256 != edit.after_sha256
                 || hash(source.content.as_bytes()) != edit.after_sha256
-                // New-file review uses a separate kernel transaction family;
-                // this first existing-file bridge must not invent its proof.
-                || edit.created_mode.is_some()
+                || edit.created_mode.is_some_and(|mode| {
+                    file.preimage_sha256 != "0".repeat(64) || mode & 0o7000 != 0
+                })
             {
                 return Err(err("code.commit.edit-lineage"));
             }
@@ -223,6 +242,9 @@ impl LinuxCodingRepository {
                     .map_err(|_| err("code.commit.mode"))?;
             let permissions = target.object_snapshot.mode & 0o7777;
             if permissions & 0o7000 != 0 {
+                return Err(err("code.commit.mode"));
+            }
+            if edit.created_mode.is_some_and(|mode| mode != permissions) {
                 return Err(err("code.commit.mode"));
             }
             // Git records the owner's executable bit, not private host read or

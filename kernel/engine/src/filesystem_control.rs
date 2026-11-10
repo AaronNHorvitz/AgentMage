@@ -374,6 +374,12 @@ impl FilesystemOperation {
         self.destination_mode
     }
 
+    /// Returns the classification bound into this exact operation.
+    #[must_use]
+    pub const fn classification(&self) -> Option<FileClassification> {
+        self.classification
+    }
+
     /// Returns the canonical operation identity.
     #[must_use]
     pub fn operation_sha256(&self) -> &str {
@@ -849,6 +855,7 @@ pub struct FilesystemApplyAuthorization<'transaction> {
     transaction_id: &'transaction str,
     consumed_grant_sha256: &'transaction str,
     plan: &'transaction FilesystemPlan,
+    approval: &'transaction FilesystemApprovalReceipt,
 }
 
 impl FilesystemApplyAuthorization<'_> {
@@ -868,6 +875,13 @@ impl FilesystemApplyAuthorization<'_> {
     #[must_use]
     pub const fn plan(&self) -> &FilesystemPlan {
         self.plan
+    }
+
+    /// Original approval checked before this grant was consumed. Borrowing it
+    /// grants no additional filesystem effect or replay authority.
+    #[must_use]
+    pub const fn approval(&self) -> &FilesystemApprovalReceipt {
+        self.approval
     }
 }
 
@@ -1395,6 +1409,7 @@ where
         transaction_id: &request.transaction_id,
         consumed_grant_sha256: &consumption.consumed_grant_sha256,
         plan,
+        approval,
     });
     let disposition = classify_filesystem_report(plan.operations.len(), &report).unwrap_or(
         FilesystemApplyDisposition::Uncertain {
@@ -4125,5 +4140,139 @@ mod tests {
                 Err(FilesystemTransactionError::ReceiptIntegrity)
             );
         }
+    }
+
+    #[test]
+    fn creation_review_projects_exact_absence_content_and_mode_bound_identity() {
+        use crate::review_packet::{
+            ChangePurposeAssignment, CommitChangePurpose, capture_reviewable_creation,
+        };
+        let build = |mode| {
+            build_filesystem_plan(
+                &parent(),
+                request(vec![FilesystemOperationDraft::Create {
+                    operation_id: "create-source".into(),
+                    destination: destination(&["new"], "source.rs", &[]),
+                    content: b"first\n\"quoted\"\\tail\n".to_vec(),
+                    mode,
+                    classification: FileClassification::SourceCode,
+                }]),
+            )
+            .unwrap()
+        };
+        let plan = build(0o600);
+        let purposes = || {
+            vec![ChangePurposeAssignment {
+                operation_id: "create-source".into(),
+                purpose: CommitChangePurpose::Behavior,
+            }]
+        };
+        let projection =
+            capture_reviewable_creation(&plan, purposes(), &"a".repeat(64), &"b".repeat(64))
+                .unwrap();
+        let file = &projection.files()[0];
+        assert_eq!(file.preimage_sha256, "0".repeat(64));
+        assert_ne!(file.preimage_sha256, hex_sha256(b""));
+        assert_eq!(
+            file.postimage_sha256,
+            hex_sha256(plan.operations()[0].postimage_bytes())
+        );
+        assert_eq!(
+            file.operation_sha256,
+            plan.operations()[0].operation_sha256()
+        );
+        assert!(
+            file.complete_diff
+                .contains("-\"\"\n+\"first\\n\\\"quoted\\\"\\\\tail\\n\"\n")
+        );
+        assert_eq!(file.complete_diff.lines().count(), 5);
+        let executable = capture_reviewable_creation(
+            &build(0o700),
+            purposes(),
+            &"a".repeat(64),
+            &"b".repeat(64),
+        )
+        .unwrap();
+        assert_ne!(
+            projection.change_set_sha256(),
+            executable.change_set_sha256()
+        );
+        assert_ne!(
+            file.operation_sha256,
+            executable.files()[0].operation_sha256
+        );
+    }
+
+    #[test]
+    fn creation_review_refuses_non_source_non_create_binary_and_bad_purposes() {
+        use crate::review_packet::{
+            ChangePurposeAssignment, CommitChangePurpose, capture_reviewable_creation,
+        };
+        let build = |content: Vec<u8>, classification| {
+            build_filesystem_plan(
+                &parent(),
+                request(vec![FilesystemOperationDraft::Create {
+                    operation_id: "create-source".into(),
+                    destination: destination(&["new"], "source.rs", &[]),
+                    content,
+                    mode: 0o600,
+                    classification,
+                }]),
+            )
+            .unwrap()
+        };
+        let purpose = || ChangePurposeAssignment {
+            operation_id: "create-source".into(),
+            purpose: CommitChangePurpose::Behavior,
+        };
+        let project = |plan: &FilesystemPlan, purposes| {
+            capture_reviewable_creation(plan, purposes, &"a".repeat(64), &"b".repeat(64))
+        };
+        for classification in [
+            FileClassification::Data,
+            FileClassification::Configuration,
+            FileClassification::Documentation,
+            FileClassification::Generated,
+        ] {
+            assert!(project(&build(b"text".to_vec(), classification), vec![purpose()]).is_err());
+        }
+        for content in [vec![], vec![0xff], b"nul\0text".to_vec()] {
+            assert!(
+                project(
+                    &build(content, FileClassification::SourceCode),
+                    vec![purpose()]
+                )
+                .is_err()
+            );
+        }
+        let plan = build(b"text".to_vec(), FileClassification::SourceCode);
+        for purposes in [
+            vec![],
+            vec![purpose(), purpose()],
+            vec![ChangePurposeAssignment {
+                operation_id: "wrong".into(),
+                ..purpose()
+            }],
+            vec![ChangePurposeAssignment {
+                purpose: CommitChangePurpose::Tests,
+                ..purpose()
+            }],
+        ] {
+            assert!(project(&plan, purposes).is_err());
+        }
+        assert!(
+            capture_reviewable_creation(&plan, vec![purpose()], "invalid", &"b".repeat(64))
+                .is_err()
+        );
+        let (_, mixed, _) = write_approval_fixture();
+        let purposes = mixed
+            .operations()
+            .iter()
+            .map(|op| ChangePurposeAssignment {
+                operation_id: op.operation_id().into(),
+                purpose: CommitChangePurpose::Behavior,
+            })
+            .collect();
+        assert!(project(&mixed, purposes).is_err());
     }
 }
