@@ -5,12 +5,11 @@ use super::*;
 use crate::command_runner::worktree::WorkspaceObservation;
 use crate::repository_base::BaseFilePreimage;
 use agentmage_kernel_engine::local_commit::{
-    CandidateTreePlan, CommitFileMode, plan_candidate_tree,
+    CandidateTreePlan, CommitFileMode, plan_candidate_tree, verify_local_commit_review,
 };
 use agentmage_kernel_engine::repository_safety::RepositoryPreservationManifest;
 use agentmage_kernel_engine::review_packet::{
-    ChangePurposeAssignment, FindingSeverity, LocalReviewPacket, ReviewableChangeSet,
-    bind_validation_evidence, verify_review_packet,
+    ChangePurposeAssignment, LocalReviewPacket, ReviewableChangeSet, bind_validation_evidence,
 };
 
 #[derive(PartialEq, Eq)]
@@ -241,17 +240,8 @@ impl LinuxCodingRepository {
         candidate_build_id: &str,
         mut observe: impl FnMut() -> Result<GitObservation>,
     ) -> Result<CandidateTreePlan> {
+        verify_local_commit_review(packet).map_err(|_| err("code.commit.review-packet"))?;
         let identity = self.created_git_identity()?;
-        if !verify_review_packet(packet)
-            || packet.review_results.findings.iter().any(|finding| {
-                matches!(
-                    finding.severity,
-                    FindingSeverity::Medium | FindingSeverity::High | FindingSeverity::Critical
-                )
-            })
-        {
-            return Err(err("code.commit.review-packet"));
-        }
         let purposes = packet
             .change_set
             .files()

@@ -1387,6 +1387,193 @@ mod tests {
         assert!(!verify_review_packet(&sensitive));
     }
 
+    fn commit_packet(results: ReviewModeResults) -> LocalReviewPacket {
+        let change_set = change_set();
+        build_review_packet(ReviewPacketInput {
+            packet_id: "commit-review-fixture".into(),
+            repository_sha256: hash('4'),
+            base_object: "5".repeat(40),
+            candidate_snapshot_sha256: hash('6'),
+            preservation_manifest_sha256: hash('7'),
+            objective: "Inspect the approved change".into(),
+            behavior_delta: "Change the fixture value".into(),
+            commit_plan: build_logical_commit_plan(&change_set, vec![]).unwrap(),
+            change_set,
+            validations: vec![],
+            checks_not_run: vec![ValidationKind::Security],
+            review_results: results,
+            evidence_artifacts: vec![],
+            rollback: "Requires separate approval".into(),
+        })
+        .unwrap()
+    }
+
+    #[test]
+    fn commit_planners_refuse_visible_and_suppressed_material_findings_with_valid_other_inputs() {
+        use crate::local_commit::*;
+        let clear = commit_packet(normalize_review_findings(all_modes(), vec![]).unwrap());
+        let group = &clear.commit_plan.groups[0];
+        let modes = group
+            .operation_ids
+            .iter()
+            .map(|id| (id.clone(), CommitFileMode::Regular))
+            .collect::<Vec<_>>();
+        let seed = plan_candidate_tree(
+            "review-build",
+            &clear,
+            &group.group_id,
+            &hash('8'),
+            &hash('9'),
+            &modes,
+        )
+        .unwrap();
+        for severity in [
+            FindingSeverity::Info,
+            FindingSeverity::Low,
+            FindingSeverity::Medium,
+            FindingSeverity::High,
+            FindingSeverity::Critical,
+        ] {
+            for confidence in [0, 6999, 7000, 10000] {
+                for duplicate in [false, true] {
+                    let mut inputs = vec![finding("original", confidence, severity)];
+                    if duplicate {
+                        inputs.push(finding("duplicate", confidence, severity));
+                    }
+                    let p = commit_packet(normalize_review_findings(all_modes(), inputs).unwrap());
+                    assert!(verify_review_packet(&p));
+                    assert_eq!(
+                        p.review_results.suppressed.len(),
+                        usize::from(duplicate) + usize::from(confidence < 7000)
+                    );
+                    let expected_block = matches!(
+                        severity,
+                        FindingSeverity::Medium | FindingSeverity::High | FindingSeverity::Critical
+                    );
+                    assert_eq!(verify_local_commit_review(&p).is_err(), expected_block);
+                    let planned = plan_candidate_tree(
+                        "review-build",
+                        &p,
+                        &group.group_id,
+                        &hash('8'),
+                        &hash('9'),
+                        &modes,
+                    );
+                    assert_eq!(
+                        planned.is_err(),
+                        expected_block,
+                        "candidate: {severity:?}/{confidence}/duplicate={duplicate}"
+                    );
+                    if expected_block {
+                        assert_eq!(planned.unwrap_err(), LocalCommitError::ReviewMismatch);
+                    }
+                    // Synthetic but integrity-valid candidate evidence for this
+                    // exact packet. This tests the commit gate independently of
+                    // candidate refusal, including saved authority-free plans.
+                    let mut candidate = seed.clone();
+                    candidate.review_packet_sha256 = p.packet_sha256.clone();
+                    candidate.plan_sha256 = "0".repeat(64);
+                    candidate.plan_sha256 = sha256_json(&candidate).unwrap();
+                    verify_candidate_tree_plan(&candidate).unwrap();
+                    let mut receipt = CandidateTreeReceipt {
+                        schema_version: candidate.schema_version,
+                        candidate_build_id: candidate.candidate_build_id.clone(),
+                        candidate_plan_sha256: candidate.plan_sha256.clone(),
+                        repository_sha256: candidate.repository_sha256.clone(),
+                        parent_object: candidate.parent_object.clone(),
+                        candidate_tree: "a".repeat(40),
+                        blobs: candidate
+                            .files
+                            .iter()
+                            .map(|f| CandidateTreeBlob {
+                                operation_id: f.operation_id.clone(),
+                                postimage_sha256: f.postimage_sha256.clone(),
+                                blob_object: "b".repeat(40),
+                            })
+                            .collect(),
+                        before_manifest_sha256: hash('7'),
+                        after_manifest_sha256: hash('a'),
+                        user_index_sha256: candidate.user_index_sha256.clone(),
+                        ref_update_authority: false,
+                        platform_code: "fixture.candidate.succeeded".into(),
+                        receipt_sha256: "0".repeat(64),
+                    };
+                    receipt.receipt_sha256 = sha256_json(&receipt).unwrap();
+                    verify_candidate_tree_receipt(&candidate, &receipt).unwrap();
+                    let signer = PinnedCommitSigner::seal(PinnedCommitSigner {
+                        schema_version: 0,
+                        signer_id: "synthetic-signer".into(),
+                        kind: CommitSignerKind::OpenPgp,
+                        source: SignerInspectionSource::ExternalKeyring,
+                        signer_path_sha256: hash('1'),
+                        signer_executable_sha256: hash('2'),
+                        key_fingerprint: "1234567890abcdef1234567890abcdef12345678".into(),
+                        public_key_sha256: hash('3'),
+                        inspection_evidence_sha256: hash('4'),
+                        repository_selected_program_used: false,
+                        unsigned_fallback: false,
+                        signer_sha256: String::new(),
+                    })
+                    .unwrap();
+                    let identity = CommitIdentity {
+                        name: "Fixture".into(),
+                        email: "fixture@example.test".into(),
+                    };
+                    let commit = plan_local_commit(
+                        "review-commit",
+                        &p,
+                        &group.group_id,
+                        &candidate,
+                        &receipt,
+                        identity.clone(),
+                        identity,
+                        1787000000,
+                        0,
+                        signer,
+                        "refs/heads/agentmage/tasks/fixture",
+                    );
+                    assert_eq!(
+                        commit.is_err(),
+                        expected_block,
+                        "commit: {severity:?}/{confidence}/duplicate={duplicate}"
+                    );
+                    if expected_block {
+                        assert_eq!(commit.unwrap_err(), LocalCommitError::ReviewMismatch);
+                    }
+                }
+            }
+        }
+        let mut tampered = clear.clone();
+        tampered.objective.push_str(" unsealed");
+        assert_eq!(
+            verify_local_commit_review(&tampered),
+            Err(LocalCommitError::ReviewMismatch)
+        );
+        assert_eq!(
+            plan_candidate_tree(
+                "review-build",
+                &tampered,
+                &group.group_id,
+                &hash('8'),
+                &hash('9'),
+                &modes
+            )
+            .unwrap_err(),
+            LocalCommitError::ReviewMismatch
+        );
+        // Rehashing the outer packet cannot validate altered inner findings.
+        let mut altered = commit_packet(
+            normalize_review_findings(all_modes(), vec![finding("low", 0, FindingSeverity::Low)])
+                .unwrap(),
+        );
+        altered.review_results.suppressed[0].finding.severity = FindingSeverity::Info;
+        altered.packet_sha256 = review_packet_digest(&altered).unwrap();
+        assert_eq!(
+            verify_local_commit_review(&altered),
+            Err(LocalCommitError::ReviewMismatch)
+        );
+    }
+
     #[test]
     fn purpose_and_artifact_matrix_rejects_mislabeled_generated_and_migration_work() {
         assert!(purpose_matches_artifact(

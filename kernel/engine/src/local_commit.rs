@@ -15,7 +15,7 @@ use crate::propagation::CancellationToken;
 use crate::repository_safety::{
     RepositoryOwnedDelta, RepositoryPreservationManifest, reconcile_preservation,
 };
-use crate::review_packet::{LocalReviewPacket, verify_review_packet};
+use crate::review_packet::{FindingSeverity, LocalReviewPacket, verify_review_packet};
 
 const SCHEMA_VERSION: u16 = 1;
 const MAX_COMMIT_FILES: usize = 128;
@@ -128,7 +128,38 @@ pub struct CandidateTreePlan {
     pub plan_sha256: String,
 }
 
-/// Builds a candidate-tree plan from one exact verified review packet group.
+/// Checks packet integrity and refuses every unresolved medium-or-higher finding.
+///
+/// Confidence and duplicate suppression affect presentation only. Suppressed
+/// findings remain unresolved evidence, and the packet's visible high/critical
+/// count is not an admission decision. This check authenticates neither the
+/// reviewer nor completeness of caller-supplied results and grants no authority.
+pub fn verify_local_commit_review(packet: &LocalReviewPacket) -> Result<(), LocalCommitError> {
+    if !verify_review_packet(packet)
+        || packet
+            .review_results
+            .findings
+            .iter()
+            .chain(
+                packet
+                    .review_results
+                    .suppressed
+                    .iter()
+                    .map(|suppressed| &suppressed.finding),
+            )
+            .any(|finding| {
+                matches!(
+                    finding.severity,
+                    FindingSeverity::Medium | FindingSeverity::High | FindingSeverity::Critical
+                )
+            })
+    {
+        return Err(LocalCommitError::ReviewMismatch);
+    }
+    Ok(())
+}
+
+/// Builds a candidate-tree plan from one exact packet without unresolved commit findings.
 pub fn plan_candidate_tree(
     candidate_build_id: &str,
     packet: &LocalReviewPacket,
@@ -137,9 +168,7 @@ pub fn plan_candidate_tree(
     user_index_sha256: &str,
     modes: &[(String, CommitFileMode)],
 ) -> Result<CandidateTreePlan, LocalCommitError> {
-    if !verify_review_packet(packet) {
-        return Err(LocalCommitError::ReviewMismatch);
-    }
+    verify_local_commit_review(packet)?;
     let group = packet
         .commit_plan
         .groups
@@ -585,9 +614,8 @@ pub fn plan_local_commit(
     signer: PinnedCommitSigner,
     task_branch: &str,
 ) -> Result<LocalCommitPlan, LocalCommitError> {
-    if !verify_review_packet(packet)
-        || verify_candidate_tree_receipt(candidate_plan, candidate).is_err()
-    {
+    verify_local_commit_review(packet)?;
+    if verify_candidate_tree_receipt(candidate_plan, candidate).is_err() {
         return Err(LocalCommitError::ReviewMismatch);
     }
     signer.verify()?;

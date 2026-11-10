@@ -1,0 +1,164 @@
+Commit: 18dd68113fc3be02da886bd7e4123cf950c2abaa
+Scope: local-coding-worktree-read-selection
+
+# Independent review: worktree source selection (T-303 / T-306, non-closing core batch)
+
+Reviewer: Claude Opus 5.5, separate read-only session, pinned checkout `/lane/review-checkout`.
+Same-model review. A cross-model review must still come before any public release.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `18dd68113fc3be02da886bd7e4123cf950c2abaa`, parent
+  `c5088d85a5d192211d469c2edfef2b7a84ab71e9`. 15 files changed (+690/-16), matching the bundle's
+  `stage_check.py` path set.
+- Read IP-POLICY.md, the TASKS.md diff, the new evidence
+  `docs/evidence/t306-worktree-read-selection-2026-11-10.md`, the retained commit-control report,
+  both changed guides and every changed source and test file. Also read the earlier lows this batch
+  addresses: the 0c859b28 review L-1 and the 9008ee38 review L1.
+- Before running anything, read the bundle README, `run.py`, `check.py`, `parse_gate.py`,
+  `light.py`, `stage_check.py`, `focused.sh` and `focused-2.sh`. `run.py` creates a fresh output
+  directory with `exist_ok=False`, freezes the 10 source hashes, runs the repository's
+  `local_agent_fast_gate.py` (which reserves heavy slots itself) and rechecks the hashes. `check.py`
+  compares per-target counts and failure/ignore identities with the hash-pinned commit-control
+  baseline, adds +3 Linux-lib and +1 API-lib passes, requires 89 named methods to be `ok`, and
+  checks plan identity, unchanged task rows, review byte-equality and public content. It asserts
+  that the gate FAILs; it never treats the gate as passing.
+- Traced every caller of the old and new selectors (`grep select_created_sources|consented_created_sources`).
+  Checked the digest scheme (`root_path_sha256`, a path/device/inode digest) across `inspect_apply`,
+  `inspect_edit`, `verify_edit_scope`, `repair_feedback` and the workspace `root_sha256`.
+- Checked whether the 72 inherited failures could hide a regression in the changed code (see
+  below).
+- No GPU, host keys, network, download or push. I did not modify the repository. This batch has no
+  UI surface, so I opened no screens.
+
+## Commands and results (all run in /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-worktree-read-selection/review-inputs.sha256`: exit 0.
+   Manifest sha256 is as given in the request.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-worktree-read-selection/run.py /lane/state/tmp/review-worktree-read-selection-full-18dd68113fc3`:
+   exit 1 as expected, with fresh output (the directory did not exist before). Result:
+   `{"exit": 1, "source_unchanged": true, "seconds_including_reservations": 290.6252652570038, "raw_log_sha256": "3f1778ccc6625f92c2a97bca286305507d33f1880fe5a3990256f0bd80abd4a7"}`.
+   The per-command `RESULT` lines are: diff-check 0, untracked lint 0, review lint 0,
+   markdownlint 0 (1.20 s), fmt 0 (9.42 s), Clippy `-D warnings` 0 (36.98 s, cold target) and
+   cargo test 101 (242.64 s). The log contains `FAST GATE: FAIL`. There was no timeout.
+3. `python3 -B .../check.py /lane/state/tmp/review-worktree-read-selection-full-18dd68113fc3`: exit 0.
+   `{"gate": "FAIL", "targets": 26, "totals": [1420, 72, 64, 0, 0], "source_files": 10, "source_unchanged": true, "affected_methods": 89, ...}`,
+   followed by `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL`. I also ran `check.py` on the
+   builder's `validation-2`: exit 0, with the same totals and raw sha `9476a70c…74fa`, matching the
+   evidence.
+4. `cmp .../validation-2/source-freeze.json .../review-worktree-read-selection-full-18dd68113fc3/source-freeze.json`: exit 0.
+5. `python3 -B .../light.py`: exit 0. All four light commands pass; markdownlint reports 0 issues
+   in 4 files.
+6. `git diff --check c5088d85a5d192211d469c2edfef2b7a84ab71e9 --`: exit 0.
+7. `cmp docs/reviews/c5088d85a5d1-local-coding-commit-control.txt /lane/reviews/c5088d85a5d1-local-coding-commit-control.md`: exit 0.
+8. `git status --short`: empty, both before and after the run.
+
+My timings differ from the builder's (235.14 s) only because my target directory was cold. The
+counts and identities match exactly.
+
+## Inherited failures do not hide the changed paths
+
+The 72 failures are 42 `linux_coding_runtime`, 13 `repository_safety`, 10 `linux_read`,
+2 `command_runner`, 2 `local_commit`, 2 `secret_service` and 1 `linux_repository_map`. Every panic
+is an environmental manifest or artifact refusal that fires before coding-edit code runs:
+`test sandbox manifest: InvalidManifest` ×42, `InvalidGitArtifact` ×15,
+`verified worker manifest` ×10, and similar. The migrated host callers are exercised positively by
+passing tests: 32 `coding_endpoint_startup::tests::prepared_tests::*` (for example
+`endpoint_model_edit_prepares_complete_strict_multifile_diff_without_writing` and
+`endpoint_model_edit_workspace_label_cannot_adopt_missing_or_replaced_owner`) and the
+local-api `endpoint_prepared::*` suite. All of these pass.
+
+## Review
+
+- **Selector correlation.** `consented_created_sources` (`platforms/linux/src/coding_repository_edit.rs:51-64`)
+  compares the caller's digest with `created.held.root_path_sha256()` before `verify_created`,
+  path validation or I/O. The test that renames the held root away and then submits
+  `""`/`invalid`/original/foreign digests with valid, traversal or empty paths gets
+  `code.edit.read-scope`, not the native `code.command.scope`. The correct digest then reaches
+  `code.command.scope`, so the order is proven. The uncorrelated `select_created_sources` is now
+  `pub(super)`. Its remaining in-crate production callers are `prepare_apply`
+  (`coding_repository_apply.rs:127`, behind the two-root check at :111) and the commit-review paths
+  (`coding_repository_commit_review.rs:129,300`, reachable only through `consented_commit_review`).
+  This matches the claim.
+- **Digest scheme.** `inspect_apply`, `inspect_edit`, `repair_feedback` and `verify_edit_scope` all
+  use the same held path/device/inode digest. Repair's `selected_root` has already been compared
+  with `feedback["worktree_root_sha256"]` (`coding_repair_api.rs:150`), so the new argument at :160
+  is consistent by construction.
+- **HTTP.** `PrepareEdit.expected_worktree_root_sha256` is a required `String` under
+  `deny_unknown_fields`. Missing or non-string values give 400. A denied read gives 403 before
+  selection. A mismatch gives 409 `code.edit.read-scope` before the native reader, and the pending
+  preview is preserved. Neither the source nor the original is written. The API unit test checks
+  each of these.
+- **Replacement and foreign owners.** Retained scopes cannot adopt a replacement: `prepare_edit`
+  rechecks live ownership (`code.command.scope` / `code.edit.scope`). Foreign, later-substituted
+  and reopened owners refuse. Exact path bounds hold: unselected reads, mixed selected/unselected
+  reads, duplicates, `..`, `.git/config`, NUL content and symlinks are all refused. The original
+  checkout is not touched, and the worktree-only control passes with it renamed away.
+- **Confinement.** No new route, permission, command, network or write authority is added. Writes
+  still need the full preview and separate exact approval (the migrated real-file test passes).
+  This batch adds no tool-call or document parsing surface. Path traversal, symlink and
+  root-replacement escapes are covered by the new tests and rest on the unchanged native adapter.
+  Environment and network confinement are unaffected.
+- **Honest claims.** The evidence and guides state plainly that digests correlate and do not
+  authenticate consent, that host flows derive the root from their own retained owner under the
+  prior-consent contract, and that the fixtures are synthetic. Every number in the evidence traces
+  to `validation-2` and reproduces in my run.
+- **Evaluation integrity.** No evaluation, hidden or held-out, scorer, prompt, threshold, dependency,
+  SBOM, lifecycle or scoreboard file is touched. TASKS.md row lines are byte-unchanged (asserted by
+  `check.py`). No sub-row is added.
+- **Public content.** The added lines contain no private host path, username, hostname, credential
+  or personal data. Lane paths are generic sandbox paths, as accepted before. No other agent
+  product is named, and no trademark is used as branding. IP policy is respected.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L-1 (low, backlog): the CLI `edit-prepare` never inserts the identity, contrary to the guide.**
+  `platforms/local-api/src/coding_cli.rs:830` validates the raw input against `PrepareEdit` before
+  `edit_prepare` runs. `PrepareEdit` now requires `expected_worktree_root_sha256`, so input without
+  it fails with a bare error. The insertion at `coding_cli.rs:569` therefore only overwrites an
+  equal value on this path; it is effective only through `propose-worktree`. The statement in
+  `docs/guides/coding-owned-edits.md:43` ("The terminal inserts the identity shown in its read
+  confirmation") is true for `propose-worktree` only. A strict-change JSON retained from before
+  this change, as `coding-terminal.md` describes, now refuses. The behaviour fails closed and has
+  no security impact. Fix: pre-validate after insertion (parse into a `Value`, insert or compare,
+  then `object_json::<PrepareEdit>`), or state in the guide that the input must already carry the
+  displayed digest.
+- **L-2 (low, backlog): migration hides existing strict-parsing negatives.**
+  `platforms/local-api/tests/coding_worktree.rs:935-940` keeps four raw malformed bodies (string
+  `approve_read`, a duplicate key, array-form `expected_sources`, a non-object body) that lack the
+  new required field. Three of them now get 400 for the missing field rather than their intended
+  defect. As a result, the `expected_sources` object-shape guard
+  (`platforms/local-api/src/coding_repository_api.rs:85-90`) is no longer exercised by any test on
+  this route. The guard code is unchanged. Fix: add `"expected_worktree_root_sha256"` with the
+  displayed (or any 64-hex) value to those byte strings.
+- **L-3 (low, backlog): correlation applies only at the repository selector, not at
+  `prepare_edit`.** `LinuxCodingReadScope::select` is public
+  (`platforms/linux/src/coding_workspace.rs:101`). `prepare_edit` accepts any scope whose
+  path/device/inode digest equals the held root (`coding_repository_edit.rs:77-82, 95`).
+  `select_created_sources` relies on exactly this equality, which proves it. So a crate-external
+  trusted Rust caller that knows the worktree path can still prepare an inert held-worktree edit
+  preview without presenting the displayed root. HTTP and CLI cannot reach this, and writes still
+  need exact approval. The guide's "the uncorrelated selector is internal" is true of the method
+  but not of the capability. Fix: have `prepare_edit` accept only a scope type minted by
+  `consented_created_sources` (a private newtype), or document this limit.
+- **L-4 (low, backlog): one evidence sentence is not asserted.** The evidence says a retained scope
+  "can still read a displaced original directory". The test guards that read with
+  `if let Ok(sources) = scope.read(&paths)` (`platforms/linux/src/coding_repository_tests.rs:748`),
+  so it only proves "never the replacement". Fix: assert the outcome, or soften the sentence to
+  "may".
+- Earlier same-row lows remain backlog as stated: commit-control native forwarding,
+  conservative pre-dispatch uncertainty and slow postflight recovery. The 0c859b28 L-1 and the
+  9008ee38 L1 are addressed by this batch for the HTTP/CLI and native selector surfaces, subject
+  to L-3.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing same-row batch):** PASS for this exact commit as a same-row
+  increment. Neither row closes or may be ticked. The full affected gate remains FAIL with exactly
+  the inherited 72 failures and 64 ignores. Native admission, original reviewer and artifact
+  provenance, complete product approval composition, durable recovery, model measurements and
+  approved push remain OPEN. No release or owner readiness is asserted.
+
+Verdict: PASS

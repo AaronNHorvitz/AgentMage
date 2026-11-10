@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The retained [worktree source-selection review](docs/reviews/18dd68113fc3-local-coding-worktree-read-selection.txt)
+has **Verdict: PASS** for exact commit
+`18dd68113fc3be02da886bd7e4123cf950c2abaa`, with no high or medium finding.
+Its low findings on terminal field insertion, strict-parsing test coverage,
+alternate native read-scope construction and displaced-read wording remain
+same-row backlog alongside earlier lows. Neither T-303 nor T-306 closes.
+
+The [commit finding-admission batch](docs/evidence/t306-review-finding-admission-2026-11-10.md)
+rejects unresolved medium, high and critical findings in both visible and
+suppressed review results at the two kernel planners and the live-owner path.
+The complete affected gate remains **FAIL**: 3,063 passes, the same 72 inherited
+failures and 72 ignores over 46 unfiltered targets. The added kernel selection
+passes 20 targets with eight unchanged ignored helpers; all prior failure/ignore
+identities match. Both new methods, 31 controls, formatting and Clippy pass;
+four source hashes stay fixed. Independent core review is required. T-303/T-306
+stay open without new rows. Reviewer/artifact provenance, complete product
+approval composition, native admission, recovery, model measurements and approved
+push remain open.
+
 The retained [commit-control review](docs/reviews/c5088d85a5d1-local-coding-commit-control.txt)
 has **Verdict: PASS** for exact commit
 `c5088d85a5d192211d469c2edfef2b7a84ab71e9`, with no high or medium finding.

@@ -21,6 +21,19 @@ Stop when a file, diff, test, unresolved issue, rollback step, or unrelated chan
 is missing or stale. A packet is explanatory evidence only and cannot authorize a
 commit.
 
+Both kernel commit planners and the live-owner candidate planner refuse every
+unresolved medium, high or critical finding in the complete normalized review.
+Low confidence and duplicate suppression change presentation; they do not resolve
+a finding. The existing packet count describes visible high/critical findings
+only and is not an admission decision. Informational and low findings remain
+inspectable, including their suppression evidence. Packet integrity is checked
+before this policy is applied. The live-owner path refuses a blocked packet
+before held-root inspection, source reads or offline Git observation.
+
+This check cannot authenticate a reviewer or prove that a caller supplied all
+findings. Reviewer and artifact provenance, separate exact approval and native
+admission remain prerequisites for executable candidate/commit composition.
+
 ## Review the Candidate Tree
 
 Candidate-tree evidence must name the exact parent, tree, temporary-index

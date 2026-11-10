@@ -3,8 +3,9 @@
 
 use super::*;
 use agentmage_kernel_engine::review_packet::{
-    ChangePurposeAssignment, CommitChangePurpose, ReviewPacketInput, build_logical_commit_plan,
-    build_review_packet, normalize_review_findings,
+    ChangePurposeAssignment, CommitChangePurpose, FindingSeverity, ReviewPacketInput,
+    build_logical_commit_plan, build_review_packet, normalize_review_findings,
+    verify_review_packet,
 };
 use std::cell::Cell;
 use std::fs;
@@ -641,6 +642,108 @@ fn candidate_review_blocks_visible_medium_high_critical_findings_without_inventi
         assert_eq!(owner.created.as_ref().unwrap().edits.len(), 1);
         owner.check_completion_validation().unwrap();
     }
+}
+
+#[test]
+fn candidate_review_blocks_suppressed_material_findings_before_any_source_or_git_read() {
+    use agentmage_kernel_engine::review_packet::{ReviewFindingInput, ReviewMode};
+    let (f, owner, changes) = command::tests::candidate_review_fixture();
+    let original = packet(&owner, &changes);
+    let mut validation = owner.inspect_validation().unwrap();
+    let records = owner.inspect().unwrap()["receipts"].clone();
+    assert!(plan(&owner, &original, || Ok(observation(&owner))).is_ok());
+    let selected = owner.inspect_apply().unwrap();
+    let review = owner
+        .consented_commit_review(
+            selected["repository_root_sha256"].as_str().unwrap(),
+            selected["worktree_root_sha256"].as_str().unwrap(),
+        )
+        .unwrap();
+    // Even an unavailable source must not conceal the review refusal behind
+    // a filesystem error. The entire normalized result is checked first.
+    fs::rename(f.root.join("owned/worktree"), f.root.join("displaced")).unwrap();
+    for severity in [
+        FindingSeverity::Medium,
+        FindingSeverity::High,
+        FindingSeverity::Critical,
+    ] {
+        for confidence_bps in [0, 6999] {
+            for duplicate in [false, true] {
+                let mut inputs = vec![ReviewFindingInput {
+                    finding_id: "original-material-finding".into(),
+                    mode: ReviewMode::Correctness,
+                    code: "fixture.review".into(),
+                    path: "sentinel".into(),
+                    line: 1,
+                    severity,
+                    confidence_bps,
+                    evidence_sha256: hash(b"synthetic finding evidence"),
+                    rationale_code: "fixture.rationale".into(),
+                }];
+                if duplicate {
+                    let mut second = inputs[0].clone();
+                    second.finding_id = "duplicate-material-finding".into();
+                    inputs.push(second);
+                }
+                let mut p = original.clone();
+                p.review_results =
+                    normalize_review_findings(vec![ReviewMode::Correctness], inputs).unwrap();
+                assert!(p.review_results.findings.is_empty());
+                assert_eq!(
+                    p.review_results.suppressed.len(),
+                    if duplicate { 2 } else { 1 }
+                );
+                let p = reseal(p);
+                assert!(verify_review_packet(&p));
+                assert_eq!(p.blocking_finding_count, 0); // Existing display count, not admission.
+                assert_eq!(
+                    review
+                        .plan_candidate_tree(&p, &p.commit_plan.groups[0].group_id, "review-build")
+                        .unwrap_err()
+                        .code(),
+                    "code.commit.review-packet"
+                );
+                assert_eq!(
+                    plan(&owner, &p, || panic!("Git must not run"))
+                        .unwrap_err()
+                        .code(),
+                    "code.commit.review-packet",
+                    "{severity:?} / {confidence_bps} / duplicate={duplicate}"
+                );
+            }
+        }
+    }
+    fs::rename(f.root.join("displaced"), f.root.join("owned/worktree")).unwrap();
+    assert_eq!(owner.inspect().unwrap()["receipts"], records);
+    // Renaming changes the root metadata in the sealed source observation.
+    // History is preserved; that external drift must not regain readiness.
+    validation["workspace_binding"]["matches_current_observation"] = json!(false);
+    assert_eq!(owner.inspect_validation().unwrap(), validation);
+    assert_eq!(
+        owner.check_completion_validation().unwrap_err().code(),
+        "code.completion.source-binding"
+    );
+    assert_eq!(
+        review
+            .capture_applied_write_review(
+                original
+                    .change_set
+                    .files()
+                    .iter()
+                    .map(|f| ChangePurposeAssignment {
+                        operation_id: f.operation_id.clone(),
+                        purpose: f.purpose
+                    })
+                    .collect()
+            )
+            .unwrap(),
+        original.change_set
+    );
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"preserve human work"
+    );
+    assert!(!f.root.join("owned/candidate-index-review-build").exists());
 }
 
 #[test]
