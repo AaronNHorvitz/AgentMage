@@ -1921,7 +1921,7 @@ pub(crate) mod tests {
             arguments,
             driver,
             GrantOperation::GitCommit,
-            "transaction-0001",
+            "fixture-commit",
             "attempt-0001",
         )
     }
@@ -2699,6 +2699,206 @@ pub(crate) mod tests {
                 agentmage_kernel_contracts::AuthorityTransactionState::Terminal
             );
         }
+    }
+
+    #[test]
+    fn local_commit_reconstruction_after_encrypted_restart_cannot_repeat_success() {
+        assert_commit_restart_refuses_reconstruction(None);
+    }
+
+    #[test]
+    fn local_commit_reconstruction_after_each_durable_crash_boundary_cannot_launch_again() {
+        for fault in [
+            FaultPoint::PreparedStored,
+            FaultPoint::GrantConsumed,
+            FaultPoint::AttemptRecorded,
+            FaultPoint::LaunchBoundaryCommitted,
+            FaultPoint::WorkerReturned,
+            FaultPoint::ResultReconciled,
+        ] {
+            assert_commit_restart_refuses_reconstruction(Some(fault));
+        }
+    }
+
+    // Real encrypted-store checkpoints/recovery and actual commit driver/grant
+    // consumption. Only held objects, approval, clock and executor are synthetic;
+    // no native Git, signer, consent channel or complete product route is proven.
+    fn assert_commit_restart_refuses_reconstruction(fault: Option<FaultPoint>) {
+        use crate::local_commit::LocalCommitEffectDriver;
+        use crate::local_commit::review_preparation_tests::{
+            FixedClock, SyntheticExecutor, prepared_fixture,
+        };
+
+        let (prepared, before) = prepared_fixture();
+        let mut fixture =
+            fixture_with_operation(None, GrantOperation::GitCommit, prepared.request_bytes());
+        fixture.transaction_id =
+            AuthorityTransactionId::from_raw(&prepared.plan().commit_transaction_id);
+        let mut request = request(&fixture);
+        request.context.now_epoch_ms = 15_000;
+        request.occurred_at_epoch_ms = 15_000;
+        let make_driver = |now| {
+            LocalCommitEffectDriver::new(
+                SyntheticExecutor::default(),
+                commit_held_fixture(),
+                prepared.clone(),
+                before.clone(),
+                crate::propagation::CancellationToken::root(
+                    agentmage_kernel_contracts::BoundaryKind::Kernel,
+                    fixture.context.task_id.clone(),
+                    fixture.call.correlation_id.clone(),
+                ),
+                FixedClock(now),
+            )
+            .unwrap()
+        };
+        let mut first = make_driver(15_001);
+        let directory = store_directory();
+        let path = directory.join("commit-authority.db");
+        let observation = store_observation();
+        let mut store =
+            OperationalStore::open(&path, &observation, &mut TestStoreKey([43; 32])).unwrap();
+        let mut coordinator = AuthorityTransactionCoordinator::new();
+        store
+            .persist_authority(&fixture.issuer, &coordinator)
+            .unwrap();
+        let result = coordinator.run_with_checkpoint(
+            &fixture.registry,
+            &mut fixture.issuer,
+            &fixture.policy,
+            &request,
+            &mut first,
+            fault,
+            &mut |issuer, coordinator| {
+                store
+                    .persist_authority(issuer, coordinator)
+                    .map_err(|_| AuthorityTransactionError::PersistenceFailure)
+            },
+        );
+        if fault.is_some() {
+            assert_eq!(result, Err(AuthorityTransactionError::SimulatedCrash));
+        } else {
+            assert_eq!(result.unwrap().outcome, OperationOutcome::Succeeded);
+        }
+        let launched = matches!(
+            fault,
+            None | Some(FaultPoint::WorkerReturned | FaultPoint::ResultReconciled)
+        );
+        assert_eq!(first.into_executor().launches, usize::from(launched));
+        drop(store);
+        // Discard the entire in-memory issuer/coordinator before recovery.
+        drop(coordinator);
+        drop(fixture.issuer);
+        let mut runtime =
+            DurableAuthorityRuntime::open(&path, &observation, &mut TestStoreKey([43; 32]), 15_002)
+                .unwrap();
+        let expected = match fault {
+            None | Some(FaultPoint::ResultReconciled) => OperationOutcome::Succeeded,
+            Some(FaultPoint::LaunchBoundaryCommitted | FaultPoint::WorkerReturned) => {
+                OperationOutcome::Uncertain
+            }
+            Some(_) => OperationOutcome::Failed,
+        };
+        assert_eq!(runtime.receipts().len(), 1);
+        assert_eq!(runtime.receipts()[0].outcome, expected);
+        let recovered = runtime.receipts()[0].clone();
+
+        // Issue a genuinely fresh, policy-valid grant in the SAME reopened
+        // store. A spent original grant must not mask transaction protection.
+        let parent = runtime
+            .issue_session_read(SessionReadGrantRequest {
+                grant_id: GrantId::from_raw("reconstruction-parent"),
+                actor_id: fixture.context.actor_id.clone(),
+                session_id: fixture.context.session_id.clone(),
+                task_id: fixture.context.task_id.clone(),
+                targets: vec![scope(&[])],
+                excluded_targets: vec![scope(&["private"])],
+                sensitivity: DataSensitivity::Ephemeral,
+                issued_at_epoch_ms: 15_002,
+                expires_at_epoch_ms: 60_000,
+                nonce: GrantNonce::from_raw("reconstruction-parent"),
+                maximum_derived_operations: 1,
+                preview_sha256: "2".repeat(64),
+                policy_sha256: fixture.policy.policy_sha256().into(),
+            })
+            .unwrap();
+        let grant = runtime
+            .derive_operation(
+                &parent.grant_id,
+                DerivedOperationGrantRequest {
+                    grant_id: GrantId::from_raw("reconstruction-operation"),
+                    approval_id: fixture.approval_id.clone(),
+                    action_id: fixture.call.action_id.clone(),
+                    action_kind: ActionKind::DeterministicTool,
+                    operation: fixture.grant.operation,
+                    tool_id: fixture.call.tool_id.clone(),
+                    tool_version: fixture.call.tool_version.clone(),
+                    targets: fixture.grant.targets.clone(),
+                    argument_sha256: fixture.grant.argument_sha256.clone(),
+                    preimages: fixture.grant.preimages.clone(),
+                    expected_side_effects: fixture.grant.expected_side_effects.clone(),
+                    rollback_description: "Synthetic restart check; inspect after interruption"
+                        .into(),
+                    issued_at_epoch_ms: 15_002,
+                    expires_at_epoch_ms: 30_000,
+                    nonce: GrantNonce::from_raw("reconstruction-operation"),
+                    preview_sha256: fixture.grant.preview_sha256.clone(),
+                    policy_sha256: fixture.policy.policy_sha256().into(),
+                },
+            )
+            .unwrap();
+        request.grant_id = grant.grant_id.clone();
+        request.attempt_id = OperationAttemptId::from_raw("reconstructed-attempt");
+        request.context.now_epoch_ms = 15_003;
+        request.occurred_at_epoch_ms = 15_003;
+        let mut repeated = make_driver(15_004);
+        assert_eq!(
+            runtime.execute_effect(
+                &fixture.registry,
+                &fixture.policy,
+                request.clone(),
+                &mut repeated,
+            ),
+            Err(DurableAuthorityError::Transaction(
+                AuthorityTransactionError::InvalidIdentity
+            ))
+        );
+        assert_eq!(repeated.into_executor().launches, 0);
+        assert_eq!(runtime.receipts(), std::slice::from_ref(&recovered));
+        assert_eq!(
+            runtime.current_grant(&grant.grant_id).unwrap().status,
+            GrantStatus::Issued
+        );
+
+        // With a different transaction, the new grant really IS consumed, but
+        // the reconstructed driver refuses the plan/transaction mismatch.
+        request.transaction_id = AuthorityTransactionId::from_raw("renamed-commit");
+        let mut renamed = make_driver(15_004);
+        let refused = runtime
+            .execute_effect(&fixture.registry, &fixture.policy, request, &mut renamed)
+            .unwrap();
+        assert_eq!(refused.outcome, OperationOutcome::Failed);
+        assert_eq!(
+            renamed.take_error(),
+            Some(crate::local_commit::LocalCommitError::ApprovalDenied)
+        );
+        assert!(renamed.take_receipt().is_none());
+        assert_eq!(renamed.into_executor().launches, 0);
+        assert_eq!(
+            runtime.current_grant(&grant.grant_id).unwrap().status,
+            GrantStatus::Consumed
+        );
+        assert_eq!(runtime.receipts().len(), 2);
+        assert_eq!(runtime.receipts()[0], recovered);
+        drop(runtime);
+        let reopened =
+            DurableAuthorityRuntime::open(&path, &observation, &mut TestStoreKey([43; 32]), 15_005)
+                .unwrap();
+        assert_eq!(reopened.receipts().len(), 2);
+        assert_eq!(reopened.receipts()[0], recovered);
+        assert_eq!(reopened.receipts()[1], refused);
+        drop(reopened);
+        fs::remove_dir_all(directory).unwrap();
     }
 
     #[test]

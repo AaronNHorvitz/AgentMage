@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The retained [single-use review](docs/reviews/a1c124d2f8b7-local-coding-single-use.txt)
+has **Verdict: PASS** for exact commit
+`a1c124d2f8b7a3eeeba0c97d22a49fa96bec5d2a`, with no high or medium finding.
+Its low L-1 post-executor reconciliation uncertainty classification and L-2
+initial-focused-run wording remain same-row backlog. The prior isolated rollback
+and operation/held-scope lows are independently confirmed addressed. Neither
+T-303 nor T-306 closes.
+
+The [durable transaction binding batch](docs/evidence/t306-transaction-replay-2026-11-10.md)
+requires dormant commit dispatch to use the transaction identity in its approved
+plan. Three new methods exercise reconstructed drivers and actual encrypted-store
+recovery after success and all six crash boundaries, using synthetic Git effects
+and approvals. The complete affected gate remains **FAIL**: 3,090 passes, the exact
+inherited 72 failures and 72 ignores over 46 unfiltered targets. All three new
+methods and 41 changed-source controls, formatting and Clippy pass; three source
+hashes stay fixed. Independent core review is required. T-303/T-306 remain open
+without new rows. This does not restore native ownership, authenticate consent
+or enable a product commit route.
+
 The retained [prepared-reconciliation review](docs/reviews/e569aa90a67b-local-coding-prepared-reconciliation.txt)
 has **Verdict: PASS** for exact commit
 `e569aa90a67bd349d6d9c7d5c4eadeb298c13a12`, with no high or medium finding.

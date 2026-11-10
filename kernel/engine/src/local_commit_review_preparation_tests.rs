@@ -313,7 +313,7 @@ fn preparation_and_driver_recheck_retained_packet_before_launch() {
     }
 }
 
-struct FixedClock(u64);
+pub(crate) struct FixedClock(pub(crate) u64);
 
 impl RuntimeClock for FixedClock {
     fn now_epoch_ms(&mut self) -> Result<u64, crate::runtime_loop::RuntimePortFailure> {
@@ -332,8 +332,8 @@ impl RuntimeClock for SequenceClock {
 }
 
 #[derive(Default)]
-struct SyntheticExecutor {
-    launches: usize,
+pub(crate) struct SyntheticExecutor {
+    pub(crate) launches: usize,
 }
 
 impl BoundedLocalCommitExecutor for SyntheticExecutor {
@@ -376,7 +376,7 @@ impl BoundedLocalCommitExecutor for SyntheticExecutor {
     }
 }
 
-pub(super) fn prepared_fixture() -> (PreparedLocalCommit, RepositoryPreservationManifest) {
+pub(crate) fn prepared_fixture() -> (PreparedLocalCommit, RepositoryPreservationManifest) {
     let packet = packet(None, 0, false);
     let (plan, before) = inputs(&packet);
     let approval = record_reviewed_manual_commit_approval(&plan, &packet, decision()).unwrap();
@@ -563,6 +563,41 @@ fn commit_driver_refuses_unavailable_construction_clock() {
 }
 
 #[test]
+fn commit_dispatch_binds_reconstructed_drivers_to_the_approved_transaction() {
+    use crate::authority_transaction::tests::{commit_held_fixture, dispatch_commit_fixture_as};
+    // Independent consumed grants and fresh drivers: the process-local latch
+    // cannot be what refuses the changed transaction identity.
+    for transaction in ["fixture-commit", "reconstructed-commit"] {
+        let (prepared, before) = prepared_fixture();
+        let arguments = prepared.request_bytes().to_vec();
+        let mut driver = LocalCommitEffectDriver::new(
+            SyntheticExecutor::default(),
+            commit_held_fixture(),
+            prepared,
+            before,
+            cancellation(),
+            SequenceClock([Ok(15_000), Ok(15_001)].into()),
+        )
+        .unwrap();
+        let receipt = dispatch_commit_fixture_as(
+            &arguments,
+            &mut driver,
+            GrantOperation::GitCommit,
+            transaction,
+            "reconstructed-attempt",
+        );
+        let allowed = transaction == "fixture-commit";
+        assert_eq!(receipt.outcome == OperationOutcome::Succeeded, allowed);
+        assert_eq!(driver.take_receipt().is_some(), allowed);
+        assert_eq!(
+            driver.take_error(),
+            (!allowed).then_some(LocalCommitError::ApprovalDenied)
+        );
+        assert_eq!(driver.into_executor().launches, usize::from(allowed));
+    }
+}
+
+#[test]
 fn commit_driver_is_single_use_after_success_uncertainty_and_prelaunch_refusal() {
     use crate::authority_transaction::tests::{commit_held_fixture, dispatch_commit_fixture_as};
     use crate::runtime_loop::RuntimePortFailure;
@@ -641,7 +676,7 @@ fn commit_driver_is_single_use_after_success_uncertainty_and_prelaunch_refusal()
             },
             &mut driver,
             GrantOperation::GitCommit,
-            "commit-first",
+            "fixture-commit",
             "attempt-first",
         );
         assert_eq!(
@@ -656,10 +691,13 @@ fn commit_driver_is_single_use_after_success_uncertainty_and_prelaunch_refusal()
         // These module-private substitutions cannot be performed by callers.
         driver.prepared = original;
         driver.cancellation = cancellation();
-        for (transaction, attempt) in [
-            ("commit-second", "attempt-second"),
+        for (index, (transaction, attempt)) in [
+            ("fixture-commit", "attempt-second"),
             ("commit-third", "attempt-third"),
-        ] {
+        ]
+        .into_iter()
+        .enumerate()
+        {
             let repeated = dispatch_commit_fixture_as(
                 &arguments,
                 &mut driver,
@@ -677,7 +715,7 @@ fn commit_driver_is_single_use_after_success_uncertainty_and_prelaunch_refusal()
             );
             assert_eq!(
                 driver.take_receipt(),
-                if transaction == "commit-second" {
+                if index == 0 {
                     original_receipt.clone()
                 } else {
                     None
@@ -685,11 +723,7 @@ fn commit_driver_is_single_use_after_success_uncertainty_and_prelaunch_refusal()
             );
             assert_eq!(
                 driver.take_error(),
-                if transaction == "commit-second" {
-                    original_error
-                } else {
-                    None
-                }
+                if index == 0 { original_error } else { None }
             );
         }
         if let Some(receipt) = original_receipt {
@@ -748,7 +782,7 @@ fn commit_driver_cannot_relaunch_after_executor_unwinds() {
             &arguments,
             &mut driver,
             GrantOperation::GitCommit,
-            "unwind-first",
+            "fixture-commit",
             "unwind-first-attempt",
         )
     }));
@@ -862,7 +896,7 @@ fn commit_dispatch_refuses_other_operation_or_other_held_scope() {
             &arguments,
             &mut driver,
             GrantOperation::GitCommit,
-            "scope-first",
+            "fixture-commit",
             "scope-attempt"
         )
         .outcome,
@@ -886,7 +920,7 @@ fn commit_dispatch_refuses_other_operation_or_other_held_scope() {
             &arguments,
             &mut driver,
             operation,
-            "operation-first",
+            "fixture-commit",
             "operation-attempt",
         );
         let allowed = operation == GrantOperation::GitCommit;

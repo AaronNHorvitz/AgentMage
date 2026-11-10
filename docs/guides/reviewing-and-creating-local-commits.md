@@ -504,7 +504,23 @@ production driver does not catch panics or claim that effects were rolled back.
 
 This is a process-local guard. `PreparedLocalCommit` is an authority-free value
 that can still be cloned or reconstructed; another driver still needs exact
-kernel authority and all native checks. The eventual product owner must retain
-durable approval/attempt records and refuse replay across restart or rebuilt
-drivers. This guard supplies neither durable recovery nor approval provenance.
-No product commit route, native admission or model measurement follows from it.
+kernel authority and all native checks. Dispatch now also requires the consumed
+authority transaction identity to equal the transaction in the approved plan.
+The host must execute through the same canonical durable authority store, whose
+transaction history rejects reuse before grant consumption. A fresh grant and
+renamed transaction cannot retry that plan: the driver refuses the identity
+mismatch before executor access. Changing the plan identity invalidates its
+existing approval and exact request binding.
+
+Tests compose the actual dormant commit driver with encrypted authority-store
+checkpoints and reopen recovery, after success and at all six crash boundaries.
+They issue a fresh grant in the reopened store: replaying the original
+transaction leaves it unused; renaming the transaction consumes it but launches
+nothing. A second reopen preserves both the original recovery receipt and the
+refusal. Held objects, approvals, clock and executor results remain synthetic;
+the test does not reopen repository ownership or a native signer.
+
+This depends on retaining that canonical store. A separate or replaced store,
+approval provenance, repository recovery and complete product composition still
+need their own controls. No product commit route, native admission or model
+measurement follows from this component evidence. T-303/T-306 remain open.

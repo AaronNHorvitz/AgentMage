@@ -1200,7 +1200,9 @@ pub trait BoundedLocalCommitExecutor {
 /// Every first entry is final, including refusal or unwind; later entries fail
 /// before clock or executor access and preserve the original terminal evidence.
 /// This process-local latch does not prevent reconstruction in another driver
-/// or replace the host's durable approval/attempt and recovery tracking.
+/// or replace the host's durable approval/attempt and recovery tracking. Dispatch
+/// must use the plan's exact transaction identity in that same canonical store;
+/// changing the transaction identity cannot retry an approved plan.
 pub struct LocalCommitEffectDriver<E, H, C> {
     executor: E,
     held_repository_scope: H,
@@ -1303,6 +1305,7 @@ where
         if now_epoch_ms < self.constructed_at_epoch_ms
             || !authorization.grant_live_at(now_epoch_ms)
             || authorization.operation().operation() != GrantOperation::GitCommit
+            || authorization.transaction_id().as_str() != self.prepared.plan.commit_transaction_id
             || !authorization.authorizes_held_object(&self.held_repository_scope)
             || call.arguments.sha256 != self.prepared.request_sha256
             || call.arguments.bytes != self.prepared.request_bytes
@@ -1879,4 +1882,4 @@ mod tests {
 
 #[cfg(test)]
 #[path = "local_commit_review_preparation_tests.rs"]
-mod review_preparation_tests;
+pub(crate) mod review_preparation_tests;

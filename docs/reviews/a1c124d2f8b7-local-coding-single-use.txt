@@ -1,0 +1,170 @@
+Commit: a1c124d2f8b7a3eeeba0c97d22a49fa96bec5d2a
+Scope: local-coding-single-use
+
+# Independent review: single-use local commit dispatch (T-303 / T-306, core, non-closing)
+
+Reviewer: separate Claude Opus 5.5 session. I had read-only access to the pinned checkout
+`/lane/review-checkout`. This is a same-model review.
+
+## Methods
+
+- Confirmed the checkout: `git rev-parse HEAD` = `a1c124d2f8b7a3eeeba0c97d22a49fa96bec5d2a`, and
+  status was clean before and after the run.
+- The diff against parent `e569aa90a67bd349d6d9c7d5c4eadeb298c13a12` touches 7 files: TASKS.md, the
+  evidence note, the local-commit guide, the retained parent review, and three Rust sources
+  (`local_commit.rs`, `authority_transaction.rs` test module, `local_commit_review_preparation_tests.rs`).
+  I read every hunk.
+- Read IP-POLICY.md, the evidence note, the guide section, the TASKS summary and the retained parent
+  report.
+- The retained parent report is byte-identical to `/lane/reviews/e569aa90a67b-local-coding-prepared-reconciliation.md`
+  (`cmp`).
+- Read every bundle script before running it: README, run.py, check.py, light.py, parse_gate.py,
+  stage_check.py and mutations.py. None writes to the checkout except mutations.py, which I did not
+  run. I read its retained logs only.
+- Read the coordinator's dispatch path (`authority_transaction.rs:730-800`), `EffectLaunch`, and the
+  prior dispatch-clock and complete-packet reports, to check how a refused reentry is recorded and
+  whether the earlier lows are now covered.
+
+## Commands and results (from /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-single-use/review-inputs.sha256`
+   - Exit 0.
+   - The manifest's own SHA-256 is `80d52ce8da729043c1581712e86702ada3ca4420b10795911b9db7b9f216fe98`,
+     matching the request.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-single-use/run.py /lane/state/tmp/review-single-use-full-OPUS1110`
+   - Exit 1, as expected: `FAST GATE: FAIL`.
+   - `source_unchanged: true`. Took 433.65 s including reservations.
+   - Raw log SHA-256 `ddd0c3b2cd2e5d7c866c4b53951dc2406b5e59bf4678b70a0c4506b5646ab04e`.
+   - Command exits: diff-check 0, lint-untracked 0, lint-reviews 0, markdownlint 0, fmt 0 (2.35 s),
+     Clippy `-D warnings` 0 (46.81 s), cargo test 101 (382.92 s). No timeout.
+   - My plan has one more light command than the builder's validation-1 plan: `--lint-reviews` for
+     the retained report. That report was added after the builder's source freeze. check.py asserts
+     only that the cargo commands are identical, and they are.
+3. `python3 -B /lane/state/tmp/t306-single-use/check.py /lane/state/tmp/review-single-use-full-OPUS1110`
+   - Exit 0. This is data comparison only, not a gate pass.
+   - 46 targets; totals 3087 passed / 72 failed / 72 ignored / 0 measured / 0 filtered.
+   - Every per-target failure and ignore identity equals the parent's raw baseline. The only count
+     change is +5 passes in the kernel engine unit target.
+   - All 41 `#[test]` methods in the three changed sources report `ok`: the 5 new methods plus 36
+     controls.
+   - The TASKS `| [` row lines are unchanged, and the public-content checks pass.
+   - Independently, `parse_gate.targets()` on my log equals the same function on the builder's
+     `validation-1/fast.log`, including all failure and ignore identities.
+   - The inherited failures are in the Linux coding runtime and similar environment-refused targets,
+     for example `linux_coding_runtime::tests::durable_coding_run_persists_continuation_artifact_and_checkpoint`.
+4. `cmp .../validation-1/source-freeze.json .../review-single-use-full-OPUS1110/source-freeze.json`: exit 0.
+   - After the run, the three source SHA-256s still equal the manifest:
+     - `local_commit.rs`: `039f77e8…`
+     - `authority_transaction.rs`: `1c409f22…`
+     - tests: `5075e538…`
+5. `python3 -B /lane/state/tmp/t306-single-use/light.py`: exit 0. All four light commands pass;
+   markdownlint reports 0 issues in 3 files.
+6. `git diff --check e569aa90a67bd349d6d9c7d5c4eadeb298c13a12 --`: exit 0, no output.
+7. `git status --short`: empty.
+
+## Retained mutation logs (read only)
+
+- All five mutants are killed by behavioural assertions:
+  - `no-latch.log`: the second outcome `Succeeded`, at tests:670.
+  - `late-latch.log`: the second, uncaught call reaches the panicking clock.
+  - `no-rollback.log`: rollback outcome mismatch.
+  - `no-operation.log`: WorkspaceWrite outcome mismatch.
+  - `no-held-scope.log`: the other-scope dispatch `Succeeded`.
+- `no-latch-initial.log` failed at the since-removed `assert!(driver.attempted)`. The rerun log
+  matches the current line numbers. The four older mutant logs cite lines exactly one higher than
+  the current file. That is consistent with removing that one line and leaving the other four test
+  methods unchanged.
+- File timestamps show the order: mutations ran, then validation-1 froze the sources at 13:50:19,
+  then the full run finished at 13:56:58, then docs and the retained report were added.
+
+## Analysis
+
+- **Latch correctness.**
+  - `std::mem::replace(&mut self.attempted, true)` is the first statement of `execute`
+    (`local_commit.rs:1295`), before the clock, authority, cancellation or executor are touched.
+  - The field is private and set nowhere else. The constructor initialises it to `false`.
+    `into_executor` consumes the driver.
+  - So no caller can reset it. A later entry returns `EffectLaunch::failed()` without touching
+    `receipt` or `error`, so original evidence is neither replaced nor recreated.
+  - The coordinator records the refused reentry as a `Failed` "worker-launch-failed" terminal for
+    the second transaction (`authority_transaction.rs:764-779`). That is accurate, because nothing
+    was launched.
+- **Debug output.** `Debug` adds only the `attempted` bool, so no content is exposed.
+- **Tests use the real path.** `dispatch_commit_fixture_as` builds a fresh issuer, policy and
+  coordinator for each invocation and goes through `execute_effect`. It also asserts that a
+  consumed-grant hash was recorded. There is no direct `EffectAuthorization` construction.
+- **Seven first-entry outcomes.** The test covers success, uncertain cleanup, clock unavailable,
+  expiry, argument mismatch, unsealed packet and cancelled.
+  - After the first entry, the test repairs the driver and issues two more consumed grants with
+    distinct IDs. Both refuse, with zero further clock samples.
+  - The receipt and error are preserved on the first take and stay `None` afterwards. The original
+    receipt binds the first transaction and attempt.
+  - Launch counts are exactly 1 for success and uncertain, and 0 otherwise.
+- **Unwinds.** Executor and clock unwinds are caught only in test code (`catch_unwind`). The
+  production code adds no panic recovery. The guide says an unwind must be treated as uncertain.
+- **Prior dispatch-clock lows are now covered.**
+  - L-1: construction at 16_000 with dispatch at 15_500 isolates the rollback guard; the
+    no-rollback mutant is killed.
+  - L-2: the wrong operation (WorkspaceWrite) and the wrong held scope (`authorization-other`) are
+    exercised. Each reaches the driver, which is shown by the driver-set `ApprovalDenied`, and
+    each has zero launches.
+- **Confinement and scope.** No product, API, MCP or terminal route constructs the driver; the only
+  call sites are tests. Nothing widens a boundary.
+  - The docs state plainly that the latch is process-local.
+  - A cloned or reconstructed `PreparedLocalCommit` in a new driver is still the host's durable
+    approval and attempt responsibility, and is not claimed as covered.
+- **Honesty, IP and public content.**
+  - No private paths, usernames, hostnames, credentials, product comparisons or trademark branding
+    appear in the added lines. The commit author identity follows the repository's existing
+    convention.
+  - No evaluator, hidden or held-out task, scorer, prompt, threshold, dependency, SBOM, lifecycle
+    or scoreboard file changed.
+  - No new row or sub-row was added, and both rows stay OPEN.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L-1 (low, pre-existing, recovery semantics):** `kernel/engine/src/local_commit.rs:1342-1344`.
+  - The problem: when the executor has already run but reconciliation fails (for example
+    `cleanup_verified = false` → `ResultDenied`), the driver returns `EffectLaunch::failed()`.
+    That constructor is documented as "the effect boundary was not crossed"
+    (`authority_transaction.rs:420`).
+  - The coordinator then terminalizes the transaction as `Failed`/"worker-launch-failed", with
+    `uncertain = false` (`authority_transaction.rs:768-779`).
+  - The new "uncertain" case shows the executor launched (launch count 1) but asserts only
+    `!= Succeeded`. A durable owner reading the coordinator journal would see a non-uncertain
+    failure for an attempt with unknown effects.
+  - This commit did not change it, and the driver is dormant.
+  - Fix during product composition: after executor invocation, return
+    `EffectLaunch::completed(EffectResult::from_redacted_material(OperationOutcome::Uncertain, …, StateChange::Uncertain))`
+    or something equivalent for any reconciliation error. Assert that the coordinator outcome is
+    `Uncertain` in the "uncertain" case.
+  - Same-row backlog.
+- **L-2 (low, evidence wording):** `docs/evidence/t306-single-use-2026-11-10.md:31`.
+  - "The focused run passes all fourteen" refers to the initial focused run, at 13:46. That run
+    predates the removal of the `driver.attempted` assertion, so it used earlier test bytes.
+  - The final test bytes are validated by the full gate, both the builder's and mine, where all 41
+    methods pass. So the claim is supported, only imprecisely labelled. The bundle README does say
+    "initial".
+  - Fix: say "initial focused run (before the final single-assertion removal)" next time.
+  - Backlog.
+
+The earlier same-row lows remain backlog as the builder states:
+- prepared-reconciliation L-1: exact absent-base refusal assertion
+- prepared-reconciliation L-2: native signing reconciliation coverage
+- complete-packet L-2: raw `reconcile_local_commit` path
+- the other earlier lows
+
+## Per-row result
+
+- T-303: increment PASS, no high or medium finding. The row stays OPEN; this is a non-closing
+  increment.
+- T-306: increment PASS, no high or medium finding. The row stays OPEN.
+  - Still open: durable approval and attempt tracking, native admission, trusted checker and
+    artifact integration, full original-owner approval composition, recovery, model measurements
+    and approved push.
+- The complete affected gate remains FAIL on the exact inherited 72 failures. This PASS covers this
+  exact commit's increment only. It is not a gate pass and claims no certification or compliance.
+
+Verdict: PASS
