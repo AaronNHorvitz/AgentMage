@@ -266,3 +266,22 @@ This is not yet an OpenPGP commit signature or an activated capability. Packet
 construction, verification, native admission and approval composition remain
 open; the existing signed-creation adapter remains dormant. Disposable agent
 fixtures prove the primitive's protocol only, not a complete approved workflow.
+
+## Dormant RSA signature assembly
+
+An internal assembler now prepares exact unsigned commit bytes from a verified
+plan, preserving every message byte and using the correct signature header for
+each Git object format. It constructs a v4 binary-document signature packet
+with SHA-256 and RSA only. Unsupported algorithms and malformed signature
+expressions refuse assembly; no fallback is selected. The approved timestamp
+must fit the signature's unsigned 32-bit time field.
+
+The dormant composition sends the complete signature digest to the socket-free
+primitive, assembles armor, checks the reconstructed signed content, and calls
+the public-only offline verifier before returning raw bytes. Full-fingerprint
+verification supplies identity; the packet's issuer key ID is advisory. No
+object is written, no branch moves and no product route or permission is added.
+The old direct signed-creation adapter remains dormant. Native admission,
+confined object write and complete approval/preservation composition are still
+required. Disposable RSA primary/subkey signatures and tamper rejection are
+component evidence, not a native approved coding workflow.

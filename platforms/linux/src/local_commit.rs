@@ -40,6 +40,9 @@ pub(crate) mod inspection;
 #[path = "local_commit_signing.rs"]
 pub(crate) mod signing;
 
+#[path = "local_commit_packet.rs"]
+pub(crate) mod packet;
+
 /// Stable Linux local-commit adapter failure class.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LinuxLocalCommitErrorKind {

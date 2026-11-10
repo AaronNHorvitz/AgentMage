@@ -2,6 +2,17 @@
 
 ## Active queue: local agent mission
 
+The [dormant RSA signature assembler](docs/evidence/t306-commit-packet-2026-11-10.md)
+prepares exact commit content and a signature packet, then requires independent
+public-only verification before returning raw bytes. It has no product caller,
+object write or approval authority. The original signed-creation adapter stays
+dormant. The complete affected gate remains **FAIL**: 1,399 passes, the exact
+inherited 72 failures and 64 ignores across 26 unfiltered targets. All six new
+methods, 33 controls, formatting and Clippy pass; all four source hashes stay
+fixed. Independent core review is required. T-303/T-306 remain open, without a
+new row or sub-row. The private-signing ancestor remains immutable while its
+review is in flight.
+
 The [socket-free private signing primitive](docs/evidence/t306-private-signing-2026-11-10.md)
 adds selected sealed-key capture and a foreground offline signer under the
 existing socket-denying supervisor. It returns an unverified signature expression;

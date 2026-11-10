@@ -157,8 +157,8 @@ impl SigningManifest {
     }
 }
 
-// Internal primitive only. The hash is not yet a complete OpenPGP message hash;
-// its response conveys no verification, approval, object or publication authority.
+// Internal primitive only. The caller supplies the complete OpenPGP digest;
+// the response conveys no verification, approval, object or publication authority.
 pub(super) fn sign_hash(
     signer: &LinuxOpenPgpSigner,
     digest: &[u8; 32],
@@ -450,6 +450,68 @@ fn add_guest_arguments(c: &mut Command, keygrip: &str) {
     // the withheld filter. No shell, socket or live keyring is involved.
     c.args(["--chdir", GUEST_HOME, "--seccomp", "4", "--", GUEST_AGENT]);
     c.args(agent_arguments(GUEST_HOME));
+}
+
+#[cfg(test)]
+pub(super) fn fixture_sign(
+    source: &Path,
+    home: &Path,
+    keygrip: &str,
+    digest: &[u8; 32],
+    cancellation: &CancellationToken,
+) -> Result<Vec<u8>, LinuxLocalCommitError> {
+    // Disposable fixture only: emulate the descriptor mount in a private home.
+    // Production never writes a private-key file and always uses run_owned.
+    use std::os::unix::fs::{DirBuilderExt as _, PermissionsExt as _};
+    let key = PrivateKey::capture(source, keygrip, || Ok(()))?;
+    fs::DirBuilder::new()
+        .mode(0o700)
+        .create(home.join("private-keys-v1.d"))
+        .map_err(|_| denied())?;
+    let mut bytes = Zeroizing::new(vec![
+        0;
+        fstat(&key.payload).map_err(|_| denied())?.st_size
+            as usize
+    ]);
+    if pread(&key.payload, &mut bytes[..], 0).map_err(|_| denied())? != bytes.len() {
+        return Err(denied());
+    }
+    let path = home.join(format!(
+        "private-keys-v1.d/{}.key",
+        keygrip.to_ascii_uppercase()
+    ));
+    fs::write(&path, &*bytes).map_err(|_| denied())?;
+    fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).map_err(|_| denied())?;
+    let deadline = Instant::now() + Duration::from_secs(5);
+    sign_with(key, keygrip, digest, cancellation, deadline, |payload| {
+        let input = rustix::io::fcntl_dupfd_cloexec(&payload[1], 3).map_err(|_| denied())?;
+        let mut command = Command::new("/usr/bin/gpg-agent");
+        command
+            .env_clear()
+            .env("LANG", "C")
+            .env("LC_ALL", "C")
+            .args(agent_arguments(home.to_str().ok_or_else(denied)?))
+            .stdin(Stdio::from(fs::File::from(input)));
+        let output = crate::sandbox::supervision::capture_local_commit_process(
+            command,
+            Some(cancellation),
+            deadline,
+        )
+        .map_err(|e| capture_error(e.kind(), LinuxLocalCommitErrorKind::ExecutionFailed))?;
+        let stream = |bytes: Vec<u8>| crate::sandbox::supervision::CapturedStream {
+            total: bytes.len(),
+            sha256: Sha256::digest(&bytes).into(),
+            retained: bytes,
+        };
+        Ok(SupervisedResult {
+            outcome: Ok(OperationOutcome::Succeeded),
+            status: Some(output.status),
+            stdout: stream(output.stdout),
+            stderr: stream(output.stderr),
+            resources: None,
+            output_complete: true,
+        })
+    })
 }
 
 #[cfg(test)]
