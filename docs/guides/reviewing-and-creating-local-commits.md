@@ -238,6 +238,12 @@ cache. Protected or externally backed keys can fail; there is no host fallback.
 Exactly two payloads, held installed artifacts, resource limits, separate output
 bounds, cancellation, deadlines and whole-unit cleanup remain mandatory.
 
+Signature data escapes require exactly two ASCII hexadecimal digits after
+percent; signed, incomplete and cross-record escapes refuse. Uppercase and
+lowercase hex preserve the same bytes, including encoded NUL, line breaks and
+percent. Decoded bytes remain unverified until packet assembly and independent
+signature verification succeed.
+
 The primitive returns only an unverified signature expression after a complete,
 phase-ordered successful response. Errors, inquiries, partial output, mismatched
 stream digests, unsuccessful exit or uncertain cleanup refuse the result.

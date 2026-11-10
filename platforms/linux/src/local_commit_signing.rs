@@ -292,7 +292,11 @@ fn parse_response(bytes: &[u8]) -> Option<Vec<u8>> {
             let mut i = 0;
             while i < encoded.len() {
                 if encoded[i] == b'%' {
-                    let hex = std::str::from_utf8(encoded.get(i + 1..i + 3)?).ok()?;
+                    let digits = encoded.get(i + 1..i + 3)?;
+                    if !digits.iter().all(u8::is_ascii_hexdigit) {
+                        return None;
+                    }
+                    let hex = std::str::from_utf8(digits).ok()?;
                     data.push(u8::from_str_radix(hex, 16).ok()?);
                     i += 3;
                 } else {

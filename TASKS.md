@@ -2,6 +2,18 @@
 
 ## Active queue: local agent mission
 
+The [signer escape repair](docs/evidence/t306-signing-escapes-2026-11-10.md)
+addresses the retained private-signing review's low L-1 and L-2 in the existing
+T-303/T-306 rows. Percent escapes require two hexadecimal digits; signed,
+partial and split escapes refuse. The selection test now has a valid private
+keyring and a successful selected-key capture control. Native execution remains
+blocked by executable artifact admission in this lane; the boundary is retained.
+The complete affected gate remains **FAIL**: 1,406 passes, the exact inherited
+72 failures and 64 ignores across 26 unfiltered targets. The new method and 51
+controls, formatting and Clippy pass; both source hashes stay fixed. Independent
+core review is required. Neither parent closes and no row or sub-row is added.
+The preceding storage commit remains immutable and under review.
+
 The [confined signed-commit storage increment](docs/evidence/t306-confined-storage-2026-11-10.md)
 composes the existing dormant executor with socket-free signing, independent
 public-only verification, sealed object storage, exact object identity/readback

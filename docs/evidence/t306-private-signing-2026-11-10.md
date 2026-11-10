@@ -3,6 +3,15 @@
 Status: complete affected gate remains **FAIL**; independent core review required.
 Neither parent closes, and no row or sub-row is added.
 
+Correction after independent review: the original percent decoder accepted a
+leading plus sign in a two-character escape, such as `%+1`. Its claim below
+that malformed escapes refuse was too broad. The
+[signer escape repair](t306-signing-escapes-2026-11-10.md) requires two hex
+digits and adds exhaustive byte/escape coverage. That repair also replaces
+the original invalid-keygrip test's nonexistent keyring with a valid fixture
+and a positive selected-key capture control. Original run counts and outcomes
+below are historical and unchanged.
+
 The retained [inspection-findings review](../reviews/ac9621ddcf35-local-coding-inspection-findings.txt)
 has **Verdict: PASS** for exact commit
 `ac9621ddcf352487554b02c7262cc14eff8b91c3`, without any finding. The report is

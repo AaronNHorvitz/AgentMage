@@ -245,6 +245,7 @@ fn private_signing_protocol_requires_exact_order_complete_data_and_no_inquiries(
         text.replace("D ", "S "),
         text.replace("D ", "INQUIRE "),
         text.replace("D ", "D %GG"),
+        text.replace("(1:r1:a)", "(1:r1:%+1)"),
         text.replace("D ", "D %"),
         text.replace("D ", "D \r"),
         text.replace("OK hello\n", ""),
@@ -262,6 +263,48 @@ fn private_signing_protocol_requires_exact_order_complete_data_and_no_inquiries(
         );
     }
     assert!(parse_response(&vec![b'\n'; MAX_SIGNATURE_BYTES + 1]).is_none());
+}
+
+#[test]
+fn private_signing_percent_escapes_require_two_hex_digits_and_preserve_every_byte() {
+    let wrap = |encoded: &[u8]| {
+        [
+            b"OK\nOK\nOK\nOK\nD (7:sig-val(1:x1:".as_slice(),
+            encoded,
+            b"))\nOK\nOK\n",
+        ]
+        .concat()
+    };
+    // Arbitrary signature octets, including NUL, LF, CR and percent, must
+    // survive decoding. Case is permitted only within the two hex digits.
+    for byte in 0..=255_u8 {
+        let expected = [b"(7:sig-val(1:x1:".as_slice(), &[byte], b"))"].concat();
+        for encoded in [format!("%{byte:02x}"), format!("%{byte:02X}")] {
+            assert_eq!(parse_response(&wrap(encoded.as_bytes())).unwrap(), expected);
+        }
+    }
+    // In particular the integer parser must not accept its optional leading
+    // plus sign as part of an escape. Reject all other non-hex pairs too.
+    for first in 0..=255_u8 {
+        for second in 0..=255_u8 {
+            if first.is_ascii_hexdigit() && second.is_ascii_hexdigit() {
+                continue;
+            }
+            assert!(
+                parse_response(&wrap(&[b'%', first, second])).is_none(),
+                "non-hex escape accepted: {first:02x} {second:02x}"
+            );
+        }
+    }
+    for encoded in [b"%".as_slice(), b"%0", b"%\nD 00", b"%0\nD 0"] {
+        assert!(parse_response(&wrap(encoded)).is_none());
+    }
+    // Splitting valid data records preserves bytes; splitting an escape does
+    // not allow the next record to complete it.
+    assert_eq!(
+        parse_response(b"OK\nOK\nOK\nOK\nD (7:sig-val(\nD 1:x1:%25))\nOK\nOK\n").unwrap(),
+        b"(7:sig-val(1:x1:%))"
+    );
 }
 
 #[test]
@@ -517,21 +560,44 @@ fn private_signing_installed_foreground_agent_reads_selected_sealed_key_without_
 
 #[test]
 fn private_signing_refuses_invalid_selection_before_capture_and_control_changes_after_dispatch() {
+    let fixture = Fixture::new();
+    let (valid_grip, _) = fixture.key(b"selected private fixture bytes");
+    assert_eq!(
+        read(
+            &PrivateKey::capture(&fixture.0, &valid_grip, || Ok(()))
+                .unwrap()
+                .payload
+        ),
+        b"selected private fixture bytes"
+    );
     let public_key = b"synthetic public export".to_vec();
     let mut pinned = super::super::tests::synthetic_plan(&hash(b"fixture repository")).signer;
     pinned.public_key_sha256 = hash(&public_key);
     let mut signer = LinuxOpenPgpSigner {
         executable: PathBuf::from("/never-launched"),
         executable_sha256: pinned.signer_executable_sha256.clone(),
-        keyring: PathBuf::from("/never-read-private-keyring"),
+        keyring: fixture.0.clone(),
         public_key,
         keygrip: None,
         pinned: PinnedCommitSigner::seal(pinned).unwrap(),
     };
     let deadline = Instant::now() + Duration::from_secs(5);
-    assert!(sign_hash(&signer, &[1; 32], &token(), deadline).is_err());
+    assert_eq!(verify_private_keyring(&signer.keyring).unwrap(), fixture.0);
+    assert!(signer.pinned.verify().is_ok());
+    assert_eq!(hash(&signer.public_key), signer.pinned.public_key_sha256);
+    assert_eq!(
+        sign_hash(&signer, &[1; 32], &token(), deadline)
+            .unwrap_err()
+            .kind(),
+        LinuxLocalCommitErrorKind::ArtifactDenied
+    );
     signer.keygrip = Some("A\nPKSIGN".into());
-    assert!(sign_hash(&signer, &[1; 32], &token(), deadline).is_err());
+    assert_eq!(
+        sign_hash(&signer, &[1; 32], &token(), deadline)
+            .unwrap_err()
+            .kind(),
+        LinuxLocalCommitErrorKind::ArtifactDenied
+    );
     let t = token();
     cancel(&t);
     assert!(sign_hash(&signer, &[1; 32], &t, deadline).is_err());
