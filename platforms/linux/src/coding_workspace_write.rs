@@ -342,6 +342,7 @@ impl LinuxCodingPendingWrite {
         let proof = if result.outcome == WriteTransactionOutcome::Committed {
             Some(LinuxCodingAppliedWrite::from_native_result(
                 scope.root_sha256(),
+                &format!("transaction-{}", changes.change_set_id()),
                 changes,
                 &approval,
                 &result,

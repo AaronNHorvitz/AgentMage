@@ -4,8 +4,11 @@
 use super::*;
 use std::sync::{Arc, Mutex, MutexGuard};
 
+use crate::coding_workspace::LinuxCodingAppliedWrite;
 use crate::{LinuxAtomicWriteDriver, LinuxAtomicWriteDriverLimits};
-use agentmage_kernel_engine::write_approval::{CurrentWriteTarget, ShadowChangeSet};
+use agentmage_kernel_engine::write_approval::{
+    CurrentWriteTarget, ShadowChangeSet, WriteApprovalReceipt,
+};
 use agentmage_kernel_engine::write_transaction::{
     AtomicWriteDriver, WriteApplyAuthorization, WriteApplyReport, WriteDriverError,
     WriteOperationStatus, WriteRestoreAuthorization, WriteRestoreReport, WriteTransactionOutcome,
@@ -152,6 +155,7 @@ impl LinuxCodingWorktreeLease {
                     owner.validation = None;
                     owner.edit = None;
                     owner.apply = None;
+                    owner.applied_write = None;
                     Ok(owner)
                 }
             },
@@ -196,6 +200,8 @@ struct Attempt {
     consumed_grant_sha256: String,
     edits: BTreeMap<String, AppliedEdit>,
     operations: BTreeMap<String, (String, String)>,
+    changes: ShadowChangeSet,
+    approval: WriteApprovalReceipt,
 }
 
 /// Native writer with optional live creation provenance. It cannot issue an
@@ -263,11 +269,38 @@ impl<'a> LinuxCodingRuntimeWriteDriver<'a> {
             return Err(err("code.runtime.write-unverified"));
         }
         owner.verify_created()?;
+        let proof = LinuxCodingAppliedWrite::from_native_result(
+            owner
+                .created
+                .as_ref()
+                .ok_or(err("code.runtime.worktree-required"))?
+                .held
+                .root_path_sha256(),
+            &attempt.transaction_id,
+            attempt.changes.clone(),
+            &attempt.approval,
+            result,
+        )
+        .map_err(|_| err("code.runtime.write-unverified"))?;
         let created = owner
             .created
             .as_mut()
             .ok_or(err("code.runtime.worktree-required"))?;
         created.edits.extend(attempt.edits.clone());
+        // A single transaction is reviewable only if it covers the complete
+        // first-preimage/current-postimage lineage. Never invent an approval
+        // spanning earlier retries or edits on other paths.
+        if attempt.changes.operations().len() == created.edits.len()
+            && attempt.changes.operations().iter().all(|op| {
+                created.edits.get(op.path()).is_some_and(|edit| {
+                    edit.created_mode.is_none()
+                        && edit.before_sha256 == op.preimage_sha256()
+                        && edit.after_sha256 == op.expected_postimage_sha256()
+                })
+            })
+        {
+            owner.applied_write = Some(proof);
+        }
         self.successful_apply = false;
         Ok(())
     }
@@ -343,6 +376,8 @@ impl AtomicWriteDriver for LinuxCodingRuntimeWriteDriver<'_> {
                     consumed_grant_sha256: authorization.consumed_grant_sha256().to_owned(),
                     edits,
                     operations,
+                    changes: authorization.change_set().clone(),
+                    approval: authorization.approval().clone(),
                 })
             })();
             let attempt = match candidate {
@@ -360,8 +395,8 @@ impl AtomicWriteDriver for LinuxCodingRuntimeWriteDriver<'_> {
             owner.command = None;
             owner.edit = None;
             owner.apply = None;
-            // Runtime writes do not yet retain the original approval binding.
-            // Their transferable bytes cannot reuse a prior manual proof.
+            // Historical proof is retired before dispatch. Only this actual
+            // native transaction plus terminal publication can replace it.
             owner.applied_write = None;
             let created = owner.created.as_mut().expect("verified created worktree");
             for path in attempt.edits.keys() {

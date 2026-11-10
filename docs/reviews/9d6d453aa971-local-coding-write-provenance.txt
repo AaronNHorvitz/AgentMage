@@ -1,0 +1,166 @@
+Commit: 9d6d453aa97195ec9a3d5d6b49cbb9d7079afa73
+Scope: local-coding-write-provenance
+
+# Independent core review: original native write provenance for candidate review (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort. Separate session, read-only, pinned checkout
+/lane/review-checkout. Same-model review; a cross-model review must still happen before any public release.
+
+## Methods
+
+- `git rev-parse HEAD` in /lane/review-checkout gives 9d6d453aa97195ec9a3d5d6b49cbb9d7079afa73; the working tree is clean.
+  Its parent is 17fcbe0df23df8db207b66e2776ad8a639de2a92. The diff against that base has exactly 17 files
+  (+980/-26), matching the request.
+- Read the README and every runner (run.py, diagnostic.py, check.py, parse_gate.py, light.py) before
+  running anything. run.py creates its output directory with exist_ok=False. check.py compares the exact
+  per-target counts, the FAILED and ignored identity lists, the 12 source hashes, the nine named methods,
+  the ledger rows and the hygiene of added lines. It reports the gate as FAIL and does not claim acceptance.
+- Read the whole diff by hand: coding_workspace_write_proof.rs (new), coding_workspace_write.rs,
+  coding_repository{,_apply,_create,_edit,_runtime,_commit_review}.rs, all test diffs, TASKS.md, decision
+  0183, the evidence document, the guide, and the retained base review copy.
+- Traced every site in the product code that mutates `created.edits` or dispatches a worktree write: the
+  manual edit, the endpoint edit (which goes through `decide_edit`), the runtime write driver, the runtime
+  create driver, original apply, native creation, poisoned recovery and `abandon_pending_decisions`. For each,
+  checked that `applied_write` is retired before native dispatch, or that the site cannot create a stale proof.
+- Compared my new full-gate log with my own earlier independent base-review log
+  (/lane/state/tmp/review-candidate-review-17fcbe0df23d/fast.log), by target, by failure/ignore identity
+  and by passing test name.
+
+## Exact commands and results (run in /lane/review-checkout)
+
+| Command | Result |
+| --- | --- |
+| `sha256sum --quiet -c /lane/state/tmp/t306-write-proof/review-inputs.sha256` | exit 0; the manifest's own SHA-256 is c03067192438…bbde749dcb2b24b02c56414ebbfc27e, as stated |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-write-provenance-9d6d453aa971` (fresh directory) | exit 1 as expected; `FAST GATE: FAIL`; the first six commands exit 0 (Clippy 61.71 s and the step before it 111.31 s, both mostly reservation wait); tests exit 101 after 322.17 s; source_unchanged true; 497.81 s total; raw log 6ffbe194…13342324 |
+| `CARGO_TARGET_DIR=... python3 -B .../diagnostic.py <out>` | exit 0; `14 passed; 0 failed; 0 ignored; 406 filtered` and `1 passed; 0 failed; 0 ignored; 419 filtered`; the exact system Git trust refusal line is present; both RESULT exits 0 (468.35 s including reservation, 0.15 s); component 5872 µs; raw log c7d09b4e…0e3124 |
+| `python3 -B .../check.py <out>` | exit 0; 26 targets; totals 1286/72/64/0/0; 72 inherited failure identities, 0 new; nine methods checked; 12 source hashes unchanged; prints "DATA COMPARISON ONLY: FULL GATE REMAINS FAIL" |
+| `python3 -B .../light.py` | exit 0; diff --check, untracked lint, review-copy lint and markdownlint (4 files, 0 issues) all pass |
+| `cmp validation-1/source-freeze.json <out>/source-freeze.json` | identical (and plan.json is also identical) |
+| `git diff --check 17fcbe0d… --` | exit 0, no output |
+| `git status --short` | empty |
+| My own comparison with my independent base-review gate | 26/26 targets the same; failure and ignore identities the same in every target; the only count change is agentmage_platform_linux lib 339→348 passed; the set of passing names gains exactly the nine new methods and loses none |
+
+The full gate still fails. The failure is the inherited baseline and not a regression: 53 failures in one target
+and 19 in another, all present byte-identically in my base run. I did not use the GPU or run any model.
+This is not a UI row.
+
+## Review
+
+**Proof construction (coding_workspace_write_proof.rs).**
+
+- `LinuxCodingAppliedWrite` has no derives at all: no Clone, Serialize, Deserialize or Default. Its
+  fields are private, and its only constructor, `from_native_result`, is `pub(super)`, so only the write module
+  can call it.
+- The single product caller (`apply_retaining_proof`, write.rs:311) passes the owner's own cloned
+  `ShadowChangeSet` and approval, plus the `WriteTransactionResult` returned directly by `execute()`. No
+  JSON, path, receipt or saved record can reach it.
+- It checks all of the following:
+  - the outcome is Committed;
+  - the approval and change-set digests match;
+  - the transaction id;
+  - the grant id;
+  - the issued revision, the issued canonical-grant digest and consumed = issued + 1;
+  - the recomputed approval binding;
+  - `verify_write_receipts` passes;
+  - the Verified op→(pre, post) map exactly equals the change-set map, and every receipt carries the same
+    transaction, grant and pre/postimage.
+- The final receipt digest is retained as the application identity.
+
+**Projection (commit_review.rs:33).**
+
+- Before any file read it requires held roots (`verify_apply_roots`) and that the proof's root equals the
+  held created root.
+- The projected files must match `created.edits` one-to-one, with the same preimage and postimage and no
+  created mode.
+- It then reads fresh bytes through the held scope, compares them with the postimages, and re-verifies the
+  roots.
+- The planner (commit_review.rs:154-165) rebuilds the projection from the packet's purpose labels and
+  requires `ReviewableChangeSet` equality. The derive is PartialEq over all fields, including both receipt
+  identities, files_sha256 and the plan and intent digests. This happens before `check_completion_validation`
+  and before any Git observation. The resealed-packet test asserts that Git is never invoked.
+
+**Retirement before dispatch.**
+
+| Dispatch site | Where the proof is retired |
+| --- | --- |
+| Manual or endpoint `decide_edit` | edit.rs:168, before `apply_retaining_proof`. The endpoint boundary pre-issues the approval and then calls `decide_edit`, so it takes this same path. |
+| Runtime write driver | runtime.rs:365, after candidate validation and before `native.apply` |
+| Runtime create driver | create.rs:215, at the same point |
+| Original transfer | apply.rs:253, before `write.apply` |
+| Native worktree creation | repository.rs:487 |
+
+Error branches before dispatch return without any effect. The proof is retained again only when the outcome
+is `committed` and the post-check succeeds (edit.rs:210-216).
+
+**Coverage and cumulative lineage.** Three cases refuse:
+
+- a later transaction that covers only part of the cumulative edits (the count does not match);
+- re-editing the same path (the first preimage differs from the latest transaction's preimage);
+- runtime writes followed by a manual re-edit (the proof was retired, or its preimage is the runtime
+  postimage, not the original).
+
+A runtime-written byte cannot be passed off under a later manual proof.
+
+**Kernel-side checks.** The kernel's `issue_write_grant` independently rejects decision hashes that do not
+match the change set and preview (write_approval.rs:770-772). The issuer is a per-pending in-memory
+`GrantIssuer`.
+
+**Test validity.**
+
+- The shared `packet()` helper previously used synthetic approval and application hashes. It now uses the
+  real `capture_applied_write_review`. No assertion line was removed; check.py enforces this, and I confirmed
+  it in the diff.
+- The reopen fixture now drops the live owner before reopening. The exclusive store lock is unchanged.
+- A 16-file `decide_edit` (`transfer_lineage_is_bounded_across_disjoint_edit_batches`) still commits. That
+  shows real multi-operation native results pass `from_native_result`.
+
+**Claims.**
+
+- The evidence document labels the Git creation and test-process observations SYNTHETIC. It reports the
+  gate as FAIL, claims no native candidate planning or measurement, and closes no row.
+- Each stated number matches the builder's retained logs (checked by check.py against validation-1). My run
+  reproduces every count; only timings and log hashes differ, as the README says they will.
+- No held-out, hidden, frozen, scorer, prompt, dependency, Cargo or SBOM file changed.
+- Public hygiene: no private host path, username, email, hostname, credential, sibling-project name or
+  other-product name appears in any added line. The /lane paths in the retained review copy are lane-internal,
+  as accepted before.
+
+**Delivery.** No row or sub-row is added. The increment ends in something that runs and is measured: nine
+passing regression methods and a timed native component.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low), platforms/linux/src/coding_workspace_write.rs:318-320.**
+  - Problem: `apply_retaining_proof` now calls `approve()` before `execute()` runs its prechecks for root
+    identity, change-set and preview equality, expiry and deadline. Before this commit, the grant was issued
+    only after those checks.
+  - Impact: none observable. The kernel re-checks the digests, the issuer lives in memory only, and `self` is
+    consumed. Still, a root-drift refusal now issues and discards a grant first.
+  - Fix: move the precheck into a shared helper that runs before `approve()`, or clone the approval after
+    `execute`'s precheck.
+- **L2 (low), platforms/linux/src/coding_repository_runtime.rs:143-152.**
+  - Problem: poisoned-owner recovery in `try_into_repository` clears `created` but leaves
+    `applied_write` (and `edit_result`) in place.
+  - Impact: unreachable today. Capture requires `created`, and the only product path that sets `created`
+    again is native creation, which clears the proof.
+  - Fix: add `owner.applied_write = None;` there, as defence in depth.
+- **L3 (low), coding_repository_commit_review_tests.rs and coding_workspace_write_proof.rs tests.**
+  - Gap 1: no regression projects a multi-file proof through `capture_applied_write_review`. Multi-op
+    construction is exercised only implicitly, by the 16-file commit.
+  - Gap 2: no test drives a `from_native_result` refusal through `decide_edit` after a committed write. That
+    path fails closed by design (error, effect unknown, lineage removed) but is unasserted.
+  - Fix: add a 2-file projection test, and a test-only result-alteration hook asserting the error, the
+    missing proof and the missing lineage.
+
+The base review's L1 and L2 and the older lows remain same-row backlog; I did not re-verify them here.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing increment):** PASS for this exact commit. Every claim in the request and in
+  the evidence was reproduced or traced. Both parent rows remain OPEN, because native/model measurement,
+  approved Git, durable recovery and reviewer/artifact provenance are still missing. Nothing is closed by this
+  review.
+
+Verdict: PASS

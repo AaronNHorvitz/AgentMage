@@ -2,6 +2,22 @@
 
 ## Active queue: local agent mission
 
+The [runtime write-provenance increment](docs/evidence/t306-runtime-write-provenance-2026-11-09.md)
+retains the original runtime approval from the kernel's opaque consumed write
+authorization through native completion and the existing terminal publication
+callback. Incomplete cumulative history and new-file review remain open.
+T-303/T-306 remain open; no row or sub-row is added or closed. The complete
+affected gate remains **FAIL**: 2,925 passed, the same 72 inherited failures and
+72 existing ignores across 46 unfiltered targets. All five new methods,
+formatting and Clippy pass; six Rust hashes remain fixed during verification.
+Independent core review is required before acceptance.
+
+The [preceding independent core report](docs/reviews/9d6d453aa971-local-coding-write-provenance.txt)
+has **Verdict: PASS** for exact commit
+`9d6d453aa97195ec9a3d5d6b49cbb9d7079afa73`, with no high or medium finding.
+The runtime increment addresses low L2 poisoned-owner cleanup and L3's two-file
+projection gap; the remaining lows stay in the same-row backlog. No row closes.
+
 The [native write-provenance increment](docs/evidence/t306-write-provenance-2026-11-09.md)
 binds candidate-review change sets to the live owner's actual prepared-edit
 approval and checked native application chain. Complete current existing-file

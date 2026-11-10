@@ -18,8 +18,9 @@ pub(crate) struct LinuxCodingAppliedWrite {
 }
 
 impl LinuxCodingAppliedWrite {
-    pub(super) fn from_native_result(
+    pub(crate) fn from_native_result(
         root_sha256: &str,
+        transaction_id: &str,
         changes: ShadowChangeSet,
         approval: &WriteApprovalReceipt,
         result: &WriteTransactionResult,
@@ -38,7 +39,7 @@ impl LinuxCodingAppliedWrite {
         let consumption = &result.grant_consumption;
         if result.outcome != WriteTransactionOutcome::Committed
             || approval.change_set_sha256 != changes.change_set_sha256()
-            || result.transaction_id != format!("transaction-{}", changes.change_set_id())
+            || result.transaction_id != transaction_id
             || consumption.grant_id != approval.grant.grant_id
             || consumption.issued_revision != approval.grant.revision
             || consumption.issued_grant_sha256 != issued
@@ -172,6 +173,7 @@ mod tests {
             .unwrap();
         let proof = LinuxCodingAppliedWrite::from_native_result(
             scope.root_sha256(),
+            &format!("transaction-{}", changes.change_set_id()),
             changes.clone(),
             &approval,
             &result,
@@ -218,6 +220,7 @@ mod tests {
             assert!(
                 LinuxCodingAppliedWrite::from_native_result(
                     scope.root_sha256(),
+                    &format!("transaction-{}", changes.change_set_id()),
                     changes.clone(),
                     &bad_approval,
                     &bad

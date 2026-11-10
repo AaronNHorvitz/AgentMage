@@ -729,6 +729,207 @@ fn runtime_edit_at(
 }
 
 #[test]
+fn runtime_native_review_retains_original_approval_and_complete_multifile_application() {
+    use agentmage_kernel_engine::review_packet::{ChangePurposeAssignment, CommitChangePurpose};
+    let started = Instant::now();
+    let f = Fixture::new();
+    let lease = runtime_lease(f.owner());
+    let scope = LinuxCodingReadScope::select(
+        &f.0.join("owned/worktree"),
+        &["one.py".into(), "two.py".into()],
+    )
+    .unwrap();
+    let mut pending = scope
+        .prepare_write(
+            &[
+                LinuxCodingReplacement {
+                    path: "one.py",
+                    before_sha256: &hash(b"first\n"),
+                    content: "first repaired\n",
+                },
+                LinuxCodingReplacement {
+                    path: "two.py",
+                    before_sha256: &hash(b"second\n"),
+                    content: "second repaired\n",
+                },
+            ],
+            "Native runtime complete review",
+            NOW,
+        )
+        .unwrap();
+    let changes = pending.preview().change_set_sha256.clone();
+    let preview = pending.preview().preview_sha256.clone();
+    let approval = pending.approve(&changes, &preview, NOW).unwrap().clone();
+    let result = pending
+        .apply_with_owned_driver(&scope, &lease, NOW, true, None)
+        .unwrap();
+    let owner = recover_lease(lease);
+    let purposes = || {
+        (0..2)
+            .map(|i| ChangePurposeAssignment {
+                operation_id: format!("edit-{i}"),
+                purpose: CommitChangePurpose::Behavior,
+            })
+            .collect()
+    };
+    let projected = owner.capture_applied_write_review(purposes()).unwrap();
+    let value = serde_json::to_value(&projected).unwrap();
+    assert_eq!(
+        value["write_approval_receipt_sha256"],
+        approval.binding_sha256
+    );
+    assert_eq!(
+        value["write_application_receipt_sha256"],
+        result.receipts.last().unwrap().receipt_sha256
+    );
+    assert_eq!(projected.files().len(), 2);
+    assert_eq!(projected.files()[0].preimage_sha256, hash(b"first\n"));
+    assert_eq!(
+        projected.files()[0].postimage_sha256,
+        hash(b"first repaired\n")
+    );
+    assert_eq!(projected.files()[1].preimage_sha256, hash(b"second\n"));
+    assert_eq!(
+        projected.files()[1].postimage_sha256,
+        hash(b"second repaired\n")
+    );
+    assert_eq!(
+        fs::read(f.0.join("owned/worktree/one.py")).unwrap(),
+        b"first repaired\n"
+    );
+    assert_eq!(
+        fs::read(f.0.join("owned/worktree/two.py")).unwrap(),
+        b"second repaired\n"
+    );
+    fs::write(f.0.join("owned/worktree/one.py"), b"human change\n").unwrap();
+    assert_eq!(
+        owner
+            .capture_applied_write_review(purposes())
+            .unwrap_err()
+            .code(),
+        "code.commit.write-provenance"
+    );
+    assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+    assert_eq!(fs::read(f.0.join("original/two.py")).unwrap(), b"second\n");
+    f.assert_preserved();
+    println!(
+        "native_runtime_write_review_component_us={}",
+        started.elapsed().as_micros()
+    );
+}
+
+#[test]
+fn runtime_native_review_requires_terminal_publication_before_retention() {
+    let f = Fixture::new();
+    let lease = runtime_lease(f.owner());
+    runtime_edit(&f, &lease, "native but unpublished\n", false);
+    let owner = recover_lease(lease);
+    assert!(owner.applied_write.is_none());
+    assert_eq!(
+        owner
+            .capture_applied_write_review(vec![])
+            .unwrap_err()
+            .code(),
+        "code.commit.write-provenance"
+    );
+    assert!(
+        owner.inspect_apply().unwrap()["available_paths"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(
+        fs::read(f.0.join("owned/worktree/one.py")).unwrap(),
+        b"native but unpublished\n"
+    );
+    assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+    f.assert_preserved();
+}
+
+#[test]
+fn runtime_native_review_rejects_modified_original_consumption_record() {
+    use agentmage_kernel_engine::write_transaction::WriteTransactionResult;
+    let corruptions: [fn(&mut WriteTransactionResult); 3] = [
+        |r| r.grant_consumption.issued_grant_sha256 = hash(b"caller grant"),
+        |r| r.grant_consumption.issued_revision += 1,
+        |r| r.grant_consumption.grant_id = GrantId::from_raw("caller-grant"),
+    ];
+    for corrupt in corruptions {
+        let f = Fixture::new();
+        let lease = runtime_lease(f.owner());
+        let scope =
+            LinuxCodingReadScope::select(&f.0.join("owned/worktree"), &["one.py".into()]).unwrap();
+        let pending = scope
+            .prepare_write(
+                &[LinuxCodingReplacement {
+                    path: "one.py",
+                    before_sha256: &hash(b"first\n"),
+                    content: "actual postimage\n",
+                }],
+                "Reject substituted original approval",
+                NOW,
+            )
+            .unwrap();
+        assert!(
+            pending
+                .apply_with_owned_driver(&scope, &lease, NOW, true, Some(corrupt))
+                .is_err()
+        );
+        let owner = recover_lease(lease);
+        assert!(owner.applied_write.is_none());
+        assert!(
+            owner.inspect_apply().unwrap()["available_paths"]
+                .as_array()
+                .unwrap()
+                .is_empty()
+        );
+        assert_eq!(
+            fs::read(f.0.join("owned/worktree/one.py")).unwrap(),
+            b"actual postimage\n"
+        );
+        assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+        f.assert_preserved();
+    }
+}
+
+#[test]
+fn runtime_native_review_does_not_aggregate_approval_across_sequential_transactions() {
+    use agentmage_kernel_engine::review_packet::{ChangePurposeAssignment, CommitChangePurpose};
+    for path in ["one.py", "two.py"] {
+        let f = Fixture::new();
+        let lease = runtime_lease(f.owner());
+        runtime_edit(&f, &lease, "first native change\n", true);
+        let owner = recover_lease(lease);
+        assert!(
+            owner
+                .capture_applied_write_review(vec![ChangePurposeAssignment {
+                    operation_id: "edit-0".into(),
+                    purpose: CommitChangePurpose::Behavior,
+                }])
+                .is_ok()
+        );
+        let lease = runtime_lease(owner);
+        runtime_edit_at(&f, &lease, path, "second native change\n", true);
+        let owner = recover_lease(lease);
+        assert!(owner.applied_write.is_none());
+        assert_eq!(
+            owner
+                .capture_applied_write_review(vec![])
+                .unwrap_err()
+                .code(),
+            "code.commit.write-provenance"
+        );
+        assert_eq!(
+            fs::read(f.0.join("owned/worktree").join(path)).unwrap(),
+            b"second native change\n"
+        );
+        assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+        assert_eq!(fs::read(f.0.join("original/two.py")).unwrap(), b"second\n");
+        f.assert_preserved();
+    }
+}
+
+#[test]
 fn runtime_handoff_retains_manual_review_proof_until_native_runtime_edit_dispatch() {
     use agentmage_kernel_engine::review_packet::{ChangePurposeAssignment, CommitChangePurpose};
     let purposes = || {
@@ -1083,6 +1284,7 @@ fn runtime_poisoned_owner_recovers_without_creation_authority_or_pending_approva
     let mut slot = Some(lease);
     let mut owner = crate::LinuxCodingWorktreeLease::recover_repository(&mut slot).unwrap();
     assert!(slot.is_none());
+    assert!(owner.applied_write.is_none());
     assert!(owner.inspect_apply().unwrap()["repository_root_sha256"].is_null());
     assert!(owner.inspect_apply().unwrap()["pending"].is_null());
     assert!(

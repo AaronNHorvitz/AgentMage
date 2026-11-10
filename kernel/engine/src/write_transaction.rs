@@ -250,6 +250,7 @@ pub struct WriteApplyAuthorization<'transaction> {
     transaction_id: &'transaction str,
     consumed_grant_sha256: &'transaction str,
     change_set: &'transaction ShadowChangeSet,
+    approval: &'transaction WriteApprovalReceipt,
 }
 
 impl WriteApplyAuthorization<'_> {
@@ -269,6 +270,13 @@ impl WriteApplyAuthorization<'_> {
     #[must_use]
     pub const fn change_set(&self) -> &ShadowChangeSet {
         self.change_set
+    }
+
+    /// Original approval checked by the kernel before consuming this grant.
+    /// This borrowed record grants no further effect or replay authority.
+    #[must_use]
+    pub const fn approval(&self) -> &WriteApprovalReceipt {
+        self.approval
     }
 }
 
@@ -375,6 +383,7 @@ where
         transaction_id: &request.transaction_id,
         consumed_grant_sha256: &consumption.consumed_grant_sha256,
         change_set,
+        approval,
     });
 
     let disposition = classify_apply_report(change_set.operations().len(), &report).unwrap_or(
@@ -1334,6 +1343,65 @@ mod tests {
             driver,
         )
         .expect("reconciled transaction result")
+    }
+
+    #[test]
+    fn write_authorization_borrows_original_approval_after_consumption_checkpoint() {
+        use std::cell::Cell;
+        struct Driver<'a> {
+            native: MemoryDriver,
+            original: &'a WriteApprovalReceipt,
+            checkpointed: &'a Cell<bool>,
+        }
+        impl AtomicWriteDriver for Driver<'_> {
+            fn observe(
+                &mut self,
+                changes: &ShadowChangeSet,
+            ) -> Result<Vec<CurrentWriteTarget>, WriteDriverError> {
+                self.native.observe(changes)
+            }
+            fn apply(&mut self, authorization: WriteApplyAuthorization<'_>) -> WriteApplyReport {
+                assert!(self.checkpointed.get());
+                assert!(std::ptr::eq(authorization.approval(), self.original));
+                self.native.apply(authorization)
+            }
+            fn restore(
+                &mut self,
+                authorization: WriteRestoreAuthorization<'_>,
+            ) -> WriteRestoreReport {
+                self.native.restore(authorization)
+            }
+        }
+        let mut f = fixture(1);
+        let checkpointed = Cell::new(false);
+        let mut driver = Driver {
+            native: MemoryDriver::new(&f.change_set, DriverMode::Success),
+            original: &f.approval,
+            checkpointed: &checkpointed,
+        };
+        let result = execute_write_transaction_with_checkpoint(
+            &mut f.issuer,
+            &f.policy,
+            &f.change_set,
+            &f.approval,
+            WriteTransactionRequest {
+                transaction_id: "native-runtime-transaction".into(),
+                now_epoch_ms: 4000,
+            },
+            &mut driver,
+            &mut |issuer| {
+                assert_eq!(
+                    issuer.current(&f.approval.grant.grant_id).unwrap().status,
+                    GrantStatus::Consumed
+                );
+                checkpointed.set(true);
+                Ok(())
+            },
+        )
+        .unwrap();
+        assert_eq!(result.outcome, WriteTransactionOutcome::Committed);
+        assert_eq!(driver.native.apply_calls, 1);
+        assert_eq!(driver.native.restore_calls, 0);
     }
 
     #[test]

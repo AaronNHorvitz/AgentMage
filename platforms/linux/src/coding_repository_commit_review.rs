@@ -26,10 +26,10 @@ impl LinuxCodingRepository {
     /// receipt into an authority-free review change set. Call only after source
     /// read consent. Purposes are caller review labels, never approval evidence.
     ///
-    /// The retained single transaction must cover the complete current existing-
-    /// file lineage from its first preimage to its final postimage. Multiple
-    /// transactions with incomplete cumulative coverage, new files and runtime writes without retained approval
-    /// provenance refuse. No receipt/path/JSON can restore this process-only proof.
+    /// The retained single native transaction must cover the complete current
+    /// existing-file lineage from its first preimage to its final postimage.
+    /// Multiple transactions with incomplete cumulative coverage and new files
+    /// refuse. No receipt/path/JSON can restore this process-only proof.
     pub fn capture_applied_write_review(
         &self,
         purposes: Vec<ChangePurposeAssignment>,
