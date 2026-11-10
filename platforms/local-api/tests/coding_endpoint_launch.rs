@@ -32,6 +32,15 @@ fn executable_endpoint_launch_requires_explicit_consent_before_reading_configura
 
 #[test]
 fn executable_endpoint_launch_reaches_original_native_refusal_without_model_or_state_effects() {
+    exercise_native_refusal(false);
+}
+
+#[test]
+fn executable_observation_sharing_preserves_read_launch_native_refusal() {
+    exercise_native_refusal(true);
+}
+
+fn exercise_native_refusal(share: bool) {
     let mut f = Fixture::new();
     let model = TcpListener::bind("127.0.0.1:0").unwrap();
     model.set_nonblocking(true).unwrap();
@@ -42,6 +51,9 @@ fn executable_endpoint_launch_reaches_original_native_refusal_without_model_or_s
         serde_json::to_value(seal_runtime_endpoint_run_request(request).unwrap()).unwrap();
     // If opened, this absent credential would fail before the native diagnostic.
     f.launch["credential_file"] = serde_json::json!(f.root.join("must-not-read"));
+    if share {
+        f.launch["share_run_observations"] = serde_json::json!(true);
+    }
     let launch = f.write();
     let auth = f.root.join("auth");
     ApiTokens::initialize(&auth).unwrap();
@@ -55,6 +67,10 @@ fn executable_endpoint_launch_reaches_original_native_refusal_without_model_or_s
         .unwrap();
     assert_eq!(result.status.code(), Some(1));
     let stderr = String::from_utf8(result.stderr).unwrap();
+    assert_eq!(
+        stderr.contains("Run observations shared with client.token holders:"),
+        share
+    );
     assert!(
         stderr.contains("code.endpoint.native-admission: linux.sandbox.manifest.invalid"),
         "{stderr}"

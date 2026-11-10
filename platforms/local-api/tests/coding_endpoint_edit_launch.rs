@@ -84,11 +84,20 @@ fn executable_checked_coding_launch_preserves_original_native_refusal() {
 }
 
 fn exercise_native_refusal(coding: bool, checked: bool) {
-    exercise_native_refusal_command(coding, checked, false);
-    exercise_native_refusal_command(coding, checked, true);
+    exercise_native_refusal_command(coding, checked, false, false);
+    exercise_native_refusal_command(coding, checked, true, false);
 }
 
-fn exercise_native_refusal_command(coding: bool, checked: bool, review: bool) {
+#[test]
+fn executable_observation_sharing_keeps_all_strict_launchers_native_refusals() {
+    for (coding, checked) in [(false, false), (true, false), (true, true)] {
+        for review in [false, true] {
+            exercise_native_refusal_command(coding, checked, review, true);
+        }
+    }
+}
+
+fn exercise_native_refusal_command(coding: bool, checked: bool, review: bool, share: bool) {
     let command = if review && coding {
         "serve-endpoint-coding-review-development"
     } else if review {
@@ -174,6 +183,9 @@ fn exercise_native_refusal_command(coding: bool, checked: bool, review: bool) {
         value["request"] = json!(seal_runtime_endpoint_run_request(request).unwrap());
         value["completion_check"] = json!("fixed_test_run_v1");
     }
+    if share {
+        value["share_run_observations"] = json!(true);
+    }
     let launch = f.root.join("edit.json");
     private_file(&launch, &serde_json::to_vec(&value).unwrap());
     let auth = f.root.join("auth");
@@ -258,6 +270,10 @@ fn exercise_native_refusal_command(coding: bool, checked: bool, review: bool) {
         .unwrap();
     assert_eq!(result.status.code(), Some(1));
     let stderr = String::from_utf8(result.stderr).unwrap();
+    assert_eq!(
+        stderr.contains("Run observations shared with client.token holders:"),
+        share
+    );
     assert!(
         stderr.contains("code.endpoint.edit-startup: linux.repository.git_artifact.invalid"),
         "{stderr}"

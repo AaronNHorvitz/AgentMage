@@ -507,3 +507,21 @@ retrying or sending an apply request. Inspect state and disk; repeating release
 cannot restore ownership. A lost response remains ambiguous and requires the
 same inspection. Publication-state checks run before terminal consumption;
 ordinary discard and returned-owner services keep their existing behavior.
+
+## Optional observation sharing at development startup
+
+The private launch documents for read-only, strict-edit and combined coding
+services, including original-diff review variants, accept the optional boolean
+`share_run_observations`. Only true selects the existing ordinary-client
+observation delegation; omission and false preserve control-only access. The
+launcher displays the sharing scope, loads one document and retains its choice
+for the service lifetime. Malformed or duplicate choices refuse. Listener and
+stop checks precede configuration reads and repeat before admission.
+
+Use the [MCP observation guide](coding-mcp.md#observe-a-retained-endpoint-run)
+to select the exact run/request and explicitly share it with a trusted program.
+The complete task and canonical events may contain source and test data.
+Delegation adds no model disclosure, tool decision, cancellation, release,
+original-diff or settings authority. The original native startup and all
+individual effect approvals remain required. Positive native startup and coding
+measurements remain open; synthetic protocol observations are not model scores.

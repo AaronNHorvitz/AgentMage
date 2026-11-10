@@ -57,6 +57,36 @@ pub enum CodingEndpointObservationAccess {
     DelegateObservations,
 }
 
+impl CodingEndpointObservationAccess {
+    // Only private launch configuration calls this; HTTP/model input cannot
+    // change the service policy. Sharing covers all holders of client.token.
+    pub(super) fn from_launch(share: bool) -> Self {
+        if share {
+            eprintln!(
+                "Run observations shared with client.token holders: the complete task, tool catalog and canonical events may contain source or test data. Model calls, approvals, cancellation and release still require control.token. Choose trusted observers and their destinations."
+            );
+            Self::DelegateObservations
+        } else {
+            Self::ControlOnly
+        }
+    }
+}
+
+// Check before opening private launch configuration as well as immediately
+// before admission. Loading configuration must not precede listener/stop refusal.
+pub(super) fn check_start(listener: &TcpListener, stop: &AtomicBool) -> Result<(), ApiError> {
+    if stop.load(Ordering::Acquire)
+        || !listener
+            .local_addr()
+            .map_err(|_| ApiError::Io)?
+            .ip()
+            .is_loopback()
+    {
+        return Err(ApiError::Configuration);
+    }
+    Ok(())
+}
+
 struct Session<
     T: RuntimeToolBoundary,
     V: RuntimeVerifierPort,
@@ -398,15 +428,7 @@ where
     C: RuntimeClock + Send + 'static,
     P: RuntimeEndpointTurnPort + Send + 'static,
 {
-    if stop.load(Ordering::Acquire)
-        || !listener
-            .local_addr()
-            .map_err(|_| ApiError::Io)?
-            .ip()
-            .is_loopback()
-    {
-        return Err(ApiError::Configuration);
-    }
+    check_start(&listener, &stop)?;
     let run_id = RuntimeRunId::from_raw(identity("endpoint-run")?);
     let session_id = SessionId::from_raw(identity("endpoint-session")?);
     let mut runs = CodingEndpointRuns::default();

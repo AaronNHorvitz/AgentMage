@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The retained [complete review deadline verdict](docs/reviews/6e75e7fc1f6a-local-coding-review-deadline.txt)
+has **Verdict: PASS** for exact commit
+`6e75e7fc1f6ab3ea2eb910357804d1ffa91b63f8`, with no high or medium finding.
+Low findings on native forwarding coverage, real-time test robustness, final
+inventory-check precision and cancellation/expiry error-order consistency join
+same-row backlog. The earlier inherited host/Linux gate remains FAIL. Neither
+T-303 nor T-306 closes.
+
+The [explicit endpoint observation-sharing batch](docs/evidence/t303-launch-observations-2026-11-10.md)
+connects the existing MCP observer to private development launch configuration.
+Omission or false keeps observations control-only; true delegates only the
+sealed request and canonical events to ordinary client credentials. Model and
+HTTP inputs cannot change the launch choice. Native admission and individual
+model/tool approvals remain required. The complete scoped fast gate passes:
+261 tests, zero failures or ignores, all 11 local-API targets; formatting and
+Clippy pass. The broader inherited host/Linux failures remain open. Independent
+core review is required. T-303/T-306 remain open without
+new rows or sub-rows. No model score or complete native workflow is claimed.
+
 The [complete original-owner review deadline batch](docs/evidence/t306-review-deadline-2026-11-10.md)
 shares one monotonic 120-second deadline across precheck, installed checker and
 postcheck. Original collection and worker caps remain shorter where applicable;

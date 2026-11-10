@@ -285,3 +285,96 @@ fn endpoint_mcp_binary_exports_original_events_and_refuses_after_release_or_with
     );
     no_effects(&model, &executions);
 }
+
+#[test]
+fn endpoint_mcp_observes_approved_tool_events_without_acquiring_control() {
+    let (upstream, endpoint) = upstream();
+    let executions = Arc::new(AtomicUsize::new(0));
+    let worker = thread::spawn(move || {
+        let mut stream = accept(&upstream);
+        read_upstream(&mut stream);
+        respond(&mut stream, &tool());
+        drop(stream);
+        let mut stream = accept(&upstream);
+        let request = read_upstream(&mut stream);
+        assert!(request.to_string().contains("original retained boundary"));
+        respond(&mut stream, "unverified synthetic completion");
+        upstream
+    });
+    let api = Api::start(endpoint, executions.clone(), true);
+    let request = api.request();
+    let delegate = Delegate::new();
+    let (code, waiting) = api.advance(&request, Value::Null, true);
+    assert_eq!(code, 200);
+    assert_eq!(waiting["state"], "awaiting_approval");
+    let challenge = &waiting["challenge"];
+    let approval = json!({"schema_version":CONTRACT_SCHEMA_VERSION,"run_id":challenge["run_id"],
+        "approval_id":challenge["approval_id"],"disposition":"allow",
+        "challenge_sha256":challenge["challenge_sha256"],"grant_id":challenge["proposed_grant_id"],"selection":null});
+    assert_eq!(
+        api.call(
+            "POST",
+            "/v1/code/endpoint/advance",
+            CLIENT,
+            Some(
+                json!({"run_id":request["run_id"],"request_sha256":request["request_sha256"],
+            "response":approval,"approve_model_context":true})
+            )
+        )
+        .0,
+        403
+    );
+    let observed = replies(delegate.run(
+        api.address,
+        &request,
+        &[
+            call(1, "endpoint_request", json!({})),
+            call(2, "endpoint_events", json!({"after":0})),
+            call(3, "endpoint_advance", json!({"response":approval})),
+        ],
+        "--share-selected-endpoint",
+    ));
+    assert_eq!(content(&observed[1])["request"], request);
+    assert!(content(&observed[2])["page"]["total"].as_u64().unwrap() > 0);
+    assert!(observed[3]["error"].is_object());
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    assert_eq!(api.advance(&request, Value::Null, true), (200, waiting));
+    let (code, terminal) = api.advance(&request, approval, true);
+    assert_eq!(code, 200);
+    assert_eq!(terminal["state"], "terminal");
+    // A rejecting synthetic verifier is never turned into task success.
+    assert_eq!(terminal["outcome"]["outcome"]["state"], "FAILED");
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    let total = api.bind("events", &request).1["total"].as_u64().unwrap();
+    let calls = (0..total)
+        .map(|after| call(after, "endpoint_events", json!({"after":after})))
+        .collect::<Vec<_>>();
+    let observed =
+        replies(delegate.run(api.address, &request, &calls, "--share-selected-endpoint"));
+    assert_eq!(observed.len(), total as usize + 1);
+    let mut sequence = agentmage_kernel_engine::runtime_event::RuntimeEventSequence::new();
+    for (after, reply) in observed[1..].iter().enumerate() {
+        let got = content(reply);
+        let original = api.call("POST", "/v1/code/endpoint/events", CONTROL,
+            Some(json!({"run_id":request["run_id"],"request_sha256":request["request_sha256"],"after":after})));
+        assert_eq!(original.0, 200);
+        assert_eq!(got["page"], original.1);
+        for event in got["page"]["events"].as_array().unwrap() {
+            sequence
+                .push(&serde_json::from_value::<RuntimeEvent>(event.clone()).unwrap())
+                .unwrap();
+        }
+    }
+    assert!(sequence.is_terminal());
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    let upstream = worker.join().unwrap();
+    assert!(matches!(upstream.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock));
+    assert_eq!(api.bind("release", &request).0, 200);
+    let observed = replies(delegate.run(
+        api.address,
+        &request,
+        &[call(1, "endpoint_events", json!({"after":0}))],
+        "--share-selected-endpoint",
+    ));
+    assert_eq!(observed[1]["result"]["isError"], true);
+}

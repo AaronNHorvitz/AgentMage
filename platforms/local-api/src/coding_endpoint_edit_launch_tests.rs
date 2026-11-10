@@ -605,3 +605,50 @@ fn coding_launch_without_opt_in_keeps_non_certifying_selection() {
         "strict-coding-unverified"
     );
 }
+
+#[test]
+fn strict_launch_observation_sharing_preserves_original_request_and_validation() {
+    let f = Fixture::new();
+    for (original, kind) in [
+        (launch(&f), CodingEndpointPreparedKind::Edit),
+        (coding_launch(&f), CodingEndpointPreparedKind::EditAndTest),
+    ] {
+        for share in [None, Some(false), Some(true)] {
+            let mut value = original.clone();
+            if let Some(share) = share {
+                value["share_run_observations"] = json!(share);
+            }
+            let input = load(&write(&f, &value), kind).unwrap();
+            assert_eq!(input.share_run_observations, share == Some(true));
+            assert_eq!(
+                CodingEndpointObservationAccess::from_launch(input.share_run_observations),
+                if share == Some(true) {
+                    CodingEndpointObservationAccess::DelegateObservations
+                } else {
+                    CodingEndpointObservationAccess::ControlOnly
+                }
+            );
+            assert_eq!(json!(input.request), original["request"]);
+            assert_eq!(json!(input.instructions), original["instructions"]);
+            if let Some(validation) = input.validation {
+                assert_eq!(json!(validation.command), original["validation"]["command"]);
+                assert_eq!(validation.minimum_test_count, 1);
+            } else {
+                assert_eq!(kind, CodingEndpointPreparedKind::Edit);
+            }
+        }
+        for invalid in [Value::Null, json!(1), json!("true"), json!([]), json!({})] {
+            let mut value = original.clone();
+            value["share_run_observations"] = invalid;
+            assert!(load(&write(&f, &value), kind).is_err());
+        }
+        let mut duplicate = serde_json::to_string(&original).unwrap();
+        duplicate.pop();
+        duplicate.push_str(",\"share_run_observations\":false,\"share_run_observations\":true}");
+        let path = f.root.join("edit.json");
+        private_file(&path, duplicate.as_bytes());
+        assert!(load(&path, kind).is_err());
+    }
+    assert_eq!(fs::read_dir(f.root.join("state")).unwrap().count(), 0);
+    assert_eq!(fs::read_dir(f.root.join("owned")).unwrap().count(), 0);
+}

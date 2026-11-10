@@ -96,9 +96,36 @@ A trusted host can explicitly enable observation delegation when starting the
 retained endpoint service. Use
 `serve_coding_endpoint_with_observation_access` with
 `CodingEndpointObservationAccess::DelegateObservations`. The original
-`serve_coding_endpoint` entry point keeps every route control-only. There is
-currently no executable launcher for this service; this policy is a host
-library choice, not an HTTP setting. See [Decision 0162](../decisions/0162-endpoint-mcp-observation-delegation.md).
+`serve_coding_endpoint` entry point keeps every route control-only. This policy is
+also an explicit private development launch choice, as described below; it is
+never an HTTP setting. See [Decision 0162](../decisions/0162-endpoint-mcp-observation-delegation.md).
+
+For the existing `serve-endpoint-read-development`,
+`serve-endpoint-edit-development`, `serve-endpoint-coding-development`,
+`serve-endpoint-edit-review-development` and
+`serve-endpoint-coding-review-development` commands, add this field to the
+complete private launch JSON before starting:
+
+```json
+{"share_run_observations": true}
+```
+
+This fragment is not a complete launch document. Use the existing
+[endpoint startup](coding-runtime-api.md) configuration, private file permissions
+and explicit startup approval flag. Omitting the field or setting it to false
+keeps observations control-only. Null, strings, numbers and duplicate fields
+refuse startup. The launcher reads the private document once and retains that
+policy for the service lifetime; changing the file does not reconfigure it.
+No model or HTTP request can enable sharing. See
+[Decision 0199](../decisions/0199-explicit-endpoint-launch-observation-sharing.md).
+
+The launcher prints a sharing notice before native admission. All holders of
+`client.token` can then retrieve the complete task, tool catalog and canonical
+events; these may contain source or test data. Choose trusted recipients and
+their destinations. Sharing does not approve a model call or tool effect.
+Native admission still must succeed. In the builder lane it currently refuses;
+synthetic service/MCP tests do not establish a successful native launcher or a
+local-model coding run.
 
 Inspect the run through the trusted terminal controls:
 

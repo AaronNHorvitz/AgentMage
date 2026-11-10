@@ -38,6 +38,9 @@ struct Launch {
     source_budget: usize,
     validation: Option<Validation>,
     completion_check: Option<CompletionCheck>,
+    // Trusted startup disclosure choice, never an HTTP/model argument.
+    #[serde(default)]
+    share_run_observations: bool,
 }
 
 // Explicit private launch choice, never a model/HTTP field or a default.
@@ -417,11 +420,14 @@ fn serve_development(
     kind: CodingEndpointPreparedKind,
     repository_review: bool,
 ) -> Result<(), ApiError> {
-    // The service checks listener and stop before invoking any launch factory.
+    coding_endpoint_api::check_start(&listener, &stop)?;
+    // Freeze the single private document before selecting the service policy;
+    // the native factory consumes this same launch, never a second file read.
+    let mut launch = load(launch_file, kind)?;
+    let access = CodingEndpointObservationAccess::from_launch(launch.share_run_observations);
     let secret = tokens.control.clone();
     let startup_stop = stop.clone();
     let factory = |run, session| {
-        let mut launch = load(launch_file, kind)?;
         let startup = prepare(&launch, run, session, kind)?;
         // Freeze and check the private definition before opening state or
         // native inspection. Actual manifest/resource checks still run in
@@ -530,31 +536,25 @@ fn serve_development(
         ))
     };
     match kind {
-        CodingEndpointPreparedKind::Edit => (if repository_review {
-            serve_coding_endpoint_strict_edits_with_repository_review
-        } else {
-            serve_coding_endpoint_strict_edits
-        })(
-            listener,
-            tokens,
-            stop,
-            CodingEndpointObservationAccess::ControlOnly,
-            |run, session| factory(run, session).map(|(run, _)| run),
-        ),
-        CodingEndpointPreparedKind::EditAndTest => (if repository_review {
-            serve_coding_endpoint_edits_and_checked_tests_with_repository_review
-        } else {
-            serve_coding_endpoint_edits_and_checked_tests
-        })(
-            listener,
-            tokens,
-            stop,
-            CodingEndpointObservationAccess::ControlOnly,
-            |run, session| {
+        CodingEndpointPreparedKind::Edit => {
+            (if repository_review {
+                serve_coding_endpoint_strict_edits_with_repository_review
+            } else {
+                serve_coding_endpoint_strict_edits
+            })(listener, tokens, stop, access, |run, session| {
+                factory(run, session).map(|(run, _)| run)
+            })
+        }
+        CodingEndpointPreparedKind::EditAndTest => {
+            (if repository_review {
+                serve_coding_endpoint_edits_and_checked_tests_with_repository_review
+            } else {
+                serve_coding_endpoint_edits_and_checked_tests
+            })(listener, tokens, stop, access, |run, session| {
                 let (run, validation) = factory(run, session)?;
                 Ok((run, validation.ok_or(ApiError::Configuration)?))
-            },
-        ),
+            })
+        }
         CodingEndpointPreparedKind::Command => Err(ApiError::Configuration),
     }
 }

@@ -216,3 +216,39 @@ fn launch_worker_trust_is_explicit_closed_and_root_owned_by_default() {
         assert!(load(&f.write()).is_err());
     }
 }
+
+#[test]
+fn read_launch_shares_observations_only_with_an_explicit_private_boolean() {
+    let mut f = Fixture::new();
+    let original = f.launch.clone();
+    for share in [None, Some(false), Some(true)] {
+        f.launch = original.clone();
+        if let Some(share) = share {
+            f.launch["share_run_observations"] = json!(share);
+        }
+        let launch = load(&f.write()).unwrap();
+        assert_eq!(launch.share_run_observations, share == Some(true));
+        assert_eq!(
+            CodingEndpointObservationAccess::from_launch(launch.share_run_observations),
+            if share == Some(true) {
+                CodingEndpointObservationAccess::DelegateObservations
+            } else {
+                CodingEndpointObservationAccess::ControlOnly
+            }
+        );
+        assert_eq!(json!(launch.request), original["request"]);
+        assert_eq!(json!(launch.instructions), original["instructions"]);
+    }
+    for invalid in [Value::Null, json!(1), json!("true"), json!([]), json!({})] {
+        f.launch = original.clone();
+        f.launch["share_run_observations"] = invalid;
+        assert!(load(&f.write()).is_err());
+    }
+    let path = f.write();
+    let mut duplicate = serde_json::to_string(&original).unwrap();
+    duplicate.pop();
+    duplicate.push_str(",\"share_run_observations\":false,\"share_run_observations\":true}");
+    private_file(&path, duplicate.as_bytes());
+    assert!(load(&path).is_err());
+    assert_eq!(fs::read_dir(f.root.join("state")).unwrap().count(), 0);
+}

@@ -62,6 +62,9 @@ struct Launch {
     checks: Vec<ReadCheck>,
     #[serde(default)]
     worker_trust: WorkerTrust,
+    // Trusted startup disclosure choice, never an HTTP/model argument.
+    #[serde(default)]
+    share_run_observations: bool,
 }
 
 type Runs = CodingEndpointRuns<
@@ -298,12 +301,17 @@ pub fn serve_coding_endpoint_read_development(
     stop: Arc<AtomicBool>,
     launch_file: &Path,
 ) -> Result<(), ApiError> {
+    coding_endpoint_api::check_start(&listener, &stop)?;
+    // Load once: the admission consumes the same immutable configuration that
+    // selected observation sharing, even if the file changes while starting.
+    let launch = load(launch_file)?;
+    let access = CodingEndpointObservationAccess::from_launch(launch.share_run_observations);
     coding_endpoint_api::serve_admitted_coding_endpoint(
         listener,
         tokens,
         stop,
-        CodingEndpointObservationAccess::ControlOnly,
-        |run_id, session_id, runs| admit(load(launch_file)?, run_id, session_id, runs),
+        access,
+        |run_id, session_id, runs| admit(launch, run_id, session_id, runs),
     )
 }
 

@@ -1,0 +1,146 @@
+Commit: 6e75e7fc1f6ab3ea2eb910357804d1ffa91b63f8
+Scope: local-coding-review-deadline
+
+# Independent review: complete original-owner review deadline (T-303 / T-306)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Pinned checkout
+`/lane/review-checkout`; `git rev-parse HEAD` = `6e75e7fc1f6ab3ea2eb910357804d1ffa91b63f8`.
+Parent `5d47bea006c79c25c64e1fd54f964d14e965f41d`. Same-row, non-closing batch; no row closes.
+
+## Methods
+
+- I read IP-POLICY.md, the new evidence file docs/evidence/t306-review-deadline-2026-11-10.md,
+  the TASKS.md and guide diffs, and both retained reports. I read the complete parent diff for all
+  8 Rust sources: coding_repository_commit_review.rs and its tests, repository_base.rs and its
+  tests, repository_inventory.rs, the new repository_inventory_deadline_tests.rs,
+  repository_observation.rs and repository_safety.rs.
+- I read the bundle README, run.py, check.py, parse_gate.py, light.py and focused.sh before
+  running anything. They only run the gate script's plan and compare data. They contain no
+  mutation scripts and no source writes.
+- I traced the production wiring, not just the seams:
+  - `verify_candidate_tree` → `verify_candidate_tree_until(Instant::now()+120 s)` →
+    `observe_commit_git_until(Some(deadline))`.
+  - From there, the deadline goes to `collect_until` (`min(deadline, now+30 s)`),
+    `collect_inventory_until` and `collect_base_preimages_until`.
+  - Both of those call `observe_confined_inventory_until`, then `run_read_only(…, deadline)`,
+    then `inspection_deadline` (`min(outer, started+15 s)`).
+- I compared the refactored inventory and base code with the parent line by line. The Git
+  arguments, byte limits (1 024 and MAX_INVENTORY_BYTES), optional `symbolic-ref` handling,
+  None→failed mapping, parsing, digest framing and result fields are all identical.
+- Visibility: `observe_confined_inventory_until` widened from `pub(super)` to `pub(crate)`. The
+  removed wrappers `observe_inventory` and `observe_inventory_optional` were already `pub(crate)`
+  and had the same capability, so the change exposes no new caller power.
+- `verify_candidate_tree_with` and `collect_cancellable_with` are now `#[cfg(test)]`. Clippy on
+  `--all-targets` with warnings denied passes, so no production caller remains.
+- Confinement: there is no change to sandbox arguments, the worker manifest, the environment
+  allow-list, network denial, path/scope revalidation or packet/source/validation/permission
+  checks. Expiry and cancellation both fail closed with an error, and no partial map escapes.
+- Privacy and IP scan of all added lines found no private host path, username, hostname,
+  credential, personal data, product name or trademark. `/lane/` paths are the established lane
+  convention already present at the parent.
+- Evaluation integrity: no eval, hidden, held-out, prompt, threshold, dependency, SBOM, lifecycle
+  or scoreboard file changed. TASKS.md table rows are unchanged; check.py asserts this, and I read
+  the diff to confirm it.
+
+## Commands and results (exact pinned checkout, fresh suffix `r6e75a1`)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-review-deadline/review-inputs.sha256` → exit 0.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-review-deadline/run.py /lane/state/tmp/review-review-deadline-full-r6e75a1`
+   → exit 1 (expected; FAST GATE: FAIL).
+   - Result: `source_unchanged: true`, 278.66 s including reservations.
+   - Command times: fmt 1.30 s, Clippy 36.27 s (my target was cold), Rust tests 239.57 s
+     (exit 101). Every pre-test check exits 0. No timeout.
+   - Raw log SHA-256 `84f60a624426c58eef26ad3197ab47e55b901ddef2e95e750e17b6460461506e`.
+     It differs from the builder's, as expected for an independent run.
+3. `python3 -B …/check.py …-r6e75a1` → exit 0 (data comparison only).
+   - 26 unfiltered targets; totals 1460 passed / 72 failed / 64 ignored / 0 measured /
+     0 filtered.
+   - The failed and ignored identities match the hash-verified parent baseline exactly, per
+     target, with +5 Linux passes.
+   - All 5 new methods are `ok`. The 69 methods in the changed sources give 56 ok / 13 FAILED /
+     0 ignored.
+4. `cmp …/validation-1/source-freeze.json …-r6e75a1/source-freeze.json` → exit 0. The 8 Rust
+   hashes are fixed.
+5. `python3 -B …/light.py` → exit 0. diff-check, untracked lint, review lint for both retained
+   reports and markdownlint (0 issues, 3 files) all pass.
+6. `cmp docs/reviews/4c8c2dd416b5-local-coding-preservation-budget.txt /lane/reviews/4c8c2dd416b5-local-coding-preservation-budget.md`
+   → exit 0.
+7. `cmp docs/reviews/5d47bea006c7-local-coding-preservation-deadline.txt /lane/reviews/5d47bea006c7-local-coding-preservation-deadline.md`
+   → exit 0.
+8. `git diff --check 5d47bea006c79c25c64e1fd54f964d14e965f41d --` → exit 0.
+9. `git status --short` → empty.
+
+Builder evidence cross-check:
+- validation-1/fast.log hashes to the claimed
+  `6b91f423dc706e1a56cb100d2906303df79ae254725010788c3796704975fa54`.
+- Its comparison.json gives the claimed 1460/72/64, 56/13, and fmt 1.35 / Clippy 10.17 /
+  Rust 234.54 / 247.5856 s.
+- focused.log shows the disclosed E0624 visibility error, and focused-2.log shows it corrected.
+  That correction came before the source freeze, and the freeze hashes match.
+
+The 13 inherited failures in changed sources are all native `repository_safety` tests. They panic
+at `git artifact: InvalidGitArtifact` (repository_safety.rs:1734), which is the known
+native-ownership block, and they are identical at the parent. No GPU was used.
+
+## Findings
+
+No critical, high or medium findings.
+
+- LOW (coverage, ownership-blocked): the production paths are refactored but have no native run.
+  - Affected: `collect_inventory_until` (repository_inventory.rs:103),
+    `collect_base_preimages_until` (repository_base.rs:51) and `verify_candidate_tree`
+    (coding_repository_commit_review.rs:231).
+  - Why: the native inventory tests
+    (`repository_inventory_preserves_exact_git_states_and_nonregular_hints`,
+    `repository_inventory_cancellation_fails_before_git_launch`) fail at Git artifact admission,
+    before reaching the refactored code. The seam tests exercise the logic with synthetic workers,
+    and I verified by reading that the production wrappers are single-line forwards with arguments
+    identical to the parent.
+  - Fix: run those native tests once executable ownership is mapped. This joins the carried
+    native forwarding-coverage low.
+- LOW (test robustness, disclosed): the new tests use real-time budgets.
+  - Where: repository_inventory_deadline_tests.rs:32 and repository_base_tests.rs:456 (100 ms),
+    and coding_repository_commit_review_tests.rs:1562 (250 ms).
+  - Effect: the non-expiring success cases (`stop == None`) also run under the 100 ms deadline. A
+    scheduler stall of more than 100 ms anywhere in the success path is a false failure. It can
+    never be a false pass.
+  - Fix: give the `None` cases a multi-second deadline, keep short deadlines only where expiry is
+    intended, or add a test-only clock seam.
+- LOW (test precision): the final post-parse `check()` in `collect_inventory_with`
+  (repository_inventory.rs:217) has no test of its own.
+  - Why: stop 7 expires during the last read and is caught by the post-read `check()` at :145.
+    Removing :217 would not fail any test, although the test name says "final result".
+  - Fix: add a seam case in which the deadline passes during parsing, or rename the test.
+- LOW (consistency): when both cancellation and expiry hold, the two paths return different error
+  codes. `check_budget` (coding_repository_commit_review.rs:282) tests cancellation first;
+  `observe_commit_git_until` (:577 and :629) tests expiry first. Both fail closed. Fix: use one
+  order.
+
+The carried lows stay same-row backlog: privileged device-node substitution, real-time deadline
+test robustness, the stale comment at local_commit_execution.rs:98, and native deadline-forwarding
+coverage.
+
+The evidence and guide claims match the code:
+- One 120 s cooperative deadline, started before the first precheck.
+- Four Git samples share it.
+- A 30 s collection cap and a 15 s worker cap remain.
+- Late success is refused; rejection and unavailable errors stop immediately.
+- The caller token is never cancelled.
+- Source capture is checked only at its boundaries.
+- There is no preemption and no hard return-time guarantee.
+- There is no claim of a checker implementation or of native or model results.
+
+The gate is honestly labelled FAIL.
+
+## Per-row result
+
+- T-303: the batch is acceptable. It adds no new rows or sub-rows, the row stays open and the lows
+  are same-row backlog.
+- T-306: the batch is acceptable. The confinement boundary is unchanged, and the deadline only
+  tightens existing caps and fails closed. The checked candidate stays inert; there is no commit,
+  build or push route. The row stays open.
+
+This PASS covers the exact commit only. It closes neither row, and the complete affected gate
+remains FAIL with inherited native failures.
+
+Verdict: PASS
