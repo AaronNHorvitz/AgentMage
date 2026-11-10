@@ -73,6 +73,23 @@ Approval expires after at most ten minutes and cannot survive any changed field.
 It does not authorize a push, pull request, merge, release, deployment, amend,
 reset, discard, force operation, or history rewrite.
 
+## Commit approval timing in the internal driver
+
+The internal signed-commit driver takes a trusted host clock rather than a saved
+construction timestamp. It samples that clock at construction and again at
+dispatch, before issuing its executor permit. The complete review packet and
+manual approval must still match, and both the approval and consumed grant must
+be live at dispatch. A missing clock, rollback before construction, time before
+grant consumption, or either exclusive expiry refuses without invoking the
+executor. Cancellation retains its separate refusal. Post-effect reconciliation
+uses the checked launch timestamp; this does not renew or replay authority.
+
+This driver is still dormant library composition. Its component tests use real
+kernel grant consumption with synthetic held objects, consent and executor
+results; they establish no native commit, trusted approval channel or model
+result. Full original-owner approval composition, trusted checker and artifact
+integration, recovery, native admission and approved push remain open.
+
 ## Verify the Receipt
 
 A successful local-commit receipt must show:

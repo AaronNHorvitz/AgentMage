@@ -2,6 +2,26 @@
 
 ## Active queue: local agent mission
 
+The retained [source-pair review](docs/reviews/5bec05b94bab-local-coding-review-source-pairs.txt)
+has **Verdict: PASS** for exact commit
+`5bec05b94bab7ace5a8359bc05397e8cf32a8dca`, with no high or medium finding.
+Its low L-1 on an explicit existing-empty-blob source-pair test joins same-row
+backlog. Neither T-303 nor T-306 closes.
+
+The [trusted commit-dispatch clock increment](docs/evidence/t306-dispatch-clock-2026-11-10.md)
+replaces construction-time approval checks at dispatch with a fresh trusted host
+clock observation. The dormant driver refuses clock failure or rollback, expired
+manual approval, and a consumed grant outside its original lifetime before
+invoking its executor. Complete packet and exact call checks still run at dispatch.
+New tests cross the actual kernel grant-consumption path using synthetic held
+objects, approvals and executor results. The complete affected gate remains
+**FAIL**: 3,079 passes, the exact inherited 72 failures and 72 ignores over 46
+unfiltered targets. All three new methods, 31 controls, formatting and Clippy
+pass; three source hashes stay fixed. Independent core review is required.
+T-303/T-306 remain open without new rows. Native admission, trusted checker and
+artifact integration, full original-owner approval composition, durable recovery,
+model measurements and approved push remain open.
+
 The retained [complete-packet review](docs/reviews/38486b9cb694-local-coding-complete-packet.txt)
 has **Verdict: PASS** for exact commit
 `38486b9cb6941123b88f917170b91957cdd0607e`, with no high or medium finding.

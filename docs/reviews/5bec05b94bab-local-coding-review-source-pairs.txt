@@ -1,0 +1,150 @@
+Commit: 5bec05b94bab7ace5a8359bc05397e8cf32a8dca
+Scope: local-coding-review-source-pairs
+
+# Independent review: exact source pairs for original-owner candidate review (T-303 / T-306)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only, pinned checkout
+`/lane/review-checkout`. This is a same-model review; a cross-model review must still precede any
+public release.
+
+## Scope and methods
+
+- Confirmed `git rev-parse HEAD` = `5bec05b94bab7ace5a8359bc05397e8cf32a8dca`, parent
+  `38486b9cb6941123b88f917170b91957cdd0607e`, clean tree. Diff against the parent touches 10 files:
+  TASKS.md, the evidence note, the commit guide, the retained parent review report, and six Linux
+  Rust sources (`coding_repository.rs`, `coding_repository_commit_review.rs`,
+  `coding_repository_commit_review_tests.rs`, `lib.rs`, `repository_base.rs`,
+  `repository_base_tests.rs`).
+- Read IP-POLICY.md, `docs/evidence/t306-review-source-pairs-2026-11-10.md`, the TASKS.md and
+  guide diffs, and the bundle's README/run/check/parse_gate/light/stage_check scripts **before**
+  running them. The scripts only read the repository, call `scripts/local_agent_fast_gate.py` and
+  write to the given output directory or a fresh `/tmp/cp-*` TMPDIR. They do not modify the repo.
+- Read all six changed Rust sources in full context: the complete `verify_candidate_tree_with`,
+  `capture_candidate_review_sources`, `observe_commit_git`, `plan_reviewed_candidate_tree_with`,
+  `capture_applied_write_review` and the base collector `collect_with`.
+- Searched the tree for any non-test implementation or caller of `LinuxCodingCandidateReviewPort`,
+  `verify_candidate_tree` or `.sources()`. There are none, so no product path can disclose
+  the bytes.
+- Scanned all added lines for private host paths, usernames, hostnames, credentials and secrets.
+  Confirmed the retained parent report is byte-identical to `/lane/reviews/38486b9cb694-local-coding-complete-packet.md`.
+
+## Commands and results (fresh, suffix `-r1`)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-review-source/review-inputs.sha256` → exit 0.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-review-source/run.py /lane/state/tmp/review-source-pairs-full-5bec05b94bab-r1`
+   → exit 1 (expected): `{"exit": 1, "source_unchanged": true, "seconds_including_reservations": 283.72, "raw_log_sha256": "a76131ea179f6ec007e8f0f292c5c46a7cf686cee22bcdc7a0dd3be2e9e522ef"}`.
+   The log says `FAST GATE: FAIL`. Commands 1–6 (diff check, lint-untracked, lint-reviews,
+   markdownlint, fmt, Clippy) gave `RESULT exit=0`. The Rust tests gave `exit=101`. Not wrapped in build-slot,
+   per instructions (the runner reserves internally).
+3. `python3 -B /lane/state/tmp/t306-review-source/check.py /lane/state/tmp/review-source-pairs-full-5bec05b94bab-r1`
+   → exit 0, DATA ONLY: 26 targets, totals `[1430, 72, 64, 0, 0]`. The per-target counts and
+   failure/ignore identities match the 46-target baseline's 26 affected targets (+3 Linux passes).
+   6 source files, 57 methods in the changed files all `ok`, cargo commands equal the current plan,
+   TASKS row lines unchanged, retained report byte-identical, public-content checks pass.
+   **This is not a gate PASS. The full affected gate remains FAIL.**
+4. `cmp .../validation-1/source-freeze.json .../review-source-pairs-full-5bec05b94bab-r1/source-freeze.json` → exit 0, identical.
+5. `python3 -B /lane/state/tmp/t306-review-source/light.py` → exit 0 (diff check, untracked lint,
+   review lint, markdownlint 0 issues on 3 files).
+6. `git diff --check 38486b9cb6941123b88f917170b91957cdd0607e --` → exit 0.
+7. `git status --short` → empty, exit 0.
+
+New and changed methods confirmed `ok` in my log:
+`candidate_checker_refuses_hash_only_base_proofs_before_invoking_reviewer`,
+`candidate_review_source_capture_refuses_changed_postimage_and_missing_base`,
+`base_preimage_debug_omits_retained_source_bytes`,
+`creation_review_candidate_plan_binds_mixed_original_history_and_creation_modes`,
+`candidate_checker_receives_original_records_and_releases_only_rechecked_inert_plan`.
+The 72 failures are the inherited ones: 42 `linux_coding_runtime` (panicking at `test sandbox
+manifest: LinuxSandboxError { kind: InvalidManifest }`), 13 `repository_safety`, 10 `linux_read`, 2
+`secret_service`, 2 `local_commit`, 2 `command_runner` and 1 `linux_repository_map`. None are in
+`commit_review` or `repository_base`, and their identities match the baseline exactly.
+
+My wall time (283.7 s) is shorter than the builder's 694.4 s, probably because more of the review
+target was already built. The builder's timing figures are their own measurements. I checked the
+builder's raw-log hash (`4e02fd30…`) only through the input-hash manifest, not by re-deriving the
+timings.
+
+## Analysis
+
+**Base bytes are bound to objects.** `collect_with` (`platforms/linux/src/repository_base.rs:111-133`)
+keeps exactly the buffer it has already checked against the tree entry's Git object id (sha1/sha256)
+and the 128 KiB `MAX_BLOB_BYTES` limit. The SHA-256 is computed over that same buffer. The bounds on
+path count, path syntax, duplicates, ancestor kind and replace-objects are unchanged.
+
+**Base bytes are hidden from Debug.** The derived `Debug` is replaced by a manual one
+(`repository_base.rs:34-41`) that shows only `sha256` and `mode` and ends with
+`finish_non_exhaustive`. `GitObservation`, `LinuxCodingReviewSource` and
+`LinuxCodingCandidateReviewEvidence` derive no `Debug` or `Serialize`. `LinuxCodingReviewSource`
+has private fields and no `Clone`, `Default`, `From` or public constructor. It is built only in
+`capture_candidate_review_sources`.
+
+**Pair construction is sound** (`coding_repository_commit_review.rs:314-367`):
+- Current bytes come from the same held `select_created_sources` / `LinuxCodingReadScope::read`
+  path that planning already uses. They are hashed and compared with `file.postimage_sha256`.
+  The bytes handed to the checker are exactly the bytes hashed, so a swap between read and check
+  cannot deliver unbound content. Even a theoretical reader escape could only deliver bytes equal
+  to the packet's hashed postimage.
+- Base bytes are accepted only when `hash(bytes) == packet preimage == base.sha256`. Absence is
+  accepted only for the all-zero preimage, with a required approved `created_mode`. Any missing,
+  extra, mismatched or absent-vs-present inconsistency refuses with `code.commit.review-source`.
+  `None` and `Some(&[])` stay distinct, because an empty blob hashes to `e3b0…`, not zero.
+- The reported mode for existing files is `base.mode`. Planning already requires the candidate mode
+  to equal it (`:664-679`). For creations the mode comes from `created_mode`, which planning also
+  checks against the live permission bits (`:629-631`). So the reported mode is the candidate mode.
+- Every packet file is included regardless of the selected group. Mode filtering by group
+  (`:687`) still applies only to the kernel planner.
+
+**Ordering and drift are handled.** The `RefCell` baseline keeps the first complete observation.
+Sources are taken from it only after the full `before` plan, including its two observations and
+the workspace snapshot recheck, has succeeded. Cancellation is checked on both sides of the capture.
+The complete `GitObservation` equality now includes base bytes and is enforced on every pre/post
+sample. The post-checker `after` plan, `before != after` and the workspace-snapshot binding are all
+unchanged. A checker failure still stops immediately, and success still cannot skip the post-check.
+
+**Confinement and authority are unchanged.** There are no new filesystem, Git, network or
+command paths. Reads stay within the existing consented two-root scope and the offline Git worker.
+There is no default or product checker, and no API/MCP/terminal route. The docs state clearly
+that the bytes are untrusted and that read consent grants no disclosure authority.
+
+**Tests are meaningful.** Hash-only base proofs with empty, different or NUL-suffixed bytes refuse
+with the exact `code.commit.review-source` code, never reach the checker, and leave no candidate index.
+Direct capture refuses changed postimage, missing, absent, extra and cleared base bytes, and the
+original repo file is untouched. The positive checker tests check operation, path, base, current
+and mode. The mixed-history test covers absent regular, absent executable and existing pairs, and
+three sources for a two-file selected group. The collector tests compare the retained bytes through
+`PartialEq` against real Git output.
+
+**Evidence honesty is adequate.** The evidence note, TASKS.md and the guide all say the gate is
+FAIL with inherited failures, that the observations are synthetic, and that no native, model,
+checker or artifact result exists. Both rows stay open with no new rows or sub-rows. The increment
+adds running, tested code, so it is not just a plan. No evaluator, hidden or held-out, scorer,
+prompt, threshold, dependency, SBOM or scoreboard paths changed: the diff is limited to the 10
+files above.
+
+**Public content is clean.** The added lines contain no private host path, username or hostname,
+and no credential or trademark branding. The retained report's only "secret" match is the test
+module name `secret_service`.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L-1 (low, test coverage):** `platforms/linux/src/coding_repository_commit_review_tests.rs`.
+  No test checks `LinuxCodingReviewSource::preimage() == Some(&[])` for an existing empty base blob
+  at the source-pair level. The collector-level test (`repository_base_tests.rs:74`) and the
+  generic code path cover it. Fix: add an empty-base `sentinel` case to
+  `candidate_checker_receives_original_records_…` that asserts `Some(b"".as_slice())`. Same-row backlog.
+- Observation, not a finding for this commit: failing host tests leave
+  `agentmage-host-*` debris in the run's TMPDIR (`/tmp/cp-bz15fpyd`). This is pre-existing,
+  outside the changed crates' new code, and touches no repository content.
+
+The parent's low findings L-1 and L-2 (38486b9cb694) remain same-row backlog, as stated.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing source-pair increment): increment PASS for this exact commit. Neither
+  row closes. The complete affected gate remains FAIL on inherited environmental failures. Still
+  open: native admission, actual checker/artifact integration, full live-owner approval
+  composition, recovery, measurements and approved push.
+
+Verdict: PASS

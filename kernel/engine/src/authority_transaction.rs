@@ -1357,7 +1357,7 @@ fn outcome_code(outcome: OperationOutcome, uncertain: bool) -> &'static str {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use std::collections::BTreeSet;
     use std::fs;
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -1726,11 +1726,23 @@ mod tests {
     }
 
     fn fixture_with_network_scope(network_scope: Option<&str>) -> Fixture {
-        let operation = OperationBinding::new(if network_scope.is_some() {
-            GrantOperation::NetworkAccess
-        } else {
-            GrantOperation::WorkspaceRead
-        });
+        fixture_with_operation(
+            network_scope,
+            if network_scope.is_some() {
+                GrantOperation::NetworkAccess
+            } else {
+                GrantOperation::WorkspaceRead
+            },
+            b"{}",
+        )
+    }
+
+    fn fixture_with_operation(
+        network_scope: Option<&str>,
+        operation: GrantOperation,
+        arguments: &[u8],
+    ) -> Fixture {
+        let operation = OperationBinding::new(operation);
         let tool_id = ToolId::from_raw("fixture.read");
         let mut registry = ToolRegistry::new();
         registry
@@ -1768,7 +1780,7 @@ mod tests {
             }]),
             targets: BTreeSet::from([operation_target.clone()]),
         };
-        let policy = if let Some(network_scope) = network_scope {
+        let policy = if operation.operation() != GrantOperation::WorkspaceRead {
             fn rules<T: Ord>(allowed: BTreeSet<T>) -> ScopeRules<T> {
                 ScopeRules {
                     allowed,
@@ -1791,7 +1803,7 @@ mod tests {
                 targets: rules(read_scope.targets),
                 denied_argument_sha256s: BTreeSet::new(),
                 denied_preimage_sha256s: BTreeSet::new(),
-                network_scopes: rules(BTreeSet::from([network_scope.to_owned()])),
+                network_scopes: rules(network_scope.map(str::to_owned).into_iter().collect()),
                 credential_scopes: ScopeRules::deny_all(),
                 publication_scopes: ScopeRules::deny_all(),
             })
@@ -1828,8 +1840,8 @@ mod tests {
             arguments: ContractPayload {
                 schema: schema(),
                 media_type: "application/json".to_owned(),
-                bytes: b"{}".to_vec(),
-                sha256: super::sha256_hex(b"{}"),
+                bytes: arguments.to_vec(),
+                sha256: super::sha256_hex(arguments),
             },
         };
         let grant = issuer
@@ -1889,6 +1901,40 @@ mod tests {
             attempt_id: OperationAttemptId::from_raw("attempt-0001"),
             approval_id,
         }
+    }
+
+    // Test-only composition: real issuer, policy and coordinator consumption,
+    // synthetic held object and approvals. Never construct a permit directly.
+    pub(crate) fn commit_held_fixture() -> impl HeldWorkspaceObject {
+        synthetic_held("authorization-0001", 2)
+    }
+
+    pub(crate) fn dispatch_commit_fixture(
+        arguments: &[u8],
+        driver: &mut impl EffectDriver,
+    ) -> Receipt {
+        let mut fixture = fixture_with_operation(None, GrantOperation::GitCommit, arguments);
+        let mut request = request(&fixture);
+        request.context.now_epoch_ms = 15_000;
+        request.occurred_at_epoch_ms = 15_000;
+        let mut coordinator = AuthorityTransactionCoordinator::new();
+        let receipt = coordinator
+            .execute_effect(
+                &fixture.registry,
+                &mut fixture.issuer,
+                &fixture.policy,
+                request,
+                driver,
+            )
+            .unwrap();
+        assert!(
+            coordinator
+                .current(&fixture.transaction_id)
+                .unwrap()
+                .consumed_grant_sha256
+                .is_some()
+        );
+        receipt
     }
 
     fn request(fixture: &Fixture) -> AuthorityTransactionRequest {

@@ -16,6 +16,7 @@ use crate::repository_safety::{
     RepositoryOwnedDelta, RepositoryPreservationManifest, reconcile_preservation,
 };
 use crate::review_packet::{FindingSeverity, LocalReviewPacket, verify_review_packet};
+use crate::runtime_loop::RuntimeClock;
 
 const SCHEMA_VERSION: u16 = 1;
 const MAX_COMMIT_FILES: usize = 128;
@@ -1193,27 +1194,32 @@ pub trait BoundedLocalCommitExecutor {
 }
 
 /// Inert local commit driver crossing the effect boundary only with consumed authority.
-pub struct LocalCommitEffectDriver<E, H> {
+pub struct LocalCommitEffectDriver<E, H, C> {
     executor: E,
     held_repository_scope: H,
     prepared: PreparedLocalCommit,
     before: RepositoryPreservationManifest,
     cancellation: CancellationToken,
-    now_epoch_ms: u64,
+    clock: C,
+    constructed_at_epoch_ms: u64,
     receipt: Option<LocalCommitReceipt>,
     error: Option<LocalCommitError>,
 }
 
-impl<E, H> LocalCommitEffectDriver<E, H> {
+impl<E, H, C: RuntimeClock> LocalCommitEffectDriver<E, H, C> {
     /// Creates an inert driver after exact approval and manifest validation.
+    /// The host supplies a trusted clock, sampled again immediately before launch.
     pub fn new(
         executor: E,
         held_repository_scope: H,
         prepared: PreparedLocalCommit,
         before: RepositoryPreservationManifest,
         cancellation: CancellationToken,
-        now_epoch_ms: u64,
+        mut clock: C,
     ) -> Result<Self, LocalCommitError> {
+        let now_epoch_ms = clock
+            .now_epoch_ms()
+            .map_err(|_| LocalCommitError::ApprovalDenied)?;
         before
             .verify()
             .map_err(|_| LocalCommitError::ResultDenied)?;
@@ -1230,7 +1236,8 @@ impl<E, H> LocalCommitEffectDriver<E, H> {
             prepared,
             before,
             cancellation,
-            now_epoch_ms,
+            clock,
+            constructed_at_epoch_ms: now_epoch_ms,
             receipt: None,
             error: None,
         })
@@ -1253,7 +1260,7 @@ impl<E, H> LocalCommitEffectDriver<E, H> {
     }
 }
 
-impl<E, H> fmt::Debug for LocalCommitEffectDriver<E, H> {
+impl<E, H, C> fmt::Debug for LocalCommitEffectDriver<E, H, C> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("LocalCommitEffectDriver")
@@ -1264,19 +1271,26 @@ impl<E, H> fmt::Debug for LocalCommitEffectDriver<E, H> {
     }
 }
 
-impl<E, H> EffectDriver for LocalCommitEffectDriver<E, H>
+impl<E, H, C> EffectDriver for LocalCommitEffectDriver<E, H, C>
 where
     E: BoundedLocalCommitExecutor,
     H: HeldWorkspaceObject,
+    C: RuntimeClock,
 {
     fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
+        let Ok(now_epoch_ms) = self.clock.now_epoch_ms() else {
+            self.error = Some(LocalCommitError::ApprovalDenied);
+            return EffectLaunch::failed();
+        };
         let call = authorization.call();
-        if authorization.operation().operation() != GrantOperation::GitCommit
+        if now_epoch_ms < self.constructed_at_epoch_ms
+            || !authorization.grant_live_at(now_epoch_ms)
+            || authorization.operation().operation() != GrantOperation::GitCommit
             || !authorization.authorizes_held_object(&self.held_repository_scope)
             || call.arguments.sha256 != self.prepared.request_sha256
             || call.arguments.bytes != self.prepared.request_bytes
             || sha256_hex(&call.arguments.bytes) != call.arguments.sha256
-            || self.prepared.verify_at(self.now_epoch_ms).is_err()
+            || self.prepared.verify_at(now_epoch_ms).is_err()
         {
             self.error = Some(LocalCommitError::ApprovalDenied);
             return EffectLaunch::failed();
@@ -1298,7 +1312,7 @@ where
             result,
             authorization.transaction_id().as_str(),
             authorization.attempt_id().as_str(),
-            self.now_epoch_ms,
+            now_epoch_ms,
         ) {
             Ok(receipt) => {
                 let effect = EffectResult::from_redacted_material(

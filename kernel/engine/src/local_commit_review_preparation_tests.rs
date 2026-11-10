@@ -251,14 +251,15 @@ fn preparation_retains_exact_packet_canonical_request_and_expiry_checks() {
                 prepared.clone(),
                 before.clone(),
                 cancellation(),
-                now,
+                FixedClock(now),
             )
             .unwrap_err(),
             LocalCommitError::ApprovalDenied
         );
     }
     assert!(
-        LocalCommitEffectDriver::new((), (), prepared, before, cancellation(), 15_000,).is_ok()
+        LocalCommitEffectDriver::new((), (), prepared, before, cancellation(), FixedClock(15_000),)
+            .is_ok()
     );
 }
 
@@ -297,10 +298,266 @@ fn preparation_and_driver_recheck_retained_packet_before_launch() {
             Err(LocalCommitError::ReviewMismatch)
         );
         assert_eq!(
-            LocalCommitEffectDriver::new((), (), prepared, before, cancellation(), 15_000,)
-                .unwrap_err(),
+            LocalCommitEffectDriver::new(
+                (),
+                (),
+                prepared,
+                before,
+                cancellation(),
+                FixedClock(15_000),
+            )
+            .unwrap_err(),
             LocalCommitError::ReviewMismatch,
             "{field}"
         );
     }
+}
+
+struct FixedClock(u64);
+
+impl RuntimeClock for FixedClock {
+    fn now_epoch_ms(&mut self) -> Result<u64, crate::runtime_loop::RuntimePortFailure> {
+        Ok(self.0)
+    }
+}
+
+struct SequenceClock(
+    std::collections::VecDeque<Result<u64, crate::runtime_loop::RuntimePortFailure>>,
+);
+
+impl RuntimeClock for SequenceClock {
+    fn now_epoch_ms(&mut self) -> Result<u64, crate::runtime_loop::RuntimePortFailure> {
+        self.0.pop_front().expect("unexpected clock sample")
+    }
+}
+
+#[derive(Default)]
+struct SyntheticExecutor {
+    launches: usize,
+}
+
+impl BoundedLocalCommitExecutor for SyntheticExecutor {
+    fn execute(
+        &mut self,
+        permit: LocalCommitLaunchPermit<'_>,
+        cancellation: &CancellationToken,
+    ) -> LocalCommitPlatformResult {
+        assert!(!cancellation.is_cancelled());
+        self.launches += 1;
+        let plan = permit.plan();
+        let before = permit.before();
+        let mut after = before.clone();
+        after.object_database_sha256 = "a".repeat(64);
+        after.agentmage_refs_sha256 = "b".repeat(64);
+        let after = RepositoryPreservationManifest::seal(after).unwrap();
+        let object = "f".repeat(40);
+        LocalCommitPlatformResult {
+            outcome: OperationOutcome::Succeeded,
+            before: before.clone(),
+            after,
+            commit_object: Some(object.clone()),
+            observed_parent: Some(plan.parent_object.clone()),
+            observed_tree: Some(plan.candidate_tree.clone()),
+            observed_message_sha256: Some(plan.message_sha256.clone()),
+            observed_identity_sha256: Some(plan.identity_sha256.clone()),
+            observed_signer_fingerprint: Some(plan.signer.key_fingerprint.clone()),
+            signature_verified: true,
+            task_branch_before: Some(plan.parent_object.clone()),
+            task_branch_after: Some(object),
+            user_index_after_sha256: before.index_sha256.clone(),
+            remotes_after_sha256: before.remotes_sha256.clone(),
+            hooks_executed: false,
+            filters_executed: false,
+            repository_selected_program_used: false,
+            network_used: false,
+            cleanup_verified: true,
+            platform_code: "fixture.commit.succeeded".into(),
+        }
+    }
+}
+
+fn prepared_fixture() -> (PreparedLocalCommit, RepositoryPreservationManifest) {
+    let packet = packet(None, 0, false);
+    let (plan, before) = inputs(&packet);
+    let approval = record_reviewed_manual_commit_approval(&plan, &packet, decision()).unwrap();
+    (
+        PreparedLocalCommit::new(plan, packet, approval, 15_000).unwrap(),
+        before,
+    )
+}
+
+#[test]
+fn commit_dispatch_samples_clock_and_refuses_expired_approval_or_consumed_grant() {
+    use crate::authority_transaction::tests::{commit_held_fixture, dispatch_commit_fixture};
+    use crate::runtime_loop::RuntimePortFailure;
+    for now in [
+        Ok(15_000),
+        Ok(19_999),
+        Ok(20_000),
+        Ok(30_000),
+        Ok(14_999),
+        Ok(0),
+        Err(RuntimePortFailure::Unavailable),
+        Err(RuntimePortFailure::TimedOut),
+    ] {
+        let (prepared, before) = prepared_fixture();
+        let arguments = prepared.request_bytes().to_vec();
+        let clock = SequenceClock([Ok(15_000), now].into());
+        let mut driver = LocalCommitEffectDriver::new(
+            SyntheticExecutor::default(),
+            commit_held_fixture(),
+            prepared,
+            before,
+            cancellation(),
+            clock,
+        )
+        .unwrap();
+        let receipt = dispatch_commit_fixture(&arguments, &mut driver);
+        let allowed = matches!(now, Ok(15_000 | 19_999));
+        assert_eq!(
+            receipt.outcome == OperationOutcome::Succeeded,
+            allowed,
+            "{now:?}"
+        );
+        assert_eq!(driver.take_receipt().is_some(), allowed, "{now:?}");
+        assert_eq!(
+            driver.take_error(),
+            if allowed {
+                None
+            } else {
+                Some(LocalCommitError::ApprovalDenied)
+            },
+            "{now:?}"
+        );
+        assert!(driver.clock.0.is_empty());
+        assert_eq!(driver.into_executor().launches, usize::from(allowed));
+    }
+    // A forward clock from construction can still precede grant consumption.
+    let (prepared, before) = prepared_fixture();
+    let arguments = prepared.request_bytes().to_vec();
+    let mut driver = LocalCommitEffectDriver::new(
+        SyntheticExecutor::default(),
+        commit_held_fixture(),
+        prepared,
+        before,
+        cancellation(),
+        SequenceClock([Ok(10_000), Ok(14_999)].into()),
+    )
+    .unwrap();
+    let receipt = dispatch_commit_fixture(&arguments, &mut driver);
+    assert_ne!(receipt.outcome, OperationOutcome::Succeeded);
+    assert_eq!(driver.take_error(), Some(LocalCommitError::ApprovalDenied));
+    assert!(driver.take_receipt().is_none());
+    assert_eq!(driver.into_executor().launches, 0);
+    // Separate the grant's shorter lifetime from manual-approval expiry.
+    let (mut prepared, before) = prepared_fixture();
+    let mut longer = decision();
+    longer.expires_at_epoch_ms = 40_000;
+    prepared.approval =
+        record_reviewed_manual_commit_approval(&prepared.plan, &prepared.packet, longer).unwrap();
+    let prepared =
+        PreparedLocalCommit::new(prepared.plan, prepared.packet, prepared.approval, 15_000)
+            .unwrap();
+    let arguments = prepared.request_bytes().to_vec();
+    for now in [29_999, 30_000] {
+        let mut driver = LocalCommitEffectDriver::new(
+            SyntheticExecutor::default(),
+            commit_held_fixture(),
+            prepared.clone(),
+            before.clone(),
+            cancellation(),
+            SequenceClock([Ok(15_000), Ok(now)].into()),
+        )
+        .unwrap();
+        let receipt = dispatch_commit_fixture(&arguments, &mut driver);
+        assert_eq!(receipt.outcome == OperationOutcome::Succeeded, now < 30_000);
+        assert_eq!(driver.take_receipt().is_some(), now < 30_000);
+        assert_eq!(driver.into_executor().launches, usize::from(now < 30_000));
+    }
+}
+
+#[test]
+fn commit_dispatch_rechecks_packet_and_call_bindings_after_real_consumption() {
+    use crate::authority_transaction::tests::{commit_held_fixture, dispatch_commit_fixture};
+    for field in ["integrity", "material", "binding", "arguments", "cancelled"] {
+        let (prepared, before) = prepared_fixture();
+        let mut arguments = prepared.request_bytes().to_vec();
+        let mut driver = LocalCommitEffectDriver::new(
+            SyntheticExecutor::default(),
+            commit_held_fixture(),
+            prepared,
+            before,
+            cancellation(),
+            SequenceClock([Ok(15_000), Ok(15_001)].into()),
+        )
+        .unwrap();
+        match field {
+            "integrity" => driver.prepared.packet.objective.push_str(" unsealed"),
+            "material" => {
+                driver.prepared.packet = packet(Some(FindingSeverity::Medium), 0, false);
+                driver.prepared.plan.review_packet_sha256 =
+                    driver.prepared.packet.packet_sha256.clone();
+                reseal(&mut driver.prepared.plan);
+                driver.prepared.approval =
+                    record_manual_commit_approval(&driver.prepared.plan, decision()).unwrap();
+            }
+            "binding" => {
+                driver.prepared.plan.message.push_str(" changed");
+                driver.prepared.plan.message_sha256 =
+                    sha256_hex(driver.prepared.plan.message.as_bytes());
+                reseal(&mut driver.prepared.plan);
+                driver.prepared.approval =
+                    record_manual_commit_approval(&driver.prepared.plan, decision()).unwrap();
+            }
+            "arguments" => arguments = b"{}".to_vec(),
+            "cancelled" => {
+                driver
+                    .cancellation
+                    .cancel(agentmage_kernel_contracts::CancellationSignal {
+                        schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                        cancellation_id: agentmage_kernel_contracts::CancellationId::from_raw(
+                            "fixture-cancel",
+                        ),
+                        task_id: agentmage_kernel_contracts::TaskId::from_raw("fixture-task"),
+                        correlation_id: agentmage_kernel_contracts::CorrelationId::from_raw(
+                            "fixture-correlation",
+                        ),
+                        requested_by: agentmage_kernel_contracts::BoundaryKind::Kernel,
+                        reason: agentmage_kernel_contracts::CancellationReason::UserRequested,
+                    })
+                    .unwrap();
+            }
+            _ => unreachable!(),
+        }
+        let receipt = dispatch_commit_fixture(&arguments, &mut driver);
+        assert_ne!(receipt.outcome, OperationOutcome::Succeeded, "{field}");
+        assert!(driver.take_receipt().is_none());
+        assert_eq!(
+            driver.take_error(),
+            Some(if field == "cancelled" {
+                LocalCommitError::ResultDenied
+            } else {
+                LocalCommitError::ApprovalDenied
+            }),
+            "{field}"
+        );
+        assert_eq!(driver.into_executor().launches, 0, "{field}");
+    }
+}
+
+#[test]
+fn commit_driver_refuses_unavailable_construction_clock() {
+    let (prepared, before) = prepared_fixture();
+    assert_eq!(
+        LocalCommitEffectDriver::new(
+            (),
+            (),
+            prepared,
+            before,
+            cancellation(),
+            SequenceClock([Err(crate::runtime_loop::RuntimePortFailure::Unavailable)].into())
+        )
+        .unwrap_err(),
+        LocalCommitError::ApprovalDenied
+    );
 }
