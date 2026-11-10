@@ -33,6 +33,10 @@ pub(crate) enum LaunchOwner {
         Arc<crate::repository_safety::LinuxRepositoryInspectionManifest>,
         crate::LinuxLinkedRepository,
     ),
+    RepositoryGit(
+        Arc<crate::repository_safety::LinuxRepositoryInspectionManifest>,
+        Arc<crate::repository_safety::LinuxRepositoryMutationScope>,
+    ),
     #[cfg(feature = "public-research-worker")]
     Research(Arc<super::research::LinuxPublicResearchManifest>),
 }
@@ -49,9 +53,9 @@ impl LaunchOwner {
                     .ok_or_else(failure)
             }
             Self::Command(manifest, _) => manifest.control_path().map_err(|_| failure()),
-            Self::Git(manifest) | Self::LinkedGit(manifest, _) => {
-                manifest.control_path().map_err(|_| failure())
-            }
+            Self::Git(manifest)
+            | Self::LinkedGit(manifest, _)
+            | Self::RepositoryGit(manifest, _) => manifest.control_path().map_err(|_| failure()),
             #[cfg(feature = "public-research-worker")]
             Self::Research(manifest) => manifest.control_path(),
         }
@@ -65,6 +69,10 @@ impl LaunchOwner {
             Self::LinkedGit(_, linked) => (
                 "agentmage-git-inspection-",
                 projections == 2 && linked.revalidate().is_ok(),
+            ),
+            Self::RepositoryGit(_, scope) => (
+                "agentmage-repository-git-",
+                projections == 3 && scope.revalidate().is_ok(),
             ),
             #[cfg(feature = "public-research-worker")]
             Self::Research(_) => ("agentmage-research-", projections == 3),
@@ -504,6 +512,8 @@ struct Observation {
     stage: UnitStage,
     invocation: String,
     cgroup: String,
+    #[cfg(test)]
+    main_pid: u32,
 }
 
 fn same_running_generation(first: &Observation, second: &Observation) -> bool {
@@ -676,6 +686,8 @@ impl Attempt {
             stage: observation.stage,
             invocation: observation.invocation.into(),
             cgroup: observation.cgroup.into(),
+            #[cfg(test)]
+            main_pid: observation.main_pid,
         }))
     }
 
@@ -737,6 +749,13 @@ impl Attempt {
                 }
                 let filter = self.filter.as_mut().ok_or_else(failure)?;
                 if filter.state == FilterState::Withheld && observed.stage == UnitStage::Running {
+                    if let LaunchOwner::RepositoryGit(_, scope) = &self.manifest {
+                        scope.revalidate().map_err(|_| failure())?;
+                        #[cfg(test)]
+                        crate::repository_safety::report_invocation_spawned(observed.main_pid);
+                        // A test observer may move a held path while the filter is withheld.
+                        scope.revalidate().map_err(|_| failure())?;
+                    }
                     filter.release(policy)?;
                 }
                 if self.complete(&observed)? {
@@ -1067,6 +1086,8 @@ struct UnitObservation<'a> {
     stage: UnitStage,
     invocation: &'a str,
     cgroup: &'a str,
+    #[cfg(test)]
+    main_pid: u32,
 }
 
 fn decimal(value: &str, allow_zero: bool) -> Result<u32, UnitObservationError> {
@@ -1089,6 +1110,7 @@ fn unit_name(value: &str) -> bool {
         "agentmage-worker-",
         "agentmage-command-",
         "agentmage-git-inspection-",
+        "agentmage-repository-git-",
         #[cfg(feature = "public-research-worker")]
         "agentmage-research-",
     ]
@@ -1234,6 +1256,8 @@ fn parse_unit_observation<'a>(
         stage,
         invocation: invocation_id,
         cgroup: group,
+        #[cfg(test)]
+        main_pid,
     })
 }
 
@@ -1247,6 +1271,20 @@ mod tests {
     use super::*;
 
     const UNIT: &str = "agentmage-worker-0123456789abcdef01234567.service";
+
+    #[test]
+    fn repository_git_observations_require_the_separate_closed_nonce() {
+        let unit = UNIT.replace("agentmage-worker-", "agentmage-repository-git-");
+        assert!(parse_unit_observation(&unit, running().replace(UNIT, &unit).as_bytes()).is_ok());
+        for bad in [
+            "agentmage-repository-git-*.service",
+            "agentmage-repository-git-0123456789abcdef0123456.service",
+            "agentmage-repository-git-0123456789abcdef0123456g.service",
+        ] {
+            assert!(!unit_name(bad));
+            assert!(parse_unit_observation(bad, running().replace(UNIT, bad).as_bytes()).is_err());
+        }
+    }
 
     #[test]
     fn research_unit_observation_requires_the_optional_closed_owner_and_exact_nonce() {
@@ -1967,6 +2005,7 @@ mod tests {
                 stage: UnitStage::Running,
                 invocation: "0123456789abcdef0123456789abcdef".into(),
                 cgroup: format!("/user.slice/user-1000.slice/user@1000.service/app.slice/{UNIT}"),
+                main_pid: 42,
             }
         }
         let first = observation();

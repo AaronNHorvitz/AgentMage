@@ -3,13 +3,15 @@
 use std::fmt;
 use std::fmt::Write as _;
 use std::fs;
+#[cfg(test)]
 use std::io::Read;
 use std::os::fd::AsRawFd as _;
 use std::os::unix::ffi::OsStrExt as _;
 use std::os::unix::fs::MetadataExt as _;
 use std::path::{Component, Path, PathBuf};
-use std::process::{Child, Command, ExitStatus, Stdio};
+use std::process::{Command, ExitStatus, Stdio};
 use std::sync::Arc;
+#[cfg(test)]
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -42,11 +44,16 @@ const MAX_HASHED_FILE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_METADATA_ENTRIES: usize = 16_384;
 const PROCESS_TIMEOUT: Duration = Duration::from_secs(30);
 const INSPECTION_PROCESS_TIMEOUT: Duration = Duration::from_secs(15);
+#[cfg(test)]
 const POLL_INTERVAL: Duration = Duration::from_millis(10);
 const GUEST_GIT_EXECUTABLE: &str = "/app/git";
 
 #[path = "repository_observation.rs"]
 mod observation;
+
+#[path = "repository_execution.rs"]
+mod execution;
+pub(crate) use execution::LinuxRepositoryMutationScope;
 
 /// Stable failure class at the Linux repository boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1356,37 +1363,13 @@ impl LinuxRepositoryExecutor {
         invocation: &HardenedGitInvocation,
         cancellation: &CancellationToken,
     ) -> InvocationStatus {
-        if invocation.verify().is_err()
-            || invocation.network
-            || revalidate_git_artifact(&self.collector.git).is_err()
-        {
-            return InvocationStatus::Denied;
-        }
-        let Some(arguments) = map_arguments(invocation, &self.scope) else {
-            return InvocationStatus::Denied;
-        };
-        let mut command = Command::new(&self.collector.git.launch_path);
-        command
-            .env_clear()
-            .envs(invocation.environment.iter())
-            .args(arguments)
-            .current_dir(&self.scope.owned_root)
-            .stdin(Stdio::null())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
-        let Ok(mut child) = command.spawn() else {
-            return InvocationStatus::Failed;
-        };
-        // Reported while the Git child is live, so a test can act strictly inside
-        // the execution window instead of relying on thread scheduling.
-        report_invocation_spawned(child.id());
-        wait_bounded(&mut child, cancellation)
+        execution::execute(&self.collector.git, &self.scope, invocation, cancellation)
     }
 }
 
-/// Test-only seam reporting that a hardened Git child is running.
+/// Test-only seam reporting the admitted Git worker before filter delivery.
 ///
-/// It observes an already-spawned process identifier and can neither choose nor
+/// It observes an already-spawned worker identifier and can neither choose nor
 /// alter any invocation. It compiles to nothing outside tests.
 #[cfg(test)]
 mod invocation_observer {
@@ -1411,12 +1394,9 @@ mod invocation_observer {
 }
 
 #[cfg(test)]
-fn report_invocation_spawned(pid: u32) {
+pub(crate) fn report_invocation_spawned(pid: u32) {
     invocation_observer::report(pid);
 }
-
-#[cfg(not(test))]
-const fn report_invocation_spawned(_pid: u32) {}
 
 fn make_created_worktree_private(path: &Path) -> bool {
     let Ok(descriptor) = open(
@@ -1493,74 +1473,6 @@ impl InvocationStatus {
             Self::TimedOut => "linux.git.invocation.timed_out",
             Self::OutputLimit => "linux.git.invocation.output_limit",
             Self::CleanupFailed => "linux.git.invocation.cleanup_failed",
-        }
-    }
-}
-
-fn wait_bounded(child: &mut Child, cancellation: &CancellationToken) -> InvocationStatus {
-    let stdout = child.stdout.take();
-    let stderr = child.stderr.take();
-    let Some(stdout) = stdout else {
-        return terminate_child(child, InvocationStatus::CleanupFailed);
-    };
-    let Some(stderr) = stderr else {
-        return terminate_child(child, InvocationStatus::CleanupFailed);
-    };
-    let stdout_reader = thread::spawn(move || read_bounded(stdout));
-    let stderr_reader = thread::spawn(move || read_bounded(stderr));
-    let deadline = Instant::now() + PROCESS_TIMEOUT;
-    let (status, exit) = loop {
-        match child.try_wait() {
-            Ok(Some(exit)) => break (InvocationStatus::Succeeded, Some(exit)),
-            Ok(None) if cancellation.is_cancelled() => {
-                break (terminate_child(child, InvocationStatus::Cancelled), None);
-            }
-            Ok(None) if Instant::now() >= deadline => {
-                break (terminate_child(child, InvocationStatus::TimedOut), None);
-            }
-            Ok(None) => thread::sleep(POLL_INTERVAL),
-            Err(_) => {
-                break (
-                    terminate_child(child, InvocationStatus::CleanupFailed),
-                    None,
-                );
-            }
-        }
-    };
-    let stdout = stdout_reader.join().unwrap_or(false);
-    let stderr = stderr_reader.join().unwrap_or(false);
-    if !stdout || !stderr {
-        InvocationStatus::OutputLimit
-    } else if status != InvocationStatus::Succeeded {
-        status
-    } else if exit.is_some_and(|value| value.success()) {
-        InvocationStatus::Succeeded
-    } else {
-        InvocationStatus::Failed
-    }
-}
-
-fn terminate_child(child: &mut Child, outcome: InvocationStatus) -> InvocationStatus {
-    if child.kill().is_ok() && child.wait().is_ok() {
-        outcome
-    } else {
-        InvocationStatus::CleanupFailed
-    }
-}
-
-fn read_bounded(mut input: impl Read) -> bool {
-    let mut total = 0_usize;
-    let mut buffer = [0_u8; HASH_BUFFER_BYTES];
-    loop {
-        let Ok(count) = input.read(&mut buffer) else {
-            return false;
-        };
-        if count == 0 {
-            return true;
-        }
-        total = total.saturating_add(count);
-        if total > MAX_OBSERVATION_BYTES {
-            return false;
         }
     }
 }
@@ -3361,9 +3273,9 @@ mod tests {
             .next()
     }
 
-    /// Stops the exact hardened Git child, proves it is stopped, mutates the user's
-    /// repository, and resumes it. While stopped the child provably cannot complete,
-    /// so the overlap is guaranteed rather than observed after the fact.
+    /// Stops the exact offline Git worker, proves it is stopped, mutates the user's
+    /// repository, and resumes it. Its seccomp filter is still withheld, so Git cannot run;
+    /// the overlap is guaranteed rather than observed after the fact.
     fn mutate_during_removal(git_pid: u32) {
         let expected = *CONCURRENT_THREAD.lock().expect("concurrent thread");
         if expected != Some(std::thread::current().id()) {
@@ -3421,7 +3333,7 @@ mod tests {
     }
 
     /// The user works inside the exact window in which AgentMage removes its own
-    /// worktree, with the removal's Git child held stopped so it cannot finish first.
+    /// worktree, with the removal worker stopped before filter delivery and Git execution.
     #[test]
     fn concurrent_user_changes_survive_worktree_removal_and_cleanup() {
         let fixture = Fixture::new();
@@ -3462,7 +3374,7 @@ mod tests {
             executor.run(&removal, &before_remove, &cancellation)
         };
 
-        // The mutation ran, and the exact Git child was held stopped throughout it.
+        // The mutation ran with the exact worker stopped before Git could execute.
         assert!(
             CONCURRENT_MUTATED.load(Ordering::SeqCst),
             "mutation never ran"

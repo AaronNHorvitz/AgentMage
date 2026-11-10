@@ -287,5 +287,27 @@ use the worker's 4 MiB output ceiling: oversize, cancellation or worker failure
 refuses collection, with no direct host-process fallback. This read confinement
 does not enable candidate construction, commits or pushes. Native positive
 execution and complete coding workflow acceptance remain unverified in this lane.
-The separate existing worktree mutation adapter still uses a bounded direct Git
-child; confining that effect path remains open.
+Ordinary observations also inherit the read worker's fifteen-second deadline,
+256 MiB memory limit, sixteen tasks and 4 MiB output ceiling; inventory requests
+up to 32 MiB are capped at 4 MiB. Large ignored build/dependency listings can
+therefore refuse inventory. Representative native capacity remains unmeasured.
+Because external registered worktrees are absent from the read worker's guest
+filesystem, its `worktree list` cannot distinguish an existing external checkout
+from a deleted one without pruned metadata. The preservation digest retains
+metadata but no longer proves those external directories exist. Nested linked
+repositories can also appear as individual untracked files. These reduced
+observation signals remain same-row backlog; they authorize no wider mount.
+
+The existing approved worktree mutation adapter now uses a separate closed
+owner in the offline supervisor. It exposes the original checkout read-only,
+the exact selected Git metadata and owned scratch root writable, and no host
+ancestor. Canonical paths inside the guest preserve persistent worktree pointers.
+All three held directory identities are checked before execution and afterward;
+changed roots or incomplete output refuse success. The existing plan, approval,
+preservation checks, thirty-second deadline and output ceiling remain required.
+There is no direct-process fallback. Runtime mount collisions, linked read-only
+scopes and network operations refuse. Git's installed helper symlinks resolve
+through a guest `/usr/bin/git` symlink to the held executable mounted read-only
+at `/app/git`; no host executable directory is exposed for them. Native positive
+execution remains unverified here; this does not activate candidate or local-commit adapters.
+See [Decision 0189](../decisions/0189-confine-approved-local-worktree-git.md).

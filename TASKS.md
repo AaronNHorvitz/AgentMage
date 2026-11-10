@@ -2,6 +2,27 @@
 
 ## Active queue: local agent mission
 
+The [confined approved local Git change](docs/evidence/t306-confined-effects-2026-11-10.md)
+routes existing worktree and local compare-and-swap effects through the offline
+supervisor. The checkout is read-only; only the exact selected metadata and
+owned scratch root are writable. Kernel plans, approvals and preservation
+reconciliation remain required. The complete affected gate remains **FAIL**:
+1,327 Rust passes, the exact same 72 inherited failure identities and 64
+existing ignores across 26 unfiltered targets. All six new methods, three
+affected controls, formatting and Clippy pass; four source hashes remain fixed.
+A separate synthetic mount-layout experiment passes after two retained helper
+layout failures; it does not establish native workflow admission. Independent
+core review is required. T-303/T-306 remain open, with no new or
+closed row or sub-row. Candidate execution, approved local commit/push effects,
+native/model measurement and durable recovery remain open.
+
+The retained [original-observation review](docs/reviews/d5452baf777b-local-coding-confined-observations.txt)
+returns **Verdict: PASS** for exact commit
+`d5452baf777b7f6cdc6aaca06883da5cf4298fbb`, with no high or medium finding.
+Its low L1 reduced linked-worktree existence signal and L2 tighter read-worker
+resource bounds are disclosed in the guide and remain same-row backlog for
+measurement or improvement. Neither parent row closes.
+
 The [confined original-observation change](docs/evidence/t306-confined-observations-2026-11-10.md)
 routes original preservation and inventory Git reads through the existing offline,
 read-only inspection worker, with no direct-process observation fallback. Linked

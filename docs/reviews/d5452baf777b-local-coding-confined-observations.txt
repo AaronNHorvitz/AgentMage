@@ -1,0 +1,177 @@
+Commit: d5452baf777b7f6cdc6aaca06883da5cf4298fbb
+Scope: local-coding-confined-observations
+
+Reviewer: Claude Opus 5.5, separate session, read-only pinned checkout `/lane/review-checkout`.
+Rows: T-303 / T-306 (non-closing prerequisite). Both parents stay OPEN; this review closes nothing.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `d5452baf777b7f6cdc6aaca06883da5cf4298fbb` in the pinned
+  checkout. Diff against base `544848fb28aa…` has 9 files: TASKS.md (prose only), Decision 0188,
+  evidence note, guide paragraph, two retained reviews, `repository_observation.rs` (new),
+  `repository_observation_tests.rs` (new), `repository_safety.rs`.
+- Read IP-POLICY.md, Decision 0188, `docs/evidence/t306-confined-observations-2026-11-10.md`, and
+  the bundle README.md, run.py, check.py, parse_gate.py and light.py before running them. They only
+  run the fast gate, hash sources, parse the log and lint. None writes tracked files.
+- Code review of every collector Git read path: `collect` (preservation), `collect_inventory`,
+  `collect_base_preimages`. All of them reach `observe_inventory_optional` and then
+  `observe_confined_inventory`/`observe_with`. Grepped every non-test `Command::new` and
+  `launch_path` in platforms/ and shells/. The only remaining direct Git children are the worktree
+  mutation executor (`repository_safety.rs:1368`, disclosed as out of scope) and the dormant
+  `local_commit.rs:599` (disclosed, not activated). Host-shell Git launches are all inside
+  `#[cfg(test)]`. `run_inventory_process` and `read_inventory_output` are now `#[cfg(test)]`, and
+  Clippy passing shows no product caller remains.
+- Checked the worker the ordinary path now uses (`LinuxBoundedRepositoryInspectionExecutor::new`
+  plus `run_read_only`):
+  - Inherited launch hardening: systemd-run `--expand-environment=no`, NoNewPrivileges,
+    RestrictAddressFamilies, TasksMax and MemoryMax.
+  - Bubblewrap: `--unshare-all --unshare-user --disable-userns --clearenv --cap-drop ALL`, plus
+    seccomp.
+  - Guest filesystem: only runtime libraries, `/app/git` and the held checkout descriptor at
+    `/work`, all read-only. There is no `/usr/bin` and no shell.
+  - Admission is `LaunchOwner::Git` with exactly one projection.
+  - The worker caps stdout at 4 MiB and has a 15 s deadline.
+  - Post-checks: the workspace is revalidated, then cancellation, termination, descendant cleanup,
+    length, byte count and SHA-256 of the result are checked.
+- Escape reproduction (my own, outside the repository, in `/lane/state/tmp/review-d5452-escape`).
+  systemd-run has no user bus in this lane and the product's `LinuxGitArtifact::verify` refuses
+  `/usr/bin/git` here (owned by nfsnobody), so the real worker cannot run. Instead I ran bubblewrap
+  directly with the worker's exact mount layout, environment and hardened `-c` prefix, using the
+  code's `--git-dir=/work/.git --work-tree=/work` argument shape:
+  - Local `include.path` naming a host file: on the host, `config --list` reveals
+    `user.name=HOST-SECRET-VALUE`. In the guest the include does not resolve.
+  - `objects/info/alternates` naming an external host object store: on the host, `cat-file -t
+    <external commit>` prints `commit`. In the guest, `could not get object info`, exit 128.
+  - A symlink in the checkout to a host file has no target in the guest; only the path is listed.
+  - The guest ownership check passes. `--clearenv` leaves only the ten explicit variables.
+- Functional parity in the same guest layout, on a plain repository with an external linked
+  worktree. Output was byte-identical to the host for: `rev-parse --show-object-format`,
+  `rev-parse --verify HEAD`, `symbolic-ref --quiet HEAD`, `ls-files --stage -z`,
+  `ls-files --others [--ignored] --exclude-standard -z`,
+  `config --local --no-includes --null --list`, `for-each-ref`, `count-objects -v` and
+  `ls-tree -r -z --full-tree HEAD`. `worktree list --porcelain -z` differs (see L1). A missing
+  ref gives exit 1.
+- Mutation testing on a `git archive` copy (`/lane/state/tmp/review-mutation-d5452baf777b/tree`):
+  five single mutants of `repository_observation.rs`, running the five new tests through
+  build-slot (results below).
+- Prompt-injected tool calls do not apply here: these collector reads take no model, document or
+  web input, and no new grant, route or tool is added.
+
+## Exact commands and results (run from /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-confined-observations/review-inputs.sha256`:
+   exit 0. The manifest's own SHA-256 is
+   `9516d1cf1dc344d4ba429a71a603d6d1f509eaf03607ff4afa68e96e22142e7a`, as stated.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-confined-observations/run.py /lane/state/tmp/review-confined-observations-full-d5452baf777b`
+   (fresh output directory, not outer-wrapped): exit 1, as expected. Results:
+   - `source_unchanged: true`.
+   - 309.60 s including reservations. Per-command times are fmt 1.35 s, Clippy 42.98 s (cold
+     separate target) and Rust 263.59 s. No timeout.
+   - Raw log SHA-256 `4a88809ca471c183b7c98188f112ea181343fe674f3aeca17808dc27edc598a8`.
+   - `FAST GATE: FAIL`.
+3. `python3 -B /lane/state/tmp/t306-confined-observations/check.py <out>`: exit 0. Results:
+   - 26 targets, totals 1321 passed / 72 failed / 64 ignored / 0 measured / 0 filtered.
+   - All 8 named methods pass: the 5 new ones and 3 controls.
+   - "DATA COMPARISON ONLY: FULL GATE REMAINS FAIL".
+   - Separately, I parsed the builder's `validation-1/fast.log` and my log. Per-target counts,
+     failure identities and ignore identities are identical.
+   - The inherited native failures (for example the `repository_safety::tests::*` collectors)
+     panic at fixture `LinuxGitArtifact::verify("/usr/bin/git")` with `InvalidGitArtifact`, as at
+     base.
+4. `python3 -B /lane/state/tmp/t306-confined-observations/light.py`: exit 0. Diff check,
+   untracked lint, review lint and markdownlint all pass; markdownlint reports 0 issues in 4 files.
+5. `cmp …/validation-1/source-freeze.json <out>/source-freeze.json`: exit 0.
+6. `git diff --check 544848fb28aacf1d5b03afc243defb5ba25b63fe --`: exit 0.
+7. `git status --short`: empty, exit 0.
+8. Retained reviews: both `docs/reviews/*.txt` files are byte-identical to `/lane/reviews/*.md`
+   (`cmp` exit 0). The only `/lane/…` strings in added lines are inside those retained copies, as
+   generic lane paths. No private host path, username, hostname, credential, personal data,
+   other-product name or trademark branding appears in added lines.
+9. Mutants, each run as
+   `CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib -- --test-threads=4 repository_safety::observation::`.
+   The unmutated copy passes 5/5. Every mutant is killed:
+   - Remove the post-dispatch `revalidate_scope` → 2 FAILED: the replaced-roots/aliases test and
+     the linked-rechecks test.
+   - Remove the pre-dispatch `revalidate_scope` → 1 FAILED: the replaced-roots/aliases test.
+   - Drop the post-run `token.is_cancelled()` check → 1 FAILED: the failed/incomplete/cancelled
+     test.
+   - Drop the stdout SHA-256 check → 1 FAILED: the same test.
+   - Pass the host Git-directory path instead of the guest `/work/<relative>` path → 1 FAILED: the
+     bind-selected-metadata test.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, backlog): the confined `worktree list` no longer shows whether a linked worktree's
+  directory exists.** Location: `platforms/linux/src/repository_safety.rs:396`, the
+  preservation `worktrees` observation.
+  - Cause: in the guest, every linked worktree recorded under the checkout's metadata with an
+    absolute host path is reported `prunable gitdir file points to non-existent location`.
+  - Effect: deleting a user's linked worktree directory on the host (without pruning) no longer
+    changes `worktrees_sha256`. This holds for the non-worktree deltas too: None,
+    BranchFastForward, Fetch, CandidateTree and LocalCommit.
+  - Related effect: a nested linked worktree inside the checkout loses its gitfile target, so
+    untracked listings show its files one by one instead of as a nested repository.
+  - Reproduced in the guest layout: identical `prunable` output before and after `rm -rf` of the
+    worktree directory. The host showed the change.
+  - This is a weaker preservation signal, not a confinement escape, and it is not disclosed.
+  - Fix: add a host-side existence/identity check for each registered worktree (from the held
+    metadata) to the framed manifest. Alternatively, document the reduced signal in Decision 0188
+    and the guide.
+- **L2 (low, backlog): stricter bounds for ordinary observations are only partly disclosed.**
+  Location: `repository_observation.rs:47` via `repository_safety.rs:670`.
+  - Ordinary preservation and inventory reads move from the 30 s direct `PROCESS_TIMEOUT` and up to
+    32 MiB of output to the worker's 15 s deadline, 256 MiB MemoryMax, 16 tasks and 4 MiB of
+    output. `repository_inventory.rs:137-164` still requests `MAX_INVENTORY_BYTES` (32 MiB), which
+    is now silently capped at 4 MiB.
+  - The docs disclose only the 4 MiB ceiling.
+  - Practical effect: `ls-files --others --ignored` lists every ignored file. Projects with a
+    populated ignored build or dependency tree are likely to refuse inventory. This fails closed,
+    so it is not a safety problem.
+  - Fix: state the deadline and resource change in the evidence/guide, and either measure a
+    representative repository or reduce the ignored-listing volume within the existing ceiling.
+- **Note (not a finding, disclosed): native positive execution of the confined ordinary path
+  remains unverified.** In this lane no native collector test can run: the `/usr/bin/git`
+  artifact is refused and there is no systemd user bus. My guest-layout reproduction tests Git's
+  behaviour under the worker's mounts, not the real systemd-run/seccomp/supervisor launch. The
+  evidence states this accurately ("do not launch native Git or establish native admission").
+
+## Claims checked
+
+- "All collector Git reads route through the offline read-only worker, no direct fallback":
+  confirmed by code reading and grep.
+- "Exact selected metadata mapped below the checkout, no ambient discovery": confirmed.
+  - `LinuxRepositoryScope::verify` requires `git_directory` to be canonical and below the checkout.
+  - Only `Normal` path components are allowed, and the argument becomes
+    `--git-dir=/work/<relative>`.
+  - No host path is passed. The test uses a decoy `.git` file plus a non-default metadata name.
+- "Linked descriptors and supervisor owner unchanged": confirmed. The `LinkedGit` owner, the two
+  projections, `add_linked_inspection_*` and the control tests are unchanged and passing.
+- "Refuse cancelled, incomplete, oversize or failed workers and changed scopes": confirmed by the
+  tests and by the five killed mutants.
+- "Missing-ref stays optional": exit 1 or 128 gives `None`, the same semantics as before. Under
+  confinement, exit 128 can also come from unreachable alternates. Alternates are already flagged
+  `hazardous_configuration`, and required observations still fail.
+- Gate numbers (1321/72/64, 26 targets, zero measured/filtered), the three unchanged source hashes
+  and the builder's raw-log SHA-256 match their result.json. My independent run reproduces the
+  same identities.
+- Scope limits are stated honestly:
+  - The worktree mutation adapter still uses direct Git.
+  - The dormant candidate and local-commit adapters stay inactive.
+  - There is no new grant, route, candidate build, commit or push.
+  - There is no model or GPU process and no coding score.
+  - No parent is closed and no release is claimed.
+- Evaluation integrity: no frozen, hidden or held-out task, scorer, prompt, threshold,
+  dependency, SBOM, lifecycle or scoreboard file is in the diff. The TASKS.md table rows are
+  unchanged (check.py). No new row or sub-row. No new `#[ignore`.
+
+## Per-row result
+
+- T-303 / T-306 non-closing prerequisite "confined original observations": PASS for this exact
+  commit. There is no open high or medium finding; L1 and L2 are same-row backlog.
+- Both parents remain OPEN. The open items are: confining the worktree mutation effect path,
+  candidate execution, reviewer and artifact provenance, approved local commit/push, native and
+  model measurement, and durable recovery. No closure is approved.
+
+Verdict: PASS
