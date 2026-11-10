@@ -236,3 +236,33 @@ options without an agent; synthetic worker tests cover the dispatch and refusal
 contracts. Neither establishes native sandbox admission or a complete approved
 commit workflow. Candidate construction, independent reviewer/artifact authority,
 approval composition, approved commit/push and model measurements remain open.
+
+## Dormant socket-free private signing primitive
+
+Public inspection now also retains the keygrip attached to the selected public
+fingerprint. It comes from the sealed listing, whose digest is already part of
+the inspection evidence. A missing, malformed or duplicate selected keygrip
+refuses private use without disqualifying the public identity.
+
+A separate internal primitive captures only that keygrip's private file through
+held owner-private directories. It refuses links, special files, unsafe modes,
+empty or oversized input, changed metadata and directory replacement. The limit
+is 128 KiB, with cancellation checkpoints around 16-KiB reads and sealing. The
+temporary heap buffer is wiped. This does not guarantee atomic capture against
+same-user edits, locked memory or erasure of kernel storage.
+
+A foreground agent receives the sealed selected file and fixed commands through
+the existing supervisor. The socket-denying policy stays unchanged. There is no
+host socket, live private directory, repository or user configuration projection,
+no shell, no pinentry program, no smartcard daemon and no external passphrase
+cache. Protected or externally backed keys can fail; there is no host fallback.
+Exactly two payloads, held installed artifacts, resource limits, separate output
+bounds, cancellation, deadlines and whole-unit cleanup remain mandatory.
+
+The primitive returns only an unverified signature expression after a complete,
+phase-ordered successful response. Errors, inquiries, partial output, mismatched
+stream digests, unsuccessful exit or uncertain cleanup refuse the result.
+This is not yet an OpenPGP commit signature or an activated capability. Packet
+construction, verification, native admission and approval composition remain
+open; the existing signed-creation adapter remains dormant. Disposable agent
+fixtures prove the primitive's protocol only, not a complete approved workflow.

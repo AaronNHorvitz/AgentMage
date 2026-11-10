@@ -37,6 +37,9 @@ pub(crate) mod verification;
 #[path = "local_commit_inspection.rs"]
 pub(crate) mod inspection;
 
+#[path = "local_commit_signing.rs"]
+pub(crate) mod signing;
+
 /// Stable Linux local-commit adapter failure class.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LinuxLocalCommitErrorKind {
@@ -283,6 +286,8 @@ pub struct LinuxOpenPgpSigner {
     executable_sha256: String,
     keyring: PathBuf,
     public_key: Vec<u8>,
+    // Derived only from the sealed public listing; never a caller-selected path.
+    keygrip: Option<String>,
     pinned: PinnedCommitSigner,
 }
 
@@ -341,7 +346,7 @@ impl LinuxOpenPgpSigner {
         if !valid_fingerprint(&fingerprint) {
             return Err(error(LinuxLocalCommitErrorKind::ArtifactDenied));
         }
-        let (public_key, inspection) = inspection::inspect(
+        let (public_key, inspection, keygrip) = inspection::inspect(
             &executable,
             &executable_sha256,
             &keyring,
@@ -370,6 +375,7 @@ impl LinuxOpenPgpSigner {
             executable_sha256,
             keyring,
             public_key,
+            keygrip,
             pinned,
         })
     }
@@ -1032,7 +1038,7 @@ pub(crate) mod tests {
     // Serialize fixtures that share the production owner's refusal of concurrent
     // admission; supervisor tests own local slots. Fixture assertion failures may
     // poison THIS test mutex, not the independent production capture owner.
-    static DIRECT_CAPTURE_TEST: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    pub(super) static DIRECT_CAPTURE_TEST: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
     #[test]
     fn local_commit_public_inspection_caller_cancellation_precedes_path_access() {
@@ -1435,6 +1441,7 @@ pub(crate) mod tests {
                 executable: PathBuf::from("/usr/bin/gpg"),
                 executable_sha256: hash(b"synthetic signer artifact"),
                 keyring,
+                keygrip: None,
                 public_key: exported.clone(),
                 pinned: plan.signer.clone(),
             };
@@ -1569,6 +1576,7 @@ pub(crate) mod tests {
             executable: PathBuf::from("/usr/bin/gpg"),
             executable_sha256: hash(b"synthetic signer artifact"),
             keyring: fixture.root.clone(),
+            keygrip: None,
             public_key: Vec::new(),
             pinned: synthetic_plan(&hash(b"repository")).signer,
         };

@@ -37,6 +37,7 @@ fn fixture() -> (LinuxOpenPgpSigner, LocalCommitPlan) {
             executable_sha256: plan.signer.signer_executable_sha256.clone(),
             keyring: PathBuf::from("/never-projected-private-keyring"),
             public_key,
+            keygrip: None,
             pinned: plan.signer.clone(),
         },
         plan,

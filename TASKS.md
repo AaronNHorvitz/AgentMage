@@ -2,6 +2,20 @@
 
 ## Active queue: local agent mission
 
+The [socket-free private signing primitive](docs/evidence/t306-private-signing-2026-11-10.md)
+adds selected sealed-key capture and a foreground offline signer under the
+existing socket-denying supervisor. It returns an unverified signature expression;
+packet construction, independent verification, native admission and approval
+composition remain open. Signed creation stays dormant. T-303/T-306 remain open,
+without a new row or sub-row; independent core review is required. The complete
+affected gate remains **FAIL**: 1,393 passes, the exact inherited 72 failures
+and 64 ignores over 26 unfiltered targets. All nine new methods, 24 controls,
+formatting and Clippy pass; all seven source hashes stay fixed.
+The retained [inspection-findings review](docs/reviews/ac9621ddcf35-local-coding-inspection-findings.txt)
+has **Verdict: PASS** for exact commit
+`ac9621ddcf352487554b02c7262cc14eff8b91c3`, with no findings. Earlier same-row
+backlog remains open.
+
 The retained [public-inspection review](docs/reviews/e00e172d7170-local-coding-confined-inspection.txt)
 has **Verdict: PASS** for exact commit
 `e00e172d717066000767cb697194aad1766ba368`, with no high or medium finding.

@@ -1,0 +1,142 @@
+Commit: ac9621ddcf352487554b02c7262cc14eff8b91c3
+Scope: local-coding-inspection-findings
+
+# Independent review: batch public-inspection findings repair (T-303 / T-306)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only, pinned checkout
+`/lane/review-checkout`. Tier: core. This is a non-closing increment.
+
+## Methods
+
+- `git rev-parse HEAD` and `git rev-parse ac9621dd...` both return
+  `ac9621ddcf352487554b02c7262cc14eff8b91c3`. The tree was clean before and after the review.
+- Read IP-POLICY.md, Decision 0193 (new paragraph), the evidence note
+  `docs/evidence/t306-inspection-findings-2026-11-10.md`, the guide diff, the TASKS.md preamble and the bundle
+  README, run.py, check.py, parse_gate.py and light.py before running anything. run.py reserves heavy
+  commands itself through the repository gate, so I did not wrap it.
+- Read the full source diff against base `4bcf4fb3` (`local_commit_inspection.rs`, its tests and
+  `sandbox.rs`), plus the unchanged code it relies on: `capture_error` (`local_commit.rs:854-865`),
+  `valid_fingerprint` (`local_commit.rs:951-956`), `validate_result` and the complete `signing_identity`.
+- Checked the three lows in the retained e00e172d7170 review (L1 rvk, L2 CleanupUncertain mapping, L3
+  keybox-daemon store) against the fixes it recommended.
+- Ran my own real-GnuPG probe (GnuPG 2.4.9, disposable `/tmp` home, removed afterwards with no agent left
+  running). I created a signing primary, a cert-only revoker key, `addrevoker`, and a signing subkey, then
+  listed them with the production options `--with-colons --fixed-list-mode --with-fingerprint
+  --with-subkey-fingerprint`. The output order was `pub`, `rvk:::22::::::<revoker>:80:`, `fpr`(primary),
+  `uid`, `sub`, `fpr`(sub). This confirms that a designated revoker appears between `pub` and its `fpr` and
+  only there, which is exactly what the new parser handles. This host's GnuPG made no `common.conf` or
+  `public-keys.d` in a fresh home, so the conservative refusal does not affect a default Fedora home.
+
+## Commands and results (all from `/lane/review-checkout`)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-inspection-findings/review-inputs.sha256`: exit 0. The
+   manifest's own SHA-256 is `4f77e5619b23bd971f8ec3c0115673686c6627cb0e9bd21530c984b6e13682a9`, as stated.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py
+   /lane/state/tmp/review-inspection-findings-full-ac9621ddcf35` (a fresh path): **exit 1 (expected full
+   gate FAIL)**.
+   - `source_unchanged: true`, 321.67 s including reservations, no timeout.
+   - Raw log SHA-256 `c9e51ce5495af9c1040d3814eabee3c8beb0b1b93b2d12f67a4517d99a5ee54b`. It differs from the
+     builder's log only because timings differ; the builder reported 302.61 s.
+   - Plan results: the four light commands exit 0, `cargo fmt --check` exit 0 (50.53 s), Clippy
+     `--all-targets -D warnings` exit 0 (36.49 s), and `cargo test` exit 101 (232.97 s). `FAST GATE: FAIL`.
+3. `python3 -B .../check.py <out>`: exit 0. This is a **data comparison only**, not a passing gate.
+   - Results: 26 targets, totals `[1384, 72, 64, 0, 0]`, 3 frozen source files unchanged, and all 24 named
+     methods (3 new plus 21 controls) `... ok`.
+   - The per-target failed and ignored identities equal the frozen baseline. The only change is three extra
+     passes in `agentmage_platform_linux` unittests.
+   - TASKS.md table rows are unchanged from base. Both `docs/reviews/*.txt` copies are byte-identical to
+     `/lane/reviews/*.md`, which I also confirmed separately with `cmp`. No private path or `#[ignore` appears
+     in the added lines.
+4. `cmp .../validation-1/source-freeze.json <out>/source-freeze.json`: exit 0.
+5. `python3 -B .../light.py`: exit 0. Diff check, untracked lint, review lint and markdownlint (0 issues in
+   4 files) all pass.
+6. `git diff --check 4bcf4fb34053afe00accd65cfce99b374d0c9c44 --`: exit 0.
+7. `git status --short`: empty.
+
+All 14 inspection-related tests in my log pass (12 `local_commit::inspection::tests`, plus
+`local_commit_public_inspection_caller_cancellation_precedes_path_access` and the supervision owner test).
+Only three inherited `local_commit::`/inspection-named failures exist:
+`native_candidate_tree_uses_only_owned_index...`, `native_signed_commit_verifies_exact_content...` and
+`story_48_2_..._git_inspection`. All three are in the baseline too.
+
+I did not re-run the builder's separate focused filter (13 pass, 505 filtered). The full run covers every
+one of those methods, and the brief does not require it.
+
+## Review of the claimed repairs
+
+- **Daemon-store indicators (old L3)** (`local_commit_inspection.rs:92-100`).
+  - `revalidate` now calls `statat(directory_fd, "public-keys.d" | "common.conf", SYMLINK_NOFOLLOW)` on the
+    held descriptor. It passes only on `NOENT`; any entry (file, directory, dangling symlink, socket, empty
+    file) or any other errno refuses. No content is read.
+  - `revalidate` runs before database selection (`:103`, before the `openat` loop), before sealing (`:151`)
+    and after sealing (`:155`). The old pre-check position was moved after `check()`, which is equivalent.
+  - The test `signer_inspection_refuses_daemon_markers_even_with_a_valid_legacy_database` covers both markers
+    in all four entry types, with both legacy names present, plus intentional empty-`common.conf` refusal.
+  - The `create_at in [3, 4]` cases tell the two rechecks apart. With a 6-byte file, check #3 is after the
+    read and check #4 is after sealing. `assert_eq!(checks, create_at)` fails if the pre-seal recheck is
+    removed (refusal would move to check 4). Removing the post-seal recheck makes `create_at = 4` succeed.
+  - The decision, guide and evidence state that refusal of every `common.conf` is intentional, and that
+    capture is not atomic against same-user changes. Both statements are accurate.
+- **Designated revokers (old L1)** (`:347-375`).
+  - `pending` now carries `(eligible, is_primary)`. `rvk` neither consumes nor sets `pending`, never
+    increments `matches`, requires a well-formed field 10 fingerprint, and refuses while a **subkey** is
+    pending.
+  - The selected fingerprint is still compared only on an `fpr` that directly consumes a pending `pub` or
+    `sub`. A revoker therefore cannot qualify, cannot replace a missing primary `fpr` (the next `pub`/`sub`,
+    or the end of input, sees `pending`), and cannot be placed before a subkey `fpr`.
+  - The synthetic test checks all three cases, and its sub-key case does discriminate: without the
+    interposed `rvk`, that subkey would match.
+  - The strengthened installed-GnuPG fixture adds a real designated revoker. It asserts an `rvk` line,
+    primary acceptance and revoker refusal. It then runs `inspect_with` with the production `gpg_arguments`
+    for both primary and subkey over the sealed keybox and the exported `pubring.gpg` snapshots. The
+    old parser would have refused the primary there, as my probe shows.
+- **CleanupUncertain at both worker boundaries (old L2).**
+  - Dispatch mapping is factored into `map_dispatch` (`:224-228`), and production `inspect` calls it
+    (`:205`). The mapping (`capture_error(kind, ArtifactDenied)`) is unchanged.
+  - The new test drives `map_dispatch(Err(..))` and `validate_result` with `outcome: Err(..)`. It covers
+    both `CleanupUncertain` (preserved) and `InvalidManifest` (falls back to ArtifactDenied), plus
+    `Ok` passthrough.
+  - `LinuxSandboxError::for_test` (`sandbox.rs:185-188`) is `#[cfg(test)] pub(crate)`. Its only caller is
+    this test module, and the struct still has a single private `kind` field. It grants no production
+    authority.
+  - As the evidence says, the test exercises the helper and not native worker cleanup.
+
+## Security and scope checks
+
+- No change to worker argv, projections, the seccomp/socket policy, the supervisor owner, private-key
+  handling, agent access, product routes, approval, commit or push. Nothing becomes reachable that was not
+  before, and the adapter stays dormant.
+- No evaluation, frozen, hidden, held-out, scorer, prompt, threshold, dependency, SBOM, lifecycle,
+  scoreboard or release file is in the diff. No row or sub-row is added and no parent is ticked; check.py
+  verified the table rows.
+- Public content:
+  - No private home path, username, hostname, credential or personal data in added lines.
+  - The `/lane/...` bundle path and the reviewer attribution follow earlier committed evidence and reviews.
+  - Fixture identities use `example.invalid`.
+  - No product comparison and no trademark used as branding.
+- Evidence numbers (1,384/72/64, 26 targets, zero measured/filtered, fmt/Clippy pass, 3 frozen hashes)
+  are reproduced exactly. Only wall time and the raw hash differ, as expected.
+
+## Findings
+
+No critical, high, medium or low finding.
+
+Observation only, not a finding: `signing_identity` also accepts an `rvk` record when nothing is pending
+(for example after a `uid`). That was already true at base. GnuPG does not emit it, and it cannot affect a
+match, because only an `fpr` that consumes a pending `pub`/`sub` is compared. It fails closed for identity
+purposes, so no change is needed.
+
+Existing same-row backlog stays open: the control-review L1 checkpoint coverage and L2 synchronous
+admission-hash latency, and the earlier inherited lows.
+
+## Per-row result
+
+- **T-303:** increment accepted with no open high or medium finding. The row does **not** close.
+  Candidate/reviewer/artifact authority, approval composition, approved commit/push and durable recovery
+  remain open.
+- **T-306:** increment accepted with no open high or medium finding. The row does **not** close.
+  - Still open: confined private signing and signed creation, native sandbox/artifact admission, the complete
+    measured workflow and model scores.
+  - The complete affected gate remains FAIL, with only the inherited failures.
+
+Verdict: PASS

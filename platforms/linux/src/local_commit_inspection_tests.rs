@@ -392,22 +392,24 @@ fn signer_inspection_orders_both_workers_over_the_same_snapshot_and_stops_on_fai
     let listing = listing(&fingerprint, "pub", "-", "", "s");
     let deadline = Instant::now() + Duration::from_secs(5);
     let mut operations = Vec::new();
-    let (public, evidence) = inspect_with(&db, &fingerprint, &token(), deadline, |fd, op| {
-        assert_eq!(read(&fd), b"snapshot");
-        assert!(rustix::io::pwrite(&fd, b"x", 0).is_err());
-        operations.push(op);
-        Ok(result(if op == InspectionOperation::List {
-            &listing
-        } else {
-            b"export"
-        }))
-    })
-    .unwrap();
+    let (public, evidence, keygrip) =
+        inspect_with(&db, &fingerprint, &token(), deadline, |fd, op| {
+            assert_eq!(read(&fd), b"snapshot");
+            assert!(rustix::io::pwrite(&fd, b"x", 0).is_err());
+            operations.push(op);
+            Ok(result(if op == InspectionOperation::List {
+                &listing
+            } else {
+                b"export"
+            }))
+        })
+        .unwrap();
     assert_eq!(
         operations,
         [InspectionOperation::List, InspectionOperation::Export]
     );
     assert_eq!(public, b"export");
+    assert_eq!(keygrip, None);
     assert_eq!(
         evidence,
         hash(
@@ -825,7 +827,7 @@ fn signer_inspection_installed_gpg_reads_sealed_public_identity_without_an_agent
             let home =
                 f.0.join(format!("public-worker-home-{database}-{fingerprint}"));
             fs::DirBuilder::new().mode(0o700).create(&home).unwrap();
-            let (export, _) = inspect_with(
+            let (export, _, keygrip) = inspect_with(
                 &db,
                 fingerprint,
                 &token(),
@@ -856,6 +858,7 @@ fn signer_inspection_installed_gpg_reads_sealed_public_identity_without_an_agent
             )
             .unwrap();
             assert!(!export.is_empty());
+            assert!(keygrip.as_ref().is_some_and(|g| signing::valid_keygrip(g)));
             if let Some(expected) = &expected {
                 assert_eq!(&export, expected);
             } else {
@@ -883,4 +886,47 @@ fn signer_inspection_installed_gpg_reads_sealed_public_identity_without_an_agent
     }
     assert!(!f.0.join("S.gpg-agent").exists());
     assert!(!public_ring.0.join("S.gpg-agent").exists());
+}
+
+#[test]
+fn signer_inspection_keygrip_is_attached_to_exact_fingerprint_and_not_a_revoker() {
+    let primary = "a".repeat(40);
+    let subkey = "b".repeat(40);
+    let first = "C".repeat(40);
+    let second = "D".repeat(40);
+    let listing = format!(
+        "pub:-:255:22:0000000000000000:1::::::s:\nrvk:::::::::{}:\nfpr:::::::::{primary}:\ngrp:::::::::{first}:\nsub:-:255:22:0000000000000000:1::::::s:\nfpr:::::::::{subkey}:\ngrp:::::::::{second}:\n",
+        "e".repeat(40)
+    );
+    assert!(signing_identity(listing.as_bytes(), &primary, 2));
+    assert_eq!(
+        selected_keygrip(listing.as_bytes(), &primary).unwrap(),
+        first
+    );
+    assert_eq!(
+        selected_keygrip(listing.as_bytes(), &subkey).unwrap(),
+        second
+    );
+    assert_eq!(selected_keygrip(listing.as_bytes(), &"e".repeat(40)), None);
+    for bad in [
+        String::new(),
+        "../not-a-file".into(),
+        "A\nPKSIGN".into(),
+        "0".repeat(40),
+        "A".repeat(39),
+        "A".repeat(41),
+        "G".repeat(40),
+    ] {
+        assert_eq!(
+            selected_keygrip(listing.replace(&first, &bad).as_bytes(), &primary),
+            None
+        );
+    }
+    let duplicate = listing.replace(
+        &format!("grp:::::::::{first}:\n"),
+        &format!("grp:::::::::{first}:\ngrp:::::::::{first}:\n"),
+    );
+    assert_eq!(selected_keygrip(duplicate.as_bytes(), &primary), None);
+    let missing = listing.replace(&format!("grp:::::::::{first}:\n"), "");
+    assert_eq!(selected_keygrip(missing.as_bytes(), &primary), None);
 }

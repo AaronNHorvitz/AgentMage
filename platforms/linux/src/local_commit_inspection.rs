@@ -168,7 +168,7 @@ pub(super) fn inspect(
     fingerprint: &str,
     cancellation: &CancellationToken,
     deadline: Instant,
-) -> Result<(Vec<u8>, String), LinuxLocalCommitError> {
+) -> Result<(Vec<u8>, String, Option<String>), LinuxLocalCommitError> {
     if cancellation.is_cancelled() || Instant::now() >= deadline || !valid_fingerprint(fingerprint)
     {
         return Err(denied());
@@ -235,7 +235,7 @@ fn inspect_with(
         OwnedFd,
         InspectionOperation,
     ) -> Result<SupervisedResult, LinuxLocalCommitError>,
-) -> Result<(Vec<u8>, String), LinuxLocalCommitError> {
+) -> Result<(Vec<u8>, String, Option<String>), LinuxLocalCommitError> {
     let mut run = |operation| {
         if cancellation.is_cancelled()
             || Instant::now() >= deadline
@@ -271,7 +271,7 @@ fn inspect_with(
         .map_err(|_| denied())?,
     );
     check_control(cancellation, deadline)?;
-    Ok((public, evidence))
+    Ok((public, evidence, selected_keygrip(&listing, fingerprint)))
 }
 
 fn validate_result(
@@ -384,6 +384,31 @@ fn signing_identity(listing: &[u8], fingerprint: &str, now: u64) -> bool {
     matches == 1 && pending.is_none()
 }
 
+// A keygrip names a private file but is not itself a private-key admission.
+// Bind it to the exact already-validated public fingerprint. Missing, malformed
+// or duplicated records leave public inspection usable but refuse private use.
+pub(super) fn selected_keygrip(listing: &[u8], fingerprint: &str) -> Option<String> {
+    let text = std::str::from_utf8(listing).ok()?;
+    let mut selected = false;
+    let mut grip = None;
+    for line in text.lines() {
+        let fields: Vec<_> = line.split(':').collect();
+        match fields.first().copied()? {
+            "pub" | "sub" => selected = false,
+            "fpr" => selected = fields.get(9)?.eq_ignore_ascii_case(fingerprint),
+            "grp" if selected => {
+                let value = fields.get(9)?;
+                if grip.is_some() || !super::signing::valid_keygrip(value) {
+                    return None;
+                }
+                grip = Some(value.to_ascii_uppercase());
+            }
+            _ => (),
+        }
+    }
+    grip
+}
+
 fn gpg_arguments<'a>(
     home: &'a str,
     public: &'a str,
@@ -414,6 +439,7 @@ fn gpg_arguments<'a>(
             "--fixed-list-mode",
             "--with-fingerprint",
             "--with-subkey-fingerprint",
+            "--with-keygrip",
             "--list-keys",
         ]),
         InspectionOperation::Export => args.push("--export"),

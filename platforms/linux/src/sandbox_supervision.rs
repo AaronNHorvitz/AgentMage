@@ -39,6 +39,7 @@ pub(crate) enum LaunchOwner {
     ),
     CommitVerification(Arc<crate::local_commit::verification::VerifierManifest>),
     SignerInspection(Arc<crate::local_commit::verification::VerifierManifest>),
+    PrivateSigning(Arc<crate::local_commit::signing::SigningManifest>),
     #[cfg(feature = "public-research-worker")]
     Research(Arc<super::research::LinuxPublicResearchManifest>),
 }
@@ -61,6 +62,7 @@ impl LaunchOwner {
             Self::CommitVerification(manifest) | Self::SignerInspection(manifest) => {
                 manifest.control_path().map_err(|_| failure())
             }
+            Self::PrivateSigning(manifest) => manifest.control_path().map_err(|_| failure()),
             #[cfg(feature = "public-research-worker")]
             Self::Research(manifest) => manifest.control_path(),
         }
@@ -81,11 +83,16 @@ impl LaunchOwner {
             ),
             Self::CommitVerification(_) => return commit_verification_shape(unit, projections),
             Self::SignerInspection(_) => return signer_inspection_shape(unit, projections),
+            Self::PrivateSigning(_) => return private_signing_shape(unit, projections),
             #[cfg(feature = "public-research-worker")]
             Self::Research(_) => ("agentmage-research-", projections == 3),
         };
         cardinality && unit_name_with_prefix(unit, prefix)
     }
+}
+
+fn private_signing_shape(unit: &str, projections: usize) -> bool {
+    projections == 2 && unit_name_with_prefix(unit, "agentmage-private-signing-")
 }
 
 fn signer_inspection_shape(unit: &str, projections: usize) -> bool {
@@ -1232,6 +1239,7 @@ fn unit_name(value: &str) -> bool {
         "agentmage-repository-git-",
         "agentmage-commit-verification-",
         "agentmage-signer-inspection-",
+        "agentmage-private-signing-",
         #[cfg(feature = "public-research-worker")]
         "agentmage-research-",
     ]
@@ -1447,6 +1455,26 @@ mod tests {
         }
     }
 
+    #[test]
+    fn private_signing_owner_requires_exact_nonce_and_two_projections() {
+        let unit = "agentmage-private-signing-0123456789abcdef01234567.service";
+        for count in [0, 1, 2, 3, 4, usize::MAX] {
+            assert_eq!(private_signing_shape(unit, count), count == 2);
+        }
+        assert!(unit_name(unit));
+        let properties = running().replace(UNIT, unit);
+        assert!(parse_unit_observation(unit, properties.as_bytes()).is_ok());
+        for bad in [
+            UNIT.to_owned(),
+            unit.replace(".service", ".scope"),
+            unit.replace("0123456789abcdef01234567", "*"),
+            unit.replace("0123456789abcdef01234567", "0123456789abcdef0123456G"),
+            unit.replace("0123456789abcdef01234567", "0123456789abcdef0123456"),
+            unit.replace("0123456789abcdef01234567", "0123456789abcdef012345678"),
+        ] {
+            assert!(!private_signing_shape(&bad, 2));
+        }
+    }
     #[test]
     fn signer_inspection_owner_requires_exact_nonce_and_one_public_projection() {
         let unit = "agentmage-signer-inspection-0123456789abcdef01234567.service";
