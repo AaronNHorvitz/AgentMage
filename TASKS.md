@@ -2,6 +2,16 @@
 
 ## Active queue: local agent mission
 
+The [inspection control repair](docs/evidence/t306-inspection-control-2026-11-10.md)
+adds caller cancellation through public-key capture and the offline workers, with
+bounded read checkpoints and stricter primary/subkey creation dates. It extends
+the existing T-303/T-306 batch; no new row or sub-row is added and neither parent
+closes. The immutable inspection base remains under independent core review.
+Confined usable signed creation, native admission and the measured full workflow
+remain open. The full affected gate remains **FAIL**: 1,381 passes, the exact
+inherited 72 failures and 64 ignores across 26 unfiltered targets. All three new
+methods, 18 controls, formatting and Clippy pass; three source hashes stay fixed.
+
 The retained [verification-status review](docs/reviews/f8236c01f04c-local-coding-verification-status.txt)
 returns **Verdict: PASS** for exact commit
 `f8236c01f04ccb92e0bae03caa546151efcb6f52`, with no high or medium finding.

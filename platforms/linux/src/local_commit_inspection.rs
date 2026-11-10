@@ -25,6 +25,16 @@ fn denied() -> LinuxLocalCommitError {
     error(LinuxLocalCommitErrorKind::ArtifactDenied)
 }
 
+pub(super) fn check_control(
+    cancellation: &CancellationToken,
+    deadline: Instant,
+) -> Result<(), LinuxLocalCommitError> {
+    if cancellation.is_cancelled() || Instant::now() >= deadline {
+        return Err(denied());
+    }
+    Ok(())
+}
+
 // Capture exactly one public database through a held private directory. No
 // directory, configuration, trust database, private key or socket is projected.
 struct PublicDatabase {
@@ -33,7 +43,35 @@ struct PublicDatabase {
 }
 
 impl PublicDatabase {
+    #[cfg(test)]
     fn capture(keyring: &Path) -> Result<Self, LinuxLocalCommitError> {
+        let cancellation = CancellationToken::root(
+            agentmage_kernel_contracts::BoundaryKind::Kernel,
+            agentmage_kernel_contracts::TaskId::from_raw("inspection-capture-test"),
+            agentmage_kernel_contracts::CorrelationId::from_raw("inspection-capture-test"),
+        );
+        Self::capture_until(
+            keyring,
+            &cancellation,
+            Instant::now() + Duration::from_secs(30),
+        )
+    }
+
+    fn capture_until(
+        keyring: &Path,
+        cancellation: &CancellationToken,
+        deadline: Instant,
+    ) -> Result<Self, LinuxLocalCommitError> {
+        Self::capture_checked(keyring, || check_control(cancellation, deadline))
+    }
+
+    // Private control seam makes cancellation during bounded reads and sealing
+    // deterministic in tests; production always checks its caller's token.
+    fn capture_checked(
+        keyring: &Path,
+        mut check: impl FnMut() -> Result<(), LinuxLocalCommitError>,
+    ) -> Result<Self, LinuxLocalCommitError> {
+        check()?;
         if verify_private_keyring(keyring)? != keyring {
             return Err(denied());
         }
@@ -78,7 +116,10 @@ impl PublicDatabase {
         let mut bytes = vec![0; before.st_size as usize];
         let mut offset = 0;
         while offset < bytes.len() {
-            let count = pread(&file, &mut bytes[offset..], offset as u64).map_err(|_| denied())?;
+            check()?;
+            let end = bytes.len().min(offset + 64 * 1024);
+            let count =
+                pread(&file, &mut bytes[offset..end], offset as u64).map_err(|_| denied())?;
             if count == 0 {
                 return Err(denied());
             }
@@ -99,10 +140,13 @@ impl PublicDatabase {
             return Err(denied());
         }
         revalidate()?;
+        check()?;
+        let payload = crate::sandbox::sealed_payload("agentmage-inspection-public", &bytes)
+            .map_err(|_| denied())?;
+        check()?;
         Ok(Self {
             sha256: hash(&bytes),
-            payload: crate::sandbox::sealed_payload("agentmage-inspection-public", &bytes)
-                .map_err(|_| denied())?,
+            payload,
         })
     }
 }
@@ -119,7 +163,7 @@ pub(super) fn inspect(
     {
         return Err(denied());
     }
-    let database = PublicDatabase::capture(keyring)?;
+    let database = PublicDatabase::capture_until(keyring, cancellation, deadline)?;
     inspect_with(
         &database,
         fingerprint,
@@ -211,6 +255,7 @@ fn inspect_with(
         ))
         .map_err(|_| denied())?,
     );
+    check_control(cancellation, deadline)?;
     Ok((public, evidence))
 }
 
@@ -260,6 +305,14 @@ fn signing_identity(listing: &[u8], fingerprint: &str, now: u64) -> bool {
                 if pending.is_some() || fields.len() < 12 {
                     return false;
                 }
+                if !fields[5].bytes().all(|b| b.is_ascii_digit())
+                    || !fields[6].bytes().all(|b| b.is_ascii_digit())
+                {
+                    return false;
+                }
+                let Ok(created) = fields[5].parse::<u64>() else {
+                    return false;
+                };
                 let expiry = if fields[6].is_empty() {
                     0
                 } else {
@@ -269,7 +322,9 @@ fn signing_identity(listing: &[u8], fingerprint: &str, now: u64) -> bool {
                     expiry
                 };
                 let usable = matches!(fields[1], "-" | "o" | "q" | "n" | "m" | "f" | "u")
+                    && created <= now
                     && (expiry == 0 || expiry > now)
+                    && (expiry == 0 || expiry > created)
                     && !fields[11].contains('D');
                 if kind == "pub" {
                     primary_usable = usable;

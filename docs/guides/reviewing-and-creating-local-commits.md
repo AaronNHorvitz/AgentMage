@@ -207,7 +207,10 @@ trust database or host agent sockets. Fixed GnuPG options prevent option-file
 loading, agent startup, key retrieval and use of a default keyring. Listing must
 identify exactly the selected fingerprint on its own public key/subkey record,
 with that key's own signing capability, no revocation, disablement or expiry,
-and a current primary key. A fingerprint in a user ID or diagnostic cannot
+and a current primary key. Creation must be an unsigned decimal timestamp;
+expiry may be empty or decimal zero for no expiry. A selected identity or its
+primary created in the future, or expiring before creation, is refused.
+A fingerprint in a user ID or diagnostic cannot
 qualify. Export follows only a successful eligible listing, over the same sealed
 snapshot. The inspection digest binds the snapshot, listing, public export and
 fingerprint. Bounded stderr remains diagnostic only.
@@ -215,8 +218,11 @@ fingerprint. Bounded stderr remains diagnostic only.
 The existing supervisor requires root-owned executable admission and whole-unit
 cleanup for each worker, with the original thirty-second total deadline, resource
 bounds, output checks and socket-denying filter. No direct inspection fallback
-exists in production. The legacy synchronous constructor owns an internal
-cancellation token; it does not yet expose external cancellation control.
+exists in production. `inspect_cancellable` uses the caller's cancellation token
+through public capture and both workers, including checks between bounded
+64-KiB reads and before returning a pin. The legacy synchronous constructor
+delegates with an internal token. Cancellation returns no signer; an individual
+filesystem operation is not made interruptible by these checks.
 
 A public pin does **not** establish private-key possession or signing availability.
 Usable private signing and confined signed creation remain prerequisites for

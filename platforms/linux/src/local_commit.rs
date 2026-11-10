@@ -297,8 +297,39 @@ impl LinuxOpenPgpSigner {
         key_fingerprint: &str,
         repository_scope: &LinuxRepositoryScope,
     ) -> Result<Self, LinuxLocalCommitError> {
+        let cancellation = CancellationToken::root(
+            agentmage_kernel_contracts::BoundaryKind::Kernel,
+            agentmage_kernel_contracts::TaskId::from_raw("local-signer-inspection"),
+            agentmage_kernel_contracts::CorrelationId::from_raw("local-signer-inspection"),
+        );
+        Self::inspect_cancellable(
+            signer_id,
+            executable,
+            keyring,
+            key_fingerprint,
+            repository_scope,
+            &cancellation,
+        )
+    }
+
+    /// Pins public identity under the caller's cancellation scope.
+    ///
+    /// The thirty-second budget covers capture and both offline workers. A
+    /// cancelled attempt returns no signer; this never admits private-key use.
+    pub fn inspect_cancellable(
+        signer_id: &str,
+        executable: impl AsRef<Path>,
+        keyring: impl AsRef<Path>,
+        key_fingerprint: &str,
+        repository_scope: &LinuxRepositoryScope,
+        cancellation: &CancellationToken,
+    ) -> Result<Self, LinuxLocalCommitError> {
         let deadline = Instant::now() + Duration::from_secs(30);
-        let (executable, executable_sha256) = verify_root_executable(executable.as_ref())?;
+        inspection::check_control(cancellation, deadline)?;
+        let (executable, executable_sha256) =
+            verify_root_executable_checked(executable.as_ref(), || {
+                inspection::check_control(cancellation, deadline)
+            })?;
         let keyring = verify_private_keyring(keyring.as_ref())?;
         if keyring.starts_with(repository_scope.checkout_root())
             || keyring.starts_with(repository_scope.git_directory())
@@ -310,17 +341,12 @@ impl LinuxOpenPgpSigner {
         if !valid_fingerprint(&fingerprint) {
             return Err(error(LinuxLocalCommitErrorKind::ArtifactDenied));
         }
-        let cancellation = CancellationToken::root(
-            agentmage_kernel_contracts::BoundaryKind::Kernel,
-            agentmage_kernel_contracts::TaskId::from_raw("local-signer-inspection"),
-            agentmage_kernel_contracts::CorrelationId::from_raw("local-signer-inspection"),
-        );
         let (public_key, inspection) = inspection::inspect(
             &executable,
             &executable_sha256,
             &keyring,
             &fingerprint,
-            &cancellation,
+            cancellation,
             deadline,
         )?;
         let pinned = PinnedCommitSigner::seal(PinnedCommitSigner {
@@ -338,6 +364,7 @@ impl LinuxOpenPgpSigner {
             signer_sha256: String::new(),
         })
         .map_err(|_| error(LinuxLocalCommitErrorKind::ArtifactDenied))?;
+        inspection::check_control(cancellation, deadline)?;
         Ok(Self {
             executable,
             executable_sha256,
@@ -853,6 +880,14 @@ fn failed_signer_result(
 }
 
 fn verify_root_executable(path: &Path) -> Result<(PathBuf, String), LinuxLocalCommitError> {
+    verify_root_executable_checked(path, || Ok(()))
+}
+
+fn verify_root_executable_checked(
+    path: &Path,
+    mut check: impl FnMut() -> Result<(), LinuxLocalCommitError>,
+) -> Result<(PathBuf, String), LinuxLocalCommitError> {
+    check()?;
     if !path.is_absolute() || path.symlink_metadata().is_err() {
         return Err(error(LinuxLocalCommitErrorKind::ArtifactDenied));
     }
@@ -878,6 +913,7 @@ fn verify_root_executable(path: &Path) -> Result<(PathBuf, String), LinuxLocalCo
     let mut buffer = [0_u8; 64 * 1024];
     let mut total = 0_u64;
     loop {
+        check()?;
         let count = executable
             .read(&mut buffer)
             .map_err(|_| error(LinuxLocalCommitErrorKind::ArtifactDenied))?;
@@ -893,6 +929,7 @@ fn verify_root_executable(path: &Path) -> Result<(PathBuf, String), LinuxLocalCo
     if total != metadata.len() {
         return Err(error(LinuxLocalCommitErrorKind::ArtifactDenied));
     }
+    check()?;
     Ok((canonical, hex_digest(digest.finalize())))
 }
 
@@ -996,6 +1033,45 @@ pub(crate) mod tests {
     // admission; supervisor tests own local slots. Fixture assertion failures may
     // poison THIS test mutex, not the independent production capture owner.
     static DIRECT_CAPTURE_TEST: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    #[test]
+    fn local_commit_public_inspection_caller_cancellation_precedes_path_access() {
+        struct UnreadPath;
+        impl AsRef<Path> for UnreadPath {
+            fn as_ref(&self) -> &Path {
+                panic!("cancelled inspection must not consult paths");
+            }
+        }
+        let fixture = Fixture::new();
+        let scope = LinuxRepositoryScope::verify(
+            &fixture.checkout,
+            fixture.checkout.join(".git"),
+            &fixture.owned,
+        )
+        .unwrap();
+        let t = cancellation("public-inspect-cancel");
+        t.cancel(agentmage_kernel_contracts::CancellationSignal {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            cancellation_id: agentmage_kernel_contracts::CancellationId::from_raw("cancel-inspect"),
+            task_id: agentmage_kernel_contracts::TaskId::from_raw("task-public-inspect-cancel"),
+            correlation_id: agentmage_kernel_contracts::CorrelationId::from_raw(
+                "correlation-public-inspect-cancel",
+            ),
+            reason: agentmage_kernel_contracts::CancellationReason::UserRequested,
+            requested_by: agentmage_kernel_contracts::BoundaryKind::Kernel,
+        })
+        .unwrap();
+        let failure = LinuxOpenPgpSigner::inspect_cancellable(
+            "cancelled",
+            UnreadPath,
+            UnreadPath,
+            &"a".repeat(40),
+            &scope,
+            &t,
+        )
+        .unwrap_err();
+        assert_eq!(failure.kind(), LinuxLocalCommitErrorKind::ArtifactDenied);
+    }
 
     // Inert input for parser and supervised-result tests. This is neither a
     // signer inspection nor a native execution/review/approval capability.

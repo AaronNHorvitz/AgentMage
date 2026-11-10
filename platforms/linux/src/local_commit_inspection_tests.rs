@@ -104,6 +104,87 @@ fn signer_inspection_captures_only_a_bounded_sealed_public_database() {
 }
 
 #[test]
+fn signer_inspection_capture_observes_control_before_reads_and_after_sealing() {
+    let f = Fixture::new();
+    let bytes = vec![b'p'; 2 * 64 * 1024 + 1];
+    fs::write(f.0.join("pubring.kbx"), &bytes).unwrap();
+    let deadline = Instant::now() + Duration::from_secs(5);
+    // Initial check, three bounded reads, pre-seal and post-seal checks.
+    for stop in 1..=6 {
+        let t = token();
+        let mut checks = 0;
+        let captured = PublicDatabase::capture_checked(&f.0, || {
+            checks += 1;
+            if checks == stop {
+                cancel(&t);
+            }
+            check_control(&t, deadline)
+        });
+        assert_eq!(
+            captured.err().unwrap().kind(),
+            LinuxLocalCommitErrorKind::ArtifactDenied
+        );
+        assert_eq!(checks, stop);
+    }
+    let mut checks = 0;
+    let captured = PublicDatabase::capture_checked(&f.0, || {
+        checks += 1;
+        check_control(&token(), deadline)
+    })
+    .unwrap();
+    assert_eq!(checks, 6);
+    assert_eq!(read(&captured.payload), bytes);
+    assert_eq!(captured.sha256, hash(&bytes));
+    assert!(PublicDatabase::capture_until(&f.0, &token(), Instant::now()).is_err());
+    let cancelled = token();
+    cancel(&cancelled);
+    assert!(PublicDatabase::capture_until(&f.0, &cancelled, deadline).is_err());
+}
+
+#[test]
+fn signer_inspection_refuses_future_or_inconsistent_primary_and_subkey_dates() {
+    let fp = "a".repeat(40);
+    let make = |kind: &str, created: &str, expiry: &str| {
+        String::from_utf8(listing(&fp, kind, "u", expiry, "s"))
+            .unwrap()
+            .replace(
+                ":0000000000000000:1:",
+                &format!(":0000000000000000:{created}:"),
+            )
+            .into_bytes()
+    };
+    for (created, expiry) in [
+        ("101", ""),
+        ("bad", ""),
+        ("", ""),
+        ("+1", ""),
+        ("-1", ""),
+        ("1", "+101"),
+        ("18446744073709551616", ""),
+        ("101", "101"),
+        ("102", "101"),
+    ] {
+        assert!(!signing_identity(&make("pub", created, expiry), &fp, 100));
+        let primary = listing(&"b".repeat(40), "pub", "u", "", "cS");
+        assert!(!signing_identity(
+            &[primary, make("sub", created, expiry)].concat(),
+            &fp,
+            100
+        ));
+        let subkey = listing(&"b".repeat(40), "sub", "u", "", "s");
+        assert!(!signing_identity(
+            &[make("pub", created, expiry), subkey].concat(),
+            &"b".repeat(40),
+            100
+        ));
+    }
+    // Creation exactly now and non-expiring epoch-zero keys remain current.
+    assert!(signing_identity(&make("pub", "100", "101"), &fp, 100));
+    assert!(signing_identity(&make("pub", "0", ""), &fp, 100));
+    assert!(signing_identity(&make("pub", "0", "0"), &fp, 100));
+}
+
+#[test]
 fn signer_inspection_refuses_missing_empty_special_symlink_oversize_and_writable_databases() {
     for case in [
         "missing",
@@ -273,17 +354,32 @@ fn signer_inspection_orders_both_workers_over_the_same_snapshot_and_stops_on_fai
             .is_err()
         );
     }
-    let cancel_between = token();
-    let mut count = 0;
-    assert!(
-        inspect_with(&db, &fingerprint, &cancel_between, deadline, |_, _| {
-            count += 1;
-            cancel(&cancel_between);
-            Ok(result(&listing))
-        })
-        .is_err()
-    );
-    assert_eq!(count, 1);
+    for cancel_at in [InspectionOperation::List, InspectionOperation::Export] {
+        let cancel_between = token();
+        let mut count = 0;
+        assert!(
+            inspect_with(&db, &fingerprint, &cancel_between, deadline, |_, op| {
+                count += 1;
+                if op == cancel_at {
+                    cancel(&cancel_between);
+                }
+                Ok(result(if op == InspectionOperation::List {
+                    &listing
+                } else {
+                    b"public"
+                }))
+            })
+            .is_err()
+        );
+        assert_eq!(
+            count,
+            if cancel_at == InspectionOperation::List {
+                1
+            } else {
+                2
+            }
+        );
+    }
 }
 
 #[test]
