@@ -15,6 +15,16 @@ Require absence for a creation and exact content for an existing-file edit.
 An existing empty file is distinct from an absent file. A mismatch refuses
 planning; it never silently includes starting changes in a future commit.
 
+Also retain each ordinary base file's Git mode (`100644` or `100755`) in
+the same private observation. Existing-file text-edit approvals authorize no
+mode change. The candidate's owner-executable bit must match the immutable
+base, even when its source bytes and sealed tests match. Other private host
+permission bits remain outside Git's file-mode representation. New files
+continue to require absence and their exact originally approved creation mode.
+Repeat the mode observation with the final base read; late source-mode changes
+also invalidate the existing sealed validation binding. A future supported
+mode change needs its own approval design, not a caller-supplied mode override.
+
 Read the fixed commit and its tree through the existing confined, offline
 linked-repository inspection worker, after explicit source and Git metadata
 read consent. Disable replacement objects on every base read. Select paths

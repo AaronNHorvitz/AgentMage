@@ -3,6 +3,7 @@
 
 use super::*;
 use crate::command_runner::worktree::WorkspaceObservation;
+use crate::repository_base::BaseFilePreimage;
 use agentmage_kernel_engine::local_commit::{
     CandidateTreePlan, CommitFileMode, plan_candidate_tree,
 };
@@ -19,7 +20,7 @@ struct GitObservation {
     task_branch: Option<String>,
     linked_identity: String,
     task_inventory_sha256: String,
-    base_preimages: BTreeMap<String, Option<String>>,
+    base_preimages: BTreeMap<String, Option<BaseFilePreimage>>,
 }
 
 impl LinuxCodingRepository {
@@ -293,13 +294,21 @@ impl LinuxCodingRepository {
         // The first approved filesystem preimage may include dirty or untracked
         // starting content. It is not evidence that the same bytes were in the
         // immutable creation base. Never silently commit that extra content.
+        // Existing-file edit approvals do not authorize chmod: require the
+        // candidate's Git mode to match that base too. New files instead retain
+        // their separately approved exact creation mode, checked above.
         if before.base_preimages.len() != files.len()
             || files
                 .iter()
                 .any(|file| match before.base_preimages.get(&file.path) {
                     Some(None) => file.preimage_sha256 != "0".repeat(64),
-                    Some(Some(digest)) => {
-                        file.preimage_sha256 == "0".repeat(64) || file.preimage_sha256 != *digest
+                    Some(Some(base)) => {
+                        file.preimage_sha256 == "0".repeat(64)
+                            || file.preimage_sha256 != base.sha256
+                            || modes
+                                .iter()
+                                .find(|(id, _)| id == &file.operation_id)
+                                .is_none_or(|(_, mode)| *mode != base.mode)
                     }
                     None => true,
                 })

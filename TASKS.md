@@ -2,6 +2,17 @@
 
 ## Active queue: local agent mission
 
+The [immutable-base mode prerequisite](docs/evidence/t306-base-modes-2026-11-09.md)
+requires existing-file text edits to preserve the committed executable bit;
+their approved source bytes cannot also authorize a mode change. New files
+retain their exact approved creation modes. The complete affected gate remains
+**FAIL**: 1,316 Rust passes, the exact same 72 inherited failures and 64 existing
+ignores across 26 unfiltered targets. All three new regressions, four affected
+controls, formatting and Clippy pass; four source hashes stay fixed. Independent
+core review is required; T-303/T-306 remain open, with no new or closed row or
+sub-row. Candidate execution, separately approved Git effects, native/model
+measurement and durable recovery remain open.
+
 The [creation-history edit repair](docs/evidence/t306-creation-edit-history-2026-11-09.md)
 addresses the review-refusal report's same-row low L1 residual. Editing a path
 cannot discard a published creation's original proof and later relabel its

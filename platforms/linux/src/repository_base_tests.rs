@@ -7,6 +7,13 @@ fn tree(mode: &str, kind: &str, object: &str, path: &str) -> Vec<u8> {
     format!("{mode} {kind} {object}\t{path}\0").into_bytes()
 }
 
+fn preimage(bytes: &[u8], mode: CommitFileMode) -> Option<BaseFilePreimage> {
+    Some(BaseFilePreimage {
+        sha256: digest(bytes),
+        mode,
+    })
+}
+
 fn digest(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()
@@ -59,8 +66,11 @@ fn base_preimages_bind_exact_blobs_and_distinguish_absence_from_empty() {
             },
         )
         .unwrap();
-        assert_eq!(result[":(glob)*.py"], Some(digest(bytes)));
-        assert_eq!(result["empty"], Some(digest(b"")));
+        assert_eq!(
+            result[":(glob)*.py"],
+            preimage(bytes, CommitFileMode::Regular)
+        );
+        assert_eq!(result["empty"], preimage(b"", CommitFileMode::Executable));
         assert_eq!(result["missing/new.py"], None);
         assert_eq!(calls.len(), 4);
         assert_eq!(calls[0].1, 32);
@@ -71,6 +81,40 @@ fn base_preimages_bind_exact_blobs_and_distinguish_absence_from_empty() {
             calls
                 .iter()
                 .all(|(args, _)| !args.contains(&":(glob)*.py".into()))
+        );
+    }
+}
+
+#[test]
+fn base_preimages_preserve_distinct_modes_for_identical_blob_bytes() {
+    for format in ["sha1", "sha256"] {
+        let base = "a".repeat(if format == "sha1" { 40 } else { 64 });
+        let bytes = b"same source\n";
+        let object = crate::linux_git_blob_object_id(format, bytes).unwrap();
+        let mut raw = tree("100644", "blob", &object, "regular.py");
+        raw.extend(tree("100755", "blob", &object, "executable.py"));
+        let output = collect_with(
+            &base,
+            &["regular.py".into(), "executable.py".into()],
+            |args, _| {
+                Ok(match args {
+                    ["--no-replace-objects", "cat-file", "-t", _] => b"commit\n".to_vec(),
+                    ["--no-replace-objects", "ls-tree", ..] => raw.clone(),
+                    ["--no-replace-objects", "cat-file", "blob", id] if *id == object => {
+                        bytes.to_vec()
+                    }
+                    _ => panic!("unexpected read"),
+                })
+            },
+        )
+        .unwrap();
+        assert_eq!(
+            output["regular.py"],
+            preimage(bytes, CommitFileMode::Regular)
+        );
+        assert_eq!(
+            output["executable.py"],
+            preimage(bytes, CommitFileMode::Executable)
         );
     }
 }
@@ -239,6 +283,13 @@ fn base_preimages_real_git_protocol_fixture_keeps_base_independent_of_worktree_a
             .status
             .success()
     );
+    // Force a committed executable bit independent of host permissions and
+    // core.filemode. Later index metadata must not replace this base mode.
+    assert!(
+        git(&["update-index", "--chmod=+x", "--", "empty.py"])
+            .status
+            .success()
+    );
     assert!(git(&["commit", "--quiet", "-m", "base"]).status.success());
     let base = String::from_utf8(git(&["rev-parse", "HEAD"]).stdout)
         .unwrap()
@@ -247,6 +298,11 @@ fn base_preimages_real_git_protocol_fixture_keeps_base_independent_of_worktree_a
     fs::write(root.join("source.py"), b"dirty staged content\n").unwrap();
     fs::write(root.join("untracked.py"), b"untracked initial content\n").unwrap();
     assert!(git(&["add", "--", "source.py"]).status.success());
+    assert!(
+        git(&["update-index", "--chmod=-x", "--", "empty.py"])
+            .status
+            .success()
+    );
     // A replacement ref must not change the meaning of the immutable base.
     let alternate_tree = String::from_utf8(git(&["write-tree"]).stdout)
         .unwrap()
@@ -278,8 +334,14 @@ fn base_preimages_real_git_protocol_fixture_keeps_base_independent_of_worktree_a
         },
     )
     .unwrap();
-    assert_eq!(result["source.py"], Some(digest(b"base\n")));
-    assert_eq!(result["empty.py"], Some(digest(b"")));
+    assert_eq!(
+        result["source.py"],
+        preimage(b"base\n", CommitFileMode::Regular)
+    );
+    assert_eq!(
+        result["empty.py"],
+        preimage(b"", CommitFileMode::Executable)
+    );
     assert_eq!(result["untracked.py"], None);
     assert_eq!(fs::read(root.join(".git/index")).unwrap(), index);
     assert_eq!(fs::read(root.join(".git/HEAD")).unwrap(), head);

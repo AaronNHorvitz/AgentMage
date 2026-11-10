@@ -10,6 +10,10 @@ use std::cell::Cell;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 
+fn base_file(sha256: String, mode: CommitFileMode) -> Option<BaseFilePreimage> {
+    Some(BaseFilePreimage { sha256, mode })
+}
+
 fn observation(owner: &LinuxCodingRepository) -> GitObservation {
     let identity = owner.created_git_identity().unwrap();
     let mut original = crate::coding_repository::tests::manifest();
@@ -35,7 +39,10 @@ fn observation(owner: &LinuxCodingRepository) -> GitObservation {
             .map(|(path, edit)| {
                 (
                     path.clone(),
-                    (edit.before_sha256 != "0".repeat(64)).then(|| edit.before_sha256.clone()),
+                    (edit.before_sha256 != "0".repeat(64)).then(|| BaseFilePreimage {
+                        sha256: edit.before_sha256.clone(),
+                        mode: CommitFileMode::Regular,
+                    }),
                 )
             })
             .collect(),
@@ -225,17 +232,19 @@ fn candidate_review_refuses_dirty_untracked_missing_and_extra_base_preimages() {
             let mut observed = observation(&owner);
             match variant {
                 "dirty" => {
-                    observed
-                        .base_preimages
-                        .insert("sentinel".into(), Some(hash(b"different immutable base")));
+                    observed.base_preimages.insert(
+                        "sentinel".into(),
+                        base_file(hash(b"different immutable base"), CommitFileMode::Regular),
+                    );
                 }
                 "untracked" => {
                     observed.base_preimages.insert("sentinel".into(), None);
                 }
                 "empty" => {
-                    observed
-                        .base_preimages
-                        .insert("sentinel".into(), Some(hash(b"")));
+                    observed.base_preimages.insert(
+                        "sentinel".into(),
+                        base_file(hash(b""), CommitFileMode::Regular),
+                    );
                 }
                 "missing" => {
                     observed.base_preimages.clear();
@@ -283,13 +292,110 @@ fn candidate_review_refuses_changed_immutable_base_observation_before_releasing_
 fn candidate_review_derives_git_modes_from_observed_owner_executability() {
     for (permissions, expected) in [
         (0o600, CommitFileMode::Regular),
+        (0o644, CommitFileMode::Regular),
+        (0o610, CommitFileMode::Regular),
         (0o700, CommitFileMode::Executable),
         (0o755, CommitFileMode::Executable),
     ] {
         let (_f, owner, changes) = command::tests::candidate_review_fixture_with_mode(permissions);
         let packet = packet(&owner, &changes);
-        let result = plan(&owner, &packet, || Ok(observation(&owner))).unwrap();
+        let result = plan(&owner, &packet, || {
+            let mut observed = observation(&owner);
+            observed
+                .base_preimages
+                .get_mut("sentinel")
+                .unwrap()
+                .as_mut()
+                .unwrap()
+                .mode = expected;
+            Ok(observed)
+        })
+        .unwrap();
         assert_eq!(result.files[0].mode, expected);
+    }
+}
+
+#[test]
+fn candidate_review_refuses_existing_mode_changes_even_with_approved_bytes_and_sealed_tests() {
+    for (current, base) in [
+        (0o700, CommitFileMode::Regular),
+        (0o600, CommitFileMode::Executable),
+    ] {
+        // The write and validation are real/native and synthetic respectively,
+        // as in the other owner fixtures. Only immutable Git observations are
+        // supplied by this private seam. Correct bytes cannot authorize chmod.
+        let (f, owner, changes) = command::tests::candidate_review_fixture_with_mode(current);
+        let packet = packet(&owner, &changes);
+        let calls = Cell::new(0);
+        let result = plan(&owner, &reseal(packet), || {
+            calls.set(calls.get() + 1);
+            let mut observed = observation(&owner);
+            observed
+                .base_preimages
+                .get_mut("sentinel")
+                .unwrap()
+                .as_mut()
+                .unwrap()
+                .mode = base;
+            Ok(observed)
+        });
+        assert_eq!(result.unwrap_err().code(), "code.commit.base-preimage");
+        assert_eq!(calls.get(), 1);
+        owner.check_completion_validation().unwrap();
+        assert_eq!(
+            fs::read(f.root.join("repo/sentinel")).unwrap(),
+            b"preserve human work"
+        );
+        assert_eq!(
+            fs::read(f.root.join("owned/worktree/sentinel")).unwrap(),
+            b"reviewed change"
+        );
+        assert!(!f.root.join("owned/candidate-index-review-build").exists());
+    }
+}
+
+#[test]
+fn candidate_review_rechecks_base_and_source_modes_before_releasing_plan() {
+    for changed in ["base", "source"] {
+        let (f, owner, changes) = command::tests::candidate_review_fixture();
+        let packet = packet(&owner, &changes);
+        let calls = Cell::new(0);
+        let result = plan(&owner, &packet, || {
+            calls.set(calls.get() + 1);
+            let mut observed = observation(&owner);
+            if calls.get() == 2 {
+                if changed == "base" {
+                    observed
+                        .base_preimages
+                        .get_mut("sentinel")
+                        .unwrap()
+                        .as_mut()
+                        .unwrap()
+                        .mode = CommitFileMode::Executable;
+                } else {
+                    fs::set_permissions(
+                        f.root.join("owned/worktree/sentinel"),
+                        fs::Permissions::from_mode(0o700),
+                    )
+                    .unwrap();
+                }
+            }
+            Ok(observed)
+        });
+        assert_eq!(calls.get(), 2);
+        assert_eq!(
+            result.unwrap_err().code(),
+            if changed == "base" {
+                "code.commit.git-drift"
+            } else {
+                "code.completion.source-binding"
+            }
+        );
+        assert!(!f.root.join("owned/candidate-index-review-build").exists());
+        assert_eq!(
+            fs::read(f.root.join("repo/sentinel")).unwrap(),
+            b"preserve human work"
+        );
     }
 }
 
@@ -950,9 +1056,10 @@ fn creation_review_candidate_plan_binds_mixed_original_history_and_creation_mode
     for occupied in [hash(b"base content\n"), hash(b""), "0".repeat(64)] {
         let result = plan(&owner, &packet, || {
             let mut observed = observation(&owner);
-            observed
-                .base_preimages
-                .insert("new.py".into(), Some(occupied.clone()));
+            observed.base_preimages.insert(
+                "new.py".into(),
+                base_file(occupied.clone(), CommitFileMode::Regular),
+            );
             Ok(observed)
         });
         assert_eq!(result.unwrap_err().code(), "code.commit.base-preimage");

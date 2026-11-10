@@ -3,6 +3,7 @@
 
 use std::collections::BTreeMap;
 
+use agentmage_kernel_engine::local_commit::CommitFileMode;
 use sha2::{Digest, Sha256};
 
 use crate::repository_safety::{
@@ -18,6 +19,15 @@ const MAX_TREE_ENTRIES: usize = 100_000;
 struct Entry {
     kind: &'static str,
     object: String,
+    mode: Option<CommitFileMode>,
+}
+
+/// Exact content and Git mode of an ordinary file at the immutable base.
+/// Absence is represented separately by the containing `Option`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct BaseFilePreimage {
+    pub(crate) sha256: String,
+    pub(crate) mode: CommitFileMode,
 }
 
 impl LinuxRepositoryCollector {
@@ -31,7 +41,7 @@ impl LinuxRepositoryCollector {
         scope: &LinuxRepositoryScope,
         base: &str,
         paths: &[String],
-    ) -> Result<BTreeMap<String, Option<String>>, LinuxRepositoryError> {
+    ) -> Result<BTreeMap<String, Option<BaseFilePreimage>>, LinuxRepositoryError> {
         collect_with(base, paths, |arguments, limit| {
             self.observe_inventory(scope, arguments, limit, None)
         })
@@ -44,7 +54,7 @@ fn collect_with(
     base: &str,
     paths: &[String],
     mut observe: impl FnMut(&[&str], usize) -> Result<Vec<u8>, LinuxRepositoryError>,
-) -> Result<BTreeMap<String, Option<String>>, LinuxRepositoryError> {
+) -> Result<BTreeMap<String, Option<BaseFilePreimage>>, LinuxRepositoryError> {
     let format = match base.len() {
         40 => "sha1",
         64 => "sha256",
@@ -103,12 +113,13 @@ fn collect_with(
                 {
                     return Err(failed());
                 }
-                Some(
-                    Sha256::digest(&bytes)
+                Some(BaseFilePreimage {
+                    sha256: Sha256::digest(&bytes)
                         .iter()
                         .map(|b| format!("{b:02x}"))
                         .collect(),
-                )
+                    mode: entry.mode.ok_or_else(failed)?,
+                })
             }
             Some(_) => return Err(failed()),
         };
@@ -151,6 +162,11 @@ fn parse_tree(
                 Entry {
                     kind,
                     object: fields[2].into(),
+                    mode: match fields[0] {
+                        "100644" => Some(CommitFileMode::Regular),
+                        "100755" => Some(CommitFileMode::Executable),
+                        _ => None,
+                    },
                 },
             )
             .is_some()
