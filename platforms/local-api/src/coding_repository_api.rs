@@ -66,6 +66,7 @@ struct Decide {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct PrepareEdit {
+    expected_worktree_root_sha256: String,
     paths: Vec<String>,
     expected_sources: Vec<ExpectedSource>,
     task: String,
@@ -92,7 +93,7 @@ fn prepare_edit(
     }
     // Ownership is checked before reading; no caller root can adopt a worktree.
     let scope = repository
-        .select_created_sources(&input.paths)
+        .consented_created_sources(&input.expected_worktree_root_sha256, &input.paths)
         .map_err(|e| (409, e.code()))?;
     let sources = scope
         .read(&input.paths)
@@ -409,6 +410,92 @@ fn arm_command_cancellation(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn owned_edit_preparation_requires_displayed_read_root_and_preserves_pending_on_mismatch() {
+        use sha2::{Digest, Sha256};
+        use std::os::unix::fs::PermissionsExt;
+        use std::sync::atomic::{AtomicU64, Ordering};
+        use std::{fs, path::PathBuf};
+        static NEXT: AtomicU64 = AtomicU64::new(0);
+        struct Fixture(PathBuf);
+        impl Drop for Fixture {
+            fn drop(&mut self) {
+                fs::remove_dir_all(&self.0).unwrap();
+            }
+        }
+        let f = Fixture(std::env::temp_dir().join(format!(
+            "agentmage-api-edit-read-selection-{}-{}",
+            std::process::id(),
+            NEXT.fetch_add(1, Ordering::Relaxed)
+        )));
+        fs::create_dir(&f.0).unwrap();
+        for path in ["state", "original", "owned", "owned/worktree"] {
+            fs::create_dir(f.0.join(path)).unwrap();
+            fs::set_permissions(f.0.join(path), fs::Permissions::from_mode(0o700)).unwrap();
+        }
+        fs::write(f.0.join("original/one.py"), b"before\n").unwrap();
+        fs::write(f.0.join("owned/worktree/one.py"), b"before\n").unwrap();
+        let mut owner = LinuxCodingRepository::open(
+            &f.0.join("state"),
+            b"synthetic-api-read-selection-secret",
+            1000,
+        )
+        .unwrap()
+        .with_test_created_worktree(&f.0.join("original"), &f.0.join("owned"))
+        .unwrap();
+        let status = owner.inspect_edit().unwrap();
+        let root = status["worktree_root_sha256"].as_str().unwrap();
+        let source_sha256 = Sha256::digest(b"before\n")
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>();
+        let body = json!({"expected_worktree_root_sha256":root,"paths":["one.py"],
+            "expected_sources":[{"path":"one.py","sha256":source_sha256}],
+            "task":"Repair selected source","max_message_bytes":4096,
+            "answer":r#"{"edits":[{"path":"one.py","old":"before","new":"after"}]}"#,
+            "approve_read":true});
+        let prepare = |owner: &mut LinuxCodingRepository, body: &Value| {
+            prepare_edit(owner, &serde_json::to_vec(body).unwrap(), 1000)
+        };
+        let mut missing = body.clone();
+        missing
+            .as_object_mut()
+            .unwrap()
+            .remove("expected_worktree_root_sha256");
+        assert_eq!(prepare(&mut owner, &missing), Err((400, "code.edit.input")));
+        let mut denied = body.clone();
+        denied["approve_read"] = json!(false);
+        assert_eq!(
+            prepare(&mut owner, &denied),
+            Err((403, "code.edit.read-required"))
+        );
+        let preview = prepare(&mut owner, &body).unwrap();
+        for selection in ["", "invalid", &"0".repeat(64)] {
+            let mut stale = body.clone();
+            stale["expected_worktree_root_sha256"] = json!(selection);
+            // A missing source would otherwise refuse at the native reader.
+            // Correlation must refuse before touching that path instead.
+            stale["paths"] = json!(["absent.py"]);
+            assert_eq!(
+                prepare(&mut owner, &stale),
+                Err((409, "code.edit.read-scope"))
+            );
+            assert_eq!(owner.inspect_edit().unwrap()["pending"], preview);
+        }
+        let mut malformed = body.clone();
+        malformed["expected_worktree_root_sha256"] = json!([root]);
+        assert_eq!(
+            prepare(&mut owner, &malformed),
+            Err((400, "code.edit.input"))
+        );
+        assert_eq!(owner.inspect_edit().unwrap()["pending"], preview);
+        assert_eq!(
+            fs::read(f.0.join("owned/worktree/one.py")).unwrap(),
+            b"before\n"
+        );
+        assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"before\n");
+    }
 
     #[test]
     fn owned_and_workspace_edits_share_complete_snapshot_and_strict_edit_checks() {

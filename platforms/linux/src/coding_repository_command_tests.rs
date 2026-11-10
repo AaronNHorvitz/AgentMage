@@ -1318,7 +1318,13 @@ fn owned_edit_writes_real_bytes_only_after_exact_approval_and_preserves_original
     let mut owner = f.open();
     f.synthetic_created(&mut owner);
     let command_digest = f.pending(&mut owner);
-    let scope = owner.select_created_sources(&["sentinel".into()]).unwrap();
+    let status = owner.inspect_apply().unwrap();
+    let scope = owner
+        .consented_created_sources(
+            status["worktree_root_sha256"].as_str().unwrap(),
+            &["sentinel".into()],
+        )
+        .unwrap();
     let preview = owner
         .prepare_edit(
             scope,

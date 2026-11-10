@@ -583,6 +583,240 @@ pub(super) fn owner_with_synthetic_git_observations(f: &Fixture) -> LinuxCodingR
 }
 
 #[test]
+fn created_source_selection_matches_displayed_root_before_any_path_inspection() {
+    let f = Fixture::new();
+    let owner = owner_with_synthetic_git_observations(&f);
+    let status = owner.inspect_apply().unwrap();
+    let expected = status["worktree_root_sha256"].as_str().unwrap();
+    let original = status["repository_root_sha256"].as_str().unwrap();
+    let receipts = owner.inspect().unwrap()["receipts"].clone();
+    fs::write(f.root.join("owned/worktree/sentinel"), b"selected source").unwrap();
+    let paths = vec!["sentinel".into()];
+    let scope = owner.consented_created_sources(expected, &paths).unwrap();
+    assert_eq!(scope.root_sha256(), expected);
+    assert_eq!(scope.paths(), paths);
+    assert_eq!(scope.read(&paths).unwrap()[0].content, "selected source");
+
+    // Make both the source and held pathname unavailable. A wrong selection
+    // still refuses with the correlation code, before path validation or I/O.
+    fs::rename(f.root.join("owned/worktree"), f.root.join("displaced")).unwrap();
+    for selection in ["", "invalid", original, &hash(b"foreign")] {
+        for paths in [&paths, &vec!["../outside".into()], &vec![]] {
+            assert_eq!(
+                owner
+                    .consented_created_sources(selection, paths)
+                    .err()
+                    .unwrap()
+                    .code(),
+                "code.edit.read-scope"
+            );
+        }
+    }
+    assert_eq!(
+        owner
+            .consented_created_sources(expected, &paths)
+            .err()
+            .unwrap()
+            .code(),
+        "code.command.scope"
+    );
+    assert_eq!(owner.inspect().unwrap()["receipts"], receipts);
+    assert_eq!(owner.inspect_apply().unwrap(), status);
+    assert_eq!(
+        fs::read(f.root.join("displaced/sentinel")).unwrap(),
+        b"selected source"
+    );
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"preserve human work"
+    );
+}
+
+#[test]
+fn created_source_selection_cannot_adopt_foreign_or_replaced_worktrees() {
+    let f = Fixture::new();
+    let mut owner = owner_with_synthetic_git_observations(&f);
+    let other = Fixture::new();
+    let mut other_owner = owner_with_synthetic_git_observations(&other);
+    let status = owner.inspect_apply().unwrap();
+    let expected = status["worktree_root_sha256"].as_str().unwrap();
+    let foreign_status = other_owner.inspect_apply().unwrap();
+    let foreign = foreign_status["worktree_root_sha256"].as_str().unwrap();
+    let paths = vec!["sentinel".into()];
+    fs::write(f.root.join("owned/worktree/sentinel"), b"selected source").unwrap();
+    fs::write(
+        other.root.join("owned/worktree/sentinel"),
+        b"foreign source",
+    )
+    .unwrap();
+    let scope = owner.consented_created_sources(expected, &paths).unwrap();
+    assert_eq!(
+        other_owner
+            .consented_created_sources(expected, &paths)
+            .err()
+            .unwrap()
+            .code(),
+        "code.edit.read-scope"
+    );
+    assert_eq!(
+        owner
+            .consented_created_sources(foreign, &paths)
+            .err()
+            .unwrap()
+            .code(),
+        "code.edit.read-scope"
+    );
+    assert_eq!(
+        other_owner
+            .prepare_edit(scope, &[], "Refuse foreign source", NOW)
+            .unwrap_err()
+            .code(),
+        "code.edit.scope"
+    );
+
+    let scope = owner.consented_created_sources(expected, &paths).unwrap();
+    // Test-only owner substitution models a later approved creation. Neither
+    // a displayed old digest nor a retained scope may select that new owner.
+    owner.created = other_owner.created.take();
+    assert_eq!(
+        owner
+            .consented_created_sources(expected, &paths)
+            .err()
+            .unwrap()
+            .code(),
+        "code.edit.read-scope"
+    );
+    assert_eq!(
+        owner
+            .prepare_edit(scope, &[], "Refuse stale source", NOW)
+            .unwrap_err()
+            .code(),
+        "code.edit.scope"
+    );
+    assert_eq!(
+        owner
+            .consented_created_sources(foreign, &paths)
+            .unwrap()
+            .read(&paths)
+            .unwrap()[0]
+            .content,
+        "foreign source"
+    );
+    owner.created = None;
+    assert_eq!(
+        owner
+            .consented_created_sources(foreign, &paths)
+            .err()
+            .unwrap()
+            .code(),
+        "code.command.worktree-required"
+    );
+    // Reopening durable authority does not restore the process-only owner.
+    drop(owner);
+    assert_eq!(
+        f.open()
+            .consented_created_sources(expected, &paths)
+            .err()
+            .unwrap()
+            .code(),
+        "code.command.worktree-required"
+    );
+
+    let f = Fixture::new();
+    let mut owner = owner_with_synthetic_git_observations(&f);
+    let status = owner.inspect_apply().unwrap();
+    let expected = status["worktree_root_sha256"].as_str().unwrap();
+    fs::write(f.root.join("owned/worktree/sentinel"), b"selected source").unwrap();
+    let scope = owner.consented_created_sources(expected, &paths).unwrap();
+    fs::rename(f.root.join("owned/worktree"), f.root.join("displaced")).unwrap();
+    fs::create_dir(f.root.join("owned/worktree")).unwrap();
+    fs::write(
+        f.root.join("owned/worktree/sentinel"),
+        b"replacement source",
+    )
+    .unwrap();
+    assert_eq!(
+        owner
+            .consented_created_sources(expected, &paths)
+            .err()
+            .unwrap()
+            .code(),
+        "code.command.scope"
+    );
+    // A held descriptor can still reach its displaced original, never the
+    // replacement. That does not authorize edits through the current owner.
+    if let Ok(sources) = scope.read(&paths) {
+        assert_eq!(sources[0].content, "selected source");
+    }
+    assert_eq!(
+        owner
+            .prepare_edit(scope, &[], "Refuse replacement", NOW)
+            .unwrap_err()
+            .code(),
+        "code.command.scope"
+    );
+    assert_eq!(
+        fs::read(f.root.join("owned/worktree/sentinel")).unwrap(),
+        b"replacement source"
+    );
+    assert_eq!(
+        fs::read(f.root.join("displaced/sentinel")).unwrap(),
+        b"selected source"
+    );
+}
+
+#[test]
+fn created_source_selection_keeps_exact_path_bounds_and_does_not_read_original() {
+    let f = Fixture::new();
+    let owner = owner_with_synthetic_git_observations(&f);
+    let status = owner.inspect_apply().unwrap();
+    let expected = status["worktree_root_sha256"].as_str().unwrap();
+    let paths = vec!["sentinel".into()];
+    fs::write(f.root.join("owned/worktree/sentinel"), b"selected source").unwrap();
+    fs::write(
+        f.root.join("owned/worktree/unselected"),
+        b"unselected source",
+    )
+    .unwrap();
+    fs::write(f.root.join("owned/worktree/invalid"), b"invalid\0source").unwrap();
+    symlink(
+        f.root.join("owned/worktree/unselected"),
+        f.root.join("owned/worktree/link"),
+    )
+    .unwrap();
+    // This selection covers only worktree paths, not the original checkout.
+    fs::rename(f.root.join("repo"), f.root.join("original-retained")).unwrap();
+    let scope = owner.consented_created_sources(expected, &paths).unwrap();
+    assert_eq!(scope.read(&paths).unwrap()[0].content, "selected source");
+    assert!(scope.read(&["unselected".into()]).is_err());
+    assert!(
+        scope
+            .read(&["sentinel".into(), "unselected".into()])
+            .is_err()
+    );
+    for rejected in [
+        vec![],
+        vec!["sentinel".into(), "sentinel".into()],
+        vec!["../outside".into()],
+        vec![".git/config".into()],
+        vec!["sentinel".into(), "invalid".into()],
+        vec!["link".into()],
+    ] {
+        assert!(
+            owner
+                .consented_created_sources(expected, &rejected)
+                .is_err()
+        );
+    }
+    assert_eq!(owner.inspect_apply().unwrap(), status);
+    assert!(owner.inspect_edit().unwrap()["pending"].is_null());
+    assert_eq!(
+        fs::read(f.root.join("original-retained/sentinel")).unwrap(),
+        b"preserve human work"
+    );
+}
+
+#[test]
 fn git_creation_identity_correlates_original_plan_and_both_dispatch_receipts() {
     let f = Fixture::new();
     let (_owner, plan, authority, repository) = synthetic_creation_observations(&f);

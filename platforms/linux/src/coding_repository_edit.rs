@@ -41,10 +41,32 @@ impl LinuxCodingRepository {
             .map(|created| created.held.workspace_id())
     }
 
-    /// Explicitly selects exact source paths in this owner's held worktree.
-    /// Call only after read consent. Caller paths cannot adopt a worktree, and
-    /// selecting sources confers neither model disclosure nor write authority.
-    pub fn select_created_sources(&self, paths: &[String]) -> Result<LinuxCodingReadScope> {
+    /// Selects exact source paths after the trusted caller obtains read consent
+    /// for the worktree root displayed by `inspect_apply`. Compare that root
+    /// before inspecting held directories or reading selected sources. The
+    /// digest correlates selection; it does not authenticate consent. Sources
+    /// remain untrusted, and model disclosure and writes need separate authority.
+    /// The returned scope revalidates its held root and exact paths on reads;
+    /// `prepare_edit` also rechecks ownership before accepting it.
+    pub fn consented_created_sources(
+        &self,
+        expected_worktree_root_sha256: &str,
+        paths: &[String],
+    ) -> Result<LinuxCodingReadScope> {
+        let created = self
+            .created
+            .as_ref()
+            .ok_or(err("code.command.worktree-required"))?;
+        if expected_worktree_root_sha256 != created.held.root_path_sha256() {
+            return Err(err("code.edit.read-scope"));
+        }
+        self.select_created_sources(paths)
+    }
+
+    // Internal callers already bind source consent through their enclosing
+    // operation (original apply or complete commit review). Never expose this
+    // uncorrelated selector as a second public entry point.
+    pub(super) fn select_created_sources(&self, paths: &[String]) -> Result<LinuxCodingReadScope> {
         let created = self.verify_created()?;
         let scope =
             LinuxCodingReadScope::select(&created.path, paths).map_err(|e| err(e.code()))?;

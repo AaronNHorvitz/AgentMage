@@ -50,7 +50,10 @@ impl Fixture {
     }
     fn prepare(&self, owner: &mut LinuxCodingRepository, content: &str) {
         let paths = vec!["one.py".into()];
-        let scope = owner.select_created_sources(&paths).unwrap();
+        let status = owner.inspect_apply().unwrap();
+        let scope = owner
+            .consented_created_sources(status["worktree_root_sha256"].as_str().unwrap(), &paths)
+            .unwrap();
         let sources = scope.read(&paths).unwrap();
         owner
             .prepare_edit(
@@ -191,8 +194,9 @@ fn prepared_input(
         // phase is separate from endpoint coordinator accounting below. The
         // socket peer is synthetic, never an actual model or task grade.
         let paths = vec!["one.py".into()];
+        let status = owner.inspect_apply().unwrap();
         let sources = owner
-            .select_created_sources(&paths)
+            .consented_created_sources(status["worktree_root_sha256"].as_str().unwrap(), &paths)
             .unwrap()
             .read(&paths)
             .unwrap()

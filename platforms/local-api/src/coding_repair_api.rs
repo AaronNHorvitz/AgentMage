@@ -157,7 +157,7 @@ fn prepare_repair<'a>(
         input.workspace_selection_id.as_deref(),
     )?;
     repository
-        .select_created_sources(&input.paths)
+        .consented_created_sources(&selected_root, &input.paths)
         .map_err(|e| (409, e.code()))?;
     let (_, source_budget) = repair_prompt(&feedback, input.max_message_bytes)?;
     let context =

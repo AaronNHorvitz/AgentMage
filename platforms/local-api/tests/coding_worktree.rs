@@ -919,7 +919,7 @@ fn owned_edit_api_requires_control_read_consent_and_never_adopts_a_caller_root()
     let inspect = "/v1/code/repository/edit";
     let prepare = "/v1/code/repository/edit/prepare";
     let decide = "/v1/code/repository/edit/decide";
-    let definition = json!({"paths":["sentinel"],"expected_sources":[{"path":"sentinel","sha256":"a".repeat(64)}],
+    let definition = json!({"expected_worktree_root_sha256":"b".repeat(64),"paths":["sentinel"],"expected_sources":[{"path":"sentinel","sha256":"a".repeat(64)}],
         "task":"Repair sentinel","max_message_bytes":4096,
         "answer":"{\"edits\":[{\"path\":\"sentinel\",\"old\":\"human work\",\"new\":\"replacement\"}]}","approve_read":true});
     assert_eq!(f.call_bytes("GET", inspect, false, b"").0, 403);
@@ -1303,7 +1303,7 @@ fn synthetic_propose_worktree_requires_complete_proposal_and_fresh_read_consent(
                 let body: Value = serde_json::from_slice(&prepared[0].1).unwrap();
                 assert_eq!(
                     body,
-                    json!({"paths":["sentinel"],"expected_sources":[{"path":"sentinel","sha256":"b".repeat(64)}],
+                    json!({"expected_worktree_root_sha256":expected_identity,"paths":["sentinel"],"expected_sources":[{"path":"sentinel","sha256":"b".repeat(64)}],
                 "task":"Repair sentinel","max_message_bytes":4096,"answer":r#"{"edits":[{"path":"sentinel","old":"human work","new":"replacement"}]}"#,"approve_read":true})
                 );
                 assert!(

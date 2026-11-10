@@ -240,8 +240,15 @@ impl CodingEndpointPreparedStartup {
             .iter()
             .map(|outline| outline.path.clone())
             .collect::<Vec<_>>();
+        // This trusted composition's caller must already have consent for
+        // this exact live owner. Its displayed root correlates the native
+        // selection; it cannot independently establish that prior consent.
+        let selection = repository.inspect_apply().map_err(|_| Refusal::Native)?;
+        let root = selection["worktree_root_sha256"]
+            .as_str()
+            .ok_or(Refusal::Scope)?;
         let scope = repository
-            .select_created_sources(&paths)
+            .consented_created_sources(root, &paths)
             .map_err(|_| Refusal::Native)?;
         let sources = scope
             .read(&paths)

@@ -2,6 +2,28 @@
 
 ## Active queue: local agent mission
 
+The retained [commit-control review](docs/reviews/c5088d85a5d1-local-coding-commit-control.txt)
+has **Verdict: PASS** for exact commit
+`c5088d85a5d192211d469c2edfef2b7a84ab71e9`, with no high or medium finding.
+Its lows on native forwarding, conservative pre-dispatch uncertainty and slow
+postflight recovery remain same-row backlog alongside earlier lows. Neither
+T-303 nor T-306 closes.
+
+The [worktree source-selection batch](docs/evidence/t306-worktree-read-selection-2026-11-10.md)
+addresses the retained read-scope review's low L-1 in the same T-303/T-306 rows.
+Public source selection requires the displayed worktree root before path
+inspection or reads; the old uncorrelated selector is internal. A matching
+digest correlates selection, not authenticated consent or write authority.
+HTTP edit preparation and its terminal confirmation now carry the selected root;
+repair uses its existing selection, while trusted host flows retain their prior
+consent contract. The complete affected gate remains **FAIL**: 1,420 passes, the
+exact inherited 72 failures and 64 ignores across 26 unfiltered targets. All four
+new methods, 85 controls, formatting and Clippy pass; ten source hashes stay
+fixed. Independent core review is required. Neither parent closes; no row or
+sub-row is added. Native admission, reviewer/artifact provenance,
+full product approval composition, durable recovery, model measurements and
+approved push remain open.
+
 The retained [review-read-scope report](docs/reviews/0c859b28ff89-local-coding-review-read-scope.txt)
 has **Verdict: PASS** for exact commit
 `0c859b28ff899a6608c070768f7e5d013a087884`, with no high or medium finding.

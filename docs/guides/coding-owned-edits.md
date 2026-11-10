@@ -26,6 +26,7 @@ The preparation request has these exact fields:
 
 ```json
 {
+  "expected_worktree_root_sha256": "<displayed-worktree-root-digest>",
   "paths": ["src/calc.py"],
   "expected_sources": [{"path": "src/calc.py", "sha256": "<complete-source-digest>"}],
   "task": "Fix addition",
@@ -35,8 +36,12 @@ The preparation request has these exact fields:
 }
 ```
 
-The request carries no root, creation receipt, replacement file content or
-execution approval. Only the owner chooses its held created root. The same
+The request carries the exact root identity displayed by inspection for read
+consent. A mismatch refuses before source selection; a digest correlates the
+choice and does not authenticate consent. No caller path, creation receipt,
+replacement file content or execution approval is accepted. Only the owner
+chooses its held created root. The terminal inserts the identity shown in its
+read confirmation and refuses a conflicting identity in its input. The same
 strict checker as the selected-workspace route checks every complete source
 hash, including unchanged files, before reapplying the exact visible fragments.
 Duplicate snapshots, stale hashes, ambiguous fragments, overlaps, unselected

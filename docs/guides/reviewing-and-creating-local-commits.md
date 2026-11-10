@@ -334,3 +334,22 @@ through the same owner while the view is live; it cannot prevent external
 filesystem changes. Root digests bind selection, not consent authentication,
 independent review, artifact provenance or permission to execute a candidate.
 No product route or new execution authority follows from this view.
+
+The earlier worktree edit selection now follows the same correlation rule:
+`consented_created_sources` requires the worktree root displayed by
+`inspect_apply` and the exact relative paths covered by read consent. A wrong
+root refuses before path inspection or source reads. The uncorrelated selector
+is internal to the owner. This operation reads only selected worktree sources;
+it does not inspect the original checkout or Git metadata and needs no consent
+for those separate reads. Existing file-count, byte, path and native-resolution
+bounds still apply, and model disclosure requires separate authority.
+
+A returned source scope retains its original directory descriptor and exact
+path allowlist. It may still read a displaced original directory; it cannot
+adopt a replacement at the same pathname. Preparing an edit rechecks the live
+owner and refuses a foreign, replaced or stale worktree. Selection supplies no
+write authority: the complete edit preview and separate exact approval remain
+required. Root digests correlate the choice and do not authenticate consent.
+The existing trusted host flows derive that root from their continuously retained
+native owner under their prior-read-consent contract. They do not introduce a
+new person-choice challenge or independently authenticate the prior consent.

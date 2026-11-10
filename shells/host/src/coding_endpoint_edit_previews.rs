@@ -234,8 +234,17 @@ impl<C: RuntimeClock + Clone> CodingEndpointEditPreviews<C> {
                     .collect::<Vec<_>>(),
             )
             .map_err(|_| RuntimePortFailure::Invalid)?;
+        // The trusted host already retains the original owner under prior
+        // read consent. Use that owner's displayed identity; this correlation
+        // does not authenticate consent or authorize model disclosure.
+        let selection = repository
+            .inspect_apply()
+            .map_err(|_| RuntimePortFailure::Unavailable)?;
+        let root = selection["worktree_root_sha256"]
+            .as_str()
+            .ok_or(RuntimePortFailure::Invalid)?;
         let sources = repository
-            .select_created_sources(paths)
+            .consented_created_sources(root, paths)
             .map_err(|_| RuntimePortFailure::Unavailable)?
             .read(paths)
             .map_err(|_| RuntimePortFailure::Unavailable)?

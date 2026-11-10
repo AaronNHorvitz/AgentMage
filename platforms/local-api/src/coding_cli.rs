@@ -552,12 +552,21 @@ fn propose(
     }
 }
 
-fn edit_prepare(client: &Client, root: &str, body: Value) -> Result<Value> {
+fn edit_prepare(client: &Client, root: &str, mut body: Value) -> Result<Value> {
     let status = client.json("GET", "/v1/code/repository/edit", true, None)?;
     let identity = status["worktree_root_sha256"]
         .as_str()
         .filter(|s| digest(s))
         .ok_or(())?;
+    if body
+        .get("expected_worktree_root_sha256")
+        .is_some_and(|value| value.as_str() != Some(identity))
+    {
+        return Err(());
+    }
+    body.as_object_mut()
+        .ok_or(())?
+        .insert("expected_worktree_root_sha256".into(), json!(identity));
     let verify = || LinuxCodingReadScope::verify_root(Path::new(root), identity).map_err(|_| ());
     verify()?;
     client.confirm(

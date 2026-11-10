@@ -1,0 +1,153 @@
+Commit: c5088d85a5d192211d469c2edfef2b7a84ab71e9
+Scope: local-coding-commit-control
+
+# Independent review: dormant commit cancellation/deadline checkpoints (T-303 / T-306, core)
+
+Reviewer: Claude Opus 5.5, separate read-only session, pinned checkout `/lane/review-checkout`.
+Rows: T-303 / T-306, same-row non-closing increment. Neither row may close on this review.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `c5088d85a5d192211d469c2edfef2b7a84ab71e9` in the pinned checkout.
+- Read IP-POLICY.md, the top of TASKS.md, the new evidence
+  `docs/evidence/t306-commit-control-2026-11-10.md`, the guide addition, the retained
+  `docs/reviews/0c859b28ff89-local-coding-review-read-scope.txt`, and the full source diff against
+  `0c859b28ff89`. Before running anything, I read every bundle script (README, run.py, check.py,
+  parse_gate.py, light.py, stage_check.py). They write only to the output directory and a `/tmp`
+  namespace. They do not modify the repository, use the network or run anything with elevated
+  privileges.
+- Code-reviewed `platforms/linux/src/local_commit_execution.rs` (new `control_active`, `preflight`,
+  `check_control!` checkpoints), `platforms/linux/src/local_commit.rs:451-458` (`run_plan` now routes
+  collection through `execution::preflight`), and the new tests. I also cross-checked the kernel
+  consumer `reconcile_local_commit` (kernel/engine/src/local_commit.rs:918-961),
+  `CancellationToken` clone semantics (kernel/engine/src/propagation.rs:57, shared `Arc` node) and
+  `CommitIoSession::deadline` (platforms/linux/src/repository_commit_io.rs:54).
+- Mutation reasoning on the tests, covering each checkpoint in turn (see below).
+- Ran a fresh full unfiltered gate myself in a separate CARGO_TARGET_DIR. I used no GPU, host keys,
+  downloads or push.
+
+## Commands and results (all run in /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-commit-control/review-inputs.sha256`: exit 0. Manifest
+   SHA-256 `01e93c538b123ca4c501efcd5bd15515ba7e426fcbce2c0c32c314341f6a8a94` matches the request.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-commit-control/run.py /lane/state/tmp/review-commit-control-full-c5088d85a5d1`:
+   exit 1 as expected, `FAST GATE: FAIL`, `source_unchanged: true`, 718.61 s including
+   reservations. Most of that was the shared-slot wait recorded against fmt: fmt 407.91 s,
+   Clippy 44.56 s exit 0, Rust tests 264.26 s exit 101. No timeout occurred. My raw log SHA-256 is
+   `4dcdf481b1fa44735fbe01ba98ce7d57b42a21ca978a98090ea71ee55096e70d`. It differs from the builder's
+   log because timings and paths differ; the per-target data is identical (command 3).
+3. `python3 -B .../check.py /lane/state/tmp/review-commit-control-full-c5088d85a5d1`: exit 0. Output:
+   26 targets, totals [1416, 72, 64, 0, 0], 3 source files unchanged, 82 named methods (3 new + 79
+   controls) all `ok`, and the command exit vector ends in 101. This is a data comparison only; the
+   full gate remains FAIL.
+4. `cmp .../validation-1/source-freeze.json .../review-commit-control-full-c5088d85a5d1/source-freeze.json`: exit 0.
+5. `python3 -B .../light.py`: exit 0 (diff check, untracked lint, review lint, markdownlint with
+   0 issues in 3 files).
+6. `git diff --check 0c859b28ff899a6608c070768f7e5d013a087884 --`: exit 0.
+7. `cmp docs/reviews/0c859b28ff89-local-coding-review-read-scope.txt /lane/reviews/0c859b28ff89-local-coding-review-read-scope.md`:
+   exit 0. The retained report is byte-identical and ends in `Verdict: PASS`.
+8. `git status --short`: empty, both before and after all runs.
+
+Every one of the 7 `commit_execution_*` methods reports `ok` in my log, including the three new ones:
+`commit_execution_cancellation_stops_before_every_next_stage_and_after_postflight`,
+`commit_execution_expiry_stops_before_every_next_stage_and_after_postflight` and
+`commit_execution_preflight_checks_cancellation_before_and_after_collection`.
+
+The inherited 72 failures, grouped by panic site:
+- shells/host/src/linux_coding_runtime.rs: 43 (test sandbox manifest `InvalidManifest`).
+- repository_safety: 13.
+- linux_read: 10.
+- command_runner, secret_service and local_commit: 2 each.
+- linux_repository_map: 1.
+
+All are environment and artifact-admission refusals, and check.py confirms their identities per
+target against the base baseline. The two `local_commit::tests::native_*` failures panic during
+fixture admission (`InvalidGitArtifact` at local_commit.rs:1909, `ArtifactDenied` at
+local_commit.rs:1897), before `run_plan`. So the native path through the new `preflight` and
+`NativeSession::control_active` does not execute in this lane. This matches the evidence's own
+statement that native forwarding coverage is not proved.
+
+## Review of the change
+
+- **Checkpoint placement.** `run_with` checks `session.control_active()` once before
+  `branch_before`, after each of branch, sign, write, read+`verify_raw_commit`, verify and update,
+  and after postflight. The pure `verify_raw_commit` check runs before the checkpoint, which is
+  harmless. A stop returns `uncertain_commit_result` (outcome `Failed`, `cleanup_verified=false`,
+  no commit object or branch fields). `reconcile_local_commit` rejects any outcome other than
+  `Succeeded`, plus missing `commit_object` and `!cleanup_verified`
+  (kernel/engine/src/local_commit.rs:935-961). So a stop after CAS or postflight cannot become a
+  receipt, and nothing implies rollback. Before any dispatch, `preflight` cancellation returns a
+  `Denied` no-effect result with the approved manifest, which is correct because collection is
+  read-only.
+- **Control source.** `NativeSession::control_active` uses the original `cancellation` reference
+  passed to `run_plan` and the same `io.deadline()` that `sign` and `verify` already receive. That
+  makes it consistent with the existing worker bounds, and every worker still gets the token.
+  `CancellationToken::clone` shares the `Arc` node, so the test's "propagated" clone is a genuine
+  same-token cancellation.
+- **Mutation adequacy.** For each `completed` in 0..=7, the stop is injected at the end of stage
+  `completed`, and the test asserts the exact call prefix `ORDER[..completed]`.
+  - Removing any one of the 8 sequence checkpoints lets the next stage run, or turns the final
+    result into `Succeeded`, so the test fails.
+  - Removing either `preflight` check fails the panic closure or the propagated-cancel assertion.
+  - The test also asserts that the stored object exists from `write` onward and that `update` ran
+    exactly when `completed >= 6`.
+  - Both object widths (40 and 64) and both cancellation and expiry are covered.
+- **No new authority.** `Session` and `run_with` remain module-private. `preflight` is
+  `pub(super)` and only gates a caller-supplied collector closure; it grants nothing. There is no new
+  public API, permit, fallback, trust exception or product route.
+- **Confinement and untrusted input.** The diff adds no new filesystem, network, process,
+  environment or parsing surface, so there is no new escape surface to reproduce. Existing
+  confinement tests among the 79 controls pass (for example
+  `policy_denies_every_worker_socket_and_connection_syscall` and
+  `commit_io_worker_refuses_unsealed_foreign_network_and_unsafe_mutation_scopes`).
+- **Evaluation integrity.** The diff touches no evaluation, hidden or held-out data, scorer,
+  prompt, threshold, dependency, SBOM or scoreboard file (diff stat: 7 files, all listed in
+  stage_check.py). `| [` row lines in TASKS.md are byte-identical to the base (check.py).
+- **Public content.** I found no private host path, username, hostname, credential, personal data,
+  sibling-project name or trademark branding in the added lines. Lane paths (`/lane/state/...`)
+  follow existing precedent in 213 committed docs. There is no product comparison, certification
+  or readiness claim.
+- **Evidence honesty.** The evidence and TASKS text accurately describe the synthetic scope. They
+  state the inherited FAIL and its exact counts, and say plainly that individual collections are
+  not interruptible and that native forwarding, admission, provenance, product approval, recovery,
+  measurements and push remain open. The builder's numbers trace to validation-1 (raw SHA
+  `e6e02884…`, verified in command 1), and my independent run reproduces the per-target data.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L-1 (low, backlog; acknowledged by the builder).** Native forwarding is untested.
+  `platforms/linux/src/local_commit.rs:451` (`run_plan` → `execution::preflight`) and
+  `platforms/linux/src/local_commit_execution.rs:45-47` (`NativeSession::control_active` →
+  `io.deadline()`) have no test that would fail if the native wiring were reverted or returned a
+  constant. Today the only native tests stop at artifact admission. Fix: once a native fixture can
+  be admitted, add a native-entry test with a precancelled token that asserts the collector is never
+  invoked and the result is `linux.git.commit.preflight`. Also add one native run whose `CommitIoSession`
+  deadline has already passed and that returns `control_stopped` with no dispatch.
+- **L-2 (low, backlog).** The checkpoint before `branch_before`
+  (local_commit_execution.rs:141) reports `Failed`/uncertain (`control_stopped`) although no worker
+  has been dispatched. The `preflight` stop, by contrast, reports `Denied` no-effect. This is
+  conservative and harmless to safety, but it may push a cancel between session creation and the
+  first stage into recovery handling that is not needed. Fix if desired: return
+  `failed_commit_result(&before, "linux.git.commit.control_stopped")` for that first check only,
+  after confirming that `CommitIoSession::new` has no effects.
+- **L-3 (low, observation).** Postflight collection is not bounded by the I/O deadline, but
+  the final checkpoint enforces that deadline. A slow postflight after a successful CAS therefore
+  yields an uncertain result for a commit that did land. This trade-off is documented and
+  fail-safe, and no receipt is falsely issued. Recovery should be able to reconcile this case
+  durably (already open under durable recovery).
+
+Earlier same-row lows, including L-1 from the 0c859b28ff89 review, remain backlog.
+
+## Per-row result
+
+- T-303 / T-306 (core), this increment: PASS for the stated scope. There are cancellation and
+  deadline checkpoints at every dormant stage boundary and after postflight, plus preflight
+  cancellation before and after collection. A stop never produces a successful receipt. The tests
+  cover both widths and both stop kinds and are mutation-adequate. The gate data matches the
+  inherited FAIL exactly. The rows stay OPEN: native admission, original reviewer and artifact
+  provenance, full product approval composition, durable recovery, model measurements and approved
+  push are not addressed. This review asserts no row close, release or readiness.
+
+Verdict: PASS
