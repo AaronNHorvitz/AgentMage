@@ -1374,3 +1374,389 @@ fn creation_review_candidate_plan_binds_mixed_original_history_and_creation_mode
         "code.commit.write-provenance"
     );
 }
+
+// This explicit test-only checker is synthetic acceptance, not an installed
+// independent reviewer, native admission or a model/coding score.
+struct CandidateChecker<F>(F);
+impl<F> LinuxCodingCandidateReviewPort for CandidateChecker<F>
+where
+    F: FnMut(
+        LinuxCodingCandidateReviewEvidence<'_>,
+    ) -> std::result::Result<(), LinuxCodingCandidateReviewFailure>,
+{
+    fn verify_candidate(
+        &mut self,
+        input: LinuxCodingCandidateReviewEvidence<'_>,
+    ) -> std::result::Result<(), LinuxCodingCandidateReviewFailure> {
+        (self.0)(input)
+    }
+}
+
+fn review_token() -> CancellationToken {
+    CancellationToken::root(
+        BoundaryKind::Shell,
+        TaskId::from_raw("candidate-review"),
+        CorrelationId::from_raw("candidate-review"),
+    )
+}
+fn cancel_review(token: &CancellationToken) {
+    token
+        .cancel(agentmage_kernel_contracts::CancellationSignal {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            cancellation_id: agentmage_kernel_contracts::CancellationId::from_raw("review-cancel"),
+            correlation_id: CorrelationId::from_raw("candidate-review"),
+            task_id: TaskId::from_raw("candidate-review"),
+            reason: agentmage_kernel_contracts::CancellationReason::UserRequested,
+            requested_by: BoundaryKind::Shell,
+        })
+        .unwrap();
+}
+fn selected_review(owner: &LinuxCodingRepository) -> LinuxCodingCommitReview<'_> {
+    let status = owner.inspect_apply().unwrap();
+    owner
+        .consented_commit_review(
+            status["repository_root_sha256"].as_str().unwrap(),
+            status["worktree_root_sha256"].as_str().unwrap(),
+        )
+        .unwrap()
+}
+
+#[test]
+fn candidate_checker_receives_original_records_and_releases_only_rechecked_inert_plan() {
+    let (f, owner, changes) = command::tests::candidate_review_fixture();
+    let p = packet(&owner, &changes);
+    let review = selected_review(&owner);
+    let calls = Cell::new(0);
+    let checked = Cell::new(0);
+    let receipts = owner.inspect().unwrap()["receipts"].clone();
+    let validation = owner.inspect_validation().unwrap();
+    let mut checker = CandidateChecker(|input: LinuxCodingCandidateReviewEvidence<'_>| {
+        assert_eq!(calls.get(), 2);
+        checked.set(checked.get() + 1);
+        assert!(std::ptr::eq(input.packet(), &p));
+        assert!(std::ptr::eq(
+            input.creation(),
+            owner.created_git_identity().unwrap()
+        ));
+        input.validation().assert_original_for_test(&owner);
+        assert_eq!(
+            input.validation().creation_receipt_sha256(),
+            input.creation().authority_receipt_sha256()
+        );
+        assert_eq!(input.candidate().review_packet_sha256, p.packet_sha256);
+        assert_eq!(
+            input.candidate().parent_object,
+            input.creation().base_object()
+        );
+        assert_eq!(
+            input.creation().branch_ref(),
+            "refs/heads/agentmage/tasks/component"
+        );
+        Ok(())
+    });
+    let value = review
+        .verify_candidate_tree_with(
+            &p,
+            &p.commit_plan.groups[0].group_id,
+            "checked-candidate",
+            &mut checker,
+            &review_token(),
+            || {
+                calls.set(calls.get() + 1);
+                Ok(observation(&owner))
+            },
+        )
+        .unwrap();
+    assert_eq!(calls.get(), 4);
+    assert_eq!(checked.get(), 1);
+    assert!(std::ptr::eq(value.packet(), &p));
+    assert!(std::ptr::eq(value._owner, &owner));
+    assert_eq!(value.candidate().review_packet_sha256, p.packet_sha256);
+    assert!(!value.candidate().network_authority);
+    assert_eq!(owner.inspect().unwrap()["receipts"], receipts);
+    assert_eq!(owner.inspect_validation().unwrap(), validation);
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"preserve human work"
+    );
+    assert_eq!(
+        fs::read(f.root.join("owned/worktree/sentinel")).unwrap(),
+        b"reviewed change"
+    );
+    assert!(
+        !f.root
+            .join("owned/candidate-index-checked-candidate")
+            .exists()
+    );
+}
+
+#[test]
+fn candidate_checker_failures_stop_before_postcheck_and_invalid_packets_never_invoke_checker() {
+    for (failure, code) in [
+        (
+            LinuxCodingCandidateReviewFailure::Rejected,
+            "code.commit.review-rejected",
+        ),
+        (
+            LinuxCodingCandidateReviewFailure::Unavailable,
+            "code.commit.review-unavailable",
+        ),
+    ] {
+        let (f, owner, changes) = command::tests::candidate_review_fixture();
+        let p = packet(&owner, &changes);
+        let review = selected_review(&owner);
+        let calls = Cell::new(0);
+        let mut checker = CandidateChecker(|_: LinuxCodingCandidateReviewEvidence<'_>| {
+            // A post-check would now produce a different error. The checker
+            // failure must stop immediately without more filesystem/Git reads.
+            fs::rename(f.root.join("owned/worktree"), f.root.join("moved-worktree")).unwrap();
+            Err(failure)
+        });
+        let result = review.verify_candidate_tree_with(
+            &p,
+            &p.commit_plan.groups[0].group_id,
+            "checker-refusal",
+            &mut checker,
+            &review_token(),
+            || {
+                calls.set(calls.get() + 1);
+                Ok(observation(&owner))
+            },
+        );
+        assert_eq!(result.err().unwrap().code(), code);
+        assert_eq!(calls.get(), 2);
+        assert_eq!(
+            fs::read(f.root.join("repo/sentinel")).unwrap(),
+            b"preserve human work"
+        );
+    }
+    let (_f, owner, changes) = command::tests::candidate_review_fixture();
+    let mut p = packet(&owner, &changes);
+    p.packet_sha256 = hash(b"forged caller packet");
+    let mut checker = CandidateChecker(|_: LinuxCodingCandidateReviewEvidence<'_>| {
+        panic!("invalid packet must not reach a reviewer")
+    });
+    assert_eq!(
+        selected_review(&owner)
+            .verify_candidate_tree_with(
+                &p,
+                &p.commit_plan.groups[0].group_id,
+                "checker-invalid",
+                &mut checker,
+                &review_token(),
+                || panic!("invalid packet must not reach Git"),
+            )
+            .err()
+            .unwrap()
+            .code(),
+        "code.commit.review-packet"
+    );
+}
+
+#[test]
+fn candidate_checker_success_cannot_hide_source_modes_or_root_drift() {
+    for drift in ["source", "mode", "worktree", "original"] {
+        let (f, owner, changes) = command::tests::candidate_review_fixture();
+        let p = packet(&owner, &changes);
+        let review = selected_review(&owner);
+        let receipts = owner.inspect().unwrap()["receipts"].clone();
+        let history = owner.inspect_validation().unwrap()["history"].clone();
+        let calls = Cell::new(0);
+        let mut checker = CandidateChecker(|_: LinuxCodingCandidateReviewEvidence<'_>| {
+            match drift {
+                "source" => {
+                    fs::write(f.root.join("owned/worktree/sentinel"), "unreviewed").unwrap()
+                }
+                "mode" => fs::set_permissions(
+                    f.root.join("owned/worktree/sentinel"),
+                    fs::Permissions::from_mode(0o700),
+                )
+                .unwrap(),
+                "worktree" => {
+                    fs::rename(f.root.join("owned/worktree"), f.root.join("moved-worktree"))
+                        .unwrap()
+                }
+                "original" => {
+                    fs::rename(f.root.join("repo"), f.root.join("moved-original")).unwrap()
+                }
+                _ => unreachable!(),
+            }
+            Ok(())
+        });
+        assert!(
+            review
+                .verify_candidate_tree_with(
+                    &p,
+                    &p.commit_plan.groups[0].group_id,
+                    "checker-drift",
+                    &mut checker,
+                    &review_token(),
+                    || {
+                        calls.set(calls.get() + 1);
+                        Ok(observation(&owner))
+                    },
+                )
+                .is_err(),
+            "{drift}"
+        );
+        assert_eq!(
+            calls.get(),
+            2,
+            "drift must stop before post-check Git: {drift}"
+        );
+        assert_eq!(owner.inspect().unwrap()["receipts"], receipts);
+        assert_eq!(owner.inspect_validation().unwrap()["history"], history);
+        assert!(owner.applied_write.is_some());
+        assert!(!f.root.join("owned/candidate-index-checker-drift").exists());
+    }
+}
+
+#[test]
+fn candidate_checker_compares_complete_git_observations_across_the_checker_call() {
+    for drift in [
+        "manifest",
+        "head",
+        "branch",
+        "linked",
+        "inventory",
+        "preimages",
+    ] {
+        for at in [2, 3, 4] {
+            let (_f, owner, changes) = command::tests::candidate_review_fixture();
+            let p = packet(&owner, &changes);
+            let review = selected_review(&owner);
+            let calls = Cell::new(0);
+            let checked = Cell::new(0);
+            let mut checker = CandidateChecker(|_: LinuxCodingCandidateReviewEvidence<'_>| {
+                checked.set(checked.get() + 1);
+                Ok(())
+            });
+            let result = review.verify_candidate_tree_with(
+                &p,
+                &p.commit_plan.groups[0].group_id,
+                "checker-git-drift",
+                &mut checker,
+                &review_token(),
+                || {
+                    calls.set(calls.get() + 1);
+                    let mut observed = observation(&owner);
+                    if calls.get() >= at {
+                        match drift {
+                            "manifest" => {
+                                observed.original.index_sha256 = hash(b"changed index");
+                                observed.original =
+                                    RepositoryPreservationManifest::seal(observed.original)
+                                        .unwrap();
+                            }
+                            "head" => observed.task_head = "a".repeat(40),
+                            "branch" => observed.task_branch = Some("refs/heads/foreign".into()),
+                            "linked" => {
+                                observed.linked_identity = hash(b"different linked metadata")
+                            }
+                            "inventory" => {
+                                observed.task_inventory_sha256 = hash(b"changed task inventory")
+                            }
+                            "preimages" => observed.base_preimages.clear(),
+                            _ => unreachable!(),
+                        }
+                    }
+                    Ok(observed)
+                },
+            );
+            assert_eq!(
+                result.err().unwrap().code(),
+                "code.commit.review-drift",
+                "{drift} at {at}"
+            );
+            assert_eq!(calls.get(), at);
+            assert_eq!(checked.get(), u32::from(at > 2));
+        }
+    }
+}
+
+#[test]
+fn candidate_checker_cancellation_stops_each_observation_and_checker_boundary() {
+    for stage in [
+        "initial",
+        "observe-1",
+        "observe-2",
+        "checker",
+        "observe-3",
+        "observe-4",
+    ] {
+        let (_f, owner, changes) = command::tests::candidate_review_fixture();
+        let p = packet(&owner, &changes);
+        let review = selected_review(&owner);
+        let token = review_token();
+        if stage == "initial" {
+            cancel_review(&token);
+        }
+        let calls = Cell::new(0);
+        let checked = Cell::new(0);
+        let mut checker = CandidateChecker(|_: LinuxCodingCandidateReviewEvidence<'_>| {
+            checked.set(checked.get() + 1);
+            if stage == "checker" {
+                cancel_review(&token);
+            }
+            Ok(())
+        });
+        let result = review.verify_candidate_tree_with(
+            &p,
+            &p.commit_plan.groups[0].group_id,
+            "checker-cancel",
+            &mut checker,
+            &token,
+            || {
+                calls.set(calls.get() + 1);
+                if stage == format!("observe-{}", calls.get()) {
+                    cancel_review(&token);
+                }
+                Ok(observation(&owner))
+            },
+        );
+        assert_eq!(
+            result.err().unwrap().code(),
+            "code.commit.review-cancelled",
+            "{stage}"
+        );
+        let (expected_calls, expected_checks) = match stage {
+            "initial" => (0, 0),
+            "observe-1" => (1, 0),
+            "observe-2" => (2, 0),
+            "checker" => (2, 1),
+            "observe-3" => (3, 1),
+            "observe-4" => (4, 1),
+            _ => unreachable!(),
+        };
+        assert_eq!(
+            (calls.get(), checked.get()),
+            (expected_calls, expected_checks),
+            "{stage}"
+        );
+    }
+}
+
+#[test]
+fn candidate_checker_public_native_path_keeps_artifact_admission_and_does_not_invoke_checker() {
+    let (f, owner, changes) = command::tests::candidate_review_fixture();
+    let p = packet(&owner, &changes);
+    let mut checker = CandidateChecker(|_: LinuxCodingCandidateReviewEvidence<'_>| {
+        panic!("synthetic repository or unadmitted Git cannot reach the checker")
+    });
+    let result = selected_review(&owner).verify_candidate_tree(
+        &p,
+        &p.commit_plan.groups[0].group_id,
+        "checker-native",
+        &mut checker,
+        &review_token(),
+    );
+    let code = result.err().unwrap().code();
+    if let Err(refusal) = LinuxGitArtifact::verify("/usr/bin/git") {
+        assert_eq!(code, refusal.kind().code());
+    }
+    assert!(!f.root.join("owned/candidate-index-checker-native").exists());
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"preserve human work"
+    );
+}

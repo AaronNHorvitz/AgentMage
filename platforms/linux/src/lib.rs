@@ -37,8 +37,9 @@ pub use coding_map::{
     LinuxCodingMap, LinuxCodingMapEntry, LinuxCodingMapError, discover_linux_coding_map,
 };
 pub use coding_repository::{
-    LINUX_CODING_PREPARED_INPUT_SCHEMA_JSON, LinuxCodingCommitReview, LinuxCodingRepository,
-    LinuxCodingRepositoryError,
+    LINUX_CODING_PREPARED_INPUT_SCHEMA_JSON, LinuxCodingCandidateReviewEvidence,
+    LinuxCodingCandidateReviewFailure, LinuxCodingCandidateReviewPort, LinuxCodingCheckedCandidate,
+    LinuxCodingCommitReview, LinuxCodingRepository, LinuxCodingRepositoryError,
 };
 /// Closed output protocols for separately approved project tests.
 pub use coding_repository::{

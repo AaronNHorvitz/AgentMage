@@ -366,3 +366,31 @@ required. Root digests correlate the choice and do not authenticate consent.
 The existing trusted host flows derive that root from their continuously retained
 native owner under their prior-read-consent contract. They do not introduce a
 new person-choice challenge or independently authenticate the prior consent.
+
+## Original-owner checker connection
+
+A trusted host can now call `verify_candidate_tree` on the existing selected
+`LinuxCodingCommitReview` view with its explicitly installed
+`LinuxCodingCandidateReviewPort`. There is no default accepting implementation.
+Select this implementation outside model/tool input. It must independently check
+the exact complete packet and task criteria, all visible and suppressed findings,
+the complete original test history and trusted capture/scanner evidence for every
+artifact claim. An empty findings list, matching digests or a test pass is
+insufficient. The interface cannot authenticate the installed checker itself.
+
+The checker receives borrowed references to the exact packet and checked inert
+plan, the original native Git-creation record and original validation records.
+A rejected or unavailable review stops immediately. A successful review repeats
+all original-owner checks and compares the complete Git observations across the
+checker call, including linked metadata and task inventory absent from the plan.
+Cancellation is checked around observations and review. The host must bound
+checker execution; an individual filesystem call or blocking checker cannot be
+interrupted by these checkpoints.
+
+The returned `LinuxCodingCheckedCandidate` is a read-only process value borrowing
+the original owner and packet. It has no public constructor, cloning or receipt
+restoration. Its plan is still inert and can become stale after return. No
+executor accepts it and it authorizes no Git effect. The old `plan_candidate_tree`
+method remains explanatory evidence only. No API, MCP or terminal route is added;
+installation of a real independent checker, artifact provenance, native admission
+and complete product approval composition remain open.

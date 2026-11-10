@@ -12,7 +12,7 @@ use agentmage_kernel_engine::review_packet::{
     ChangePurposeAssignment, LocalReviewPacket, ReviewableChangeSet, bind_validation_evidence,
 };
 
-#[derive(PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 struct GitObservation {
     original: RepositoryPreservationManifest,
     task_head: String,
@@ -32,7 +32,197 @@ pub struct LinuxCodingCommitReview<'a> {
     owner: &'a LinuxCodingRepository,
 }
 
-impl LinuxCodingCommitReview<'_> {
+/// Original-owner inputs delivered only after candidate planning succeeds.
+/// These borrows cannot be restored from a packet or serialized receipts.
+pub struct LinuxCodingCandidateReviewEvidence<'a> {
+    packet: &'a LocalReviewPacket,
+    candidate: &'a CandidateTreePlan,
+    creation: &'a LinuxCodingGitCreation,
+    validation: LinuxCodingValidationEvidence<'a>,
+}
+
+impl LinuxCodingCandidateReviewEvidence<'_> {
+    /// Exact complete packet, including suppressed findings and artifact claims.
+    #[must_use]
+    pub fn packet(&self) -> &LocalReviewPacket {
+        self.packet
+    }
+
+    /// Inert plan correlated with original writes and current observations.
+    #[must_use]
+    pub fn candidate(&self) -> &CandidateTreePlan {
+        self.candidate
+    }
+
+    /// Historical native creation record from this same original owner.
+    #[must_use]
+    pub fn creation(&self) -> &LinuxCodingGitCreation {
+        self.creation
+    }
+
+    /// Complete original test history, including failures and sealed inputs.
+    #[must_use]
+    pub fn validation(&self) -> &LinuxCodingValidationEvidence<'_> {
+        &self.validation
+    }
+}
+
+/// Content-free outcome from an explicitly installed trusted reviewer.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LinuxCodingCandidateReviewFailure {
+    /// Independent review did not accept the exact complete candidate.
+    Rejected,
+    /// Review or trusted artifact evidence could not be obtained.
+    Unavailable,
+}
+
+/// Explicit trusted opt-in at the original-owner review boundary.
+///
+/// The host must select an independent checker, outside model/tool input. It
+/// must check the full packet, exact diff and acceptance criteria, original
+/// validation history, completeness of findings and trusted provenance/scanning
+/// of EVERY artifact claim. Missing evidence must refuse. A matching hash,
+/// passing tests, empty findings or a caller's scanner flag cannot accept.
+/// There is no default accepting implementation or automatic reviewer selection.
+/// This interface does not authenticate the installed implementation itself.
+pub trait LinuxCodingCandidateReviewPort {
+    /// Check original borrowed records without reentering their owner. Prior
+    /// read consent must cover both complete roots and offline Git observations.
+    /// This grants no extra reads, commands, disclosure or effect permission.
+    /// The host remains responsible for bounding/cancelling its checker work.
+    fn verify_candidate(
+        &mut self,
+        evidence: LinuxCodingCandidateReviewEvidence<'_>,
+    ) -> std::result::Result<(), LinuxCodingCandidateReviewFailure>;
+}
+
+/// Process-only result of the installed checker and matching before/after plans.
+///
+/// No constructor, cloning, deserialization or restoration from packet hashes.
+/// Borrows the original owner and packet, preventing mutation through those
+/// references. External drift remains possible after return. This is evidence
+/// of this check only, NOT execution/commit approval or an atomic state lease.
+/// No candidate builder or commit executor consumes this type yet.
+pub struct LinuxCodingCheckedCandidate<'a> {
+    _owner: &'a LinuxCodingRepository,
+    packet: &'a LocalReviewPacket,
+    candidate: CandidateTreePlan,
+}
+
+impl LinuxCodingCheckedCandidate<'_> {
+    /// Exact immutable packet that the installed checker received.
+    #[must_use]
+    pub fn packet(&self) -> &LocalReviewPacket {
+        self.packet
+    }
+
+    /// Inert candidate plan from the matching post-check observation.
+    #[must_use]
+    pub fn candidate(&self) -> &CandidateTreePlan {
+        &self.candidate
+    }
+}
+
+impl<'owner> LinuxCodingCommitReview<'owner> {
+    /// Invoke an explicitly installed checker on original evidence, then repeat
+    /// the complete live-owner plan checks before returning its inert result.
+    /// Cancellation checkpoints cannot interrupt a blocking checker or an
+    /// individual filesystem operation. A checker failure stops immediately;
+    /// success cannot skip the post-check or authorize any subsequent effect.
+    pub fn verify_candidate_tree<'a>(
+        &self,
+        packet: &'a LocalReviewPacket,
+        group_id: &str,
+        candidate_build_id: &str,
+        reviewer: &mut impl LinuxCodingCandidateReviewPort,
+        cancellation: &CancellationToken,
+    ) -> Result<LinuxCodingCheckedCandidate<'a>>
+    where
+        'owner: 'a,
+    {
+        self.verify_candidate_tree_with(
+            packet,
+            group_id,
+            candidate_build_id,
+            reviewer,
+            cancellation,
+            || self.owner.observe_commit_git(packet),
+        )
+    }
+
+    // Observation substitution is private and available only to this module's
+    // synthetic tests. Public callers cannot replace native Git collection.
+    fn verify_candidate_tree_with<'a>(
+        &self,
+        packet: &'a LocalReviewPacket,
+        group_id: &str,
+        candidate_build_id: &str,
+        reviewer: &mut impl LinuxCodingCandidateReviewPort,
+        cancellation: &CancellationToken,
+        mut observe: impl FnMut() -> Result<GitObservation>,
+    ) -> Result<LinuxCodingCheckedCandidate<'a>>
+    where
+        'owner: 'a,
+    {
+        let check_cancelled = || {
+            if cancellation.is_cancelled() {
+                Err(err("code.commit.review-cancelled"))
+            } else {
+                Ok(())
+            }
+        };
+        check_cancelled()?;
+        // Candidate plans omit some inventory/link observations. Compare the
+        // complete private observation across ALL pre/post samples as well;
+        // equal plan hashes alone cannot hide drift across the checker call.
+        let mut baseline = None;
+        let mut stable_observe = || {
+            check_cancelled()?;
+            let observed = observe()?;
+            check_cancelled()?;
+            if baseline.as_ref().is_some_and(|first| first != &observed) {
+                return Err(err("code.commit.review-drift"));
+            }
+            baseline.get_or_insert_with(|| observed.clone());
+            Ok(observed)
+        };
+        let before = self.owner.plan_reviewed_candidate_tree_with(
+            packet,
+            group_id,
+            candidate_build_id,
+            &mut stable_observe,
+        )?;
+        check_cancelled()?;
+        let outcome = reviewer.verify_candidate(LinuxCodingCandidateReviewEvidence {
+            packet,
+            candidate: &before,
+            creation: self.owner.created_git_identity()?,
+            validation: self.owner.completion_validation_evidence()?,
+        });
+        outcome.map_err(|failure| {
+            err(match failure {
+                LinuxCodingCandidateReviewFailure::Rejected => "code.commit.review-rejected",
+                LinuxCodingCandidateReviewFailure::Unavailable => "code.commit.review-unavailable",
+            })
+        })?;
+        check_cancelled()?;
+        let after = self.owner.plan_reviewed_candidate_tree_with(
+            packet,
+            group_id,
+            candidate_build_id,
+            &mut stable_observe,
+        )?;
+        check_cancelled()?;
+        if before != after {
+            return Err(err("code.commit.review-drift"));
+        }
+        Ok(LinuxCodingCheckedCandidate {
+            _owner: self.owner,
+            packet,
+            candidate: after,
+        })
+    }
+
     /// Reads exact approved source history under the selected held roots.
     /// Purpose labels carry no approval or independent-review authority.
     pub fn capture_applied_write_review(
@@ -179,55 +369,58 @@ impl LinuxCodingRepository {
         candidate_build_id: &str,
     ) -> Result<CandidateTreePlan> {
         self.plan_reviewed_candidate_tree_with(packet, group_id, candidate_build_id, || {
-            let created = self.verify_apply_roots()?;
-            let scope = LinuxRepositoryScope::verify(
-                &created.original_path,
-                created.original_path.join(".git"),
-                created.path.parent().ok_or(err("code.command.scope"))?,
-            )
+            self.observe_commit_git(packet)
+        })
+    }
+
+    fn observe_commit_git(&self, packet: &LocalReviewPacket) -> Result<GitObservation> {
+        let created = self.verify_apply_roots()?;
+        let scope = LinuxRepositoryScope::verify(
+            &created.original_path,
+            created.original_path.join(".git"),
+            created.path.parent().ok_or(err("code.command.scope"))?,
+        )
+        .map_err(|e| err(e.kind().code()))?;
+        let linked = crate::LinuxLinkedRepository::verify_owned_worktree(
+            &created.path,
+            scope.git_directory(),
+        )
+        .map_err(|e| err(e.kind().code()))?;
+        let task_scope = LinuxRepositoryScope::verify_linked_read_only(&linked, &self.state_root)
             .map_err(|e| err(e.kind().code()))?;
-            let linked = crate::LinuxLinkedRepository::verify_owned_worktree(
-                &created.path,
-                scope.git_directory(),
-            )
+        let collector = LinuxRepositoryCollector::new(
+            LinuxGitArtifact::verify("/usr/bin/git").map_err(|e| err(e.kind().code()))?,
+        );
+        let original = collector
+            .collect(&scope)
             .map_err(|e| err(e.kind().code()))?;
-            let task_scope =
-                LinuxRepositoryScope::verify_linked_read_only(&linked, &self.state_root)
-                    .map_err(|e| err(e.kind().code()))?;
-            let collector = LinuxRepositoryCollector::new(
-                LinuxGitArtifact::verify("/usr/bin/git").map_err(|e| err(e.kind().code()))?,
-            );
-            let original = collector
-                .collect(&scope)
-                .map_err(|e| err(e.kind().code()))?;
-            let task = collector
-                .collect_inventory(&task_scope)
-                .map_err(|e| err(e.kind().code()))?;
-            let paths = packet
-                .change_set
-                .files()
-                .iter()
-                .map(|f| f.path.clone())
-                .collect::<Vec<_>>();
-            let base_preimages = collector
-                .collect_base_preimages(
-                    &task_scope,
-                    self.created_git_identity()?.base_object(),
-                    &paths,
-                )
-                .map_err(|_| err("code.commit.base-preimage"))?;
-            linked.revalidate().map_err(|e| err(e.kind().code()))?;
-            if task.repository_sha256 != created.held.root_path_sha256() {
-                return Err(err("code.commit.git-state"));
-            }
-            Ok(GitObservation {
-                original,
-                task_head: task.commit_id,
-                task_branch: task.branch,
-                linked_identity: linked.identity_sha256().into(),
-                task_inventory_sha256: task.git_evidence_sha256,
-                base_preimages,
-            })
+        let task = collector
+            .collect_inventory(&task_scope)
+            .map_err(|e| err(e.kind().code()))?;
+        let paths = packet
+            .change_set
+            .files()
+            .iter()
+            .map(|f| f.path.clone())
+            .collect::<Vec<_>>();
+        let base_preimages = collector
+            .collect_base_preimages(
+                &task_scope,
+                self.created_git_identity()?.base_object(),
+                &paths,
+            )
+            .map_err(|_| err("code.commit.base-preimage"))?;
+        linked.revalidate().map_err(|e| err(e.kind().code()))?;
+        if task.repository_sha256 != created.held.root_path_sha256() {
+            return Err(err("code.commit.git-state"));
+        }
+        Ok(GitObservation {
+            original,
+            task_head: task.commit_id,
+            task_branch: task.branch,
+            linked_identity: linked.identity_sha256().into(),
+            task_inventory_sha256: task.git_evidence_sha256,
+            base_preimages,
         })
     }
 

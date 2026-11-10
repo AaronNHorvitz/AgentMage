@@ -2,6 +2,18 @@
 
 ## Active queue: local agent mission
 
+The [original-owner checker connection](docs/decisions/0198-original-owner-candidate-review-checker.md)
+delivers exact borrowed creation and validation records to an explicitly installed
+trusted checker and rechecks complete source/Git observations after success.
+Its result stays inert; there is no default checker or execution route. The
+[complete affected gate](docs/evidence/t306-candidate-checker-2026-11-10.md)
+remains **FAIL**: 1,427 passes, the exact inherited 72 failures and 64 ignores
+over 26 unfiltered targets. All six new and 24 existing review methods, formatting
+and Clippy pass; four source hashes stay fixed. Independent core review is
+required. T-303/T-306 remain open without new rows; actual checker/artifact
+integration, native admission, exact product approval composition, durable
+recovery and model measurements remain open.
+
 The retained [worktree source-selection review](docs/reviews/18dd68113fc3-local-coding-worktree-read-selection.txt)
 has **Verdict: PASS** for exact commit
 `18dd68113fc3be02da886bd7e4123cf950c2abaa`, with no high or medium finding.
